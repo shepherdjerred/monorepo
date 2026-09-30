@@ -3,10 +3,6 @@ import {
   collectCiIoObservability,
   evaluateCiIoObservability,
 } from "./ci-io-observability.ts";
-import {
-  countCiIoFinishedBuilds,
-  selectCiIoCandidateBuilds,
-} from "./ci-io-impact.ts";
 
 const originalFetch = globalThis.fetch;
 const originalPrometheusUrl = Bun.env["PROMETHEUS_URL"];
@@ -33,40 +29,6 @@ afterEach(() => {
 });
 
 describe("CI I/O observability evidence", () => {
-  test("selects the newest completed fixed-corpus build and excludes cancellations", () => {
-    expect(
-      selectCiIoCandidateBuilds([
-        {
-          number: 103,
-          state: "canceled",
-          env: { CI_IO_FIXED_CORPUS: "true" },
-        },
-        {
-          number: 102,
-          state: "failed",
-          env: { CI_IO_FIXED_CORPUS: "true" },
-        },
-        {
-          number: 101,
-          state: "passed",
-          env: { CI_IO_FIXED_CORPUS: "false" },
-        },
-      ]),
-    ).toEqual([102]);
-  });
-
-  test("counts only passed and failed builds toward retirement", () => {
-    expect(
-      countCiIoFinishedBuilds([
-        { state: "passed" },
-        { state: "failed" },
-        { state: "running" },
-        { state: "blocked" },
-        { state: "canceled" },
-      ]),
-    ).toBe(2);
-  });
-
   test("enforces series, minimum, and maximum thresholds", () => {
     const definition = {
       id: "threshold",
@@ -91,5 +53,38 @@ describe("CI I/O observability evidence", () => {
     );
 
     await expect(collectCiIoObservability()).rejects.toThrow(/HTTP 503/);
+  });
+
+  test("joins node I/O metrics to job pods in the CI namespace", async () => {
+    Bun.env["PROMETHEUS_URL"] = "https://prometheus.example.test";
+    Bun.env["GRAFANA_URL"] = "https://grafana.example.test";
+    Bun.env["GRAFANA_API_KEY"] = "test-token";
+    const queries: string[] = [];
+    globalThis.fetch = Object.assign(
+      async (input: string | URL | Request) => {
+        const url = new URL(
+          input instanceof Request ? input.url : input.toString(),
+        );
+        if (url.pathname === "/api/v1/query") {
+          queries.push(url.searchParams.get("query") ?? "");
+          return Response.json({
+            status: "success",
+            data: { result: [{ value: [0, "1"] }] },
+          });
+        }
+        return Response.json({ dashboard: {} });
+      },
+      { preconnect: originalFetch.preconnect },
+    );
+
+    await collectCiIoObservability();
+    const nodeQueries = queries.filter((query) =>
+      query.includes("kube_pod_info"),
+    );
+    expect(nodeQueries.length).toBeGreaterThan(0);
+    for (const query of nodeQueries) {
+      expect(query).toContain('kube_pod_info{namespace="woodpecker-ci"}');
+      expect(query).toContain('kube_pod_labels{namespace="woodpecker-ci"');
+    }
   });
 });

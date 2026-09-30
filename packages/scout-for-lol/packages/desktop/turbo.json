@@ -1,0 +1,66 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  // Every task shells out through mise. Turbo's strict environment otherwise
+  // drops the CI image's /opt/mise store and makes each task install the full
+  // repository toolchain again from the unauthenticated default store.
+  "tasks": {
+    "build": {
+      "passThroughEnv": ["MISE_DATA_DIR"],
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "rustfmt.toml",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "passThroughEnv": ["MISE_DATA_DIR"],
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "passThroughEnv": ["MISE_DATA_DIR"],
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "test:ci": {
+      "passThroughEnv": ["MISE_DATA_DIR"],
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "passThroughEnv": ["MISE_DATA_DIR"],
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "rustfmt.toml",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/data/src/scout-client/protocol.contract.json",
+        "!target/**"
+      ],
+      "outputs": []
+    }
+  }
+}

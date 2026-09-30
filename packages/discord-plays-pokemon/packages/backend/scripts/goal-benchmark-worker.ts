@@ -13,7 +13,7 @@ import {
   shouldContinuePostProcessCatchObservation,
   type CatchEvidenceSettler,
   type CatchEventEvidence,
-} from "#src/goal/catch-evidence.ts";
+} from "#src/goal/memory/catch-evidence.ts";
 import { readGameObservation } from "#src/goal/game/game-observation.ts";
 import { GoalManager } from "#src/goal/goal-manager.ts";
 import { startGoalControlServer } from "#src/goal/control/control-server.ts";

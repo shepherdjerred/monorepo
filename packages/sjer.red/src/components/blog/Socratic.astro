@@ -26,13 +26,13 @@ const direction =
       class="m-0 rounded-full border-2 dark:border-white"
     />
     <span class="text-sm italic">
-      {
-        match(perspective)
-          .with("student", () => "Student")
-          .with("teacher", () => "Teacher")
-          .exhaustive()
-      }
+      {match(perspective)
+        .with("student", () => "Student")
+        .with("teacher", () => "Teacher")
+        .exhaustive()}
     </span>
   </div>
-  <div class="grow-2 ml-6 mr-6"><slot /></div>
+  <div class="grow-2 ml-6 mr-6">
+    <slot />
+  </div>
 </aside>

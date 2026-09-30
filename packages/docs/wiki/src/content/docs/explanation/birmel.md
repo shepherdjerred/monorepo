@@ -17,19 +17,17 @@ context, memory, sessions, jobs, and orchestration**.
 ```mermaid
 flowchart LR
   accTitle: Birmel turn lifecycle
-  accDescr: An admitted and deduplicated Discord event receives one bounded context bundle, takes exactly one capability-grounded route to either direct conversation or one specialist, produces one Discord reply, and then extracts human claims and curated self-memory. An AgentRun record audits the lifecycle without storing prompt contents.
+  accDescr: An admitted and deduplicated Discord event receives one bounded context bundle and is handed to a single agent holding every registered tool. The agent loops over tool calls, letting each result inform the next choice, then emits a structured answer carrying the turn's disposition. That produces one Discord reply, and then human claims and curated self-memory are extracted. An AgentRun record audits the lifecycle without storing prompt contents.
 
   D[Discord event] --> A[Admission and deduplication]
   A --> C[One bounded<br/>ContextBundle]
-  C --> R{One route and<br/>disposition}
-  R -->|conversation or unsupported| X[Tool-free<br/>direct agent]
-  R -->|supported registered tool| S[One bounded<br/>specialist]
-  X --> O[One Discord reply]
-  S --> O
+  C --> G[One agent,<br/>every registered tool]
+  G -->|call a tool| T[Tool result]
+  T -->|informs the next choice| G
+  G --> O[One Discord reply]
   O --> M[Human claims and<br/>curated self-memory]
   A -. status .-> U[(AgentRun audit)]
-  R -. route .-> U
-  O -. response ID .-> U
+  O -. disposition, tool count,<br/>response ID .-> U
 ```
 
 ## A turn has exactly one owner
@@ -47,8 +45,9 @@ An accepted alias is a persona claim for one guild. It becomes a wake name for
 every trusted user and channel in that guild. The same name has no effect in a
 different guild.
 
-That same allowlist governs every capability, including shell and scheduled
-work. A queued job re-checks its original actor when it executes,
+That same allowlist governs every capability, including sandboxed code,
+the shared browser profile, and scheduled work. A queued job re-checks its
+original actor when it executes,
 because authority at enqueue time is not authority at run time.
 
 Each Discord message ID identifies one
@@ -57,28 +56,74 @@ which makes retries and restarts idempotent. Assembled prompts and model
 reasoning are never audit fields. The record says what happened, not what was
 said to the model.
 
-After admission a
-[structured router](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/router.ts)
-picks exactly one route and labels it as conversation, supported, or
-unsupported. Supported work must name a real registered tool owned by the
-selected specialist, and that primary tool must succeed before the runtime
-accepts the result. Unsupported work stays tool-free and states the missing
-capability plainly.
+After admission the turn goes to a single
+[agent](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/agent.ts)
+holding every registered tool. It investigates, and what it finds is allowed to
+change which tool it reaches for next. Picking a tool, learning it was the
+wrong one, and trying another is an ordinary path through a turn.
 
-The catalog is generated from
+This replaced a structured router that chose one specialist and one primary
+tool from assembled context alone — before any tool had run — and then required
+that pre-named tool to succeed. The cheapest model in the system committed the
+turn, and a perfectly recoverable "this actually needs a different tool" became
+a failed turn and an incident reference. Conversation and unsupported routes
+were tool-free, so a question that merely needed one lookup was answered from
+memory instead of checked.
+
+The turn ends with a structured answer carrying its own disposition —
+conversation, supported, or unsupported — which is the first moment that is
+actually known.
+
+A gate used to sit here too: the answer had to list the tool calls it relied on,
+and a turn was failed if any of them had not succeeded. It was removed. The
+runtime already records every call it made and whether it worked, so requiring
+the model to restate that made a forgotten field look identical to a lie — in
+practice it failed turns whose work had plainly succeeded and threw the results
+away, including generated images. Honest reporting of tool outcomes is now a
+prompt rule rather than an enforced one, which is a deliberate trade: the bot
+can overstate an outcome, and nothing in the runtime will catch it.
+
+The registry is generated from
 [executable tool registration](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-tools/tools/tool-sets.ts),
-so the router cannot advertise a stale hand-written capability. Birmel has
-scoped activity queries but no generic SQL access.
+and startup refuses to boot if tool metadata and the executable inventory
+disagree. Birmel has scoped activity queries but no generic SQL access.
 
 Ordinary supported writes are allowed for trusted users. The
 [core policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/prompts.ts)
-blocks only bulk destructive and bulk-creation effects. It does not disguise
+blocks bulk-creation requests. It does not disguise
 missing integrations as safety refusals.
 
-A specialist receives a compact task packet. Not a manager transcript, not
-another agent's tool trace, not a recursively assembled prompt. That is the
-whole point: a nested-agent architecture makes it impossible to say why a
-response happened.
+The registered surface deliberately makes Birmel a general assistant and
+community organizer rather than a server administrator. It retains research,
+creative work, schedules, and conversational Discord features. Administrative
+server capabilities are absent, as are generic shell and SQL access.
+
+[Python, JavaScript, and TypeScript snippets](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/sandbox/server.ts)
+run in a credential-free sidecar. The broker gives each execution a minimal
+fixed environment, a private temporary directory, and a distinct unprivileged
+identity. Each runtime lowers its hard process limit before user code starts,
+so a run cannot create descendants and its address-space limit is aggregate.
+The broker still kills every process owned by that identity before reuse as a
+defensive cleanup boundary. The run directory is the identity's only writable
+filesystem location. Persistent IPC and keyring syscalls are blocked before
+they reach the kernel. It also imposes fixed CPU, memory, time, process, and
+output limits. The
+[deployment boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/birmel/index.ts)
+removes network, service-account, secret, and persistent-volume access. The
+main Birmel process never executes model-supplied commands.
+
+[Browser automation](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-tools/tools/automation/pinchtab-browser.ts)
+uses one configured persistent PinchTab profile for every trusted user in the
+guild. Cookies remain inside that profile and are not model-readable.
+Application validation permits only public HTTPS destinations. A
+[pod-local firewall](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/pinchtab/index.ts)
+also blocks private destinations after redirects and subresource loads.
+Scheduled jobs revalidate saved tab IDs against that configured instance before
+reuse, so a Birmel restart does not orphan valid persistent tabs.
+
+The agent receives a compact task packet. Not a manager transcript, not another
+agent's tool trace, not a recursively assembled prompt. That is the whole point:
+a nested-agent architecture makes it impossible to say why a response happened.
 
 ## Context is a bounded value, not a growing history
 
@@ -150,6 +195,11 @@ outcome unknown, the job **pauses instead of replaying**.
 That asymmetry is intentional. An ambiguous occurrence cannot be marked
 not-applied or retried in place, because its prior executor may still settle.
 Duplicating a real-world effect is worse than stalling.
+
+A scheduled agent prompt still receives one bounded agent run. It can perform a
+multi-step task such as research followed by image generation and Discord
+delivery, but it is best effort: there is no persisted stage graph, resumable
+plan, or guarantee that the model will use every available step.
 
 ## Why this shape
 

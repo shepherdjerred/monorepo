@@ -1,22 +1,17 @@
 import { trace, type Tracer } from "@opentelemetry/api";
 // Import the client interceptor from its specific subpath rather than the
 // package root. The root barrel (`lib/index.js`) eagerly re-exports
-// `./workflow`, which patches the Workflow sandbox isolate runtime and pulls
-// in @temporalio/interceptors-opentelemetry's own `@opentelemetry/sdk-trace-base`
-// (pinned ^1.25.1). That collides with this repo's root `overrides` pin of
-// `@opentelemetry/core` to 2.10.0 (sdk-trace-base@1.x expects core@1.x's
-// `TracesSamplerValues` export, which core@2.x removed), crashing module load
-// in any process — including this one — that imports the bare package name.
-// `lib/client` only needs `@opentelemetry/api` and `@temporalio/common`, so
-// importing it directly avoids the incompatible transitive chain entirely.
+// `./workflow`, which patches the Workflow sandbox isolate runtime. Keep the
+// `lib/client` and `lib/worker` subpath imports so the workflow isolate code
+// only loads where the worker explicitly bundles it.
 import {
   OpenTelemetryWorkflowClientInterceptor,
   type InterceptorOptions,
-} from "@temporalio/interceptors-opentelemetry/lib/client/index.js";
+} from "@temporalio/interceptors-opentelemetry-v2/lib/client/index.js";
 import {
   OpenTelemetryActivityInboundInterceptor,
   OpenTelemetryActivityOutboundInterceptor,
-} from "@temporalio/interceptors-opentelemetry/lib/worker/index.js";
+} from "@temporalio/interceptors-opentelemetry-v2/lib/worker/index.js";
 import type { Context as ActivityContext } from "@temporalio/activity";
 import type {
   ActivityInterceptorsFactory,
@@ -58,7 +53,8 @@ function createActivityInterceptors(
 
 export function temporalWorkflowTracingModulePath(): string {
   return new URL(
-    import.meta.resolve("@temporalio/interceptors-opentelemetry/lib/workflow"),
+    import.meta
+      .resolve("@temporalio/interceptors-opentelemetry-v2/lib/workflow"),
   ).pathname;
 }
 

@@ -15,6 +15,7 @@ import type {
   VoiceCloseSource,
 } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 import type { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import type { AssistantAudioPort } from "@shepherdjerred/streambot/streamer/audio-ports.ts";
 
 /** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
 export type PlayerFactory = typeof createSeekablePlayer;
@@ -41,10 +42,31 @@ export type StreamerLike = PooledUserbot & {
   ) => Promise<VoiceHandle>;
   runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
   leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
+  /**
+   * Apply a playback volume percentage. True when it reached live audio, which is the case for a
+   * music segment (the mixer scales the samples) and never for Go Live, whose gain is fixed for
+   * the duration of a segment by the `audioVolume` its ffmpeg command was built with.
+   */
   setVolume: (percent: number) => Promise<boolean>;
-  /** Duck Go Live independently of the desired playback volume while the assistant speaks. */
+  /**
+   * Open the voice assistant's write access to the outbound audio track.
+   *
+   * This replaced a `sendAssistantOpus` + `setAssistantSpeaking` pair, and the replacement is a
+   * NARROWING on purpose. Those two methods let the assistant write Opus straight at the same
+   * packetizer, timestamp and SSRC the music pipeline uses, and two Opus streams interleaved on one
+   * SSRC is not a mix — it is noise. A port cannot be a second writer: everything behind it goes
+   * through the one mixer that owns the connection, which is also what lets the speaking flag be
+   * arbitrated between the two sources instead of being clobbered by whichever finished last.
+   */
+  openAssistantAudio: () => AssistantAudioPort;
+  /**
+   * The two methods `@shepherdjerred/voice-assistant` calls through its own
+   * `AssistantAudioTransport` port. They are an adapter over {@link openAssistantAudio}, not a
+   * second way in: both delegate to one long-lived mixer port, so the narrowing above still holds
+   * and nothing outside the mixer touches the connection. They exist because the shared voice
+   * pipeline is consumed by two bots and owns that interface.
+   */
   setAssistantSpeaking: (speaking: boolean) => Promise<void>;
-  /** Send one 20ms assistant Opus packet over the normal Discord voice connection. */
   sendAssistantOpus: (opus: Uint8Array) => void;
   /** Read-only identity used to attribute live assistant reply packets. */
   assistantUserId: () => string;

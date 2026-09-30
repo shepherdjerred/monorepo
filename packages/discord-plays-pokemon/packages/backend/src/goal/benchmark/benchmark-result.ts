@@ -11,7 +11,7 @@ import {
   type CatchBenchmarkResult,
   type GoalBenchmarkTelemetry,
 } from "./benchmark-evaluator.ts";
-import type { CatchStateEvidence } from "#src/goal/catch-evidence.ts";
+import type { CatchStateEvidence } from "#src/goal/memory/catch-evidence.ts";
 import {
   BENCHMARK_PROVIDER_FAILURE_FILE,
   BENCHMARK_PROVIDER_STARTUP_FAILURE_FILE,
@@ -85,8 +85,9 @@ export async function readProviderStartupFailure(
   const file = Bun.file(
     path.join(runDirectory, BENCHMARK_PROVIDER_STARTUP_FAILURE_FILE),
   );
-  if (!(await file.exists())) return null;
-  return BenchmarkProviderStartupFailureSchema.parse(await file.json());
+  return (await file.exists())
+    ? BenchmarkProviderStartupFailureSchema.parse(await file.json())
+    : null;
 }
 
 export function evaluateWorkerCatch(input: {

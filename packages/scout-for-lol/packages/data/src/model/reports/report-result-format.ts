@@ -1,4 +1,5 @@
 import type { ReportResultColumn } from "#src/model/reports/report-ai.ts";
+import { reportAssetInfo } from "#src/model/reports/report-assets.ts";
 
 /**
  * The header a grand-total result's dimension column carries.
@@ -15,7 +16,12 @@ export function formatReportDisplayValue(
   value: string | number,
 ): string {
   if (typeof value === "string") {
-    return value;
+    return column.asset === undefined
+      ? value
+      : reportAssetInfo(column.asset, value).name;
+  }
+  if (column.asset !== undefined) {
+    return reportAssetInfo(column.asset, value).name;
   }
   if (column.format === "percent") {
     return `${(value * 100).toLocaleString("en-US", {
@@ -23,8 +29,7 @@ export function formatReportDisplayValue(
       maximumFractionDigits: 1,
     })}%`;
   }
-  if (column.format === "integer") {
-    return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
-  }
-  return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return column.format === "integer"
+    ? value.toLocaleString("en-US", { maximumFractionDigits: 0 })
+    : value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }

@@ -1,4 +1,4 @@
-import { parseAnalyticsRegistry } from "../lib/scout-analytics-config.ts";
+import { parseAnalyticsRegistry } from "../lib/scout/scout-analytics-config.ts";
 
 const root = new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
 const registryPath = `${root}/config/analytics-sites.json`;
@@ -69,6 +69,20 @@ const staticTrackers = [
     masksAllText: false,
     wiring: /<script[^>]+\bsrc=["']\.\/posthog\.js["']/,
   },
+  {
+    path: "packages/ts-mc/public/posthog.js",
+    entrypoint: "packages/ts-mc/src/layouts/BaseLayout.astro",
+    hostname: "ts-mc.net",
+    masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
+  },
+  {
+    path: "packages/ts-mc-docs/public/posthog.js",
+    entrypoint: "packages/ts-mc-docs/astro.config.ts",
+    hostname: "docs.ts-mc.net",
+    masksAllText: false,
+    wiring: /\bsrc\s*:\s*["']\/posthog\.js["']/,
+  },
 ] as const;
 
 // These three keys are load-bearing by their ABSENCE, and each one silently
@@ -124,6 +138,7 @@ const expectedHostnames = new Set([
   "scout-for-lol.com",
   "beta.scout-for-lol.com",
   "ts-mc.net",
+  "docs.ts-mc.net",
   "ppl.glitter-boys.com",
   "cook.sjer.red",
   "stocks.sjer.red",
@@ -135,7 +150,7 @@ if (
   [...expectedHostnames].some((hostname) => !actualHostnames.has(hostname))
 ) {
   throw new Error(
-    "Analytics registry must contain exactly the thirteen portfolio hosts",
+    "Analytics registry must contain exactly the fourteen portfolio hosts",
   );
 }
 
@@ -180,14 +195,26 @@ for (const tracker of staticTrackers) {
       `${tracker.path} must use the shared PostHog project token for ${tracker.hostname}`,
     );
   }
-  if (
-    !trackerSource.includes(registry.apiHost) ||
-    !trackerSource.includes(registry.assetHost)
-  ) {
-    throw new Error(`${tracker.path} must use the PostHog US hosts`);
+  if (!trackerSource.includes(registry.proxyHost)) {
+    throw new Error(`${tracker.path} must use the managed PostHog proxy host`);
   }
-  if (!trackerSource.includes(`asset_host: "${registry.assetHost}"`)) {
-    throw new Error(`${tracker.path} must configure the PostHog asset host`);
+  if (
+    trackerSource.includes(registry.apiHost) ||
+    trackerSource.includes(registry.assetHost)
+  ) {
+    throw new Error(
+      `${tracker.path} must not send browser traffic directly to PostHog`,
+    );
+  }
+  if (!trackerSource.includes(`api_host: "${registry.proxyHost}"`)) {
+    throw new Error(
+      `${tracker.path} must configure the managed PostHog proxy API host`,
+    );
+  }
+  if (!trackerSource.includes(`asset_host: "${registry.proxyHost}"`)) {
+    throw new Error(
+      `${tracker.path} must configure the managed PostHog proxy asset host`,
+    );
   }
   if (!trackerSource.includes(`site_key: "${site.key}"`)) {
     throw new Error(

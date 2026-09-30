@@ -5,6 +5,8 @@ import {
   completeInstallAttribution,
   mintInstallAttributionToken,
   reconcilePendingInstallAttribution,
+  restoreRetiredInstallAttribution,
+  retirePendingInstallAttribution,
 } from "#src/analytics/install-attribution.ts";
 import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
 
@@ -14,11 +16,17 @@ const INSTALLER = testAccountId("771");
 const OTHER_USER = testAccountId("772");
 
 const T0 = new Date("2026-08-22T12:00:00Z");
+const T_PLUS_30S = new Date("2026-08-22T12:00:30Z");
 const T_PLUS_1M = new Date("2026-08-22T12:01:00Z");
 const T_PLUS_5M = new Date("2026-08-22T12:05:00Z");
+const T_PLUS_6M = new Date("2026-08-22T12:06:00Z");
+const T_PLUS_7M = new Date("2026-08-22T12:07:00Z");
 const T_PLUS_20M = new Date("2026-08-22T12:20:00Z");
 
-async function seedInstall(options?: { installedAt?: Date }) {
+async function seedInstall(options?: {
+  analyticsLifecycleTracked?: boolean;
+  installedAt?: Date;
+}) {
   return prisma.guildInstall.create({
     data: {
       serverId: SERVER_ID,
@@ -27,6 +35,7 @@ async function seedInstall(options?: { installedAt?: Date }) {
       addedByDiscordId: INSTALLER,
       memberCount: 25,
       installedAt: options?.installedAt ?? T_PLUS_1M,
+      analyticsLifecycleTracked: options?.analyticsLifecycleTracked ?? true,
     },
   });
 }
@@ -189,8 +198,14 @@ describe("completeInstallAttribution", () => {
     expect(replay).toEqual({ outcome: "invalid" });
   });
 
-  test("refuses to attribute an install that predates the token", async () => {
-    await seedInstall({ installedAt: new Date("2026-08-01T00:00:00Z") });
+  test.each([
+    [
+      "an install that predates the token",
+      { installedAt: new Date("2026-08-01T00:00:00Z") },
+    ],
+    ["a historical backfill", { analyticsLifecycleTracked: false }],
+  ])("refuses to attribute %s", async (_description, installOptions) => {
+    await seedInstall(installOptions);
     const token = await mint();
     const { analytics, capture } = createAnalyticsFixture();
 
@@ -295,5 +310,103 @@ describe("reconcilePendingInstallAttribution", () => {
     });
 
     expect(capture).not.toHaveBeenCalled();
+  });
+});
+
+describe("historical attribution retirement", () => {
+  test("restores only the tokens claimed by one historical reconciliation", async () => {
+    const token = await mint();
+    await consumePending(token);
+
+    const retirement = await retirePendingInstallAttribution(SERVER_ID, {
+      db: prisma,
+      now: T_PLUS_5M,
+    });
+    await expect(
+      prisma.installAttributionToken.findUniqueOrThrow({ where: { token } }),
+    ).resolves.toMatchObject({ reconciledAt: T_PLUS_5M });
+
+    await restoreRetiredInstallAttribution(retirement, { db: prisma });
+
+    await expect(
+      prisma.installAttributionToken.findUniqueOrThrow({ where: { token } }),
+    ).resolves.toMatchObject({ reconciledAt: null });
+  });
+
+  test("restores only the newest token while surplus tokens stay retired", async () => {
+    const olderToken = await mint();
+    const newestToken = await mint(T_PLUS_30S);
+    await consumePending(olderToken);
+    await consumePending(newestToken);
+
+    const retirement = await retirePendingInstallAttribution(SERVER_ID, {
+      db: prisma,
+      now: T_PLUS_5M,
+    });
+    const newestRow = await prisma.installAttributionToken.findUniqueOrThrow({
+      where: { token: newestToken },
+    });
+    expect(retirement.tokenIds).toEqual([newestRow.id]);
+
+    await restoreRetiredInstallAttribution(retirement, { db: prisma });
+
+    await expect(
+      prisma.installAttributionToken.findUniqueOrThrow({
+        where: { token: olderToken },
+      }),
+    ).resolves.toMatchObject({ reconciledAt: T_PLUS_5M });
+    await expect(
+      prisma.installAttributionToken.findUniqueOrThrow({
+        where: { token: newestToken },
+      }),
+    ).resolves.toMatchObject({ reconciledAt: null });
+  });
+
+  test("retires restored tokens without consuming a later reinstall", async () => {
+    const restoredToken = await mint();
+    await consumePending(restoredToken);
+    const retirement = await retirePendingInstallAttribution(SERVER_ID, {
+      db: prisma,
+      now: T_PLUS_5M,
+    });
+
+    const laterReinstallToken = await mint(T_PLUS_30S);
+    const newerToken = await mint(T_PLUS_5M);
+    const { analytics } = createAnalyticsFixture();
+    await completeInstallAttribution(
+      { state: newerToken, guildId: SERVER_ID, discordId: INSTALLER },
+      { db: prisma, analytics, now: T_PLUS_6M },
+    );
+    await completeInstallAttribution(
+      {
+        state: laterReinstallToken,
+        guildId: SERVER_ID,
+        discordId: INSTALLER,
+      },
+      { db: prisma, analytics, now: T_PLUS_7M },
+    );
+    await restoreRetiredInstallAttribution(retirement, { db: prisma });
+    await seedInstall({ installedAt: T_PLUS_5M });
+
+    await reconcilePendingInstallAttribution(SERVER_ID, {
+      db: prisma,
+      analytics,
+      now: T_PLUS_6M,
+    });
+
+    await expect(
+      prisma.installAttributionToken.findMany({
+        where: { token: { in: [restoredToken, newerToken] } },
+        select: { reconciledAt: true },
+      }),
+    ).resolves.toEqual([
+      { reconciledAt: T_PLUS_6M },
+      { reconciledAt: T_PLUS_6M },
+    ]);
+    await expect(
+      prisma.installAttributionToken.findUniqueOrThrow({
+        where: { token: laterReinstallToken },
+      }),
+    ).resolves.toMatchObject({ reconciledAt: null });
   });
 });

@@ -163,10 +163,9 @@ function technicalDetails(report: ReportEnvelopeV1): TechnicalDetail[] {
 }
 
 function actionHtml(actions: readonly string[]): string {
-  if (actions.length === 0) {
-    return `<div style="margin:24px 0;padding:16px 18px;border-radius:10px;background:#f3f4f6;"><strong style="color:#111827;">No action is needed.</strong></div>`;
-  }
-  return `<div style="margin:24px 0;padding:18px;border:1px solid #fdba74;border-radius:10px;background:#fff7ed;"><h2 style="margin:0 0 10px;font-size:18px;line-height:1.3;color:#9a3412;">What you need to do</h2><ul style="margin:0;padding-left:22px;color:#431407;">${actions.map((action) => `<li style="margin:6px 0;">${escapeHtml(action)}</li>`).join("")}</ul></div>`;
+  return actions.length === 0
+    ? `<div style="margin:24px 0;padding:16px 18px;border-radius:10px;background:#f3f4f6;"><strong style="color:#111827;">No action is needed.</strong></div>`
+    : `<div style="margin:24px 0;padding:18px;border:1px solid #fdba74;border-radius:10px;background:#fff7ed;"><h2 style="margin:0 0 10px;font-size:18px;line-height:1.3;color:#9a3412;">What you need to do</h2><ul style="margin:0;padding-left:22px;color:#431407;">${actions.map((action) => `<li style="margin:6px 0;">${escapeHtml(action)}</li>`).join("")}</ul></div>`;
 }
 
 function findingsHtml(report: ReportEnvelopeV1): string {
@@ -204,8 +203,9 @@ function checksHtml(report: ReportEnvelopeV1): string {
 }
 
 function limitationsHtml(limitations: readonly string[]): string {
-  if (limitations.length === 0) return "";
-  return `<section style="margin-top:24px;"><h2 style="margin:0 0 8px;font-size:17px;color:#374151;">What may be missing</h2><ul style="margin:0;padding-left:22px;color:#4b5563;">${limitations.map((limitation) => `<li style="margin:5px 0;">${escapeHtml(limitation)}</li>`).join("")}</ul></section>`;
+  return limitations.length === 0
+    ? ""
+    : `<section style="margin-top:24px;"><h2 style="margin:0 0 8px;font-size:17px;color:#374151;">What may be missing</h2><ul style="margin:0;padding-left:22px;color:#4b5563;">${limitations.map((limitation) => `<li style="margin:5px 0;">${escapeHtml(limitation)}</li>`).join("")}</ul></section>`;
 }
 
 function detailsHtml(report: ReportEnvelopeV1): string {

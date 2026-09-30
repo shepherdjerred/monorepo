@@ -1,7 +1,6 @@
 import path from "node:path";
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import {
-  DEFAULT_VOICE_CORPUS_DIR,
   loadVoiceCorpusManifest,
   verifyVoiceCorpus,
 } from "@shepherdjerred/streambot/voice/corpus-io.ts";
@@ -14,11 +13,20 @@ import {
   VoiceAudioLifecycle,
   type LocalVoiceModels,
 } from "@shepherdjerred/voice-assistant";
+import type { VoiceAudioLifecycleOptions } from "@shepherdjerred/voice-assistant/audio/audio-lifecycle-types.ts";
+import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/voice-assistant/local-models.ts";
+import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
 import {
-  initializeLocalVoiceModelsForRuntime,
-  streambotVoiceLifecycleDeps,
-} from "@shepherdjerred/streambot/voice/local-voice.ts";
+  VOICE_WAKE_PHRASES,
+  type VoiceWakePhraseProfile,
+} from "@shepherdjerred/streambot/voice/corpus-phrases.ts";
 import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/voice-assistant/constants.ts";
+
+/** The lifecycle ports the offline evaluator injects; phrase-specific via the profile. */
+export type VoiceLifecycleDeps = Pick<
+  VoiceAudioLifecycleOptions,
+  "fragmentTailMs" | "metrics" | "observability"
+>;
 
 type ClipEvaluation = {
   readonly id: string;
@@ -125,6 +133,7 @@ function verificationBarrier(): {
 export async function evaluateDiscordOpusPackets(
   models: LocalVoiceModels,
   packets: readonly Uint8Array[],
+  lifecycleDeps: VoiceLifecycleDeps = streambotVoiceLifecycleDeps(),
 ): Promise<DiscordOpusPipelineEvaluation> {
   let activated = false;
   const candidate = { detected: false };
@@ -137,7 +146,7 @@ export async function evaluateDiscordOpusPackets(
   // simulated timestamp on the frame the turn actually completed at.
   const verification = verificationBarrier();
   const lifecycle = new VoiceAudioLifecycle({
-    ...streambotVoiceLifecycleDeps(),
+    ...lifecycleDeps,
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,
@@ -182,8 +191,13 @@ async function evaluateClip(
   models: LocalVoiceModels,
   entry: VoiceCorpusEntry,
   packets: readonly Uint8Array[],
+  lifecycleDeps: VoiceLifecycleDeps,
 ): Promise<ClipEvaluation> {
-  const result = await evaluateDiscordOpusPackets(models, packets);
+  const result = await evaluateDiscordOpusPackets(
+    models,
+    packets,
+    lifecycleDeps,
+  );
   return {
     id: entry.id,
     expected: entry.expected,
@@ -216,14 +230,16 @@ function confusion(
 }
 
 function recall(results: readonly ClipEvaluation[]): number {
-  if (results.length === 0) return 1;
-  return results.filter((result) => result.activated).length / results.length;
+  return results.length === 0
+    ? 1
+    : results.filter((result) => result.activated).length / results.length;
 }
 
 async function negativeSoak(
   corpusDir: string,
   models: LocalVoiceModels,
   manifest: VoiceCorpusManifest,
+  lifecycleDeps: VoiceLifecycleDeps,
 ): Promise<number> {
   const negatives = manifest.entries.filter(
     (entry) => entry.expected === "no-wake",
@@ -243,7 +259,7 @@ async function negativeSoak(
   let activations = 0;
   const verification = verificationBarrier();
   const lifecycle = new VoiceAudioLifecycle({
-    ...streambotVoiceLifecycleDeps(),
+    ...lifecycleDeps,
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,
@@ -291,12 +307,85 @@ async function negativeSoak(
   return activations;
 }
 
-async function evaluateRuntime(
-  corpusDir: string,
-  manifest: VoiceCorpusManifest,
+export type SoakActivation = {
+  /** Simulated milliseconds into the fed audio when this false wake fired. */
+  readonly elapsedMs: number;
+};
+
+/**
+ * Feed one flat sequence of pre-encoded Opus packets through a single, never-reset
+ * `VoiceAudioLifecycle` for a target simulated duration, recording every activation's timestamp.
+ *
+ * Generalizes `negativeSoak`'s continuous-session mechanism (same verification-barrier and
+ * silence-ticker wiring, same "hold the feed for in-flight verification or the soak under-drives
+ * the verifier it exists to measure" correctness requirement) to an arbitrary packet source —
+ * real recorded audio, not just the synthetic corpus's cycled fixtures. If `packets` is shorter
+ * than the target duration, it loops from the start; source it long enough that looping isn't
+ * load-bearing for the result if that matters to the caller.
+ */
+export async function runContinuousActivationSoak(
   models: LocalVoiceModels,
-  runSoak: boolean,
-): Promise<RuntimeCorpusEvaluation> {
+  packets: readonly Uint8Array[],
+  lifecycleDeps: VoiceLifecycleDeps,
+  targetMs: number,
+): Promise<readonly SoakActivation[]> {
+  if (packets.length === 0) {
+    throw new Error("No packets supplied for continuous soak");
+  }
+  const activations: SoakActivation[] = [];
+  let elapsedMs = 0;
+  const verification = verificationBarrier();
+  const lifecycle = new VoiceAudioLifecycle({
+    ...lifecycleDeps,
+    models,
+    preRollMs: VOICE_WAKE_WINDOW_MS,
+    maxUtteranceMs: 15_000,
+    createSilenceTicker: inertSilenceTicker,
+    onLocalVerificationScheduled: verification.onScheduled,
+    onWake: () => {
+      activations.push({ elapsedMs });
+    },
+    onTurn: (turn) => {
+      turn.pcm16k.fill(0);
+      return Promise.resolve();
+    },
+  });
+  let packetIndex = 0;
+  try {
+    while (elapsedMs < targetMs) {
+      const packet = packets[packetIndex % packets.length];
+      if (packet === undefined) {
+        throw new Error("Packet selection failed");
+      }
+      lifecycle.accept(audio(packet, packetIndex));
+      await verification.settle();
+      elapsedMs += 20;
+      packetIndex += 1;
+    }
+    lifecycle.finishInput();
+    await verification.settle();
+    await Bun.sleep(0);
+  } finally {
+    lifecycle.close();
+  }
+  return activations;
+}
+
+type RuntimeEvaluationInputs = {
+  readonly corpusDir: string;
+  readonly manifest: VoiceCorpusManifest;
+  readonly models: LocalVoiceModels;
+  readonly runSoak: boolean;
+  readonly lifecycleDeps: VoiceLifecycleDeps;
+};
+
+async function evaluateRuntime({
+  corpusDir,
+  manifest,
+  models,
+  runSoak,
+  lifecycleDeps,
+}: RuntimeEvaluationInputs): Promise<RuntimeCorpusEvaluation> {
   const clips: ClipEvaluation[] = [];
   for (const entry of manifest.entries) {
     const container = decodeDiscordOpusContainer(
@@ -304,7 +393,9 @@ async function evaluateRuntime(
         await Bun.file(path.join(corpusDir, entry.file)).arrayBuffer(),
       ),
     );
-    clips.push(await evaluateClip(models, entry, container.packets));
+    clips.push(
+      await evaluateClip(models, entry, container.packets, lifecycleDeps),
+    );
   }
   const byId = new Map(clips.map((result) => [result.id, result]));
   const clean = manifest.entries
@@ -355,7 +446,7 @@ async function evaluateRuntime(
     ).length,
     endpointViolations,
     twoHourNegativeSoakActivations: runSoak
-      ? await negativeSoak(corpusDir, models, manifest)
+      ? await negativeSoak(corpusDir, models, manifest, lifecycleDeps)
       : null,
   };
 }
@@ -364,33 +455,46 @@ export async function evaluateVoiceCorpus(options: {
   readonly corpusDir?: string;
   readonly assetsDir: string;
   readonly runSoak?: boolean;
+  /** Which wake phrase's corpus/assets to evaluate; defaults to streambot's. */
+  readonly phrase?: VoiceWakePhraseProfile;
 }): Promise<VoiceCorpusEvaluationReport> {
-  const corpusDir = options.corpusDir ?? DEFAULT_VOICE_CORPUS_DIR;
-  await verifyVoiceCorpus(corpusDir);
-  const manifest = await loadVoiceCorpusManifest(corpusDir);
+  const phrase = options.phrase ?? VOICE_WAKE_PHRASES["hey-streambot"];
+  const corpusDir = options.corpusDir ?? phrase.corpusDir;
+  await verifyVoiceCorpus(corpusDir, true, phrase.spec);
+  const manifest = await loadVoiceCorpusManifest(corpusDir, phrase.spec.format);
+  const streambotDeps = streambotVoiceLifecycleDeps();
+  // The metrics/observability ports are phrase-agnostic offline instrumentation; only the
+  // fragment-tail table is phrase-specific.
+  const lifecycleDeps: VoiceLifecycleDeps = {
+    ...streambotDeps,
+    fragmentTailMs: await phrase.loadFragmentTailMs(),
+  };
+  const assetManifest = phrase.assetManifest(options.assetsDir);
   const nativeModels = await initializeLocalVoiceModelsForRuntime(
-    options.assetsDir,
+    assetManifest,
     "native",
   );
   const wasmModels = await initializeLocalVoiceModelsForRuntime(
-    options.assetsDir,
+    assetManifest,
     "wasm",
   );
   let native: RuntimeCorpusEvaluation;
   let wasm: RuntimeCorpusEvaluation;
   try {
-    native = await evaluateRuntime(
+    native = await evaluateRuntime({
       corpusDir,
       manifest,
-      nativeModels,
-      options.runSoak ?? true,
-    );
-    wasm = await evaluateRuntime(
+      models: nativeModels,
+      runSoak: options.runSoak ?? true,
+      lifecycleDeps,
+    });
+    wasm = await evaluateRuntime({
       corpusDir,
       manifest,
-      wasmModels,
-      options.runSoak ?? true,
-    );
+      models: wasmModels,
+      runSoak: options.runSoak ?? true,
+      lifecycleDeps,
+    });
   } finally {
     await Promise.all([nativeModels.close(), wasmModels.close()]);
   }

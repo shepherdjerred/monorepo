@@ -53,25 +53,51 @@ function prevLineHasBlockScalar(lines: string[], i: number): boolean {
  * Check if a line is still in a block scalar (indented content)
  */
 function isBlockScalarContent(line: string, trimmed: string): boolean {
-  if (trimmed.length === 0) {
-    return false;
-  }
   return (
-    line.startsWith("  ") || line.startsWith("\t") || /^#\s{2,}/.test(line)
+    trimmed.length > 0 &&
+    (line.startsWith("  ") || line.startsWith("\t") || /^#\s{2,}/.test(line))
   );
 }
 
 /**
  * Check if a commented key value looks like it should be excluded
  */
-function isExcludedCommentedKey(keyValue: string): boolean {
+function isExcludedCommentedKey(
+  keyValue: string,
+  lines: string[],
+  lineIndex: number,
+  indent: string,
+): boolean {
   const isDocReference =
     /^ref:/i.test(keyValue) &&
     (keyValue.includes("http://") || keyValue.includes("https://"));
   const isURL =
     keyValue.trim().startsWith("http://") ||
     keyValue.trim().startsWith("https://");
-  return isDocReference || isURL;
+  if (isDocReference || isURL) return true;
+
+  const value = keyValue.slice(keyValue.indexOf(":") + 1).trim();
+  if (!value.startsWith("/")) return false;
+
+  // A run of commented absolute-path keys followed by a real key with the
+  // same indentation is a documented example (for example, cert/key paths
+  // followed by the active certificate value), not a set of defaults.
+  const keyNames = new Set<string>();
+  for (let i = lineIndex; i >= 0; i--) {
+    const line = lines[i] ?? "";
+    if (line.trim() === "") break;
+    const match = new RegExp(
+      String.raw`^${indent}#+\s*([\w.-]+):\s*(?:\S.*)?$`,
+    ).exec(line);
+    if (match?.[1] !== undefined) keyNames.add(match[1]);
+  }
+  for (let i = lineIndex + 1; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    if (line.trim() === "") break;
+    const match = new RegExp(String.raw`^${indent}([\w.-]+):`).exec(line);
+    if (match?.[1] !== undefined && keyNames.has(match[1])) return true;
+  }
+  return false;
 }
 
 /**
@@ -82,11 +108,16 @@ function isLikelyExample(lines: string[], i: number): boolean {
   const prevTrimmed = prevLine?.trim() ?? "";
   const prevIsCommentedKey = /^#+\s*[\w.-]+:\s/.test(prevTrimmed);
   const prevIsBlank = !prevTrimmed;
-  const prevIsListItem =
-    prevTrimmed.startsWith("#") && prevTrimmed.slice(1).trim().startsWith("-");
+  const prevIsListItem = /^#\s*-\s+[^-]/.test(prevTrimmed);
+  const prevIsHelmDocumentation = /^#+\s*--/.test(prevTrimmed);
+  const prevIsCommentSeparator = /^#+\s*$/.test(prevTrimmed);
 
   return (
-    (!prevIsBlank && !prevIsCommentedKey && prevTrimmed.startsWith("#")) ||
+    (!prevIsBlank &&
+      !prevIsCommentedKey &&
+      !prevIsHelmDocumentation &&
+      !prevIsCommentSeparator &&
+      prevTrimmed.startsWith("#")) ||
     prevIsListItem
   );
 }
@@ -107,10 +138,7 @@ function updateConsecutiveCount(
   if (prevIsCommentedKey) {
     return current + 1;
   }
-  if (!prevIsBlank) {
-    return 0;
-  }
-  return current;
+  return prevIsBlank ? current : 0;
 }
 
 /**
@@ -138,7 +166,7 @@ function tryUncommentLine(
   const keyPart = keyValue.split(":")[0]?.trim() ?? "";
   const isValidKey = /^[\w.-]+$/.test(keyPart);
 
-  if (!isValidKey || isExcludedCommentedKey(keyValue)) {
+  if (!isValidKey || isExcludedCommentedKey(keyValue, lines, i, indent)) {
     return {
       uncommented: null,
       newConsecutive: state.consecutiveCommentedKeys,
@@ -159,11 +187,9 @@ function tryUncommentLine(
       Math.abs(keyIndent - state.lastRealKeyIndent) <= 4 ||
       newConsecutive >= 2);
 
-  if (shouldUncomment) {
-    return { uncommented: `${indent}${keyValue}`, newConsecutive };
-  }
-
-  return { uncommented: null, newConsecutive };
+  return shouldUncomment
+    ? { uncommented: `${indent}${keyValue}`, newConsecutive }
+    : { uncommented: null, newConsecutive };
 }
 
 export function preprocessYAMLComments(yamlContent: string): string {

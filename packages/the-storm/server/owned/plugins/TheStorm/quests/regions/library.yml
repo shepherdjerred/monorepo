@@ -1,0 +1,93 @@
+# Walter's water study adapts a 2017 draft; Unshelved develops its archaeology thread.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  researching-infinite-water:
+    name: Researching Infinite Water
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements: []
+    text:
+      offer: An apprentice once asked how water appears in a spell. His notes survived, but the samples did not. Will you help me test his theory?
+      accept: Bring water, ice and mossy cobblestone. We will compare what each holds.
+      decline: The question has waited years. It can wait another day.
+      finish: The old theory was close. The missing ingredient was patience, not magic.
+      summary: Rebuild an apprentice water mage's experiment from the old Library notes.
+      questions: []
+    start: sources
+    stages:
+      sources:
+        journal: Bring Walter 5 water buckets, 16 ice and 6 mossy cobblestone.
+        waiting: Water, ice and moss-grown stone. Each remembers a different place.
+        complete: These samples match the apprentice's notes. Now I need lapis.
+        objectives:
+          - deliver walter 5 WATER_BUCKET
+          - deliver walter 16 ICE
+          - deliver walter 6 MOSSY_COBBLESTONE
+        onComplete: []
+        next: [{ to: lapis, when: [], label: none }]
+        timeLimit: none
+      lapis:
+        journal: Bring Walter 4 lapis blocks to finish the water study.
+        waiting: Four blocks of lapis will hold the pattern long enough.
+        complete: The pattern holds. I'll file the result with the old notes.
+        objectives:
+          - deliver walter 4 LAPIS_BLOCK
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 2
+      - reputation townsfolk 1
+
+  unshelved:
+    name: Unshelved
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 65
+    requirements:
+      - completed researching-infinite-water
+    text:
+      offer: A fragment tucked inside the water notes is older than this Library. The shape matches a pottery sherd from the ruins. Help me identify it.
+      accept: Bring a brush and one sherd with an angler mark. Handle them gently.
+      decline: Shelves are safer for mysteries than pockets.
+      finish: The mark points toward a buried chamber. I've copied it before returning the sherd.
+      summary: Use archaeology to identify a fragment hidden in Walter's notes.
+      questions: []
+    start: tools
+    stages:
+      tools:
+        journal: Bring Walter a brush and an angler pottery sherd.
+        waiting: A brush, and a sherd bearing the angler mark.
+        complete: The curves line up. We can preserve the drawing in a new book.
+        objectives:
+          - deliver walter 1 BRUSH
+          - deliver walter 1 ANGLER_POTTERY_SHERD
+        onComplete: []
+        next: [{ to: record, when: [], label: none }]
+        timeLimit: none
+      record:
+        journal: Bring Walter a book and an ink sac to record the sherd's mark.
+        waiting: We should make a copy before the trail goes cold.
+        complete: The fragment is recorded. When the chamber is found, the Library will be ready.
+        objectives:
+          - deliver walter 1 BOOK
+          - deliver walter 1 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 2
+      - reputation townsfolk 1
+      - give 1 ANGLER_POTTERY_SHERD

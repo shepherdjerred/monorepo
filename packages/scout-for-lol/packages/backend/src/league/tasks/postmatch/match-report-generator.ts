@@ -2,9 +2,6 @@ import { z } from "zod";
 import type {
   PlayerConfigEntry,
   MatchId,
-  CompletedMatch,
-  ArenaMatch,
-  ClassicMatch,
   QueueType,
   RawMatch,
   RawTimeline,
@@ -22,22 +19,19 @@ import {
   isClassicAssetMode,
   rankForQueue,
 } from "@scout-for-lol/data/index.ts";
-import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
-import { AttachmentBuilder, EmbedBuilder } from "discord.js";
-import {
-  matchToSvg,
-  arenaMatchToSvg,
-  classicMatchToSvg,
-  svgToPng,
-  setItemMissHandler,
-} from "@scout-for-lol/report";
-import { saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
+import type { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { matchLinkComponents } from "./match-report-components.ts";
+import { setItemMissHandler } from "@scout-for-lol/report";
+import { aiReviewAttachment, createMatchImage } from "./match-report-image.ts";
 import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
 import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
+import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
+import { shouldAttachMvpVotes } from "#src/mvp-votes/eligibility.ts";
+import { ensureMatchMvpContest } from "#src/mvp-votes/vote.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   saveMatchRankHistory,
@@ -97,67 +91,11 @@ function formatGameCompletionMessage(
   return `${allButLast}, and ${lastAlias} finished ${article} ${queueName} game`;
 }
 
-/** Create image attachments for Discord message */
-async function createMatchImage(
-  matchToRender: CompletedMatch | ArenaMatch | ClassicMatch,
-  matchId: MatchId,
-): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  let svgData: string;
-  if (matchToRender.queueType === "arena") {
-    svgData = await arenaMatchToSvg(matchToRender);
-  } else if ("mapName" in matchToRender) {
-    if (!isClassicQueueType(matchToRender.queueType)) {
-      throw new Error("Classic report model has a non-Classic queue type");
-    }
-    svgData = await classicMatchToSvg(matchToRender);
-  } else {
-    svgData = await matchToSvg(matchToRender, {
-      // Keep the new ranked banner/square designs local-only until the
-      // redesign is promoted.
-      enableRankedDesigns: configuration.environment === "dev",
-    });
-  }
-  const svg = z.string().parse(svgData);
-  const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
-
-  // Save both PNG and SVG to S3 (fire and forget)
-  const queueTypeForStorage =
-    matchToRender.queueType === "arena"
-      ? "arena"
-      : (matchToRender.queueType ?? "unknown");
-  const trackedPlayerAliases = matchToRender.players.map(
-    (p) => p.playerConfig.alias,
-  );
-  void (async () => {
-    try {
-      await Promise.all([
-        saveImageToS3(
-          matchId,
-          image,
-          queueTypeForStorage,
-          trackedPlayerAliases,
-        ),
-        saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases),
-      ]);
-    } catch (error) {
-      logger.error(`[createMatchImage] Failed to save images to S3:`, error);
-    }
-  })();
-
-  const attachmentName = `${matchId}.png`;
-  const attachment = new AttachmentBuilder(Buffer.from(image)).setName(
-    attachmentName,
-  );
-  const embed = new EmbedBuilder({
-    image: { url: `attachment://${attachmentName}` },
-  });
-  return [attachment, embed];
-}
-
 async function processClassicMatch(
   matchData: RawMatch,
   matchId: MatchId,
   playersInMatch: PlayerConfigEntry[],
+  prerenderedImage: Uint8Array | undefined,
 ): Promise<MessageCreateOptions | undefined> {
   logger.info(`[generateMatchReport] 🕰️ Processing as League Classic match`);
   const classicMatch = buildClassicMatch(matchData, playersInMatch);
@@ -170,7 +108,11 @@ async function processClassicMatch(
   let attachment: AttachmentBuilder;
   let embed: EmbedBuilder;
   try {
-    [attachment, embed] = await createMatchImage(classicMatch, matchId);
+    [attachment, embed] = await createMatchImage(
+      classicMatch,
+      matchId,
+      prerenderedImage,
+    );
   } catch (error) {
     classicAssetResolutionFailuresTotal.inc({
       phase: "postmatch",
@@ -184,6 +126,9 @@ async function processClassicMatch(
     });
     throw error;
   }
+  // No "View match" link: the Explore match page rejects Classic asset
+  // modes (isExploreMatchSnapshotSupported), so a button here would open
+  // "Match unavailable".
   return {
     content: formatGameCompletionMessage(
       classicMatch.players.map((player) => player.playerConfig.alias),
@@ -197,12 +142,18 @@ async function processClassicMatch(
 /**
  * Process arena match and generate Discord message
  */
+type ArenaMatchContext = {
+  players: Awaited<ReturnType<typeof getPlayer>>[];
+  matchData: RawMatch;
+  matchId: MatchId;
+  playersInMatch: PlayerConfigEntry[];
+  prerenderedImage: Uint8Array | undefined;
+};
+
 async function processArenaMatch(
-  players: Awaited<ReturnType<typeof getPlayer>>[],
-  matchData: RawMatch,
-  matchId: MatchId,
-  playersInMatch: PlayerConfigEntry[],
+  ctx: ArenaMatchContext,
 ): Promise<MessageCreateOptions | undefined> {
+  const { players, matchData, matchId, playersInMatch, prerenderedImage } = ctx;
   logger.info(`[generateMatchReport] 🎯 Processing as arena match`);
   const arenaMatch = toArenaMatch(players, matchData);
 
@@ -214,7 +165,11 @@ async function processArenaMatch(
   }
 
   // Create Discord message for arena
-  const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
+  const [attachment, embed] = await createMatchImage(
+    arenaMatch,
+    matchId,
+    prerenderedImage,
+  );
 
   // Generate completion message
   const playerAliases = playersInMatch.map((p) => p.alias);
@@ -223,6 +178,9 @@ async function processArenaMatch(
     arenaMatch.queueType,
   );
 
+  // No "View match" link: the Explore match page rejects Arena matches
+  // (isExploreMatchSnapshotSupported), so a button here would open
+  // "Match unavailable".
   return {
     content: completionMessage,
     files: [attachment],
@@ -239,6 +197,8 @@ type StandardMatchContext = {
   /** Guild IDs that will receive this match report - used for feature flag checks */
   targetGuildIds: DiscordGuildId[];
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
+  prerenderedImage?: Uint8Array | undefined;
+  omitMvpVotes?: boolean | undefined;
 };
 
 /**
@@ -255,6 +215,7 @@ async function processStandardMatch(
     timelineData,
     targetGuildIds,
     prefetchedRankChanges,
+    prerenderedImage,
   } = ctx;
   logger.info(`[generateMatchReport] ⚔️  Processing as standard match`);
   // Process match for all tracked players
@@ -334,6 +295,7 @@ async function processStandardMatch(
   const [matchReportAttachment, matchReportEmbed] = await createMatchImage(
     completedMatch,
     matchId,
+    prerenderedImage,
   );
 
   // Build files array - start with match report image
@@ -341,11 +303,7 @@ async function processStandardMatch(
 
   // Add AI-generated image if available
   if (reviewImage) {
-    const aiBuffer = Buffer.from(reviewImage);
-    const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName(
-      "ai-review.png",
-    );
-    files.push(aiImageAttachment);
+    files.push(aiReviewAttachment(reviewImage));
     logger.info(`[generateMatchReport] ✨ Added AI-generated image to message`);
   }
 
@@ -363,11 +321,27 @@ async function processStandardMatch(
       ? `${completionMessage}\n\n${reviewText}`
       : completionMessage;
 
-  return {
+  const message: MessageCreateOptions = {
     files: files,
     embeds: [matchReportEmbed],
     content: messageContent,
+    components: matchLinkComponents(matchId),
   };
+  if (
+    ctx.omitMvpVotes !== true &&
+    (await shouldAttachMvpVotes({
+      queueType: completedMatch.queueType,
+      targetGuildIds,
+      participants: matchData.info.participants,
+      trackedPuuids: playersInMatch.map(
+        (player) => player.league.leagueAccount.puuid,
+      ),
+    }))
+  ) {
+    await ensureMatchMvpContest(matchData);
+    return withMvpVoteFurniture(message, matchId);
+  }
+  return message;
 }
 
 /**
@@ -381,6 +355,16 @@ export type GenerateMatchReportOptions = {
   /** Player/rank data captured before Dare settlement. */
   prefetchedPlayers?: Player[] | undefined;
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
+  /** An already-rendered, verified report image; see `createMatchImage`. */
+  prerenderedImage?: Uint8Array | undefined;
+  /**
+   * Build the report without community-MVP vote controls, and so without
+   * creating the `MatchMvpContest` they vote into. For a report that will
+   * never be posted, where a contest would be orphaned: no message carries
+   * its buttons, so nobody can vote, yet anything counting contests would
+   * read it as real.
+   */
+  omitMvpVotes?: boolean | undefined;
 };
 
 export type GenerateMatchReportDependencies = {
@@ -456,6 +440,7 @@ export async function generateMatchReport(
         matchData,
         matchId,
         playersInMatch,
+        options.prerenderedImage,
       );
       if (result === undefined) {
         return undefined;
@@ -488,12 +473,13 @@ export async function generateMatchReport(
       matchData.info.queueId,
       matchData.info.gameMode,
     )
-      ? await dependencies.processArenaMatch(
+      ? await dependencies.processArenaMatch({
           players,
           matchData,
           matchId,
           playersInMatch,
-        )
+          prerenderedImage: options.prerenderedImage,
+        })
       : await dependencies.processStandardMatch({
           players,
           matchData,
@@ -504,6 +490,8 @@ export async function generateMatchReport(
           ...(options.prefetchedRankChanges === undefined
             ? {}
             : { prefetchedRankChanges: options.prefetchedRankChanges }),
+          prerenderedImage: options.prerenderedImage,
+          omitMvpVotes: options.omitMvpVotes,
         });
 
     if (result === undefined) {

@@ -33,11 +33,13 @@ type IntentAccount = { id: number } | undefined;
 type DareIntentTarget = { dareId: number; revision: number };
 
 /**
- * Narrow a stored payload to a dare payload, or `null` for a creation intent.
+ * Narrow a stored payload to a dare payload, or `null` for any other intent.
  *
- * Creation intents live on the same table and have their own confirm procedure
- * with its own gate and its own RBAC; this one must refuse them rather than
- * fall through to the contribute branch.
+ * Creation and operations intents live on the same table and have their own
+ * confirm procedures with their own gates and their own authorization; this one
+ * must refuse them rather than fall through to the contribute branch. The
+ * switch is exhaustive on purpose: a new arm on the shared union has to be
+ * classified here before it compiles.
  */
 function asDarePayload(
   payload: ConfirmationIntentPayload,
@@ -52,7 +54,13 @@ function asDarePayload(
     }
     case "report":
     case "subscription":
-    case "competition": {
+    case "competition":
+    case "ops_reconcile_pipeline":
+    case "ops_retry_notification":
+    case "ops_suppress_stale_notification":
+    case "ops_resolve_unknown_delivery":
+    case "ops_repair_projection":
+    case "ops_release_recovery_policy": {
       return null;
     }
   }

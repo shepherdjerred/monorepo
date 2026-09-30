@@ -1,7 +1,0 @@
-magnet:
-  enabled: true
-  radius: 2
-  perSweep: 10
-  blacklist:
-    - 500
-  maxPickupDelay: 40

@@ -14,8 +14,8 @@ worker.
 
 | Surface                 | Public host                     | Triggers                                     |
 | ----------------------- | ------------------------------- | -------------------------------------------- |
-| GitHub webhook receiver | `pr-bot.sjer.red`               | merge-conflict check, Buildkite build cancel |
-| Agent-task API          | `temporal-agent-tasks.sjer.red` | agent tasks (bearer-token)                   |
+| GitHub webhook receiver | `pr-bot.sjer.red`               | merge-conflict check, CI pipeline cancel     |
+| Agent-task/chat API     | `temporal-agent-tasks.sjer.red` | agent tasks and durable chats (bearer-token) |
 | Sleep webhook           | `temporal-sleep.sjer.red`       | sleep workflows (bearer-token)               |
 | Xcode Cloud webhook     | `xcode-cloud-webhook.sjer.red`  | iOS build failures → Alertmanager alerts     |
 
@@ -69,7 +69,7 @@ house, "eventually consistent" is not good enough.
 ## Redelivery is safe, but not uniformly
 
 What a redelivered webhook does depends on the target's workflow-ID policy. The
-merge-conflict check is keyed per PR and _supersedes_ an in-flight run; Buildkite
+merge-conflict check is keyed per PR and _supersedes_ an in-flight run; CI
 cancel is keyed by commit and no-ops a duplicate.
 
 Both are safe. They are not the same kind of safe, which is worth knowing before

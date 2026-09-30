@@ -3,17 +3,23 @@
  * target guild AND Scout is installed there." Mirrors the Discord-side
  * Discord command access is intentionally lightweight; management permissions
  * are enforced by the web UI's guild procedures.
+ *
+ * Both checks read application ports (`installed-guilds.ts` for installation,
+ * `postable-channels.ts` — over `bot-rest.ts` — for channels) rather than the
+ * gateway guild cache, so they answer the same way whether or not this pod
+ * holds a gateway connection.
  */
 
 import { TRPCError } from "@trpc/server";
-import { ChannelType } from "discord.js";
 import type { User } from "#generated/prisma/client/index.js";
+import type { DiscordGuildId } from "@scout-for-lol/data";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
+import { readGuildChannelPostability } from "#src/lib/discord/postable-channels.ts";
 import {
-  hasAdministrator,
-  isDevGuildOverrideGuild,
-} from "#src/lib/discord-rest.ts";
-import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
-import { client as discordClient } from "#src/discord/client.ts";
+  callDiscordForRequest,
+  fetchUserGuildsForRequest,
+} from "#src/trpc/discord-upstream.ts";
 
 export async function assertGuildAdmin(params: {
   user: User;
@@ -35,10 +41,10 @@ export async function assertGuildAdmin(params: {
       message: "Administrator permission required",
     });
   }
-  if (
-    !discordClient.guilds.cache.has(params.guildId) &&
-    !isDevGuildOverrideGuild(params.guildId)
-  ) {
+  const installed = await callDiscordForRequest(() =>
+    isScoutInstalledInGuild(params.guildId),
+  );
+  if (!installed) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Scout is not installed in that guild",
@@ -47,40 +53,47 @@ export async function assertGuildAdmin(params: {
 }
 
 /**
- * Verifies that `channelId` is a postable text/announcement channel inside
- * `guildId`. Without this, an admin of guild A could pass any channel ID
+ * Verifies that `channelId` is a channel inside `guildId` that Scout can
+ * actually post in. Without this, an admin of guild A could pass any channel ID
  * (even one belonging to guild B) into a subscription mutation and have
  * Scout's poll cycle later post into that foreign channel — `assertGuildAdmin`
  * alone is not enough because it only proves admin on the *requested* guild.
  *
- * Mirrors the filter in `guildRouter.listChannels` so mutations only accept
- * channels the picker would have offered.
+ * The postability question goes through the SAME code the picker's filter does
+ * ({@link readGuildChannelPostability}), rather than a second implementation of
+ * it. Claiming to mirror the picker while checking only the channel *type* is
+ * how this drifted: every mutation accepted channels the picker had refused on
+ * permissions, and the resulting subscription was created successfully and then
+ * never posted — a failure the user learns about by noticing nothing happens,
+ * at a point where nothing connects it to the channel they picked.
  */
-export function assertChannelInGuild(params: {
-  guildId: string;
+export async function assertChannelInGuild(params: {
+  guildId: DiscordGuildId;
   channelId: string;
-}): void {
-  const guild = discordClient.guilds.cache.get(params.guildId);
-  if (guild === undefined) {
+}): Promise<void> {
+  const guild = await callDiscordForRequest(() =>
+    readGuildChannelPostability(params.guildId),
+  );
+  if (guild === null) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Scout is not installed in that guild",
     });
   }
-  const channel = guild.channels.cache.get(params.channelId);
+  const channel = guild.channels.find(
+    (candidate) => candidate.id === params.channelId,
+  );
   if (channel === undefined) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: "Channel does not belong to that guild",
     });
   }
-  if (
-    channel.type !== ChannelType.GuildText &&
-    channel.type !== ChannelType.GuildAnnouncement
-  ) {
+  if (!guild.isPostable(channel)) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "Channel must be a text or announcement channel",
+      message:
+        "Scout cannot post in that channel. Pick a text or announcement channel where Scout has View Channel and Send Messages.",
     });
   }
 }

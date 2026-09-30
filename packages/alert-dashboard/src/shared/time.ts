@@ -49,3 +49,12 @@ export function addDuration(
 export function durationMilliseconds(from: bigint, to: bigint): number {
   return Number((to - from) / 1_000_000n);
 }
+
+/**
+ * The ops-model and ops-clients contracts take a JavaScript `Date`. This
+ * module is the package's one Temporal gateway, so it is the single place
+ * allowed to construct one.
+ */
+export function toContractDate(instant: Temporal.Instant): Date {
+  return new Date(instant.epochMilliseconds);
+}

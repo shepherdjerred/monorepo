@@ -73,6 +73,10 @@ export function redactSharedExploreTranscript(
     conversation: transcript.conversation,
     messages: transcript.messages.map((message) => ({
       ...message,
+      // A share link is public. The guilds a turn resolved its capabilities
+      // from are internal identifiers with no business on one, and this maps
+      // by spread, so a new column would reach the payload unless it is named.
+      guildIds: [],
       trace: message.trace.map((entry) => ({
         ...entry,
         rawInput: null,

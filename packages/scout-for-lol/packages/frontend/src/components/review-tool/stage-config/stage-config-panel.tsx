@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { Label } from "@scout-for-lol/design-system/components/label";
-import { Switch } from "@scout-for-lol/design-system/components/switch";
+import { Switch } from "@scout-for-lol/design-system/components/forms/switch";
 import type {
   ReviewTextStageConfig,
   StageConfig,
@@ -77,7 +77,7 @@ function getDefaultPrompts(stageName: PromptStageName): {
         user: IMAGE_DESCRIPTION_USER_PROMPT,
       };
     case "imageGeneration":
-      // Image generation uses a single OpenRouter image prompt.
+      // Image generation uses a single Gemini image prompt.
       return { user: IMAGE_GENERATION_USER_PROMPT };
   }
 }

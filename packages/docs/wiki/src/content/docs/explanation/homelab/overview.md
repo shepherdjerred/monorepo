@@ -12,9 +12,9 @@ services around them — and delivered by ArgoCD.
 ```mermaid
 flowchart LR
   accTitle: Homelab topology
-  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to ChartMuseum. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Buildkite step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress.
+  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to ChartMuseum. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Woodpecker step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress.
 
-  PR[Pull request] --> CI[Buildkite]
+  PR[Pull request] --> CI[Woodpecker CI]
   CI --> CM[ChartMuseum<br/>immutable charts]
   CM --> ARGO[ArgoCD]
   ARGO --> T[torvalds<br/>control plane + all prod]
@@ -31,7 +31,7 @@ home automation, monitoring, and the storage for every prod PVC. Its ZFS volumes
 are node-local, so prod stateful workloads cannot move.
 
 **liskov** is a CI-only worker (Ryzen 9950X), tainted `ci=only:NoSchedule` in its
-Talos machine config. Only Buildkite step pods, which also nodeSelector onto it,
+Talos machine config. Only CI step pods, which also nodeSelector onto it,
 and per-node system DaemonSets with tolerations run there.
 
 This is not a high-availability cluster and is not pretending to be. For prod
@@ -52,6 +52,27 @@ than pretending otherwise.
 
 GPU work (Intel i915 hardware acceleration) exists only on torvalds. liskov has
 no GPU workloads.
+
+## Memory is shared, not reserved for every possible peak
+
+Production workloads reserve their baseline memory and share spare RAM for bursts.
+Adding every application's independent peak would reserve memory that normally sits unused.
+Container limits bound selected bursty apps so one outlier cannot consume the whole pool.
+The [workload resource definitions](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/container-resources.test.ts) preserve these explicit decisions.
+
+Interactive games and Plex can reclaim reservations from the two background Glitter workers.
+They cannot preempt equal-priority normal services, including databases.
+The existing global service default remains non-preempting.
+The [priority classes](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/priority-classes.ts) define that boundary.
+
+Background work may wait, restart, or exhaust its existing finite retries during repeated pressure.
+That tradeoff favors a usable homelab over protecting every background occurrence.
+Priority influences node-pressure eviction; it does not guarantee protection from every OOM.
+The [Glitter deployments](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/workers/glitter-worker.ts) keep the existing shutdown and retry contracts.
+
+Host reservations and eviction floors still protect Talos, Kubernetes daemons, and ZFS memory.
+Available-memory alerts warn before pressure reaches those floors.
+Their sources are the [kubelet budget](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/talos/torvalds/patches/kubelet.yaml) and [production memory alerts](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring-production.ts).
 
 ## Typed infrastructure, not YAML
 
@@ -83,10 +104,12 @@ survive the next sync.
 Private services use a **Tailscale ingress** and are reachable only from the
 tailnet. Public services go through a **Cloudflare Tunnel**.
 
-Choosing tailnet-only is the default, and for some services the tailnet is the
-entire authorization model — see
-[the Scout evals trust boundary](/explanation/homelab/scout-evals-trust-boundary/)
-for what that implies.
+The Tailscale operator creates kernel-mode proxy pods in its own namespace.
+That namespace explicitly permits privileged pods; the cluster's baseline Pod
+Security default would otherwise reject newly created proxies.
+
+Choosing tailnet-only is the default, and the tailnet can serve as a service's
+authorization boundary.
 
 Funnel, which would publish a tailnet service to the public internet, is
 deliberately never configured.
@@ -108,7 +131,7 @@ orphan audit exists to make that visible.
 
 ## CI runs here, so the homelab is in the merge path
 
-Buildkite runs on liskov under [Kueue admission](/explanation/homelab/buildkite-admission/).
+CI runs on liskov under [Kueue admission](/explanation/homelab/ci-admission/).
 The Temporal worker also posts the required `ci/merge-conflict` status.
 
 That means the homelab being down blocks merging. It is a real coupling, and an
@@ -117,5 +140,5 @@ accepted one.
 ## Related
 
 - [Release safety](/explanation/homelab/release-safety/)
-- [Buildkite admission](/explanation/homelab/buildkite-admission/)
+- [CI admission](/explanation/homelab/ci-admission/)
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)

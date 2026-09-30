@@ -3,12 +3,13 @@ import {
   BucksDareV2StateSchema,
   OPEN_BUCKS_DARE_V2_STATES,
   type BucksDareV2State,
+  type BucksStake,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { stakeDareV2ContributionInTransaction } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import type { Db } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/dare-notification-outbox.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 
 const OPEN_DARE_STATES: ReadonlySet<BucksDareV2State> = new Set(
   OPEN_BUCKS_DARE_V2_STATES,
@@ -21,7 +22,7 @@ export async function contributeToDareV2InTransaction(
     revision: number;
     actorDiscordId: DiscordAccountId;
     bucksAccountId: number;
-    amount: number;
+    amount: BucksStake;
     now: Date;
   },
 ) {
@@ -67,14 +68,11 @@ export async function contributeToDareV2InTransaction(
     const beforeDeadline =
       state !== "active" ||
       (current.deadlineAt !== null && current.deadlineAt > input.now);
-    if (
-      beforeDeadline &&
+    return beforeDeadline &&
       OPEN_DARE_STATES.has(state) &&
       current.potTotal + input.amount > BUCKS_INT32_MAX
-    ) {
-      return { kind: "pot_full", potTotal: current.potTotal } as const;
-    }
-    return { kind: "too_late", dareState: state } as const;
+      ? ({ kind: "pot_full", potTotal: current.potTotal } as const)
+      : ({ kind: "too_late", dareState: state } as const);
   }
   const [targets, revision] = await Promise.all([
     tx.bucksDareV2Target.findMany({

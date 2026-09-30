@@ -125,10 +125,10 @@ function hideBodies(value: JsonValue): JsonValue {
 }
 
 function shouldHideBodyField(key: string, value: JsonValue): boolean {
-  if (!BODY_FIELD_PATTERN.test(key)) {
-    return false;
-  }
-  return key.toLowerCase() !== "error" || typeof value === "string";
+  return (
+    BODY_FIELD_PATTERN.test(key) &&
+    (key.toLowerCase() !== "error" || typeof value === "string")
+  );
 }
 
 export function inspectEvents(

@@ -1,16 +1,16 @@
 import { describe, expect, test } from "vitest";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import type {
   ScoutQlGroupSize,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import { groupGameLevelColumns } from "#src/reports/duckdb/execute.ts";
 import {
   aggregateFoldedGroups,
   foldGroupCombinations,
   type GroupFactRow,
 } from "#src/reports/group-combinations.ts";
-import type { PlanAggregateRow } from "#src/reports/plan-rows.ts";
+import type { PlanAggregateRow } from "#src/reports/query/plan-rows.ts";
 
 /**
  * Teammate-group folding and the JS aggregation that stands in for SQL on this

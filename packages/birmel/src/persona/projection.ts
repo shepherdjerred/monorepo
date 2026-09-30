@@ -1,12 +1,15 @@
 import { getStyleCard } from "@shepherdjerred/glitter-context";
 import { CONTEXT_BUDGETS } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 
+function toSingleLine(value: string): string {
+  return value.replaceAll(/\s*\n\s*/g, " ").trim();
+}
+
 function renderList(title: string, values: readonly string[], limit: number) {
   const selected = values.slice(0, limit);
-  if (selected.length === 0) {
-    return "";
-  }
-  return `${title}:\n${selected.map((value) => `- ${value}`).join("\n")}`;
+  return selected.length === 0
+    ? ""
+    : `${title}:\n${selected.map((value) => `- ${toSingleLine(value)}`).join("\n")}`;
 }
 
 function renderSummary(summary: string | string[]): string {

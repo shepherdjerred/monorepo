@@ -4,7 +4,6 @@ import {
   DeploymentStrategy,
   EnvValue,
   type ISecret,
-  Probe,
   Protocol,
   Secret,
   Service,
@@ -16,31 +15,54 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import versions, {
-  postgresImageDigests,
-} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { match } from "ts-pattern";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import {
+  addAnthropicFederation,
+  geminiApiKeyEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   applyZfsVolumeSelinuxRelabeling,
   zfsVolumeSelinuxLevels,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
-import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import {
+  createScoutGatewayDeployment,
+  SCOUT_DUCKDB_SCRATCH,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import { createScoutGatewayRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway-retirement-gate.ts";
+import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import {
+  gatewayTopologyRunsRole,
+  type ScoutGatewayTopology,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
-function requiredWeeklyParlaySecret(secret: ISecret | undefined): ISecret {
+function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
-    throw new Error("Beta Scout requires its weekly parlay secret.");
+    throw new Error("Beta Scout requires its Bryan Bucks control secret.");
   }
   return secret;
 }
 
-export function createScoutDeployment(chart: Chart, stage: Stage) {
+function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
+  if (secret === undefined) {
+    throw new Error("Beta Scout requires its voice OpenAI secret.");
+  }
+  return secret;
+}
+
+export function createScoutDeployment(
+  chart: Chart,
+  stage: Stage,
+  gatewayTopology: ScoutGatewayTopology,
+) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
@@ -80,7 +102,13 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
         cpuRequest: Cpu.millis(50),
-        memoryRequest: Size.gibibytes(2),
+        // 3Gi, up from 2Gi: beta is the only stage that loads the Hey Scout
+        // voice runtime (three sherpa int8 graphs, silero VAD, and the
+        // openWakeWord cascade) on top of the report lake. Sized from
+        // streambot's 2Gi request for a comparable pipeline plus Scout's
+        // existing baseline; re-tune from observed usage under a live session
+        // rather than guessing again.
+        memoryRequest: Size.gibibytes(3),
       };
     })
     .with("prod", () => {
@@ -101,57 +129,119 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       itemPath: path,
     },
   });
-  const weeklyParlaySecret =
+  // The vault item keeps its original name; only the Kubernetes secret and the
+  // environment variable follow the feature that still uses the credential.
+  const bryanBucksControlSecret =
     stage === "beta"
       ? Secret.fromSecretName(
           chart,
-          "scout-weekly-parlay-control-secret",
-          new OnePasswordItem(chart, "scout-weekly-parlay-control-1p", {
-            metadata: { name: "scout-weekly-parlay-control" },
+          "scout-bryan-bucks-control-secret",
+          new OnePasswordItem(chart, "scout-bryan-bucks-control-1p", {
+            metadata: { name: "scout-bryan-bucks-control" },
             spec: { itemPath: vaultItemPath("scout-weekly-parlay-control") },
+          }).name,
+        )
+      : undefined;
+  // Hey Scout's OpenAI Realtime credential. A dedicated item rather than a
+  // field on scout-for-lol-1p so it rotates on its own (OpenTofu mints it as
+  // the `scout-voice-2026-09` service account), and beta-only because
+  // production is hard-disabled for voice in code.
+  const voiceOpenAiSecret =
+    stage === "beta"
+      ? Secret.fromSecretName(
+          chart,
+          "scout-openai-secret",
+          new OnePasswordItem(chart, "scout-openai-1p", {
+            metadata: { name: "scout-openai" },
+            spec: { itemPath: vaultItemPath("scout-openai") },
           }).name,
         )
       : undefined;
   // PostgreSQL credentials secret generated by postgres-operator
   // ({username}.{cluster}.credentials...; see resources/postgres/scout-db.ts).
-  // DATABASE_URL is composed via K8s $(VAR) substitution, which only sees
-  // env vars defined EARLIER in the list — so ...dbEnv must be spread FIRST
-  // in baseEnvVariables (same load-bearing ordering as Bugsink).
+  // Scout is PostgreSQL-only: DATABASE_URL is composed via K8s $(VAR)
+  // substitution, which only sees env vars defined EARLIER in the list — so
+  // ...dbEnv must be spread FIRST in baseEnvVariables (same load-bearing
+  // ordering as Bugsink).
   const pgSecretRef = Secret.fromSecretName(
     chart,
     "scout-pg-secret-ref",
     `scout.scout-${stage}-postgresql.credentials.postgresql.acid.zalan.do`,
   );
-  const dbEnv: Record<string, EnvValue> = scoutImageUsesPostgres(
-    imageVersion,
-    postgresImageDigests,
-  )
-    ? {
-        DB_USER: EnvValue.fromSecretValue({
-          secret: pgSecretRef,
-          key: "username",
-        }),
-        DB_PASSWORD: EnvValue.fromSecretValue({
-          secret: pgSecretRef,
-          key: "password",
-        }),
-        DATABASE_URL: EnvValue.fromValue(
-          `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
-        ),
-      }
-    : {
-        // Older production pins remain on SQLite until a PostgreSQL-
-        // compatible image is promoted after the beta soak.
-        DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
-      };
+  const dbEnv: Record<string, EnvValue> = {
+    DB_USER: EnvValue.fromSecretValue({
+      secret: pgSecretRef,
+      key: "username",
+    }),
+    DB_PASSWORD: EnvValue.fromSecretValue({
+      secret: pgSecretRef,
+      key: "password",
+    }),
+    DATABASE_URL: EnvValue.fromValue(
+      `postgresql://$(DB_USER):$(DB_PASSWORD)@scout-${stage}-postgresql.scout-${stage}.svc.cluster.local:5432/scout`,
+    ),
+  };
 
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
-    // 24Gi: sized when the SQLite match DB lived here and filled the original
-    // 8Gi (2026-05). Still hosts the report lake plus the retained legacy
-    // /data/db.sqlite (importer source + rollback path for the Postgres
-    // migration); shrink only after the legacy file is deleted post-soak.
-    storage: Size.gibibytes(24),
+    // 48Gi: the retained legacy /data/db.sqlite is about 12Gi and a full
+    // report-lake rebuild writes a new snapshot beside the retained builds
+    // before garbage collection. 24Gi cannot provide that working headroom;
+    // shrink only after the legacy file is deleted post-soak.
+    storage: Size.gibibytes(48),
   });
+  const dataVolumeMount = {
+    path: "/data",
+    volume: Volume.fromPersistentVolumeClaim(
+      chart,
+      "scout-volume",
+      localPathVolume.claim,
+    ),
+  };
+  // Voice is a gateway-role capability: the table gives voiceAssistant and
+  // voiceStateAccess to `combined` and `gateway`, never to `application`. So on
+  // a split stage the credential follows the shard into scout-gateway, and this
+  // pod — which runs `application` — neither mounts nor needs it. On an unsplit
+  // stage the combined pod keeps it exactly as #2870 wired it.
+  const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
+  const voiceSecretMount =
+    stage === "beta"
+      ? {
+          path: "/run/secrets/scout-openai",
+          volume: Volume.fromSecret(
+            chart,
+            "scout-openai-volume",
+            requiredVoiceOpenAiSecret(voiceOpenAiSecret),
+            {
+              // Deliberately optional, not an oversight of the fail-fast
+              // secrets rule. The backend treats an absent credential as the
+              // designed `unconfigured` status reported at `/scout join`, and
+              // loads voice lazily rather than at boot. Requiring it would
+              // leave the pod unschedulable until the Secret exists — and
+              // since the split that is the pod holding the Discord shard, so
+              // a rotation would take every slash command down for the sake of
+              // a flag-gated feature. The full argument, with its sources in
+              // the backend, is on the test that pins this in
+              // scout-voice-boundary.test.ts.
+              optional: true,
+            },
+          ),
+        }
+      : undefined;
+  const scratchMount = {
+    path: SCOUT_DUCKDB_SCRATCH.path,
+    volume: Volume.fromEmptyDir(
+      chart,
+      "scout-duckdb-scratch",
+      "duckdb-scratch",
+      {
+        sizeLimit: SCOUT_DUCKDB_SCRATCH.sizeLimit,
+      },
+    ),
+  };
+  const volumeMounts =
+    voiceSecretMount !== undefined && !splitTopology
+      ? [dataVolumeMount, scratchMount, voiceSecretMount]
+      : [dataVolumeMount, scratchMount];
 
   const baseEnvVariables = {
     ...dbEnv,
@@ -186,9 +276,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     // TELEMETRY_ENABLED.
     TELEMETRY_ENABLED: EnvValue.fromValue("true"),
     TELEMETRY_SERVICE_NAME: EnvValue.fromValue("scout-backend"),
-    OTLP_ENDPOINT: EnvValue.fromValue(
-      "http://tempo.tempo.svc.cluster.local:4318",
-    ),
+    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
     TEMPORAL_ADDRESS: EnvValue.fromValue(
       "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
     ),
@@ -241,6 +329,17 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     // derived data on the same PVC as the legacy DB file; rebuilt from S3 by
     // the report-lake compaction crons.
     REPORT_LAKE_DIR: EnvValue.fromValue("/data/report-lake"),
+    // DuckDB for reports and Explore: generous on purpose, since both answer
+    // open questions over the whole lake. A query past memory_limit spills to
+    // the scratch volume (SCOUT_DUCKDB_SCRATCH) instead of failing. Only the
+    // pods that serve those queries get these explicitly so dev and worker
+    // processes can still choose their own resource budgets.
+    REPORT_DUCKDB_THREADS: EnvValue.fromValue("4"),
+    REPORT_DUCKDB_MEMORY_LIMIT: EnvValue.fromValue("3GB"),
+    REPORT_DUCKDB_TEMP_DIR: EnvValue.fromValue(SCOUT_DUCKDB_SCRATCH.path),
+    REPORT_DUCKDB_MAX_TEMP_SIZE: EnvValue.fromValue(
+      SCOUT_DUCKDB_SCRATCH.maxSpill,
+    ),
     JWT_SIGNING_SECRET: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
@@ -264,14 +363,24 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     ),
     LLM_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
     LLM_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
-    OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+    // Text inference from this stage's own OpenAI project. Voice has separate
+    // names (VOICE_OPENAI_API_KEY*) and a separate project, so the two cannot
+    // shadow each other.
+    OPENAI_API_KEY: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
-        "openrouter-api-key-secret",
+        "openai-api-key-secret",
         onePasswordItem.name,
       ),
-      key: "OPENROUTER_API_KEY",
+      key: "OPENAI_API_KEY",
     }),
+    // Gemini image generation runs only on beta; production has no Gemini
+    // project and must not carry a key it never uses.
+    ...(stage === "beta"
+      ? {
+          GEMINI_API_KEY: geminiApiKeyEnv(chart, "scout-beta"),
+        }
+      : {}),
   };
 
   // Beta keeps its operator-managed Explore preview allowlist. Production
@@ -280,8 +389,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     stage === "beta"
       ? {
           ...baseEnvVariables,
-          WEEKLY_PARLAY_CONTROL_TOKEN: EnvValue.fromSecretValue({
-            secret: requiredWeeklyParlaySecret(weeklyParlaySecret),
+          BRYAN_BUCKS_CONTROL_TOKEN: EnvValue.fromSecretValue({
+            secret: requiredBryanBucksControlSecret(bryanBucksControlSecret),
             key: "token",
           }),
           // Beta's entire access gate: sign in, and belong to one of these
@@ -290,6 +399,41 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           EXPLORE_GUILD_ALLOWLIST: EnvValue.fromValue("1337623164146155593"),
         }
       : baseEnvVariables;
+
+  // Hey Scout's credential and bootstrap surface. Activation itself is the
+  // `voice_assistant_enabled` Flipt flag and lives nowhere here: the backend
+  // loads its models lazily on first `/scout join`, so there is no env gate to
+  // duplicate the flag's authority. Production omits these because it has no
+  // voice credential and is hard-disabled for the flag in code.
+  //
+  // A Secret volume is updated in a running pod when 1Password populates the
+  // key. The lazy loader reads it on every attempt, so the credential handoff
+  // needs neither an unschedulable pod nor an imperative restart.
+  //
+  // Held separately from envVariables because these follow the shard: on a
+  // split stage they belong to scout-gateway, which is the process that
+  // actually runs `/scout join`.
+  const voiceEnvVariables: Record<string, EnvValue> =
+    stage === "beta"
+      ? {
+          VOICE_OPENAI_API_KEY_FILE: EnvValue.fromValue(
+            "/run/secrets/scout-openai/OPENAI_API_KEY",
+          ),
+          VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/scout/voice"),
+          VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
+        }
+      : {};
+
+  // A split stage runs this Deployment as the `application` role, with the
+  // Discord shard — and therefore voice — moved to scout-gateway. Every other
+  // stage stays on the combined role, which is what an unset SCOUT_RUNTIME_ROLE
+  // resolves to, so an unsplit stage's manifest is unchanged by the split.
+  const roleEnvVariables: Record<string, EnvValue> = splitTopology
+    ? {
+        ...envVariables,
+        SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
+      }
+    : { ...envVariables, ...voiceEnvVariables };
 
   deployment.addContainer(
     withCommonProps({
@@ -305,46 +449,26 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
-      // Stage-specific request-only baselines cover the observed 30d peaks.
+      // Keep stage-specific baselines; contain outliers instead of allowing
+      // one process to consume the node's shared burst memory.
       resources: {
         cpu: {
           request: cpuRequest,
         },
         memory: {
           request: memoryRequest,
+          limit: Size.gibibytes(8),
         },
       },
-      startup: Probe.fromHttpGet("/ping", {
-        port: 3000,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 240,
-      }),
-      liveness: Probe.fromHttpGet("/livez", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/healthz", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      volumeMounts: [
-        {
-          path: "/data",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "scout-volume",
-            localPathVolume.claim,
-          ),
-        },
-      ],
-      envVariables,
+      ...scoutRuntimeProbes(),
+      volumeMounts,
+      envVariables: roleEnvVariables,
     }),
   );
 
   applyZfsVolumeSelinuxRelabeling(deployment, selinuxLevel);
 
+  addAnthropicFederation(deployment, { workload: `scout-${stage}` });
   setRevisionHistoryLimit(deployment);
 
   // Create Service to expose metrics port
@@ -365,4 +489,30 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     name: `scout-${stage}`,
     matchLabels: { app: "scout", stage },
   });
+
+  // The gateway role shares this stage's claim and SELinux level by design;
+  // see createScoutGatewayDeployment for why that is safe for this role and
+  // not for activity-worker. The pin is already proven safe for a second pod
+  // above, before any of this stage's resources were built.
+  //
+  // Rendered while retiring as well as while split — at zero replicas, which is
+  // how the rollback retires the pod without an operator scaling it by hand.
+  // Retiring also renders the gate that holds the backend's return to
+  // `combined` until that pod has actually exited.
+  // The claim is still declared on a retiring Deployment; with no pod it is
+  // never mounted, so the read-only co-mount argument above is unaffected.
+  if (gatewayTopology !== "absent") {
+    createScoutGatewayDeployment(chart, stage, {
+      topology: gatewayTopology,
+      imageVersion,
+      envVariables: { ...envVariables, ...voiceEnvVariables },
+      claim: localPathVolume.claim,
+      selinuxLevel,
+      colocateWith: deployment,
+      voiceSecretMount,
+    });
+  }
+  if (gatewayTopology === "retiring") {
+    createScoutGatewayRetirementGate(chart, stage);
+  }
 }

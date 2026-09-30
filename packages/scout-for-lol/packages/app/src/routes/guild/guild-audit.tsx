@@ -1,0 +1,119 @@
+import { Loaded } from "@shepherdjerred/loaded";
+import { useParams } from "react-router";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTRPC } from "#src/lib/query/trpc.ts";
+import { DiscordUser } from "#src/components/discord-user.tsx";
+import { LoadMore } from "#src/components/chrome/load-more.tsx";
+import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@scout-for-lol/design-system/components/table";
+
+export function GuildAudit() {
+  const { guildId } = useParams();
+  const trpc = useTRPC();
+  const safeGuildId = guildId ?? "";
+  const query = useInfiniteQuery(
+    trpc.subscription.listAuditLog.infiniteQueryOptions(
+      { guildId: safeGuildId, limit: 50 },
+      {
+        enabled: guildId !== undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    ),
+  );
+  const auditValue = Loaded.fromQuery(query, ["guild.audit"]);
+  const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
+  // Audit actors aren't necessarily stored players, so resolve their names
+  // via the batch hook rather than relying on payload enrichment.
+  const names = useDiscordNames(rows.map((row) => row.actorDiscordId));
+
+  if (guildId === undefined) {
+    return (
+      <div>
+        <p className="text-sm text-scout-danger">Missing guild id</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold tracking-tight">Audit log</h2>
+
+      {auditValue.status === "loading" && (
+        <p className="text-sm text-scout-subtle">Loading…</p>
+      )}
+      {query.error && (
+        <p className="text-sm text-scout-danger">
+          Failed to load: {query.error.message}
+        </p>
+      )}
+
+      {query.data && rows.length === 0 && (
+        <p className="text-sm text-scout-subtle">No audit entries yet.</p>
+      )}
+
+      {query.data && rows.length > 0 && (
+        <div className="rounded-md border border-border">
+          <Table>
+            <caption className="sr-only">Subscription audit log</caption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>When</TableHead>
+                <TableHead>Actor</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Channel</TableHead>
+                <TableHead>Player</TableHead>
+                <TableHead>Account</TableHead>
+                <TableHead>Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell className="whitespace-nowrap text-scout-subtle">
+                    {new Date(row.createdAt).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    <DiscordUser
+                      id={row.actorDiscordId}
+                      name={names.resolve(row.actorDiscordId)}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{row.action}</TableCell>
+                  <TableCell className="font-mono text-xs text-scout-subtle">
+                    {row.targetChannelId ?? "—"}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-scout-subtle">
+                    {row.targetPlayerId ?? "—"}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-scout-subtle">
+                    {row.targetAccountId ?? "—"}
+                  </TableCell>
+                  <TableCell>
+                    <pre className="m-0 max-w-md overflow-x-auto rounded-sm bg-scout-hover p-2 text-xs">
+                      {JSON.stringify(row.payload, null, 2)}
+                    </pre>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <LoadMore
+        hasNextPage={query.hasNextPage}
+        isFetchingNextPage={query.isFetchingNextPage}
+        onLoadMore={() => {
+          void query.fetchNextPage();
+        }}
+      />
+    </div>
+  );
+}

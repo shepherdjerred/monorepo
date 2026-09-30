@@ -3,6 +3,8 @@ import {
   SourceSchema,
   sourceIdentity,
   sourceLabel,
+  withMode,
+  withSpoken,
 } from "@shepherdjerred/streambot/sources/source.ts";
 
 describe("SourceSchema", () => {
@@ -39,6 +41,82 @@ describe("SourceSchema", () => {
       SourceSchema.safeParse({ kind: "stream", url: "https://x.test" }).success,
     ).toBe(false);
   });
+
+  test("accepts a mode override on every variant", () => {
+    expect(
+      SourceSchema.parse({
+        kind: "file",
+        path: "/videos/a.mkv",
+        title: "a",
+        mode: "music",
+      }).mode,
+    ).toBe("music");
+    expect(
+      SourceSchema.parse({
+        kind: "url",
+        url: "https://youtu.be/abc",
+        mode: "video",
+      }).mode,
+    ).toBe("video");
+    expect(
+      SourceSchema.parse({ kind: "search", query: "lofi", mode: "auto" }).mode,
+    ).toBe("auto");
+  });
+
+  test("treats a missing mode as absent, so old persisted sources still parse", () => {
+    expect(
+      SourceSchema.parse({ kind: "url", url: "https://youtu.be/abc" }).mode,
+    ).toBeUndefined();
+  });
+
+  test("rejects a mode outside the enum", () => {
+    expect(
+      SourceSchema.safeParse({
+        kind: "url",
+        url: "https://youtu.be/abc",
+        mode: "audio",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("withMode", () => {
+  test("attaches a mode while preserving the discriminant and the other fields", () => {
+    expect(
+      withMode({ kind: "file", path: "/v/a.mkv", title: "Movie" }, "music"),
+    ).toEqual({
+      kind: "file",
+      path: "/v/a.mkv",
+      title: "Movie",
+      mode: "music",
+    });
+    expect(
+      withMode({ kind: "url", url: "https://youtu.be/abc" }, "video"),
+    ).toEqual({
+      kind: "url",
+      url: "https://youtu.be/abc",
+      mode: "video",
+    });
+    expect(withMode({ kind: "search", query: "lofi" }, "auto")).toEqual({
+      kind: "search",
+      query: "lofi",
+      mode: "auto",
+    });
+  });
+
+  test("clears the mode when given undefined, and keeps a subtitle preference intact", () => {
+    const source = withMode(
+      {
+        kind: "url",
+        url: "https://youtu.be/abc",
+        subtitles: { enabled: true },
+        mode: "music",
+      },
+      undefined,
+    );
+    expect(source.mode).toBeUndefined();
+    expect(source.subtitles).toEqual({ enabled: true });
+  });
 });
 
 describe("sourceLabel", () => {
@@ -72,6 +150,19 @@ describe("sourceIdentity", () => {
     expect(a).not.toBe(b);
   });
 
+  test("ignores the mode override (music-vs-video is a setting, not a different item)", () => {
+    const withoutMode = sourceIdentity({
+      kind: "url",
+      url: "https://youtu.be/abc",
+    });
+    const withModeSet = sourceIdentity({
+      kind: "url",
+      url: "https://youtu.be/abc",
+      mode: "music",
+    });
+    expect(withModeSet).toBe(withoutMode);
+  });
+
   test("ignores the per-request subtitle preference", () => {
     const withoutPref = sourceIdentity({
       kind: "file",
@@ -96,5 +187,15 @@ describe("sourceIdentity", () => {
     const urlId = sourceIdentity({ kind: "url", url: "https://x.test/x" });
     const searchId = sourceIdentity({ kind: "search", query: "x" });
     expect(new Set([fileId, urlId, searchId]).size).toBe(3);
+  });
+});
+
+describe("withSpoken", () => {
+  test("clears a stored spoken hint for a non-spoken play", () => {
+    const spoken = withSpoken(
+      { kind: "url", url: "https://youtu.be/abc", spoken: true },
+      undefined,
+    );
+    expect(spoken.spoken).toBeUndefined();
   });
 });

@@ -1,0 +1,607 @@
+# Owned by the repository; the plugin never writes it.
+# Townsfolk who give the quests under plugins/TheStorm/quests/. Their names
+# and voices come from the 2017 quests; the quests module puts the quest
+# conversations in their mouths, and the dialogues below are what they say
+# once there is nothing to do.
+#
+# PLACEHOLDER COORDINATES: every position below is a stand-in near spawn
+# until Spawn Town is rebuilt. Stand where an NPC belongs and run
+# `/npc here <id>` to get a block to paste, then `/npc reload`.
+#
+# Optional references are written as `none`, never left out.
+
+places: {}
+skins: {}
+schedules: {}
+
+dialogues:
+  marcus:
+    title: Marcus
+    start: greet
+    nodes:
+      greet:
+        text: The construction of the new rail is coming along nicely.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  martha:
+    title: Martha
+    start: greet
+    nodes:
+      greet:
+        text: The farm is doing great. Thanks again!
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  mason:
+    title: Mason
+    start: greet
+    nodes:
+      greet:
+        text: Hi. We're doing well, thanks to folk like you.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  stanley:
+    title: Stanley
+    start: greet
+    nodes:
+      greet:
+        text: Hello there. Long time no see!
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  bridge-hobo:
+    title: Bridge Hobo
+    start: greet
+    nodes:
+      greet:
+        text: Hey! Get away from my bridge! I'm trying to catch a fish...
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  walter:
+    title: Walter
+    start: greet
+    nodes:
+      greet:
+        text: Yes, yes, the study is coming along. Magic is patient work. You wouldn't understand.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  addison:
+    title: Addison
+    start: greet
+    nodes:
+      greet:
+        text: I finally sleep through the night. Mostly.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  iovita:
+    title: Iovita
+    start: greet
+    nodes:
+      greet:
+        text: Oh, it's you. You best stay out of the city for a while... for your own good.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  guard-captain:
+    title: The Guard Captain
+    start: greet
+    nodes:
+      greet:
+        text: Keep your blade sharp. The Watch always needs another pair of hands.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  edgar:
+    title: Edgar
+    start: greet
+    nodes:
+      greet:
+        text: It's so expensive to keep a hearth going through the night.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  alger:
+    title: Alger
+    start: greet
+    nodes:
+      greet:
+        text: The nether warp is right behind me. Mind the heat.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  cade:
+    title: Cade
+    start: greet
+    nodes:
+      greet:
+        text: Do you smell that? ...Never mind.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  oswin:
+    title: Oswin
+    start: greet
+    nodes:
+      greet:
+        text: My wife still talks about that fish.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  fergus:
+    title: Fergus
+    start: greet
+    nodes:
+      greet:
+        text: What? I don't know you. Never seen you before in my life.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  dorran:
+    title: Dorran
+    start: greet
+    nodes:
+      greet:
+        text: The South Mines are running again. Watch your step down there.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  lenox:
+    title: Lenox
+    start: greet
+    nodes:
+      greet:
+        text: My family made it through the winter. I won't forget it.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  leight:
+    title: Leight
+    start: greet
+    nodes:
+      greet:
+        text: Iron into gold, friend. Just ask me how.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  winston:
+    title: Winston
+    start: greet
+    nodes:
+      greet:
+        text: Isn't redstone amazing?
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  bobert:
+    title: Bobert
+    start: greet
+    nodes:
+      greet:
+        text: I don't feel so well...
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  anna:
+    title: Anna
+    start: greet
+    nodes:
+      greet:
+        text: Come back tomorrow for your next daily reward!
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  quest-board:
+    title: Quest Board
+    start: greet
+    nodes:
+      greet:
+        text: Nothing new on the board for you today. Check back tomorrow.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+
+npcs:
+  marcus:
+    name: Marcus · Rail Foreman
+    description: Building the mine rail
+    skin: vanilla:wide/kai
+    home:
+      {
+        world: minecraft:overworld,
+        x: -24.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: marcus
+    trainer: none
+  martha:
+    name: Martha · Farmer
+    description: Tends the wheat fields
+    skin: vanilla:slim/alex
+    home:
+      {
+        world: minecraft:overworld,
+        x: -18.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: martha
+    trainer: none
+  mason:
+    name: Mason · Refugee
+    description: Lost his home to the storm
+    skin: vanilla:wide/steve
+    home:
+      {
+        world: minecraft:overworld,
+        x: -12.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: mason
+    trainer: none
+  stanley:
+    name: Stanley · Tavern Regular
+    description: Having a bad day
+    skin: vanilla:wide/efe
+    home:
+      {
+        world: minecraft:overworld,
+        x: -6.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: stanley
+    trainer: none
+  bridge-hobo:
+    name: Bridge Hobo
+    description: Lives under the shops bridge
+    skin: vanilla:wide/noor
+    home:
+      {
+        world: minecraft:overworld,
+        x: 6.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: bridge-hobo
+    trainer: none
+  walter:
+    name: Walter · Wizard
+    description: Building a study
+    skin: vanilla:wide/ari
+    home:
+      {
+        world: minecraft:overworld,
+        x: 12.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: walter
+    trainer: none
+  addison:
+    name: Addison · Lodger
+    description: Upstairs at the tavern
+    skin: vanilla:slim/sunny
+    home:
+      {
+        world: minecraft:overworld,
+        x: 18.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: addison
+    trainer: none
+  iovita:
+    name: Iovita · Herbalist
+    description: Brews behind the tavern
+    skin: vanilla:slim/zuri
+    home:
+      {
+        world: minecraft:overworld,
+        x: 24.5,
+        y: 64.0,
+        z: 20.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: iovita
+    trainer: none
+  guard-captain:
+    name: The Guard Captain
+    description: Commands the Storm Watch
+    skin: vanilla:wide/steve
+    home:
+      {
+        world: minecraft:overworld,
+        x: -24.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver, guard]
+    schedule: none
+    dialogue: guard-captain
+    trainer: none
+  edgar:
+    name: Edgar · Townsfolk
+    description: Keeps a cold hearth
+    skin: vanilla:wide/makena
+    home:
+      {
+        world: minecraft:overworld,
+        x: -18.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: edgar
+    trainer: none
+  alger:
+    name: Alger · Warp Keeper
+    description: Minds the nether warp
+    skin: vanilla:wide/kai
+    home:
+      {
+        world: minecraft:overworld,
+        x: -12.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: alger
+    trainer: none
+  cade:
+    name: Cade · Townsfolk
+    description: Loves cheese a little too much
+    skin: vanilla:wide/efe
+    home:
+      {
+        world: minecraft:overworld,
+        x: -6.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: cade
+    trainer: none
+  oswin:
+    name: Oswin · Townsfolk
+    description: Brings bread home every day
+    skin: vanilla:wide/noor
+    home:
+      {
+        world: minecraft:overworld,
+        x: 6.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: oswin
+    trainer: none
+  fergus:
+    name: Fergus · Down on His Luck
+    description: A single parent, he says
+    skin: vanilla:wide/ari
+    home:
+      {
+        world: minecraft:overworld,
+        x: 12.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: fergus
+    trainer: none
+  dorran:
+    name: Dorran · Mine Foreman
+    description: Runs the South Mines
+    skin: vanilla:wide/makena
+    home:
+      {
+        world: minecraft:overworld,
+        x: 18.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: dorran
+    trainer: none
+  lenox:
+    name: Lenox · Townsfolk
+    description: Worried about the winter
+    skin: vanilla:wide/zuri
+    home:
+      {
+        world: minecraft:overworld,
+        x: 24.5,
+        y: 64.0,
+        z: 28.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: lenox
+    trainer: none
+  leight:
+    name: Leight · Alchemist
+    description: Turns iron into gold, he claims
+    skin: vanilla:wide/steve
+    home:
+      {
+        world: minecraft:overworld,
+        x: -24.5,
+        y: 64.0,
+        z: 36.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: leight
+    trainer: none
+  winston:
+    name: Winston · Inventor
+    description: By the florist, on the arena path
+    skin: vanilla:wide/efe
+    home:
+      {
+        world: minecraft:overworld,
+        x: -18.5,
+        y: 64.0,
+        z: 36.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: winston
+    trainer: none
+  bobert:
+    name: Bobert · Outside the Bakery
+    description: Has a sweet tooth
+    skin: vanilla:wide/kai
+    home:
+      {
+        world: minecraft:overworld,
+        x: -12.5,
+        y: 64.0,
+        z: 36.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: bobert
+    trainer: none
+  anna:
+    name: Anna · Daily Rewards
+    description: Thanks you for logging in
+    skin: vanilla:slim/alex
+    home:
+      {
+        world: minecraft:overworld,
+        x: -6.5,
+        y: 64.0,
+        z: 36.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-giver]
+    schedule: none
+    dialogue: anna
+    trainer: none
+  quest-board:
+    name: Tamsin · Quest Board
+    description: Daily and weekly work
+    skin: vanilla:slim/sunny
+    home:
+      {
+        world: minecraft:overworld,
+        x: 6.5,
+        y: 64.0,
+        z: 36.5,
+        yaw: 180.0,
+        pitch: 0.0,
+      }
+    pose: standing
+    roles: [quest-board]
+    schedule: none
+    dialogue: quest-board
+    trainer: none

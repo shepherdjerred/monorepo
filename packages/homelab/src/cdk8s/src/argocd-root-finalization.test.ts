@@ -3,6 +3,16 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { SyncInfoEntrySchema } from "./argocd-script-support.ts";
+
+const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
+const ARGOCD_SCRIPT = path.join(PACKAGE_ROOT, "scripts/argocd/argocd.ts");
+const RELEASE_RESULT_FILE = "homelab-release-result.json";
+const ReleaseReceiptSchema = z.object({
+  outcome: z.string(),
+  requestId: z.string(),
+  revision: z.string(),
+});
 
 const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const RELEASE_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
@@ -14,25 +24,6 @@ const PRUNE_PHASE_INFO = {
   name: "ci.sjer.red/release-phase",
   value: "prune",
 } as const;
-
-const SyncInfoEntrySchema = z.discriminatedUnion("name", [
-  z.object({
-    name: z.literal("ci.sjer.red/request-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/operation-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/revision"),
-    value: z.string(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/release-phase"),
-    value: z.enum(["stage", "batch", "prune", "child"]),
-  }),
-]);
 
 const SyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
@@ -71,7 +62,7 @@ function operationForRootSyncRequest(
   const syncRequest = RootSyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       prune: syncRequest.prune,
       ...(syncRequest.revision === undefined
@@ -177,7 +168,7 @@ function operationForSyncRequest(request: unknown): Record<string, unknown> {
   const syncRequest = SyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       ...(syncRequest.manifests === undefined
         ? {}
@@ -193,6 +184,9 @@ function releaseOperationInfo(phase: "batch" | "prune") {
     { name: "ci.sjer.red/operation-id", value: RELEASE_OPERATION_ID },
     { name: "ci.sjer.red/revision", value: "2.0.0-43" },
     { name: "ci.sjer.red/release-phase", value: phase },
+    ...(phase === "prune"
+      ? [{ name: "ci.sjer.red/prune-candidates", value: "[]" }]
+      : []),
   ];
 }
 
@@ -201,7 +195,7 @@ test("root release finalization requires exact revision and request identity", a
     [
       "bun",
       "--no-install",
-      "scripts/argocd.ts",
+      "scripts/argocd/argocd.ts",
       "finalize-root-release",
       "apps",
       "--revision",
@@ -345,7 +339,7 @@ test("root release finalization applies every exact wave before accepting a part
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",
@@ -541,7 +535,7 @@ for (const clusterScoped of [
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "finalize-root-release",
           "apps",
           "--revision",
@@ -695,7 +689,7 @@ test("root release finalization adopts the exact active prune without another PO
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",
@@ -734,7 +728,7 @@ test("root release finalization adopts the exact active prune without another PO
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",
@@ -858,7 +852,7 @@ test("release-root resumes at a live later phase instead of restaging", async ()
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        ARGOCD_SCRIPT,
         "release-root",
         "apps",
         expectedPath,
@@ -870,7 +864,11 @@ test("release-root resumes at a live later phase instead of restaging", async ()
         "1",
       ],
       {
-        cwd: path.resolve(import.meta.dir, "../../.."),
+        // This is the only spawn here that completes a real release, so it is
+        // the only one that writes the release receipt. The receipt path is
+        // relative to the working directory, so the release runs from the
+        // scratch directory and the script is addressed absolutely.
+        cwd: directory,
         env: {
           ...Bun.env,
           ARGOCD_POLL_INTERVAL_MS: "5",
@@ -897,6 +895,17 @@ test("release-root resumes at a live later phase instead of restaging", async ()
     expect(stdout).not.toContain("stage-root-release");
     expect(syncPosts).toBe(0);
     expect(deleteRequests).toBe(1);
+    const receipt = ReleaseReceiptSchema.parse(
+      await Bun.file(path.join(directory, RELEASE_RESULT_FILE)).json(),
+    );
+    expect(receipt.outcome).toBe("applied-verified");
+    expect(receipt.requestId).toBe(RELEASE_REQUEST_ID);
+    expect(receipt.revision).toBe("2.0.0-43");
+    // The receipt belongs to the directory the release was driven from. A test
+    // must never leave one behind in the package root of a working tree.
+    expect(
+      await Bun.file(path.join(PACKAGE_ROOT, RELEASE_RESULT_FILE)).exists(),
+    ).toBe(false);
   } finally {
     await server.stop(true);
     await rm(directory, { recursive: true, force: true });
@@ -908,7 +917,7 @@ test("root release finalization refuses a batch selecting another namespace", as
   // rendered revision never declares, so it is a different target.
   const activeOperation = {
     info: releaseOperationInfo("batch"),
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       prune: false,
       resources: [
@@ -982,7 +991,7 @@ test("root release finalization refuses a batch selecting another namespace", as
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",

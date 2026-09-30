@@ -213,20 +213,19 @@ function structuredMovementDecision(
   const tap = /^tap:([a-z]+)$/u.exec(action);
   if (tap !== null) {
     const argument = tap[1];
-    if (argument === undefined || !DIRECTIONAL_ARGUMENTS.has(argument)) {
-      return false;
-    }
-    return structured.fieldContext;
+    return (
+      argument !== undefined &&
+      DIRECTIONAL_ARGUMENTS.has(argument) &&
+      structured.fieldContext
+    );
   }
-  if (
-    action === "interact" ||
-    action === "advance" ||
-    action === "chord:raw" ||
-    action.startsWith("wait:")
-  ) {
-    return false;
-  }
-  return undefined;
+  return (
+    action !== "interact" &&
+    action !== "advance" &&
+    action !== "chord:raw" &&
+    !action.startsWith("wait:") &&
+    undefined
+  );
 }
 
 function fieldContext(value: unknown): boolean | undefined {
@@ -276,8 +275,9 @@ function movementPosition(value: unknown): MovementPosition | undefined {
     (position.mapGroup !== undefined && position.mapNum !== undefined
       ? `${String(position.mapGroup)}:${String(position.mapNum)}`
       : undefined);
-  if (map === undefined) return undefined;
-  return { map: String(map), x: position.x, y: position.y };
+  return map === undefined
+    ? undefined
+    : { map: String(map), x: position.x, y: position.y };
 }
 
 function legacyLocations(output: string): MovementPosition[] {

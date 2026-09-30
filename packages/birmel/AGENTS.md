@@ -6,16 +6,28 @@ the architecture and capability surface.
 ## Turn and authority boundaries
 
 - The only turn pipeline is admission and restart-safe `AgentRun` dedup,
-  `ContextBundle`, capability-grounded routing, at most one specialist, one
-  edited Discord reply, then curated memory extraction.
+  `ContextBundle`, one agent with every registered tool, one edited Discord
+  reply, then curated memory extraction. There is no pre-flight router: the
+  agent may change approach mid-turn, and that is the point.
 - Only configured trusted users may trigger the bot or any tool. Guild, channel,
   and actor identity come from `RequestContext`, never model arguments.
-- The router returns one of `conversation`, `supported`, or `unsupported`.
-  Supported routes name a registered primary tool owned by that specialist.
-- One source message gets one placeholder and one final edit. Source-channel
-  tools must not send a second final response.
+- The agent reports `conversation`, `supported`, or `unsupported` as an outcome
+  when the turn ends, never as an up-front classification. Missing capability is
+  an honest limitation, not a safety refusal.
+- There is no grounded-answer gate. The agent used to restate which tool calls
+  it relied on so a check could verify them, but the runtime already records
+  every call and its outcome, so a model omitting that field was indistinguishable
+  from one lying - and turns whose work had demonstrably succeeded were failed
+  and their results discarded. Honesty about tool outcomes is a prompt rule now
+  (`CORE_SYSTEM_POLICY`), not an enforced one. Do not reintroduce a check that
+  makes the model restate what the runtime already knows.
+- One source message gets one reply, and that reply ends on the answer. The
+  runtime may edit it while the turn runs to show progress; those edits are
+  coalesced, must never persist, and a failed progress edit must not fail the
+  turn. Source-channel tools must not send a second response.
 - Keep stable tool IDs and Zod schemas. Validate model-facing tool results.
-  Missing capability is an honest limitation, not a fabricated safety refusal.
+  Tool metadata and the executable registry must stay identical; startup calls
+  `getCapabilityCatalog` and refuses to boot on a mismatch.
 
 ## Context, memory, and jobs
 
@@ -48,6 +60,6 @@ bun run docker:build
 bun run smoke
 ```
 
-Disconnect Prisma in test teardown. Routine tests use fake Discord, model, and
-browser boundaries. Production delivery uses the existing homelab image and
-ArgoCD path; verify live behavior separately.
+Routine tests use fake Discord, model, and browser boundaries. Production
+delivery uses the existing homelab image and ArgoCD path; verify live behavior
+separately.

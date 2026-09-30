@@ -439,10 +439,9 @@ export function resolveRunDirectory(
   run: string,
   stateDirectory?: string,
 ): string {
-  if (path.isAbsolute(run) || run.includes(path.sep)) {
-    return path.resolve(run);
-  }
-  return path.join(resolveStateDirectory(stateDirectory), run);
+  return path.isAbsolute(run) || run.includes(path.sep)
+    ? path.resolve(run)
+    : path.join(resolveStateDirectory(stateDirectory), run);
 }
 
 export async function readRunManifest(

@@ -215,9 +215,17 @@ export class WebRtcConnWrapper {
     return this._mediaConn;
   }
 
-  public sendAudioFrame(frame: Buffer, frametime: number) {
-    if (!this.ready) return;
-    if (!this._audioPacketizer) return;
+  /**
+   * @returns whether the frame reached the transport. `false` means it was dropped on the floor:
+   *   the peer connection is not connected yet, or no audio packetizer is installed (the join did
+   *   not ask for `receiveAudio`/`sendAudio`, see {@link ../Streamer.js VoiceJoinOptions}). Both
+   *   are silent failures from the sender's point of view — the pacer keeps feeding frames at
+   *   realtime and playback reports a clean end — so callers that own a whole track should treat a
+   *   run of `false` as a failed segment rather than as playback.
+   */
+  public sendAudioFrame(frame: Buffer, frametime: number): boolean {
+    if (!this.ready) return false;
+    if (!this._audioPacketizer) return false;
     const { rtpConfig } = this._audioPacketizer;
     const { clockRate } = rtpConfig;
     const daveSession = this.mediaConnection.daveSession;
@@ -234,6 +242,7 @@ export class WebRtcConnWrapper {
       frametime,
       clockRate,
     );
+    return true;
   }
 
   public setAudioPacketizer(): void {

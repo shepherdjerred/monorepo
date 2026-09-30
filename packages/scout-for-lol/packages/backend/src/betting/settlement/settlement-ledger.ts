@@ -1,11 +1,17 @@
 import {
   DiscordGuildIdSchema,
+  amountToStake,
+  creditOf,
+  stakeToAmount,
+  subtractAmounts,
+  type BucksDelta,
   type BucksLedgerContext,
+  type BucksPoolTotal,
   type BucksPoolParticipant,
   type BucksVoidReason,
 } from "@scout-for-lol/data";
-import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
-import { transferHouseCut } from "#src/betting/house.ts";
+import { HOUSE_CUT_PERCENT } from "#src/betting/eligibility/house-cut.ts";
+import { transferHouseCut } from "#src/betting/eligibility/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import type { Db } from "#src/database/index.ts";
@@ -17,8 +23,10 @@ type CreditBetInput = {
   roster: readonly BucksPoolParticipant[];
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
-  winnersPool: number;
-  losersPool: number;
+  // Pool-level aggregates: unbounded multi-bettor sums, matching the
+  // `BucksPoolTotal` fields in the persisted settlement ledger context.
+  winnersPool: BucksPoolTotal;
+  losersPool: BucksPoolTotal;
 };
 
 type PayoutComponent = "gross" | "principal" | "profit" | "refund";
@@ -61,7 +69,7 @@ function settlementLedgerContext(
     grossPayout: bet.grossPayout,
     houseCut: bet.houseCut,
     netPayout: bet.payout,
-    submittedStake: bet.submittedStake,
+    submittedStake: stakeToAmount(bet.submittedStake),
     matchedStake: bet.matchedStake,
     unmatchedStake: bet.unmatchedStake,
     payoutComponent,
@@ -72,7 +80,7 @@ function settlementLedgerContext(
 async function creditSettlementPayout(
   tx: Db,
   input: CreditBetInput,
-  delta: number,
+  delta: BucksDelta,
   payoutComponent: PayoutComponent,
 ): Promise<void> {
   await applyBucksDelta(tx, {
@@ -92,7 +100,7 @@ async function transferWinnerFee(tx: Db, input: CreditBetInput): Promise<void> {
   await transferHouseCut(tx, {
     serverId: DiscordGuildIdSchema.parse(input.serverId),
     bucksAccountId: bet.bucksAccountId,
-    amount: bet.houseCut,
+    amount: amountToStake(bet.houseCut),
     kind: "winner_fee",
     matchId: input.matchId,
     betId: bet.betId,
@@ -100,8 +108,10 @@ async function transferWinnerFee(tx: Db, input: CreditBetInput): Promise<void> {
       type: "house_fee",
       source: "settlement",
       ratePercent: HOUSE_CUT_PERCENT,
-      grossAmount: bet.matchedStake,
-      fee: bet.houseCut,
+      // Both are positive on this path: the fee transfer only runs for a
+      // fee-paying winner, whose matched profit equals matched stake.
+      grossAmount: amountToStake(bet.matchedStake),
+      fee: amountToStake(bet.houseCut),
       basis: "matched_profit",
     },
   });
@@ -120,7 +130,7 @@ export async function creditBet(tx: Db, input: CreditBetInput): Promise<void> {
     await creditSettlementPayout(
       tx,
       input,
-      bet.grossPayout,
+      creditOf(bet.grossPayout),
       bet.refunded ? "refund" : "gross",
     );
     return;
@@ -130,11 +140,16 @@ export async function creditBet(tx: Db, input: CreditBetInput): Promise<void> {
   // gross credit would overflow temporarily. Principal funds the fee, then
   // profit lands after that debit. The two payout rows still sum to the stored
   // gross payout and make the ordering explicit in the ledger context.
-  const grossProfit = bet.grossPayout - bet.matchedStake;
-  if (grossProfit <= 0) {
+  const grossProfit = subtractAmounts(bet.grossPayout, bet.matchedStake);
+  if (grossProfit === 0) {
     throw new Error("A Bryan Bucks winner fee requires positive gross profit");
   }
-  await creditSettlementPayout(tx, input, bet.matchedStake, "principal");
+  await creditSettlementPayout(
+    tx,
+    input,
+    creditOf(bet.matchedStake),
+    "principal",
+  );
   await transferWinnerFee(tx, input);
-  await creditSettlementPayout(tx, input, grossProfit, "profit");
+  await creditSettlementPayout(tx, input, creditOf(grossProfit), "profit");
 }

@@ -352,6 +352,44 @@ const GET_CATEGORIES_QUERY = `
   }
 `;
 
+const DeleteTransactionResponseSchema = z.object({
+  deleteTransaction: z.object({
+    deleted: z.boolean(),
+    errors: z.array(PayloadErrorSchema).nullable(),
+  }),
+});
+
+export type DeleteTransactionResponse = z.infer<
+  typeof DeleteTransactionResponseSchema
+>;
+
+const DELETE_TRANSACTION_MUTATION = `
+  mutation Common_DeleteTransactionMutation($input: DeleteTransactionMutationInput!) {
+    deleteTransaction(input: $input) {
+      deleted
+      errors {
+        fieldErrors {
+          field
+          messages
+        }
+        message
+        code
+      }
+    }
+  }
+`;
+
+export async function deleteTransactionMutation(
+  transactionId: string,
+): Promise<DeleteTransactionResponse> {
+  return gqlRequest(
+    "Common_DeleteTransactionMutation",
+    DELETE_TRANSACTION_MUTATION,
+    { input: { transactionId } },
+    DeleteTransactionResponseSchema,
+  );
+}
+
 const UPDATE_TRANSACTION_MUTATION = `
   mutation Web_TransactionDrawerUpdateTransaction($input: UpdateTransactionMutationInput!) {
     updateTransaction(input: $input) {

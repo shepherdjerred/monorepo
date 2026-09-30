@@ -10,12 +10,12 @@ import {
   type ChannelStateManifest,
   type CorpusObservation,
   type CurrentMessage,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import {
   mergeCurrentProjection,
   projectionChecksum,
   serializeProjection,
-} from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus-projection.ts";
 import {
   loadStateManifest,
   readOverlapTraversal,

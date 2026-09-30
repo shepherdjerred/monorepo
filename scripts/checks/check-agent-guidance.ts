@@ -29,7 +29,7 @@ const ROOT_AGENT_MAX_LINES = 200;
 const ROOT_AGENT_MAX_BYTES = 16 * 1024;
 const SKILL_MAX_LINES = 160;
 const SKILL_MAX_BYTES = 12 * 1024;
-const CATALOG_MAX_BYTES = 8 * 1024;
+const CATALOG_MAX_BYTES = 24 * 1024;
 const PERSONAL_AGENT_PATH = "packages/dotfiles/AGENTS.md";
 const PERSONAL_SKILLS_PATH = "packages/dotfiles/dot_agents/skills";
 const gitPath = path.posix;
@@ -51,8 +51,8 @@ const CURSOR_ADAPTER_CONTENT =
   "---\ndescription: Use the canonical personal and repository agent guidance\nalwaysApply: true\n---\n\n" +
   "Follow `~/AGENTS.md`, then the nearest repository `AGENTS.md`. Load matching\nskills from `.agents/skills`; do not duplicate their instructions here.";
 const REQUIRED_SOURCE_ADAPTERS = new Map([
-  ["packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
-  ["packages/dotfiles/dot_claude/symlink_skills", "../.agents/skills"],
+  ["packages/dotfiles/private_dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
+  ["packages/dotfiles/private_dot_claude/symlink_skills", "../.agents/skills"],
   ["packages/dotfiles/private_dot_codex/symlink_AGENTS.md", "../AGENTS.md"],
   [GEMINI_SOURCE_ADAPTER_PATH, "../AGENTS.md"],
   [
@@ -95,8 +95,8 @@ function catalogRoot(entryPath: string): string | undefined {
   const marker = "/.agents/skills/";
   if (entryPath.startsWith(".agents/skills/")) return ".agents/skills";
   const index = entryPath.indexOf(marker);
-  if (index === -1) return undefined;
-  return entryPath.slice(0, index + marker.length - 1);
+  const end = index + marker.length - 1;
+  return index === -1 ? undefined : entryPath.slice(0, end);
 }
 function parseSkillFrontmatter(
   entry: GuidanceEntry,

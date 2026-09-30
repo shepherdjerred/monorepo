@@ -1,4 +1,4 @@
-import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/editor/scoutql-idioms.ts";
 
 /**
  * The one ScoutQL authoring guide, shared verbatim by both agents.

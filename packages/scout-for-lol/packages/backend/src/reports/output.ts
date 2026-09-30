@@ -4,7 +4,7 @@ import {
   type ReportRenderSpec,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { planResultColumns } from "#src/reports/plan-columns.ts";
+import { planResultColumns } from "#src/reports/query/plan-columns.ts";
 import {
   analyticsChartToImage,
   visualizationSnapshotToImage,
@@ -12,7 +12,7 @@ import {
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-types.ts";
+} from "#src/reports/query/query-types.ts";
 import {
   formatRankedLabel,
   resolveMentionCount,
@@ -63,8 +63,9 @@ function renderReportOutputSync(
   if (snapshotOutput !== null) return snapshotOutput;
   if (render.kind === "BAR_CHART") return renderBarChart(params, render);
   if (render.kind === "LINE_CHART") return renderLineChart(params, render);
-  if ("encoding" in render) return renderAnalyticsChart(params, render);
-  return renderTextOutput(params, render);
+  return "encoding" in render
+    ? renderAnalyticsChart(params, render)
+    : renderTextOutput(params, render);
 }
 
 function renderSnapshotOutput(
@@ -152,8 +153,19 @@ function formatTextReport(
     return `**${title}**\nNo rows matched this report.`;
   }
 
+  const labelColumn = planResultColumns(result.plan, result.columns).find(
+    (column) => column.key === "label",
+  );
+  const formatLabel = (row: ReportResultRow) =>
+    labelColumn === undefined
+      ? row.label
+      : formatReportDisplayValue(labelColumn, row.label);
+
   if (render.kind === "TABLE") {
-    return appendThinDataNote(result, `**${title}**\n${formatTable(result)}`);
+    return appendThinDataNote(
+      result,
+      `**${title}**\n${formatTable(result, formatLabel)}`,
+    );
   }
 
   if (render.kind === "LIST") {
@@ -161,7 +173,8 @@ function formatTextReport(
       result,
       `**${title}**\n${result.rows
         .map(
-          (row, index) => `- ${row.label}: ${formatValues(result, row, index)}`,
+          (row, index) =>
+            `- ${formatLabel(row)}: ${formatValues(result, row, index)}`,
         )
         .join("\n")}`,
     );
@@ -177,7 +190,7 @@ function formatTextReport(
       .map(
         (row, index) =>
           `${(index + 1).toString()}. ${formatRankedLabel({
-            label: row.label,
+            label: formatLabel(row),
             index,
             mentionIdentity: row.mentionIdentity,
             ...(mentions.playerDiscordIds === undefined
@@ -190,7 +203,10 @@ function formatTextReport(
   );
 }
 
-function formatTable(result: ReportQueryResult): string {
+function formatTable(
+  result: ReportQueryResult,
+  formatLabel: (row: ReportResultRow) => string,
+): string {
   const columns = planResultColumns(result.plan, result.columns);
   const header = columns.map((column) => column.label).join(" | ");
   const separator = columns.map(() => "---").join(" | ");
@@ -199,7 +215,7 @@ function formatTable(result: ReportQueryResult): string {
       columns
         .map((column) => {
           if (column.key === "label") {
-            return row.label;
+            return formatLabel(row);
           }
           const value = row.values.find(
             (entry) => entry.column === column.key,

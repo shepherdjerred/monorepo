@@ -1,0 +1,36 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Herdr plugins live in ~/.config/herdr/plugins, which herdr owns at runtime and
+# chezmoi does not manage. Pin the install here so the keybindings in
+# private_dot_config/private_herdr/private_config.toml always have a
+# plugin behind them. `herdr plugin install` writes the plugin tree and fetches
+# its prebuilt binaries directly; it does not go through the herdr server, so
+# this runs before a session exists.
+annotate_repo="plannotator/herdr-annotate"
+annotate_ref="7c8f5a177b8285dc56efc471ef04f7ab44a2b4b6"
+
+# `herdr plugin list` prints the resolved source as
+# `github:<owner>/<repo>@<commit>`. Reinstalling is safe but re-downloads both
+# binaries, so skip when the pinned commit is already the installed one. Capture
+# the listing first: piping it into `grep -q` under `pipefail` fails the whole
+# pipeline, because grep exits on the first match and herdr takes a SIGPIPE.
+installed_plugins="$(herdr plugin list)"
+
+# The stage plugin was linked in place from this repo. Deleting its source
+# leaves herdr's own registration under ~/.config/herdr/plugins pointing at a
+# manifest that no longer exists, and .chezmoiremove only reaches the helper
+# binaries in $HOME. Unlink it wherever that registration survives.
+if [[ $installed_plugins == *"jerred.herdr-stage"* ]]; then
+  herdr plugin unlink jerred.herdr-stage
+  installed_plugins="$(herdr plugin list)"
+fi
+
+if [[ $installed_plugins == *"github:${annotate_repo}@${annotate_ref}"* ]]; then
+  printf 'Herdr Annotate already installed at %s\n' "$annotate_ref"
+else
+  herdr plugin install "$annotate_repo" --ref "$annotate_ref" --yes
+fi
+{{- end -}}

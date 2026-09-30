@@ -1,9 +1,9 @@
 import { Button } from "@scout-for-lol/design-system/components/button";
-import type { ExtraChoice } from "#src/lib/onboarding-steps.ts";
+import type { ExtraChoice } from "#src/lib/onboarding/onboarding-steps.ts";
 import {
   COMPETITION_EXAMPLES,
   REPORT_EXAMPLES,
-} from "#src/lib/onboarding-examples.ts";
+} from "#src/lib/onboarding/onboarding-examples.ts";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 
 type Option = {

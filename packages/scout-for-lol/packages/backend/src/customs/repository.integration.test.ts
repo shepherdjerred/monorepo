@@ -15,7 +15,7 @@ import {
 } from "#src/customs/repository.ts";
 import { clearCustomsTestData } from "#src/customs/test-database.ts";
 import { anonymizeCustomParticipant } from "#src/customs/anonymize.ts";
-import { expireCustomNightsInDatabase } from "#src/customs/expiry.ts";
+import { expireCustomNightsInDatabase } from "#src/customs/game/expiry.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 
 const { prisma: testPrisma } = createTestDatabase("customs-repository");

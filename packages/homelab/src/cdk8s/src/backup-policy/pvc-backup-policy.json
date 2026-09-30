@@ -18,52 +18,58 @@
     "reason": "Bugsink PostgreSQL database"
   },
   {
+    "namespace": "woodpecker",
+    "name": "pgdata-woodpecker-postgresql-0",
+    "backup": "enabled",
+    "reason": "Woodpecker CI database - pipeline history and the last-green-main record the release lanes read back"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-bun-cache",
+    "backup": "disabled",
+    "reason": "Disposable CI package cache - rebuildable from the lockfile"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-bun-cache-control",
+    "backup": "disabled",
+    "reason": "Lock file only - coordination state for the bun cache collector"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-uv-cache",
+    "backup": "disabled",
+    "reason": "Disposable CI package cache - rebuildable from the lockfile"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-tofu-plugin-cache",
+    "backup": "disabled",
+    "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
+  },
+  {
+    "namespace": "phoenix",
+    "name": "pgdata-phoenix-postgresql-0",
+    "backup": "enabled",
+    "reason": "Phoenix users, API keys, datasets, annotations, and sampled LLM traces"
+  },
+  {
     "namespace": "buildkitd",
     "name": "buildkitd-cache-liskov",
     "backup": "disabled",
     "reason": "Rebuildable BuildKit cache"
   },
   {
-    "namespace": "buildkite",
-    "name": "buildkite-bun-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable Bun package cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-bun-cache-control",
-    "backup": "disabled",
-    "reason": "Disposable Bun cache coordination locks"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-codex-auth",
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-codex-auth",
     "backup": "disabled",
     "reason": "Refreshable ChatGPT-managed Codex credential bundle"
   },
   {
-    "namespace": "buildkite",
-    "name": "buildkite-git-mirrors-liskov",
-    "backup": "disabled",
-    "reason": "Rebuildable Git mirror cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-tofu-plugin-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable OpenTofu plugin cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-trivy-db",
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-trivy-db",
     "backup": "disabled",
     "reason": "Rebuildable vulnerability database cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-uv-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable Python package cache"
   },
   {
     "namespace": "chartmuseum",
@@ -243,7 +249,13 @@
     "namespace": "minecraft-sjerred",
     "name": "datadir-minecraft-sjerred-0",
     "backup": "enabled",
-    "reason": "Selected Minecraft world"
+    "reason": "Retained pre-RLCraft Minecraft world rollback volume"
+  },
+  {
+    "namespace": "minecraft-sjerred",
+    "name": "minecraft-sjerred-rlcraft-data",
+    "backup": "enabled",
+    "reason": "Active RLCraft server world and mod data"
   },
   {
     "namespace": "minecraft-tsmc",
@@ -394,12 +406,6 @@
     "name": "syncthing-data",
     "backup": "disabled",
     "reason": "Replicated Syncthing bulk data"
-  },
-  {
-    "namespace": "scout-evals",
-    "name": "scout-evals-data",
-    "backup": "enabled",
-    "reason": "Scout review evals SQLite \u2014 human ratings live only here"
   },
   {
     "namespace": "tasknotes",

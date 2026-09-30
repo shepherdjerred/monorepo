@@ -5,7 +5,6 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import configuration from "#src/configuration.ts";
 import { getDashboardUrl } from "#src/discord/commands/links.ts";
 import { prisma } from "#src/database/index.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
@@ -49,7 +48,7 @@ function renderStatus(
       embed: new EmbedBuilder()
         .setTitle("Duel lobby ready")
         .setDescription(
-          `Game ${payload.gameNumber.toString()} is ready. Assigned players can reveal the code in the [Scout web app](${path}).`,
+          `Game ${payload.gameNumber.toString()} is ready. Either participant can create an ordinary custom lobby; Scout Client will observe it. See the [Scout web app](${path}) for the rules.`,
         )
         .setColor(0x57_f2_87),
       users: [],
@@ -91,9 +90,7 @@ export async function deliverDuelStatusOutbox(): Promise<void> {
   const deliveryErrors: unknown[] = [];
   for (const row of rows) {
     const guildId = DiscordGuildIdSchema.parse(row.guildId);
-    if (
-      !(await duelRolloutAllowed(prisma, guildId, configuration.environment))
-    ) {
+    if (!(await duelRolloutAllowed(guildId))) {
       await prisma.duelStatusOutbox.update({
         where: { id: row.id },
         data: {

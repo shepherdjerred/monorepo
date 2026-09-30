@@ -64,6 +64,12 @@ export async function runAgentJobNow(options: {
   if (existing == null) {
     return { success: false, message: "Agent job not found or unavailable" };
   }
+  if (existing.lastStatus === "unsupported_tool") {
+    return {
+      success: false,
+      message: "Replace the unsupported job payload before running this job",
+    };
+  }
   if (hasAmbiguousAgentJobEffect(existing.lastStatus)) {
     return {
       success: false,

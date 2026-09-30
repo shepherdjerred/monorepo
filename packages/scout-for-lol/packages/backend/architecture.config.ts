@@ -31,6 +31,19 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * only test files should use, but dependency-cruiser cruises a `.test.ts` like
  * any other module, so a rule forbidding it would forbid the tests that are
  * supposed to use it.
+ *
+ * `runtime/` has no rule of its own, and that is the decision rather than an
+ * omission. It is the composition root: it selects the process's runtime role
+ * and starts the subsystems that role declares, so it necessarily reaches into
+ * nearly every layer, and a `from: "runtime"` rule could only list layers it
+ * happens not to touch today. What matters is the other direction — nothing may
+ * depend on the composition root, because a module that can ask which role it
+ * is running under can grow behaviour the capability table does not describe.
+ * Listing it in `layers` is what enforces that: every rule below is written as
+ * `everythingExcept(...)`, so a new layer is forbidden by each of them the
+ * moment it is named here. The role *vocabulary* lives in `configuration/`
+ * instead, where the leaf rule already keeps it importable by anyone and
+ * dependent on nothing.
  */
 
 /** Every directory directly under `src/`. Adding one here covers every rule below. */
@@ -42,19 +55,24 @@ const layers = [
   "configuration",
   "database",
   "discord",
+  "durable",
   "explore",
   "http",
   "league",
   "lib",
   "metrics",
+  "mvp-votes",
   "observability",
+  "operations",
   "report-lake",
   "report-store",
   "reports",
+  "runtime",
   "showcase",
   "sound-engine",
   "storage",
   "testing",
+  "tips",
   "trpc",
   "utils",
   "voice",
@@ -159,6 +177,22 @@ export default defineArchitecture({
       ),
     },
     {
+      name: "durable-services-take-their-dependencies-as-arguments",
+      comment:
+        "`durable/` holds the typed match services the v1 pipeline calls: they run an injected " +
+        "operation and record what it did in the durable tables, whose repositories and row " +
+        "codecs sit under `database/durable/`. Every feature they coordinate — settlement, " +
+        "progression, delivery, workflow starts — arrives as a callback, so the layer stays " +
+        "callable from a Temporal Activity, a backfill script or a test without dragging a " +
+        "Discord client or a Riot fetcher in behind it. Importing a feature slice directly is " +
+        "what would end that, so only the persistence and metric layers are reachable from " +
+        "here. Note the name is about durability, not about the `application` RUNTIME ROLE in " +
+        "`configuration/runtime-role.ts`: these services run under whichever role executes the " +
+        "write, which is usually a worker.",
+      from: "durable",
+      to: everythingExcept("durable", "database", "metrics"),
+    },
+    {
       name: "analytics-reads-the-database-and-nothing-else",
       comment:
         "`analytics/` answers questions about stored data. Keeping it to the database means an " +
@@ -176,9 +210,9 @@ export default defineArchitecture({
     {
       name: "http-is-limited-to-its-endpoint-adapters",
       comment:
-        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI and weekly " +
-        "parlay endpoints. Those adapters are its complete direct application surface; a new " +
-        "feature or repository must join tRPC or be introduced explicitly as an HTTP endpoint.",
+        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI and Bryan " +
+        "Bucks analytics endpoints. Those adapters are its complete direct application surface; " +
+        "a new feature or repository must join tRPC or be introduced explicitly as an HTTP endpoint.",
       from: "http",
       to: everythingExcept(
         "http",

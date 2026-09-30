@@ -9,13 +9,11 @@ import {
   Search,
 } from "lucide-react";
 import {
-  isLowSampleGameCount,
-  formatReportDisplayValue,
   type ReportResultColumn,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { Input } from "@scout-for-lol/design-system/components/field";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import {
   Table,
   TableBody,
@@ -24,30 +22,16 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { tableToCsv, downloadCsv } from "#src/lib/table-export.ts";
-
-// Accepts both the AI preview rows (non-null values) and the live tRPC preview
-// rows, whose values are nullable when a column is absent for a row.
-type PreviewRow = {
-  label: string;
-  games?: number | undefined;
-  values: {
-    column: string;
-    value: string | number | null;
-    comparisonValue?: string | number | null;
-    absoluteDelta?: number | null;
-    percentageDelta?: number | null;
-  }[];
-};
-
-type PreviewEvidence = {
-  label: string;
-  games: number;
-  values: {
-    column: string;
-    sampleSize: number;
-  }[];
-};
+import { tableToCsv, downloadCsv } from "#src/lib/reports/table-export.ts";
+import {
+  formatCell,
+  hasThinRateRows,
+  reportRowForFollowUp,
+  reportRowSortValue,
+  ReportAssetIcon,
+  type PreviewEvidence,
+  type PreviewRow,
+} from "#src/components/report/report-result-table-helpers.tsx";
 
 export function ReportResultTable(props: {
   columns: ReportResultColumn[];
@@ -118,17 +102,21 @@ export function ReportResultTable(props: {
     }
 
     if (sortColumn !== null) {
+      const column = props.columns.find((entry) => entry.key === sortColumn);
+      if (column === undefined) return result;
       result = [...result].sort((a, b) => {
-        const valA =
-          sortColumn === "label"
-            ? a.row.label
-            : (a.row.values.find((e) => e.column === sortColumn)?.value ??
-              null);
-        const valB =
-          sortColumn === "label"
-            ? b.row.label
-            : (b.row.values.find((e) => e.column === sortColumn)?.value ??
-              null);
+        const valA = reportRowSortValue(
+          column,
+          a.row,
+          props.evidence?.[a.originalIndex],
+          hasGamesColumn,
+        );
+        const valB = reportRowSortValue(
+          column,
+          b.row,
+          props.evidence?.[b.originalIndex],
+          hasGamesColumn,
+        );
 
         if (valA === null) return 1;
         if (valB === null) return -1;
@@ -306,7 +294,9 @@ export function ReportResultTable(props: {
                     props.onRowClick === undefined
                       ? undefined
                       : () => {
-                          props.onRowClick?.(row);
+                          props.onRowClick?.(
+                            reportRowForFollowUp(props.columns, row),
+                          );
                         }
                   }
                   className={
@@ -322,6 +312,26 @@ export function ReportResultTable(props: {
                       props.evidence?.[originalIndex],
                       hasGamesColumn,
                     );
+                    const rawValue =
+                      column.key === "label"
+                        ? row.label
+                        : row.values.find(
+                            (entry) => entry.column === column.key,
+                          )?.value;
+                    const renderedValue =
+                      rawValue !== undefined &&
+                      rawValue !== null &&
+                      column.asset !== undefined ? (
+                        <span className="inline-flex items-center gap-2">
+                          <ReportAssetIcon
+                            kind={column.asset}
+                            value={rawValue}
+                          />
+                          <span>{cellValue}</span>
+                        </span>
+                      ) : (
+                        cellValue
+                      );
                     return (
                       <TableCell
                         key={column.key}
@@ -333,17 +343,19 @@ export function ReportResultTable(props: {
                         column.key === "label" ? (
                           <button
                             type="button"
-                            aria-label={`Explore ${row.label}`}
+                            aria-label={`Explore ${reportRowForFollowUp(props.columns, row).label}`}
                             className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scout-accent"
                             onClick={(event) => {
                               event.stopPropagation();
-                              props.onRowClick?.(row);
+                              props.onRowClick?.(
+                                reportRowForFollowUp(props.columns, row),
+                              );
                             }}
                           >
-                            {cellValue}
+                            {renderedValue}
                           </button>
                         ) : (
-                          cellValue
+                          renderedValue
                         )}
                       </TableCell>
                     );
@@ -426,60 +438,5 @@ export function sparklineSegments(values: (number | null)[]): string[] {
       throw new Error("A one-point sparkline segment is missing its point.");
     }
     return `${onlyPoint} ${onlyPoint}`;
-  });
-}
-
-function formatCell(
-  column: ReportResultColumn,
-  row: PreviewRow,
-  evidenceRow: PreviewEvidence | undefined,
-  hasGamesColumn: boolean,
-): string {
-  if (column.key === "label") {
-    return row.label;
-  }
-  const result = row.values.find((entry) => entry.column === column.key);
-  if (result?.value === undefined || result.value === null) return "—";
-  const details: string[] = [];
-  const games = evidenceRow?.games ?? row.games;
-  const isIdentifier =
-    column.key.endsWith("_id") ||
-    column.key === "id" ||
-    column.key === "key" ||
-    column.key === "slug";
-  if (
-    !hasGamesColumn &&
-    !isIdentifier &&
-    games !== undefined &&
-    column.key !== "games"
-  ) {
-    details.push(`Based on ${games.toString()} games`);
-  }
-  if (result.absoluteDelta !== undefined && result.absoluteDelta !== null) {
-    details.push(`Δ ${formatReportDisplayValue(column, result.absoluteDelta)}`);
-  }
-  if (result.percentageDelta !== undefined) {
-    details.push(
-      result.percentageDelta === null
-        ? "Δ% unknown"
-        : `Δ ${(result.percentageDelta * 100).toFixed(1)}%`,
-    );
-  }
-  const suffix = details.length === 0 ? "" : ` (${details.join(" · ")})`;
-  return `${formatReportDisplayValue(column, result.value)}${suffix}`;
-}
-
-function hasThinRateRows(
-  columns: ReportResultColumn[],
-  rows: PreviewRow[],
-  evidence: PreviewEvidence[] | undefined,
-): boolean {
-  return rows.some((row, rowIndex) => {
-    const games = evidence?.[rowIndex]?.games ?? row.games;
-    return (
-      games !== undefined &&
-      isLowSampleGameCount(games) &&
-      columns.some((column) => column.format === "percent")
-    );
   });
 }

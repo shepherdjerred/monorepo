@@ -1,0 +1,82 @@
+# The 2014 harbour spawn was lost with the old world. These stories recover
+# its working life without placing the vanished docks in the reset world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  nets-and-knots:
+    name: Nets and Knots
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 25
+    requirements: []
+    text:
+      offer: The old harbour kept spare nets for anyone who needed a meal. The docks are gone, but I'd like to keep that custom alive.
+      accept: Catch a few fish and bring string for a new net.
+      decline: The river will still be here tomorrow.
+      finish: That's a good net. I'll leave it where the next fisher can find it.
+      summary: Help Oswin revive a custom from the old harbour.
+      questions: []
+    start: catch
+    stages:
+      catch:
+        journal: Catch 3 fish in the main world and bring Oswin 12 string.
+        waiting: A net is only useful when somebody knows the water.
+        complete: The knots hold. I'll show the next fisher how to mend them.
+        objectives:
+          - fish 3 any
+          - deliver oswin 12 STRING
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 350
+      - points 1
+      - reputation townsfolk 1
+
+  harbour-lights:
+    name: Harbour Lights
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed nets-and-knots
+    text:
+      offer: On dark nights the old harbour lights brought every boat home. We can hang new lights by the river and remember those who built the docks.
+      accept: Bring lanterns and copper. Stanley remembers the old harbour bell; ask him how it sounded.
+      decline: A light can wait, but a story fades.
+      finish: The lights are ready. Even without the old docks, the river has a welcome.
+      summary: Recreate the old harbour's welcome lights by the river.
+      questions: []
+    start: memory
+    stages:
+      memory:
+        journal: Ask Stanley what he remembers of the old harbour bell.
+        waiting: Stanley was there when the docks were busy.
+        complete: He remembers the bell more clearly than the boats.
+        objectives:
+          - talk stanley
+        onComplete: []
+        next: [{ to: lights, when: [], label: none }]
+        timeLimit: none
+      lights:
+        journal: Bring Oswin 8 lanterns and 16 copper ingots for the new river lights.
+        waiting: Copper will weather well, and the lanterns will show the bank.
+        complete: We'll hang these before dusk.
+        objectives:
+          - deliver oswin 8 LANTERN
+          - deliver oswin 16 COPPER_INGOT
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

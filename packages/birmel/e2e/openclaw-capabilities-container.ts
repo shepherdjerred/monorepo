@@ -56,9 +56,6 @@ function startMockServer() {
           { headers: { "content-type": "text/html" } },
         );
       }
-      if (url.pathname === "/profiles") {
-        return Response.json([{ name: "birmel-e2e" }]);
-      }
       if (url.pathname === "/profiles/birmel-e2e/start") {
         return Response.json({ instanceId: "instance-1" });
       }
@@ -66,12 +63,10 @@ function startMockServer() {
         return Response.json({ tabId: "tab-1" });
       }
       if (url.pathname === "/instances/instance-1/tabs") {
-        return Response.json([
-          { id: "tab-1", url: "http://localhost:9867/page" },
-        ]);
+        return Response.json([{ id: "tab-1", url: "https://example.com/" }]);
       }
       if (url.pathname === "/tabs/tab-1/navigate") {
-        return Response.json({ ok: true, url: "http://localhost:9867/page" });
+        return Response.json({ ok: true, url: "https://example.com/" });
       }
       if (url.pathname === "/tabs/tab-1/text") {
         return Response.json({ text: "mock body text" });
@@ -79,16 +74,12 @@ function startMockServer() {
       if (url.pathname === "/tabs/tab-1/snapshot") {
         return Response.json({ text: "mock snapshot text" });
       }
-      if (url.pathname === "/tabs/tab-1/cookies") {
-        return Response.json([{ name: "session", value: "readonly" }]);
-      }
       if (url.pathname === "/tabs/tab-1/action") {
         return Response.json({ ok: true });
       }
-      if (url.pathname === "/tabs/tab-1/close") {
-        return Response.json({ ok: true });
-      }
-      return new Response("not found", { status: 404 });
+      return url.pathname === "/tabs/tab-1/close"
+        ? Response.json({ ok: true })
+        : new Response("not found", { status: 404 });
     },
   });
 }
@@ -147,14 +138,9 @@ async function setupPhase(): Promise<void> {
     },
     async () => {
       expectSuccess(
-        await browserTool.execute({ action: "start", profile: "birmel-e2e" }),
-        "pinchtab start",
-      );
-      expectSuccess(
         await browserTool.execute({
           action: "open",
-          instanceId: "instance-1",
-          url: "http://localhost:9867/page",
+          url: "https://example.com/",
         }),
         "pinchtab open",
       );
@@ -162,7 +148,7 @@ async function setupPhase(): Promise<void> {
         await browserTool.execute({
           action: "navigate",
           tabId: "tab-1",
-          url: "http://localhost:9867/page",
+          url: "https://example.com/",
         }),
         "pinchtab navigate",
       );
@@ -173,7 +159,7 @@ async function setupPhase(): Promise<void> {
       expectSuccess(
         await researchTool.execute({
           action: "fetch",
-          url: "http://localhost:9867/page",
+          url: "https://example.com/",
         }),
         "web fetch",
       );

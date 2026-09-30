@@ -1,0 +1,13 @@
+diff --git a/dist/frontmatter.js b/dist/frontmatter.js
+index d2e0fe9baef8ea7340b4b7821e4bc76f1c9be6bc..3f176295722b424016f20fc0f5ee5b763bc1d0db 100644
+--- a/dist/frontmatter.js
++++ b/dist/frontmatter.js
+@@ -22,7 +22,7 @@ function parseFrontmatter(code, options) {
+     return { frontmatter: {}, rawFrontmatter: "", content: code };
+   }
+   const [delims, parser] = getFrontmatterParser(code);
+-  const parsed = parser(rawFrontmatter);
++  const parsed = rawFrontmatter.trim() === "" ? void 0 : parser(rawFrontmatter);
+   const frontmatter = parsed && typeof parsed === "object" ? parsed : {};
+   let content;
+   switch (options?.frontmatter ?? "remove") {

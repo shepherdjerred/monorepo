@@ -6,29 +6,39 @@ description: Privacy configuration, public-token setup, and production verificat
 PostHog Cloud US provides analytics for `sjer.red`, `resume.sjer.red`,
 `webring.sjer.red`, `better-skill-capped.com`, `mariokart.sjer.red`,
 `pokebot.sjer.red`, `scout-for-lol.com`, `beta.scout-for-lol.com`, `ts-mc.net`,
-`ppl.glitter-boys.com`, `cook.sjer.red`, `stocks.sjer.red`, and `wiki.sjer.red`.
+`docs.ts-mc.net`, `ppl.glitter-boys.com`, `cook.sjer.red`, `stocks.sjer.red`,
+and `wiki.sjer.red`.
 Scout's `/docs/` pages share the Scout host identity and tracker. PostHog is a
 managed external service: the cluster has no PostHog namespace, database,
 volume, DNS record, secret, or readiness dependency.
 
-The Cooklang preview, Stocks, Glitter Boys, and human wiki trackers are
-repo-owned static assets. `ts-mc.net` has no current site source in this
-checkout, so its tracker is currently installed in the S3-hosted HTML itself;
-an external redeploy of that bucket must preserve `/posthog.js` and its HTML
-script tags.
+The Cooklang preview, Stocks, Glitter Boys, human wiki, and both Storm
+site trackers are repo-owned static assets.
 
 ## Project setup
 
 Use the existing single US project. Copy its public `phc_` project token into
 `config/analytics-sites.json`; this token is safe to embed in browser bundles.
-Never commit a `phx_` personal API key. The registry check deliberately fails
-while the placeholder token is present.
+The managed browser proxy is `https://j.sjer.red`. `apiHost` and `assetHost`
+remain the direct US PostHog endpoints for server-to-server transport, while
+`proxyHost` is used by every repo-owned browser tracker for SDK assets,
+captures, replay, feature flags, and other browser requests. Never commit a
+`phx_` personal API key. The registry check deliberately fails while the
+placeholder token is present.
+The [operations overview](/explanation/homelab/operations-overview/) reads
+traffic with a read-scoped personal key. That key lives only in 1Password and
+the Temporal infra worker's environment.
+
+The proxy record is managed by OpenTofu. Its `j.sjer.red` Cloudflare CNAME is
+deliberately unproxied (gray cloud), and browser traffic must use it only after
+PostHog provisions a valid managed certificate. Do not put another CDN or
+reverse proxy in front of this CNAME.
 
 In PostHog project privacy settings, IP collection must stay **enabled** — it is
 what produces the country and city breakdowns — and session-recording masking
 stays at the standard setting. Leave _Cookieless server hash mode_ **disabled**.
 
-All thirteen configured hosts use PostHog's default persistence (a first-party
+All fourteen configured hosts use PostHog's default persistence (a first-party
 cookie plus `localStorage`), create person profiles, and capture autocapture,
 heatmaps, dead
 clicks, web vitals, and session replay with inputs masked. Every site respects
@@ -100,7 +110,7 @@ enrichment is enabled for browser events and **disabled** for backend events:
 those captures come from Discord gateway events and background jobs that carry
 no end-user `$ip`, so GeoIP would resolve the backend's own egress location and
 label it as the guild's. PostHog _group_ analytics is deliberately not used: it
-is a paid add-on that reprices every identified event across all thirteen hosts,
+is a paid add-on that reprices every identified event across all fourteen hosts,
 and the `guild_id` property answers the same questions through breakdowns and
 filters.
 
@@ -118,7 +128,7 @@ value.
 ## Source verification
 
 Run `bun scripts/checks/check-analytics-sites.ts`, then build each affected site. The
-generated browser assets must contain the configured US hosts and must not
+generated browser assets must contain the managed proxy host and must not
 contain a retired analytics endpoint. Scout tests additionally cover route
 normalization, bounded typed events, replay gating, local no-op behavior, and
 beacon transport for outbound navigation.
@@ -135,14 +145,14 @@ is precisely how the cookieless outage went unnoticed.
 
 - Open every hostname with Do Not Track disabled and confirm a fresh pageview
   and autocapture event arrives in Live Events with the expected `site_key` and
-  `site_hostname`.
+  `site_hostname`; the browser request should target `j.sjer.red`.
 - Reload a page and confirm the distinct ID is unchanged, then confirm a person
   profile exists for that anonymous visitor.
 - Navigate through the Scout web app and confirm recorded URLs still template
   dynamic identifiers (`/g/:guildId`, `/players/:alias`).
 - Confirm `$geoip_country_name` is populated on browser events and absent on
   backend events.
-- Confirm session recordings appear for all thirteen hosts with input masking
+- Confirm session recordings appear for all fourteen hosts with input masking
   active, and that no username, guild name, Riot account, or player alias is
   legible in a Mario Kart, Pokémon, or Scout recording.
 - Repeat with Do Not Track enabled and confirm the browser sends no PostHog

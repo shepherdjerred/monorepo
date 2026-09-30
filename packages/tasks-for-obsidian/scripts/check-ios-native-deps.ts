@@ -78,9 +78,7 @@ function isOptionalPeer(
   if (parsedPeerMeta === undefined) return false;
 
   const entry = jsonObjectOrUndefined(parsedPeerMeta[peerName]);
-  if (entry === undefined) return false;
-
-  return entry["optional"] === true;
+  return entry?.["optional"] === true;
 }
 
 function isNativePeerDependency(peerName: string): boolean {
@@ -89,6 +87,43 @@ function isNativePeerDependency(peerName: string): boolean {
 
 function formatList(items: Iterable<string>): string {
   return [...items].sort((a, b) => a.localeCompare(b)).join(", ");
+}
+
+const MISE_BUN_PATTERN = /^bun\s*=\s*"([^"]+)"/m;
+const POST_CLONE_BUN_TAG_PATTERN = /BUN_INSTALL_TAG="bun-v([^"]+)"/;
+
+/**
+ * The Xcode Cloud worker installs its own bun via ci_post_clone.sh instead of
+ * using the repo's mise toolchain. An older bun cannot parse newer bun.lock
+ * versions (lockfileVersion 2 from bun 1.4 failed every Archive from #92 to
+ * #100 with "Unknown lockfile version"), so the script's pin must match the
+ * root .mise.toml exactly. Either side being unparseable is a violation, not a
+ * skip: a guard that cannot see the pin cannot protect the Archive.
+ */
+export function findBunVersionDriftMessages(options: {
+  miseToml: string;
+  postCloneScript: string;
+}): string[] {
+  const miseVersion = MISE_BUN_PATTERN.exec(options.miseToml)?.[1];
+  if (miseVersion === undefined) {
+    return [
+      'Could not find `bun = "<version>"` in the root .mise.toml; the Xcode Cloud bun pin cannot be validated.',
+    ];
+  }
+  const tagVersion = POST_CLONE_BUN_TAG_PATTERN.exec(
+    options.postCloneScript,
+  )?.[1];
+  if (tagVersion === undefined) {
+    return [
+      'Could not find BUN_INSTALL_TAG="bun-v<version>" in ios/ci_scripts/ci_post_clone.sh; the Xcode Cloud bun pin cannot be validated.',
+    ];
+  }
+  if (miseVersion !== tagVersion) {
+    return [
+      `Xcode Cloud installs bun ${tagVersion} but the repo pins bun ${miseVersion} in .mise.toml. Align BUN_INSTALL_TAG in ios/ci_scripts/ci_post_clone.sh — an older bun cannot parse the current bun.lock and fails the Archive during post-clone install.`,
+    ];
+  }
+  return [];
 }
 
 export function findMissingNativePeerDependencyMessages(
@@ -211,11 +246,9 @@ function ensureNodeModules(rootDir: string): string[] {
     ];
   }
 
-  if (!statSync(nodeModules).isDirectory()) {
-    return ["node_modules exists but is not a directory."];
-  }
-
-  return [];
+  return statSync(nodeModules).isDirectory()
+    ? []
+    : ["node_modules exists but is not a directory."];
 }
 
 function loadReactNativeConfig(rootDir: string): unknown {
@@ -232,6 +265,16 @@ function loadReactNativeConfig(rootDir: string): unknown {
   }
 
   return JSON.parse(result.stdout);
+}
+
+function findRepoRoot(startDir: string): string | undefined {
+  let dir: string | undefined = startDir;
+  while (dir !== undefined) {
+    if (existsSync(path.join(dir, ".mise.toml"))) return dir;
+    const parent = path.dirname(dir);
+    dir = parent === dir ? undefined : parent;
+  }
+  return undefined;
 }
 
 function main(): void {
@@ -255,6 +298,23 @@ function main(): void {
       ...findMissingIosPodspecMessages(loadReactNativeConfig(rootDir), (p) =>
         existsSync(p),
       ),
+    );
+  }
+
+  const repoRoot = findRepoRoot(rootDir);
+  if (repoRoot === undefined) {
+    issues.push(
+      "Could not locate the repository root (.mise.toml) from the current directory; the Xcode Cloud bun pin cannot be validated.",
+    );
+  } else {
+    issues.push(
+      ...findBunVersionDriftMessages({
+        miseToml: readFileSync(path.join(repoRoot, ".mise.toml"), "utf8"),
+        postCloneScript: readFileSync(
+          path.join(rootDir, "ios", "ci_scripts", "ci_post_clone.sh"),
+          "utf8",
+        ),
+      }),
     );
   }
 

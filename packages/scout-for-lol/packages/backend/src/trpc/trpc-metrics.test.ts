@@ -13,7 +13,7 @@ import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 const trpc = await createOfflineTrpcHarness("trpc-metrics-test");
 
 const { trpcCallsTotal, trpcCallDuration } =
-  await import("#src/metrics/web.ts");
+  await import("#src/metrics/platform/web.ts");
 
 async function callCount(procedure: string, code: string): Promise<number> {
   const metric = await trpcCallsTotal.get();

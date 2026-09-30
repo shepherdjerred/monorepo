@@ -1,10 +1,8 @@
-// Temporal requires workflows to be exported from a single entry point.
-// These wrapper functions delegate to the actual workflow implementations
-// to satisfy the no-re-exports lint rule.
-import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./fetcher.ts";
+// Temporal requires wrappers rather than re-exports from its entry point.
+import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
-import { runDnsAudit as _runDnsAudit } from "./dns-audit.ts";
-import { syncGolinks as _syncGolinks } from "./golink-sync.ts";
+import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
+import { syncGolinks as _syncGolinks } from "./homelab/golink-sync.ts";
 import {
   goodMorningGetUp as _goodMorningGetUp,
   goodMorningPreheat as _goodMorningPreheat,
@@ -19,16 +17,18 @@ import { motionLight as _motionLight } from "./ha/motion-light.ts";
 import { sleepAc as _sleepAc, sleepMusic as _sleepMusic } from "./ha/sleep.ts";
 import type { MotionLightRoom } from "#shared/infra/motion-light.ts";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
-import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
+import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homelab/zfs-maintenance.ts";
+import { runMiningWorldResetWorkflow as _runMiningWorldResetWorkflow } from "./homelab/mining-reset.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
-import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout-image-gc.ts";
+import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
   ScoutImageGcInput,
   ScoutImageGcResult,
 } from "#activities/scout/scout-image-gc.ts";
-import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
-import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
-import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./lane-prior-refresh.ts";
+import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./homelab/velero-orphan-audit.ts";
+import { runVeleroR2OrphanAuditWorkflow as _runVeleroR2OrphanAuditWorkflow } from "./homelab/velero-r2-orphan-audit.ts";
+import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./scout/data-dragon.ts";
+import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./scout/lane-prior-refresh.ts";
 import type { DataDragonUpdateResult } from "#shared/data-dragon-types.ts";
 import type {
   LanePriorRefreshResult,
@@ -36,47 +36,36 @@ import type {
 } from "#activities/lane-prior-refresh.ts";
 import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-refresh.ts";
 import type { LlmCatalogRefreshResult } from "#activities/agent/llm-catalog-refresh.ts";
-import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab-crd-imports-refresh.ts";
+import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab/homelab-crd-imports-refresh.ts";
 import type { HomelabCrdImportsRefreshResult } from "#activities/homelab/homelab-crd-imports-refresh.ts";
 import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-pokeemerald-data-refresh.ts";
 import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
-import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout-showcase-refresh.ts";
-import {
-  runScoutWeeklyParlayCatchupWorkflow as _runScoutWeeklyParlayCatchupWorkflow,
-  runScoutWeeklyParlayWorkflow as _runScoutWeeklyParlayWorkflow,
-} from "./scout-weekly-parlay.ts";
-import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout-queue-windows.ts";
-import { runScoutCompetitionUpdatesWorkflow as _runScoutCompetitionUpdatesWorkflow } from "./scout-competition-updates.ts";
-import type { ScoutCompetitionUpdateDispatchResult } from "./scout-competition-updates.ts";
+import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout/scout-showcase-refresh.ts";
+import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout/scout-queue-windows.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout/scout-showcase-refresh.ts";
-import type {
-  ScoutWeeklyParlayCatchupWorkflowInput,
-  ScoutWeeklyParlayWorkflowInput,
-} from "./scout-weekly-parlay.ts";
-import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout-bryan-bucks.ts";
+import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout/scout-bryan-bucks.ts";
 import type { ScoutBryanBucksAnalyticsResult } from "#activities/scout/scout-bryan-bucks.ts";
-import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
+import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout/scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
-import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
-import { runProtobufWatch as _runProtobufWatch } from "./protobuf-watch.ts";
+import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
+import { runCiIoTelemetry as _runCiIoTelemetry } from "./ci/ci-io-telemetry.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
-import { monitorReportFreshness as _monitorReportFreshness } from "./report-freshness.ts";
-import { runCiIoImpact as _runCiIoImpact } from "./ci-io-impact.ts";
-import { deliverReportWorkflow as _deliverReportWorkflow } from "./report-delivery.ts";
+import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
+import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
 import type { ReportDeliveryResult } from "#activities/reports/report-delivery.ts";
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
-import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
+import type { RunHomelabAuditWorkflowInput } from "./homelab/homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
-import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
+import { cancelCiPipelinesWorkflow as _cancelCiPipelinesWorkflow } from "./ci/cancel-ci-pipelines.ts";
+import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./ci/check-pr-merge-conflicts.ts";
 import { pollWorkflowFailuresWorkflow as _pollWorkflowFailuresWorkflow } from "./workflow-failure-watch.ts";
-import type { PollWorkflowFailuresResult } from "#activities/maintenance/workflow-failure-watch.ts";
+import type { PollWorkflowFailuresResult } from "#activities/maintenance/workflow-failure/workflow-failure-watch.ts";
 import type {
-  CancelBuildkiteBuildsInput,
+  CancelCiPipelinesInput,
   CheckPrMergeConflictsInput,
 } from "#shared/schemas.ts";
 import type { AgentTaskInput } from "#shared/agent/agent-task.ts";
@@ -86,28 +75,28 @@ import {
   runGlitterCorpusChannelOverlap as _runGlitterCorpusChannelOverlap,
   runGlitterCorpusDaily as _runGlitterCorpusDaily,
   runGlitterCorpusInventory as _runGlitterCorpusInventory,
-} from "./glitter-corpus.ts";
+} from "./glitter/glitter-corpus.ts";
 import type {
   GlitterCorpusBackfillInput,
   GlitterCorpusChannelBackfillInput,
   GlitterCorpusChannelOverlapInput,
   GlitterCorpusSnapshotResult,
-} from "./glitter-corpus.ts";
+} from "./glitter/glitter-corpus.ts";
 import type {
   ChannelStateResult,
   InventoryResult,
-} from "#shared/glitter-corpus-activity-types.ts";
-import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter-context-refresh.ts";
+} from "#shared/glitter/glitter-corpus-activity-types.ts";
+import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter/glitter-context-refresh.ts";
 import type {
   GlitterContextRefreshInput,
   GlitterContextRefreshResult,
-} from "#activities/glitter/context/glitter-context-refresh.ts";
-import { runGlitterContextAudit as _runGlitterContextAudit } from "./glitter-context-audit.ts";
+} from "#activities/glitter/context/refresh/glitter-context-refresh.ts";
+import { runGlitterContextAudit as _runGlitterContextAudit } from "./glitter/glitter-context-audit.ts";
 import type {
   GlitterContextAuditInput,
   GlitterContextAuditResult,
-} from "#activities/glitter/context/glitter-context-audit-schema.ts";
-import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
+} from "#activities/glitter/context/audit/glitter-context-audit-schema.ts";
+import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./ci/main-vuln-scan.ts";
 import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
 import { runScheduleRehearsalWorkflow as runScheduleRehearsalWorkflowImplementation } from "./schedule-rehearsal.ts";
 import type { ScheduleRehearsalResult } from "#activities/scout/schedule-rehearsal.ts";
@@ -118,7 +107,7 @@ import {
   runTrivyDbRefreshWorkflow as runTrivyDbRefreshWorkflowImplementation,
   runTurboCacheCleanWorkflow as runTurboCacheCleanWorkflowImplementation,
 } from "./maintenance.ts";
-import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./freshrss.ts";
+import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./homelab/freshrss.ts";
 import { runFliptFlagInventory as _runFliptFlagInventory } from "./flipt-flag-inventory.ts";
 import type { FliptFlagInventoryResult } from "#activities/flipt-flag-inventory.ts";
 import {
@@ -129,10 +118,53 @@ import {
 import {
   runSeaweedFsBackupRetentionAndGcWorkflow as _runSeaweedFsBackupRetentionAndGcWorkflow,
   runSeaweedFsBackupWorkflow as _runSeaweedFsBackupWorkflow,
-} from "./seaweedfs-backup.ts";
+} from "./homelab/seaweedfs-backup.ts";
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
-import { runOpenAiComplimentaryUsageReconciliation as _runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
-import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";
+import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
+import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
+import {
+  runOpsDigest as _runOpsDigest,
+  runOpsSnapshot as _runOpsSnapshot,
+} from "./ops-snapshot.ts";
+import type {
+  OpsDigestKind,
+  OpsPublishSummary,
+} from "#activities/ops/ops-publish.ts";
+import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
+import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
+import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
+import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
+import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
+import { discordAgentChatWorkflow as _discordAgentChatWorkflow } from "./discord-agent-chat.ts";
+import { httpAgentChatWorkflow as _httpAgentChatWorkflow } from "./http-agent-chat.ts";
+import type {
+  AgentChatCatalogState,
+  AgentChatTurnResult,
+  AgentChatWorkflowInput,
+  ScheduledAgentChatTurnInput,
+} from "#shared/agent/agent-chat.ts";
+import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
+import type {
+  HttpAgentChatCommand,
+  HttpAgentChatStartOptions,
+} from "#shared/agent/agent-chat-http.ts";
+import type {
+  BlueBubblesCursor,
+  ImessageCommand,
+} from "#shared/agent/agent-chat-imessage.ts";
+import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
+import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
+
+export async function blueBubblesIngressWorkflow(
+  cursor: BlueBubblesCursor,
+): Promise<never> {
+  return _blueBubblesIngressWorkflow(cursor);
+}
+export async function imessageAgentChatWorkflow(
+  command: ImessageCommand,
+): Promise<void> {
+  return _imessageAgentChatWorkflow(command);
+}
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -144,39 +176,33 @@ export function workerDeploymentCanaryWorkflow(
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
 }
-
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
-
 export async function runMainVulnScanWorkflow(): Promise<void> {
   return runMainVulnScanWorkflowImplementation();
 }
-
+export async function runCiIoTelemetry(): Promise<void> {
+  return _runCiIoTelemetry();
+}
 export async function runLinkRotScanWorkflow(): Promise<void> {
   return runLinkRotScanWorkflowImplementation();
 }
-
 export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
   return runScheduleRehearsalWorkflowImplementation();
 }
-
 export async function runBunCacheGcWorkflow(): Promise<void> {
   return runBunCacheGcWorkflowImplementation();
 }
-
 export async function runUvCachePruneWorkflow(): Promise<void> {
   return runUvCachePruneWorkflowImplementation();
 }
-
 export async function runTrivyDbRefreshWorkflow(): Promise<void> {
   return runTrivyDbRefreshWorkflowImplementation();
 }
-
 export async function runTurboCacheCleanWorkflow(): Promise<void> {
   return runTurboCacheCleanWorkflowImplementation();
 }
-
 export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
 }
@@ -250,6 +276,10 @@ export async function runZfsMaintenanceWorkflow(): Promise<void> {
   return _runZfsMaintenanceWorkflow();
 }
 
+export async function runMiningWorldResetWorkflow(): Promise<void> {
+  return _runMiningWorldResetWorkflow();
+}
+
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();
 }
@@ -262,6 +292,10 @@ export async function runScoutImageGcWorkflow(
 
 export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
+}
+
+export async function runVeleroR2OrphanAuditWorkflow(): Promise<void> {
+  return _runVeleroR2OrphanAuditWorkflow();
 }
 
 export async function runScoutDataDragonVersionCheck(
@@ -299,31 +333,12 @@ export async function runScoutShowcaseRefresh(): Promise<ScoutShowcaseRefreshRes
   return _runScoutShowcaseRefresh();
 }
 
-export async function runScoutWeeklyParlayWorkflow(
-  input: ScoutWeeklyParlayWorkflowInput = {},
-): Promise<void> {
-  return _runScoutWeeklyParlayWorkflow(input);
-}
-
-export async function runScoutWeeklyParlayCatchupWorkflow(
-  input: ScoutWeeklyParlayCatchupWorkflowInput,
-): Promise<void> {
-  return _runScoutWeeklyParlayCatchupWorkflow(input);
-}
-
 export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<ScoutBryanBucksAnalyticsResult> {
   return await _runScoutBryanBucksAnalyticsWorkflow();
 }
 
 export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResult> {
   return _runScoutQueueWindowsWatch();
-}
-
-export async function runScoutCompetitionUpdatesWorkflow(): Promise<{
-  beta: ScoutCompetitionUpdateDispatchResult;
-  prod: ScoutCompetitionUpdateDispatchResult;
-}> {
-  return _runScoutCompetitionUpdatesWorkflow();
 }
 
 export async function runScoutSeasonRefreshWorkflow(
@@ -339,20 +354,12 @@ export async function runHomelabAuditWorkflow(
   return _runHomelabAuditWorkflow(input, reportTaskQueue);
 }
 
-export async function runProtobufWatch(): Promise<void> {
-  return _runProtobufWatch();
-}
-
 export async function runTasknotesCanary(): Promise<void> {
   return _runTasknotesCanary();
 }
 
 export async function monitorReportFreshness(): Promise<void> {
   return _monitorReportFreshness();
-}
-
-export async function runCiIoImpact(): Promise<void> {
-  return _runCiIoImpact();
 }
 
 export async function deliverReportWorkflow(
@@ -365,10 +372,10 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
 }
 
-export async function cancelBuildkiteBuildsWorkflow(
-  input: CancelBuildkiteBuildsInput,
+export async function cancelCiPipelinesWorkflow(
+  input: CancelCiPipelinesInput,
 ): Promise<void> {
-  return _cancelBuildkiteBuildsWorkflow(input);
+  return _cancelCiPipelinesWorkflow(input);
 }
 
 export async function checkPrMergeConflictsWorkflow(
@@ -433,6 +440,53 @@ export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
   return _runSeaweedFsBackupRetentionAndGcWorkflow();
 }
 
-export async function runOpenAiComplimentaryUsageReconciliation(): Promise<OpenAiComplimentaryUsageResult> {
-  return _runOpenAiComplimentaryUsageReconciliation();
+export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
+  return _runLlmBilledCostReconciliation();
+}
+
+export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
+  return _runOpsSnapshot();
+}
+
+export async function runOpsDigest(input: {
+  kind: OpsDigestKind;
+}): Promise<{ kind: OpsDigestKind }> {
+  return _runOpsDigest(input);
+}
+
+export async function agentChatWorkflow(
+  input: AgentChatWorkflowInput,
+): Promise<never> {
+  return _agentChatWorkflow(input);
+}
+
+export async function agentChatTurnReceiptWorkflow(
+  input: AgentChatReceiptInput,
+): Promise<AgentChatTurnResult> {
+  return _agentChatTurnReceiptWorkflow(input);
+}
+
+export async function agentChatCatalogWorkflow(
+  state?: AgentChatCatalogState,
+): Promise<never> {
+  return _agentChatCatalogWorkflow(state);
+}
+
+export async function scheduledAgentChatTurnWorkflow(
+  input: ScheduledAgentChatTurnInput,
+): Promise<AgentChatTurnResult> {
+  return _scheduledAgentChatTurnWorkflow(input);
+}
+
+export async function discordAgentChatWorkflow(
+  input: DiscordAgentChatCommand,
+): Promise<void> {
+  return _discordAgentChatWorkflow(input);
+}
+
+export async function httpAgentChatWorkflow(
+  input: HttpAgentChatCommand,
+  options?: HttpAgentChatStartOptions,
+): Promise<AgentChatTurnResult> {
+  return _httpAgentChatWorkflow(input, options);
 }

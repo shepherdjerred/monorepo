@@ -1,6 +1,7 @@
 import {
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   BucksPoolRosterSchema,
+  debitOf,
   type BucksPoolParticipant,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -19,14 +20,14 @@ import {
   BucksStorageOverflowError,
   InsufficientBucksError,
 } from "#src/betting/ledger.ts";
-import { addInt32 } from "#src/betting/parlays/parlay-odds.ts";
-import { bettingOversizedStakeRejectedTotal } from "#src/metrics/betting-parlay.ts";
+import { addInt32 } from "#src/betting/parlays/model/parlay-odds.ts";
+import { bettingOversizedStakeRejectedTotal } from "#src/metrics/betting/betting-parlay.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   bettingBetPlacementsTotal,
   bettingStakeBucksTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-place-bet");
@@ -160,7 +161,7 @@ async function placeBetInner(
     return { kind: "feature_disabled" };
   }
 
-  const stake = BucksStakeSchema.safeParse(input.stake);
+  const stake = StorableBucksStakeSchema.safeParse(input.stake);
   if (!stake.success) return { kind: "invalid_stake" };
 
   const pool = await prismaClient.bucksMatchPool.findUnique({
@@ -287,7 +288,7 @@ async function placeBetInner(
 
       const balanceAfter = await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: -stake.data,
+        delta: debitOf(stake.data),
         kind: "bet_stake",
         matchId: input.matchId,
         betId: bet.id,

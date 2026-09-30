@@ -7,13 +7,13 @@ type Props = {
 const { href, isHighlighted } = Astro.props;
 ---
 
-<a href={href}
-  ><li
+<a href={href}>
+  <li
     class:list={[
       "p-1 hover:bg-white hover:text-black underline",
       isHighlighted ? "bg-white text-black" : "",
     ]}
   >
     <slot />
-  </li></a
->
+  </li>
+</a>

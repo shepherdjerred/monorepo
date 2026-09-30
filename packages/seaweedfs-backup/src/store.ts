@@ -269,6 +269,14 @@ function createS3Client(input: {
     endpoint: input.endpoint,
     region: input.region ?? "us-east-1",
     forcePathStyle: true,
+    // Bun's node:http compatibility layer can throw ERR_SOCKET_CLOSED outside
+    // the request promise when the default keep-alive pool reuses a stale S3
+    // socket. Dedicated request sockets preserve raw response bytes while
+    // keeping transport failures attached to the request that owns them.
+    requestHandler: {
+      httpAgent: { keepAlive: false, maxSockets: Number.POSITIVE_INFINITY },
+      httpsAgent: { keepAlive: false, maxSockets: Number.POSITIVE_INFINITY },
+    },
     credentials: {
       accessKeyId: input.accessKeyId,
       secretAccessKey: input.secretAccessKey,

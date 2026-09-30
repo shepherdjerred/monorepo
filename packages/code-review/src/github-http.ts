@@ -170,6 +170,32 @@ export async function postJson(
   return response.json();
 }
 
+/**
+ * Yield each issue comment on a pull request as a record, across all pages.
+ *
+ * Non-record items are skipped; a non-array payload yields nothing. That
+ * tolerance suits presence scans (skip/blocked signals), where "no match"
+ * is an ordinary answer — callers that must distinguish "no comments" from a
+ * contract regression paginate and validate themselves instead.
+ */
+export async function* eachIssueComment(input: {
+  repo: string;
+  number: number;
+  token: string;
+}): AsyncGenerator<Record<string, unknown>, void, void> {
+  let url: string | null =
+    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
+  while (url !== null) {
+    const { payload, linkNext } = await getJsonWithLink(url, input.token);
+    const comments = Array.isArray(payload) ? payload : [];
+    for (const rawItem of comments) {
+      const item = asRecord(rawItem);
+      if (item !== null) yield item;
+    }
+    url = linkNext;
+  }
+}
+
 export function splitRepo(repo: string): { owner: string; name: string } {
   const [owner, name] = repo.split("/");
   if (

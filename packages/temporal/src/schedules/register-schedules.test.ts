@@ -8,6 +8,7 @@ import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts"
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
+  DELETED_SCHEDULES,
   buildSchedulePolicies,
   routeDynamicAgentTaskSchedule,
   terminateRetiredWorkflowExecutions,
@@ -25,6 +26,7 @@ import {
   type TemporalBootstrapMetadata,
 } from "#shared/execution-metadata.ts";
 import * as workflowEntrypoint from "#workflows/index.ts";
+import { scoutPostMatchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -97,12 +99,30 @@ test("every declared schedule workflow is exported by the workflow bundle", () =
   expect(missingWorkflowTypes).toEqual([]);
 });
 
+test.each(["beta", "prod"] as const)(
+  "the %s post-match schedule keeps its ID while routing through V2 dispatch",
+  (stage) => {
+    const schedule = findScheduleById(`scout-${stage}-postmatch-discovery`);
+    expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryV2Workflow");
+    expect(schedule.args).toEqual([
+      scoutPostMatchDiscoveryV2InputCodec.serialize({
+        stage,
+        trigger: "schedule",
+      }),
+    ]);
+    expect(schedule.taskQueue).toBe(
+      stage === "beta" ? TASK_QUEUES.SCOUT_BETA : TASK_QUEUES.SCOUT_PROD,
+    );
+  },
+);
+
 describe("central Workflow schedule routing", () => {
   const definitions = [
-    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
+    ["ci-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
-    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
-    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
+    ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
   ] as const;
 
@@ -224,19 +244,21 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
     ).toBe(true);
   });
 
-  // Regression: ci-io-post-merge-impact was created as a dynamic agent task and
-  // later promoted into SCHEDULES. Temporal memos are immutable after creation,
-  // so its live memo still carries the marker while its action starts
-  // runCiIoImpact. Reconciling it threw "must start agentTaskWorkflow" and
-  // crash-looped the worker before it could register any schedule.
+  // Regression: ci-io-post-merge-impact (retired 2026-09) was created as a
+  // dynamic agent task and later promoted into SCHEDULES. Temporal memos are
+  // immutable after creation, so its live memo still carried the marker while
+  // its action started runCiIoImpact. Reconciling it threw "must start
+  // agentTaskWorkflow" and crash-looped the worker before it could register
+  // any schedule. The behavior pin now uses dns-audit-daily since the
+  // original schedule is deleted.
   test("a declared schedule with a stale marker is skipped", () => {
-    expect(declaredIds.has("ci-io-post-merge-impact")).toBe(true);
+    expect(declaredIds.has("dns-audit-daily")).toBe(true);
     expect(
       isReconcilableDynamicAgentTaskSchedule(
-        "ci-io-post-merge-impact",
+        "dns-audit-daily",
         {
           ...DYNAMIC_AGENT_TASK_MEMO,
-          description: "Agent task: Measure CI I/O optimization impact",
+          description: "Agent task: stale marker on a declared schedule",
         },
         declaredIds,
       ),
@@ -260,7 +282,7 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
   test("declared precedence matches orphan detection", () => {
     expect(
       isOrphanSchedule({
-        scheduleId: "ci-io-post-merge-impact",
+        scheduleId: "dns-audit-daily",
         memo: DYNAMIC_AGENT_TASK_MEMO,
         namespace: "prod",
         declaredIds,
@@ -295,7 +317,7 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
     args: [],
     timing: {
       kind: "cron",
-      expression: "*/15 * * * *",
+      expression: "*/2 * * * *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
@@ -305,9 +327,9 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
   });
 });
 
-test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue", () => {
-  expect(findScheduleById("openai-complimentary-usage-hourly")).toMatchObject({
-    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
+  expect(findScheduleById("llm-billed-cost-hourly")).toMatchObject({
+    workflowType: "runLlmBilledCostReconciliation",
     args: [],
     timing: { kind: "cron", expression: "17 * * * *", timezone: "UTC" },
     taskQueue: TASK_QUEUES.WORKFLOWS,
@@ -316,15 +338,76 @@ test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue"
   });
 });
 
-test("protobuf watch timeout covers collection and both delivery paths", () => {
-  const timeout = findScheduleById(
-    "protobufjs-v8-watch-weekly",
-  ).workflowExecutionTimeout;
-  expect(timeout).toBe("25 minutes");
-  if (timeout === undefined) {
-    throw new Error("protobufjs-v8-watch-weekly lacks a timeout");
-  }
-  expect(durationToMs(timeout)).toBeGreaterThan(15 * ONE_MINUTE);
+test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
+  // Stable workers do not register this Workflow, so its schedule must remain
+  // paused until the candidate receives 100% of traffic.
+  const initialPauseNote = findScheduleById(
+    "llm-billed-cost-hourly",
+  )?.initialPauseNote;
+  expect(initialPauseNote).toContain("100% candidate traffic");
+  expect(initialPauseNote).toContain(
+    "stable workers do not register this Workflow",
+  );
+  const schedule = findScheduleById("llm-billed-cost-hourly");
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Awaiting Workflow candidate promotion with runLlmBilledCostReconciliation",
+      },
+    ),
+  ).toEqual({ paused: true, note: initialPauseNote });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Paused by operator for incident review",
+      },
+    ),
+  ).toEqual({ paused: true, note: "Paused by operator for incident review" });
+});
+
+describe("ops overview schedules", () => {
+  test("the snapshot runs every five minutes, skipping overlaps and stale catchup", () => {
+    expect(findScheduleById("ops-snapshot")).toMatchObject({
+      workflowType: "runOpsSnapshot",
+      args: [],
+      timing: {
+        kind: "cron",
+        expression: "*/5 * * * *",
+        timezone: "America/Los_Angeles",
+      },
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      overlap: ScheduleOverlapPolicy.SKIP,
+      catchupWindow: "5 minutes",
+      workflowExecutionTimeout: "5 minutes",
+    });
+    expect(
+      buildSchedulePolicies(findScheduleById("ops-snapshot")).catchupWindow,
+    ).toBe("5 minutes");
+  });
+
+  test.each([
+    ["ops-digest-daily", "daily", "30 7 * * *"],
+    ["ops-digest-weekly", "weekly", "0 8 * * 1"],
+  ] as const)("%s triggers the %s digest at %s Pacific", (id, kind, cron) => {
+    expect(findScheduleById(id)).toMatchObject({
+      workflowType: "runOpsDigest",
+      args: [{ kind }],
+      timing: {
+        kind: "cron",
+        expression: cron,
+        timezone: "America/Los_Angeles",
+      },
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      overlap: ScheduleOverlapPolicy.SKIP,
+      workflowExecutionTimeout: "10 minutes",
+    });
+  });
 });
 
 test.each([
@@ -377,28 +460,32 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
   // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.
   // Activity time and retries are covered by SLACK_MS below.
   runVacuumIfNotHome: 7 * ONE_MINUTE,
-  // Sunday noon through the next Sunday 11:00 PT. The fall DST transition
-  // makes the maximum elapsed duration 168 hours.
-  runScoutWeeklyParlayWorkflow: 168 * ONE_HOUR,
 };
 
-// Weekly finalization continues as new without a chain-wide execution timeout;
-// this is deliberate so a prolonged Scout outage cannot strand bets.
-const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set([
-  "runScoutWeeklyParlayWorkflow",
-]);
+// Escape hatch for a long-sleeping workflow that deliberately runs without a
+// chain-wide execution timeout. Empty since the weekly parlay lifecycle — its
+// only member — was retired; a new entry needs that same explicit rationale.
+const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",
-  "runOpenAiComplimentaryUsageReconciliation",
+  "runLlmBilledCostReconciliation",
+  // Fans out one bounded collector Activity per source in parallel, then one
+  // publish Activity. No workflow-level sleeps; Activity timeouts and retry
+  // budgets fit inside the five-minute execution timeout.
+  "runOpsSnapshot",
+  // Awaits a single triggerOpsDigest Activity; the dashboard renders and
+  // sends. No workflow-level sleeps.
+  "runOpsDigest",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runCiIoTelemetry",
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",
@@ -411,9 +498,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runLinkRotScanWorkflow",
   "monitorReportFreshness",
   "generateDependencySummary",
-  "runProtobufWatch",
   "runTasknotesCanary",
-  "runCiIoImpact",
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
@@ -437,15 +522,21 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // carries its own startToCloseTimeout + retry budget.
   "runScoutShowcaseRefresh",
   "runScoutQueueWindowsWatch",
-  "runScoutCompetitionUpdatesWorkflow",
   "runScoutSeasonRefreshWorkflow",
   "runScoutBryanBucksAnalyticsWorkflow",
   "runZfsMaintenanceWorkflow",
+  // Reset sleeps while polling the backup and Job only inside its heartbeat
+  // Activity; the Workflow awaits that one bounded Activity.
+  "runMiningWorldResetWorkflow",
   "runBugsinkHousekeepingWorkflow",
   // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
+  // Awaits a single runVeleroR2OrphanAudit activity (Backup CR + two R2
+  // prefix listings). No workflow-level sleeps; the activity carries its own
+  // startToCloseTimeout + retry budget.
+  "runVeleroR2OrphanAuditWorkflow",
   "runSeaweedFsBackupWorkflow",
   "runSeaweedFsBackupRetentionAndGcWorkflow",
   "syncGolinks",
@@ -459,8 +550,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // activities or child workflows. Their activity retry budgets are bounded
   // independently; none sleeps inside Workflow code.
   "scoutRealtimePollWorkflow",
-  "scoutPostMatchDiscoveryWorkflow",
+  "scoutPostMatchDiscoveryV2Workflow",
   "scoutIngestionReconciliationWorkflow",
+  "scoutPipelineReconciliationV2Workflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",
   "scoutReportLakeWorkflow",
@@ -558,23 +650,6 @@ describe("Scout lane-prior schedule config", () => {
   });
 });
 
-describe("Scout weekly parlay schedule config", () => {
-  test("starts one Pacific lifecycle at Sunday noon", () => {
-    const schedule = findScheduleById("scout-weekly-parlay");
-    expect(schedule).toMatchObject({
-      workflowType: "runScoutWeeklyParlayWorkflow",
-      args: [{}],
-      timing: {
-        kind: "cron",
-        expression: "0 12 * * 0",
-        timezone: "America/Los_Angeles",
-      },
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-    });
-  });
-});
-
 describe("Scout Bryan Bucks analytics schedule config", () => {
   test("runs the committed-ledger sync every fifteen minutes", () => {
     expect(findScheduleById("scout-bryan-bucks-analytics")).toMatchObject({
@@ -587,7 +662,7 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
       },
       taskQueue: TASK_QUEUES.WORKFLOWS,
       overlap: ScheduleOverlapPolicy.SKIP,
-      workflowExecutionTimeout: "5 minutes",
+      workflowExecutionTimeout: "15 minutes",
     });
   });
 });
@@ -601,7 +676,28 @@ describe("DELETED_SCHEDULE_IDS", () => {
   });
 });
 
-test("terminates running executions of retired workflow types", async () => {
+const RETIRED_FIXTURE = [
+  { workflowType: "retiredProdWorkflow", namespace: "prod" },
+  { workflowType: "retiredBetaWorkflow", namespace: "beta" },
+] as const;
+
+function createWorkflowQueryRecorder(queries: string[]) {
+  return {
+    workflow: {
+      list({ query }: { query: string }) {
+        queries.push(query);
+        return (async function* () {
+          // These tests assert which workflow types are queried.
+        })();
+      },
+      getHandle() {
+        return { terminate: () => Promise.resolve() };
+      },
+    },
+  };
+}
+
+test("terminates running executions of injected retired workflow types", async () => {
   const queries: string[] = [];
   const terminated: string[] = [];
   const client = {
@@ -622,13 +718,57 @@ test("terminates running executions of retired workflow types", async () => {
     },
   };
 
-  await terminateRetiredWorkflowExecutions(client);
+  // "dev" reconciles every namespace, so this covers the whole injected list.
+  await terminateRetiredWorkflowExecutions(client, "dev", RETIRED_FIXTURE);
 
   expect(queries).toEqual([
-    'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "retiredProdWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "retiredBetaWorkflow" AND ExecutionStatus = "Running"',
   ]);
-  expect(terminated).toEqual([
-    "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
+  expect(terminated).toEqual(
+    Array.from(
+      { length: queries.length },
+      () =>
+        "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
+    ),
+  );
+});
+
+test("terminates a retired workflow in the namespace it actually ran in", async () => {
+  // Deleting a Schedule only stops future starts. Existing runs still need
+  // termination in the namespace where they started.
+  const queries: string[] = [];
+  await terminateRetiredWorkflowExecutions(
+    createWorkflowQueryRecorder(queries),
+    "beta",
+    RETIRED_FIXTURE,
+  );
+
+  expect(queries).toEqual([
+    'WorkflowType = "retiredBetaWorkflow" AND ExecutionStatus = "Running"',
+  ]);
+
+  const prodQueries: string[] = [];
+  await terminateRetiredWorkflowExecutions(
+    createWorkflowQueryRecorder(prodQueries),
+    "prod",
+    RETIRED_FIXTURE,
+  );
+  expect(prodQueries).toEqual([
+    'WorkflowType = "retiredProdWorkflow" AND ExecutionStatus = "Running"',
+  ]);
+});
+
+test("terminates workflows for schedules being removed", async () => {
+  const queries: string[] = [];
+  await terminateRetiredWorkflowExecutions(
+    createWorkflowQueryRecorder(queries),
+    "prod",
+  );
+
+  expect(queries).toEqual([
+    'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runProtobufWatch" AND ExecutionStatus = "Running"',
   ]);
 });
 
@@ -721,7 +861,7 @@ describe("Glitter context refresh schedule", () => {
       expression: "0 11 * * 1",
       timezone: "America/Los_Angeles",
     });
-    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 1 }]);
+    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 10 }]);
     expect(schedule.workflowExecutionTimeout).toBe("15 hours");
     expect(buildScheduleState(schedule, {}).paused).toBe(true);
     expect(
@@ -782,13 +922,6 @@ describe("catchup window policy", () => {
     );
   });
 
-  test("weekly Scout publication preserves the Sunday betting window", () => {
-    expect(
-      buildSchedulePolicies(findScheduleById("scout-weekly-parlay"))
-        .catchupWindow,
-    ).toBe("12 hours");
-  });
-
   test("tight window is strictly shorter than the relaxed default", () => {
     const tight = buildSchedulePolicies(
       findScheduleById("vacuum-9am"),
@@ -812,24 +945,17 @@ describe("orphan schedule detection", () => {
   const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
   const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
 
-  test("review-signal collector schedule is queued for deletion", () => {
-    expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
-    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
-      "review-signals-collect",
-    );
-  });
-
-  test("both pokeemerald wasm schedules are queued for deletion", () => {
-    // The pokeemerald.wasm download workflow is gone — the wasm was built
-    // from source in the old CI image build. Both the weekly and the older monthly
-    // schedule must be deleted (and absent from SCHEDULES) so neither keeps
-    // firing a workflow that's no longer in the bundle.
-    for (const id of [
-      "pokeemerald-wasm-weekly",
-      "pokeemerald-wasm-monthly",
+  test("the retired tournament lobby pollers are deleted in their own namespaces", () => {
+    // Reconciliation filters deletions by namespace, so each poller must be
+    // listed under the namespace it lived in.
+    for (const [id, namespace] of [
+      ["scout-prod-tournament-lobby-poll", "prod"],
+      ["scout-beta-tournament-lobby-poll", "beta"],
     ] as const) {
-      expect(DELETED_SCHEDULE_IDS).toContain(id);
-      expect(SCHEDULES.map((s) => s.id)).not.toContain(id);
+      expect(
+        DELETED_SCHEDULES.find((schedule) => schedule.id === id)?.namespace,
+      ).toBe(namespace);
+      expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(id);
     }
   });
 
@@ -905,6 +1031,27 @@ describe("orphan schedule detection", () => {
         deletedIds,
       }),
     ).toBe(false);
+  });
+
+  test("undeclared durable-chat schedules are production drift", () => {
+    expect(
+      isOrphanSchedule({
+        scheduleId: "agent-chat-morning-review",
+        memo: undefined,
+        namespace: "prod",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(true);
+    expect(
+      isOrphanSchedule({
+        scheduleId: "morning-review",
+        memo: { chatId: "morning-review" },
+        namespace: "prod",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(true);
   });
 
   test("a declared agent-task schedule removed from SCHEDULES is still flagged", () => {

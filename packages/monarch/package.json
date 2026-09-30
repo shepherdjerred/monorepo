@@ -1,7 +1,7 @@
 {
   "name": "@shepherdjerred/monarch",
   "version": "0.1.0",
-  "description": "Monarch Money transaction classifier using OpenRouter + Amazon order matching",
+  "description": "Monarch Money transaction classifier using first-party LLM providers + Amazon order matching",
   "type": "module",
   "bin": {
     "monarch-classify": "./src/index.ts"
@@ -17,23 +17,24 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/llm-runtime": "workspace:*",
+    "@duckdb/node-api": "1.5.4-r.1",
     "@shepherdjerred/llm-models": "workspace:*",
-    "ai": "7.0.77",
-    "pdfjs-dist": "^6.2.108",
-    "playwright": "1.62.1",
+    "@shepherdjerred/llm-runtime": "workspace:*",
+    "ai": "7.0.114",
+    "pdfjs-dist": "^6.3.289",
+    "playwright": "1.63.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "bun-types": "1.4.0",
-    "eslint": "^10.3.0",
+    "bun-types": "1.4.2",
+    "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",

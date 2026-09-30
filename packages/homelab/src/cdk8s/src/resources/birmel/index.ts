@@ -1,4 +1,5 @@
 import {
+  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -16,15 +17,25 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import {
+  addAnthropicFederation,
+  geminiApiKeyEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import {
+  NET_ADMIN_FIREWALL_RESOURCES,
+  netAdminFirewallSecurityContext,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
 
 export function createBirmelDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "birmel", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    automountServiceAccountToken: false,
     securityContext: {
       fsGroup: 1000,
       ensureNonRoot: false,
@@ -37,7 +48,37 @@ export function createBirmelDeployment(chart: Chart) {
           "Birmel requires writable filesystem for SQLite databases",
       },
     },
+    podMetadata: {
+      annotations: {
+        "ci.sjer.red/pod-security-enforcement": "privileged",
+      },
+    },
   });
+
+  const firewallRunVolume = Volume.fromEmptyDir(
+    chart,
+    "birmel-sandbox-firewall-run",
+    "sandbox-firewall-run",
+  );
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "install-code-sandbox-firewall",
+      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        `set -eu
+for firewall in iptables ip6tables; do
+  for uid in 1001 1002; do
+    "$firewall" -A OUTPUT -m owner --uid-owner "$uid" -j REJECT
+  done
+  "$firewall" -L OUTPUT -n
+done`,
+      ],
+      securityContext: netAdminFirewallSecurityContext(true),
+      volumeMounts: [{ path: "/run", volume: firewallRunVolume }],
+      resources: NET_ADMIN_FIREWALL_RESOURCES,
+    }),
+  );
 
   const onePasswordItem = new OnePasswordItem(chart, "birmel-1p", {
     spec: {
@@ -81,14 +122,14 @@ export function createBirmelDeployment(chart: Chart) {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      // Baseline request (no limits) so the bot isn't BestEffort.
-      // 30d peak ~510m / ~1.6Gi; request covers the observed p95 plus margin.
+      // Reserve the baseline while bounding bursts independently.
       resources: {
         cpu: {
           request: Cpu.millis(50),
         },
         memory: {
-          request: Size.mebibytes(1280),
+          request: Size.mebibytes(768),
+          limit: Size.gibibytes(2),
         },
       },
       ports: [{ number: 8080, name: "health" }],
@@ -136,7 +177,6 @@ export function createBirmelDeployment(chart: Chart) {
           key: "DISCORD_CLIENT_ID",
         }),
 
-        // OpenRouter ordinary inference
         // Bootstrap for the flag client — these cannot come from a flag.
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
@@ -144,14 +184,18 @@ export function createBirmelDeployment(chart: Chart) {
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
-        OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+        // Provider credentials for the LLM runtime, from Birmel's own OpenAI
+        // project and the Gemini key the google stack minted. Anthropic
+        // arrives through addAnthropicFederation below instead of a key.
+        OPENAI_API_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "birmel-openrouter-api-key-secret",
+            "birmel-openai-api-key-secret",
             onePasswordItem.name,
           ),
-          key: "OPENROUTER_API_KEY",
+          key: "OPENAI_API_KEY",
         }),
+        GEMINI_API_KEY: geminiApiKeyEnv(chart, "birmel-prod"),
         LLM_MODEL: EnvValue.fromValue("gpt-5.6-sol"),
         LLM_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
         LLM_MEMORY_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
@@ -168,9 +212,7 @@ export function createBirmelDeployment(chart: Chart) {
         // Telemetry configuration (OpenTelemetry)
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("birmel"),
-        OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://tempo.tempo.svc.cluster.local:4318",
-        ),
+        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
 
         ...llmArchiveEnvVars(),
         S3_ENDPOINT: EnvValue.fromValue(
@@ -214,7 +256,6 @@ export function createBirmelDeployment(chart: Chart) {
         LOG_LEVEL: EnvValue.fromValue("info"),
         DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
         WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
-        BROWSER_PROVIDER: EnvValue.fromValue("pinchtab"),
         PINCHTAB_BASE_URL: EnvValue.fromValue(
           "http://pinchtab.pinchtab.svc.cluster.local:9867",
         ),
@@ -234,6 +275,76 @@ export function createBirmelDeployment(chart: Chart) {
     }),
   );
 
+  const sandboxTmp = Volume.fromEmptyDir(
+    chart,
+    "birmel-code-sandbox-tmp",
+    "code-sandbox-tmp",
+    { sizeLimit: Size.mebibytes(64) },
+  );
+  deployment.addContainer(
+    withCommonProps({
+      name: "code-sandbox",
+      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      command: ["tini", "-s", "--", "bun", "src/sandbox/server.ts"],
+      securityContext: {
+        user: 0,
+        group: 0,
+        ensureNonRoot: false,
+        privileged: false,
+        allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: true,
+        capabilities: {
+          drop: [Capability.ALL],
+          add: [
+            Capability.CHOWN,
+            Capability.DAC_OVERRIDE,
+            Capability.FOWNER,
+            Capability.KILL,
+            Capability.SETGID,
+            Capability.SETPCAP,
+            Capability.SETUID,
+          ],
+        },
+      },
+      resources: {
+        cpu: { request: Cpu.millis(50), limit: Cpu.millis(1000) },
+        memory: {
+          request: Size.mebibytes(256),
+          // Descendant creation is blocked per run, so two concurrent Bun
+          // snippets can each reach only their single 1 GiB address space.
+          // Leave another 512 MiB for the broker and cleanup.
+          limit: Size.mebibytes(2560),
+        },
+      },
+      startup: Probe.fromCommand(
+        [
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)",
+        ],
+        { periodSeconds: Duration.seconds(5), failureThreshold: 12 },
+      ),
+      liveness: Probe.fromCommand(
+        [
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)",
+        ],
+        { periodSeconds: Duration.seconds(30), failureThreshold: 3 },
+      ),
+      readiness: Probe.fromCommand(
+        [
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)",
+        ],
+        { periodSeconds: Duration.seconds(10), failureThreshold: 3 },
+      ),
+      volumeMounts: [{ path: "/tmp/birmel-sandbox", volume: sandboxTmp }],
+    }),
+  );
+
+  addAnthropicFederation(deployment, { workload: "birmel-prod" });
   setRevisionHistoryLimit(deployment);
 
   const healthService = new Service(chart, "birmel-health-service", {

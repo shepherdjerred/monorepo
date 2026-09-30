@@ -16,8 +16,5 @@ export function parseTeam(input: number): Team | undefined {
   if (input === 100) {
     return "blue";
   }
-  if (input === 200) {
-    return "red";
-  }
-  return undefined;
+  return input === 200 ? "red" : undefined;
 }

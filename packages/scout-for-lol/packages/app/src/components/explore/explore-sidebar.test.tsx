@@ -18,6 +18,24 @@ function ignore(): void {
 }
 
 describe("ExploreSidebar", () => {
+  test("marks conversations started through voice", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <ExploreSidebar
+          conversations={[{ ...conversation, origin: "voice" }]}
+          activeId={null}
+          onSelect={ignore}
+          onNew={ignore}
+          onRename={ignore}
+          onDelete={ignore}
+          statusForConversation={() => null}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('aria-label="Voice conversation"');
+  });
+
   test("labels a running conversation accessibly", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>

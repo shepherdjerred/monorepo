@@ -22,7 +22,7 @@ import type { Context } from "#src/trpc/context.ts";
 import {
   onboardingOutcomeTotal,
   onboardingStepTotal,
-} from "#src/metrics/web.ts";
+} from "#src/metrics/platform/web.ts";
 
 /**
  * Fixed-window limiter, applied **per caller** with a global safety cap on top.
@@ -77,8 +77,9 @@ function withinRateLimit(callerKey: string): boolean {
  */
 function callerKeyFor(ctx: Context): string {
   const sessionId = ctx.webSession?.discordId;
-  if (sessionId !== undefined) return `u:${sessionId}`;
-  return `ip:${ctx.clientIp ?? "unknown"}`;
+  return sessionId === undefined
+    ? `ip:${ctx.clientIp ?? "unknown"}`
+    : `u:${sessionId}`;
 }
 
 /** Exposed for tests so the limiter can't leak state between cases. */

@@ -19,7 +19,7 @@ import {
   bettingReconciliationFindings,
   bettingReconciliationLastRunTimestampSeconds,
   bettingReconciliationRunsTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 
 const logger = createLogger("betting-reconcile");
 

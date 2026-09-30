@@ -4,8 +4,8 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
   {
-    id: "openai-complimentary-usage-hourly",
-    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+    id: "llm-billed-cost-hourly",
+    workflowType: "runLlmBilledCostReconciliation",
     args: [],
     timing: {
       kind: "cron",
@@ -15,7 +15,12 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "10 minutes",
-    memo: "Hourly official OpenAI complimentary-token usage and cost reconciliation",
+    memo: "Hourly billed-spend reconciliation from the OpenAI and Anthropic cost reports, per project and workspace",
+    // Registered paused: stable workers do not register this Workflow, so a
+    // schedule run could reach an incompatible stable worker and fail before
+    // the candidate receives 100% of traffic. Unpause once it reaches 100%.
+    initialPauseNote:
+      "Awaiting 100% candidate traffic for runLlmBilledCostReconciliation; stable workers do not register this Workflow",
   },
   {
     id: "report-freshness-monitor",
@@ -66,7 +71,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     args: [],
     timing: {
       kind: "cron",
-      expression: "*/15 * * * *",
+      expression: "*/2 * * * *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
@@ -76,7 +81,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Create missing managed Flipt flags, then alert on remaining inventory drift",
   },
   {
-    id: "buildkite-bun-cache-gc",
+    id: "ci-bun-cache-gc",
     workflowType: "runBunCacheGcWorkflow",
     args: [],
     timing: {
@@ -88,7 +93,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 15-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "1 hour",
-    memo: "Every-five-minute Buildkite Bun cache GC on the CI node",
+    memo: "Every-five-minute Bun cache GC on the CI node",
   },
   {
     id: "turbo-cache-clean-daily",
@@ -122,8 +127,8 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Weekly dependency summary email",
   },
   {
-    id: "protobufjs-v8-watch-weekly",
-    workflowType: "runProtobufWatch",
+    id: "tasknotes-skipped-files-canary",
+    workflowType: "runTasknotesCanary",
     args: [],
     timing: {
       kind: "cron",
@@ -132,40 +137,8 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // Worst case: three 1m collection attempts, three 2m primary-delivery
-    // attempts, then three 2m failure-delivery attempts, plus retry delays and
-    // workflow-task overhead. Keep ten minutes of headroom over the 15m
-    // start-to-close total so the failure heartbeat can still be accepted.
-    workflowExecutionTimeout: "25 minutes",
-    memo: "Weekly typed npm metadata check for Temporal protobufjs v8 compatibility",
-  },
-  {
-    id: "tasknotes-skipped-files-canary",
-    workflowType: "runTasknotesCanary",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "0 9 * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "20 minutes",
-    memo: "Daily typed TaskNotes engine, pod, skipped-file, and accepted task-count baseline check",
-  },
-  {
-    id: "ci-io-post-merge-impact",
-    workflowType: "runCiIoImpact",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "0 9 * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Daily deterministic schema-v4 CI I/O impact and observability report",
+    memo: "Weekly typed TaskNotes engine, pod, skipped-file, and accepted task-count baseline check",
   },
   {
     id: "dns-audit-daily",
@@ -232,5 +205,53 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "50 minutes",
     memo: "Deterministic daily homelab health check with evidence-backed report delivery",
+  },
+  {
+    id: "ops-snapshot",
+    workflowType: "runOpsSnapshot",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "*/5 * * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "5 minutes",
+    // Two 60s collector attempts run in parallel, then up to three 30s
+    // publish attempts with backoff: about four minutes in the worst case,
+    // inside one five-minute cadence.
+    workflowExecutionTimeout: "5 minutes",
+    memo: "Every-five-minute ops overview snapshot collection and dashboard ingest",
+  },
+  {
+    id: "ops-digest-daily",
+    workflowType: "runOpsDigest",
+    args: [{ kind: "daily" }],
+    timing: {
+      kind: "cron",
+      expression: "30 7 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 2m trigger attempts plus backoff; the dashboard is idempotent
+    // per period, so a late or retried trigger never sends twice.
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Daily ops digest email trigger (the dashboard renders and sends)",
+  },
+  {
+    id: "ops-digest-weekly",
+    workflowType: "runOpsDigest",
+    args: [{ kind: "weekly" }],
+    timing: {
+      kind: "cron",
+      expression: "0 8 * * 1",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Weekly ops review digest email trigger (the dashboard renders and sends)",
   },
 ]);

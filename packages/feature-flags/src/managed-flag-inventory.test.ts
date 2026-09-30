@@ -66,7 +66,38 @@ function dareExtendedContractsFlag(environment: string) {
   return flag;
 }
 
+function scoutPolicyFlag(environment: string, key: string) {
+  const flag = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    environment,
+    "scout",
+  ).find((candidate) => candidate.key === key);
+  if (flag === undefined) throw new Error(`Scout policy flag missing: ${key}`);
+  return flag;
+}
+
+function verifySportsGuildRollout(): void {
+  const sports = managedFlagInventory.flags.find(
+    (flag) => flag.key === "streambot-sports-streaming-enabled",
+  );
+  if (sports === undefined) throw new Error("Streambot sports flag missing");
+  expect(sports.default).toBe(false);
+  expect(sports.rollouts).toHaveLength(2);
+  expect(
+    sports.rollouts.every((rollout) =>
+      rollout.constraints.every(
+        (constraint) => constraint.property === "server",
+      ),
+    ),
+  ).toBe(true);
+}
+
 describe("ManagedFlagInventorySchema", () => {
+  test(
+    "limits Streambot sports rollout to named guilds",
+    verifySportsGuildRollout,
+  );
+
   test("uses Luna in both managed environments", () => {
     expect(exploreModel("beta")).toBe("gpt-5.6-luna");
     expect(exploreModel("prod")).toBe("gpt-5.6-luna");
@@ -84,6 +115,10 @@ describe("ManagedFlagInventorySchema", () => {
       "starlight-karma-bot",
       "trmnl-dashboard",
       "temporal",
+      "alert-dashboard",
+      "the-storm",
+      "the-storm-companion",
+      "storm",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
@@ -116,7 +151,31 @@ describe("ManagedFlagInventorySchema", () => {
     expect(prodFlag.rollouts).toEqual([]);
   });
 
-  test("enables Birmel image generation in beta and disables in prod", () => {
+  test("enables Explore confirmations while keeping unavailable Scout surfaces off in prod", () => {
+    expect(scoutPolicyFlag("prod", "explore_creation_enabled")).toMatchObject({
+      default: true,
+      rollouts: [],
+    });
+
+    for (const key of [
+      "hall_of_fame_enabled",
+      "challenge_runs_enabled",
+      "mvp_votes_enabled",
+      "voice_assistant_enabled",
+    ]) {
+      expect(scoutPolicyFlag("prod", key)).toMatchObject({
+        default: false,
+        rollouts: [],
+      });
+    }
+  });
+
+  test("keeps Birmel image generation off by default, on in beta, and ramped in prod", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "birmel-image-generation-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
     const betaFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "beta",
@@ -130,6 +189,49 @@ describe("ManagedFlagInventorySchema", () => {
       "birmel",
     ).find((candidate) => candidate.key === "birmel-image-generation-enabled");
     expect(prodFlag?.default).toBe(false);
+    expect(prodFlag?.thresholdRollouts).toEqual([
+      {
+        rank: 1,
+        percentage: 100,
+        result: true,
+      },
+    ]);
+  });
+});
+
+describe("Managed flag inventory validation", () => {
+  test("opens Scout client ingestion through managed rollouts while its fallback stays off", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "scout_client_ingestion",
+    );
+    expect(declared?.default).toBe(false);
+
+    expect(scoutPolicyFlag("beta", "scout_client_ingestion")).toMatchObject({
+      default: true,
+      thresholdRollouts: [],
+    });
+    expect(scoutPolicyFlag("prod", "scout_client_ingestion")).toMatchObject({
+      default: false,
+      thresholdRollouts: [
+        {
+          rank: 1,
+          percentage: 10,
+          result: true,
+        },
+      ],
+    });
+  });
+
+  test("keeps Custom nights beta-only while production client ingestion ramps", () => {
+    expect(
+      scoutPolicyFlag("beta", "custom_nights_enabled").rollouts,
+    ).toHaveLength(1);
+    expect(scoutPolicyFlag("prod", "custom_nights_enabled")).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
   });
 
   test("materializes a full-state environment override", () => {
@@ -201,5 +303,199 @@ describe("ManagedFlagInventorySchema", () => {
         inventory([{ key: "example", type: "variant", default: "luna" }]),
       ).success,
     ).toBe(false);
+  });
+
+  test("generated flag keys match managed-flag-inventory.json", async () => {
+    const { generateFlagTypesSource } =
+      await import("../scripts/generate-flag-types.ts");
+    const generatedOnDisk = await Bun.file(
+      new URL("managed-flag-keys.generated.ts", import.meta.url),
+    ).text();
+    const expected = await generateFlagTypesSource();
+    expect(generatedOnDisk).toBe(expected);
+  });
+});
+
+describe("The Storm companion pilot rollout", () => {
+  test("targets Alt 1 in beta while keeping production and fallback off", () => {
+    const key = "the-storm-companion-pilot-enabled";
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === key,
+    );
+    expect(declared).toMatchObject({ default: false, rollouts: [] });
+
+    const beta = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "the-storm-companion",
+    ).find((flag) => flag.key === key);
+    expect(beta).toMatchObject({
+      default: false,
+      rollouts: [
+        {
+          segmentKey: "the-storm-companion-alt-1",
+          constraints: [{ property: "pilot", value: "alt-1" }],
+          result: true,
+        },
+      ],
+    });
+
+    const prod = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "the-storm-companion",
+    ).find((flag) => flag.key === key);
+    expect(prod).toMatchObject({ default: false, rollouts: [] });
+  });
+});
+
+describe("durable iMessage ingress rollout", () => {
+  test("enables the beta gateway rollout while prod stays disabled", () => {
+    const betaFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "temporal",
+    ).find(
+      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+    );
+    const prodFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "temporal",
+    ).find(
+      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+    );
+
+    expect(betaFlag?.default).toBe(true);
+    expect(prodFlag?.default).toBe(false);
+  });
+});
+
+describe("pet dashboard rollout", () => {
+  test("keeps the pet dashboard off by default and in beta while prod stays rolled out", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "pet-dashboard-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
+    const betaFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "trmnl-dashboard",
+    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
+    expect(betaFlag).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+
+    const prodFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "trmnl-dashboard",
+    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
+    expect(prodFlag).toMatchObject({
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+  });
+});
+
+describe("ops digest email rollout", () => {
+  test("sends the ops digest only in prod", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "ops-digest-email-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
+    for (const [environment, enabled] of [
+      ["beta", false],
+      ["prod", true],
+    ] as const) {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "alert-dashboard",
+      ).find((candidate) => candidate.key === "ops-digest-email-enabled");
+      expect(flag).toMatchObject({
+        default: enabled,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+    }
+  });
+});
+
+describe("Scout V2 post-match ownership", () => {
+  test("keeps V2 as the post-match discovery owner in every environment", () => {
+    // The rollback switch, not a new surface: merging it must change nothing,
+    // so both environments resolve the V2 ownership that already runs.
+    for (const environment of ["beta", "prod"]) {
+      expect(
+        scoutPolicyFlag(environment, "scout_v2_postmatch_ownership_enabled"),
+      ).toMatchObject({ default: true, rollouts: [] });
+    }
+  });
+});
+
+describe("Scout V2 progression notifications", () => {
+  test("targets the beta canary and leaves production off", () => {
+    const beta = scoutPolicyFlag(
+      "beta",
+      "scout_v2_progression_notifications_enabled",
+    );
+    expect(beta.default).toBe(false);
+    expect(beta.rollouts).toEqual([
+      expect.objectContaining({
+        segmentKey: "scout-guild-1337623164146155593",
+        constraints: [
+          expect.objectContaining({
+            property: "server",
+            operator: "eq",
+            value: "1337623164146155593",
+          }),
+        ],
+        result: true,
+      }),
+    ]);
+    expect(beta.rules).toEqual([]);
+
+    expect(
+      scoutPolicyFlag("prod", "scout_v2_progression_notifications_enabled"),
+    ).toMatchObject({ default: false, rollouts: [], rules: [] });
+  });
+});
+
+describe("Scout V2 prematch ownership", () => {
+  test("keeps the declared default on v1 so an unreachable Flipt never moves detection", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "scout_v2_prematch_ownership_enabled",
+    );
+    expect(declared).toMatchObject({ default: false, rollouts: [] });
+  });
+
+  test("hands prematch detection to V2 in beta while prod stays on v1", () => {
+    // The cutover ramps per stage, beta first. Each ramp records its own
+    // environment override, so prod keeps resolving the v1 ownership it runs.
+    expect(
+      scoutPolicyFlag("beta", "scout_v2_prematch_ownership_enabled"),
+    ).toMatchObject({
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+    expect(
+      scoutPolicyFlag("prod", "scout_v2_prematch_ownership_enabled"),
+    ).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
   });
 });

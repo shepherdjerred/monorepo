@@ -1,19 +1,19 @@
 import type {
   ScoutQlGroupSize,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import {
   evaluateAggregate,
   evaluateHaving,
   type AggregateEvalContext,
   type FactRow,
-} from "#src/reports/aggregate-eval.ts";
+} from "#src/reports/query/aggregate-eval.ts";
 import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
 import type {
   PlanAggregateRow,
   PlanGroupMember,
   PlanOutputValue,
-} from "#src/reports/plan-rows.ts";
+} from "#src/reports/query/plan-rows.ts";
 
 /**
  * Teammate-group folding for the `player_groups` source.

@@ -1,4 +1,8 @@
-import type { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import type {
+  PutObjectCommand,
+  PutObjectCommandOutput,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -42,19 +46,33 @@ function isRetryableError(error: unknown): boolean {
 /**
  * Send a PutObjectCommand with a bounded exponential backoff on transient
  * errors. Deterministic (4xx) failures and the final attempt throw.
+ *
+ * The command output is returned so the caller can check the ETag the server
+ * acknowledged against the body it uploaded; see `object-integrity.ts` for what
+ * that comparison does and does not prove.
  */
 export async function sendPutWithRetry(
   client: S3Client,
   command: PutObjectCommand,
   context: string,
-): Promise<void> {
+  abortSignal?: AbortSignal,
+): Promise<PutObjectCommandOutput> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_PUT_ATTEMPTS; attempt++) {
     try {
-      await client.send(command);
-      return;
+      return await client.send(
+        command,
+        abortSignal === undefined ? {} : { abortSignal },
+      );
     } catch (error) {
       lastError = error;
+      // A caller that fenced this put gave it a deadline, and the retry budget
+      // must not outlive it. Three attempts plus backoff is precisely how an
+      // unbounded put escapes the lock that was meant to be holding it, so an
+      // aborted signal ends the loop rather than starting another attempt.
+      if (abortSignal?.aborted === true) {
+        throw error;
+      }
       if (attempt === MAX_PUT_ATTEMPTS || !isRetryableError(error)) {
         throw error;
       }

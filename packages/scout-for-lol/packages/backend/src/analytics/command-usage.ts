@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -8,6 +7,7 @@ import {
   type DiscordCommandStatus,
   type ProductAnalytics,
 } from "#src/analytics/product-analytics.ts";
+import { findAnalyticsGuildInstallation } from "#src/analytics/guild-installation.ts";
 
 const logger = createLogger("command-usage-analytics");
 
@@ -30,6 +30,24 @@ const DiscordCommandNameSchema = z.enum([
 ]);
 
 /**
+ * Closed subcommand vocabulary across the grouped commands. Unknown or absent
+ * subcommands simply omit the property — same drop-don't-mint policy as the
+ * command names.
+ */
+const DiscordCommandSubcommandSchema = z.enum([
+  "balance",
+  "prizes",
+  "rules",
+  "history",
+  "transfer",
+  "dare",
+  "notifications",
+  "ask",
+  "join",
+  "leave",
+]);
+
+/**
  * Capture one `discord_command_used` product analytics event against the
  * guild's installation identity.
  *
@@ -43,6 +61,7 @@ export async function captureDiscordCommandUsed(
   input: {
     guildId: string | null;
     commandName: string;
+    subcommand?: string | null;
     status: DiscordCommandStatus;
   },
   options?: {
@@ -54,25 +73,17 @@ export async function captureDiscordCommandUsed(
     if (input.guildId === null) {
       return;
     }
-    const guildId = DiscordGuildIdSchema.safeParse(input.guildId);
-    if (!guildId.success) {
-      return;
-    }
     const commandName = DiscordCommandNameSchema.safeParse(input.commandName);
     if (!commandName.success) {
       return;
     }
+    const subcommand = DiscordCommandSubcommandSchema.safeParse(
+      input.subcommand ?? undefined,
+    );
 
     const db = options?.db ?? prisma;
     const analytics = options?.analytics ?? getProductAnalytics();
-    const install = await db.guildInstall.findUnique({
-      where: { serverId: guildId.data },
-      select: {
-        serverId: true,
-        analyticsInstallationId: true,
-        analyticsLifecycleTracked: true,
-      },
-    });
+    const install = await findAnalyticsGuildInstallation(db, input.guildId);
     if (install === null) {
       logger.warn(
         "Cannot capture command usage without a GuildInstall lifecycle row",
@@ -82,7 +93,11 @@ export async function captureDiscordCommandUsed(
 
     analytics.capture(install, {
       event: "discord_command_used",
-      properties: { command_name: commandName.data, status: input.status },
+      properties: {
+        command_name: commandName.data,
+        status: input.status,
+        ...(subcommand.success ? { subcommand: subcommand.data } : {}),
+      },
     });
   } catch (error) {
     logger.error(

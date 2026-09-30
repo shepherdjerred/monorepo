@@ -1,10 +1,10 @@
 import type { ReportRenderSpec } from "@scout-for-lol/data";
-import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { AnalyticsChartProps } from "@scout-for-lol/report";
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-types.ts";
+} from "#src/reports/query/query-types.ts";
 import { chartNumber } from "#src/reports/report-chart-values.ts";
 
 export type ReportChartRender = Extract<

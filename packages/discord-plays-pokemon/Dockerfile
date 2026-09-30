@@ -23,7 +23,7 @@
 # uses clang wasm32-unknown-unknown + wasm-ld (LLVM, NOT emscripten): trixie's
 # clang-19 produces a Bun-loadable binary (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
-FROM debian:trixie-slim@sha256:3a39a0592364683e6bab97937b72cad5a8fa6dcbbee90edb3bb48c7f8e94f258 AS wasm-builder
+FROM debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a AS wasm-builder
 
 # Pinned commit of ottohg/pokeemerald-wasm. Kept in sync with the OTTOHG_SHA in
 # packages/discord-plays-pokemon/scripts/build-wasm.ts (the single source of
@@ -36,7 +36,7 @@ ENV OTTOHG_SHA=c101be5ac2ae53c5d18ee063f16eeeda751639f8
 # decomp host tools, libpng/zlib + pkg-config for gbagfx, python3 + uv for the
 # sound-data tooling.
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.5
+ARG UV_VERSION=0.12.18
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
 # into a build failure here. Reproducibility would need a snapshot archive, not
@@ -83,7 +83,7 @@ RUN WASM_CC=clang WASM_LD=wasm-ld make wasm \
 # ---------------------------------------------------------------------------
 # Bun stages.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the artifact builds below ─────────
@@ -98,9 +98,9 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --filter '@discord-plays-pokemon/*'
 
@@ -140,7 +140,8 @@ COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
   /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
 RUN cd /app/packages/discord-plays-pokemon/packages/backend && \
   bun --no-install --bun vitest --config ../../../../vitest.config.ts run \
-  src/emulator/emulator-symbols.integration.test.ts
+  src/emulator/emulator-symbols.integration.test.ts \
+  src/emulator/audio/audio-fingerprint.test.ts
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps
@@ -149,9 +150,9 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@discord-plays-pokemon/backend'
 
@@ -250,8 +251,8 @@ CMD ["bun", "packages/backend/src/index.ts"]
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=discord-plays-pokemon
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # The smoke harness writes its temporary config at the application's normal
@@ -265,6 +266,6 @@ RUN touch /app/packages/discord-plays-pokemon/config.toml \
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

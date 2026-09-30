@@ -5,7 +5,7 @@ import {
 } from "#src/analytics/bryan-bucks-events.ts";
 
 describe("aggregateBucksPendingStakes", () => {
-  test("sums outcome, parlay, and weekly pending stakes per server", () => {
+  test("sums outcome, parlay, and dare pending stakes per server", () => {
     const result = aggregateBucksPendingStakes(
       [{ stake: 10, matchedStake: 6, bucksAccount: { serverId: "s1" } }],
       [{ stake: 3, bucksAccount: { serverId: "s1" } }],
@@ -24,19 +24,17 @@ describe("aggregateBucksPendingStakes", () => {
     expect(result.get("s1")).toBe(10);
   });
 
-  test("dare escrow counts as pending stake alongside outcome, parlay, and weekly money", () => {
+  test("dare escrow counts as pending stake alongside outcome and parlay money", () => {
     const result = aggregateBucksPendingStakes(
       [{ stake: 5, matchedStake: 5, bucksAccount: { serverId: "s1" } }],
       [{ stake: 3, bucksAccount: { serverId: "s1" } }],
-      [{ stake: 2, bucksAccount: { serverId: "s1" } }],
       [{ stake: 7, bucksAccount: { serverId: "s1" } }],
     );
-    expect(result.get("s1")).toBe(17);
+    expect(result.get("s1")).toBe(15);
   });
 
   test("dare escrow alone still attributes to the right server", () => {
     const result = aggregateBucksPendingStakes(
-      [],
       [],
       [],
       [{ stake: 4, bucksAccount: { serverId: "s3" } }],

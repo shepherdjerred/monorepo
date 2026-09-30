@@ -115,12 +115,11 @@ export function getLaneOpponent(
   // custom) matches `undefined === undefined` against every enemy and returns
   // an arbitrary one. That answer then reaches the AI review prompt, which
   // states it as fact.
-  if (player.lane === undefined) {
-    return undefined;
-  }
-  return pipe(
-    opponents,
-    filter((opponent) => opponent.lane === player.lane),
-    first(),
-  );
+  return player.lane === undefined
+    ? undefined
+    : pipe(
+        opponents,
+        filter((opponent) => opponent.lane === player.lane),
+        first(),
+      );
 }

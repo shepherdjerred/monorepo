@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   COMPETITIVE_PROGRESSION_CATALOG,
   COMPETITIVE_PROGRESSION_CATALOG_VERSION,
@@ -18,6 +19,7 @@ import {
 } from "@scout-for-lol/temporal";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
+import { RETIRED_HALL_RECORD_IDS } from "#src/progression/hall/legacy-record-ids.ts";
 
 const QueueFamilyArraySchema = HallQueueFamilyIdSchema.array();
 const RecordArraySchema = HallRecordIdSchema.array();
@@ -48,6 +50,13 @@ export function defaultHallSettings(guildId: string): HallSettings {
 }
 
 export function hallSettingsFromRow(row: HallSettingsRow): HallSettings {
+  const rawRecords = parseProgressionJson(
+    row.enabledRecords,
+    z.array(z.string()),
+  );
+  const enabledRecords = RecordArraySchema.parse(
+    rawRecords.filter((id) => !RETIRED_HALL_RECORD_IDS.has(id)),
+  );
   return HallSettingsSchema.parse({
     guildId: row.guildId,
     catalogVersion: row.catalogVersion,
@@ -56,7 +65,7 @@ export function hallSettingsFromRow(row: HallSettingsRow): HallSettings {
       row.enabledQueueFamilies,
       QueueFamilyArraySchema,
     ),
-    enabledRecords: parseProgressionJson(row.enabledRecords, RecordArraySchema),
+    enabledRecords,
   });
 }
 
@@ -274,7 +283,7 @@ export async function requestFullHallBaseline(
     readonly stage: ScoutStage;
     readonly reuseActive?: boolean;
   },
-): Promise<HallBaselineRequest> {
+): Promise<HallBaselineRequest | null> {
   const guildId = DiscordGuildIdSchema.parse(options.guildId);
   const request = await db.$transaction(async (tx) => {
     const existing = await tx.hallSettings.findUnique({
@@ -305,9 +314,8 @@ export async function requestFullHallBaseline(
       reuseActive: options.reuseActive ?? true,
     });
   });
-  if (request === null) {
-    throw new Error("Hall baseline requires at least one enabled cell");
-  }
+  // Null when no cells are enabled: a user-configuration state, not a
+  // failure. The caller maps it to a user-facing error.
   return request;
 }
 

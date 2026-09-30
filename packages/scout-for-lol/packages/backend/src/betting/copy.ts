@@ -47,3 +47,12 @@ export function bucksInsufficient(balance: number, needed: number): string {
 export function withRulesHint(text: string): string {
   return `${text} ${BUCKS_RULES_HINT}`;
 }
+
+/** Singular/plural label for a count. */
+export function countLabel(
+  value: number,
+  singular: string,
+  plural = `${singular}s`,
+): string {
+  return value === 1 ? singular : plural;
+}

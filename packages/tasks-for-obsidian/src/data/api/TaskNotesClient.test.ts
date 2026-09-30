@@ -31,8 +31,7 @@ function page({ total, paths, hasMore }: Page): Response {
 
 function requestUrl(input: Parameters<typeof fetch>[0]): string {
   if (typeof input === "string") return input;
-  if (input instanceof URL) return input.href;
-  return input.url;
+  return input instanceof URL ? input.href : input.url;
 }
 
 /** A transport that records every URL and replays scripted pages in order. */

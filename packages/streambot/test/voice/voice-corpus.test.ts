@@ -9,7 +9,7 @@ import {
 import {
   decodeDiscordOpusContainer,
   encodeDiscordOpusContainer,
-} from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
+} from "@shepherdjerred/voice-assistant/audio/discord-opus-container.ts";
 import { expandVoiceCorpusRecipes } from "@shepherdjerred/streambot/voice/corpus-recipes.ts";
 import {
   generateVoiceCorpus,

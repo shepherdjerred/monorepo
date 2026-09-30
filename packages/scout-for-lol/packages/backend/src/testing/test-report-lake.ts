@@ -1,10 +1,16 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   ACCOUNT_LAKE_COLUMNS,
+  computeKda,
   type AccountLakeRow,
+  type MatchLoadout,
   type MatchLakeRow,
+  type MatchTeamBanLakeRow,
+  type MatchTeamLakeRow,
   type PrematchLakeRow,
+  type RUNE_SPELL_COLUMNS,
   type TimelineCoverageLakeRow,
   type TimelineEventParticipantLakeRow,
   type TimelineEventLakeRow,
@@ -22,10 +28,19 @@ import {
 } from "#src/report-lake/paths.ts";
 import {
   matchStagingFilePath,
+  matchTeamBanStagingFilePath,
+  matchTeamStagingFilePath,
   prematchStagingFilePath,
   timelineStagingFilePath,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { matchLoadoutLakeFields } from "#src/report-lake/loadout.ts";
+import {
+  augmentFields,
+  DEFAULT_SCOUTQL_LOADOUT,
+  itemSlots,
+} from "#src/testing/report-lake/match-fields.ts";
 
 /**
  * Test helper: build a minimal report lake from simplified fact inputs.
@@ -48,6 +63,9 @@ export type TestLakeMatchFact = {
   matchId: string;
   puuid: string;
   queue: string | null;
+  queueId?: number;
+  gameMode?: string;
+  mapId?: number;
   win: boolean;
   surrendered: boolean;
   kills: number;
@@ -60,10 +78,18 @@ export type TestLakeMatchFact = {
   /** Override to make per-participant CS vary, e.g. for CS-per-minute tests. */
   creepScore?: number;
   teamId?: number;
+  /** Team objective flags for the match_teams row this fact rolls up into. */
+  firstDragon?: boolean;
+  firstBaron?: boolean;
   /** Arena subteam (1-8); leave unset for non-Arena queues. */
   playerSubteamId?: number;
+  placement?: number;
+  subteamPlacement?: number;
+  augmentIds?: readonly (number | null)[];
   championId?: number;
   championName?: string;
+  teamPosition?: string | undefined;
+  loadout?: MatchLoadout;
   /**
    * The Riot ID recorded on this match row.
    *
@@ -74,6 +100,12 @@ export type TestLakeMatchFact = {
    */
   riotIdGameName?: string;
   riotIdTagline?: string;
+  /** Final inventory by slot (0-6); missing slots are empty. */
+  items?: number[];
+  /** ScoutQL spell/rune ids; defaults to Flash + Ignite, Conqueror. */
+  scoutQlLoadout?: Partial<
+    Pick<MatchLakeRow, (typeof RUNE_SPELL_COLUMNS)[number]>
+  >;
   gameCreationAt: Date;
 };
 
@@ -99,6 +131,17 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
   const gameDurationSeconds = fact.gameDurationSeconds ?? 1800;
   const timePlayedSeconds = fact.timePlayedSeconds ?? gameDurationSeconds;
+  const loadout = fact.loadout ?? {
+    itemIds: [1055, 3006, 3031, 3094, 3072, 0, 3340],
+    summonerSpellIds: [4, 7],
+    runes: {
+      primaryStyleId: 8000,
+      primaryRuneIds: [8005, 8009, 9103, 8014],
+      secondaryStyleId: 8300,
+      secondaryRuneIds: [8304, 8347],
+      statShardIds: { offense: 5005, flex: 5008, defense: 5002 },
+    },
+  };
   return {
     match_id: fact.matchId,
     game_id: fact.matchId.replaceAll(/\D/g, "") || "0",
@@ -108,13 +151,13 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     game_start_at: lakeTimestamp(created),
     game_end_at: lakeTimestamp(created + gameDurationSeconds * 1000),
     game_duration_seconds: gameDurationSeconds,
-    queue_id: 420,
+    queue_id: fact.queueId ?? 420,
     queue: fact.queue,
-    game_mode: "CLASSIC",
+    game_mode: fact.gameMode ?? "CLASSIC",
     game_type: "MATCHED_GAME",
     game_version: "16.1.1",
     end_of_game_result: "GameComplete",
-    map_id: 11,
+    map_id: fact.mapId ?? 11,
     puuid: fact.puuid,
     participant_id: fact.playerId,
     team_id: fact.teamId ?? 100,
@@ -123,10 +166,11 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     summoner_name: fact.playerAlias,
     champion_id: fact.championId ?? 22,
     champion_name: fact.championName ?? "Ashe",
-    team_position: "BOTTOM",
+    team_position: fact.teamPosition ?? "BOTTOM",
     individual_position: "BOTTOM",
     lane: null,
     role: null,
+    ...matchLoadoutLakeFields(loadout),
     win: fact.win,
     surrendered: fact.surrendered,
     early_surrendered: false,
@@ -136,10 +180,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     kills: fact.kills,
     deaths: fact.deaths,
     assists: fact.assists,
-    kda:
-      fact.deaths === 0
-        ? fact.kills + fact.assists
-        : (fact.kills + fact.assists) / fact.deaths,
+    kda: computeKda(fact),
     creep_score: fact.creepScore ?? 150,
     total_minions_killed: 140,
     neutral_minions_killed: 10,
@@ -191,9 +232,51 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     inhibitor_kills: 0,
     baron_kills: 0,
     dragon_kills: 0,
-    placement: null,
-    subteam_placement: null,
+    placement: fact.placement ?? null,
+    subteam_placement: fact.subteamPlacement ?? null,
     player_subteam_id: fact.playerSubteamId ?? null,
+    ...itemSlots(fact.items ?? loadout.itemIds),
+    ...augmentFields(fact.augmentIds),
+    ...DEFAULT_SCOUTQL_LOADOUT,
+    ...fact.scoutQlLoadout,
+  };
+}
+
+function teamRowFromFacts(
+  matchId: string,
+  teamId: number,
+  facts: readonly TestLakeMatchFact[],
+): MatchTeamLakeRow {
+  const first = facts[0];
+  if (first === undefined) {
+    throw new Error(
+      `Test lake team ${String(teamId)} for ${matchId} has no participants`,
+    );
+  }
+  return {
+    match_id: matchId,
+    month: lakeMonth(first.gameCreationAt.getTime()),
+    team_id: teamId,
+    win: first.win,
+    baron_kills: first.firstBaron === true ? 1 : 0,
+    first_baron: first.firstBaron ?? false,
+    champion_kills: facts.reduce((sum, fact) => sum + fact.kills, 0),
+    first_champion_kill: false,
+    dragon_kills: first.firstDragon === true ? 1 : 0,
+    first_dragon: first.firstDragon ?? false,
+    inhibitor_kills: 0,
+    first_inhibitor: false,
+    rift_herald_kills: 0,
+    first_rift_herald: false,
+    tower_kills: 1,
+    first_tower: false,
+    void_grub_kills: null,
+    first_void_grub: null,
+    atakhan_kills: null,
+    first_atakhan: null,
+    epic_monster_feat_state: null,
+    first_blood_feat_state: null,
+    first_turret_feat_state: null,
   };
 }
 
@@ -240,6 +323,8 @@ type TestLakeInput = {
   timelineEventParticipants?: TimelineEventParticipantLakeRow[];
   timelineFrames?: TimelineParticipantFrameLakeRow[];
   timelineCoverage?: TimelineCoverageLakeRow[];
+  /** Raw ban rows, written as staging files one per match. */
+  bans?: MatchTeamBanLakeRow[];
 };
 
 async function writeTestAccounts(
@@ -315,6 +400,33 @@ async function writeTestMatches(
   }
 }
 
+async function writeTestMatchTeams(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
+  const byMatch = new Map<string, Map<number, TestLakeMatchFact[]>>();
+  for (const fact of [
+    ...(input.matchFacts ?? []),
+    ...(input.untrackedMatchFacts ?? []),
+  ]) {
+    const teams = byMatch.get(fact.matchId) ?? new Map();
+    const teamId = fact.teamId ?? 100;
+    const facts = teams.get(teamId) ?? [];
+    facts.push(fact);
+    teams.set(teamId, facts);
+    byMatch.set(fact.matchId, teams);
+  }
+  for (const [matchId, teams] of byMatch) {
+    const rows = [...teams.entries()]
+      .toSorted(([left], [right]) => left - right)
+      .map(([teamId, facts]) => teamRowFromFacts(matchId, teamId, facts));
+    await Bun.write(
+      matchTeamStagingFilePath(lakeDir, matchId),
+      rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+    );
+  }
+}
+
 async function writeTestPrematches(
   lakeDir: string,
   input: TestLakeInput,
@@ -356,6 +468,24 @@ async function writeTestTimelineRows(
   }
 }
 
+async function writeTestMatchTeamBans(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
+  const byMatch = new Map<string, MatchTeamBanLakeRow[]>();
+  for (const row of input.bans ?? []) {
+    const rows = byMatch.get(row.match_id) ?? [];
+    rows.push(row);
+    byMatch.set(row.match_id, rows);
+  }
+  for (const [matchId, rows] of byMatch) {
+    await Bun.write(
+      matchTeamBanStagingFilePath(lakeDir, matchId),
+      rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+    );
+  }
+}
+
 export async function writeTestLake(
   lakeDir: string,
   input: TestLakeInput,
@@ -363,6 +493,8 @@ export async function writeTestLake(
   await ensureLakeScaffold(lakeDir);
   await writeTestAccounts(lakeDir, input);
   await writeTestMatches(lakeDir, input);
+  await writeTestMatchTeams(lakeDir, input);
+  await writeTestMatchTeamBans(lakeDir, input);
   await writeTestPrematches(lakeDir, input);
   await writeTestTimelineRows(
     lakeDir,
@@ -384,4 +516,14 @@ export async function writeTestLake(
     "timeline_coverage",
     input.timelineCoverage ?? [],
   );
+}
+
+/** Write a test lake into a fresh temp directory and resolve its files. */
+export async function writeTempTestLake(
+  prefix: string,
+  input: TestLakeInput,
+): Promise<LakeFiles> {
+  const lakeDir = await mkdtemp(path.join(tmpdir(), prefix));
+  await writeTestLake(lakeDir, input);
+  return await resolveLakeFiles(lakeDir);
 }

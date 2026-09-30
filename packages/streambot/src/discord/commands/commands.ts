@@ -1,0 +1,436 @@
+import {
+  SlashCommandBuilder,
+  type SlashCommandSubcommandBuilder,
+  type RESTPostAPIChatInputApplicationCommandsJSONBody,
+} from "discord.js";
+
+/**
+ * Options `/stream play` and `/stream playnext` share.
+ *
+ * The two subcommands take the same request, differing only in where the item lands, so their
+ * option lists have to agree — a `mode` or `sublang` added to one and forgotten on the other is a
+ * silent asymmetry a user only discovers by trying it. Declaring them once makes that impossible.
+ */
+function withRequestOptions(
+  sub: SlashCommandSubcommandBuilder,
+): SlashCommandSubcommandBuilder {
+  return sub
+    .addStringOption((o) =>
+      o
+        .setName("query")
+        .setDescription("library title, URL, or search terms")
+        .setRequired(true),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("subtitles")
+        .setDescription("Burn in subtitles (default: server setting)")
+        .addChoices({ name: "on", value: "on" }, { name: "off", value: "off" }),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("sublang")
+        .setDescription("Preferred subtitle language, e.g. en, es, en.forced"),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("mode")
+        .setDescription(
+          "Play as audio only, or as a Go Live video stream (default: auto)",
+        )
+        .addChoices(
+          { name: "auto", value: "auto" },
+          { name: "music", value: "music" },
+          { name: "video", value: "video" },
+        ),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("provider")
+        .setDescription(
+          "Choose for sports requests; auto tries StreamEast first",
+        )
+        .addChoices(
+          { name: "auto (StreamEast first)", value: "auto" },
+          { name: "StreamEast", value: "streameast" },
+          { name: "TVSportsLive", value: "tvsportslive" },
+        ),
+    );
+}
+
+/**
+ * Slash command definitions. A single top-level `/stream` command with subcommands
+ * (`/stream play`, `/stream skip`, …). Registered guild-scoped on `ready` (instant). Handlers
+ * live in `command-bot.ts`, keyed on the subcommand name. Commands work in any channel;
+ * world-readable output goes to the status channel.
+ */
+export const commandDefinitions = [
+  new SlashCommandBuilder()
+    .setName("stream")
+    .setDescription("Control the video stream")
+    .addSubcommand((sub) =>
+      withRequestOptions(
+        sub
+          .setName("play")
+          .setDescription(
+            "Queue and play a video (library title, URL, playlist, or search)",
+          ),
+      )
+        .addStringOption((o) =>
+          o
+            .setName("source")
+            .setDescription(
+              "Search history, local files, YouTube, or all sources",
+            )
+            .addChoices(
+              { name: "auto", value: "auto" },
+              { name: "history", value: "history" },
+              { name: "local", value: "local" },
+              { name: "youtube", value: "youtube" },
+            ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("placement")
+            .setDescription(
+              "Add to queue, play next, or replace the current video",
+            )
+            .addChoices(
+              { name: "queue", value: "queue" },
+              { name: "next", value: "next" },
+              { name: "now", value: "now" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      withRequestOptions(
+        sub
+          .setName("playnext")
+          .setDescription("Queue a video to play next (front of the queue)"),
+      ),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("skip").setDescription("Skip the current video"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("join")
+        .setDescription("Join your voice channel and listen for requests"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("stop")
+        .setDescription("Stop playback and clear the queue (admin)"),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("queue").setDescription("Show the current queue"),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("nowplaying").setDescription("Show what's currently playing"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("remove")
+        .setDescription("Remove an item from the queue")
+        .addIntegerOption((o) =>
+          o
+            .setName("index")
+            .setDescription("queue position (1-based)")
+            .setMinValue(1)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("clear").setDescription("Clear the queue (admin)"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("move")
+        .setDescription("Move a queued item to a new position")
+        .addIntegerOption((o) =>
+          o
+            .setName("from")
+            .setDescription("current position (1-based)")
+            .setMinValue(1)
+            .setRequired(true),
+        )
+        .addIntegerOption((o) =>
+          o
+            .setName("to")
+            .setDescription("new position (1-based)")
+            .setMinValue(1)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("shuffle").setDescription("Shuffle the queue"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("loop")
+        .setDescription("Set the loop mode")
+        .addStringOption((o) =>
+          o
+            .setName("mode")
+            .setDescription("off, track, or queue")
+            .setRequired(true)
+            .addChoices(
+              { name: "off", value: "off" },
+              { name: "track", value: "track" },
+              { name: "queue", value: "queue" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("volume")
+        .setDescription("Set playback volume (0-200%)")
+        .addIntegerOption((o) =>
+          o
+            .setName("level")
+            .setDescription("0-200")
+            .setMinValue(0)
+            .setMaxValue(200)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("seek")
+        .setDescription("Jump to a position in the current video")
+        .addStringOption((o) =>
+          o
+            .setName("position")
+            .setDescription("timestamp: 90, 1:30, or 1:02:03")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("chapters")
+        .setDescription("List the chapters of the current video"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("chapter")
+        .setDescription("Jump to a chapter of the current video")
+        .addIntegerOption((o) =>
+          o
+            .setName("number")
+            .setDescription("chapter number (1-based)")
+            .setMinValue(1)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("subtitles")
+        .setDescription(
+          "Pick a subtitle track for the currently playing video (brief restart)",
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("list")
+        .setDescription("Browse the video library")
+        .addStringOption((o) =>
+          o.setName("filter").setDescription("optional search filter"),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("search")
+        .setDescription("Search history, local files, and YouTube")
+        .addStringOption((o) =>
+          o.setName("query").setDescription("search terms").setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("source")
+            .setDescription("limit results to one source")
+            .addChoices(
+              { name: "auto", value: "auto" },
+              { name: "history", value: "history" },
+              { name: "local", value: "local" },
+              { name: "youtube", value: "youtube" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("sources")
+        .setDescription("List or search the sources yt-dlp can stream")
+        .addStringOption((o) =>
+          o
+            .setName("query")
+            .setDescription("filter the source list, e.g. twitch"),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("help")
+        .setDescription("List all commands and supported sources"),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("playback")
+        .setDescription("Playback session controls")
+        .addSubcommand((sub) =>
+          sub.setName("pause").setDescription("Pause playback"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("resume").setDescription("Resume playback"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("restart").setDescription("Restart the current video"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("previous")
+            .setDescription("Play the previous server item"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("leave").setDescription("Leave your voice channel"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("sports")
+            .setDescription("Show live and upcoming sports listings for today"),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("history")
+        .setDescription("Recent playback history")
+        .addSubcommand((sub) =>
+          sub
+            .setName("list")
+            .setDescription("List recent media")
+            .addStringOption((option) =>
+              option
+                .setName("scope")
+                .setDescription("your history or this server's history")
+                .addChoices(
+                  { name: "mine", value: "mine" },
+                  { name: "server", value: "server" },
+                ),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("replay")
+            .setDescription("Replay an item from recent history")
+            .addIntegerOption((option) =>
+              option
+                .setName("index")
+                .setDescription("history position")
+                .setMinValue(1)
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("scope")
+                .setDescription("your history or this server's history")
+                .addChoices(
+                  { name: "mine", value: "mine" },
+                  { name: "server", value: "server" },
+                ),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("personal")
+        .setDescription("Favorites and saved queues")
+        .addSubcommand((sub) =>
+          sub
+            .setName("favorite-add")
+            .setDescription("Favorite the current video"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("favorite-remove")
+            .setDescription("Remove a favorite")
+            .addIntegerOption((option) =>
+              option
+                .setName("index")
+                .setDescription("favorite position")
+                .setMinValue(1)
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("favorites").setDescription("List your favorites"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("save-queue")
+            .setDescription("Save the current queue")
+            .addStringOption((option) =>
+              option
+                .setName("name")
+                .setDescription("queue name")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("saved-queues").setDescription("List saved queues"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("load-queue")
+            .setDescription("Load a saved queue")
+            .addStringOption((option) =>
+              option
+                .setName("name")
+                .setDescription("queue name")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("delete-queue")
+            .setDescription("Delete a saved queue")
+            .addStringOption((option) =>
+              option
+                .setName("name")
+                .setDescription("queue name")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("usual").setDescription("Play your most frequent item"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("continue")
+            .setDescription("Continue your most recent series"),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("voice-debug")
+        .setDescription("Capture decoded voice input for diagnosis (admin)")
+        .addSubcommand((sub) =>
+          sub
+            .setName("start")
+            .setDescription("Start a private decoded-audio capture window")
+            .addIntegerOption((option) =>
+              option
+                .setName("duration")
+                .setDescription("capture duration in seconds (default 60)")
+                .setMinValue(10)
+                .setMaxValue(300),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("stop").setDescription("Stop the active capture window"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("status").setDescription("Show capture window status"),
+        ),
+    ),
+];
+
+export const commandJson: RESTPostAPIChatInputApplicationCommandsJSONBody[] =
+  commandDefinitions.map((command) => command.toJSON());

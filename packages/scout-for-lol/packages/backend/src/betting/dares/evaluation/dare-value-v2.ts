@@ -3,10 +3,11 @@ import type { DareValueV2 } from "@scout-for-lol/data";
 export type DareValuePrimitiveV2 = "boolean" | "invalid" | "number" | "string";
 
 export function dareValueNeedsTimeline(value: DareValueV2): boolean {
-  if (value.kind === "timeline_event_count") return true;
   return (
-    value.kind === "arithmetic" &&
-    (dareValueNeedsTimeline(value.left) || dareValueNeedsTimeline(value.right))
+    value.kind === "timeline_event_count" ||
+    (value.kind === "arithmetic" &&
+      (dareValueNeedsTimeline(value.left) ||
+        dareValueNeedsTimeline(value.right)))
   );
 }
 

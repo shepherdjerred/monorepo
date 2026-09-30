@@ -12,9 +12,11 @@ export function parseColor(
     const green = Number(values[1]);
     const blue = Number(values[2]);
     const alpha = values[3] === undefined ? 1 : Number(values[3]);
-    if ([red, green, blue, alpha].some((component) => Number.isNaN(component)))
-      return null;
-    return [red, green, blue, alpha];
+    return [red, green, blue, alpha].some((component) =>
+      Number.isNaN(component),
+    )
+      ? null
+      : [red, green, blue, alpha];
   }
   const hex = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(normalized);
   const digits = hex?.[1];

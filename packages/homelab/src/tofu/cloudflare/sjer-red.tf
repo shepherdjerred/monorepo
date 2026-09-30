@@ -292,10 +292,10 @@ resource "cloudflare_dns_record" "sjer_red_cname_shuxin_bluemap" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_sjerred_bluemap" {
+resource "cloudflare_dns_record" "sjer_red_cname_dynmap" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
-  name    = "sjerred-bluemap"
+  name    = "dynmap"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
@@ -305,15 +305,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_ts_mc_net" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "ts-mc.net"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
-resource "cloudflare_dns_record" "sjer_red_cname_openrouter_broadcast" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "openrouter-broadcast"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
@@ -332,6 +323,24 @@ resource "cloudflare_dns_record" "sjer_red_cname_cook" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "cook"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+resource "cloudflare_dns_record" "sjer_red_cname_macos_cross" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "macos-cross"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+resource "cloudflare_dns_record" "sjer_red_cname_cross_compilers" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "cross-compilers"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
@@ -368,6 +377,19 @@ resource "cloudflare_dns_record" "sjer_red_cname_trmnl" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "trmnl"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+# GitHub must reach Woodpecker for webhooks and the OAuth callback, so the web
+# surface is public. Access control is WOODPECKER_OPEN=false plus the admin
+# allowlist, not network reachability — and the agent gRPC endpoint is
+# deliberately NOT here: it is reachable only over the tailnet.
+resource "cloudflare_dns_record" "sjer_red_cname_woodpecker" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "woodpecker"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true

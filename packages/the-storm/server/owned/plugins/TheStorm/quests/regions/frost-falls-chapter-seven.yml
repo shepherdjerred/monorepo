@@ -1,0 +1,73 @@
+# A bright memorial shelter records its guests and sends them onward prepared.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-guestbook:
+    name: "The Guestbook"
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed a-warm-window
+    text:
+      offer: "The window tells travellers the hearth is open. A guestbook will help the next keeper know who came through and what they needed."
+      accept: "Bring books and ink for a shelter guestbook."
+      decline: "I will keep the names on loose pages."
+      finish: "The memorial shelter can greet returning travellers by name."
+      summary: "Keep a guestbook for the Frost Falls memorial shelter."
+      questions: []
+    start: guestbook
+    stages:
+      guestbook:
+        journal: "Bring Lenox 6 books and 3 ink sacs."
+        waiting: "A name should be recorded only with the guest's welcome."
+        complete: "The shelter has a guestbook for the next watch."
+        objectives:
+          - deliver lenox 6 BOOK
+          - deliver lenox 3 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  the-travellers-pack:
+    name: "The Traveller's Pack"
+    giver: edgar
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-guestbook
+    text:
+      offer: "Lenox can keep track of guests. Before they leave, let us offer a simple pack of food and light for the main-world road."
+      accept: "Craft bread and torches for travellers leaving the shelter."
+      decline: "I will share what is beside the hearth."
+      finish: "The next traveller leaves with food, light and a place to return."
+      summary: "Prepare departure packs at the Frost Falls memorial hearth."
+      questions: []
+    start: packs
+    stages:
+      packs:
+        journal: "Craft 16 bread and 16 torches in the main world."
+        waiting: "A good shelter helps people leave safely as well as arrive."
+        complete: "Edgar has departure packs ready for travellers."
+        objectives:
+          - craft 16 BREAD
+          - craft 16 TORCH
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1

@@ -1,17 +1,17 @@
 import { describe, expect, test } from "vitest";
-import {
-  hardDisabledFeatureForTemporalWork,
-  providerQuotaApplicationFailure,
-} from "./activities.ts";
+import { providerQuotaApplicationFailure } from "./activities.ts";
+import { hardDisabledFeatureForTemporalWork } from "./work-features.ts";
 
 describe("Scout Temporal production policy", () => {
   test.each([
-    ["tournament-lobbies", "tournament_lobbies_enabled"],
     ["custom-nights-expiry", "custom_nights_enabled"],
     ["progression-outbox", null],
+    ["progression-reconciliation", null],
+    ["notification-intent-expiry", null],
     ["bucks-reconciliation", "betting_enabled"],
     ["weekly-bucks-leaderboard", "betting_enabled"],
     ["competition-refresh", null],
+    ["clash-snapshot", null],
     ["prematch", null],
   ])("maps %s to its hard-disable feature", (kind, expected) => {
     expect(hardDisabledFeatureForTemporalWork(kind)).toBe(expected);
@@ -19,10 +19,11 @@ describe("Scout Temporal production policy", () => {
 });
 
 describe("Scout detached-work provider failures", () => {
-  test("turns OpenRouter weekly quota failures into non-retryable activity failures", () => {
+  test("turns provider spend-cap failures into non-retryable activity failures", () => {
     const failure = providerQuotaApplicationFailure({
-      status: 403,
-      message: "Weekly key limit exceeded",
+      status: 429,
+      message:
+        "You exceeded your current quota, please check your plan and billing details.",
     });
     expect(failure).toMatchObject({
       type: "ProviderQuotaExhausted",

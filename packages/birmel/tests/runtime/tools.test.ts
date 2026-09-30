@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  BirmelToolMetadataSchema,
-  SpecialistIdSchema,
-} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { BirmelToolMetadataSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import {
   getRegisteredToolMetadata,
@@ -15,17 +12,21 @@ import {
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { manageMessageTool } from "@shepherdjerred/birmel/agent-tools/tools/discord/messages.ts";
+import { allDiscordTools } from "@shepherdjerred/birmel/agent-tools/tools/discord/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
-import { getCapabilityCatalog } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
+import {
+  getCapabilityCatalog,
+  toolsForTurn,
+} from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 
 const trustedUserId = "186665676134547461";
 
 const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   {
     id: "manage-message",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["get"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -35,9 +36,9 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-thread",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["get-messages", "summarize"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -47,9 +48,9 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-poll",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["get-results"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -59,7 +60,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "get-activity-stats",
-    specialist: "messaging",
     riskClass: "read",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -71,7 +71,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "record-activity",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -83,7 +82,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-memory",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -95,7 +93,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-agent-session",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -107,7 +104,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-guild",
-    specialist: "server",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -116,10 +112,10 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
       "userId",
       "sourceMessageId",
     ],
+    readActions: ["get-info", "get-owner", "get-audit-logs"],
   },
   {
     id: "manage-channel",
-    specialist: "server",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -131,7 +127,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "moderate-member",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -143,7 +138,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-role",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -152,10 +146,10 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
       "userId",
       "sourceMessageId",
     ],
+    readActions: ["list", "get"],
   },
   {
     id: "manage-member",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -167,7 +161,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-automod-rule",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -179,7 +172,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-webhook",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -191,7 +183,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-invite",
-    specialist: "moderation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -203,7 +194,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-emoji",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -215,7 +205,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-sticker",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -227,7 +216,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "execute-shell-command",
-    specialist: "automation",
     riskClass: "code-execution",
     timeoutMs: 300_000,
     requiredRequestContext: [
@@ -239,7 +227,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-job",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -251,9 +238,9 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "browser-automation",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 120_000,
+    readActions: ["tabs", "snapshot", "screenshot", "get-text"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -263,8 +250,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "external-service",
-    specialist: "automation",
-    riskClass: "write",
+    riskClass: "read",
     timeoutMs: 120_000,
     requiredRequestContext: [
       "guildId",
@@ -275,7 +261,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "web-research",
-    specialist: "automation",
     riskClass: "read",
     timeoutMs: 120_000,
     requiredRequestContext: [
@@ -287,9 +272,9 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-scheduled-event",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["list", "get-users"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -299,7 +284,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-election",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -311,7 +295,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "get-candidate-stats",
-    specialist: "automation",
     riskClass: "read",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -323,7 +306,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-birthday",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -360,6 +342,37 @@ function trustedContext(
   };
 }
 
+const REMOVED_TOOL_IDS = new Set([
+  "execute-shell-command",
+  "manage-automod-rule",
+  "manage-channel",
+  "manage-emoji",
+  "manage-guild",
+  "manage-invite",
+  "manage-member",
+  "manage-role",
+  "manage-sticker",
+  "manage-webhook",
+  "moderate-member",
+]);
+
+function expectedCurrentMetadata() {
+  return BirmelToolMetadataSchema.array().parse([
+    ...expectedMetadata.filter(({ id }) => !REMOVED_TOOL_IDS.has(id)),
+    {
+      id: "run-code",
+      riskClass: "code-execution",
+      timeoutMs: 15_000,
+      requiredRequestContext: [
+        "guildId",
+        "channelId",
+        "userId",
+        "sourceMessageId",
+      ],
+    },
+  ]);
+}
+
 async function executeInContext<T>(
   context: RequestContext,
   operation: () => T | PromiseLike<T>,
@@ -368,11 +381,22 @@ async function executeInContext<T>(
 }
 
 describe("tool metadata contracts", () => {
-  test("declares the exact specialist, risk, timeout, and request context for every stable tool", () => {
+  test("keeps the Discord barrel importable and limited to active tools", () => {
+    expect(allDiscordTools.map(({ id }) => id).toSorted()).toEqual([
+      "get-activity-stats",
+      "manage-message",
+      "manage-poll",
+      "manage-scheduled-event",
+      "manage-thread",
+      "record-activity",
+    ]);
+  });
+
+  test("declares the exact risk, timeout, and request context for every stable tool", () => {
     const actual = getRegisteredToolMetadata().toSorted((left, right) =>
       left.id.localeCompare(right.id),
     );
-    const expected = expectedMetadata.toSorted((left, right) =>
+    const expected = expectedCurrentMetadata().toSorted((left, right) =>
       left.id.localeCompare(right.id),
     );
 
@@ -380,22 +404,13 @@ describe("tool metadata contracts", () => {
     expect(new Set(actual.map(({ id }) => id)).size).toBe(actual.length);
   });
 
-  test("registers each tool in exactly one matching specialist set", async () => {
-    const toolSets =
+  test("registers every tool exactly once in the flat registry", async () => {
+    const { registeredTools } =
       await import("@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts");
-    const sets = [
-      { specialist: "messaging", tools: toolSets.messagingToolSet },
-      { specialist: "server", tools: toolSets.serverToolSet },
-      { specialist: "moderation", tools: toolSets.moderationToolSet },
-      { specialist: "automation", tools: toolSets.automationToolSet },
-    ];
-    const registrations = sets.flatMap(({ specialist, tools }) =>
-      tools.map((tool) => ({
-        id: tool.id,
-        specialist: SpecialistIdSchema.parse(specialist),
-        metadata: BirmelToolMetadataSchema.parse(tool.birmelMetadata),
-      })),
-    );
+    const registrations = registeredTools.map((tool) => ({
+      id: tool.id,
+      metadata: BirmelToolMetadataSchema.parse(tool.birmelMetadata),
+    }));
 
     const registrationCounts = new Map<string, number>();
     for (const { id } of registrations) {
@@ -405,23 +420,18 @@ describe("tool metadata contracts", () => {
       .filter(([, count]) => count !== 1)
       .map(([id, count]) => `${id}:${String(count)}`)
       .toSorted();
-    const mismatchedAssignments = registrations
-      .filter(({ specialist, metadata }) => metadata.specialist !== specialist)
-      .map(
-        ({ id, specialist, metadata }) =>
-          `${id}:${specialist}->${metadata.specialist}`,
-      )
+    const mismatchedIds = registrations
+      .filter(({ id, metadata }) => metadata.id !== id)
+      .map(({ id, metadata }) => `${id}->${metadata.id}`)
       .toSorted();
-    const registeredIds = [...registrationCounts.keys()].toSorted();
+    const registeredIds = registrations.map(({ id }) => id).toSorted();
 
-    expect({
-      duplicateIds,
-      mismatchedAssignments,
-      registeredIds,
-    }).toEqual({
+    expect({ duplicateIds, mismatchedIds, registeredIds }).toEqual({
       duplicateIds: [],
-      mismatchedAssignments: [],
-      registeredIds: expectedMetadata.map(({ id }) => id).toSorted(),
+      mismatchedIds: [],
+      registeredIds: expectedCurrentMetadata()
+        .map(({ id }) => id)
+        .toSorted(),
     });
   });
 
@@ -430,7 +440,8 @@ describe("tool metadata contracts", () => {
     const ids = catalog.map(({ id }) => id);
 
     expect(ids).toContain("get-activity-stats");
-    expect(ids).toContain("moderate-member");
+    expect(ids).toContain("run-code");
+    expect(ids).not.toContain("moderate-member");
     expect(ids).not.toContain("manage-database");
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain("sql");
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain(
@@ -449,13 +460,21 @@ describe("tool metadata contracts", () => {
       "generate-image",
     );
   });
+
+  test("omits generate-image from the live tool set when image generation is disabled", () => {
+    getConfig().imageGeneration.enabled = false;
+    expect(Object.keys(toolsForTurn())).not.toContain("generate-image");
+
+    getConfig().imageGeneration.enabled = true;
+    expect(Object.keys(toolsForTurn())).toContain("generate-image");
+  });
 });
 
 describe("createTool", () => {
   beforeEach(() => {
     Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
     Bun.env["DISCORD_TOKEN"] = "test-discord-token";
-    Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
+    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
     resetConfig();
   });
 
@@ -465,7 +484,7 @@ describe("createTool", () => {
 
   test("rejects execution without trusted request context", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -479,7 +498,7 @@ describe("createTool", () => {
 
   test("rejects an actor outside the trusted allowlist", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -495,7 +514,7 @@ describe("createTool", () => {
 
   test("overrides a model-supplied guild with trusted runtime context", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ guildId: z.string() }),
@@ -511,7 +530,7 @@ describe("createTool", () => {
 
   test("validates tool results before returning them to the model", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.number().positive(),
@@ -524,6 +543,57 @@ describe("createTool", () => {
       ),
     ).rejects.toThrow();
   });
+
+  test("does not checkpoint credential-free sandbox execution", async () => {
+    let checkpoints = 0;
+    const tool = createTool({
+      id: "run-code",
+      description: "Test sandbox tool",
+      inputSchema: z.object({ source: z.string() }),
+      outputSchema: z.object({ success: z.boolean() }),
+      execute: () => ({ success: false }),
+    });
+
+    const result = await executeInContext(
+      trustedContext({
+        beforeExternalEffect: async () => {
+          checkpoints += 1;
+        },
+      }),
+      async () => await tool.execute({ source: "throw new Error()" }),
+    );
+
+    expect(result).toEqual({ success: false });
+    expect(checkpoints).toBe(0);
+  });
+
+  test.each([
+    { action: "tabs", expectedCheckpoints: 0 },
+    { action: "click", expectedCheckpoints: 1 },
+  ])(
+    "acquires $expectedCheckpoints browser checkpoint(s) for $action",
+    async ({ action, expectedCheckpoints }) => {
+      let checkpoints = 0;
+      const tool = createTool({
+        id: "browser-automation",
+        description: "Test composite tool",
+        inputSchema: z.object({ action: z.string() }),
+        outputSchema: z.object({ success: z.boolean() }),
+        execute: () => ({ success: true }),
+      });
+
+      await executeInContext(
+        trustedContext({
+          beforeExternalEffect: async () => {
+            checkpoints += 1;
+          },
+        }),
+        async () => await tool.execute({ action }),
+      );
+
+      expect(checkpoints).toBe(expectedCheckpoints);
+    },
+  );
 
   test("allows a durable job to reply in its source channel", async () => {
     const tool = createTool({
@@ -550,7 +620,7 @@ describe("createTool cancellation", () => {
   beforeEach(() => {
     Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
     Bun.env["DISCORD_TOKEN"] = "test-discord-token";
-    Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
+    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
     resetConfig();
   });
 
@@ -559,13 +629,13 @@ describe("createTool cancellation", () => {
   });
 
   test("aborts timed-out work before a later side effect", async () => {
-    const metadata = getToolMetadata("manage-guild");
+    const metadata = getToolMetadata("manage-memory");
     const originalTimeoutMs = metadata.timeoutMs;
     metadata.timeoutMs = 10;
     let observedSignal: AbortSignal | undefined;
     let sideEffectCount = 0;
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -603,14 +673,14 @@ describe("createTool cancellation", () => {
   });
 
   test("does not release a timed-out tool until signal-ignoring work settles", async () => {
-    const metadata = getToolMetadata("manage-guild");
+    const metadata = getToolMetadata("manage-memory");
     const originalTimeoutMs = metadata.timeoutMs;
     metadata.timeoutMs = 10;
     const started = Promise.withResolvers<undefined>();
     const release = Promise.withResolvers<undefined>();
     let sideEffectCount = 0;
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -653,7 +723,7 @@ describe("createTool cancellation", () => {
     const started = Promise.withResolvers<undefined>();
     let observedSignal: AbortSignal | undefined;
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -681,6 +751,19 @@ describe("createTool cancellation", () => {
 
     await expect(execution).rejects.toThrow("caller cancelled");
     expect(observedSignal?.aborted).toBe(true);
+  });
+});
+
+describe("createTool cancellation at Discord boundaries", () => {
+  beforeEach(() => {
+    Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
+    Bun.env["DISCORD_TOKEN"] = "test-discord-token";
+    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+    resetConfig();
+  });
+
+  afterEach(() => {
+    resetConfig();
   });
 
   test("an already-aborted signal prevents a manage-message Discord write", async () => {
@@ -716,6 +799,46 @@ describe("createTool cancellation", () => {
       ).rejects.toThrow("cancelled before Discord write");
       expect(fetchCount).toBe(0);
       expect(sendCount).toBe(0);
+    } finally {
+      Reflect.set(channels, "fetch", originalFetch);
+    }
+  });
+
+  test("rejects a message destination outside the admitted guild", async () => {
+    const channels = getDiscordClient().channels;
+    const originalFetch = Reflect.get(channels, "fetch");
+    let sendCount = 0;
+    let checkpointCount = 0;
+    Reflect.set(channels, "fetch", async () => ({
+      guildId: "999999999999999999",
+      isSendable: () => true,
+      send: async () => {
+        sendCount += 1;
+        return { id: "400000000000000001" };
+      },
+    }));
+
+    try {
+      await expect(
+        executeInContext(
+          trustedContext({
+            beforeExternalEffect: async () => {
+              checkpointCount += 1;
+            },
+          }),
+          () =>
+            manageMessageTool.execute({
+              action: "send",
+              channelId: "400000000000000002",
+              content: "must not be sent",
+            }),
+        ),
+      ).resolves.toMatchObject({
+        success: false,
+        message: expect.stringContaining("not in this server"),
+      });
+      expect(sendCount).toBe(0);
+      expect(checkpointCount).toBe(0);
     } finally {
       Reflect.set(channels, "fetch", originalFetch);
     }

@@ -7,13 +7,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
+} from "@scout-for-lol/design-system/components/overlays/dialog";
 import {
   FormPendingStatus,
   ServerFormError,
   handleFormSubmit,
 } from "#src/components/semantic-form.tsx";
-import { docsHref } from "#src/lib/surface-origins.ts";
+import { docsHref } from "#src/lib/routes/surface-origins.ts";
 
 /**
  * Cancel confirmation as a small semantic form. It shows the server-computed

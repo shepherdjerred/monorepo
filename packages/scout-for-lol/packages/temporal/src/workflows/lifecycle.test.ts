@@ -2,23 +2,25 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker } from "@temporalio/worker";
+import { Worker, type WorkerOptions } from "@temporalio/worker";
 import {
   requestInitialHistoryRunSignal,
   requestStopSignal,
 } from "#src/signals.ts";
 import {
   scoutInitialHistoryWorkflow,
+  scoutExploreHistoryWorkflow,
+  scoutExploreTimelineWorkflow,
   scoutIngestionReconciliationWorkflow,
   scoutInteractiveRunWorkflow,
   scoutPostMatchDiscoveryWorkflow,
   scoutQueueCanaryWorkflow,
   scoutRealtimePollWorkflow,
 } from "./index.ts";
+import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 let environment: TestWorkflowEnvironment;
-const runningWorkers: Worker[] = [];
-const workerRuns: Promise<void>[] = [];
+const workers = createScoutWorkerPool();
 
 function workflowWorker(): Promise<Worker> {
   return Worker.create({
@@ -29,10 +31,75 @@ function workflowWorker(): Promise<Worker> {
   });
 }
 
-async function startWorker(worker: Worker): Promise<void> {
-  runningWorkers.push(worker);
-  workerRuns.push(worker.run());
-  while (worker.getState() === "INITIALIZED") await new Promise(setImmediate);
+async function startExploreAcquisitionWorkers(
+  phases: string[],
+  activities: NonNullable<WorkerOptions["activities"]>,
+): Promise<void> {
+  const workflow = await workflowWorker();
+  const background = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: "scout-dev-background",
+    activities,
+  });
+  const lake = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: "scout-dev-lake",
+    activities: {
+      runReportLakeJob: () => {
+        phases.push("fold");
+      },
+    },
+  });
+  await workers.start(workflow);
+  await workers.start(background);
+  await workers.start(lake);
+}
+
+/**
+ * A stalled account cursor keeps re-reporting a match whose child already
+ * COMPLETED. `ALLOW_DUPLICATE_FAILED_ONLY` refuses to reuse a succeeded ID,
+ * so the start is rejected forever. What the run does with that rejection is
+ * the difference between ending the stall and hiding it.
+ */
+async function startRediscoveryWorkers(
+  outcome: "reconciled" | "not-completed",
+  observed: {
+    attempts: string[];
+    reconciled: string[];
+    settlement: boolean[];
+  },
+): Promise<void> {
+  const workflow = await workflowWorker();
+  const activities = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: "scout-dev-realtime",
+    activities: {
+      discoverPostMatchIds: () => ({
+        evidenceComplete: true,
+        matches: [
+          {
+            matchId: "NA1_300",
+            sourcePuuid: "puuid-NA1_300",
+            region: "AMERICA_NORTH",
+            delivery: "live",
+          },
+        ],
+      }),
+      ingestMatch: (input: { matchId: string }) => {
+        observed.attempts.push(input.matchId);
+      },
+      reconcileIngestedMatchCursor: (input: { matchId: string }) => {
+        observed.reconciled.push(input.matchId);
+        return { outcome };
+      },
+      runPostMatchMaintenance: (input: { settleDareV2Deadlines: boolean }) => {
+        observed.settlement.push(input.settleDareV2Deadlines);
+      },
+    },
+    maxConcurrentActivityTaskExecutions: 1,
+  });
+  await workers.start(workflow);
+  await workers.start(activities);
 }
 
 beforeEach(async () => {
@@ -40,10 +107,7 @@ beforeEach(async () => {
 }, 60_000);
 
 afterEach(async () => {
-  for (const worker of runningWorkers.splice(0)) {
-    if (worker.getState() === "RUNNING") worker.shutdown();
-  }
-  await Promise.allSettled(workerRuns.splice(0));
+  await workers.drain();
   await environment.teardown();
 });
 
@@ -72,9 +136,9 @@ test("routes the queue canary through every workload queue", async () => {
         }),
     ),
   );
-  await startWorker(workflow);
+  await workers.start(workflow);
   for (const activityWorker of activityWorkers) {
-    await startWorker(activityWorker);
+    await workers.start(activityWorker);
   }
   const result = await environment.client.workflow.execute(
     scoutQueueCanaryWorkflow,
@@ -92,6 +156,86 @@ test("routes the queue canary through every workload queue", async () => {
       taskQueue: `scout-dev-${queueClass}`,
     })),
   );
+});
+
+test("imports Explore history before folding the report lake", async () => {
+  const phases: string[] = [];
+  await startExploreAcquisitionWorkers(phases, {
+    importExploreHistory: () => {
+      phases.push("import");
+      return {
+        requested: 100,
+        found: 87,
+        alreadyAvailable: 50,
+        ingested: 36,
+        skipped: 1,
+      };
+    },
+  });
+
+  const result = await environment.client.workflow.execute(
+    scoutExploreHistoryWorkflow,
+    {
+      taskQueue: "scout-dev",
+      workflowId: "explore-history",
+      args: [
+        {
+          stage: "dev",
+          puuid: "puuid_123",
+          region: "AMERICA_NORTH",
+          acquisitionBucket: 123,
+          requestedMatches: 100,
+        },
+      ],
+    },
+  );
+
+  expect(result).toEqual({
+    requested: 100,
+    found: 87,
+    alreadyAvailable: 50,
+    ingested: 36,
+    skipped: 1,
+  });
+  expect(phases).toEqual(["import", "fold"]);
+});
+
+test("imports Explore timelines before folding the report lake", async () => {
+  const phases: string[] = [];
+  await startExploreAcquisitionWorkers(phases, {
+    importExploreTimelines: () => {
+      phases.push("import");
+      return {
+        requested: 3,
+        alreadyAvailable: 1,
+        ingested: 2,
+        unavailable: 0,
+      };
+    },
+  });
+
+  const result = await environment.client.workflow.execute(
+    scoutExploreTimelineWorkflow,
+    {
+      taskQueue: "scout-dev",
+      workflowId: "explore-timeline",
+      args: [
+        {
+          stage: "dev",
+          matchIds: ["NA1_1", "NA1_2", "NA1_3"],
+          acquisitionBucket: 123,
+        },
+      ],
+    },
+  );
+
+  expect(result).toEqual({
+    requested: 3,
+    alreadyAvailable: 1,
+    ingested: 2,
+    unavailable: 0,
+  });
+  expect(phases).toEqual(["import", "fold"]);
 });
 
 describe("realtime workflows", () => {
@@ -145,8 +289,8 @@ describe("realtime workflows", () => {
       },
       maxConcurrentActivityTaskExecutions: 4,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
     const result = await environment.client.workflow.execute(
       scoutPostMatchDiscoveryWorkflow,
       {
@@ -195,8 +339,8 @@ describe("realtime workflows", () => {
       },
       maxConcurrentActivityTaskExecutions: 1,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
 
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
@@ -221,7 +365,13 @@ describe("realtime workflows", () => {
       },
     ]);
   });
+});
 
+// Child IDs are one-per-match and permanent, so a rediscovered match always
+// collides with whatever execution already owns it. Whether that collision is a
+// fault depends entirely on what the owning execution did, which is what these
+// cover.
+describe("post-match discovery child ownership", () => {
   test("restarts a failed match child without duplicating a successful child", async () => {
     let attempts = 0;
     let failIngestion = true;
@@ -259,8 +409,8 @@ describe("realtime workflows", () => {
       },
       maxConcurrentActivityTaskExecutions: 1,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
 
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
@@ -297,6 +447,52 @@ describe("realtime workflows", () => {
     ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
     expect(attempts).toBe(2);
   });
+
+  // Both runs behave identically up to the collision; the child's confirmed
+  // status is the only thing that decides what the second run may do with it.
+  test.each([
+    {
+      label: "advances the stale cursor when the child is confirmed COMPLETED",
+      outcome: "reconciled" as const,
+      slug: "reconciled",
+      // Evidence IS captured, so the second pass may still settle — withholding
+      // it would starve deadlines for a match already fully ingested.
+      settlement: [true, true],
+    },
+    {
+      label: "stops without settling when the child is not COMPLETED",
+      outcome: "not-completed" as const,
+      slug: "unconfirmed",
+      // Another execution may still be mid-ingest, so nothing may be assumed
+      // done and the run reports a partial pass.
+      settlement: [true, false],
+    },
+  ])("$label", async ({ outcome, slug, settlement }) => {
+    const observed = { attempts: [], reconciled: [], settlement: [] };
+    await startRediscoveryWorkers(outcome, observed);
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: `postmatch-rediscovery-${slug}-first`,
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: `postmatch-rediscovery-${slug}`,
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
+
+    // The collision was resolved by asking, not swallowed.
+    expect(observed.reconciled).toEqual(["NA1_300"]);
+    // Ingestion ran once, for the child that actually started.
+    expect(observed.attempts).toEqual(["NA1_300"]);
+    expect(observed.settlement).toEqual(settlement);
+  });
 });
 
 test("initial history drains incomplete pages across Continue-As-New and accepts a later import signal", async () => {
@@ -305,12 +501,16 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
     pagesProcessed: number;
     pagesInCurrentRun: number;
   }[] = [];
+  let releaseFinalPage!: () => void;
+  const finalPageMayComplete = new Promise<void>((resolve) => {
+    releaseFinalPage = resolve;
+  });
   const workflow = await workflowWorker();
   const activities = await Worker.create({
     connection: environment.nativeConnection,
     taskQueue: "scout-dev-background",
     activities: {
-      fetchInitialHistoryPage: (input: {
+      fetchInitialHistoryPage: async (input: {
         cursor?: string;
         pagesProcessed: number;
         pagesInCurrentRun: number;
@@ -330,13 +530,14 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
             complete: false,
           };
         }
+        if (observed.length === 3) await finalPageMayComplete;
         return { persistedMatches: 2, complete: true };
       },
     },
     maxConcurrentActivityTaskExecutions: 1,
   });
-  await startWorker(workflow);
-  await startWorker(activities);
+  await workers.start(workflow);
+  await workers.start(activities);
   const handle = await environment.client.workflow.start(
     scoutInitialHistoryWorkflow,
     {
@@ -352,9 +553,13 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
       ],
     },
   );
-  await expect.poll(() => observed).toHaveLength(3);
-  await handle.signal(requestInitialHistoryRunSignal);
-  await expect.poll(() => observed).toHaveLength(4);
+  await expect.poll(() => observed, { timeout: 10_000 }).toHaveLength(3);
+  try {
+    await handle.signal(requestInitialHistoryRunSignal);
+  } finally {
+    releaseFinalPage();
+  }
+  await expect.poll(() => observed, { timeout: 10_000 }).toHaveLength(4);
   expect(observed).toEqual([
     {
       stage: "dev",
@@ -425,9 +630,9 @@ test("ingestion reconciliation recovers detached and pending interactive work", 
     },
     maxConcurrentActivityTaskExecutions: 1,
   });
-  await startWorker(workflow);
-  await startWorker(background);
-  await startWorker(interactiveWorker);
+  await workers.start(workflow);
+  await workers.start(background);
+  await workers.start(interactiveWorker);
 
   await expect(
     environment.client.workflow.execute(scoutIngestionReconciliationWorkflow, {
@@ -471,8 +676,8 @@ test(
       },
       maxConcurrentActivityTaskExecutions: 2,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
     const handle = await environment.client.workflow.start(
       scoutInteractiveRunWorkflow,
       {

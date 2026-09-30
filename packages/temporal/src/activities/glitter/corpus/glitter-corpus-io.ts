@@ -7,12 +7,12 @@ import {
   type ChannelStateManifest,
   type CorpusObservation,
   type PageManifest,
-} from "#shared/glitter-corpus.ts";
-import { SeedImportManifestSchema } from "#shared/glitter-corpus-seed.ts";
+} from "#shared/glitter/glitter-corpus.ts";
+import { SeedImportManifestSchema } from "#shared/glitter/glitter-corpus-seed.ts";
 import {
   compareSnowflakes,
   sha256,
-} from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus-projection.ts";
 import { normalizeDiscordMessage } from "./glitter-corpus-normalize.ts";
 import {
   assertDiscordPageOrder,
@@ -25,7 +25,7 @@ import {
   readRequiredObject,
   readVerifiedObject,
 } from "./glitter-corpus-storage.ts";
-import { ChannelStateResultSchema } from "#shared/glitter-corpus-activity-types.ts";
+import { ChannelStateResultSchema } from "#shared/glitter/glitter-corpus-activity-types.ts";
 
 export function requireGlitterCorpusEnv(name: string): string {
   const value = Bun.env[name];

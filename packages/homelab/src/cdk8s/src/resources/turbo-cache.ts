@@ -24,7 +24,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   CI_NODE_HOSTNAME,
   ciNodeTaintedNode,
@@ -50,7 +50,7 @@ export function createTurboCacheDeployment(chart: Chart) {
   const secrets = new OnePasswordItem(chart, "turbo-cache-secrets", {
     spec: {
       // vaultItemPath takes the 1Password item *ID*, not its title. This is the
-      // dedicated Turbo item shared with Buildkite's exact TURBO_TOKEN grant.
+      // dedicated Turbo item shared with Woodpecker's exact TURBO_TOKEN grant.
       itemPath: vaultItemPath("mzvcz4pqqbda75ufu7l5myd4ey"),
     },
     metadata: {

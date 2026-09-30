@@ -8,12 +8,12 @@
 # closure and never runs `bun install`. Dev dependencies and the rest of the
 # monorepo source never reach the final image, and the source layer only
 # invalidates when a closure package changes — not on every repo commit.
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
-# The trmnl-dashboard filter includes config, feature-flags, and home-assistant
-# through its workspace dependency closure. `--frozen-lockfile` requires every workspace member's
+# The trmnl-dashboard filter includes config, feature-flags, home-assistant, and
+# ops-model through its workspace dependency closure. `--frozen-lockfile` requires every workspace member's
 # package.json present, so the globs enumerate every member (top-level, nested
 # packages/*/packages/*, homelab/src/*, the desktop src-tauri crate, and the
 # `scripts` dir).
@@ -22,9 +22,9 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/trmnl-dashboard'
 
@@ -36,9 +36,9 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/home-assistant'
 
@@ -63,6 +63,7 @@ COPY --parents \
   packages/config \
   packages/feature-flags \
   packages/home-assistant \
+  packages/ops-model \
   ./
 COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
 
@@ -89,8 +90,8 @@ CMD ["bun", "src/index.ts"]
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=trmnl-dashboard
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Smoke runs as the non-root deploy uid (1000, the app deployment convention),
@@ -99,6 +100,6 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

@@ -6,7 +6,7 @@ description: Design or change repo-owned homelab infrastructure, Kubernetes reso
 # Homelab development
 
 The homelab hosts every first-party site, API, bot, worker, and supporting
-service. `packages/homelab` is the declarative source of truth; Buildkite builds
+service. `packages/homelab` is the declarative source of truth; CI builds
 artifacts and ArgoCD reconciles Kubernetes.
 
 Read `packages/homelab/AGENTS.md` and the closest wiki explanation or how-to
@@ -20,7 +20,7 @@ before editing. Preserve these boundaries:
   Regenerate committed Helm types whenever a chart input changes.
 - Recurring work is a Temporal Schedule, never a Kubernetes CronJob.
 - Secrets come from 1Password through declared grants. No optional secret refs,
-  literals, token files, or ambient credentials in Buildkite jobs.
+  literals, token files, or ambient credentials in CI steps.
 - OpenTofu owns external control-plane resources and state. Do not reproduce a
   Tofu-owned setting in an application dashboard.
 

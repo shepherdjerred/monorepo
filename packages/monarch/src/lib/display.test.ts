@@ -1,19 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { displaySummary } from "./display.ts";
 import type { EnrichmentStats } from "./enrichment/pipeline.ts";
+import { emptyEnrichmentStats } from "./enrichment/pipeline.ts";
 
-const defaultStats: EnrichmentStats = {
-  amazon: { matched: 0, total: 0 },
-  venmo: { matched: 0, total: 0 },
-  bilt: { matched: 0, total: 0 },
-  usaa: { matched: 0, total: 0 },
-  scl: { matched: 0, total: 0 },
-  apple: { matched: 0, total: 0 },
-  costco: { matched: 0, total: 0 },
-  tier1Count: 0,
-  tier2Count: 0,
-  tier3Count: 0,
-};
+const defaultStats: EnrichmentStats = emptyEnrichmentStats();
 
 describe("displaySummary", () => {
   test("counts changes by tier correctly", () => {

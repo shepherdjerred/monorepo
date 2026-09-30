@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   GuildInventorySchema,
   StoredObjectSchema,
-} from "#shared/glitter-corpus.ts";
-import { FinalizeSnapshotInputSchema } from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus.ts";
+import { FinalizeSnapshotInputSchema } from "#shared/glitter/glitter-corpus-activity-types.ts";
 import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import {
   publishLatestSnapshotPointer,

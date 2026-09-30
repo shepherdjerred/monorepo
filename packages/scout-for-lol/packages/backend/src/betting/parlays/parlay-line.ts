@@ -8,8 +8,8 @@ import {
   renderParlay,
   type GeneratedParlay,
   type ParlaySubject,
-} from "#src/betting/parlays/parlay-criteria.ts";
-import { formatDecimalOdds } from "#src/betting/parlays/parlay-odds.ts";
+} from "#src/betting/parlays/model/parlay-criteria.ts";
+import { formatDecimalOdds } from "#src/betting/parlays/model/parlay-odds.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 
 /**

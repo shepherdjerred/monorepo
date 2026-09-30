@@ -7,7 +7,10 @@ import {
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { getToolMetadata } from "./tool-metadata.ts";
+import {
+  getToolMetadata,
+  toolRequiresExternalEffectCheckpoint,
+} from "./tool-metadata.ts";
 
 const logger = loggers.tools.child("ai-sdk");
 
@@ -19,6 +22,13 @@ type BirmelToolOptions<
   description: string;
   inputSchema: InputSchema;
   outputSchema: OutputSchema;
+  preflight?: (
+    input: z.infer<InputSchema>,
+    context: BirmelToolExecutionContext,
+  ) =>
+    | Promise<z.infer<OutputSchema> | undefined>
+    | z.infer<OutputSchema>
+    | undefined;
   execute: (
     input: z.infer<InputSchema>,
     context: BirmelToolExecutionContext,
@@ -45,6 +55,46 @@ export type BirmelTool<
     executionOptions?: unknown,
   ) => PromiseLike<z.output<OutputSchema>> | z.output<OutputSchema>;
 };
+
+type InternalToolExecution = {
+  preflight: (input: unknown, executionOptions?: unknown) => Promise<unknown>;
+  executeAfterPreflight: (
+    input: unknown,
+    executionOptions?: unknown,
+  ) => Promise<unknown>;
+};
+
+const internalToolExecutions = new WeakMap<object, InternalToolExecution>();
+
+function requireInternalToolExecution(tool: object): InternalToolExecution {
+  const execution = internalToolExecutions.get(tool);
+  if (execution == null) {
+    throw new Error("Tool was not created by the Birmel runtime");
+  }
+  return execution;
+}
+
+export async function preflightCreatedTool(
+  tool: object,
+  input: unknown,
+  executionOptions?: unknown,
+): Promise<unknown> {
+  return await requireInternalToolExecution(tool).preflight(
+    input,
+    executionOptions,
+  );
+}
+
+export async function executeCreatedToolAfterPreflight(
+  tool: object,
+  input: unknown,
+  executionOptions?: unknown,
+): Promise<unknown> {
+  return await requireInternalToolExecution(tool).executeAfterPreflight(
+    input,
+    executionOptions,
+  );
+}
 
 const ObjectInputSchema = z.record(z.string(), z.unknown());
 const ToolExecutionOptionsSchema = z
@@ -98,10 +148,9 @@ function enforceSingleRuntimeReply(
 }
 
 function abortReason(signal: AbortSignal): Error {
-  if (signal.reason instanceof Error) {
-    return signal.reason;
-  }
-  return new DOMException("Tool execution aborted", "AbortError");
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new DOMException("Tool execution aborted", "AbortError");
 }
 
 async function withCancellation<T>(
@@ -150,9 +199,10 @@ export function createTool<
   options: BirmelToolOptions<InputSchema, OutputSchema>,
 ): BirmelTool<InputSchema, OutputSchema> {
   const metadata = getToolMetadata(options.id);
-  const execute = async (
+  const executeWithMode = async (
     untrustedInput: unknown,
     untrustedExecutionOptions?: unknown,
+    mode: "full" | "after-preflight" = "full",
   ) => {
     const requestContext = requireTrustedContext();
     enforceSingleRuntimeReply(options.id, untrustedInput, requestContext);
@@ -171,12 +221,20 @@ export function createTool<
       async (span) => {
         const startedAt = performance.now();
         try {
-          if (metadata.riskClass !== "read") {
-            await requestContext.beforeExternalEffect?.();
-          }
           const output = await withCancellation(
             async (signal) => {
               signal.throwIfAborted();
+              if (mode === "full") {
+                const preflightOutput = await options.preflight?.(input, {
+                  signal,
+                });
+                if (preflightOutput !== undefined) {
+                  return preflightOutput;
+                }
+                if (toolRequiresExternalEffectCheckpoint(metadata.id, input)) {
+                  await requestContext.beforeExternalEffect?.();
+                }
+              }
               const result = await options.execute(input, { signal });
               signal.throwIfAborted();
               return result;
@@ -189,7 +247,6 @@ export function createTool<
           span.setAttribute("tool.duration_ms", performance.now() - startedAt);
           logger.info("Birmel tool call completed", {
             toolId: metadata.id,
-            specialist: metadata.specialist,
             riskClass: metadata.riskClass,
             durationMs: performance.now() - startedAt,
           });
@@ -202,7 +259,6 @@ export function createTool<
           );
           logger.error("Birmel tool call failed", error, {
             toolId: metadata.id,
-            specialist: metadata.specialist,
             riskClass: metadata.riskClass,
             errorClass: error instanceof Error ? error.name : "UnknownError",
           });
@@ -211,8 +267,45 @@ export function createTool<
       },
     );
   };
+  const preflight = async (
+    untrustedInput: unknown,
+    untrustedExecutionOptions?: unknown,
+  ) => {
+    const requestContext = requireTrustedContext();
+    enforceSingleRuntimeReply(options.id, untrustedInput, requestContext);
+    const input = options.inputSchema.parse(
+      deriveGuildFromRuntime(untrustedInput, requestContext),
+    );
+    const executionOptions =
+      untrustedExecutionOptions == null
+        ? undefined
+        : ToolExecutionOptionsSchema.parse(untrustedExecutionOptions);
+    return await withCancellation(
+      async (signal) => {
+        const output = await options.preflight?.(input, { signal });
+        return output === undefined
+          ? undefined
+          : options.outputSchema.parse(output);
+      },
+      metadata.timeoutMs,
+      executionOptions?.abortSignal,
+    );
+  };
+  const execute = async (
+    untrustedInput: unknown,
+    untrustedExecutionOptions?: unknown,
+  ) => await executeWithMode(untrustedInput, untrustedExecutionOptions, "full");
+  const executeAfterPreflight = async (
+    untrustedInput: unknown,
+    untrustedExecutionOptions?: unknown,
+  ) =>
+    await executeWithMode(
+      untrustedInput,
+      untrustedExecutionOptions,
+      "after-preflight",
+    );
 
-  return {
+  const tool: BirmelTool<InputSchema, OutputSchema> = {
     id: options.id,
     type: "function",
     description: options.description,
@@ -222,4 +315,6 @@ export function createTool<
     birmelMetadata: metadata,
     execute,
   };
+  internalToolExecutions.set(tool, { preflight, executeAfterPreflight });
+  return tool;
 }

@@ -1,0 +1,10 @@
+plugin/**/.gradle/
+plugin/**/build/
+plugin/.kotlin/
+plugin/build-logic/.kotlin/
+plugin/dist/run/
+# The repository root ignores dist/; this dist is the plugin assembly project.
+!plugin/dist/
+plugin/dist/build/
+# Pinned server jars, Paperclip libraries and per-run plugin staging for tests/e2e.
+/.cache/

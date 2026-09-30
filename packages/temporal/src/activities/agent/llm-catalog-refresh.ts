@@ -113,7 +113,7 @@ export type LlmCatalogRefreshActivities = typeof llmCatalogRefreshActivities;
 export const llmCatalogRefreshActivities = {
   /**
    * Run the deterministic catalog cross-check (packages/llm-models/scripts/
-   * sync-from-upstreams.ts) against models.dev, LiteLLM, and OpenRouter and,
+   * sync-from-upstreams.ts) against models.dev and LiteLLM and,
    * if our metadata drifted, open a PR. No LLM, no scraping.
    */
   async refreshLlmCatalog(): Promise<LlmCatalogRefreshResult> {
@@ -242,7 +242,7 @@ export const llmCatalogRefreshActivities = {
         "(`llm-catalog-refresh-weekly` schedule).",
         "",
         "`packages/llm-models/scripts/sync-from-upstreams.ts` compared our catalog",
-        "against models.dev, LiteLLM, and OpenRouter and applied metadata drift.",
+        "against models.dev and LiteLLM and applied metadata drift.",
         "Review the numbers below against the official provider pricing pages.",
         "",
         "```",

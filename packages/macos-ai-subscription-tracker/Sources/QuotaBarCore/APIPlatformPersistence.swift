@@ -1,8 +1,8 @@
 public import Foundation
 
 public protocol APIPlatformSnapshotPersisting: Sendable {
-  func load() throws -> APIPlatformSnapshot?
-  func save(_ snapshot: APIPlatformSnapshot) throws
+  func load() throws -> [APIPlatformID: APIPlatformSnapshot]
+  func save(_ snapshots: [APIPlatformID: APIPlatformSnapshot]) throws
   func remove() throws
 }
 
@@ -27,20 +27,31 @@ public final class JSONAPIPlatformSnapshotStore: APIPlatformSnapshotPersisting, 
     )
   }
 
-  public func load() throws -> APIPlatformSnapshot? {
-    guard fileManager.fileExists(atPath: url.path) else { return nil }
+  public func load() throws -> [APIPlatformID: APIPlatformSnapshot] {
+    guard fileManager.fileExists(atPath: url.path) else { return [:] }
+    let data: Data
     do {
-      return try JSONDecoder().decode(APIPlatformSnapshot.self, from: Data(contentsOf: url))
+      data = try Data(contentsOf: url)
     } catch {
       throw APIPlatformError.cacheCorrupt
     }
+    if let cache = try? JSONDecoder().decode(DecodedAPIPlatformCacheFile.self, from: data) {
+      return try dictionary(from: cache.snapshots.compactMap(\.snapshot))
+    }
+    if let entry = try? JSONDecoder().decode(CachedAPIPlatformSnapshot.self, from: data) {
+      guard let snapshot = entry.snapshot else { return [:] }
+      return [snapshot.platform: snapshot]
+    }
+    throw APIPlatformError.cacheCorrupt
   }
 
-  public func save(_ snapshot: APIPlatformSnapshot) throws {
+  public func save(_ snapshots: [APIPlatformID: APIPlatformSnapshot]) throws {
     do {
       try fileManager.createDirectory(
         at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-      try JSONEncoder().encode(snapshot).write(to: url, options: .atomic)
+      let cache = APIPlatformCacheFile(
+        snapshots: snapshots.values.sorted { $0.platform.rawValue < $1.platform.rawValue })
+      try JSONEncoder().encode(cache).write(to: url, options: .atomic)
     } catch {
       throw APIPlatformError.cacheWriteFailed
     }
@@ -53,5 +64,45 @@ public final class JSONAPIPlatformSnapshotStore: APIPlatformSnapshotPersisting, 
     } catch {
       throw APIPlatformError.cacheWriteFailed
     }
+  }
+
+  private func dictionary(from snapshots: [APIPlatformSnapshot]) throws -> [APIPlatformID:
+    APIPlatformSnapshot]
+  {
+    var result: [APIPlatformID: APIPlatformSnapshot] = [:]
+    for snapshot in snapshots {
+      if result[snapshot.platform] != nil { throw APIPlatformError.cacheCorrupt }
+      result[snapshot.platform] = snapshot
+    }
+    return result
+  }
+}
+
+private struct APIPlatformCacheFile: Encodable {
+  let snapshots: [APIPlatformSnapshot]
+}
+
+private struct DecodedAPIPlatformCacheFile: Decodable {
+  let snapshots: [CachedAPIPlatformSnapshot]
+}
+
+/// Platforms Brim used to support. A cache written before a platform was
+/// removed still carries its snapshot, which is a known migration, not
+/// corruption; any other unrecognized platform still fails the load.
+let retiredAPIPlatformRawValues: Set<String> = ["openrouter"]
+
+private struct CachedAPIPlatformSnapshot: Decodable {
+  let snapshot: APIPlatformSnapshot?
+
+  private enum CodingKeys: String, CodingKey {
+    case platform
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let platform = try container.decode(String.self, forKey: .platform)
+    snapshot =
+      retiredAPIPlatformRawValues.contains(platform)
+      ? nil : try APIPlatformSnapshot(from: decoder)
   }
 }

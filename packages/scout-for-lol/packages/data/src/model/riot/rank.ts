@@ -33,10 +33,7 @@ export function rankForQueue(
   if (queue === "solo") {
     return ranks.solo;
   }
-  if (queue === "flex") {
-    return ranks.flex;
-  }
-  return ranks.ranked5s;
+  return queue === "flex" ? ranks.flex : ranks.ranked5s;
 }
 
 export function rankToString(rank: Rank): string {

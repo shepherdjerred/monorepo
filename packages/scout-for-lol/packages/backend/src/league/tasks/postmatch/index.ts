@@ -5,32 +5,30 @@ import { settleMatureDareSqlV3Races } from "#src/betting/dares/settlement/dare-s
 import { activatePendingDaresV3 } from "#src/betting/dares/lifecycle/dare-activation-v3.ts";
 import { refreshPendingDareV2Callouts } from "#src/betting/dares/presentation/dare-callout-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types-v2.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/dare-delivery.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
-import { announceSettlements } from "#src/betting/announce.ts";
-import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
+import { announceSettlements } from "#src/betting/notify/announce.ts";
+import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
-import { voidStaleParlayMarkets } from "#src/betting/parlays/parlay-sweep.ts";
+import { voidStaleParlayMarkets } from "#src/betting/parlays/runtime/parlay-sweep.ts";
 import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
-import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/dare-notification-delivery.ts";
+import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 import {
   markPostMatchPollCompleted,
   markPostMatchPollFailed,
+  type PostMatchPollOwner,
 } from "#src/league/tasks/recovery/app-state.ts";
 import { prisma } from "#src/database/index.ts";
 
 const logger = createLogger("tasks-postmatch");
 
 function asError(error: unknown, message: string): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-  return new Error(message, { cause: error });
+  return error instanceof Error ? error : new Error(message, { cause: error });
 }
 
 export async function checkPostMatch(): Promise<{
@@ -94,9 +92,20 @@ export async function checkPostMatch(): Promise<{
   }
 }
 
+/**
+ * Run the post-match clocks and close the poll.
+ *
+ * `pollOwner` is the poll this pass may close, present only when the caller
+ * claimed one durably — a V2 discovery, whose poll spans the Workflow rather
+ * than one Activity. The close is then guarded on that identity: a run whose
+ * claim was taken over closes nothing and fails loudly, rather than marking a
+ * LATER run's poll complete underneath it. Without it the close overwrites
+ * whatever stands, which is v1's behaviour and stays v1's behaviour.
+ */
 export async function runPostMatchMaintenance(options?: {
   settleDareV2Deadlines: boolean;
   dareEvidenceWatermark?: Date | undefined;
+  pollOwner?: PostMatchPollOwner | undefined;
 }): Promise<{
   dareSummaries: DareSettlementSummary[];
 }> {
@@ -187,6 +196,8 @@ export async function runPostMatchMaintenance(options?: {
       },
     );
   }
+  const pollOwner = options?.pollOwner;
+  const close = pollOwner === undefined ? {} : { owner: pollOwner };
   // Isolated per step, then re-thrown: a persistently failing recovery path
   // cannot starve the remaining clocks while money stays escrowed.
   try {
@@ -195,9 +206,22 @@ export async function runPostMatchMaintenance(options?: {
       completedAt: new Date(),
       evidenceComplete: settleDareV2Deadlines,
       evidenceWatermark: options?.dareEvidenceWatermark,
+      ...close,
     });
   } catch (error) {
-    await markPostMatchPollFailed(error, new Date());
+    try {
+      await markPostMatchPollFailed(error, new Date(), close);
+    } catch (closeError) {
+      // Both facts matter and neither may hide the other: the clocks failed,
+      // AND the poll this run meant to close was no longer its own. Reporting
+      // only the first would lose a durable-write conflict; reporting only the
+      // second would lose why maintenance failed at all.
+      throw new AggregateError(
+        [error, closeError],
+        "Post-match maintenance failed and its poll was no longer this run's to close",
+        { cause: closeError },
+      );
+    }
     throw error;
   }
   return { dareSummaries };

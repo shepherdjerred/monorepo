@@ -9,7 +9,7 @@
 # client — it never runs `bun install`. Dev dependencies and the rest of the
 # monorepo source never reach the final image, and the source layer only
 # invalidates when this package changes — not on every repo commit.
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the prisma generate below ─────────
@@ -18,9 +18,9 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --filter 'starlight-karma-bot'
 
@@ -41,9 +41,9 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter 'starlight-karma-bot'
 
@@ -105,8 +105,8 @@ CMD ["bun", "scripts/start.ts"]
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=starlight-karma-bot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Smoke runs as the non-root deploy uid (1000, the app deployment convention),
@@ -115,6 +115,6 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

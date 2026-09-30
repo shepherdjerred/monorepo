@@ -12,7 +12,8 @@ import {
   preparePageForScreenshot,
   waitForStablePage,
 } from "#src/page-checks.ts";
-import { auditRoutes, routeBaseUrl, type AuditRoute } from "#src/routes.ts";
+import { type AuditRoute } from "#src/app-routes.ts";
+import { auditRoutes, routeBaseUrl } from "#src/routes.ts";
 
 function routeUrl(route: AuditRoute): string {
   return new URL(route.path, routeBaseUrl(route.surface)).toString();

@@ -1,8 +1,16 @@
 import "dotenv/config";
+import { providerCredentialsFromEnv } from "@shepherdjerred/llm-runtime";
 import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
-import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
+import {
+  DEFAULT_EXPLORE_QUOTA_LIMITS,
+  ExploreQuotaLimitsInputSchema,
+} from "#src/configuration/explore-quota.ts";
+import {
+  parseScoutRuntimeRole,
+  scoutRuntimeCapabilities,
+} from "#src/configuration/runtime-role.ts";
 import { ScoutStageSchema } from "@scout-for-lol/temporal";
 
 const logger = createLogger("config");
@@ -45,50 +53,52 @@ const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
 /**
- * The "Hey Scout" voice assistant's boot contract. Environment variables here
- * are deliberately bootstrap-only: whether the pipeline loads its pinned local
- * models is a fatal boot decision (asset verification throws), so it cannot be
- * a Flipt flag — and unauthenticated Flipt must never control audio capture.
- * Per-guild opt-in stays on the `voice_assistant_enabled` flag; this schema
- * only decides whether the deployment has a voice runtime at all.
+ * The "Hey Scout" voice assistant's environment surface — credentials and
+ * bootstrap only, per the repo's configuration policy.
+ *
+ * There is deliberately no `enabled` flag here. Activation is the
+ * `voice_assistant_enabled` Flipt flag and nothing else: it already decides
+ * whether `/scout join` may open a session and tears down live sessions when
+ * it flips off, so a second env gate duplicated that authority without adding
+ * any. What used to justify the env var — model verification being fatal at
+ * boot — no longer applies: the models load lazily on first use
+ * (`voice-assistant/runtime.ts`), and the image's `voice-smoke` build stage
+ * proves they load before the image can be published, which catches a broken
+ * asset set earlier than a crash-looping pod did.
+ *
+ * The credential can arrive directly for local development or through a
+ * mounted Secret file in Kubernetes. Both stay optional: their absence is a
+ * runtime answer ("voice is not configured in this deployment"), not a boot
+ * failure, so a deployment that never intends to serve voice simply omits
+ * them.
  */
-export const VoiceAssistantConfigSchema = z
-  .object({
-    enabled: z.boolean().default(false),
-    openAiApiKey: z.string().min(1).optional(),
-    assetsDir: z.string().min(1).default("/opt/scout/voice"),
-    kwsRuntime: z.enum(["auto", "native", "wasm"]).default("auto"),
-  })
-  .superRefine((value, context) => {
-    if (value.enabled && value.openAiApiKey === undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["openAiApiKey"],
-        message:
-          "VOICE_ASSISTANT_ENABLED=true requires OPENAI_API_KEY: a voice deployment without a Realtime credential could accept wakes it can never answer",
-      });
-    }
-  });
+export const VoiceAssistantConfigSchema = z.object({
+  openAiApiKey: z.string().min(1).optional(),
+  openAiApiKeyFile: z.string().min(1).optional(),
+  assetsDir: z.string().min(1).default("/opt/scout/voice"),
+  kwsRuntime: z.enum(["auto", "native", "wasm"]).default("auto"),
+});
 
 export type VoiceAssistantConfig = z.infer<typeof VoiceAssistantConfigSchema>;
 
 /**
- * Parse the voice assistant's environment surface. `enabled` arrives already
- * boolean-parsed by env-var (a present invalid value throws there); the
- * remaining values are optional strings where empty means absent. A present
- * but invalid `kwsRuntime` throws here rather than falling back.
+ * Parse the voice assistant's environment surface. Values are optional strings
+ * where empty means absent. A present but invalid `kwsRuntime` throws here
+ * rather than falling back.
  */
 export function parseVoiceAssistantConfiguration(values: {
-  enabled: boolean;
   openAiApiKey: string | undefined;
+  openAiApiKeyFile: string | undefined;
   assetsDir: string | undefined;
   kwsRuntime: string | undefined;
 }): VoiceAssistantConfig {
   return VoiceAssistantConfigSchema.parse({
-    enabled: values.enabled,
     ...(values.openAiApiKey === undefined
       ? {}
       : { openAiApiKey: values.openAiApiKey }),
+    ...(values.openAiApiKeyFile === undefined
+      ? {}
+      : { openAiApiKeyFile: values.openAiApiKeyFile }),
     ...(values.assetsDir === undefined ? {} : { assetsDir: values.assetsDir }),
     ...(values.kwsRuntime === undefined
       ? {}
@@ -160,25 +170,25 @@ export function parseProductAnalyticsConfiguration(
  */
 function computeConfiguration() {
   const environment = resolveEnvironment();
-  const enableDiscordGateway = env
-    .get("ENABLE_DISCORD_GATEWAY")
-    .default("true")
+  // Which shape of the one backend image this process is. Bootstrap config by
+  // definition: it decides what starts, so it cannot come from a flag service
+  // the process has not connected to yet.
+  const runtimeRole = parseScoutRuntimeRole(
+    env.get("SCOUT_RUNTIME_ROLE").asString(),
+  );
+  // Local-only escape hatch for the boot-time report-lake fold, which is the
+  // one startup step a developer routinely cannot satisfy: with no published
+  // build and no S3 bucket the fold falls back to a rebuild and throws. It is
+  // deliberately narrower than the ENABLE_BACKGROUND_JOBS flag it replaces —
+  // that one also silently removed the realtime, background and competition
+  // workers, which is a capability decision and now belongs to the role.
+  const skipReportLakeFold = env
+    .get("SCOUT_DEV_SKIP_REPORT_LAKE_FOLD")
+    .default("false")
     .asBool();
-  const enableBackgroundJobs = env
-    .get("ENABLE_BACKGROUND_JOBS")
-    .default("true")
-    .asBool();
-  if (
-    environment !== "dev" &&
-    (!enableDiscordGateway || !enableBackgroundJobs)
-  ) {
+  if (environment !== "dev" && skipReportLakeFold) {
     throw new Error(
-      "ENABLE_DISCORD_GATEWAY and ENABLE_BACKGROUND_JOBS may only be disabled in environment=dev",
-    );
-  }
-  if (enableBackgroundJobs && !enableDiscordGateway) {
-    throw new Error(
-      "ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY: background jobs use the Discord client and guild filtering",
+      "SCOUT_DEV_SKIP_REPORT_LAKE_FOLD may only be set in environment=dev: a beta/prod pod that owns the report lake must publish a build before it serves from it",
     );
   }
   const temporalNamespace = ScoutStageSchema.parse(
@@ -211,7 +221,7 @@ function computeConfiguration() {
     // unset, so gating the route on `environment === "dev"` alone would fail
     // open on a beta/prod deploy that forgot to set ENVIRONMENT — an
     // unauthenticated session-minting endpoint. Requiring this explicit flag
-    // (set only by scripts/dev-web.ts) means an omitted config fails closed.
+    // (set only by scripts/dev/dev-web.ts) means an omitted config fails closed.
     enableDevLogin: env.get("ENABLE_DEV_LOGIN").default("false").asBool(),
     // Local web boots use the signed dev-login route by default so a secondary
     // copy does not depend on a Discord Developer Portal callback registration.
@@ -233,10 +243,14 @@ function computeConfiguration() {
     // same pair that already binds the server to loopback. Unset means "no
     // override", so an omitted config fails closed exactly like dev-login.
     devUserGuilds: env.get("DEV_USER_GUILDS").default("").asArray(","),
-    // A secondary local web instance can opt out of the single BETA Discord
-    // gateway and background jobs. These remain enabled by default everywhere.
-    enableDiscordGateway,
-    enableBackgroundJobs,
+    // A secondary local web instance opts out of the single BETA Discord
+    // gateway by running the `application` role instead of `combined`.
+    runtimeRole,
+    // Derived, not read from the environment: the role decides the subsystems,
+    // so a consumer asking "may this process do X" asks the table rather than
+    // re-deriving X from a role name at the call site.
+    runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole),
+    skipReportLakeFold,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
     temporalNamespace,
     temporalScheduleReconciliation,
@@ -264,21 +278,33 @@ function computeConfiguration() {
       .asString(),
     reportDuckDbThreads: env
       .get("REPORT_DUCKDB_THREADS")
-      .default("2")
+      .default("4")
       .asIntPositive(),
     reportDuckDbMemoryLimit: env
       .get("REPORT_DUCKDB_MEMORY_LIMIT")
-      .default("512MB")
+      .default("3GB")
       .asString(),
-    openRouterApiKey: getOptionalEnvVar("OPENROUTER_API_KEY"),
+    // Where a query that outgrows memory_limit spills, and how much it may.
+    // Unset keeps DuckDB's in-memory default (no spilling); the pods that
+    // serve reports and Explore set it to a scratch volume.
+    reportDuckDbTempDir: getOptionalEnvVar("REPORT_DUCKDB_TEMP_DIR"),
+    reportDuckDbMaxTempSize: env
+      .get("REPORT_DUCKDB_MAX_TEMP_SIZE")
+      .default("7GiB")
+      .asString(),
+    // Scout's review and report models are OpenAI, so "inference is
+    // configured" means the runtime can see OpenAI credentials. Asked of the
+    // runtime's own resolver so the environment contract has one home.
+    inferenceConfigured: providerCredentialsFromEnv().openai !== undefined,
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
     bettingParlayAiModel: getOptionalEnvVar(
       "BETTING_PARLAY_AI_MODEL",
       "gpt-5.6-sol",
     ),
-    // Replay-only compatibility credential for weekly-parlay executions that
-    // started before the embedded Scout Activity patch was recorded.
-    weeklyParlayControlToken: getOptionalEnvVar("WEEKLY_PARLAY_CONTROL_TOKEN"),
+    // Bearer credential for the internal Bryan Bucks analytics control route
+    // the Temporal analytics Schedule calls. Absent in deployments that do not
+    // expose that route.
+    bryanBucksControlToken: getOptionalEnvVar("BRYAN_BUCKS_CONTROL_TOKEN"),
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-luna").asString(),
     // Beta Explore access is an explicit Discord server allowlist. Production
     // authorizes against the bot's live connected-guild set instead. Unset
@@ -295,19 +321,31 @@ function computeConfiguration() {
       .get("LLM_DAILY_TOKEN_BUDGET")
       .default("20000000")
       .asIntPositive(),
-    // Seeds the dynamic-config snapshot so a read before the first flag
-    // refresh matches the env layer. "stub" is the safe default: stub codes
-    // cannot create a real game.
-    tournamentApiMode: TournamentApiModeSchema.parse(
-      env.get("TOURNAMENT_API_MODE").default("stub").asString(),
+    // Seeds the dynamic-config snapshot, so a read before the first flag
+    // refresh matches the env layer. Unset means the shipped policy.
+    exploreQuotaLimits: ExploreQuotaLimitsInputSchema.parse(
+      env
+        .get("EXPLORE_QUOTA_LIMITS")
+        .default(JSON.stringify(DEFAULT_EXPLORE_QUOTA_LIMITS))
+        .asString(),
     ),
-    tournamentMaxOpenLobbies: env
-      .get("TOURNAMENT_MAX_OPEN_LOBBIES")
+    // env-var's asIntPositive admits zero, which matters here: 0 silences
+    // tips without removing the feature.
+    featureTipPercent: env
+      .get("FEATURE_TIP_PERCENT")
       .default("10")
       .asIntPositive(),
+    featureTipCooldownHours: env
+      .get("FEATURE_TIP_COOLDOWN_HOURS")
+      .default("72")
+      .asIntPositive(),
+    // Voice has its own names. It bills a dedicated OpenAI project with its own
+    // spend cap, and the direct key outranks the file, so sharing
+    // `OPENAI_API_KEY` with text inference would silently move Realtime spend
+    // onto the review project.
     voiceAssistant: parseVoiceAssistantConfiguration({
-      enabled: env.get("VOICE_ASSISTANT_ENABLED").default("false").asBool(),
-      openAiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
+      openAiApiKey: getOptionalEnvVar("VOICE_OPENAI_API_KEY"),
+      openAiApiKeyFile: getOptionalEnvVar("VOICE_OPENAI_API_KEY_FILE"),
       assetsDir: getOptionalEnvVar("VOICE_ASSETS_DIR"),
       kwsRuntime: getOptionalEnvVar("VOICE_KWS_RUNTIME"),
     }),
@@ -368,11 +406,14 @@ const configuration: Configuration = {
   get devUserGuilds() {
     return getConfiguration().devUserGuilds;
   },
-  get enableDiscordGateway() {
-    return getConfiguration().enableDiscordGateway;
+  get runtimeRole() {
+    return getConfiguration().runtimeRole;
   },
-  get enableBackgroundJobs() {
-    return getConfiguration().enableBackgroundJobs;
+  get runtimeCapabilities() {
+    return getConfiguration().runtimeCapabilities;
+  },
+  get skipReportLakeFold() {
+    return getConfiguration().skipReportLakeFold;
   },
   get temporalAddress() {
     return getConfiguration().temporalAddress;
@@ -428,8 +469,14 @@ const configuration: Configuration = {
   get reportDuckDbMemoryLimit() {
     return getConfiguration().reportDuckDbMemoryLimit;
   },
-  get openRouterApiKey() {
-    return getConfiguration().openRouterApiKey;
+  get inferenceConfigured() {
+    return getConfiguration().inferenceConfigured;
+  },
+  get reportDuckDbTempDir() {
+    return getConfiguration().reportDuckDbTempDir;
+  },
+  get reportDuckDbMaxTempSize() {
+    return getConfiguration().reportDuckDbMaxTempSize;
   },
   get reportAiModel() {
     return getConfiguration().reportAiModel;
@@ -437,8 +484,8 @@ const configuration: Configuration = {
   get bettingParlayAiModel() {
     return getConfiguration().bettingParlayAiModel;
   },
-  get weeklyParlayControlToken() {
-    return getConfiguration().weeklyParlayControlToken;
+  get bryanBucksControlToken() {
+    return getConfiguration().bryanBucksControlToken;
   },
   get exploreModel() {
     return getConfiguration().exploreModel;
@@ -449,14 +496,17 @@ const configuration: Configuration = {
   get llmHourlyTokenBudget() {
     return getConfiguration().llmHourlyTokenBudget;
   },
+  get exploreQuotaLimits() {
+    return getConfiguration().exploreQuotaLimits;
+  },
   get llmDailyTokenBudget() {
     return getConfiguration().llmDailyTokenBudget;
   },
-  get tournamentApiMode() {
-    return getConfiguration().tournamentApiMode;
+  get featureTipPercent() {
+    return getConfiguration().featureTipPercent;
   },
-  get tournamentMaxOpenLobbies() {
-    return getConfiguration().tournamentMaxOpenLobbies;
+  get featureTipCooldownHours() {
+    return getConfiguration().featureTipCooldownHours;
   },
   get voiceAssistant() {
     return getConfiguration().voiceAssistant;

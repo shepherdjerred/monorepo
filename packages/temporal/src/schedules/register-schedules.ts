@@ -32,12 +32,27 @@ import {
 // allow-list — NOT a blind prune of "anything not in SCHEDULES", which would
 // also delete the ad-hoc/cron agent-task schedules created via the /agent-tasks API.
 export const DELETED_SCHEDULE_IDS = [
+  // CI maintenance schedules renamed off the provider: the id is also the
+  // `maintenance_job` metric label the homelab staleness alerts watch, so the
+  // old ids must be deleted rather than orphaned or both names would appear to
+  // be jobs that stopped reporting.
+  "buildkite-bun-cache-gc",
+  "buildkite-uv-cache-prune-weekly",
+  "buildkite-trivy-db-refresh",
+  // The post-merge CI I/O impact report measured one PR against a frozen
+  // July-2026 Buildkite cohort. That baseline lives in `buildkite:` recording
+  // rules the migration stopped producing, so the comparison can never be
+  // reproduced -- and the report's own retirement criteria (seven days and 100
+  // builds observed) had already been met. Its replacement,
+  // `ci-io-telemetry-daily`, keeps the part that was still earning its keep:
+  // watching whether the measurement chain itself is intact.
+  "ci-io-post-merge-impact",
   // Replaced by the stage-specific Scout competition update Schedules owned
   // by the embedded Scout Workers.
   "scout-competition-updates-minute",
   "good-morning-weekday-early",
   "good-morning-weekend-early",
-  // Replaced by the Buildkite `helm-types-drift-check` CI gate (the generated
+  // Replaced by the `helm-types-drift-check` CI gate (the generated
   // types are now verified on every PR that touches a generator input, instead
   // of reconciled weekly). The workflow type was removed from the bundle, so
   // this schedule must be deleted or it would keep firing a missing workflow.
@@ -77,27 +92,71 @@ export const DELETED_SCHEDULE_IDS = [
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
+  // Monitored the one OpenAI project OpenRouter billed through. Replaced by
+  // `llm-billed-cost-hourly`, which covers every OpenAI project and Anthropic
+  // workspace now that each app calls its provider directly.
+  "openai-complimentary-usage-hourly",
+  // The Riot tournament lobby poller was retired with the Tournament API
+  // integration; its orphaned Schedule kept starting no-op
+  // `scoutRealtimePollWorkflow` runs every 20 seconds.
+  "scout-prod-tournament-lobby-poll",
+  // The protobufjs v8 watch retired once @temporalio/proto moved to ^8.
+  "protobufjs-v8-watch-weekly",
+] as const;
+
+/**
+ * Retired schedules that did not live in `prod`.
+ *
+ * `DELETED_SCHEDULES` stamps the list above as `prod`, and reconciliation only
+ * deletes entries whose namespace matches the one it is running for — so a
+ * beta-only schedule listed there would never actually be deleted.
+ */
+const DELETED_BETA_SCHEDULE_IDS = [
+  // Beta twin of scout-prod-tournament-lobby-poll.
+  "scout-beta-tournament-lobby-poll",
 ] as const;
 
 // Schedule deletion prevents future starts but does not stop an execution that
 // was already started. The retired workflow types stay on this migration list
 // for one reconciliation so the gateway can terminate those executions before
 // the queue-owning workers receive a bundle without their handlers.
-const RETIRED_WORKFLOW_TYPES = ["observeReviewSignalsWorkflow"] as const;
+type RetiredWorkflowType = {
+  readonly workflowType: string;
+  readonly namespace: TemporalNamespace;
+};
 
-export async function terminateRetiredWorkflowExecutions(client: {
-  workflow: {
-    list: (options: { query: string }) => AsyncIterable<{
-      workflowId: string;
-      runId: string;
-    }>;
-    getHandle: (
-      workflowId: string,
-      runId: string,
-    ) => { terminate: (reason?: string) => Promise<unknown> };
-  };
-}): Promise<void> {
-  for (const workflowType of RETIRED_WORKFLOW_TYPES) {
+const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
+  // Keep terminating this workflow until the live OpenAI schedule above is
+  // removed by reconciliation.
+  {
+    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+    namespace: "prod",
+  },
+  // A run can start after the pre-deploy query but before this reconciliation
+  // removes its schedule, so drain it before workers drop the handler.
+  { workflowType: "runProtobufWatch", namespace: "prod" },
+] as const;
+
+export async function terminateRetiredWorkflowExecutions(
+  client: {
+    workflow: {
+      list: (options: { query: string }) => AsyncIterable<{
+        workflowId: string;
+        runId: string;
+      }>;
+      getHandle: (
+        workflowId: string,
+        runId: string,
+      ) => { terminate: (reason?: string) => Promise<unknown> };
+    };
+  },
+  namespace: TemporalNamespace,
+  retiredTypes: readonly RetiredWorkflowType[] = RETIRED_WORKFLOW_TYPES,
+): Promise<void> {
+  const retired = retiredTypes.filter(
+    (entry) => namespace === "dev" || entry.namespace === namespace,
+  );
+  for (const { workflowType } of retired) {
     const query = `WorkflowType = "${workflowType}" AND ExecutionStatus = "Running"`;
     for await (const execution of client.workflow.list({ query })) {
       try {
@@ -144,10 +203,13 @@ async function pauseLegacyClaudeSchedules(client: Client): Promise<void> {
   }
 }
 
-export const DELETED_SCHEDULES = DELETED_SCHEDULE_IDS.map((id) => ({
-  id,
-  namespace: "prod" as const,
-}));
+export const DELETED_SCHEDULES = [
+  ...DELETED_SCHEDULE_IDS.map((id) => ({ id, namespace: "prod" as const })),
+  ...DELETED_BETA_SCHEDULE_IDS.map((id) => ({
+    id,
+    namespace: "beta" as const,
+  })),
+];
 
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
@@ -300,9 +362,9 @@ export async function registerSchedules(
     declaredIds,
     options.bootstrap,
   );
-  if (options.namespace === "prod") {
-    await terminateRetiredWorkflowExecutions(client);
-  }
+  // Namespace-scoped, not prod-only: a retired workflow terminates in the
+  // namespace it actually ran in.
+  await terminateRetiredWorkflowExecutions(client, options.namespace);
 
   for (const schedule of schedules) {
     const handle = scheduleClient.getHandle(schedule.id);

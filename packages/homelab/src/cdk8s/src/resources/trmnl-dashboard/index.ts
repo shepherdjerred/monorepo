@@ -10,20 +10,19 @@ import {
   ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  IntOrString,
-  KubeClusterRole,
-  KubeClusterRoleBinding,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+
+export const OPS_DASHBOARD_URL =
+  "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341";
 
 export function createTrmnlDashboardDeployment(chart: Chart) {
   const onePasswordItem = new OnePasswordItem(chart, "trmnl-dashboard-1p", {
@@ -37,44 +36,20 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
     onePasswordItem.name,
   );
 
-  const serviceAccount = new ServiceAccount(chart, "trmnl-dashboard-sa", {
-    metadata: { name: "trmnl-dashboard" },
-  });
-
-  new KubeClusterRole(chart, "trmnl-dashboard-reader", {
-    metadata: { name: "trmnl-dashboard-reader" },
-    rules: [
-      {
-        apiGroups: [""],
-        resources: ["nodes", "pods"],
-        verbs: ["get", "list"],
-      },
-    ],
-  });
-
-  new KubeClusterRoleBinding(chart, "trmnl-dashboard-reader-binding", {
-    metadata: { name: "trmnl-dashboard-reader" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "ClusterRole",
-      name: "trmnl-dashboard-reader",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "trmnl-dashboard",
-      },
-    ],
-  });
-
   const deployment = new Deployment(chart, "trmnl-dashboard", {
     replicas: 1,
-    serviceAccount,
-    automountServiceAccountToken: true,
     podMetadata: {
       labels: { app: "trmnl-dashboard" },
     },
+    // The pod no longer reads the Kubernetes API (#3093), so it runs as the
+    // namespace default account. Naming it explicitly matters: omitting the
+    // field leaves the API server's deprecated `serviceAccount` mirror in
+    // place, which restores the retired trmnl-dashboard account on apply.
+    serviceAccount: ServiceAccount.fromServiceAccountName(
+      chart,
+      "trmnl-dashboard-default-sa",
+      "default",
+    ),
   });
 
   const container = deployment.addContainer(
@@ -104,9 +79,6 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        BUGSINK_URL: EnvValue.fromValue(
-          "http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
-        ),
         HA_PRESENCE_ENTITIES: EnvValue.fromSecretValue({
           secret,
           key: "HA_PRESENCE_ENTITIES",
@@ -119,16 +91,11 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           secret,
           key: "HA_CLIMATE_ENTITIES",
         }),
-        BUGSINK_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "BUGSINK_TOKEN",
-        }),
-        ALERT_DASHBOARD_URL: EnvValue.fromValue(
-          "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
-        ),
+        // The homelab screen renders from the ops snapshot the ops dashboard
+        // (deployed as alert-dashboard) serves.
+        OPS_DASHBOARD_URL: EnvValue.fromValue(OPS_DASHBOARD_URL),
         // Sentry error reporting → Bugsink project 15 (TRMNL Dashboard). This
-        // is the dashboard's OWN error tracking, distinct from BUGSINK_URL/TOKEN
-        // which it queries to render the homelab error panel. Required
+        // is the dashboard's OWN error tracking. Required
         // (fail-fast): the item must carry SENTRY_DSN. VERSION is baked into the
         // image; both surface as the Sentry release/environment.
         SENTRY_DSN: EnvValue.fromSecretValue({
@@ -205,9 +172,9 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   return { deployment, service };
 }
 
-export const trmnlDashboardPorts = [
-  53, 80, 443, 8000, 8080, 8123, 9090, 9093,
-].map((port) => ({
-  port: IntOrString.fromNumber(port),
-  protocol: port === 53 ? "UDP" : "TCP",
-}));
+export const trmnlDashboardPorts = [53, 80, 443, 8080, 8123, 9093].map(
+  (port) => ({
+    port: IntOrString.fromNumber(port),
+    protocol: port === 53 ? "UDP" : "TCP",
+  }),
+);

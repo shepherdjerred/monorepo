@@ -34,10 +34,7 @@ function fetchInputToUrl(input: FetchInput): string {
   if (typeof input === "string") {
     return input;
   }
-  if (input instanceof URL) {
-    return input.toString();
-  }
-  return input.url;
+  return input instanceof URL ? input.toString() : input.url;
 }
 
 afterEach(() => {
@@ -71,14 +68,14 @@ describe("homelabAuditActivities", () => {
 
   it("classifies missing tools and env as fatal preflight failures", () => {
     const result = classifyHomelabAuditPreflight({
-      missingBinaries: ["bk", "temporal"],
-      missingEnvGroups: ["BUILDKITE_API_TOKEN"],
+      missingBinaries: ["woodpecker-cli", "temporal"],
+      missingEnvGroups: ["WOODPECKER_TOKEN"],
       remoteWarnings: ["Bugsink: exit 1"],
     });
 
     expect(result.fatalMessages).toEqual([
-      "Missing required audit binaries: bk, temporal",
-      "Missing required audit environment: BUILDKITE_API_TOKEN",
+      "Missing required audit binaries: woodpecker-cli, temporal",
+      "Missing required audit environment: WOODPECKER_TOKEN",
     ]);
     expect(result.markdown).toContain("Bugsink: exit 1");
   });

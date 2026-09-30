@@ -2,14 +2,13 @@ import { describe, expect, test } from "vitest";
 
 import {
   budgetOf,
-  CEILING,
+  LIMIT,
   directoryOf,
   findErrors,
   findWarnings,
   isCountedPath,
   reportedDirectories,
   tallyDirectories,
-  TARGET,
   WARN_THRESHOLD,
 } from "./check-directory-file-counts.ts";
 
@@ -21,13 +20,9 @@ function filesIn(directory: string, count: number, suffix = ".ts"): string[] {
   );
 }
 
-describe("the ratchet", () => {
-  test("never sits below the permanent target", () => {
-    expect(CEILING).toBeGreaterThanOrEqual(TARGET);
-  });
-
-  test("the advisory threshold is below the permanent target", () => {
-    expect(WARN_THRESHOLD).toBeLessThan(TARGET);
+describe("the limit", () => {
+  test("the advisory threshold is below the limit", () => {
+    expect(WARN_THRESHOLD).toBeLessThan(LIMIT);
   });
 });
 
@@ -69,6 +64,20 @@ describe("isCountedPath", () => {
     expect(isCountedPath("packages/x/sandbox/a.ts")).toBe(true);
   });
 
+  test("excludes generated trees, which are machine output", () => {
+    expect(
+      isCountedPath("packages/homelab/src/cdk8s/generated/helm/loki.types.ts"),
+    ).toBe(false);
+    expect(isCountedPath("packages/x/generated/client.ts")).toBe(false);
+    expect(isCountedPath("generated/root.ts")).toBe(false);
+  });
+
+  test("still counts authored files whose name contains generated", () => {
+    expect(
+      isCountedPath("packages/homelab/src/cdk8s/src/version-map.generated.ts"),
+    ).toBe(true);
+  });
+
   test("is not fooled by an extension appearing mid-path", () => {
     expect(isCountedPath("packages/x.ts/notes.md")).toBe(false);
   });
@@ -97,7 +106,7 @@ describe("budgetOf", () => {
   /**
    * The budget split only means anything if a test is recognised as a test in
    * the language it is written in. Charging these to the source budget would
-   * make a directory of 30 modules and their 30 tests fail a 50-module limit it
+   * make a directory of 20 modules and their 20 tests fail a 25-module limit it
    * never exceeded.
    */
   test("recognises Go's convention", () => {
@@ -180,40 +189,40 @@ describe("tallyDirectories", () => {
 });
 
 describe("findErrors", () => {
-  test("fails a directory over the ceiling", () => {
-    const tallies = tallyDirectories(filesIn("src/betting", CEILING + 1));
+  test("fails a directory over the limit", () => {
+    const tallies = tallyDirectories(filesIn("src/betting", LIMIT + 1));
     expect(findErrors(tallies.values())).toEqual([
-      { directory: "src/betting", budget: "source", count: CEILING + 1 },
+      { directory: "src/betting", budget: "source", count: LIMIT + 1 },
     ]);
   });
 
-  test("passes a directory exactly at the ceiling", () => {
-    const tallies = tallyDirectories(filesIn("src/betting", CEILING));
+  test("passes a directory exactly at the limit", () => {
+    const tallies = tallyDirectories(filesIn("src/betting", LIMIT));
     expect(findErrors(tallies.values())).toEqual([]);
   });
 
   test("fails on the test budget alone", () => {
     const tallies = tallyDirectories([
       ...filesIn("test", 2),
-      ...filesIn("test", CEILING + 1, ".test.ts"),
+      ...filesIn("test", LIMIT + 1, ".test.ts"),
     ]);
     expect(findErrors(tallies.values())).toEqual([
-      { directory: "test", budget: "test", count: CEILING + 1 },
+      { directory: "test", budget: "test", count: LIMIT + 1 },
     ]);
   });
 
-  test("a directory at the ceiling in both budgets still passes", () => {
+  test("a directory at the limit in both budgets still passes", () => {
     const tallies = tallyDirectories([
-      ...filesIn("src/betting", CEILING),
-      ...filesIn("src/betting", CEILING, ".test.ts"),
+      ...filesIn("src/betting", LIMIT),
+      ...filesIn("src/betting", LIMIT, ".test.ts"),
     ]);
     expect(findErrors(tallies.values())).toEqual([]);
   });
 
   test("reports the worst offender first", () => {
     const tallies = tallyDirectories([
-      ...filesIn("src/small", CEILING + 1),
-      ...filesIn("src/big", CEILING + 90),
+      ...filesIn("src/small", LIMIT + 1),
+      ...filesIn("src/big", LIMIT + 90),
     ]);
     expect(findErrors(tallies.values()).map((v) => v.directory)).toEqual([
       "src/big",
@@ -221,15 +230,15 @@ describe("findErrors", () => {
     ]);
   });
 
-  test("honours an explicit lower ceiling, which is how the ratchet tightens", () => {
-    const tallies = tallyDirectories(filesIn("src/betting", TARGET + 1));
-    expect(findErrors(tallies.values(), TARGET)).toHaveLength(1);
-    expect(findErrors(tallies.values(), TARGET + 1)).toEqual([]);
+  test("honours an explicit limit", () => {
+    const tallies = tallyDirectories(filesIn("src/betting", LIMIT + 1));
+    expect(findErrors(tallies.values(), LIMIT)).toHaveLength(1);
+    expect(findErrors(tallies.values(), LIMIT + 1)).toEqual([]);
   });
 });
 
 describe("findWarnings", () => {
-  test("advises above the threshold but below the ceiling", () => {
+  test("advises above the threshold but below the limit", () => {
     const tallies = tallyDirectories(filesIn("src/x", WARN_THRESHOLD + 1));
     expect(findWarnings(tallies.values())).toEqual([
       {
@@ -246,7 +255,7 @@ describe("findWarnings", () => {
   });
 
   test("does not also warn about something already erroring", () => {
-    const tallies = tallyDirectories(filesIn("src/x", CEILING + 1));
+    const tallies = tallyDirectories(filesIn("src/x", LIMIT + 1));
     expect(findWarnings(tallies.values())).toEqual([]);
     expect(findErrors(tallies.values())).toHaveLength(1);
   });
@@ -284,7 +293,7 @@ describe("reportedDirectories — staged-file scoping", () => {
 
     // Counts come from the directory's full contents, not from `staged`.
     const wholeRepository = [
-      ...filesIn("src/betting", CEILING + 1),
+      ...filesIn("src/betting", LIMIT + 1),
       ...staged,
       ...filesIn("src/elsewhere", 3),
     ];
@@ -294,14 +303,14 @@ describe("reportedDirectories — staged-file scoping", () => {
 
     expect(findErrors(tallies)).toHaveLength(1);
     // Had the counts come from `staged`, this would have been 1 and passed.
-    expect(findErrors(tallies)[0]?.count).toBeGreaterThan(CEILING);
+    expect(findErrors(tallies)[0]?.count).toBeGreaterThan(LIMIT);
   });
 
   test("an unrelated over-limit directory is not reported in staged mode", () => {
     const selected = reportedDirectories(["src/elsewhere/a.ts"]);
     const tallies = [
       ...tallyDirectories([
-        ...filesIn("src/betting", CEILING + 1),
+        ...filesIn("src/betting", LIMIT + 1),
         ...filesIn("src/elsewhere", 3),
       ]).values(),
     ].filter((tally) => selected?.has(tally.directory) ?? true);

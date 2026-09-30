@@ -142,8 +142,7 @@ function arithmeticOperator(
   if (functionName === "+") return "add";
   if (functionName === "-") return "subtract";
   if (functionName === "*") return "multiply";
-  if (functionName === "/") return "divide";
-  return undefined;
+  return functionName === "/" ? "divide" : undefined;
 }
 
 function divisionRightOperand(
@@ -217,15 +216,13 @@ function comparisonOperator(
   if (type === "COMPARE_GREATERTHANOREQUALTO") return "gte";
   if (type === "COMPARE_LESSTHANOREQUALTO") return "lte";
   if (type === "COMPARE_GREATERTHAN") return "gt";
-  if (type === "COMPARE_LESSTHAN") return "lt";
-  return undefined;
+  return type === "COMPARE_LESSTHAN" ? "lt" : undefined;
 }
 
 function conjunctionKind(object: AstObject): "and" | "or" | null {
   const type = expressionType(object);
   if (type === "CONJUNCTION_AND") return "and";
-  if (type === "CONJUNCTION_OR") return "or";
-  return null;
+  return type === "CONJUNCTION_OR" ? "or" : null;
 }
 
 export function darePredicateFromScoutQl(

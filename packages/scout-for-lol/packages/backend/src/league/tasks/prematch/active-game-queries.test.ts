@@ -67,7 +67,11 @@ const fakePrisma = {
 
 await vi.doMock("#src/database/index.ts", () => ({
   prisma: fakePrisma,
+}));
+await vi.doMock("#src/database/player-accounts.ts", () => ({
   getAccountsWithState: () => Promise.resolve([]),
+}));
+await vi.doMock("#src/database/subscribed-channels.ts", () => ({
   getChannelsSubscribedToPlayers: () => Promise.resolve([]),
 }));
 

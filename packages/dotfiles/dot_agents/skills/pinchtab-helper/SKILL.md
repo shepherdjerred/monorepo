@@ -1,9 +1,28 @@
 ---
 name: pinchtab-helper
-description: "Use this skill for PinchTab browser automation - profiles, instances, multi-instance routing, tabs, actions, and an…"
+description: |
+  PinchTab browser automation - the default browser for local development, UI verification, and visual proof; also profiles, instances, multi-instance routing, tabs, actions, and anti-detection
+  When building or changing any frontend/UI, verifying a change against a local dev server, capturing a screenshot or recording for a PR, or when the user mentions PinchTab, browser automation, headed/headless browser, or web scraping with Chrome
 ---
 
 # PinchTab Browser Automation
+
+PinchTab is the browser for development. Use it to look at frontend and UI work
+instead of reasoning about it from source, and to produce the visual proof a PR
+needs. Use `lightpanda-browser` instead for curl-like scraping and extraction.
+
+## Verify a local UI change
+
+Start the app's dev server, then drive it and keep the capture for the PR:
+
+```bash
+pinchtab nav http://localhost:5180/app/
+pinchtab screenshot -o /tmp/foo.png
+toolkit pr asset <PR> /tmp/foo.png --markdown --profile seaweedfs
+```
+
+See "Capturing UI work" below for the rest of the verbs and for driving this
+from a script.
 
 ## Installation
 
@@ -119,6 +138,25 @@ pinchtab screenshot                # Take screenshot
 pinchtab tab                       # List tabs
 pinchtab eval '<js>'               # Execute JavaScript
 ```
+
+### Capturing UI work
+
+| Command | Use |
+| --- | --- |
+| `snap --interactive` | What is actually on the page, before acting on it |
+| `capture` | Paired screenshot + accessibility snapshot from one DOM epoch |
+| `compare` | Before/after visual diff of two versions |
+| `record` | Video of a multi-step flow, for a demo of an interaction |
+| `console` / `errors` | Console output and uncaught errors |
+| `screenshot --beyond-viewport` | Whole scrollable document, not just the viewport |
+| `screenshot --selector <ref>` | One element instead of the page |
+| `screenshot --scale 0.5` | Smaller file for a PR attachment |
+
+For a scripted harness rather than one-off commands, drive the REST API
+directly: read the token from the config `PINCHTAB_CONFIG` selects, find the
+running headed instance via `GET /instances`, and drive its tab with
+`POST /tabs/{tabId}/action` and `GET /tabs/{tabId}/screenshot`. Wrap the capture
+in one helper and reuse it per scenario.
 
 ### Instance-Scoped Commands (target specific instance)
 

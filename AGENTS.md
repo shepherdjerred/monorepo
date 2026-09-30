@@ -21,15 +21,28 @@ deployment targets.
   Do not copy a static workspace tree into agent guidance.
 
 Do not turn plans, work logs, or historical rollout details into repository
-documents. Track unfinished work in Linear or the PR.
+documents. Track unfinished work in the Linear `AI` team or the PR. Never
+create an issue in `SJ`, which is reserved for human-created work; update an
+existing `SJ` issue only when the task explicitly identifies it.
+
+When the development environment itself blocks you — a tool that reliably
+fails, a documented command that does not work, missing access or fixtures
+needed to verify the change, a manual sequence you have now repeated — search
+the `AI` team's `Developer Experience` project, upvote a match with a `+1`
+comment, and file a new issue only when there is no match. File systemic
+problems the next agent will hit again, not one-off mistakes, unverified
+guesses, or causes you can fix inside the current scope. Filing never blocks or
+widens the task: fix small in-scope causes inline, file the rest after
+delivering, and name any issue you filed or upvoted in the final report. Load
+the `linear-work-management` skill for the search-first procedure, vote shape,
+and issue shape.
 
 ## Workspace and runtime
 
 This is one Bun workspace with one root `bun.lock` and the isolated linker.
 Run `bun install --frozen-lockfile` once at the root. Internal dependencies use
 `workspace:*`; never use npm, Yarn, pnpm, per-package lockfiles, or copied
-workspace artifacts. Use Bun APIs in Bun-only TypeScript when they are clearer
-than Node compatibility APIs.
+workspace artifacts.
 
 After dependency or schema changes:
 
@@ -46,35 +59,17 @@ or in-process timers.
 
 ## Engineering invariants
 
-- Never use TypeScript assertions except `as const` and `as unknown`. Parse
-  untyped boundaries with Zod or narrow them explicitly.
 - Let broken internal contracts fail loudly. Handle expected user and external
   boundary errors with typed, useful responses.
 - Do not add fallbacks for corrupt data, unknown enums, missing assets, or
   required tools. Fix the producer or contract.
-- Never suppress CI, lint, tests, Renovate, or architecture rules to get green.
-  Do not skip tests because generated output is missing; build the prerequisite.
+- Do not skip tests because generated output is missing; build the prerequisite.
 - Fix dependency upgrades forward using the migration guide and validation
   tools. Do not revert merely to avoid the migration.
 - Shared cross-language data uses a language-neutral source of truth plus
   per-language validation.
-- Module boundaries are enforced by `@shepherdjerred/architecture`. Fix cycles
-  or coupling; never weaken a rule. Boundary fixtures must prove each rule can
-  fail.
 - After roughly two failed attempts at the same workaround, step back and
   reconsider the design instead of layering more exceptions.
-- No directory may exceed 50 code files, counted per directory with source and
-  colocated tests holding separate budgets
-  (`scripts/checks/check-directory-file-counts.ts`). Split the directory into
-  sub-domains rather than raising `CEILING`, which has no allowlist to add to.
-  `CEILING` is a ratchet lowered by each reorganization PR toward the
-  permanent `TARGET` of 50; until it reaches `TARGET`, some directories may
-  still legally sit above 50 and below the current `CEILING`.
-
-Automation under `scripts/`, `.buildkite/`, and deploy/build scripts must not
-hide failures or credentials. In particular, do not add `|| true`,
-`2>/dev/null`, `|| echo`, `|| bun install`, `--no-exit-code`, token-bearing
-URLs, token files, `git add .`, or `git add -A`.
 
 Every newly added or rewritten URL must return HTTP 200 before commit.
 
@@ -94,14 +89,14 @@ call and distinguish authentication from authorization.
 ## Homelab ownership and delivery
 
 Infrastructure source lives under `packages/homelab`. Change repo-owned IaC and
-let Buildkite and ArgoCD apply it; do not make an untracked dashboard or cluster
+let CI and ArgoCD apply it; do not make an untracked dashboard or cluster
 mutation when a declarative path exists. Load the homelab development or
 operations skill before changing or operating that system.
 
 These are separate acceptance layers:
 
 1. source and focused local checks;
-2. exact-head Buildkite CI;
+2. exact-head Woodpecker CI;
 3. built and published artifacts;
 4. ArgoCD reconciliation to the intended revision;
 5. observed runtime health and user-visible behavior.
@@ -122,8 +117,8 @@ bunx turbo run build typecheck test lint --filter=<package>
 bunx lefthook run pre-commit
 ```
 
-Buildkite is the exhaustive gate and the CI source of truth. Use `toolkit bk` or
-`toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
+Woodpecker is the exhaustive gate and the CI source of truth. Use
+`toolkit woodpecker` or `toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
 reproducing CI or changing verification machinery.
 
 Verify claims from the live tree before reporting them. Preserve unrelated
@@ -140,9 +135,9 @@ Feature work uses `toolkit git-spice`; a single PR is a stack of one. Load the
 `monorepo-delivery` skill before branch, stack, PR, or CI-recovery work. Never
 hand-roll a stack rebase or create a feature PR with bare `gh pr create`.
 
-Commits use `type(scope): outcome`. The primary commit and PR body include
-`Why`, `What`, and `Verification`, including live checks not run. Stage explicit
-paths only. Keep PR metadata based on the complete branch diff.
+The primary commit and PR body include `Why`, `What`, and `Verification`,
+including live checks not run. Stage explicit paths only. Keep PR metadata based
+on the complete branch diff.
 
 Attach the lightest useful visual proof when behavior is visual or interactive;
 pure logic and internal refactors need exact commands instead. Use

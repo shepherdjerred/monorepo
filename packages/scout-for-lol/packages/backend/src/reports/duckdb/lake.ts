@@ -1,4 +1,7 @@
 import path from "node:path";
+import configuration from "#src/configuration.ts";
+import { RuntimeCapabilityError } from "#src/configuration/runtime-capability-error.ts";
+import type { ScoutRuntimeCapabilities } from "#src/configuration/runtime-role.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
@@ -7,6 +10,7 @@ import {
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
+import { matchReadColumns } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import {
   TIMELINE_COVERAGE_LAKE_COLUMNS,
   TIMELINE_EVENT_LAKE_COLUMNS,
@@ -81,7 +85,47 @@ async function globParquet(root: string, table: string): Promise<string[]> {
   return files.toSorted();
 }
 
-export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
+/**
+ * Refuse to resolve lake files on a role that does not declare lake access.
+ *
+ * This is a *structural* rule, and it is here rather than in `runtime/`
+ * because of how the boot gate failed. `subsystems.ts` verifies a published
+ * build only for roles whose `reportLakeAccess` is true — so the check a role
+ * skips by declaring `false` is the very check that would have caught the
+ * role reading the lake anyway. A capability whose `false` skips a safety
+ * check cannot protect the role that sets it false; only an assertion at the
+ * read site can.
+ *
+ * And the read site is where the damage is silent. An unmounted or
+ * unpublished lake is not an error for DuckDB — it scans zero parquet files
+ * and returns zero rows — so the caller does not fail, it reports "no games
+ * found" and records a successful run. Every in-process lake reader funnels
+ * through {@link resolveLakeFiles}, which is what makes one assertion here
+ * cover Explore turns, report runs, dare settlement, parlay generation and
+ * the consumer profile alike.
+ *
+ * No role in the table sets this false today, and that is the intended end
+ * state rather than the reason to drop the guard: the table is the claim, and
+ * this is what makes a future role's claim true or make it fail loudly.
+ */
+export function assertReportLakeAccess(
+  capabilities: Pick<ScoutRuntimeCapabilities, "reportLakeAccess">,
+): void {
+  if (capabilities.reportLakeAccess) return;
+  throw new RuntimeCapabilityError(
+    "reportLakeAccess",
+    "This process's runtime role does not declare reportLakeAccess, so it must not query the report lake. An unmounted or unpublished lake answers every query with zero rows instead of failing, which a caller records as a successful run that found nothing.",
+  );
+}
+
+export async function resolveLakeFiles(
+  lakeDir: string,
+  capabilities: Pick<
+    ScoutRuntimeCapabilities,
+    "reportLakeAccess"
+  > = configuration.runtimeCapabilities,
+): Promise<LakeFiles> {
+  assertReportLakeAccess(capabilities);
   const buildDir = await readCurrentBuildDir(lakeDir);
   const [
     matchesStaging,
@@ -202,6 +246,57 @@ type UnionSourceInput = {
 };
 
 /**
+ * Tables whose compacted parquet is already unique per key, because the
+ * rebuild emits one timeline per match (report-lake/rebuild-sources.ts).
+ * Only a staged row can duplicate one, and the compacted row wins.
+ */
+const COMPACTED_UNIQUE = new Set<UnionSourceInput["dedupe"]>([
+  "timeline-events",
+  "timeline-event-participants",
+  "timeline-participant-frames",
+  "timeline-coverage",
+]);
+
+/**
+ * The same rows the row_number dedupe keeps, without windowing the whole
+ * table: compacted rows as they are, plus staged rows no compacted row
+ * already holds, deduped among themselves. A window over every frame in a
+ * production lake ran out of the report memory limit; staging is small.
+ */
+function compactedFirstSource(
+  input: UnionSourceInput,
+  partition: string,
+): SqlFragment {
+  const cols = columnList(input.columns);
+  const where =
+    input.predicate.sql.length > 0 ? ` WHERE ${input.predicate.sql}` : "";
+  const compacted = `SELECT ${cols}, 1 AS src FROM read_parquet(?)${where}`;
+  const compactedParams = [
+    listParam(input.parquetFiles),
+    ...input.predicate.params,
+  ];
+  if (input.stagingFiles.length === 0) {
+    return { sql: compacted, params: compactedParams };
+  }
+  const staged = `SELECT * FROM (SELECT ${cols}, 2 AS src FROM read_json(?, format='newline_delimited', columns=${duckDbColumnsSpec(input.columns)})${where}) QUALIFY row_number() OVER (PARTITION BY ${partition}) = 1`;
+  const stagedParams = [
+    listParam(input.stagingFiles),
+    ...input.predicate.params,
+  ];
+  if (input.parquetFiles.length === 0) {
+    return { sql: staged, params: stagedParams };
+  }
+  const sameKey = partition
+    .split(", ")
+    .map((key) => `c.${key} = s.${key}`)
+    .join(" AND ");
+  return {
+    sql: `${compacted} UNION ALL BY NAME SELECT s.* FROM (${staged}) s ANTI JOIN (${compacted}) c ON ${sameKey}`,
+    params: [...compactedParams, ...stagedParams, ...compactedParams],
+  };
+}
+
+/**
  * Build the deduped parquet ∪ staging source for one lake table. Returns
  * undefined when there are no files at all (caller short-circuits).
  */
@@ -255,6 +350,9 @@ export function buildUnionSource(
         return "match_id";
     }
   })();
+  if (COMPACTED_UNIQUE.has(input.dedupe)) {
+    return compactedFirstSource(input, partition);
+  }
   const sourceOrder = "src";
   return {
     sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY ${sourceOrder}) = 1`,
@@ -262,14 +360,16 @@ export function buildUnionSource(
   };
 }
 
+/** Participant rows, with the loadout columns the caller reads. */
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  loadout: readonly string[] = [],
 ): SqlFragment | undefined {
   return buildUnionSource({
     parquetFiles: files.matchesParquet,
     stagingFiles: files.matchesStaging,
-    columns: MATCH_LAKE_COLUMNS,
+    columns: matchReadColumns(loadout),
     dedupe: "matches",
     predicate,
   });
@@ -284,6 +384,71 @@ export function buildPrematchSource(
     stagingFiles: files.prematchStaging,
     columns: PREMATCH_LAKE_COLUMNS,
     dedupe: "prematch",
+    predicate,
+  });
+}
+
+/**
+ * The match-level columns a team row needs, and nothing else.
+ *
+ * A team row carries no timestamp, queue or version, so `match_teams` queries
+ * look them up from the participant table. Reading them through
+ * `buildMatchesSource` would project all ninety-odd participant columns and
+ * defeat parquet's column pruning on every objective query; this narrow map
+ * reads six. `puuid` earns its place by being half the dedupe key.
+ */
+const MATCH_DIMENSION_LAKE_COLUMNS = {
+  match_id: MATCH_LAKE_COLUMNS.match_id,
+  puuid: MATCH_LAKE_COLUMNS.puuid,
+  game_creation_at: MATCH_LAKE_COLUMNS.game_creation_at,
+  queue: MATCH_LAKE_COLUMNS.queue,
+  game_version: MATCH_LAKE_COLUMNS.game_version,
+  map_id: MATCH_LAKE_COLUMNS.map_id,
+} as const;
+
+export function buildMatchDimensionSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.matchesParquet,
+    stagingFiles: files.matchesStaging,
+    columns: MATCH_DIMENSION_LAKE_COLUMNS,
+    dedupe: "matches",
+    predicate,
+  });
+}
+
+/**
+ * The participant facts a timeline row lacks, and nothing more.
+ *
+ * A frame or event names a participant by puuid or slot but carries no
+ * champion, position, team, result or match time. Those are read from the
+ * participant row — one per (match, puuid), which the `matches` dedupe
+ * already guarantees — through this narrow projection rather than all
+ * ninety-odd participant columns.
+ */
+const PARTICIPANT_DIMENSION_LAKE_COLUMNS = {
+  ...MATCH_DIMENSION_LAKE_COLUMNS,
+  participant_id: MATCH_LAKE_COLUMNS.participant_id,
+  team_id: MATCH_LAKE_COLUMNS.team_id,
+  champion_id: MATCH_LAKE_COLUMNS.champion_id,
+  champion_name: MATCH_LAKE_COLUMNS.champion_name,
+  team_position: MATCH_LAKE_COLUMNS.team_position,
+  win: MATCH_LAKE_COLUMNS.win,
+  riot_id_game_name: MATCH_LAKE_COLUMNS.riot_id_game_name,
+  riot_id_tagline: MATCH_LAKE_COLUMNS.riot_id_tagline,
+} as const;
+
+export function buildParticipantDimensionSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.matchesParquet,
+    stagingFiles: files.matchesStaging,
+    columns: PARTICIPANT_DIMENSION_LAKE_COLUMNS,
+    dedupe: "matches",
     predicate,
   });
 }
@@ -361,6 +526,31 @@ export function buildTimelineParticipantFramesSource(
     parquetFiles: files.timelineParticipantFramesParquet,
     stagingFiles: files.timelineParticipantFramesStaging,
     columns: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+    dedupe: "timeline-participant-frames",
+    predicate,
+  });
+}
+
+/**
+ * The frame scan the gold differences read: only the columns a team or lane
+ * total needs. The dedupe window materializes every column it is handed, and
+ * the full frame row made that window run out of memory at production size.
+ */
+export function buildFrameGoldSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  const all = TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS;
+  return buildUnionSource({
+    parquetFiles: files.timelineParticipantFramesParquet,
+    stagingFiles: files.timelineParticipantFramesStaging,
+    columns: {
+      match_id: all.match_id,
+      frame_index: all.frame_index,
+      participant_id: all.participant_id,
+      puuid: all.puuid,
+      total_gold: all.total_gold,
+    },
     dedupe: "timeline-participant-frames",
     predicate,
   });

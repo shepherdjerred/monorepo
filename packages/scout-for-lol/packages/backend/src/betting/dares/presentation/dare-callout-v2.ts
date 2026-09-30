@@ -16,10 +16,10 @@ import { renderDareV2Callout } from "#src/betting/dares/presentation/dare-callou
 import { deriveDareProgressV2 } from "#src/betting/dares/presentation/dare-progress-v2.ts";
 import { deriveDareProgressV3 } from "#src/betting/dares/presentation/dare-progress-v3.ts";
 import { storedDareV2Evidence } from "#src/betting/dares/settlement/dare-settle-evidence-v2.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { client } from "#src/discord/client.ts";
+import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -40,7 +40,7 @@ export type DareV2MessageEditor = (input: {
 }) => Promise<void>;
 
 const defaultEditor: DareV2MessageEditor = async (input) => {
-  const channel = await client.channels.fetch(input.channelId);
+  const channel = await fetchChannelForDelivery(input.channelId);
   if (channel?.isTextBased() !== true) {
     throw new Error(
       `Dare v2 channel ${input.channelId} is unavailable or not text based.`,
@@ -53,6 +53,18 @@ export type DareV2CalloutDependencies = {
   prismaClient: ExtendedPrismaClient;
   sendMessage: DareV2MessageSender;
   editMessage: DareV2MessageEditor;
+  /**
+   * Whether a Dare with no callout yet may have one POSTED. Defaults to yes,
+   * which is v1's behaviour and the behaviour of every caller that does not
+   * care.
+   *
+   * Only the post branch asks. Editing a callout that already exists is
+   * allowed unconditionally: withholding it would leave an already-public
+   * message stale and wrong, which is a different harm rather than a smaller
+   * one, and the message it edits was posted by a live discovery that was
+   * entitled to post it.
+   */
+  mayPost?: (() => boolean) | undefined;
 };
 
 export const defaultDareV2CalloutDependencies: DareV2CalloutDependencies = {
@@ -401,7 +413,9 @@ export async function refreshPendingDareV2Callouts(
 export async function ensureDareV2Callout(
   dareId: number,
   dependencies: DareV2CalloutDependencies = defaultDareV2CalloutDependencies,
-): Promise<"posted" | "existing" | "in_progress" | "refreshed" | "draft"> {
+): Promise<
+  "posted" | "existing" | "in_progress" | "refreshed" | "draft" | "withheld"
+> {
   const dare = await dependencies.prismaClient.bucksDareV2.findUnique({
     where: { id: dareId },
     select: { dareState: true, messageRef: true },
@@ -409,6 +423,16 @@ export async function ensureDareV2Callout(
   if (dare === null) throw new Error(`Dare v2 ${dareId.toString()} not found.`);
   if (dare.dareState === "draft") return "draft";
   if (dare.messageRef === null) {
+    // Nothing is public for this Dare yet, so this branch would POST. A match
+    // owed no public delivery withholds it; there is nothing to edit and
+    // nothing is left half-done, because a Dare with no callout is exactly the
+    // state it was already in.
+    // Withheld, and nothing is retired from here. The scan this runs under
+    // selects every globally pending Dare, so a decision about one match must
+    // not write to rows that match never touched; the Dare a silent match
+    // DID resolve has its pending callout retired inside that settlement's
+    // own transaction. See `withholdDareV2Callout`.
+    if (dependencies.mayPost?.() === false) return "withheld";
     const result = await postDareV2Callout(dareId, dependencies);
     return result.kind;
   }
@@ -420,7 +444,13 @@ export async function tryEnsureDareV2Callout(
   dareId: number,
   dependencies: DareV2CalloutDependencies = defaultDareV2CalloutDependencies,
 ): Promise<
-  "posted" | "existing" | "in_progress" | "refreshed" | "draft" | "failed"
+  | "posted"
+  | "existing"
+  | "in_progress"
+  | "refreshed"
+  | "draft"
+  | "withheld"
+  | "failed"
 > {
   try {
     return await ensureDareV2Callout(dareId, dependencies);

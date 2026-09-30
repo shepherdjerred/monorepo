@@ -24,7 +24,7 @@ import { captureVoiceQuestionAsked } from "#src/analytics/voice-question.ts";
 import {
   scoutVoiceActiveSessions,
   scoutVoiceSessionsTotal,
-} from "#src/metrics/voice.ts";
+} from "#src/metrics/platform/voice.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("voice-assistant-manager");
@@ -36,7 +36,8 @@ export type SessionEndReason =
   | "connection-lost"
   | "rejoined"
   | "flag-disabled"
-  | "shutdown";
+  | "shutdown"
+  | "moved";
 
 /** What the manager needs from an assistant-mode voice connection. */
 export type AssistantConnection = AssistantVoiceConnection & {
@@ -120,8 +121,9 @@ function defaultDeps(): VoiceAssistantManagerDeps {
         .getClient()
         ?.guilds.cache.get(guildId)
         ?.channels.cache.get(channelId);
-      if (channel?.isVoiceBased() !== true) return null;
-      return channel.members.filter((member) => !member.user.bot).size;
+      return channel?.isVoiceBased() === true
+        ? channel.members.filter((member) => !member.user.bot).size
+        : null;
     },
     createSession: (input) =>
       new ScoutVoiceSession({
@@ -135,6 +137,14 @@ function defaultDeps(): VoiceAssistantManagerDeps {
             voiceOutputArbiter.assistantDuck(input.guildId),
             () => voiceOutputArbiter.reserveForAssistant(input.guildId),
           ),
+        resolveUserProfile: async (userId) => {
+          const discordClient = voiceManager.getClient();
+          if (discordClient === null) {
+            throw new Error("Discord client is unavailable for Voice Explore");
+          }
+          const user = await discordClient.users.fetch(userId);
+          return { username: user.username, avatar: user.avatar };
+        },
         onWakeAccepted: input.onWakeAccepted,
         onQuestionObserved: input.onQuestionObserved,
       }),
@@ -483,6 +493,40 @@ export class VoiceAssistantManager {
     if (humans === null || humans > 0) return;
     if (active !== undefined) {
       this.endSession(guildId, "empty-channel", { leaveChannel: true });
+      return;
+    }
+    this.invalidate(guildId);
+  }
+
+  /**
+   * Discord's own `VoiceStateUpdate` for Scout's own member: `newChannelId`
+   * is wherever the underlying connection is bound now. An admin dragging
+   * the bot to a DIFFERENT channel moves that connection without ever going
+   * through `join()` — nobody consented to being listened to there, and the
+   * stored channel ID here would otherwise keep pointing at the channel
+   * Scout just left, so the empty-channel check above (and any later
+   * teardown) would keep watching the wrong room.
+   *
+   * A transition to `null` is excluded on purpose, not just left unhandled:
+   * `join()` always destroys any existing connection before establishing
+   * the requested one (`VoiceManager.joinChannelLocked`), which briefly
+   * reports no channel while the old connection tears down — exactly while
+   * `pendingJoinChannels` already names the NEW target as this same
+   * request's own known channel. Reacting to that transient `null` would
+   * cancel the very join causing it. A genuine full disconnect is already
+   * handled by the connection-lost listener wired in the constructor, after
+   * its own reconnect grace period.
+   */
+  handleBotChannelChanged(guildId: string, newChannelId: string | null): void {
+    if (newChannelId === null) return;
+    const active = this.sessions.get(guildId);
+    const pendingChannelId = this.pendingJoinChannels.get(guildId);
+    const knownChannelId = active?.channelId ?? pendingChannelId;
+    if (knownChannelId === undefined || knownChannelId === newChannelId) {
+      return;
+    }
+    if (active !== undefined) {
+      this.endSession(guildId, "moved", { leaveChannel: true });
       return;
     }
     this.invalidate(guildId);

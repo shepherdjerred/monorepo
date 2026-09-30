@@ -19,9 +19,13 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  NET_ADMIN_FIREWALL_RESOURCES,
+  netAdminFirewallSecurityContext,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
 
 const PINCHTAB_PORT = 9867;
 
@@ -35,11 +39,17 @@ const HEALTHCHECK_COMMAND = [
   "-c",
   `wget -q -O /dev/null --header="Authorization: Bearer $PINCHTAB_TOKEN" http://localhost:${String(PINCHTAB_PORT)}/health`,
 ];
+const BROWSER_READINESS_COMMAND = [
+  "sh",
+  "-c",
+  String.raw`wget -q -O - --header="Authorization: Bearer $PINCHTAB_TOKEN" http://localhost:${String(PINCHTAB_PORT)}/instances | tr '}' '\n' | grep '"profileName":"default"' | grep -Eq '"status":"running"'`,
+];
 
 export function createPinchtabDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "pinchtab", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    automountServiceAccountToken: false,
     securityContext: {
       // The pinchtab image runs Chrome as its own non-root user. fsGroup lets
       // that user (whatever its UID) write to the persisted /data PVC.
@@ -54,7 +64,61 @@ export function createPinchtabDeployment(chart: Chart) {
           "Chrome requires a writable filesystem for its user-data and cache directories",
       },
     },
+    podMetadata: {
+      annotations: {
+        "ci.sjer.red/pod-security-enforcement": "privileged",
+      },
+    },
   });
+
+  const firewallRunVolume = Volume.fromEmptyDir(
+    chart,
+    "pinchtab-firewall-run",
+    "firewall-run",
+  );
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "install-browser-firewall",
+      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        `set -eu
+iptables -F OUTPUT
+ip6tables -F OUTPUT
+iptables -P OUTPUT DROP
+ip6tables -P OUTPUT DROP
+iptables -A OUTPUT -o lo -j ACCEPT
+ip6tables -A OUTPUT -o lo -j ACCEPT
+iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+ip6tables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+for address in $(awk '/^nameserver / { print $2 }' /etc/resolv.conf); do
+  case "$address" in
+    *:*)
+      ip6tables -A OUTPUT -d "$address" -p udp --dport 53 -j ACCEPT
+      ip6tables -A OUTPUT -d "$address" -p tcp --dport 53 -j ACCEPT
+      ;;
+    *)
+      iptables -A OUTPUT -d "$address" -p udp --dport 53 -j ACCEPT
+      iptables -A OUTPUT -d "$address" -p tcp --dport 53 -j ACCEPT
+      ;;
+  esac
+done
+for cidr in 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 224.0.0.0/4; do
+  iptables -A OUTPUT -d "$cidr" -j REJECT
+done
+for cidr in ::/128 ::1/128 fc00::/7 fe80::/10 ff00::/8; do
+  ip6tables -A OUTPUT -d "$cidr" -j REJECT
+done
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+ip6tables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+iptables -L OUTPUT -n
+ip6tables -L OUTPUT -n`,
+      ],
+      securityContext: netAdminFirewallSecurityContext(true),
+      volumeMounts: [{ path: "/run", volume: firewallRunVolume }],
+      resources: NET_ADMIN_FIREWALL_RESOURCES,
+    }),
+  );
 
   // Shared "PinchTab" 1Password item (also synced into the birmel namespace).
   // Single source of truth for the bearer token used by both pinchtab and birmel.
@@ -81,6 +145,10 @@ export function createPinchtabDeployment(chart: Chart) {
       name: "pinchtab-config",
     },
     data: {
+      // PinchTab 0.15.1 uses this marker to detect containers. Kubernetes CRI
+      // does not supply Docker's marker, so Chrome otherwise tries a sandbox
+      // that cannot run with no_new_privs. Retain the existing pod firewall.
+      dockerenv: "",
       "config.json": JSON.stringify(
         {
           server: {
@@ -99,13 +167,27 @@ export function createPinchtabDeployment(chart: Chart) {
           instanceDefaults: {
             mode: "headless",
             noRestore: true,
+            stealthLevel: "full",
+            humanize: true,
           },
+          security: { allowEvaluate: true },
         },
         null,
         2,
       ),
     },
   });
+  deployment.podMetadata.addAnnotation(
+    "checksum/browser-config",
+    new Bun.CryptoHasher("sha256")
+      .update(JSON.stringify(config.data))
+      .digest("hex"),
+  );
+  const configVolume = Volume.fromConfigMap(
+    chart,
+    "pinchtab-config-volume",
+    config,
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -144,17 +226,16 @@ export function createPinchtabDeployment(chart: Chart) {
           key: "PINCHTAB_TOKEN",
         }),
       },
-      // pinchtab 0.13.2 runs its "guard" with auth required on every route
-      // except `/` — `/health` returns 401 without the bearer token, so a plain
-      // httpGet probe fails. Use an exec probe that reads PINCHTAB_TOKEN from the
-      // container env (never the manifest) and calls /health. Two-stage readiness:
-      // the generous startup probe covers Chrome warm-up before liveness/readiness
-      // take over.
+      // PinchTab's guarded health route requires the bearer token, so probes read
+      // PINCHTAB_TOKEN from the container environment instead of the manifest.
+      // Keep the API ready if Chrome stops: clients need that endpoint to start a
+      // replacement browser. Liveness checks Chrome and restarts the pod when the
+      // browser does not recover.
       startup: Probe.fromCommand(HEALTHCHECK_COMMAND, {
         periodSeconds: Duration.seconds(5),
         failureThreshold: 24,
       }),
-      liveness: Probe.fromCommand(HEALTHCHECK_COMMAND, {
+      liveness: Probe.fromCommand(BROWSER_READINESS_COMMAND, {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
@@ -163,6 +244,12 @@ export function createPinchtabDeployment(chart: Chart) {
         failureThreshold: 3,
       }),
       volumeMounts: [
+        {
+          path: "/.dockerenv",
+          subPath: "dockerenv",
+          volume: configVolume,
+          readOnly: true,
+        },
         {
           path: "/data",
           volume: Volume.fromPersistentVolumeClaim(
@@ -173,7 +260,7 @@ export function createPinchtabDeployment(chart: Chart) {
         },
         {
           path: "/config",
-          volume: Volume.fromConfigMap(chart, "pinchtab-config-volume", config),
+          volume: configVolume,
         },
         {
           // Chrome needs far more shared memory than the container default 64Mi.

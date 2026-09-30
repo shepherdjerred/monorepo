@@ -40,10 +40,9 @@ export async function resolveHostAddresses(
 ): Promise<{ address: string; family: number }[]> {
   signal?.throwIfAborted();
   const lookupPromise = dns.lookup(hostname, { all: true });
-  if (signal == null) {
-    return await lookupPromise;
-  }
-  return await Promise.race([lookupPromise, waitForAbort(signal)]);
+  return signal == null
+    ? await lookupPromise
+    : await Promise.race([lookupPromise, waitForAbort(signal)]);
 }
 
 export function sanitizeUrlForLogging(url: string): string {
@@ -253,21 +252,14 @@ function isPrivateOrReservedIpv6(ip: string): boolean {
     return isPrivateOrReservedIpv4Uint(ipv4Uint);
   }
   const w0 = words[0] ?? 0;
-  if (matchesIpv6MaskRules(w0)) {
-    return true;
-  }
-  return isIpv6SpecialPrefix(words);
+  return matchesIpv6MaskRules(w0) || isIpv6SpecialPrefix(words);
 }
 
 export function isPrivateOrReservedIp(ip: string): boolean {
   const family = net.isIP(ip);
-  if (family === 4) {
-    return isPrivateOrReservedIpv4(ip);
-  }
-  if (family === 6) {
-    return isPrivateOrReservedIpv6(ip);
-  }
-  return true;
+  return family === 4
+    ? isPrivateOrReservedIpv4(ip)
+    : family !== 6 || isPrivateOrReservedIpv6(ip);
 }
 
 const FORBIDDEN_HOST_PATTERNS = [
@@ -278,27 +270,27 @@ const FORBIDDEN_HOST_PATTERNS = [
   ".arpa",
 ];
 
-function validateUrlProtocolAndHost(url: string): URL {
+function validateUrlProtocolAndHost(url: string, subject: string): URL {
   let parsed: URL;
   try {
     parsed = new URL(url);
   } catch (error) {
-    throw new Error("Invalid image URL: unable to parse", { cause: error });
+    throw new Error(`Invalid ${subject}: unable to parse`, { cause: error });
   }
 
   if (parsed.protocol !== "https:") {
     throw new Error(
-      `Invalid image URL protocol: only HTTPS is allowed (received ${parsed.protocol})`,
+      `Invalid ${subject} protocol: only HTTPS is allowed (received ${parsed.protocol})`,
     );
   }
 
   if (parsed.username !== "" || parsed.password !== "") {
-    throw new Error("Invalid image URL: credentials are not allowed");
+    throw new Error(`Invalid ${subject}: credentials are not allowed`);
   }
 
   const hostname = parsed.hostname.toLowerCase();
   if (hostname.length === 0) {
-    throw new Error("Invalid image URL: empty hostname");
+    throw new Error(`Invalid ${subject}: empty hostname`);
   }
 
   for (const pattern of FORBIDDEN_HOST_PATTERNS) {
@@ -306,7 +298,7 @@ function validateUrlProtocolAndHost(url: string): URL {
       ? hostname.endsWith(pattern)
       : hostname === pattern;
     if (isForbidden) {
-      throw new Error(`Forbidden image URL: '${pattern}' is not allowed`);
+      throw new Error(`Forbidden ${subject}: '${pattern}' is not allowed`);
     }
   }
 
@@ -317,6 +309,7 @@ async function validateHostDns(
   hostname: string,
   resolver: HostResolver,
   signal?: AbortSignal,
+  subject = "URL",
 ): Promise<string> {
   signal?.throwIfAborted();
   let addresses: { address: string; family: number }[];
@@ -326,19 +319,19 @@ async function validateHostDns(
     if (signal?.aborted === true) {
       throw error;
     }
-    throw new Error(`Invalid image URL: host lookup failed for ${hostname}`, {
+    throw new Error(`Invalid ${subject}: host lookup failed for ${hostname}`, {
       cause: error,
     });
   }
 
   if (addresses.length === 0) {
-    throw new Error(`Invalid image URL: no DNS records found for ${hostname}`);
+    throw new Error(`Invalid ${subject}: no DNS records found for ${hostname}`);
   }
 
   for (const record of addresses) {
     if (isPrivateOrReservedIp(record.address)) {
       throw new Error(
-        `Forbidden image URL: host ${hostname} resolves to private or reserved IP ${record.address}`,
+        `Forbidden ${subject}: host ${hostname} resolves to private or reserved IP ${record.address}`,
       );
     }
   }
@@ -352,9 +345,40 @@ async function validateHostDns(
 
   const first = addresses[0];
   if (first === undefined) {
-    throw new Error(`Invalid image URL: no DNS records found for ${hostname}`);
+    throw new Error(`Invalid ${subject}: no DNS records found for ${hostname}`);
   }
   return first.address;
+}
+
+async function validateSafePublicUrlWithSubject(
+  url: string,
+  resolver: HostResolver,
+  signal: AbortSignal | undefined,
+  subject: string,
+): Promise<ValidatedSafeUrl> {
+  signal?.throwIfAborted();
+  const parsed = validateUrlProtocolAndHost(url, subject);
+  const hostname = parsed.hostname.toLowerCase();
+
+  if (net.isIP(hostname) !== 0) {
+    if (isPrivateOrReservedIp(hostname)) {
+      throw new Error(
+        `Forbidden ${subject}: private or reserved IP address is not allowed`,
+      );
+    }
+    return { url: parsed, pinnedIp: hostname };
+  }
+
+  const pinnedIp = await validateHostDns(hostname, resolver, signal, subject);
+  return { url: parsed, pinnedIp };
+}
+
+export async function validateSafePublicUrl(
+  url: string,
+  resolver: HostResolver = resolveHostAddresses,
+  signal?: AbortSignal,
+): Promise<ValidatedSafeUrl> {
+  return await validateSafePublicUrlWithSubject(url, resolver, signal, "URL");
 }
 
 export async function validateSafePublicImageUrl(
@@ -362,19 +386,10 @@ export async function validateSafePublicImageUrl(
   resolver: HostResolver = resolveHostAddresses,
   signal?: AbortSignal,
 ): Promise<ValidatedSafeUrl> {
-  signal?.throwIfAborted();
-  const parsed = validateUrlProtocolAndHost(url);
-  const hostname = parsed.hostname.toLowerCase();
-
-  if (net.isIP(hostname) !== 0) {
-    if (isPrivateOrReservedIp(hostname)) {
-      throw new Error(
-        "Forbidden image URL: private or reserved IP address is not allowed",
-      );
-    }
-    return { url: parsed, pinnedIp: hostname };
-  }
-
-  const pinnedIp = await validateHostDns(hostname, resolver, signal);
-  return { url: parsed, pinnedIp };
+  return await validateSafePublicUrlWithSubject(
+    url,
+    resolver,
+    signal,
+    "image URL",
+  );
 }

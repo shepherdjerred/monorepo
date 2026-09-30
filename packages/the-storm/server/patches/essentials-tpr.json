@@ -1,0 +1,19 @@
+{
+  "file": "/data/plugins/Essentials/tpr.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$",
+        "key": "min-range",
+        "value": 5000.0
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "max-range",
+        "value": 20000.0
+      }
+    }
+  ]
+}

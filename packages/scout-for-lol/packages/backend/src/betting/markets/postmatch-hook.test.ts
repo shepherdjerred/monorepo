@@ -1,9 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
+import { BucksPoolTotalSchema } from "@scout-for-lol/data";
 import {
   refreshPendingDareV2CalloutsWithoutBlocking,
   refreshSettledPoolMessages,
 } from "#src/betting/markets/postmatch-hook.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { defaultDareV2CalloutDependencies } from "#src/betting/dares/presentation/dare-callout-v2.ts";
 
 describe("refreshSettledPoolMessages", () => {
@@ -13,9 +14,9 @@ describe("refreshSettledPoolMessages", () => {
       serverId: "guild-one",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: 100,
-      losersPool: 50,
-      houseCut: 5,
+      winnersPool: BucksPoolTotalSchema.parse(100),
+      losersPool: BucksPoolTotalSchema.parse(50),
+      houseCut: BucksPoolTotalSchema.parse(5),
       bets: [],
     };
     const refreshed: (readonly {

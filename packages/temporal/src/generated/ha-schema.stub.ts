@@ -1,6 +1,6 @@
 /**
  * Committed stub — contains NO sensitive data. Copied to `ha-schema.ts`
- * by `scripts/ensure-ha-schema.ts` when no generated schema exists yet, so
+ * by `scripts/homelab/ensure-ha-schema.ts` when no generated schema exists yet, so
  * typecheck works without a live HA instance. Replaced in full by
  * `bun run generate` (which invokes ha-codegen against the live instance).
  *

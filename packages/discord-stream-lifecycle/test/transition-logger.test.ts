@@ -54,15 +54,12 @@ function buildHarness(gatePromise: Promise<string>) {
 }
 
 function projectContext(context: unknown): Record<string, unknown> {
-  if (
-    typeof context === "object" &&
+  return typeof context === "object" &&
     context !== null &&
     "n" in context &&
     typeof context.n === "number"
-  ) {
-    return { n: context.n };
-  }
-  return {};
+    ? { n: context.n }
+    : {};
 }
 
 async function run(): Promise<LoggedLine[]> {

@@ -10,14 +10,11 @@ function checkClass(bucket: string): string {
   ) {
     return "ok";
   }
-  if (
-    value.includes("fail") ||
+  return value.includes("fail") ||
     value.includes("error") ||
     value.includes("red")
-  ) {
-    return "bad";
-  }
-  return "pending";
+    ? "bad"
+    : "pending";
 }
 
 export function EvidencePanel({ pr }: { pr: PrState }): ReactElement {
@@ -60,11 +57,11 @@ export function EvidencePanel({ pr }: { pr: PrState }): ReactElement {
         </ul>
       )}
 
-      {e.buildkiteFailure === null ? null : (
+      {e.ciFailure === null ? null : (
         <div className="bk-failure">
-          <h4>Buildkite failure</h4>
-          <p className="mono">{e.buildkiteFailure.name}</p>
-          <a href={e.buildkiteFailure.webUrl} target="_blank" rel="noreferrer">
+          <h4>CI failure</h4>
+          <p className="mono">{e.ciFailure.name}</p>
+          <a href={e.ciFailure.webUrl} target="_blank" rel="noreferrer">
             open job ↗
           </a>
         </div>

@@ -1,0 +1,93 @@
+# Marcus's repaired caravan needs a dependable route through the main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  roadside-warnings:
+    name: Roadside Warnings
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed caravan-conundrums
+    text:
+      offer: Marcus's caravan is repaired, but the raid showed our road warnings are too easy to miss.
+      accept: Bring signs, lanterns and a map. I will mark safe stops without sending anyone to an old-world road.
+      decline: The patrol will watch the road for now.
+      finish: Marcus has a marked route and the watch has a copy.
+      summary: Prepare new route warnings after the caravan raid.
+      questions: []
+    start: markers
+    stages:
+      markers:
+        journal: Bring the Guard Captain 8 oak signs, 4 lanterns and a map.
+        waiting: A warning is useful only if travellers can see it.
+        complete: The route is marked. Tell Marcus where the patrol will watch.
+        objectives:
+          - deliver guard-captain 8 OAK_SIGN
+          - deliver guard-captain 4 LANTERN
+          - deliver guard-captain 1 MAP
+        onComplete: []
+        next: [{ to: dispatch, when: [], label: none }]
+        timeLimit: none
+      dispatch:
+        journal: Tell Marcus about the new caravan route warnings.
+        waiting: Marcus must give the map to the next driver.
+        complete: The next caravan will leave with a map and a warning.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1
+
+  the-returning-cart:
+    name: The Returning Cart
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed roadside-warnings
+    text:
+      offer: A road works both ways. I want the returning cart to carry supplies for the next traveller, not arrive empty.
+      accept: Bring planks, bread and wool. Then let Martha know a load is ready for the town.
+      decline: I will save room on the cart.
+      finish: The cart has a return load, and Martha knows when to expect it.
+      summary: Stock Marcus's returning caravan for travellers and Spawn Town.
+      questions: []
+    start: return-load
+    stages:
+      return-load:
+        journal: Bring Marcus 16 oak planks, 12 bread and 8 white wool.
+        waiting: A useful return load can mend a wagon or warm a traveller.
+        complete: The cart is stocked. Martha needs to know what is coming.
+        objectives:
+          - deliver marcus 16 OAK_PLANKS
+          - deliver marcus 12 BREAD
+          - deliver marcus 8 WHITE_WOOL
+        onComplete: []
+        next: [{ to: notice, when: [], label: none }]
+        timeLimit: none
+      notice:
+        journal: Tell Martha about Marcus's returning supply cart.
+        waiting: Martha can make room for the load.
+        complete: The town will have timber, food and blankets ready.
+        objectives:
+          - talk martha
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

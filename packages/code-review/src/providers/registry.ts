@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ReviewProvider } from "../types.ts";
+import { coderabbitProvider } from "./coderabbit.ts";
 import { codexProvider } from "./codex.ts";
 import { greptileProvider } from "./greptile.ts";
 import { qodoProvider } from "./qodo.ts";
@@ -9,10 +10,16 @@ export const PROVIDERS = {
   codex: codexProvider,
   greptile: greptileProvider,
   qodo: qodoProvider,
+  coderabbit: coderabbitProvider,
 } as const;
 
 // Keep these ids in sync with the keys of PROVIDERS above.
-export const ProviderIdSchema = z.enum(["codex", "greptile", "qodo"]);
+export const ProviderIdSchema = z.enum([
+  "codex",
+  "greptile",
+  "qodo",
+  "coderabbit",
+]);
 export type ProviderId = z.infer<typeof ProviderIdSchema>;
 
 /** The hosted provider whose findings are required by the repository CI gate. */

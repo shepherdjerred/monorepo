@@ -1,5 +1,6 @@
 import {
   MATCH_LAKE_COLUMNS,
+  MATCH_READ_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   TIMELINE_COVERAGE_LAKE_COLUMNS,
@@ -32,7 +33,10 @@ function columns(values: Record<string, DuckDbColumnType>) {
 }
 
 export function dareSqlV3Catalog() {
-  const participantColumns = columns(MATCH_LAKE_COLUMNS);
+  // Dare execution and preview both project MATCH_READ_COLUMNS. Keep the
+  // advertised columns identical to that relation, including while new lake
+  // fields wait for a full rebuild.
+  const participantColumns = columns(MATCH_READ_COLUMNS);
   return {
     contract:
       "One read-only SELECT. Game-set CTEs return match_id, game_end_at, and nullable BOOLEAN matched. The root returns exactly one nullable BOOLEAN named achieved.",

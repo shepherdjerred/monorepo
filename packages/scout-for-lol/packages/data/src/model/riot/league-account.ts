@@ -1,4 +1,12 @@
 import { z } from "zod";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+
+export {
+  type LeaguePuuid,
+  LeaguePuuidSchema,
+  type LeagueSummonerId,
+  LeagueSummonerIdSchema,
+} from "@scout-for-lol/domain/identity/league-account.ts";
 
 export type RegionGroup = z.infer<typeof RegionGroupSchema>;
 export const RegionGroupSchema = z.enum(["AMERICAS", "ASIA", "EUROPE", "SEA"]);
@@ -43,19 +51,6 @@ const readableRegions: Record<Region, string> = {
 export function toReadableRegion(region: Region): string {
   return readableRegions[region];
 }
-
-export type LeagueSummonerId = z.infer<typeof LeagueSummonerIdSchema>;
-export const LeagueSummonerIdSchema = z
-  .string()
-  .min(0)
-  .max(63)
-  .brand<"LeagueSummonerId">();
-export type LeaguePuuid = z.infer<typeof LeaguePuuidSchema>;
-export const LeaguePuuidSchema = z
-  .string()
-  .min(78)
-  .max(78)
-  .brand<"LeaguePuuid">();
 
 // https://developer.riotgames.com/docs/summoner-name-to-riot-id-faq
 // a riot ID looks like this: game_name#tag_line

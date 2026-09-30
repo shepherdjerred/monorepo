@@ -1,0 +1,623 @@
+import { z } from "zod";
+
+export const ManagedResourceSchema = z.object({
+  group: z.string().optional(),
+  kind: z.string(),
+  name: z.string(),
+  namespace: z.string().optional(),
+  liveState: z.string().optional(),
+  targetState: z.string().optional(),
+});
+
+export const ManagedResourcesSchema = z.object({
+  items: z.array(ManagedResourceSchema),
+});
+
+export type ManagedResource = z.infer<typeof ManagedResourceSchema>;
+
+const JsonObjectSchema = z.record(z.string(), z.unknown());
+const ResourceSyncOptionsSchema = z
+  .object({
+    metadata: z
+      .object({
+        annotations: z.record(z.string(), z.string()).optional(),
+      })
+      .loose()
+      .optional(),
+  })
+  .loose();
+const PROBE_HANDLERS = ["exec", "grpc", "httpGet", "tcpSocket"] as const;
+const ARGO_SYNC_OPTIONS_ANNOTATION = "argocd.argoproj.io/sync-options";
+
+/**
+ * Unreadable state stays fatal — a resource whose live or target state cannot
+ * be parsed is a broken contract, not a finding, and continuing would report
+ * "no immutable changes" for a resource nobody actually inspected. But the
+ * failure has to say which resource and which side, because the preflight
+ * reads every managed resource in the application and a bare JSON or Zod
+ * message names none of them.
+ */
+export function parseObject(
+  source: string | undefined,
+  resource: ManagedResource,
+  field: "liveState" | "targetState",
+): Record<string, unknown> | null {
+  if (source === undefined || source === "" || source === "null") {
+    return null;
+  }
+  try {
+    return JsonObjectSchema.parse(JSON.parse(source));
+  } catch (error) {
+    throw new Error(`Could not read ${field} for ${identity(resource)}`, {
+      cause: error,
+    });
+  }
+}
+
+function valueAt(
+  object: Record<string, unknown>,
+  path: readonly string[],
+): unknown {
+  let current: unknown = object;
+  for (const segment of path) {
+    const parsed = JsonObjectSchema.safeParse(current);
+    if (!parsed.success) {
+      return undefined;
+    }
+    current = parsed.data[segment];
+  }
+  return current;
+}
+
+/**
+ * What a key found only in the live value means. `omission` below classifies
+ * dropping a whole immutable field; this classifies dropping something inside
+ * one. Comparing only the target's keys answered that silently as "no change",
+ * so removing a selector label passed the preflight and was rejected later by
+ * the API server, mid-release, after earlier resources had already applied.
+ */
+type LiveOnlyKeys =
+  /**
+   * The API server populates keys the request never sets, so a live-only key
+   * is its doing rather than a removal. Only the declared keys can be
+   * compared; flagging the rest would fail every release whose chart omits a
+   * defaulted key.
+   */
+  | "api-populates"
+  /**
+   * The chart author owns every key, so a key that exists only in live was
+   * removed from the declaration. Kubernetes rejects that like any other
+   * change to an immutable field.
+   */
+  | "removes-managed-key";
+
+function targetMatchesLive(
+  target: unknown,
+  live: unknown,
+  liveOnlyKeys: LiveOnlyKeys,
+): boolean {
+  if (Array.isArray(target)) {
+    return (
+      Array.isArray(live) &&
+      target.length === live.length &&
+      target.every((entry, index) =>
+        targetMatchesLive(entry, live[index], liveOnlyKeys),
+      )
+    );
+  }
+  const targetObject = JsonObjectSchema.safeParse(target);
+  if (targetObject.success) {
+    const liveObject = JsonObjectSchema.safeParse(live);
+    if (!liveObject.success) {
+      return false;
+    }
+    const removesManagedKey =
+      liveOnlyKeys === "removes-managed-key" &&
+      Object.keys(liveObject.data).some(
+        (key) => !Object.hasOwn(targetObject.data, key),
+      );
+    return (
+      !removesManagedKey &&
+      Object.entries(targetObject.data).every(([key, value]) =>
+        targetMatchesLive(value, liveObject.data[key], liveOnlyKeys),
+      )
+    );
+  }
+  return JSON.stringify(target) === JSON.stringify(live);
+}
+
+/**
+ * What it means for the requested target to omit an immutable field. "No
+ * default" was previously conflated into one case, which hid a real class of
+ * change: a field the chart author owns is not the same as one the API server
+ * populates. Every immutable field must say which it is, so adding one forces
+ * the question rather than defaulting to silence.
+ */
+type ImmutableField = {
+  readonly path: readonly string[];
+  readonly liveOnlyKeys: LiveOnlyKeys;
+} & (
+  | {
+      /**
+       * The API server populates it and keeps the live value when the request
+       * omits it, so omission declares no change. Flagging it would fail every
+       * release whose chart simply never mentions the field.
+       */
+      readonly omission: "keeps-live-value";
+    }
+  | {
+      /**
+       * The API server defaults it, so omitting it resets the field to that
+       * default. That is a change exactly when the live value is not already
+       * the default.
+       */
+      readonly omission: "resets-to-default";
+      readonly apiDefault: string;
+    }
+  | {
+      /**
+       * The chart author owns it and the API server neither populates nor
+       * defaults it, so removing the declaration removes a previously managed
+       * immutable field. Kubernetes rejects that like any other change to it.
+       */
+      readonly omission: "removes-managed-field";
+    }
+);
+
+function omissionChanges(field: ImmutableField, liveValue: unknown): boolean {
+  if (liveValue === undefined) {
+    return false;
+  }
+  switch (field.omission) {
+    case "keeps-live-value":
+      return false;
+    case "resets-to-default":
+      return liveValue !== field.apiDefault;
+    case "removes-managed-field":
+      return true;
+  }
+}
+
+function declaredTargetChanged(
+  live: Record<string, unknown>,
+  target: Record<string, unknown>,
+  field: ImmutableField,
+): boolean {
+  const targetValue = valueAt(target, field.path);
+  const liveValue = valueAt(live, field.path);
+  // Kubernetes treats an explicit null in a manifest as an omitted field.
+  // Helm commonly emits null for disabled optional lists (for example a
+  // StatefulSet using an existing claim emits volumeClaimTemplates: null),
+  // while the API server drops that key from the stored object. Compare both
+  // shapes with the field's omission semantics so an absent live field is not
+  // misclassified as an immutable change.
+  return targetValue === undefined || targetValue === null
+    ? omissionChanges(field, liveValue)
+    : !targetMatchesLive(targetValue, liveValue, field.liveOnlyKeys);
+}
+
+/**
+ * A list whose entries are themselves resources of a known kind, compared with
+ * that kind's own immutable-field rules.
+ *
+ * The surrounding list has to tolerate live-only keys, because the API server
+ * writes them into every entry. That tolerance is what lets an author-owned key
+ * removed from one entry — dropping `accessModes` from a claim template — read
+ * as no change. Descending with the entry kind's rules recovers the precision:
+ * each of those fields already declares whether the API server owns it, so the
+ * classification comes from one reviewed table rather than a second list of
+ * server-defaulted keys that would drift with every Kubernetes release.
+ */
+type EmbeddedResourceList = {
+  readonly path: readonly string[];
+  readonly entryKind: string;
+};
+
+function embeddedResourceLists(kind: string): readonly EmbeddedResourceList[] {
+  switch (kind) {
+    case "StatefulSet":
+      return [
+        {
+          path: ["spec", "volumeClaimTemplates"],
+          entryKind: "PersistentVolumeClaim",
+        },
+      ];
+    default:
+      return [];
+  }
+}
+
+function entriesByName(value: unknown): Map<string, Record<string, unknown>> {
+  const byName = new Map<string, Record<string, unknown>>();
+  if (!Array.isArray(value)) {
+    return byName;
+  }
+  for (const entry of value) {
+    const parsed = JsonObjectSchema.safeParse(entry);
+    if (!parsed.success) {
+      continue;
+    }
+    const name = valueAt(parsed.data, ["metadata", "name"]);
+    if (typeof name === "string" && name !== "") {
+      byName.set(name, parsed.data);
+    }
+  }
+  return byName;
+}
+
+/**
+ * Entries are matched by name rather than position: the enclosing list already
+ * reports an added, removed, or reordered entry, so descending by index would
+ * only restate that as a pile of per-field findings.
+ */
+function embeddedListFindings(
+  live: Record<string, unknown>,
+  target: Record<string, unknown>,
+  list: EmbeddedResourceList,
+  resourceIdentity: string,
+): readonly string[] {
+  const liveEntries = entriesByName(valueAt(live, list.path));
+  const targetEntries = entriesByName(valueAt(target, list.path));
+  const findings: string[] = [];
+  for (const [name, targetEntry] of targetEntries) {
+    const liveEntry = liveEntries.get(name);
+    if (liveEntry === undefined) {
+      continue;
+    }
+    for (const field of immutableFields(list.entryKind)) {
+      if (declaredTargetChanged(liveEntry, targetEntry, field)) {
+        findings.push(
+          `${resourceIdentity} changes immutable /${list.path.join("/")}/[name=${name}]/${field.path.join("/")}`,
+        );
+      }
+    }
+  }
+  return findings;
+}
+
+function activeProbeHandler(probe: Record<string, unknown>): string | null {
+  const handlers = PROBE_HANDLERS.filter(
+    (handler) => probe[handler] !== undefined,
+  );
+  return handlers.length === 1 ? (handlers[0] ?? null) : null;
+}
+
+/**
+ * Kubernetes merges container and init-container lists by `name`, so a chart
+ * that inserts or reorders an entry leaves every other container untouched.
+ * Key such lists by name and fall back to positions only for lists that are
+ * not name-keyed, so a probe path identifies the same container on both sides.
+ */
+function arrayEntrySegments(entries: readonly unknown[]): readonly string[] {
+  const names = entries.flatMap((entry) => {
+    const parsed = JsonObjectSchema.safeParse(entry);
+    if (!parsed.success) {
+      return [];
+    }
+    const name = parsed.data["name"];
+    return typeof name === "string" && name !== "" ? [name] : [];
+  });
+  return names.length !== entries.length || new Set(names).size !== names.length
+    ? entries.map((_entry, index) => index.toString())
+    : names.map((name) => `[name=${name}]`);
+}
+
+/**
+ * Walks a manifest and calls `visit` for every key it contains, keyed by the
+ * name-stable path arrayEntrySegments produces, so a path identifies the same
+ * container on both sides of a live-versus-target comparison.
+ */
+function walkManifest(
+  value: unknown,
+  path: string,
+  visit: (key: string, entry: unknown, entryPath: string) => void,
+): void {
+  if (Array.isArray(value)) {
+    const segments = arrayEntrySegments(value);
+    for (const [index, entry] of value.entries()) {
+      walkManifest(
+        entry,
+        `${path}/${segments[index] ?? index.toString()}`,
+        visit,
+      );
+    }
+    return;
+  }
+  const parsed = JsonObjectSchema.safeParse(value);
+  if (!parsed.success) {
+    return;
+  }
+  for (const [key, entry] of Object.entries(parsed.data)) {
+    const entryPath = `${path}/${key}`;
+    visit(key, entry, entryPath);
+    walkManifest(entry, entryPath, visit);
+  }
+}
+
+function collectProbeHandlers(
+  value: unknown,
+  path: string,
+  output: Map<string, string>,
+): void {
+  walkManifest(value, path, (key, entry, entryPath) => {
+    if (
+      key !== "livenessProbe" &&
+      key !== "readinessProbe" &&
+      key !== "startupProbe"
+    ) {
+      return;
+    }
+    const probe = JsonObjectSchema.safeParse(entry);
+    if (!probe.success) {
+      return;
+    }
+    const handler = activeProbeHandler(probe.data);
+    if (handler !== null) {
+      output.set(entryPath, handler);
+    }
+  });
+}
+
+/**
+ * Internal images are tagged `2.0.0-<buildNumber>` by the release, so their
+ * build numbers are directly comparable. Third-party images use their upstream
+ * versioning and are deliberately not matched here.
+ */
+const RELEASE_IMAGE_PATTERN =
+  /^(?<repository>.+):2\.0\.0-(?<build>\d+)(?:@sha256:[a-f\d]{64})?$/;
+
+type ReleaseImage = { repository: string; build: number };
+
+function parseReleaseImage(value: unknown): ReleaseImage | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const match = RELEASE_IMAGE_PATTERN.exec(value);
+  const repository = match?.groups?.["repository"];
+  const build = match?.groups?.["build"];
+  return repository === undefined || build === undefined
+    ? null
+    : { repository, build: Number.parseInt(build, 10) };
+}
+
+function collectReleaseImages(
+  value: unknown,
+  path: string,
+  output: Map<string, ReleaseImage>,
+): void {
+  walkManifest(value, path, (key, entry, entryPath) => {
+    if (key !== "image") {
+      return;
+    }
+    const image = parseReleaseImage(entry);
+    if (image !== null) {
+      output.set(entryPath, image);
+    }
+  });
+}
+
+/**
+ * Refuses a sync that would move an internal image *backwards*.
+ *
+ * The release renders internal image pins from the version catalog and then
+ * overlays the digests this build actually pushed
+ * (applyCurrentBuildImageOverrides). When a build pushes nothing — a re-run of
+ * an already-published commit makes `ci-changed.ts images` skip the step, which
+ * sets the handoff to `{}` — the overlay is empty and the chart falls back to
+ * the catalog alone. The catalog only advances when the `version commit-back`
+ * bump PR merges, so a bump PR left unmerged silently rolls production back to
+ * whatever it last recorded. On 2026-08-30 that reverted all 13 temporal
+ * workers roughly 300 builds, and one crash-looped because the chart set a
+ * worker role its resurrected image predated.
+ *
+ * A rollback is legitimate sometimes, but it must be deliberate. Every path
+ * that produces one accidentally routes through here, so this is the one place
+ * that can catch the whole class rather than the single cause above.
+ */
+function imageDowngradeFindings(
+  live: Record<string, unknown>,
+  target: Record<string, unknown>,
+  resourceIdentity: string,
+): readonly string[] {
+  const liveImages = new Map<string, ReleaseImage>();
+  const targetImages = new Map<string, ReleaseImage>();
+  collectReleaseImages(live, "", liveImages);
+  collectReleaseImages(target, "", targetImages);
+  const findings: string[] = [];
+  for (const [path, liveImage] of liveImages) {
+    const targetImage = targetImages.get(path);
+    if (targetImage === undefined) {
+      continue;
+    }
+    if (targetImage.repository !== liveImage.repository) {
+      continue;
+    }
+    if (targetImage.build >= liveImage.build) {
+      continue;
+    }
+    findings.push(
+      `${resourceIdentity} downgrades ${path} from 2.0.0-${liveImage.build.toString()} to 2.0.0-${targetImage.build.toString()}; the version catalog is behind the running release`,
+    );
+  }
+  return findings;
+}
+
+function identity(resource: ManagedResource): string {
+  return `${resource.group ?? ""}/${resource.kind} ${resource.namespace ?? "_cluster"}/${resource.name}`;
+}
+
+/**
+ * A resource carrying both options is deleted and recreated by Argo rather
+ * than patched. That makes immutable-field and probe-handler update checks
+ * inapplicable, but only when the destructive intent is declared on the
+ * target resource itself. Application-wide options do not reach this parser.
+ */
+function targetRequestsForceReplace(target: Record<string, unknown>): boolean {
+  const annotation =
+    ResourceSyncOptionsSchema.parse(target).metadata?.annotations?.[
+      ARGO_SYNC_OPTIONS_ANNOTATION
+    ];
+  if (annotation === undefined) {
+    return false;
+  }
+  const options = new Set(annotation.split(",").map((option) => option.trim()));
+  return options.has("Force=true") && options.has("Replace=true");
+}
+
+function immutableFields(kind: string): readonly ImmutableField[] {
+  switch (kind) {
+    // A DaemonSet's selector is as immutable as a Deployment's; the API server
+    // rejects the update rather than replacing the workload.
+    case "DaemonSet":
+    case "Deployment":
+      return [
+        {
+          path: ["spec", "selector"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
+      ];
+    case "StatefulSet":
+      return [
+        {
+          path: ["spec", "podManagementPolicy"],
+          omission: "resets-to-default",
+          apiDefault: "OrderedReady",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "selector"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "serviceName"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "volumeClaimTemplates"],
+          omission: "removes-managed-field",
+          // Each template is a claim the API server defaults like any other:
+          // volumeMode, storageClassName, and status appear on the live copy
+          // whether or not the chart wrote them.
+          liveOnlyKeys: "api-populates",
+        },
+      ];
+    case "PersistentVolumeClaim":
+      return [
+        {
+          path: ["spec", "accessModes"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        // The API server cross-populates these two, so a claim authored with
+        // only one of them reports both. Treating an omission as a change would
+        // fail every such claim, so under-report rather than block releases.
+        // The same cross-population adds keys inside them.
+        {
+          path: ["spec", "dataSource"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "api-populates",
+        },
+        {
+          path: ["spec", "dataSourceRef"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "api-populates",
+        },
+        // Binds the claim to a matching volume. The author owns it and nothing
+        // defaults it, so changing or dropping it is an immutable update.
+        {
+          path: ["spec", "selector"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        // Defaulted from the cluster's default StorageClass at creation, so a
+        // live claim carries one whether or not the chart ever declared it.
+        {
+          path: ["spec", "storageClassName"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "volumeMode"],
+          omission: "resets-to-default",
+          apiDefault: "Filesystem",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "volumeName"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
+      ];
+    case "Service":
+      // All three are assigned by the cluster, not the chart. Each holds a
+      // string or a list of strings, so there is no key inside for the API
+      // server to populate.
+      return [
+        {
+          path: ["spec", "clusterIP"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "clusterIPs"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "ipFamilies"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
+      ];
+    default:
+      return [];
+  }
+}
+
+export function analyzeApplySafety(
+  resources: readonly ManagedResource[],
+): readonly string[] {
+  const findings: string[] = [];
+  for (const resource of resources) {
+    const live = parseObject(resource.liveState, resource, "liveState");
+    const target = parseObject(resource.targetState, resource, "targetState");
+    if (live === null || target === null) {
+      continue;
+    }
+    const forceReplace = targetRequestsForceReplace(target);
+    if (!forceReplace) {
+      for (const field of immutableFields(resource.kind)) {
+        if (declaredTargetChanged(live, target, field)) {
+          findings.push(
+            `${identity(resource)} changes immutable /${field.path.join("/")}`,
+          );
+        }
+      }
+      for (const list of embeddedResourceLists(resource.kind)) {
+        findings.push(
+          ...embeddedListFindings(live, target, list, identity(resource)),
+        );
+      }
+    }
+    findings.push(...imageDowngradeFindings(live, target, identity(resource)));
+    if (forceReplace) {
+      continue;
+    }
+    const liveProbes = new Map<string, string>();
+    const targetProbes = new Map<string, string>();
+    collectProbeHandlers(live, "", liveProbes);
+    collectProbeHandlers(target, "", targetProbes);
+    for (const [path, liveHandler] of liveProbes) {
+      const targetHandler = targetProbes.get(path);
+      if (targetHandler !== undefined && targetHandler !== liveHandler) {
+        findings.push(
+          `${identity(resource)} changes ${path} handler from ${liveHandler} to ${targetHandler}; use a resource-scoped replace`,
+        );
+      }
+    }
+  }
+  return findings;
+}

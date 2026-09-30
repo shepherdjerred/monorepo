@@ -11,11 +11,11 @@
  * fills every bucket a bounded window covers, so a hand-written list that
  * disagreed with the window would silently draw a chart with holes in it.
  */
-import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
-import type { ReportResultRow } from "@scout-for-lol/backend/reports/query-types.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import type { ReportResultRow } from "@scout-for-lol/backend/reports/query/query-types.ts";
 import type { LakeScalar } from "@scout-for-lol/backend/reports/duckdb/row-schema.ts";
-import type { TemporalRange } from "@scout-for-lol/backend/reports/temporal-range.ts";
-import { visualizationBucketLabels } from "@scout-for-lol/backend/reports/visualization-buckets.ts";
+import type { TemporalRange } from "@scout-for-lol/backend/reports/schedule/temporal-range.ts";
+import { visualizationBucketLabels } from "@scout-for-lol/backend/reports/visualization/visualization-buckets.ts";
 
 export type SampleContext = { plan: ScoutQlPlan; range: TemporalRange };
 

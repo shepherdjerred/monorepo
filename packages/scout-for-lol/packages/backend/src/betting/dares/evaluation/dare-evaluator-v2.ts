@@ -52,8 +52,7 @@ function compare(
   }
   if (operator === "gte") return actual >= expected;
   if (operator === "lte") return actual <= expected;
-  if (operator === "gt") return actual > expected;
-  return actual < expected;
+  return operator === "gt" ? actual > expected : actual < expected;
 }
 
 function participantValue(
@@ -145,9 +144,8 @@ function timelineEventCount(
       (value.monsterType === null || event.monsterType === value.monsterType) &&
       (value.buildingType === null ||
         event.buildingType === value.buildingType) &&
-      (value.target === null && value.role === null
-        ? true
-        : participantEvents.has(event.eventId)),
+      ((value.target === null && value.role === null) ||
+        participantEvents.has(event.eventId)),
   ).length;
 }
 
@@ -219,10 +217,9 @@ function resolveValue(
   if (value.kind === "related_participant_count") {
     return relatedParticipantCount(value, context);
   }
-  if (value.kind === "arithmetic") {
-    return resolveArithmeticValue(value, context);
-  }
-  return timelineEventCount(value, context.timeline, context.participants);
+  return value.kind === "arithmetic"
+    ? resolveArithmeticValue(value, context)
+    : timelineEventCount(value, context.timeline, context.participants);
 }
 
 function evaluatePredicate(
@@ -278,24 +275,19 @@ function participantsForSet(
   if (gameSet.relationship === "same_team" && new Set(teams).size !== 1) {
     return undefined;
   }
-  if (
-    gameSet.relationship === "opponents" &&
+  return gameSet.relationship === "opponents" &&
     (teams.length !== 2 || teams[0] === teams[1])
-  ) {
-    return undefined;
-  }
-  return matched;
+    ? undefined
+    : matched;
 }
 
 function expressionNeedsTimeline(expression: DareBooleanExpressionV2): boolean {
   if (expression.kind === "comparison") {
     return dareValueNeedsTimeline(expression.value);
   }
-  if (expression.kind === "not")
-    return expressionNeedsTimeline(expression.operand);
-  return expression.operands.some((operand) =>
-    expressionNeedsTimeline(operand),
-  );
+  return expression.kind === "not"
+    ? expressionNeedsTimeline(expression.operand)
+    : expression.operands.some((operand) => expressionNeedsTimeline(operand));
 }
 
 type DareMatchEvaluationInput = Parameters<typeof evaluateDareMatchV2>[0];

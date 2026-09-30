@@ -298,9 +298,5 @@ export async function getCacheStatus(
   }
 
   const s3Key = urlToS3Key(url);
-  if (await isInS3Cache(s3Key)) {
-    return "cached";
-  }
-
-  return "not-cached";
+  return (await isInS3Cache(s3Key)) ? "cached" : "not-cached";
 }

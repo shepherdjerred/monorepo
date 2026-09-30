@@ -143,3 +143,20 @@ export async function deleteIfExists(
     // Table might not exist, ignore
   }
 }
+
+/**
+ * The `#src/database/index.ts` module with its ambient client replaced.
+ *
+ * Every integration test that exercises code reaching for the ambient
+ * `prisma` needs exactly this and needs it IDENTICAL: a copy that drifted
+ * would leave one suite quietly writing to the real client. So it is defined
+ * once and each test spreads it into its own `vi.mock` factory, which has to
+ * stay at the call site because those factories are hoisted.
+ */
+export async function testDatabaseModule(
+  prisma: ExtendedPrismaClient,
+): Promise<Record<string, unknown>> {
+  const actual: Record<string, unknown> =
+    await import("#src/database/index.ts");
+  return { ...actual, prisma };
+}

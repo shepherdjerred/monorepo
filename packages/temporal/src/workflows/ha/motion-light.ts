@@ -1,4 +1,4 @@
-import { CancellationScope, sleep } from "@temporalio/workflow";
+import { CancellationScope, patched, sleep } from "@temporalio/workflow";
 import {
   callServiceForCleanup,
   callServiceUnchecked,
@@ -9,27 +9,34 @@ import {
   type MotionLightRoom,
 } from "#shared/infra/motion-light.ts";
 
-const INACTIVITY_TIMEOUT = "5 minutes" as const;
+const INACTIVITY_CHECK_INTERVAL = "5 minutes" as const;
+const SINGLE_INACTIVE_CHECK_PATCH = "motion-light-single-inactive-check-v1";
 
 export async function motionLight(room: MotionLightRoom): Promise<void> {
   const { motionEntityId, lightEntityId } = MOTION_LIGHT_ROOMS[room];
+  const useSingleInactiveCheck = patched(SINGLE_INACTIVE_CHECK_PATCH);
 
   try {
     await callServiceUnchecked("switch", "turn_on", {
       entity_id: lightEntityId,
     });
 
-    let inactive = false;
-    while (!inactive) {
-      await sleep(INACTIVITY_TIMEOUT);
+    for (;;) {
+      await sleep(INACTIVITY_CHECK_INTERVAL);
       const motion = await getEntityStateUnchecked(motionEntityId);
       if (motion.state !== "off") {
         continue;
       }
 
-      await sleep(INACTIVITY_TIMEOUT);
+      if (useSingleInactiveCheck) {
+        return;
+      }
+
+      await sleep(INACTIVITY_CHECK_INTERVAL);
       const stillInactive = await getEntityStateUnchecked(motionEntityId);
-      inactive = stillInactive.state === "off";
+      if (stillInactive.state === "off") {
+        return;
+      }
     }
   } finally {
     await CancellationScope.nonCancellable(() =>

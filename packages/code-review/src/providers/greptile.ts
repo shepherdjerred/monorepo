@@ -25,7 +25,9 @@ export const greptileProvider: ReviewProvider = {
   // nothing to recognise a second copy of.
   parseFindingTitle: null,
   findingKey: null,
+  parseReviewBodyFindings: null,
   completion: { kind: "check-run", namePattern: /greptile/iu },
+  detectBlocked: null,
   detectSkip: {
     marker: "<!-- greptile-status -->",
     reasons: [

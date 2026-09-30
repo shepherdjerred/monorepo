@@ -9,7 +9,7 @@ services:
       - ./tempo.yaml:/etc/tempo.yaml:ro
 
   loki:
-    image: grafana/loki:3.7.6@sha256:efd47c67f9bac88ca29bcf8cb997d9ab29d1848bd0aff579282295542a745952
+    image: grafana/loki:3.7.8@sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193
     ports:
       - "3100:3100" # /loki/api/v1/push, /otlp/v1/logs, query
     command: ["-config.file=/etc/loki/local-config.yaml"]
@@ -17,7 +17,7 @@ services:
       - ./loki.yaml:/etc/loki/local-config.yaml:ro
 
   grafana:
-    image: grafana/grafana:13.2.0@sha256:3fd54ae1214669f8355f065ec9f6445d5279a3d77095ab048ca045685272429b
+    image: grafana/grafana:13.2.2@sha256:ac461fb352abc50da10a51c7d02462e9c05488f11f53f14b3ad79a8145f638a0
     ports:
       - "3000:3000"
     environment:

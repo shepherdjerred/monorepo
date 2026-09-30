@@ -1,0 +1,135 @@
+msxml3: Report SAX attribute types and the declaration's encoding and standalone values.
+
+The non-validating reader reports every attribute as CDATA, as MSXML does, and
+exposes the xmldecl-encoding and xmldecl-standalone properties next to the
+existing xmldecl-version.
+
+--- a/dlls/msxml3/saxreader.c
++++ b/dlls/msxml3/saxreader.c
+@@ -194,6 +194,8 @@
+     struct bstrpool pool;
+     saxreader_feature features;
+     BSTR xmldecl_version;
++    BSTR xmldecl_encoding;
++    BSTR xmldecl_standalone;
+     MSXML_VERSION version;
+ } saxreader;
+ 
+@@ -1182,6 +1184,9 @@
+     return E_INVALIDARG;
+ }
+ 
++/* The reader does not validate, so like MSXML it reports every attribute as CDATA. */
++static const WCHAR attribute_typeW[] = L"CDATA";
++
+ static HRESULT WINAPI isaxattributes_getType(
+         ISAXAttributes* iface,
+         int nIndex,
+@@ -1190,8 +1195,14 @@
+ {
+     saxlocator *This = impl_from_ISAXAttributes( iface );
+ 
+-    FIXME("(%p)->(%d) stub\n", This, nIndex);
+-    return E_NOTIMPL;
++    TRACE("(%p)->(%d)\n", This, nIndex);
++
++    if(!is_valid_attr_index(This, nIndex)) return E_INVALIDARG;
++    if(!pType || !pTypeLength) return E_POINTER;
++
++    *pType = attribute_typeW;
++    *pTypeLength = ARRAY_SIZE(attribute_typeW) - 1;
++    return S_OK;
+ }
+ 
+ static HRESULT WINAPI isaxattributes_getTypeFromName(
+@@ -1203,11 +1214,18 @@
+         const WCHAR **pType,
+         int *nType)
+ {
++    HRESULT hr;
++    int index;
+     saxlocator *This = impl_from_ISAXAttributes( iface );
+ 
+-    FIXME("(%p)->(%s, %d, %s, %d) stub\n", This, debugstr_w(pUri), nUri,
++    TRACE("(%p)->(%s, %d, %s, %d)\n", This, debugstr_w(pUri), nUri,
+             debugstr_w(pLocalName), nLocalName);
+-    return E_NOTIMPL;
++
++    hr = ISAXAttributes_getIndexFromName(iface,
++            pUri, nUri, pLocalName, nLocalName, &index);
++    if(hr==S_OK) hr = ISAXAttributes_getType(iface, index, pType, nType);
++
++    return hr;
+ }
+ 
+ static HRESULT WINAPI isaxattributes_getTypeFromQName(
+@@ -1217,10 +1235,16 @@
+         const WCHAR **pType,
+         int *nType)
+ {
++    HRESULT hr;
++    int index;
+     saxlocator *This = impl_from_ISAXAttributes( iface );
+ 
+-    FIXME("(%p)->(%s, %d) stub\n", This, debugstr_w(pQName), nQName);
+-    return E_NOTIMPL;
++    TRACE("(%p)->(%s, %d)\n", This, debugstr_w(pQName), nQName);
++
++    hr = ISAXAttributes_getIndexFromQName(iface, pQName, nQName, &index);
++    if(hr==S_OK) hr = ISAXAttributes_getType(iface, index, pType, nType);
++
++    return hr;
+ }
+ 
+ static HRESULT WINAPI isaxattributes_getValue(
+@@ -1464,6 +1488,11 @@
+     {
+         SysFreeString(This->saxreader->xmldecl_version);
+         This->saxreader->xmldecl_version = bstr_from_xmlChar(This->pParserCtxt->version);
++        SysFreeString(This->saxreader->xmldecl_encoding);
++        This->saxreader->xmldecl_encoding = bstr_from_xmlChar(This->pParserCtxt->encoding);
++        SysFreeString(This->saxreader->xmldecl_standalone);
++        This->saxreader->xmldecl_standalone = SysAllocString(This->pParserCtxt->standalone == 1 ? L"yes" :
++                This->pParserCtxt->standalone == 0 ? L"no" : L"");
+     }
+ 
+     if (saxreader_has_handler(This, SAXContentHandler))
+@@ -2848,6 +2877,20 @@
+         return S_OK;
+     }
+ 
++    if (!memcmp(L"xmldecl-encoding", prop, sizeof(L"xmldecl-encoding")))
++    {
++        V_VT(value) = VT_BSTR;
++        V_BSTR(value) = SysAllocString(This->xmldecl_encoding);
++        return S_OK;
++    }
++
++    if (!memcmp(L"xmldecl-standalone", prop, sizeof(L"xmldecl-standalone")))
++    {
++        V_VT(value) = VT_BSTR;
++        V_BSTR(value) = SysAllocString(This->xmldecl_standalone);
++        return S_OK;
++    }
++
+     FIXME("(%p)->(%s) unsupported property\n", This, debugstr_w(prop));
+ 
+     return E_NOTIMPL;
+@@ -2920,6 +2963,8 @@
+         }
+ 
+         SysFreeString(This->xmldecl_version);
++        SysFreeString(This->xmldecl_encoding);
++        SysFreeString(This->xmldecl_standalone);
+         free_bstr_pool(&This->pool);
+ 
+         free(This);
+@@ -3421,6 +3466,8 @@
+     memset(reader->saxhandlers, 0, sizeof(reader->saxhandlers));
+     reader->isParsing = FALSE;
+     reader->xmldecl_version = NULL;
++    reader->xmldecl_encoding = NULL;
++    reader->xmldecl_standalone = NULL;
+     reader->pool.pool = NULL;
+     reader->pool.index = 0;
+     reader->pool.len = 0;

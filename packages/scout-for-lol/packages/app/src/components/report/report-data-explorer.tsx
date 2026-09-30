@@ -1,17 +1,17 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Copy, CornerDownLeft, Plus, Trash2 } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ClipboardError } from "#src/components/clipboard-error.tsx";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+} from "@scout-for-lol/design-system/components/forms/select";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
 import { copyToClipboard } from "#src/lib/clipboard.ts";
 

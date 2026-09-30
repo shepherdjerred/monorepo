@@ -17,6 +17,9 @@ const config = [
   }),
   {
     files: ["src/**/*.{ts,tsx}"],
+    // `#shared/time` is the Temporal gateway the rule message points to; it
+    // alone converts to the `Date` that ops-model and ops-clients accept.
+    ignores: ["src/shared/time.ts"],
     rules: {
       "no-restricted-globals": [
         "error",

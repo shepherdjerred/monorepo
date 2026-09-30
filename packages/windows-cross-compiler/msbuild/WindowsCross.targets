@@ -1,0 +1,66 @@
+<Project>
+  <!--
+    Builds Windows App SDK and MSIX projects on Linux with Microsoft's own tools.
+    The windows-cross-compiler-winui image sets $(WindowsCrossTargets) to this
+    file; import it last, from a Directory.Build.targets:
+
+      <Import Project="$(WindowsCrossTargets)" Condition="'$(WindowsCrossTargets)' != ''" />
+
+    The .NET Framework XAML compiler and the Windows SDK's makepri and makeappx
+    run under the image's Wine through shims generated in the intermediate
+    directory. Packages are left unsigned.
+  -->
+  <PropertyGroup>
+    <WindowsCrossWineRun Condition="'$(WindowsCrossWineRun)' == ''">/opt/windows-cross/bin/windows-cross-wine-run</WindowsCrossWineRun>
+    <_WindowsCrossShimDir>$(ProjectDir)$(IntermediateOutputPath)windows-cross/</_WindowsCrossShimDir>
+    <_WindowsCrossXamlCompilerExe>$(XamlCompilerExePath.Replace('\', '/'))</_WindowsCrossXamlCompilerExe>
+    <XamlCompilerExePath Condition="'$(_WindowsCrossXamlCompilerExe)' != ''">$(_WindowsCrossShimDir)XamlCompiler</XamlCompilerExePath>
+  </PropertyGroup>
+
+  <!-- The Windows SDK BuildTools props pick the x86 tools on non-Windows hosts. -->
+  <PropertyGroup Condition="'$(WindowsSDKBuildToolsBinVersionedFolder)' != ''">
+    <_WindowsCrossSdkToolsDir>$(WindowsSDKBuildToolsBinVersionedFolder.Replace('\', '/'))/x64/</_WindowsCrossSdkToolsDir>
+    <MakePriExeFullPath>$(_WindowsCrossShimDir)makepri.exe</MakePriExeFullPath>
+    <MakeAppxExeFullPath>$(_WindowsCrossShimDir)makeappx.exe</MakeAppxExeFullPath>
+    <!--
+      Map packaged resources from makepri dump output, the path the MSIX tooling
+      uses where the resource indexer API is unavailable, instead of loading
+      MrmSupport.dll into the Linux MSBuild process.
+    -->
+    <AppxUseResourceIndexerApi>false</AppxUseResourceIndexerApi>
+    <MrmSupportLibraryPath />
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(_WindowsCrossXamlCompilerExe)' != ''">
+    <AppxManifestMetadata Remove="$(XamlCompilerExePath)" />
+    <AppxManifestMetadata Include="$(_WindowsCrossXamlCompilerExe)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_WindowsCrossShim
+      Include="$(XamlCompilerExePath)"
+      Condition="'$(_WindowsCrossXamlCompilerExe)' != ''"
+      Mode="--xaml-compiler"
+      Tool="$(_WindowsCrossXamlCompilerExe)" />
+    <_WindowsCrossShim Include="$(MakePriExeFullPath)" Condition="'$(_WindowsCrossSdkToolsDir)' != ''" Tool="$(_WindowsCrossSdkToolsDir)makepri.exe" />
+    <_WindowsCrossShim Include="$(MakeAppxExeFullPath)" Condition="'$(_WindowsCrossSdkToolsDir)' != ''" Tool="$(_WindowsCrossSdkToolsDir)makeappx.exe" />
+  </ItemGroup>
+
+  <!-- The SDK's signtool.exe needs the x64 MFC runtime, which Wine does not provide. -->
+  <Target Name="_WindowsCrossRejectSigning" BeforeTargets="PrepareForBuild" Condition="'$(AppxPackageSigningEnabled)' == 'true'">
+    <Error Text="windows-cross-compiler produces unsigned packages; sign the MSIX on Windows." />
+  </Target>
+
+  <Target Name="_WindowsCrossWriteShims" BeforeTargets="PrepareForBuild" Condition="'@(_WindowsCrossShim)' != ''">
+    <Error Condition="!Exists('%(_WindowsCrossShim.Tool)')" Text="Windows build tool '%(_WindowsCrossShim.Tool)' does not exist." />
+    <WriteLinesToFile
+      File="%(_WindowsCrossShim.Identity)"
+      Lines="#!/bin/sh;exec &quot;$(WindowsCrossWineRun)&quot; %(_WindowsCrossShim.Mode) &quot;%(_WindowsCrossShim.Tool)&quot; &quot;$@&quot;"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
+    <Exec Command="chmod +x @(_WindowsCrossShim->'&quot;%(Identity)&quot;', ' ')" />
+  </Target>
+
+  <!-- MrmSupport.dll stays unused; skip the lookup that requires an installed Windows SDK. -->
+  <Target Name="_GetMrmSupportLibraryPath" />
+</Project>

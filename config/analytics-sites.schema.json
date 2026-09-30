@@ -1,7 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["provider", "projectToken", "apiHost", "assetHost", "sites"],
+  "required": [
+    "provider",
+    "projectToken",
+    "apiHost",
+    "assetHost",
+    "proxyHost",
+    "sites"
+  ],
   "additionalProperties": false,
   "properties": {
     "provider": { "const": "posthog" },
@@ -11,6 +18,7 @@
     },
     "apiHost": { "const": "https://us.i.posthog.com" },
     "assetHost": { "const": "https://us-assets.i.posthog.com" },
+    "proxyHost": { "const": "https://j.sjer.red" },
     "sites": {
       "type": "array",
       "minItems": 1,

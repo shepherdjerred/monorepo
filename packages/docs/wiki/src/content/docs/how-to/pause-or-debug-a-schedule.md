@@ -101,9 +101,7 @@ A missed run outside the window is gone and will not replay.
 
 Overlap policy is normally `SKIP`. A slow run does not stack a second one; the
 next tick is skipped instead. A job that appears to have "missed" a run may have
-still been executing. The `scout-weekly-parlay` exception uses `ALLOW_ALL`
-because each execution owns a distinct period and delayed finalization must not
-suppress the next Sunday's market.
+still been executing.
 
 ## Change or remove a schedule
 
@@ -116,6 +114,9 @@ Deleting the definition is not enough. Removing a workflow means **adding its
 schedule ID to `DELETED_SCHEDULE_IDS` in
 [`register-schedules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/register-schedules.ts)**,
 which boot then acts on. Until you do, the schedule keeps running on the server.
+A beta-only schedule goes in `DELETED_BETA_SCHEDULE_IDS` instead. Once the
+release has deployed and `toolkit temporal schedule list` no longer shows the
+ID, remove the entry: the list is a migration, not a history.
 
 An orphan detector exports a metric for any server-side schedule that code no
 longer defines, so this drift alerts rather than lingering quietly.

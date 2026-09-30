@@ -190,9 +190,11 @@ const issueCommentProvider: ReviewProvider = {
     ],
   },
   detectSkip: null,
+  detectBlocked: null,
   requestReview: null,
   parseFindingTitle: null,
   findingKey: null,
+  parseReviewBodyFindings: null,
 };
 
 test("records the acknowledgement time as issue-comment completion", async () => {

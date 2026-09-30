@@ -1,5 +1,5 @@
 import { match } from "ts-pattern";
-import type { ScoutQlScalarFunction } from "@scout-for-lol/data/model/scoutql/expression.ts";
+import type { ScoutQlScalarFunction } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import { scalarParam } from "#src/reports/duckdb/lake.ts";
 import type { BoundParam, SqlFragment } from "#src/reports/duckdb/lake.ts";
 
@@ -199,8 +199,7 @@ export function emitArithmetic(
 ): SqlFragment {
   // DuckDB `/` is float division. NULLIF keeps a zero denominator an empty
   // answer instead of a crashed report; same for `%`.
-  if (op === "/" || op === "%") {
-    return seq("((", left, `) ${op} nullif((`, right, "), 0))");
-  }
-  return seq("((", left, `) ${op} (`, right, "))");
+  return op === "/" || op === "%"
+    ? seq("((", left, `) ${op} nullif((`, right, "), 0))")
+    : seq("((", left, `) ${op} (`, right, "))");
 }

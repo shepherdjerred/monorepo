@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   BucksLedgerContextSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
@@ -147,7 +148,7 @@ describe("storage overflow", () => {
     await db.$transaction((tx) =>
       applyBucksDelta(tx, {
         bucksAccountId: target.bucksAccountId ?? 0,
-        delta: BUCKS_INT32_MAX - SEED_GRANT,
+        delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX - SEED_GRANT),
         kind: "adjustment",
         context: {
           type: "adjustment",

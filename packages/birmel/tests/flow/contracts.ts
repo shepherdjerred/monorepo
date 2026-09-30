@@ -1,12 +1,11 @@
 import { z } from "zod";
 
 export const FlowScenarioSchema = z.enum([
-  "direct",
-  "specialist-tool",
+  "conversation",
+  "agent-tool",
   "placeholder-failure",
   "context-failure",
-  "router-malformed",
-  "specialist-failure",
+  "agent-failure",
   "tool-output-failure",
   "final-delivery-failure",
   "dedupe",
@@ -17,6 +16,9 @@ export const FlowScenarioSchema = z.enum([
   "agent-run-persistence",
   "session-persistence-failure",
   "agent-run-completion-failure",
+  // Appended: scenario order derives fixture message IDs, so inserting in the
+  // middle renumbers every existing expectation.
+  "agent-progress",
 ]);
 
 export type FlowScenario = z.infer<typeof FlowScenarioSchema>;
@@ -29,9 +31,7 @@ export const FlowScenarioResultSchema = z.object({
   editAttempts: z.array(z.string()),
   deliveredEdits: z.array(z.string()),
   contextCalls: z.number().int().nonnegative(),
-  routerCalls: z.number().int().nonnegative(),
-  directCalls: z.number().int().nonnegative(),
-  specialistCalls: z.number().int().nonnegative(),
+  agentCalls: z.number().int().nonnegative(),
   toolCalls: z.number().int().nonnegative(),
   memoryExtractionCalls: z.number().int().nonnegative(),
   memoryExtractionErrors: z.number().int().nonnegative(),
@@ -42,7 +42,7 @@ export const FlowScenarioResultSchema = z.object({
   errorClasses: z.array(z.string()),
   finishReasons: z.array(z.string()),
   routeDispositions: z.array(z.string().nullable()),
-  primaryToolIds: z.array(z.string().nullable()),
+  toolCallCounts: z.array(z.number().int().nonnegative()),
   agentRunColumns: z.array(z.string()),
   serializedAgentRuns: z.string(),
   secondReplyObservedWhileFirstBlocked: z.boolean(),

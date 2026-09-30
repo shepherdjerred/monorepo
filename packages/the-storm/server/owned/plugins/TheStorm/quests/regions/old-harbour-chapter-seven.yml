@@ -1,0 +1,72 @@
+# The river supper becomes a lasting loaner-rod and catch record.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-loaner-rods:
+    name: "The Loaner Rods"
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-river-supper
+    text:
+      offer: "The supper welcomed new fishers. A set of loaner rods will let the next newcomer join even without their own tools."
+      accept: "Craft fishing rods in the main world for Oswin."
+      decline: "I will keep lending my personal rod."
+      finish: "New fishers can borrow a rod and learn the present river."
+      summary: "Make loaner rods for the current river fishing community."
+      questions: []
+    start: rods
+    stages:
+      rods:
+        journal: "Craft 6 fishing rods in the main world for Oswin."
+        waiting: "A shared rod should be ready before a newcomer arrives."
+        complete: "Oswin has six loaner rods."
+        objectives:
+          - craft 6 FISHING_ROD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  the-catch-register:
+    name: "The Catch Register"
+    giver: stanley
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-loaner-rods
+    text:
+      offer: "Oswin can teach more newcomers now. Let us record the catch and the season so we can share fairly without relying on old harbour stories."
+      accept: "Catch fish and bring paper for a river register."
+      decline: "I will keep counting by the supper table."
+      finish: "The river community has a current catch record beside its memorial."
+      summary: "Open a present-day catch register for the river fishers."
+      questions: []
+    start: register
+    stages:
+      register:
+        journal: "Catch 12 fish in the main world and bring Stanley 16 paper."
+        waiting: "The register should reflect today's river and its fishers."
+        complete: "Stanley has the first catch register."
+        objectives:
+          - fish 12 any
+          - deliver stanley 16 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1

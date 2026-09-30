@@ -26,8 +26,7 @@ async function promptInteractive(
     ? new TextDecoder().decode(value).trim().toLowerCase()
     : "s";
   if (input === "a" || input === "apply") return "apply";
-  if (input === "q" || input === "quit") return "quit";
-  return "skip";
+  return input === "q" || input === "quit" ? "quit" : "skip";
 }
 
 async function applySingleChange(change: ProposedChange): Promise<boolean> {
@@ -74,10 +73,14 @@ async function applySingleChange(change: ProposedChange): Promise<boolean> {
   }
 }
 
+// "quit" means the operator asked to stop partway through. Callers must not
+// continue with further mutations — notes included — on that answer.
+export type ApplyOutcome = "completed" | "quit";
+
 export async function applyChanges(
   changes: ProposedChange[],
   interactive: boolean,
-): Promise<void> {
+): Promise<ApplyOutcome> {
   let applied = 0;
   let failed = 0;
 
@@ -88,7 +91,7 @@ export async function applyChanges(
         log.info(
           `Stopped. Applied ${String(applied)} of ${String(changes.length)} changes.`,
         );
-        return;
+        return "quit";
       }
       if (action === "skip") continue;
       const ok = await applySingleChange(change);
@@ -107,4 +110,5 @@ export async function applyChanges(
   log.info(
     `Done! Applied ${String(applied)} changes.${failed > 0 ? ` ${String(failed)} failed.` : ""}`,
   );
+  return "completed";
 }

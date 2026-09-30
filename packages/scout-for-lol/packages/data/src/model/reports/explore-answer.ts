@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
+import { ExploreMatchCardRequestsSchema } from "#src/model/reports/explore-match-card.ts";
+import { ExploreLoadoutCardRequestsSchema } from "#src/model/reports/explore-loadout-card.ts";
 
 export const EXPLORE_ANSWER_MAX_LENGTH = 4000;
+export const EXPLORE_SPOKEN_ANSWER_MAX_LENGTH = 500;
 
 const INCLUDE_VISUALIZATION_DESCRIPTION =
   "True only when a chart or table should be attached to this turn. False when the prose is enough, no query ran, or a table would dump the same numbers already in the answer.";
@@ -29,6 +32,14 @@ const ExploreFollowUpSchema = z
 export const ExploreAnswerSchema = z
   .object({
     answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
+    /** A compact, speech-safe rendering of `answer` for voice-origin turns. */
+    spokenAnswer: z
+      .string()
+      .trim()
+      .min(1)
+      .max(EXPLORE_SPOKEN_ANSWER_MAX_LENGTH)
+      .nullable()
+      .optional(),
     /**
      * A short name for the whole conversation, used only for its first turn.
      *
@@ -57,6 +68,10 @@ export const ExploreAnswerSchema = z
       .boolean()
       .describe(INCLUDE_VISUALIZATION_DESCRIPTION)
       .default(false),
+    /** Source-backed match artifacts the model wants beside this answer. */
+    matchCards: ExploreMatchCardRequestsSchema.default([]),
+    /** Participant-specific build and rune artifacts to show with this answer. */
+    loadoutCards: ExploreLoadoutCardRequestsSchema.default([]),
     /**
      * Limits a reader needs to judge the answer — small samples, a corpus
      * that only covers matches Scout ingested, a metric that means something
@@ -73,14 +88,14 @@ export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
 /**
  * The same answer contract, shaped for a strict structured-output request.
  *
- * The runtime asks OpenRouter for `structuredOutputs: { strict: true }`, and
+ * The runtime asks OpenAI for a strict JSON schema, and
  * OpenAI's strict mode requires *every* property to appear in `required` —
  * a field carrying `.default()` is emitted as optional and the provider
  * rejects the whole request with `invalid_json_schema`
  * ("'required' ... must include every key in properties"). That is a hard 400
  * on every turn, not a soft downgrade, so the defaults cannot live on the wire.
  *
- * The model must therefore supply all six keys; `title` and `queryText` stay
+ * The model must therefore supply every key; `title` and `queryText` stay
  * nullable because follow-ups do not rename an established conversation and
  * can be answered from the transcript without another query. Empty arrays
  * express "no caveats/follow-ups". `includeVisualization` is a required
@@ -92,11 +107,19 @@ export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
 export const ExploreAnswerWireSchema = z
   .object({
     answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
+    spokenAnswer: z
+      .string()
+      .trim()
+      .min(1)
+      .max(EXPLORE_SPOKEN_ANSWER_MAX_LENGTH)
+      .nullable(),
     title: z.string().trim().min(1).nullable(),
     queryText: ReportQueryTextSchema.nullable(),
     includeVisualization: z
       .boolean()
       .describe(INCLUDE_VISUALIZATION_DESCRIPTION),
+    matchCards: ExploreMatchCardRequestsSchema,
+    loadoutCards: ExploreLoadoutCardRequestsSchema,
     caveats: z.array(z.string().trim().min(1).max(300)).max(5),
     followUps: z.array(ExploreFollowUpSchema).max(3),
   })

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { readPcm16MonoWave } from "./wave-io.ts";
+import { readPcm16MonoWave } from "./audio/wave-io.ts";
 
 const FEEDBACK_SAMPLE_RATE = 24_000;
 

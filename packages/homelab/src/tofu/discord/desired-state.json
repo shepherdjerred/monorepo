@@ -7,6 +7,7 @@
       "expected_application_id": "1452172134498701455",
       "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
       "description": "the invisibility booster must be faulty",
+      "custom_install_url": "https://discord.com/oauth2/authorize?client_id=1452172134498701455&permissions=580928753749056&scope=bot",
       "tags": []
     },
     "starlight-beta": {

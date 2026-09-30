@@ -45,10 +45,6 @@ export type TempoHelmValuesTempo = {
    */
   pullPolicy?: string;
   /**
-   * Optionally specify an array of imagePullSecrets.
-   * Secrets must be manually created in the namespace.
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-   *
    * @default "RollingUpdate"
    */
   updateStrategy?: string;
@@ -511,9 +507,6 @@ export type TempoHelmValuesTempoQuery = {
    */
   pullPolicy?: string;
   /**
-   * Optionally specify an array of imagePullSecrets.
-   * Secrets must be manually created in the namespace.
-   * Refers to: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
    * if False the tempo-query container is not deployed
    *
    * @default false

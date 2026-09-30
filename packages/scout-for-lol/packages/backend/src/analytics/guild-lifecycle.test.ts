@@ -8,6 +8,7 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   captureFirstSubscriptionCreated,
   captureGuildRemoval,
+  captureGuildRemovalForInstallation,
   deliverTrackedCoreOutput,
   memberCountBucket,
   recordCoreOutputDelivered,
@@ -309,6 +310,47 @@ describe("guild removal", () => {
         activation_state: "activated",
         tenure_bucket: "7-29d",
       },
+    });
+  });
+
+  test("stamps a historical backfill without synthetic removal analytics", async () => {
+    await seedInstall({ analyticsLifecycleTracked: false });
+    const { analytics, capture } = createAnalyticsFixture();
+    const removedAt = new Date("2026-08-10T00:00:00Z");
+
+    expect(
+      await captureGuildRemoval(SERVER_ID, removedAt, prisma, analytics),
+    ).toBe(true);
+    expect(capture).not.toHaveBeenCalled();
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({ removedAt });
+  });
+
+  test("does not remove a replacement installation generation", async () => {
+    await seedInstall();
+    const original = await prisma.guildInstall.findUniqueOrThrow({
+      where: { serverId: SERVER_ID },
+    });
+    const replacementInstallationId = crypto.randomUUID();
+    await prisma.guildInstall.update({
+      where: { serverId: SERVER_ID },
+      data: { analyticsInstallationId: replacementInstallationId },
+    });
+
+    expect(
+      await captureGuildRemovalForInstallation(
+        SERVER_ID,
+        new Date("2026-08-10T00:00:00Z"),
+        original.analyticsInstallationId,
+        { db: prisma },
+      ),
+    ).toBe(false);
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({
+      analyticsInstallationId: replacementInstallationId,
+      removedAt: null,
     });
   });
 

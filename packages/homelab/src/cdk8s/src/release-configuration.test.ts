@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   applyCurrentBuildImageOverrides,
-  catalogScoutPostgresImageDigests,
   releaseChartRevisions,
-  scoutImageUsesPostgres,
 } from "./release-configuration.ts";
 
 describe("applyCurrentBuildImageOverrides", () => {
@@ -15,7 +13,7 @@ describe("applyCurrentBuildImageOverrides", () => {
       "shepherdjerred/worker/workflows/stable": "old@sha256:old",
       "shepherdjerred/worker/workflows/candidate": "old@sha256:old",
     };
-    const postgresImageDigests = applyCurrentBuildImageOverrides(
+    applyCurrentBuildImageOverrides(
       versions,
       JSON.stringify({
         "shepherdjerred/worker": `sha256:${"a".repeat(64)}`,
@@ -30,19 +28,20 @@ describe("applyCurrentBuildImageOverrides", () => {
       "shepherdjerred/worker/workflows/stable": "old@sha256:old",
       "shepherdjerred/worker/workflows/candidate": `2.0.0-42@sha256:${"a".repeat(64)}`,
     });
-    expect(postgresImageDigests).toEqual(new Set());
 
     const scoutVersions: Record<string, string> = {
       "shepherdjerred/scout-for-lol/beta": "old@sha256:old",
     };
-    const migratedDigests = applyCurrentBuildImageOverrides(
+    applyCurrentBuildImageOverrides(
       scoutVersions,
       JSON.stringify({
         "shepherdjerred/scout-for-lol/beta": `sha256:${"c".repeat(64)}`,
       }),
       "2.0.0-43",
     );
-    expect(migratedDigests).toEqual(new Set([`sha256:${"c".repeat(64)}`]));
+    expect(scoutVersions["shepherdjerred/scout-for-lol/beta"]).toBe(
+      `2.0.0-43@sha256:${"c".repeat(64)}`,
+    );
   });
 
   test("retains a divergent workflow candidate while a rollout is active", () => {
@@ -115,14 +114,10 @@ describe("applyCurrentBuildImageOverrides", () => {
     const versions: Record<string, string> = {
       "shepherdjerred/worker": "old@sha256:old",
     };
-    const postgresImageDigests = applyCurrentBuildImageOverrides(
-      versions,
-      "{}",
-    );
+    applyCurrentBuildImageOverrides(versions, "{}");
     expect(versions).toEqual({
       "shepherdjerred/worker": "old@sha256:old",
     });
-    expect(postgresImageDigests).toEqual(new Set());
   });
 });
 
@@ -133,48 +128,4 @@ test("releaseChartRevisions validates exact build revisions", () => {
   expect(() =>
     releaseChartRevisions(JSON.stringify({ worker: "~2.0.0-0" })),
   ).toThrow();
-});
-
-test("classifies Scout images from current-build provenance", () => {
-  const postgresImageDigests = new Set([
-    "sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
-  ]);
-  expect(
-    scoutImageUsesPostgres(
-      "2.0.0-10860@sha256:c79be8f789dc48b8add32d5c633be88a881899cef91beb8efd450fba483474ff",
-      postgresImageDigests,
-    ),
-  ).toBe(false);
-  expect(
-    scoutImageUsesPostgres(
-      "2.0.0-10861@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
-      postgresImageDigests,
-    ),
-  ).toBe(true);
-});
-
-test("preserves Scout PostgreSQL provenance from the catalog", () => {
-  expect(
-    catalogScoutPostgresImageDigests({
-      $schema: "test",
-      schemaVersion: 1,
-      entries: [
-        {
-          name: "shepherdjerred/scout-for-lol/beta",
-          value:
-            "2.0.0-10861@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
-          category: "internal-image",
-          artifactType: "image",
-          management: { managed: false },
-          notes: [
-            "database contract: postgresql sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
-          ],
-        },
-      ],
-    }),
-  ).toEqual(
-    new Set([
-      "sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
-    ]),
-  );
 });

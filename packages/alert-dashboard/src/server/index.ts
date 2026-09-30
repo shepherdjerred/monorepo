@@ -1,14 +1,26 @@
+import {
+  SERVICE_CATALOG,
+  ServiceIndex,
+} from "@shepherdjerred/ops-model/catalog.ts";
+
 import { AlertService } from "#application/alert-service";
+import { DigestService } from "#application/ops-digest-service";
+import { OpsService } from "#application/ops-service";
 import type { PreviewPort } from "#application/ports";
 import { AlertmanagerClient } from "#infrastructure/alertmanager-client";
 import { readConfig } from "#infrastructure/config";
+import {
+  createDigestGate,
+  flagMetricsRecorder,
+} from "#infrastructure/digest-flag";
 import { GrafanaPreviewClient } from "#infrastructure/grafana-preview-client";
 import {
   initializeTracing,
   shutdownTracing,
 } from "#infrastructure/observability";
 import { PostalClient, disabledPostal } from "#infrastructure/postal-client";
-import { createPrismaRepository } from "#infrastructure/prisma-repository";
+import { createPrismaRepositories } from "#infrastructure/prisma-repositories";
+import { PrometheusSeries } from "#infrastructure/prometheus-series";
 import { createApp } from "#server/app";
 import { ChangeBus } from "#server/change-bus";
 import { Metrics } from "#server/metrics";
@@ -22,7 +34,8 @@ initializeTracing({
   serviceName: config.OTEL_SERVICE_NAME,
   endpoint: config.OTEL_EXPORTER_OTLP_ENDPOINT,
 });
-const repository = await createPrismaRepository(config.DATABASE_URL);
+const { ledger: repository, ops: opsRepository } =
+  await createPrismaRepositories(config.DATABASE_URL);
 const alertmanager = new AlertmanagerClient(config.ALERTMANAGER_URL);
 const grafanaPreviews = new GrafanaPreviewClient({
   baseUrl: config.GRAFANA_URL,
@@ -47,7 +60,8 @@ const previews: PreviewPort = {
   },
 };
 
-function postalClient(): PostalClient {
+/** Postal when every setting is present; alert email requires it. */
+function configuredPostal(): PostalClient | null {
   const {
     POSTAL_API_KEY,
     POSTAL_FROM,
@@ -61,7 +75,7 @@ function postalClient(): PostalClient {
     POSTAL_HOST === undefined ||
     POSTAL_TO === undefined
   ) {
-    throw new Error("Postal configuration is incomplete");
+    return null;
   }
   return new PostalClient({
     apiKey: POSTAL_API_KEY,
@@ -74,6 +88,12 @@ function postalClient(): PostalClient {
   });
 }
 
+function postalClient(): PostalClient {
+  const postal = configuredPostal();
+  if (postal === null) throw new Error("Postal configuration is incomplete");
+  return postal;
+}
+
 const service = new AlertService({
   repository,
   alertmanager,
@@ -82,12 +102,52 @@ const service = new AlertService({
   clock: systemClock,
   emailEnabled: config.EMAIL_ENABLED,
 });
+const digestGate = await createDigestGate({
+  environment: Bun.env,
+  metrics: flagMetricsRecorder({
+    countEvaluation: (flag, reason) => {
+      metrics.increment("feature_flag_evaluations_total", { flag, reason });
+    },
+    countError: (operation) => {
+      metrics.increment("feature_flag_errors_total", { operation });
+    },
+    providerReady: (ready) => {
+      metrics.gauge("feature_flag_provider_ready", ready ? 1 : 0);
+    },
+    snapshotAge: (seconds) => {
+      metrics.gauge("feature_flag_snapshot_age_seconds", seconds);
+    },
+  }),
+});
+const series = new PrometheusSeries(config.PROMETHEUS_URL);
+const ops = new OpsService({
+  repository: opsRepository,
+  series,
+  clock: systemClock,
+  services: new ServiceIndex(SERVICE_CATALOG),
+  grafanaUids: {
+    prometheus: config.GRAFANA_PROMETHEUS_DATASOURCE_UID,
+    loki: config.GRAFANA_LOKI_DATASOURCE_UID,
+    tempo: config.GRAFANA_TEMPO_DATASOURCE_UID,
+  },
+});
+const digests = new DigestService({
+  repository: opsRepository,
+  ops,
+  series,
+  gate: digestGate,
+  mailer: configuredPostal(),
+  clock: systemClock,
+});
 const changes = new ChangeBus();
 const app = createApp({
   service,
   changes,
   metrics,
   webhookToken: config.ALERT_DASHBOARD_WEBHOOK_TOKEN,
+  ops,
+  digests,
+  opsIngestToken: config.OPS_INGEST_TOKEN,
 });
 const server = Bun.serve({
   hostname: config.HOST,
@@ -190,6 +250,7 @@ async function shutdown(): Promise<void> {
   clearInterval(retentionTimer);
   await server.stop();
   await service.disconnect();
+  await digestGate.shutdown();
   await shutdownTracing();
 }
 

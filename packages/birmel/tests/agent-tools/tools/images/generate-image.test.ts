@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type * as Ai from "ai";
 import {
   getStagedAttachments,
   runWithRequestContext,
@@ -8,9 +9,13 @@ import {
 const mockGenerateImage = vi.fn();
 const mockDownloadImageWithRetry = vi.fn();
 
-vi.mock("ai", () => ({
-  generateImage: (...args: unknown[]) => mockGenerateImage(...args),
-}));
+vi.mock("ai", async (importOriginal) => {
+  const actual = await importOriginal<typeof Ai>();
+  return {
+    ...actual,
+    generateImage: (...args: unknown[]) => mockGenerateImage(...args),
+  };
+});
 
 vi.mock("@shepherdjerred/birmel/utils/image.ts", () => ({
   downloadImageWithRetry: (...args: unknown[]) =>
@@ -270,7 +275,7 @@ describe("generateImageTool - reference image editing", () => {
 describe("generateImageTool - error handling and validation", () => {
   test("returns clean error result when generateImage throws", async () => {
     mockGenerateImage.mockRejectedValueOnce(
-      new Error("OpenRouter rate limit reached"),
+      new Error("provider rate limit reached"),
     );
 
     const context: RequestContext = { ...dummyContext };
@@ -284,7 +289,7 @@ describe("generateImageTool - error handling and validation", () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain("OpenRouter rate limit reached");
+    expect(result.message).toContain("provider rate limit reached");
 
     const staged = getStagedAttachments(context);
     expect(staged).toHaveLength(0);

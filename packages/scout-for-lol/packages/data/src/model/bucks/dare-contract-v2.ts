@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BucksStakeSchema } from "#src/model/bucks/bryan-bucks.ts";
+import { StorableBucksStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
 import { QueueTypeSchema } from "#src/model/core/state.ts";
 import { dareGameSetDomainIssuesV2 } from "#src/model/bucks/dare-domains.ts";
 import {
@@ -267,10 +267,11 @@ function dareValueDepth(value: DareValueV2): number {
 }
 
 function dareValueNeedsTimeline(value: DareValueV2): boolean {
-  if (value.kind === "timeline_event_count") return true;
   return (
-    value.kind === "arithmetic" &&
-    (dareValueNeedsTimeline(value.left) || dareValueNeedsTimeline(value.right))
+    value.kind === "timeline_event_count" ||
+    (value.kind === "arithmetic" &&
+      (dareValueNeedsTimeline(value.left) ||
+        dareValueNeedsTimeline(value.right)))
   );
 }
 
@@ -437,7 +438,7 @@ export type DareDeadlineSpecV2 = z.infer<typeof DareDeadlineSpecV2Schema>;
 
 export const DareRelationalContractRuntimeSchema = z.strictObject({
   targets: z.array(DareTargetBindingV2Schema).min(1).max(DARE_V2_MAX_TARGETS),
-  openingStake: BucksStakeSchema,
+  openingStake: StorableBucksStakeSchema,
   serverId: z.string().min(1),
   channelId: z.string().min(1),
   revision: z.number().int().positive(),

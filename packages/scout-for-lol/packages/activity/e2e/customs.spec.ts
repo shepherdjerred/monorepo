@@ -221,7 +221,11 @@ test("renders Riot result waiting on mobile in dark mode", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await mockBackend(page, snapshot(pendingGame()));
   await page.goto("./");
-  await expect(page.getByText("Waiting for Riot Match-V5")).toBeVisible();
+  await expect(
+    page.getByText(
+      "Waiting for Riot or a paired Scout Client to verify the result. Results cannot be entered manually.",
+    ),
+  ).toBeVisible();
   await expect(page).toHaveScreenshot(
     "customs-result-pending-dark-mobile.png",
     {

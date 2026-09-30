@@ -28,11 +28,7 @@ export async function getPullRequest(
     return null;
   }
 
-  if (!result.data) {
-    return null;
-  }
-
-  return result.data;
+  return result.data ?? null;
 }
 
 export async function getPullRequestForBranch(
@@ -56,11 +52,7 @@ export async function getPullRequestForBranch(
     return null;
   }
 
-  if (!result.data) {
-    return null;
-  }
-
-  return result.data;
+  return result.data ?? null;
 }
 
 export async function getReviews(

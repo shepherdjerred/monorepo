@@ -19,22 +19,30 @@ export const register = new Registry();
 register.setDefaultLabels({ component: "temporal-worker" });
 collectDefaultMetrics({ register, prefix: "temporal_worker_app_" });
 
-export const openAiProjectUsageTokens = new Gauge({
-  name: "openai_project_usage_tokens",
-  help: "Official OpenAI current-day project usage by model, service tier, and token type",
-  labelNames: ["model", "service_tier", "type"] as const,
+// Billed spend straight from each provider's cost report, per project or
+// workspace. `account` is the provider's own name for it, which is bounded by
+// how many projects and workspaces exist.
+export const llmBilledCostUsd = new Gauge({
+  name: "llm_billed_cost_usd",
+  help: "Billed LLM spend from the provider's cost report, per account, for the current UTC day or the trailing seven days",
+  labelNames: ["provider", "account", "window"] as const,
   registers: [register],
 });
 
-export const openAiProjectCostUsd = new Gauge({
-  name: "openai_project_cost_usd",
-  help: "Official OpenAI current-day cost for the monitored OpenRouter project",
+// OpenAI's usage report splits tokens by service tier, which is where the
+// data-sharing complimentary allowance shows up: shared traffic inside the
+// daily allowance is not billed at the `default` tier.
+export const llmBilledTokens = new Gauge({
+  name: "llm_billed_tokens",
+  help: "Current-UTC-day token usage from the provider's usage report, by account, model, service tier, and token type",
+  labelNames: ["provider", "account", "model", "service_tier", "type"] as const,
   registers: [register],
 });
 
-export const openAiUsageReconciliationLastSuccessTimestampSeconds = new Gauge({
-  name: "openai_usage_reconciliation_last_success_timestamp_seconds",
-  help: "Unix timestamp of the last successful official OpenAI usage and cost reconciliation",
+export const llmBilledReconciliationLastSuccessTimestampSeconds = new Gauge({
+  name: "llm_billed_reconciliation_last_success_timestamp_seconds",
+  help: "Unix timestamp of the last successful billed-cost reconciliation, per provider",
+  labelNames: ["provider"] as const,
   registers: [register],
 });
 
@@ -310,10 +318,58 @@ export const veleroLiveBackupCount = new Gauge({
   registers: [register],
 });
 
+// ---------------------------------------------------------------------------
+// velero-r2-orphan-audit workflow metrics
+//
+// Detection-only metrics for orphan R2 objects under zfspv-incr/backups/ —
+// prefixes named by neither a live Velero Backup CR nor R2 backup metadata,
+// older than the 24h safety fence. Same orphan definition as the operator
+// cleanup tool (packages/homelab/src/cdk8s/scripts/r2-orphan-cleanup-core.ts).
+// Operator remediation lives in `runbooks/r2-capacity-remediation.md`.
+// ---------------------------------------------------------------------------
+
+export const veleroR2OrphanAuditRunsTotal = new Counter({
+  name: "velero_r2_orphan_audit_runs_total",
+  help: "Number of velero-r2-orphan-audit workflow runs by outcome (success | failure)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const veleroR2OrphanAuditDurationSeconds = new Histogram({
+  name: "velero_r2_orphan_audit_duration_seconds",
+  help: "Wall-clock duration of velero-r2-orphan-audit runs",
+  buckets: [10, 30, 60, 120, 300, 600],
+  registers: [register],
+});
+
+export const veleroOrphanR2PrefixesTotal = new Gauge({
+  name: "velero_orphan_r2_prefixes_total",
+  help: "Orphan R2 backup prefixes under zfspv-incr/backups/ with no live Backup CR or metadata",
+  registers: [register],
+});
+
+export const veleroOrphanR2BytesTotal = new Gauge({
+  name: "velero_orphan_r2_bytes_total",
+  help: "Total bytes in orphan R2 backup prefixes under zfspv-incr/backups/",
+  registers: [register],
+});
+
 export const zfsDatasetSnapshotCount = new Gauge({
   name: "zfs_dataset_snapshot_count",
   help: "Total ZFS snapshot count per PVC dataset (live + orphan)",
   labelNames: ["node", "pool", "dataset"] as const,
+  registers: [register],
+});
+
+export const veleroOrphanBackupCrsTotal = new Gauge({
+  name: "velero_orphan_backup_crs_total",
+  help: "ZFSBackup CRs whose Velero Backup is gone and which are older than the 24h fence",
+  registers: [register],
+});
+
+export const veleroOrphanBackupCrOldestAgeSeconds = new Gauge({
+  name: "velero_orphan_backup_crs_oldest_age_seconds",
+  help: "Age of the oldest orphan ZFSBackup CR, or 0 when none exist",
   registers: [register],
 });
 
@@ -416,10 +472,9 @@ export function startMetricsServer(): number {
           headers: { "content-type": register.contentType },
         });
       }
-      if (url.pathname === "/healthz") {
-        return new Response("ok\n", { status: 200 });
-      }
-      return new Response("not found\n", { status: 404 });
+      return url.pathname === "/healthz"
+        ? new Response("ok\n", { status: 200 })
+        : new Response("not found\n", { status: 404 });
     },
   });
 

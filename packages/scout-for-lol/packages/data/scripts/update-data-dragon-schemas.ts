@@ -1,20 +1,11 @@
 import { z } from "zod";
+import { ItemSchema as RuntimeItemSchema } from "#src/data-dragon/item.ts";
 import type { SummonerSchema } from "#src/data-dragon/summoner.ts";
 import type { RuneTreeSchema } from "#src/data-dragon/runes.ts";
 
 export type SummonerData = z.infer<typeof SummonerSchema>;
 
-export const ItemSchema = z.object({
-  data: z.record(
-    z.string(),
-    z.object({
-      name: z.string(),
-      description: z.string(),
-      plaintext: z.string().optional(),
-      stats: z.record(z.string(), z.number()).optional(),
-    }),
-  ),
-});
+export const ItemSchema = RuntimeItemSchema;
 
 export type ItemData = z.infer<typeof ItemSchema>;
 

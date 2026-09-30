@@ -1,0 +1,25 @@
+# An iOS app that also builds for Mac Catalyst.
+name: HelloiOS
+options:
+  bundleIdPrefix: dev.macos-cross
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "6"
+targets:
+  HelloiOS:
+    type: application
+    platform: iOS
+    supportedDestinations: [macCatalyst]
+    sources: [App]
+    info:
+      path: App/Info.plist
+      properties:
+        UILaunchScreen: {}
+    settings:
+      base:
+        CODE_SIGN_IDENTITY: "-"
+        SUPPORTS_MACCATALYST: YES
+        TARGETED_DEVICE_FAMILY: "1,2,6"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor

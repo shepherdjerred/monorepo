@@ -30,8 +30,11 @@ reference; the Temporal wiki explains workflow families and boundaries. Load
 - Report delivery is exclusive and auditable. A generated report, durable send
   record, downstream receipt, and user-visible message are separate evidence.
 - Generic agent tasks follow the shared typed schema, bounded tools, redacted
-  environment, and OpenRouter/Codex SDK policy. Never pass inference credentials
+  environment, and Codex SDK policy. Never pass inference credentials
   to tool subprocesses.
+- Durable agent chats use the reviewed Claude Agent SDK or Codex App Server adapter
+  with subscription authentication. Their provider is fixed at chat creation;
+  provider session state is durable, while each turn gets a fresh workspace.
 - PR-creating workflows use the bot-clone helper and repository PR contract;
   do not hand-roll installs or stack state in ephemeral clones.
 
@@ -46,8 +49,10 @@ bun run lint
 
 Workflow changes require bundle and retained-history replay appropriate to the
 change. Rollouts use the package's Worker Deployment command and move through
-stable, candidate canary, ramp, clean alert windows, and promotion. Inspect a
-stale lease before removal.
+stable, candidate canary, ramp, healthy poller and Prometheus rule-evaluation
+windows, candidate Build ID Workflow failure checks, and promotion. Alerts
+from other workers do not block deployment routing. Inspect a stale lease
+before removal.
 
 For live work, identify namespace, workflow ID, run ID, task queue, worker
 build, and schedule. A quiet durable timer is healthy; do not cancel it merely

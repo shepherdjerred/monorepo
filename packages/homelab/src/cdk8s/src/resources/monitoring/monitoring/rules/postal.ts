@@ -132,27 +132,15 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
-    {
-      name: "postal-smtp",
-      rules: [
-        {
-          alert: "PostalSMTPExceptionsHigh",
-          annotations: {
-            summary: "High rate of SMTP server exceptions",
-            message: escapePrometheusTemplate(
-              "Postal SMTP server has {{ $value }} exceptions in the last 15 minutes.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "increase(postal_smtp_server_exceptions_total[15m]) > 10",
-          ),
-          for: "5m",
-          labels: {
-            severity: "warning",
-          },
-        },
-      ],
-    },
+    // No `postal-smtp` group. A `PostalSMTPExceptionsHigh` rule lived here
+    // watching `postal_smtp_server_exceptions_total`, but only the worker
+    // Deployment exposes Postal's health server (port 9090, scraped by the
+    // ServiceMonitor in `resources/mail/postal.ts`); the SMTP Deployment
+    // publishes port 25 alone. That series therefore never existed, so the rule
+    // could not fire and reported SMTP health as green by never going red.
+    // Restoring the coverage means exposing the health server on the SMTP
+    // Deployment and scraping it, then writing the rule against a metric that
+    // is confirmed to be emitted — not re-adding this expression.
     {
       name: "postal-health",
       rules: [

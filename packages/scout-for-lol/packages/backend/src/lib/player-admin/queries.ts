@@ -30,8 +30,7 @@ function lookupUser(
   names: DiscordNames,
   id: string | null,
 ): ResolvedDiscordUser | null {
-  if (id === null) return null;
-  return names[id] ?? null;
+  return id === null ? null : (names[id] ?? null);
 }
 
 export const ListPlayersInput = GuildIdInput.extend({
@@ -284,6 +283,7 @@ export async function getCurrentLinkedPlayer(
     where: { serverId: input.guildId, discordId: ctx.user.discordId },
     include: playerDetailInclude,
   });
-  if (player === null) return null;
-  return serializePlayerDetailWithRiotRefresh(player, permissions);
+  return player === null
+    ? null
+    : serializePlayerDetailWithRiotRefresh(player, permissions);
 }

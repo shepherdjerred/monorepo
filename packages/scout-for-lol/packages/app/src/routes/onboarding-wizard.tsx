@@ -1,9 +1,15 @@
-import { useEffect, useReducer, useRef, type ReactElement } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { match } from "ts-pattern";
-import { useTRPC } from "#src/lib/trpc.ts";
-import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/query/session-query.ts";
 import type { OnboardingOutcome } from "@scout-for-lol/data";
 import {
   reportOnboardingOutcome,
@@ -14,8 +20,8 @@ import {
   initialOnboardingState,
   onboardingReducer,
   type OnboardingState,
-} from "#src/lib/onboarding-steps.ts";
-import { markOnboardingComplete } from "#src/lib/onboarding-storage.ts";
+} from "#src/lib/onboarding/onboarding-steps.ts";
+import { markOnboardingComplete } from "#src/lib/onboarding/onboarding-storage.ts";
 import { OnboardingInstallStep } from "#src/components/onboarding/onboarding-install-step.tsx";
 import { OnboardingPickGuildStep } from "#src/components/onboarding/onboarding-pick-guild-step.tsx";
 import { OnboardingConceptsStep } from "#src/components/onboarding/onboarding-concepts-step.tsx";
@@ -82,6 +88,10 @@ export function OnboardingWizard() {
   // subscription.list is paginated ({ items, nextCursor }); the onboarding
   // wizard only needs the first page's items for its "tracking so far" list.
   const subs = subsQuery.data?.items ?? [];
+  // Alias and channel successfully tracked in subscribe-self. Anchors
+  // teammate suggestions on the subscription the current user just added —
+  // never on another guild member's row in the paginated list.
+  const [self, setSelf] = useState({ alias: "", channelId: "" });
 
   function complete(outcome: OnboardingOutcome): void {
     const user = meQuery.data?.user ?? null;
@@ -186,6 +196,9 @@ export function OnboardingWizard() {
           username={meQuery.data?.user?.username ?? ""}
           discordId={meQuery.data?.user?.discordId ?? ""}
           existingSubs={[]}
+          selfAlias=""
+          selfChannelId=""
+          onSelfAdded={setSelf}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),
@@ -214,6 +227,8 @@ export function OnboardingWizard() {
             alias: s.player.alias,
             channelId: s.channelId,
           }))}
+          selfAlias={self.alias}
+          selfChannelId={self.channelId}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),

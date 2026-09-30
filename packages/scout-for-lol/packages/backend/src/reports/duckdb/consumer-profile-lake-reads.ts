@@ -2,16 +2,24 @@ import { z } from "zod";
 import {
   TimelineEventLakeRowSchema,
   TimelineParticipantFrameLakeRowSchema,
+  MatchTeamLakeRowSchema,
+  type MatchTeamLakeRow,
   type PlayerProfileGameWindow,
   type QueueType,
   type TimelineEventLakeRow,
   type TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import {
+  MATCH_LOADOUT_LAKE_COLUMNS_SQL,
+  MATCH_UI_READ_COLUMNS,
+  MatchLoadoutLakeRowSchema,
+} from "#src/report-lake/loadout.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
+  buildMatchTeamsSource,
   buildTimelineCoverageSource,
   buildTimelineEventParticipantsSource,
   buildTimelineEventsSource,
@@ -141,37 +149,48 @@ export async function fetchChampionComparisons(options: {
   });
 }
 
-const MatchParticipantRowSchema = z.object({
-  match_id: z.string(),
-  game_creation_ms: LakeIntSchema,
-  game_duration_seconds: LakeIntSchema,
-  queue: z.string().nullable(),
-  queue_id: LakeIntSchema,
-  game_mode: z.string(),
-  game_type: z.string(),
-  game_version: z.string(),
-  map_id: LakeIntSchema,
-  puuid: z.string(),
-  participant_id: LakeIntSchema,
-  team_id: LakeIntSchema,
-  riot_id_game_name: z.string().nullable(),
-  riot_id_tagline: z.string(),
-  champion_id: LakeIntSchema,
-  champion_name: z.string(),
-  team_position: z.string(),
-  win: z.boolean(),
-  kills: LakeIntSchema,
-  deaths: LakeIntSchema,
-  assists: LakeIntSchema,
-  creep_score: LakeIntSchema,
-  gold_earned: LakeIntSchema,
-  vision_score: LakeIntSchema,
-  total_damage_dealt_to_champions: LakeIntSchema,
-  turret_kills: LakeIntSchema,
-  inhibitor_kills: LakeIntSchema,
-  baron_kills: LakeIntSchema,
-  dragon_kills: LakeIntSchema,
-});
+const MatchParticipantRowSchema = z
+  .object({
+    match_id: z.string(),
+    game_creation_ms: LakeIntSchema,
+    game_duration_seconds: LakeIntSchema,
+    queue: z.string().nullable(),
+    queue_id: LakeIntSchema,
+    game_mode: z.string(),
+    game_type: z.string(),
+    game_version: z.string(),
+    map_id: LakeIntSchema,
+    puuid: z.string(),
+    participant_id: LakeIntSchema,
+    team_id: LakeIntSchema,
+    player_subteam_id: LakeIntSchema.nullable(),
+    placement: LakeIntSchema.nullable(),
+    subteam_placement: LakeIntSchema.nullable(),
+    augment_1_id: LakeIntSchema.nullable(),
+    augment_2_id: LakeIntSchema.nullable(),
+    augment_3_id: LakeIntSchema.nullable(),
+    augment_4_id: LakeIntSchema.nullable(),
+    augment_5_id: LakeIntSchema.nullable(),
+    augment_6_id: LakeIntSchema.nullable(),
+    riot_id_game_name: z.string().nullable(),
+    riot_id_tagline: z.string(),
+    champion_id: LakeIntSchema,
+    champion_name: z.string(),
+    team_position: z.string(),
+    win: z.boolean(),
+    kills: LakeIntSchema,
+    deaths: LakeIntSchema,
+    assists: LakeIntSchema,
+    creep_score: LakeIntSchema,
+    gold_earned: LakeIntSchema,
+    vision_score: LakeIntSchema,
+    total_damage_dealt_to_champions: LakeIntSchema,
+    turret_kills: LakeIntSchema,
+    inhibitor_kills: LakeIntSchema,
+    baron_kills: LakeIntSchema,
+    dragon_kills: LakeIntSchema,
+  })
+  .extend(MatchLoadoutLakeRowSchema.shape);
 
 export type LakeMatchParticipantRow = z.infer<typeof MatchParticipantRowSchema>;
 
@@ -180,22 +199,46 @@ export async function fetchFullMatch(options: {
   lakeDir?: string;
 }): Promise<LakeMatchParticipantRow[]> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildMatchesSource(files, {
-    sql: "match_id = ?",
-    params: [scalarParam(options.matchId)],
-  });
+  const source = buildMatchesSource(
+    files,
+    {
+      sql: "match_id = ?",
+      params: [scalarParam(options.matchId)],
+    },
+    MATCH_UI_READ_COLUMNS,
+  );
   if (source === undefined) return [];
   return await runSource({
     source,
     sql:
       `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
       `game_duration_seconds, queue, queue_id, game_mode, game_type, game_version, map_id, ` +
-      `puuid, participant_id, team_id, riot_id_game_name, riot_id_tagline, ` +
+      `puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement, ` +
+      `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
+      `riot_id_game_name, riot_id_tagline, ` +
       `champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score, ` +
       `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
-      `inhibitor_kills, baron_kills, dragon_kills FROM (${source.sql}) ` +
+      `inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
+      `FROM (${source.sql}) ` +
       `ORDER BY team_id, participant_id`,
     schema: MatchParticipantRowSchema,
+  });
+}
+
+export async function fetchFullMatchTeams(options: {
+  matchId: string;
+  lakeDir?: string;
+}): Promise<MatchTeamLakeRow[]> {
+  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
+  const source = buildMatchTeamsSource(files, {
+    sql: "match_id = ?",
+    params: [scalarParam(options.matchId)],
+  });
+  if (source === undefined) return [];
+  return await runSource({
+    source,
+    sql: `SELECT * FROM (${source.sql}) ORDER BY team_id`,
+    schema: MatchTeamLakeRowSchema,
   });
 }
 
@@ -214,6 +257,7 @@ export type LakeTimelineCoverage = z.infer<typeof TimelineCoverageRowSchema>;
 
 export async function fetchTimelineCoverage(options: {
   matchId: string;
+  abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<LakeTimelineCoverage | null> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
@@ -229,6 +273,7 @@ export async function fetchTimelineCoverage(options: {
       `participant_count, first_frame_timestamp_ms, last_frame_timestamp_ms ` +
       `FROM (${source.sql}) LIMIT 1`,
     schema: TimelineCoverageRowSchema,
+    abortSignal: options.abortSignal,
   });
   return rows[0] ?? null;
 }
@@ -278,6 +323,7 @@ export async function fetchTimelineEventPage(options: {
   limit: number;
   eventTypes?: string[];
   participantIds?: number[];
+  abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<TimelineEventRead[]> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
@@ -320,6 +366,7 @@ export async function fetchTimelineEventPage(options: {
       `SELECT ${TIMELINE_EVENT_COLUMNS} FROM (${source.sql}) ${participantClause} ` +
       `ORDER BY event_timestamp_ms, frame_index, event_index, event_id LIMIT ? OFFSET ?`,
     schema: TimelineEventReadSchema,
+    abortSignal: options.abortSignal,
   });
 }
 
@@ -346,6 +393,36 @@ export type TimelineFrameRead = Omit<
   TimelineParticipantFrameLakeRow,
   "match_id" | "month" | "observed_at"
 >;
+
+const LaneDeltaFrameSchema = z.object({
+  participant_id: LakeIntSchema,
+  total_gold: LakeIntSchema,
+  minions_killed: LakeIntSchema,
+  jungle_minions_killed: LakeIntSchema,
+  xp: LakeIntSchema,
+});
+
+export type LaneDeltaFrame = z.infer<typeof LaneDeltaFrameSchema>;
+
+export async function fetchTimelineFramesAtIndex(options: {
+  matchId: string;
+  frameIndex: number;
+  lakeDir?: string;
+}): Promise<LaneDeltaFrame[]> {
+  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
+  const source = buildTimelineParticipantFramesSource(files, {
+    sql: "match_id = ? AND frame_index = ?",
+    params: [scalarParam(options.matchId), scalarParam(options.frameIndex)],
+  });
+  if (source === undefined) return [];
+  return await runSource({
+    source,
+    sql:
+      `SELECT participant_id, total_gold, minions_killed, jungle_minions_killed, xp ` +
+      `FROM (${source.sql}) ORDER BY participant_id`,
+    schema: LaneDeltaFrameSchema,
+  });
+}
 
 const TIMELINE_FRAME_COLUMNS = Object.keys(TimelineFrameReadSchema.shape).join(
   ", ",

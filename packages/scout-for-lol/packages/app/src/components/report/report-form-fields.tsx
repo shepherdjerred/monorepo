@@ -6,6 +6,10 @@ import { ChevronDown } from "lucide-react";
 import { DEFAULT_REPORT_CRON } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
+  ChannelSelectControl,
+  type ChannelAvailability,
+} from "#src/components/channel-select-support.tsx";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -15,7 +19,7 @@ import {
   FieldDescription,
   FieldError,
   FormSection,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { ReportQueryDocs } from "#src/components/report/report-query-docs.tsx";
 import {
   ReportScheduleFields,
@@ -100,6 +104,8 @@ export function buildReportPayload(
 
 type ReportFormFieldsProps = {
   channels: { id: string; name: string }[] | undefined;
+  channelAvailability?: ChannelAvailability;
+  onRetryChannels?: () => void;
   // When provided, renders a "Full reference" link next to the Query label
   // (the report route passes its guild-scoped help route; onboarding omits it).
   queryHelpHref?: string;
@@ -115,6 +121,7 @@ type ReportFormFieldsProps = {
 
 const DEFAULT_REPORT_FORM_FIELDS_PROPS: ReportFormFieldsProps = {
   channels: undefined,
+  channelAvailability: { status: "ready" },
 };
 
 export const ReportFormFields = withScoutForm({
@@ -162,15 +169,16 @@ export const ReportFormFields = withScoutForm({
           </form.AppField>
           <form.AppField name="channelId">
             {(field) => (
-              <field.NativeSelectField
+              <ChannelSelectControl
                 id="report-channel"
                 label="Delivery channel"
-                placeholder="Pick a channel"
-                options={(props.channels ?? []).map((channel) => ({
-                  value: channel.id,
-                  label: `#${channel.name}`,
-                }))}
-                required
+                value={field.state.value}
+                channels={props.channels ?? []}
+                availability={props.channelAvailability}
+                onRetry={props.onRetryChannels}
+                renderSelect={(selectProps) => (
+                  <field.NativeSelectField {...selectProps} />
+                )}
               />
             )}
           </form.AppField>
@@ -257,9 +265,7 @@ export const ReportFormFields = withScoutForm({
                               ? "report-query-description"
                               : "report-query-description report-query-error"
                           }
-                          aria-invalid={
-                            message === undefined ? undefined : true
-                          }
+                          aria-invalid={message !== undefined || undefined}
                           tabIndex={message === undefined ? undefined : -1}
                         >
                           <ReportQueryEditor

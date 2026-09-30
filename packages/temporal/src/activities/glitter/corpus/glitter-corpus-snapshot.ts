@@ -3,8 +3,8 @@ import type { z } from "zod/v4";
 import {
   GuildInventorySchema,
   GuildSnapshotSchema,
-} from "#shared/glitter-corpus.ts";
-import { compareSnowflakes } from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus.ts";
+import { compareSnowflakes } from "#shared/glitter/glitter-corpus-projection.ts";
 import {
   glitterCorpusLastSnapshotTimestampSeconds,
   glitterCorpusSnapshotMetricsConfigured,
@@ -14,7 +14,7 @@ import {
   DailyBaselineSchema,
   FinalizeSnapshotInputSchema,
   type DailyBaseline,
-} from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus-activity-types.ts";
 import {
   glitterCorpusRuntimeConfig,
   jsonBytes,

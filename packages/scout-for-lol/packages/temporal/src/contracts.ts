@@ -40,9 +40,20 @@ export type ScoutWorkflowStatus = z.infer<typeof ScoutWorkflowStatusSchema>;
 
 export const ScoutRealtimePollInputSchema = z.object({
   stage: ScoutStageSchema,
+  // Keep the retired tournament discriminator while executions created by the
+  // former Schedule can still replay or retry their recorded Activity.
   kind: z.enum(["prematch", "tournament-lobbies"]),
   scheduledStartAt: IsoInstantSchema.optional(),
   maximumAgeSeconds: z.number().int().positive(),
+  /**
+   * Set to `v2` only by the prematch ownership router, when V2 owns the
+   * pass: `scoutPrematchDiscoveryV2Workflow` has already detected this
+   * pass's live games, so `pollRealtime` runs v1's prematch maintenance
+   * (betting windows, Dare expiry, parlay activation) without v1's
+   * active-game detection. Absent on every other run, including every run
+   * recorded before the router, which keeps v1's whole pass unchanged.
+   */
+  activeGameDetectionOwner: z.literal("v2").optional(),
 });
 export type ScoutRealtimePollInput = z.infer<
   typeof ScoutRealtimePollInputSchema
@@ -78,6 +89,16 @@ export type ScoutMatchIngestionInput = z.infer<
 export const ScoutPostMatchDiscoveryInputSchema = z.object({
   stage: ScoutStageSchema,
   scheduledStartAt: IsoInstantSchema.optional(),
+  /**
+   * The durable poll claim this v1 pass runs under, by the instant it was
+   * claimed at. Set only when the V2 ownership gate delegates to v1: the gate
+   * claims the poll first, so two overlapping handoffs cannot both run v1.
+   * Discovery re-presents the claim instead of opening the poll
+   * unconditionally, and the Workflow's `...input` spread carries it to
+   * maintenance, whose close is then guarded on it. Absent for every v1 run
+   * the gate did not start, which keeps v1's own open and close unchanged.
+   */
+  pollOwner: z.iso.datetime().optional(),
 });
 export type ScoutPostMatchDiscoveryInput = z.infer<
   typeof ScoutPostMatchDiscoveryInputSchema
@@ -93,6 +114,65 @@ export const ScoutInitialHistoryInputSchema = z.object({
 });
 export type ScoutInitialHistoryInput = z.infer<
   typeof ScoutInitialHistoryInputSchema
+>;
+
+export const ScoutExploreHistoryInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  puuid: RiotPuuidSchema,
+  region: z.enum([
+    "BRAZIL",
+    "EU_EAST",
+    "EU_WEST",
+    "KOREA",
+    "LAT_NORTH",
+    "LAT_SOUTH",
+    "AMERICA_NORTH",
+    "OCEANIA",
+    "TURKEY",
+    "RUSSIA",
+    "JAPAN",
+    "VIETNAM",
+    "TAIWAN",
+    "SINGAPORE",
+    "PBE",
+  ]),
+  /** Ten-minute UTC bucket: coalesces simultaneous asks but permits refreshes. */
+  acquisitionBucket: z.number().int().nonnegative(),
+  requestedMatches: z.number().int().min(1).max(100).default(100),
+});
+export type ScoutExploreHistoryInput = z.infer<
+  typeof ScoutExploreHistoryInputSchema
+>;
+
+export const ScoutExploreHistoryResultSchema = z.strictObject({
+  requested: z.number().int().nonnegative(),
+  found: z.number().int().nonnegative(),
+  alreadyAvailable: z.number().int().nonnegative(),
+  ingested: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+});
+export type ScoutExploreHistoryResult = z.infer<
+  typeof ScoutExploreHistoryResultSchema
+>;
+
+export const ScoutExploreTimelineInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  matchIds: z.array(OpaqueIdentifierSchema).min(1).max(10),
+  /** Ten-minute UTC bucket coalesces simultaneous requests. */
+  acquisitionBucket: z.number().int().nonnegative(),
+});
+export type ScoutExploreTimelineInput = z.infer<
+  typeof ScoutExploreTimelineInputSchema
+>;
+
+export const ScoutExploreTimelineResultSchema = z.strictObject({
+  requested: z.number().int().nonnegative(),
+  alreadyAvailable: z.number().int().nonnegative(),
+  ingested: z.number().int().nonnegative(),
+  unavailable: z.number().int().nonnegative(),
+});
+export type ScoutExploreTimelineResult = z.infer<
+  typeof ScoutExploreTimelineResultSchema
 >;
 
 export const ScoutIngestionReconciliationInputSchema = z.object({
@@ -118,9 +198,13 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "conversion-check",
     "summoner-index-backfill",
     "custom-nights-expiry",
+    "notification-intent-expiry",
     "prediction-ingest",
     "legacy-backfill",
     "progression-outbox",
+    "progression-reconciliation",
+    "mvp-tally-refresh",
+    "clash-snapshot",
   ]),
 });
 export type ScoutBackgroundJobInput = z.infer<
@@ -129,7 +213,7 @@ export type ScoutBackgroundJobInput = z.infer<
 
 export const ScoutDetachedWorkInputSchema = z.object({
   stage: ScoutStageSchema,
-  kind: z.literal("parlay-generation"),
+  kind: z.enum(["parlay-generation", "champion-mastery-refresh"]),
   workId: OpaqueIdentifierSchema,
 });
 export type ScoutDetachedWorkInput = z.infer<
@@ -288,6 +372,23 @@ export type IngestionReconciliationResult = z.infer<
   typeof IngestionReconciliationResultSchema
 >;
 
+/**
+ * Whether a rediscovered match's ingestion child is confirmed COMPLETED, and
+ * its discovering account's cursor therefore moved past the match.
+ *
+ * `reconciled` means the child reached a terminal COMPLETED status, which it
+ * only does once every ingestion effect has run — so the match's evidence is
+ * captured and the run may carry on and settle. `not-completed` covers every
+ * other status: the execution may still be mid-ingest, so the caller must not
+ * advance anything or settle on it.
+ */
+export const IngestedMatchCursorReconciliationSchema = z.object({
+  outcome: z.enum(["reconciled", "not-completed"]),
+});
+export type IngestedMatchCursorReconciliation = z.infer<
+  typeof IngestedMatchCursorReconciliationSchema
+>;
+
 export const PostMatchDiscoveryResultSchema = z.object({
   matches: z.array(ScoutMatchIngestionInputSchema.omit({ stage: true })),
   // Old activity completions predate this field and only returned after a
@@ -306,6 +407,18 @@ export const ScoutPostMatchMaintenanceInputSchema =
   ScoutPostMatchDiscoveryInputSchema.extend({
     settleDareV2Deadlines: z.boolean(),
     evidenceWatermark: z.iso.datetime().optional(),
+    /**
+     * Which poll this maintenance may close, by the instant it was claimed at.
+     *
+     * Present only for a V2 discovery, whose poll is claimed durably and spans
+     * the whole Workflow: the close is guarded on this identity, so a run
+     * whose claim was taken over fails loudly instead of marking a later run's
+     * poll complete. Absent for v1, whose poll and maintenance are one
+     * Activity and whose close overwrites whatever stands, exactly as it
+     * always has — optional rather than required so an in-flight v1 history
+     * that recorded no such field still parses.
+     */
+    pollOwner: z.iso.datetime().optional(),
   });
 export type ScoutPostMatchMaintenanceInput = z.infer<
   typeof ScoutPostMatchMaintenanceInputSchema

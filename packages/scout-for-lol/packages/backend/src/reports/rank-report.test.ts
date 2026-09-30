@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import {
   DiscordAccountIdSchema,
   PlayerIdSchema,

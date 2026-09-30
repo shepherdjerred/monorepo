@@ -79,6 +79,12 @@ function createPairingKey(aliases: string[]): string {
  * Options for calculating pairing stats
  */
 export type CalculatePairingStatsOptions = {
+  /**
+   * Old→new PUUIDs for match payloads captured under a previous Riot key. This
+   * module compares stored participants against current database identifiers,
+   * so without it every historical match silently fails to match its players.
+   */
+  puuidRemap: ReadonlyMap<string, string>;
   players: ServerPlayer[];
   startDate: Date;
   endDate: Date;
@@ -97,6 +103,7 @@ export async function calculatePairingStats(
     startDate,
     endDate,
     serverId,
+    puuidRemap,
     gameMode = "ranked",
   } = options;
   const allowedQueueTypes = getQueueTypesForCategory(gameMode);
@@ -120,7 +127,12 @@ export async function calculatePairingStats(
   logger.info(
     `[CalculatePairings] Querying matches for ${allPuuids.length.toString()} PUUIDs`,
   );
-  const matches = await queryMatchesByDateRange(startDate, endDate, allPuuids);
+  const matches = await queryMatchesByDateRange(
+    startDate,
+    endDate,
+    allPuuids,
+    puuidRemap,
+  );
   logger.info(
     `[CalculatePairings] Found ${matches.length.toString()} matches total`,
   );

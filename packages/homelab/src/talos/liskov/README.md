@@ -29,7 +29,7 @@ committed).
 1. **SecureBoot enrollment** (BIOS): Secure Boot → OS Type "Windows UEFI
    mode", mode Custom, Key Management → Clear Secure Boot Keys (= setup
    mode). Boot the SecureBoot ISO and confirm the Talos auto-enroll prompt:
-   `https://factory.talos.dev/image/<schematic-id>/v1.13.9/metal-amd64-secureboot.iso`
+   `https://factory.talos.dev/image/<schematic-id>/v1.14.1/metal-amd64-secureboot.iso`
    (schematic id: see `patches/image.yaml`).
 2. **Maintenance mode**: note the IP from the console, then
    `talosctl -n <ip> disks --insecure` → put the 990 Pro **1TB** serial into
@@ -38,8 +38,8 @@ committed).
 
    ```bash
    talosctl gen config --with-secrets secrets.yaml \
-     --talos-version v1.13.9 \
-     --kubernetes-version 1.36.4 \
+     --talos-version v1.14.1 \
+     --kubernetes-version 1.37.0 \
      --output-types worker -o liskov-worker.yaml \
      torvalds https://192.168.1.81:6443 \
      --config-patch @patches/image.yaml \
@@ -131,11 +131,12 @@ committed).
 ## After the soak
 
 Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Kubernetes
-currently reports approximately 91.5Gi of allocatable memory on liskov, and Buildkite
-has a resource-aware Kueue budget of 80Gi memory / 24 CPU / 24 pods, so
-`BUILDKITE_MAX_IN_FLIGHT` remains the count cap while Kueue handles weighted
-admission. Keep watching liskov's available-memory and eviction signals before
-raising either limit.
+currently reports approximately 91.5Gi of allocatable memory on liskov. CI pods
+are admitted by Kueue against the budget in
+`src/cdk8s/src/misc/ci-admission-budget.json` (80Gi memory / 24 CPU), and the
+Woodpecker agent's workflow cap is the count backstop. Keep watching liskov's
+available-memory and eviction signals before raising either limit; see
+[Why CI jobs queue instead of failing](../../../../docs/wiki/src/content/docs/explanation/homelab/ci-admission.md).
 
 **Applied**: reconciled live on 2026-08-29 with an exact Talos 1.13.9 client via
 `apply-config --mode=try`, followed by `--mode=no-reboot` confirmation. Effective

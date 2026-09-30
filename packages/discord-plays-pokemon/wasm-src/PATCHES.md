@@ -74,9 +74,11 @@ before creating the runtime image. The wider package verification also runs:
 - `packages/backend/src/emulator/audio/audio-fingerprint.test.ts` — captured PCM
   matches the committed mel/chroma/onset baseline.
 
-Both auto-skip when the wasm is absent (plain `bun run test` on a clean
-checkout); they run for real in the image build and locally after
-`scripts/build-wasm.ts`.
+The backend's default unit-test command excludes these integration files because
+the artifact is intentionally gitignored. Run `bun run test:wasm` from the
+backend package to build the pinned artifact first and execute both tests; the
+image build runs the same files after its `wasm-builder` stage supplies the
+artifact.
 
 ## Updating upstream
 

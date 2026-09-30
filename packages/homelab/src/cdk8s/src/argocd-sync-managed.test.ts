@@ -11,7 +11,7 @@ test("sync-managed rejects detached operations", async () => {
     [
       "bun",
       "--no-install",
-      "scripts/argocd.ts",
+      "scripts/argocd/argocd.ts",
       "sync-managed",
       "worker",
       "--async",
@@ -83,7 +83,7 @@ test("sync-managed preflights immutable changes before submitting", async () => 
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "sync-managed",
         "worker",
         "--timeout",
@@ -181,7 +181,7 @@ test("sync-managed preflights the requested revision", async () => {
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "sync-managed",
         "worker",
         "--revision",
@@ -282,7 +282,7 @@ test("sync-managed preflights a resource the requested revision introduces", asy
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "sync-managed",
         "worker",
         "--revision",
@@ -475,7 +475,7 @@ async function runSyncManagedAtRevision(origin: string) {
     [
       "bun",
       "--no-install",
-      "scripts/argocd.ts",
+      "scripts/argocd/argocd.ts",
       "sync-managed",
       "worker",
       "--revision",

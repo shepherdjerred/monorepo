@@ -12,8 +12,8 @@ import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Field,
   FieldError,
-} from "@scout-for-lol/design-system/components/input";
-import { permissionLabel } from "#src/components/forbidden-panel.tsx";
+} from "@scout-for-lol/design-system/components/forms/field";
+import { permissionLabel } from "#src/components/chrome/forbidden-panel.tsx";
 import {
   fieldErrorMessage,
   focusFirstInvalid,

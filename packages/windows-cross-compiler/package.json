@@ -1,0 +1,26 @@
+{
+  "name": "windows-cross-compiler",
+  "private": true,
+  "type": "module",
+  "description": "Linux container toolchain that cross-compiles C, C++, Rust, .NET, and WinUI/MSIX projects for Windows",
+  "scripts": {
+    "lint": "bunx eslint --cache . --max-warnings=0",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "1.4.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "5.0.1",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.1"
+  }
+}

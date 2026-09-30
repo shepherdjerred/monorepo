@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.10.1...webring-v1.11.0) (2026-09-23)
+
+
+### Features
+
+* **config:** route browser PostHog traffic through managed proxy ([#2835](https://github.com/shepherdjerred/monorepo/issues/2835)) ([33736ec](https://github.com/shepherdjerred/monorepo/commit/33736ecde965c8144b1b216a6147d40e35224597))
+
+
+### Bug Fixes
+
+* **root:** tighten the jscpd baseline to the current clone count ([#2817](https://github.com/shepherdjerred/monorepo/issues/2817)) ([0b2d74d](https://github.com/shepherdjerred/monorepo/commit/0b2d74d1096aeb828145b1f8c861e86923000181))
+
 ## [1.10.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.10.0...webring-v1.10.1) (2026-08-13)
 
 No library behavior changes. `src/`, the runtime dependencies, and the published `package.json` metadata are identical to `1.10.0`. The shipped `README.md` — the page you see on npm — did get a substantive documentation pass.

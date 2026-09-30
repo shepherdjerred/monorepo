@@ -24,7 +24,7 @@ import { verifyScoutAssetBucket } from "@scout-for-lol/design-system/build";
 import {
   assertScoutCustomsArtifactPolicy,
   type ScoutSiteFlavor,
-} from "@shepherdjerred/root-scripts/lib/scout-customs-artifact.ts";
+} from "@shepherdjerred/root-scripts/lib/scout/scout-customs-artifact.ts";
 
 function siteFlavor(): ScoutSiteFlavor {
   const flavor = process.env["PUBLIC_SCOUT_SITE_FLAVOR"];
@@ -127,15 +127,15 @@ function docsPosthogAttr(attribute: string): string | undefined {
 // checking attribute *names* alone would let a broken env value ship a build
 // that passes verification but never actually captures analytics.
 const docsApiHost = docsPosthogAttr("data-posthog-api-host");
-if (docsApiHost !== "https://us.i.posthog.com") {
+if (docsApiHost !== "https://j.sjer.red") {
   throw new Error(
-    `${docsTarget}/index.html must set data-posthog-api-host to the PostHog US API host, got ${String(docsApiHost)}`,
+    `${docsTarget}/index.html must set data-posthog-api-host to the managed PostHog proxy host, got ${String(docsApiHost)}`,
   );
 }
 const docsAssetHost = docsPosthogAttr("data-posthog-asset-host");
-if (docsAssetHost !== "https://us-assets.i.posthog.com") {
+if (docsAssetHost !== "https://j.sjer.red") {
   throw new Error(
-    `${docsTarget}/index.html must set data-posthog-asset-host to the PostHog US asset host, got ${String(docsAssetHost)}`,
+    `${docsTarget}/index.html must set data-posthog-asset-host to the managed PostHog proxy host, got ${String(docsAssetHost)}`,
   );
 }
 const docsSessionReplay = docsPosthogAttr("data-posthog-session-replay");

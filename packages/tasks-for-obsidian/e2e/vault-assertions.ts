@@ -186,8 +186,8 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     flow: "03-recurring-complete.yaml",
     check: (files) => {
       const content = fileWithTitle(files, "Water plants");
-      if (content === undefined) return false;
       return (
+        content !== undefined &&
         content.includes("status: open") &&
         completeInstanceDates(content).includes("2026-07-01")
       );

@@ -3,20 +3,20 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import type { RootStackParamList } from "../navigation/types";
-import type { CaptureMetadataChip } from "../domain/quick-capture";
-import type { CaptureSeed } from "../domain/quick-capture-seed";
+import type { CaptureMetadataChip } from "../domain/quick-capture/quick-capture";
+import type { CaptureSeed } from "../domain/quick-capture/quick-capture-seed";
 import {
   createCaptureRequest,
   deriveCaptureDraft,
   unparseCaptureChip,
-} from "../domain/quick-capture";
+} from "../domain/quick-capture/quick-capture";
 import {
   captureSessionFromSeed,
   captureSeedFromRouteParams,
   clearCaptureSeedField,
   resetCaptureSessionForAnother,
   setCaptureSeedProject,
-} from "../domain/quick-capture-seed";
+} from "../domain/quick-capture/quick-capture-seed";
 import { useTasks } from "../hooks/use-tasks";
 import { useSettings } from "../hooks/use-settings";
 import { useTip } from "../hooks/use-tip";

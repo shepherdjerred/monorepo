@@ -19,8 +19,18 @@ import {
 } from "#lib/review/harvest.ts";
 import {
   resolveProvider,
+  resolveRequiredReviewProvider,
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
+
+/**
+ * Repository the CLI addresses when restarting a pipeline.
+ *
+ * `woodpecker-cli` takes a repository before the pipeline number, and accepts
+ * either its numeric id or its slug. The slug is used here because it is the
+ * same in every environment and needs no lookup.
+ */
+const WOODPECKER_REPO = "shepherdjerred/monorepo";
 
 export type ReviewOptions = {
   repo?: string | undefined;
@@ -112,20 +122,38 @@ export async function reviewListCommand(
   const repo = options.repo ?? DEFAULT_REPO;
   const number = requirePr(prNumber);
   const provider = selectedProvider(options);
-  const { head, findings } = await listFindings({
+  const { head, findings, reviewState } = await listFindings({
     repo,
     number,
     token: requireToken(),
     provider,
   });
+  // A blocked review also yields zero findings, so without this the counts
+  // below read as a clean review rather than one that never ran.
+  const blocked = reviewState.blockedReason;
+  // `listFindings` defaults an unspecified provider the same way.
+  const strategy = (provider ?? resolveRequiredReviewProvider()).detectBlocked;
+  const remediation =
+    blocked !== null && strategy !== null && strategy.reason === blocked
+      ? `: ${strategy.remediation}`
+      : "";
 
   if (options.json === true) {
-    console.log(JSON.stringify({ repo, pr: number, head, findings }, null, 2));
+    console.log(
+      JSON.stringify(
+        { repo, pr: number, head, blockedReason: blocked, findings },
+        null,
+        2,
+      ),
+    );
     return;
   }
 
   const open = findings.filter((finding) => !finding.isResolved);
   console.log(`${repo}#${String(number)} @ ${head.slice(0, 9)}`);
+  if (blocked !== null) {
+    console.log(`Review blocked (${blocked})${remediation}`);
+  }
   console.log(
     `${String(findings.length)} finding(s), ${String(open.length)} unresolved\n`,
   );
@@ -274,30 +302,37 @@ export async function reviewHarvestCommand(
       // makes the read-only run useful rather than merely safe.
       if (options.all !== true) {
         console.log(
-          `#${String(number)} ${provider.displayName}: retryable — toolkit bk job retry ${verdict.jobId}`,
+          `#${String(number)} ${provider.displayName}: retryable — toolkit woodpecker pipeline start ${WOODPECKER_REPO} ${verdict.pipelineNumber}`,
         );
         continue;
       }
-      retryBuildkiteJob(verdict.jobId);
+      restartCiPipeline(verdict.pipelineNumber);
       console.log(
-        `#${String(number)} ${provider.displayName}: retried ${verdict.jobId}`,
+        `#${String(number)} ${provider.displayName}: restarted pipeline ${verdict.pipelineNumber}`,
       );
     }
   }
 }
 
-function retryBuildkiteJob(jobId: string): void {
+/**
+ * Restart a whole pipeline.
+ *
+ * Coarser than the Buildkite retry it replaces: that targeted the one failed
+ * job, because Buildkite wrote the job id into the status URL fragment.
+ * Woodpecker links a status at the pipeline and restarts at that granularity,
+ * so this re-runs the gate rather than one step inside it.
+ */
+function restartCiPipeline(pipelineNumber: string): void {
   const result = Bun.spawnSync([
-    "bk",
-    "job",
-    "retry",
-    jobId,
-    "-y",
-    "--no-input",
+    "woodpecker-cli",
+    "pipeline",
+    "start",
+    WOODPECKER_REPO,
+    pipelineNumber,
   ]);
   if (result.exitCode !== 0) {
     throw new Error(
-      `bk job retry ${jobId} failed: ${result.stderr.toString().trim()}`,
+      `woodpecker-cli pipeline start ${pipelineNumber} failed: ${result.stderr.toString().trim()}`,
     );
   }
 }

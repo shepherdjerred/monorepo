@@ -56,25 +56,37 @@ import {
 const RECONCILIATION_TRANSACTION_MAX_WAIT_MS = 15_000;
 const RECONCILIATION_TRANSACTION_TIMEOUT_MS = 60_000;
 
-export async function createPrismaRepository(
+export async function createPrismaClient(
   databaseUrl: string,
-): Promise<PrismaAlertLedgerRepository> {
+): Promise<PrismaClient> {
   const adapter = new PrismaLibSql({ url: databaseUrl, intMode: "bigint" });
   const prisma = new PrismaClient({ adapter });
   await prisma.$executeRawUnsafe("PRAGMA foreign_keys = ON");
   await prisma.$executeRawUnsafe("PRAGMA busy_timeout = 5000");
   await prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL");
-  return new PrismaAlertLedgerRepository(prisma);
+  return prisma;
+}
+
+export async function createPrismaRepository(
+  databaseUrl: string,
+): Promise<PrismaAlertLedgerRepository> {
+  return new PrismaAlertLedgerRepository(await createPrismaClient(databaseUrl));
 }
 
 export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
   readonly #prisma: PrismaClient;
   readonly #read: PrismaReadRepository;
-  readonly #writeMutex = new AsyncMutex();
+  readonly #writeMutex: AsyncMutex;
 
-  constructor(prisma: PrismaClient) {
+  /**
+   * `writeMutex` is shared with every other repository over the same client:
+   * SQLite admits one writer, and interleaved interactive transactions on one
+   * connection would otherwise contend.
+   */
+  constructor(prisma: PrismaClient, writeMutex = new AsyncMutex()) {
     this.#prisma = prisma;
     this.#read = new PrismaReadRepository(prisma);
+    this.#writeMutex = writeMutex;
   }
 
   async ingestWebhook(input: IngestWebhookInput): Promise<IngestWebhookResult> {

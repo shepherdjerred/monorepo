@@ -1,0 +1,120 @@
+import { z } from "zod";
+import {
+  StorableBucksStakeSchema,
+  DARE_V2_MAX_HORIZON_DAYS,
+  DARE_V2_MAX_QUERY_LENGTH,
+  DARE_V2_MAX_TARGETS,
+  DareStoredPlanV2Schema,
+  DareDeadlineSpecV2Schema,
+  DareSqlV3CompetitionSchema,
+  DareActivationV3Schema,
+  DareIntentPayloadSchema,
+} from "@scout-for-lol/data";
+
+export const DareToolResultSchema = z.strictObject({
+  kind: z.string().min(1),
+  message: z.string().min(1),
+  data: z.json().nullable(),
+});
+export type DareToolResult = z.infer<typeof DareToolResultSchema>;
+
+const DareListCopyFields = {
+  displayTitle: z.string().trim().min(1).max(80),
+  statusPhrases: z.record(
+    z.string().min(1).max(64),
+    z.string().trim().min(1).max(80),
+  ),
+};
+
+export const DareDefinitionV2ToolInputSchema = z.strictObject({
+  originalText: z.string().min(1).max(4000),
+  ...DareListCopyFields,
+  targetKeys: z
+    .array(z.string().regex(/^T\d{1,2}$/))
+    .min(1)
+    .max(DARE_V2_MAX_TARGETS),
+  // Structural, not authoring. The AI SDK validates tool input against this
+  // schema *before* the executor runs, so putting the value-domain refinement
+  // here would make the SDK reject the call itself — and the model would get a
+  // generic invalid-tool-input error instead of `prepareDareDraftV2`'s
+  // actionable `{ kind: "invalid", issues }`, which names the wrong value and
+  // the legal ones. The domains are still enforced, one layer in, where the
+  // model can act on the answer.
+  plan: DareStoredPlanV2Schema,
+  deadlineSpec: DareDeadlineSpecV2Schema,
+  openingStake: StorableBucksStakeSchema,
+});
+
+export const DareDefinitionV3ToolInputSchema = z.strictObject({
+  originalText: z.string().min(1).max(4000),
+  ...DareListCopyFields,
+  targetKeys: z
+    .array(z.string().regex(/^T[1-5]$/))
+    .min(1)
+    .max(DARE_V2_MAX_TARGETS),
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
+  plainLanguage: z.string().min(1).max(4000),
+  deadlineSpec: DareDeadlineSpecV2Schema,
+  openingStake: StorableBucksStakeSchema,
+  competition: DareSqlV3CompetitionSchema.default({ kind: "standard" }),
+  activation: DareActivationV3Schema.default({ kind: "immediate" }),
+});
+
+export const DareDefinitionToolInputSchema = z.union([
+  DareDefinitionV3ToolInputSchema,
+  DareDefinitionV2ToolInputSchema,
+]);
+
+export const DareScoutQlToolInputSchema = z.strictObject({
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
+  targetKeys: z
+    .array(z.string().regex(/^T\d{1,2}$/))
+    .min(1)
+    .max(DARE_V2_MAX_TARGETS),
+});
+
+const RevisionFields = {
+  dareId: z.number().int().positive(),
+  expectedRevision: z.number().int().positive(),
+};
+
+export const ReviseDareToolInputSchema = z.union([
+  DareDefinitionV3ToolInputSchema.extend(RevisionFields),
+  DareDefinitionV2ToolInputSchema.extend(RevisionFields),
+]);
+
+const PreviewFields = {
+  historyDays: z
+    .number()
+    .int()
+    .min(1)
+    .max(DARE_V2_MAX_HORIZON_DAYS)
+    .default(30),
+};
+
+export const DarePreviewToolInputSchema = z.union([
+  DareDefinitionV3ToolInputSchema.extend(PreviewFields),
+  DareDefinitionV2ToolInputSchema.extend(PreviewFields),
+]);
+
+export const DareListToolInputSchema = z.strictObject({
+  scope: z.enum(["mine", "guild"]),
+  search: z.string().min(1).max(100).optional(),
+});
+
+export const DareInspectToolInputSchema = z.strictObject({
+  dareId: z.number().int().positive(),
+});
+
+// The dare-only payload union, so the Explore dare tool cannot mint a
+// creation intent — those have their own gate, RBAC and confirm procedure.
+export const DareActionToolInputSchema = z.strictObject({
+  dareId: z.number().int().positive(),
+  expectedRevision: z.number().int().positive(),
+  payload: DareIntentPayloadSchema,
+});
+
+export const DareDeleteToolInputSchema = z.strictObject({
+  dareId: z.number().int().positive(),
+  expectedRevision: z.number().int().positive(),
+});

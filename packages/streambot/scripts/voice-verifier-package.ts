@@ -2,6 +2,7 @@ import path from "node:path";
 import { cp, mkdir, readdir, rename, rm } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { z } from "zod";
+import { verifierPackagingPlan } from "@shepherdjerred/streambot/voice/corpus-phrases.ts";
 
 const MIN_POSITIVES = 20_000;
 const MIN_ADVERSARIAL = 40_000;
@@ -13,6 +14,8 @@ const { values } = parseArgs({
     "livekit-dir": { type: "string" },
     "model-dir": { type: "string" },
     threshold: { type: "string" },
+    "phrase-slug": { type: "string", default: "hey-streambot" },
+    dest: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
   strict: true,
@@ -24,6 +27,11 @@ if (values.help) {
 
 Usage:
   bun run voice:verifier:package --livekit-dir <checkout> --model-dir <run> --threshold <0..1>
+    [--phrase-slug hey-streambot|hey-scout] [--dest <assets-dir>]
+
+The phrase slug selects the trained classifier name (<slug with underscores>_cascade.onnx) and
+the packaged output filenames; the default reproduces the historical hey-streambot packaging
+into packages/streambot/assets/voice exactly. --dest overrides the committed destination.
 
 The pinned checkout must contain the full ACAV100M feature asset. The command verifies training
 counts, copies the mel/embedding/classifier ONNX graph atomically, and writes its checksum manifest.
@@ -35,7 +43,11 @@ It does not evaluate or select a threshold; pass the reviewed synthetic-tuning t
 const livekitDir = path.resolve(z.string().min(1).parse(values["livekit-dir"]));
 const modelDir = path.resolve(z.string().min(1).parse(values["model-dir"]));
 const threshold = z.coerce.number().min(0).max(1).parse(values.threshold);
-const destination = path.resolve(import.meta.dir, "../assets/voice");
+const plan = verifierPackagingPlan(
+  z.string().min(1).parse(values["phrase-slug"]),
+  values.dest === undefined ? undefined : path.resolve(values.dest),
+);
+const destination = plan.destination;
 const temporary = path.join(destination, `.verifier-${crypto.randomUUID()}`);
 
 async function countWaves(directory: string): Promise<number> {
@@ -99,7 +111,7 @@ const sources = {
     livekitDir,
     "src/livekit/wakeword/resources/embedding_model.onnx",
   ),
-  classifier: path.join(modelDir, "hey_streambot_cascade.onnx"),
+  classifier: path.join(modelDir, plan.classifierSourceName),
   smokePositive: await firstWave(path.join(modelDir, "positive_test")),
 };
 for (const source of Object.values(sources)) {
@@ -108,13 +120,14 @@ for (const source of Object.values(sources)) {
   }
 }
 
+await mkdir(destination, { recursive: true });
 await mkdir(temporary, { recursive: false });
 try {
   const outputs = {
-    mel: path.join(temporary, "melspectrogram.onnx"),
-    embedding: path.join(temporary, "embedding_model.onnx"),
-    classifier: path.join(temporary, "hey_streambot.onnx"),
-    smokePositive: path.join(temporary, "hey-streambot-smoke.wav"),
+    mel: path.join(temporary, plan.outputs.mel),
+    embedding: path.join(temporary, plan.outputs.embedding),
+    classifier: path.join(temporary, plan.outputs.classifier),
+    smokePositive: path.join(temporary, plan.outputs.smokePositive),
   };
   await Promise.all([
     cp(sources.mel, outputs.mel),
@@ -143,10 +156,10 @@ try {
     `${JSON.stringify(manifest, null, 2)}\n`,
   );
   for (const filename of [
-    "melspectrogram.onnx",
-    "embedding_model.onnx",
-    "hey_streambot.onnx",
-    "hey-streambot-smoke.wav",
+    plan.outputs.mel,
+    plan.outputs.embedding,
+    plan.outputs.classifier,
+    plan.outputs.smokePositive,
     "wake-verifier.json",
   ]) {
     await rename(

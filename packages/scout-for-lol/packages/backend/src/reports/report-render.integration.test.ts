@@ -15,7 +15,7 @@ import {
   writeTestLake,
   type TestLakeMatchFact,
 } from "#src/testing/test-report-lake.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import {
   renderReportOutput,
   type RenderedReportOutput,
@@ -55,12 +55,15 @@ function fact(input: {
   matchId: string;
   win: boolean;
   discordId?: string | null;
+  championId?: number;
   championName?: string;
+  items?: number[];
 }): TestLakeMatchFact {
   return {
     playerId: input.player,
     playerAlias: input.alias,
     ...(input.discordId === undefined ? {} : { discordId: input.discordId }),
+    ...(input.championId === undefined ? {} : { championId: input.championId }),
     matchId: input.matchId,
     puuid: testPuuid(`render-${input.alias}`),
     queue: "solo",
@@ -72,6 +75,7 @@ function fact(input: {
     ...(input.championName === undefined
       ? {}
       : { championName: input.championName }),
+    ...(input.items === undefined ? {} : { items: input.items }),
     gameCreationAt: now,
   };
 }
@@ -138,6 +142,34 @@ describe("RENDER clause — text kinds", () => {
     expect(output.content).toMatch(/2\. Bravo/);
     expect(output.content).toContain("Based on 3 games");
     expect(output.content).not.toContain("95% CI");
+  });
+
+  test("renders asset-backed row labels as names in Discord text outputs", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_asset_label",
+          win: true,
+          items: [3031],
+        }),
+      ],
+    });
+    const query =
+      "SELECT COUNT(*) AS games FROM match_participants " +
+      `WHERE queue IN ('solo') AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY ` +
+      "GROUP BY item0 ORDER BY games DESC";
+    const outputs: RenderedReportOutput[] = [];
+    for (const renderKind of ["table", "list", "leaderboard"]) {
+      outputs.push(await render(`${query} RENDER ${renderKind}`));
+    }
+
+    for (const output of outputs) {
+      expect(output.content).toContain("Infinity Edge");
+      expect(output.content).not.toContain("3031");
+    }
   });
 
   test("a query with no RENDER clause defaults to a TABLE render", async () => {
@@ -388,6 +420,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
         fact({
           player: 1,
           alias: "Lux",
+          championId: 99,
           championName: "Lux",
           matchId: "NA1_lux",
           win: true,

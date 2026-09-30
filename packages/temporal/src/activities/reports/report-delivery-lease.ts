@@ -141,8 +141,8 @@ export async function claimReportSend(input: {
   // schedule in report-delivery-policy.ts is proven against.
   const heldFor =
     Date.parse(input.attemptStartedAt) - Date.parse(held.claim.claimedAt);
-  if (heldFor < REPORT_SEND_CLAIM_TAKEOVER_MS) {
-    return false;
-  }
-  return input.backend.writeSendClaim(input.claimKey, claim, held.etag);
+  return (
+    heldFor >= REPORT_SEND_CLAIM_TAKEOVER_MS &&
+    input.backend.writeSendClaim(input.claimKey, claim, held.etag)
+  );
 }

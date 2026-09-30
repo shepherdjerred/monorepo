@@ -3,7 +3,7 @@ import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   CI_NODE_TOLERATION,
   PROD_NODE_INTERNAL_IP,
@@ -11,7 +11,7 @@ import {
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
-  BUILDKITE_IO_OBSERVABILITY_VALUES,
+  CI_IO_OBSERVABILITY_VALUES,
   createGrafanaValues,
   type PrometheusValuesWithBlackbox,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
@@ -22,7 +22,7 @@ import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
-import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
+import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
 import {
   ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
   ALERTMANAGER_POSTAL_SMTP_TLS,
@@ -58,6 +58,55 @@ const ALERTMANAGER_GLOBAL = {
   smtp_require_tls: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_require_tls,
   smtp_tls_config: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_tls_config,
 };
+
+const OPERATOR_EMAIL_CONFIGS = [
+  {
+    send_resolved: false,
+    to: "claude@sjer.red",
+  },
+];
+
+function alertmanagerReceivers(alertDashboardSecretName: string) {
+  return [
+    {
+      name: "null",
+    },
+    {
+      name: "alerts",
+      webhook_configs: [
+        {
+          send_resolved: true,
+          max_alerts: 100,
+          url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
+          http_config: {
+            authorization: {
+              type: "Bearer",
+              credentials_file: `/etc/alertmanager/secrets/${alertDashboardSecretName}/WEBHOOK_TOKEN`,
+            },
+          },
+        },
+      ],
+      // The ledger is the place to work alerts, but it is a page the operator
+      // has to remember to open. Only the null routes and the fallback matchers
+      // divert anything ahead of this receiver, so it sees exactly the critical
+      // and warning alerts worth interrupting someone for. Delivery is
+      // additive: the webhook above still records every alert whether or not
+      // the mail succeeds.
+      //
+      // This and the dashboard's own outbox are alternatives, not layers. The
+      // webhook above queues an opening email of its own whenever the dashboard
+      // runs with EMAIL_ENABLED=true, which would mail every alert twice. The
+      // dashboard's sender is therefore off, and re-enabling it means removing
+      // this entry in the same change — see packages/alert-dashboard/README.md.
+      email_configs: OPERATOR_EMAIL_CONFIGS,
+    },
+    {
+      // Reports on the webhook, so it must not depend on the webhook.
+      name: "postal-fallback",
+      email_configs: OPERATOR_EMAIL_CONFIGS,
+    },
+  ];
+}
 
 function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
   return new OnePasswordItem(chart, "alertmanager-postal-smtp-onepassword", {
@@ -179,10 +228,10 @@ export async function createPrometheusApp(chart: Chart) {
       endpoints: [PROD_NODE_INTERNAL_IP],
     },
     // cAdvisor owns the unique 10-second pod-parent counters. The normal
-    // kube-state-metrics scrape adds Buildkite identity/link metadata; missing
+    // kube-state-metrics scrape adds Woodpecker identity/link metadata; missing
     // joins remain explicit in the rules and CI I/O reporter rather than
     // accelerating the full cluster-wide metadata endpoint.
-    ...BUILDKITE_IO_OBSERVABILITY_VALUES,
+    ...CI_IO_OBSERVABILITY_VALUES,
     grafana: createGrafanaValues(prometheusSecrets.name),
     prometheusOperator: {
       resources: {
@@ -282,36 +331,7 @@ export async function createPrometheusApp(chart: Chart) {
           },
         ],
         templates: ["/etc/alertmanager/config/*.tmpl"],
-        receivers: [
-          {
-            name: "null",
-          },
-          {
-            name: "alerts",
-            webhook_configs: [
-              {
-                send_resolved: true,
-                max_alerts: 100,
-                url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
-                http_config: {
-                  authorization: {
-                    type: "Bearer",
-                    credentials_file: `/etc/alertmanager/secrets/${alertDashboardSecrets.name}/WEBHOOK_TOKEN`,
-                  },
-                },
-              },
-            ],
-          },
-          {
-            name: "postal-fallback",
-            email_configs: [
-              {
-                send_resolved: false,
-                to: "claude@sjer.red",
-              },
-            ],
-          },
-        ],
+        receivers: alertmanagerReceivers(alertDashboardSecrets.name),
         route: {
           group_by: ["namespace", "alertname"],
           group_wait: "30s",
@@ -398,13 +418,13 @@ export async function createPrometheusApp(chart: Chart) {
               ],
             },
             {
-              // Silence KubeJobFailed for Buildkite CI jobs — a failed PR build is a
-              // normal outcome, already surfaced in Buildkite and as a GitHub commit
+              // Silence KubeJobFailed for Woodpecker CI jobs — a failed PR build is a
+              // normal outcome, already surfaced in Woodpecker and as a GitHub commit
               // status. Job failures in every other namespace still page.
               receiver: "null",
               matchers: [
                 'alertname = "KubeJobFailed"',
-                'namespace = "buildkite"',
+                'namespace = "woodpecker"',
               ],
             },
             removedAgentTaskAggregateRoute,

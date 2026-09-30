@@ -4,14 +4,10 @@ import {
   awardBucksForMatch,
   type EarnedAward,
 } from "#src/betting/accounts/earnings.ts";
-import {
-  closeAndSettleBettingForMatch,
-  type SettlementSummary,
-} from "#src/betting/settle.ts";
-import {
-  settleParlaysForMatch,
-  type ParlaySettlementSummary,
-} from "#src/betting/parlays/parlay-settle.ts";
+import { closeAndSettleBettingForMatch } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
+import { settleParlaysForMatch } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import { settleDaresForMatch } from "#src/betting/dares/settlement/dare-settle.ts";
 import { settleDaresV2ForMatch } from "#src/betting/dares/settlement/dare-settle-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types-v2.ts";
@@ -21,20 +17,19 @@ import {
   refreshPendingDareV2Callouts,
   type DareV2CalloutDependencies,
 } from "#src/betting/dares/presentation/dare-callout-v2.ts";
-import {
-  DarePartialSettlementError,
-  type DareSettlementSummary,
-} from "#src/betting/dares/settlement/dare-settle-shared.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/dare-delivery.ts";
-import { refreshClosedParlayMessages } from "#src/betting/parlays/parlay-refresh.ts";
-import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
+import { DarePartialSettlementError } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
+import { refreshClosedParlayMessages } from "#src/betting/parlays/runtime/parlay-refresh.ts";
+import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
 import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
-import { captureWeeklyParlayContributions } from "#src/betting/weekly/weekly-parlay-contribution.ts";
 import { createLogger } from "#src/logger.ts";
-import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/dare-notification-delivery.ts";
+import {
+  announcingSettlementSink,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
 
 const logger = createLogger("betting-postmatch-hook");
 
@@ -88,7 +83,15 @@ export async function refreshSettledPoolMessages(
 export async function settleAndAwardBucks(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
-  options: { dareTimeline?: DareTimelineEvidenceV2 | undefined } = {},
+  options: {
+    dareTimeline?: DareTimelineEvidenceV2 | undefined;
+    /**
+     * Who may announce what this settlement produces. Defaults to v1's own
+     * behaviour, so a caller that says nothing announces everything exactly as
+     * it did before the sink existed.
+     */
+    announcementSink?: SettlementAnnouncementSink | undefined;
+  } = {},
 ): Promise<{
   closures: ClosedPool[];
   settlements: SettlementSummary[];
@@ -96,6 +99,7 @@ export async function settleAndAwardBucks(
   dareSettlements: DareSettlementSummary[];
   earnings: EarnedAward[];
 }> {
+  const sink = options.announcementSink ?? announcingSettlementSink;
   if (isFeatureHardDisabled("betting_enabled")) {
     return {
       closures: [],
@@ -108,18 +112,21 @@ export async function settleAndAwardBucks(
   const closures = await closeBettingWindowsForMatch(
     matchData.metadata.matchId,
     prismaClient,
+    new Date(),
+    sink,
   );
-  const retry = await closeAndSettleBettingForMatch(matchData, prismaClient);
+  const retry = await closeAndSettleBettingForMatch(
+    matchData,
+    prismaClient,
+    sink,
+  );
   closures.push(...retry.closures);
   const parlaySettlements = await settleParlaysForMatch(
     matchData,
     prismaClient,
+    sink,
   );
-  // The canonical match has already been persisted by the caller. Weekly
-  // progress is append-only and may settle only an irreversible YES here;
-  // Sunday finalization remains the only path to an early-false result.
-  await captureWeeklyParlayContributions(matchData, prismaClient);
-  const earnings = await awardBucksForMatch(matchData, prismaClient);
+  const earnings = await awardBucksForMatch(matchData, prismaClient, sink);
   // Discord cleanup runs after the committed local operations and regardless
   // of whether the caller suppresses an old match's post-match notification.
   // This also covers a remake or very short game that settles an `open` market
@@ -133,8 +140,8 @@ export async function settleAndAwardBucks(
   );
   // Dares run LAST, and unlike everything above, settleDaresForMatch CAN
   // throw (after its own short bounded retry exhausts — see its doc
-  // comment). Everything above it (parlay settlement, weekly capture,
-  // earnings) already committed its own idempotent, state-gated writes, so
+  // comment). Everything above it (parlay settlement, earnings) already
+  // committed its own idempotent, state-gated writes, so
   // a throw here — and the caller not advancing the cursor — simply retries
   // the whole match later; those writes safely no-op on replay. Running
   // dares last also means an ordinary (non-retry-exhausting) throw anywhere
@@ -150,12 +157,17 @@ export async function settleAndAwardBucks(
   try {
     await settleDaresV2ForMatch(matchData, prismaClient, {
       timeline: options.dareTimeline,
+      // Whether the ROW may exist, not merely whether this run drains it:
+      // the v1 poller drains the same outbox with no sink, so a delivery
+      // withheld from one drain is sent by the next.
+      notify: sink.mayEnqueueDareNotification() ? "enqueue" : "withhold",
     });
   } catch (error) {
     if (error instanceof DareV2PartialSettlementError) {
       await refreshPendingDareV2CalloutsWithoutBlocking({
         ...defaultDareV2CalloutDependencies,
         prismaClient,
+        mayPost: sink.mayPostDareCallout,
       });
     }
     throw error;
@@ -163,18 +175,24 @@ export async function settleAndAwardBucks(
   await refreshPendingDareV2CalloutsWithoutBlocking({
     ...defaultDareV2CalloutDependencies,
     prismaClient,
+    mayPost: sink.mayPostDareCallout,
   });
-  await deliverPendingDareNotifications(prismaClient);
+  await sink.drainDareNotifications(prismaClient);
   let dareSettlements: DareSettlementSummary[];
   try {
-    dareSettlements = await settleDaresForMatch(matchData, prismaClient);
+    dareSettlements = await settleDaresForMatch(
+      matchData,
+      prismaClient,
+      new Date(),
+      sink,
+    );
   } catch (error) {
     if (error instanceof DarePartialSettlementError) {
       // Deliver what DID commit before propagating: those summaries are
       // one-shot and cannot be reproduced on a retry (see
       // settleDaresForMatch's doc comment). The retry that follows this
       // throw only needs to re-attempt whichever dare actually failed.
-      await deliverDareSummaries(error.summaries, prismaClient);
+      await sink.deliverPartialDareSummaries(error.summaries, prismaClient);
     }
     throw error;
   }

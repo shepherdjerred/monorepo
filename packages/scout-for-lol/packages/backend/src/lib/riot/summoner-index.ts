@@ -11,7 +11,7 @@
 import { LeaguePuuidSchema, RegionSchema } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
-import { fetchDistinctPrematchIdentities } from "#src/reports/duckdb/lake-reads.ts";
+import { fetchDistinctPrematchIdentities } from "#src/reports/duckdb/prematch-lake-reads.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("summoner-index");
@@ -28,8 +28,9 @@ export function parseRiotId(
   riotId: string,
 ): { gameName: string; tagLine: string } | null {
   const hash = riotId.lastIndexOf("#");
-  if (hash <= 0 || hash === riotId.length - 1) return null;
-  return { gameName: riotId.slice(0, hash), tagLine: riotId.slice(hash + 1) };
+  return hash <= 0 || hash === riotId.length - 1
+    ? null
+    : { gameName: riotId.slice(0, hash), tagLine: riotId.slice(hash + 1) };
 }
 
 /**

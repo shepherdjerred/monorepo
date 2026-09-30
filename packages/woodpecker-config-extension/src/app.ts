@@ -1,0 +1,266 @@
+import { Hono } from "hono";
+import type { KeyObject } from "node:crypto";
+import { ConfigExtensionRequestSchema, type Pipeline } from "#src/schemas.ts";
+import { authorizePipeline } from "#src/authorization.ts";
+import { verifySignedRequest } from "#src/signature.ts";
+import { emitWorkflows } from "#src/pipeline/emit.ts";
+import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
+import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import {
+  PlatformApplyStackSchema,
+  type PlatformOperation,
+} from "#src/pipeline/lanes/tofu-apply.ts";
+import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
+import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
+import type { CiStep } from "#src/pipeline/model.ts";
+import { changedFilesSince } from "#src/github-compare.ts";
+import {
+  internalImagePinSteps,
+  isInternalImagePinChange,
+} from "#src/pipeline/internal-image-pin-change.ts";
+
+export type AppOptions = {
+  /** Resolves Woodpecker's signing key; the caller caches it. */
+  readonly publicKey: () => Promise<KeyObject>;
+  /** Reads a committed file at a given commit. */
+  readonly imageFetcher: ImageFetcher;
+  /** Resolves the newest green commit on a branch. */
+  readonly changedBase: (
+    repoId: number,
+    branch: string,
+  ) => Promise<string | undefined>;
+  readonly verifyBase: (
+    repoId: number,
+    branch: string,
+  ) => Promise<string | undefined>;
+  /**
+   * Resolves the newest commit whose images were built, pushed and pinned --
+   * a stricter question than "last green", answered from per-workflow outcomes.
+   */
+  readonly imageReleaseBase: (
+    repoId: number,
+    branch: string,
+  ) => Promise<string | undefined>;
+  readonly compareChangedFiles?: typeof changedFilesSince;
+};
+
+function platformOperationRequest(
+  pipeline: Pipeline,
+  defaultBranch: string,
+):
+  | { readonly operation: PlatformOperation }
+  | { readonly invalid: true }
+  | undefined {
+  const prepare = pipeline.variables["TOFU_PLATFORM_PLAN"];
+  const apply = pipeline.variables["TOFU_PLATFORM_APPLY"];
+  const sourcePipeline = pipeline.variables["TOFU_PLATFORM_PLAN_PIPELINE"];
+  if (
+    prepare === undefined &&
+    apply === undefined &&
+    sourcePipeline === undefined
+  ) {
+    return undefined;
+  }
+  if (pipeline.event !== "manual" || pipeline.branch !== defaultBranch) {
+    return { invalid: true };
+  }
+  if (
+    prepare !== undefined &&
+    apply === undefined &&
+    sourcePipeline === undefined
+  ) {
+    const parsed = PlatformApplyStackSchema.safeParse(prepare);
+    return parsed.success
+      ? { operation: { stack: parsed.data, action: "prepare" } }
+      : { invalid: true };
+  }
+  if (
+    apply !== undefined &&
+    prepare === undefined &&
+    sourcePipeline !== undefined
+  ) {
+    const parsed = PlatformApplyStackSchema.safeParse(apply);
+    if (
+      parsed.success &&
+      /^[1-9]\d*$/u.test(sourcePipeline) &&
+      Number.isSafeInteger(Number(sourcePipeline))
+    ) {
+      return {
+        operation: {
+          stack: parsed.data,
+          action: "apply-saved",
+          sourcePipeline,
+        },
+      };
+    }
+  }
+  return { invalid: true };
+}
+
+async function stepsForMainChange({
+  steps,
+  pipeline,
+  defaultBranch,
+  changedFiles,
+  changedBase,
+  imageFetcher,
+}: {
+  steps: CiStep[];
+  pipeline: Pipeline;
+  defaultBranch: string;
+  changedFiles: readonly string[] | undefined;
+  changedBase: string | undefined;
+  imageFetcher: ImageFetcher;
+}): Promise<CiStep[]> {
+  return changedFiles !== undefined &&
+    pipeline.event === "push" &&
+    pipeline.branch === defaultBranch &&
+    (await isInternalImagePinChange(
+      changedFiles,
+      changedBase,
+      pipeline.commit,
+      imageFetcher,
+    ))
+    ? internalImagePinSteps(steps)
+    : steps;
+}
+
+export function createApp(options: AppOptions): Hono {
+  const app = new Hono();
+
+  app.get("/healthz", (context) => context.text("ok"));
+
+  app.post("/ciconfig", async (context) => {
+    // Verify against the exact bytes that were signed, not a re-serialization
+    // of the parsed object.
+    const body = await context.req.text();
+
+    const headers: Record<string, string> = {};
+    for (const [name, value] of Object.entries(context.req.header())) {
+      headers[name.toLowerCase()] = value;
+    }
+
+    const verified = await verifySignedRequest(
+      { method: context.req.method, url: context.req.url, headers, body },
+      await options.publicKey(),
+    );
+    if (!verified) {
+      // The response becomes an executed pipeline, so an unverified caller
+      // learns nothing about why it was rejected.
+      return context.json({ error: "invalid signature" }, 401);
+    }
+
+    const parsed = ConfigExtensionRequestSchema.safeParse(JSON.parse(body));
+    if (!parsed.success) {
+      return context.json({ error: "malformed request" }, 400);
+    }
+
+    const { repo, pipeline } = parsed.data;
+
+    // Decided before any other work. A refusal must not be the 204 that means
+    // "keep the configuration you already have", and it must not be a 200
+    // carrying an empty set of configs either: this returns an error status so
+    // the server marks the pipeline errored and schedules nothing. Refusing
+    // first also keeps an untrusted commit from driving the forge reads below.
+    const authorization = authorizePipeline(pipeline);
+    if (!authorization.allowed) {
+      console.warn(
+        `refused pipeline for ${repo.name}: ${authorization.reason}`,
+      );
+      return context.json({ error: "actor is not permitted to run CI" }, 403);
+    }
+
+    const platformOperation = platformOperationRequest(
+      pipeline,
+      repo.default_branch,
+    );
+    if (platformOperation !== undefined && "invalid" in platformOperation) {
+      return context.json({ error: "invalid platform operation request" }, 400);
+    }
+
+    const selectionContext = {
+      event: pipeline.event,
+      branch: pipeline.branch,
+      defaultBranch: repo.default_branch,
+      changedFiles: pipeline.changed_files,
+    };
+    const images = await resolveCiImages(pipeline.commit, options.imageFetcher);
+    const identity = {
+      commit: pipeline.commit,
+      branch: pipeline.branch,
+      linkUrl: pipeline.forge_url,
+    };
+    if (!isWorkEvent(selectionContext)) {
+      return context.json({
+        configs: emitWorkflows([noWorkStep(images.base)], identity),
+      });
+    }
+
+    if (platformOperation !== undefined && "operation" in platformOperation) {
+      const { operation } = platformOperation;
+      const steps = buildPipelineSteps({
+        images,
+        changedBase: undefined,
+        platformOperation: operation,
+      }).filter(
+        (step) =>
+          step.key === "homelab-release-admission" ||
+          step.key === `tofu-platform-${operation.stack}`,
+      );
+      const selected = selectSteps(steps, {
+        ...selectionContext,
+        changedFiles: [],
+      });
+      return context.json({ configs: emitWorkflows(selected, identity) });
+    }
+
+    const [changedBase, verifyBase, imageReleaseBase] = await Promise.all([
+      options.changedBase(repo.id, repo.default_branch),
+      options.verifyBase(repo.id, repo.default_branch),
+      options.imageReleaseBase(repo.id, repo.default_branch),
+    ]);
+    const changedFiles =
+      pipeline.event === "push" && pipeline.branch === repo.default_branch
+        ? changedBase === undefined
+          ? undefined
+          : await (options.compareChangedFiles ?? changedFilesSince)(
+              `shepherdjerred/${repo.name}`,
+              changedBase,
+              pipeline.commit,
+            )
+        : pipeline.changed_files;
+    if (changedFiles === undefined) {
+      console.warn(
+        "could not establish complete main diff; selecting all lanes",
+      );
+    }
+    const steps = buildPipelineSteps({
+      images,
+      changedBase,
+      verifyBase,
+      imageReleaseBase,
+    });
+    const selected = selectSteps(
+      await stepsForMainChange({
+        steps,
+        pipeline,
+        defaultBranch: repo.default_branch,
+        changedFiles,
+        changedBase,
+        imageFetcher: options.imageFetcher,
+      }),
+      { ...selectionContext, changedFiles: changedFiles ?? [] },
+    );
+
+    return context.json({
+      configs: emitWorkflows(
+        pipeline.event === "pull_request"
+          ? [...selected, completionStep(selected, images.base)]
+          : selected,
+        identity,
+      ),
+    });
+  });
+
+  return app;
+}

@@ -47,8 +47,7 @@ function loadCoreConfig(environment: Environment) {
       token: environment["DISCORD_TOKEN"] ?? "",
       clientId: environment["DISCORD_CLIENT_ID"] ?? "",
     },
-    openRouter: {
-      apiKey: environment["OPENROUTER_API_KEY"] ?? "",
+    llm: {
       model: environment["LLM_MODEL"] ?? "gpt-5.6-sol",
       classifierModel: environment["LLM_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
       memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-5.4-nano",
@@ -63,13 +62,13 @@ function loadCoreConfig(environment: Environment) {
       enabled: environment["IMAGE_GENERATION_ENABLED"] === "true",
     },
     agent: {
-      maxSteps: parseNumber(environment["AGENT_MAX_STEPS"], 8),
+      maxSteps: parseNumber(environment["AGENT_MAX_STEPS"], 12),
       responseTimeoutMs: parseNumber(
         environment["AGENT_RESPONSE_TIMEOUT_MS"],
-        120_000,
+        300_000,
       ),
-      routerTimeoutMs: parseNumber(
-        environment["AGENT_ROUTER_TIMEOUT_MS"],
+      auxiliaryTimeoutMs: parseNumber(
+        environment["AGENT_AUXILIARY_TIMEOUT_MS"],
         30_000,
       ),
     },
@@ -136,11 +135,6 @@ function loadFeatureConfig(environment: Environment) {
         50,
       ),
     },
-    shell: {
-      enabled: parseBoolean(environment["SHELL_ENABLED"], true),
-      defaultTimeout: parseNumber(environment["SHELL_DEFAULT_TIMEOUT"], 30_000),
-      maxTimeout: parseNumber(environment["SHELL_MAX_TIMEOUT"], 300_000),
-    },
     scheduler: {
       enabled: parseBoolean(environment["SCHEDULER_ENABLED"], true),
       maxTasksPerGuild: parseNumber(
@@ -170,7 +164,6 @@ function loadFeatureConfig(environment: Environment) {
     },
     browser: {
       enabled: parseBoolean(environment["BROWSER_ENABLED"], true),
-      provider: environment["BROWSER_PROVIDER"] ?? "pinchtab",
       headless: parseBoolean(environment["BROWSER_HEADLESS"], true),
       viewportWidth: parseNumber(environment["BROWSER_VIEWPORT_WIDTH"], 1280),
       viewportHeight: parseNumber(environment["BROWSER_VIEWPORT_HEIGHT"], 720),

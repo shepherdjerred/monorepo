@@ -464,10 +464,9 @@ export async function canJoinCompetition(
   );
 
   if (!active) {
-    if (competition.isCancelled) {
-      return { canJoin: false, reason: "Competition is cancelled" };
-    }
-    return { canJoin: false, reason: "Competition has ended" };
+    return competition.isCancelled
+      ? { canJoin: false, reason: "Competition is cancelled" }
+      : { canJoin: false, reason: "Competition has ended" };
   }
 
   // Check if player is already a participant

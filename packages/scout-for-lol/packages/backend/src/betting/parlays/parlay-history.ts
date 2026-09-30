@@ -4,13 +4,12 @@ import {
   BLUE_TEAM_ID,
   PARTICIPANTS_PER_TEAM,
   RED_TEAM_ID,
-  REMAKE_MAX_DURATION_SECONDS,
   STANDARD_LOBBY_SIZE,
 } from "#src/betting/constants.ts";
 import {
   OPPONENT_PING_HISTORY_COLUMNS,
   PARLAY_HISTORY_COLUMNS,
-} from "#src/betting/parlays/parlay-stat-fields.ts";
+} from "#src/betting/parlays/model/parlay-stat-fields.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import type { MatchLakeRow } from "@scout-for-lol/data";
 import {
@@ -252,14 +251,6 @@ function isVoidMatch(participants: readonly unknown[]): boolean {
   if (
     parsedParticipants.some(
       (participant) => participant.end_of_game_result !== "GameComplete",
-    )
-  ) {
-    return true;
-  }
-  if (
-    parsedParticipants.some(
-      (participant) =>
-        participant.game_duration_seconds < REMAKE_MAX_DURATION_SECONDS,
     )
   ) {
     return true;

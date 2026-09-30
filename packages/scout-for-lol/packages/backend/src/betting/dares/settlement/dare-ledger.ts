@@ -1,18 +1,27 @@
 import {
+  BucksAmountSchema,
+  BucksStakeSchema,
   DiscordGuildIdSchema,
+  ZERO_BUCKS,
+  amountToStake,
+  creditOf,
+  debitOf,
+  subtractAmounts,
+  type BucksAmount,
+  type BucksStake,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import {
   cancellationHouseCut,
   settlementHouseCut,
-} from "#src/betting/house-cut.ts";
-import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+} from "#src/betting/eligibility/house-cut.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import {
   applyBucksDelta,
   lockBucksAccountsForCredit,
 } from "#src/betting/ledger.ts";
 import type { Db } from "#src/database/index.ts";
-import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting/betting.ts";
 
 /**
  * The money paths every dare resolution shares.
@@ -38,15 +47,20 @@ export type DareLedgerFacts = {
 export type DareRefundResolution =
   "declined" | "expired" | "unachieved" | "voided";
 
+/**
+ * Money this module computes, not money it was handed: the refund and payout
+ * arithmetic below produces these values, so they carry the brands and the
+ * ledger call sites need no re-parse to move them.
+ */
 export type DareContributorRefund = {
   bucksAccountId: number;
   discordId: string;
   /** Gross total this contributor had in the pot. */
-  contributed: number;
+  contributed: BucksAmount;
   /** House cut withheld (zero on the full-refund paths). */
-  fee: number;
+  fee: BucksAmount;
   /** Net amount credited back. */
-  refunded: number;
+  refunded: BucksAmount;
 };
 
 export type DareTargetPayout = {
@@ -54,10 +68,10 @@ export type DareTargetPayout = {
   discordId: string;
   alias: string;
   /** floor(pot / N) before the house cut. */
-  grossShare: number;
-  fee: number;
+  grossShare: BucksAmount;
+  fee: BucksAmount;
   /** Net amount credited. */
-  net: number;
+  net: BucksAmount;
 };
 
 function assertDareConservation(condition: boolean, detail: string): void {
@@ -103,7 +117,7 @@ export async function stakeDareContributionInTransaction(
     facts: DareLedgerFacts;
     bucksAccountId: number;
     discordId: DiscordAccountId;
-    amount: number;
+    amount: BucksStake;
   },
 ): Promise<number> {
   const { facts } = input;
@@ -117,7 +131,7 @@ export async function stakeDareContributionInTransaction(
   });
   return await applyBucksDelta(tx, {
     bucksAccountId: input.bucksAccountId,
-    delta: -input.amount,
+    delta: debitOf(input.amount),
     kind: "dare_stake",
     context: {
       type: "dare",
@@ -125,7 +139,7 @@ export async function stakeDareContributionInTransaction(
       role: "contributor",
       targetAliases: [...facts.targetAliases],
       conditionSummary: facts.conditionSummary,
-      potTotal: facts.potTotal,
+      potTotal: BucksStakeSchema.parse(facts.potTotal),
       amount: input.amount,
       payoutComponent: "contribution",
     },
@@ -178,13 +192,16 @@ export async function refundDareContributionsInTransaction(
   }
   const refunds: DareContributorRefund[] = [...byAccount.entries()].map(
     ([bucksAccountId, entry]) => {
-      const fee = input.withCut ? cancellationHouseCut(entry.total) : 0;
+      const contributed = BucksAmountSchema.parse(entry.total);
+      const fee = input.withCut
+        ? cancellationHouseCut(contributed)
+        : ZERO_BUCKS;
       return {
         bucksAccountId,
         discordId: entry.discordId,
-        contributed: entry.total,
+        contributed,
         fee,
-        refunded: entry.total - fee,
+        refunded: subtractAmounts(contributed, fee),
       };
     },
   );
@@ -212,7 +229,7 @@ export async function refundDareContributionsInTransaction(
     dareId: facts.dareId,
     targetAliases: [...facts.targetAliases],
     conditionSummary: facts.conditionSummary,
-    potTotal: facts.potTotal,
+    potTotal: BucksStakeSchema.parse(facts.potTotal),
     resolution: input.resolution,
     ...(input.voidReason === undefined ? {} : { voidReason: input.voidReason }),
   };
@@ -220,13 +237,13 @@ export async function refundDareContributionsInTransaction(
     if (refund.refunded > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: refund.bucksAccountId,
-        delta: refund.refunded,
+        delta: creditOf(refund.refunded),
         kind: "dare_refund",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "contributor",
-          amount: refund.contributed,
+          amount: amountToStake(refund.contributed),
           payoutComponent: "refund",
         },
       });
@@ -234,13 +251,13 @@ export async function refundDareContributionsInTransaction(
     if (house !== undefined && refund.fee > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: refund.fee,
+        delta: creditOf(refund.fee),
         kind: "dare_fee",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "house",
-          amount: refund.contributed,
+          amount: amountToStake(refund.contributed),
           payoutComponent: "refund_fee",
         },
       });
@@ -288,7 +305,7 @@ export async function payDareTargetsInTransaction(
   );
 
   const targetCount = input.targets.length;
-  const share = Math.floor(pot / targetCount);
+  const share = BucksAmountSchema.parse(Math.floor(pot / targetCount));
   const remainder = pot - targetCount * share;
   const payouts: DareTargetPayout[] = input.targets.map((target) => {
     const fee = settlementHouseCut({ matchedProfit: share, isHouse: false });
@@ -298,7 +315,7 @@ export async function payDareTargetsInTransaction(
       alias: target.alias,
       grossShare: share,
       fee,
-      net: share - fee,
+      net: subtractAmounts(share, fee),
     };
   });
   const distributed =
@@ -321,7 +338,7 @@ export async function payDareTargetsInTransaction(
     dareId: facts.dareId,
     targetAliases: [...facts.targetAliases],
     conditionSummary: facts.conditionSummary,
-    potTotal: facts.potTotal,
+    potTotal: BucksStakeSchema.parse(facts.potTotal),
     resolution: "achieved" as const,
   };
   for (const [index, payout] of payouts.entries()) {
@@ -336,13 +353,13 @@ export async function payDareTargetsInTransaction(
     if (payout.net > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: payout.bucksAccountId,
-        delta: payout.net,
+        delta: creditOf(payout.net),
         kind: "dare_payout",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "target",
-          amount: payout.grossShare,
+          amount: amountToStake(payout.grossShare),
           payoutComponent: "share",
           grossShare: payout.grossShare,
         },
@@ -351,13 +368,13 @@ export async function payDareTargetsInTransaction(
     if (payout.fee > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: payout.fee,
+        delta: creditOf(payout.fee),
         kind: "dare_fee",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "house",
-          amount: payout.grossShare,
+          amount: amountToStake(payout.grossShare),
           payoutComponent: "fee",
           grossShare: payout.grossShare,
         },
@@ -365,15 +382,16 @@ export async function payDareTargetsInTransaction(
     }
   }
   if (remainder > 0) {
+    const indivisible = BucksStakeSchema.parse(remainder);
     await applyBucksDelta(tx, {
       bucksAccountId: house.id,
-      delta: remainder,
+      delta: creditOf(indivisible),
       kind: "dare_fee",
       matchId: facts.matchId,
       context: {
         ...contextBase,
         role: "house",
-        amount: remainder,
+        amount: indivisible,
         payoutComponent: "remainder",
       },
     });

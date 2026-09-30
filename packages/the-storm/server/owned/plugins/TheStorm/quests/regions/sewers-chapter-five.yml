@@ -1,0 +1,75 @@
+# Bank and watch maintain the repaired sewer without sending players into an
+# unverified drain or treating the former world as still present.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-patrol-report:
+    name: The Patrol Report
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed a-clean-count
+    text:
+      offer: Braxton has a clean count. The watch needs its own report so a new guard knows which grate was repaired.
+      accept: Bring paper, ink and lanterns for a patrol record.
+      decline: I will brief the next guard in person.
+      finish: The repair and patrol schedule are written together.
+      summary: Give the sewer watch a durable repair report.
+      questions: []
+    start: report
+    stages:
+      report:
+        journal: Bring the Guard Captain 12 paper, 2 ink sacs and 4 lanterns.
+        waiting: A written route helps the next patrol repeat the inspection.
+        complete: The sewer repair is in the patrol record.
+        objectives:
+          - deliver guard-captain 12 PAPER
+          - deliver guard-captain 2 INK_SAC
+          - deliver guard-captain 4 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1
+
+  a-rainwater-check:
+    name: A Rainwater Check
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-patrol-report
+    text:
+      offer: A grate can hold and still let dirty water spread after rain. Give the watch a simple sample kit.
+      accept: Bring water buckets and glass bottles so we can compare what the patrol finds.
+      decline: I will ask the guard to watch for cloudy water.
+      finish: The samples have labels. The next patrol can report a change before it becomes another audit.
+      summary: Prepare a water-sample kit for the sewer patrol.
+      questions: []
+    start: sample-kit
+    stages:
+      sample-kit:
+        journal: Bring Iovita 4 water buckets and 8 glass bottles.
+        waiting: Keep each sample separate and clearly marked.
+        complete: The patrol has a water-sample kit.
+        objectives:
+          - deliver iovita 4 WATER_BUCKET
+          - deliver iovita 8 GLASS_BOTTLE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1

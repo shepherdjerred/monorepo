@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/editor/scoutql-idioms.ts";
 import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
 import { validateQuery } from "#src/reports/ai/scoutql-tools.ts";
 

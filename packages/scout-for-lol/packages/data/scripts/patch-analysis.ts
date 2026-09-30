@@ -5,12 +5,13 @@
 // can't get the load-bearing facts wrong.
 //
 // Prompt building and output parsing are split out so they're unit-testable; the
-// OpenRouter call is the only impure part. The `update-data-dragon` caller
+// model call is the only impure part. The `update-data-dragon` caller
 // treats a failure as non-fatal (it still ships the asset PR, just without a
 // refreshed changeset).
 
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
+  providerCredentialsFromEnv,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
 import type { RiotPatch } from "./riot-patch.ts";
@@ -105,7 +106,7 @@ export function parsePatchAnalysis(
 }
 
 /**
- * Ask Opus through OpenRouter to produce the structured changeset from content
+ * Ask Opus to produce the structured changeset from content
  * fetched by deterministic application code. Throws on any transport or
  * output-contract failure so the caller can skip the
  * refresh. The final object comes only from schema-backed structured output;
@@ -116,14 +117,14 @@ export async function analyzePatch(
   officialPatchContent: string,
   date: Date = new Date(),
 ): Promise<PatchChangeset> {
-  const runtime = createOpenRouterRuntime({
-    apiKey: Bun.env["OPENROUTER_API_KEY"] ?? "",
+  const runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-data",
     appName: "scout-patch-analysis/1.0",
   });
   const controller = new AbortController();
   const timeout = setTimeout(() => {
-    controller.abort(new Error("OpenRouter patch analysis timed out"));
+    controller.abort(new Error("Patch analysis timed out"));
   }, TIMEOUT_MS);
   try {
     const result = await generateValidatedObject(runtime, {

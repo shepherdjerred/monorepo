@@ -1,5 +1,5 @@
 # Template for local web-UI development. Resolves at runtime via:
-#   op run --env-file=dev-web.env.tpl -- ./scripts/dev-web.ts
+#   op run --env-file=dev-web.env.tpl -- ./scripts/dev/dev-web.ts
 #
 # Secrets come from the BETA 1Password item (vault v64ocnykdqju4ui6j6pua56xw4,
 # item rtu44pohnp5ixdp2njuv5f6t2e). Non-secret config is inline.
@@ -15,7 +15,7 @@ VERSION=local-dev
 # Temporal's ReleaseCommit search attribute (execution-metadata.ts) requires
 # an exact 40-character lowercase hex Git SHA, so a non-hex placeholder like
 # "local-dev" makes every Scout Temporal workflow start throw before any
-# report-editor, weekly-parlay, or schedule flow can run locally.
+# report-editor or schedule flow can run locally.
 GIT_SHA=0000000000000000000000000000000000000000
 CONTRACT_HASH=local-dev
 ENVIRONMENT=dev
@@ -38,7 +38,7 @@ JWT_SIGNING_SECRET=local-dev-only-jwt-signing-secret-not-for-any-deployed-env
 
 # ── Where the SPA lives (browser-visible origin) ──────────────────────
 # The default Vite dev server runs at :5180 and proxies /trpc + /api to the
-# backend. scripts/dev-web.ts overrides this for --web-port.
+# backend. scripts/dev/dev-web.ts overrides this for --web-port.
 WEB_APP_ORIGIN=http://localhost:5180
 
 # Local web boots use a signed dev session and a representative consumer
@@ -50,11 +50,13 @@ SCOUT_DEV_CONSUMER_PREVIEW=true
 SCOUT_DEV_CONSUMER_GUILD_ID=1337623164146155593
 
 # ── AI (report editor + explore) ──────────────────────────────────────
-# Every model call now goes through OpenRouter, so without this the backend
-# still starts (unresolvedSecrets() does not validate the AI key) but every
+# Scout calls OpenAI and Google directly. Without these the backend still
+# starts (unresolvedSecrets() does not validate the AI keys) but every
 # report-editor and Explore turn fails at the model call. Same BETA item as the
-# secrets above, and the same field the deployed beta backend reads.
-OPENROUTER_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENROUTER_API_KEY
+# secrets above, and the same fields the deployed beta backend reads, so local
+# spend counts against the beta projects' hard caps.
+OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENAI_API_KEY
+GEMINI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/GEMINI_API_KEY
 BETTING_PARLAY_AI_MODEL=gpt-5.6-sol
 
 # dev:web derives DEV_USER_GUILDS and EXPLORE_GUILD_ALLOWLIST from the local

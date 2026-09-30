@@ -7,7 +7,7 @@ import {
 } from "#src/testing/test-ids.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 
 /**
@@ -276,6 +276,6 @@ describe("global scope", () => {
           "SELECT COUNT(*) AS games FROM competition_match_participants WHERE competition_id = 1 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
         now,
       }),
-    ).rejects.toThrow(/not available in global scope/);
+    ).rejects.toThrow(/needs exactly one server/);
   });
 });

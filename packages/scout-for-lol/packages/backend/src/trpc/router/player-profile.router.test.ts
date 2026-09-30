@@ -14,6 +14,8 @@ import { testPuuid } from "#src/testing/test-ids.ts";
 // src/testing/test-trpc-caller.ts. Must be created before appRouter is imported.
 const trpc = await createOfflineTrpcHarness("trpc-player-profile-test");
 const { prisma: testPrisma } = trpc;
+const { getPlayerRankHistory } =
+  await import("#src/lib/player-profile/rank-history.ts");
 
 const guildId = DiscordGuildIdSchema.parse("100000000000000021");
 const otherGuildId = DiscordGuildIdSchema.parse("100000000000000022");
@@ -278,6 +280,167 @@ describe("player.profileSummary", () => {
 
     await expect(
       trpc.anonCaller().player.profileSummary({ guildId, alias: "Solo" }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("player.rankHistory", () => {
+  const now = new Date("2026-09-20T12:00:00-07:00");
+
+  test("uses match end time, skips null rankAfter, and appends a newer snapshot", async () => {
+    await seedPlayer({ serverId: guildId, alias: "Climber", puuids: [MAIN] });
+    await testPrisma.matchRankHistory.create({
+      data: {
+        matchId: "NA1_old",
+        puuid: MAIN,
+        queueType: "solo",
+        rankAfter: JSON.stringify({
+          tier: "gold",
+          division: 2,
+          lp: 10,
+          wins: 20,
+          losses: 18,
+        }),
+        matchGameEndAt: new Date("2026-05-02T12:00:00-07:00"),
+        capturedAt: new Date("2026-08-01T12:00:00-07:00"),
+      },
+    });
+    await testPrisma.matchRankHistory.create({
+      data: {
+        matchId: "NA1_live",
+        puuid: MAIN,
+        queueType: "solo",
+        rankAfter: JSON.stringify({
+          tier: "emerald",
+          division: 4,
+          lp: 40,
+          wins: 30,
+          losses: 24,
+        }),
+        matchGameEndAt: new Date("2026-08-10T12:00:00-07:00"),
+        capturedAt: new Date("2026-08-10T13:00:00-07:00"),
+      },
+    });
+    await testPrisma.matchRankHistory.create({
+      data: {
+        matchId: "NA1_unranked",
+        puuid: MAIN,
+        queueType: "solo",
+        rankAfter: null,
+        matchGameEndAt: new Date("2026-08-11T12:00:00-07:00"),
+        capturedAt: new Date("2026-08-11T13:00:00-07:00"),
+      },
+    });
+    await testPrisma.currentRankSnapshot.create({
+      data: {
+        puuid: MAIN,
+        soloRank: JSON.stringify({
+          tier: "emerald",
+          division: 3,
+          lp: 80,
+          wins: 32,
+          losses: 24,
+        }),
+        flexRank: null,
+        fetchedAt: new Date("2026-09-19T12:00:00-07:00"),
+      },
+    });
+
+    const history = await getPlayerRankHistory(
+      { guildId, alias: "Climber" },
+      now,
+    );
+    expect(
+      history.queues.solo.series[0]?.points.map((point) => point.rank.lp),
+    ).toEqual([40, 80]);
+    expect(history.queues.solo.previous[0]).toMatchObject({
+      splitId: "2026_SEASON_2",
+      last: { tier: "gold", lp: 10 },
+    });
+  });
+
+  test("does not let an older current snapshot rewrite the last match", async () => {
+    await seedPlayer({ serverId: guildId, alias: "Stale", puuids: [MAIN] });
+    await testPrisma.matchRankHistory.create({
+      data: {
+        matchId: "NA1_fresh",
+        puuid: MAIN,
+        queueType: "flex",
+        rankAfter: JSON.stringify({
+          tier: "platinum",
+          division: 1,
+          lp: 1,
+          wins: 40,
+          losses: 30,
+        }),
+        matchGameEndAt: new Date("2026-09-01T12:00:00-07:00"),
+        capturedAt: new Date("2026-09-01T13:00:00-07:00"),
+      },
+    });
+    await testPrisma.currentRankSnapshot.create({
+      data: {
+        puuid: MAIN,
+        soloRank: null,
+        flexRank: JSON.stringify({
+          tier: "gold",
+          division: 4,
+          lp: 0,
+          wins: 10,
+          losses: 10,
+        }),
+        fetchedAt: new Date("2026-08-01T12:00:00-07:00"),
+      },
+    });
+
+    const history = await getPlayerRankHistory(
+      { guildId, alias: "Stale" },
+      now,
+    );
+    expect(history.queues.flex.series[0]?.points).toHaveLength(1);
+    expect(history.queues.flex.series[0]?.points[0]?.rank).toMatchObject({
+      tier: "platinum",
+      lp: 1,
+    });
+  });
+
+  test("does not invent live rank history from an imported current snapshot", async () => {
+    await seedPlayer({ serverId: guildId, alias: "Imported", puuids: [MAIN] });
+    await testPrisma.currentRankSnapshot.create({
+      data: {
+        puuid: MAIN,
+        soloRank: JSON.stringify({
+          tier: "gold",
+          division: 1,
+          lp: 12,
+          wins: 8,
+          losses: 4,
+        }),
+        flexRank: null,
+        fetchedAt: new Date("2026-09-19T12:00:00-07:00"),
+      },
+    });
+
+    const history = await getPlayerRankHistory(
+      { guildId, alias: "Imported" },
+      now,
+    );
+    expect(history.queues.solo.series).toEqual([]);
+    expect(history.queues.solo.previous).toEqual([]);
+  });
+
+  test("refuses another guild's player and an anonymous caller", async () => {
+    await seedPlayer({
+      serverId: otherGuildId,
+      alias: "Stranger",
+      puuids: [MAIN],
+    });
+    await expect(
+      trpc.authedCaller().player.rankHistory({ guildId, alias: "Stranger" }),
+    ).rejects.toThrow(/not found/i);
+
+    await seedPlayer({ serverId: guildId, alias: "Solo", puuids: [SMURF] });
+    await expect(
+      trpc.anonCaller().player.rankHistory({ guildId, alias: "Solo" }),
     ).rejects.toThrow();
   });
 });

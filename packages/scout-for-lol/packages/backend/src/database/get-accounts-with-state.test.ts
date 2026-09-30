@@ -1,5 +1,5 @@
 import { describe, expect, test, afterAll, beforeEach } from "vitest";
-import { getAccountsWithState } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import {
   testGuildId,
   testAccountId,

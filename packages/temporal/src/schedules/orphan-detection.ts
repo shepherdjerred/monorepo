@@ -30,8 +30,10 @@ export function isDynamicAgentTaskSchedule(
   scheduleId: string,
   memo: Record<string, unknown> | undefined,
 ): boolean {
-  if (scheduleId.startsWith("agent-task-")) return true;
-  return memo?.[DYNAMIC_AGENT_TASK_MEMO_KEY] === true;
+  return (
+    scheduleId.startsWith("agent-task-") ||
+    memo?.[DYNAMIC_AGENT_TASK_MEMO_KEY] === true
+  );
 }
 
 export function isOwnedScoutReportSchedule(
@@ -40,8 +42,8 @@ export function isOwnedScoutReportSchedule(
   namespace: TemporalNamespace,
 ): boolean {
   const parsed = ScoutScheduleOwnershipMemoSchema.safeParse(memo);
-  if (!parsed.success) return false;
   return (
+    parsed.success &&
     namespace === parsed.data.stage &&
     scheduleId ===
       scoutReportScheduleId(parsed.data.stage, parsed.data.reportId)
@@ -50,7 +52,7 @@ export function isOwnedScoutReportSchedule(
 
 // A declared schedule is never a dynamic agent-task schedule, whatever its memo
 // says. Promoting an agent-task schedule into SCHEDULES (as
-// `ci-io-post-merge-impact` was) leaves the creation-time
+// `ci-io-post-merge-impact` once was) leaves the creation-time
 // DYNAMIC_AGENT_TASK_MEMO_KEY marker on the live schedule forever: Temporal
 // memos are immutable after creation — `ScheduleUpdateOptions` omits `memo`
 // and `temporal schedule update` refuses it outright — so the marker cannot be
@@ -65,8 +67,9 @@ export function isReconcilableDynamicAgentTaskSchedule(
   memo: Record<string, unknown> | undefined,
   declaredIds: ReadonlySet<string>,
 ): boolean {
-  if (declaredIds.has(scheduleId)) return false;
-  return isDynamicAgentTaskSchedule(scheduleId, memo);
+  return (
+    !declaredIds.has(scheduleId) && isDynamicAgentTaskSchedule(scheduleId, memo)
+  );
 }
 
 // A live schedule is an orphan when it is neither declared in SCHEDULES, nor in

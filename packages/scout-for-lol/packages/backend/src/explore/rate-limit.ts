@@ -8,6 +8,7 @@ import {
   quotaSecondsUntil,
   type QuotaRule,
 } from "#src/utils/quota-buckets.ts";
+import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 
 /**
  * Explore quotas are per person, not per server.
@@ -68,18 +69,30 @@ export type ExploreRateLimitTicket = {
 
 const MAX_ACTIVE_GLOBAL_RUNS = 5;
 
-const QUOTA_RULES: QuotaRule<ExploreQuotaScope>[] = [
-  { scope: "user", window: "minute", limit: 4 },
-  { scope: "user", window: "hour", limit: 30 },
-  { scope: "user", window: "day", limit: 100 },
-  { scope: "user", window: "week", limit: 300 },
-  { scope: "global", window: "hour", limit: 120 },
-  { scope: "global", window: "day", limit: 600 },
-  { scope: "global", window: "week", limit: 2000 },
-];
+/**
+ * Resolved per call rather than frozen at module load.
+ *
+ * These ceilings bound model spend, so an operator has to be able to move
+ * them — down during a cost surprise, or up for one environment — without a
+ * rebuild. `exploreQuotaLimits()` is the typed configuration read; the
+ * shipped policy is its default, so a backend with no flag or env override
+ * behaves exactly as these numbers did when they were literals here.
+ */
+function quotaRules(): QuotaRule<ExploreQuotaScope>[] {
+  const limits = exploreQuotaLimits();
+  return [
+    { scope: "user", window: "minute", limit: limits.userMinute },
+    { scope: "user", window: "hour", limit: limits.userHour },
+    { scope: "user", window: "day", limit: limits.userDay },
+    { scope: "user", window: "week", limit: limits.userWeek },
+    { scope: "global", window: "hour", limit: limits.globalHour },
+    { scope: "global", window: "day", limit: limits.globalDay },
+    { scope: "global", window: "week", limit: limits.globalWeek },
+  ];
+}
 
 const engine = createQuotaEngine<ExploreQuotaScope, ExploreRateLimitIdentity>({
-  rules: QUOTA_RULES,
+  rules: quotaRules,
   scopeKey: (scope, identity) =>
     scope === "global" ? "global" : identity.userId,
 });

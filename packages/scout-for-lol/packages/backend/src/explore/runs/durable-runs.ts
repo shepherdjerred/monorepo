@@ -1,0 +1,319 @@
+import * as Sentry from "@sentry/bun";
+import { z } from "zod";
+import {
+  ExploreActiveRunSchema,
+  ExploreRunPreviewEventSchema,
+  ExploreRunSnapshotEventSchema,
+  ExploreTraceEntrySchema,
+  ReportAiPreviewSummarySchema,
+  type DiscordAccountId,
+  type ExploreActiveRun,
+  type ExploreRunOutcome,
+  type ExploreStreamEvent,
+} from "@scout-for-lol/data";
+import { scoutInteractiveWorkflowId } from "@scout-for-lol/temporal";
+import { requestStopSignal } from "@scout-for-lol/temporal/signals";
+import configuration from "#src/configuration.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { rollbackUnstartedExploreTurnInTransaction } from "#src/explore/rollback.ts";
+import { lockDurableExploreConversation } from "#src/temporal/durable-quota.ts";
+import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
+import { startScoutInteractiveRun } from "#src/temporal/starts.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("explore-durable-runs");
+
+type Subscriber = (event: ExploreStreamEvent) => void;
+
+type StartedTurn = {
+  conversationId: string;
+  title: string;
+  messageId: string;
+  question: string;
+  expectedCurrentLeafId: string | null;
+  previousCurrentLeafId: string | null;
+  createdConversation: boolean;
+  createdQuestion: boolean;
+};
+
+export class DurableExploreUnavailableError extends Error {}
+
+export async function startReservedDurableExploreRun(input: {
+  database: ExtendedPrismaClient;
+  summary: ExploreActiveRun;
+  ownerId: DiscordAccountId;
+  started: StartedTurn;
+}): Promise<void> {
+  try {
+    const supervisor = currentScoutTemporalSupervisor();
+    if (supervisor === undefined) {
+      throw new DurableExploreUnavailableError("Temporal is unavailable");
+    }
+    await startScoutInteractiveRun(supervisor.client(), {
+      stage: configuration.environment,
+      kind: "explore",
+      databaseRunId: input.summary.runId,
+    });
+  } catch (error) {
+    // A client-side start error is ambiguous: Temporal may have accepted the
+    // workflow while the response was lost. Keep the reservation PENDING so
+    // the ingestion reconciler can reattach it instead of deleting the turn
+    // or issuing a second provider request. A supervisor that was known to be
+    // unavailable can be rolled back, but the row transition and message
+    // deletion must hold the same conversation lock as a competing start.
+    if (error instanceof DurableExploreUnavailableError) {
+      await input.database.$transaction(async (tx) => {
+        await lockDurableExploreConversation(tx, input.summary.conversationId);
+        const terminalized = await tx.scoutInteractiveRun.updateMany({
+          where: { id: input.summary.runId, state: "PENDING" },
+          data: {
+            state: "FAILED",
+            outcome: "failed",
+            lastError: error.message,
+            completedAt: new Date(),
+          },
+        });
+        if (terminalized.count !== 1) {
+          throw new Error(
+            `Explore reservation ${input.summary.runId} could not be terminalized`,
+          );
+        }
+        await rollbackUnstartedExploreTurnInTransaction(tx, {
+          ...input.started,
+          userId: input.ownerId,
+        });
+      });
+    }
+    throw error;
+  }
+}
+
+export async function listDurableExploreRuns(
+  database: ExtendedPrismaClient,
+  userId: DiscordAccountId,
+  local: ExploreActiveRun[],
+): Promise<ExploreActiveRun[]> {
+  const localIds = new Set(local.map((run) => run.runId));
+  const persisted = await database.scoutInteractiveRun.findMany({
+    where: {
+      kind: "explore",
+      ownerId: userId,
+      state: { in: ["PENDING", "RUNNING"] },
+    },
+    select: { id: true, payload: true },
+    orderBy: { createdAt: "asc" },
+  });
+  for (const row of persisted) {
+    if (localIds.has(row.id)) continue;
+    const parsed = z
+      .object({ summary: ExploreActiveRunSchema })
+      .parse(JSON.parse(row.payload));
+    local.push(parsed.summary);
+  }
+  return local.toSorted((left, right) =>
+    left.startedAt.localeCompare(right.startedAt),
+  );
+}
+
+function outcomeForStatus(status: string): ExploreRunOutcome {
+  if (status === "COMPLETED") return "succeeded";
+  if (status === "CANCELLED") return "stopped";
+  return status === "INTERRUPTED" ? "interrupted" : "failed";
+}
+
+/**
+ * Rebuild a run's snapshot from the row a durable observer polls.
+ *
+ * Exported because this mapping is the whole of the durable path's fidelity:
+ * every field it cannot read is one it has to invent, and inventing
+ * `"Thinking…"` is exactly what made the same run narrate itself differently
+ * depending on which subscribe path a request happened to land on.
+ *
+ * The two fallbacks are not the old behaviour returning — they cover a run
+ * that has not heartbeated yet, and rows written before these columns
+ * existed.
+ */
+export function exploreAttachEventsFromRow(row: {
+  state: string;
+  payload: string;
+  partialOutput: string | null;
+  trace: string | null;
+  activity: string | null;
+  preview: string | null;
+}): ExploreStreamEvent[] {
+  const parsed = z
+    .object({ summary: ExploreActiveRunSchema })
+    .parse(JSON.parse(row.payload));
+  const answer = row.partialOutput ?? "";
+  const snapshot = ExploreRunSnapshotEventSchema.parse({
+    type: "snapshot",
+    ...parsed.summary,
+    answer: answer.length === 0 ? null : answer,
+    activity:
+      row.activity ??
+      (row.state === "PENDING" ? "Waiting to start…" : "Thinking…"),
+    trace: z
+      .array(ExploreTraceEntrySchema)
+      .parse(row.trace === null ? [] : JSON.parse(row.trace)),
+  });
+  if (row.preview === null) {
+    return [snapshot];
+  }
+  // Beside the snapshot, never inside it: every bundle already open in a
+  // browser parses the snapshot strictly, so an added key there makes the
+  // snapshot itself unparseable and the turn stops updating for that tab.
+  return [
+    snapshot,
+    ExploreRunPreviewEventSchema.parse({
+      type: "run_preview",
+      preview: ReportAiPreviewSummarySchema.parse(JSON.parse(row.preview)),
+    }),
+  ];
+}
+
+export async function subscribeDurableExploreRun(
+  database: ExtendedPrismaClient,
+  runId: string,
+  userId: DiscordAccountId,
+  subscriber: Subscriber,
+): Promise<(() => void) | null> {
+  const initial = await database.scoutInteractiveRun.findFirst({
+    where: { id: runId, kind: "explore", ownerId: userId },
+  });
+  if (initial === null) return null;
+
+  let stopped = false;
+  let reading = false;
+  let lastPartial = "";
+  let lastTrace = "[]";
+  let lastActivity: string | null = null;
+  let lastPreview: string | null = null;
+  const emitRow = (row: typeof initial): boolean => {
+    if (row.state !== "PENDING" && row.state !== "RUNNING") {
+      subscriber({ type: "done", outcome: outcomeForStatus(row.state) });
+      return true;
+    }
+    lastPartial = row.partialOutput ?? "";
+    lastTrace = row.trace ?? "[]";
+    lastActivity = row.activity;
+    lastPreview = row.preview;
+    for (const event of exploreAttachEventsFromRow(row)) subscriber(event);
+    return false;
+  };
+  if (emitRow(initial)) {
+    return () => {
+      stopped = true;
+    };
+  }
+
+  const poll = async (): Promise<void> => {
+    try {
+      const row = await database.scoutInteractiveRun.findUniqueOrThrow({
+        where: { id: runId },
+      });
+      if (stopped) return;
+      if (row.state !== "PENDING" && row.state !== "RUNNING") {
+        stopped = true;
+        clearInterval(timer);
+        subscriber({ type: "done", outcome: outcomeForStatus(row.state) });
+      } else if (
+        (row.partialOutput ?? "") !== lastPartial ||
+        (row.trace ?? "[]") !== lastTrace ||
+        // Without these two the status line would freeze at whatever it said
+        // when the answer last grew — which, during a long query, is exactly
+        // when the reader is watching it.
+        row.activity !== lastActivity ||
+        row.preview !== lastPreview
+      ) {
+        emitRow(row);
+      }
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { source: "explore-durable-observer", runId },
+      });
+    } finally {
+      reading = false;
+    }
+  };
+  const timer = setInterval(() => {
+    if (stopped || reading) return;
+    reading = true;
+    void poll();
+  }, 1000);
+  return () => {
+    stopped = true;
+    clearInterval(timer);
+  };
+}
+
+export async function requestDurableExploreStop(
+  database: ExtendedPrismaClient,
+  runId: string,
+  userId: DiscordAccountId,
+): Promise<boolean> {
+  const durableRun = await database.scoutInteractiveRun.findFirst({
+    where: {
+      id: runId,
+      kind: "explore",
+      ownerId: userId,
+      state: { in: ["PENDING", "RUNNING"] },
+    },
+    select: { id: true },
+  });
+  if (durableRun === null) return false;
+  await database.scoutInteractiveRun.update({
+    where: { id: runId },
+    data: { stopRequestedAt: new Date() },
+  });
+  const supervisor = currentScoutTemporalSupervisor();
+  if (supervisor === undefined) return true;
+  try {
+    await supervisor
+      .client()
+      .workflow.getHandle(
+        scoutInteractiveWorkflowId(configuration.environment, "explore", runId),
+      )
+      .signal(requestStopSignal);
+  } catch (error) {
+    logger.warn(
+      "Explore stop persisted but the Temporal signal was not accepted; reconciliation will retry it",
+      { runId, error },
+    );
+  }
+  return true;
+}
+
+export async function durableExploreOutcome(
+  database: ExtendedPrismaClient,
+  runId: string,
+  userId: DiscordAccountId,
+): Promise<ExploreRunOutcome | null> {
+  const run = await database.scoutInteractiveRun.findFirst({
+    where: { id: runId, kind: "explore", ownerId: userId },
+    select: { state: true },
+  });
+  return run === null || run.state === "PENDING" || run.state === "RUNNING"
+    ? null
+    : outcomeForStatus(run.state);
+}
+
+export async function waitForDurableExploreRun(
+  database: ExtendedPrismaClient,
+  runId: string,
+  timeoutMs: number,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs + 60_000;
+  for (;;) {
+    const run = await database.scoutInteractiveRun.findUniqueOrThrow({
+      where: { id: runId },
+      select: { state: true },
+    });
+    if (run.state !== "PENDING" && run.state !== "RUNNING") return;
+    if (Date.now() >= deadline) {
+      throw new Error(
+        "Explore cancellation did not finish before its deadline",
+      );
+    }
+    await Bun.sleep(250);
+  }
+}

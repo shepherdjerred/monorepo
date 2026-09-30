@@ -17,13 +17,13 @@ import {
   assertCustomLaunchChannel,
   customActivityActor,
   customGuildMemberIdentity,
-} from "#src/customs/activity-actor.ts";
+} from "#src/customs/activity/activity-actor.ts";
 import {
   customMutationContext as mutationContext,
   customSnapshotForActorAfterMutation as afterMutation,
   requiredCustomSnapshot,
   type CustomRevisionInput as RevisionInput,
-} from "#src/customs/activity-mutation-context.ts";
+} from "#src/customs/activity/activity-mutation-context.ts";
 import {
   commitCustomMutation,
   createCustomNight,
@@ -62,8 +62,9 @@ export async function activeCustomNight(
   const active = await prisma.customActiveNight.findUnique({
     where: { guildId: actor.guildId },
   });
-  if (active === null) return null;
-  return requiredCustomSnapshot(prisma, active.nightId, actor);
+  return active === null
+    ? null
+    : requiredCustomSnapshot(prisma, active.nightId, actor);
 }
 
 export async function startCustomNight(

@@ -1,0 +1,6060 @@
+{
+  "version": 1,
+  "evaluatedAt": "2026-09-12T19:52:38.966Z",
+  "corpusClips": 400,
+  "native": {
+    "runtime": "native",
+    "clips": [
+      {
+        "id": "background-negative-001",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-002",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-003",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-004",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-005",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-006",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-007",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-008",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-009",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-010",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-011",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-012",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-013",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-014",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-015",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-016",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-017",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-018",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-019",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-020",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-021",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-022",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-023",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-024",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-025",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-026",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-027",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-028",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-029",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-030",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-031",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-032",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-033",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-034",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-035",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-036",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-037",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-038",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-039",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-040",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-001",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 620
+      },
+      {
+        "id": "clean-positive-002",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 674
+      },
+      {
+        "id": "clean-positive-003",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-004",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 495
+      },
+      {
+        "id": "clean-positive-005",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 300
+      },
+      {
+        "id": "clean-positive-006",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 587
+      },
+      {
+        "id": "clean-positive-007",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-008",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 715
+      },
+      {
+        "id": "clean-positive-009",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 390
+      },
+      {
+        "id": "clean-positive-010",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 492
+      },
+      {
+        "id": "clean-positive-011",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 550
+      },
+      {
+        "id": "clean-positive-012",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 524
+      },
+      {
+        "id": "clean-positive-013",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 490
+      },
+      {
+        "id": "clean-positive-014",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 499
+      },
+      {
+        "id": "clean-positive-015",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-016",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 718
+      },
+      {
+        "id": "clean-positive-017",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-018",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 552
+      },
+      {
+        "id": "clean-positive-019",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-020",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 718
+      },
+      {
+        "id": "clean-positive-021",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 510
+      },
+      {
+        "id": "clean-positive-022",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-023",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "clean-positive-024",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 605
+      },
+      {
+        "id": "clean-positive-025",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 280
+      },
+      {
+        "id": "clean-positive-026",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 493
+      },
+      {
+        "id": "clean-positive-027",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 600
+      },
+      {
+        "id": "clean-positive-028",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 716
+      },
+      {
+        "id": "clean-positive-029",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 550
+      },
+      {
+        "id": "clean-positive-030",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 572
+      },
+      {
+        "id": "clean-positive-031",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-032",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 494
+      },
+      {
+        "id": "clean-positive-033",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 310
+      },
+      {
+        "id": "clean-positive-034",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 453
+      },
+      {
+        "id": "clean-positive-035",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-036",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 700
+      },
+      {
+        "id": "clean-positive-037",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -220
+      },
+      {
+        "id": "clean-positive-038",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-039",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 450
+      },
+      {
+        "id": "clean-positive-040",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 744
+      },
+      {
+        "id": "clean-positive-041",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 590
+      },
+      {
+        "id": "clean-positive-042",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 678
+      },
+      {
+        "id": "clean-positive-043",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-044",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 481
+      },
+      {
+        "id": "clean-positive-045",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 490
+      },
+      {
+        "id": "clean-positive-046",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 520
+      },
+      {
+        "id": "clean-positive-047",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -480
+      },
+      {
+        "id": "clean-positive-048",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-049",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "clean-positive-050",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-051",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "clean-positive-052",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 526
+      },
+      {
+        "id": "clean-positive-053",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 450
+      },
+      {
+        "id": "clean-positive-054",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 579
+      },
+      {
+        "id": "clean-positive-055",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 180
+      },
+      {
+        "id": "clean-positive-056",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 681
+      },
+      {
+        "id": "clean-positive-057",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "clean-positive-058",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 497
+      },
+      {
+        "id": "clean-positive-059",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-060",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 745
+      },
+      {
+        "id": "clean-positive-061",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 510
+      },
+      {
+        "id": "clean-positive-062",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 703
+      },
+      {
+        "id": "clean-positive-063",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 550
+      },
+      {
+        "id": "clean-positive-064",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 477
+      },
+      {
+        "id": "clean-positive-065",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "clean-positive-066",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 573
+      },
+      {
+        "id": "clean-positive-067",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -170
+      },
+      {
+        "id": "clean-positive-068",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 738
+      },
+      {
+        "id": "clean-positive-069",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 250
+      },
+      {
+        "id": "clean-positive-070",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 520
+      },
+      {
+        "id": "clean-positive-071",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "clean-positive-072",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 565
+      },
+      {
+        "id": "clean-positive-073",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 340
+      },
+      {
+        "id": "clean-positive-074",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 488
+      },
+      {
+        "id": "clean-positive-075",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 350
+      },
+      {
+        "id": "clean-positive-076",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 670
+      },
+      {
+        "id": "clean-positive-077",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "clean-positive-078",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "clean-positive-079",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 30
+      },
+      {
+        "id": "clean-positive-080",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 759
+      },
+      {
+        "id": "clean-positive-081",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-082",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 692
+      },
+      {
+        "id": "clean-positive-083",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 620
+      },
+      {
+        "id": "clean-positive-084",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 581
+      },
+      {
+        "id": "clean-positive-085",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -730
+      },
+      {
+        "id": "clean-positive-086",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 513
+      },
+      {
+        "id": "clean-positive-087",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 610
+      },
+      {
+        "id": "clean-positive-088",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 698
+      },
+      {
+        "id": "clean-positive-089",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 340
+      },
+      {
+        "id": "clean-positive-090",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 545
+      },
+      {
+        "id": "clean-positive-091",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "clean-positive-092",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 443
+      },
+      {
+        "id": "clean-positive-093",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "clean-positive-094",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 524
+      },
+      {
+        "id": "clean-positive-095",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -520
+      },
+      {
+        "id": "clean-positive-096",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 696
+      },
+      {
+        "id": "clean-positive-097",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -790
+      },
+      {
+        "id": "clean-positive-098",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-099",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 320
+      },
+      {
+        "id": "clean-positive-100",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 706
+      },
+      {
+        "id": "clean-positive-101",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-102",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-103",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "clean-positive-104",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 478
+      },
+      {
+        "id": "clean-positive-105",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 590
+      },
+      {
+        "id": "clean-positive-106",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 533
+      },
+      {
+        "id": "clean-positive-107",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 140
+      },
+      {
+        "id": "clean-positive-108",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-109",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 160
+      },
+      {
+        "id": "clean-positive-110",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 472
+      },
+      {
+        "id": "clean-positive-111",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-112",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 507
+      },
+      {
+        "id": "clean-positive-113",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 50
+      },
+      {
+        "id": "clean-positive-114",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 564
+      },
+      {
+        "id": "clean-positive-115",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 90
+      },
+      {
+        "id": "clean-positive-116",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 685
+      },
+      {
+        "id": "clean-positive-117",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -680
+      },
+      {
+        "id": "clean-positive-118",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 388
+      },
+      {
+        "id": "clean-positive-119",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 420
+      },
+      {
+        "id": "clean-positive-120",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 709
+      },
+      {
+        "id": "clean-positive-121",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 380
+      },
+      {
+        "id": "clean-positive-122",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 690
+      },
+      {
+        "id": "clean-positive-123",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 530
+      },
+      {
+        "id": "clean-positive-124",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 524
+      },
+      {
+        "id": "clean-positive-125",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 70
+      },
+      {
+        "id": "clean-positive-126",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 582
+      },
+      {
+        "id": "clean-positive-127",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "clean-positive-128",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 761
+      },
+      {
+        "id": "clean-positive-129",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 670
+      },
+      {
+        "id": "clean-positive-130",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 489
+      },
+      {
+        "id": "clean-positive-131",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 530
+      },
+      {
+        "id": "clean-positive-132",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 544
+      },
+      {
+        "id": "clean-positive-133",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 510
+      },
+      {
+        "id": "clean-positive-134",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "clean-positive-135",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-136",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 690
+      },
+      {
+        "id": "clean-positive-137",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-138",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 554
+      },
+      {
+        "id": "clean-positive-139",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 350
+      },
+      {
+        "id": "clean-positive-140",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 728
+      },
+      {
+        "id": "clean-positive-141",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 360
+      },
+      {
+        "id": "clean-positive-142",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-143",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 350
+      },
+      {
+        "id": "clean-positive-144",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 563
+      },
+      {
+        "id": "clean-positive-145",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "clean-positive-146",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 487
+      },
+      {
+        "id": "clean-positive-147",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-148",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 735
+      },
+      {
+        "id": "clean-positive-149",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 580
+      },
+      {
+        "id": "clean-positive-150",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 577
+      },
+      {
+        "id": "clean-positive-151",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-152",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 445
+      },
+      {
+        "id": "clean-positive-153",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "clean-positive-154",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 505
+      },
+      {
+        "id": "clean-positive-155",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 420
+      },
+      {
+        "id": "clean-positive-156",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 719
+      },
+      {
+        "id": "clean-positive-157",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 610
+      },
+      {
+        "id": "clean-positive-158",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 497
+      },
+      {
+        "id": "clean-positive-159",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 160
+      },
+      {
+        "id": "clean-positive-160",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 726
+      },
+      {
+        "id": "near-match-negative-001",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-002",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-003",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-004",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 515
+      },
+      {
+        "id": "near-match-negative-005",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-006",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-007",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-008",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-009",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-010",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-011",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-012",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-013",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-014",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 508
+      },
+      {
+        "id": "near-match-negative-015",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-016",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-017",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-018",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-019",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-020",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-021",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-022",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-023",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-024",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 584
+      },
+      {
+        "id": "near-match-negative-025",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-026",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-027",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "near-match-negative-028",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-029",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-030",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-031",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-032",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-033",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-034",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 500
+      },
+      {
+        "id": "near-match-negative-035",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-036",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-037",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -730
+      },
+      {
+        "id": "near-match-negative-038",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-039",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-040",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-041",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-042",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-043",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-044",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "near-match-negative-045",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-046",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-047",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-048",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-049",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-050",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-051",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-052",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-053",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-054",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-055",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-056",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-057",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-058",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-059",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-060",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-001",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-002",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-003",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-004",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-005",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-006",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-007",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-008",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-009",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-010",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-011",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-012",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-013",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-014",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-015",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-016",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-017",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-018",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-019",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-020",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-021",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-022",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-023",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-024",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-025",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-026",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-027",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-028",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-029",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-030",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-031",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-032",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-033",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-034",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-035",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-036",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-037",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-038",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-039",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-040",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-041",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-042",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-043",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-044",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-045",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-046",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-047",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-048",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-049",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-050",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-051",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-052",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-053",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-054",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-055",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-056",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-057",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-058",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-059",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-060",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-001",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "stress-positive-002",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 754
+      },
+      {
+        "id": "stress-positive-003",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-004",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-005",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-006",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 707
+      },
+      {
+        "id": "stress-positive-007",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-008",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-009",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "stress-positive-010",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 592
+      },
+      {
+        "id": "stress-positive-011",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-012",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-013",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-014",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 599
+      },
+      {
+        "id": "stress-positive-015",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 620
+      },
+      {
+        "id": "stress-positive-016",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-017",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 780
+      },
+      {
+        "id": "stress-positive-018",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 672
+      },
+      {
+        "id": "stress-positive-019",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-020",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-021",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 420
+      },
+      {
+        "id": "stress-positive-022",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-023",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 390
+      },
+      {
+        "id": "stress-positive-024",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 725
+      },
+      {
+        "id": "stress-positive-025",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 180
+      },
+      {
+        "id": "stress-positive-026",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-027",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "stress-positive-028",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-029",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -590
+      },
+      {
+        "id": "stress-positive-030",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 612
+      },
+      {
+        "id": "stress-positive-031",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "stress-positive-032",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-033",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "stress-positive-034",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-035",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 310
+      },
+      {
+        "id": "stress-positive-036",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 740
+      },
+      {
+        "id": "stress-positive-037",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "stress-positive-038",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-039",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 330
+      },
+      {
+        "id": "stress-positive-040",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-041",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -550
+      },
+      {
+        "id": "stress-positive-042",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 738
+      },
+      {
+        "id": "stress-positive-043",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-044",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-045",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 520
+      },
+      {
+        "id": "stress-positive-046",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 580
+      },
+      {
+        "id": "stress-positive-047",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 20
+      },
+      {
+        "id": "stress-positive-048",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-049",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-050",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "stress-positive-051",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "stress-positive-052",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-053",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 170
+      },
+      {
+        "id": "stress-positive-054",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-055",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-056",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 741
+      },
+      {
+        "id": "stress-positive-057",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 210
+      },
+      {
+        "id": "stress-positive-058",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-059",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-060",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-061",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 490
+      },
+      {
+        "id": "stress-positive-062",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 703
+      },
+      {
+        "id": "stress-positive-063",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 390
+      },
+      {
+        "id": "stress-positive-064",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-065",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-066",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 673
+      },
+      {
+        "id": "stress-positive-067",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 130
+      },
+      {
+        "id": "stress-positive-068",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-069",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 140
+      },
+      {
+        "id": "stress-positive-070",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-071",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-072",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 725
+      },
+      {
+        "id": "stress-positive-073",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 30
+      },
+      {
+        "id": "stress-positive-074",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 628
+      },
+      {
+        "id": "stress-positive-075",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "stress-positive-076",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-077",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 410
+      },
+      {
+        "id": "stress-positive-078",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 580
+      },
+      {
+        "id": "stress-positive-079",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-080",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      }
+    ],
+    "sherpaCandidateRate": 0.7325,
+    "sherpaCandidateConfusion": {
+      "truePositive": 219,
+      "falsePositive": 74,
+      "trueNegative": 86,
+      "falseNegative": 21
+    },
+    "localVerifierConfusion": {
+      "truePositive": 186,
+      "falsePositive": 7,
+      "trueNegative": 153,
+      "falseNegative": 54
+    },
+    "cleanPositiveRecall": 0.88125,
+    "stressAtLeast10DbRecall": 0.725,
+    "stressBelow10DbRecall": 0.4,
+    "negativeActivations": 7,
+    "endpointViolations": [
+      "clean-positive-001",
+      "clean-positive-003",
+      "clean-positive-004",
+      "clean-positive-005",
+      "clean-positive-006",
+      "clean-positive-007",
+      "clean-positive-009",
+      "clean-positive-010",
+      "clean-positive-011",
+      "clean-positive-012",
+      "clean-positive-013",
+      "clean-positive-014",
+      "clean-positive-015",
+      "clean-positive-017",
+      "clean-positive-018",
+      "clean-positive-019",
+      "clean-positive-021",
+      "clean-positive-022",
+      "clean-positive-023",
+      "clean-positive-024",
+      "clean-positive-025",
+      "clean-positive-026",
+      "clean-positive-027",
+      "clean-positive-029",
+      "clean-positive-030",
+      "clean-positive-031",
+      "clean-positive-032",
+      "clean-positive-033",
+      "clean-positive-034",
+      "clean-positive-035",
+      "clean-positive-037",
+      "clean-positive-038",
+      "clean-positive-039",
+      "clean-positive-041",
+      "clean-positive-043",
+      "clean-positive-044",
+      "clean-positive-045",
+      "clean-positive-046",
+      "clean-positive-047",
+      "clean-positive-048",
+      "clean-positive-049",
+      "clean-positive-050",
+      "clean-positive-051",
+      "clean-positive-052",
+      "clean-positive-053",
+      "clean-positive-054",
+      "clean-positive-055",
+      "clean-positive-057",
+      "clean-positive-058",
+      "clean-positive-059",
+      "clean-positive-061",
+      "clean-positive-063",
+      "clean-positive-064",
+      "clean-positive-065",
+      "clean-positive-066",
+      "clean-positive-067",
+      "clean-positive-069",
+      "clean-positive-070",
+      "clean-positive-071",
+      "clean-positive-072",
+      "clean-positive-073",
+      "clean-positive-074",
+      "clean-positive-075",
+      "clean-positive-077",
+      "clean-positive-078",
+      "clean-positive-079",
+      "clean-positive-081",
+      "clean-positive-083",
+      "clean-positive-084",
+      "clean-positive-085",
+      "clean-positive-086",
+      "clean-positive-087",
+      "clean-positive-089",
+      "clean-positive-090",
+      "clean-positive-091",
+      "clean-positive-092",
+      "clean-positive-093",
+      "clean-positive-094",
+      "clean-positive-095",
+      "clean-positive-097",
+      "clean-positive-098",
+      "clean-positive-099",
+      "clean-positive-101",
+      "clean-positive-102",
+      "clean-positive-103",
+      "clean-positive-104",
+      "clean-positive-105",
+      "clean-positive-106",
+      "clean-positive-107",
+      "clean-positive-108",
+      "clean-positive-109",
+      "clean-positive-110",
+      "clean-positive-111",
+      "clean-positive-112",
+      "clean-positive-113",
+      "clean-positive-114",
+      "clean-positive-115",
+      "clean-positive-117",
+      "clean-positive-118",
+      "clean-positive-119",
+      "clean-positive-121",
+      "clean-positive-123",
+      "clean-positive-124",
+      "clean-positive-125",
+      "clean-positive-126",
+      "clean-positive-127",
+      "clean-positive-130",
+      "clean-positive-131",
+      "clean-positive-132",
+      "clean-positive-133",
+      "clean-positive-134",
+      "clean-positive-135",
+      "clean-positive-137",
+      "clean-positive-138",
+      "clean-positive-139",
+      "clean-positive-141",
+      "clean-positive-142",
+      "clean-positive-143",
+      "clean-positive-144",
+      "clean-positive-145",
+      "clean-positive-146",
+      "clean-positive-147",
+      "clean-positive-149",
+      "clean-positive-150",
+      "clean-positive-151",
+      "clean-positive-152",
+      "clean-positive-153",
+      "clean-positive-154",
+      "clean-positive-155",
+      "clean-positive-157",
+      "clean-positive-158",
+      "clean-positive-159",
+      "stress-positive-001",
+      "stress-positive-003",
+      "stress-positive-004",
+      "stress-positive-005",
+      "stress-positive-007",
+      "stress-positive-008",
+      "stress-positive-009",
+      "stress-positive-010",
+      "stress-positive-011",
+      "stress-positive-012",
+      "stress-positive-013",
+      "stress-positive-014",
+      "stress-positive-015",
+      "stress-positive-016",
+      "stress-positive-019",
+      "stress-positive-020",
+      "stress-positive-021",
+      "stress-positive-022",
+      "stress-positive-023",
+      "stress-positive-025",
+      "stress-positive-026",
+      "stress-positive-027",
+      "stress-positive-028",
+      "stress-positive-029",
+      "stress-positive-030",
+      "stress-positive-031",
+      "stress-positive-032",
+      "stress-positive-033",
+      "stress-positive-034",
+      "stress-positive-035",
+      "stress-positive-037",
+      "stress-positive-038",
+      "stress-positive-039",
+      "stress-positive-040",
+      "stress-positive-041",
+      "stress-positive-043",
+      "stress-positive-044",
+      "stress-positive-045",
+      "stress-positive-046",
+      "stress-positive-047",
+      "stress-positive-048",
+      "stress-positive-049",
+      "stress-positive-050",
+      "stress-positive-051",
+      "stress-positive-052",
+      "stress-positive-053",
+      "stress-positive-054",
+      "stress-positive-055",
+      "stress-positive-057",
+      "stress-positive-058",
+      "stress-positive-059",
+      "stress-positive-060",
+      "stress-positive-061",
+      "stress-positive-063",
+      "stress-positive-064",
+      "stress-positive-065",
+      "stress-positive-067",
+      "stress-positive-068",
+      "stress-positive-069",
+      "stress-positive-070",
+      "stress-positive-071",
+      "stress-positive-073",
+      "stress-positive-074",
+      "stress-positive-075",
+      "stress-positive-076",
+      "stress-positive-077",
+      "stress-positive-078",
+      "stress-positive-079",
+      "stress-positive-080"
+    ],
+    "twoHourNegativeSoakActivations": 28
+  },
+  "wasm": {
+    "runtime": "wasm",
+    "clips": [
+      {
+        "id": "background-negative-001",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-002",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-003",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-004",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-005",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-006",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-007",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-008",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-009",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-010",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-011",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-012",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-013",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-014",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-015",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-016",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-017",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-018",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-019",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-020",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-021",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-022",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-023",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-024",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-025",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-026",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-027",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-028",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-029",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-030",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-031",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-032",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-033",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-034",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-035",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-036",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-037",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-038",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-039",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "background-negative-040",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-001",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 620
+      },
+      {
+        "id": "clean-positive-002",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 674
+      },
+      {
+        "id": "clean-positive-003",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-004",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 495
+      },
+      {
+        "id": "clean-positive-005",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 300
+      },
+      {
+        "id": "clean-positive-006",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 587
+      },
+      {
+        "id": "clean-positive-007",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-008",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 715
+      },
+      {
+        "id": "clean-positive-009",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 390
+      },
+      {
+        "id": "clean-positive-010",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 492
+      },
+      {
+        "id": "clean-positive-011",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 550
+      },
+      {
+        "id": "clean-positive-012",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 524
+      },
+      {
+        "id": "clean-positive-013",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 490
+      },
+      {
+        "id": "clean-positive-014",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 499
+      },
+      {
+        "id": "clean-positive-015",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-016",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 718
+      },
+      {
+        "id": "clean-positive-017",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-018",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 552
+      },
+      {
+        "id": "clean-positive-019",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-020",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 718
+      },
+      {
+        "id": "clean-positive-021",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 510
+      },
+      {
+        "id": "clean-positive-022",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-023",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "clean-positive-024",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 605
+      },
+      {
+        "id": "clean-positive-025",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 280
+      },
+      {
+        "id": "clean-positive-026",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 493
+      },
+      {
+        "id": "clean-positive-027",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 600
+      },
+      {
+        "id": "clean-positive-028",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 716
+      },
+      {
+        "id": "clean-positive-029",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 550
+      },
+      {
+        "id": "clean-positive-030",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 572
+      },
+      {
+        "id": "clean-positive-031",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-032",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 494
+      },
+      {
+        "id": "clean-positive-033",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 310
+      },
+      {
+        "id": "clean-positive-034",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 453
+      },
+      {
+        "id": "clean-positive-035",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-036",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 700
+      },
+      {
+        "id": "clean-positive-037",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -220
+      },
+      {
+        "id": "clean-positive-038",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-039",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 450
+      },
+      {
+        "id": "clean-positive-040",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 744
+      },
+      {
+        "id": "clean-positive-041",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 590
+      },
+      {
+        "id": "clean-positive-042",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 678
+      },
+      {
+        "id": "clean-positive-043",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-044",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 481
+      },
+      {
+        "id": "clean-positive-045",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 490
+      },
+      {
+        "id": "clean-positive-046",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 520
+      },
+      {
+        "id": "clean-positive-047",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -480
+      },
+      {
+        "id": "clean-positive-048",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-049",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "clean-positive-050",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-051",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "clean-positive-052",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 526
+      },
+      {
+        "id": "clean-positive-053",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 450
+      },
+      {
+        "id": "clean-positive-054",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 579
+      },
+      {
+        "id": "clean-positive-055",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 180
+      },
+      {
+        "id": "clean-positive-056",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 681
+      },
+      {
+        "id": "clean-positive-057",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "clean-positive-058",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 497
+      },
+      {
+        "id": "clean-positive-059",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-060",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 745
+      },
+      {
+        "id": "clean-positive-061",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 510
+      },
+      {
+        "id": "clean-positive-062",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 703
+      },
+      {
+        "id": "clean-positive-063",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 550
+      },
+      {
+        "id": "clean-positive-064",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 477
+      },
+      {
+        "id": "clean-positive-065",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "clean-positive-066",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 573
+      },
+      {
+        "id": "clean-positive-067",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -170
+      },
+      {
+        "id": "clean-positive-068",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 738
+      },
+      {
+        "id": "clean-positive-069",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 250
+      },
+      {
+        "id": "clean-positive-070",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 520
+      },
+      {
+        "id": "clean-positive-071",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "clean-positive-072",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 565
+      },
+      {
+        "id": "clean-positive-073",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 340
+      },
+      {
+        "id": "clean-positive-074",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 488
+      },
+      {
+        "id": "clean-positive-075",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 350
+      },
+      {
+        "id": "clean-positive-076",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 670
+      },
+      {
+        "id": "clean-positive-077",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "clean-positive-078",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "clean-positive-079",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 30
+      },
+      {
+        "id": "clean-positive-080",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 759
+      },
+      {
+        "id": "clean-positive-081",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-082",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 692
+      },
+      {
+        "id": "clean-positive-083",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 620
+      },
+      {
+        "id": "clean-positive-084",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 581
+      },
+      {
+        "id": "clean-positive-085",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -730
+      },
+      {
+        "id": "clean-positive-086",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 513
+      },
+      {
+        "id": "clean-positive-087",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 610
+      },
+      {
+        "id": "clean-positive-088",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 698
+      },
+      {
+        "id": "clean-positive-089",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 340
+      },
+      {
+        "id": "clean-positive-090",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 545
+      },
+      {
+        "id": "clean-positive-091",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "clean-positive-092",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 443
+      },
+      {
+        "id": "clean-positive-093",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "clean-positive-094",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 524
+      },
+      {
+        "id": "clean-positive-095",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -520
+      },
+      {
+        "id": "clean-positive-096",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 696
+      },
+      {
+        "id": "clean-positive-097",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -790
+      },
+      {
+        "id": "clean-positive-098",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-099",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 320
+      },
+      {
+        "id": "clean-positive-100",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 706
+      },
+      {
+        "id": "clean-positive-101",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-102",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-103",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "clean-positive-104",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 478
+      },
+      {
+        "id": "clean-positive-105",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 590
+      },
+      {
+        "id": "clean-positive-106",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 533
+      },
+      {
+        "id": "clean-positive-107",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 140
+      },
+      {
+        "id": "clean-positive-108",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-109",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 160
+      },
+      {
+        "id": "clean-positive-110",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 472
+      },
+      {
+        "id": "clean-positive-111",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-112",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 507
+      },
+      {
+        "id": "clean-positive-113",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 50
+      },
+      {
+        "id": "clean-positive-114",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 564
+      },
+      {
+        "id": "clean-positive-115",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 90
+      },
+      {
+        "id": "clean-positive-116",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 685
+      },
+      {
+        "id": "clean-positive-117",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -680
+      },
+      {
+        "id": "clean-positive-118",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 388
+      },
+      {
+        "id": "clean-positive-119",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 420
+      },
+      {
+        "id": "clean-positive-120",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 709
+      },
+      {
+        "id": "clean-positive-121",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 380
+      },
+      {
+        "id": "clean-positive-122",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 690
+      },
+      {
+        "id": "clean-positive-123",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 530
+      },
+      {
+        "id": "clean-positive-124",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 524
+      },
+      {
+        "id": "clean-positive-125",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 70
+      },
+      {
+        "id": "clean-positive-126",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 582
+      },
+      {
+        "id": "clean-positive-127",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "clean-positive-128",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 761
+      },
+      {
+        "id": "clean-positive-129",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 670
+      },
+      {
+        "id": "clean-positive-130",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 489
+      },
+      {
+        "id": "clean-positive-131",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 530
+      },
+      {
+        "id": "clean-positive-132",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 544
+      },
+      {
+        "id": "clean-positive-133",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 510
+      },
+      {
+        "id": "clean-positive-134",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "clean-positive-135",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-136",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 690
+      },
+      {
+        "id": "clean-positive-137",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 460
+      },
+      {
+        "id": "clean-positive-138",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 554
+      },
+      {
+        "id": "clean-positive-139",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 350
+      },
+      {
+        "id": "clean-positive-140",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 728
+      },
+      {
+        "id": "clean-positive-141",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 360
+      },
+      {
+        "id": "clean-positive-142",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-143",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 350
+      },
+      {
+        "id": "clean-positive-144",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 563
+      },
+      {
+        "id": "clean-positive-145",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "clean-positive-146",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-147",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-148",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 735
+      },
+      {
+        "id": "clean-positive-149",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "clean-positive-150",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 577
+      },
+      {
+        "id": "clean-positive-151",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "clean-positive-152",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 445
+      },
+      {
+        "id": "clean-positive-153",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "clean-positive-154",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 505
+      },
+      {
+        "id": "clean-positive-155",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 420
+      },
+      {
+        "id": "clean-positive-156",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 719
+      },
+      {
+        "id": "clean-positive-157",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 610
+      },
+      {
+        "id": "clean-positive-158",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 497
+      },
+      {
+        "id": "clean-positive-159",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 160
+      },
+      {
+        "id": "clean-positive-160",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 726
+      },
+      {
+        "id": "near-match-negative-001",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-002",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-003",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-004",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 515
+      },
+      {
+        "id": "near-match-negative-005",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-006",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-007",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-008",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-009",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-010",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-011",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-012",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-013",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-014",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 508
+      },
+      {
+        "id": "near-match-negative-015",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-016",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-017",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-018",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-019",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-020",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-021",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-022",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-023",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-024",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 584
+      },
+      {
+        "id": "near-match-negative-025",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-026",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-027",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "near-match-negative-028",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-029",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-030",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-031",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-032",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-033",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-034",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 500
+      },
+      {
+        "id": "near-match-negative-035",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-036",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-037",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -730
+      },
+      {
+        "id": "near-match-negative-038",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-039",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-040",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-041",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-042",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-043",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-044",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "near-match-negative-045",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-046",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-047",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-048",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-049",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-050",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-051",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-052",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-053",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-054",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-055",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-056",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-057",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-058",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-059",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "near-match-negative-060",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-001",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-002",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-003",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-004",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-005",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-006",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-007",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-008",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-009",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-010",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-011",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-012",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-013",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-014",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-015",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-016",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-017",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-018",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-019",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-020",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-021",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-022",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-023",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-024",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-025",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-026",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-027",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-028",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-029",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-030",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-031",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-032",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-033",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-034",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-035",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-036",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-037",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-038",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-039",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-040",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-041",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-042",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-043",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-044",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-045",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-046",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-047",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-048",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-049",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-050",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-051",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-052",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-053",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-054",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-055",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-056",
+        "expected": "no-wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-057",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-058",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-059",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "ordinary-negative-060",
+        "expected": "no-wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-001",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 570
+      },
+      {
+        "id": "stress-positive-002",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 754
+      },
+      {
+        "id": "stress-positive-003",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-004",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-005",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-006",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 707
+      },
+      {
+        "id": "stress-positive-007",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-008",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-009",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "stress-positive-010",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 592
+      },
+      {
+        "id": "stress-positive-011",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-012",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-013",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-014",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 599
+      },
+      {
+        "id": "stress-positive-015",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 620
+      },
+      {
+        "id": "stress-positive-016",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-017",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 780
+      },
+      {
+        "id": "stress-positive-018",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 672
+      },
+      {
+        "id": "stress-positive-019",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-020",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-021",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 420
+      },
+      {
+        "id": "stress-positive-022",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-023",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 390
+      },
+      {
+        "id": "stress-positive-024",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 725
+      },
+      {
+        "id": "stress-positive-025",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 180
+      },
+      {
+        "id": "stress-positive-026",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-027",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "stress-positive-028",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-029",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -590
+      },
+      {
+        "id": "stress-positive-030",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 612
+      },
+      {
+        "id": "stress-positive-031",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 370
+      },
+      {
+        "id": "stress-positive-032",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-033",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 440
+      },
+      {
+        "id": "stress-positive-034",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-035",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 310
+      },
+      {
+        "id": "stress-positive-036",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 740
+      },
+      {
+        "id": "stress-positive-037",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 470
+      },
+      {
+        "id": "stress-positive-038",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-039",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 330
+      },
+      {
+        "id": "stress-positive-040",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-041",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": -550
+      },
+      {
+        "id": "stress-positive-042",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 738
+      },
+      {
+        "id": "stress-positive-043",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-044",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-045",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 520
+      },
+      {
+        "id": "stress-positive-046",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 580
+      },
+      {
+        "id": "stress-positive-047",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 20
+      },
+      {
+        "id": "stress-positive-048",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-049",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-050",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 540
+      },
+      {
+        "id": "stress-positive-051",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "stress-positive-052",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-053",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 170
+      },
+      {
+        "id": "stress-positive-054",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-055",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-056",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 741
+      },
+      {
+        "id": "stress-positive-057",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 210
+      },
+      {
+        "id": "stress-positive-058",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-059",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-060",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-061",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 490
+      },
+      {
+        "id": "stress-positive-062",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 703
+      },
+      {
+        "id": "stress-positive-063",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 390
+      },
+      {
+        "id": "stress-positive-064",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-065",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-066",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 673
+      },
+      {
+        "id": "stress-positive-067",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 130
+      },
+      {
+        "id": "stress-positive-068",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-069",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 140
+      },
+      {
+        "id": "stress-positive-070",
+        "expected": "wake",
+        "candidate": true,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-071",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-072",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-073",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 30
+      },
+      {
+        "id": "stress-positive-074",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 628
+      },
+      {
+        "id": "stress-positive-075",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 560
+      },
+      {
+        "id": "stress-positive-076",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-077",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 410
+      },
+      {
+        "id": "stress-positive-078",
+        "expected": "wake",
+        "candidate": true,
+        "activated": true,
+        "endpointDelayMs": 580
+      },
+      {
+        "id": "stress-positive-079",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      },
+      {
+        "id": "stress-positive-080",
+        "expected": "wake",
+        "candidate": false,
+        "activated": false,
+        "endpointDelayMs": null
+      }
+    ],
+    "sherpaCandidateRate": 0.7375,
+    "sherpaCandidateConfusion": {
+      "truePositive": 220,
+      "falsePositive": 75,
+      "trueNegative": 85,
+      "falseNegative": 20
+    },
+    "localVerifierConfusion": {
+      "truePositive": 184,
+      "falsePositive": 7,
+      "trueNegative": 153,
+      "falseNegative": 56
+    },
+    "cleanPositiveRecall": 0.875,
+    "stressAtLeast10DbRecall": 0.725,
+    "stressBelow10DbRecall": 0.375,
+    "negativeActivations": 7,
+    "endpointViolations": [
+      "clean-positive-001",
+      "clean-positive-003",
+      "clean-positive-004",
+      "clean-positive-005",
+      "clean-positive-006",
+      "clean-positive-007",
+      "clean-positive-009",
+      "clean-positive-010",
+      "clean-positive-011",
+      "clean-positive-012",
+      "clean-positive-013",
+      "clean-positive-014",
+      "clean-positive-015",
+      "clean-positive-017",
+      "clean-positive-018",
+      "clean-positive-019",
+      "clean-positive-021",
+      "clean-positive-022",
+      "clean-positive-023",
+      "clean-positive-024",
+      "clean-positive-025",
+      "clean-positive-026",
+      "clean-positive-027",
+      "clean-positive-029",
+      "clean-positive-030",
+      "clean-positive-031",
+      "clean-positive-032",
+      "clean-positive-033",
+      "clean-positive-034",
+      "clean-positive-035",
+      "clean-positive-037",
+      "clean-positive-038",
+      "clean-positive-039",
+      "clean-positive-041",
+      "clean-positive-043",
+      "clean-positive-044",
+      "clean-positive-045",
+      "clean-positive-046",
+      "clean-positive-047",
+      "clean-positive-048",
+      "clean-positive-049",
+      "clean-positive-050",
+      "clean-positive-051",
+      "clean-positive-052",
+      "clean-positive-053",
+      "clean-positive-054",
+      "clean-positive-055",
+      "clean-positive-057",
+      "clean-positive-058",
+      "clean-positive-059",
+      "clean-positive-061",
+      "clean-positive-063",
+      "clean-positive-064",
+      "clean-positive-065",
+      "clean-positive-066",
+      "clean-positive-067",
+      "clean-positive-069",
+      "clean-positive-070",
+      "clean-positive-071",
+      "clean-positive-072",
+      "clean-positive-073",
+      "clean-positive-074",
+      "clean-positive-075",
+      "clean-positive-077",
+      "clean-positive-078",
+      "clean-positive-079",
+      "clean-positive-081",
+      "clean-positive-083",
+      "clean-positive-084",
+      "clean-positive-085",
+      "clean-positive-086",
+      "clean-positive-087",
+      "clean-positive-089",
+      "clean-positive-090",
+      "clean-positive-091",
+      "clean-positive-092",
+      "clean-positive-093",
+      "clean-positive-094",
+      "clean-positive-095",
+      "clean-positive-097",
+      "clean-positive-098",
+      "clean-positive-099",
+      "clean-positive-101",
+      "clean-positive-102",
+      "clean-positive-103",
+      "clean-positive-104",
+      "clean-positive-105",
+      "clean-positive-106",
+      "clean-positive-107",
+      "clean-positive-108",
+      "clean-positive-109",
+      "clean-positive-110",
+      "clean-positive-111",
+      "clean-positive-112",
+      "clean-positive-113",
+      "clean-positive-114",
+      "clean-positive-115",
+      "clean-positive-117",
+      "clean-positive-118",
+      "clean-positive-119",
+      "clean-positive-121",
+      "clean-positive-123",
+      "clean-positive-124",
+      "clean-positive-125",
+      "clean-positive-126",
+      "clean-positive-127",
+      "clean-positive-130",
+      "clean-positive-131",
+      "clean-positive-132",
+      "clean-positive-133",
+      "clean-positive-134",
+      "clean-positive-135",
+      "clean-positive-137",
+      "clean-positive-138",
+      "clean-positive-139",
+      "clean-positive-141",
+      "clean-positive-142",
+      "clean-positive-143",
+      "clean-positive-144",
+      "clean-positive-145",
+      "clean-positive-146",
+      "clean-positive-147",
+      "clean-positive-149",
+      "clean-positive-150",
+      "clean-positive-151",
+      "clean-positive-152",
+      "clean-positive-153",
+      "clean-positive-154",
+      "clean-positive-155",
+      "clean-positive-157",
+      "clean-positive-158",
+      "clean-positive-159",
+      "stress-positive-001",
+      "stress-positive-003",
+      "stress-positive-004",
+      "stress-positive-005",
+      "stress-positive-007",
+      "stress-positive-008",
+      "stress-positive-009",
+      "stress-positive-010",
+      "stress-positive-011",
+      "stress-positive-012",
+      "stress-positive-013",
+      "stress-positive-014",
+      "stress-positive-015",
+      "stress-positive-016",
+      "stress-positive-019",
+      "stress-positive-020",
+      "stress-positive-021",
+      "stress-positive-022",
+      "stress-positive-023",
+      "stress-positive-025",
+      "stress-positive-026",
+      "stress-positive-027",
+      "stress-positive-028",
+      "stress-positive-029",
+      "stress-positive-030",
+      "stress-positive-031",
+      "stress-positive-032",
+      "stress-positive-033",
+      "stress-positive-034",
+      "stress-positive-035",
+      "stress-positive-037",
+      "stress-positive-038",
+      "stress-positive-039",
+      "stress-positive-040",
+      "stress-positive-041",
+      "stress-positive-043",
+      "stress-positive-044",
+      "stress-positive-045",
+      "stress-positive-046",
+      "stress-positive-047",
+      "stress-positive-048",
+      "stress-positive-049",
+      "stress-positive-050",
+      "stress-positive-051",
+      "stress-positive-052",
+      "stress-positive-053",
+      "stress-positive-054",
+      "stress-positive-055",
+      "stress-positive-057",
+      "stress-positive-058",
+      "stress-positive-059",
+      "stress-positive-060",
+      "stress-positive-061",
+      "stress-positive-063",
+      "stress-positive-064",
+      "stress-positive-065",
+      "stress-positive-067",
+      "stress-positive-068",
+      "stress-positive-069",
+      "stress-positive-070",
+      "stress-positive-071",
+      "stress-positive-072",
+      "stress-positive-073",
+      "stress-positive-074",
+      "stress-positive-075",
+      "stress-positive-076",
+      "stress-positive-077",
+      "stress-positive-078",
+      "stress-positive-079",
+      "stress-positive-080"
+    ],
+    "twoHourNegativeSoakActivations": 46
+  },
+  "runtimeDisagreements": ["clean-positive-146", "stress-positive-072"],
+  "passed": false
+}

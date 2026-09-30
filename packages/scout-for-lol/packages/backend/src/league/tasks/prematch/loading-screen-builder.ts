@@ -29,6 +29,7 @@ import {
   resolveClassicChampionKey,
   getClassicChampionId,
   getClassicSpellId,
+  getModernChampionIdForClassic,
   loadingScreenLayoutForQueueType,
   isClassicAssetMode,
 } from "@scout-for-lol/data/index.ts";
@@ -50,6 +51,11 @@ import {
   buildLopsidedTeamMessage,
 } from "./loading-screen-errors.ts";
 import { orderClassicParticipants } from "./loading-screen-classic.ts";
+import {
+  fetchParticipantMasteries,
+  withSelectedChampionMastery,
+  type ParticipantMasteries,
+} from "./loading-screen-mastery.ts";
 
 const logger = createLogger("prematch-loading-screen-builder");
 
@@ -64,7 +70,7 @@ type BuildParticipantContext = {
 
 type BaseBuiltParticipant = Omit<
   NonStandardLoadingScreenParticipant,
-  "rankState"
+  "rankState" | "mastery"
 >;
 type RankedBuiltParticipant = NonStandardLoadingScreenParticipant;
 export type ParticipantRanks = ReadonlyMap<string, RankLookupResult>;
@@ -125,10 +131,9 @@ function resolveTeam(
   layout: LoadingScreenLayout,
 ): LoadingScreenTeam {
   if (layout === "arena") {
-    if (participant.playerSubteamId === undefined) {
-      return { arenaTeam: null };
-    }
-    return { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
+    return participant.playerSubteamId === undefined
+      ? { arenaTeam: null }
+      : { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
   }
   const team = parseTeam(participant.teamId);
   if (team === undefined) {
@@ -186,6 +191,7 @@ function buildParticipant(
 function buildClassicParticipant(
   participant: RawCurrentGameParticipant,
   trackedPuuids: ReadonlySet<string>,
+  masteries: ParticipantMasteries,
 ): ClassicLoadingScreenParticipant {
   const championId = getClassicChampionId(participant.championId);
   const championName = resolveClassicChampionKey(championId);
@@ -211,6 +217,11 @@ function buildClassicParticipant(
       getClassicSpellId(participant.spell2Id),
     ),
     isTrackedPlayer: puuid !== null && trackedPuuids.has(puuid),
+    ...withSelectedChampionMastery(
+      puuid,
+      getModernChampionIdForClassic(championId),
+      masteries,
+    ),
   };
 }
 
@@ -394,11 +405,17 @@ export async function buildLoadingScreenData(
     );
   }
 
+  const masteriesByPuuid = await fetchParticipantMasteries(gameInfo, region);
+
   if (layout === "classic") {
     const participants = orderClassicParticipants(
       gameInfo.participants.map((participant) => {
         try {
-          return buildClassicParticipant(participant, trackedPuuids);
+          return buildClassicParticipant(
+            participant,
+            trackedPuuids,
+            masteriesByPuuid,
+          );
         } catch (error) {
           const reason =
             error instanceof Error && error.message.includes("asset")
@@ -452,7 +469,15 @@ export async function buildLoadingScreenData(
       if (rankState === undefined) {
         throw new Error(`Missing rank lookup result for ${base.puuid}`);
       }
-      return { ...base, rankState };
+      return {
+        ...base,
+        rankState,
+        ...withSelectedChampionMastery(
+          base.puuid,
+          base.championId,
+          masteriesByPuuid,
+        ),
+      };
     },
   );
 

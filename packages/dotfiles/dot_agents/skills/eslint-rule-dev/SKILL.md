@@ -1,6 +1,8 @@
 ---
 name: eslint-rule-dev
-description: "Use this skill for ESLint custom rule development - AST traversal, rule testing, plugins, and flat config When user…"
+description: |
+  ESLint custom rule development - AST traversal, rule testing, plugins, and flat config
+  When user creates ESLint rules, develops ESLint plugins, works with AST, or mentions RuleTester
 ---
 
 # ESLint Rule Development Agent

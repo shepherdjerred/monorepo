@@ -83,7 +83,7 @@ public protocol HTTPTransport: Sendable {
   func send(_ request: ProviderRequest) async throws -> ProviderResponse
 }
 
-public final class URLSessionTransport: HTTPTransport, @unchecked Sendable {
+public final class URLSessionTransport: HTTPTransport, Sendable {
   private let session: URLSession
 
   public init(session: URLSession? = nil) {
@@ -233,6 +233,26 @@ public struct ProviderHTTPClient: Sendable {
       provider: provider,
       url: url,
       body: nil,
+      headers: headers,
+      timeout: timeout
+    )
+    let response = try await send(request, credential: credential)
+    return try validate(response, provider: provider)
+  }
+
+  public func post(
+    provider: ProviderID,
+    url: URL,
+    body: Data,
+    credential: ProviderCredential,
+    headers: [String: String] = [:],
+    timeout: TimeInterval = 20
+  ) async throws -> Data {
+    let request = ProviderRequestTemplate(
+      method: .post,
+      provider: provider,
+      url: url,
+      body: body,
       headers: headers,
       timeout: timeout
     )

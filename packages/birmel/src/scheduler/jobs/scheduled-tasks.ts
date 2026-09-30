@@ -1,73 +1,40 @@
 import type { AgentJob } from "#generated/prisma/client/index.js";
 import {
+  getStagedAttachments,
   runWithRequestContext,
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { toDiscordAttachments } from "@shepherdjerred/birmel/agent-tools/tools/staged-attachments.ts";
+import {
+  DeliveryResultSchema,
+  EffectDispositionSchema,
+  type AgentJobExecution,
+  type AgentJobRuntimeDependencies,
+} from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
+import { recordPostExecutionSessionEvent } from "@shepherdjerred/birmel/scheduler/agent-job-session-events.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
-import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";
-import { serializeAgentJobOutput } from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/actions/message-actions.ts";
 import {
-  parseJsonRecord,
-  toError,
-} from "@shepherdjerred/birmel/utils/errors.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { appendSessionEvent } from "@shepherdjerred/birmel/sessions/service.ts";
-import { summarizeSessionIfNeeded } from "@shepherdjerred/birmel/sessions/summarization.ts";
-import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
+  createEffectCheckpoint,
+  serializeCheckpointOutput,
+} from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
+import { parseJsonRecord } from "@shepherdjerred/birmel/utils/errors.ts";
+import { toolRequiresExternalEffectCheckpoint } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
+import {
+  executeCreatedToolAfterPreflight,
+  preflightCreatedTool,
+} from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 
-const logger = loggers.scheduler.child("scheduled-tasks");
-
-export type AgentJobExecution = {
-  jobId: string;
-  runId: string;
-  claimId: string;
-  guildId: string;
-  actorUserId: string;
-  sessionId: string | null;
-  model: string | null;
-  reasoningEffort: string | null;
-  textVerbosity: string | null;
-  timeoutMs: number;
-  requestContext: RequestContext;
-};
-
-export type AgentJobRuntimeDependencies = {
-  executeTool: (
-    toolId: string,
-    input: Record<string, unknown>,
-    execution: AgentJobExecution,
-  ) => Promise<unknown>;
-  executeAgent: (
-    prompt: string,
-    execution: AgentJobExecution,
-  ) => Promise<unknown>;
-  deliverMessage: (
-    channelId: string,
-    message: string,
-    execution: AgentJobExecution,
-  ) => Promise<unknown>;
-};
 const AgentExecutionResultSchema = z.object({
   message: z.string().min(1).max(20_000),
   data: z.unknown().optional(),
 });
-const ExecutableToolSchema = z.object({ execute: z.function() }).loose();
-const EffectDispositionSchema = z.enum(["not_applied", "applied", "unknown"]);
 const ScheduledToolResultSchema = z
   .object({
     success: z.boolean(),
-    effectDisposition: EffectDispositionSchema.optional(),
-  })
-  .loose();
-const DeliveryResultSchema = z
-  .object({
-    success: z.boolean(),
-    message: z.string().optional(),
-    data: z.object({ messageId: z.string().min(1) }).optional(),
     effectDisposition: EffectDispositionSchema.optional(),
   })
   .loose();
@@ -80,10 +47,6 @@ function requireSuccessfulDelivery(delivery: unknown) {
     );
   }
   return parsedDelivery;
-}
-
-function serializeCheckpointOutput(value: unknown): string {
-  return serializeAgentJobOutput(value).slice(0, 20_000);
 }
 
 async function beginExternalEffect(
@@ -156,57 +119,6 @@ async function recordExternalEffectNotApplied(
   }
 }
 
-async function appendJobSessionEvent(options: {
-  execution: AgentJobExecution;
-  role: "assistant" | "tool";
-  eventType: string;
-  content: string;
-  toolId?: string;
-  delivery?: unknown;
-}): Promise<void> {
-  if (options.execution.sessionId == null) {
-    return;
-  }
-  const delivery = DeliveryResultSchema.safeParse(options.delivery);
-  await appendSessionEvent({
-    sessionId: options.execution.sessionId,
-    role: options.role,
-    eventType: options.eventType,
-    content: options.content,
-    ...(options.toolId == null ? {} : { toolId: options.toolId }),
-    ...(!delivery.success || delivery.data.data == null
-      ? {}
-      : { discordMessageId: delivery.data.data.messageId }),
-  });
-  await summarizeSessionIfNeeded(options.execution.sessionId);
-}
-
-async function recordPostExecutionSessionEvent(
-  options: Parameters<typeof appendJobSessionEvent>[0],
-): Promise<void> {
-  try {
-    await appendJobSessionEvent(options);
-  } catch (error) {
-    logger.error("Post-execution session event persistence failed", error, {
-      jobId: options.execution.jobId,
-      guildId: options.execution.guildId,
-      eventType: options.eventType,
-      errorClass: error instanceof Error ? error.name : "UnknownError",
-    });
-    captureException(toError(error), {
-      operation: "job.session-event.post-execution",
-      discord: {
-        guildId: options.execution.guildId,
-        userId: options.execution.actorUserId,
-      },
-      extra: {
-        jobId: options.execution.jobId,
-        eventType: options.eventType,
-      },
-    });
-  }
-}
-
 async function executeRegisteredTool(
   toolId: string,
   input: Record<string, unknown>,
@@ -218,14 +130,27 @@ async function executeRegisteredTool(
   if (tool == null) {
     throw new Error(`Tool not found or not executable: ${toolId}`);
   }
-  const executableTool = ExecutableToolSchema.parse(tool);
-  return await Reflect.apply(executableTool.execute, undefined, [
-    input,
-    {
-      runId: `agent-job-${execution.jobId}`,
-      agentId: "birmel-job-runner",
-    },
-  ]);
+  return await executeCreatedToolAfterPreflight(tool, input, {
+    runId: `agent-job-${execution.jobId}`,
+    agentId: "birmel-job-runner",
+  });
+}
+
+async function preflightRegisteredTool(
+  toolId: string,
+  input: Record<string, unknown>,
+  execution: AgentJobExecution,
+): Promise<unknown> {
+  const { allTools } =
+    await import("@shepherdjerred/birmel/agent-tools/tools/index.ts");
+  const tool = allTools[toolId];
+  if (tool == null) {
+    throw new Error(`Tool not found or not executable: ${toolId}`);
+  }
+  return await preflightCreatedTool(tool, input, {
+    runId: `agent-job-${execution.jobId}`,
+    agentId: "birmel-job-runner",
+  });
 }
 
 async function executeUnconfiguredAgent(): Promise<never> {
@@ -233,10 +158,17 @@ async function executeUnconfiguredAgent(): Promise<never> {
   throw new Error("Agent job executor has not been configured");
 }
 
+// A job's turn stages attachments the same way an interactive turn does, so
+// they have to be read back here too. Delivering only `message` meant an image
+// generated inside a scheduled job was produced, billed and then dropped.
 async function deliverDiscordMessage(
   channelId: string,
   message: string,
+  execution: AgentJobExecution,
 ): Promise<unknown> {
+  const files = toDiscordAttachments(
+    getStagedAttachments(execution.requestContext),
+  );
   if (Bun.env["BIRMEL_MOCK_DISCORD_DELIVERY"] === "true") {
     return {
       success: true,
@@ -244,9 +176,12 @@ async function deliverDiscordMessage(
       mockDelivery: true,
       channelId,
       message,
+      attachmentCount: files.length,
     };
   }
-  const result = await handleSend(getDiscordClient(), channelId, message);
+  const result = await handleSend(getDiscordClient(), channelId, message, {
+    files,
+  });
   return {
     ...result,
     effectDisposition: result.success ? "applied" : "not_applied",
@@ -254,11 +189,11 @@ async function deliverDiscordMessage(
 }
 
 const defaultRuntimeDependencies: AgentJobRuntimeDependencies = {
+  preflightTool: preflightRegisteredTool,
   executeTool: executeRegisteredTool,
   executeAgent: executeUnconfiguredAgent,
   deliverMessage: deliverDiscordMessage,
 };
-
 let runtimeDependencies = defaultRuntimeDependencies;
 
 export function configureAgentJobRuntime(
@@ -351,21 +286,28 @@ async function executeToolPayload(
     job.toolInput == null || job.toolInput.length === 0
       ? {}
       : parseJsonRecord(job.toolInput);
-  const requiresEffectCheckpoint =
-    getToolMetadata(job.toolId).riskClass !== "read";
-  if (requiresEffectCheckpoint) {
-    await beginExternalEffect(execution);
-  }
-  const result = await runtimeDependencies.executeTool(
+  const preflightResult = await runtimeDependencies.preflightTool(
     job.toolId,
     input,
     execution,
   );
+  const requiresEffectCheckpoint = toolRequiresExternalEffectCheckpoint(
+    job.toolId,
+    input,
+  );
+  const effectCheckpointAcquired =
+    preflightResult === undefined && requiresEffectCheckpoint;
+  if (effectCheckpointAcquired) {
+    await beginExternalEffect(execution);
+  }
+  const result =
+    preflightResult ??
+    (await runtimeDependencies.executeTool(job.toolId, input, execution));
   const toolResult = ScheduledToolResultSchema.parse(result);
-  if (requiresEffectCheckpoint && toolResult.success) {
+  if (effectCheckpointAcquired && toolResult.success) {
     await acknowledgeExternalEffect(execution, result);
   } else if (
-    requiresEffectCheckpoint &&
+    effectCheckpointAcquired &&
     toolResult.effectDisposition === "not_applied"
   ) {
     await recordExternalEffectNotApplied(execution);
@@ -422,20 +364,30 @@ async function executeAgentPayload(
     throw new Error("agentPrompt is required for agent jobs");
   }
   const agentPrompt = job.agentPrompt;
-  const effectState: {
-    acquiredByTool: boolean;
-    checkpoint: Promise<void> | null;
-  } = { acquiredByTool: false, checkpoint: null };
-  const beforeExternalEffect = async () => {
-    effectState.checkpoint ??= beginExternalEffect(execution);
-    await effectState.checkpoint;
-    effectState.acquiredByTool = true;
+  // allTools gives the agent manage-message now; block it from posting here.
+  const channelId = await deliveryChannelFor(job);
+  const { effectState, beforeExternalEffect } = createEffectCheckpoint(() =>
+    beginExternalEffect(execution),
+  );
+  // channelId (resolved delivery channel) can differ from the job's original
+  // source channel. Both the guard tools check and the model's own prompt
+  // context must agree on it, or a reply to the original channel slips past
+  // enforceSingleRuntimeReply and becomes a second, unintended message.
+  const requestContext = {
+    ...execution.requestContext,
+    beforeExternalEffect,
+    ownsSourceReply: true,
+    sourceChannelId: channelId,
   };
+  // The turn runs against this cloned context, so anything a tool stages during
+  // it — a generated image, say — lands here and not on execution.requestContext.
+  // Delivery has to be handed the same clone or the attachments are invisible.
+  const turnExecution = { ...execution, requestContext };
   const result = AgentExecutionResultSchema.parse(
     await runWithRequestContext(
-      { ...execution.requestContext, beforeExternalEffect },
+      requestContext,
       async () =>
-        await runtimeDependencies.executeAgent(agentPrompt, execution),
+        await runtimeDependencies.executeAgent(agentPrompt, turnExecution),
     ),
   );
   const resultData = z
@@ -448,7 +400,6 @@ async function executeAgentPayload(
   if (resultData.effectDisposition != null) {
     throw new Error(result.message);
   }
-  const channelId = await deliveryChannelFor(job);
   if (!effectState.acquiredByTool) {
     effectState.checkpoint ??= beginExternalEffect(execution);
     await effectState.checkpoint;
@@ -456,7 +407,7 @@ async function executeAgentPayload(
   const delivery = await runtimeDependencies.deliverMessage(
     channelId,
     result.message,
-    execution,
+    turnExecution,
   );
   const parsedDelivery = DeliveryResultSchema.parse(delivery);
   if (

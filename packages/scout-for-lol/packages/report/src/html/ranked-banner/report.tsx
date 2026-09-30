@@ -33,10 +33,7 @@ export const BANNER_HEIGHT = 1500;
  * report.tsx. The -1.5 fudge keeps the columns' gap from overflowing 100%.
  */
 function squadGroupWidth(groupCount: number): string {
-  if (groupCount <= 1) {
-    return "100%";
-  }
-  return `${(100 / groupCount - 1.5).toString()}%`;
+  return groupCount <= 1 ? "100%" : `${(100 / groupCount - 1.5).toString()}%`;
 }
 
 function CornerBracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {

@@ -3,6 +3,7 @@ import {
   UNGROUPED_LABEL_COLUMN_LABEL,
   type ExploreMessage,
 } from "@scout-for-lol/data";
+import { ReportAssetIcon } from "#src/components/report/report-result-table-helpers.tsx";
 import { ReportResultTable } from "#src/components/report/report-result-table.tsx";
 
 /**
@@ -63,6 +64,8 @@ export function SingleRowResult(props: {
             key: column.key,
             label: column.label,
             text: formatReportDisplayValue(column, value),
+            asset: column.asset,
+            value,
           },
         ];
   });
@@ -81,7 +84,12 @@ export function SingleRowResult(props: {
       {figures.map((figure) => (
         <div key={figure.key} className="min-w-24">
           <dt className="text-xs text-muted-foreground">{figure.label}</dt>
-          <dd className="text-2xl font-semibold tabular-nums">{figure.text}</dd>
+          <dd className="flex items-center gap-2 text-2xl font-semibold tabular-nums">
+            {figure.asset === undefined ? null : (
+              <ReportAssetIcon kind={figure.asset} value={figure.value} />
+            )}
+            {figure.text}
+          </dd>
         </div>
       ))}
     </dl>

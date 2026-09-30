@@ -36,10 +36,10 @@ test("withLlmSubjectSpan makes the span active for the wrapped call", async () =
   exporter.reset();
 
   // This is the property the whole attribution scheme rests on: llm-runtime
-  // reads trace.getSpan(context.active()) to build a call's attribution
-  // headers. If the span were created but not activated, the call would reach
-  // OpenRouter with no trace id and its cost log could never be joined back to
-  // the span naming the subject.
+  // reads trace.getSpan(context.active()) to stamp a call's trace id. If the
+  // span were created but not activated, the call would reach the provider
+  // with no trace id and its cost log could never be joined back to the span
+  // naming the subject.
   const observed = await withLlmSubjectSpan(
     "scout.explore",
     { kind: "discord_user", id: "42" },

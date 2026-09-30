@@ -16,8 +16,11 @@ import {
   deriveProjectOptions,
   projectIdentityLabel,
 } from "../../domain/project-options";
-import type { SavedViewDefinition } from "../../domain/saved-view-actions";
-import type { SavedView, SavedViewQuery } from "../../domain/saved-views";
+import type { SavedViewDefinition } from "../../domain/saved-view/saved-view-actions";
+import type {
+  SavedView,
+  SavedViewQuery,
+} from "../../domain/saved-view/saved-views";
 import { ALL_PRIORITIES, PRIORITY_LABELS } from "../../domain/priority";
 import type { Priority } from "../../domain/priority";
 import { STATUS_LABELS } from "../../domain/status";

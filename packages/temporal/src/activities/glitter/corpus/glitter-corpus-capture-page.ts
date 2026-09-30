@@ -3,8 +3,8 @@ import {
   DiscordApiMessageSchema,
   DiscordRateLimitSchema,
   IsoTimestampSchema,
-} from "#shared/glitter-corpus.ts";
-import type { CapturePageInput } from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus.ts";
+import type { CapturePageInput } from "#shared/glitter/glitter-corpus-activity-types.ts";
 import type {
   DiscordRestClient,
   DiscordRestResponse,

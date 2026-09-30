@@ -5,9 +5,13 @@ import { serveStatic } from "hono/bun";
 import { z } from "zod";
 
 import type { AlertService } from "#application/alert-service";
+import type { DigestService } from "#application/ops-digest-service";
+import type { OpsService } from "#application/ops-service";
+import { hasBearer } from "#server/bearer";
 import type { ChangeBus } from "#server/change-bus";
 import type { Metrics } from "#server/metrics";
 import { withSpan } from "#infrastructure/observability";
+import { opsErrorResponse, registerOpsRoutes } from "#server/ops-routes";
 import { appRouter } from "#server/trpc";
 import {
   AlertDetailInputSchema,
@@ -22,23 +26,15 @@ type AppOptions = {
   changes: ChangeBus;
   metrics: Metrics;
   webhookToken: string;
+  ops: OpsService;
+  digests: DigestService;
+  opsIngestToken: string;
 };
 
 const clientRoot = `${import.meta.dir}/../../dist/client`;
 const LabelFilterSchema = z
   .string()
   .regex(/^[^:]+:.+$/u, "Expected a non-empty key:value label filter");
-
-function secureEqual(left: string, right: string): boolean {
-  let difference = left.length ^ right.length;
-  const length = Math.max(left.length, right.length);
-  for (let index = 0; index < length; index += 1) {
-    difference |=
-      (left.codePointAt(index % Math.max(left.length, 1)) ?? 0) ^
-      (right.codePointAt(index % Math.max(right.length, 1)) ?? 0);
-  }
-  return difference === 0;
-}
 
 function labels(values: readonly string[]): Record<string, string> | undefined {
   if (values.length === 0) return undefined;
@@ -107,6 +103,13 @@ export function createApp(options: AppOptions): Hono {
     options.metrics.gauge("alert_dashboard_open_alerts", summary.info, {
       severity: "info",
     });
+    // Outbox depth and age alone cannot tell a stuck sender from a sender that
+    // is switched off, and the rows keep their original timestamps either way.
+    // Publishing the switch lets the alert rules separate the two.
+    options.metrics.gauge(
+      "alert_dashboard_email_enabled",
+      status.emailEnabled ? 1 : 0,
+    );
     options.metrics.gauge(
       "alert_dashboard_email_outbox_depth",
       status.pendingEmails,
@@ -123,6 +126,11 @@ export function createApp(options: AppOptions): Hono {
             instantTextToEpochNanoseconds(status.oldestPendingEmailAt) /
               1_000_000_000n,
           ),
+    );
+    const lastIngestAtNs = await options.ops.lastIngestAtNs();
+    options.metrics.gauge(
+      "alert_dashboard_ops_last_ingest_timestamp_seconds",
+      lastIngestAtNs === null ? 0 : Number(lastIngestAtNs / 1_000_000_000n),
     );
     options.metrics.gauge(
       "alert_dashboard_last_reconciliation_timestamp_seconds",
@@ -145,11 +153,8 @@ export function createApp(options: AppOptions): Hono {
       onError: (context) => context.json({ error: "Payload too large" }, 413),
     }),
     async (context) => {
-      const authorization = context.req.header("authorization");
-      const expected = `Bearer ${options.webhookToken}`;
       if (
-        authorization === undefined ||
-        !secureEqual(authorization, expected)
+        !hasBearer(context.req.header("authorization"), options.webhookToken)
       ) {
         options.metrics.increment("alert_dashboard_webhook_total", {
           result: "unauthorized",
@@ -228,6 +233,8 @@ export function createApp(options: AppOptions): Hono {
   app.all("/trpc", handleTrpc);
   app.all("/trpc/*", handleTrpc);
 
+  registerOpsRoutes(app, options);
+
   app.all("/api", apiNotFound);
   app.all("/api/*", apiNotFound);
   app.all("/internal", apiNotFound);
@@ -238,6 +245,8 @@ export function createApp(options: AppOptions): Hono {
   app.get("*", serveStatic({ root: clientRoot, path: "index.html" }));
   app.notFound((context) => context.json({ error: "Not found" }, 404));
   app.onError((error, context) => {
+    const opsResponse = opsErrorResponse(error, context);
+    if (opsResponse !== undefined) return opsResponse;
     if (error instanceof z.ZodError)
       return context.json(
         { error: "Invalid request", issues: z.treeifyError(error) },

@@ -4,8 +4,7 @@ import {
   lookupChampionText,
   lookupItemText,
   lookupPatchNotesText,
-  VoiceTurnFactsRecorder,
-} from "#src/voice-assistant/league-tools.ts";
+} from "#src/explore/tools/league-reference-tools.ts";
 
 /**
  * Golden answers over the committed Data Dragon / CommunityDragon assets.
@@ -14,18 +13,12 @@ import {
  */
 describe("lookup_ability", () => {
   test("grounds Cho'Gath ult at rank one in 300 true damage", async () => {
-    const recorder = new VoiceTurnFactsRecorder();
-    const text = await lookupAbilityText(
-      { champion: "chogath", ability: "R" },
-      recorder,
-    );
+    const text = await lookupAbilityText({ champion: "chogath", ability: "R" });
     expect(text).toContain("Feast");
     expect(text).toContain("RBaseDamage at rank 1: 300");
     expect(text).toContain("RBaseDamage by rank: [300, 475, 650]");
     expect(text).toContain("defaulted to rank 1");
     expect(text).toContain("true damage");
-    expect(recorder.champion).toBe("Cho'Gath");
-    expect(recorder.slot).toBe("R");
   });
 
   test("reports Karthus ult cooldowns by rank", async () => {
@@ -92,19 +85,20 @@ describe("lookup_champion", () => {
 
 describe("lookup_item", () => {
   test("returns stats for an exact item name", () => {
-    const text = lookupItemText({ item: "Infinity Edge" });
-    expect(text).toContain("Item: Infinity Edge");
+    const text = lookupItemText({ item: "Infinity Edge", mapId: 11 });
+    expect(text).toContain("Item: Infinity Edge (3031)");
     expect(text).toContain("Stats:");
   });
 
   test("is case-insensitive", () => {
-    const text = lookupItemText({ item: "infinity edge" });
-    expect(text).toContain("Item: Infinity Edge");
+    const text = lookupItemText({ item: "infinity edge", mapId: 11 });
+    expect(text).toContain("Item: Infinity Edge (3031)");
   });
 
-  test("asks for a full name on an ambiguous fragment", () => {
+  test("asks for an item or map ID on an ambiguous fragment", () => {
     const text = lookupItemText({ item: "sword" });
-    expect(text).toContain("Multiple items match");
+    expect(text).toContain("Multiple item variants match");
+    expect(text).toContain("numeric item ID or map ID");
   });
 
   test("declines unknown items without inventing one", () => {

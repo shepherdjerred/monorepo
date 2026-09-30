@@ -170,5 +170,22 @@ export function parseAgentStreamChunk(
 }
 
 export function agentStreamErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (typeof error === "object" && error !== null) {
+    // Provider error payloads are objects; String() renders them as the
+    // useless "[object Object]" and Bugsink groups on the message.
+    try {
+      return JSON.stringify(error);
+    } catch {
+      // Circular or otherwise unserializable: say so rather than emitting
+      // the default "[object Object]" stringification.
+      return "[unserializable error object]";
+    }
+  }
+  return String(error);
 }

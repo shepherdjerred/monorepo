@@ -1,17 +1,4 @@
-import {
-  automationToolSet,
-  messagingToolSet,
-  moderationToolSet,
-  serverToolSet,
-  toolsToRecord,
-} from "./tool-sets.ts";
-
-const registeredTools = [
-  ...messagingToolSet,
-  ...serverToolSet,
-  ...moderationToolSet,
-  ...automationToolSet,
-];
+import { registeredTools, toolsToRecord } from "./tool-sets.ts";
 
 const ids = registeredTools.map(({ id }) => id);
 if (new Set(ids).size !== ids.length) {

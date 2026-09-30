@@ -303,8 +303,9 @@ export const challengeRouter = router({
       const player = await prisma.player.findFirstOrThrow({
         where: { serverId: input.guildId, alias: input.alias },
       });
-      if (player.discordId === null) return [];
-      return await getChallengeRunHistory(prisma, ownerId(player.discordId));
+      return player.discordId === null
+        ? []
+        : await getChallengeRunHistory(prisma, ownerId(player.discordId));
     }),
   profileRunsByPlayerId: webProcedure
     .input(z.strictObject({ playerId: PlayerIdSchema }))
@@ -332,7 +333,8 @@ export const challengeRouter = router({
           message: "Challenge runs are unavailable",
         });
       }
-      if (player.discordId === null) return [];
-      return await getChallengeRunHistory(prisma, ownerId(player.discordId));
+      return player.discordId === null
+        ? []
+        : await getChallengeRunHistory(prisma, ownerId(player.discordId));
     }),
 });

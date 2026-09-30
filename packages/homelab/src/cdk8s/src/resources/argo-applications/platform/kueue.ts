@@ -10,6 +10,13 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 
 // The Kueue Helm chart uses a single YAML string for the entire controller config.
 // Individual top-level values don't work — must override the full controllerManagerConfigYaml.
+//
+// `pod` is what admits Woodpecker CI: its Kubernetes backend creates bare pods,
+// not Jobs. Pod integration has no label selector (v1beta2 removed
+// podOptions), so it covers every pod in a namespace carrying the managed
+// label -- only `woodpecker-ci`, which holds nothing that must start while
+// Kueue is down. With it enabled the pod webhook is fail-closed: while Kueue
+// is unavailable, CI pods fail to create rather than run unadmitted.
 const KUEUE_CONFIG_YAML = `
 apiVersion: config.kueue.x-k8s.io/v1beta2
 kind: Configuration
@@ -17,6 +24,12 @@ manageJobsWithoutQueueName: true
 managedJobsNamespaceSelector:
   matchLabels:
     kueue.x-k8s.io/managed-namespace: "true"
+# Buildkite runs checkout as a regular container that exits after cloning.
+# Its pod stays NotReady while the command container runs, so Kueue 0.19's
+# default 30m PodsReady timeout evicts healthy long-running CI jobs. Keep
+# quota admission; disable only the incompatible readiness eviction.
+featureGates:
+  DisableWaitForPodsReady: true
 health:
   healthProbeBindAddress: :8081
 metrics:
@@ -48,6 +61,7 @@ clientConnection:
 integrations:
   frameworks:
     - batch/job
+    - pod
 `.trim();
 
 export function createKueueApp(chart: Chart) {

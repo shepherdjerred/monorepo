@@ -301,11 +301,9 @@ function tokenizeCooklangLine(
   timers: Timer[],
 ): StepToken[] {
   const lexResult = stepLexer.tokenize(line);
-  if (lexResult.errors.length > 0) {
-    return [{ type: "text", value: line }];
-  }
-
-  return parseTokenStream(lexResult.tokens, ingredients, cookware, timers);
+  return lexResult.errors.length > 0
+    ? [{ type: "text", value: line }]
+    : parseTokenStream(lexResult.tokens, ingredients, cookware, timers);
 }
 
 // ── Line-level preprocessing (hand-written, unchanged) ──────────────────────

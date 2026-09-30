@@ -1,5 +1,5 @@
 import { riotClient } from "#src/league/api/api.ts";
-import { getAccountsWithState } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import {
   MatchIdSchema,

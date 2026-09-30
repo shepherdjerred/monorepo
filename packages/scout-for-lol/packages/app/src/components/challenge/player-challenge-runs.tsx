@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import type { PlayerId } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { Section } from "#src/components/player/player-detail-sections.tsx";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 type ChallengeRunSummary = {
   readonly id: string;
@@ -28,7 +28,7 @@ function ChallengeRunSection(props: {
             >
               <span className="font-medium">{run.title}</span>
               <Badge variant="outline">
-                {run.recomputing ? "recomputing" : run.status}
+                {run.recomputing ? "Updating now..." : run.status}
               </Badge>
             </Link>
           </li>

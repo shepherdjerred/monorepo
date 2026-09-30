@@ -1,0 +1,81 @@
+# A new harvest cycle follows the windmill safety work in the main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-grain-measure:
+    name: The Grain Measure
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed after-the-storm
+    text:
+      offer: Martha's reserve is counted. I need one common measure so the market and mill record the same amount of grain.
+      accept: Bring wheat and a chest for a measured market sample.
+      decline: The grain will remain in reserve.
+      finish: The market sample is sealed. Martha can compare each new harvest with it.
+      summary: Establish a shared grain measure for the mill and market.
+      questions: []
+    start: sample
+    stages:
+      sample:
+        journal: Bring Braxton 48 wheat and a chest for the grain measure.
+        waiting: A common sample helps the town divide the harvest fairly.
+        complete: The market and mill now share one measured sample.
+        objectives:
+          - deliver braxton 48 WHEAT
+          - deliver braxton 1 CHEST
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  bread-for-the-watch:
+    name: Bread for the Watch
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-grain-measure
+    text:
+      offer: Braxton's measure protects the market share. The windmill watch still needs a meal on long shifts.
+      accept: Craft bread from the harvest in the main world for the watch.
+      decline: The watch will carry what it has tonight.
+      finish: The first share of the new harvest feeds the people who guard it.
+      summary: Bake bread for the Spawn Town windmill watch.
+      questions: []
+    start: bake
+    stages:
+      bake:
+        journal: Craft 16 bread in the main world for Martha's watch.
+        waiting: Fresh bread makes a long watch easier.
+        complete: The bread is ready to take to Martha.
+        objectives:
+          - craft 16 BREAD
+        onComplete: []
+        next: [{ to: hand-in, when: [], label: none }]
+        timeLimit: none
+      hand-in:
+        journal: Bring Martha the 16 bread for the watch.
+        waiting: Bring the fresh bread to me and I will send it to the watch.
+        complete: Martha has enough bread for the next watch.
+        objectives:
+          - deliver martha 16 BREAD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

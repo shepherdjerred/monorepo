@@ -15,7 +15,7 @@ import {
   cancelBet,
   type CancelBetResult,
 } from "#src/betting/markets/cancel-bet.ts";
-import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
+import { refreshBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { outcomeLabel, teamIdForSubjectOutcome } from "#src/betting/team.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import {

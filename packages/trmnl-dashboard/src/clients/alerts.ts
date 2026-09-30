@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-const SummarySchema = z.object({
-  open: z.number().int().nonnegative(),
-  critical: z.number().int().nonnegative(),
-  warning: z.number().int().nonnegative(),
-  info: z.number().int().nonnegative(),
-});
-
 const AlertSchema = z.object({
   alertname: z.string(),
   severity: z.string(),
@@ -19,16 +12,10 @@ const AlertListSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
-export type AlertsSummary = z.infer<typeof SummarySchema>;
 export type AlertSummaryItem = z.infer<typeof AlertSchema>;
 
 export class AlertsClient {
   constructor(private readonly baseUrl: string) {}
-
-  async getSummary(): Promise<AlertsSummary> {
-    const response = await this.fetchJson("/api/v1/summary");
-    return SummarySchema.parse(response);
-  }
 
   async listOpen(limit = 6): Promise<AlertSummaryItem[]> {
     const response = await this.fetchJson(

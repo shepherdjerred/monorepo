@@ -47,15 +47,6 @@ correlation exactly.
 The model never sees a probability field it could fill in. It does not exist in
 the schema it answers.
 
-Weekly parlays use the same replay principle over aligned Pacific scoring
-windows, with one important separation: activity qualifies a window for
-pricing but is not displayed as a betting leg. Scout excludes a historical
-window unless every featured player completed at least three eligible games.
-It stores the total, qualified, and excluded windows so the quoted probability
-can be audited. The live market uses the same rule: fewer than three games
-voids the market and refunds everyone rather than turning predictable activity
-into a leg.
-
 The model returns five distinct proposal shapes, each with a one-game peak on a
 shortlisted champion. Code chooses thresholds and rejects any shape outside the
 interesting catalogue. Each individual leg must have landed 20–70% of the time

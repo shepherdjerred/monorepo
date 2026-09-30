@@ -16,7 +16,7 @@ import type {
 } from "#src/model/core/discord.ts";
 import { DiscordChannelIdSchema } from "#src/model/core/discord.ts";
 
-export const REPORT_QUERY_MAX_LENGTH = 4000;
+export const REPORT_QUERY_MAX_LENGTH = 16_000;
 export const REPORT_DEFAULT_MAX_ROWS = 10;
 export const REPORT_MAX_ROWS_LIMIT = 25;
 export const REPORT_ACTIVE_LIMIT_PER_SERVER = 3;
@@ -76,6 +76,16 @@ export const ReportDisplayKindSchema = z.enum([
   "text",
   "timestamp",
 ]);
+
+/** Game asset shown beside a ScoutQL result value or grouping label. */
+export const ReportAssetKindSchema = z.enum([
+  "champion",
+  "item",
+  "rune",
+  "rune_tree",
+  "spell",
+]);
+export type ReportAssetKind = z.infer<typeof ReportAssetKindSchema>;
 
 /**
  * Channel encodings for chart kinds — a deliberately small slice of the

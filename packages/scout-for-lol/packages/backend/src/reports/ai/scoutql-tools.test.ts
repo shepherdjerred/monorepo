@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
-import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/presets.ts";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/editor/scoutql-idioms.ts";
+import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/editor/presets.ts";
 import {
   LanguageToolOutputSchema,
   scoutQlLanguageReference,

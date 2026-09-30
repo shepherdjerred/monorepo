@@ -11,14 +11,14 @@ import type {
   InteractionReplyOptions,
 } from "discord.js";
 import { MessageFlags } from "discord.js";
-import type { ExploreAgentParams } from "#src/explore/agent.ts";
+import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   executeScout,
   type ScoutAskInteraction,
 } from "#src/discord/commands/scout.ts";
 import { resetExploreRateLimitStateForTests } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
+import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { scoutTestVisualization } from "#src/discord/scout/test-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
@@ -98,11 +98,15 @@ const successfulAgent = async (_params: ExploreAgentParams) => ({
     title: "Most frequent winners",
     queryText: "SELECT champion, wins FROM match_participants",
     includeVisualization: true,
+    matchCards: [],
+    loadoutCards: [],
     caveats: ["Tracked matches only."],
     followUps: [],
   },
   preview: null,
   visualization: scoutTestVisualization,
+  matchCards: [],
+  loadoutCards: [],
 });
 
 const interruptedAgent = async (params: ExploreAgentParams) => {

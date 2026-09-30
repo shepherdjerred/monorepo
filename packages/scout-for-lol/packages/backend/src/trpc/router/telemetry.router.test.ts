@@ -16,7 +16,7 @@ import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 const trpc = await createOfflineTrpcHarness("telemetry-router-test");
 
 const { onboardingStepTotal, onboardingOutcomeTotal } =
-  await import("#src/metrics/web.ts");
+  await import("#src/metrics/platform/web.ts");
 const { resetTelemetryRateLimitForTests } =
   await import("#src/trpc/router/telemetry.router.ts");
 

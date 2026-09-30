@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/parlay-settle.ts";
+import {
+  BucksAmountSchema,
+  BucksPoolTotalSchema,
+  BucksStakeSchema,
+  DiscordAccountIdSchema,
+  ZERO_BUCKS,
+} from "@scout-for-lol/data";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import {
   buildSettlementDmMessages,
   type TeamRecipient,
@@ -9,7 +16,7 @@ import {
   SETTLEMENT_DM_HINT_EVERY,
   type SettlementDmDeliveryDependencies,
 } from "#src/betting/settlement/settlement-dm-delivery.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import {
@@ -35,21 +42,22 @@ function bet(input: {
   unmatchedStake?: number;
   isHouse?: boolean;
 }): SettlementBet {
-  const unmatchedStake = input.unmatchedStake ?? 0;
-  const matchedStake = 10 - unmatchedStake;
+  const unmatchedStake = BucksAmountSchema.parse(input.unmatchedStake ?? 0);
+  const matchedStake = BucksAmountSchema.parse(10 - unmatchedStake);
   return {
     betId: input.id,
     bucksAccountId: input.id,
-    discordId: input.discordId,
+    discordId: DiscordAccountIdSchema.parse(input.discordId),
     isHouse: input.isHouse ?? false,
     predictedTeamId: input.teamId,
-    submittedStake: 10,
+    submittedStake: BucksStakeSchema.parse(10),
     matchedStake,
     unmatchedStake,
-    grossPayout: input.won === true ? 20 : matchedStake,
-    houseCut: 0,
-    payout: input.won === true ? 20 : matchedStake,
-    winnings: input.won === true ? 10 : 0,
+    grossPayout:
+      input.won === true ? BucksAmountSchema.parse(20) : matchedStake,
+    houseCut: ZERO_BUCKS,
+    payout: input.won === true ? BucksAmountSchema.parse(20) : matchedStake,
+    winnings: input.won === true ? BucksAmountSchema.parse(10) : ZERO_BUCKS,
     won: input.won ?? false,
     refunded: input.refunded ?? false,
     subjectPuuid: bucksTestPuuid(input.id),
@@ -66,9 +74,9 @@ function summary(
     serverId,
     winningTeamId: 100,
     voidReason,
-    winnersPool: 10,
-    losersPool: 10,
-    houseCut: 0,
+    winnersPool: BucksPoolTotalSchema.parse(10),
+    losersPool: BucksPoolTotalSchema.parse(10),
+    houseCut: BucksPoolTotalSchema.parse(0),
     bets,
   };
 }

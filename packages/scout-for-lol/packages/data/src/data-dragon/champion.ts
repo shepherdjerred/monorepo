@@ -40,6 +40,7 @@ const ChampionDataSchema = z.object({
     z.string(),
     z.object({
       id: z.string(),
+      key: z.string(),
       name: z.string(),
       title: z.string(),
       tags: z.array(ChampionTagSchema).min(1),
@@ -62,7 +63,8 @@ export type ChampionInfo = {
 const championCache = new Map<string, ChampionInfo>();
 
 // Cache for champion list
-let championListCache: { id: string; name: string }[] | null = null;
+let championListCache: { id: string; key: string; name: string }[] | null =
+  null;
 
 /**
  * Schema for the champion list data from Data Dragon
@@ -72,6 +74,7 @@ const ChampionListSchema = z.object({
     z.string(),
     z.object({
       id: z.string(),
+      key: z.string(),
       name: z.string(),
     }),
   ),
@@ -83,7 +86,7 @@ const ChampionListSchema = z.object({
  * @returns Array of champions with id and name
  */
 export async function getChampionList(): Promise<
-  { id: string; name: string }[]
+  { id: string; key: string; name: string }[]
 > {
   // Return cached list if available
   if (championListCache !== null) {
@@ -95,7 +98,7 @@ export async function getChampionList(): Promise<
   const data = ChampionListSchema.parse(JSON.parse(fileContent));
 
   championListCache = Object.values(data.data)
-    .map((c) => ({ id: c.id, name: c.name }))
+    .map((c) => ({ id: c.id, key: c.key, name: c.name }))
     .toSorted((a, b) => a.name.localeCompare(b.name));
 
   return championListCache;

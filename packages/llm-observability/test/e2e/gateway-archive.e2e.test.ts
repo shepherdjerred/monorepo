@@ -23,7 +23,7 @@ const InputMessagesEnvelopeSchema = z.object({
 let harness: E2eHarness;
 
 beforeAll(() => {
-  harness = buildE2eHarness("e2e-test-openrouter");
+  harness = buildE2eHarness("e2e-test-provider");
 });
 
 afterAll(async () => {
@@ -36,9 +36,9 @@ test("end-to-end: gateway span -> Tempo + private archive", async () => {
 
   const response = await withLlmSpan(
     {
-      service: "e2e-test-openrouter",
+      service: "e2e-test-provider",
       callSite: "scout-review",
-      system: "openrouter",
+      system: "openai",
     },
     {
       model: "openai/gpt-5.4-mini",
@@ -84,7 +84,7 @@ test("end-to-end: gateway span -> Tempo + private archive", async () => {
   const traceResult = await pollTempoTrace(capturedTraceId);
   const llmSpan = traceResult.spans.find((span) => span.name === "gen_ai.chat");
   expect(llmSpan).toBeDefined();
-  expect(llmSpan?.attributes["gen_ai.system"]).toBe("openrouter");
+  expect(llmSpan?.attributes["gen_ai.system"]).toBe("openai");
   expect(llmSpan?.attributes["gen_ai.request.model"]).toBe(
     "openai/gpt-5.4-mini",
   );
@@ -113,8 +113,8 @@ test("end-to-end: gateway span -> Tempo + private archive", async () => {
   const envelope = gunzipJson(archived);
   expect(envelope).toMatchObject({
     v: 1,
-    service: "e2e-test-openrouter",
-    provider: "openrouter",
+    service: "e2e-test-provider",
+    provider: "openai",
     callSite: "scout-review",
   });
   const parsedEnvelope = InputMessagesEnvelopeSchema.parse(envelope);

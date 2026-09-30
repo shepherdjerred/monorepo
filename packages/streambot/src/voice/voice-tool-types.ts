@@ -7,6 +7,10 @@ export const voiceToolSchemas = {
     query: z.string().min(1),
     source: z.enum(["auto", "history", "local", "youtube"]),
     placement: z.enum(["queue", "next", "now"]),
+    // "watch this" vs "play this" is the clearest transport signal a speaker gives, and the model
+    // hears the verb we do not: `inferMediaIntent` only sees the query after the verb is stripped.
+    mode: z.enum(["auto", "music", "video"]),
+    provider: z.enum(["auto", "streameast", "tvsportslive"]).optional(),
   }),
   skip: EmptyInputSchema,
   stop: EmptyInputSchema,
@@ -43,6 +47,7 @@ export const voiceToolSchemas = {
   listChapters: EmptyInputSchema,
   getQueue: EmptyInputSchema,
   getNowPlaying: EmptyInputSchema,
+  listSports: EmptyInputSchema,
 } as const;
 
 export type ToolName =
@@ -67,7 +72,8 @@ export type ToolName =
   | "search_media"
   | "list_chapters"
   | "get_queue"
-  | "get_now_playing";
+  | "get_now_playing"
+  | "list_sports";
 
 export type PlayArguments = z.infer<typeof voiceToolSchemas.play>;
 export type SeekArguments = z.infer<typeof voiceToolSchemas.seek>;
@@ -125,4 +131,5 @@ export type VoiceCommandInvocation =
   | {
       readonly name: "get_now_playing";
       readonly arguments: Record<string, never>;
-    };
+    }
+  | { readonly name: "list_sports"; readonly arguments: Record<string, never> };

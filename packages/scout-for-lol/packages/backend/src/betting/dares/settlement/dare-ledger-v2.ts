@@ -1,12 +1,20 @@
 import {
+  BucksAmountSchema,
+  BucksStakeSchema,
   DiscordGuildIdSchema,
+  ZERO_BUCKS,
+  amountToStake,
+  creditOf,
+  debitOf,
+  subtractAmounts,
+  type BucksStake,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import {
   cancellationHouseCut,
   settlementHouseCut,
-} from "#src/betting/house-cut.ts";
-import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+} from "#src/betting/eligibility/house-cut.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import {
   applyBucksDelta,
   lockBucksAccountsForCredit,
@@ -16,7 +24,7 @@ import type {
   DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
 import type { Db } from "#src/database/index.ts";
-import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting/betting.ts";
 
 export type DareV2LedgerFacts = {
   contractVersion: 2 | 3;
@@ -63,7 +71,7 @@ function contextBase(
     dareId: facts.dareId,
     targetAliases: [...facts.targetAliases],
     conditionSummary: facts.conditionSummary,
-    potTotal: facts.potTotal,
+    potTotal: BucksStakeSchema.parse(facts.potTotal),
     ...(resolution === undefined ? {} : { resolution }),
   };
 }
@@ -74,7 +82,7 @@ export async function stakeDareV2ContributionInTransaction(
     facts: DareV2LedgerFacts;
     bucksAccountId: number;
     discordId: DiscordAccountId;
-    amount: number;
+    amount: BucksStake;
   },
 ): Promise<number> {
   await tx.bucksDareV2Contribution.create({
@@ -87,7 +95,7 @@ export async function stakeDareV2ContributionInTransaction(
   });
   return await applyBucksDelta(tx, {
     bucksAccountId: input.bucksAccountId,
-    delta: -input.amount,
+    delta: debitOf(input.amount),
     kind: "dare_stake",
     context: {
       ...contextBase(input.facts),
@@ -138,13 +146,14 @@ export async function refundDareV2ContributionsInTransaction(
 ): Promise<DareContributorRefund[]> {
   const totals = await contributionTotals(tx, input.facts);
   const refunds = [...totals.entries()].map(([bucksAccountId, entry]) => {
-    const fee = input.withCut ? cancellationHouseCut(entry.total) : 0;
+    const contributed = BucksAmountSchema.parse(entry.total);
+    const fee = input.withCut ? cancellationHouseCut(contributed) : ZERO_BUCKS;
     return {
       bucksAccountId,
       discordId: entry.discordId,
-      contributed: entry.total,
+      contributed,
       fee,
-      refunded: entry.total - fee,
+      refunded: subtractAmounts(contributed, fee),
     };
   });
   const house = refunds.some((refund) => refund.fee > 0)
@@ -161,13 +170,13 @@ export async function refundDareV2ContributionsInTransaction(
     if (refund.refunded > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: refund.bucksAccountId,
-        delta: refund.refunded,
+        delta: creditOf(refund.refunded),
         kind: "dare_refund",
         matchId: input.facts.matchId,
         context: {
           ...contextBase(input.facts, input.resolution),
           role: "contributor",
-          amount: refund.contributed,
+          amount: amountToStake(refund.contributed),
           payoutComponent: "refund",
           ...(input.voidReason === undefined
             ? {}
@@ -178,13 +187,13 @@ export async function refundDareV2ContributionsInTransaction(
     if (house !== undefined && refund.fee > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: refund.fee,
+        delta: creditOf(refund.fee),
         kind: "dare_fee",
         matchId: input.facts.matchId,
         context: {
           ...contextBase(input.facts, input.resolution),
           role: "house",
-          amount: refund.contributed,
+          amount: amountToStake(refund.contributed),
           payoutComponent: "refund_fee",
         },
       });
@@ -227,13 +236,13 @@ export async function payDareV2TargetsInTransaction(
     if (payout.net > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: payout.bucksAccountId,
-        delta: payout.net,
+        delta: creditOf(payout.net),
         kind: "dare_payout",
         matchId: input.facts.matchId,
         context: {
           ...contextBase(input.facts, "achieved"),
           role: "target",
-          amount: payout.grossShare,
+          amount: amountToStake(payout.grossShare),
           payoutComponent: "share",
           grossShare: payout.grossShare,
         },
@@ -242,13 +251,13 @@ export async function payDareV2TargetsInTransaction(
     if (payout.fee > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: payout.fee,
+        delta: creditOf(payout.fee),
         kind: "dare_fee",
         matchId: input.facts.matchId,
         context: {
           ...contextBase(input.facts, "achieved"),
           role: "house",
-          amount: payout.grossShare,
+          amount: amountToStake(payout.grossShare),
           payoutComponent: "fee",
           grossShare: payout.grossShare,
         },
@@ -256,15 +265,16 @@ export async function payDareV2TargetsInTransaction(
     }
   }
   if (remainder > 0 && input.remainderTargetId === undefined) {
+    const indivisible = BucksStakeSchema.parse(remainder);
     await applyBucksDelta(tx, {
       bucksAccountId: house.id,
-      delta: remainder,
+      delta: creditOf(indivisible),
       kind: "dare_fee",
       matchId: input.facts.matchId,
       context: {
         ...contextBase(input.facts, "achieved"),
         role: "house",
-        amount: remainder,
+        amount: indivisible,
         payoutComponent: "remainder",
       },
     });
@@ -291,8 +301,9 @@ export function allocateDareV2TargetPayouts(input: {
     throw new Error("Dare payout remainder target is not a payee.");
   }
   const payouts = input.targets.map((target) => {
-    const grossShare =
-      share + (target.id === input.remainderTargetId ? remainder : 0);
+    const grossShare = BucksAmountSchema.parse(
+      share + (target.id === input.remainderTargetId ? remainder : 0),
+    );
     const fee = settlementHouseCut({
       matchedProfit: grossShare,
       isHouse: false,
@@ -303,7 +314,7 @@ export function allocateDareV2TargetPayouts(input: {
       alias: target.alias,
       grossShare,
       fee,
-      net: grossShare - fee,
+      net: subtractAmounts(grossShare, fee),
     };
   });
   assertConservation(

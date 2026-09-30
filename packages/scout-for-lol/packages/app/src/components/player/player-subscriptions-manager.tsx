@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import type { usePermissions } from "#src/hooks/use-permissions.ts";
 import type { ReactNode } from "react";
 import { Button } from "@scout-for-lol/design-system/components/button";

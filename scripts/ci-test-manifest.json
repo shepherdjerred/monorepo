@@ -15,6 +15,16 @@
           "runner": "vitest",
           "args": ["src"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        },
+        {
+          "path": "integration/sqlite.integration.test.ts",
+          "reason": "Runs in its own pipeline step (test:sqlite) against a real SQLite database file."
+        }
       ]
     },
     {
@@ -155,7 +165,23 @@
       "directory": "packages/discord-plays-pokemon/packages/backend",
       "steps": [
         {
-          "runner": "vitest"
+          "runner": "vitest",
+          "args": [
+            "--exclude",
+            "src/emulator/emulator-symbols.integration.test.ts",
+            "--exclude",
+            "src/emulator/audio/audio-fingerprint.test.ts"
+          ]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "src/emulator/emulator-symbols.integration.test.ts",
+          "reason": "Runs in the discord-plays-pokemon Dockerfile wasm-abi-test stage after the wasm-builder supplies the generated artifact."
+        },
+        {
+          "path": "src/emulator/audio/audio-fingerprint.test.ts",
+          "reason": "Runs in the discord-plays-pokemon Dockerfile wasm-abi-test stage after the wasm-builder supplies the generated artifact."
         }
       ]
     },
@@ -190,6 +216,12 @@
         {
           "runner": "vitest",
           "args": ["src"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "tests",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -267,12 +299,19 @@
         {
           "runner": "vitest",
           "args": [
-            "scripts/argocd-manifest-overrides.test.ts",
-            "scripts/helm-release-core.test.ts",
-            "scripts/helm-set-version.test.ts",
-            "scripts/lint-helm.test.ts",
+            "scripts/argocd/argocd-manifest-overrides.test.ts",
+            "scripts/argocd/argocd-ignored-differences.test.ts",
+            "scripts/scripts-typecheck.test.ts",
+            "scripts/helm/helm-release-core.test.ts",
+            "scripts/helm/helm-set-version.test.ts",
+            "scripts/helm/lint-helm.test.ts",
             "scripts/migration-smoke.test.ts",
-            "scripts/velero-backups.test.ts"
+            "scripts/velero-backups.test.ts",
+            "scripts/argocd/argocd-apply-safety.test.ts",
+            "scripts/argocd/argocd-auto-sync-policy.test.ts",
+            "scripts/argocd/argocd-child-sync-timeout.test.ts",
+            "scripts/argocd/argocd-release-result.test.ts",
+            "scripts/tofu/tofu-stack.test.ts"
           ]
         }
       ]
@@ -297,6 +336,16 @@
       "steps": [
         {
           "runner": "vitest"
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/justin-principal-engineer",
+      "directory": "packages/justin-principal-engineer",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
         }
       ]
     },
@@ -361,8 +410,8 @@
       ]
     },
     {
-      "package": "@shepherdjerred/openrouter-broadcast-ingest",
-      "directory": "packages/openrouter-broadcast-ingest",
+      "package": "@shepherdjerred/woodpecker-config-extension",
+      "directory": "packages/woodpecker-config-extension",
       "steps": [
         {
           "runner": "vitest",
@@ -387,9 +436,12 @@
           "runner": "vitest",
           "args": [
             "scripts/create-minimal-png.test.ts",
-            "scripts/dev-web.test.ts",
             "scripts/install-pkgs.test.ts",
-            "scripts/migration-smoke.test.ts"
+            "scripts/migration-smoke.test.ts",
+            "scripts/dev/",
+            "scripts/discord-smoke/",
+            "scripts/puuid-corpus/",
+            "scripts/puuid-migration/"
           ]
         }
       ]
@@ -402,6 +454,12 @@
           "runner": "vitest",
           "args": ["src"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        }
       ]
     },
     {
@@ -409,7 +467,14 @@
       "directory": "packages/scout-for-lol/packages/app",
       "steps": [
         {
-          "runner": "vitest"
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -436,6 +501,25 @@
       ]
     },
     {
+      "package": "@scout-for-lol/desktop",
+      "directory": "packages/scout-for-lol/packages/desktop",
+      "steps": [
+        {
+          "runner": "cargo",
+          "args": ["--workspace", "--all-features", "--locked"]
+        }
+      ]
+    },
+    {
+      "package": "@scout-for-lol/domain",
+      "directory": "packages/scout-for-lol/packages/domain",
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
+    },
+    {
       "package": "@scout-for-lol/design-system",
       "directory": "packages/scout-for-lol/packages/design-system",
       "steps": [
@@ -443,20 +527,27 @@
           "runner": "vitest",
           "args": ["src"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        }
       ]
     },
     {
       "package": "@scout-for-lol/design-audit",
       "directory": "packages/scout-for-lol/packages/design-audit",
-      "steps": [{ "runner": "vitest", "args": ["src"] }]
-    },
-    {
-      "package": "@scout-for-lol/evals",
-      "directory": "packages/scout-for-lol/packages/evals",
       "steps": [
         {
           "runner": "vitest",
           "args": ["src"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "tests",
+          "reason": "Playwright design audit; runs in the design-audit lane (test:e2e:ci), not in Vitest reporting."
         }
       ]
     },
@@ -472,6 +563,9 @@
     {
       "package": "@scout-for-lol/docs-site",
       "directory": "packages/scout-for-lol/packages/docs-site",
+      "defaultEnv": {
+        "PUBLIC_SCOUT_SITE_FLAVOR": "beta"
+      },
       "steps": [
         {
           "runner": "command",
@@ -499,7 +593,7 @@
       "steps": [
         {
           "runner": "vitest",
-          "args": ["src", "--exclude", "src/workflows/*.test.ts"]
+          "args": ["src", "--exclude", "src/workflows/**/*.test.ts"]
         },
         {
           "runner": "vitest",
@@ -520,12 +614,28 @@
       ]
     },
     {
+      "package": "@shepherdjerred/storm-brain",
+      "directory": "packages/storm-brain",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/streambot",
       "directory": "packages/streambot",
       "steps": [
         {
           "runner": "vitest",
-          "args": ["test/"]
+          "args": ["test/", "src/sports/"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "integration",
+          "reason": "Needs real ffmpeg/ffprobe with libass, zimg and fonts, as in the streambot image; run it with test:integration there."
         }
       ]
     },
@@ -546,6 +656,16 @@
         {
           "runner": "cargo",
           "args": ["--workspace"]
+        }
+      ]
+    },
+    {
+      "package": "tasknotes-macos",
+      "directory": "packages/tasknotes-macos",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["scripts"]
         }
       ]
     },
@@ -646,7 +766,7 @@
         {
           "runner": "command",
           "name": "ha-schema",
-          "command": ["bun", "run", "scripts/ensure-ha-schema.ts"]
+          "command": ["bun", "run", "scripts/homelab/ensure-ha-schema.ts"]
         },
         {
           "runner": "vitest",
@@ -657,7 +777,11 @@
             "src/schedules",
             "src/shared",
             "src/lib",
-            "src/workflows/agent-task.test.ts"
+            "src/workflows/agent-task.test.ts",
+            "src/config/imessage.test.ts",
+            "src/worker-config.test.ts",
+            "scripts/check-workflow-tracing-safety.test.ts",
+            "scripts/cli-arguments.test.ts"
           ]
         },
         {
@@ -671,6 +795,12 @@
             "src/workflows/agent-task.test.ts",
             "--no-file-parallelism"
           ]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "src/integration.test.ts",
+          "reason": "Requires a live Temporal server on localhost:7233; run it with test:integration against a dev server."
         }
       ]
     },
@@ -706,8 +836,17 @@
             "test/s3",
             "test/deployed",
             "test/screenshot",
-            "scripts"
+            "test/history",
+            "test/discord",
+            "scripts",
+            "test-integration/catalog.integration.test.ts"
           ]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "test-integration/screenshot.integration.test.ts",
+          "reason": "Drives a real PinchTab browser against a locally served site; run it with test:integration on a workstation with PinchTab."
         }
       ]
     },
@@ -723,12 +862,38 @@
     {
       "package": "@shepherdjerred/config",
       "directory": "packages/config",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/feature-flags",
       "directory": "packages/feature-flags",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/ops-model",
+      "directory": "packages/ops-model",
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/ops-clients",
+      "directory": "packages/ops-clients",
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/version-catalog",
@@ -755,23 +920,28 @@
       ]
     },
     {
-      "package": "@shepherdjerred/root-scripts",
-      "directory": "scripts",
-      "coverageSourceDirectories": ["scripts", ".buildkite/scripts"],
+      "package": "windows-cross-compiler",
+      "directory": "packages/windows-cross-compiler",
       "steps": [
         {
           "runner": "vitest",
-          "args": [".", "../.buildkite/scripts"]
-        },
+          "args": ["src"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/root-scripts",
+      "directory": "scripts",
+      "coverageSourceDirectories": ["scripts", "ci/scripts"],
+      "steps": [
         {
-          "runner": "command",
-          "name": "upload-pipeline-shell",
-          "command": ["bash", "../.buildkite/scripts/upload-pipeline.test.sh"]
+          "runner": "vitest",
+          "args": [".", "../ci/scripts"]
         },
         {
           "runner": "command",
           "name": "toolchain-shell",
-          "command": ["bash", "../.buildkite/scripts/toolchain.test.sh"]
+          "command": ["bash", "../ci/scripts/toolchain.test.sh"]
         }
       ]
     },
@@ -781,6 +951,32 @@
       "steps": [
         {
           "runner": "vitest"
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/the-storm",
+      "directory": "packages/the-storm",
+      "steps": [
+        {
+          "runner": "gradle",
+          "args": ["-p", "plugin", "test"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "tests/e2e",
+          "reason": "Real-server E2E runs through test:e2e in the dedicated paper-e2e-pr Woodpecker lane, with Paper as a service and Mineflayer clients. The full reporting task does not start the game server."
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/the-storm-brain",
+      "directory": "packages/the-storm/brain",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
         }
       ]
     }
@@ -802,23 +998,13 @@
       "reason": "Static frontend package; no test files exist."
     },
     {
-      "package": "@scout-for-lol/desktop",
-      "directory": "packages/scout-for-lol/packages/desktop",
-      "reason": "Desktop tests have not been implemented."
-    },
-    {
-      "package": "@scout-for-lol/desktop-rust",
-      "directory": "packages/scout-for-lol/packages/desktop/src-tauri",
-      "reason": "Tauri crate cargo tests need GTK/glib system libraries (libwebkit2gtk) in the ci-base image; that image only rebuilds on main after verify, so a PR cannot both add the deps and consume them. Reporting is deferred until an image-only change lands the Tauri prerequisites on main."
-    },
-    {
-      "package": "@scout-for-lol/ui",
-      "directory": "packages/scout-for-lol/packages/ui",
-      "reason": "Source-only UI package; no test files exist."
-    },
-    {
       "package": "@shepherdjerred/cooklang-rich-preview",
       "directory": "packages/cooklang-rich-preview",
+      "reason": "Static marketing site; no test files exist."
+    },
+    {
+      "package": "@shepherdjerred/cross-compilers-site",
+      "directory": "packages/cross-compilers-site",
       "reason": "Static marketing site; no test files exist."
     },
     {
@@ -832,17 +1018,27 @@
       "reason": "JSON scenario corpus plus its JSON Schema; no code and no dependencies, so the Rust core can consume it without the React Native package. The corpus is executed by tasks-for-obsidian and, later, tasknotes-core."
     },
     {
-      "package": "tasknotes-macos",
-      "directory": "packages/tasknotes-macos",
-      "reason": "The native macOS app has a Swift Testing suite, but running it needs a Swift toolchain and the Rust XCFramework, neither of which the Linux CI image has. It runs locally through `bun run mac:test`, the same way the iOS app's Maestro e2e suite is a local pre-merge gate. Only `lint` (SwiftLint's static Linux binary) participates in CI."
-    },
-    {
       "package": "stocks-sjer-red",
       "directory": "packages/stocks-sjer-red",
+      "reason": "Static Astro site; no test files exist."
+    },
+    {
+      "package": "@shepherdjerred/ts-mc",
+      "directory": "packages/ts-mc",
+      "reason": "Static Astro site; no test files exist."
+    },
+    {
+      "package": "@shepherdjerred/ts-mc-docs",
+      "directory": "packages/ts-mc-docs",
       "reason": "Static Astro site; no test files exist."
     }
   ],
   "separateTests": [
+    {
+      "package": "@shepherdjerred/macos-cross-compiler",
+      "directory": "packages/macos-cross-compiler",
+      "reason": "Compiler image smoke tests are paused in CI, so the sample builds and Mach-O checks are currently unverified by Buildkite. The smoke stage remains available for explicit local image validation. The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
+    },
     {
       "package": "@shepherdjerred/hkctl",
       "directory": "packages/hkctl",
@@ -851,7 +1047,7 @@
     {
       "package": "@shepherdjerred/quotabar",
       "directory": "packages/macos-ai-subscription-tracker",
-      "reason": "The Swift build/test/coverage suite requires macOS and has no Buildkite lane today - the homelab macOS agent (packages/homelab/mac-ci/) is dormant, so verify:macos is a local-only developer/release gate, not a CI gate. Linux CI runs only the portable lint:swift (SwiftLint) task."
+      "reason": "The Swift build/test/coverage suite requires macOS and has no Linux CI lane today - the homelab macOS agent (packages/homelab/mac-ci/) is dormant, so verify:macos is a local-only developer/release gate, not a CI gate. Linux CI runs only the portable lint:swift (SwiftLint) task."
     },
     {
       "package": "sjer.red",

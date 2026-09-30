@@ -66,7 +66,7 @@ export function useWatchStatus(): UseWatchStatusResult {
         {
           uuid: item.uuid,
           kind: item.kind,
-          watched: existing === undefined ? true : !existing.watched,
+          watched: !existing?.watched,
           updatedAt: new Date().toISOString(),
         },
         ...rest,

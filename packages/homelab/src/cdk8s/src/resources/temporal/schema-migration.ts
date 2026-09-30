@@ -1,6 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import { Cpu, EnvValue, Job, Secret, Volume } from "cdk8s-plus-31";
+import { TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS } from "@shepherdjerred/homelab/cdk8s/src/temporal-release-budgets.ts";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
   TEMPORAL_POSTGRES_TLS_CA_FILE,
@@ -97,8 +98,7 @@ export function createTemporalSchemaMigrationJob(chart: Chart) {
         // `MountVolume.SetUp failed ... secret "temporal-postgresql-tls" not
         // found` until its deadline, failing every temporal sync. A Sync hook
         // at wave -1 is still blocking and still ahead of the server at wave
-        // 0, but now runs after everything it depends on. The backup-preflight
-        // PreSync gate still precedes the whole phase.
+        // 0, but now runs after everything it depends on.
         "argocd.argoproj.io/hook": "Sync",
         "argocd.argoproj.io/sync-wave": "-1",
         "argocd.argoproj.io/hook-delete-policy":
@@ -107,7 +107,9 @@ export function createTemporalSchemaMigrationJob(chart: Chart) {
     },
     automountServiceAccountToken: false,
     backoffLimit: 1,
-    activeDeadline: Duration.seconds(900),
+    activeDeadline: Duration.seconds(
+      TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+    ),
     podMetadata: { labels: { app: "temporal-schema-migration" } },
   });
 

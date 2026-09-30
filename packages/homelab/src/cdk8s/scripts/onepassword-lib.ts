@@ -50,9 +50,13 @@ const MAX_KEY_LENGTH = 253;
 
 /** True when `value` is already a valid k8s Secret data key (operator's IsConfigMapKey). */
 function isValidDataKey(value: string): boolean {
-  if (value === "." || value === "..") return false;
-  if (value.length === 0 || value.length > MAX_KEY_LENGTH) return false;
-  return VALID_DATA_KEY.test(value);
+  return (
+    value !== "." &&
+    value !== ".." &&
+    value.length > 0 &&
+    value.length <= MAX_KEY_LENGTH &&
+    VALID_DATA_KEY.test(value)
+  );
 }
 
 /**

@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  BUCKS_INT32_MAX,
+  BucksAmountSchema,
+  BucksPoolTotalSchema,
+  BucksStakeSchema,
+} from "#src/model/bucks/bryan-bucks-money.ts";
 import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
 import { QueueTypeSchema } from "#src/model/core/state.ts";
 
@@ -27,19 +33,6 @@ import { QueueTypeSchema } from "#src/model/core/state.ts";
 export type RiotTeamId = z.infer<typeof RiotTeamIdSchema>;
 export const RiotTeamIdSchema = z.union([z.literal(100), z.literal(200)]);
 
-/** Prisma's SQLite `Int` client boundary. The economy intentionally remains
- * on Int32 storage for this version even though the product no longer applies
- * a smaller stake cap. */
-export const BUCKS_INT32_MAX = 2_147_483_647;
-
-/** Any positive whole-BB stake that the existing storage domain can hold. */
-export type BucksStake = z.infer<typeof BucksStakeSchema>;
-export const BucksStakeSchema = z
-  .number()
-  .int()
-  .positive()
-  .max(BUCKS_INT32_MAX);
-
 /** Why a ledger row exists. Separate `earn_*` and market movement kinds keep
  * the explanation auditable without reconstructing a combined total. */
 export type BucksLedgerKind = z.infer<typeof BucksLedgerKindSchema>;
@@ -67,11 +60,6 @@ export const BucksLedgerKindSchema = z.enum([
   "parlay_payout",
   "parlay_refund",
   "parlay_release",
-  "weekly_parlay_stake",
-  "weekly_parlay_reserve",
-  "weekly_parlay_payout",
-  "weekly_parlay_refund",
-  "weekly_parlay_release",
   "peek_pass",
   "transfer_sent",
   "transfer_received",
@@ -125,30 +113,6 @@ export const BucksParlayVoidReasonSchema = z.enum([
   "storage_overflow",
 ]);
 
-export type BucksWeeklyParlayMarketState = z.infer<
-  typeof BucksWeeklyParlayMarketStateSchema
->;
-export const BucksWeeklyParlayMarketStateSchema = z.enum([
-  "publishing",
-  "open",
-  "active",
-  "settled",
-  "voided",
-]);
-
-export type BucksWeeklyParlayVoidReason = z.infer<
-  typeof BucksWeeklyParlayVoidReasonSchema
->;
-export const BucksWeeklyParlayVoidReasonSchema = z.enum([
-  "infrastructure_failure",
-  "insufficient_activity",
-  "operator_cancelled",
-  "unknown_evaluator",
-  "invalid_definition",
-  "missing_data",
-  "storage_overflow",
-]);
-
 /**
  * Lifecycle of a free-text dare bounty (`BucksDare.dareState`).
  *
@@ -179,11 +143,21 @@ export const BucksDareStateSchema = z.enum([
  * reaches a terminal state. The ONE definition shared by the contribution
  * claim and the refundable-headroom query, so the two can never disagree
  * about which dares hold live money.
+ *
+ * Declared as a `readonly BucksDareState[]` rather than inferred as a literal
+ * tuple, and the difference is load-bearing. A tuple gives
+ * `ReadonlyArray.includes` a parameter type of just its two members, so
+ * testing a full {@link BucksDareState} against it does not compile. The
+ * backend masks that with its own `ts-reset`, which widens `includes`; the
+ * packages that compile the backend's sources without that ambient
+ * declaration do not, so the error appears only once one of them reaches the
+ * call site. The annotation still checks every member against the enum, and
+ * nothing here needs the narrower type — the Prisma filters only spread it.
  */
-export const OPEN_BUCKS_DARE_STATES = [
+export const OPEN_BUCKS_DARE_STATES: readonly BucksDareState[] = [
   "pending_accept",
   "active",
-] as const satisfies readonly BucksDareState[];
+];
 
 /**
  * How a dare's clock is bounded: the targets' very next qualifying game, or a
@@ -240,12 +214,15 @@ export const BucksPoolRosterSchema = z.strictObject({
 
 export const BUCKS_MATCHING_VERSION = 1;
 
+// Per-bet money written from and read back into Prisma `Int` columns, so the
+// branded Int32 schemas restate exactly the domain the storage already
+// enforced — historical rows keep parsing.
 const MatchingAmountFields = {
-  submittedStake: z.number().int().positive(),
-  humanMatchedStake: z.number().int().nonnegative(),
-  houseMatchedStake: z.number().int().nonnegative(),
-  matchedStake: z.number().int().nonnegative(),
-  unmatchedStake: z.number().int().nonnegative(),
+  submittedStake: BucksStakeSchema,
+  humanMatchedStake: BucksAmountSchema,
+  houseMatchedStake: BucksAmountSchema,
+  matchedStake: BucksAmountSchema,
+  unmatchedStake: BucksAmountSchema,
 };
 
 export type BucksMatchingAllocation = z.infer<
@@ -258,15 +235,30 @@ export const BucksMatchingAllocationSchema = z.strictObject({
   ...MatchingAmountFields,
 });
 
-/** Complete, versioned close-time allocation for one guild's match pool. */
+/**
+ * Complete, versioned close-time allocation for one guild's match pool.
+ *
+ * The three money fields are sums across every position on a side, which is
+ * exactly what `BucksPoolTotal` names: an aggregate that may legally exceed
+ * what any single `Int` column holds, unlike the per-bet values inside
+ * `allocations`. They were bare `z.number().int().nonnegative()` — the brand's
+ * own shape, written out by hand — which is the gap that motivated splitting
+ * the semantic brand from Int32 storability in the first place.
+ *
+ * Branding is safe here on the read side as well as the write side, unlike the
+ * settlement context's historical money fields: `BucksPoolTotalSchema` *is*
+ * `.int().nonnegative()`, so the validated domain does not move and no stored
+ * blob that parsed before can fail now. These are recomputed at close time
+ * from sums of stakes, which cannot be negative, so no version bump is owed.
+ */
 export type BucksMatchingSummary = z.infer<typeof BucksMatchingSummarySchema>;
 export const BucksMatchingSummarySchema = z.strictObject({
   version: z.literal(BUCKS_MATCHING_VERSION),
-  humanMatchedPerSide: z.number().int().nonnegative(),
-  houseFill: z.number().int().nonnegative(),
+  humanMatchedPerSide: BucksPoolTotalSchema,
+  houseFill: BucksPoolTotalSchema,
   houseTeamId: RiotTeamIdSchema.nullable(),
   houseBetId: z.number().int().positive().nullable(),
-  totalMatchedPerSide: z.number().int().nonnegative(),
+  totalMatchedPerSide: BucksPoolTotalSchema,
   allocations: z.array(BucksMatchingAllocationSchema),
 });
 
@@ -283,16 +275,86 @@ const MvpContextSchema = z.strictObject({
  * Discriminated on `type` so a row is self-describing without consulting its
  * `kind` column, and so adding a future entry shape cannot silently widen the
  * meaning of an existing one.
+ *
+ * This is the WRITE contract: what Scout is allowed to record today. Reading
+ * `BucksLedgerEntry.context` back out of the database uses
+ * {@link StoredBucksLedgerContextSchema}, which differs in exactly one
+ * variant — see {@link StoredSettlementContextSchema}.
  */
 export type BucksLedgerContext = z.infer<typeof BucksLedgerContextSchema>;
-// Weekly v2 pricing uses a challenging 20–30% YES range. Keep the original
-// 40–60% range readable for v1 ledger entries because ledger history is
-// append-only and the context does not carry the weekly schema version.
-export const BucksWeeklyParlayYesProbabilityBpsSchema = z.union([
-  z.number().int().min(2000).max(3000),
-  z.number().int().min(4000).max(6000),
-]);
-export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
+/** One persisted row's context, in the domain it was written in. */
+export type StoredBucksLedgerContext = z.infer<
+  typeof StoredBucksLedgerContextSchema
+>;
+/** Everything a settlement row records that both domains agree on. */
+const SettlementContextCommonFields = {
+  type: z.literal("settlement"),
+  subjectAlias: z.string(),
+  backedAliases: z.array(z.string()),
+  opposingAliases: z.array(z.string()),
+  /** Added with house cuts. Optional so historical ledger JSON remains
+   * parseable under the current schema. Per-bet Int-column values, so the
+   * branded Int32 schemas restate the stored domain — and unlike the four
+   * money fields below, these were introduced already branded, so no row
+   * exists that was written under a wider domain. */
+  grossPayout: BucksAmountSchema.optional(),
+  houseCut: BucksAmountSchema.optional(),
+  netPayout: BucksAmountSchema.optional(),
+  submittedStake: BucksAmountSchema.optional(),
+  matchedStake: BucksAmountSchema.optional(),
+  unmatchedStake: BucksAmountSchema.optional(),
+  /** Gross payouts may be split around the fee transfer so every
+   * intermediate wallet balance remains representable. */
+  payoutComponent: z
+    .enum(["gross", "principal", "profit", "refund"])
+    .optional(),
+  voidReason: BucksVoidReasonSchema.optional(),
+};
+
+/**
+ * The settlement context Scout writes today.
+ *
+ * Pool-level aggregates sum many bettors' Int32 positions, so unlike the
+ * per-bet fields they carry no storage bound — `BucksPoolTotal` is the brand
+ * for exactly that shape. `stakeReturned` and `winnings` are per-bet despite
+ * sitting beside the aggregates: settlement writes this bettor's own matched
+ * stake and own winnings, both already branded where they are computed.
+ */
+const WrittenSettlementContextSchema = z.strictObject({
+  ...SettlementContextCommonFields,
+  winnersPool: BucksPoolTotalSchema,
+  losersPool: BucksPoolTotalSchema,
+  stakeReturned: BucksAmountSchema,
+  winnings: BucksAmountSchema,
+});
+
+/**
+ * The same context as it may actually exist in the database.
+ *
+ * These four fields were persisted as plain signed `z.number().int()` from the
+ * first Bryan Bucks release until the money brands landed, which narrowed all
+ * four to non-negative in one step. Today's writer provably cannot emit a
+ * negative — that is what the brands are for — but a stored row's meaning is
+ * fixed by the schema that was in force when it was written, and that schema
+ * bounded none of these below. Existing records keep their original
+ * interpretation, so the read side restates the domain history was written in
+ * and only the write path narrows.
+ *
+ * Reading through the narrowed schema instead is not a harmless strictness:
+ * the ledger page silently drops a row's whole explanation and falls back to a
+ * bare match ID, and the dare repair script hard-throws while merely scanning
+ * candidate rows — both on rows that are not corrupt, just old.
+ */
+const StoredSettlementContextSchema = z.strictObject({
+  ...SettlementContextCommonFields,
+  winnersPool: z.number().int(),
+  losersPool: z.number().int(),
+  stakeReturned: z.number().int(),
+  winnings: z.number().int(),
+});
+
+/** Every variant whose domain is the same read or written. */
+const SHARED_LEDGER_CONTEXT_VARIANTS = [
   z.strictObject({
     type: z.literal("seed"),
     note: z.string(),
@@ -328,30 +390,6 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     opposingAliases: z.array(z.string()),
   }),
   z.strictObject({
-    type: z.literal("settlement"),
-    subjectAlias: z.string(),
-    backedAliases: z.array(z.string()),
-    opposingAliases: z.array(z.string()),
-    winnersPool: z.number().int(),
-    losersPool: z.number().int(),
-    stakeReturned: z.number().int(),
-    winnings: z.number().int(),
-    /** Added with house cuts. Optional so historical ledger JSON remains
-     * parseable under the current schema. */
-    grossPayout: z.number().int().nonnegative().optional(),
-    houseCut: z.number().int().nonnegative().optional(),
-    netPayout: z.number().int().nonnegative().optional(),
-    submittedStake: z.number().int().nonnegative().optional(),
-    matchedStake: z.number().int().nonnegative().optional(),
-    unmatchedStake: z.number().int().nonnegative().optional(),
-    /** Gross payouts may be split around the fee transfer so every
-     * intermediate wallet balance remains representable. */
-    payoutComponent: z
-      .enum(["gross", "principal", "profit", "refund"])
-      .optional(),
-    voidReason: BucksVoidReasonSchema.optional(),
-  }),
-  z.strictObject({
     type: z.literal("matching"),
     source: z.enum(["unmatched_refund", "house_match"]),
     matchingVersion: z.literal(BUCKS_MATCHING_VERSION),
@@ -366,16 +404,16 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     subjectAlias: z.string(),
     backedAliases: z.array(z.string()),
     opposingAliases: z.array(z.string()),
-    submittedStake: z.number().int().positive(),
-    fee: z.number().int().nonnegative(),
-    netRefund: z.number().int().nonnegative(),
+    submittedStake: BucksStakeSchema,
+    fee: BucksAmountSchema,
+    netRefund: BucksAmountSchema,
   }),
   z.strictObject({
     type: z.literal("house_fee"),
     source: z.enum(["settlement", "cancellation"]),
     ratePercent: z.number().int().min(0).max(100),
-    grossAmount: z.number().int().positive(),
-    fee: z.number().int().positive(),
+    grossAmount: BucksStakeSchema,
+    fee: BucksStakeSchema,
     basis: z.enum(["matched_profit", "submitted_stake"]).optional(),
   }),
   z.strictObject({
@@ -402,43 +440,6 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     grossPayout: BucksStakeSchema,
     credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
     voidReason: BucksParlayVoidReasonSchema.optional(),
-  }),
-  z.strictObject({
-    type: z.literal("weekly_parlay_stake"),
-    version: z.literal(1),
-    definitionId: z.number().int().positive(),
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative(),
-    side: BucksParlaySideSchema,
-    yesProbabilityBps: BucksWeeklyParlayYesProbabilityBpsSchema,
-    totalStake: BucksStakeSchema,
-    quotedGrossPayout: BucksStakeSchema,
-  }),
-  z.strictObject({
-    type: z.literal("weekly_parlay_reserve"),
-    version: z.literal(1),
-    definitionId: z.number().int().positive(),
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative(),
-    side: BucksParlaySideSchema,
-    yesProbabilityBps: BucksWeeklyParlayYesProbabilityBpsSchema,
-    totalStake: BucksStakeSchema,
-    totalReserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
-    quotedGrossPayout: BucksStakeSchema,
-  }),
-  z.strictObject({
-    type: z.literal("weekly_parlay_settlement"),
-    version: z.literal(1),
-    definitionId: z.number().int().positive(),
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative(),
-    side: BucksParlaySideSchema,
-    yesResult: z.boolean().optional(),
-    stake: BucksStakeSchema,
-    reserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
-    grossPayout: BucksStakeSchema,
-    credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
-    voidReason: BucksWeeklyParlayVoidReasonSchema.optional(),
   }),
   // Retired peek feature; the shape survives so historical rows still parse.
   z.strictObject({
@@ -510,6 +511,24 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     note: z.string(),
     actorDiscordId: z.string(),
   }),
+] as const;
+
+export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
+  ...SHARED_LEDGER_CONTEXT_VARIANTS,
+  WrittenSettlementContextSchema,
+]);
+
+/**
+ * The union to parse `BucksLedgerEntry.context` with.
+ *
+ * Identical to {@link BucksLedgerContextSchema} except for the settlement
+ * variant, whose money fields keep the wider domain they were written in.
+ * Everything that reads a persisted row uses this; everything that writes one
+ * uses the narrowed write schema, so the tightening still holds going forward.
+ */
+export const StoredBucksLedgerContextSchema = z.discriminatedUnion("type", [
+  ...SHARED_LEDGER_CONTEXT_VARIANTS,
+  StoredSettlementContextSchema,
 ]);
 
 /** A `{ channelId, messageId }` pair for one guild's prematch message, so the

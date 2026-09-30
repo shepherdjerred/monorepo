@@ -129,7 +129,6 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
       // Expressions mixed with text are inline and don't need layout control
       // Only *multiple JSX elements* need display: flex
       let elementCount = 0;
-      let hasTextOrExpression = false;
 
       for (const child of node.children) {
         switch (child.type) {
@@ -139,16 +138,8 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
 
             break;
           }
-          case AST_NODE_TYPES.JSXText: {
-            if (child.value.trim().length > 0) {
-              hasTextOrExpression = true;
-            }
-
-            break;
-          }
+          case AST_NODE_TYPES.JSXText:
           case AST_NODE_TYPES.JSXExpressionContainer: {
-            hasTextOrExpression = true;
-
             break;
           }
           // No default
@@ -157,10 +148,6 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
 
       // Only count pure elements that are siblings
       // If there's text or expressions mixed in, this is inline content, not layout
-      // Return elementCount only if we have multiple JSX elements and no mixed text/expressions
-      if (hasTextOrExpression) {
-        return elementCount;
-      }
       return elementCount;
     }
 

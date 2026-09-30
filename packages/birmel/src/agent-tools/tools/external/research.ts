@@ -3,6 +3,7 @@ import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { z } from "zod";
 import { handleFetchUrl, handleSearch } from "./web-actions.ts";
+import { fetchSafePublicText } from "@shepherdjerred/birmel/utils/safe-fetch.ts";
 
 const logger = loggers.tools.child("web-research");
 
@@ -47,13 +48,8 @@ async function fetchHtml(url: string): Promise<{
   html: string;
   text: string;
 }> {
-  const response = await fetch(url, {
-    headers: { "User-Agent": "Birmel Discord Bot/1.0" },
-  });
-  if (!response.ok) {
-    throw new Error(`Fetch failed with HTTP ${String(response.status)}`);
-  }
-  const html = await response.text();
+  const response = await fetchSafePublicText(url);
+  const html = response.text;
   return {
     url: response.url,
     title: extractTitle(html),

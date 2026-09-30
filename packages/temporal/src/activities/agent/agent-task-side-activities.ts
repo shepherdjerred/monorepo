@@ -3,7 +3,6 @@ import {
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
-import { activityInfo } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { createTemporalClient } from "#client";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
@@ -11,7 +10,7 @@ import {
   agentTaskEmailSentTotal,
   agentTaskRunsTotal,
 } from "#observability/metrics.ts";
-import { cleanupWorkdir } from "#lib/pr-review-workdir.ts";
+import { cleanupWorkdir } from "#lib/agent-workdir.ts";
 import {
   AgentTaskInputSchema,
   AgentTaskInputV2Schema,
@@ -40,7 +39,6 @@ import {
   type ReportEnvelopeV1,
 } from "#shared/reports/report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 const COMPONENT = "agent-task";
 
@@ -77,11 +75,6 @@ export type SendAgentTaskFailureReportInput = {
   error: string;
   /** Optional for replay compatibility with activity inputs recorded before it existed. */
   failureStage?: "execution" | "follow-up-dispatch" | "workdir-cleanup";
-};
-
-export type PauseAgentTaskScheduleInput = {
-  scheduleId: string;
-  reason: string;
 };
 
 function captureWithSubject(error: unknown, subject: string): void {
@@ -216,15 +209,18 @@ function agentTaskReportInput(
   runResult: RunAgentTaskResult,
   title: string,
 ): ActivityReportInput {
-  if (runResult.contractVersion === 1) {
-    return legacyReportInput(input, runResult, title);
-  }
-  return v2ReportInput(
-    input,
-    runResult,
-    title,
-    normalizeAgentTaskV2Result(input, runResult.payload, runResult.evidence),
-  );
+  return runResult.contractVersion === 1
+    ? legacyReportInput(input, runResult, title)
+    : v2ReportInput(
+        input,
+        runResult,
+        title,
+        normalizeAgentTaskV2Result(
+          input,
+          runResult.payload,
+          runResult.evidence,
+        ),
+      );
 }
 
 export type AgentTaskReportDeliveryWorkflowOptions = {
@@ -437,26 +433,6 @@ export function agentTaskFollowUpInput(
   return input.parent.contractVersion === 2
     ? AgentTaskInputV2Schema.parse(rawTask)
     : AgentTaskInputSchema.parse(rawTask);
-}
-
-export async function pauseSchedule(
-  input: PauseAgentTaskScheduleInput,
-): Promise<void> {
-  const client = await createTemporalClient(
-    parseTemporalNamespace(activityInfo().namespace),
-  );
-  const handle = client.schedule.getHandle(input.scheduleId);
-  await handle.pause(input.reason);
-  console.warn(
-    JSON.stringify({
-      level: "info",
-      msg: "Paused agent task schedule",
-      component: COMPONENT,
-      activity: "pauseAgentTaskSchedule",
-      scheduleId: input.scheduleId,
-      reason: input.reason,
-    }),
-  );
 }
 
 export async function cleanup(

@@ -18,11 +18,8 @@
  */
 
 import { run, requireEnv, optionalEnv } from "../lib/run.ts";
-import {
-  s3SyncStaticSite,
-  SEAWEEDFS_ENDPOINT,
-  SEAWEEDFS_AWS_ENV,
-} from "../lib/s3-static-site.ts";
+import { s3SyncStaticSite } from "../lib/s3-static-site.ts";
+import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
 
 // ---------------------------------------------------------------------------
 // Static site deploy catalog (translated verbatim from DEPLOY_SITES)
@@ -31,6 +28,14 @@ import {
 type DeploySiteBase = {
   bucket: string;
   name: string;
+  /**
+   * Retired names that still resolve to this entry. The Woodpecker config
+   * extension is a version-pinned image built from main, so a renamed site's
+   * PR CI (and post-merge main builds until the extension redeploys) still
+   * address it by the old name. Remove once the redeployed extension's
+   * generated loops use the new name.
+   */
+  aliases?: readonly string[];
   url: string;
   /** Package dir the buildCmd runs in (relative to repo root). */
   buildDir: string;
@@ -99,6 +104,21 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     immutablePrefixes: [],
   },
   {
+    bucket: "scout-design-system",
+    name: "scout-design-system",
+    url: "https://design.scout-for-lol.com",
+    buildDir: "packages/scout-for-lol",
+    // Builds both catalogs and joins them: the design system at the root, the
+    // app's components under /app/.
+    buildCmd: "bun --no-install run build:storybook-site",
+    distDir: "packages/scout-for-lol/storybook-site",
+    target: "s3",
+    // Storybook's hashed chunks share `assets/` with the unhashed Scout art,
+    // fonts, and theme bootstrap the asset plugin copies in, so nothing here
+    // can be marked immutable wholesale.
+    immutablePrefixes: [],
+  },
+  {
     bucket: "webring",
     name: "webring",
     url: "https://webring.sjer.red",
@@ -115,6 +135,17 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     buildDir: "packages/cooklang-rich-preview",
     buildCmd: "bun --no-install run astro build",
     distDir: "packages/cooklang-rich-preview/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
+  {
+    bucket: "cross-compilers",
+    name: "cross-compilers-site",
+    aliases: ["macos-cross-site"],
+    url: "https://cross-compilers.sjer.red",
+    buildDir: "packages/cross-compilers-site",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/cross-compilers-site/dist",
     target: "s3",
     immutablePrefixes: ["_astro/"],
   },
@@ -173,6 +204,28 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     distDir: "packages/glitter/dist",
     target: "s3",
     immutablePrefixes: [],
+  },
+  {
+    bucket: "ts-mc",
+    name: "ts-mc",
+    url: "https://ts-mc.net",
+    buildDir: "packages/ts-mc",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/ts-mc/dist",
+    target: "s3",
+    // Astro's hashed output dir.
+    immutablePrefixes: ["_astro/"],
+  },
+  {
+    bucket: "ts-mc-docs",
+    name: "ts-mc-docs",
+    url: "https://docs.ts-mc.net",
+    buildDir: "packages/ts-mc-docs",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/ts-mc-docs/dist",
+    target: "s3",
+    // Astro's hashed output dir.
+    immutablePrefixes: ["_astro/"],
   },
 ];
 
@@ -255,9 +308,12 @@ function selectSite(args: string[]): DeploySite {
   if (siteName === undefined || positional.length > 1) {
     usage();
   }
-  // Match by name or by bucket (bucket is space-free — preferred in scripts).
+  // Match by name, alias, or bucket (bucket is space-free — preferred in scripts).
   const site = DEPLOY_SITES.find(
-    (s) => s.name === siteName || s.bucket === siteName,
+    (s) =>
+      s.name === siteName ||
+      s.bucket === siteName ||
+      (s.aliases ?? []).includes(siteName),
   );
   if (!site) {
     console.error(`Unknown site: ${siteName}`);

@@ -1,0 +1,549 @@
+import { Output, stepCountIs, ToolLoopAgent } from "ai";
+import { redactSecrets } from "@shepherdjerred/llm-observability";
+import { z } from "zod";
+import {
+  CookieEntrySchema,
+  CREDENTIAL_KEY_PATTERN,
+  DISCORD_SENSITIVE_URL_PATTERN,
+  InviteEntrySchema,
+  redactInviteFields,
+  type SessionToolEvent,
+  SessionToolEventSchema,
+  type TaskPacket,
+  TaskPacketSchema,
+  ToolDomainResultSchema,
+  ToolIdSchema,
+  ToolResultForSessionSchema,
+  TurnAnswerSchema,
+  type TurnDisposition,
+} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
+import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import {
+  getAgentProviderOptions,
+  mergeAgentProviderOptions,
+} from "./provider-options.ts";
+import { recoverTurnAnswer } from "./turn-answer-recovery.ts";
+import { AGENT_INSTRUCTIONS } from "./prompts.ts";
+import type { ProgressReporter } from "./progress.ts";
+
+export type AgentExecutionResult = {
+  text: string;
+  disposition: TurnDisposition;
+  finishReason: string;
+  inputTokens: number;
+  outputTokens: number;
+  stepCount: number;
+  toolEvents: SessionToolEvent[];
+};
+
+export type TurnOptions = {
+  progress?: ProgressReporter | undefined;
+};
+
+export type IsolatedAgentOptions = {
+  model?: string;
+  reasoningEffort?: "minimal" | "low" | "medium" | "high";
+  textVerbosity?: "low" | "medium" | "high";
+  timeoutMs?: number;
+};
+
+const logger = loggers.agent.child("execution");
+
+function boundedText(value: string, maxLength: number): string {
+  return value.length <= maxLength
+    ? value
+    : `${value.slice(0, maxLength - 1)}…`;
+}
+
+function boundedSummary(value: unknown): string {
+  const redacted = redactSecrets(value);
+  const serialized = z
+    .string()
+    .min(1)
+    .parse(typeof redacted === "string" ? redacted : JSON.stringify(redacted));
+  return boundedText(serialized, 384);
+}
+
+const ActionInputSchema = z.object({ action: z.string().max(64) }).loose();
+
+type SanitizeToolOutputOptions = {
+  isCookiesCall: boolean;
+  isInviteCall: boolean;
+  /** Absent for a tool whose output the agent itself authored. */
+  retainedDataKeys?: ReadonlySet<string> | undefined;
+};
+
+function sanitizeArrayEntry(
+  entry: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  const cookie = CookieEntrySchema.safeParse(entry);
+  if (cookie.success) {
+    return sanitizeToolOutputData(
+      { ...cookie.data, value: "[REDACTED]" },
+      options,
+    );
+  }
+  return entry !== null &&
+    typeof entry === "object" &&
+    (options.isInviteCall || InviteEntrySchema.safeParse(entry).success)
+    ? sanitizeToolOutputData(redactInviteFields(entry), options)
+    : sanitizeToolOutputData(entry, options);
+}
+
+function sanitizeObjectEntry(
+  key: string,
+  value: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  if (CREDENTIAL_KEY_PATTERN.test(key)) {
+    return "[REDACTED]";
+  }
+  if (options.isInviteCall && (key === "code" || key === "url")) {
+    return value == null ? value : "[REDACTED]";
+  }
+  const cookie = CookieEntrySchema.safeParse(value);
+  if (cookie.success) {
+    return sanitizeToolOutputData(
+      { ...cookie.data, value: "[REDACTED]" },
+      options,
+    );
+  }
+  const invite = InviteEntrySchema.safeParse(value);
+  return invite.success
+    ? sanitizeToolOutputData(redactInviteFields(invite.data), options)
+    : sanitizeToolOutputData(value, options);
+}
+
+// A persisted tool summary is interpolated into the memory-extraction prompt,
+// so any third-party text it keeps can steer durable memory. Denying known-bad
+// keys lost this argument repeatedly, and so did naming only the untrusted
+// tools: a tool absent from the list kept everything, so each new one was a
+// leak waiting to be reported.
+//
+// The default is therefore to keep NO data. A tool appears here only to name
+// the keys it keeps, and those must be values the agent or our own
+// infrastructure wrote - not a Discord name, title, or body someone else
+// chose. Every tool still keeps its own result message, which is the summary
+// its author wrote for exactly this purpose.
+const RETAINED_DATA_KEYS_BY_TOOL: ReadonlyMap<
+  string,
+  ReadonlySet<string>
+> = new Map([
+  // No url or title: a hostile page controls both, and a redirect controls
+  // the final url even when the agent chose the first one.
+  ["browser-automation", new Set(["provider", "tabId", "filename", "path"])],
+  ["web-research", new Set<string>()],
+  ["external-service", new Set<string>()],
+  ["manage-message", new Set(["messageId", "messageCount"])],
+  [
+    "manage-thread",
+    new Set(["threadId", "messageId", "messageCount", "participantCount"]),
+  ],
+  // Not `question` or `answers`: both carry text another member wrote.
+  [
+    "manage-poll",
+    new Set(["messageId", "pollId", "totalVotes", "isFinalized", "expiresAt"]),
+  ],
+  ["manage-agent-session", new Set(["sessionId", "eventCount"])],
+  // stdout and stderr carry whatever the command printed; the rest is our
+  // own measurement of the run.
+  ["run-code", new Set(["exitCode", "timedOut", "durationMs", "truncated"])],
+  // The agent wrote the schedule it asked for, so reading it back is safe.
+  [
+    "manage-job",
+    new Set([
+      "jobId",
+      "runId",
+      "status",
+      "nextRunAt",
+      "scheduleKind",
+      "scheduleValue",
+      "timezone",
+    ]),
+  ],
+  // Counts we computed, not text anyone typed.
+  [
+    "manage-memory",
+    new Set([
+      "claimId",
+      "createdCount",
+      "confirmedCount",
+      "supersededCount",
+      "uncertainCount",
+    ]),
+  ],
+  [
+    "get-activity-stats",
+    new Set(["messageCount", "reactionCount", "userCount", "rank"]),
+  ],
+  [
+    "get-candidate-stats",
+    new Set(["messageCount", "reactionCount", "userCount", "rank"]),
+  ],
+  ["record-activity", new Set(["recorded", "messageCount"])],
+  ["generate-image", new Set(["name", "mediaType", "aspectRatio"])],
+  // Never code or url: an invite code is a credential. What is left is
+  // structural and is what an operator actually wants to see later.
+  [
+    "manage-invite",
+    new Set([
+      "uses",
+      "maxUses",
+      "channelId",
+      "inviterId",
+      "expiresAt",
+      "temporary",
+    ]),
+  ],
+]);
+
+function shouldOmitOutputKey(
+  key: string,
+  options: SanitizeToolOutputOptions,
+): boolean {
+  if (key === "raw" && options.isCookiesCall) {
+    return true;
+  }
+  // Unlisted tool: keep nothing. A tool added later is private by default.
+  return !(options.retainedDataKeys?.has(key) ?? false);
+}
+
+function sanitizeToolOutputData(
+  data: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  if (typeof data === "string") {
+    return data.replaceAll(DISCORD_SENSITIVE_URL_PATTERN, "[REDACTED]");
+  }
+  if (data === null || typeof data !== "object") {
+    return data;
+  }
+  if (Array.isArray(data)) {
+    return data.map((entry) => sanitizeArrayEntry(entry, options));
+  }
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (shouldOmitOutputKey(key, options)) {
+      continue;
+    }
+    sanitized[key] = sanitizeObjectEntry(key, value, options);
+  }
+  return sanitized;
+}
+
+export function summarizeToolResultForSession(
+  rawToolResult: unknown,
+  registeredToolIds: readonly string[],
+): SessionToolEvent {
+  const toolResult = ToolResultForSessionSchema.parse(rawToolResult);
+  const parsedRegisteredToolIds = z
+    .array(ToolIdSchema)
+    .parse(registeredToolIds);
+  if (!parsedRegisteredToolIds.includes(toolResult.toolName)) {
+    throw new Error(
+      `AI SDK returned an unregistered tool result: ${toolResult.toolName}`,
+    );
+  }
+  const status = toolResult.output.success ? "succeeded" : "failed";
+  const action = ActionInputSchema.safeParse(toolResult.input);
+  const isCookiesCall = action.success && action.data.action === "cookies";
+  const isInviteCall = toolResult.toolName === "manage-invite";
+  const retainedDataKeys = RETAINED_DATA_KEYS_BY_TOOL.get(toolResult.toolName);
+  const inputSummary = boundedSummary(toolResult.input);
+  const sanitizedData =
+    toolResult.output.data === undefined
+      ? undefined
+      : sanitizeToolOutputData(toolResult.output.data, {
+          isCookiesCall,
+          isInviteCall,
+          retainedDataKeys,
+        });
+  const hasData =
+    sanitizedData !== undefined &&
+    sanitizedData !== null &&
+    (typeof sanitizedData !== "object" ||
+      (Array.isArray(sanitizedData)
+        ? sanitizedData.length > 0
+        : Object.keys(sanitizedData).length > 0));
+  const resultSummary = toolResult.output.success
+    ? boundedSummary(
+        hasData
+          ? {
+              message: toolResult.output.message,
+              data: sanitizedData,
+            }
+          : toolResult.output.message,
+      )
+    : "Tool reported failure";
+  const content = boundedText(
+    `Tool ${toolResult.toolName} call ${toolResult.toolCallId} ${status}; input=${inputSummary}; result=${resultSummary}`,
+    1024,
+  );
+  return SessionToolEventSchema.parse({
+    toolCallId: toolResult.toolCallId,
+    toolId: toolResult.toolName,
+    inputSummary,
+    resultSummary,
+    content,
+    success: toolResult.output.success,
+    ...(toolResult.output.effectDisposition == null
+      ? {}
+      : { effectDisposition: toolResult.output.effectDisposition }),
+  });
+}
+
+/** Minimal completed-step surface needed to rebuild session tool events. */
+export type CompletedStepForSession = {
+  toolResults: readonly unknown[];
+};
+
+/**
+ * Summarize every tool result across completed steps for session
+ * persistence. Shared by the success path (from `result.steps`) and the
+ * unparseable-output recovery path (from steps collected via
+ * `onStepFinish`), so a recovered turn never drops executed tool effects.
+ */
+export function summarizeStepsForSession(
+  steps: readonly CompletedStepForSession[],
+  registeredToolIds: readonly string[],
+): SessionToolEvent[] {
+  return steps.flatMap((step) =>
+    step.toolResults.map((toolResult) =>
+      summarizeToolResultForSession(toolResult, registeredToolIds),
+    ),
+  );
+}
+
+function taskPrompt(packet: TaskPacket): string {
+  const referenceFailureText =
+    packet.referenceResolutionError == null
+      ? ""
+      : `\n\nReference warning:\nFailed to resolve referenced message ${packet.referenceResolutionError.referencedMessageId}: ${packet.referenceResolutionError.error}`;
+  return `Current request from ${packet.username} (${packet.userId}):\n${packet.request}\n\nDiscord context:\nguild=${packet.guildId}\nchannel=${packet.channelId}${packet.threadId == null ? "" : `\nthread=${packet.threadId}`}\n\nRelevant context:\n${packet.context}${referenceFailureText}`;
+}
+
+function taskMessages(packet: TaskPacket) {
+  return [
+    {
+      role: "user" as const,
+      content: [
+        { type: "text" as const, text: taskPrompt(packet) },
+        ...packet.attachments.map((attachment) => ({
+          type: "image" as const,
+          image: new URL(attachment.url),
+          ...(attachment.contentType == null
+            ? {}
+            : { mediaType: attachment.contentType }),
+        })),
+      ],
+    },
+  ];
+}
+
+export async function executeTurn(
+  rawPacket: TaskPacket,
+  options: IsolatedAgentOptions & TurnOptions = {},
+): Promise<AgentExecutionResult> {
+  const packet = TaskPacketSchema.parse(rawPacket);
+  const config = getConfig();
+  const runtime = getLlmRuntime();
+  const tools = toolsForTurn();
+  const registeredToolIds = Object.keys(tools);
+  return await withSpan(
+    "birmel.agent.turn",
+    {
+      guildId: packet.guildId,
+      channelId: packet.channelId,
+      userId: packet.userId,
+      persona: packet.personaId,
+      operation: "agent.turn.generate",
+    },
+    async (span) => {
+      const startedAt = performance.now();
+      const maxSteps = config.agent.maxSteps;
+      const abortSignal = AbortSignal.timeout(
+        options.timeoutMs ?? config.agent.responseTimeoutMs,
+      );
+      const modelId = options.model ?? config.llm.model;
+      const providerOptions = getAgentProviderOptions(modelId, options);
+      const agent = new ToolLoopAgent({
+        id: "birmel-agent",
+        model: runtime.languageModel(modelId, ["tools"]),
+        instructions: `${AGENT_INSTRUCTIONS}\n\n${packet.persona}`,
+        tools,
+        stopWhen: stepCountIs(maxSteps),
+        // Spend the last step answering rather than starting work that cannot
+        // finish. Without this the run can end mid-tool-call, and `output`
+        // throws NoOutputGeneratedError because the final step never stopped.
+        prepareStep: ({ stepNumber }) =>
+          stepNumber >= maxSteps - 1
+            ? { activeTools: [], toolChoice: "none" }
+            : undefined,
+        maxOutputTokens: config.llm.maxTokens,
+        ...(providerOptions === undefined ? {} : { providerOptions }),
+        output: Output.object({ schema: TurnAnswerSchema }),
+      });
+      const progress = options.progress;
+      // Steps completed before a terminal output failure.
+      // NoObjectGeneratedError carries no step history, so without this a
+      // recovered turn would persist stepCount 0 with no tool events and
+      // hide executed tool effects from session state.
+      const completedSteps: CompletedStepForSession[] = [];
+      let result: Awaited<ReturnType<typeof agent.generate>>;
+      try {
+        const callOptions = runtime.callOptions({
+          workload: "birmel.agent.turn",
+          model: modelId,
+          sessionId: packet.threadId ?? packet.channelId,
+        });
+        const mergedProviderOptions = mergeAgentProviderOptions(
+          providerOptions,
+          callOptions.providerOptions,
+        );
+        result = await agent.generate({
+          messages: taskMessages(packet),
+          abortSignal,
+          onStepFinish: ({ stepNumber, text, toolCalls, toolResults }) => {
+            completedSteps.push({ toolResults: [...toolResults] });
+            // The finishing step answers with structured TurnAnswer JSON
+            // and calls no tool, so its "text" is wire JSON, not the
+            // requested plain-language sentence. Narration only ever
+            // comes from a step that actually did something.
+            if (progress !== undefined && toolCalls.length > 0) {
+              progress.stepFinished(stepNumber, text);
+            }
+          },
+          ...(progress === undefined
+            ? {}
+            : {
+                onToolExecutionStart: ({ toolCall }) => {
+                  progress.toolStarted(
+                    toolCall.toolCallId,
+                    toolCall.toolName,
+                    toolCall.input,
+                  );
+                },
+                onToolExecutionEnd: ({
+                  toolCall,
+                  toolOutput,
+                  toolExecutionMs,
+                }) => {
+                  // A tool that resolves rather than throws still reports its
+                  // own success/failure inside the resolved value (the same
+                  // field summarizeToolResultForSession reads), so a validation
+                  // failure inside the tool would otherwise render as a
+                  // misleading ✓. Fall back to "resolved at all" only for a
+                  // shape this check does not recognize.
+                  const domainResult = ToolDomainResultSchema.safeParse(
+                    toolOutput.type === "tool-result"
+                      ? toolOutput.output
+                      : undefined,
+                  );
+                  const succeeded = domainResult.success
+                    ? domainResult.data.success
+                    : toolOutput.type !== "tool-error";
+                  progress.toolFinished(
+                    toolCall.toolCallId,
+                    succeeded,
+                    toolExecutionMs,
+                  );
+                },
+                onStepStart: ({ stepNumber }) => {
+                  progress.stepStarted(stepNumber);
+                },
+              }),
+          ...callOptions,
+          ...(mergedProviderOptions === undefined
+            ? {}
+            : { providerOptions: mergedProviderOptions }),
+        });
+      } catch (error) {
+        const recovered = recoverTurnAnswer(error);
+        if (recovered === null) {
+          throw error;
+        }
+        const toolEvents = summarizeStepsForSession(
+          completedSteps,
+          registeredToolIds,
+        );
+        span.setAttribute(
+          "gen_ai.response.finish_reasons",
+          recovered.finishReason,
+        );
+        span.setAttribute("gen_ai.usage.input_tokens", recovered.inputTokens);
+        span.setAttribute("gen_ai.usage.output_tokens", recovered.outputTokens);
+        span.setAttribute("birmel.agent_steps", completedSteps.length);
+        span.setAttribute(
+          "birmel.turn_disposition",
+          recovered.answer.disposition,
+        );
+        logger.warn("Agent turn output unparseable; delivering model text", {
+          disposition: recovered.answer.disposition,
+          personaId: packet.personaId,
+          finishReason: recovered.finishReason,
+          inputTokens: recovered.inputTokens,
+          outputTokens: recovered.outputTokens,
+          stepCount: completedSteps.length,
+          toolCallCount: toolEvents.length,
+          durationMs: performance.now() - startedAt,
+        });
+        return {
+          text: recovered.answer.answer,
+          disposition: recovered.answer.disposition,
+          finishReason: recovered.finishReason,
+          inputTokens: recovered.inputTokens,
+          outputTokens: recovered.outputTokens,
+          stepCount: completedSteps.length,
+          toolEvents,
+        };
+      }
+      const toolEvents = summarizeStepsForSession(
+        result.steps,
+        registeredToolIds,
+      );
+      const inputTokens = result.usage.inputTokens ?? 0;
+      const outputTokens = result.usage.outputTokens ?? 0;
+      const answer = TurnAnswerSchema.parse(result.output);
+      span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
+      span.setAttribute("gen_ai.usage.input_tokens", inputTokens);
+      span.setAttribute("gen_ai.usage.output_tokens", outputTokens);
+      span.setAttribute("birmel.agent_steps", result.steps.length);
+      span.setAttribute("birmel.turn_disposition", answer.disposition);
+      logger.info("Agent turn completed", {
+        disposition: answer.disposition,
+        personaId: packet.personaId,
+        finishReason: result.finishReason,
+        inputTokens,
+        outputTokens,
+        stepCount: result.steps.length,
+        toolCallCount: toolEvents.length,
+        durationMs: performance.now() - startedAt,
+      });
+      return {
+        text: answer.answer,
+        disposition: answer.disposition,
+        finishReason: result.finishReason,
+        inputTokens,
+        outputTokens,
+        stepCount: result.steps.length,
+        toolEvents,
+      };
+    },
+  );
+}
+
+/**
+ * Scheduled jobs run the same agent with the same tools. They differ only in
+ * their model/effort overrides, which the job payload supplies.
+ */
+export async function executeIsolatedAgent(
+  packet: TaskPacket,
+  options: IsolatedAgentOptions,
+): Promise<AgentExecutionResult> {
+  return await executeTurn(packet, options);
+}

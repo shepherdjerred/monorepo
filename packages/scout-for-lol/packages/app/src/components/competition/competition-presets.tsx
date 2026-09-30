@@ -2,7 +2,7 @@ import { Trophy } from "lucide-react";
 import {
   COMPETITION_EXAMPLES,
   type CompetitionExample,
-} from "#src/lib/onboarding-examples.ts";
+} from "#src/lib/onboarding/onboarding-examples.ts";
 import {
   Card,
   CardContent,

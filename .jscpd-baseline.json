@@ -20,18 +20,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/better-skill-capped/src/components/ui/badge.tsx|packages/scout-for-lol/packages/evals/src/components/ui/badge.tsx": {
-      "clones": 1,
-      "tokens": 146
-    },
-    "packages/better-skill-capped/src/components/ui/button.tsx|packages/scout-for-lol/packages/evals/src/components/ui/button.tsx": {
-      "clones": 1,
-      "tokens": 166
-    },
-    "packages/better-skill-capped/src/components/ui/card.tsx|packages/scout-for-lol/packages/evals/src/components/ui/card.tsx": {
-      "clones": 1,
-      "tokens": 139
-    },
     "packages/better-skill-capped/src/lib/local-store.test.ts|packages/better-skill-capped/src/lib/safe-storage.test.ts": {
       "clones": 1,
       "tokens": 114
@@ -44,17 +32,17 @@
       "clones": 1,
       "tokens": 254
     },
-    "packages/birmel/scripts/smoke.ts|packages/scout-for-lol/packages/evals/scripts/smoke.ts": {
-      "clones": 1,
-      "tokens": 142
-    },
     "packages/birmel/scripts/smoke.ts|packages/starlight-karma-bot/scripts/smoke.ts": {
       "clones": 1,
       "tokens": 127
     },
     "packages/birmel/scripts/smoke.ts|packages/streambot/scripts/smoke.ts": {
       "clones": 2,
-      "tokens": 225
+      "tokens": 242
+    },
+    "packages/birmel/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 142
     },
     "packages/birmel/scripts/smoke.ts|packages/temporal/scripts/smoke.ts": {
       "clones": 1,
@@ -68,33 +56,29 @@
       "clones": 1,
       "tokens": 89
     },
-    "packages/birmel/src/agent-tools/tools/automation/browser.ts|packages/birmel/src/agent-tools/tools/automation/pinchtab-browser.ts": {
+    "packages/birmel/src/agent-tools/tools/discord/actions/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
       "clones": 1,
-      "tokens": 74
+      "tokens": 90
+    },
+    "packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts": {
+      "clones": 1,
+      "tokens": 73
     },
     "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/channels.ts": {
       "clones": 1,
       "tokens": 77
     },
     "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
-      "clones": 1,
-      "tokens": 76
+      "clones": 2,
+      "tokens": 146
     },
     "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
       "clones": 1,
-      "tokens": 94
+      "tokens": 93
     },
     "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/events.ts": {
       "clones": 1,
       "tokens": 72
-    },
-    "packages/birmel/src/agent-tools/tools/discord/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
-    "packages/birmel/src/agent-tools/tools/discord/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/thread-actions.ts": {
-      "clones": 1,
-      "tokens": 73
     },
     "packages/birmel/src/agent-tools/tools/elections/candidate-stats.ts|packages/birmel/src/agent-tools/tools/elections/election-actions.ts": {
       "clones": 1,
@@ -163,10 +147,6 @@
     "packages/birmel/tests/sessions/session-runtime.test.ts|packages/birmel/tests/sessions/session-runtime.test.ts": {
       "clones": 1,
       "tokens": 87
-    },
-    "packages/code-review/src/github-issue-comments.ts|packages/code-review/src/github.ts": {
-      "clones": 1,
-      "tokens": 76
     },
     "packages/code-review/src/github-review-threads.ts|packages/code-review/src/github-review-threads.ts": {
       "clones": 1,
@@ -320,7 +300,7 @@
       "clones": 1,
       "tokens": 111
     },
-    "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark/benchmark-evaluator.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/catch-evidence.test.ts": {
+    "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark/benchmark-evaluator.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/memory/catch-evidence.test.ts": {
       "clones": 1,
       "tokens": 195
     },
@@ -335,6 +315,10 @@
     "packages/discord-plays-pokemon/packages/backend/src/goal/benchmark/benchmark-run.ts|packages/toolkit/test/lib/git-conflicts.test.ts": {
       "clones": 1,
       "tokens": 77
+    },
+    "packages/discord-plays-pokemon/packages/backend/src/goal/control/goal-input-lease.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
+      "clones": 1,
+      "tokens": 129
     },
     "packages/discord-plays-pokemon/packages/backend/src/goal/e2e-goal.integration.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
       "clones": 1,
@@ -360,15 +344,11 @@
       "clones": 2,
       "tokens": 173
     },
-    "packages/discord-plays-pokemon/packages/backend/src/goal/goal-input-lease.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
-      "clones": 1,
-      "tokens": 129
-    },
-    "packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.test.ts": {
+    "packages/discord-plays-pokemon/packages/backend/src/goal/memory/knowledge.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/memory/knowledge.test.ts": {
       "clones": 2,
       "tokens": 210
     },
-    "packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.ts|packages/discord-plays-pokemon/scripts/knowledge/model.ts": {
+    "packages/discord-plays-pokemon/packages/backend/src/goal/memory/knowledge.ts|packages/discord-plays-pokemon/scripts/knowledge/model.ts": {
       "clones": 1,
       "tokens": 83
     },
@@ -424,10 +404,6 @@
       "clones": 1,
       "tokens": 115
     },
-    "packages/eslint-config/src/rules/prefer-date-fns.ts|packages/eslint-config/src/rules/prefer-date-fns.ts": {
-      "clones": 1,
-      "tokens": 89
-    },
     "packages/home-assistant/src/codegen/introspect.ts|packages/home-assistant/src/codegen/introspect.ts": {
       "clones": 1,
       "tokens": 118
@@ -440,85 +416,85 @@
       "clones": 1,
       "tokens": 101
     },
-    "packages/homelab/src/cdk8s/grafana/buildkite-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
       "clones": 3,
       "tokens": 281
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts": {
       "clones": 1,
       "tokens": 78
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 1,
       "tokens": 78
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
-      "clones": 1,
-      "tokens": 89
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
+      "clones": 2,
+      "tokens": 158
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
       "clones": 1,
       "tokens": 95
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts": {
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts": {
       "clones": 2,
       "tokens": 163
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
-      "clones": 1,
-      "tokens": 77
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
+      "clones": 2,
+      "tokens": 146
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts": {
       "clones": 1,
       "tokens": 88
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
-      "tokens": 141
+      "tokens": 140
     },
-    "packages/homelab/src/cdk8s/grafana/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/seaweedfs-backup-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/shared/dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
       "clones": 1,
       "tokens": 72
     },
-    "packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 3,
       "tokens": 264
     },
-    "packages/homelab/src/cdk8s/grafana/smartctl-panels.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/smartctl-panels.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/homelab/src/cdk8s/grafana/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/grafana/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
       "clones": 1,
       "tokens": 101
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-panels.ts": {
       "clones": 3,
       "tokens": 211
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-performance-panels.ts": {
       "clones": 1,
       "tokens": 80
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard.ts": {
       "clones": 1,
       "tokens": 80
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard.ts": {
       "clones": 1,
       "tokens": 76
+    },
+    "packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts": {
+      "clones": 1,
+      "tokens": 72
     },
     "packages/homelab/src/cdk8s/src/apps/1password.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/platform/1password.ts": {
       "clones": 2,
@@ -537,56 +513,48 @@
       "tokens": 88
     },
     "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts": {
-      "clones": 7,
-      "tokens": 589
-    },
-    "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 1,
-      "tokens": 86
-    },
-    "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
-      "clones": 1,
-      "tokens": 123
+      "clones": 6,
+      "tokens": 505
     },
     "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
       "clones": 1,
-      "tokens": 81
+      "tokens": 82
     },
     "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
+      "clones": 2,
+      "tokens": 152
+    },
+    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 1,
-      "tokens": 71
+      "tokens": 82
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts": {
       "clones": 5,
       "tokens": 437
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 1,
-      "tokens": 142
+      "clones": 2,
+      "tokens": 262
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 8,
-      "tokens": 763
+      "clones": 10,
+      "tokens": 901
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 12,
-      "tokens": 1435
+      "clones": 13,
+      "tokens": 1391
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
-      "clones": 3,
-      "tokens": 258
+      "clones": 2,
+      "tokens": 152
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 6,
-      "tokens": 553
-    },
-    "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 1,
-      "tokens": 82
+      "clones": 4,
+      "tokens": 365
     },
     "packages/homelab/src/cdk8s/src/argocd-script-support.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 2,
-      "tokens": 239
+      "clones": 3,
+      "tokens": 267
     },
     "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
       "clones": 11,
@@ -594,117 +562,49 @@
     },
     "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 2,
-      "tokens": 247
+      "tokens": 216
     },
     "packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 4,
-      "tokens": 478
+      "clones": 6,
+      "tokens": 688
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/flipt.ts": {
+    "packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
       "clones": 1,
-      "tokens": 82
+      "tokens": 91
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/freshrss.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts": {
-      "clones": 1,
-      "tokens": 99
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts": {
-      "clones": 1,
-      "tokens": 81
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
-      "clones": 1,
-      "tokens": 142
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts": {
-      "clones": 1,
-      "tokens": 118
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/syncthing.ts": {
-      "clones": 1,
-      "tokens": 107
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
-      "clones": 1,
-      "tokens": 126
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts": {
-      "clones": 1,
-      "tokens": 99
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/freshrss.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/freshrss.ts": {
       "clones": 1,
       "tokens": 71
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/media.ts": {
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts": {
-      "clones": 1,
-      "tokens": 131
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/temporal/agent-worker-network-policy.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts": {
-      "clones": 3,
-      "tokens": 339
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
       "clones": 1,
       "tokens": 75
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/syncthing.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
       "clones": 1,
       "tokens": 75
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
       "clones": 1,
-      "tokens": 75
+      "tokens": 97
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
       "clones": 1,
       "tokens": 88
     },
-    "packages/homelab/src/cdk8s/src/misc/zfs-nvme-volume.ts|packages/homelab/src/cdk8s/src/misc/zfs-sata-volume.ts": {
+    "packages/homelab/src/cdk8s/src/misc/storage/zfs-nvme-volume.ts|packages/homelab/src/cdk8s/src/misc/storage/zfs-sata-volume.ts": {
       "clones": 1,
       "tokens": 104
-    },
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-sjerred.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-sjerred.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts": {
-      "clones": 2,
-      "tokens": 170
     },
     "packages/homelab/src/cdk8s/src/resources/bugsink/index.ts|packages/homelab/src/cdk8s/src/resources/bugsink/index.ts": {
       "clones": 1,
       "tokens": 83
     },
-    "packages/homelab/src/cdk8s/src/resources/flipt/index.test.ts|packages/homelab/src/cdk8s/src/resources/freshrss.test.ts": {
+    "packages/homelab/src/cdk8s/src/resources/flipt/index.test.ts|packages/homelab/src/cdk8s/src/resources/freshrss/freshrss.test.ts": {
       "clones": 1,
       "tokens": 118
     },
@@ -720,7 +620,7 @@
       "clones": 1,
       "tokens": 87
     },
-    "packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/resource-monitoring.test.ts|packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/resource-monitoring.test.ts": {
+    "packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring.test.ts|packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring.test.ts": {
       "clones": 1,
       "tokens": 80
     },
@@ -736,7 +636,15 @@
       "clones": 2,
       "tokens": 206
     },
-    "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts": {
+    "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/config-extension-workload.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/index.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts": {
       "clones": 1,
       "tokens": 90
     },
@@ -744,13 +652,25 @@
       "clones": 1,
       "tokens": 82
     },
-    "packages/homelab/src/cdk8s/src/resources/temporal/operations-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/worker.ts": {
+    "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/woodpecker-db.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts|packages/homelab/src/cdk8s/src/resources/postgres/woodpecker-db.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts": {
       "clones": 1,
       "tokens": 82
     },
     "packages/homelab/src/cdk8s/src/resources/torrents/radarr.ts|packages/homelab/src/cdk8s/src/resources/torrents/sonarr.ts": {
       "clones": 2,
       "tokens": 146
+    },
+    "packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
+      "clones": 1,
+      "tokens": 78
     },
     "packages/homelab/src/helm-types/src/cli.test.ts|packages/homelab/src/helm-types/src/cli.test.ts": {
       "clones": 3,
@@ -764,37 +684,9 @@
       "clones": 1,
       "tokens": 91
     },
-    "packages/llm-runtime/src/metrics.ts|packages/llm-runtime/src/metrics.ts": {
-      "clones": 1,
-      "tokens": 145
-    },
-    "packages/llm-runtime/test/attributed-fetch.test.ts|packages/llm-runtime/test/attributed-fetch.test.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
     "packages/macos-ai-subscription-tracker/scripts/verify-app.ts|packages/macos-ai-subscription-tracker/scripts/verify-notarized-app.ts": {
       "clones": 1,
       "tokens": 192
-    },
-    "packages/monarch/src/lib/amazon/classify.ts|packages/monarch/src/lib/costco/classify.ts": {
-      "clones": 1,
-      "tokens": 101
-    },
-    "packages/monarch/src/lib/amazon/enrich.ts|packages/monarch/src/lib/costco/enrich.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/monarch/src/lib/amazon/matcher.ts|packages/monarch/src/lib/costco/matcher.ts": {
-      "clones": 2,
-      "tokens": 190
-    },
-    "packages/monarch/src/lib/amazon/scraper.ts|packages/monarch/src/lib/costco/scraper.ts": {
-      "clones": 1,
-      "tokens": 84
-    },
-    "packages/monarch/src/lib/apple/matcher.ts|packages/monarch/src/lib/costco/matcher.ts": {
-      "clones": 1,
-      "tokens": 71
     },
     "packages/monarch/src/lib/classifier/prompt.test.ts|packages/monarch/src/lib/classifier/prompt.test.ts": {
       "clones": 1,
@@ -805,22 +697,6 @@
       "tokens": 71
     },
     "packages/monarch/src/lib/display.test.ts|packages/monarch/src/lib/display.test.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/monarch/src/lib/display.test.ts|packages/monarch/src/lib/enrichment/pipeline.ts": {
-      "clones": 1,
-      "tokens": 102
-    },
-    "packages/monarch/src/lib/scl/parser.ts|packages/monarch/src/lib/venmo/parser.ts": {
-      "clones": 1,
-      "tokens": 110
-    },
-    "packages/monarch/src/lib/usaa/classify.ts|packages/monarch/src/lib/usaa/enrich.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
-    "packages/openrouter-broadcast-ingest/test/app.test.ts|packages/openrouter-broadcast-ingest/test/app.test.ts": {
       "clones": 1,
       "tokens": 71
     },
@@ -840,7 +716,7 @@
       "clones": 1,
       "tokens": 74
     },
-    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/run-recorder-failure.test.ts": {
+    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/operator/run-recorder-failure.test.ts": {
       "clones": 1,
       "tokens": 76
     },
@@ -851,6 +727,10 @@
     "packages/pr-fleet-controller/test/operator-review-regressions.test.ts|packages/pr-fleet-controller/test/worktree.test.ts": {
       "clones": 1,
       "tokens": 76
+    },
+    "packages/pr-fleet-controller/test/operator/run-recorder-failure.test.ts|packages/pr-fleet-controller/test/operator/run-recorder-failure.test.ts": {
+      "clones": 2,
+      "tokens": 180
     },
     "packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts|packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts": {
       "clones": 3,
@@ -863,10 +743,6 @@
     "packages/pr-fleet-controller/test/run-bundle.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
       "clones": 3,
       "tokens": 283
-    },
-    "packages/pr-fleet-controller/test/run-recorder-failure.test.ts|packages/pr-fleet-controller/test/run-recorder-failure.test.ts": {
-      "clones": 2,
-      "tokens": 180
     },
     "packages/pr-fleet-controller/test/worktree.test.ts|packages/pr-fleet-controller/test/worktree.test.ts": {
       "clones": 2,
@@ -884,37 +760,33 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts": {
+    "packages/scout-for-lol/packages/backend/scripts/lane-priors/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/lane-priors/lane-prior-cli.ts": {
       "clones": 1,
       "tokens": 70
     },
-    "packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/update-queue-windows.ts": {
+    "packages/scout-for-lol/packages/backend/scripts/lane-priors/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/update-queue-windows.ts": {
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/scripts/register-tournament-provider.ts|packages/scout-for-lol/packages/backend/scripts/tournament-stub-smoke.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/scout-for-lol/packages/backend/scripts/scoutql-v2-rewrite-render.ts|packages/scout-for-lol/packages/data/src/model/legacy/report-query-render.ts": {
+    "packages/scout-for-lol/packages/backend/scripts/scoutql/scoutql-v2-rewrite-render.ts|packages/scout-for-lol/packages/data/src/model/legacy/report-query-render.ts": {
       "clones": 1,
       "tokens": 70
+    },
+    "packages/scout-for-lol/packages/backend/src/architecture-boundaries.test.ts|packages/scout-for-lol/packages/domain/src/architecture-boundaries.test.ts": {
+      "clones": 1,
+      "tokens": 113
+    },
+    "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/leaderboard/weekly-leaderboard.integration.test.ts": {
+      "clones": 1,
+      "tokens": 106
     },
     "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/parlay.integration.test.ts": {
       "clones": 1,
       "tokens": 74
     },
-    "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-leaderboard.integration.test.ts": {
-      "clones": 1,
-      "tokens": 89
-    },
     "packages/scout-for-lol/packages/backend/src/betting/accounts/earnings.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/accounts/earnings.integration.test.ts": {
       "clones": 1,
       "tokens": 97
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/announce.test.ts|packages/scout-for-lol/packages/backend/src/betting/announce.test.ts": {
-      "clones": 1,
-      "tokens": 134
     },
     "packages/scout-for-lol/packages/backend/src/betting/concurrent-race.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/markets/bet-button.integration.test.ts": {
       "clones": 1,
@@ -924,25 +796,21 @@
       "clones": 1,
       "tokens": 156
     },
-    "packages/scout-for-lol/packages/backend/src/betting/markets/place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-bet.ts": {
-      "clones": 1,
-      "tokens": 86
+    "packages/scout-for-lol/packages/backend/src/betting/notify/announce.test.ts|packages/scout-for-lol/packages/backend/src/betting/notify/announce.test.ts": {
+      "clones": 2,
+      "tokens": 215
     },
-    "packages/scout-for-lol/packages/backend/src/betting/message-refresh.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/message-refresh.integration.test.ts": {
+    "packages/scout-for-lol/packages/backend/src/betting/notify/message-refresh.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/notify/message-refresh.integration.test.ts": {
       "clones": 1,
-      "tokens": 109
+      "tokens": 129
     },
-    "packages/scout-for-lol/packages/backend/src/betting/message-refresh.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/parlay-refresh.ts": {
+    "packages/scout-for-lol/packages/backend/src/betting/notify/message-refresh.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/runtime/parlay-refresh.ts": {
       "clones": 1,
       "tokens": 101
     },
-    "packages/scout-for-lol/packages/backend/src/betting/parlays/parlay-criteria.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/parlay-criteria.test.ts": {
-      "clones": 3,
-      "tokens": 237
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/parlays/parlay-place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-bet.ts": {
-      "clones": 3,
-      "tokens": 251
+    "packages/scout-for-lol/packages/backend/src/betting/parlays/model/parlay-criteria.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/model/parlay-criteria.test.ts": {
+      "clones": 5,
+      "tokens": 375
     },
     "packages/scout-for-lol/packages/backend/src/betting/parlays/parlay.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
       "clones": 1,
@@ -954,23 +822,15 @@
     },
     "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
       "clones": 3,
-      "tokens": 226
+      "tokens": 230
     },
     "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts": {
       "clones": 1,
-      "tokens": 93
+      "tokens": 98
     },
     "packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts": {
       "clones": 1,
       "tokens": 70
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-leaderboard.integration.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/bucks.router.test.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-period.ts|packages/temporal/src/activities/scout/scout-weekly-parlay.ts": {
-      "clones": 3,
-      "tokens": 329
     },
     "packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts": {
       "clones": 4,
@@ -994,7 +854,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.test.ts|packages/scout-for-lol/packages/backend/src/discord/commands/help.test.ts": {
       "clones": 1,
-      "tokens": 92
+      "tokens": 87
     },
     "packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts|packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts": {
       "clones": 1,
@@ -1016,15 +876,11 @@
       "clones": 2,
       "tokens": 158
     },
-    "packages/scout-for-lol/packages/backend/src/discord/utils/permissions.test.ts|packages/scout-for-lol/packages/backend/src/discord/utils/permissions.test.ts": {
+    "packages/scout-for-lol/packages/backend/src/explore/http/http-auth.ts|packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts": {
       "clones": 1,
-      "tokens": 71
+      "tokens": 190
     },
-    "packages/scout-for-lol/packages/backend/src/explore/http-auth.ts|packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts": {
-      "clones": 1,
-      "tokens": 203
-    },
-    "packages/scout-for-lol/packages/backend/src/explore/http-auth.ts|packages/scout-for-lol/packages/backend/src/trpc/trpc.ts": {
+    "packages/scout-for-lol/packages/backend/src/explore/http/http-auth.ts|packages/scout-for-lol/packages/backend/src/trpc/trpc.ts": {
       "clones": 1,
       "tokens": 81
     },
@@ -1076,13 +932,9 @@
       "clones": 1,
       "tokens": 78
     },
-    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/evals/src/materialization/openrouter-client.ts": {
+    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/provider-clients.ts": {
       "clones": 1,
-      "tokens": 108
-    },
-    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/openrouter-clients.ts": {
-      "clones": 1,
-      "tokens": 73
+      "tokens": 77
     },
     "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.ts": {
       "clones": 1,
@@ -1090,7 +942,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
       "clones": 1,
-      "tokens": 92
+      "tokens": 80
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts": {
       "clones": 1,
@@ -1102,19 +954,11 @@
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts": {
       "clones": 3,
-      "tokens": 272
+      "tokens": 245
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
       "clones": 1,
       "tokens": 76
-    },
-    "packages/scout-for-lol/packages/backend/src/league/tasks/prematch/__tests__/active-game-detection.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/__tests__/active-game-detection.test.ts": {
-      "clones": 1,
-      "tokens": 81
-    },
-    "packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-loading-screen.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-notification.ts": {
-      "clones": 1,
-      "tokens": 124
     },
     "packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.test.ts|packages/scout-for-lol/packages/backend/src/lib/player-admin/player-mutations.test.ts": {
       "clones": 2,
@@ -1160,21 +1004,17 @@
       "clones": 2,
       "tokens": 176
     },
-    "packages/scout-for-lol/packages/backend/src/reports/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-calendar-option.ts": {
+    "packages/scout-for-lol/packages/backend/src/reports/schedule/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/snapshot/visualization-snapshot-calendar-option.ts": {
       "clones": 1,
       "tokens": 122
     },
-    "packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts|packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts": {
+    "packages/scout-for-lol/packages/backend/src/reports/visualization/visualization-snapshot.test.ts|packages/scout-for-lol/packages/backend/src/reports/visualization/visualization-snapshot.test.ts": {
       "clones": 1,
       "tokens": 95
     },
     "packages/scout-for-lol/packages/backend/src/showcase/manifest.ts|packages/scout-for-lol/packages/frontend/src/data/scout-showcase.ts": {
       "clones": 1,
       "tokens": 76
-    },
-    "packages/scout-for-lol/packages/backend/src/storage/s3-helpers.ts|packages/scout-for-lol/packages/backend/src/storage/s3-prematch.ts": {
-      "clones": 2,
-      "tokens": 161
     },
     "packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard-image.ts|packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.ts": {
       "clones": 1,
@@ -1194,11 +1034,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.no-bucket.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.test.ts": {
       "clones": 1,
-      "tokens": 143
-    },
-    "packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts": {
-      "clones": 2,
-      "tokens": 150
+      "tokens": 81
     },
     "packages/scout-for-lol/packages/backend/src/storage/s3-query.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
       "clones": 1,
@@ -1208,25 +1044,9 @@
       "clones": 1,
       "tokens": 83
     },
-    "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
-    "packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts": {
-      "clones": 2,
-      "tokens": 194
-    },
     "packages/scout-for-lol/packages/backend/src/trpc/router/subscription-filters.router.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/subscription-mute.router.test.ts": {
       "clones": 1,
       "tokens": 156
-    },
-    "packages/scout-for-lol/packages/data/scripts/update-data-dragon-schemas.ts|packages/scout-for-lol/packages/data/src/data-dragon/item.ts": {
-      "clones": 1,
-      "tokens": 87
     },
     "packages/scout-for-lol/packages/data/src/example/example.ts|packages/scout-for-lol/packages/report/src/html/index.test.ts": {
       "clones": 5,
@@ -1240,15 +1060,11 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/data/src/model/bucks/bryan-bucks.ts|packages/scout-for-lol/packages/data/src/model/bucks/bryan-bucks.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/tokens.ts": {
+    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/tokens.ts": {
       "clones": 1,
       "tokens": 124
     },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-spec.ts|packages/scout-for-lol/packages/data/src/model/scoutql/plan.ts": {
+    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-spec.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/plan.ts": {
       "clones": 1,
       "tokens": 78
     },
@@ -1260,35 +1076,19 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/scout-for-lol/packages/data/src/model/reports/report-query-champions.ts|packages/scout-for-lol/packages/data/src/model/scoutql/catalog-functions.ts": {
+    "packages/scout-for-lol/packages/data/src/model/reports/report-query-champions.ts|packages/scout-for-lol/packages/data/src/model/scoutql/catalog/catalog-functions.ts": {
       "clones": 1,
       "tokens": 181
     },
-    "packages/scout-for-lol/packages/data/src/model/scoutql/corpus.test.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse-recovery.test.ts": {
+    "packages/scout-for-lol/packages/data/src/model/scoutql/parse/corpus.test.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/parse-recovery.test.ts": {
       "clones": 1,
       "tokens": 129
     },
-    "packages/scout-for-lol/packages/data/src/model/scoutql/cst-to-ast-expr.ts|packages/scout-for-lol/packages/data/src/model/scoutql/cst-to-ast.ts": {
+    "packages/scout-for-lol/packages/data/src/model/scoutql/parse/cst-to-ast-expr.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/cst-to-ast.ts": {
       "clones": 1,
       "tokens": 77
     },
-    "packages/scout-for-lol/packages/data/src/review/timeline-pipeline.test.ts|packages/scout-for-lol/packages/evals/src/materialization/s3-source.test.ts": {
-      "clones": 1,
-      "tokens": 97
-    },
-    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/starlight-karma-bot/scripts/smoke.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
-      "clones": 4,
-      "tokens": 464
-    },
-    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
-      "clones": 2,
-      "tokens": 253
-    },
-    "packages/scout-for-lol/packages/frontend/src/components/review-tool/history-panel.tsx|packages/scout-for-lol/packages/frontend/src/components/review-tool/ratings-analytics.tsx": {
+    "packages/scout-for-lol/packages/frontend/src/components/review-tool/results/history-panel.tsx|packages/scout-for-lol/packages/frontend/src/components/review-tool/results/ratings-analytics.tsx": {
       "clones": 1,
       "tokens": 151
     },
@@ -1300,7 +1100,7 @@
       "clones": 1,
       "tokens": 79
     },
-    "packages/scout-for-lol/packages/report/src/html/competition-chart.ts|packages/scout-for-lol/packages/report/src/html/competition-chart.ts": {
+    "packages/scout-for-lol/packages/report/src/html/charts/competition-chart.ts|packages/scout-for-lol/packages/report/src/html/charts/competition-chart.ts": {
       "clones": 1,
       "tokens": 88
     },
@@ -1316,10 +1116,6 @@
       "clones": 1,
       "tokens": 97
     },
-    "packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/rule-editor.tsx|packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/sound-pool-editor.tsx": {
-      "clones": 1,
-      "tokens": 75
-    },
     "packages/seaweedfs-backup/test/backup-restore.test.ts|packages/seaweedfs-backup/test/gc.test.ts": {
       "clones": 1,
       "tokens": 74
@@ -1327,6 +1123,14 @@
     "packages/seaweedfs-backup/test/gc.test.ts|packages/seaweedfs-backup/test/s3-endpoints.integration.test.ts": {
       "clones": 1,
       "tokens": 80
+    },
+    "packages/starlight-karma-bot/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/starlight-karma-bot/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 72
     },
     "packages/streambot/e2e/run.ts|packages/streambot/e2e/voice-recovery.ts": {
       "clones": 1,
@@ -1340,10 +1144,6 @@
       "clones": 1,
       "tokens": 78
     },
-    "packages/streambot/src/discord/commands.ts|packages/streambot/src/discord/commands.ts": {
-      "clones": 1,
-      "tokens": 91
-    },
     "packages/streambot/src/discord/interaction-adapters.ts|packages/streambot/src/discord/interaction-adapters.ts": {
       "clones": 1,
       "tokens": 71
@@ -1352,15 +1152,11 @@
       "clones": 1,
       "tokens": 73
     },
-    "packages/streambot/src/voice/debug-audio-recorder.ts|packages/voice-assistant/src/wave-io.ts": {
+    "packages/streambot/src/voice/debug-audio-recorder.ts|packages/voice-assistant/src/audio/wave-io.ts": {
       "clones": 1,
       "tokens": 73
     },
-    "packages/streambot/test/media/player-card.test.ts|packages/streambot/test/media/player-controls.test.ts": {
-      "clones": 1,
-      "tokens": 118
-    },
-    "packages/streambot/test/media/streamer-position.test.ts|packages/streambot/test/media/streamer-position.test.ts": {
+    "packages/streambot/test/media/streamer/streamer-position.test.ts|packages/streambot/test/media/streamer/streamer-position.test.ts": {
       "clones": 1,
       "tokens": 104
     },
@@ -1375,10 +1171,6 @@
     "packages/streambot/test/session/session-manager.test.ts|packages/streambot/test/session/session-manager.test.ts": {
       "clones": 4,
       "tokens": 301
-    },
-    "packages/streambot/test/session/session-manager.test.ts|packages/streambot/test/session/userbot-pool.test.ts": {
-      "clones": 1,
-      "tokens": 91
     },
     "packages/streambot/test/unit/config-dynamic.test.ts|packages/streambot/test/unit/config-dynamic.test.ts": {
       "clones": 1,
@@ -1399,6 +1191,10 @@
     "packages/tasknotes-core/ci/coverage-ratchet.ts|packages/tasknotes-windows/scripts/coverage-ratchet.ts": {
       "clones": 1,
       "tokens": 93
+    },
+    "packages/tasknotes-server/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
+      "clones": 3,
+      "tokens": 335
     },
     "packages/tasknotes-server/src/__tests__/concurrency.test.ts|packages/tasknotes-server/src/__tests__/v2-routes.test.ts": {
       "clones": 1,
@@ -1450,7 +1246,7 @@
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/job-search-board.test.ts": {
       "clones": 1,
-      "tokens": 75
+      "tokens": 70
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts": {
       "clones": 1,
@@ -1458,15 +1254,31 @@
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
       "clones": 1,
-      "tokens": 77
+      "tokens": 70
     },
-    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/saved-view-collection.test.ts": {
+    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/job-search-board.test.ts": {
       "clones": 1,
-      "tokens": 83
+      "tokens": 74
+    },
+    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/saved-view/saved-view-collection.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
+      "clones": 1,
+      "tokens": 74
     },
     "packages/tasks-for-obsidian/src/domain/base-schemas.ts|packages/tasks-for-obsidian/src/domain/wire.ts": {
       "clones": 2,
       "tokens": 166
+    },
+    "packages/tasks-for-obsidian/src/domain/job-search-board.test.ts|packages/tasks-for-obsidian/src/domain/saved-view/saved-view-collection.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/tasks-for-obsidian/src/domain/job-search-board.test.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
+      "clones": 1,
+      "tokens": 71
     },
     "packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts|packages/tasks-for-obsidian/src/domain/recurrence.test.ts": {
       "clones": 1,
@@ -1526,7 +1338,7 @@
     },
     "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
       "clones": 1,
-      "tokens": 75
+      "tokens": 72
     },
     "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts": {
       "clones": 2,
@@ -1540,33 +1352,25 @@
       "clones": 2,
       "tokens": 194
     },
-    "packages/temporal/src/activities/homelab/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab/homelab-audit-collectors.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
     "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
-      "tokens": 127
+      "tokens": 122
     },
     "packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
       "clones": 1,
       "tokens": 95
     },
-    "packages/temporal/src/activities/maintenance/deps-summary.ts|packages/version-catalog/src/index.ts": {
+    "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/temporal/src/activities/maintenance/deps-summary/deps-summary.ts|packages/version-catalog/src/index.ts": {
       "clones": 1,
       "tokens": 79
     },
     "packages/temporal/src/activities/maintenance/tasknotes-canary.ts|packages/temporal/src/activities/reports/report-freshness.ts": {
       "clones": 1,
       "tokens": 105
-    },
-    "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/temporal/src/event-bridge/sleep-webhook.ts|packages/temporal/src/event-bridge/xcode-cloud-webhook.ts": {
-      "clones": 1,
-      "tokens": 74
     },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,
@@ -1576,7 +1380,7 @@
       "clones": 1,
       "tokens": 143
     },
-    "packages/temporal/src/workflows/data-dragon.test.ts|packages/temporal/src/workflows/data-dragon.test.ts": {
+    "packages/temporal/src/workflows/scout/data-dragon.test.ts|packages/temporal/src/workflows/scout/data-dragon.test.ts": {
       "clones": 1,
       "tokens": 75
     },
@@ -1604,45 +1408,25 @@
       "clones": 1,
       "tokens": 80
     },
-    "packages/toolkit/src/lib/github/pr.ts|packages/toolkit/src/lib/github/pr.ts": {
-      "clones": 1,
-      "tokens": 75
-    },
-    "packages/toolkit/src/lib/history/conductor.ts|packages/toolkit/src/lib/history/sources.ts": {
-      "clones": 1,
-      "tokens": 122
-    },
-    "packages/toolkit/src/lib/history/index.ts|packages/toolkit/src/lib/history/index.ts": {
-      "clones": 1,
-      "tokens": 139
-    },
     "packages/toolkit/test/bugsink/client.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
-      "tokens": 89
+      "tokens": 84
     },
     "packages/toolkit/test/lib/git-conflicts.test.ts|scripts/lib/test-git.ts": {
       "clones": 1,
       "tokens": 76
     },
     "packages/toolkit/test/lib/http.test.ts|packages/toolkit/test/lib/http.test.ts": {
-      "clones": 2,
-      "tokens": 166
+      "clones": 3,
+      "tokens": 235
     },
     "packages/voice-assistant/src/local-models.ts|packages/voice-assistant/src/local-models.ts": {
       "clones": 2,
       "tokens": 175
     },
-    "scripts/lib/ci-io-fixed-corpus.test.ts|scripts/lib/ci-io-fixed-corpus.test.ts": {
-      "clones": 2,
-      "tokens": 156
-    },
-    "scripts/lib/ci-io-report.test.ts|scripts/lib/ci-io-report.test.ts": {
-      "clones": 2,
-      "tokens": 182
-    },
-    "scripts/lib/scout-legacy-site-storage.ts|scripts/lib/scout-site-storage.ts": {
-      "clones": 2,
-      "tokens": 148
+    "scripts/lib/scout/scout-legacy-site-storage.ts|scripts/lib/scout/scout-site-storage.ts": {
+      "clones": 1,
+      "tokens": 74
     }
   }
 }

@@ -23,19 +23,15 @@ export async function syncScoutBryanBucksAnalytics(): Promise<ScoutBryanBucksAna
   const now = new Date();
   const bucket = Math.floor(now.getTime() / (15 * 60 * 1000)).toString();
   const response = await fetch(
-    z.url().parse(requiredEnvironment("SCOUT_WEEKLY_PARLAY_CONTROL_URL")),
+    z.url().parse(requiredEnvironment("SCOUT_BRYAN_BUCKS_CONTROL_URL")),
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${requiredEnvironment("SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN")}`,
+        Authorization: `Bearer ${requiredEnvironment("SCOUT_BRYAN_BUCKS_CONTROL_TOKEN")}`,
         "Content-Type": "application/json",
         "Idempotency-Key": `bryan-bucks-analytics:${bucket}`,
       },
-      body: JSON.stringify({
-        periodKey: now.toISOString().slice(0, 10),
-        slot: 0,
-        action: "analytics_sync",
-      }),
+      body: "{}",
       signal: AbortSignal.timeout(2 * 60 * 1000),
     },
   );

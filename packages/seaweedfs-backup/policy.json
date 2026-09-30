@@ -12,6 +12,13 @@
   },
   "buckets": [
     {
+      "name": "apple-sdks",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Apple SDK tarballs; re-staging needs a Mac with that Xcode"
+    },
+    {
       "name": "better-skill-capped",
       "mode": "excluded",
       "cadences": [],
@@ -24,6 +31,13 @@
       "cadences": [],
       "excludeSuffixes": [],
       "reason": "Retired static site"
+    },
+    {
+      "name": "ci-handoff",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Ephemeral CI handoff data"
     },
     {
       "name": "resume",
@@ -61,6 +75,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "ts-mc-docs",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "webring",
       "mode": "excluded",
       "cadences": [],
@@ -75,6 +96,20 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "macos-cross",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "cross-compilers",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "stocks-sjer-red",
       "mode": "excluded",
       "cadences": [],
@@ -83,6 +118,13 @@
     },
     {
       "name": "wiki-sjer-red",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "scout-design-system",
       "mode": "excluded",
       "cadences": [],
       "excludeSuffixes": [],
@@ -136,6 +178,13 @@
       "cadences": ["daily"],
       "excludeSuffixes": [],
       "reason": "LLM request and response archive"
+    },
+    {
+      "name": "agent-chat-sessions",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Durable Claude and Codex chat resume state"
     },
     {
       "name": "streambot-voice-captures",

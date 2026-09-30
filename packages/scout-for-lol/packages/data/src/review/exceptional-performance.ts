@@ -1,5 +1,6 @@
 import type { PlayerConfigEntry } from "#src/model/riot/player-config.ts";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
+import { computeKda } from "#src/model/matches/match-helpers.ts";
 
 const THRESHOLDS = {
   fastGameSeconds: 20 * 60,
@@ -32,9 +33,7 @@ export type ExceptionalParticipantStats = {
 };
 
 function calculateKda(stats: ExceptionalParticipantStats): number {
-  return stats.deaths === 0
-    ? Infinity
-    : (stats.kills + stats.assists) / stats.deaths;
+  return computeKda(stats);
 }
 
 function exceptionallyGood(

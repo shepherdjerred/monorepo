@@ -47,8 +47,9 @@ const SNAPSHOT_MAX_AGE_DAYS = 45;
 const PLATFORM_STACKS: readonly PlatformStack[] = [
   "openai",
   "anthropic",
+  "anthropic-federation",
+  "google",
   "discord",
-  "openrouter",
   "cloudflare-tokens",
 ];
 
@@ -65,6 +66,12 @@ const SecretKeyRefSchema = z.object({
 const SecretVolumeSchema = z.object({
   secretName: z.string(),
   items: z.array(z.object({ key: z.string() })).optional(),
+});
+const HelmRconSchema = z.object({
+  enabled: z.boolean().optional(),
+  withGeneratedPassword: z.boolean().optional(),
+  existingSecret: z.string().min(1),
+  secretKey: z.string().min(1),
 });
 const ManifestSchema = z.object({
   apiVersion: z.string().optional(),
@@ -99,8 +106,8 @@ function addKey(
   keys.add(key);
 }
 
-/** Recursively collect specific secret-key consumption (secretKeyRef + volume secret items). */
-function collectConsumption(
+/** Recursively collect specific secret-key consumption, including Helm RCON values. */
+export function collectConsumption(
   node: unknown,
   into: Map<string, Set<string>>,
 ): void {
@@ -123,6 +130,17 @@ function collectConsumption(
   if (secret.success) {
     for (const item of secret.data.items ?? [])
       addKey(into, secret.data.secretName, item.key);
+  }
+
+  // The Minecraft Helm chart consumes this secret internally. It has no
+  // rendered secretKeyRef in the Argo Application valuesObject for us to find.
+  const rcon = HelmRconSchema.safeParse(object["rcon"]);
+  if (
+    rcon.success &&
+    rcon.data.enabled !== false &&
+    rcon.data.withGeneratedPassword !== true
+  ) {
+    addKey(into, rcon.data.existingSecret, rcon.data.secretKey);
   }
 
   for (const value of Object.values(object)) collectConsumption(value, into);
@@ -421,11 +439,10 @@ export function snapshotStalenessWarning(
   const ageDays = Math.floor(
     (now.getTime() - generated) / (24 * 60 * 60 * 1000),
   );
-  if (ageDays <= maxAgeDays) return null;
-  return (
-    `vault snapshot is ${String(ageDays)} days old (generated ${generatedAt}). ` +
-    `Fields added or populated since then are invisible to this check — refresh it with snapshot-1password-vault.ts.`
-  );
+  return ageDays <= maxAgeDays
+    ? null
+    : `vault snapshot is ${String(ageDays)} days old (generated ${generatedAt}). ` +
+        `Fields added or populated since then are invisible to this check — refresh it with snapshot-1password-vault.ts.`;
 }
 
 function warnIfSnapshotIsStale(generatedAt: string): void {

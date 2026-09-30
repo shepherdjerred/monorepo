@@ -3,7 +3,7 @@ import {
   competitionQueuesToString,
   visibilityToString,
 } from "@scout-for-lol/data";
-import type { CompetitionBuilderState } from "#src/lib/competition-builder-state.ts";
+import type { CompetitionBuilderState } from "#src/lib/bucks/competition-builder-state.ts";
 
 const CRITERION_LABELS: Record<
   CompetitionBuilderState["criteria"]["criteriaType"],

@@ -6,6 +6,7 @@ import {
 } from "@shepherdjerred/code-review";
 import {
   CheckEvidenceSchema,
+  CiPipelineSchema,
   PrIdentitySchema,
   type CheckEvidence,
   type PrIdentity,
@@ -66,23 +67,9 @@ const ReviewPageSchema = z.object({
   }),
 });
 
-const BuildkiteBuildSchema = z.object({
-  commit: z.string(),
-  jobs: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      state: z.string(),
-      web_url: z.url(),
-      started_at: z.string().nullable().optional(),
-      soft_failed: z.boolean().optional(),
-    }),
-  ),
-});
-
 const HeadSchema = z.object({ headRefOid: z.string() });
 
-/** A GitHub check run before its Buildkite soft-failure status is resolved. */
+/** A GitHub check run, as `gh pr checks` reports it. */
 export type RawCheck = {
   name: string;
   state: string;
@@ -128,53 +115,26 @@ export function parseChecks(text: string): RawCheck[] {
     }));
 }
 
-// Extract the Buildkite job id from a per-step check's target URL
-// (`https://buildkite.com/<org>/<pipeline>/builds/<n>#<job-uuid>`). The
-// aggregate `buildkite/monorepo/pr` check and non-Buildkite checks carry no
-// fragment and return null.
-function buildkiteJobId(link: string | null): string | null {
-  if (link === null) {
-    return null;
-  }
-  const hashIndex = link.indexOf("#");
-  if (hashIndex === -1) {
-    return null;
-  }
-  const fragment = link.slice(hashIndex + 1);
-  return fragment.length > 0 ? fragment : null;
-}
-
 /**
- * Resolve each check's soft-failure status from the AUTHORITATIVE Buildkite
- * `soft_failed` job metadata (correlated by the job id embedded in the check's
- * target URL), not by matching check NAMES. The pipeline encodes softness by
- * exit status — Trivy findings are soft only for exit 7 while a scanner/runtime
- * failure is hard, and Semgrep findings are soft for exit 1 — which a name match
- * cannot capture: it would treat every Trivy failure (including a hard infra
- * failure) as soft and every Semgrep finding as hard, producing an incorrect
- * fleet readiness state. A check with no correlated Buildkite job (the aggregate
- * check, `ci/merge-conflict`) is never soft.
+ * Normalise raw GitHub checks into evidence.
+ *
+ * There is no soft-failure correlation any more. Buildkite reported advisory
+ * scanner findings as a failed job flagged `soft_failed`, so this had to fetch
+ * the whole build and match each check to its job to avoid counting a Trivy
+ * finding as blocking. The advisory lanes now decide inside their own command
+ * and exit 0 when findings are not fatal, so a failed check is simply a
+ * failure.
  */
-export function checksWithBuildkiteSoftFailure(
-  checks: RawCheck[],
-  jobs: { id: string; soft_failed?: boolean | undefined }[],
-): CheckEvidence[] {
-  const softByJobId = new Map(
-    jobs.map((job) => [job.id, job.soft_failed === true]),
-  );
-  return checks.map((check) => {
-    const jobId = buildkiteJobId(check.link);
-    const softFail = jobId !== null && softByJobId.get(jobId) === true;
-    return CheckEvidenceSchema.parse({ ...check, softFail });
-  });
+export function checksAsEvidence(checks: RawCheck[]): CheckEvidence[] {
+  return checks.map((check) => CheckEvidenceSchema.parse(check));
 }
 
 export function parseReviewPage(text: string) {
   return ReviewPageSchema.parse(parseJson(text)).data.repository.pullRequest;
 }
 
-export function parseBuildkiteBuild(text: string) {
-  return BuildkiteBuildSchema.parse(parseJson(text));
+export function parseCiPipeline(text: string) {
+  return CiPipelineSchema.parse(parseJson(text));
 }
 
 export function parseHeadSha(text: string): string {
@@ -202,8 +162,7 @@ function reviewSeverity(level: number): ReviewFinding["severity"] {
   if (level === 0) return "P0";
   if (level === 1) return "P1";
   if (level === 2) return "P2";
-  if (level === 3) return "P3";
-  return "unknown";
+  return level === 3 ? "P3" : "unknown";
 }
 
 /**
@@ -292,6 +251,17 @@ export function reviewFindings(input: {
   issueComment: ReviewIssueComment | null;
   provider: ReviewProvider;
 }): ReviewFinding[] {
+  // Providers whose findings also live in review bodies (CodeRabbit's
+  // "outside diff range" sections) are unreadable here: this evidence path
+  // fetches threads and the issue comment, never review bodies. Fail loudly
+  // instead of reporting a findings-free PR ready — same rule as the CLI's
+  // provider default (see cli/main.ts).
+  if (input.provider.parseReviewBodyFindings !== null) {
+    throw new Error(
+      `Review provider '${input.provider.id}' keeps findings in review bodies, which the fleet evidence path does not fetch. ` +
+        `Classify this PR with a thread- or issue-comment-backed provider instead.`,
+    );
+  }
   return [
     ...reviewFindingsFromThreads(input.threads, input.provider),
     ...reviewFindingsFromIssueComment(input.issueComment, input.provider),
@@ -299,10 +269,9 @@ export function reviewFindings(input: {
 }
 
 export function fingerprint(values: string[]): string | null {
-  if (values.length === 0) {
-    return null;
-  }
-  return new Bun.CryptoHasher("sha256")
-    .update([...values].sort().join("\n"))
-    .digest("hex");
+  return values.length === 0
+    ? null
+    : new Bun.CryptoHasher("sha256")
+        .update([...values].sort().join("\n"))
+        .digest("hex");
 }

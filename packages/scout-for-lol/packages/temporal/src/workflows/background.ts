@@ -3,6 +3,7 @@ import {
   continueAsNew,
   getExternalWorkflowHandle,
   isCancellation,
+  patched,
   setHandler,
   sleep,
   startChild,
@@ -14,10 +15,16 @@ import {
   ScoutDetachedWorkInputSchema,
   ScoutIngestionReconciliationInputSchema,
   ScoutInitialHistoryInputSchema,
+  ScoutExploreHistoryInputSchema,
+  ScoutExploreTimelineInputSchema,
   type ScoutBackgroundJobInput,
   type ScoutDetachedWorkInput,
   type ScoutIngestionReconciliationInput,
   type ScoutInitialHistoryInput,
+  type ScoutExploreHistoryInput,
+  type ScoutExploreHistoryResult,
+  type ScoutExploreTimelineInput,
+  type ScoutExploreTimelineResult,
   type ScoutWorkflowStatus,
 } from "#src/contracts.ts";
 import { backgroundActivities } from "./activity-options.ts";
@@ -37,7 +44,9 @@ export async function scoutInitialHistoryWorkflow(
 ): Promise<never> {
   let input = ScoutInitialHistoryInputSchema.parse(rawInput);
   let runRequested = input.runOnStart ?? true;
+  let requestSequence = 0;
   setHandler(requestInitialHistoryRunSignal, () => {
+    requestSequence += 1;
     runRequested = true;
   });
   const activities = backgroundActivities(input.stage);
@@ -45,6 +54,7 @@ export async function scoutInitialHistoryWorkflow(
     setWorkflowPhase("**Phase:** waiting for an initial-history request");
     await condition(() => runRequested);
     runRequested = false;
+    const requestSequenceAtStart = requestSequence;
     setWorkflowPhase("**Phase:** fetching the next initial-history page");
     const page = await fetchHistoryPage(
       activities.fetchInitialHistoryPage,
@@ -68,7 +78,9 @@ export async function scoutInitialHistoryWorkflow(
     }
     const next = nextHistoryInput(input, page);
     input = next.input;
-    runRequested = !next.complete;
+    runRequested = patched("scout-initial-history-preserve-pending-request-v1")
+      ? requestSequence !== requestSequenceAtStart || !next.complete
+      : !next.complete;
     if (
       next.input.pagesInCurrentRun >= 100 ||
       workflowInfo().continueAsNewSuggested
@@ -80,6 +92,48 @@ export async function scoutInitialHistoryWorkflow(
       });
     }
   }
+}
+
+export async function scoutExploreHistoryWorkflow(
+  rawInput: ScoutExploreHistoryInput,
+): Promise<ScoutExploreHistoryResult> {
+  const input = ScoutExploreHistoryInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** importing recent ranked match history");
+  const result = await backgroundActivities(input.stage).importExploreHistory(
+    input,
+  );
+  if (result.ingested > 0) {
+    setWorkflowPhase(
+      "**Phase:** folding imported matches into the report lake",
+    );
+    await lakeActivities(input.stage).runReportLakeJob({
+      stage: input.stage,
+      kind: "fold",
+    });
+  }
+  setWorkflowPhase("**Phase:** recent ranked history is ready");
+  return result;
+}
+
+export async function scoutExploreTimelineWorkflow(
+  rawInput: ScoutExploreTimelineInput,
+): Promise<ScoutExploreTimelineResult> {
+  const input = ScoutExploreTimelineInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** importing requested match timelines");
+  const result = await backgroundActivities(input.stage).importExploreTimelines(
+    input,
+  );
+  if (result.ingested > 0) {
+    setWorkflowPhase(
+      "**Phase:** folding imported timelines into the report lake",
+    );
+    await lakeActivities(input.stage).runReportLakeJob({
+      stage: input.stage,
+      kind: "fold",
+    });
+  }
+  setWorkflowPhase("**Phase:** requested timelines are ready");
+  return result;
 }
 
 async function fetchHistoryPage(
@@ -223,7 +277,7 @@ type InteractiveRun = {
 };
 
 type DetachedWork = {
-  readonly kind: "parlay-generation";
+  readonly kind: ScoutDetachedWorkInput["kind"];
   readonly workId: string;
 };
 

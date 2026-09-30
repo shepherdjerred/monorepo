@@ -4,7 +4,7 @@ import {
   isExplorePath,
   resolveAppShellMode,
   shouldRenderGlobalFooter,
-} from "#src/lib/app-navigation.ts";
+} from "#src/lib/routes/app-navigation.ts";
 
 describe("RootLayout shell selection", () => {
   test("uses the workspace shell for signed-in product routes", () => {
@@ -27,6 +27,9 @@ describe("RootLayout shell selection", () => {
 
   test("reads the selected guild from basename-relative router paths", () => {
     expect(guildIdFromAppPath("/g/123/reports")).toBe("123");
+    expect(guildIdFromAppPath("/halls/123")).toBeUndefined();
+    expect(guildIdFromAppPath("/duels/123")).toBeUndefined();
+    expect(guildIdFromAppPath("/halls")).toBeUndefined();
     expect(guildIdFromAppPath("/manage")).toBeUndefined();
   });
 

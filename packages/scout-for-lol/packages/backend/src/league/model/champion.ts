@@ -38,10 +38,7 @@ function extractAugments(dto: RawParticipant): Augment[] {
       ids.push(augment);
     }
   }
-  if (ids.length === 0) {
-    return [];
-  }
-  return mapAugmentIdsToUnion(ids);
+  return ids.length === 0 ? [] : mapAugmentIdsToUnion(ids);
 }
 
 function extractArenaMetrics(dto: RawParticipant) {

@@ -2,37 +2,44 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
+import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
-  DISCORDSRV_PLUGIN_URL,
-  getDiscordSrvConfigMapManifest,
-  getDiscordSrvExtraVolumes,
-  getDiscordSrvExtraEnv,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/discordsrv-config.ts";
-import {
-  createMinecraftConfigMaps,
-  getMinecraftExtraVolumes,
-  getMinecraftExtraEnv,
-  getMinecraftPluginConfigInitContainer,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-config.ts";
+  MINING_RESET_IMAGE_ANNOTATION,
+  MINING_RESET_LOCK_ANNOTATION,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
+const RCON_SECRET_NAME = "minecraft-tsmc-brain";
+const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
 
+/**
+ * The Paper version baked into ghcr.io/shepherdjerred/the-storm-server. The
+ * chart's VERSION env overrides the image's, and itzg reads the Paper config
+ * defaults from /opt/paper-defaults/<VERSION>, so this must equal the image's
+ * Paper (packages/the-storm/server/plugins.json; minecraft-tsmc.test.ts checks
+ * it). It deliberately does not follow the catalog's `paper` pin, which moves
+ * the other servers.
+ */
+export const THE_STORM_PAPER_VERSION = "26.2";
+
+/**
+ * minecraft-tsmc runs The Storm's own image (packages/the-storm/server): Paper
+ * pre-patched, every plugin jar pinned by sha256 and baked in, and the
+ * repository-owned config delivered by the image (itzg's /plugins sync plus
+ * PATCH_DEFINITIONS). Kubernetes carries only secrets; there are no plugin
+ * URLs, config ConfigMaps or copy init containers here.
+ */
 export function createMinecraftTsmcApp(chart: Chart) {
-  // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
-  createMinecraftConfigMaps(chart, "tsmc", NAMESPACE);
-
-  // 1Password secret for DiscordSRV configuration
-  // Required fields in 1Password (UPPERCASE_SNAKE labels, matching the env-var refs):
-  // - DISCORD_BOT_TOKEN: Discord bot token
-  // - DISCORD_CHANNEL_ID: Main chat channel ID
-  // - discord-console-channel-id: (optional) Console channel ID
-  // - discord-invite-link: (optional) Discord invite link
+  // DiscordSRV credentials. Required fields (UPPERCASE_SNAKE labels, matching
+  // the env-var refs below): DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID.
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
     spec: {
       itemPath:
@@ -42,6 +49,18 @@ export function createMinecraftTsmcApp(chart: Chart) {
       name: SECRET_NAME,
       namespace: NAMESPACE,
     },
+  });
+
+  new OnePasswordItem(chart, "minecraft-tsmc-brain-1p", {
+    spec: { itemPath: vaultItemPath("mpv7cti3fpwrfobgr6ydnemydy") },
+    metadata: { name: RCON_SECRET_NAME, namespace: NAMESPACE },
+  });
+
+  // The agent reads the same owner-managed brain bearer token from its own
+  // namespace; Kubernetes secrets cannot cross namespace boundaries.
+  new OnePasswordItem(chart, "minecraft-tsmc-storm-brain-1p", {
+    spec: { itemPath: vaultItemPath("storm-brain") },
+    metadata: { name: BRAIN_SECRET_NAME, namespace: NAMESPACE },
   });
 
   createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
@@ -70,14 +89,17 @@ export function createMinecraftTsmcApp(chart: Chart) {
     replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
     workloadAsStatefulSet: true,
+    extraPodSpec: { priorityClassName: BURST_SERVICE_PRIORITY },
     strategyType: "RollingUpdate",
     // mc-router annotation for hostname-based routing (must be top-level)
     // Include mc.ts-mc.net because SRV record redirects there and some clients send that hostname
     serviceAnnotations: {
       "mc-router.itzg.me/externalServerName": "ts-mc.net,mc.ts-mc.net",
     },
+    // The chart sets no command or args, so the image's storm-entrypoint runs.
     image: {
-      tag: versions["itzg/minecraft-server"],
+      repository: "ghcr.io/shepherdjerred/the-storm-server",
+      tag: versions["shepherdjerred/the-storm-server"],
     },
     resources: {
       requests: {
@@ -100,96 +122,91 @@ export function createMinecraftTsmcApp(chart: Chart) {
       pvp: true,
       gameMode: "survival",
       forcegameMode: true,
+      // Vanilla spawn protection off: the towns module protects spawn with
+      // admin regions, and vanilla protection would stop non-ops using the
+      // windmill Storm Shards altar.
       spawnProtection: 0,
-      ops: "RiotShielder",
-      version: versions.paper,
+      ops: "XiguaJerred",
+      // TYPE and VERSION repeat the image's own env: the chart always renders
+      // TYPE (default VANILLA), and VERSION selects the baked Paper defaults.
+      version: THE_STORM_PAPER_VERSION,
       type: "PAPER",
       serviceType: "ClusterIP",
-
-      // Plugin downloads - direct URLs
-      pluginUrls: [
-        "https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar",
-        "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.23/bluemap-5.23-paper.jar",
-        DISCORDSRV_PLUGIN_URL,
-        "https://cdn.modrinth.com/data/hXiIvTyT/versions/nY6VN1XH/EssentialsX-2.22.0.jar",
-        "https://cdn.modrinth.com/data/sYpvDxGJ/versions/lc5JHiNJ/EssentialsXSpawn-2.22.0.jar",
-        "https://github.com/dmulloy2/ProtocolLib/releases/download/5.4.0/ProtocolLib.jar",
-        "https://github.com/DecentSoftware-eu/DecentHolograms/releases/download/2.10.1/DecentHolograms-2.10.1.jar",
-        "https://github.com/garbagemule/MobArena/releases/download/0.109/MobArena-0.109.jar",
-        // Core plugins (all servers)
-        "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
-        "https://cdn.modrinth.com/data/Lu3KuzdV/versions/Kma0kBsY/CoreProtect-CE-24.0.jar",
-        "https://cdn.modrinth.com/data/Kt3eUOUy/versions/hvoPVYQT/Sleeper-1.10.8.jar",
-        // Re-enabled paused plugins with upstream 26.2 compatibility metadata
-        "https://cdn.modrinth.com/data/Vs77PB2W/versions/pra46LOM/Towny-0.103.2.0.jar",
-        "https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar",
-        "https://cdn.modrinth.com/data/DKY9btbd/versions/btHBavWa/worldguard-bukkit-7.0.18.jar",
-        "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
-        "https://cdn.modrinth.com/data/s86X568j/versions/asaBBItO/ChunkyBorder-Bukkit-1.2.23.jar",
-        "https://cdn.modrinth.com/data/wJQfHhxh/versions/VCtXebje/Plan-5.8-build-3605.jar",
-        "https://cdn.modrinth.com/data/lKEzGugV/versions/pIvQcXW8/PlaceholderAPI-2.12.3.jar",
-        "https://cdn.modrinth.com/data/LDkz4P10/versions/jOP2uPPT/ChestSort-1.1.jar",
-        "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
-        "https://cdn.modrinth.com/data/jrO7z7l7/versions/5NcWuiCT/craftbook-bukkit-5.0.0-beta-05.jar",
-        "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/dSBu3PRW/LevelledMobs-4.5.3.2%20b159.jar",
-        "https://cdn.modrinth.com/data/OzSmbRQS/versions/IEILpPIV/DynamicShop-2.6.4.jar",
-        "https://github.com/Aust1n46/VentureChat/releases/download/v3.8.0/VentureChat-3.8.0.jar",
-        "https://github.com/YiC200333/XConomy/releases/download/2.26.3/XConomy-Paper-2.26.3.jar",
-        // New SMP plugins
-        "https://cdn.modrinth.com/data/LI8sodAD/versions/xrvVOux2/CombatLog.jar",
-        "https://cdn.modrinth.com/data/vCFaodCy/versions/JpbCUK5u/GravesX-2026.4.9.1.jar",
-        "https://cdn.modrinth.com/data/uA289E2d/versions/F4QSC1D9/Lunamatic-2.0.8-all.jar",
-      ],
-      // Skipped (no direct download URL): mcMMO (Spigot/Polymart only), LWCX (Spigot only)
+      // The image removes stale jars but preserves the PVC-only LWCX jar
+      // until the towns module takes over container protection.
+      removeOldMods: true,
 
       extraPorts: [
+        getMinecraftBlueMapPort(),
         {
+          // mc-router handles Java TCP only. Bedrock UDP reaches Geyser while
+          // the server is awake; a Bedrock packet cannot wake this StatefulSet.
           service: {
             enabled: true,
-            port: 8100,
+            type: "NodePort",
+            port: 19_132,
+            nodePort: 30_004,
           },
-          protocol: "TCP",
-          containerPort: 8100,
-          name: "bluemap",
-          ingress: {
-            enabled: false,
-          },
+          protocol: "UDP",
+          containerPort: 19_132,
+          name: "bedrock",
+          ingress: { enabled: false },
         },
       ],
 
       rcon: {
         enabled: true,
-        withGeneratedPassword: true,
+        withGeneratedPassword: false,
+        existingSecret: RCON_SECRET_NAME,
+        secretKey: "MINECRAFT_RCON_PASSWORD",
       },
     },
     persistence: {
       storageClass: NVME_STORAGE_CLASS,
-      // Note: persistence.labels doesn't work in this Helm chart (not templated to
-      // the PVC), so this volume is not enrolled in Velero backups.
       dataDir: {
         Size: Size.gibibytes(128).asString(),
         enabled: true,
       },
     },
 
-    // DiscordSRV ConfigMap (main server ConfigMaps are created externally to avoid size limits)
-    extraDeploy: [getDiscordSrvConfigMapManifest(NAMESPACE)],
-
-    // Mount configs to /config (itzg syncs to /data on startup)
-    // Use split ConfigMaps (true) to avoid Application size limits
-    extraVolumes: [
-      ...getMinecraftExtraVolumes("tsmc", NAMESPACE, true),
-      ...getDiscordSrvExtraVolumes(NAMESPACE),
-    ],
-
-    // Config sync settings + DiscordSRV secrets
     extraEnv: {
-      ...getMinecraftExtraEnv(),
-      ...getDiscordSrvExtraEnv(SECRET_NAME),
+      FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+      FLIPT_ENVIRONMENT: "prod",
+      // Kicks idle players after 60 minutes (server.properties
+      // player-idle-timeout, formerly set by the synced server.properties).
+      PLAYER_IDLE_TIMEOUT: "60",
+      // DiscordSRV reads its bot token natively from DISCORDSRV_TOKEN.
+      DISCORDSRV_TOKEN: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
+        },
+      },
+      STORM_BRAIN_BEARER_TOKEN: {
+        valueFrom: {
+          secretKeyRef: {
+            name: BRAIN_SECRET_NAME,
+            key: "STORM_BRAIN_BEARER_TOKEN",
+          },
+        },
+      },
+      DISCORD_BOT_TOKEN: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
+        },
+      },
+      DISCORD_CHANNEL_ID: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
+        },
+      },
+      // Interpolated into plugins/DiscordSRV/config.yml by the image's
+      // PATCH_DEFINITIONS (server/patches/discordsrv-config.json).
+      CFG_DISCORD_CHANNEL_ID: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
+        },
+      },
     },
-
-    // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)
-    initContainers: [getMinecraftPluginConfigInitContainer("tsmc", true)],
   };
 
   // DNS records are now managed by mc-router
@@ -221,6 +238,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
           kind: "StatefulSet",
           jsonPointers: [
             "/spec/replicas",
+            `/metadata/annotations/${MINING_RESET_LOCK_ANNOTATION.replaceAll("/", "~1")}`,
+            `/metadata/annotations/${MINING_RESET_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
             "/spec/podManagementPolicy",
             "/spec/revisionHistoryLimit",
             "/spec/persistentVolumeClaimRetentionPolicy",
@@ -234,6 +253,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
           // perpetually OutOfSync against a manifest that includes it.
           kind: "Service",
           jsonPointers: [
+            "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
             "/spec/clusterIP",
             "/spec/clusterIPs",
             "/spec/ipFamilies",

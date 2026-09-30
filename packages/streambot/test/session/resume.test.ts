@@ -49,6 +49,7 @@ function makeContext(over: Partial<PlaybackContext> = {}): PlaybackContext {
     resolved: {
       title: "Movie Title",
       ffmpegInput: "/videos/movie.mkv",
+      mediaKind: "video",
       chapters: [],
     },
     loop: "queue",

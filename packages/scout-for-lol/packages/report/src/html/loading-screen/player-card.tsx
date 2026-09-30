@@ -65,14 +65,19 @@ function formatRankText(rank: Rank | undefined): string | undefined {
   if (rank === undefined) {
     return undefined;
   }
-  if (
-    rank.tier === "master" ||
+  return rank.tier === "master" ||
     rank.tier === "grandmaster" ||
     rank.tier === "challenger"
-  ) {
-    return capitalize(rank.tier);
-  }
-  return `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
+    ? capitalize(rank.tier)
+    : `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
+}
+
+function formatMasteryPoints(points: number): string {
+  return points >= 1_000_000
+    ? `${(points / 1_000_000).toFixed(1)}M`
+    : points >= 1000
+      ? `${Math.round(points / 1000).toString()}K`
+      : points.toString();
 }
 
 export function resolveParticipantRankDisplay(
@@ -113,11 +118,9 @@ export function resolveParticipantRankDisplay(
     return { text: `Flex ${flexRank}`, color: palette.gold[3] };
   }
   const ranked5sRank = formatRankText(ranks.ranked5s);
-  if (ranked5sRank !== undefined) {
-    return { text: `Ranked 5s ${ranked5sRank}`, color: palette.gold[3] };
-  }
-
-  return { text: "Unranked", color: palette.grey[1] };
+  return ranked5sRank === undefined
+    ? { text: "Unranked", color: palette.grey[1] }
+    : { text: `Ranked 5s ${ranked5sRank}`, color: palette.gold[3] };
 }
 
 function resolveSpellImage(spellId: number): string | undefined {
@@ -130,11 +133,7 @@ function resolveSpellImage(spellId: number): string | undefined {
   }
 
   const spellData = summoner.data[name];
-  if (!spellData) {
-    return undefined;
-  }
-
-  return getSpellImage(spellData.image.full);
+  return spellData ? getSpellImage(spellData.image.full) : undefined;
 }
 
 function SummonerSpells({
@@ -383,6 +382,22 @@ export function PlayerCard({
             >
               {rankDisplay.text}
             </span>
+            {participant.mastery !== undefined && (
+              <span
+                style={{
+                  fontSize: `${Math.max(9, sizing.rankFontSize - 1).toString()}px`,
+                  fontFamily: font.body,
+                  fontWeight: 700,
+                  color: palette.gold[2],
+                  textShadow: "0 1px 2px rgba(0,0,0,0.9)",
+                  letterSpacing: "0.5px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                M{participant.mastery.level.toString()} ·{" "}
+                {formatMasteryPoints(participant.mastery.points)}
+              </span>
+            )}
           </div>
 
           <SummonerSpells

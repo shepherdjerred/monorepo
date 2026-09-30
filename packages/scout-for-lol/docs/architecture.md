@@ -29,12 +29,6 @@ flowchart TB
         REPORT["@scout-for-lol/report<br/>(JSX → SVG → PNG)"]
     end
 
-    subgraph Desktop["Desktop App"]
-        TAURI["Tauri (Rust)"]
-        REACT["React Frontend"]
-        LCU["LCU Client"]
-    end
-
     subgraph Storage["Data Storage"]
         DB[("PostgreSQL<br/>(Prisma ORM)")]
     end
@@ -65,12 +59,6 @@ flowchart TB
     DATA --> Backend
     REPORT --> REPORT_GEN
     DATA --> REPORT
-    DATA --> Desktop
-
-    %% Desktop connections
-    LCU --> LEAGUE_CLIENT
-    TAURI --> LCU
-    REACT --> TAURI
 ```
 
 ## Package Dependency Graph
@@ -81,12 +69,10 @@ graph BT
     REPORT["@scout-for-lol/report"]
     BACKEND["@scout-for-lol/backend"]
     FRONTEND["@scout-for-lol/frontend"]
-    DESKTOP["@scout-for-lol/desktop"]
 
     DATA --> REPORT
     DATA --> BACKEND
     DATA --> FRONTEND
-    DATA --> DESKTOP
     REPORT --> BACKEND
 ```
 
@@ -240,14 +226,6 @@ advance either evidence or the match cursor.
 | `arenaMatchToSvg/Image()` | Arena mode variants                 |
 | `svgToPng()`              | Convert SVG string to PNG           |
 
-### Desktop Application
-
-| Module         | Responsibility                                  |
-| -------------- | ----------------------------------------------- |
-| Tauri Core     | Window management, IPC, system integration      |
-| LCU Client     | Connect to League Client Update API             |
-| React Frontend | User interface for monitoring and configuration |
-
 ## Validation Architecture
 
 All external data flows through Zod validation:
@@ -329,7 +307,8 @@ Required environment variables by component:
 | `APPLICATION_ID`          | Backend   | Yes                    |
 | `RIOT_API_KEY`            | Backend   | Yes                    |
 | `DATABASE_URL`            | Backend   | Yes                    |
-| `OPENROUTER_API_KEY`      | Backend   | No (disables AI)       |
+| `OPENAI_API_KEY`          | Backend   | No (disables AI)       |
+| `GEMINI_API_KEY`          | Backend   | No (images fail)       |
 | `BETTING_PARLAY_AI_MODEL` | Backend   | No (`gpt-5.6-sol`)     |
 | `S3_BUCKET_NAME`          | Backend   | No (disables storage)  |
 | `SENTRY_DSN`              | Backend   | No (disables tracking) |
@@ -365,7 +344,7 @@ occupies one global slot. The versioned generation context stores the exact 20
 candidates for audit, and structured model output is rejected unless every
 target is in that list and bound to its listed subject or team.
 
-GPT-5.6 Sol then generates a versioned 2–6 leg criteria tree through OpenRouter
+GPT-5.6 Sol then generates a versioned 2–6 leg criteria tree through OpenAI
 with medium reasoning, a 4,096-token initial output limit, a 6,144-token
 truncated retry limit, and a shared 60-second deadline. It receives anonymous
 lobby and recent-form context plus only the shortlist. The first pass chooses
@@ -397,49 +376,10 @@ time fields render as `MM:SS` without wrapping minutes at 60.
 Prompt rendering, semantic validation, catalog coverage, and evaluation run in
 ordinary offline tests. Run the opt-in production prompt acceptance suite with
 `bun --cwd packages/scout-for-lol/packages/backend run test:parlay:live`; it
-requires `OPENROUTER_API_KEY` and fails rather than skipping when absent.
-
-### Weekly cross-game parlays
-
-Weekly parlays are a separate aggregate with immutable definitions, guild-local
-markets and bets, match contributions, and delivery records. They do not make
-match-bound parlay rows nullable. Definitions freeze an array of subjects and
-each subject's Scout identity, display alias, Discord identity, and linked Riot
-accounts. Runtime queries and Discord selectors accept arrays of definitions
-and subjects even though the private beta creates one slot with one subject.
-
-Generation considers linked active guild members in a stable order. It uses
-only history after every frozen account had tracking coverage, retains empty
-Pacific scoring windows, enforces the feature cooldown and coverage gates, and
-rejects the week when no candidate yields a defensibly priced market. The model
-chooses shapes from a closed catalog; deterministic threshold search jointly
-replays aligned weeks and publishes only the configured empirical probability
-band. The immutable definition records the proposal, selected criteria, replay
-sample, measured odds, frozen context, and all model/catalog/evaluator versions.
-
-Post-match ingestion appends idempotent definition/match/subject contribution
-rows for eligible games whose completion time is inside the half-open scoring
-window, including when the Monday start transition or Match-V5 ingestion is
-delayed. Final settlement begins at the scoring cutoff but leaves two worst-case
-polling intervals for completed games to ingest. Progress and settlement read
-only persisted contributions, with the market-row guard serializing the final
-append against settlement. Monotonic lower-bound legs can become irreversible;
-every leg must be irreversibly true for early YES. NO, equality, upper-bound,
-rate, and average outcomes remain final-only. A processing or evaluator failure
-voids and refunds, while zero eligible games is an ordinary evaluated result.
-
-One paused-by-default Temporal schedule owns the complete weekly lifecycle. Its
-long-running workflow freezes the Pacific timeline, then invokes an authenticated
-idempotent beta-only control endpoint for publication, reminder, scoring start,
-progress, and final reconciliation. The endpoint is absent without its bearer
-credential. A shared 1Password item supplies that credential to the Temporal and
-Scout namespaces, with ingress and egress restricted to the core worker and beta
-backend. Schedule pause is the operator suspension control; flag revocation stops
-creation and stakes but never settlement or refunds.
+requires `OPENAI_API_KEY` and fails rather than skipping when absent.
 
 ## Next Steps
 
 - [Backend Service](./backend.md) - Detailed backend architecture
 - [AI Review System](./ai-review-system.md) - AI pipeline details
-- [Desktop Application](./desktop.md) - Tauri app architecture
 - [Database Schema](./database.md) - Data model documentation

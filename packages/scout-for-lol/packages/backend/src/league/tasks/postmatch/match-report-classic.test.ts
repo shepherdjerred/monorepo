@@ -1,4 +1,6 @@
+import { AttachmentBuilder } from "discord.js";
 import { describe, expect, test, vi } from "vitest";
+import { z } from "zod";
 import {
   type ClassicMatch,
   type Player,
@@ -436,6 +438,43 @@ describe("buildClassicMatch roster handling", () => {
     });
 
     expect(buildClassicMatch(mismatch, [missingPlayer])).toBeUndefined();
+  });
+});
+
+describe("generateMatchReport with a pre-rendered image", () => {
+  test("attaches the bytes it was handed and renders nothing", async () => {
+    // The V2 notification lane's seam: the render Activity already produced
+    // and attested this match's PNG, and the delivery hands those bytes in.
+    // The report must be built AROUND them — the attachment IS the bytes —
+    // and the Satori pass must not run, because a second render on the
+    // realtime queue is exactly what the split exists to avoid.
+    const rawMatch = await classicMatchFixture();
+    const trackedParticipant = rawMatch.info.participants[0];
+    if (trackedParticipant === undefined) {
+      throw new Error("Classic fixture is missing its tracked participant");
+    }
+    const trackedPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Pre-rendered",
+      league: {
+        leagueAccount: {
+          puuid: trackedParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+    const prerenderedImage = new Uint8Array([...PNG_SIGNATURE, 42, 42, 42]);
+
+    const result = await generateMatchReport(rawMatch, [trackedPlayer], {
+      targetGuildIds: [],
+      prerenderedImage,
+    });
+
+    expect(result).toBeDefined();
+    const files = z.array(z.instanceof(AttachmentBuilder)).parse(result?.files);
+    expect(files).toHaveLength(1);
+    const attachment = z.instanceof(Uint8Array).parse(files[0]?.attachment);
+    expect(new Uint8Array(attachment)).toEqual(prerenderedImage);
+    expect(files[0]?.name).toBe(`${rawMatch.metadata.matchId}.png`);
   });
 });
 

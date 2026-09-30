@@ -80,8 +80,9 @@ function classifyFailure(
     return { kind: "permanent", code: "contract" };
   }
   if (status === 429) return { kind: "retry", reason: "rate_limit" };
-  if (status !== undefined) return { kind: "retry", reason: "upstream" };
-  return { kind: "retry", reason: "transport" };
+  return status === undefined
+    ? { kind: "retry", reason: "transport" }
+    : { kind: "retry", reason: "upstream" };
 }
 
 async function trackedAliases(

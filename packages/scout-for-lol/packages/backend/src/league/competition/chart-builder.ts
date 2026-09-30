@@ -80,18 +80,16 @@ function valueAxisLabelForCriteria(criteria: CompetitionCriteria): string {
 const NumericScoreSchema = z.number();
 function entryToPlotValue(entry: CachedLeaderboardEntry): number {
   const rankResult = RankSchema.safeParse(entry.score);
-  if (rankResult.success) {
-    return rankToLeaguePoints(rankResult.data);
-  }
-  return NumericScoreSchema.parse(entry.score);
+  return rankResult.success
+    ? rankToLeaguePoints(rankResult.data)
+    : NumericScoreSchema.parse(entry.score);
 }
 
 function leaderboardEntryToPlotValue(entry: RankedLeaderboardEntry): number {
   const rankResult = RankSchema.safeParse(entry.score);
-  if (rankResult.success) {
-    return rankToLeaguePoints(rankResult.data);
-  }
-  return NumericScoreSchema.parse(entry.score);
+  return rankResult.success
+    ? rankToLeaguePoints(rankResult.data)
+    : NumericScoreSchema.parse(entry.score);
 }
 
 /**
@@ -109,10 +107,9 @@ function buildSeries(
       const entry = snapshot.entries.find(
         (candidate) => candidate.playerId === playerId,
       );
-      if (entry === undefined) {
-        return { date, value: null };
-      }
-      return { date, value: entryToPlotValue(entry) };
+      return entry === undefined
+        ? { date, value: null }
+        : { date, value: entryToPlotValue(entry) };
     });
     return { playerName, points };
   });

@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { updateSavedView } from "./saved-view-actions";
+import { updateSavedView } from "./saved-view/saved-view-actions";
 import {
   deriveJobSearchBoardSource,
   JOB_SEARCH_SAVED_VIEW_ID,
   jobSearchColumnKey,
   jobSearchMovePatch,
 } from "./job-search-board";
-import { createDefaultSavedViewPreferences } from "./saved-views";
-import type { SavedView } from "./saved-views";
+import { createDefaultSavedViewPreferences } from "./saved-view/saved-views";
+import type { SavedView } from "./saved-view/saved-views";
 import type { Task } from "./types";
 import { projectName, tagName, taskId } from "./types";
 

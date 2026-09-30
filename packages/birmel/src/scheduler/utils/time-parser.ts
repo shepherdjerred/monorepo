@@ -150,11 +150,7 @@ export function parseFlexibleTime(
 
   // Strategy 3: Natural language
   const parsed = parseNaturalTime(text, referenceDate);
-  if (parsed != null) {
-    return { type: "date", value: parsed.date };
-  }
-
-  return null;
+  return parsed == null ? null : { type: "date", value: parsed.date };
 }
 
 /**

@@ -29,7 +29,7 @@ origin can be supplied with `SCOUT_DESIGN_AUDIT_BASE_URL`.
 
 Local origins use Scout's loopback-only `/api/dev/login` route, so
 `SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true` boots the backend with
-`SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true` (scripts/dev-web.ts) and needs no real
+`SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true` (scripts/dev/dev-web.ts) and needs no real
 Discord bot token, Riot API key, or 1Password session — the audit never makes
 a live Discord or Riot call. Local audit boots always use the dedicated
 `packages/backend/.design-audit-report-lake` directory, even when

@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { HistoryIndex } from "#lib/history/index.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
-import { ftsQuery } from "#lib/history/query.ts";
+import { ftsQuery } from "#lib/history/query/query.ts";
 import type {
   HistoryDocument,
   HistorySourceName,
@@ -46,6 +46,7 @@ function document(
     openingPromptHash: values.promptHash ?? null,
     dialogueText: values.dialogue ?? "",
     toolOutputText: values.tool ?? "",
+    usageEvents: [],
   };
 }
 
@@ -59,6 +60,8 @@ function result(
     documents,
     fingerprint: "fixture-v1",
     error: null,
+    complete: true,
+    sourceIds: documents.map((entry) => entry.sourceId),
   };
 }
 
@@ -336,6 +339,8 @@ describe("history index rebuilds", () => {
           documents: [],
           fingerprint: "unchanged-source",
           error: "fixture database could not be read",
+          complete: true,
+          sourceIds: [],
         },
       ],
       true,

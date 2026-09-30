@@ -270,10 +270,9 @@ export class GameStreamer extends GameStreamerBase {
       type: "go-live",
       videoPlayoutDelayMaxMs: this.options.videoPlayoutDelayMaxMs,
     };
-    if (this.streamObserver) {
-      return { ...base, observer: this.streamObserver };
-    }
-    return base;
+    return this.streamObserver
+      ? { ...base, observer: this.streamObserver }
+      : base;
   }
 
   private resetStreamMetrics(): void {

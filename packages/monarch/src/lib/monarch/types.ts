@@ -32,7 +32,11 @@ export const MonarchTransactionSchema = z.object({
   pending: z.boolean(),
   date: z.string(),
   hideFromReports: z.boolean(),
-  plaidName: z.string(),
+  // Old transactions (pre-2025) come back with plaidName: null
+  plaidName: z
+    .string()
+    .nullable()
+    .transform((v) => v ?? ""),
   notes: z
     .string()
     .nullable()

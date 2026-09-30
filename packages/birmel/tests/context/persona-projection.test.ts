@@ -32,7 +32,9 @@ describe("buildCompactPersonaProjection", () => {
     const projectedSamples = representativeBlock?.split("\n").slice(1) ?? [];
 
     expect(projectedSamples).toEqual(
-      style.sample_messages.slice(0, 6).map((sample) => `- ${sample}`),
+      style.sample_messages
+        .slice(0, 6)
+        .map((sample) => `- ${sample.replaceAll(/\s*\n\s*/g, " ").trim()}`),
     );
 
     expect(projection.length).toBeLessThan(JSON.stringify(style).length);

@@ -17,17 +17,14 @@ export function crossedUnannouncedMilestone(
   after: number,
   highestAnnounced: number,
 ): number | null {
-  if (after <= before) {
-    return null;
-  }
-  return (
-    KARMA_MILESTONES.findLast(
-      (milestone) =>
-        milestone > highestAnnounced &&
-        before < milestone &&
-        after >= milestone,
-    ) ?? null
-  );
+  return after <= before
+    ? null
+    : (KARMA_MILESTONES.findLast(
+        (milestone) =>
+          milestone > highestAnnounced &&
+          before < milestone &&
+          after >= milestone,
+      ) ?? null);
 }
 
 export type MilestoneLedgerRow = {

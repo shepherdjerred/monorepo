@@ -24,7 +24,7 @@
 # time. No binaries are committed — the build is reproducible from source.
 # Pinned Emscripten 6 toolchain for the legacy SDL2/GLES2 core.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765 AS wasm-builder
+FROM emscripten/emsdk:6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65 AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).
@@ -44,7 +44,7 @@ RUN make clean && make
 # ---------------------------------------------------------------------------
 # Bun stages.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the artifact builds below ─────────
@@ -59,9 +59,9 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --filter '@discord-plays-mario-kart/*'
 
@@ -98,9 +98,9 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@discord-plays-mario-kart/backend'
 
@@ -202,8 +202,8 @@ FROM runtime AS smoke
 USER 0
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=discord-plays-mario-kart
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # The smoke harness writes its temporary config at the application's normal
@@ -217,6 +217,6 @@ RUN touch /app/packages/discord-plays-mario-kart/config.toml \
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

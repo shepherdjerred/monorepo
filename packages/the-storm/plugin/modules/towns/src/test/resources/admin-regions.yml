@@ -1,0 +1,49 @@
+# Synthetic bounds for MockBukkit protection tests. Never ship these coordinates.
+regions:
+  - id: spawn
+    name: Spawn
+    areas:
+      chunks:
+        - world: world
+          from: { x: -4, z: -4 }
+          to: { x: 3, z: 3 }
+      cuboids: []
+    allow:
+      - action: INTERACT
+        subjects:
+          [
+            DOOR,
+            TRAPDOOR,
+            FENCE_GATE,
+            BUTTON,
+            LEVER,
+            PRESSURE_PLATE,
+            TRIPWIRE,
+            BELL,
+          ]
+      - action: INTERACT_ENTITY
+        subjects: [VILLAGER, VEHICLE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]
+    mobSpawns:
+      limited: false
+      allow: []
+  - id: arena
+    name: Arena
+    areas:
+      chunks: []
+      cuboids:
+        - world: world
+          from: { x: 512, y: -64, z: 512 }
+          to: { x: 575, y: 320, z: 575 }
+    allow:
+      - action: INTERACT
+        subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]
+      - action: BREAK
+        subjects: [CREAKING_HEART]
+    mobSpawns:
+      limited: true
+      allow:
+        [CUSTOM, COMMAND, SPELL, REINFORCEMENTS, SLIME_SPLIT, JOCKEY, MOUNT]

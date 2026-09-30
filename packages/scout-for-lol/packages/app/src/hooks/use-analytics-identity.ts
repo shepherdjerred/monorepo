@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { syncAnalyticsIdentity } from "#src/lib/analytics.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
-import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/query/session-query.ts";
 
 /**
  * Keep PostHog's identity in step with the web session, on every route.

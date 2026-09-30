@@ -3,8 +3,9 @@
 OpenTelemetry tracing for LLM calls: thin wrappers that emit `gen_ai.*` spans
 around provider SDK calls, plus an archive span processor that copies large
 prompt/response bodies to S3 for durable retention while the trace backend
-(Tempo) and any additional OTLP consumer receive the full redacted content on
-the span itself, alongside an archive reference. Consumers include
+(Tempo) and any additional OTLP consumer receive the full content on the span
+itself, alongside an archive reference. Only credentials are masked; prompts,
+responses, tool output, and Discord data are never redacted. Consumers include
 [packages/temporal](../temporal/) and
 [packages/pr-fleet-controller](../pr-fleet-controller/).
 
@@ -17,14 +18,13 @@ GenAI semantic conventions: `gen_ai.system`, `gen_ai.operation.name`,
 `gen_ai.response.model` / `id` / `finish_reasons`, and
 `gen_ai.usage.input_tokens` / `output_tokens` / cache read + creation tokens.
 Message bodies go on `gen_ai.input.messages` / `gen_ai.output.messages`
-(redacted in place by the archive processor before export).
+(credentials masked in place by the archive processor before export).
 
 | Export                                                                         | Traces                                              |
 | ------------------------------------------------------------------------------ | --------------------------------------------------- |
 | `traceClaudeAgent` (`./wrappers/claude-agent`)                                 | A Claude Agent SDK message stream (async generator) |
 | `attachCodexTrace` (`./wrappers/codex`)                                        | A Codex exec session, spans per turn/tool call      |
 | `createCodexJsonlParser`, `pumpCodexStdout`, `addCodexUsage` (`./codex-jsonl`) | Codex JSONL event stream parsing                    |
-| `traceTextStream` (`./wrappers/text-stream`)                                   | A generic streamed text response                    |
 
 All of these are re-exported from the package root; the per-wrapper subpaths
 listed above exist so a consumer only type-checks against the peer SDKs it
@@ -32,13 +32,14 @@ actually uses.
 
 Neither native SDK contributes to `llm_cost_usd_total`. Both bill against a
 subscription rather than per call, so a cost figure from either would be an
-API-equivalent price mixed into the same series as real OpenRouter charges.
+API-equivalent price mixed into the same series as real per-token API charges.
 They record tokens instead. `llm.cost_usd` remains on the Claude Agent span as a
 provider-reported fact for reading a single trace.
 
 Direct provider-SDK wrappers (Anthropic, OpenAI, Gemini, and the `claude` CLI)
-are gone: every model call in the repository now goes through OpenRouter via
-the AI SDK, so those calls are instrumented by
+are gone: every model call in the repository now goes through
+`@shepherdjerred/llm-runtime`, which calls OpenAI, Anthropic, and Google directly
+through the AI SDK, so those calls are instrumented by
 `RepositoryOpenTelemetry` (`./ai-sdk-telemetry`) and the `withLlmSpan` /
 `setLlmResponseAttributes` primitives in `./span-helpers` rather than by a
 per-provider wrapper.
@@ -54,9 +55,9 @@ have a user.
 
 `withLlmSubjectSpan(name, subject, fn)` opens an **active** span carrying those
 attributes. Activeness is the point, not a detail: `@shepherdjerred/llm-runtime`
-reads `trace.getSpan(context.active())` when it builds a call's attribution
-headers, so a call made outside an active span reaches OpenRouter with no trace
-id and its cost log cannot be joined back to the span that names the subject.
+reads `trace.getSpan(context.active())` when it stamps a call's trace id, so a
+call made outside an active span reaches the provider with no trace id and its
+cost log cannot be joined back to the span that names the subject.
 
 The subject also travels through OpenTelemetry context, and `RepositoryOpenTelemetry`
 stamps it onto every `gen_ai.*` span it opens. This is not a convenience: OTel
@@ -72,18 +73,19 @@ design, and Tempo is already the store for trace, session, and user ids.
 
 ## Archive pipeline (full-content spans)
 
-`LlmArchiveSpanProcessor` (`./span-processor`) wraps an inner `SpanProcessor`
+`LlmArchiveSpanProcessor` (package root) wraps an inner `SpanProcessor`
 (typically a `BatchSpanProcessor` over an OTLP exporter). On span end, if the
 span carries known LLM body attributes (OTel GenAI keys, Codex tool
 stdout/stderr, or Vercel AI SDK legacy keys), it:
 
 1. Builds one JSON envelope from the body attributes (request + response +
    usage),
-2. redacts obvious secrets (`redactSecrets`),
+2. masks credentials (`redactSecrets`: secret-shaped keys, known secret env
+   values, `Bearer` tokens, and Discord webhook and invite URLs),
 3. gzips and PUTs it to S3 under a deterministic key
    (`buildArchiveKey`/`uploadArchive` — SigV4-signed, path-style capable, so
    SeaweedFS works), and
-4. forwards a copy of the span with bodies redacted in place and
+4. forwards a copy of the span with credentials masked in the bodies and
    `llm.archive.*` attributes added (bucket, key, sha256, sizes, status).
 
 The forwarded span keeps the complete prompt, response, and tool content; the

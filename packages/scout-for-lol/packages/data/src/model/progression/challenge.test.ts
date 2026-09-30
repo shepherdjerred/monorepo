@@ -3,12 +3,22 @@ import {
   CHALLENGE_CONTRACT_VERSION,
   CHALLENGE_EVALUATOR_VERSION,
   ChallengeContractV1Schema,
+  challengeNeedsPlacement,
   evaluateChallengeContract,
+  evaluateChallengePredicate,
   freezeChallengeCatalogs,
   type ChallengeMatchPredicate,
 } from "./challenge.ts";
-import { WIN_EVERY_CURRENT_CHAMPION_TEMPLATE } from "./challenge-builtins.ts";
-import type { ChallengeEvidenceMatch } from "./challenge-public.ts";
+import {
+  WIN_EVERY_CURRENT_CHAMPION_ARENA_FIRST_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_ARENA_WIN_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_FLEX_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
+} from "./challenge-builtins.ts";
+import {
+  ChallengeEvidenceMatchSchema,
+  type ChallengeEvidenceMatch,
+} from "./challenge-public.ts";
 
 function evidence(input: {
   id: string;
@@ -16,15 +26,18 @@ function evidence(input: {
   win: boolean;
   kills?: number;
   timeline?: boolean;
+  queue?: "solo" | "flex" | "arena";
+  placement?: number | null;
 }): ChallengeEvidenceMatch {
   return {
     matchId: input.id,
     gameEndAt: `2026-01-${input.id.padStart(2, "0")}T00:00:00.000Z`,
-    queue: "solo",
+    queue: input.queue ?? "solo",
     championId: input.championId,
     championName: `Champion ${input.championId.toString()}`,
     role: "MIDDLE",
     win: input.win,
+    placement: input.placement ?? null,
     kills: input.kills ?? 0,
     deaths: 0,
     assists: 0,
@@ -66,17 +79,85 @@ function evaluateTimelineChallenge(
 }
 
 describe("community challenge contracts", () => {
-  test("freezes the current champion catalog for a run", () => {
-    const frozen = freezeChallengeCatalogs(WIN_EVERY_CURRENT_CHAMPION_TEMPLATE);
-    expect(frozen.progressGoal.kind).toBe("distinct");
-    if (frozen.progressGoal.kind !== "distinct") return;
-    expect(frozen.progressGoal.catalog).toBeNull();
-    expect(frozen.progressGoal.requiredValues.length).toBeGreaterThan(150);
-    expect(frozen.progressGoal.target).toBe(
-      frozen.progressGoal.requiredValues.length,
-    );
+  test("freezes the current champion catalog for solo and flex runs", () => {
+    for (const template of [
+      WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
+      WIN_EVERY_CURRENT_CHAMPION_FLEX_TEMPLATE,
+    ]) {
+      const frozen = freezeChallengeCatalogs(template);
+      expect(frozen.progressGoal.kind).toBe("distinct");
+      if (frozen.progressGoal.kind !== "distinct") return;
+      expect(frozen.progressGoal.catalog).toBeNull();
+      expect(frozen.progressGoal.requiredValues.length).toBeGreaterThan(150);
+      expect(frozen.progressGoal.target).toBe(
+        frozen.progressGoal.requiredValues.length,
+      );
+    }
   });
 
+  test("evaluates arena placement predicates correctly", () => {
+    const top3 = evaluateChallengeContract(
+      freezeChallengeCatalogs(WIN_EVERY_CURRENT_CHAMPION_ARENA_WIN_TEMPLATE),
+      [
+        evidence({
+          id: "1",
+          championId: 1,
+          win: true,
+          queue: "arena",
+          placement: 3,
+        }),
+        evidence({
+          id: "2",
+          championId: 2,
+          win: false,
+          queue: "arena",
+          placement: 4,
+        }),
+        evidence({
+          id: "3",
+          championId: 3,
+          win: true,
+          queue: "solo",
+          placement: null,
+        }),
+      ],
+      { startAt: "2026-01-01T00:00:00.000Z", endAt: null },
+    );
+    expect(top3.progress.kind).toBe("distinct");
+    if (top3.progress.kind === "distinct") {
+      expect(top3.progress.current).toBe(1);
+      expect(top3.progress.covered[0]?.value).toBe("1");
+    }
+
+    const first = evaluateChallengeContract(
+      freezeChallengeCatalogs(WIN_EVERY_CURRENT_CHAMPION_ARENA_FIRST_TEMPLATE),
+      [
+        evidence({
+          id: "1",
+          championId: 1,
+          win: true,
+          queue: "arena",
+          placement: 1,
+        }),
+        evidence({
+          id: "2",
+          championId: 2,
+          win: true,
+          queue: "arena",
+          placement: 2,
+        }),
+      ],
+      { startAt: "2026-01-01T00:00:00.000Z", endAt: null },
+    );
+    expect(first.progress.kind).toBe("distinct");
+    if (first.progress.kind === "distinct") {
+      expect(first.progress.current).toBe(1);
+      expect(first.progress.covered[0]?.value).toBe("1");
+    }
+  });
+});
+
+describe("challenge goal evaluation and validation", () => {
   test("evaluates count, sum, maximum, streak, distinct, and boolean goals", () => {
     const contract = ChallengeContractV1Schema.parse({
       version: CHALLENGE_CONTRACT_VERSION,
@@ -147,6 +228,87 @@ describe("community challenge contracts", () => {
     expect(result.progress.completed).toBe(false);
     expect(result.coverage.missingTimelineEvidence).toBe(1);
   });
+});
+
+describe("challenge predicate evaluation and missing evidence", () => {
+  test("does not let negation turn missing placement into progress", () => {
+    const soloMatch = evidence({
+      id: "1",
+      championId: 1,
+      win: true,
+      queue: "solo",
+      placement: null,
+    });
+    const arenaTop3 = evidence({
+      id: "2",
+      championId: 1,
+      win: true,
+      queue: "arena",
+      placement: 2,
+    });
+    const arenaBottom = evidence({
+      id: "3",
+      championId: 1,
+      win: false,
+      queue: "arena",
+      placement: 5,
+    });
+
+    const notPlacementLte3: ChallengeMatchPredicate = {
+      kind: "not",
+      predicate: {
+        kind: "numeric",
+        field: "placement",
+        operator: "lte",
+        threshold: 3,
+      },
+    };
+
+    expect(challengeNeedsPlacement(notPlacementLte3)).toBe(true);
+    expect(evaluateChallengePredicate(notPlacementLte3, soloMatch)).toBe(false);
+    expect(evaluateChallengePredicate(notPlacementLte3, arenaTop3)).toBe(false);
+    expect(evaluateChallengePredicate(notPlacementLte3, arenaBottom)).toBe(
+      true,
+    );
+
+    const allSoloNotPlacementGt3: ChallengeMatchPredicate = {
+      kind: "all",
+      predicates: [
+        { kind: "queue_in", queues: ["solo"] },
+        {
+          kind: "not",
+          predicate: {
+            kind: "numeric",
+            field: "placement",
+            operator: "gt",
+            threshold: 3,
+          },
+        },
+      ],
+    };
+    expect(evaluateChallengePredicate(allSoloNotPlacementGt3, soloMatch)).toBe(
+      false,
+    );
+
+    const anySoloNotPlacementGt3: ChallengeMatchPredicate = {
+      kind: "any",
+      predicates: [
+        { kind: "queue_in", queues: ["solo"] },
+        {
+          kind: "not",
+          predicate: {
+            kind: "numeric",
+            field: "placement",
+            operator: "gt",
+            threshold: 3,
+          },
+        },
+      ],
+    };
+    expect(evaluateChallengePredicate(anySoloNotPlacementGt3, soloMatch)).toBe(
+      true,
+    );
+  });
 
   test("rejects duplicate and incompatible distinct coverage selectors", () => {
     const contract = {
@@ -187,5 +349,36 @@ describe("community challenge contracts", () => {
         },
       }).success,
     ).toBe(false);
+  });
+
+  test("parses legacy evidence without placement field defaulting to null", () => {
+    const parsed = ChallengeEvidenceMatchSchema.parse({
+      matchId: "1",
+      gameEndAt: "2026-01-01T00:00:00.000Z",
+      queue: "solo",
+      championId: 1,
+      championName: "Annie",
+      role: "MIDDLE",
+      win: true,
+      kills: 1,
+      deaths: 0,
+      assists: 2,
+      creep_score: 100,
+      gold_earned: 5000,
+      vision_score: 10,
+      champion_damage: 10_000,
+      damage_taken: 5000,
+      damage_mitigated: 2000,
+      teammate_healing: 0,
+      wards_cleared: 1,
+      objective_damage: 1000,
+      turret_damage: 500,
+      crowd_control_time: 5,
+      longest_life: 600,
+      total_time_dead: 0,
+      timelineEvidenceAvailable: false,
+      timelineEventCounts: {},
+    });
+    expect(parsed.placement).toBeNull();
   });
 });

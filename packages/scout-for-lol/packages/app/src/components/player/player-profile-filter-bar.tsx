@@ -7,19 +7,16 @@ import {
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import type { PlayerProfileFilters } from "#src/lib/player-profile-filters.ts";
+import type { PlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
 
 function sameQueues(
   selected: QueueType[] | undefined,
   preset: readonly QueueType[] | undefined,
 ): boolean {
-  if (selected === undefined || preset === undefined) {
-    return selected === undefined && preset === undefined;
-  }
-  return (
-    selected.length === preset.length &&
-    selected.every((queue) => preset.includes(queue))
-  );
+  return selected === undefined || preset === undefined
+    ? selected === undefined && preset === undefined
+    : selected.length === preset.length &&
+        selected.every((queue) => preset.includes(queue));
 }
 
 const PRESETS: readonly {

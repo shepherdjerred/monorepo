@@ -9,9 +9,6 @@ import type { VoiceAssetManifest } from "@shepherdjerred/voice-assistant";
  * `src/configuration.ts`.
  */
 
-export const VOICE_REALTIME_MODEL = "gpt-realtime-2.1";
-export const VOICE_ASSISTANT_VOICE = "marin";
-
 /**
  * Rolling pre-roll retained before a sherpa candidate. Matches the shared
  * pipeline's `VOICE_WAKE_WINDOW_MS` (asserted by test) — the verifier scores
@@ -19,7 +16,16 @@ export const VOICE_ASSISTANT_VOICE = "marin";
  */
 export const VOICE_PRE_ROLL_MS = 2000;
 export const VOICE_MAX_UTTERANCE_MS = 15_000;
-export const VOICE_TRANSACTION_TIMEOUT_MS = 30_000;
+
+/** Hard deadline for each direct OpenAI transcription or speech request. */
+export const VOICE_OPENAI_AUDIO_REQUEST_TIMEOUT_MS = 30_000;
+
+export function voiceAudioRequestSignal(
+  parent: AbortSignal,
+  timeoutMs = VOICE_OPENAI_AUDIO_REQUEST_TIMEOUT_MS,
+): AbortSignal {
+  return AbortSignal.any([parent, AbortSignal.timeout(timeoutMs)]);
+}
 
 /** A session with no accepted wake for this long leaves the channel. */
 export const VOICE_INACTIVITY_TIMEOUT_MS = 45 * 60_000;
@@ -31,6 +37,21 @@ export const VOICE_INACTIVITY_TIMEOUT_MS = 45 * 60_000;
  * `HEY`'s tail is a pre-training estimate ("scout" is one short syllable);
  * re-measure it against the trained assets with the M2 corpus method before
  * beta launch (streambot `constants.ts` documents the sweep).
+ *
+ * 2026-09-12 investigation note: the acceptance eval at these values found a ~510-520ms
+ * median endpoint delay (below the 650ms floor) alongside 88% clean recall. Raising
+ * HEY_SCOUT/SCOUT to 350ms then 900ms left the delay essentially unchanged while recall
+ * fell to 72% then 39% — reverted to these values (best recall of the three) rather than
+ * ship a worse config while guessing further. The tail is not the lever that controls this
+ * delay in the range tested; the recall collapse at high tail values points at a different
+ * constraint (likely clip trailing-audio length or VAD/finishInput timeout) that needs
+ * tracing through audio-lifecycle.ts before trying again. See
+ * `voice-training/reports/2026-09-12-threshold-0.35.json` and the two later skip-soak
+ * attempts recorded in that investigation.
+ *
+ * Must equal `tails` in `../../assets/voice/fragment-tails.json` — that JSON is what the M2
+ * offline evaluator and packager read, and `session.test.ts` asserts the two stay identical.
+ * Update both together; the JSON alone is not the production source of truth.
  */
 export const VOICE_FRAGMENT_TAIL_MS: Readonly<Record<string, number>> = {
   HEY_SCOUT: 0,

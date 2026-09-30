@@ -5,11 +5,21 @@ import {
   DiscordOpusEncoder,
   type LocalVoiceModels,
 } from "@shepherdjerred/voice-assistant";
-import { evaluateDiscordOpusPackets } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
 import {
   initializeLocalVoiceModelsForRuntime,
   validateVoiceAssets,
-} from "@shepherdjerred/streambot/voice/local-voice.ts";
+} from "@shepherdjerred/voice-assistant/local-models.ts";
+import {
+  evaluateDiscordOpusPackets,
+  runContinuousActivationSoak,
+  type SoakActivation,
+  type VoiceLifecycleDeps,
+} from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
+import {
+  resolveVoiceWakePhrase,
+  type VoiceWakePhraseProfile,
+} from "@shepherdjerred/streambot/voice/corpus-phrases.ts";
+import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
 
 const AUDIO_EXTENSIONS = new Set([
   ".aac",
@@ -41,27 +51,29 @@ type RuntimeResult = {
   readonly classifications: ReadonlyMap<string, boolean>;
 };
 
-const defaultAssetsDir = path.resolve(
-  import.meta.dir,
-  "../../../.context/streambot-voice-models",
-);
-
-const help = `Streambot saved-recording wake evaluator
+const help = `Saved-recording wake evaluator
 
 Replays audio through FFmpeg -> production Discord Opus encoder/decoder ->
 production wake/VAD lifecycle. It never contacts OpenAI and never modifies input files.
 
 Usage:
   bun run voice:harness:evaluate --positive-dir <dir> [--negative-dir <dir>]
+  bun run voice:harness:evaluate --soak <audio-file> [--soak-duration-hours <n>]
 
 Options:
-  --positive-dir <path>  Audio expected to contain "Hey Streambot"
+  --phrase <value>       hey-streambot or hey-scout (default: hey-streambot)
+  --positive-dir <path>  Audio expected to contain the wake phrase
   --negative-dir <path>  Audio expected not to activate
   --positive-pattern <r> Only include positive basenames matching this regular expression
   --negative-pattern <r> Only include negative basenames matching this regular expression
-  --assets-dir <path>    Prepared model assets (default: ${defaultAssetsDir})
+  --soak <path>          Continuous-session mode: feed one real audio file through a single,
+                         never-reset lifecycle for --soak-duration-hours (looping the file if
+                         shorter), reporting every false-wake timestamp. Mutually exclusive with
+                         --positive-dir/--negative-dir.
+  --soak-duration-hours  Target soak duration in hours (default: 2)
+  --assets-dir <path>    Prepared model assets (default: the phrase's own default)
   --runtime <value>      native, wasm, or both (default: native)
-  --require-perfect      Exit nonzero unless every expectation passes
+  --require-perfect      Exit nonzero unless every expectation passes (positive/negative mode only)
   -h, --help             Show this help
 `;
 
@@ -150,6 +162,7 @@ async function evaluateRuntime(
   models: LocalVoiceModels,
   trials: readonly Trial[],
   ffmpegPath: string,
+  lifecycleDeps: VoiceLifecycleDeps,
 ): Promise<RuntimeResult> {
   let positivePasses = 0;
   let positiveTotal = 0;
@@ -162,7 +175,7 @@ async function evaluateRuntime(
     const packets = await rawFileToPackets(trial.file, ffmpegPath);
     const result = await (async () => {
       try {
-        return await evaluateDiscordOpusPackets(models, packets);
+        return await evaluateDiscordOpusPackets(models, packets, lifecycleDeps);
       } finally {
         for (const packet of packets) packet.fill(0);
       }
@@ -194,6 +207,45 @@ async function evaluateRuntime(
   };
 }
 
+async function runSoak(
+  models: LocalVoiceModels,
+  options: {
+    readonly audioFile: string;
+    readonly ffmpegPath: string;
+    readonly lifecycleDeps: VoiceLifecycleDeps;
+    readonly targetMs: number;
+  },
+): Promise<readonly SoakActivation[]> {
+  const packets = await rawFileToPackets(options.audioFile, options.ffmpegPath);
+  try {
+    return await runContinuousActivationSoak(
+      models,
+      packets,
+      options.lifecycleDeps,
+      options.targetMs,
+    );
+  } finally {
+    for (const packet of packets) packet.fill(0);
+  }
+}
+
+function printSoakSummary(
+  runtime: LocalVoiceModels["runtime"],
+  activations: readonly SoakActivation[],
+  targetMs: number,
+): void {
+  console.log(
+    `${runtime}: ${String(activations.length)} false wake(s) over ${(targetMs / 3_600_000).toFixed(2)}h`,
+  );
+  for (const activation of activations) {
+    const totalSeconds = Math.round(activation.elapsedMs / 1000);
+    const hh = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+    const mm = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const ss = String(totalSeconds % 60).padStart(2, "0");
+    console.log(`  ${runtime}: false wake at ${hh}:${mm}:${ss}`);
+  }
+}
+
 function printSummary(result: RuntimeResult): void {
   const positiveRecall =
     result.positiveTotal === 0
@@ -205,38 +257,69 @@ function printSummary(result: RuntimeResult): void {
   );
 }
 
-async function main(): Promise<void> {
-  const { values } = parseArgs({
-    args: Bun.argv.slice(2),
-    options: {
-      "positive-dir": { type: "string" },
-      "negative-dir": { type: "string" },
-      "positive-pattern": { type: "string" },
-      "negative-pattern": { type: "string" },
-      "assets-dir": { type: "string" },
-      runtime: { type: "string", default: "native" },
-      "require-perfect": { type: "boolean", default: false },
-      help: { type: "boolean", short: "h", default: false },
-    },
-    strict: true,
-    allowPositionals: false,
-  });
-  if (values.help) {
-    console.log(help);
-    return;
+async function buildLifecycleDeps(
+  phrase: VoiceWakePhraseProfile,
+): Promise<VoiceLifecycleDeps> {
+  return {
+    ...streambotVoiceLifecycleDeps(),
+    fragmentTailMs: await phrase.loadFragmentTailMs(),
+  };
+}
+
+type SharedContext = {
+  readonly assetManifest: ReturnType<VoiceWakePhraseProfile["assetManifest"]>;
+  readonly lifecycleDeps: VoiceLifecycleDeps;
+  readonly ffmpegPath: string;
+  readonly phrase: VoiceWakePhraseProfile;
+  readonly runtimes: readonly ("native" | "wasm")[];
+};
+
+async function runSoakMode(
+  context: SharedContext,
+  soakFile: string,
+  soakDurationHoursText: string,
+): Promise<void> {
+  const soakHours = Number(soakDurationHoursText);
+  if (!Number.isFinite(soakHours) || soakHours <= 0) {
+    throw new Error("--soak-duration-hours must be a positive number");
   }
+  const targetMs = soakHours * 3_600_000;
+  console.log(
+    `Soaking ${path.resolve(soakFile)} for ${soakHours.toString()}h against ${context.phrase.slug}; OpenAI will not be contacted.`,
+  );
+  for (const selected of context.runtimes) {
+    const models = await initializeLocalVoiceModelsForRuntime(
+      context.assetManifest,
+      selected,
+    );
+    try {
+      const activations = await runSoak(models, {
+        audioFile: soakFile,
+        ffmpegPath: context.ffmpegPath,
+        lifecycleDeps: context.lifecycleDeps,
+        targetMs,
+      });
+      printSoakSummary(models.runtime, activations, targetMs);
+    } finally {
+      await models.close();
+    }
+  }
+}
+
+async function runPositiveNegativeMode(
+  context: SharedContext,
+  values: {
+    readonly "positive-dir"?: string;
+    readonly "negative-dir"?: string;
+    readonly "positive-pattern"?: string;
+    readonly "negative-pattern"?: string;
+    readonly "require-perfect": boolean;
+  },
+): Promise<void> {
   const positiveDir = values["positive-dir"];
   if (positiveDir === undefined) {
-    throw new Error("--positive-dir is required");
+    throw new Error("--positive-dir is required (or use --soak)");
   }
-  const runtime = values.runtime;
-  if (runtime !== "native" && runtime !== "wasm" && runtime !== "both") {
-    throw new Error("--runtime must be native, wasm, or both");
-  }
-  const ffmpegPath = Bun.which("ffmpeg");
-  if (ffmpegPath === null) throw new Error("FFmpeg is required");
-  const assetsDir = path.resolve(values["assets-dir"] ?? defaultAssetsDir);
-  await validateVoiceAssets(assetsDir);
   const positiveFiles = await requiredAudioFiles(
     positiveDir,
     values["positive-pattern"],
@@ -253,22 +336,23 @@ async function main(): Promise<void> {
     ...negativeFiles.map((file) => ({ expected: "no-wake" as const, file })),
   ];
   console.log(
-    `Evaluating ${String(positiveFiles.length)} positives and ${String(negativeFiles.length)} negatives; OpenAI will not be contacted.`,
+    `Evaluating ${String(positiveFiles.length)} positives and ${String(negativeFiles.length)} negatives against ${context.phrase.slug}; OpenAI will not be contacted.`,
   );
-  const runtimes: readonly ("native" | "wasm")[] =
-    runtime === "both"
-      ? ["native", "wasm"]
-      : runtime === "native"
-        ? ["native"]
-        : ["wasm"];
   const results: RuntimeResult[] = [];
-  for (const selected of runtimes) {
+  for (const selected of context.runtimes) {
     const models = await initializeLocalVoiceModelsForRuntime(
-      assetsDir,
+      context.assetManifest,
       selected,
     );
     try {
-      results.push(await evaluateRuntime(models, trials, ffmpegPath));
+      results.push(
+        await evaluateRuntime(
+          models,
+          trials,
+          context.ffmpegPath,
+          context.lifecycleDeps,
+        ),
+      );
     } finally {
       await models.close();
     }
@@ -295,6 +379,71 @@ async function main(): Promise<void> {
   if (!perfect && values["require-perfect"]) {
     throw new Error("Saved-recording wake expectations did not all pass");
   }
+}
+
+async function main(): Promise<void> {
+  const { values } = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      phrase: { type: "string" },
+      "positive-dir": { type: "string" },
+      "negative-dir": { type: "string" },
+      "positive-pattern": { type: "string" },
+      "negative-pattern": { type: "string" },
+      soak: { type: "string" },
+      "soak-duration-hours": { type: "string", default: "2" },
+      "assets-dir": { type: "string" },
+      runtime: { type: "string", default: "native" },
+      "require-perfect": { type: "boolean", default: false },
+      help: { type: "boolean", short: "h", default: false },
+    },
+    strict: true,
+    allowPositionals: false,
+  });
+  if (values.help) {
+    console.log(help);
+    return;
+  }
+  const runtime = values.runtime;
+  if (runtime !== "native" && runtime !== "wasm" && runtime !== "both") {
+    throw new Error("--runtime must be native, wasm, or both");
+  }
+  const ffmpegPath = Bun.which("ffmpeg");
+  if (ffmpegPath === null) throw new Error("FFmpeg is required");
+  const phrase = resolveVoiceWakePhrase(values.phrase);
+  const assetsDir = path.resolve(
+    values["assets-dir"] ?? phrase.defaultAssetsDir,
+  );
+  const assetManifest = phrase.assetManifest(assetsDir);
+  await validateVoiceAssets(assetManifest);
+  const context: SharedContext = {
+    assetManifest,
+    lifecycleDeps: await buildLifecycleDeps(phrase),
+    ffmpegPath,
+    phrase,
+    runtimes:
+      runtime === "both"
+        ? ["native", "wasm"]
+        : runtime === "native"
+          ? ["native"]
+          : ["wasm"],
+  };
+
+  const soakFile = values.soak;
+  if (soakFile !== undefined) {
+    if (
+      values["positive-dir"] !== undefined ||
+      values["negative-dir"] !== undefined
+    ) {
+      throw new Error(
+        "--soak is mutually exclusive with --positive-dir/--negative-dir",
+      );
+    }
+    await runSoakMode(context, soakFile, values["soak-duration-hours"]);
+    return;
+  }
+
+  await runPositiveNegativeMode(context, values);
 }
 
 await main();

@@ -18,11 +18,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update structured homelab version catalog and legacy TypeScript version files",
-      "managerFilePatterns": [
-        "packages/version-catalog/src/catalog.json",
-        "**/lib-versions.ts"
-      ],
+      "description": "Update the structured homelab version catalog",
+      "managerFilePatterns": ["packages/version-catalog/src/catalog.json"],
       "matchStrings": [
         "\"name\":\\s*\"(?<depName>[^\"]+)\",[\\s\\S]{0,240}?\"management\":\\s*\\{\\s*\"managed\":\\s*true,\\s*\"datasource\":\\s*\"(?<datasource>[^\"]+)\"(?:,\\s*\"registryUrl\":\\s*\"(?<registryUrl>[^\"]+)\")?,\\s*\"versioning\":\\s*\"(?<versioning>[^\"]+)\"(?:,\\s*\"packageName\":\\s*\"(?<packageName>[^\"]+)\")?\\s*\\},\\s*\"value\":\\s*\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
       ]
@@ -53,6 +50,29 @@
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\n[ \\t]*ARG\\s+(?:YT_DLP_VERSION|UV_VERSION)=(?<currentValue>[a-zA-Z0-9._-]+)"
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Apple codesign (rcodesign) version pin in the macOS cross-compiler toolchain image",
+      "managerFilePatterns": ["packages/macos-cross-compiler/Dockerfile"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+)\\n[ \\t]*ARG APPLE_CODESIGN_VERSION=(?<currentValue>[0-9][a-zA-Z0-9._-]*)"
+      ],
+      "extractVersionTemplate": "^apple-codesign/(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "description": "macOS cross-compiler Swift base image, kept in sync across the structured SDK catalog and Dockerfile default",
+      "managerFilePatterns": [
+        "packages/macos-cross-compiler/sdks.json",
+        "packages/macos-cross-compiler/Dockerfile"
+      ],
+      "matchStrings": [
+        "\"swiftImage\":\\s*\"swift:(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[a-f0-9]{64})\"",
+        "ARG\\s+SWIFT_IMAGE=swift:(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "swift"
     },
     {
       "customType": "regex",
@@ -146,6 +166,13 @@
       "transformTemplates": [
         "{\"releases\": $map($filter($reduce($each(versions, function($v) { $v }), $append, []), function($v) { $not($contains($v, \"-\")) }), function($v) { {\"version\": $v} }), \"sourceUrl\": \"https://github.com/PaperMC/Paper\", \"homepage\": \"https://papermc.io\"}"
       ]
+    },
+    "mc2discord-forge-1-12-2": {
+      "defaultRegistryUrlTemplate": "https://api.modrinth.com/v2/project/Cfbcv7uF/version?game_versions=%5B%221.12.2%22%5D&loaders=%5B%22forge%22%5D&include_changelog=false",
+      "format": "json",
+      "transformTemplates": [
+        "{\"releases\": $map($filter($, function($v) { $v.version_type = \"release\" }), function($v) { {\"version\": $v.files[primary = true][0].url, \"releaseTimestamp\": $v.date_published} }), \"sourceUrl\": \"https://github.com/DenisD3D/Mc2Discord\", \"homepage\": \"https://modrinth.com/mod/mc2discord\"}"
+      ]
     }
   },
   "packageRules": [
@@ -208,10 +235,20 @@
     },
     {
       "description": "Minecraft - no delay, no automerge",
-      "matchPackageNames": ["itzg/minecraft-server", "minecraft", "mc-router"],
+      "matchPackageNames": [
+        "itzg/minecraft-server",
+        "mc2discord-forge-1.12.2",
+        "minecraft",
+        "mc-router"
+      ],
       "automerge": false,
       "minimumReleaseAge": "0 days",
       "schedule": ["at any time"]
+    },
+    {
+      "description": "packages/the-storm/server/Dockerfile builds FROM the version catalog's itzg/minecraft-server pin (minecraft-tsmc.test.ts requires them equal), so bump both in one PR",
+      "matchPackageNames": ["itzg/minecraft-server"],
+      "groupName": "itzg/minecraft-server"
     },
     {
       "description": "Sandbox is personal scratch space outside maintained dependency automation",
@@ -228,6 +265,7 @@
     },
     {
       "description": "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+      "groupName": "typescript",
       "matchManagers": ["bun", "npm"],
       "matchDepNames": ["typescript"],
       "allowedVersions": "<7"
@@ -246,7 +284,12 @@
       "matchUpdateTypes": ["major"]
     },
     {
-      "description": "Keep react, react-dom and their @types in lockstep. React 19 throws 'Incompatible React versions' at runtime when react and react-dom differ, so they must always bump together in one PR to the same resolved version. Enforced by scripts/checks/check-react-version-sync.ts.",
+      "description": "Storybook ships its core, framework and addons as one release train; a partial bump leaves the builder and addons on mismatched internal APIs, so they update together in one PR.",
+      "groupName": "Storybook",
+      "matchPackageNames": ["storybook", "@storybook/**"]
+    },
+    {
+      "description": "Keep react, react-dom and their @types in lockstep. React 19 throws 'Incompatible React versions' at runtime when react and react-dom differ, so they must always bump together in one PR to the same resolved version. Enforced by scripts/checks/deps/check-react-version-sync.ts.",
       "groupName": "React",
       "matchPackageNames": [
         "react",
@@ -256,35 +299,41 @@
       ]
     },
     {
+      "description": "Keep the Vercel AI SDK in lockstep. Each @ai-sdk/otel release depends on the exact matching ai version, and its Telemetry types must match the ai the app compiles against, so bumping ai alone breaks typecheck.",
+      "groupName": "AI SDK",
+      "matchPackageNames": ["ai", "@ai-sdk/**"]
+    },
+    {
+      "description": "Bundle every package.json's eslint bump into one PR instead of ~60 separate ones",
+      "groupName": "eslint",
+      "matchManagers": ["bun", "npm"],
+      "matchDepNames": ["eslint"]
+    },
+    {
+      "description": "Bundle every package.json's prettier bump into one PR instead of ~60 separate ones",
+      "groupName": "prettier",
+      "matchManagers": ["bun", "npm"],
+      "matchDepNames": ["prettier"]
+    },
+    {
       "description": "Ignore architecture-specific Plex tags (armhf, arm64)",
       "matchPackageNames": ["plexinc/pms-docker"],
       "allowedVersions": "!/-(armhf|arm64)$/"
     },
     {
-      "description": "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
+      "description": "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are stale Ubuntu YY.MM-based image tags, not qBittorrent app versions. qBittorrent never zero-pads its minor version, so rejecting a leading-zero minor excludes them while keeping every semantic app tag.",
       "matchPackageNames": ["linuxserver/qbittorrent"],
-      "allowedVersions": "/^[0-9]+\\.[0-9]+\\.[0-9]+$/"
+      "allowedVersions": "/^[0-9]+\\.(0|[1-9][0-9]*)\\.[0-9]+$/"
     },
     {
-      "description": "Ignore bogus LinuxServer qBittorrent v20 tag; it is not an app release",
-      "matchPackageNames": ["linuxserver/qbittorrent"],
-      "matchNewValue": "/^v?20$/",
-      "enabled": false
-    },
-    {
-      "description": "Pin protobufjs to v7 until @temporalio/proto widens its pin off 7.5.x. The override in packages/temporal/package.json is load-bearing for Temporal payload (de)serialization; commit acc7320dc contains the previous v8 revert. allowedVersions:<8 keeps v8 off the auto-PR list (it surfaces on the Dependency Dashboard as ignored) without gating v7 patches.",
-      "matchPackageNames": ["protobufjs"],
-      "allowedVersions": "<8"
-    },
-    {
-      "description": "Pin sherpa-onnx and its native platform packages below 1.13.2. Version 1.13.4 loads the GigaSpeech KWS model but misses the model's own LIGHT UP positive fixture; 1.13.1 recognizes it in native and WASM. The functional startup smoke in packages/streambot/src/voice/local-models.ts is the independent upgrade gate.",
+      "description": "sherpa-onnx 1.13.2-1.13.4 miss KWS/streaming-ASR detections on FEAT_SME arm64 (bundled onnxruntime 1.27.0 Conv bug, k2-fsa/sherpa-onnx#3791/#3776). Fixed upstream via ORT 1.27.1 in k2-fsa/sherpa-onnx#3831 (macOS) and #3850 (Linux aarch64/Android), both merged before the 1.13.5 release. allowedVersions skips only the broken window; the functional startup smoke in packages/streambot/src/voice/local-models.ts is the upgrade gate before bumping past the current 1.13.1 pin.",
       "matchPackageNames": ["/^sherpa-onnx/"],
-      "allowedVersions": "<1.13.2"
+      "allowedVersions": "<1.13.2 || >=1.13.5"
     },
     {
-      "description": "Pin velero-plugin-for-aws to v1.14.0. v1.14.1 sends an empty x-amz-tagging header on every PutObject, which Cloudflare R2 rejects with 501 NotImplemented, failing all Velero backup-metadata uploads (PR #1307 deployed it 2026-06-21 \u2192 every backup Failed since, plus orphaned ZFS/R2 data: incidents #5860 and #5849). allowedVersions:<1.14.1 keeps v1.14.1+ off the auto-PR list (surfaces on the Dependency Dashboard as ignored) until upstream omits the header on R2; revisit and unpin once R2 compatibility is confirmed.",
+      "description": "velero-plugin-for-aws 1.14.1-1.14.2 send an empty x-amz-tagging header on every PutObject, which Cloudflare R2 rejects with 501 NotImplemented, failing all Velero backup-metadata uploads (PR #1307 deployed it 2026-06-21 \u2192 every backup Failed since, plus orphaned ZFS/R2 data: incidents #5860 and #5849). The upstream guard (velero-io/velero-plugin-for-aws#299) landed in v1.14.3, confirmed by source inspection (buildPutObjectInput only sets Tagging when configured); v1.14.2 does not have it. allowedVersions skips only the broken window; verify against R2 before bumping past the current v1.14.0 pin.",
       "matchPackageNames": ["velero/velero-plugin-for-aws"],
-      "allowedVersions": "<1.14.1"
+      "allowedVersions": "<1.14.1 || >=1.14.3"
     },
     {
       "description": "Skip .terraform.lock.hcl hash maintenance for hashicorp/aws only. To refresh a lock, Renovate recomputes the h1 hashes itself by downloading every published platform's provider zip (lockfile/index.ts createHashes -> terraform-provider getBuilds -> calculateHashScheme1Hashes), fetching them with concurrency=16. The aws provider ships ~15 platforms at ~150-200MB each, so the parallel downloads OOM-kill the Mend-hosted runner mid-run before it can regenerate Dependency Dashboard #481. Observed 2026-07-03: two runs in a row died at 'Calculating hashes for 15 builds' on branch renovate/aws-6.x-lockfile with no 'Repository finished', leaving #481 stale and the recreate/unlimit checkboxes stuck. Reducing platforms does NOT help: OpenTofu 1.12 records h1 for every platform from the signed SHA256SUMS regardless of `tofu providers lock -platform`, and Renovate hashes every build getBuilds returns, not the ones in the lock. skipArtifactsUpdate stops the in-range lock-only refresh branch from being created at all while still surfacing aws version/constraint-bump PRs. Trade-off: the aws lock is no longer auto-maintained -- when an aws constraint bump lands, regenerate packages/homelab/src/tofu/seaweedfs/.terraform.lock.hcl with `tofu init -upgrade` (CI runs plain `tofu init`, so a stale lock fails fast and visibly). Only aws is affected; every other provider's lock is small and stays Renovate-maintained.",

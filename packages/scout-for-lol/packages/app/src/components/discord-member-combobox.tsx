@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
-import { Combobox } from "@scout-for-lol/design-system/components/combobox";
+import { Combobox } from "@scout-for-lol/design-system/components/forms/combobox";
 
 const SNOWFLAKE = /^\d{17,20}$/;
 

@@ -11,6 +11,7 @@ export type HomeCollectorClient = {
   getProblemEntities: (
     batteryThreshold: number,
     unavailableIgnoredDomains: readonly string[],
+    unavailableIgnoredEntityGlobs: readonly string[],
   ) => Promise<{
     unavailable: EntitySummary[];
     unavailableCount: number;
@@ -49,6 +50,7 @@ export async function collectHomePayload(
     const problems = await client.getProblemEntities(
       config.homeAssistant.batteryThreshold,
       config.homeAssistant.unavailableIgnoredDomains,
+      config.homeAssistant.unavailableIgnoredEntityGlobs,
     );
     unavailable = problems.unavailable;
     unavailableCount = problems.unavailableCount;

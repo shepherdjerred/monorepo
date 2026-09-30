@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { matchRoutes } from "react-router";
 import { routes } from "#src/router.tsx";
-import { trpcOptions } from "#src/lib/trpc-options.ts";
+import { trpcOptions } from "#src/lib/query/trpc-options.ts";
 
 /**
  * Every URL the JSX `<Routes>` tree served must still resolve through the
@@ -21,8 +21,10 @@ const KNOWN_URLS = [
   "/explore/s/some-share-token",
   "/players",
   "/players/42",
+  "/halls",
   "/halls/1",
   "/challenges",
+  "/clash",
   "/challenges/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/challenges/drafts/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/challenge-runs/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
@@ -52,6 +54,7 @@ const KNOWN_URLS = [
   "/g/1/hall-of-fame",
   "/g/1/audit",
   "/g/1/access",
+  "/operations/matches",
 ];
 
 describe("router route matching", () => {

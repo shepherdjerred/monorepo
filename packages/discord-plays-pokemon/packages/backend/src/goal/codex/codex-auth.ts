@@ -5,10 +5,7 @@ export function envValue(
   name: string,
 ): string | undefined {
   const value = values[name];
-  if (value === undefined || value.length === 0) {
-    return undefined;
-  }
-  return value;
+  return value === undefined || value.length === 0 ? undefined : value;
 }
 
 export function buildCodexCredentialEnvironment(
@@ -25,11 +22,10 @@ export function buildCodexCredentialEnvironment(
 export async function hasCodexCredential(
   runtimeDirectory: string,
 ): Promise<boolean> {
-  if (envValue(Bun.env, "CODEX_ACCESS_TOKEN") !== undefined) {
-    return true;
-  }
-
-  return await Bun.file(codexAuthPath(runtimeDirectory)).exists();
+  return (
+    envValue(Bun.env, "CODEX_ACCESS_TOKEN") !== undefined ||
+    (await Bun.file(codexAuthPath(runtimeDirectory)).exists())
+  );
 }
 
 function codexAuthPath(runtimeDirectory: string): string {
@@ -39,9 +35,7 @@ function codexAuthPath(runtimeDirectory: string): string {
   }
 
   const home = envValue(Bun.env, "HOME");
-  if (home !== undefined) {
-    return path.join(home, ".codex", "auth.json");
-  }
-
-  return path.join(path.resolve(runtimeDirectory), ".codex", "auth.json");
+  return home === undefined
+    ? path.join(path.resolve(runtimeDirectory), ".codex", "auth.json")
+    : path.join(home, ".codex", "auth.json");
 }

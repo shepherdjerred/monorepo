@@ -20,9 +20,6 @@ for cross-package workflow.
 
 ## Swift and UI
 
-- Authored code uses strict Swift 6, SwiftLint, and swift-format without source
-  suppressions or unsafe flags. Generated code keeps its measured exemptions.
-- Exhaustive switches have no `default`; `@unknown default` is allowed.
 - In binding-importing files, use `CoreTask`/`CoreClock` and
   `_Concurrency.Task` to avoid generated-name collisions.
 - Durable failures must be visible and actionable in the UI, not merely parked
@@ -42,7 +39,7 @@ bun run mac:verify
 bun run mac:e2e
 ```
 
-Changed TaskNotes paths also have a hard serial macOS Buildkite gate. Preserve
+Changed TaskNotes paths also have a hard serial macOS CI gate. Preserve
 accessibility assertions; a compile-only result is not app verification.
 
 Releases use the operator-run Developer ID/notarization lane. Do not add an App

@@ -5,12 +5,12 @@ import {
   type ChannelStateManifest,
   type CurrentMessage,
   type GuildSnapshot,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import {
   compareSnowflakes,
   mergeCurrentProjection,
   projectionChecksum,
-} from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus-projection.ts";
 import {
   loadStateManifest,
   readOverlapTraversal,

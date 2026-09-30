@@ -15,7 +15,7 @@ import {
   handleModifyRule,
   handleDeleteRule,
   handleToggleRule,
-} from "./automod-actions.ts";
+} from "./actions/automod-actions.ts";
 
 type AutomodInput = {
   guildId: string;
@@ -52,11 +52,9 @@ function validateAutomodInput(
     ctx.exemptChannels,
     "exemptChannels",
   );
-  if (channelsError != null && channelsError.length > 0) {
-    return { success: false, message: channelsError };
-  }
-
-  return null;
+  return channelsError != null && channelsError.length > 0
+    ? { success: false, message: channelsError }
+    : null;
 }
 
 function buildCreateOptions(ctx: AutomodInput): Record<string, unknown> {

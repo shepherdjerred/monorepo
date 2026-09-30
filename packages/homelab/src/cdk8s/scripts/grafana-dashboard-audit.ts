@@ -154,19 +154,16 @@ async function queryLoki(expr: string): Promise<{
   url.searchParams.set("limit", "10");
   const body = LokiQuerySchema.parse(await getJson(url.toString()));
 
-  if (body.status !== "success") {
-    return { resultCount: 0, error: "loki_query_error" };
-  }
-
-  return { resultCount: body.data?.result?.length ?? 0 };
+  return body.status === "success"
+    ? { resultCount: body.data?.result?.length ?? 0 }
+    : { resultCount: 0, error: "loki_query_error" };
 }
 
 type DatasourceRef = z.infer<typeof DatasourceRefSchema>;
 
 function datasourceType(ref: DatasourceRef | undefined): string | undefined {
   if (ref === undefined) return undefined;
-  if (typeof ref === "string") return ref;
-  return ref.type ?? ref.uid;
+  return typeof ref === "string" ? ref : (ref.type ?? ref.uid);
 }
 
 const searchUrl = new URL(`${grafanaUrl}/api/search`);

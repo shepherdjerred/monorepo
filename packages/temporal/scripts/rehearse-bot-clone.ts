@@ -56,7 +56,7 @@ import {
   installScoutWorkspace,
   rootInstallWithoutHooks,
 } from "#activities/bot-clone.ts";
-import { isAllowedGlitterContextRefreshPath } from "#activities/glitter/context/glitter-context-refresh-paths.ts";
+import { isAllowedGlitterContextRefreshPath } from "#activities/glitter/context/refresh/glitter-context-refresh-paths.ts";
 import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
 import { runScoutGeneratedPreflight } from "#activities/scout/scout-generated-preflight.ts";
 import { z } from "zod";

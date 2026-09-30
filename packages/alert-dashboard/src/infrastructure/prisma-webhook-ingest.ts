@@ -102,13 +102,11 @@ function reconciledResolutionPromotion(
   existing: AlertOccurrence,
   alertResolvedAtNs: bigint | null,
 ): Prisma.AlertOccurrenceUpdateInput {
-  if (
-    alertResolvedAtNs !== null &&
+  return alertResolvedAtNs !== null &&
     existing.lifecycleState === "resolved" &&
     existing.resolutionSource === "reconciled"
-  )
-    return { resolutionSource: "webhook" };
-  return {};
+    ? { resolutionSource: "webhook" }
+    : {};
 }
 
 function shouldReopenOccurrence(

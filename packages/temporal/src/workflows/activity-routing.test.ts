@@ -9,8 +9,9 @@ async function typescriptFiles(directory: string): Promise<string[]> {
     entries.map(async (entry) => {
       const entryPath = path.join(directory, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === "replay-fixtures") return [];
-        return typescriptFiles(entryPath);
+        return entry.name === "replay-fixtures"
+          ? []
+          : typescriptFiles(entryPath);
       }
       return entry.isFile() && entry.name.endsWith(".ts") ? [entryPath] : [];
     }),

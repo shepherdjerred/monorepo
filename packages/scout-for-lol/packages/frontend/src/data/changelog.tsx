@@ -12,6 +12,88 @@ export function renderChangelogToHtml(content: ReactNode): string {
 }
 
 export const changelog: ChangelogEntry[] = [
+  buildChangelogEntry({
+    date: "2026 09 24",
+    banner: "Updated for League patch 26.19",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.19",
+          "League Classic adds Fizz, Graves, Nami, and Nautilus, plus the returning items Cloak and Dagger, Moonflair Spellblade, and Zz'Rot Portal.",
+          "Arena adds 13 new Augments (including Hellbent, Shark Bait, Surge Field, Titan's Resolve, Death Dealer, and Got That Dog In Em) and three new Guests of Honor: Ivern, Senna, and Thresh.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.19 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-19-notes",
+    },
+  }),
+  buildChangelogEntry({
+    date: "2026 09 13",
+    banner: "In beta: Explore, player profiles, Hall of Fame, and Hey Scout",
+    sections: [
+      {
+        title: "In beta, on selected servers",
+        color: "yellow",
+        items: [
+          "Scout Explore: ask about your matches in plain language and get charts, tables, and match cards back",
+          "Player profiles: accounts, rank, champion performance, and match history for every tracked player",
+          "Hall of Fame: your server's best games, kept as records and announced the moment one breaks",
+          "Community challenges: turn a goal like winning on every champion into a challenge Scout tracks for you",
+          "Dares: dare someone to pull something off, and Scout calls it the moment they do",
+          'Hey Scout: say "Hey Scout" in voice chat and ask a question mid-game',
+        ],
+      },
+      {
+        title: "For everyone",
+        color: "indigo",
+        items: [
+          "A cleaner app throughout, and more reliable match tracking behind it",
+        ],
+      },
+    ],
+  }),
+  buildChangelogEntry({
+    date: "2026 09 10",
+    banner: "Updated for League patch 26.18",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.18",
+          "League Classic adds Fiora, Galio, Poppy, Shyvana, and Xin Zhao in their old-school kits.",
+          "ARAM Mayhem Augment pools reworked with new exclusion filters so champions get more relevant Augment offers.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.18 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-18-notes",
+    },
+  }),
+  buildChangelogEntry({
+    date: "2026 09 07",
+    banner: "Updated for League patch 26.17",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.17",
+          "ARAM: Mayhem adds new fighter Augments Ultra Hydra and Upgrade Death's Dance; Double Tap moves to Prismatic and Upgrade Infinity Edge loses its crit chance.",
+          "League Classic adds Champion and Role swapping in Champion Select plus the first in-client Council vote.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.17 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-17-notes",
+    },
+  }),
   newScoutChangelogEntry,
   buildChangelogEntry({
     date: "2026 08 18",
@@ -115,7 +197,7 @@ export const changelog: ChangelogEntry[] = [
         items: [
           "Report queries can now do real analytics — math and aggregate expressions (per-game, per-minute, rounding), grouping by up to two dimensions with day/week/month time buckets, and many more metrics across economy, farming, damage, vision, objectives, and Arena",
           "Seven new chart types — stacked bar, area, donut, scatter, heatmap, radar, and KPI cards — with themes, palettes, and custom colors, plus 23 ready-made presets",
-          "A cleaner report builder: live AI-draft preview, visible AI credits, a point-and-click Data Explorer, champion-name filters, and full custom scheduling with a timezone picker and next-run preview",
+          "A cleaner report builder: a point-and-click Data Explorer, champion-name filters, and full custom scheduling with a timezone picker and next-run preview — plus live AI-draft preview with visible AI credits on selected beta servers",
         ],
       },
       {

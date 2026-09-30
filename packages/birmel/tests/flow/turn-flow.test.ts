@@ -79,35 +79,53 @@ afterAll(async () => {
 });
 
 describe("successful deterministic turn flow", () => {
-  test("direct chat admits one run and edits one response exactly once", () => {
-    const result = resultFor("direct");
+  test("tool-free chat admits one run and edits one response exactly once", () => {
+    const result = resultFor("conversation");
 
     expect(result.runStatuses).toEqual(["completed"]);
     expect(result.replyCalls).toBe(1);
     expect(result.replyPayloads).toEqual(["…"]);
     expect(result.deliveredEdits).toHaveLength(1);
-    expect(result.directCalls).toBe(1);
-    expect(result.specialistCalls).toBe(0);
+    expect(result.agentCalls).toBe(1);
     expect(result.toolCalls).toBe(0);
     expect(result.contextCalls).toBe(1);
-    expect(result.routerCalls).toBe(1);
     expect(result.memoryExtractionCalls).toBe(1);
     expect(result.routeDispositions).toEqual(["conversation"]);
-    expect(result.primaryToolIds).toEqual([null]);
+    expect(result.toolCallCounts).toEqual([0]);
   });
 
-  test("typed specialist route executes exactly one specialist and one validated tool", () => {
-    const result = resultFor("specialist-tool");
+  test("a tool-using turn runs one agent and one validated tool", () => {
+    const result = resultFor("agent-tool");
 
     expect(result.runStatuses).toEqual(["completed"]);
     expect(result.replyCalls).toBe(1);
     expect(result.deliveredEdits).toHaveLength(1);
-    expect(result.directCalls).toBe(0);
-    expect(result.specialistCalls).toBe(1);
+    expect(result.agentCalls).toBe(1);
     expect(result.toolCalls).toBe(1);
     expect(result.memoryExtractionCalls).toBe(1);
     expect(result.routeDispositions).toEqual(["supported"]);
-    expect(result.primaryToolIds).toEqual(["manage-message"]);
+    expect(result.toolCallCounts).toEqual([1]);
+  });
+
+  test("a working turn narrates into its own message and still ends on the answer", () => {
+    const result = resultFor("agent-progress");
+
+    expect(result.runStatuses).toEqual(["completed"]);
+    // Still one reply. The extra edits are progress on that same message, so
+    // the "one placeholder, one final state" contract is intact.
+    expect(result.replyCalls).toBe(1);
+    expect(result.deliveredEdits.length).toBeGreaterThan(1);
+    expect(
+      result.deliveredEdits.some((edit) => edit.includes("🔎 Working…")),
+    ).toBe(true);
+    expect(
+      result.deliveredEdits.some((edit) =>
+        edit.includes("Checking who has been active."),
+      ),
+    ).toBe(true);
+    // Whatever progress showed, the last thing on screen is the answer.
+    expect(result.deliveredEdits.at(-1)).toMatch(/^agent reply/u);
+    expect(result.deliveredEdits.at(-1)).not.toContain("🔎 Working…");
   });
 
   test("restart-safe Discord message deduplication produces only one response", () => {
@@ -117,8 +135,7 @@ describe("successful deterministic turn flow", () => {
     expect(result.replyCalls).toBe(1);
     expect(result.deliveredEdits).toHaveLength(1);
     expect(result.contextCalls).toBe(1);
-    expect(result.routerCalls).toBe(1);
-    expect(result.directCalls).toBe(1);
+    expect(result.agentCalls).toBe(1);
   });
 
   test("concurrent turns in one channel stay ordered through final delivery", () => {
@@ -127,10 +144,10 @@ describe("successful deterministic turn flow", () => {
     expect(result.runStatuses).toEqual(["completed", "completed"]);
     expect(result.secondReplyObservedWhileFirstBlocked).toBe(false);
     expect(result.deliveryOrder).toEqual([
-      "reply:10000000000000090",
-      "edit:10000000000000090",
-      "reply:10000000000000091",
-      "edit:10000000000000091",
+      "reply:10000000000000080",
+      "edit:10000000000000080",
+      "reply:10000000000000081",
+      "edit:10000000000000081",
     ]);
     expect(result.replyCalls).toBe(2);
     expect(result.deliveredEdits).toHaveLength(2);
@@ -147,8 +164,7 @@ describe("successful deterministic turn flow", () => {
     expect(result.replyCalls).toBe(1);
     expect(result.sessionEventCalls).toBe(2);
     expect(result.contextCalls).toBe(1);
-    expect(result.routerCalls).toBe(1);
-    expect(result.directCalls).toBe(1);
+    expect(result.agentCalls).toBe(1);
     expect(result.memoryExtractionCalls).toBe(1);
     expect(result.incidentIds).toEqual([]);
     expect(result.errorClasses).toEqual([]);
@@ -159,7 +175,7 @@ describe("successful deterministic turn flow", () => {
 
     expect(result.runStatuses).toEqual(["completed"]);
     expect(result.replyCalls).toBe(1);
-    expect(result.directCalls).toBe(1);
+    expect(result.agentCalls).toBe(1);
     expect(result.memoryExtractionCalls).toBe(0);
     expect(result.incidentIds).toEqual([]);
   });
@@ -173,7 +189,7 @@ describe("boundary failures", () => {
     expect(result.replyCalls).toBe(1);
     expect(result.editAttempts).toHaveLength(0);
     expect(result.contextCalls).toBe(0);
-    expect(result.routerCalls).toBe(0);
+    expect(result.agentCalls).toBe(0);
     expect(result.incidentIds[0]).toMatch(/^B3-[0-9a-f]{8}$/u);
   });
 
@@ -184,30 +200,16 @@ describe("boundary failures", () => {
     expect(result.deliveredEdits).toHaveLength(1);
     expect(result.deliveredEdits[0]).toMatch(/Reference: B3-[0-9a-f]{8}$/u);
     expect(result.deliveredEdits[0]).not.toContain("CONTEXT_SECRET_EXCEPTION");
-    expect(result.routerCalls).toBe(0);
-    expect(result.directCalls).toBe(0);
+    expect(result.agentCalls).toBe(0);
   });
 
-  test("malformed router output cannot reach an executor", () => {
-    const result = resultFor("router-malformed");
+  test("agent failure returns only an incident reference", () => {
+    const result = resultFor("agent-failure");
 
     expect(result.runStatuses).toEqual(["failed"]);
-    expect(result.deliveredEdits).toHaveLength(1);
-    expect(result.deliveredEdits[0]).not.toContain("secondRoute");
-    expect(result.routerCalls).toBe(1);
-    expect(result.directCalls).toBe(0);
-    expect(result.specialistCalls).toBe(0);
-  });
-
-  test("specialist failure returns only an incident reference", () => {
-    const result = resultFor("specialist-failure");
-
-    expect(result.runStatuses).toEqual(["failed"]);
-    expect(result.specialistCalls).toBe(1);
+    expect(result.agentCalls).toBe(1);
     expect(result.toolCalls).toBe(0);
-    expect(result.deliveredEdits[0]).not.toContain(
-      "SPECIALIST_SECRET_EXCEPTION",
-    );
+    expect(result.deliveredEdits[0]).not.toContain("AGENT_SECRET_EXCEPTION");
     expect(result.memoryExtractionCalls).toBe(0);
   });
 
@@ -215,7 +217,7 @@ describe("boundary failures", () => {
     const result = resultFor("tool-output-failure");
 
     expect(result.runStatuses).toEqual(["failed"]);
-    expect(result.specialistCalls).toBe(1);
+    expect(result.agentCalls).toBe(1);
     expect(result.toolCalls).toBe(1);
     expect(result.deliveredEdits).toHaveLength(1);
     expect(result.deliveredEdits[0]).not.toContain(
@@ -242,7 +244,7 @@ describe("boundary failures", () => {
     expect(result.runStatuses).toEqual(["completed"]);
     expect(result.editAttempts).toHaveLength(1);
     expect(result.deliveredEdits).toHaveLength(1);
-    expect(result.deliveredEdits[0]).toMatch(/^direct reply/u);
+    expect(result.deliveredEdits[0]).toMatch(/^conversation reply/u);
     expect(result.incidentIds).toEqual([]);
     expect(result.memoryExtractionCalls).toBe(1);
   });
@@ -253,7 +255,7 @@ describe("boundary failures", () => {
     expect(result.runStatuses).toEqual(["running"]);
     expect(result.editAttempts).toHaveLength(1);
     expect(result.deliveredEdits).toHaveLength(1);
-    expect(result.deliveredEdits[0]).toMatch(/^direct reply/u);
+    expect(result.deliveredEdits[0]).toMatch(/^conversation reply/u);
     expect(result.incidentIds).toEqual([]);
     expect(result.memoryExtractionCalls).toBe(1);
   });
@@ -264,7 +266,7 @@ describe("boundary failures", () => {
     expect(result.runStatuses).toEqual(["completed"]);
     expect(result.editAttempts).toHaveLength(1);
     expect(result.deliveredEdits).toHaveLength(1);
-    expect(result.deliveredEdits[0]).toMatch(/^direct reply/u);
+    expect(result.deliveredEdits[0]).toMatch(/^conversation reply/u);
     expect(result.memoryExtractionCalls).toBe(1);
     expect(result.memoryExtractionErrors).toBe(1);
     expect(result.incidentIds).toEqual([]);
@@ -282,7 +284,7 @@ test("AgentRun SQLite schema and rows contain no assembled prompt or message con
   expect(normalizedColumns).not.toContain("content");
   expect(normalizedColumns).not.toContain("assembled");
   expect(normalizedColumns).toContain("routedisposition");
-  expect(normalizedColumns).toContain("primarytoolid");
+  expect(normalizedColumns).toContain("toolcallcount");
   expect(result.serializedAgentRuns).not.toContain(
     "ASSEMBLED_PROMPT_CONTENT_SENTINEL",
   );

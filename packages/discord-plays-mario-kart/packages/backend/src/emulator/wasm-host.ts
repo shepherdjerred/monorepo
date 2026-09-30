@@ -99,8 +99,7 @@ export function makeGLStub(): unknown {
     createRenderbuffer: () => ({}),
     createVertexArray: () => ({}),
     getShaderParameter: (_s: unknown, p: number) => p === 0x8b_81, // COMPILE_STATUS
-    getProgramParameter: (_pr: unknown, p: number) =>
-      p === 0x8b_82 ? true : 0, // LINK_STATUS else 0 uniforms/attrs
+    getProgramParameter: (_pr: unknown, p: number) => p === 0x8b_82 || 0, // LINK_STATUS else 0 uniforms/attrs
     getActiveUniform: () => ({ name: "", size: 0, type: 0 }),
     getActiveAttrib: () => ({ name: "", size: 0, type: 0 }),
     getUniformLocation: () => ({}),
@@ -112,8 +111,7 @@ export function makeGLStub(): unknown {
   return new Proxy(obj, {
     get(target, prop) {
       if (typeof prop !== "string") return;
-      if (prop in target) return target[prop];
-      return noop;
+      return prop in target ? target[prop] : noop;
     },
   });
 }

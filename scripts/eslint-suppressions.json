@@ -1,10 +1,5 @@
 {
-  "checks/check-patched-deps.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "checks/check-react-version-sync.ts": {
+  "checks/deps/check-react-version-sync.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -19,7 +14,7 @@
       "count": 1
     }
   },
-  "checks/check-tunnel-dns-coverage.ts": {
+  "checks/ci/check-tunnel-dns-coverage.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }
@@ -49,19 +44,14 @@
       "count": 1
     }
   },
-  "lib/ci-env-command.ts": {
+  "lib/ci/ci-env-command.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "lib/ci-env-pipeline.ts": {
+  "lib/ci/ci-env-pipeline.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
-    }
-  },
-  "lib/ci-secret-grant-pipeline.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
     }
   },
   "lib/npm-release-eligibility.ts": {
@@ -87,11 +77,6 @@
   "review/review-analytics.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 3
-    }
-  },
-  "review/wait-for-review.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
     }
   },
   "tools/jscpd-check.ts": {

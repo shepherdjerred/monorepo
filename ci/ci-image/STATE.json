@@ -1,0 +1,7 @@
+{
+  "schema": "ci-image-pin-state/v1",
+  "buildNumber": 1002630,
+  "sourceCommit": "ffe6e1cc69c5c81352e90dfd2ec2fdfab30b2dec",
+  "sourceFingerprint": "sha256:6bce76cc7cc99a6d79eeabc73c8e3d821aa52e6988f20cd624bebcedf9851502",
+  "digest": "sha256:2cb990c10bab0d29d33651d139894e5343672d594c47070709b49a886c9adfd7"
+}

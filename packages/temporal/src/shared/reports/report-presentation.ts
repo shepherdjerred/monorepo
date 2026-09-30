@@ -3,12 +3,10 @@ import type { ReportEnvelopeV1 } from "./report.ts";
 
 export const TAILORED_REPORT_TYPES = [
   "agent-task",
-  "ci-io-impact",
   "dependency-summary",
   "homelab-audit",
   "link-rot-scan",
   "main-vuln-scan",
-  "protobufjs-v8-watch",
   "scout-data-dragon",
   "scout-lane-priors",
   "scout-queue-windows",
@@ -54,8 +52,7 @@ type SubjectPolicy = (report: ReportEnvelopeV1) => string;
 
 function subjectFromCopy(report: ReportEnvelopeV1, copy: SubjectCopy): string {
   if (report.execution === "failed") return copy.failed;
-  if (report.execution === "partial") return copy.partial;
-  return copy[report.verdict];
+  return report.execution === "partial" ? copy.partial : copy[report.verdict];
 }
 
 function agentTaskTitle(title: string): string {
@@ -72,22 +69,13 @@ function agentTaskSubject(report: ReportEnvelopeV1): string {
   ) {
     return `${title} could not finish`;
   }
-  if (report.verdict === "attention") return `Action needed: ${title}`;
-  return `${title}: report ready`;
+  return report.verdict === "attention"
+    ? `Action needed: ${title}`
+    : `${title}: report ready`;
 }
 
 const SUBJECT_POLICIES = {
   "agent-task": agentTaskSubject,
-  "ci-io-impact": (report) =>
-    subjectFromCopy(report, {
-      clear: "CI I/O report is ready",
-      changed: "CI I/O report is ready",
-      attention: "Action needed: CI I/O target missed",
-      pending: "CI I/O report is still pending",
-      inconclusive: "CI I/O report could not finish",
-      partial: "CI I/O report could not finish",
-      failed: "CI I/O report failed",
-    }),
   "dependency-summary": (report) =>
     subjectFromCopy(report, {
       clear: "Dependencies are up to date",
@@ -127,16 +115,6 @@ const SUBJECT_POLICIES = {
       inconclusive: "Vulnerability scan could not finish",
       partial: "Vulnerability scan could not finish",
       failed: "Vulnerability scan failed",
-    }),
-  "protobufjs-v8-watch": (report) =>
-    subjectFromCopy(report, {
-      clear: "Temporal still uses protobufjs v7",
-      changed: "Temporal protobufjs compatibility changed",
-      attention: "Temporal can move to protobufjs v8",
-      pending: "Temporal still uses protobufjs v7",
-      inconclusive: "protobufjs compatibility check could not finish",
-      partial: "protobufjs compatibility check could not finish",
-      failed: "protobufjs compatibility check failed",
     }),
   "scout-data-dragon": (report) =>
     subjectFromCopy(report, {
@@ -199,8 +177,9 @@ function genericSubject(report: ReportEnvelopeV1): string {
     return `Action needed: ${report.title}`;
   }
   if (report.verdict === "pending") return `${report.title} is still pending`;
-  if (report.verdict === "changed") return `${report.title}: changes found`;
-  return `${report.title}: no action needed`;
+  return report.verdict === "changed"
+    ? `${report.title}: changes found`
+    : `${report.title}: no action needed`;
 }
 
 export function hasTailoredReportPresentation(reportType: string): boolean {
@@ -221,15 +200,11 @@ function presentationTone(
   if (
     report.execution !== "complete" ||
     report.verdict === "inconclusive" ||
-    (report.verdict === "pending" &&
-      report.reportType !== "protobufjs-v8-watch")
+    report.verdict === "pending"
   ) {
     return "incomplete";
   }
-  if (report.verdict === "attention" || actionCount > 0) {
-    return "review";
-  }
-  return "ok";
+  return report.verdict === "attention" || actionCount > 0 ? "review" : "ok";
 }
 
 function checkStatus(

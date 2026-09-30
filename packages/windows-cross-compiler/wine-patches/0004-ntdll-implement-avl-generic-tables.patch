@@ -1,0 +1,254 @@
+ntdll: Implement the AVL generic table functions used by the AppX tools.
+
+makeappx.exe, appxpackaging.dll, and appxsip.dll keep options and package
+parts in RTL_AVL_TABLEs. Elements follow the Windows layout (an
+RTL_BALANCED_LINKS header followed by the caller's data) and the tree stays
+ordered; it is not rebalanced. RtlInsertElementGenericTableAvl returns the
+element and writes a BOOLEAN, as on Windows.
+
+--- a/dlls/ntdll/ntdll.spec
++++ b/dlls/ntdll/ntdll.spec
+@@ -617,7 +617,7 @@
+ @ stdcall RtlDeleteCriticalSection(ptr)
+ @ stdcall -arch=!i386 RtlDeleteGrowableFunctionTable(ptr)
+ @ stdcall RtlDeleteElementGenericTable(ptr ptr)
+-@ stub RtlDeleteElementGenericTableAvl
++@ stdcall RtlDeleteElementGenericTableAvl(ptr ptr)
+ @ cdecl -arch=!i386 RtlDeleteFunctionTable(ptr)
+ @ stdcall RtlDeleteNoSplay(ptr ptr)
+ @ stub RtlDeleteOwnersRanges
+@@ -860,7 +860,7 @@
+ @ stdcall RtlIsDosDeviceName_U(wstr)
+ @ stdcall -arch=x86_64 -norelay RtlIsEcCode(ptr)
+ @ stdcall RtlIsGenericTableEmpty(ptr)
+-# @ stub RtlIsGenericTableEmptyAvl
++@ stdcall RtlIsGenericTableEmptyAvl(ptr)
+ @ stdcall RtlIsNameLegalDOS8Dot3(ptr ptr ptr)
+ @ stdcall RtlIsNormalizedString(long wstr long ptr)
+ @ stdcall RtlIsProcessorFeaturePresent(long)
+--- a/dlls/ntdll/rtl.c
++++ b/dlls/ntdll/rtl.c
+@@ -1573,6 +1573,52 @@
+     }
+     if (child) child->Red = 0;
+     if (tree->root) tree->root->Red = 0;
++}
++
++/* AVL generic tables keep each element behind an RTL_BALANCED_LINKS header, as
++ * on Windows; the real tree root hangs off BalancedRoot.RightChild. The tree is
++ * kept ordered but is not rebalanced. */
++
++static inline void *avl_node_data( RTL_BALANCED_LINKS *node )
++{
++    return node + 1;
++}
++
++static inline RTL_BALANCED_LINKS *avl_root( RTL_AVL_TABLE *table )
++{
++    return table->BalancedRoot.RightChild;
++}
++
++static RTL_BALANCED_LINKS *avl_find( RTL_AVL_TABLE *table, void *buffer, RTL_BALANCED_LINKS **parent,
++                                     RTL_GENERIC_COMPARE_RESULTS *result )
++{
++    RTL_BALANCED_LINKS *node = avl_root( table );
++
++    *parent = &table->BalancedRoot;
++    *result = GenericGreaterThan;
++    while (node)
++    {
++        *parent = node;
++        *result = table->CompareRoutine( table, buffer, avl_node_data( node ) );
++        if (*result == GenericEqual) return node;
++        node = *result == GenericLessThan ? node->LeftChild : node->RightChild;
++    }
++    return NULL;
++}
++
++static RTL_BALANCED_LINKS *avl_leftmost( RTL_BALANCED_LINKS *node )
++{
++    while (node && node->LeftChild) node = node->LeftChild;
++    return node;
++}
++
++static void avl_replace_child( RTL_AVL_TABLE *table, RTL_BALANCED_LINKS *node, RTL_BALANCED_LINKS *child )
++{
++    RTL_BALANCED_LINKS *parent = node->Parent;
++
++    if (parent == &table->BalancedRoot || parent->RightChild == node) parent->RightChild = child;
++    else parent->LeftChild = child;
++    if (child) child->Parent = parent;
+ }
+ 
+ /***********************************************************************
+@@ -1581,7 +1627,14 @@
+ void WINAPI RtlInitializeGenericTableAvl(PRTL_AVL_TABLE table, PRTL_AVL_COMPARE_ROUTINE compare,
+                                          PRTL_AVL_ALLOCATE_ROUTINE allocate, PRTL_AVL_FREE_ROUTINE free, void *context)
+ {
+-    FIXME("%p %p %p %p %p: stub\n", table, compare, allocate, free, context);
++    TRACE("%p %p %p %p %p\n", table, compare, allocate, free, context);
++
++    memset( table, 0, sizeof(*table) );
++    table->BalancedRoot.Parent = &table->BalancedRoot;
++    table->CompareRoutine = compare;
++    table->AllocateRoutine = allocate;
++    table->FreeRoutine = free;
++    table->TableContext = context;
+ }
+ 
+ /******************************************************************************
+@@ -1589,11 +1642,22 @@
+  */
+ void * WINAPI RtlEnumerateGenericTableWithoutSplayingAvl(RTL_AVL_TABLE *table, PVOID *previous)
+ {
+-    static int warn_once;
++    RTL_BALANCED_LINKS *node = *previous;
+ 
+-    if (!warn_once++)
+-        FIXME("(%p, %p) stub!\n", table, previous);
+-    return NULL;
++    TRACE("(%p, %p)\n", table, previous);
++
++    if (!node) node = avl_leftmost( avl_root( table ) );
++    else if (node->RightChild) node = avl_leftmost( node->RightChild );
++    else
++    {
++        while (node->Parent != &table->BalancedRoot && node->Parent->RightChild == node)
++            node = node->Parent;
++        node = node->Parent == &table->BalancedRoot ? NULL : node->Parent;
++    }
++
++    if (!node) return NULL;
++    *previous = node;
++    return avl_node_data( node );
+ }
+ 
+ /******************************************************************************
+@@ -1601,16 +1665,47 @@
+  */
+ ULONG WINAPI RtlNumberGenericTableElementsAvl(RTL_AVL_TABLE *table)
+ {
+-    FIXME("(%p) stub!\n", table);
+-    return 0;
++    TRACE("(%p)\n", table);
++    return table->NumberGenericTableElements;
+ }
+ 
++/******************************************************************************
++ *  RtlIsGenericTableEmptyAvl  (NTDLL.@)
++ */
++BOOLEAN WINAPI RtlIsGenericTableEmptyAvl(RTL_AVL_TABLE *table)
++{
++    TRACE("(%p)\n", table);
++    return !avl_root( table );
++}
++
+ /***********************************************************************
+  *           RtlInsertElementGenericTableAvl  (NTDLL.@)
+  */
+-void WINAPI RtlInsertElementGenericTableAvl(PRTL_AVL_TABLE table, void *buffer, ULONG size, BOOL *element)
++void * WINAPI RtlInsertElementGenericTableAvl(PRTL_AVL_TABLE table, void *buffer, ULONG size, BOOLEAN *new_element)
+ {
+-    FIXME("%p %p %lu %p: stub\n", table, buffer, size, element);
++    RTL_BALANCED_LINKS *parent, *node;
++    RTL_GENERIC_COMPARE_RESULTS result;
++
++    TRACE("%p %p %lu %p\n", table, buffer, size, new_element);
++
++    if ((node = avl_find( table, buffer, &parent, &result )))
++    {
++        if (new_element) *new_element = FALSE;
++        return avl_node_data( node );
++    }
++
++    if (!(node = table->AllocateRoutine( table, sizeof(*node) + size ))) return NULL;
++    memset( node, 0, sizeof(*node) );
++    memcpy( avl_node_data( node ), buffer, size );
++    node->Parent = parent;
++    if (parent == &table->BalancedRoot || result != GenericLessThan) parent->RightChild = node;
++    else parent->LeftChild = node;
++
++    table->NumberGenericTableElements++;
++    table->WhichOrderedElement = 0;
++    table->OrderedPointer = NULL;
++    if (new_element) *new_element = TRUE;
++    return avl_node_data( node );
+ }
+ 
+ /******************************************************************************
+@@ -1618,10 +1713,52 @@
+  */
+ void * WINAPI RtlLookupElementGenericTableAvl(PRTL_AVL_TABLE table, void *buffer)
+ {
+-    FIXME("(%p, %p) stub!\n", table, buffer);
+-    return NULL;
++    RTL_BALANCED_LINKS *parent, *node;
++    RTL_GENERIC_COMPARE_RESULTS result;
++
++    TRACE("(%p, %p)\n", table, buffer);
++
++    node = avl_find( table, buffer, &parent, &result );
++    return node ? avl_node_data( node ) : NULL;
+ }
+ 
++/******************************************************************************
++ *           RtlDeleteElementGenericTableAvl  (NTDLL.@)
++ */
++BOOLEAN WINAPI RtlDeleteElementGenericTableAvl(PRTL_AVL_TABLE table, void *buffer)
++{
++    RTL_BALANCED_LINKS *parent, *node, *next;
++    RTL_GENERIC_COMPARE_RESULTS result;
++
++    TRACE("(%p, %p)\n", table, buffer);
++
++    if (!(node = avl_find( table, buffer, &parent, &result ))) return FALSE;
++
++    if (!node->LeftChild) avl_replace_child( table, node, node->RightChild );
++    else if (!node->RightChild) avl_replace_child( table, node, node->LeftChild );
++    else
++    {
++        next = avl_leftmost( node->RightChild );
++        if (next->Parent != node)
++        {
++            avl_replace_child( table, next, next->RightChild );
++            next->RightChild = node->RightChild;
++            next->RightChild->Parent = next;
++        }
++        avl_replace_child( table, node, next );
++        next->LeftChild = node->LeftChild;
++        next->LeftChild->Parent = next;
++    }
++
++    table->NumberGenericTableElements--;
++    table->DeleteCount++;
++    table->WhichOrderedElement = 0;
++    table->OrderedPointer = NULL;
++    table->RestartKey = NULL;
++    table->FreeRoutine( table, node );
++    return TRUE;
++}
++
+ /*********************************************************************
+  *           RtlQueryPackageIdentity [NTDLL.@]
+  */
+--- a/include/ddk/ntddk.h
++++ b/include/ddk/ntddk.h
+@@ -305,15 +305,17 @@
+ void      WINAPI RtlDeleteNoSplay(PRTL_SPLAY_LINKS,PRTL_SPLAY_LINKS *);
+ void *    WINAPI RtlEnumerateGenericTable(PRTL_GENERIC_TABLE,BOOLEAN);
+ void *    WINAPI RtlEnumerateGenericTableWithoutSplaying(PRTL_GENERIC_TABLE,PVOID*);
++BOOLEAN   WINAPI RtlDeleteElementGenericTableAvl(PRTL_AVL_TABLE,void *);
+ void *    WINAPI RtlEnumerateGenericTableWithoutSplayingAvl(PRTL_AVL_TABLE,PVOID*);
+ BOOLEAN   WINAPI RtlEqualString(const STRING*,const STRING*,BOOLEAN);
+ void *    WINAPI RtlGetElementGenericTable(PRTL_GENERIC_TABLE,ULONG);
+ void      WINAPI RtlInitializeGenericTable(PRTL_GENERIC_TABLE,PRTL_GENERIC_COMPARE_ROUTINE,PRTL_GENERIC_ALLOCATE_ROUTINE,PRTL_GENERIC_FREE_ROUTINE,void *);
+ void      WINAPI RtlInitializeGenericTableAvl(PRTL_AVL_TABLE,PRTL_AVL_COMPARE_ROUTINE,PRTL_AVL_ALLOCATE_ROUTINE, PRTL_AVL_FREE_ROUTINE,void *);
+ PVOID     WINAPI RtlInsertElementGenericTable(PRTL_GENERIC_TABLE,PVOID,CLONG,PBOOLEAN);
+-void      WINAPI RtlInsertElementGenericTableAvl(PRTL_AVL_TABLE,void *,ULONG,BOOL*);
++void *    WINAPI RtlInsertElementGenericTableAvl(PRTL_AVL_TABLE,void *,ULONG,BOOLEAN*);
+ BOOLEAN   WINAPI RtlIsGenericTableEmpty(PRTL_GENERIC_TABLE);
+ void *    WINAPI RtlLookupElementGenericTable(PRTL_GENERIC_TABLE,void *);
++BOOLEAN   WINAPI RtlIsGenericTableEmptyAvl(PRTL_AVL_TABLE);
+ void *    WINAPI RtlLookupElementGenericTableAvl(PRTL_AVL_TABLE,void *);
+ void      WINAPI RtlMapGenericMask(ACCESS_MASK*,const GENERIC_MAPPING*);
+ ULONG     WINAPI RtlNumberGenericTableElements(PRTL_GENERIC_TABLE);

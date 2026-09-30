@@ -4,6 +4,10 @@ import type {
   ScoutDetachedWorkInput,
   ScoutIngestionReconciliationInput,
   ScoutInitialHistoryInput,
+  ScoutExploreHistoryInput,
+  ScoutExploreHistoryResult,
+  ScoutExploreTimelineInput,
+  ScoutExploreTimelineResult,
   ScoutInteractiveRunInput,
   ScoutMatchIngestionInput,
   ScoutPostMatchDiscoveryInput,
@@ -18,10 +22,35 @@ import type {
   ScoutChallengeRunRecomputeInput,
   ScoutDuelSeriesInput,
 } from "#src/contracts.ts";
+import type {
+  ScoutLakeProjectionV2InputEnvelope,
+  ScoutLakeProjectionV2ResultEnvelope,
+  ScoutClientMatchDispatchV2InputEnvelope,
+  ScoutMatchProcessingV2InputEnvelope,
+  ScoutMatchProcessingV2ResultEnvelope,
+  ScoutNotificationV2InputEnvelope,
+  ScoutNotificationV2ResultEnvelope,
+  ScoutPipelineReconciliationV2InputEnvelope,
+  ScoutPipelineReconciliationV2ResultEnvelope,
+  ScoutPostMatchDiscoveryV2InputEnvelope,
+  ScoutPostMatchDiscoveryV2ResultEnvelope,
+  ScoutPrematchDiscoveryV2InputEnvelope,
+  ScoutPrematchDiscoveryV2ResultEnvelope,
+  ScoutPrematchGameV2InputEnvelope,
+  ScoutPrematchGameV2ResultEnvelope,
+  ScoutRecoveryBatchV2InputEnvelope,
+  ScoutRecoveryBatchV2ResultEnvelope,
+} from "#src/workflow-contracts-v2.ts";
+import type {
+  ScoutSilentPostmatchBackfillV2InputEnvelope,
+  ScoutSilentPostmatchBackfillV2ResultEnvelope,
+} from "#src/silent-postmatch-backfill-v2.ts";
 import { scoutRealtimePollWorkflow as realtimePoll } from "./realtime.ts";
 import { scoutMatchIngestionWorkflow as matchIngestion } from "./realtime.ts";
 import { scoutPostMatchDiscoveryWorkflow as postMatchDiscovery } from "./realtime.ts";
 import { scoutInitialHistoryWorkflow as initialHistory } from "./background.ts";
+import { scoutExploreHistoryWorkflow as exploreHistory } from "./background.ts";
+import { scoutExploreTimelineWorkflow as exploreTimeline } from "./background.ts";
 import { scoutIngestionReconciliationWorkflow as ingestionReconciliation } from "./background.ts";
 import { scoutBackgroundJobWorkflow as backgroundJob } from "./background.ts";
 import { scoutDetachedWorkWorkflow as detachedWork } from "./background.ts";
@@ -35,6 +64,22 @@ import {
   scoutDuelSeriesWorkflow as duelSeries,
   scoutHallBaselineWorkflow as hallBaseline,
 } from "./progression.ts";
+import { scoutClientMatchDispatchV2Workflow as clientMatchDispatchV2 } from "./client-match-dispatch-v2.ts";
+import {
+  scoutMatchProcessingV2Workflow as matchProcessingV2,
+  scoutPostMatchDiscoveryV2Workflow as postMatchDiscoveryV2,
+} from "./match-v2.ts";
+import {
+  scoutPrematchDiscoveryV2Workflow as prematchDiscoveryV2,
+  scoutPrematchGameV2Workflow as prematchGameV2,
+} from "./prematch-v2.ts";
+import {
+  scoutLakeProjectionV2Workflow as lakeProjectionV2,
+  scoutNotificationV2Workflow as notificationV2,
+  scoutPipelineReconciliationV2Workflow as pipelineReconciliationV2,
+  scoutRecoveryBatchV2Workflow as recoveryBatchV2,
+} from "./durable-v2.ts";
+import { scoutSilentPostmatchBackfillV2Workflow as silentPostmatchBackfillV2 } from "./silent-postmatch-backfill-v2.ts";
 
 export async function scoutRealtimePollWorkflow(
   input: ScoutRealtimePollInput,
@@ -58,6 +103,18 @@ export async function scoutInitialHistoryWorkflow(
   input: ScoutInitialHistoryInput,
 ): Promise<{ status: ScoutWorkflowStatus; pagesProcessed: number }> {
   return await initialHistory(input);
+}
+
+export async function scoutExploreHistoryWorkflow(
+  input: ScoutExploreHistoryInput,
+): Promise<ScoutExploreHistoryResult> {
+  return await exploreHistory(input);
+}
+
+export async function scoutExploreTimelineWorkflow(
+  input: ScoutExploreTimelineInput,
+): Promise<ScoutExploreTimelineResult> {
+  return await exploreTimeline(input);
 }
 
 export async function scoutIngestionReconciliationWorkflow(
@@ -124,4 +181,64 @@ export async function scoutDuelSeriesWorkflow(
   input: ScoutDuelSeriesInput,
 ): Promise<ScoutWorkflowStatus> {
   return await duelSeries(input);
+}
+
+export async function scoutPostMatchDiscoveryV2Workflow(
+  input: ScoutPostMatchDiscoveryV2InputEnvelope,
+): Promise<ScoutPostMatchDiscoveryV2ResultEnvelope> {
+  return await postMatchDiscoveryV2(input);
+}
+
+export async function scoutMatchProcessingV2Workflow(
+  input: ScoutMatchProcessingV2InputEnvelope,
+): Promise<ScoutMatchProcessingV2ResultEnvelope> {
+  return await matchProcessingV2(input);
+}
+
+export async function scoutClientMatchDispatchV2Workflow(
+  input: ScoutClientMatchDispatchV2InputEnvelope,
+): Promise<never> {
+  return await clientMatchDispatchV2(input);
+}
+
+export async function scoutPrematchDiscoveryV2Workflow(
+  input: ScoutPrematchDiscoveryV2InputEnvelope,
+): Promise<ScoutPrematchDiscoveryV2ResultEnvelope> {
+  return await prematchDiscoveryV2(input);
+}
+
+export async function scoutPrematchGameV2Workflow(
+  input: ScoutPrematchGameV2InputEnvelope,
+): Promise<ScoutPrematchGameV2ResultEnvelope> {
+  return await prematchGameV2(input);
+}
+
+export async function scoutNotificationV2Workflow(
+  input: ScoutNotificationV2InputEnvelope,
+): Promise<ScoutNotificationV2ResultEnvelope> {
+  return await notificationV2(input);
+}
+
+export async function scoutLakeProjectionV2Workflow(
+  input: ScoutLakeProjectionV2InputEnvelope,
+): Promise<ScoutLakeProjectionV2ResultEnvelope> {
+  return await lakeProjectionV2(input);
+}
+
+export async function scoutRecoveryBatchV2Workflow(
+  input: ScoutRecoveryBatchV2InputEnvelope,
+): Promise<ScoutRecoveryBatchV2ResultEnvelope> {
+  return await recoveryBatchV2(input);
+}
+
+export async function scoutPipelineReconciliationV2Workflow(
+  input: ScoutPipelineReconciliationV2InputEnvelope,
+): Promise<ScoutPipelineReconciliationV2ResultEnvelope> {
+  return await pipelineReconciliationV2(input);
+}
+
+export async function scoutSilentPostmatchBackfillV2Workflow(
+  input: ScoutSilentPostmatchBackfillV2InputEnvelope,
+): Promise<ScoutSilentPostmatchBackfillV2ResultEnvelope> {
+  return await silentPostmatchBackfillV2(input);
 }

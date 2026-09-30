@@ -4,6 +4,83 @@ Shared Scout domain models, schemas, review pipeline prompts, and the committed
 League of Legends static-data snapshot. Other Scout workspaces import from this
 package instead of calling Riot or CommunityDragon at runtime.
 
+Contracts that need nothing but zod live in `@scout-for-lol/domain` and are
+re-exported from here. This package owns everything those contracts must not
+know about: Prisma's storage domain, Discord and Riot shapes, and the static
+snapshot below.
+
+## Bryan Bucks storability
+
+`src/model/bucks/bryan-bucks-money.ts` is the Prisma edge of the Bucks economy.
+The semantic brands — what a quantity means — are defined in
+`@scout-for-lol/domain/identity/bucks-money.ts` and carry no storage bound; see
+that package's README. What lives here is the part domain must not know: a
+Prisma `Int` column is 32 bits wide, and a value bound for one has to fit.
+
+- `BUCKS_INT32_MAX` is that ceiling.
+- `StorableBucksStakeSchema`, `StorableBucksAmountSchema`, and
+  `StorableBucksDeltaSchema` add the bound on top of a semantic brand. A
+  `StorableBucksAmount` **is** a `BucksAmount` — the brands intersect — so
+  checking storability never forces a conversion on the way back out, and only
+  code that genuinely requires a storable value has to say so.
+- `storableStake`, `storableAmount`, and `storableDelta` assert an
+  already-branded value against that bound at a persistence boundary. Callers
+  that must not throw (user input, quote arithmetic) use the schemas'
+  `safeParse` directly.
+
+The bound is a `.check(z.lte(...))` rather than a `.refine(...)` on purpose: a
+check stays visible to `z.toJSONSchema`, so generated contract schemas still
+advertise the ceiling. A refine validates identically and emits nothing.
+
+### The re-export shim
+
+The domain schemas are re-exported from this module rather than redeclared.
+Zod brands are structural: an independently defined schema carrying the same
+tag typechecks identically while validating differently, so a copy would drift
+silently and a value branded through one package would not be branded through
+the other. Import sites must receive the _same_ schema objects.
+`src/model/core/domain-reexport-identity.test.ts` asserts that object identity
+and is hand-enumerated — extend it when another schema moves behind a shim.
+
+### `BucksStorageOverflowError`
+
+The error a value too large for its column raises. It is defined here, beside
+the helpers that throw it, because the data layer is where the Int32 bound is
+known.
+
+Every recovery path keys off `instanceof`: pool settlement retries as a
+matched-principal refund, dare settlement voids with a full refund, and
+placement turns it into a "storage limit" reply. So
+`packages/backend/src/betting/ledger.ts` **re-exports this one class object**
+rather than declaring its own — a second class would typecheck fine and silently
+stop matching every one of those catches.
+
+### Reading a ledger row is not writing one
+
+`src/model/bucks/bryan-bucks.ts` exports two ledger-context unions, and which
+one you reach for depends on the direction:
+
+- `BucksLedgerContextSchema` validates what Scout is about to **write**. Every
+  producer — `betting/ledger.ts`, the transfer path, the dare repair script's
+  reversal — parses through it, so today's narrowed money domains are enforced
+  going forward.
+- `StoredBucksLedgerContextSchema` parses a `BucksLedgerEntry.context` **read
+  back** out of the database. Everything that loads history uses it.
+
+They differ in exactly one variant. A settlement row's `winnersPool`,
+`losersPool`, `stakeReturned`, and `winnings` were persisted as plain signed
+integers from the first Bryan Bucks release until the money brands narrowed all
+four to non-negative; a stored row means what the schema in force when it was
+written said it meant, and existing records keep their original interpretation.
+So the stored union restates the historical domain for those four fields and the
+write union does not. Narrowing the read side instead is not harmless
+strictness — it makes the ledger page drop an old row's whole explanation and
+the repair script abort while merely scanning candidates.
+
+Add a new variant to `SHARED_LEDGER_CONTEXT_VARIANTS` so both unions get it. Give
+a variant its own read and write forms only when a persisted domain genuinely
+changed, and say in the schema which release changed it.
+
 ## Data Dragon assets
 
 `src/data-dragon/assets/` is a committed snapshot of Riot's Data Dragon (plus
@@ -14,6 +91,11 @@ It is regenerated — never hand-edited — by:
 bun run update-data-dragon            # full refresh to the latest version
 bun run update-data-dragon 16.16.1    # full refresh to a specific version
 ```
+
+Arena augment generation also preserves IDs 71 and 250 from CommunityDragon
+15.23, which appear in recorded matches but are absent from the current
+catalog. `--arena-augments-only` regenerates that cache against the committed
+version without refreshing unrelated assets.
 
 The refresh runs weekly via the `scout-data-dragon-weekly-refresh` Temporal
 schedule. Typed readers live beside the assets in `src/data-dragon/`

@@ -4,16 +4,16 @@ import {
   messageMatchesQuery,
   selectShowMessages,
 } from "#lib/history/context.ts";
-import { dialogueText, toolOutputText } from "#lib/history/messages.ts";
+import { dialogueText, toolOutputText } from "#lib/history/query/messages.ts";
 import {
   collectHistoryResults,
   prepareResults,
   sourceWarnings,
-} from "#lib/history/results.ts";
+} from "#lib/history/query/results.ts";
 import {
   renderHistoryRecords,
   renderHistoryShow,
-} from "#lib/history/render.ts";
+} from "#lib/history/query/render.ts";
 import type {
   HistoryMessage,
   HistorySourceName,

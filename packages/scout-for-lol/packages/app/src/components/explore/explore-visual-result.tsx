@@ -7,7 +7,7 @@ import {
   type ReportResultColumn,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
+import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Select,
@@ -15,8 +15,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@scout-for-lol/design-system/components/select";
-import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
+} from "@scout-for-lol/design-system/components/forms/select";
+import { InteractiveVisualization } from "#src/components/scoutql/interactive-visualization.tsx";
 import { ReportResultTable } from "#src/components/report/report-result-table.tsx";
 import {
   SingleRowResult,
@@ -27,7 +27,7 @@ import {
   plottableMetricColumns,
   previewToVisualizationSnapshot,
   visualizationSnapshotWithControls,
-} from "#src/lib/preview-to-visualization.ts";
+} from "#src/lib/scoutql/preview-to-visualization.ts";
 
 function chartableSnapshot(
   snapshot: VisualizationSnapshot | null,
@@ -54,20 +54,17 @@ export function initialChartKind(
     }
   }
 
-  if (preview !== null && isChartRenderKind(preview.renderKind)) {
-    return preview.renderKind;
-  }
-
-  return "BAR_CHART";
+  return preview !== null && isChartRenderKind(preview.renderKind)
+    ? preview.renderKind
+    : "BAR_CHART";
 }
 
 function initialChartOrientation(
   rawChart: VisualizationSnapshot | null,
 ): "vertical" | "horizontal" {
-  if (rawChart === null) {
-    return "vertical";
-  }
-  return rawChart.display.options?.orientation ?? "vertical";
+  return rawChart === null
+    ? "vertical"
+    : (rawChart.display.options?.orientation ?? "vertical");
 }
 
 export function initialMetricKey(
@@ -75,13 +72,10 @@ export function initialMetricKey(
   plottableCols: ReportResultColumn[],
 ): string | undefined {
   const persistedMetric = rawChart?.series[0]?.metric;
-  if (
-    persistedMetric !== undefined &&
+  return persistedMetric !== undefined &&
     plottableCols.some((column) => column.key === persistedMetric)
-  ) {
-    return persistedMetric;
-  }
-  return plottableCols[0]?.key;
+    ? persistedMetric
+    : plottableCols[0]?.key;
 }
 
 export type ExploreVisualResultProps = {
@@ -184,7 +178,7 @@ function ExploreChartControls(props: {
             }
           }}
         >
-          <SelectTrigger className="h-7 text-xs">
+          <SelectTrigger aria-label="Chart type" className="h-7 text-xs">
             <SelectValue placeholder="Chart Type" />
           </SelectTrigger>
           <SelectContent>
@@ -202,7 +196,7 @@ function ExploreChartControls(props: {
             value={selectedMetricKey ?? plottableCols[0]?.key ?? ""}
             onValueChange={onMetricChange}
           >
-            <SelectTrigger className="h-7 text-xs">
+            <SelectTrigger aria-label="Metric" className="h-7 text-xs">
               <SelectValue placeholder="Metric" />
             </SelectTrigger>
             <SelectContent>

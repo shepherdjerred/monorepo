@@ -92,11 +92,13 @@ export async function persistTimelineForProgression(
   timeline: RawTimeline,
   playersInMatch: PlayerConfigEntry[],
   matchId: MatchId,
+  matchData: RawMatch,
 ): Promise<void> {
   const staged = await recordTimelineForReportStore({
     timeline,
     source: "timeline_progression",
     trackedPlayerAliases: playersInMatch.map((player) => player.alias),
+    gameCreatedAt: new Date(matchData.info.gameCreation),
   });
   requireTimelineStaging("required", staged, matchId);
 }
@@ -116,6 +118,7 @@ async function stageFetchedTimeline(
     readonly source?: "timeline_progression";
     readonly playersInMatch: PlayerConfigEntry[];
     readonly matchId: MatchId;
+    readonly matchData: RawMatch;
   },
   timeline: RawTimeline,
 ): Promise<void> {
@@ -134,6 +137,7 @@ async function stageFetchedTimeline(
           ? "timeline_dare_v2"
           : "timeline_live"),
       trackedPlayerAliases,
+      gameCreatedAt: new Date(options.matchData.info.gameCreation),
     });
     requireTimelineStaging(options.persistence, staged, options.matchId);
   } catch (error) {

@@ -80,10 +80,7 @@ export async function getItem(
     const store = getStore(transaction, storeName);
     const request = store.get(key);
     const result = await executeRequest<unknown>(request);
-    if (result === undefined || result === null) {
-      return null;
-    }
-    return result;
+    return result ?? null;
   } catch (error) {
     console.warn(`Failed to get item from ${storeName}:`, error);
     return null;
@@ -124,10 +121,7 @@ export async function getAllItems(storeName: string): Promise<unknown[]> {
     // Validate with Zod to ensure it's an array
     const ArraySchema = z.array(z.unknown());
     const parsed = ArraySchema.safeParse(result);
-    if (!parsed.success) {
-      return [];
-    }
-    return parsed.data;
+    return parsed.success ? parsed.data : [];
   } catch (error) {
     console.warn(`Failed to get all items from ${storeName}:`, error);
     return [];

@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   BucksLedgerContextSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
@@ -370,7 +371,7 @@ describe("transferBucks policy and transaction safety", () => {
       });
       await applyBucksDelta(tx, {
         bucksAccountId: recipientId,
-        delta: -1,
+        delta: BucksDeltaSchema.parse(-1),
         kind: "bet_stake",
         matchId: pool.matchId,
         betId: bet.id,

@@ -7,7 +7,14 @@ import { EMAIL_SEND_CLAIM_LEASE_NS } from "#infrastructure/prisma-email-claim";
 const OccurrenceIdsSchema = z.array(AlertOccurrenceIdSchema);
 
 export type CancelPendingEmailsInput = {
-  alertname: string;
+  /**
+   * Restrict cancellation to rows whose every occurrence carries this
+   * alertname. Omit to cancel every pending row in the window, which is the
+   * only way to reach rows that carry no occurrences at all — a truncation
+   * notice, or anything queued under a since-pruned occurrence. Those rows are
+   * unreachable by any alertname and would otherwise sit pending forever.
+   */
+  alertname?: string | undefined;
   fromNs: bigint;
   toNs: bigint;
   canceledAtNs: bigint;
@@ -21,6 +28,38 @@ export type CancelPendingEmailsResult = {
   canceled: number;
   ids: readonly string[];
 };
+
+/**
+ * Rows whose occurrences ALL carry `alertname`. A row with no occurrences is
+ * not attributable to any alertname, so it is excluded here rather than
+ * silently swept up by a targeted cancellation.
+ */
+async function attributedToAlertname(
+  transaction: Prisma.TransactionClient,
+  messages: readonly { id: string; occurrenceIds: readonly string[] }[],
+  alertname: string,
+): Promise<string[]> {
+  const attributed = messages.filter(
+    (message) => message.occurrenceIds.length > 0,
+  );
+  const occurrenceIds = [
+    ...new Set(attributed.flatMap((message) => message.occurrenceIds)),
+  ];
+  const occurrences = await transaction.alertOccurrence.findMany({
+    where: { id: { in: occurrenceIds } },
+    select: { id: true, alertname: true },
+  });
+  const alertnameByOccurrenceId = new Map(
+    occurrences.map((occurrence) => [occurrence.id, occurrence.alertname]),
+  );
+  return attributed
+    .filter((message) =>
+      message.occurrenceIds.every(
+        (id) => alertnameByOccurrenceId.get(id) === alertname,
+      ),
+    )
+    .map((message) => message.id);
+}
 
 export async function cancelPendingEmails(
   transaction: Prisma.TransactionClient,
@@ -40,31 +79,14 @@ export async function cancelPendingEmails(
     select: { id: true, occurrenceIds: true },
     orderBy: { createdAtNs: "asc" },
   });
-  const occurrenceIdsByOutbox = pending
-    .map((message) => ({
-      id: message.id,
-      occurrenceIds: OccurrenceIdsSchema.parse(message.occurrenceIds),
-    }))
-    .filter((message) => message.occurrenceIds.length > 0);
-  const occurrenceIds = [
-    ...new Set(
-      occurrenceIdsByOutbox.flatMap((message) => message.occurrenceIds),
-    ),
-  ];
-  const occurrences = await transaction.alertOccurrence.findMany({
-    where: { id: { in: occurrenceIds } },
-    select: { id: true, alertname: true },
-  });
-  const alertnameByOccurrenceId = new Map(
-    occurrences.map((occurrence) => [occurrence.id, occurrence.alertname]),
-  );
-  const ids = occurrenceIdsByOutbox
-    .filter((message) =>
-      message.occurrenceIds.every(
-        (id) => alertnameByOccurrenceId.get(id) === input.alertname,
-      ),
-    )
-    .map((message) => message.id);
+  const parsed = pending.map((message) => ({
+    id: message.id,
+    occurrenceIds: OccurrenceIdsSchema.parse(message.occurrenceIds),
+  }));
+  const ids =
+    input.alertname === undefined
+      ? parsed.map((message) => message.id)
+      : await attributedToAlertname(transaction, parsed, input.alertname);
 
   if (!input.confirm) return { matched: ids.length, canceled: 0, ids };
 

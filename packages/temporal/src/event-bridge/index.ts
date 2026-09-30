@@ -1,4 +1,5 @@
 import type { Client } from "@temporalio/client";
+import { startBlueBubblesIngress } from "./imessage/start.ts";
 import {
   HomeAssistantEventClient,
   HomeAssistantRestClient,
@@ -14,12 +15,17 @@ import {
   type XcodeCloudWebhookHandle,
 } from "./xcode-cloud-webhook.ts";
 import { startSleepWebhook, type SleepWebhookHandle } from "./sleep-webhook.ts";
+import { type AgentChatDiscordHandle } from "./agent-chat-discord-bot.ts";
+import { startAgentChatDiscordSupervisor } from "./agent-chat-discord-supervisor.ts";
 
 export type EventBridgeHandle = {
   close: () => Promise<void>;
 };
 
-export function startHttpServers(client: Client): EventBridgeHandle {
+export async function startHttpServers(
+  client: Client,
+): Promise<EventBridgeHandle> {
+  await startBlueBubblesIngress(client);
   // GitHub webhook server is optional — only start when the secret is set.
   // Local dev / smoke tests can run the worker without webhook ingest.
   let webhook: WebhookHandle | undefined;
@@ -30,6 +36,8 @@ export function startHttpServers(client: Client): EventBridgeHandle {
   }
 
   const agentTaskApi: AgentTaskApiHandle = startAgentTaskApi(client);
+  const agentChatDiscord: AgentChatDiscordHandle =
+    startAgentChatDiscordSupervisor(client);
   let sleepWebhook: SleepWebhookHandle | undefined;
   if ((Bun.env["SLEEP_WEBHOOK_TOKEN"] ?? "") === "") {
     console.warn("SLEEP_WEBHOOK_TOKEN not set; skipping sleep webhook server");
@@ -54,6 +62,7 @@ export function startHttpServers(client: Client): EventBridgeHandle {
         await webhook.close();
       }
       await agentTaskApi.close();
+      await agentChatDiscord.close();
       if (sleepWebhook !== undefined) {
         await sleepWebhook.close();
       }

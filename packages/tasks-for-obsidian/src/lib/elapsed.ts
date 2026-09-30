@@ -5,10 +5,7 @@ export function formatElapsed(seconds: number): string {
   const secs = total % 60;
   const mm = String(minutes).padStart(2, "0");
   const ss = String(secs).padStart(2, "0");
-  if (hours > 0) {
-    return `${String(hours)}:${mm}:${ss}`;
-  }
-  return `${mm}:${ss}`;
+  return hours > 0 ? `${String(hours)}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
 export function elapsedSecondsSince(
@@ -16,6 +13,7 @@ export function elapsedSecondsSince(
   now: number = Date.now(),
 ): number {
   const startMs = new Date(startTime).getTime();
-  if (Number.isNaN(startMs)) return 0;
-  return Math.max(0, Math.floor((now - startMs) / 1000));
+  return Number.isNaN(startMs)
+    ? 0
+    : Math.max(0, Math.floor((now - startMs) / 1000));
 }

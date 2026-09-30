@@ -1,9 +1,9 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { ReportResultTable } from "#src/components/report/report-result-table.tsx";
-import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
+import { InteractiveVisualization } from "#src/components/scoutql/interactive-visualization.tsx";
 
 const DEBOUNCE_MS = 500;
 
@@ -74,7 +74,7 @@ export function ReportQueryPreview(props: {
         <p className="text-sm text-scout-subtle">Running preview…</p>
       )}
       {(preview.status === "error" || preview.status === "degraded") && (
-        <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-scout-danger bg-scout-danger p-3 text-xs text-scout-danger-ink">
+        <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-scout-danger-fill bg-scout-danger-fill p-3 text-xs text-scout-danger-ink">
           {Loaded.messageOf(preview.errors[0].error)}
         </pre>
       )}

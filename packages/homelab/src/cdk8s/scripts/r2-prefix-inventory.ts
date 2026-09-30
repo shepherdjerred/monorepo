@@ -76,10 +76,9 @@ function groupName(key: string): string {
       ? key.slice(basePrefix.length)
       : key;
   const parts = relative.split("/").filter((part) => part !== "");
-  if (parts.length === 0) {
-    return "(root)";
-  }
-  return `${parts.slice(0, Math.max(1, prefixDepth)).join("/")}/`;
+  return parts.length === 0
+    ? "(root)"
+    : `${parts.slice(0, Math.max(1, prefixDepth)).join("/")}/`;
 }
 
 async function listObjects(

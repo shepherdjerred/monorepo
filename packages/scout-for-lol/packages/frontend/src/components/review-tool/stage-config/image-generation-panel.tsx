@@ -4,9 +4,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
-import { Switch } from "@scout-for-lol/design-system/components/switch";
+import { Switch } from "@scout-for-lol/design-system/components/forms/switch";
 import type { ImageGenerationStageConfig } from "#src/lib/review-tool/config/schema.ts";
 import { IMAGE_GENERATION_USER_PROMPT } from "@scout-for-lol/data";
 import { PromptEditor } from "./prompt-editor.tsx";
@@ -26,7 +26,7 @@ export function ImageGenerationPanel({
         <div>
           <CardTitle>Stage 4: Image Generation</CardTitle>
           <p className="mt-1 text-xs text-scout-subtle">
-            OpenRouter image generation settings
+            Gemini image generation settings
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export function ImageGenerationPanel({
               onChange={(e) => {
                 onChange({ ...config, model: e.target.value });
               }}
-              placeholder="gemini-3-pro-image-preview"
+              placeholder="gemini-2.5-flash-image"
             />
           </div>
           <div>
@@ -77,7 +77,7 @@ export function ImageGenerationPanel({
               User prompt template
             </Label>
             <p className="text-xs text-scout-subtle">
-              Template for the OpenRouter image generation request.
+              Template for the Gemini image generation request.
             </p>
           </div>
           <PromptEditor

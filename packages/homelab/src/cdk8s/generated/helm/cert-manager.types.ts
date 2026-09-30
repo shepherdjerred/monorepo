@@ -34,8 +34,7 @@ export type CertmanagerHelmValuesGlobal = {
    */
   priorityClassName?: string;
   /**
-   * Set all pods to run in a user namespace without host access.
-   * Experimental: may be removed once the Kubernetes User Namespaces feature is GA.
+   * - Kubernetes 1.27–1.32 with UserNamespacesSupport feature gate enabled.
    * Set to false to run pods in a user namespace without host access.
    * See [limitations](https://kubernetes.io/docs/concepts/workloads/pods/user-namespaces/#limitations) for details.
    * +docs:property

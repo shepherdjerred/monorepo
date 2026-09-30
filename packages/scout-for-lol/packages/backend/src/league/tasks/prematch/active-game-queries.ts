@@ -8,18 +8,16 @@ import * as Sentry from "@sentry/bun";
 const logger = createLogger("prematch-active-game-queries");
 
 // Keep reply metadata through the full postmatch alert window, which is three
-// hours from match creation.
-const ACTIVE_GAME_TTL_MS = 3 * 60 * 60 * 1000;
+// hours from match creation. Exported because it is also the freshness horizon
+// of a pre-match notification intent: past it the game is no longer tracked.
+export const ACTIVE_GAME_TTL_MS = 3 * 60 * 60 * 1000;
 
 const TrackedPuuidsSchema = z.array(z.string());
 /** Discord channel ID -> message ID, for both prematch and postmatch refs. */
 const MessageIdsByChannelSchema = z.record(z.string(), z.string());
 
 function parseMessageIdsByChannel(raw: string | null): Record<string, string> {
-  if (raw === null) {
-    return {};
-  }
-  return MessageIdsByChannelSchema.parse(JSON.parse(raw));
+  return raw === null ? {} : MessageIdsByChannelSchema.parse(JSON.parse(raw));
 }
 
 export type ActiveGameRecord = {
@@ -199,12 +197,9 @@ export async function getPrematchMessageIdsForMatchId(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, string>> {
   const row = await findPrematchMessageIdsRowForMatchId(matchId, prismaClient);
-  if (row?.prematchMatchId !== matchId) {
-    return new Map();
-  }
-  return new Map(
-    Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)),
-  );
+  return row?.prematchMatchId === matchId
+    ? new Map(Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)))
+    : new Map();
 }
 
 /**
@@ -229,12 +224,9 @@ export async function getPrematchMessageIdsForMatchIdOrEmpty(
     });
     return new Map();
   }
-  if (row?.prematchMatchId !== matchId) {
-    return new Map();
-  }
-  return new Map(
-    Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)),
-  );
+  return row?.prematchMatchId === matchId
+    ? new Map(Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)))
+    : new Map();
 }
 
 /**
@@ -309,11 +301,33 @@ export async function getPostmatchMessageIdsForMatchIdOrEmpty(
     });
     return new Map();
   }
-  if (row?.prematchMatchId !== matchId) {
-    return new Map();
-  }
-  return new Map(
-    Object.entries(parseMessageIdsByChannel(row.postmatchMessageIds)),
+  return row?.prematchMatchId === matchId
+    ? new Map(Object.entries(parseMessageIdsByChannel(row.postmatchMessageIds)))
+    : new Map();
+}
+
+/**
+ * The match ids among `matchIds` that v1 tracks as live right now.
+ *
+ * Only v1 writes `ActiveGame` rows, and it writes one before it announces a
+ * game (and deletes it again if the announcement never became durable), so a
+ * live row is v1's claim on that game's announcement. The V2 prematch
+ * discovery reads this to leave such a game to v1 after a flip mid-game.
+ */
+export async function listLiveActiveGameMatchIds(
+  matchIds: readonly string[],
+  now: Date,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Set<string>> {
+  if (matchIds.length === 0) return new Set();
+  const rows = await prismaClient.activeGame.findMany({
+    where: { prematchMatchId: { in: [...matchIds] }, expiresAt: { gt: now } },
+    select: { prematchMatchId: true },
+  });
+  return new Set(
+    rows.flatMap((row) =>
+      row.prematchMatchId === null ? [] : [row.prematchMatchId],
+    ),
   );
 }
 

@@ -161,3 +161,47 @@ export function dareTargetBindingsForAliases(
     ],
   }));
 }
+
+/**
+ * The version-3 compilation fields every test contract repeats.
+ *
+ * Two suites need a parseable ScoutQL-3 contract for entirely different
+ * reasons — one evaluates activation snapshots, one proves the settlement's
+ * notification wiring — and neither cares what the query says. Only the
+ * fields they genuinely differ on stay at the call site; this is the shape
+ * the schema demands and nothing more.
+ */
+export function dareSqlV3ContractCore(input: {
+  queryHash: string;
+  maxEligibleGames: number;
+}) {
+  return {
+    version: 3,
+    canonicalSql: "SELECT FALSE AS achieved",
+    immutableAst: "{}",
+    queryHash: input.queryHash,
+    maxEligibleGames: input.maxEligibleGames,
+    compilerVersion: "dare-scoutql-3",
+    evaluatorVersion: "dare-evaluator-3",
+    finality: "deadline_only",
+    facts: {
+      cteCount: 1,
+      joinedRelations: 0,
+      predicates: 0,
+      maxExpressionDepth: 1,
+      physicalSources: ["match_participants"],
+      functions: [],
+      targetKeys: ["T1"],
+    },
+    resultStructure: {
+      gameSets: [
+        {
+          name: "attempts",
+          projectionColumns: ["score"],
+          targetDependencies: ["T1"],
+        },
+      ],
+    },
+    competition: { kind: "standard" },
+  };
+}

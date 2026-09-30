@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { ReportResultColumn } from "#src/model/reports/report-ai.ts";
+import { reportAssetInfo } from "#src/model/reports/report-assets.ts";
 import { formatReportDisplayValue } from "#src/model/reports/report-result-format.ts";
 
 describe("report result formatting", () => {
@@ -23,6 +24,30 @@ describe("report result formatting", () => {
     label: "KDA",
     format: "decimal",
   };
+  const rune: ReportResultColumn = {
+    key: "perk0",
+    label: "Keystone",
+    format: "text",
+    asset: "rune",
+  };
+  const item: ReportResultColumn = {
+    key: "item0",
+    label: "Item",
+    format: "text",
+    asset: "item",
+  };
+  const spell: ReportResultColumn = {
+    key: "summoner1_id",
+    label: "Summoner 1",
+    format: "text",
+    asset: "spell",
+  };
+  const champion: ReportResultColumn = {
+    key: "champion_id",
+    label: "Champion",
+    format: "integer",
+    asset: "champion",
+  };
 
   test("formats rates, counts, and ratios semantically", () => {
     expect(formatReportDisplayValue(games, 1276)).toBe("1,276");
@@ -32,5 +57,45 @@ describe("report result formatting", () => {
 
   test("passes dimension text through untouched", () => {
     expect(formatReportDisplayValue(label, "Long")).toBe("Long");
+  });
+
+  test("asset ids and names format as display names for text exports", () => {
+    expect(formatReportDisplayValue(rune, 8010)).toBe("Conqueror");
+    expect(formatReportDisplayValue(item, 3031)).toBe("Infinity Edge");
+    expect(formatReportDisplayValue(spell, 4)).toBe("Flash");
+    expect(formatReportDisplayValue(rune, "Conqueror")).toBe("Conqueror");
+    expect(formatReportDisplayValue(item, 0)).toBe("Empty");
+    expect(reportAssetInfo("rune_tree", 8000)).toEqual({
+      canonicalKey: ["7201", "Precision"].join("_"),
+      name: "Precision",
+    });
+    expect(reportAssetInfo("champion", 62)).toEqual({
+      canonicalKey: "MonkeyKing",
+      name: "Wukong",
+    });
+  });
+
+  test("formats the unused-ban sentinel without an icon", () => {
+    expect(reportAssetInfo("champion", -1)).toEqual({
+      canonicalKey: null,
+      name: "No ban",
+    });
+    expect(formatReportDisplayValue(champion, -1)).toBe("No ban");
+  });
+
+  test("resolves exact asset keys and rejects ambiguous names or unknown ids", () => {
+    expect(reportAssetInfo("spell", "SummonerFlash")).toEqual({
+      canonicalKey: "SummonerFlash",
+      name: "Flash",
+    });
+    expect(() => reportAssetInfo("spell", "Flash")).toThrow(
+      /Ambiguous spell name/u,
+    );
+    expect(() => reportAssetInfo("champion", "Lee Sin")).toThrow(
+      /Ambiguous champion name/u,
+    );
+    expect(() => formatReportDisplayValue(item, 999_999)).toThrow(
+      /Unknown item asset/u,
+    );
   });
 });

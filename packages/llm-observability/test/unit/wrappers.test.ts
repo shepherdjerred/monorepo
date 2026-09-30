@@ -91,7 +91,7 @@ test("traceClaudeAgent accumulates assistant messages and result usage", async (
   expect(metrics).toContain('outcome="success"');
   // The Claude Agent SDK bills against a subscription, so it contributes token
   // samples but must never contribute a cost sample. The counter itself stays
-  // registered because the OpenRouter path shares it; what must be absent is any
+  // registered because the direct-provider path shares it; what must be absent is any
   // `llm_cost_usd_total` series carrying this transport's labels.
   expect(metrics).toContain('type="cached_input"');
   expect(metrics).not.toMatch(/^llm_cost_usd_total\{/m);
@@ -110,7 +110,7 @@ test("traceClaudeAgent runs SDK iteration beneath its repository-owned span", as
     };
   }
 
-  for await (const message of traceClaudeAgent(
+  for await (const _message of traceClaudeAgent(
     {
       service: "temporal",
       callSite: "agent-task",
@@ -118,7 +118,7 @@ test("traceClaudeAgent runs SDK iteration beneath its repository-owned span", as
     },
     contextQuery,
   )) {
-    void message;
+    // Drain the stream; assertions read the exported spans.
   }
 
   const root = exporter
@@ -149,7 +149,7 @@ test("traceClaudeAgent closes its span when SDK iterator cleanup fails", async (
 
   await expect(
     (async () => {
-      for await (const message of traceClaudeAgent(
+      for await (const _message of traceClaudeAgent(
         {
           service: "temporal",
           callSite: "agent-task",
@@ -161,7 +161,7 @@ test("traceClaudeAgent closes its span when SDK iterator cleanup fails", async (
         },
         () => iterable,
       )) {
-        void message;
+        // Take the first message, then stop draining.
         break;
       }
     })(),

@@ -19,7 +19,7 @@ import {
   type ExploreClientRun,
 } from "#src/lib/explore/explore-client-runs.ts";
 import type { ExploreRunIdentity } from "#src/lib/explore/explore-run-completion.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const RECONNECT_DELAYS_MS = [250, 750, 1500, 3000];
 

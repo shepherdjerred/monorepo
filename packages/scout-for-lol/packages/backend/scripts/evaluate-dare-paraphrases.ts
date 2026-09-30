@@ -3,7 +3,11 @@ import {
   DareParaphraseCorpusSchema,
   type DareParaphraseCorpus,
 } from "@scout-for-lol/data";
-import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
+import {
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+  requireCredentialsFor,
+} from "@shepherdjerred/llm-runtime";
 import { darePlanSemanticIssues } from "#src/betting/dares/evaluation/dare-contract-compiler-v2.ts";
 import { prepareDareDraftV2 } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
 import {
@@ -11,14 +15,15 @@ import {
   canonicalDarePlanV2,
 } from "#src/betting/dares/evaluation/dare-plan-canonical-v2.ts";
 import { renderDarePlanV2 } from "#src/betting/dares/presentation/dare-render-v2.ts";
-import { DareDefinitionV2ToolInputSchema } from "#src/explore/dare-tool-schemas.ts";
+import { DareDefinitionV2ToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
 import {
   DARE_V2_EVAL_MODEL,
   DareModelEvalReportSchema,
   dareModelEvalSha256,
   resolveDareModelEvalTargets,
-} from "#src/explore/dare-model-eval-v2.ts";
-import { dareExplorePromptSection } from "#src/explore/prompt.ts";
+} from "#src/explore/tools/dare-model-eval-v2.ts";
+import { dareSkillBody } from "#src/explore/skills/registry.ts";
+import { emitEvalReport } from "#src/explore/eval-report-output.ts";
 
 const CORPUS_URL = new URL(
   "../../data/src/model/bucks/dare-v2-paraphrase-corpus.json",
@@ -67,14 +72,14 @@ function evalPrompt(input: {
 }
 
 async function evaluateParaphrase(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   entry: DareParaphraseCorpus["cases"][number],
   paraphrase: string,
 ) {
   try {
     const result = await generateText({
       model: runtime.languageModel(DARE_V2_EVAL_MODEL),
-      system: dareExplorePromptSection(),
+      system: dareSkillBody(),
       prompt: evalPrompt({
         paraphrase,
         targetAliases: entry.targetAliases,
@@ -82,7 +87,10 @@ async function evaluateParaphrase(
       }),
       output: Output.object({ schema: DareDefinitionV2ToolInputSchema }),
       maxOutputTokens: 8000,
-      ...runtime.callOptions({ workload: "scout.dare-v2-eval" }),
+      ...runtime.callOptions({
+        workload: "scout.dare-v2-eval",
+        model: DARE_V2_EVAL_MODEL,
+      }),
     });
     const output = DareDefinitionV2ToolInputSchema.parse(result.output);
     const resolvedTargets = resolveDareModelEvalTargets({
@@ -154,13 +162,10 @@ async function evaluateParaphrase(
 }
 
 async function main(): Promise<void> {
-  const apiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (apiKey === undefined || apiKey.trim() === "") {
-    throw new Error("OPENROUTER_API_KEY is required for Dare v2 model evals.");
-  }
+  requireCredentialsFor(DARE_V2_EVAL_MODEL);
   const { corpus, raw } = await loadCorpus();
-  const runtime = createOpenRouterRuntime({
-    apiKey,
+  const runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-dare-v2-evals",
     appName: "Scout Dare v2 Evals",
   });
@@ -175,7 +180,7 @@ async function main(): Promise<void> {
     corpusVersion: corpus.version,
     promptVersion: corpus.promptVersion,
     promptSha256: dareModelEvalSha256(
-      `${dareExplorePromptSection()}\n${EVAL_PROMPT_TEMPLATE}`,
+      `${dareSkillBody()}\n${EVAL_PROMPT_TEMPLATE}`,
     ),
     corpusSha256: dareModelEvalSha256(raw),
     model: DARE_V2_EVAL_MODEL,
@@ -183,11 +188,7 @@ async function main(): Promise<void> {
     passed: cases.every((entry) => entry.passed),
     cases,
   });
-  if (Bun.argv.includes("--write")) {
-    await Bun.write(REPORT_URL, `${JSON.stringify(report, null, 2)}\n`);
-  }
-  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  if (!report.passed) process.exitCode = 1;
+  await emitEvalReport(report, REPORT_URL);
 }
 
 await main();

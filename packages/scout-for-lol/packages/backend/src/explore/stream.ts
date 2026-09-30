@@ -244,8 +244,12 @@ export async function emitExploreStreamChunk(
       // whole turn's stream. It is also persisted into the message trace and
       // rendered verbatim, including to anonymous holders of a share link, so
       // it would leak internals to people who never ran the query.
+      // It does go to the log, which is neither emitted nor persisted, because
+      // without it a tool failure is undiagnosable anywhere: a replay sweep
+      // recorded fifty failed turns and no recoverable reason for any of them.
       logger.warn("Explore tool failed", {
         toolName: chunk.toolName,
+        cause: chunk.message,
       });
       await emit({
         type: "tool_result",
@@ -313,8 +317,8 @@ const DARE_TOOL_CALL_MESSAGES = new Map([
 const DARE_RESULT_TOOL_NAMES = new Set(DARE_TOOL_CALL_MESSAGES.keys());
 
 function toolCallMessage(toolName: string): string {
-  if (toolName === "get_report_language") {
-    return "Reading the ScoutQL reference.";
+  if (toolName === "load_skill") {
+    return "Reading skill instructions.";
   }
   if (toolName === "validate_report_query") {
     return "Checking the query.";
@@ -339,13 +343,15 @@ function toolCallMessage(toolName: string): string {
     return "Querying Bryan Bucks records.";
   }
   const dareMessage = DARE_TOOL_CALL_MESSAGES.get(toolName);
-  if (dareMessage !== undefined) return dareMessage;
-  return `Running ${toolName}.`;
+  return dareMessage ?? `Running ${toolName}.`;
 }
 
 function toolResultMessage(toolName: string, ok: boolean): string {
   if (!ok) {
     return `${toolName} returned an error.`;
+  }
+  if (toolName === "load_skill") {
+    return "Skill instructions loaded.";
   }
   if (toolName === "run_report_query") {
     return "Got results.";
@@ -367,8 +373,7 @@ function toolResultMessage(toolName: string, ok: boolean): string {
   ) {
     return "Got Bryan Bucks results.";
   }
-  if (DARE_RESULT_TOOL_NAMES.has(toolName)) {
-    return "Dare action completed.";
-  }
-  return `${toolName} completed.`;
+  return DARE_RESULT_TOOL_NAMES.has(toolName)
+    ? "Dare action completed."
+    : `${toolName} completed.`;
 }

@@ -87,12 +87,19 @@ export default defineConfig({
   redirects: {
     "/birmel": "/explanation/birmel/",
     "/homelab/alerts": "/explanation/homelab/alerts/",
-    "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
+    // Two hops collapsed into one: the pre-Diátaxis route and the
+    // Buildkite-named canonical route both land on the current page.
+    "/homelab/buildkite-admission": "/explanation/homelab/ci-admission/",
+    "/explanation/homelab/buildkite-admission/":
+      "/explanation/homelab/ci-admission/",
+    "/how-to/rotate-buildkite-credentials/": "/how-to/rotate-ci-credentials/",
     "/homelab/releases": "/explanation/homelab/release-safety/",
-    "/homelab/scout-evals-tailnet-boundary":
-      "/explanation/homelab/scout-evals-trust-boundary/",
+    "/homelab/scout-evals-tailnet-boundary": "/explanation/homelab/overview/",
     "/homelab/tracker-tracker": "/explanation/homelab/overview/",
+    "/explanation/homelab/scout-evals-trust-boundary/":
+      "/explanation/homelab/overview/",
     "/explanation/homelab/tracker-tracker/": "/explanation/homelab/overview/",
+    "/how-to/operate-scout-evals/": "/explanation/homelab/overview/",
     "/how-this-wiki-works": "/explanation/how-this-wiki-works/",
     "/pr-fleet-controller": "/explanation/pr-fleet-authority-boundary/",
     "/scout-analysis": "/explanation/scout-temporal-analysis/",
@@ -113,6 +120,8 @@ export default defineConfig({
     "/temporal/workflows/repo-upkeep":
       "/explanation/temporal/workflow-families/",
     "/temporal/workflows/scout": "/explanation/temporal/workflow-families/",
+    "/how-to/route-a-service-to-braintrust":
+      "/how-to/route-a-service-to-phoenix/",
   },
   prefetch: {
     defaultStrategy: "hover",

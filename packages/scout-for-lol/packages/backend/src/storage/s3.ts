@@ -6,34 +6,79 @@ import type {
 } from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
-import { savePrematchToS3 } from "#src/storage/s3-prematch.ts";
-import configuration from "#src/configuration.ts";
+import type { StoredObject } from "#src/storage/object-integrity.ts";
+import {
+  prematchObjectResourceId,
+  savePrematchToS3,
+} from "#src/storage/s3-prematch.ts";
 import {
   prematchSpectatorPayloadSavesTotal,
   prematchSpectatorPayloadSaveDurationSeconds,
 } from "#src/metrics/index.ts";
 import { trackedPlayerCountMetadata } from "#src/storage/s3-metadata.ts";
+import {
+  ArtifactDescriptorSchema,
+  type ArtifactDescriptor,
+  type ArtifactKind,
+} from "@scout-for-lol/domain/artifacts/descriptors.ts";
 
 export type PrematchPayloadSaveResult = {
   status: "saved" | "skipped_no_bucket";
   durationSeconds?: number;
+  /** Present exactly when `status` is `saved`. */
+  artifact?: ArtifactDescriptor;
 };
 
 /**
- * Save a League of Legends match to S3 storage
+ * The outcome of archiving one raw capture: either the descriptor of the object
+ * that now exists, or the dev/test no-op when no bucket is configured.
+ *
+ * The descriptor is built from what the put actually stored — the real key and
+ * the digest of the exact bytes uploaded — so it is usable as durable evidence
+ * rather than a restatement of intent.
+ *
+ * There is deliberately NO status-only wrapper over these functions. Two once
+ * existed, and every caller that went through them threw the descriptor away —
+ * which is why `MatchObservation`'s artifact columns were NULL for every live
+ * match until the receipted doors were wired up. A caller that only wants the
+ * status reads `.status`.
+ */
+export type RawArchiveResult =
+  | { status: "saved"; artifact: ArtifactDescriptor }
+  | { status: "skipped_no_bucket" };
+
+function describeArchived(
+  kind: ArtifactKind,
+  stored: StoredObject,
+): ArtifactDescriptor {
+  return ArtifactDescriptorSchema.parse({
+    kind,
+    key: stored.key,
+    digest: stored.digest,
+    bytes: stored.bytes,
+    contentType: stored.contentType,
+    capturedAt: stored.capturedAt,
+  });
+}
+
+function archived(kind: ArtifactKind, stored: StoredObject): RawArchiveResult {
+  return { status: "saved", artifact: describeArchived(kind, stored) };
+}
+
+/**
+ * Archive a League of Legends match to S3 and describe what was stored.
  * @param match The match data to save
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
- * @returns whether the canonical write happened or S3 is unavailable
  */
-export async function saveMatchToS3(
+export async function archiveMatchToS3(
   match: RawMatch,
   trackedPlayerAliases: string[],
-): Promise<"saved" | "skipped_no_bucket"> {
+  abortSignal?: AbortSignal,
+): Promise<RawArchiveResult> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const body = JSON.stringify(match, null, 2);
-  const storageAvailable = configuration.s3BucketName !== undefined;
 
-  await saveToS3({
+  const stored = await saveToS3({
     matchId,
     assetType: "match",
     extension: "json",
@@ -59,15 +104,17 @@ export async function saveMatchToS3(
     logEmoji: "💾",
     logMessage: "Saving match to S3",
     errorContext: "match",
-    returnUrl: false,
     keyDate: new Date(match.info.gameCreation),
     additionalLogDetails: {
       participants: match.info.participants.length,
       gameMode: match.info.gameMode,
       gameDuration: match.info.gameDuration,
     },
+    ...(abortSignal === undefined ? {} : { abortSignal }),
   });
-  return storageAvailable ? "saved" : "skipped_no_bucket";
+  return stored === undefined
+    ? { status: "skipped_no_bucket" }
+    : archived("match", stored);
 }
 
 /**
@@ -84,7 +131,7 @@ export async function saveImageToS3(
   queueType: string,
   trackedPlayerAliases: string[],
 ): Promise<string | undefined> {
-  return saveToS3({
+  const stored = await saveToS3({
     matchId,
     assetType: "report",
     extension: "png",
@@ -99,11 +146,11 @@ export async function saveImageToS3(
     logEmoji: "🖼️",
     logMessage: "Saving PNG to S3",
     errorContext: "PNG",
-    returnUrl: true,
     additionalLogDetails: {
       queueType,
     },
   });
+  return stored?.url;
 }
 
 /**
@@ -120,7 +167,7 @@ export async function saveSvgToS3(
   queueType: string,
   trackedPlayerAliases: string[],
 ): Promise<string | undefined> {
-  return saveToS3({
+  const stored = await saveToS3({
     matchId,
     assetType: "report",
     extension: "svg",
@@ -135,11 +182,11 @@ export async function saveSvgToS3(
     logEmoji: "📄",
     logMessage: "Saving SVG to S3",
     errorContext: "SVG",
-    returnUrl: true,
     additionalLogDetails: {
       queueType,
     },
   });
+  return stored?.url;
 }
 
 /**
@@ -150,25 +197,23 @@ export async function saveSvgToS3(
  * (src/index.ts) prevents that from ever happening in beta/prod.
  */
 export async function savePrematchDataToS3(
-  gameId: number,
   gameInfo: RawCurrentGameInfo,
   trackedPlayerAliases: string[],
+  abortSignal?: AbortSignal,
 ): Promise<PrematchPayloadSaveResult> {
-  if (configuration.s3BucketName === undefined) {
-    prematchSpectatorPayloadSavesTotal.inc({ status: "skipped_no_bucket" });
-    return { status: "skipped_no_bucket" };
-  }
-
+  const gameId = gameInfo.gameId;
   const body = JSON.stringify(gameInfo, null, 2);
   const startTime = Date.now();
 
   try {
-    await savePrematchToS3({
+    const stored = await savePrematchToS3({
       gameId,
+      resourceId: prematchObjectResourceId(gameInfo.platformId, gameId),
       assetType: "spectator-data",
       extension: "json",
       body,
       contentType: "application/json",
+      ...(abortSignal === undefined ? {} : { abortSignal }),
       metadata: {
         gameId: gameId.toString(),
         gameMode: gameInfo.gameMode,
@@ -181,10 +226,19 @@ export async function savePrematchDataToS3(
       errorContext: "prematch-data",
     });
 
+    if (stored === undefined) {
+      prematchSpectatorPayloadSavesTotal.inc({ status: "skipped_no_bucket" });
+      return { status: "skipped_no_bucket" };
+    }
+
     const durationSeconds = (Date.now() - startTime) / 1000;
     prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
     prematchSpectatorPayloadSavesTotal.inc({ status: "saved" });
-    return { status: "saved", durationSeconds };
+    return {
+      status: "saved",
+      durationSeconds,
+      artifact: describeArchived("prematch", stored),
+    };
   } catch (error) {
     const durationSeconds = (Date.now() - startTime) / 1000;
     prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
@@ -194,16 +248,28 @@ export async function savePrematchDataToS3(
 }
 
 /**
+ * The two fields every prematch asset is keyed by. A spectator payload carries
+ * both; the loading-screen writers take just these so a caller cannot hand
+ * them a game id without the platform that makes it unique.
+ */
+export type PrematchGameIdentity = {
+  readonly platformId: string;
+  readonly gameId: number;
+};
+
+/**
  * Save a loading screen PNG image to S3.
  */
 export async function savePrematchImageToS3(
-  gameId: number,
+  game: PrematchGameIdentity,
   imageBuffer: Uint8Array,
   queueType: string,
   trackedPlayerAliases: string[],
 ): Promise<string | undefined> {
-  return savePrematchToS3({
+  const gameId = game.gameId;
+  const stored = await savePrematchToS3({
     gameId,
+    resourceId: prematchObjectResourceId(game.platformId, gameId),
     assetType: "loading-screen",
     extension: "png",
     body: imageBuffer,
@@ -217,21 +283,23 @@ export async function savePrematchImageToS3(
     logEmoji: "🖼️",
     logMessage: "Saving loading screen PNG to S3",
     errorContext: "prematch-image",
-    returnUrl: true,
   });
+  return stored?.url;
 }
 
 /**
  * Save a loading screen SVG to S3.
  */
 export async function savePrematchSvgToS3(
-  gameId: number,
+  game: PrematchGameIdentity,
   svgContent: string,
   queueType: string,
   trackedPlayerAliases: string[],
 ): Promise<string | undefined> {
-  return savePrematchToS3({
+  const gameId = game.gameId;
+  const stored = await savePrematchToS3({
     gameId,
+    resourceId: prematchObjectResourceId(game.platformId, gameId),
     assetType: "loading-screen",
     extension: "svg",
     body: svgContent,
@@ -245,24 +313,37 @@ export async function savePrematchSvgToS3(
     logEmoji: "📄",
     logMessage: "Saving loading screen SVG to S3",
     errorContext: "prematch-svg",
-    returnUrl: true,
   });
+  return stored?.url;
 }
 
 /**
- * Save a match timeline to S3 storage
+ * Archive a match timeline to S3 and describe what was stored.
+ *
+ * PARTITION CUTOVER (2026-09-12): timelines are keyed by the match's
+ * `gameCreation`, exactly like the match payload, so every asset for a game
+ * shares one `games/yyyy/MM/dd/{matchId}/` prefix. Before this change the
+ * timeline used the upload time instead, which put it under the day it was
+ * fetched — usually, but not always, the day the game was played. Objects
+ * written before the cutover keep their old location; nothing rewrites them.
+ * Readers must therefore tolerate both, which they do by enumerating the whole
+ * `games/` prefix and taking identity from the payload rather than the key
+ * (see `report-lake/rebuild-sources.ts`).
+ *
  * @param timeline The timeline data to save
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
- * @returns Promise that resolves when the timeline is saved
+ * @param gameCreatedAt The match's `info.gameCreation`, which partitions the key
  */
-export async function saveTimelineToS3(
+export async function archiveTimelineToS3(
   timeline: RawTimeline,
   trackedPlayerAliases: string[],
-): Promise<void> {
+  gameCreatedAt: Date,
+  abortSignal?: AbortSignal,
+): Promise<RawArchiveResult> {
   const matchId = MatchIdSchema.parse(timeline.metadata.matchId);
   const body = JSON.stringify(timeline, null, 2);
 
-  await saveToS3({
+  const stored = await saveToS3({
     matchId,
     assetType: "timeline",
     extension: "json",
@@ -278,10 +359,14 @@ export async function saveTimelineToS3(
     logEmoji: "📊",
     logMessage: "Saving timeline to S3",
     errorContext: "timeline",
-    returnUrl: false,
+    keyDate: gameCreatedAt,
     additionalLogDetails: {
       frameCount: timeline.info.frames.length,
       frameInterval: timeline.info.frameInterval,
     },
+    ...(abortSignal === undefined ? {} : { abortSignal }),
   });
+  return stored === undefined
+    ? { status: "skipped_no_bucket" }
+    : archived("timeline", stored);
 }

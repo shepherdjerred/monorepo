@@ -2,12 +2,24 @@
 
 Discord bot built on a single explicit AI SDK agent runtime. Every message turn
 follows one pipeline: a Discord event is admitted (trusted users only),
-assembled into a context bundle, and assigned one capability-grounded route.
-Conversation and unsupported work use the tool-free direct agent. Supported
-work uses exactly one specialist (`messaging`, `server`, `moderation`, or
-`automation`) and one registered primary tool. The runtime then
-requires that primary tool to succeed and edits one Discord reply. Durable
-memory separates human claims from curated
+assembled into a context bundle, and handed to one agent that works the request
+to a conclusion. The agent sees every registered tool and decides as it goes,
+so investigating and then changing approach is normal rather than an error.
+It finishes with a structured answer carrying the turn's disposition.
+
+While it works, the turn narrates into the single Discord reply it owns: a
+throttled timeline of what ran, with the agent's own one-line description of
+what it is doing, resolving to the answer. Progress edits are best-effort and
+never persisted.
+
+There is deliberately no up-front router. Routing used to pick one specialist
+and one primary tool from assembled context alone, before any tool could run,
+and required that pre-named tool to succeed - so an ordinary "this needs a
+different tool" became a failed turn. The turn's disposition (`conversation`,
+`supported`, `unsupported`) is now reported by the agent on the way out, which
+is the only point at which it is actually known.
+
+Durable memory separates human claims from curated
 self-memory: accepted aliases, commitments, and experiences backed by a
 specific successful current-turn tool call and its bounded, redacted result.
 Aliases and persona memory cross trusted
@@ -26,6 +38,26 @@ The runtime also binds one active session to each Discord thread and runs a
 jobs system with durable effect checkpoints. Health is exposed on `/live`
 (process) and `/ready` (migrations applied, Prisma connected, Discord ready,
 scheduler started).
+
+## Capability boundary
+
+Birmel is a general assistant and community organizer, not a server
+administrator. Trusted users can research the web, use the shared persistent
+browser profile, generate images, run networkless Python/JavaScript/TypeScript
+snippets, manage jobs and sessions, and work with messages, DMs, reactions,
+threads, polls, scheduled events, activity, birthdays, elections, and memory.
+It has no registered moderation, role, member, channel-definition, guild,
+invite, webhook, emoji, sticker, automod, generic shell, or SQL capability.
+
+The browser always uses the configured PinchTab profile. Its cookies persist
+inside PinchTab but are never returned to the model, and navigation is limited
+to public HTTPS destinations. Code runs in a credential-free sidecar with a
+fresh temporary directory, bounded resources and output, and no network or
+persistent volume access.
+
+Scheduled agent prompts use the same bounded tool loop as an interactive turn.
+They are durable and checkpoint external effects, but they are still
+best-effort agent runs rather than a staged workflow engine.
 
 ## Commands
 
@@ -59,8 +91,8 @@ unmigrated database, resolves the verified baseline when appropriate, and runs
 bun run docker:build   # builds birmel:dev from the repo root context (Dockerfile)
 ```
 
-The image is the Bun runtime plus the scoped source closure — it installs no
-CLIs or extra language runtimes. Production deploys go through the Buildkite
-image build and ArgoCD GitOps flow.
+The image contains Bun, Python, and the isolation utilities required by the
+credential-free code sidecar. Production deploys go through the Buildkite image
+build and ArgoCD GitOps flow.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.

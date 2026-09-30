@@ -1,0 +1,481 @@
+import { z } from "zod";
+import type { DiscordMessageId, IsoInstant } from "#src/identity/brands.ts";
+import type {
+  NotificationAttemptNonce,
+  NotificationFailure,
+  NotificationIntent,
+  NotificationIntentState,
+  NotificationPolicySuppressionReason,
+  NotificationRetirementReason,
+  NotificationSuppressionReason,
+  NotificationUnsentSuppressionReason,
+  OperatorUnknownResolution,
+} from "#src/notifications/intent.ts";
+
+/**
+ * Pure transitions over {@link NotificationIntent}. An illegal transition is
+ * an expected concurrency outcome, so it returns a `conflict` with a closed
+ * reason instead of throwing; exceptions are reserved for values that violate
+ * the module's own invariants (e.g. an unparseable stored instant).
+ */
+
+export type NotificationConflictReason = z.infer<
+  typeof NotificationConflictReasonSchema
+>;
+export const NotificationConflictReasonSchema = z.enum([
+  "invalid-source-state",
+  "terminal-state",
+  "unknown-delivery-requires-operator",
+  "already-sending",
+  "attempt-nonce-mismatch",
+  "send-in-flight",
+  "freshness-deadline-passed",
+  "not-stale",
+  "stale-operator-view",
+]);
+
+export type NotificationTransitionResult =
+  | { outcome: "applied"; next: NotificationIntent }
+  | { outcome: "already-applied" }
+  | { outcome: "conflict"; reason: NotificationConflictReason };
+
+function applied(next: NotificationIntent): NotificationTransitionResult {
+  return { outcome: "applied", next };
+}
+
+const alreadyApplied: NotificationTransitionResult = {
+  outcome: "already-applied",
+};
+
+function conflict(
+  reason: NotificationConflictReason,
+): NotificationTransitionResult {
+  return { outcome: "conflict", reason };
+}
+
+function withState(
+  intent: NotificationIntent,
+  state: NotificationIntentState,
+): NotificationIntent {
+  return { ...intent, state };
+}
+
+function instantEpochMs(value: IsoInstant): number {
+  const ms = Date.parse(value);
+  if (Number.isNaN(ms)) {
+    throw new TypeError(
+      `Unparseable ISO instant reached a transition: ${value}`,
+    );
+  }
+  return ms;
+}
+
+function isInstantAfter(instant: IsoInstant, reference: IsoInstant): boolean {
+  return instantEpochMs(instant) > instantEpochMs(reference);
+}
+
+/**
+ * Instants are compared by the moment they name, never by string: storage
+ * normalizes representation (millisecond padding, offsets rewritten to UTC),
+ * so a replayed command may carry a different spelling of the same instant.
+ */
+function instantsEqual(a: IsoInstant, b: IsoInstant): boolean {
+  return instantEpochMs(a) === instantEpochMs(b);
+}
+
+export function markReady(
+  intent: NotificationIntent,
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "pending":
+      return applied(withState(intent, { kind: "ready" }));
+    case "ready":
+      return alreadyApplied;
+    case "sending":
+      return conflict("invalid-source-state");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "delivered":
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+export function beginSend(
+  intent: NotificationIntent,
+  args: { attemptNonce: NotificationAttemptNonce; startedAt: IsoInstant },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "ready": {
+      if (isInstantAfter(args.startedAt, intent.freshnessDeadline)) {
+        return conflict("freshness-deadline-passed");
+      }
+      return applied({
+        ...intent,
+        attemptCount: intent.attemptCount + 1,
+        state: {
+          kind: "sending",
+          attemptNonce: args.attemptNonce,
+          startedAt: args.startedAt,
+        },
+      });
+    }
+    case "sending":
+      return state.attemptNonce === args.attemptNonce
+        ? alreadyApplied
+        : conflict("already-sending");
+    case "pending":
+      return conflict("invalid-source-state");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "delivered":
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+function deliveredState(args: {
+  messageId?: DiscordMessageId | undefined;
+  deliveredAt: IsoInstant;
+}): NotificationIntentState {
+  return {
+    kind: "delivered",
+    deliveredAt: args.deliveredAt,
+    ...(args.messageId === undefined ? {} : { messageId: args.messageId }),
+  };
+}
+
+export function confirmDelivered(
+  intent: NotificationIntent,
+  args: {
+    attemptNonce: NotificationAttemptNonce;
+    messageId?: DiscordMessageId | undefined;
+    deliveredAt: IsoInstant;
+  },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "sending":
+      return state.attemptNonce === args.attemptNonce
+        ? applied(withState(intent, deliveredState(args)))
+        : conflict("attempt-nonce-mismatch");
+    case "delivered":
+      return instantsEqual(state.deliveredAt, args.deliveredAt) &&
+        state.messageId === args.messageId
+        ? alreadyApplied
+        : conflict("terminal-state");
+    case "unknown-delivery":
+      // Even a nonce-matching confirmation must go through the operator once
+      // the attempt has been recorded as unknown: the operator may already be
+      // acting on the ambiguity.
+      return conflict("unknown-delivery-requires-operator");
+    case "pending":
+    case "ready":
+      return conflict("invalid-source-state");
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+export function recordFailure(
+  intent: NotificationIntent,
+  args: {
+    attemptNonce: NotificationAttemptNonce;
+    failure: NotificationFailure;
+  },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "sending": {
+      if (state.attemptNonce !== args.attemptNonce) {
+        return conflict("attempt-nonce-mismatch");
+      }
+      const next: NotificationIntentState =
+        args.failure.classification === "retryable"
+          ? { kind: "ready" }
+          : { kind: "permission-denied" };
+      return applied({ ...intent, lastFailure: args.failure, state: next });
+    }
+    case "pending":
+    case "ready":
+      return conflict("invalid-source-state");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "delivered":
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+export function recordUnknownDelivery(
+  intent: NotificationIntent,
+  args: { attemptNonce: NotificationAttemptNonce; observedAt: IsoInstant },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "sending":
+      if (state.attemptNonce !== args.attemptNonce) {
+        return conflict("attempt-nonce-mismatch");
+      }
+      return applied(
+        withState(intent, {
+          kind: "unknown-delivery",
+          attemptNonce: args.attemptNonce,
+          observedAt: args.observedAt,
+        }),
+      );
+    case "unknown-delivery":
+      return state.attemptNonce === args.attemptNonce &&
+        instantsEqual(state.observedAt, args.observedAt)
+        ? alreadyApplied
+        : conflict("unknown-delivery-requires-operator");
+    case "pending":
+    case "ready":
+      return conflict("invalid-source-state");
+    case "delivered":
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+export function suppressStale(
+  intent: NotificationIntent,
+  args: { at: IsoInstant },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "pending":
+    case "ready": {
+      return isInstantAfter(args.at, intent.freshnessDeadline)
+        ? applied(withState(intent, { kind: "suppressed", reason: "stale" }))
+        : conflict("not-stale");
+    }
+    case "sending":
+      return conflict("send-in-flight");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "suppressed":
+      return state.reason === "stale"
+        ? alreadyApplied
+        : conflict("terminal-state");
+    case "delivered":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * Suppress an unattempted intent because a delivery policy says it must not go
+ * out: the feature is off for the recipient's server, or the recipient opted
+ * out.
+ *
+ * The sibling of {@link suppressStale}, with the same source states and the
+ * same refusals, and without the clock: a policy decision is not refuted by
+ * the intent still being fresh. It never touches an attempt that has begun —
+ * `sending` may already have reached Discord and `unknown-delivery` is the
+ * operator's — because suppressing either would record "not sent" over a send
+ * nobody can rule out.
+ *
+ * A replay under the same reason is `already-applied`; an intent already
+ * suppressed for a DIFFERENT reason is a terminal conflict, so the stored
+ * reason stays the one that actually stopped it.
+ */
+export function suppress(
+  intent: NotificationIntent,
+  args: { reason: NotificationPolicySuppressionReason },
+): NotificationTransitionResult {
+  return suppressUnattempted(intent, args.reason);
+}
+
+/** Confirm a policy refusal observed inside this attempt before any send. */
+export function confirmUnsentSuppression(
+  intent: NotificationIntent,
+  args: {
+    attemptNonce: NotificationAttemptNonce;
+    reason: NotificationUnsentSuppressionReason;
+  },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "sending":
+      return state.attemptNonce === args.attemptNonce
+        ? applied(
+            withState(intent, { kind: "suppressed", reason: args.reason }),
+          )
+        : conflict("attempt-nonce-mismatch");
+    case "pending":
+    case "ready":
+      return conflict("invalid-source-state");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "delivered":
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * The guard every reasoned, clock-free suppression shares: move an intent
+ * nobody is sending to `suppressed` under one reason, and never re-target a
+ * reason already recorded. `sending` loses to the attempt in flight and
+ * `unknown-delivery` stays the operator's, exactly as {@link expire} refuses
+ * them. {@link suppress} and {@link retireOrphaned} differ only in which
+ * reasons they may record, so this is the one place those refusals live.
+ */
+function suppressUnattempted(
+  intent: NotificationIntent,
+  reason: NotificationSuppressionReason,
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "pending":
+    case "ready":
+      return applied(withState(intent, { kind: "suppressed", reason }));
+    case "sending":
+      return conflict("send-in-flight");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "suppressed":
+      return state.reason === reason
+        ? alreadyApplied
+        : conflict("terminal-state");
+    case "delivered":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+export function expire(
+  intent: NotificationIntent,
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "pending":
+    case "ready":
+      return applied(withState(intent, { kind: "expired" }));
+    case "sending":
+      return conflict("send-in-flight");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "expired":
+      return alreadyApplied;
+    case "delivered":
+    case "suppressed":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * Retire an intent whose audience was deleted before it was delivered.
+ *
+ * Only an intent nobody is sending may be retired. `sending` is an attempt in
+ * flight whose outcome belongs to that attempt — retiring it would erase the
+ * nonce the outcome is matched by, and the message may already be in the
+ * channel. `unknown-delivery` is the operator's alone. Both conflict rather
+ * than apply, exactly as {@link expire} does, so a retirement that races a
+ * send loses to it.
+ *
+ * Retiring is idempotent over its reason. An intent already retired for a
+ * DIFFERENT reason, or settled any other way, conflicts as terminal: the
+ * first recorded reason is the one the evidence supported when it was
+ * written, and a later observer does not get to rewrite it.
+ */
+export function retireOrphaned(
+  intent: NotificationIntent,
+  args: { reason: NotificationRetirementReason },
+): NotificationTransitionResult {
+  return suppressUnattempted(intent, args.reason);
+}
+
+/**
+ * The resolution binds to one attempt by nonce: an operator who investigated
+ * attempt A must not resolve attempt B, which can happen when a resolve-as-
+ * unsent, a fresh send, and a new unknown outcome interleave with a delayed
+ * duplicate of the original resolution.
+ */
+export function operatorResolveUnknown(
+  intent: NotificationIntent,
+  resolution: OperatorUnknownResolution,
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "unknown-delivery":
+      if (state.attemptNonce !== resolution.attemptNonce) {
+        return conflict("stale-operator-view");
+      }
+      return resolution.outcome === "delivered"
+        ? applied(withState(intent, deliveredState(resolution)))
+        : applied(withState(intent, { kind: "ready" }));
+    case "delivered":
+      return resolution.outcome === "delivered" &&
+        instantsEqual(state.deliveredAt, resolution.deliveredAt) &&
+        state.messageId === resolution.messageId
+        ? alreadyApplied
+        : conflict("terminal-state");
+    case "pending":
+    case "ready":
+    case "sending":
+      return conflict("invalid-source-state");
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}

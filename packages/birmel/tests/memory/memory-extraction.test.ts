@@ -575,8 +575,8 @@ describe("structured-output compatibility", () => {
     // `anyOf` for z.union, so this asserts the union stays plain.
     //
     // A unit test is the only place this can be caught. The failure is
-    // routing-dependent -- providers that tolerate `oneOf` accept the identical
-    // schema -- so it does not reproduce until OpenRouter happens to pick Azure.
+    // provider-dependent -- providers that tolerate `oneOf` accept the identical
+    // schema -- so it does not reproduce until a request reaches a strict one.
     const jsonSchema = JSON.stringify(
       z.toJSONSchema(ExtractionSchema, { io: "output" }),
     );

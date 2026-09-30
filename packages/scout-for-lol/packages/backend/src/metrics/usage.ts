@@ -192,13 +192,18 @@ export async function updateUsageMetrics(
   }
 }
 
-// Update usage metrics every 5 minutes
-setInterval(
-  () => {
-    void updateUsageMetrics();
-  },
-  5 * 60 * 1000,
-);
-
-// Initial update
-void updateUsageMetrics();
+// No import-time sweep and no interval here on purpose.
+//
+// This module used to kick off `updateUsageMetrics()` at import and then every
+// five minutes. `metrics/index.ts` side-effect-imports it, so EVERY process
+// that touched the metrics registry ran these database sweeps on its own
+// schedule — which is exactly what the `databaseMetricSweeps` capability exists
+// to prevent, and the import-time copy ran before any role had been selected.
+// Scheduling now happens only through `getMetrics()`, which the sweep policy
+// gates to the owning role, so the gauges refresh per scrape rather than per
+// timer.
+//
+// The durable home for a recurring sweep is a Temporal Schedule, not an
+// in-process timer (see the repository's recurring-work rule). Moving it there
+// is deliberately left as follow-up work: scrape-time collection is correct and
+// owner-scoped today, and a Schedule changes who writes the gauges.

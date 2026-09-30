@@ -8,6 +8,8 @@ const base = {
   DATABASE_URL: "file:./data/alert-dashboard-test.db",
   GRAFANA_API_KEY: "viewer-token",
   GRAFANA_URL: "http://grafana.monitoring.svc:3000",
+  OPS_INGEST_TOKEN: "b".repeat(32),
+  PROMETHEUS_URL: "http://prometheus-operated.prometheus:9090",
 };
 
 describe("environment boundary", () => {
@@ -16,6 +18,14 @@ describe("environment boundary", () => {
     expect(config.EMAIL_ENABLED).toBe(false);
     expect(config.PORT).toBe(7341);
     expect(config.GRAFANA_LOKI_DATASOURCE_UID).toBe("loki");
+  });
+
+  test("requires the ops ingest token and Prometheus URL", () => {
+    const { OPS_INGEST_TOKEN: _token, ...withoutToken } = base;
+    expect(() => readConfig(withoutToken)).toThrow();
+    expect(() => readConfig({ ...base, OPS_INGEST_TOKEN: "short" })).toThrow();
+    const { PROMETHEUS_URL: _url, ...withoutPrometheus } = base;
+    expect(() => readConfig(withoutPrometheus)).toThrow();
   });
 
   test("requires every Postal setting when email is enabled", () => {

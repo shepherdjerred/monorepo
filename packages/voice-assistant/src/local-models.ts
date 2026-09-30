@@ -16,7 +16,7 @@ import {
   type WakePhraseVerification,
   type WakePhraseVerifier,
 } from "./phrase-verifier.ts";
-import { readPcm16MonoWave } from "./wave-io.ts";
+import { readPcm16MonoWave } from "./audio/wave-io.ts";
 import { z } from "zod";
 
 const SAMPLE_RATE = 16_000;
@@ -211,8 +211,7 @@ const KeywordTimestampsSchema = z.looseObject({
 
 function fragmentEndSeconds(result: unknown): number | null {
   const parsed = KeywordTimestampsSchema.safeParse(result);
-  if (!parsed.success) return null;
-  return parsed.data.timestamps.at(-1) ?? null;
+  return parsed.success ? (parsed.data.timestamps.at(-1) ?? null) : null;
 }
 
 function modelConfig(assets: AssetPaths) {
@@ -402,8 +401,9 @@ export async function initializeLocalVoiceModelsForRuntime(
     },
     assets.wakeThreshold,
   );
+  let models: LocalVoiceModels | null = null;
   try {
-    const models =
+    models =
       runtime === "native"
         ? await createNativeModels(assets, verifier)
         : await createWasmModels(assets, verifier);
@@ -427,7 +427,14 @@ export async function initializeLocalVoiceModelsForRuntime(
     models.createVad().close();
     return models;
   } catch (error) {
-    await verifier.close();
+    if (models === null) {
+      await verifier.close();
+    } else {
+      // Once the runtime owns the verifier, its close method must unwind the
+      // whole model set. This catch is reachable after the verifier smoke or
+      // detector/VAD smoke fails, and callers may retry initialization.
+      await models.close();
+    }
     throw error;
   }
 }

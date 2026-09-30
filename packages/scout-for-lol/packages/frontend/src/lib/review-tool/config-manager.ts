@@ -49,10 +49,9 @@ export async function saveCurrentConfig(config: ReviewConfig): Promise<void> {
 export async function loadGlobalConfig(): Promise<GlobalConfig | null> {
   try {
     const stored = await getItem(STORES.GLOBAL_CONFIG, "global");
-    if (stored === undefined || stored === null) {
-      return null;
-    }
-    return GlobalConfigSchema.parse(stored);
+    return stored === undefined || stored === null
+      ? null
+      : GlobalConfigSchema.parse(stored);
   } catch {
     return null;
   }

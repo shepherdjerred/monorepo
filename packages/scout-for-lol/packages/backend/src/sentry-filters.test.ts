@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import type { ErrorEvent, EventHint } from "@sentry/bun";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
+import { LlmBudgetExceeded } from "#src/league/review/openai-budget.ts";
 
 function makeHint(originalException: unknown): EventHint {
   return { originalException };
@@ -12,6 +14,18 @@ const baseEvent: ErrorEvent = {
   type: undefined,
   event_id: "test",
 };
+
+function discordUpstreamCause(): Error {
+  // Stand-in for DiscordUpstreamError: the filter matches its `name`
+  // without importing the Prisma-backed module that defines it.
+  const cause = new Error("fetch failed");
+  cause.name = "DiscordUpstreamError";
+  return cause;
+}
+
+function taggedEvent(source: string): ErrorEvent {
+  return { ...baseEvent, tags: { source } };
+}
 
 function makeRiotError(status: number): RiotHttpError {
   return new RiotHttpError({
@@ -198,6 +212,79 @@ describe("filterScoutSentryEvent — Riot ID Zod filter", () => {
       makeHint(parseResult.error),
     );
     expect(result).toEqual(baseEvent);
+  });
+});
+
+describe("filterScoutSentryEvent — LLM budget throttle", () => {
+  test("drops LlmBudgetExceeded (designed throttle, counted in Prometheus)", () => {
+    const result = filterScoutSentryEvent(
+      baseEvent,
+      makeHint(new LlmBudgetExceeded("hourly", 2_135_721, 2_000_000)),
+    );
+    expect(result).toBeNull();
+  });
+});
+
+describe("filterScoutSentryEvent — Discord upstream failures", () => {
+  test("drops the user-facing TRPCError wrapping a Discord outage", () => {
+    const error = new TRPCError({
+      code: "SERVICE_UNAVAILABLE",
+      message: "Couldn't reach Discord, try again in a moment.",
+      cause: discordUpstreamCause(),
+    });
+    const result = filterScoutSentryEvent(baseEvent, makeHint(error));
+    expect(result).toBeNull();
+  });
+
+  test("drops a raw DiscordUpstreamError", () => {
+    const result = filterScoutSentryEvent(
+      baseEvent,
+      makeHint(discordUpstreamCause()),
+    );
+    expect(result).toBeNull();
+  });
+
+  test("keeps a TRPCError with an unrelated cause", () => {
+    const error = new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "boom",
+      cause: new Error("real bug"),
+    });
+    const result = filterScoutSentryEvent(baseEvent, makeHint(error));
+    expect(result).toEqual(baseEvent);
+  });
+});
+
+describe("filterScoutSentryEvent — Discord gateway handshake noise", () => {
+  const gatewayMessage =
+    "WebSocket connection to 'wss://gateway.discord.gg/?v=10&encoding=json' failed: Expected 101 status code";
+
+  test.each(["discord-client", "discord-shard"])(
+    "drops gateway noise from the %s handler",
+    (source) => {
+      const result = filterScoutSentryEvent(
+        taggedEvent(source),
+        makeHint(new Error(gatewayMessage)),
+      );
+      expect(result).toBeNull();
+    },
+  );
+
+  test("keeps the same message without a Discord handler tag", () => {
+    const result = filterScoutSentryEvent(
+      baseEvent,
+      makeHint(new Error(gatewayMessage)),
+    );
+    expect(result).toEqual(baseEvent);
+  });
+
+  test("keeps non-handshake errors from the Discord handlers", () => {
+    const event = taggedEvent("discord-client");
+    const result = filterScoutSentryEvent(
+      event,
+      makeHint(new Error("something else broke")),
+    );
+    expect(result).toEqual(event);
   });
 });
 

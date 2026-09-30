@@ -299,9 +299,8 @@ model AgentRun {
   actorUserId              String
   triggerKind              String
   persona                  String?
-  route                    String?
   routeDisposition         String?
-  primaryToolId            String?
+  toolCallCount            Int       @default(0)
   status                   String    @default("admitted")
   responseMessageId        String?
   incidentId               String?   @unique

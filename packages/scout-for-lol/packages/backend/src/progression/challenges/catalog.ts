@@ -1,40 +1,109 @@
 import {
   ChallengeContractV1Schema,
   ChallengeTemplateVersionSchema,
-  WIN_EVERY_CURRENT_CHAMPION_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_ARENA_FIRST_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_ARENA_WIN_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_FLEX_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
   type ChallengeTemplateVersion,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
 
-const BUILTIN_SLUG = "scout-win-every-current-champion";
+const LEGACY_BUILTIN_SLUG = "scout-win-every-current-champion";
+
+export const BUILTIN_CHALLENGE_TEMPLATES = [
+  {
+    slug: "scout-win-every-champion-solo",
+    template: WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
+  },
+  {
+    slug: "scout-win-every-champion-flex",
+    template: WIN_EVERY_CURRENT_CHAMPION_FLEX_TEMPLATE,
+  },
+  {
+    slug: "scout-win-every-champion-arena-win",
+    template: WIN_EVERY_CURRENT_CHAMPION_ARENA_WIN_TEMPLATE,
+  },
+  {
+    slug: "scout-win-every-champion-arena-first",
+    template: WIN_EVERY_CURRENT_CHAMPION_ARENA_FIRST_TEMPLATE,
+  },
+] as const;
 
 export async function ensureBuiltInChallengeTemplates(
   db: ExtendedPrismaClient,
 ): Promise<void> {
   await db.$transaction(async (tx) => {
-    const template = await tx.challengeTemplate.upsert({
-      where: { slug: BUILTIN_SLUG },
-      create: {
-        slug: BUILTIN_SLUG,
-        authorDiscordId: "scout",
-        latestVersion: 1,
-      },
-      update: {},
+    const legacy = await tx.challengeTemplate.findUnique({
+      where: { slug: LEGACY_BUILTIN_SLUG },
+      select: { id: true },
     });
-    await tx.challengeTemplateVersion.upsert({
-      where: { templateId_version: { templateId: template.id, version: 1 } },
-      create: {
-        templateId: template.id,
-        version: 1,
-        title: WIN_EVERY_CURRENT_CHAMPION_TEMPLATE.title,
-        summary: WIN_EVERY_CURRENT_CHAMPION_TEMPLATE.summary,
-        contractJson: JSON.stringify(WIN_EVERY_CURRENT_CHAMPION_TEMPLATE),
-        authorDiscordId: "scout",
-      },
-      update: {},
-    });
+    if (legacy !== null) {
+      const runs = await tx.challengeRun.findMany({
+        where: { templateId: legacy.id },
+        select: { id: true },
+      });
+      const runIds = runs.map((run) => run.id);
+      if (runIds.length > 0) {
+        await tx.challengeActiveRun.deleteMany({
+          where: { templateId: legacy.id },
+        });
+        await tx.challengeRunEvidence.deleteMany({
+          where: { runId: { in: runIds } },
+        });
+        await tx.challengeRunCursor.deleteMany({
+          where: { runId: { in: runIds } },
+        });
+        await tx.challengeRunMatchTrigger.deleteMany({
+          where: { runId: { in: runIds } },
+        });
+        await tx.challengeRunSnapshot.deleteMany({
+          where: { runId: { in: runIds } },
+        });
+        await tx.challengeRunRevision.deleteMany({
+          where: { runId: { in: runIds } },
+        });
+        await tx.challengeRun.deleteMany({
+          where: { id: { in: runIds } },
+        });
+      }
+      await tx.challengeTemplateVersion.deleteMany({
+        where: { templateId: legacy.id },
+      });
+      await tx.challengeTemplate.delete({
+        where: { id: legacy.id },
+      });
+    }
+
+    for (const entry of BUILTIN_CHALLENGE_TEMPLATES) {
+      const template = await tx.challengeTemplate.upsert({
+        where: { slug: entry.slug },
+        create: {
+          slug: entry.slug,
+          authorDiscordId: "scout",
+          latestVersion: 1,
+        },
+        update: {},
+      });
+      await tx.challengeTemplateVersion.upsert({
+        where: { templateId_version: { templateId: template.id, version: 1 } },
+        create: {
+          templateId: template.id,
+          version: 1,
+          title: entry.template.title,
+          summary: entry.template.summary,
+          contractJson: JSON.stringify(entry.template),
+          authorDiscordId: "scout",
+        },
+        update: {
+          title: entry.template.title,
+          summary: entry.template.summary,
+          contractJson: JSON.stringify(entry.template),
+        },
+      });
+    }
   });
 }
 

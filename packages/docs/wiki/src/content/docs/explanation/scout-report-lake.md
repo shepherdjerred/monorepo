@@ -35,6 +35,8 @@ flowchart LR
   I -->|best effort| ST[NDJSON staging]
   H[Quiet first-run import] -->|must succeed| S3
   H -->|must succeed before checkpoint| ST
+  O[Explore on-demand ranked history] -->|must succeed| S3
+  O -->|must succeed before fold| ST
   ST --> F[Fold, every 15 min]
   S3 --> R[Rebuild, nightly]
   F --> B[Immutable Parquet build]
@@ -64,13 +66,62 @@ This split is why schema changes are cheap. Adding a lake column needs no
 migration and no backfill: the nightly rebuild re-derives every row from the
 raw JSON, so the new column simply appears the next morning.
 
+### Why the record was rewritten rather than translated
+
+Riot encrypts PUUIDs per API-key holder, so the same player has a different
+PUUID under each key. Moving Scout to the production key left every identifier
+already written into S3 in the old domain.
+
+The first answer was to leave the archive alone and translate on the way past, on
+the principle that the raw objects are the record of what Riot returned and
+rewriting them destroys that evidence. It was the wrong call, and the number that
+settles it is this: of 174,573 distinct participant PUUIDs in prod's archive,
+167 were mapped. Translation only ever covered the players Scout already
+watched, so the corpus stayed 99.9 percent old-domain by identity.
+
+That has a cost a read-time map cannot pay. When a player becomes tracked, their
+appearances in games archived earlier carry an identifier nothing will ever match
+to their new one — so their history before subscription is invisible, and stays
+invisible. Fidelity to what Riot returned is worth less than a corpus whose
+identifiers still mean something.
+
+Rewriting is affordable because the archive is self-describing: every match
+participant carries `riotIdGameName`/`riotIdTagline` and every spectator
+participant a `riotId`. That is a cross-check rather than an answer — the handle
+is a snapshot from game time, and sampling found 4 of 25 identities had renamed
+since, where resolving the stale handle would land on whoever holds it now. The
+old key stays the authority for who an identifier belongs to.
+
+### The translation that remains
+
+[puuid-remap.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/puuid-remap.ts)
+still applies a map where a raw payload is parsed, before validation, and to the
+direct S3 readers — the leaderboard, pairing stats, pending-earning recovery —
+which compare stored participants against database identifiers
+([s3-query.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/s3-query.ts)).
+
+Once the archive is re-domained it does nothing, and it is kept anyway. It is
+still the correct answer for identities Riot can no longer resolve, and for any
+restore from a backup predating the rewrite — 30 daily, 8 weekly and 12 monthly
+snapshots hold old-domain payloads.
+
+Getting a build wrong is silent. An untranslated one splits a player into two
+identities at the cutover date: no error, just wrong aggregates. So a build
+records the map it was derived under, and one whose fingerprint no longer matches
+falls back to a full rebuild — the same path an added column takes.
+
+The map outlives the migration that produced it. Only the retired key could have
+built it, so it is a managed model rather than a scratch table.
+
 ## Writes: live ingest can recover staging; initial import cannot
 
 Ingest makes two writes with deliberately different contracts, spelled out in
 [store.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-store/store.ts).
 The S3 put throws on failure, because raw data is unrecoverable. Match and
-timeline lake staging writes never throw, because a lost staging row is
-re-derived from S3 that night anyway.
+timeline lake staging writes never throw at the ingest caller, because a lost
+staging row is re-derived from S3 that night anyway. Both steps run through the
+receipted doors described below, and `store.ts` is where the receipted contract
+is translated back into the boolean one ingest has always had.
 
 The quiet first-run import tightens that contract. It snapshots exactly 20
 Match-V5 IDs once, imports newest first, and checkpoints a match only when the
@@ -87,6 +138,140 @@ not send Discord messages, generate reports or AI recaps, write ActiveGame
 state, settle Bryan Bucks, award earnings, or fabricate per-match rank deltas.
 The live poller resumes only after the fixed snapshot is stored and its newest
 ID becomes the cursor, so a game completed during import is notified once.
+
+Explore also has user-requested acquisition paths. Ranked-history acquisition
+checks the lake first, then fetches only the missing games among the newest 100
+matches Riot classifies as ranked for a resolved account. Each new match uses
+the same permanent S3 and staging path, then one durable Workflow folds the
+batch before the tool returns. A separate Workflow can acquire complete
+timelines for at most ten match IDs selected from the latest ScoutQL result,
+with no more than three Riot reads in parallel.
+Unlike initial history, this path does not update a tracked account's polling
+cursor or readiness. The acquired public match evidence becomes globally
+queryable through ScoutQL.
+
+### Every archived capture is content-addressed
+
+Each raw match, timeline, and prematch payload is hashed with SHA-256 before it
+is uploaded, in
+[object-integrity.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/object-integrity.ts). The digest is stored on the object as user metadata and returned to
+the caller as an artifact descriptor: the key that was written, the digest, the
+byte count, the content type, and the capture instant. Because a descriptor
+carries the key the put actually used rather than one recomputed afterwards, it
+cannot describe an object that is not there.
+
+The write path verifies less than it may appear to. The AWS SDK sends a request
+checksum the server recomputes and rejects on mismatch, so transit corruption
+fails the put itself; Scout additionally compares the returned ETag against its
+own MD5 of the body, which independently confirms that the bytes the server
+acknowledged are the bytes it sent (`assertPutIntegrity`, same module). Nothing re-reads the object. Durable
+replication, later overwrites, and read-time integrity are all outside what a
+write can establish — the recorded digest is what makes them checkable later,
+which is the reason for recording it.
+
+### The timeline partition cutover
+
+Every asset for a game belongs under one `games/yyyy/MM/dd/{matchId}/` prefix,
+and since 2026-09-12 timelines are keyed by the match's `gameCreation` so they
+land beside the match payload, per
+[archiveTimelineToS3](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/s3.ts). Before that they were keyed by the moment they
+were uploaded, which was usually — but not reliably — the day the game was
+played, so a game's own assets could end up split across two prefixes.
+
+Nothing rewrites the objects already filed under the old layout, and nothing
+needs to. Both the fold and the rebuild enumerate the whole `games/` prefix and
+take a match's identity from the parsed payload, never from its key, so a reader
+cannot tell which layout it is looking at. What it does need is deduplication —
+a match retried across the cutover has a surviving object in each layout, and
+[rebuild-sources.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/rebuild-sources.ts) keeps the newest so the
+rebuild is reproducible.
+
+### Receipted ingest is a second door, not a replacement
+
+The durable architecture adds a receipted entry point over the same staging and
+archival primitives, with the opposite failure contract on top. A caller that
+asks for a receipted write is asking for a
+durable claim that the projection happened, so a staging failure throws and
+records nothing rather than returning `false`
+([receipted-staging.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/receipted-staging.ts),
+[receipted-archive.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/receipted-archive.ts)). A receipt that might not
+correspond to a real staging file would be worse than no receipt, because the
+value of the table is that a row in it can be trusted without re-deriving the
+fact it attests to.
+
+Live ingest goes through this door, which is how a raw archive and a lake
+projection become facts anyone can check rather than events only the logs
+remember.
+
+On the archival side there is no longer a second door at all. Two status-only
+wrappers used to sit over the archive functions and returned `"saved"` instead
+of the descriptor; every caller that went through them threw the artifact's
+identity away, which is precisely why the observation's artifact columns were
+NULL for every live match. They are gone, and a caller that wants only the
+status reads it off the result.
+
+The boolean STAGING door does remain, with two callers: competition rank-history
+staging, which has no receipted counterpart, and the dev/test path where no
+bucket is configured — there nothing was archived, so there is no source object
+a staging receipt could name and no archive to attest to.
+
+The translation between the two contracts lives in one place, `store.ts`, and
+only one failure crosses it: a staging failure becomes the `false` that has
+always blocked cursor advancement. A source descriptor that does not describe
+what was staged is a broken internal contract rather than a failed projection,
+and stays fatal.
+
+The receipt write itself is the one fail-open step. Refusing an archive because
+its bookkeeping row could not be inserted would trade a bookkeeping problem for a
+data-loss one, so a broken receipt write is logged and metered while the v1 write
+stands.
+
+Two counters record that, and keeping them apart is what makes either usable
+(defined in [metrics/durable.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/durable.ts), applied in
+[durable-receipts.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/durable-receipts.ts)).
+`scout_durable_dualwrite_failures_total` counts only writes that THREW: the
+recorder is broken and the stored state is unknown, which is worth paging on.
+`scout_durable_dualwrite_records_total` counts every write that completed,
+labelled by the repository's answer, so a conflict — a definite result where the
+row exists, the first writer's evidence was kept, and two producers disagree — is
+visible as drift without contaminating the alert. Collapsing a conflict into the
+failures counter would make it fire on benign retries and stop meaning "the
+recorder is broken". Both are recorded inline by whichever role performed the
+write, so they arrive from the ingest worker roles rather than from
+`application`; neither is one of the database-sweeping collectors only
+`application` serves ([sweep-policy.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/sweep-policy.ts)), so a
+dashboard over the pair joins across roles.
+
+Both producers count through the same place, and that is what keeps the pair
+readable. The `write_kind` label comes from one closed set shared with the
+per-match durable services
+([durable-facts.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/durable/match/durable-facts.ts)),
+so neither producer can grow the label on its own, and the repository's answer is
+parsed before it becomes an `outcome`, so a repository that learns a new answer
+surfaces as a loud failure rather than a quietly widened axis. The two fail-open
+wrappers also refuse to nest: both count a completed write, so recording a
+receipt from inside a durable write would report one fact as two.
+
+### A receipt identifies content, never a location
+
+Receipt evidence names artifacts by content digest and by the S3 object they
+derive from, shaped by
+[durable-receipts.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/durable-receipts.ts). It never names a local path or a build id, and that rule is what
+lets any role read a receipt another role wrote.
+
+The reason is the split topology. Staging files live on one role's
+read-write-once volume, so a receipt naming `matches-recent/NA1_1.jsonl` would be
+a claim no other role could evaluate, and it would quietly become false the day
+the lake moved to a shared store. A lake-staging receipt therefore records the
+source object key, the digest of the bytes the rows were derived from, and how
+many staging relations the capture writes. All three are true from anywhere, and
+together they let a reader re-derive the projection and check it rather than take
+the receipt's word for it. A staging run cannot be receipted at all without
+knowing the object it projected, which is why the source descriptor is a required
+argument rather than an optional one. Each artifact kind also gets its own
+receipt kind, because all three share one match id and a receipt's identity is
+`(kind, version, scope)` within a match — one kind per family would make a
+game's match and timeline the same receipt.
 
 ```mermaid
 sequenceDiagram
@@ -145,6 +330,17 @@ including its win state, objective counts, and first-objective flags, while
 `match_team_bans` contains one row per normalized ban. That shape makes a
 team-relative statistic ordinary SQL: a target row joins its team row on
 `match_id` and `team_id`, and an opponent comparison joins the other team.
+
+A participant row also carries its loadout: the final inventory as seven
+slot columns (`item0` through `item6`), both summoner spells, and the rune
+page. A match read selects those columns only when a query names one, and the
+Dare catalog leaves them out
+([dare-sql-v3-catalog.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/dares/sql/dare-sql-v3-catalog.ts)).
+That is deliberate. Reads name their columns, so
+a build published before a column existed fails any read that names it until
+the schema fingerprint's rebuild publishes. Leaving the loadout out of ordinary
+reads keeps reports working through that window
+([lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts)).
 
 Version-three Bryan Bucks Dares expose those relations, the four timeline
 relations, and `T1` through `T5`. Each target relation is an ordinary filtered

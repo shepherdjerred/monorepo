@@ -215,6 +215,23 @@ export interface AlertmanagerSpec {
   readonly clusterLabel?: string;
 
   /**
+   * clusterPeerName defines the name that this Alertmanager instance uses to
+   * advertise itself to other cluster peers (the `--cluster.peer-name` flag,
+   * available since Alertmanager v0.30.0).
+   *
+   * If not set, the operator defaults to the pod's name (`$(POD_NAME)`),
+   * which is injected via the Kubernetes downward API. Setting this field
+   * lets you override that default with either a literal value or a string
+   * referencing environment variables that are already available in the
+   * Alertmanager container (for example `$(POD_NAME).$(NAMESPACE)`).
+   *
+   * / It requires Alertmanager >= 0.30.0.
+   *
+   * @schema AlertmanagerSpec#clusterPeerName
+   */
+  readonly clusterPeerName?: string;
+
+  /**
    * clusterPeerTimeout defines the timeout for cluster peering.
    *
    * @schema AlertmanagerSpec#clusterPeerTimeout
@@ -749,6 +766,7 @@ export function toJson_AlertmanagerSpec(
     clusterAdvertiseAddress: obj.clusterAdvertiseAddress,
     clusterGossipInterval: obj.clusterGossipInterval,
     clusterLabel: obj.clusterLabel,
+    clusterPeerName: obj.clusterPeerName,
     clusterPeerTimeout: obj.clusterPeerTimeout,
     clusterPushpullInterval: obj.clusterPushpullInterval,
     clusterTLS: toJson_AlertmanagerSpecClusterTls(obj.clusterTls),
@@ -2461,11 +2479,8 @@ export interface AlertmanagerSpecSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -2968,8 +2983,19 @@ export function toJson_AlertmanagerSpecUpdateStrategy(
  */
 export interface AlertmanagerSpecVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema AlertmanagerSpecVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema AlertmanagerSpecVolumeMounts#mountPath
    */
@@ -3057,6 +3083,7 @@ export function toJson_AlertmanagerSpecVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -5355,8 +5382,19 @@ export function toJson_AlertmanagerSpecContainersVolumeDevices(
  */
 export interface AlertmanagerSpecContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema AlertmanagerSpecContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema AlertmanagerSpecContainersVolumeMounts#mountPath
    */
@@ -5444,6 +5482,7 @@ export function toJson_AlertmanagerSpecContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -6572,8 +6611,19 @@ export function toJson_AlertmanagerSpecInitContainersVolumeDevices(
  */
 export interface AlertmanagerSpecInitContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema AlertmanagerSpecInitContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema AlertmanagerSpecInitContainersVolumeMounts#mountPath
    */
@@ -6661,6 +6711,7 @@ export function toJson_AlertmanagerSpecInitContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -7050,6 +7101,20 @@ export interface AlertmanagerSpecStorageEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema AlertmanagerSpecStorageEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -7074,6 +7139,7 @@ export function toJson_AlertmanagerSpecStorageEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -7718,6 +7784,15 @@ export interface AlertmanagerSpecVolumesConfigMap {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesConfigMap#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items if unspecified, each key-value pair in the Data field of the referenced
    * ConfigMap will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -7761,6 +7836,7 @@ export function toJson_AlertmanagerSpecVolumesConfigMap(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_AlertmanagerSpecVolumesConfigMapItems(y),
     ),
@@ -7882,6 +7958,15 @@ export interface AlertmanagerSpecVolumesDownwardApi {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesDownwardApi#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * Items is a list of downward API volume file
    *
    * @schema AlertmanagerSpecVolumesDownwardApi#items
@@ -7901,6 +7986,7 @@ export function toJson_AlertmanagerSpecVolumesDownwardApi(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_AlertmanagerSpecVolumesDownwardApiItems(y),
     ),
@@ -7931,6 +8017,20 @@ export interface AlertmanagerSpecVolumesEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -7955,6 +8055,7 @@ export function toJson_AlertmanagerSpecVolumesEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -8903,6 +9004,15 @@ export interface AlertmanagerSpecVolumesProjected {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesProjected#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * sources is the list of volume projections. Each entry in this list
    * handles one source.
    *
@@ -8923,6 +9033,7 @@ export function toJson_AlertmanagerSpecVolumesProjected(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     sources: obj.sources?.map((y) =>
       toJson_AlertmanagerSpecVolumesProjectedSources(y),
     ),
@@ -9273,6 +9384,15 @@ export interface AlertmanagerSpecVolumesSecret {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesSecret#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items If unspecified, each key-value pair in the Data field of the referenced
    * Secret will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -9313,6 +9433,7 @@ export function toJson_AlertmanagerSpecVolumesSecret(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) => toJson_AlertmanagerSpecVolumesSecretItems(y)),
     optional: obj.optional,
     secretName: obj.secretName,
@@ -10881,7 +11002,8 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalWechat(
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationTemplatesConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationTemplatesConfigMap#key
    */
@@ -11684,6 +11806,16 @@ export function toJson_AlertmanagerSpecContainersLivenessProbeExec(
  */
 export interface AlertmanagerSpecContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema AlertmanagerSpecContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema AlertmanagerSpecContainersLivenessProbeGrpc#port
@@ -11712,6 +11844,7 @@ export function toJson_AlertmanagerSpecContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -11761,6 +11894,14 @@ export interface AlertmanagerSpecContainersLivenessProbeHttpGet {
   readonly port: AlertmanagerSpecContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -11787,6 +11928,7 @@ export function toJson_AlertmanagerSpecContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -11888,6 +12030,16 @@ export function toJson_AlertmanagerSpecContainersReadinessProbeExec(
  */
 export interface AlertmanagerSpecContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema AlertmanagerSpecContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema AlertmanagerSpecContainersReadinessProbeGrpc#port
@@ -11916,6 +12068,7 @@ export function toJson_AlertmanagerSpecContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -11965,6 +12118,14 @@ export interface AlertmanagerSpecContainersReadinessProbeHttpGet {
   readonly port: AlertmanagerSpecContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -11991,6 +12152,7 @@ export function toJson_AlertmanagerSpecContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -12508,6 +12670,16 @@ export function toJson_AlertmanagerSpecContainersStartupProbeExec(
  */
 export interface AlertmanagerSpecContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema AlertmanagerSpecContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema AlertmanagerSpecContainersStartupProbeGrpc#port
@@ -12536,6 +12708,7 @@ export function toJson_AlertmanagerSpecContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -12585,6 +12758,14 @@ export interface AlertmanagerSpecContainersStartupProbeHttpGet {
   readonly port: AlertmanagerSpecContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -12611,6 +12792,7 @@ export function toJson_AlertmanagerSpecContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -13033,6 +13215,16 @@ export function toJson_AlertmanagerSpecInitContainersLivenessProbeExec(
  */
 export interface AlertmanagerSpecInitContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema AlertmanagerSpecInitContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema AlertmanagerSpecInitContainersLivenessProbeGrpc#port
@@ -13061,6 +13253,7 @@ export function toJson_AlertmanagerSpecInitContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -13110,6 +13303,14 @@ export interface AlertmanagerSpecInitContainersLivenessProbeHttpGet {
   readonly port: AlertmanagerSpecInitContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecInitContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -13136,6 +13337,7 @@ export function toJson_AlertmanagerSpecInitContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -13237,6 +13439,16 @@ export function toJson_AlertmanagerSpecInitContainersReadinessProbeExec(
  */
 export interface AlertmanagerSpecInitContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema AlertmanagerSpecInitContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema AlertmanagerSpecInitContainersReadinessProbeGrpc#port
@@ -13265,6 +13477,7 @@ export function toJson_AlertmanagerSpecInitContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -13314,6 +13527,14 @@ export interface AlertmanagerSpecInitContainersReadinessProbeHttpGet {
   readonly port: AlertmanagerSpecInitContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecInitContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -13340,6 +13561,7 @@ export function toJson_AlertmanagerSpecInitContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -13857,6 +14079,16 @@ export function toJson_AlertmanagerSpecInitContainersStartupProbeExec(
  */
 export interface AlertmanagerSpecInitContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema AlertmanagerSpecInitContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema AlertmanagerSpecInitContainersStartupProbeGrpc#port
@@ -13885,6 +14117,7 @@ export function toJson_AlertmanagerSpecInitContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -13934,6 +14167,14 @@ export interface AlertmanagerSpecInitContainersStartupProbeHttpGet {
   readonly port: AlertmanagerSpecInitContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecInitContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -13960,6 +14201,7 @@ export function toJson_AlertmanagerSpecInitContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -14204,8 +14446,8 @@ export interface AlertmanagerSpecStorageVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema AlertmanagerSpecStorageVolumeClaimTemplateSpec#dataSource
@@ -14234,7 +14476,6 @@ export interface AlertmanagerSpecStorageVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema AlertmanagerSpecStorageVolumeClaimTemplateSpec#dataSourceRef
@@ -14446,6 +14687,14 @@ export interface AlertmanagerSpecStorageVolumeClaimTemplateStatus {
   readonly currentVolumeAttributesClassName?: string;
 
   /**
+   * healthStatus contains the latest controller-reported health information
+   * for the volume bound to this claim.
+   *
+   * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatus#healthStatus
+   */
+  readonly healthStatus?: AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus;
+
+  /**
    * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
    * When this is unset, there is no ModifyVolume operation being attempted.
    *
@@ -14498,6 +14747,10 @@ export function toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatus(
       toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatusConditions(y),
     ),
     currentVolumeAttributesClassName: obj.currentVolumeAttributesClassName,
+    healthStatus:
+      toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus(
+        obj.healthStatus,
+      ),
     modifyVolumeStatus:
       toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatusModifyVolumeStatus(
         obj.modifyVolumeStatus,
@@ -14711,6 +14964,15 @@ export interface AlertmanagerSpecVolumesConfigMapItems {
    * @schema AlertmanagerSpecVolumesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -14727,6 +14989,7 @@ export function toJson_AlertmanagerSpecVolumesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -14818,6 +15081,15 @@ export interface AlertmanagerSpecVolumesDownwardApiItems {
    * @schema AlertmanagerSpecVolumesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: AlertmanagerSpecVolumesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -14840,6 +15112,7 @@ export function toJson_AlertmanagerSpecVolumesDownwardApiItems(
       toJson_AlertmanagerSpecVolumesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -15276,6 +15549,15 @@ export interface AlertmanagerSpecVolumesSecretItems {
    * @schema AlertmanagerSpecVolumesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -15292,6 +15574,7 @@ export function toJson_AlertmanagerSpecVolumesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -17170,7 +17453,8 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalWechatApiS
  */
 export interface AlertmanagerSpecClusterTlsClientCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecClusterTlsClientCaConfigMap#key
    */
@@ -17280,7 +17564,8 @@ export function toJson_AlertmanagerSpecClusterTlsClientCaSecret(
  */
 export interface AlertmanagerSpecClusterTlsClientCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecClusterTlsClientCertConfigMap#key
    */
@@ -17390,7 +17675,8 @@ export function toJson_AlertmanagerSpecClusterTlsClientCertSecret(
  */
 export interface AlertmanagerSpecClusterTlsServerCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecClusterTlsServerCertConfigMap#key
    */
@@ -17500,7 +17786,8 @@ export function toJson_AlertmanagerSpecClusterTlsServerCertSecret(
  */
 export interface AlertmanagerSpecClusterTlsServerClientCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecClusterTlsServerClientCaConfigMap#key
    */
@@ -17610,7 +17897,8 @@ export function toJson_AlertmanagerSpecClusterTlsServerClientCaSecret(
  */
 export interface AlertmanagerSpecContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -17955,6 +18243,14 @@ export interface AlertmanagerSpecContainersLifecyclePostStartHttpGet {
   readonly port: AlertmanagerSpecContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -17981,6 +18277,7 @@ export function toJson_AlertmanagerSpecContainersLifecyclePostStartHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -18150,6 +18447,14 @@ export interface AlertmanagerSpecContainersLifecyclePreStopHttpGet {
   readonly port: AlertmanagerSpecContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -18176,6 +18481,7 @@ export function toJson_AlertmanagerSpecContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -18533,7 +18839,8 @@ export class AlertmanagerSpecContainersStartupProbeTcpSocketPort {
  */
 export interface AlertmanagerSpecInitContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecInitContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -18878,6 +19185,14 @@ export interface AlertmanagerSpecInitContainersLifecyclePostStartHttpGet {
   readonly port: AlertmanagerSpecInitContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecInitContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -18906,6 +19221,7 @@ export function toJson_AlertmanagerSpecInitContainersLifecyclePostStartHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -19075,6 +19391,14 @@ export interface AlertmanagerSpecInitContainersLifecyclePreStopHttpGet {
   readonly port: AlertmanagerSpecInitContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema AlertmanagerSpecInitContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -19103,6 +19427,7 @@ export function toJson_AlertmanagerSpecInitContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -19478,8 +19803,8 @@ export interface AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpec#dataSource
@@ -19508,7 +19833,6 @@ export interface AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -19620,8 +19944,8 @@ export function toJson_AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpec(
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema AlertmanagerSpecStorageVolumeClaimTemplateSpecDataSource
@@ -19696,7 +20020,6 @@ export function toJson_AlertmanagerSpecStorageVolumeClaimTemplateSpecDataSource(
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema AlertmanagerSpecStorageVolumeClaimTemplateSpecDataSourceRef
@@ -20004,6 +20327,56 @@ export function toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatusCondition
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * healthStatus contains the latest controller-reported health information
+ * for the volume bound to this claim.
+ *
+ * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus
+ */
+export interface AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus {
+  /**
+   * conditions is the set of adverse conditions reported by
+   * the CSI controller plugin. An empty list means no adverse condition.
+   * At most 16 conditions may be reported.
+   *
+   * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus#healthConditions
+   */
+  readonly healthConditions?: AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions[];
+
+  /**
+   * lastTransitionTime is when the current set of conditions first appeared.
+   *
+   * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus#lastTransitionTime
+   */
+  readonly lastTransitionTime?: Date;
+}
+
+/**
+ * Converts an object of type 'AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus(
+  obj: AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatus | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    healthConditions: obj.healthConditions?.map((y) =>
+      toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+        y,
+      ),
+    ),
+    lastTransitionTime: obj.lastTransitionTime?.toISOString(),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
  * When this is unset, there is no ModifyVolume operation being attempted.
  *
@@ -20176,8 +20549,8 @@ export interface AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSource
@@ -20206,7 +20579,6 @@ export interface AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -20374,6 +20746,15 @@ export interface AlertmanagerSpecVolumesProjectedSourcesClusterTrustBundle {
    * @schema AlertmanagerSpecVolumesProjectedSourcesClusterTrustBundle#signerName
    */
   readonly signerName?: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesProjectedSourcesClusterTrustBundle#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -20395,6 +20776,7 @@ export function toJson_AlertmanagerSpecVolumesProjectedSourcesClusterTrustBundle
     optional: obj.optional,
     path: obj.path,
     signerName: obj.signerName,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -20625,6 +21007,15 @@ export interface AlertmanagerSpecVolumesProjectedSourcesPodCertificate {
   readonly signerName: string;
 
   /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesProjectedSourcesPodCertificate#user
+   */
+  readonly user?: number;
+
+  /**
    * userAnnotations allow pod authors to pass additional information to
    * the signer implementation.  Kubernetes does not restrict or validate this
    * metadata in any way.
@@ -20661,6 +21052,7 @@ export function toJson_AlertmanagerSpecVolumesProjectedSourcesPodCertificate(
     keyType: obj.keyType,
     maxExpirationSeconds: obj.maxExpirationSeconds,
     signerName: obj.signerName,
+    user: obj.user,
     userAnnotations:
       obj.userAnnotations === undefined
         ? undefined
@@ -20776,6 +21168,15 @@ export interface AlertmanagerSpecVolumesProjectedSourcesServiceAccountToken {
    * @schema AlertmanagerSpecVolumesProjectedSourcesServiceAccountToken#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesProjectedSourcesServiceAccountToken#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -20792,6 +21193,7 @@ export function toJson_AlertmanagerSpecVolumesProjectedSourcesServiceAccountToke
     audience: obj.audience,
     expirationSeconds: obj.expirationSeconds,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -20834,7 +21236,8 @@ export enum AlertmanagerSpecWebHttpConfigHeadersXFrameOptions {
  */
 export interface AlertmanagerSpecWebTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecWebTlsConfigCertConfigMap#key
    */
@@ -20944,7 +21347,8 @@ export function toJson_AlertmanagerSpecWebTlsConfigCertSecret(
  */
 export interface AlertmanagerSpecWebTlsConfigClientCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecWebTlsConfigClientCaConfigMap#key
    */
@@ -22992,8 +23396,8 @@ export class AlertmanagerSpecInitContainersLifecyclePreStopTcpSocketPort {
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecDataSource
@@ -23070,7 +23474,6 @@ export function toJson_AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecDa
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -23365,6 +23768,66 @@ export function toJson_AlertmanagerSpecStorageVolumeClaimTemplateSpecSelectorMat
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * VolumeHealthCondition represents an adverse health condition reported for a volume.
+ *
+ * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+ */
+export interface AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions {
+  /**
+   * message is a human-readable description.
+   * Maximum permitted length of a message is 1024 bytes.
+   *
+   * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#message
+   */
+  readonly message?: string;
+
+  /**
+   * reason is a brief CamelCase machine-parseable reason.
+   * Together with status it forms the unique identity of a condition entry.
+   * Maximum permitted length of a reason is 256 bytes.
+   *
+   * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#reason
+   */
+  readonly reason: string;
+
+  /**
+   * status is the machine-parseable health category.
+   * Possible values:
+   * - "Inaccessible": the volume cannot be accessed.
+   * - "DataLoss": data loss has been detected on the volume.
+   * - "Degraded": the volume is functioning with reduced capability.
+   *
+   * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#status
+   */
+  readonly status: AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus;
+}
+
+/**
+ * Converts an object of type 'AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+  obj:
+    | AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    message: obj.message,
+    reason: obj.reason,
+    status: obj.status,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * Specifies the output format of the exposed resources, defaults to "1"
  *
  * @schema AlertmanagerSpecVolumesDownwardApiItemsResourceFieldRefDivisor
@@ -23393,8 +23856,8 @@ export class AlertmanagerSpecVolumesDownwardApiItemsResourceFieldRefDivisor {
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
@@ -23471,7 +23934,6 @@ export function toJson_AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecDa
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -23759,6 +24221,15 @@ export interface AlertmanagerSpecVolumesProjectedSourcesConfigMapItems {
    * @schema AlertmanagerSpecVolumesProjectedSourcesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesProjectedSourcesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -23775,6 +24246,7 @@ export function toJson_AlertmanagerSpecVolumesProjectedSourcesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -23823,6 +24295,15 @@ export interface AlertmanagerSpecVolumesProjectedSourcesDownwardApiItems {
    * @schema AlertmanagerSpecVolumesProjectedSourcesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: AlertmanagerSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesProjectedSourcesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -23846,6 +24327,7 @@ export function toJson_AlertmanagerSpecVolumesProjectedSourcesDownwardApiItems(
       toJson_AlertmanagerSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -23889,6 +24371,15 @@ export interface AlertmanagerSpecVolumesProjectedSourcesSecretItems {
    * @schema AlertmanagerSpecVolumesProjectedSourcesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema AlertmanagerSpecVolumesProjectedSourcesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -23905,6 +24396,7 @@ export function toJson_AlertmanagerSpecVolumesProjectedSourcesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -24153,7 +24645,8 @@ export function toJson_AlertmanagerSpecAffinityPodAntiAffinityPreferredDuringSch
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -24462,7 +24955,8 @@ export enum AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2TlsCo
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigTlsConfigCaConfigMap#key
    */
@@ -24576,7 +25070,8 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfig
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigTlsConfigCertConfigMap#key
    */
@@ -24690,7 +25185,8 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfig
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCaConfigMap#key
    */
@@ -24804,7 +25300,8 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsCon
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsConfigCertConfigMap#key
    */
@@ -25010,6 +25507,24 @@ export function toJson_AlertmanagerSpecStorageEphemeralVolumeClaimTemplateSpecSe
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * status is the machine-parseable health category.
+ * Possible values:
+ * - "Inaccessible": the volume cannot be accessed.
+ * - "DataLoss": data loss has been detected on the volume.
+ * - "Degraded": the volume is functioning with reduced capability.
+ *
+ * @schema AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus
+ */
+export enum AlertmanagerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus {
+  /** DataLoss */
+  DATA_LOSS = "DataLoss",
+  /** Degraded */
+  DEGRADED = "Degraded",
+  /** Inaccessible */
+  INACCESSIBLE = "Inaccessible",
+}
 
 /**
  * @schema AlertmanagerSpecVolumesEphemeralVolumeClaimTemplateSpecResourcesLimits
@@ -25274,7 +25789,8 @@ export function toJson_AlertmanagerSpecVolumesProjectedSourcesDownwardApiItemsRe
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -25388,7 +25904,8 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfig
  */
 export interface AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -31605,7 +32122,7 @@ export interface AlertmanagerConfigSpecReceiversSnsConfigsSigv4 {
 
   /**
    * externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
    *
    * @schema AlertmanagerConfigSpecReceiversSnsConfigsSigv4#externalId
    */
@@ -40543,7 +41060,8 @@ export enum AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigTlsConfigMinV
  */
 export interface AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCaConfigMap#key
    */
@@ -40654,7 +41172,8 @@ export function toJson_AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCaSec
  */
 export interface AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversEmailConfigsTlsConfigCertConfigMap#key
    */
@@ -48982,7 +49501,8 @@ export enum AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfigMinVe
  */
 export interface AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -49291,7 +49811,8 @@ export enum AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2TlsConf
  */
 export interface AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -49405,7 +49926,8 @@ export function toJson_AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigTl
  */
 export interface AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -49519,7 +50041,8 @@ export function toJson_AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigTl
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -49828,7 +50351,8 @@ export enum AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2TlsConf
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -49942,7 +50466,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigTl
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -50056,7 +50581,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigTl
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -50365,7 +50891,8 @@ export enum AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2TlsCo
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -50479,7 +51006,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -50593,7 +51121,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -50902,7 +51431,8 @@ export enum AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2TlsCon
  */
 export interface AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -51016,7 +51546,8 @@ export function toJson_AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigT
  */
 export interface AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -51130,7 +51661,8 @@ export function toJson_AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigT
  */
 export interface AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -51439,7 +51971,8 @@ export enum AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2TlsCo
  */
 export interface AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -51553,7 +52086,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -51667,7 +52201,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -51976,7 +52511,8 @@ export enum AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2TlsCon
  */
 export interface AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -52090,7 +52626,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigT
  */
 export interface AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -52204,7 +52741,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigT
  */
 export interface AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -52513,7 +53051,8 @@ export enum AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigOauth2TlsC
  */
 export interface AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -52627,7 +53166,8 @@ export function toJson_AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfi
  */
 export interface AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -52741,7 +53281,8 @@ export function toJson_AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfi
  */
 export interface AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -53050,7 +53591,8 @@ export enum AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOauth2TlsConfig
  */
 export interface AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -53164,7 +53706,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsC
  */
 export interface AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -53278,7 +53821,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigTlsC
  */
 export interface AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -53587,7 +54131,8 @@ export enum AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2TlsConfigMi
  */
 export interface AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -53701,7 +54246,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsCon
  */
 export interface AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -53815,7 +54361,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigTlsCon
  */
 export interface AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -54124,7 +54671,8 @@ export enum AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2TlsCon
  */
 export interface AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -54238,7 +54786,8 @@ export function toJson_AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigT
  */
 export interface AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -54352,7 +54901,8 @@ export function toJson_AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigT
  */
 export interface AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -54661,7 +55211,8 @@ export enum AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2TlsCo
  */
 export interface AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -54775,7 +55326,8 @@ export function toJson_AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -54889,7 +55441,8 @@ export function toJson_AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -55198,7 +55751,8 @@ export enum AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOauth2TlsConfig
  */
 export interface AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -55312,7 +55866,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsC
  */
 export interface AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -55426,7 +55981,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigTlsC
  */
 export interface AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -55735,7 +56291,8 @@ export enum AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2TlsConf
  */
 export interface AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -55849,7 +56406,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigTl
  */
 export interface AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -55963,7 +56521,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigTl
  */
 export interface AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOauth2ClientIdConfigMap#key
    */
@@ -56272,7 +56831,8 @@ export enum AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOauth2TlsConfi
  */
 export interface AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfigCaConfigMap#key
    */
@@ -56386,7 +56946,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTls
  */
 export interface AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTlsConfigCertConfigMap#key
    */
@@ -56500,7 +57061,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigTls
  */
 export interface AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -56614,7 +57176,8 @@ export function toJson_AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOa
  */
 export interface AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -56728,7 +57291,8 @@ export function toJson_AlertmanagerConfigSpecReceiversDiscordConfigsHttpConfigOa
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -56842,7 +57406,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOa
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -56956,7 +57521,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsConfigsHttpConfigOa
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -57070,7 +57636,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -57184,7 +57751,8 @@ export function toJson_AlertmanagerConfigSpecReceiversMsteamsv2ConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -57298,7 +57866,8 @@ export function toJson_AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigO
  */
 export interface AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -57412,7 +57981,8 @@ export function toJson_AlertmanagerConfigSpecReceiversOpsgenieConfigsHttpConfigO
  */
 export interface AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -57526,7 +58096,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -57640,7 +58211,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPagerdutyConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -57754,7 +58326,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigO
  */
 export interface AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -57868,7 +58441,8 @@ export function toJson_AlertmanagerConfigSpecReceiversPushoverConfigsHttpConfigO
  */
 export interface AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -57982,7 +58556,8 @@ export function toJson_AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfi
  */
 export interface AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -58096,7 +58671,8 @@ export function toJson_AlertmanagerConfigSpecReceiversRocketchatConfigsHttpConfi
  */
 export interface AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -58210,7 +58786,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOaut
  */
 export interface AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -58324,7 +58901,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSlackConfigsHttpConfigOaut
  */
 export interface AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -58438,7 +59016,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2
  */
 export interface AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -58552,7 +59131,8 @@ export function toJson_AlertmanagerConfigSpecReceiversSnsConfigsHttpConfigOauth2
  */
 export interface AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -58666,7 +59246,8 @@ export function toJson_AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigO
  */
 export interface AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -58780,7 +59361,8 @@ export function toJson_AlertmanagerConfigSpecReceiversTelegramConfigsHttpConfigO
  */
 export interface AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -58894,7 +59476,8 @@ export function toJson_AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -59008,7 +59591,8 @@ export function toJson_AlertmanagerConfigSpecReceiversVictoropsConfigsHttpConfig
  */
 export interface AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -59122,7 +59706,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOaut
  */
 export interface AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -59236,7 +59821,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebexConfigsHttpConfigOaut
  */
 export interface AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -59350,7 +59936,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOa
  */
 export interface AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -59464,7 +60051,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWebhookConfigsHttpConfigOa
  */
 export interface AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOauth2TlsConfigCaConfigMap#key
    */
@@ -59578,7 +60166,8 @@ export function toJson_AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOau
  */
 export interface AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema AlertmanagerConfigSpecReceiversWechatConfigsHttpConfigOauth2TlsConfigCertConfigMap#key
    */
@@ -62054,7 +62643,8 @@ export enum PodMonitorSpecPodMetricsEndpointsTlsConfigMinVersion {
  */
 export interface PodMonitorSpecPodMetricsEndpointsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PodMonitorSpecPodMetricsEndpointsOauth2ClientIdConfigMap#key
    */
@@ -62351,7 +62941,8 @@ export enum PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigMinVersion {
  */
 export interface PodMonitorSpecPodMetricsEndpointsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PodMonitorSpecPodMetricsEndpointsTlsConfigCaConfigMap#key
    */
@@ -62461,7 +63052,8 @@ export function toJson_PodMonitorSpecPodMetricsEndpointsTlsConfigCaSecret(
  */
 export interface PodMonitorSpecPodMetricsEndpointsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PodMonitorSpecPodMetricsEndpointsTlsConfigCertConfigMap#key
    */
@@ -62571,7 +63163,8 @@ export function toJson_PodMonitorSpecPodMetricsEndpointsTlsConfigCertSecret(
  */
 export interface PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCaConfigMap#key
    */
@@ -62681,7 +63274,8 @@ export function toJson_PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCaSecret(
  */
 export interface PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PodMonitorSpecPodMetricsEndpointsOauth2TlsConfigCertConfigMap#key
    */
@@ -64791,7 +65385,8 @@ export enum ProbeSpecTlsConfigMinVersion {
  */
 export interface ProbeSpecOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ProbeSpecOauth2ClientIdConfigMap#key
    */
@@ -65381,7 +65976,8 @@ export function toJson_ProbeSpecTargetsStaticConfigRelabelingConfigs(
  */
 export interface ProbeSpecTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ProbeSpecTlsConfigCaConfigMap#key
    */
@@ -65491,7 +66087,8 @@ export function toJson_ProbeSpecTlsConfigCaSecret(
  */
 export interface ProbeSpecTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ProbeSpecTlsConfigCertConfigMap#key
    */
@@ -65601,7 +66198,8 @@ export function toJson_ProbeSpecTlsConfigCertSecret(
  */
 export interface ProbeSpecOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ProbeSpecOauth2TlsConfigCaConfigMap#key
    */
@@ -65711,7 +66309,8 @@ export function toJson_ProbeSpecOauth2TlsConfigCaSecret(
  */
 export interface ProbeSpecOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ProbeSpecOauth2TlsConfigCertConfigMap#key
    */
@@ -66253,9 +66852,9 @@ export interface PrometheusSpec {
    *
    * When `spec.thanos.objectStorageConfig` or `spec.thanos.objectStorageConfigFile` are defined, the operator's
    * default handling depends on the Prometheus and Thanos sidecar versions:
-   * - With Prometheus < v3.9.0 or a Thanos sidecar < v0.41.0, block compaction is disabled to avoid race
+   * - With Prometheus < v3.9.0 or a Thanos sidecar < v0.42.0, block compaction is disabled to avoid race
    * conditions during block uploads (as the Thanos documentation recommends).
-   * - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.41.0, local compaction is kept enabled and coordinated
+   * - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.42.0, local compaction is kept enabled and coordinated
    * with the sidecar through the shipper meta file (`--storage.tsdb.delay-compact-file.path`), so blocks are only
    * compacted after they have been uploaded.
    * Setting this field to true always disables local compaction regardless of the versions.
@@ -67005,11 +67604,25 @@ export interface PrometheusSpec {
   /**
    * retention defines how long to retain the Prometheus data.
    *
-   * Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
+   * Default: "24h" if `spec.retention`, `spec.retentionSize` and
+   * `spec.retentionPercentage` are empty.
    *
    * @schema PrometheusSpec#retention
    */
   readonly retention?: string;
+
+  /**
+   * retentionPercentage defines the maximum percentage of the data volume's
+   * capacity used by the Prometheus data.
+   *
+   * The value is a number between 0 and 100. If set to 0, percentage-based
+   * retention is disabled.
+   *
+   * It requires Prometheus >= v3.11.0 and is ignored by older versions.
+   *
+   * @schema PrometheusSpec#retentionPercentage
+   */
+  readonly retentionPercentage?: PrometheusSpecRetentionPercentage;
 
   /**
    * retentionSize defines the maximum number of bytes used by the Prometheus data.
@@ -67609,6 +68222,7 @@ export function toJson_PrometheusSpec(
     replicas: obj.replicas,
     resources: toJson_PrometheusSpecResources(obj.resources),
     retention: obj.retention,
+    retentionPercentage: obj.retentionPercentage?.value,
     retentionSize: obj.retentionSize,
     routePrefix: obj.routePrefix,
     ruleNamespaceSelector: toJson_PrometheusSpecRuleNamespaceSelector(
@@ -70549,6 +71163,27 @@ export function toJson_PrometheusSpecResources(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * retentionPercentage defines the maximum percentage of the data volume's
+ * capacity used by the Prometheus data.
+ *
+ * The value is a number between 0 and 100. If set to 0, percentage-based
+ * retention is disabled.
+ *
+ * It requires Prometheus >= v3.11.0 and is ignored by older versions.
+ *
+ * @schema PrometheusSpecRetentionPercentage
+ */
+export class PrometheusSpecRetentionPercentage {
+  public static fromNumber(value: number): PrometheusSpecRetentionPercentage {
+    return new PrometheusSpecRetentionPercentage(value);
+  }
+  public static fromString(value: string): PrometheusSpecRetentionPercentage {
+    return new PrometheusSpecRetentionPercentage(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
  * ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
  * matches all namespaces. A null label selector matches the current
  * namespace only.
@@ -71097,11 +71732,8 @@ export interface PrometheusSpecSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -72310,8 +72942,19 @@ export function toJson_PrometheusSpecUpdateStrategy(
  */
 export interface PrometheusSpecVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema PrometheusSpecVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema PrometheusSpecVolumeMounts#mountPath
    */
@@ -72399,6 +73042,7 @@ export function toJson_PrometheusSpecVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -74609,8 +75253,19 @@ export function toJson_PrometheusSpecContainersVolumeDevices(
  */
 export interface PrometheusSpecContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema PrometheusSpecContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema PrometheusSpecContainersVolumeMounts#mountPath
    */
@@ -74698,6 +75353,7 @@ export function toJson_PrometheusSpecContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -75854,8 +76510,19 @@ export function toJson_PrometheusSpecInitContainersVolumeDevices(
  */
 export interface PrometheusSpecInitContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema PrometheusSpecInitContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema PrometheusSpecInitContainersVolumeMounts#mountPath
    */
@@ -75943,6 +76610,7 @@ export function toJson_PrometheusSpecInitContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -77246,7 +77914,7 @@ export interface PrometheusSpecRemoteWriteSigv4 {
 
   /**
    * externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
    *
    * @schema PrometheusSpecRemoteWriteSigv4#externalId
    */
@@ -78874,6 +79542,20 @@ export interface PrometheusSpecStorageEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema PrometheusSpecStorageEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -78898,6 +79580,7 @@ export function toJson_PrometheusSpecStorageEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -79469,8 +80152,19 @@ export function toJson_PrometheusSpecThanosTracingConfig(
  */
 export interface PrometheusSpecThanosVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema PrometheusSpecThanosVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema PrometheusSpecThanosVolumeMounts#mountPath
    */
@@ -79558,6 +80252,7 @@ export function toJson_PrometheusSpecThanosVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -80313,6 +81008,15 @@ export interface PrometheusSpecVolumesConfigMap {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesConfigMap#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items if unspecified, each key-value pair in the Data field of the referenced
    * ConfigMap will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -80356,6 +81060,7 @@ export function toJson_PrometheusSpecVolumesConfigMap(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) => toJson_PrometheusSpecVolumesConfigMapItems(y)),
     name: obj.name,
     optional: obj.optional,
@@ -80475,6 +81180,15 @@ export interface PrometheusSpecVolumesDownwardApi {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesDownwardApi#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * Items is a list of downward API volume file
    *
    * @schema PrometheusSpecVolumesDownwardApi#items
@@ -80494,6 +81208,7 @@ export function toJson_PrometheusSpecVolumesDownwardApi(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_PrometheusSpecVolumesDownwardApiItems(y),
     ),
@@ -80524,6 +81239,20 @@ export interface PrometheusSpecVolumesEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -80548,6 +81277,7 @@ export function toJson_PrometheusSpecVolumesEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -81496,6 +82226,15 @@ export interface PrometheusSpecVolumesProjected {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesProjected#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * sources is the list of volume projections. Each entry in this list
    * handles one source.
    *
@@ -81516,6 +82255,7 @@ export function toJson_PrometheusSpecVolumesProjected(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     sources: obj.sources?.map((y) =>
       toJson_PrometheusSpecVolumesProjectedSources(y),
     ),
@@ -81866,6 +82606,15 @@ export interface PrometheusSpecVolumesSecret {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesSecret#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items If unspecified, each key-value pair in the Data field of the referenced
    * Secret will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -81906,6 +82655,7 @@ export function toJson_PrometheusSpecVolumesSecret(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) => toJson_PrometheusSpecVolumesSecretItems(y)),
     optional: obj.optional,
     secretName: obj.secretName,
@@ -83113,7 +83863,7 @@ export interface PrometheusSpecAlertingAlertmanagersSigv4 {
 
   /**
    * externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
    *
    * @schema PrometheusSpecAlertingAlertmanagersSigv4#externalId
    */
@@ -84009,6 +84759,16 @@ export function toJson_PrometheusSpecContainersLivenessProbeExec(
  */
 export interface PrometheusSpecContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusSpecContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusSpecContainersLivenessProbeGrpc#port
@@ -84037,6 +84797,7 @@ export function toJson_PrometheusSpecContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -84086,6 +84847,14 @@ export interface PrometheusSpecContainersLivenessProbeHttpGet {
   readonly port: PrometheusSpecContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -84112,6 +84881,7 @@ export function toJson_PrometheusSpecContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -84213,6 +84983,16 @@ export function toJson_PrometheusSpecContainersReadinessProbeExec(
  */
 export interface PrometheusSpecContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusSpecContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusSpecContainersReadinessProbeGrpc#port
@@ -84241,6 +85021,7 @@ export function toJson_PrometheusSpecContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -84290,6 +85071,14 @@ export interface PrometheusSpecContainersReadinessProbeHttpGet {
   readonly port: PrometheusSpecContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -84316,6 +85105,7 @@ export function toJson_PrometheusSpecContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -84833,6 +85623,16 @@ export function toJson_PrometheusSpecContainersStartupProbeExec(
  */
 export interface PrometheusSpecContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusSpecContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusSpecContainersStartupProbeGrpc#port
@@ -84861,6 +85661,7 @@ export function toJson_PrometheusSpecContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -84910,6 +85711,14 @@ export interface PrometheusSpecContainersStartupProbeHttpGet {
   readonly port: PrometheusSpecContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -84936,6 +85745,7 @@ export function toJson_PrometheusSpecContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -85356,6 +86166,16 @@ export function toJson_PrometheusSpecInitContainersLivenessProbeExec(
  */
 export interface PrometheusSpecInitContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusSpecInitContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusSpecInitContainersLivenessProbeGrpc#port
@@ -85384,6 +86204,7 @@ export function toJson_PrometheusSpecInitContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -85433,6 +86254,14 @@ export interface PrometheusSpecInitContainersLivenessProbeHttpGet {
   readonly port: PrometheusSpecInitContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecInitContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -85459,6 +86288,7 @@ export function toJson_PrometheusSpecInitContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -85560,6 +86390,16 @@ export function toJson_PrometheusSpecInitContainersReadinessProbeExec(
  */
 export interface PrometheusSpecInitContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusSpecInitContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusSpecInitContainersReadinessProbeGrpc#port
@@ -85588,6 +86428,7 @@ export function toJson_PrometheusSpecInitContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -85637,6 +86478,14 @@ export interface PrometheusSpecInitContainersReadinessProbeHttpGet {
   readonly port: PrometheusSpecInitContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecInitContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -85663,6 +86512,7 @@ export function toJson_PrometheusSpecInitContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -86180,6 +87030,16 @@ export function toJson_PrometheusSpecInitContainersStartupProbeExec(
  */
 export interface PrometheusSpecInitContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusSpecInitContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusSpecInitContainersStartupProbeGrpc#port
@@ -86208,6 +87068,7 @@ export function toJson_PrometheusSpecInitContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -86257,6 +87118,14 @@ export interface PrometheusSpecInitContainersStartupProbeHttpGet {
   readonly port: PrometheusSpecInitContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecInitContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -86283,6 +87152,7 @@ export function toJson_PrometheusSpecInitContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -88363,8 +89233,8 @@ export interface PrometheusSpecStorageVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema PrometheusSpecStorageVolumeClaimTemplateSpec#dataSource
@@ -88393,7 +89263,6 @@ export interface PrometheusSpecStorageVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema PrometheusSpecStorageVolumeClaimTemplateSpec#dataSourceRef
@@ -88605,6 +89474,14 @@ export interface PrometheusSpecStorageVolumeClaimTemplateStatus {
   readonly currentVolumeAttributesClassName?: string;
 
   /**
+   * healthStatus contains the latest controller-reported health information
+   * for the volume bound to this claim.
+   *
+   * @schema PrometheusSpecStorageVolumeClaimTemplateStatus#healthStatus
+   */
+  readonly healthStatus?: PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus;
+
+  /**
    * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
    * When this is unset, there is no ModifyVolume operation being attempted.
    *
@@ -88657,6 +89534,10 @@ export function toJson_PrometheusSpecStorageVolumeClaimTemplateStatus(
       toJson_PrometheusSpecStorageVolumeClaimTemplateStatusConditions(y),
     ),
     currentVolumeAttributesClassName: obj.currentVolumeAttributesClassName,
+    healthStatus:
+      toJson_PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus(
+        obj.healthStatus,
+      ),
     modifyVolumeStatus:
       toJson_PrometheusSpecStorageVolumeClaimTemplateStatusModifyVolumeStatus(
         obj.modifyVolumeStatus,
@@ -89331,6 +90212,15 @@ export interface PrometheusSpecVolumesConfigMapItems {
    * @schema PrometheusSpecVolumesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -89347,6 +90237,7 @@ export function toJson_PrometheusSpecVolumesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -89438,6 +90329,15 @@ export interface PrometheusSpecVolumesDownwardApiItems {
    * @schema PrometheusSpecVolumesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: PrometheusSpecVolumesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -89460,6 +90360,7 @@ export function toJson_PrometheusSpecVolumesDownwardApiItems(
       toJson_PrometheusSpecVolumesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -89895,6 +90796,15 @@ export interface PrometheusSpecVolumesSecretItems {
    * @schema PrometheusSpecVolumesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -89911,6 +90821,7 @@ export function toJson_PrometheusSpecVolumesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -91298,7 +92209,8 @@ export enum PrometheusSpecAlertingAlertmanagersTlsConfigMinVersion {
  */
 export interface PrometheusSpecApiserverConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecApiserverConfigTlsConfigCaConfigMap#key
    */
@@ -91408,7 +92320,8 @@ export function toJson_PrometheusSpecApiserverConfigTlsConfigCaSecret(
  */
 export interface PrometheusSpecApiserverConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecApiserverConfigTlsConfigCertConfigMap#key
    */
@@ -91518,7 +92431,8 @@ export function toJson_PrometheusSpecApiserverConfigTlsConfigCertSecret(
  */
 export interface PrometheusSpecContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -91863,6 +92777,14 @@ export interface PrometheusSpecContainersLifecyclePostStartHttpGet {
   readonly port: PrometheusSpecContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -91889,6 +92811,7 @@ export function toJson_PrometheusSpecContainersLifecyclePostStartHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -92058,6 +92981,14 @@ export interface PrometheusSpecContainersLifecyclePreStopHttpGet {
   readonly port: PrometheusSpecContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -92084,6 +93015,7 @@ export function toJson_PrometheusSpecContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -92441,7 +93373,8 @@ export class PrometheusSpecContainersStartupProbeTcpSocketPort {
  */
 export interface PrometheusSpecInitContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecInitContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -92786,6 +93719,14 @@ export interface PrometheusSpecInitContainersLifecyclePostStartHttpGet {
   readonly port: PrometheusSpecInitContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecInitContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -92814,6 +93755,7 @@ export function toJson_PrometheusSpecInitContainersLifecyclePostStartHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -92983,6 +93925,14 @@ export interface PrometheusSpecInitContainersLifecyclePreStopHttpGet {
   readonly port: PrometheusSpecInitContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusSpecInitContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -93009,6 +93959,7 @@ export function toJson_PrometheusSpecInitContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -93366,7 +94317,8 @@ export class PrometheusSpecInitContainersStartupProbeTcpSocketPort {
  */
 export interface PrometheusSpecRemoteReadOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteReadOauth2ClientIdConfigMap#key
    */
@@ -93659,7 +94611,8 @@ export enum PrometheusSpecRemoteReadOauth2TlsConfigMinVersion {
  */
 export interface PrometheusSpecRemoteReadTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteReadTlsConfigCaConfigMap#key
    */
@@ -93769,7 +94722,8 @@ export function toJson_PrometheusSpecRemoteReadTlsConfigCaSecret(
  */
 export interface PrometheusSpecRemoteReadTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteReadTlsConfigCertConfigMap#key
    */
@@ -93934,7 +94888,8 @@ export function toJson_PrometheusSpecRemoteWriteAzureAdOauthClientSecret(
  */
 export interface PrometheusSpecRemoteWriteOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteWriteOauth2ClientIdConfigMap#key
    */
@@ -94227,7 +95182,8 @@ export enum PrometheusSpecRemoteWriteOauth2TlsConfigMinVersion {
  */
 export interface PrometheusSpecRemoteWriteTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteWriteTlsConfigCaConfigMap#key
    */
@@ -94337,7 +95293,8 @@ export function toJson_PrometheusSpecRemoteWriteTlsConfigCaSecret(
  */
 export interface PrometheusSpecRemoteWriteTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteWriteTlsConfigCertConfigMap#key
    */
@@ -94447,7 +95404,8 @@ export function toJson_PrometheusSpecRemoteWriteTlsConfigCertSecret(
  */
 export interface PrometheusSpecScrapeClassesTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecScrapeClassesTlsConfigCaConfigMap#key
    */
@@ -94557,7 +95515,8 @@ export function toJson_PrometheusSpecScrapeClassesTlsConfigCaSecret(
  */
 export interface PrometheusSpecScrapeClassesTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecScrapeClassesTlsConfigCertConfigMap#key
    */
@@ -94683,8 +95642,8 @@ export interface PrometheusSpecStorageEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema PrometheusSpecStorageEphemeralVolumeClaimTemplateSpec#dataSource
@@ -94713,7 +95672,6 @@ export interface PrometheusSpecStorageEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema PrometheusSpecStorageEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -94825,8 +95783,8 @@ export function toJson_PrometheusSpecStorageEphemeralVolumeClaimTemplateSpec(
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema PrometheusSpecStorageVolumeClaimTemplateSpecDataSource
@@ -94901,7 +95859,6 @@ export function toJson_PrometheusSpecStorageVolumeClaimTemplateSpecDataSource(
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema PrometheusSpecStorageVolumeClaimTemplateSpecDataSourceRef
@@ -95207,6 +96164,56 @@ export function toJson_PrometheusSpecStorageVolumeClaimTemplateStatusConditions(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * healthStatus contains the latest controller-reported health information
+ * for the volume bound to this claim.
+ *
+ * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus
+ */
+export interface PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus {
+  /**
+   * conditions is the set of adverse conditions reported by
+   * the CSI controller plugin. An empty list means no adverse condition.
+   * At most 16 conditions may be reported.
+   *
+   * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus#healthConditions
+   */
+  readonly healthConditions?: PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions[];
+
+  /**
+   * lastTransitionTime is when the current set of conditions first appeared.
+   *
+   * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus#lastTransitionTime
+   */
+  readonly lastTransitionTime?: Date;
+}
+
+/**
+ * Converts an object of type 'PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus(
+  obj: PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatus | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    healthConditions: obj.healthConditions?.map((y) =>
+      toJson_PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+        y,
+      ),
+    ),
+    lastTransitionTime: obj.lastTransitionTime?.toISOString(),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
  * When this is unset, there is no ModifyVolume operation being attempted.
  *
@@ -95268,7 +96275,8 @@ export function toJson_PrometheusSpecStorageVolumeClaimTemplateStatusModifyVolum
  */
 export interface PrometheusSpecThanosGrpcServerTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecThanosGrpcServerTlsConfigCaConfigMap#key
    */
@@ -95378,7 +96386,8 @@ export function toJson_PrometheusSpecThanosGrpcServerTlsConfigCaSecret(
  */
 export interface PrometheusSpecThanosGrpcServerTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecThanosGrpcServerTlsConfigCertConfigMap#key
    */
@@ -95488,7 +96497,8 @@ export function toJson_PrometheusSpecThanosGrpcServerTlsConfigCertSecret(
  */
 export interface PrometheusSpecTracingConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecTracingConfigTlsConfigCaConfigMap#key
    */
@@ -95598,7 +96608,8 @@ export function toJson_PrometheusSpecTracingConfigTlsConfigCaSecret(
  */
 export interface PrometheusSpecTracingConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecTracingConfigTlsConfigCertConfigMap#key
    */
@@ -95819,8 +96830,8 @@ export interface PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSource
@@ -95849,7 +96860,6 @@ export interface PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -96017,6 +97027,15 @@ export interface PrometheusSpecVolumesProjectedSourcesClusterTrustBundle {
    * @schema PrometheusSpecVolumesProjectedSourcesClusterTrustBundle#signerName
    */
   readonly signerName?: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesProjectedSourcesClusterTrustBundle#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -96038,6 +97057,7 @@ export function toJson_PrometheusSpecVolumesProjectedSourcesClusterTrustBundle(
     optional: obj.optional,
     path: obj.path,
     signerName: obj.signerName,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -96268,6 +97288,15 @@ export interface PrometheusSpecVolumesProjectedSourcesPodCertificate {
   readonly signerName: string;
 
   /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesProjectedSourcesPodCertificate#user
+   */
+  readonly user?: number;
+
+  /**
    * userAnnotations allow pod authors to pass additional information to
    * the signer implementation.  Kubernetes does not restrict or validate this
    * metadata in any way.
@@ -96304,6 +97333,7 @@ export function toJson_PrometheusSpecVolumesProjectedSourcesPodCertificate(
     keyType: obj.keyType,
     maxExpirationSeconds: obj.maxExpirationSeconds,
     signerName: obj.signerName,
+    user: obj.user,
     userAnnotations:
       obj.userAnnotations === undefined
         ? undefined
@@ -96419,6 +97449,15 @@ export interface PrometheusSpecVolumesProjectedSourcesServiceAccountToken {
    * @schema PrometheusSpecVolumesProjectedSourcesServiceAccountToken#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesProjectedSourcesServiceAccountToken#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -96435,6 +97474,7 @@ export function toJson_PrometheusSpecVolumesProjectedSourcesServiceAccountToken(
     audience: obj.audience,
     expirationSeconds: obj.expirationSeconds,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -96477,7 +97517,8 @@ export enum PrometheusSpecWebHttpConfigHeadersXFrameOptions {
  */
 export interface PrometheusSpecWebTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecWebTlsConfigCertConfigMap#key
    */
@@ -96587,7 +97628,8 @@ export function toJson_PrometheusSpecWebTlsConfigCertSecret(
  */
 export interface PrometheusSpecWebTlsConfigClientCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecWebTlsConfigClientCaConfigMap#key
    */
@@ -97403,7 +98445,8 @@ export function toJson_PrometheusSpecAffinityPodAntiAffinityRequiredDuringSchedu
  */
 export interface PrometheusSpecAlertingAlertmanagersTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecAlertingAlertmanagersTlsConfigCaConfigMap#key
    */
@@ -97513,7 +98556,8 @@ export function toJson_PrometheusSpecAlertingAlertmanagersTlsConfigCaSecret(
  */
 export interface PrometheusSpecAlertingAlertmanagersTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecAlertingAlertmanagersTlsConfigCertConfigMap#key
    */
@@ -98020,7 +99064,8 @@ export class PrometheusSpecInitContainersLifecyclePreStopTcpSocketPort {
  */
 export interface PrometheusSpecRemoteReadOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteReadOauth2TlsConfigCaConfigMap#key
    */
@@ -98130,7 +99175,8 @@ export function toJson_PrometheusSpecRemoteReadOauth2TlsConfigCaSecret(
  */
 export interface PrometheusSpecRemoteReadOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteReadOauth2TlsConfigCertConfigMap#key
    */
@@ -98240,7 +99286,8 @@ export function toJson_PrometheusSpecRemoteReadOauth2TlsConfigCertSecret(
  */
 export interface PrometheusSpecRemoteWriteOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteWriteOauth2TlsConfigCaConfigMap#key
    */
@@ -98350,7 +99397,8 @@ export function toJson_PrometheusSpecRemoteWriteOauth2TlsConfigCaSecret(
  */
 export interface PrometheusSpecRemoteWriteOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusSpecRemoteWriteOauth2TlsConfigCertConfigMap#key
    */
@@ -98459,8 +99507,8 @@ export function toJson_PrometheusSpecRemoteWriteOauth2TlsConfigCertSecret(
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecDataSource
@@ -98536,7 +99584,6 @@ export function toJson_PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecData
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -98830,6 +99877,66 @@ export function toJson_PrometheusSpecStorageVolumeClaimTemplateSpecSelectorMatch
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * VolumeHealthCondition represents an adverse health condition reported for a volume.
+ *
+ * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+ */
+export interface PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions {
+  /**
+   * message is a human-readable description.
+   * Maximum permitted length of a message is 1024 bytes.
+   *
+   * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#message
+   */
+  readonly message?: string;
+
+  /**
+   * reason is a brief CamelCase machine-parseable reason.
+   * Together with status it forms the unique identity of a condition entry.
+   * Maximum permitted length of a reason is 256 bytes.
+   *
+   * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#reason
+   */
+  readonly reason: string;
+
+  /**
+   * status is the machine-parseable health category.
+   * Possible values:
+   * - "Inaccessible": the volume cannot be accessed.
+   * - "DataLoss": data loss has been detected on the volume.
+   * - "Degraded": the volume is functioning with reduced capability.
+   *
+   * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#status
+   */
+  readonly status: PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus;
+}
+
+/**
+ * Converts an object of type 'PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+  obj:
+    | PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    message: obj.message,
+    reason: obj.reason,
+    status: obj.status,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * Specifies the output format of the exposed resources, defaults to "1"
  *
  * @schema PrometheusSpecVolumesDownwardApiItemsResourceFieldRefDivisor
@@ -98858,8 +99965,8 @@ export class PrometheusSpecVolumesDownwardApiItemsResourceFieldRefDivisor {
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
@@ -98935,7 +100042,6 @@ export function toJson_PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecData
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -99222,6 +100328,15 @@ export interface PrometheusSpecVolumesProjectedSourcesConfigMapItems {
    * @schema PrometheusSpecVolumesProjectedSourcesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesProjectedSourcesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -99238,6 +100353,7 @@ export function toJson_PrometheusSpecVolumesProjectedSourcesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -99286,6 +100402,15 @@ export interface PrometheusSpecVolumesProjectedSourcesDownwardApiItems {
    * @schema PrometheusSpecVolumesProjectedSourcesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: PrometheusSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesProjectedSourcesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -99309,6 +100434,7 @@ export function toJson_PrometheusSpecVolumesProjectedSourcesDownwardApiItems(
       toJson_PrometheusSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -99352,6 +100478,15 @@ export interface PrometheusSpecVolumesProjectedSourcesSecretItems {
    * @schema PrometheusSpecVolumesProjectedSourcesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusSpecVolumesProjectedSourcesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -99368,6 +100503,7 @@ export function toJson_PrometheusSpecVolumesProjectedSourcesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -99708,6 +100844,24 @@ export function toJson_PrometheusSpecStorageEphemeralVolumeClaimTemplateSpecSele
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * status is the machine-parseable health category.
+ * Possible values:
+ * - "Inaccessible": the volume cannot be accessed.
+ * - "DataLoss": data loss has been detected on the volume.
+ * - "Degraded": the volume is functioning with reduced capability.
+ *
+ * @schema PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus
+ */
+export enum PrometheusSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus {
+  /** DataLoss */
+  DATA_LOSS = "DataLoss",
+  /** Degraded */
+  DEGRADED = "Degraded",
+  /** Inaccessible */
+  INACCESSIBLE = "Inaccessible",
+}
 
 /**
  * @schema PrometheusSpecVolumesEphemeralVolumeClaimTemplateSpecResourcesLimits
@@ -104223,11 +105377,8 @@ export interface PrometheusAgentSpecSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -105106,8 +106257,19 @@ export function toJson_PrometheusAgentSpecUpdateStrategy(
  */
 export interface PrometheusAgentSpecVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema PrometheusAgentSpecVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema PrometheusAgentSpecVolumeMounts#mountPath
    */
@@ -105195,6 +106357,7 @@ export function toJson_PrometheusAgentSpecVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -107187,8 +108350,19 @@ export function toJson_PrometheusAgentSpecContainersVolumeDevices(
  */
 export interface PrometheusAgentSpecContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema PrometheusAgentSpecContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema PrometheusAgentSpecContainersVolumeMounts#mountPath
    */
@@ -107276,6 +108450,7 @@ export function toJson_PrometheusAgentSpecContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -108437,8 +109612,19 @@ export function toJson_PrometheusAgentSpecInitContainersVolumeDevices(
  */
 export interface PrometheusAgentSpecInitContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema PrometheusAgentSpecInitContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema PrometheusAgentSpecInitContainersVolumeMounts#mountPath
    */
@@ -108526,6 +109712,7 @@ export function toJson_PrometheusAgentSpecInitContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -109414,7 +110601,7 @@ export interface PrometheusAgentSpecRemoteWriteSigv4 {
 
   /**
    * externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
    *
    * @schema PrometheusAgentSpecRemoteWriteSigv4#externalId
    */
@@ -110827,6 +112014,20 @@ export interface PrometheusAgentSpecStorageEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema PrometheusAgentSpecStorageEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -110851,6 +112052,7 @@ export function toJson_PrometheusAgentSpecStorageEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -111742,6 +112944,15 @@ export interface PrometheusAgentSpecVolumesConfigMap {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesConfigMap#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items if unspecified, each key-value pair in the Data field of the referenced
    * ConfigMap will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -111785,6 +112996,7 @@ export function toJson_PrometheusAgentSpecVolumesConfigMap(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_PrometheusAgentSpecVolumesConfigMapItems(y),
     ),
@@ -111907,6 +113119,15 @@ export interface PrometheusAgentSpecVolumesDownwardApi {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesDownwardApi#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * Items is a list of downward API volume file
    *
    * @schema PrometheusAgentSpecVolumesDownwardApi#items
@@ -111926,6 +113147,7 @@ export function toJson_PrometheusAgentSpecVolumesDownwardApi(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_PrometheusAgentSpecVolumesDownwardApiItems(y),
     ),
@@ -111956,6 +113178,20 @@ export interface PrometheusAgentSpecVolumesEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -111980,6 +113216,7 @@ export function toJson_PrometheusAgentSpecVolumesEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -112930,6 +114167,15 @@ export interface PrometheusAgentSpecVolumesProjected {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesProjected#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * sources is the list of volume projections. Each entry in this list
    * handles one source.
    *
@@ -112950,6 +114196,7 @@ export function toJson_PrometheusAgentSpecVolumesProjected(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     sources: obj.sources?.map((y) =>
       toJson_PrometheusAgentSpecVolumesProjectedSources(y),
     ),
@@ -113300,6 +114547,15 @@ export interface PrometheusAgentSpecVolumesSecret {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesSecret#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items If unspecified, each key-value pair in the Data field of the referenced
    * Secret will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -113340,6 +114596,7 @@ export function toJson_PrometheusAgentSpecVolumesSecret(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_PrometheusAgentSpecVolumesSecretItems(y),
     ),
@@ -114839,6 +116096,16 @@ export function toJson_PrometheusAgentSpecContainersLivenessProbeExec(
  */
 export interface PrometheusAgentSpecContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusAgentSpecContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusAgentSpecContainersLivenessProbeGrpc#port
@@ -114867,6 +116134,7 @@ export function toJson_PrometheusAgentSpecContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -114916,6 +116184,14 @@ export interface PrometheusAgentSpecContainersLivenessProbeHttpGet {
   readonly port: PrometheusAgentSpecContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -114942,6 +116218,7 @@ export function toJson_PrometheusAgentSpecContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -115043,6 +116320,16 @@ export function toJson_PrometheusAgentSpecContainersReadinessProbeExec(
  */
 export interface PrometheusAgentSpecContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusAgentSpecContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusAgentSpecContainersReadinessProbeGrpc#port
@@ -115071,6 +116358,7 @@ export function toJson_PrometheusAgentSpecContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -115120,6 +116408,14 @@ export interface PrometheusAgentSpecContainersReadinessProbeHttpGet {
   readonly port: PrometheusAgentSpecContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -115146,6 +116442,7 @@ export function toJson_PrometheusAgentSpecContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -115663,6 +116960,16 @@ export function toJson_PrometheusAgentSpecContainersStartupProbeExec(
  */
 export interface PrometheusAgentSpecContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusAgentSpecContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusAgentSpecContainersStartupProbeGrpc#port
@@ -115691,6 +116998,7 @@ export function toJson_PrometheusAgentSpecContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -115740,6 +117048,14 @@ export interface PrometheusAgentSpecContainersStartupProbeHttpGet {
   readonly port: PrometheusAgentSpecContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -115766,6 +117082,7 @@ export function toJson_PrometheusAgentSpecContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -116195,6 +117512,16 @@ export function toJson_PrometheusAgentSpecInitContainersLivenessProbeExec(
  */
 export interface PrometheusAgentSpecInitContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusAgentSpecInitContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusAgentSpecInitContainersLivenessProbeGrpc#port
@@ -116223,6 +117550,7 @@ export function toJson_PrometheusAgentSpecInitContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -116272,6 +117600,14 @@ export interface PrometheusAgentSpecInitContainersLivenessProbeHttpGet {
   readonly port: PrometheusAgentSpecInitContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecInitContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -116300,6 +117636,7 @@ export function toJson_PrometheusAgentSpecInitContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -116401,6 +117738,16 @@ export function toJson_PrometheusAgentSpecInitContainersReadinessProbeExec(
  */
 export interface PrometheusAgentSpecInitContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusAgentSpecInitContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusAgentSpecInitContainersReadinessProbeGrpc#port
@@ -116429,6 +117776,7 @@ export function toJson_PrometheusAgentSpecInitContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -116478,6 +117826,14 @@ export interface PrometheusAgentSpecInitContainersReadinessProbeHttpGet {
   readonly port: PrometheusAgentSpecInitContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecInitContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -116506,6 +117862,7 @@ export function toJson_PrometheusAgentSpecInitContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -117027,6 +118384,16 @@ export function toJson_PrometheusAgentSpecInitContainersStartupProbeExec(
  */
 export interface PrometheusAgentSpecInitContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema PrometheusAgentSpecInitContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema PrometheusAgentSpecInitContainersStartupProbeGrpc#port
@@ -117055,6 +118422,7 @@ export function toJson_PrometheusAgentSpecInitContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -117104,6 +118472,14 @@ export interface PrometheusAgentSpecInitContainersStartupProbeHttpGet {
   readonly port: PrometheusAgentSpecInitContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecInitContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -117130,6 +118506,7 @@ export function toJson_PrometheusAgentSpecInitContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -118623,8 +120000,8 @@ export interface PrometheusAgentSpecStorageVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema PrometheusAgentSpecStorageVolumeClaimTemplateSpec#dataSource
@@ -118653,7 +120030,6 @@ export interface PrometheusAgentSpecStorageVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema PrometheusAgentSpecStorageVolumeClaimTemplateSpec#dataSourceRef
@@ -118867,6 +120243,14 @@ export interface PrometheusAgentSpecStorageVolumeClaimTemplateStatus {
   readonly currentVolumeAttributesClassName?: string;
 
   /**
+   * healthStatus contains the latest controller-reported health information
+   * for the volume bound to this claim.
+   *
+   * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatus#healthStatus
+   */
+  readonly healthStatus?: PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus;
+
+  /**
    * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
    * When this is unset, there is no ModifyVolume operation being attempted.
    *
@@ -118919,6 +120303,10 @@ export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatus(
       toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusConditions(y),
     ),
     currentVolumeAttributesClassName: obj.currentVolumeAttributesClassName,
+    healthStatus:
+      toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus(
+        obj.healthStatus,
+      ),
     modifyVolumeStatus:
       toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusModifyVolumeStatus(
         obj.modifyVolumeStatus,
@@ -119341,6 +120729,15 @@ export interface PrometheusAgentSpecVolumesConfigMapItems {
    * @schema PrometheusAgentSpecVolumesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -119357,6 +120754,7 @@ export function toJson_PrometheusAgentSpecVolumesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -119448,6 +120846,15 @@ export interface PrometheusAgentSpecVolumesDownwardApiItems {
    * @schema PrometheusAgentSpecVolumesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: PrometheusAgentSpecVolumesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -119470,6 +120877,7 @@ export function toJson_PrometheusAgentSpecVolumesDownwardApiItems(
       toJson_PrometheusAgentSpecVolumesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -119906,6 +121314,15 @@ export interface PrometheusAgentSpecVolumesSecretItems {
    * @schema PrometheusAgentSpecVolumesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -119922,6 +121339,7 @@ export function toJson_PrometheusAgentSpecVolumesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -120777,7 +122195,8 @@ export function toJson_PrometheusAgentSpecAffinityPodAntiAffinityRequiredDuringS
  */
 export interface PrometheusAgentSpecApiserverConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecApiserverConfigTlsConfigCaConfigMap#key
    */
@@ -120887,7 +122306,8 @@ export function toJson_PrometheusAgentSpecApiserverConfigTlsConfigCaSecret(
  */
 export interface PrometheusAgentSpecApiserverConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecApiserverConfigTlsConfigCertConfigMap#key
    */
@@ -120997,7 +122417,8 @@ export function toJson_PrometheusAgentSpecApiserverConfigTlsConfigCertSecret(
  */
 export interface PrometheusAgentSpecContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -121342,6 +122763,14 @@ export interface PrometheusAgentSpecContainersLifecyclePostStartHttpGet {
   readonly port: PrometheusAgentSpecContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -121370,6 +122799,7 @@ export function toJson_PrometheusAgentSpecContainersLifecyclePostStartHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -121539,6 +122969,14 @@ export interface PrometheusAgentSpecContainersLifecyclePreStopHttpGet {
   readonly port: PrometheusAgentSpecContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -121565,6 +123003,7 @@ export function toJson_PrometheusAgentSpecContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -121923,7 +123362,8 @@ export class PrometheusAgentSpecContainersStartupProbeTcpSocketPort {
  */
 export interface PrometheusAgentSpecInitContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecInitContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -122269,6 +123709,14 @@ export interface PrometheusAgentSpecInitContainersLifecyclePostStartHttpGet {
   readonly port: PrometheusAgentSpecInitContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecInitContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -122297,6 +123745,7 @@ export function toJson_PrometheusAgentSpecInitContainersLifecyclePostStartHttpGe
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -122466,6 +123915,14 @@ export interface PrometheusAgentSpecInitContainersLifecyclePreStopHttpGet {
   readonly port: PrometheusAgentSpecInitContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema PrometheusAgentSpecInitContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -122494,6 +123951,7 @@ export function toJson_PrometheusAgentSpecInitContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -122927,7 +124385,8 @@ export function toJson_PrometheusAgentSpecRemoteWriteAzureAdOauthClientSecret(
  */
 export interface PrometheusAgentSpecRemoteWriteOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecRemoteWriteOauth2ClientIdConfigMap#key
    */
@@ -123223,7 +124682,8 @@ export enum PrometheusAgentSpecRemoteWriteOauth2TlsConfigMinVersion {
  */
 export interface PrometheusAgentSpecRemoteWriteTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecRemoteWriteTlsConfigCaConfigMap#key
    */
@@ -123333,7 +124793,8 @@ export function toJson_PrometheusAgentSpecRemoteWriteTlsConfigCaSecret(
  */
 export interface PrometheusAgentSpecRemoteWriteTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecRemoteWriteTlsConfigCertConfigMap#key
    */
@@ -123443,7 +124904,8 @@ export function toJson_PrometheusAgentSpecRemoteWriteTlsConfigCertSecret(
  */
 export interface PrometheusAgentSpecScrapeClassesTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecScrapeClassesTlsConfigCaConfigMap#key
    */
@@ -123553,7 +125015,8 @@ export function toJson_PrometheusAgentSpecScrapeClassesTlsConfigCaSecret(
  */
 export interface PrometheusAgentSpecScrapeClassesTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecScrapeClassesTlsConfigCertConfigMap#key
    */
@@ -123679,8 +125142,8 @@ export interface PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpec#dataSource
@@ -123709,7 +125172,6 @@ export interface PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -123821,8 +125283,8 @@ export function toJson_PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpe
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema PrometheusAgentSpecStorageVolumeClaimTemplateSpecDataSource
@@ -123897,7 +125359,6 @@ export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateSpecDataSour
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema PrometheusAgentSpecStorageVolumeClaimTemplateSpecDataSourceRef
@@ -124211,6 +125672,57 @@ export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusCondit
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * healthStatus contains the latest controller-reported health information
+ * for the volume bound to this claim.
+ *
+ * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus
+ */
+export interface PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus {
+  /**
+   * conditions is the set of adverse conditions reported by
+   * the CSI controller plugin. An empty list means no adverse condition.
+   * At most 16 conditions may be reported.
+   *
+   * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus#healthConditions
+   */
+  readonly healthConditions?: PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions[];
+
+  /**
+   * lastTransitionTime is when the current set of conditions first appeared.
+   *
+   * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus#lastTransitionTime
+   */
+  readonly lastTransitionTime?: Date;
+}
+
+/**
+ * Converts an object of type 'PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus(
+  obj:
+    PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatus | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    healthConditions: obj.healthConditions?.map((y) =>
+      toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+        y,
+      ),
+    ),
+    lastTransitionTime: obj.lastTransitionTime?.toISOString(),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
  * When this is unset, there is no ModifyVolume operation being attempted.
  *
@@ -124272,7 +125784,8 @@ export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusModify
  */
 export interface PrometheusAgentSpecTracingConfigTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecTracingConfigTlsConfigCaConfigMap#key
    */
@@ -124382,7 +125895,8 @@ export function toJson_PrometheusAgentSpecTracingConfigTlsConfigCaSecret(
  */
 export interface PrometheusAgentSpecTracingConfigTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecTracingConfigTlsConfigCertConfigMap#key
    */
@@ -124603,8 +126117,8 @@ export interface PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSource
@@ -124633,7 +126147,6 @@ export interface PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -124801,6 +126314,15 @@ export interface PrometheusAgentSpecVolumesProjectedSourcesClusterTrustBundle {
    * @schema PrometheusAgentSpecVolumesProjectedSourcesClusterTrustBundle#signerName
    */
   readonly signerName?: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesProjectedSourcesClusterTrustBundle#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -124822,6 +126344,7 @@ export function toJson_PrometheusAgentSpecVolumesProjectedSourcesClusterTrustBun
     optional: obj.optional,
     path: obj.path,
     signerName: obj.signerName,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -125052,6 +126575,15 @@ export interface PrometheusAgentSpecVolumesProjectedSourcesPodCertificate {
   readonly signerName: string;
 
   /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesProjectedSourcesPodCertificate#user
+   */
+  readonly user?: number;
+
+  /**
    * userAnnotations allow pod authors to pass additional information to
    * the signer implementation.  Kubernetes does not restrict or validate this
    * metadata in any way.
@@ -125088,6 +126620,7 @@ export function toJson_PrometheusAgentSpecVolumesProjectedSourcesPodCertificate(
     keyType: obj.keyType,
     maxExpirationSeconds: obj.maxExpirationSeconds,
     signerName: obj.signerName,
+    user: obj.user,
     userAnnotations:
       obj.userAnnotations === undefined
         ? undefined
@@ -125203,6 +126736,15 @@ export interface PrometheusAgentSpecVolumesProjectedSourcesServiceAccountToken {
    * @schema PrometheusAgentSpecVolumesProjectedSourcesServiceAccountToken#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesProjectedSourcesServiceAccountToken#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -125220,6 +126762,7 @@ export function toJson_PrometheusAgentSpecVolumesProjectedSourcesServiceAccountT
     audience: obj.audience,
     expirationSeconds: obj.expirationSeconds,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -125262,7 +126805,8 @@ export enum PrometheusAgentSpecWebHttpConfigHeadersXFrameOptions {
  */
 export interface PrometheusAgentSpecWebTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecWebTlsConfigCertConfigMap#key
    */
@@ -125372,7 +126916,8 @@ export function toJson_PrometheusAgentSpecWebTlsConfigCertSecret(
  */
 export interface PrometheusAgentSpecWebTlsConfigClientCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecWebTlsConfigClientCaConfigMap#key
    */
@@ -126613,7 +128158,8 @@ export class PrometheusAgentSpecInitContainersLifecyclePreStopTcpSocketPort {
  */
 export interface PrometheusAgentSpecRemoteWriteOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecRemoteWriteOauth2TlsConfigCaConfigMap#key
    */
@@ -126723,7 +128269,8 @@ export function toJson_PrometheusAgentSpecRemoteWriteOauth2TlsConfigCaSecret(
  */
 export interface PrometheusAgentSpecRemoteWriteOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema PrometheusAgentSpecRemoteWriteOauth2TlsConfigCertConfigMap#key
    */
@@ -126832,8 +128379,8 @@ export function toJson_PrometheusAgentSpecRemoteWriteOauth2TlsConfigCertSecret(
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpecDataSource
@@ -126910,7 +128457,6 @@ export function toJson_PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpe
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -127206,6 +128752,66 @@ export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateSpecSelector
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * VolumeHealthCondition represents an adverse health condition reported for a volume.
+ *
+ * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+ */
+export interface PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions {
+  /**
+   * message is a human-readable description.
+   * Maximum permitted length of a message is 1024 bytes.
+   *
+   * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#message
+   */
+  readonly message?: string;
+
+  /**
+   * reason is a brief CamelCase machine-parseable reason.
+   * Together with status it forms the unique identity of a condition entry.
+   * Maximum permitted length of a reason is 256 bytes.
+   *
+   * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#reason
+   */
+  readonly reason: string;
+
+  /**
+   * status is the machine-parseable health category.
+   * Possible values:
+   * - "Inaccessible": the volume cannot be accessed.
+   * - "DataLoss": data loss has been detected on the volume.
+   * - "Degraded": the volume is functioning with reduced capability.
+   *
+   * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#status
+   */
+  readonly status: PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus;
+}
+
+/**
+ * Converts an object of type 'PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+  obj:
+    | PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    message: obj.message,
+    reason: obj.reason,
+    status: obj.status,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * Specifies the output format of the exposed resources, defaults to "1"
  *
  * @schema PrometheusAgentSpecVolumesDownwardApiItemsResourceFieldRefDivisor
@@ -127234,8 +128840,8 @@ export class PrometheusAgentSpecVolumesDownwardApiItemsResourceFieldRefDivisor {
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
@@ -127312,7 +128918,6 @@ export function toJson_PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpe
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -127601,6 +129206,15 @@ export interface PrometheusAgentSpecVolumesProjectedSourcesConfigMapItems {
    * @schema PrometheusAgentSpecVolumesProjectedSourcesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesProjectedSourcesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -127617,6 +129231,7 @@ export function toJson_PrometheusAgentSpecVolumesProjectedSourcesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -127665,6 +129280,15 @@ export interface PrometheusAgentSpecVolumesProjectedSourcesDownwardApiItems {
    * @schema PrometheusAgentSpecVolumesProjectedSourcesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: PrometheusAgentSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesProjectedSourcesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -127688,6 +129312,7 @@ export function toJson_PrometheusAgentSpecVolumesProjectedSourcesDownwardApiItem
       toJson_PrometheusAgentSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -127731,6 +129356,15 @@ export interface PrometheusAgentSpecVolumesProjectedSourcesSecretItems {
    * @schema PrometheusAgentSpecVolumesProjectedSourcesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema PrometheusAgentSpecVolumesProjectedSourcesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -127747,6 +129381,7 @@ export function toJson_PrometheusAgentSpecVolumesProjectedSourcesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -128087,6 +129722,24 @@ export function toJson_PrometheusAgentSpecStorageEphemeralVolumeClaimTemplateSpe
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * status is the machine-parseable health category.
+ * Possible values:
+ * - "Inaccessible": the volume cannot be accessed.
+ * - "DataLoss": data loss has been detected on the volume.
+ * - "Degraded": the volume is functioning with reduced capability.
+ *
+ * @schema PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus
+ */
+export enum PrometheusAgentSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus {
+  /** DataLoss */
+  DATA_LOSS = "DataLoss",
+  /** Degraded */
+  DEGRADED = "Degraded",
+  /** Inaccessible */
+  INACCESSIBLE = "Inaccessible",
+}
 
 /**
  * @schema PrometheusAgentSpecVolumesEphemeralVolumeClaimTemplateSpecResourcesLimits
@@ -137211,10 +138864,10 @@ export function toJson_ScrapeConfigSpecHetznerSdConfigsProxyConnectHeader(
  * @schema ScrapeConfigSpecHetznerSdConfigsRole
  */
 export enum ScrapeConfigSpecHetznerSdConfigsRole {
-  /** hcloud */
-  HCLOUD = "hcloud",
-  /** robot */
-  ROBOT = "robot",
+  /** Hcloud */
+  HCLOUD = "Hcloud",
+  /** Robot */
+  ROBOT = "Robot",
 }
 
 /**
@@ -149970,7 +151623,8 @@ export enum ScrapeConfigSpecNomadSdConfigsTlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecOauth2ClientIdConfigMap#key
    */
@@ -151230,7 +152884,8 @@ export enum ScrapeConfigSpecScalewaySdConfigsTlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecTlsConfigCaConfigMap#key
    */
@@ -151340,7 +152995,8 @@ export function toJson_ScrapeConfigSpecTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecTlsConfigCertConfigMap#key
    */
@@ -151450,7 +153106,8 @@ export function toJson_ScrapeConfigSpecTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecAzureSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecAzureSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -151746,7 +153403,8 @@ export enum ScrapeConfigSpecAzureSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecAzureSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecAzureSdConfigsTlsConfigCaConfigMap#key
    */
@@ -151856,7 +153514,8 @@ export function toJson_ScrapeConfigSpecAzureSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecAzureSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecAzureSdConfigsTlsConfigCertConfigMap#key
    */
@@ -151966,7 +153625,8 @@ export function toJson_ScrapeConfigSpecAzureSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecConsulSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecConsulSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -152262,7 +153922,8 @@ export enum ScrapeConfigSpecConsulSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecConsulSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecConsulSdConfigsTlsConfigCaConfigMap#key
    */
@@ -152372,7 +154033,8 @@ export function toJson_ScrapeConfigSpecConsulSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecConsulSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecConsulSdConfigsTlsConfigCertConfigMap#key
    */
@@ -152482,7 +154144,8 @@ export function toJson_ScrapeConfigSpecConsulSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecDigitalOceanSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDigitalOceanSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -152781,7 +154444,8 @@ export enum ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecDigitalOceanSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDigitalOceanSdConfigsTlsConfigCaConfigMap#key
    */
@@ -152891,7 +154555,8 @@ export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecDigitalOceanSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDigitalOceanSdConfigsTlsConfigCertConfigMap#key
    */
@@ -153001,7 +154666,8 @@ export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecDockerSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -153297,7 +154963,8 @@ export enum ScrapeConfigSpecDockerSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecDockerSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSdConfigsTlsConfigCaConfigMap#key
    */
@@ -153407,7 +155074,8 @@ export function toJson_ScrapeConfigSpecDockerSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecDockerSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSdConfigsTlsConfigCertConfigMap#key
    */
@@ -153517,7 +155185,8 @@ export function toJson_ScrapeConfigSpecDockerSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecDockerSwarmSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSwarmSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -153815,7 +155484,8 @@ export enum ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecDockerSwarmSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSwarmSdConfigsTlsConfigCaConfigMap#key
    */
@@ -153925,7 +155595,8 @@ export function toJson_ScrapeConfigSpecDockerSwarmSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecDockerSwarmSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSwarmSdConfigsTlsConfigCertConfigMap#key
    */
@@ -154035,7 +155706,8 @@ export function toJson_ScrapeConfigSpecDockerSwarmSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecEc2SdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecEc2SdConfigsTlsConfigCaConfigMap#key
    */
@@ -154145,7 +155817,8 @@ export function toJson_ScrapeConfigSpecEc2SdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecEc2SdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecEc2SdConfigsTlsConfigCertConfigMap#key
    */
@@ -154255,7 +155928,8 @@ export function toJson_ScrapeConfigSpecEc2SdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecEurekaSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecEurekaSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -154551,7 +156225,8 @@ export enum ScrapeConfigSpecEurekaSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecEurekaSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecEurekaSdConfigsTlsConfigCaConfigMap#key
    */
@@ -154661,7 +156336,8 @@ export function toJson_ScrapeConfigSpecEurekaSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecEurekaSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecEurekaSdConfigsTlsConfigCertConfigMap#key
    */
@@ -154771,7 +156447,8 @@ export function toJson_ScrapeConfigSpecEurekaSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecHetznerSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHetznerSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -155068,7 +156745,8 @@ export enum ScrapeConfigSpecHetznerSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecHetznerSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHetznerSdConfigsTlsConfigCaConfigMap#key
    */
@@ -155178,7 +156856,8 @@ export function toJson_ScrapeConfigSpecHetznerSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecHetznerSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHetznerSdConfigsTlsConfigCertConfigMap#key
    */
@@ -155288,7 +156967,8 @@ export function toJson_ScrapeConfigSpecHetznerSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecHttpSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHttpSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -155583,7 +157263,8 @@ export enum ScrapeConfigSpecHttpSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecHttpSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHttpSdConfigsTlsConfigCaConfigMap#key
    */
@@ -155693,7 +157374,8 @@ export function toJson_ScrapeConfigSpecHttpSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecHttpSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHttpSdConfigsTlsConfigCertConfigMap#key
    */
@@ -155803,7 +157485,8 @@ export function toJson_ScrapeConfigSpecHttpSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecIonosSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecIonosSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -156099,7 +157782,8 @@ export enum ScrapeConfigSpecIonosSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecIonosSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecIonosSdConfigsTlsConfigCaConfigMap#key
    */
@@ -156209,7 +157893,8 @@ export function toJson_ScrapeConfigSpecIonosSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecIonosSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecIonosSdConfigsTlsConfigCertConfigMap#key
    */
@@ -156319,7 +158004,8 @@ export function toJson_ScrapeConfigSpecIonosSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecKubernetesSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKubernetesSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -156616,7 +158302,8 @@ export enum ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecKubernetesSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKubernetesSdConfigsTlsConfigCaConfigMap#key
    */
@@ -156726,7 +158413,8 @@ export function toJson_ScrapeConfigSpecKubernetesSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecKubernetesSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKubernetesSdConfigsTlsConfigCertConfigMap#key
    */
@@ -156836,7 +158524,8 @@ export function toJson_ScrapeConfigSpecKubernetesSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecKumaSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKumaSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -157131,7 +158820,8 @@ export enum ScrapeConfigSpecKumaSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecKumaSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKumaSdConfigsTlsConfigCaConfigMap#key
    */
@@ -157241,7 +158931,8 @@ export function toJson_ScrapeConfigSpecKumaSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecKumaSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKumaSdConfigsTlsConfigCertConfigMap#key
    */
@@ -157351,7 +159042,8 @@ export function toJson_ScrapeConfigSpecKumaSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecLightSailSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLightSailSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -157648,7 +159340,8 @@ export enum ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecLightSailSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLightSailSdConfigsTlsConfigCaConfigMap#key
    */
@@ -157758,7 +159451,8 @@ export function toJson_ScrapeConfigSpecLightSailSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecLightSailSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLightSailSdConfigsTlsConfigCertConfigMap#key
    */
@@ -157868,7 +159562,8 @@ export function toJson_ScrapeConfigSpecLightSailSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecLinodeSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLinodeSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -158164,7 +159859,8 @@ export enum ScrapeConfigSpecLinodeSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecLinodeSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLinodeSdConfigsTlsConfigCaConfigMap#key
    */
@@ -158274,7 +159970,8 @@ export function toJson_ScrapeConfigSpecLinodeSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecLinodeSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLinodeSdConfigsTlsConfigCertConfigMap#key
    */
@@ -158384,7 +160081,8 @@ export function toJson_ScrapeConfigSpecLinodeSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecNomadSdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecNomadSdConfigsOauth2ClientIdConfigMap#key
    */
@@ -158680,7 +160378,8 @@ export enum ScrapeConfigSpecNomadSdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecNomadSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecNomadSdConfigsTlsConfigCaConfigMap#key
    */
@@ -158790,7 +160489,8 @@ export function toJson_ScrapeConfigSpecNomadSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecNomadSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecNomadSdConfigsTlsConfigCertConfigMap#key
    */
@@ -158900,7 +160600,8 @@ export function toJson_ScrapeConfigSpecNomadSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecOauth2TlsConfigCaConfigMap#key
    */
@@ -159010,7 +160711,8 @@ export function toJson_ScrapeConfigSpecOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecOauth2TlsConfigCertConfigMap#key
    */
@@ -159120,7 +160822,8 @@ export function toJson_ScrapeConfigSpecOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecOpenstackSdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecOpenstackSdConfigsTlsConfigCaConfigMap#key
    */
@@ -159230,7 +160933,8 @@ export function toJson_ScrapeConfigSpecOpenstackSdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecOpenstackSdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecOpenstackSdConfigsTlsConfigCertConfigMap#key
    */
@@ -159340,7 +161044,8 @@ export function toJson_ScrapeConfigSpecOpenstackSdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecPuppetDbsdConfigsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecPuppetDbsdConfigsOauth2ClientIdConfigMap#key
    */
@@ -159637,7 +161342,8 @@ export enum ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigMinVersion {
  */
 export interface ScrapeConfigSpecPuppetDbsdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecPuppetDbsdConfigsTlsConfigCaConfigMap#key
    */
@@ -159747,7 +161453,8 @@ export function toJson_ScrapeConfigSpecPuppetDbsdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecPuppetDbsdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecPuppetDbsdConfigsTlsConfigCertConfigMap#key
    */
@@ -159857,7 +161564,8 @@ export function toJson_ScrapeConfigSpecPuppetDbsdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecScalewaySdConfigsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecScalewaySdConfigsTlsConfigCaConfigMap#key
    */
@@ -159967,7 +161675,8 @@ export function toJson_ScrapeConfigSpecScalewaySdConfigsTlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecScalewaySdConfigsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecScalewaySdConfigsTlsConfigCertConfigMap#key
    */
@@ -160077,7 +161786,8 @@ export function toJson_ScrapeConfigSpecScalewaySdConfigsTlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecAzureSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecAzureSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -160187,7 +161897,8 @@ export function toJson_ScrapeConfigSpecAzureSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecAzureSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecAzureSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -160297,7 +162008,8 @@ export function toJson_ScrapeConfigSpecAzureSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecConsulSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecConsulSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -160407,7 +162119,8 @@ export function toJson_ScrapeConfigSpecConsulSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecConsulSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecConsulSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -160517,7 +162230,8 @@ export function toJson_ScrapeConfigSpecConsulSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -160628,7 +162342,8 @@ export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCaSec
  */
 export interface ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -160741,7 +162456,8 @@ export function toJson_ScrapeConfigSpecDigitalOceanSdConfigsOauth2TlsConfigCertS
  */
 export interface ScrapeConfigSpecDockerSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -160851,7 +162567,8 @@ export function toJson_ScrapeConfigSpecDockerSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecDockerSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -160961,7 +162678,8 @@ export function toJson_ScrapeConfigSpecDockerSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -161072,7 +162790,8 @@ export function toJson_ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCaSecr
  */
 export interface ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -161185,7 +162904,8 @@ export function toJson_ScrapeConfigSpecDockerSwarmSdConfigsOauth2TlsConfigCertSe
  */
 export interface ScrapeConfigSpecEurekaSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecEurekaSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -161295,7 +163015,8 @@ export function toJson_ScrapeConfigSpecEurekaSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecEurekaSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecEurekaSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -161405,7 +163126,8 @@ export function toJson_ScrapeConfigSpecEurekaSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecHetznerSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHetznerSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -161515,7 +163237,8 @@ export function toJson_ScrapeConfigSpecHetznerSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecHetznerSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHetznerSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -161625,7 +163348,8 @@ export function toJson_ScrapeConfigSpecHetznerSdConfigsOauth2TlsConfigCertSecret
  */
 export interface ScrapeConfigSpecHttpSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHttpSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -161735,7 +163459,8 @@ export function toJson_ScrapeConfigSpecHttpSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecHttpSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecHttpSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -161845,7 +163570,8 @@ export function toJson_ScrapeConfigSpecHttpSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecIonosSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecIonosSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -161955,7 +163681,8 @@ export function toJson_ScrapeConfigSpecIonosSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecIonosSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecIonosSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -162065,7 +163792,8 @@ export function toJson_ScrapeConfigSpecIonosSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -162176,7 +163904,8 @@ export function toJson_ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCaSecre
  */
 export interface ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -162287,7 +164016,8 @@ export function toJson_ScrapeConfigSpecKubernetesSdConfigsOauth2TlsConfigCertSec
  */
 export interface ScrapeConfigSpecKumaSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKumaSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -162397,7 +164127,8 @@ export function toJson_ScrapeConfigSpecKumaSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecKumaSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecKumaSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -162507,7 +164238,8 @@ export function toJson_ScrapeConfigSpecKumaSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -162617,7 +164349,8 @@ export function toJson_ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCaSecret
  */
 export interface ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -162728,7 +164461,8 @@ export function toJson_ScrapeConfigSpecLightSailSdConfigsOauth2TlsConfigCertSecr
  */
 export interface ScrapeConfigSpecLinodeSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLinodeSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -162838,7 +164572,8 @@ export function toJson_ScrapeConfigSpecLinodeSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecLinodeSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecLinodeSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -162948,7 +164683,8 @@ export function toJson_ScrapeConfigSpecLinodeSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecNomadSdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecNomadSdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -163058,7 +164794,8 @@ export function toJson_ScrapeConfigSpecNomadSdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecNomadSdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecNomadSdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -163168,7 +164905,8 @@ export function toJson_ScrapeConfigSpecNomadSdConfigsOauth2TlsConfigCertSecret(
  */
 export interface ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCaConfigMap#key
    */
@@ -163278,7 +165016,8 @@ export function toJson_ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCaSecret(
  */
 export interface ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ScrapeConfigSpecPuppetDbsdConfigsOauth2TlsConfigCertConfigMap#key
    */
@@ -165781,7 +167520,8 @@ export enum ServiceMonitorSpecEndpointsTlsConfigMinVersion {
  */
 export interface ServiceMonitorSpecEndpointsOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ServiceMonitorSpecEndpointsOauth2ClientIdConfigMap#key
    */
@@ -166076,7 +167816,8 @@ export enum ServiceMonitorSpecEndpointsOauth2TlsConfigMinVersion {
  */
 export interface ServiceMonitorSpecEndpointsTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ServiceMonitorSpecEndpointsTlsConfigCaConfigMap#key
    */
@@ -166186,7 +167927,8 @@ export function toJson_ServiceMonitorSpecEndpointsTlsConfigCaSecret(
  */
 export interface ServiceMonitorSpecEndpointsTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ServiceMonitorSpecEndpointsTlsConfigCertConfigMap#key
    */
@@ -166296,7 +168038,8 @@ export function toJson_ServiceMonitorSpecEndpointsTlsConfigCertSecret(
  */
 export interface ServiceMonitorSpecEndpointsOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ServiceMonitorSpecEndpointsOauth2TlsConfigCaConfigMap#key
    */
@@ -166406,7 +168149,8 @@ export function toJson_ServiceMonitorSpecEndpointsOauth2TlsConfigCaSecret(
  */
 export interface ServiceMonitorSpecEndpointsOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ServiceMonitorSpecEndpointsOauth2TlsConfigCertConfigMap#key
    */
@@ -169618,11 +171362,8 @@ export interface ThanosRulerSpecSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -170187,8 +171928,19 @@ export function toJson_ThanosRulerSpecUpdateStrategy(
  */
 export interface ThanosRulerSpecVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema ThanosRulerSpecVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema ThanosRulerSpecVolumeMounts#mountPath
    */
@@ -170276,6 +172028,7 @@ export function toJson_ThanosRulerSpecVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -171958,8 +173711,19 @@ export function toJson_ThanosRulerSpecContainersVolumeDevices(
  */
 export interface ThanosRulerSpecContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema ThanosRulerSpecContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema ThanosRulerSpecContainersVolumeMounts#mountPath
    */
@@ -172047,6 +173811,7 @@ export function toJson_ThanosRulerSpecContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -173384,8 +175149,19 @@ export function toJson_ThanosRulerSpecInitContainersVolumeDevices(
  */
 export interface ThanosRulerSpecInitContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema ThanosRulerSpecInitContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema ThanosRulerSpecInitContainersVolumeMounts#mountPath
    */
@@ -173473,6 +175249,7 @@ export function toJson_ThanosRulerSpecInitContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -174110,7 +175887,7 @@ export interface ThanosRulerSpecRemoteWriteSigv4 {
 
   /**
    * externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+   * It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
    *
    * @schema ThanosRulerSpecRemoteWriteSigv4#externalId
    */
@@ -174882,6 +176659,20 @@ export interface ThanosRulerSpecStorageEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema ThanosRulerSpecStorageEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -174906,6 +176697,7 @@ export function toJson_ThanosRulerSpecStorageEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -175550,6 +177342,15 @@ export interface ThanosRulerSpecVolumesConfigMap {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesConfigMap#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items if unspecified, each key-value pair in the Data field of the referenced
    * ConfigMap will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -175593,6 +177394,7 @@ export function toJson_ThanosRulerSpecVolumesConfigMap(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_ThanosRulerSpecVolumesConfigMapItems(y),
     ),
@@ -175714,6 +177516,15 @@ export interface ThanosRulerSpecVolumesDownwardApi {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesDownwardApi#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * Items is a list of downward API volume file
    *
    * @schema ThanosRulerSpecVolumesDownwardApi#items
@@ -175733,6 +177544,7 @@ export function toJson_ThanosRulerSpecVolumesDownwardApi(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_ThanosRulerSpecVolumesDownwardApiItems(y),
     ),
@@ -175763,6 +177575,20 @@ export interface ThanosRulerSpecVolumesEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -175787,6 +177613,7 @@ export function toJson_ThanosRulerSpecVolumesEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -176735,6 +178562,15 @@ export interface ThanosRulerSpecVolumesProjected {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesProjected#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * sources is the list of volume projections. Each entry in this list
    * handles one source.
    *
@@ -176755,6 +178591,7 @@ export function toJson_ThanosRulerSpecVolumesProjected(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     sources: obj.sources?.map((y) =>
       toJson_ThanosRulerSpecVolumesProjectedSources(y),
     ),
@@ -177105,6 +178942,15 @@ export interface ThanosRulerSpecVolumesSecret {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesSecret#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items If unspecified, each key-value pair in the Data field of the referenced
    * Secret will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -177145,6 +178991,7 @@ export function toJson_ThanosRulerSpecVolumesSecret(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) => toJson_ThanosRulerSpecVolumesSecretItems(y)),
     optional: obj.optional,
     secretName: obj.secretName,
@@ -178286,6 +180133,16 @@ export function toJson_ThanosRulerSpecContainersLivenessProbeExec(
  */
 export interface ThanosRulerSpecContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema ThanosRulerSpecContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema ThanosRulerSpecContainersLivenessProbeGrpc#port
@@ -178314,6 +180171,7 @@ export function toJson_ThanosRulerSpecContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -178363,6 +180221,14 @@ export interface ThanosRulerSpecContainersLivenessProbeHttpGet {
   readonly port: ThanosRulerSpecContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -178389,6 +180255,7 @@ export function toJson_ThanosRulerSpecContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -178490,6 +180357,16 @@ export function toJson_ThanosRulerSpecContainersReadinessProbeExec(
  */
 export interface ThanosRulerSpecContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema ThanosRulerSpecContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema ThanosRulerSpecContainersReadinessProbeGrpc#port
@@ -178518,6 +180395,7 @@ export function toJson_ThanosRulerSpecContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -178567,6 +180445,14 @@ export interface ThanosRulerSpecContainersReadinessProbeHttpGet {
   readonly port: ThanosRulerSpecContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -178593,6 +180479,7 @@ export function toJson_ThanosRulerSpecContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -179110,6 +180997,16 @@ export function toJson_ThanosRulerSpecContainersStartupProbeExec(
  */
 export interface ThanosRulerSpecContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema ThanosRulerSpecContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema ThanosRulerSpecContainersStartupProbeGrpc#port
@@ -179138,6 +181035,7 @@ export function toJson_ThanosRulerSpecContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -179187,6 +181085,14 @@ export interface ThanosRulerSpecContainersStartupProbeHttpGet {
   readonly port: ThanosRulerSpecContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -179213,6 +181119,7 @@ export function toJson_ThanosRulerSpecContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -179275,7 +181182,8 @@ export function toJson_ThanosRulerSpecContainersStartupProbeTcpSocket(
  */
 export interface ThanosRulerSpecGrpcServerTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecGrpcServerTlsConfigCaConfigMap#key
    */
@@ -179385,7 +181293,8 @@ export function toJson_ThanosRulerSpecGrpcServerTlsConfigCaSecret(
  */
 export interface ThanosRulerSpecGrpcServerTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecGrpcServerTlsConfigCertConfigMap#key
    */
@@ -179853,6 +181762,16 @@ export function toJson_ThanosRulerSpecInitContainersLivenessProbeExec(
  */
 export interface ThanosRulerSpecInitContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema ThanosRulerSpecInitContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema ThanosRulerSpecInitContainersLivenessProbeGrpc#port
@@ -179881,6 +181800,7 @@ export function toJson_ThanosRulerSpecInitContainersLivenessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -179930,6 +181850,14 @@ export interface ThanosRulerSpecInitContainersLivenessProbeHttpGet {
   readonly port: ThanosRulerSpecInitContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecInitContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -179956,6 +181884,7 @@ export function toJson_ThanosRulerSpecInitContainersLivenessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -180057,6 +181986,16 @@ export function toJson_ThanosRulerSpecInitContainersReadinessProbeExec(
  */
 export interface ThanosRulerSpecInitContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema ThanosRulerSpecInitContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema ThanosRulerSpecInitContainersReadinessProbeGrpc#port
@@ -180085,6 +182024,7 @@ export function toJson_ThanosRulerSpecInitContainersReadinessProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -180134,6 +182074,14 @@ export interface ThanosRulerSpecInitContainersReadinessProbeHttpGet {
   readonly port: ThanosRulerSpecInitContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecInitContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -180160,6 +182108,7 @@ export function toJson_ThanosRulerSpecInitContainersReadinessProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -180677,6 +182626,16 @@ export function toJson_ThanosRulerSpecInitContainersStartupProbeExec(
  */
 export interface ThanosRulerSpecInitContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema ThanosRulerSpecInitContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema ThanosRulerSpecInitContainersStartupProbeGrpc#port
@@ -180705,6 +182664,7 @@ export function toJson_ThanosRulerSpecInitContainersStartupProbeGrpc(
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -180754,6 +182714,14 @@ export interface ThanosRulerSpecInitContainersStartupProbeHttpGet {
   readonly port: ThanosRulerSpecInitContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecInitContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -180780,6 +182748,7 @@ export function toJson_ThanosRulerSpecInitContainersStartupProbeHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -181959,8 +183928,8 @@ export interface ThanosRulerSpecStorageVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema ThanosRulerSpecStorageVolumeClaimTemplateSpec#dataSource
@@ -181989,7 +183958,6 @@ export interface ThanosRulerSpecStorageVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema ThanosRulerSpecStorageVolumeClaimTemplateSpec#dataSourceRef
@@ -182201,6 +184169,14 @@ export interface ThanosRulerSpecStorageVolumeClaimTemplateStatus {
   readonly currentVolumeAttributesClassName?: string;
 
   /**
+   * healthStatus contains the latest controller-reported health information
+   * for the volume bound to this claim.
+   *
+   * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatus#healthStatus
+   */
+  readonly healthStatus?: ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus;
+
+  /**
    * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
    * When this is unset, there is no ModifyVolume operation being attempted.
    *
@@ -182253,6 +184229,10 @@ export function toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatus(
       toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatusConditions(y),
     ),
     currentVolumeAttributesClassName: obj.currentVolumeAttributesClassName,
+    healthStatus:
+      toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus(
+        obj.healthStatus,
+      ),
     modifyVolumeStatus:
       toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatusModifyVolumeStatus(
         obj.modifyVolumeStatus,
@@ -182466,6 +184446,15 @@ export interface ThanosRulerSpecVolumesConfigMapItems {
    * @schema ThanosRulerSpecVolumesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -182482,6 +184471,7 @@ export function toJson_ThanosRulerSpecVolumesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -182573,6 +184563,15 @@ export interface ThanosRulerSpecVolumesDownwardApiItems {
    * @schema ThanosRulerSpecVolumesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: ThanosRulerSpecVolumesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -182595,6 +184594,7 @@ export function toJson_ThanosRulerSpecVolumesDownwardApiItems(
       toJson_ThanosRulerSpecVolumesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -183030,6 +185030,15 @@ export interface ThanosRulerSpecVolumesSecretItems {
    * @schema ThanosRulerSpecVolumesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -183046,6 +185055,7 @@ export function toJson_ThanosRulerSpecVolumesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -183899,7 +185909,8 @@ export function toJson_ThanosRulerSpecAffinityPodAntiAffinityRequiredDuringSched
  */
 export interface ThanosRulerSpecContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -184244,6 +186255,14 @@ export interface ThanosRulerSpecContainersLifecyclePostStartHttpGet {
   readonly port: ThanosRulerSpecContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -184270,6 +186289,7 @@ export function toJson_ThanosRulerSpecContainersLifecyclePostStartHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -184439,6 +186459,14 @@ export interface ThanosRulerSpecContainersLifecyclePreStopHttpGet {
   readonly port: ThanosRulerSpecContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -184465,6 +186493,7 @@ export function toJson_ThanosRulerSpecContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -184822,7 +186851,8 @@ export class ThanosRulerSpecContainersStartupProbeTcpSocketPort {
  */
 export interface ThanosRulerSpecInitContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecInitContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -185167,6 +187197,14 @@ export interface ThanosRulerSpecInitContainersLifecyclePostStartHttpGet {
   readonly port: ThanosRulerSpecInitContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecInitContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -185195,6 +187233,7 @@ export function toJson_ThanosRulerSpecInitContainersLifecyclePostStartHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -185364,6 +187403,14 @@ export interface ThanosRulerSpecInitContainersLifecyclePreStopHttpGet {
   readonly port: ThanosRulerSpecInitContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema ThanosRulerSpecInitContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -185390,6 +187437,7 @@ export function toJson_ThanosRulerSpecInitContainersLifecyclePreStopHttpGet(
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -185803,7 +187851,8 @@ export function toJson_ThanosRulerSpecRemoteWriteAzureAdOauthClientSecret(
  */
 export interface ThanosRulerSpecRemoteWriteOauth2ClientIdConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecRemoteWriteOauth2ClientIdConfigMap#key
    */
@@ -186098,7 +188147,8 @@ export enum ThanosRulerSpecRemoteWriteOauth2TlsConfigMinVersion {
  */
 export interface ThanosRulerSpecRemoteWriteTlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecRemoteWriteTlsConfigCaConfigMap#key
    */
@@ -186208,7 +188258,8 @@ export function toJson_ThanosRulerSpecRemoteWriteTlsConfigCaSecret(
  */
 export interface ThanosRulerSpecRemoteWriteTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecRemoteWriteTlsConfigCertConfigMap#key
    */
@@ -186334,8 +188385,8 @@ export interface ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpec#dataSource
@@ -186364,7 +188415,6 @@ export interface ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -186476,8 +188526,8 @@ export function toJson_ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpec(
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema ThanosRulerSpecStorageVolumeClaimTemplateSpecDataSource
@@ -186552,7 +188602,6 @@ export function toJson_ThanosRulerSpecStorageVolumeClaimTemplateSpecDataSource(
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema ThanosRulerSpecStorageVolumeClaimTemplateSpecDataSourceRef
@@ -186858,6 +188907,56 @@ export function toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatusConditions
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * healthStatus contains the latest controller-reported health information
+ * for the volume bound to this claim.
+ *
+ * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus
+ */
+export interface ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus {
+  /**
+   * conditions is the set of adverse conditions reported by
+   * the CSI controller plugin. An empty list means no adverse condition.
+   * At most 16 conditions may be reported.
+   *
+   * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus#healthConditions
+   */
+  readonly healthConditions?: ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions[];
+
+  /**
+   * lastTransitionTime is when the current set of conditions first appeared.
+   *
+   * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus#lastTransitionTime
+   */
+  readonly lastTransitionTime?: Date;
+}
+
+/**
+ * Converts an object of type 'ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus(
+  obj: ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatus | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    healthConditions: obj.healthConditions?.map((y) =>
+      toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+        y,
+      ),
+    ),
+    lastTransitionTime: obj.lastTransitionTime?.toISOString(),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.
  * When this is unset, there is no ModifyVolume operation being attempted.
  *
@@ -187030,8 +189129,8 @@ export interface ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSource
@@ -187060,7 +189159,6 @@ export interface ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpec {
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -187228,6 +189326,15 @@ export interface ThanosRulerSpecVolumesProjectedSourcesClusterTrustBundle {
    * @schema ThanosRulerSpecVolumesProjectedSourcesClusterTrustBundle#signerName
    */
   readonly signerName?: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesProjectedSourcesClusterTrustBundle#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -187249,6 +189356,7 @@ export function toJson_ThanosRulerSpecVolumesProjectedSourcesClusterTrustBundle(
     optional: obj.optional,
     path: obj.path,
     signerName: obj.signerName,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -187479,6 +189587,15 @@ export interface ThanosRulerSpecVolumesProjectedSourcesPodCertificate {
   readonly signerName: string;
 
   /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesProjectedSourcesPodCertificate#user
+   */
+  readonly user?: number;
+
+  /**
    * userAnnotations allow pod authors to pass additional information to
    * the signer implementation.  Kubernetes does not restrict or validate this
    * metadata in any way.
@@ -187515,6 +189632,7 @@ export function toJson_ThanosRulerSpecVolumesProjectedSourcesPodCertificate(
     keyType: obj.keyType,
     maxExpirationSeconds: obj.maxExpirationSeconds,
     signerName: obj.signerName,
+    user: obj.user,
     userAnnotations:
       obj.userAnnotations === undefined
         ? undefined
@@ -187630,6 +189748,15 @@ export interface ThanosRulerSpecVolumesProjectedSourcesServiceAccountToken {
    * @schema ThanosRulerSpecVolumesProjectedSourcesServiceAccountToken#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesProjectedSourcesServiceAccountToken#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -187646,6 +189773,7 @@ export function toJson_ThanosRulerSpecVolumesProjectedSourcesServiceAccountToken
     audience: obj.audience,
     expirationSeconds: obj.expirationSeconds,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -187688,7 +189816,8 @@ export enum ThanosRulerSpecWebHttpConfigHeadersXFrameOptions {
  */
 export interface ThanosRulerSpecWebTlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecWebTlsConfigCertConfigMap#key
    */
@@ -187798,7 +189927,8 @@ export function toJson_ThanosRulerSpecWebTlsConfigCertSecret(
  */
 export interface ThanosRulerSpecWebTlsConfigClientCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecWebTlsConfigClientCaConfigMap#key
    */
@@ -189020,7 +191150,8 @@ export class ThanosRulerSpecInitContainersLifecyclePreStopTcpSocketPort {
  */
 export interface ThanosRulerSpecRemoteWriteOauth2TlsConfigCaConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecRemoteWriteOauth2TlsConfigCaConfigMap#key
    */
@@ -189130,7 +191261,8 @@ export function toJson_ThanosRulerSpecRemoteWriteOauth2TlsConfigCaSecret(
  */
 export interface ThanosRulerSpecRemoteWriteOauth2TlsConfigCertConfigMap {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema ThanosRulerSpecRemoteWriteOauth2TlsConfigCertConfigMap#key
    */
@@ -189239,8 +191371,8 @@ export function toJson_ThanosRulerSpecRemoteWriteOauth2TlsConfigCertSecret(
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecDataSource
@@ -189317,7 +191449,6 @@ export function toJson_ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecDat
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -189611,6 +191742,66 @@ export function toJson_ThanosRulerSpecStorageVolumeClaimTemplateSpecSelectorMatc
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * VolumeHealthCondition represents an adverse health condition reported for a volume.
+ *
+ * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+ */
+export interface ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions {
+  /**
+   * message is a human-readable description.
+   * Maximum permitted length of a message is 1024 bytes.
+   *
+   * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#message
+   */
+  readonly message?: string;
+
+  /**
+   * reason is a brief CamelCase machine-parseable reason.
+   * Together with status it forms the unique identity of a condition entry.
+   * Maximum permitted length of a reason is 256 bytes.
+   *
+   * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#reason
+   */
+  readonly reason: string;
+
+  /**
+   * status is the machine-parseable health category.
+   * Possible values:
+   * - "Inaccessible": the volume cannot be accessed.
+   * - "DataLoss": data loss has been detected on the volume.
+   * - "Degraded": the volume is functioning with reduced capability.
+   *
+   * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions#status
+   */
+  readonly status: ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus;
+}
+
+/**
+ * Converts an object of type 'ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions(
+  obj:
+    | ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditions
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    message: obj.message,
+    reason: obj.reason,
+    status: obj.status,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * Specifies the output format of the exposed resources, defaults to "1"
  *
  * @schema ThanosRulerSpecVolumesDownwardApiItemsResourceFieldRefDivisor
@@ -189639,8 +191830,8 @@ export class ThanosRulerSpecVolumesDownwardApiItemsResourceFieldRefDivisor {
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
@@ -189717,7 +191908,6 @@ export function toJson_ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecDat
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -190004,6 +192194,15 @@ export interface ThanosRulerSpecVolumesProjectedSourcesConfigMapItems {
    * @schema ThanosRulerSpecVolumesProjectedSourcesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesProjectedSourcesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -190020,6 +192219,7 @@ export function toJson_ThanosRulerSpecVolumesProjectedSourcesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -190068,6 +192268,15 @@ export interface ThanosRulerSpecVolumesProjectedSourcesDownwardApiItems {
    * @schema ThanosRulerSpecVolumesProjectedSourcesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: ThanosRulerSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesProjectedSourcesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -190091,6 +192300,7 @@ export function toJson_ThanosRulerSpecVolumesProjectedSourcesDownwardApiItems(
       toJson_ThanosRulerSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -190134,6 +192344,15 @@ export interface ThanosRulerSpecVolumesProjectedSourcesSecretItems {
    * @schema ThanosRulerSpecVolumesProjectedSourcesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema ThanosRulerSpecVolumesProjectedSourcesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -190150,6 +192369,7 @@ export function toJson_ThanosRulerSpecVolumesProjectedSourcesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -190490,6 +192710,24 @@ export function toJson_ThanosRulerSpecStorageEphemeralVolumeClaimTemplateSpecSel
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * status is the machine-parseable health category.
+ * Possible values:
+ * - "Inaccessible": the volume cannot be accessed.
+ * - "DataLoss": data loss has been detected on the volume.
+ * - "Degraded": the volume is functioning with reduced capability.
+ *
+ * @schema ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus
+ */
+export enum ThanosRulerSpecStorageVolumeClaimTemplateStatusHealthStatusHealthConditionsStatus {
+  /** DataLoss */
+  DATA_LOSS = "DataLoss",
+  /** Degraded */
+  DEGRADED = "Degraded",
+  /** Inaccessible */
+  INACCESSIBLE = "Inaccessible",
+}
 
 /**
  * @schema ThanosRulerSpecVolumesEphemeralVolumeClaimTemplateSpecResourcesLimits

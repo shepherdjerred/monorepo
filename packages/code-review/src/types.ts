@@ -27,7 +27,16 @@ export type ReviewState = "reviewing" | "reviewed" | "errored";
 export type GateDecision =
   | { state: "waiting"; message: string }
   | { state: "passed"; message: string }
-  | { state: "failed"; message: string };
+  | {
+      state: "failed";
+      message: string;
+      /**
+       * The provider's declared block slug when it could not review at all
+       * (quota exhaustion), else null. A blocked failure exits with
+       * `REVIEW_GATE_BLOCKED_EXIT_CODE` so CI can soft-fail on it alone.
+       */
+      blockedReason: string | null;
+    };
 
 /** GitHub's validated author identity for a pull request. */
 export type PullRequestAuthor = {
@@ -117,7 +126,8 @@ export type ReviewIssueComment = {
  *   the head once its latest review's `commit_id === head`. Providers in this
  *   mode leave no artifact on a clean PR, so `cleanSignal` says how to detect
  *   "reviewed, nothing to flag" — currently a 👍 reaction from the provider
- *   (Codex).
+ *   (Codex), or `"none"` when the provider always posts a review object and a
+ *   missing review means "not reviewed yet" (CodeRabbit).
  * - `issue-comment`: the provider maintains findings in a review issue comment
  *   and posts an independent acknowledgement naming each reviewed head. A
  *   clean review with no acknowledgement falls back to the comment's
@@ -125,7 +135,7 @@ export type ReviewIssueComment = {
  */
 export type CompletionStrategy =
   | { kind: "check-run"; namePattern: RegExp }
-  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" }
+  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" | "none" }
   | {
       kind: "issue-comment";
       marker: string;
@@ -168,6 +178,26 @@ export type SkipStrategy = {
 };
 
 /**
+ * How a provider signals it cannot review at all right now (quota/usage-limit
+ * exhaustion). Detected on issue-level comments authored by the provider that
+ * contain every `matches` entry and postdate the head push. Unlike a skip this
+ * is a FAILING terminal state — no review happened, so the gate fails fast with
+ * `remediation` instead of polling to its deadline. `null` for providers with
+ * no such signal.
+ */
+export type BlockedSignalStrategy = {
+  /** Every entry must appear in the comment body for it to count. */
+  matches: readonly string[];
+  /** Short slug carried on the result, e.g. `"usage-limited"`. */
+  reason: string;
+  /**
+   * What the operator must do, rendered in the gate failure (capitalised, no
+   * trailing punctuation — the gate frames it with the provider and head).
+   */
+  remediation: string;
+};
+
+/**
  * How to explicitly ask a provider to (re-)review the current head, or `null`
  * when the provider reviews automatically and needs no trigger comment.
  *
@@ -180,6 +210,33 @@ export type SkipStrategy = {
 export type ReviewRequestStrategy = {
   /** The provider's trigger phrase, e.g. `"@codex review"`. */
   command: string;
+};
+
+/**
+ * One provider review with the body needed to parse findings that live only
+ * in the review itself (never as addressable threads). A structural subset of
+ * `ProviderReview` so the GitHub layer can pass its own records straight in.
+ */
+export type ProviderReviewSnapshot = {
+  id: string;
+  submittedAt: string | null;
+  body: string | null;
+  /** The full SHA of the commit the review read; null when unknown. */
+  commitOid: string | null;
+};
+
+/**
+ * A finding parsed out of a provider review body, still needing review
+ * attribution. `thread.raisedInReview` must be null here: the caller assigns
+ * the ordinal in the same pass as the addressable threads, so a body finding
+ * and its thread copy share one review position.
+ */
+export type UnattributedBodyFinding = {
+  thread: ReviewThread;
+  reviewId: string;
+  reviewSubmittedAt: string | null;
+  /** The commit the finding's review read; null when unknown. */
+  reviewCommitOid: string | null;
 };
 
 /** A registered code-review provider. */
@@ -197,6 +254,8 @@ export type ReviewProvider = {
    * having to declare `review`.
    */
   botAuthoredPullRequestPolicy: "review" | "skip";
+  /** Optional allowlist when only specific bot-authored PRs are reviewable. */
+  botAuthorAllowlist?: readonly string[];
   /**
    * The complete GitHub login(s) this provider posts as (the GraphQL bare slug,
    * e.g. `greptile-apps` / `chatgpt-codex-connector`). Matched EXACTLY
@@ -223,10 +282,31 @@ export type ReviewProvider = {
    * folded into another. `null` for providers that post each finding once.
    */
   findingKey: ((thread: ReviewThread) => string | null) | null;
+  /**
+   * Parse findings that live only in the provider's review bodies — findings
+   * the platform would not let it post inline (CodeRabbit's "outside diff
+   * range" sections). The caller attributes each finding to its review in the
+   * same ordinal space as the addressable threads and merges thread/body
+   * copies via {@link ReviewProvider.findingKey}. `null` for providers whose
+   * every finding is an addressable thread. Only findings with a recognised
+   * severity may be emitted; severity-less sections (nitpicks) never block and
+   * must not inflate finding counts.
+   */
+  parseReviewBodyFindings:
+    | ((
+        reviews: readonly ProviderReviewSnapshot[],
+      ) => readonly UnattributedBodyFinding[])
+    | null;
   /** How the gate detects the provider finished reviewing the head commit. */
   completion: CompletionStrategy;
   /** How the provider signals a deliberate skip, or null if it has none. */
   detectSkip: SkipStrategy | null;
+  /**
+   * How the provider signals it cannot review right now (quota exhaustion),
+   * or null if it has no such signal. A matched block fails the gate — it is
+   * never a pass, because no review happened.
+   */
+  detectBlocked: BlockedSignalStrategy | null;
   /**
    * How to explicitly request a head review, or `null` when the provider
    * reviews automatically. Consumers that trigger reviews (e.g. the PR-fleet

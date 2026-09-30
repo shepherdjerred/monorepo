@@ -140,6 +140,8 @@ final class NetworkingTests: XCTestCase {
       ),
       endpoints.grokCredits.absoluteString: .success(
         ProviderResponse(statusCode: 500, data: Data())),
+      endpoints.grokResets.absoluteString: .success(
+        ProviderResponse(statusCode: 429, data: Data())),
     ])
     let client = ProviderHTTPClient(
       transport: transport,
@@ -158,60 +160,23 @@ final class NetworkingTests: XCTestCase {
       client: client,
       userEndpoint: endpoints.grokUser,
       billingEndpoint: endpoints.grokBilling,
-      creditsEndpoint: endpoints.grokCredits
+      creditsEndpoint: endpoints.grokCredits,
+      resetEndpoint: endpoints.grokResets
     ).fetch()
     XCTAssertEqual(grok.windows.map(\.label), ["Monthly"])
     XCTAssertFalse(grok.notes.isEmpty)
+    XCTAssertNotNil(grok.resetErrorMessage)
     let requests = await transport.requests
-    XCTAssertEqual(requests.filter { $0.provider == .grok }.count, 3)
+    XCTAssertEqual(requests.filter { $0.provider == .grok }.count, 4)
     XCTAssertTrue(requests.contains { $0.headers["x-userid"] == "user_quotabar_fixture" })
-  }
-
-  func testGrokUnauthorizedSurfaceRestartsCompleteFetchOnOneCredential() async throws {
-    let endpoints = try ProviderEndpoints.live(environment: [:])
-    let transport = TokenRoutingTransport(routes: [
-      endpoints.grokUser.absoluteString: (
-        rejectedToken: nil,
-        response: .success(ProviderResponse(statusCode: 200, data: fixture("grok-user")))
-      ),
-      endpoints.grokBilling.absoluteString: (
-        rejectedToken: "token-a",
-        response: .success(ProviderResponse(statusCode: 200, data: fixture("grok-billing")))
-      ),
-      endpoints.grokCredits.absoluteString: (
-        rejectedToken: "token-a",
-        response: .success(ProviderResponse(statusCode: 200, data: fixture("grok-credits")))
-      ),
-    ])
-    let client = ProviderHTTPClient(
-      transport: transport,
-      credentials: StubCredentialStore(tokens: ["token-a", "token-b"])
+    XCTAssertEqual(
+      requests.first { $0.url == endpoints.grokResets }?.method,
+      .post
     )
-
-    let grok = try await GrokProvider(
-      client: client,
-      userEndpoint: endpoints.grokUser,
-      billingEndpoint: endpoints.grokBilling,
-      creditsEndpoint: endpoints.grokCredits
-    ).fetch()
-
-    XCTAssertTrue(grok.windows.map(\.label).contains("Monthly"))
-    let requests = await transport.requests
     XCTAssertEqual(
-      requests.filter { $0.url == endpoints.grokUser }.map(\.bearerToken),
-      [
-        "token-a", "token-b",
-      ])
-    XCTAssertEqual(
-      requests.filter { $0.url == endpoints.grokBilling }.map(\.bearerToken),
-      [
-        "token-a", "token-b",
-      ])
-    XCTAssertEqual(
-      requests.filter { $0.url == endpoints.grokCredits }.map(\.bearerToken),
-      [
-        "token-a", "token-b",
-      ])
+      requests.first { $0.url == endpoints.grokResets }?.headers["Content-Type"],
+      "application/grpc-web+proto"
+    )
   }
 
   func testCodexUnauthorizedSurfaceRestartsCompleteFetchOnOneCredential() async throws {
@@ -354,7 +319,7 @@ final class NetworkingTests: XCTestCase {
     let credentials = StubCredentialStore(tokens: ["token"])
     XCTAssertEqual(
       try Providers.live(credentials: credentials).map(\.id),
-      [.claudeCode, .codex, .antigravity, .cursor]
+      ProviderID.allCases
     )
     XCTAssertEqual(
       try Providers.live(credentials: credentials, providerIDs: Set(ProviderID.allCases)).map(\.id),

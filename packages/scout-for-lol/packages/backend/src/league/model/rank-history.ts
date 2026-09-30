@@ -190,10 +190,9 @@ function maxRank(
 }
 
 function parseStoredRank(serialized: string | null): Rank | undefined {
-  if (serialized === null || serialized.length === 0) {
-    return undefined;
-  }
-  return RankSchema.parse(JSON.parse(serialized));
+  return serialized === null || serialized.length === 0
+    ? undefined
+    : RankSchema.parse(JSON.parse(serialized));
 }
 
 export async function getHighestRankForPuuidsInWindow(params: {
@@ -226,6 +225,33 @@ export async function getHighestRankForPuuidsInWindow(params: {
   }
 
   return highestRank;
+}
+
+/**
+ * The rank changes already recorded for one match in one queue, by PUUID.
+ *
+ * For a render that runs long after the game: the rows the settlement-time
+ * capture wrote are the only true "after" ranks for that game, so they are
+ * read back as they stand rather than re-captured from the rank the player
+ * holds today. A PUUID with no row is simply absent.
+ */
+export async function getRecordedRankChangesForMatch(
+  matchId: MatchId,
+  queueType: RankedQueueType,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, { before: Rank | undefined; after: Rank | undefined }>> {
+  const records = await prismaClient.matchRankHistory.findMany({
+    where: { matchId, queueType },
+  });
+  return new Map(
+    records.map((record) => [
+      record.puuid,
+      {
+        before: parseStoredRank(record.rankBefore),
+        after: parseStoredRank(record.rankAfter),
+      },
+    ]),
+  );
 }
 
 export function getHigherRank(

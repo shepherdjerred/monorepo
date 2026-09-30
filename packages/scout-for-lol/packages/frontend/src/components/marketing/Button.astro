@@ -1,0 +1,109 @@
+---
+import { cn } from "#src/lib/utils.ts";
+import type { CtaLocation } from "#src/lib/marketing.ts";
+import type { GetStartedClickEvent } from "#src/lib/marketing-constants.ts";
+
+interface BaseProps {
+  href: string;
+  variant?: "primary" | "secondary" | "text";
+  size?: "sm" | "md" | "lg";
+  color?: "indigo" | "white" | "gray";
+  external?: boolean;
+  class?: string;
+}
+
+type TrackingProps =
+  | {
+      trackingEvent: GetStartedClickEvent;
+      trackingLocation: CtaLocation;
+    }
+  | {
+      trackingEvent?: undefined;
+      trackingLocation?: undefined;
+    };
+
+type Props = BaseProps & TrackingProps;
+
+const {
+  href,
+  variant = "primary",
+  size = "md",
+  color = "indigo",
+  external = false,
+  trackingEvent,
+  trackingLocation,
+  class: className = "",
+} = Astro.props;
+
+if (
+  (trackingEvent !== undefined && trackingLocation === undefined) ||
+  (trackingEvent === undefined && trackingLocation !== undefined)
+) {
+  throw new Error(
+    "Button trackingEvent and trackingLocation must be provided together",
+  );
+}
+
+let variantClasses = "";
+let sizeClasses: string;
+
+// Base classes for all buttons
+const baseClasses =
+  "scout-button inline-flex items-center gap-2 justify-center whitespace-nowrap";
+
+// Map variants
+switch (variant) {
+  case "primary":
+    if (color === "indigo") {
+      variantClasses = "scout-button--primary";
+    } else if (color === "white") {
+      variantClasses = "scout-button--secondary";
+    } else if (color === "gray") {
+      variantClasses = "scout-button--secondary";
+    }
+    break;
+  case "secondary":
+    variantClasses = "scout-button--outline";
+    break;
+  case "text":
+    variantClasses =
+      color === "white"
+        ? "scout-button--link scout-button--on-primary"
+        : "scout-button--link";
+    break;
+}
+
+// Map sizes
+switch (size) {
+  case "sm":
+    sizeClasses = "scout-button--small";
+    break;
+  case "lg":
+    sizeClasses = "scout-button--large";
+    break;
+  case "md":
+  default:
+    sizeClasses = "";
+    break;
+}
+
+const externalProps = external
+  ? {
+      target: "_blank",
+      rel: "noopener noreferrer",
+    }
+  : {};
+---
+
+<a
+  href={href}
+  {...externalProps}
+  data-scout-conversion={trackingEvent}
+  data-scout-cta-location={trackingLocation}
+  class={cn(baseClasses, variantClasses, sizeClasses, className)}
+>
+  <slot />
+  {variant === "text" && !className.includes("inline-flex") && (
+    <span aria-hidden="true">→</span>
+  )}
+</a>

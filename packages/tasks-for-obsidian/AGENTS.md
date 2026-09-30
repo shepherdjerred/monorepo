@@ -3,8 +3,7 @@
 This is a bare React Native iOS/Android client for TaskNotes. `README.md` and
 `e2e/README.md` own setup, screens, deep links, and test reference.
 
-- Domain code is React-free. API responses and native modules are parsed with
-  Zod. Expected failures use the typed result/error model.
+- Domain code is React-free. Expected failures use the typed result/error model.
 - Wire conversion is centralized; internal camelCase vocabulary must not leak
   into the upstream `/v2` contract.
 - Sync and mutation queues preserve offline ordering, crash recovery,

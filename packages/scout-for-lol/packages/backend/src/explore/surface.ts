@@ -16,5 +16,5 @@ import { z } from "zod";
  * an optional input no production caller passes, so it is always null and could
  * not distinguish the two surfaces even if it were read that way.
  */
-export const ExploreSurfaceSchema = z.enum(["web", "discord"]);
+export const ExploreSurfaceSchema = z.enum(["web", "discord", "voice"]);
 export type ExploreSurface = z.infer<typeof ExploreSurfaceSchema>;

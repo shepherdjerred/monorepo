@@ -1,5 +1,6 @@
 import { z } from "zod";
 import runesData from "./assets/runesReforged.json" with { type: "json" };
+import historicalRunesData from "./assets/historical-runes.json" with { type: "json" };
 
 // Runes are organized by style (tree) with selections
 export const RuneTreeSchema = z.array(
@@ -27,6 +28,55 @@ export const RuneTreeSchema = z.array(
 
 export const runes = RuneTreeSchema.parse(runesData);
 
+export const HistoricalRuneAssetSchema = z.object({
+  sourceVersion: z.string().min(1),
+  runes: z.array(
+    z.object({
+      id: z.number(),
+      key: z.string(),
+      icon: z.string(),
+      name: z.string(),
+      shortDesc: z.string(),
+      longDesc: z.string(),
+      treeId: z.number(),
+      treeName: z.string(),
+      slot: z.number().int().nonnegative(),
+    }),
+  ),
+});
+
+const historicalRunes = new Map(
+  HistoricalRuneAssetSchema.parse(historicalRunesData).runes.map((rune) => [
+    rune.id,
+    rune,
+  ]),
+);
+
+export type RuneInfo = {
+  id: number;
+  key: string;
+  name: string;
+  shortDesc: string;
+  longDesc: string;
+  icon: string;
+  treeId: number;
+  treeName: string;
+  slot: number;
+};
+
+export function listRunes(): RuneInfo[] {
+  return runes.flatMap((tree) =>
+    tree.slots.flatMap((slot, slotIndex) =>
+      slot.runes.map((rune) => ({
+        ...rune,
+        treeId: tree.id,
+        treeName: tree.name,
+        slot: slotIndex,
+      })),
+    ),
+  );
+}
+
 export function getRuneInfo(runeId: number):
   | {
       name: string;
@@ -50,7 +100,30 @@ export function getRuneInfo(runeId: number):
       }
     }
   }
-  return undefined;
+  const historical = historicalRunes.get(runeId);
+  return historical === undefined
+    ? undefined
+    : {
+        name: historical.name,
+        shortDesc: historical.shortDesc,
+        longDesc: historical.longDesc,
+        icon: historical.icon,
+      };
+}
+
+export function findRunes(query: string): RuneInfo[] {
+  const normalized = query.trim().toLowerCase();
+  const numericId = Number(normalized);
+  const all = listRunes();
+  const exact = all.filter(
+    (rune) =>
+      rune.name.toLowerCase() === normalized ||
+      rune.key.toLowerCase() === normalized ||
+      (Number.isInteger(numericId) && rune.id === numericId),
+  );
+  return exact.length > 0
+    ? exact
+    : all.filter((rune) => rune.name.toLowerCase().includes(normalized));
 }
 
 export function getRuneTreeName(treeId: number): string | undefined {
@@ -94,5 +167,15 @@ export function getRuneTreeForRune(runeId: number):
       }
     }
   }
-  return undefined;
+  const historical = historicalRunes.get(runeId);
+  if (historical === undefined) return undefined;
+  const tree = runes.find((candidate) => candidate.id === historical.treeId);
+  if (tree === undefined) {
+    throw new Error(`Historical rune ${runeId.toString()} has unknown tree`);
+  }
+  return {
+    treeId: historical.treeId,
+    treeName: historical.treeName,
+    treeIcon: tree.icon,
+  };
 }

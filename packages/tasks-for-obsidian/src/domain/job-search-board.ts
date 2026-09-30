@@ -1,5 +1,5 @@
-import { deriveSavedViewTasks } from "./saved-view-collection";
-import type { SavedView } from "./saved-views";
+import { deriveSavedViewTasks } from "./saved-view/saved-view-collection";
+import type { SavedView } from "./saved-view/saved-views";
 import type { Task } from "./types";
 
 export const JOB_SEARCH_SAVED_VIEW_ID = "job-search";
@@ -29,8 +29,9 @@ export function jobSearchColumnKey(
   const raw = task.extraFields["company_status"];
   const status = typeof raw === "string" ? raw.toLowerCase() : "";
   if (JOB_SEARCH_COLUMN_KEY_SET.has(status)) {
-    if (status === "applied" || status === "screener") return status;
-    return "identified";
+    return status === "applied" || status === "screener"
+      ? status
+      : "identified";
   }
 
   for (const tag of task.tags) {

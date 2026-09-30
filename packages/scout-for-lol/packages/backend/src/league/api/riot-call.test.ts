@@ -1,11 +1,14 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { ZodError, z } from "zod";
 import {
   callRiotOrThrow,
   callRiotOrUndefined,
   callRiotOrUndefinedOn404,
 } from "#src/league/api/riot-call.ts";
-import { RiotHttpError } from "#src/league/api/client/errors.ts";
+import {
+  RiotHttpError,
+  RiotTransportError,
+} from "#src/league/api/client/errors.ts";
 
 const Schema = z
   .object({
@@ -32,6 +35,13 @@ function httpError(status: number): RiotHttpError {
     url: "https://na1.api.riotgames.com/test",
     headers: new Headers(),
   });
+}
+
+function transportError(): RiotTransportError {
+  return new RiotTransportError(
+    "https://na1.api.riotgames.com/test",
+    new Error("ENOTFOUND"),
+  );
 }
 
 describe("callRiotOrUndefined", () => {
@@ -95,7 +105,7 @@ describe("callRiotOrUndefined", () => {
   test("returns undefined on transport error (no HTTP status)", async () => {
     const result = await callRiotOrUndefined(
       { source: "test-transport", schema: Schema, context: {} },
-      fails(new Error("ENOTFOUND")),
+      fails(transportError()),
     );
     expect(result).toBeUndefined();
   });
@@ -138,9 +148,9 @@ describe("callRiotOrThrow", () => {
   test("throws Error on transport failure", async () => {
     const promise = callRiotOrThrow(
       { source: "test-throw-transport", schema: Schema, context: {} },
-      fails(new Error("ENOTFOUND")),
+      fails(transportError()),
     );
-    await expect(promise).rejects.toThrow(/ENOTFOUND/);
+    await expect(promise).rejects.toThrow(/transport failure/);
   });
 });
 
@@ -210,5 +220,73 @@ describe("schemaLabel", () => {
       ok({ id: 1, name: "ok", extra: true }),
     );
     expect(result).toEqual({ id: 1, name: "ok" });
+  });
+});
+
+describe("transport retry", () => {
+  test("retries a transport error once and returns the second attempt", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValueOnce(transportError())
+      .mockResolvedValueOnce({ id: 1, name: "ok" });
+    const result = await callRiotOrUndefined(
+      { source: "test-retry-success", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toEqual({ id: 1, name: "ok" });
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  test("gives up after two consecutive transport failures", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValue(transportError());
+    const result = await callRiotOrUndefined(
+      { source: "test-retry-exhausted", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toBeUndefined();
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  test("retries a timeout-shaped error", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error("API request timed out after 30000ms"))
+      .mockResolvedValueOnce({ id: 1, name: "ok" });
+    const result = await callRiotOrUndefined(
+      { source: "test-retry-timeout", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toEqual({ id: 1, name: "ok" });
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  test("does not retry HTTP errors", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValue(httpError(404));
+    const result = await callRiotOrUndefined(
+      { source: "test-no-retry-http", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toBeUndefined();
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not retry deterministic errors without a status", async () => {
+    // A malformed JSON body throws with no HTTP status, but a second fetch
+    // returns the same bytes: retrying cannot fix it.
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValue(
+        new SyntaxError("Unexpected token < in JSON at position 0"),
+      );
+    const result = await callRiotOrUndefined(
+      { source: "test-no-retry-deterministic", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toBeUndefined();
+    expect(fn).toHaveBeenCalledTimes(1);
   });
 });

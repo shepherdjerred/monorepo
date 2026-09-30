@@ -1,0 +1,17 @@
+msxml3: Treat DOM-built documents as well-formed for validateNode.
+
+libxml2 sets XML_DOC_WELLFORMED only when it parses a document, so validating a
+node of a document assembled through the DOM always failed. makepri.exe builds
+one per resource index and validates it against its configuration schema.
+
+--- a/dlls/msxml3/domdoc.c
++++ b/dlls/msxml3/domdoc.c
+@@ -2872,7 +2872,7 @@
+ 
+ static inline BOOL is_wellformed(xmlDocPtr doc)
+ {
+-    return doc->properties & XML_DOC_WELLFORMED;
++    return doc->properties & (XML_DOC_WELLFORMED | XML_DOC_USERBUILT);
+ }
+ 
+ static void LIBXML2_LOG_CALLBACK validate_error(void* ctx, char const* msg, ...)

@@ -104,6 +104,7 @@ test("does not redact Discord-style snowflake IDs or usernames", () => {
 afterEach(() => {
   delete Bun.env["OPENAI_API_KEY"];
   delete Bun.env["XAI_API_KEY"];
+  delete Bun.env["GEMINI_API_KEY"];
   delete Bun.env["OPENROUTER_API_KEY"];
 });
 
@@ -122,14 +123,23 @@ test("redactText masks known secret env-var values in any format", () => {
 
 test("redactText masks every documented provider credential", () => {
   const xaiSecret = ["xai", "provider", "credential"].join("-");
-  const openRouterSecret = ["openrouter", "provider", "credential"].join("-");
+  const geminiSecret = ["gemini", "provider", "credential"].join("-");
   Bun.env["XAI_API_KEY"] = xaiSecret;
-  Bun.env["OPENROUTER_API_KEY"] = openRouterSecret;
+  Bun.env["GEMINI_API_KEY"] = geminiSecret;
 
-  const out = redactText(`xai=${xaiSecret} router=${openRouterSecret}`);
+  const out = redactText(`xai=${xaiSecret} gemini=${geminiSecret}`);
   expect(out).not.toContain(xaiSecret);
-  expect(out).not.toContain(openRouterSecret);
+  expect(out).not.toContain(geminiSecret);
   expect(out.match(/\[REDACTED\]/g)).toHaveLength(2);
+});
+
+test("redactText keeps retired OpenRouter values masked through credential revocation", () => {
+  const retiredSecret = ["router", "provider", "credential"].join("-");
+  Bun.env["OPENROUTER_API_KEY"] = retiredSecret;
+
+  const out = redactText(`archived span: ${retiredSecret}`);
+  expect(out).not.toContain(retiredSecret);
+  expect(out).toContain("[REDACTED]");
 });
 
 test("redactSecrets applies literal-value masking inside nested strings", () => {
@@ -207,4 +217,66 @@ test("redactText masks Bearer tokens", () => {
   expect(redactText(`curl -H 'Authorization: Bearer ${bearer}'`)).toBe(
     "curl -H 'Authorization: Bearer [REDACTED]'",
   );
+});
+
+test("redactSecrets masks webhookUrl keys and Discord webhook URLs", () => {
+  const token = ["tok", "discord", "123456"].join("_");
+  const webhookUrl = `https://discord.com/api/webhooks/1234567890/${token}`;
+  const input = {
+    webhookUrl,
+    list: [
+      {
+        id: "1234567890",
+        url: webhookUrl,
+      },
+    ],
+    nested: {
+      webhook_token: "secret-token",
+    },
+  };
+  const WebhookSecretsSchema = z.object({
+    webhookUrl: z.string(),
+    list: z.array(z.object({ id: z.string(), url: z.string() })),
+    nested: z.object({ webhook_token: z.string() }),
+  });
+  const redacted = WebhookSecretsSchema.parse(redactSecrets(input));
+  expect(redacted.webhookUrl).toBe("[REDACTED]");
+  expect(redacted.list[0]?.url).toBe("[REDACTED]");
+  expect(redacted.nested.webhook_token).toBe("[REDACTED]");
+  expect(JSON.stringify(redacted)).not.toContain(token);
+});
+
+test("redactSecrets masks inviteCode keys and Discord invite URLs", () => {
+  const inviteCode = "abcXYZ123";
+  const inviteUrl = `https://discord.gg/${inviteCode}`;
+  const vanityUrl = `discord.gg/${inviteCode}`;
+  const appInviteUrl = `https://discord.com/invite/${inviteCode}`;
+  const input = {
+    inviteCode,
+    invite_code: inviteCode,
+    inviteUrl,
+    vanityUrl,
+    appInviteUrl,
+    list: [
+      {
+        code: "keep-plain-if-not-invite-key",
+        url: inviteUrl,
+      },
+    ],
+  };
+  const InviteSecretsSchema = z.object({
+    inviteCode: z.string(),
+    invite_code: z.string(),
+    inviteUrl: z.string(),
+    vanityUrl: z.string(),
+    appInviteUrl: z.string(),
+    list: z.array(z.object({ code: z.string(), url: z.string() })),
+  });
+  const redacted = InviteSecretsSchema.parse(redactSecrets(input));
+  expect(redacted.inviteCode).toBe("[REDACTED]");
+  expect(redacted.invite_code).toBe("[REDACTED]");
+  expect(redacted.inviteUrl).toBe("[REDACTED]");
+  expect(redacted.vanityUrl).toBe("[REDACTED]");
+  expect(redacted.appInviteUrl).toBe("[REDACTED]");
+  expect(redacted.list[0]?.url).toBe("[REDACTED]");
 });

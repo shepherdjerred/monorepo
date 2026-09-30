@@ -10,10 +10,9 @@ export type AppleEnrichResult = {
 };
 
 export async function enrichApple(
-  appleMailDir: string,
   appleTransactions: MonarchTransaction[],
 ): Promise<AppleEnrichResult> {
-  const receipts = await loadAppleReceipts(appleMailDir);
+  const receipts = await loadAppleReceipts();
   const matchResult = matchAppleTransactions(appleTransactions, receipts);
   log.info(
     `Matched ${String(matchResult.matched.length)}/${String(appleTransactions.length)} Apple transactions`,

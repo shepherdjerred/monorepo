@@ -3,7 +3,7 @@ import {
   ErrorState,
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
-import { DelayedLoadingState } from "#src/components/section-skeleton.tsx";
+import { DelayedLoadingState } from "#src/components/chrome/section-skeleton.tsx";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import {
   BucksMarketCard,
@@ -11,7 +11,7 @@ import {
 } from "#src/components/bucks/bucks-market-card.tsx";
 import { BucksParlayCard } from "#src/components/bucks/bucks-parlay-card.tsx";
 import type { BucksBetSubmission } from "#src/components/bucks/bucks-bet-form.tsx";
-import { remainingMs } from "#src/lib/bucks-countdown.ts";
+import { remainingMs } from "#src/lib/bucks/bucks-countdown.ts";
 
 export type BucksMatchParlayRow = {
   matchId: string;
@@ -24,26 +24,11 @@ export type BucksMatchParlayRow = {
   positions: { discordId: string; side: "YES" | "NO"; stake: number }[];
 };
 
-export type BucksWeeklyParlayRow = {
-  marketId: number;
-  periodKey: string;
-  bettingClosesAt: string;
-  legs: string[];
-  qualification?: string | undefined;
-  yesOdds: string;
-  noOdds: string;
-  yourPosition: { side: "YES" | "NO"; stake: number } | null;
-  bettorCount: number;
-  totalStaked: number;
-  subjects: string[];
-};
-
 /** The `bucks.openMarkets` payload, structurally — the minimal shape this route consumes. */
 export type BucksOpenMarkets = {
   serverNow: string;
   outcome: (OutcomeMarketView & { closesAt: string })[];
   parlays: BucksMatchParlayRow[];
-  weeklyParlays: BucksWeeklyParlayRow[];
 };
 
 export type MarketErrorMap = Record<string, string>;
@@ -96,8 +81,6 @@ export function BucksMarketSections(props: {
   placeOutcomePending: boolean;
   placeParlay: (matchId: string, submission: BucksBetSubmission) => void;
   placeParlayPending: boolean;
-  placeWeekly: (marketId: number, submission: BucksBetSubmission) => void;
-  placeWeeklyPending: boolean;
   onCancelRequest: (matchId: string) => void;
 }) {
   const { markets } = props;
@@ -158,41 +141,6 @@ export function BucksMarketSections(props: {
             serverError={props.marketErrors[key] ?? null}
             onPlace={(submission) => {
               props.placeParlay(market.matchId, submission);
-            }}
-          />
-        );
-      })}
-      {markets.weeklyParlays.map((market) => {
-        const key = `weekly:${market.marketId.toString()}`;
-        return (
-          <BucksParlayCard
-            key={key}
-            idPrefix={key}
-            market={{
-              title: "Weekly parlay",
-              subtitle: `${market.subjects.join(", ")} · week of ${market.periodKey}`,
-              legs: market.legs,
-              qualification: market.qualification,
-              yesOdds: market.yesOdds,
-              noOdds: market.noOdds,
-              yourPosition: market.yourPosition,
-              aggregate: {
-                bettorCount: market.bettorCount,
-                totalStaked: market.totalStaked,
-              },
-            }}
-            remainingMs={remainingMs(
-              market.bettingClosesAt,
-              props.nowMs,
-              props.skewMs,
-            )}
-            balance={props.balance}
-            canBet={props.canBet}
-            nameOf={props.nameOf}
-            pending={props.placeWeeklyPending}
-            serverError={props.marketErrors[key] ?? null}
-            onPlace={(submission) => {
-              props.placeWeekly(market.marketId, submission);
             }}
           />
         );

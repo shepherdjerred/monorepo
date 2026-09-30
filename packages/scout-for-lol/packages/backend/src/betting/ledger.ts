@@ -1,8 +1,11 @@
 import {
   BUCKS_INT32_MAX,
   BucksLedgerContextSchema,
+  BucksStorageOverflowError,
   OPEN_BUCKS_DARE_STATES,
   OPEN_BUCKS_DARE_V2_STATES,
+  storableDelta,
+  type BucksDelta,
   type BucksLedgerContext,
   type BucksLedgerKind,
 } from "@scout-for-lol/data";
@@ -38,25 +41,24 @@ export class InsufficientBucksError extends Error {
   }
 }
 
-export class BucksStorageOverflowError extends Error {
-  constructor(readonly bucksAccountId: number) {
-    super(
-      `Bucks account ${bucksAccountId.toString()} would exceed Int32 storage`,
-    );
-    this.name = "BucksStorageOverflowError";
-  }
-}
+/**
+ * Re-exported, not redeclared: the class moved down to `@scout-for-lol/data`
+ * with the storable helpers that raise it, and every recovery path here
+ * matches on `instanceof`. A second class would silently stop matching.
+ */
+export { BucksStorageOverflowError } from "@scout-for-lol/data";
 
 export type ApplyBucksDeltaInput = {
   bucksAccountId: number;
-  /** Signed. Negative debits, positive credits. Zero is rejected. */
-  delta: number;
+  /** Signed. Negative debits, positive credits. The brand already excludes
+   * zero and out-of-range values; the runtime guards below stay because this
+   * is the single chokepoint every Buck moves through. */
+  delta: BucksDelta;
   kind: BucksLedgerKind;
   context: BucksLedgerContext;
   matchId?: string | undefined;
   betId?: number | undefined;
   parlayBetId?: number | undefined;
-  weeklyParlayBetId?: number | undefined;
   predictedTeamId?: number | undefined;
   actualWinningTeamId?: number | undefined;
   /**
@@ -128,8 +130,6 @@ export async function refundableBucksHeldForAccounts(
     outcomeRows,
     humanParlayRows,
     houseParlayRows,
-    humanWeeklyRows,
-    houseWeeklyRows,
     humanDareRows,
     humanDareV2Rows,
   ] = await Promise.all([
@@ -149,24 +149,6 @@ export async function refundableBucksHeldForAccounts(
       _sum: { stake: true },
     }),
     tx.bucksParlayBet.findMany({
-      where: {
-        betOutcome: "pending",
-        market: { serverId: { in: houseServerIds } },
-      },
-      select: {
-        houseReserve: true,
-        market: { select: { serverId: true } },
-      },
-    }),
-    tx.bucksWeeklyParlayBet.groupBy({
-      by: ["bucksAccountId"],
-      where: {
-        bucksAccountId: { in: humanAccountIds },
-        betOutcome: "pending",
-      },
-      _sum: { stake: true },
-    }),
-    tx.bucksWeeklyParlayBet.findMany({
       where: {
         betOutcome: "pending",
         market: { serverId: { in: houseServerIds } },
@@ -207,9 +189,6 @@ export async function refundableBucksHeldForAccounts(
   const parlayByAccount = new Map(
     humanParlayRows.map((row) => [row.bucksAccountId, row._sum.stake ?? 0]),
   );
-  const weeklyByAccount = new Map(
-    humanWeeklyRows.map((row) => [row.bucksAccountId, row._sum.stake ?? 0]),
-  );
   const dareByAccount = new Map(
     humanDareRows.map((row) => [row.bucksAccountId, row._sum.amount ?? 0]),
   );
@@ -224,13 +203,6 @@ export async function refundableBucksHeldForAccounts(
         BigInt(row.houseReserve),
     );
   }
-  for (const row of houseWeeklyRows) {
-    reserveByServer.set(
-      row.market.serverId,
-      (reserveByServer.get(row.market.serverId) ?? 0n) +
-        BigInt(row.houseReserve),
-    );
-  }
 
   return new Map(
     accounts.map((account) => [
@@ -239,7 +211,6 @@ export async function refundableBucksHeldForAccounts(
         (account.isHouse
           ? (reserveByServer.get(account.serverId) ?? 0n)
           : BigInt(parlayByAccount.get(account.id) ?? 0) +
-            BigInt(weeklyByAccount.get(account.id) ?? 0) +
             BigInt(dareByAccount.get(account.id) ?? 0) +
             BigInt(dareV2ByAccount.get(account.id) ?? 0)),
     ]),
@@ -269,34 +240,17 @@ export async function refundableBucksHeld(
     0n,
   );
   if (account.isHouse) {
-    const [parlay, weekly] = await Promise.all([
-      tx.bucksParlayBet.aggregate({
-        where: {
-          betOutcome: "pending",
-          market: { serverId: account.serverId },
-        },
-        _sum: { houseReserve: true },
-      }),
-      tx.bucksWeeklyParlayBet.aggregate({
-        where: {
-          betOutcome: "pending",
-          market: { serverId: account.serverId },
-        },
-        _sum: { houseReserve: true },
-      }),
-    ]);
-    return (
-      outcomeHeld +
-      BigInt(parlay._sum.houseReserve ?? 0) +
-      BigInt(weekly._sum.houseReserve ?? 0)
-    );
+    const parlay = await tx.bucksParlayBet.aggregate({
+      where: {
+        betOutcome: "pending",
+        market: { serverId: account.serverId },
+      },
+      _sum: { houseReserve: true },
+    });
+    return outcomeHeld + BigInt(parlay._sum.houseReserve ?? 0);
   }
-  const [parlay, weekly, dare, dareV2] = await Promise.all([
+  const [parlay, dare, dareV2] = await Promise.all([
     tx.bucksParlayBet.aggregate({
-      where: { bucksAccountId, betOutcome: "pending" },
-      _sum: { stake: true },
-    }),
-    tx.bucksWeeklyParlayBet.aggregate({
       where: { bucksAccountId, betOutcome: "pending" },
       _sum: { stake: true },
     }),
@@ -321,7 +275,6 @@ export async function refundableBucksHeld(
   return (
     outcomeHeld +
     BigInt(parlay._sum.stake ?? 0) +
-    BigInt(weekly._sum.stake ?? 0) +
     BigInt(dare._sum.amount ?? 0) +
     BigInt(dareV2._sum.amount ?? 0)
   );
@@ -340,12 +293,9 @@ export async function applyBucksDelta(
   if (input.delta === 0) {
     throw new Error("A ledger entry with no effect is a bug, not a no-op");
   }
-  if (
-    !Number.isInteger(input.delta) ||
-    Math.abs(input.delta) > BUCKS_INT32_MAX
-  ) {
-    throw new BucksStorageOverflowError(input.bucksAccountId);
-  }
+  // The single chokepoint every Buck moves through, and the one place the
+  // semantic `BucksDelta` brand is narrowed to what the `Int` column holds.
+  storableDelta(input.delta, input.bucksAccountId);
 
   if (input.delta < 0) {
     // Guarded conditional update: validates "can afford" and locks the row in
@@ -354,15 +304,18 @@ export async function applyBucksDelta(
     // version (EvalPlanQual), so the losing click matches 0 rows instead of
     // double-spending. A plain read-then-write here would race two concurrent
     // button clicks.
+    // Binary subtraction, not unary minus: no-unsafe-unary-minus cannot see
+    // through the branded number.
+    const requested = 0 - input.delta;
     const debited = await tx.bucksAccount.updateMany({
       where: {
         id: input.bucksAccountId,
-        balance: { gte: -input.delta },
+        balance: { gte: requested },
       },
       data: { balance: { increment: input.delta } },
     });
     if (debited.count !== 1) {
-      throw new InsufficientBucksError(input.bucksAccountId, -input.delta);
+      throw new InsufficientBucksError(input.bucksAccountId, requested);
     }
   } else {
     const held =
@@ -412,7 +365,6 @@ export async function applyBucksDelta(
       matchId: input.matchId ?? null,
       betId: input.betId ?? null,
       parlayBetId: input.parlayBetId ?? null,
-      weeklyParlayBetId: input.weeklyParlayBetId ?? null,
       predictedTeamId: input.predictedTeamId ?? null,
       actualWinningTeamId: input.actualWinningTeamId ?? null,
       // Validated on the way in, so a malformed explanation can never be

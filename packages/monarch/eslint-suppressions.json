@@ -4,11 +4,6 @@
       "count": 1
     }
   },
-  "src/lib/amazon/classify.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/lib/amazon/scraper.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -21,7 +16,7 @@
   },
   "src/lib/classifier/tier2.ts": {
     "sonarjs/cognitive-complexity": {
-      "count": 2
+      "count": 1
     }
   },
   "src/lib/conservice/matcher.ts": {
@@ -40,11 +35,6 @@
     }
   },
   "src/lib/display.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/lib/scl/parser.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

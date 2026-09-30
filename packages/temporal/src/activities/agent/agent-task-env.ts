@@ -1,4 +1,37 @@
 import type { AgentTaskProvider } from "#shared/agent/agent-task.ts";
+import {
+  isProviderCredentialKey,
+  PROVIDER_CREDENTIAL_KEYS,
+} from "#shared/agent/provider-credentials.ts";
+import { z } from "zod/v4";
+
+const CodexCredentialTokensSchema = z.object({
+  tokens: z.object({
+    access_token: z.string().min(1),
+    refresh_token: z.string().optional(),
+    id_token: z.string().optional(),
+  }),
+});
+
+export function agentTaskProviderSecretTokens(
+  environment: Readonly<Record<string, string | undefined>>,
+): string[] {
+  return Object.entries(environment).flatMap(([key, value]) => {
+    if (value === undefined || value === "" || !isProviderCredentialKey(key))
+      return [];
+    if (key !== "CODEX_AUTH_JSON_B64") return [value];
+    const decoded = Buffer.from(value, "base64").toString("utf8");
+    const parsed: unknown = JSON.parse(decoded);
+    const auth = CodexCredentialTokensSchema.parse(parsed);
+    return [
+      value,
+      decoded,
+      ...Object.values(auth.tokens).flatMap((token) =>
+        token === undefined || token === "" ? [] : [token],
+      ),
+    ];
+  });
+}
 
 const MOUNTED_SECRET_PATHS = [
   "/var/run/secrets/kubernetes.io/serviceaccount/token",
@@ -6,6 +39,7 @@ const MOUNTED_SECRET_PATHS = [
 ] as const;
 const AGENT_TASK_COMMON_ENVIRONMENT = new Set([
   "ALERT_DASHBOARD_URL",
+  "AGENT_PROVIDER_UID",
   "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
   "DISABLE_AUTOUPDATER",
   "LANG",
@@ -32,38 +66,6 @@ const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
   "GITHUB_WEBHOOK_SECRET",
   "XCODE_CLOUD_WEBHOOK_TOKEN",
 ]);
-
-// Direct inference-provider keys. No agent may inherit one from the worker.
-const DIRECT_PROVIDER_CREDENTIAL_KEYS = new Set([
-  "ANTHROPIC_API_KEY",
-  "CODEX_API_KEY",
-  "GEMINI_API_KEY",
-  "GOOGLE_GENERATIVE_AI_API_KEY",
-  "GROQ_API_KEY",
-  "OPENAI_API_KEY",
-  "OPENROUTER_API_KEY",
-  "XAI_API_KEY",
-]);
-
-// Legacy subscription credentials are scrubbed even though fresh tasks no
-// longer receive them.
-const PROVIDER_CREDENTIAL_KEYS = {
-  claude: "CLAUDE_CODE_OAUTH_TOKEN",
-  codex: "OPENROUTER_API_KEY",
-} as const satisfies Record<AgentTaskProvider, string>;
-const AGENT_SUBSCRIPTION_CREDENTIAL_KEYS = new Set<string>(
-  Object.values(PROVIDER_CREDENTIAL_KEYS),
-);
-
-// Every inference credential the worker holds, direct or subscription. An
-// agent is given exactly one of these explicitly; it must never inherit
-// another provider's credential just because the worker also holds it.
-function isProviderCredentialKey(key: string): boolean {
-  return (
-    DIRECT_PROVIDER_CREDENTIAL_KEYS.has(key) ||
-    AGENT_SUBSCRIPTION_CREDENTIAL_KEYS.has(key)
-  );
-}
 
 export function isReportDeliveryBoundaryEnvironmentKey(key: string): boolean {
   return (
@@ -118,6 +120,12 @@ function compositeSecretTokens(value: string): readonly string[] {
   return tokens;
 }
 
+function encodedSecretTokens(key: string, value: string): readonly string[] {
+  if (key !== "CODEX_AUTH_JSON_B64") return [];
+  const decoded = Buffer.from(value, "base64").toString("utf8");
+  return compositeSecretTokens(decoded);
+}
+
 export async function readAgentTaskMountedSecretTokens(
   paths: readonly string[] = MOUNTED_SECRET_PATHS,
 ): Promise<readonly string[]> {
@@ -147,8 +155,10 @@ export function agentTaskSecretTokens(
   // Mounted service-account/Talos files are read into this same redaction set
   // by createAgentTaskSecretTokenState. Keeping them in the returned list is
   // what protects final-text excerpts when a provider violates its contract.
-  const environmentSecretTokens = Object.values(env).flatMap((value) =>
-    value === undefined ? [] : compositeSecretTokens(value),
+  const environmentSecretTokens = Object.entries(env).flatMap(([key, value]) =>
+    value === undefined
+      ? []
+      : [...compositeSecretTokens(value), ...encodedSecretTokens(key, value)],
   );
   const tokens: (string | undefined)[] = [
     ...environmentSecretTokens,
@@ -160,6 +170,7 @@ export function agentTaskSecretTokens(
 
 export type AgentTaskSecretTokenState = {
   tokens: (string | undefined)[];
+  mountedTokens: string[];
   refresh: () => Promise<void>;
 };
 
@@ -203,24 +214,25 @@ export async function createAgentTaskSecretTokenState(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
   paths: readonly string[] = MOUNTED_SECRET_PATHS,
 ): Promise<AgentTaskSecretTokenState> {
-  const tokens = [
-    ...agentTaskSecretTokens(
-      githubAppToken,
-      env,
-      await readAgentTaskMountedSecretTokens(paths),
-    ),
-  ];
+  const mountedTokens = [...(await readAgentTaskMountedSecretTokens(paths))];
+  const tokens = [...agentTaskSecretTokens(githubAppToken, env, mountedTokens)];
   let refreshInFlight: Promise<void> | undefined;
   const refresh = (): Promise<void> => {
     if (refreshInFlight !== undefined) {
       return refreshInFlight;
     }
     const refreshRun = (async (): Promise<void> => {
+      const nextMountedTokens = await readAgentTaskMountedSecretTokens(paths);
       const nextSecretTokens = agentTaskSecretTokens(
         githubAppToken,
         env,
-        await readAgentTaskMountedSecretTokens(paths),
+        nextMountedTokens,
       );
+      for (const token of nextMountedTokens) {
+        if (!mountedTokens.includes(token)) {
+          mountedTokens.push(token);
+        }
+      }
       for (const token of nextSecretTokens) {
         if (!tokens.includes(token)) {
           tokens.push(token);
@@ -236,7 +248,7 @@ export async function createAgentTaskSecretTokenState(
     })();
     return refreshInFlight;
   };
-  return { tokens, refresh };
+  return { tokens, mountedTokens, refresh };
 }
 
 export async function refreshAgentTaskSecretTokenStateInBackground(
@@ -253,7 +265,7 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 // Build the deliberately small environment for a native agent SDK run. The SDK
 // child process inherits nothing by default: only basic process/TLS settings,
 // non-secret evidence endpoints, the dedicated read-only Kubernetes identity,
-// and the one OpenRouter credential its own provider needs. Every other
+// and the one provider credential its own SDK needs. Every other
 // worker credential — Postal, S3, GitHub, Temporal, Talos — stays out, so a
 // prompt-injected agent has nothing to exfiltrate from its own environment.
 export function envForProvider(

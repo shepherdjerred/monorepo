@@ -48,31 +48,36 @@ Local and CI verification deliberately have different scopes:
   [`staged-package-quality.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/staged-package-quality.ts)
   runs `typecheck` and `lint` for owning workspaces at `--concurrency=1`.
   It does not run tests, dependents, or the whole-repo graph.
-- **Buildkite** runs the exhaustive root `bun run verify` graph on every PR.
-  That is the real gate.
+- **Woodpecker CI** runs the exhaustive root `bun run verify` graph on every
+  PR. That is the real gate.
 
 Running the full graph locally is for reproducing a CI failure or changing the
 verification machinery, not for everyday work. There is no pre-push hook.
 
-## CI is Buildkite, not GitHub Actions
+## CI is Woodpecker, not GitHub Actions
 
-`.buildkite/pipeline.yml` is the single canonical source: every step is written
-there by hand, and PR builds upload it unchanged. Default-branch builds take a
-bootstrap path instead, where `select-main-pipeline.ts` uploads the subset of
-those same steps the commit actually needs. So the graph main runs is selected
-rather than authored — no step exists that is not in the checked-in file.
+There is no committed pipeline file. Woodpecker asks a [configuration
+extension](/explanation/ci-pipeline-shape/) for the graph on every build,
+passing the changed files; the extension selects the steps that commit needs
+and returns them as workflows.
+
+So the graph is generated rather than authored, and the step model in
+`packages/woodpecker-config-extension/src/pipeline/` is the source it is
+generated from. No step exists that is not defined there.
 
 This matters mostly because it breaks a common assumption: GitHub Actions is
-not the source of truth for CI here. The exact Buildkite build for a commit is.
+not the source of truth for CI here. The exact Woodpecker pipeline for a commit
+is.
 
 CI itself runs on the homelab — a dedicated `liskov` worker under
-[Kueue admission](/explanation/homelab/buildkite-admission/). The homelab is
+[Kueue admission](/explanation/homelab/ci-admission/). The homelab is
 therefore in the path of merging, which is a real coupling and an accepted one.
 
 ## One command boundary for the stack
 
 The repository spans more control planes than its package graph suggests:
-GitHub, Buildkite, Linear, PostHog, Grafana, Temporal, ArgoCD, Cloudflare, and
+GitHub, Woodpecker, Linear, PostHog, Grafana, Temporal, ArgoCD, Cloudflare,
+and
 Tailscale all participate in ordinary work. `toolkit` is the stable entrypoint
 across that stack.
 
@@ -84,7 +89,7 @@ growing a second API client inside the repo.
 
 Toolkit owns only the workflows that combine multiple sources or encode local
 policy. PR health, for example, joins GitHub review metadata with a fresh local
-merge-tree and the exact-head Buildkite build. Deployment tracing follows a
+merge-tree and the exact-head Woodpecker pipeline. Deployment tracing follows a
 commit farther still, through image publication, GitOps state, and the running
 pod digest. The distinction keeps one memorable command boundary without
 hiding which system is authoritative.

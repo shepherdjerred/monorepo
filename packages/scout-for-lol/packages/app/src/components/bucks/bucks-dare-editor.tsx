@@ -12,8 +12,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Input } from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/overlays/dialog";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import {
   DareEditorReview,
@@ -25,7 +25,7 @@ import {
   submitThenChangeValidation,
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const ReadableSummarySchema = z.strictObject({
   plainLanguage: z.string().trim().min(1).max(4000),

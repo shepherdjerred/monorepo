@@ -2,6 +2,39 @@ import { describe, expect, test } from "vitest";
 
 import { staticSites } from "./sites.ts";
 
+describe("Scout Storybook catalog site", () => {
+  const catalog = staticSites.find(
+    ({ hostname }) => hostname === "design.scout-for-lol.com",
+  );
+  if (catalog === undefined) {
+    throw new Error("design.scout-for-lol.com static site is missing");
+  }
+
+  test("serves the dedicated bucket and probes the story preview", () => {
+    expect(catalog.bucket).toBe("scout-design-system");
+    expect(catalog.probes).toContainEqual({
+      endpoint: "iframe",
+      path: "/iframe.html",
+    });
+  });
+
+  test("permits the same-origin preview iframe Storybook renders into", () => {
+    // Both headers matter: the shared default is X-Frame-Options DENY, and the
+    // other Scout sites' CSP sets frame-ancestors 'none'. Either one alone
+    // would leave the catalog blank.
+    expect(catalog.responseHeaders?.["X-Frame-Options"]).toBe("SAMEORIGIN");
+    const csp = catalog.responseHeaders?.["Content-Security-Policy"];
+    expect(csp).toContain("frame-ancestors 'self'");
+    expect(csp).toContain("frame-src 'self'");
+  });
+
+  test("talks to no third-party host", () => {
+    const csp = catalog.responseHeaders?.["Content-Security-Policy"] ?? "";
+    expect(csp).toContain("connect-src 'self'");
+    expect(csp).not.toContain("https://");
+  });
+});
+
 describe("Scout static sites", () => {
   for (const hostname of [
     "scout-for-lol.com",
@@ -16,13 +49,13 @@ describe("Scout static sites", () => {
       }
       const csp = site.responseHeaders?.["Content-Security-Policy"];
       expect(csp).toContain(
-        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com https://s.pinimg.com https://www.redditstatic.com",
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red https://s.pinimg.com https://www.redditstatic.com",
       );
       expect(csp).toContain(
         "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
       );
       expect(csp).toContain(
-        "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
+        "connect-src 'self' https://j.sjer.red https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
       );
       expect(csp).toContain("frame-src https://ct.pinterest.com");
     });
@@ -50,6 +83,35 @@ describe("Scout static sites", () => {
   });
 });
 
+describe("ScoutQL reference probes", () => {
+  const routes = [
+    ["scoutql-sources", "/docs/reference/scoutql-sources/"],
+    ["scoutql-filters", "/docs/reference/scoutql-filters/"],
+    ["scoutql-functions", "/docs/reference/scoutql-functions/"],
+  ] as const;
+
+  for (const hostname of [
+    "scout-for-lol.com",
+    "beta.scout-for-lol.com",
+  ] as const) {
+    test(`${hostname} probes ScoutQL reference pages`, () => {
+      const site = staticSites.find(
+        (candidate) => candidate.hostname === hostname,
+      );
+      if (site === undefined) {
+        throw new Error(`${hostname} static site is missing`);
+      }
+      for (const [endpoint, path] of routes) {
+        expect(site.probes).toContainEqual({
+          endpoint,
+          path,
+          module: "http_200_no_redirect",
+        });
+      }
+    });
+  }
+});
+
 describe("human wiki static site", () => {
   const wiki = staticSites.find(({ hostname }) => hostname === "wiki.sjer.red");
   if (wiki === undefined) {
@@ -68,9 +130,9 @@ describe("human wiki static site", () => {
   test("allows Pagefind, Mermaid, and PostHog Cloud US", () => {
     const csp = wiki.responseHeaders?.["Content-Security-Policy"];
     expect(csp).toContain(
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red",
     );
-    expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
+    expect(csp).toContain("connect-src 'self' https://j.sjer.red");
     expect(csp).toContain("worker-src 'self' blob:");
     expect(csp).toContain("frame-ancestors 'none'");
   });

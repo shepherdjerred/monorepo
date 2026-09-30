@@ -7,7 +7,7 @@ import {
   RiotIdTextSchema,
   SubscriptionFormSchema,
 } from "#src/lib/form-schemas.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
+import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
 import { buildReportPayload } from "#src/components/report/report-form-fields.tsx";
 
 const CHANNEL_ID = "123456789012345678";

@@ -27,9 +27,6 @@ const OTHER_ID = bucksTestDiscordId(2);
 async function clearAll(): Promise<void> {
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksMatchPool.deleteMany();
-  await db.bucksWeeklyParlayBet.deleteMany();
-  await db.bucksWeeklyParlayMarket.deleteMany();
-  await db.bucksWeeklyParlayDefinition.deleteMany();
   await db.bucksAccount.deleteMany();
 }
 
@@ -159,7 +156,7 @@ describe("Bryan Bucks history navigation", () => {
 });
 
 describe("resolveLedgerGameLabels", () => {
-  test("labels rows from context aliases, rosters, and weekly subjects", async () => {
+  test("labels rows from context aliases and rosters", async () => {
     const account = await db.bucksAccount.create({
       data: { serverId: SERVER_ID, discordId: OWNER_ID, balance: 40 },
     });
@@ -174,59 +171,6 @@ describe("resolveLedgerGameLabels", () => {
         }),
       },
     });
-    const definition = await db.bucksWeeklyParlayDefinition.create({
-      data: {
-        serverId: SERVER_ID,
-        periodKey: "2030-01-06",
-        slot: 0,
-        openAt: new Date("2030-01-06T00:00:00Z"),
-        bettingClosesAt: new Date("2030-01-07T00:00:00Z"),
-        scoringStartsAt: new Date("2030-01-06T00:00:00Z"),
-        scoringEndsAt: new Date("2030-01-13T00:00:00Z"),
-        subjects: JSON.stringify([
-          {
-            key: "P1",
-            playerId: 1,
-            alias: "jerred",
-            discordId: bucksTestDiscordId(1),
-            accounts: [
-              {
-                puuid: bucksTestPuuid(0),
-                trackingStartedAt: "2029-01-01T00:00:00.000Z",
-              },
-            ],
-          },
-          {
-            key: "P2",
-            playerId: 2,
-            alias: "bryan",
-            discordId: bucksTestDiscordId(2),
-            accounts: [
-              {
-                puuid: bucksTestPuuid(1),
-                trackingStartedAt: "2029-01-01T00:00:00.000Z",
-              },
-            ],
-          },
-        ]),
-        eligibleQueues: "[]",
-        proposal: "{}",
-        criteria: "{}",
-        historySample: "{}",
-        pricing: "{}",
-        yesProbabilityBps: 2500,
-        promptVersion: "test",
-        catalogVersion: "test",
-        schemaVersion: 2,
-        evaluatorVersion: "2",
-        pricingVersion: "2",
-        generationContext: "{}",
-        requestedModel: "test",
-        usage: "{}",
-        durationMs: 1,
-      },
-    });
-
     const entries = [
       {
         id: 1,
@@ -261,25 +205,6 @@ describe("resolveLedgerGameLabels", () => {
         createdAt: new Date(0),
       },
       {
-        id: 3,
-        delta: -1,
-        balanceAfter: 35,
-        kind: BucksLedgerKindSchema.parse("weekly_parlay_stake"),
-        matchId: null,
-        context: JSON.stringify({
-          type: "weekly_parlay_stake",
-          version: 1,
-          definitionId: definition.id,
-          periodKey: "2030-01-06",
-          slot: 0,
-          side: "YES",
-          yesProbabilityBps: 2500,
-          totalStake: 1,
-          quotedGrossPayout: 4,
-        }),
-        createdAt: new Date(0),
-      },
-      {
         id: 4,
         delta: 20,
         balanceAfter: 55,
@@ -295,8 +220,6 @@ describe("resolveLedgerGameLabels", () => {
     expect(labels.get(1)).toBe("jerred, bryan");
     // Earn rows resolve through the pool's frozen roster.
     expect(labels.get(2)).toContain("jerred");
-    // Weekly rows resolve through their definition's frozen subjects.
-    expect(labels.get(3)).toBe("weekly · jerred, bryan");
     // A seed has no game; the renderer shows nothing for it.
     expect(labels.has(4)).toBe(false);
     expect(account.id).toBeGreaterThan(0);

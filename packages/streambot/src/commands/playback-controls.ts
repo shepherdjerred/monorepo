@@ -18,6 +18,8 @@ import type {
   PlaybackCommandResult,
   PlaybackCommandServiceDeps,
 } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
+import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 
 /** Permission-checked playback controls shared by slash and voice transports. */
 export class PlaybackControls {
@@ -144,11 +146,13 @@ export class PlaybackControls {
   }
 
   setLoop(mode: LoopMode): PlaybackCommandResult {
+    this.assertSportsControlSupported();
     this.deps.dispatch({ type: "SET_LOOP", mode });
     return { outcome: "loop-set", message: `Loop set to ${mode}.` };
   }
 
   shuffle(): PlaybackCommandResult {
+    this.assertSportsControlSupported();
     const count = this.deps.view().queue.length;
     this.deps.dispatch({ type: "SHUFFLE" });
     return {
@@ -166,6 +170,7 @@ export class PlaybackControls {
   }
 
   remove(userId: UserId, position: number): PlaybackCommandResult {
+    this.assertSportsControlSupported();
     const item = this.deps.view().queue[position - 1];
     if (item === undefined) {
       throw new PlaybackCommandBoundaryError(
@@ -191,6 +196,7 @@ export class PlaybackControls {
   }
 
   clear(userId: UserId): PlaybackCommandResult {
+    this.assertSportsControlSupported();
     if (!isAdmin(userId, this.deps.config.discord.adminIds)) {
       throw new PlaybackCommandBoundaryError(
         "Only an admin can clear the queue.",
@@ -206,6 +212,7 @@ export class PlaybackControls {
   }
 
   move(from: number, to: number): PlaybackCommandResult {
+    this.assertSportsControlSupported();
     const queue = this.deps.view().queue;
     const item = queue[from - 1];
     if (item === undefined || to < 1 || to > queue.length) {
@@ -319,7 +326,24 @@ export class PlaybackControls {
         "Only the requester or an admin can control this.",
       );
     }
+    if (this.isSportsSource(view.current.source)) {
+      throw new PlaybackCommandBoundaryError(
+        "Live sports support play, skip/stop, and volume only.",
+      );
+    }
     return view;
+  }
+
+  private assertSportsControlSupported(): void {
+    if (this.isSportsSource(this.deps.view().current?.source)) {
+      throw new PlaybackCommandBoundaryError(
+        "Live sports support play, skip/stop, and volume only.",
+      );
+    }
+  }
+
+  private isSportsSource(source: Source | undefined): boolean {
+    return source?.kind === "url" && sportsEventForSource(source.url) !== null;
   }
 
   private relativeChapter(view: PlaybackView, target: "next" | "previous") {

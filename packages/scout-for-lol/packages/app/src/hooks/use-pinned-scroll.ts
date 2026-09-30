@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isScrolledToBottom } from "#src/lib/pinned-scroll.ts";
 
 /**
@@ -23,12 +17,10 @@ import { isScrolledToBottom } from "#src/lib/pinned-scroll.ts";
  * re-render to know where the reader is.
  */
 export function usePinnedScroll(): {
-  bottomRef: RefObject<HTMLDivElement | null>;
   scrollIfPinned: () => void;
   pinned: boolean;
   scrollToBottom: () => void;
 } {
-  const bottomRef = useRef<HTMLDivElement | null>(null);
   // Optimistic only until the effect below measures; a reader who mounted
   // part-way up is un-pinned before anything can scroll them.
   const pinnedRef = useRef(true);
@@ -65,25 +57,33 @@ export function usePinnedScroll(): {
     if (pinnedRef.current) {
       // `auto`, not `smooth`: per-token smooth scrolling restarts the
       // animation on every delta and janks the whole stream.
-      bottomRef.current?.scrollIntoView({ block: "end" });
+      scrollDocumentToBottom("auto");
     }
   }, []);
 
   const scrollToBottom = useCallback((): void => {
-    // The document, not `bottomRef`. That anchor sits *above* the sticky
-    // composer, which is still in normal flow and carries the pill, the box
-    // and the page padding — so aligning it with the viewport can leave more
-    // than the 120px slack below, finishing the scroll still un-pinned with
-    // the pill still showing.
-    //
     // Smooth here, unlike `scrollIfPinned`: one deliberate jump the reader
     // asked for, not a per-token correction whose animation would restart on
     // every delta.
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: "smooth",
-    });
+    scrollDocumentToBottom("smooth");
   }, []);
 
-  return { bottomRef, scrollIfPinned, pinned, scrollToBottom };
+  return { scrollIfPinned, pinned, scrollToBottom };
+}
+
+/**
+ * The document, never an anchor element inside the transcript.
+ *
+ * Following the stream used to `scrollIntoView` an anchor at the end of the
+ * transcript. That anchor sits above the sticky composer, so aligning it with
+ * the viewport bottom stops a few pixels short of the document's — harmless
+ * against the pinned slack, but it meant the two ways of reaching the bottom
+ * disagreed about where the bottom was. One target for both, and the page no
+ * longer needs an empty node in the transcript to aim at.
+ */
+function scrollDocumentToBottom(behavior: ScrollBehavior): void {
+  window.scrollTo({
+    top: document.documentElement.scrollHeight,
+    behavior,
+  });
 }

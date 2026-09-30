@@ -22,7 +22,7 @@ import { TaskQueueSchema } from "#shared/task-queues.ts";
  * home/reports/etc. traces this shared process actually hosts.
  *
  * Registered in worker.ts's workflowModules list AFTER the official
- * @temporalio/interceptors-opentelemetry module, so trace.getActiveSpan()
+ * @temporalio/interceptors-opentelemetry-v2 module, so trace.getActiveSpan()
  * here is the RunWorkflow span that interceptor already opened (interceptor
  * composition runs modules' inbound interceptors in list order, each
  * wrapping the next — see @temporalio/common's composeInterceptorsWith).

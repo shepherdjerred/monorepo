@@ -22,11 +22,16 @@ import {
 } from "#src/trpc/guild-permission.ts";
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
+import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
+import { guildFeatureStatus } from "#src/trpc/guild-feature-status.ts";
 
 const GuildInputSchema = z.strictObject({ guildId: DiscordGuildIdSchema });
 
 async function assertHallEnabled(guildId: DiscordGuildId): Promise<void> {
-  if (!(await isPolicyEnabled("hall_of_fame_enabled", { server: guildId }))) {
+  if (
+    !(await isPolicyEnabled("hall_of_fame_enabled", { server: guildId })) &&
+    !isDevGuildOverrideGuild(guildId)
+  ) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Hall of Fame is unavailable",
@@ -35,6 +40,14 @@ async function assertHallEnabled(guildId: DiscordGuildId): Promise<void> {
 }
 
 export const hallRouter = router({
+  status: webProcedure.query(
+    async ({ ctx }) =>
+      await guildFeatureStatus(
+        ctx.user,
+        async (guildId) =>
+          await isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
+      ),
+  ),
   get: webProcedure.input(GuildInputSchema).query(async ({ ctx, input }) => {
     await assertHallEnabled(input.guildId);
     await resolveGuildPermissions(ctx.user, input.guildId);
@@ -51,7 +64,7 @@ export const hallRouter = router({
     .mutation(async ({ ctx, input }) => {
       await assertHallEnabled(input.guildId);
       if (input.channelId !== null) {
-        assertChannelInGuild({
+        await assertChannelInGuild({
           guildId: input.guildId,
           channelId: input.channelId,
         });
@@ -73,6 +86,15 @@ export const hallRouter = router({
         actorDiscordId: ctx.user.discordId,
         stage: configuration.environment,
       });
+      if (request === null) {
+        // BAD_REQUEST is an expected client error: surfaced as 4xx, never
+        // shipped to Sentry.
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Enable at least one Hall of Fame queue family and record to start a baseline.",
+        });
+      }
       await launchHallBaseline(configuration.environment, request);
       return request;
     }),

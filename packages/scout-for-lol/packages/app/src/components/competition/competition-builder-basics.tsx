@@ -3,13 +3,16 @@ import {
   visibilityDescription,
   visibilityToString,
 } from "@scout-for-lol/data";
-import { Input, Textarea } from "@scout-for-lol/design-system/components/input";
+import {
+  Input,
+  Textarea,
+} from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   BuilderFieldError,
   builderErrorAttributes,
 } from "#src/components/builder-field-error.tsx";
-import type { CompetitionBuilderState } from "#src/lib/competition-builder-state.ts";
+import type { CompetitionBuilderState } from "#src/lib/bucks/competition-builder-state.ts";
 
 export function CompetitionBuilderBasics(props: {
   state: CompetitionBuilderState;

@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router";
 import { ArrowDown, ChevronDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { ExploreSuggestionChips } from "#src/components/explore/explore-suggestion-chips.tsx";
+import { ExploreSuggestionChips } from "#src/components/explore/transcript/explore-suggestion-chips.tsx";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,11 +13,11 @@ import {
 import { ExploreComposer } from "#src/components/explore/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore/explore-header.tsx";
 import { ExploreShareRow } from "#src/components/explore/explore-share.tsx";
-import { ExploreTranscript } from "#src/components/explore/explore-transcript.tsx";
-import type { ExploreTranscriptActions } from "#src/components/explore/explore-transcript-actions.ts";
-import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
-import { ErrorPanel } from "#src/components/route-error-panel.tsx";
-import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
+import { ExploreTranscript } from "#src/components/explore/transcript/explore-transcript.tsx";
+import type { ExploreTranscriptActions } from "#src/components/explore/transcript/explore-transcript-actions.ts";
+import { ForbiddenPanel } from "#src/components/chrome/forbidden-panel.tsx";
+import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
+import { SectionSkeleton } from "#src/components/chrome/section-skeleton.tsx";
 import { useExploreConversation } from "#src/hooks/use-explore-conversation.ts";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
@@ -31,11 +31,11 @@ import {
   exportFilename,
 } from "#src/lib/explore/explore-export.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
-import { useExploreParams } from "#src/lib/route-params.ts";
+import { useExploreParams } from "#src/lib/routes/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
 import { useExploreRuns } from "#src/components/explore/explore-runs-context.ts";
 import { usePinnedScroll } from "#src/hooks/use-pinned-scroll.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
  * Explore: ask questions of every match Scout has ingested.
@@ -53,6 +53,10 @@ const EXPLORE_CONTAINER_CLASS =
 export function Explore() {
   const { conversationId: routeConversationId } = useExploreParams();
   const conversationId = routeConversationId ?? null;
+  const [composerElement, setComposerElement] = useState<HTMLDivElement | null>(
+    null,
+  );
+  const [composerHeight, setComposerHeight] = useState(0);
   const location = useLocation();
   const locationKeyRef = useRef(location.key);
   locationKeyRef.current = location.key;
@@ -72,6 +76,7 @@ export function Explore() {
     transcript,
     messages,
     title,
+    origin,
     shared,
   } = useExploreConversation(conversationId);
 
@@ -189,6 +194,13 @@ export function Explore() {
     shared,
   ]);
 
+  // Memoized because `visiblePending` returns fresh literals — `trace: []`
+  // among them — on every call, and those values are the dependencies of the
+  // follow-the-stream effect below. Unmemoized, the effect fired on *every*
+  // render, including the ones `usePinnedScroll` itself causes when the
+  // reader's scroll position crosses the pinned threshold. The result was a
+  // page that scrolled itself to the bottom the moment a reader scrolled into
+  // the last 120px, with no turn streaming at all.
   const {
     pendingQuestion,
     pendingAnswer,
@@ -197,10 +209,26 @@ export function Explore() {
     trace: pendingTrace,
     preview: pendingPreview,
     visualization: pendingVisualization,
-  } = visiblePending(pendingTurn, conversationId, messages);
+  } = useMemo(
+    () => visiblePending(pendingTurn, conversationId, messages),
+    [pendingTurn, conversationId, messages],
+  );
 
-  const { bottomRef, scrollIfPinned, pinned, scrollToBottom } =
-    usePinnedScroll();
+  const { scrollIfPinned, pinned, scrollToBottom } = usePinnedScroll();
+  useEffect(() => {
+    if (composerElement === null) return;
+    const updateHeight = () => {
+      setComposerHeight(
+        Math.ceil(composerElement.getBoundingClientRect().height),
+      );
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(composerElement);
+    return () => {
+      observer.disconnect();
+    };
+  }, [composerElement]);
   useEffect(() => {
     scrollIfPinned();
   }, [
@@ -296,6 +324,7 @@ export function Explore() {
     <div className={EXPLORE_CONTAINER_CLASS}>
       <ExploreHeader
         title={conversationId === null ? "Explore" : title}
+        voiceConversation={origin === "voice"}
         {...(headerActions === undefined ? {} : { actions: headerActions })}
       />
 
@@ -305,7 +334,14 @@ export function Explore() {
         pendingTurn,
       }) && <ExploreSuggestionChips onSelect={ask} enabled={enabled} />}
 
-      <div className="min-h-0 flex-1 space-y-4 pb-4">
+      <div
+        className="min-h-0 flex-1 space-y-4 pb-4"
+        style={
+          composerHeight === 0
+            ? undefined
+            : { paddingBottom: `${String(composerHeight)}px` }
+        }
+      >
         <ExploreTranscript
           messages={messages}
           pendingQuestion={pendingQuestion}
@@ -335,13 +371,17 @@ export function Explore() {
         {share.showShareLink && share.shareLink !== null && (
           <ExploreShareRow shareLink={share.shareLink} copied={share.copied} />
         )}
-
-        <div ref={bottomRef} />
       </div>
 
       {/* Pinned to the bottom of the viewport with a translucent gradient fade:
-          allows chat text to remain visible below the composer through the fade effect. */}
-      <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 bg-gradient-to-t from-scout-canvas/80 via-scout-canvas/30 via-40% to-transparent dark:from-black/75 dark:via-black/30 dark:via-40% dark:to-transparent">
+          allows chat text to remain visible below the composer through the fade
+          effect. `explore-composer-fade` carries the gradient (see global.css
+          for why it is not built from `from-*`/`to-*`); it is the canvas colour
+          in every theme, which switches with `data-scout-mode`. */}
+      <div
+        ref={setComposerElement}
+        className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 explore-composer-fade"
+      >
         <ExploreJumpToLatest pinned={pinned} onClick={scrollToBottom} />
         <div className="pointer-events-auto">
           <ExploreComposer
@@ -367,16 +407,25 @@ function errorText(error: unknown): string {
 /**
  * Only while the reader is away from the bottom, so the idle page is
  * unchanged and nothing overlaps the composer at rest.
+ *
+ * Absolutely positioned, not a flow sibling of the composer. In flow the pill
+ * added its own height to the sticky footer, so appearing and disappearing
+ * changed the document's height by ~40px — and it appears and disappears
+ * exactly when the reader is scrolling near the bottom, which shunted the page
+ * under them in whichever direction they had just moved.
+ *
+ * It carries its own surface because `outline` is transparent by design: over
+ * the transcript it otherwise read as loose text sitting on the conversation.
  */
 function ExploreJumpToLatest(props: { pinned: boolean; onClick: () => void }) {
   if (props.pinned) return null;
   return (
-    <div className="pointer-events-auto mb-2 flex justify-center">
+    <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
       <Button
         type="button"
         variant="outline"
         size="sm"
-        className="rounded-full shadow-sm"
+        className="pointer-events-auto rounded-full bg-scout-surface shadow-sm hover:bg-scout-hover"
         onClick={props.onClick}
       >
         <ArrowDown className="size-3.5" aria-hidden="true" />
@@ -436,7 +485,7 @@ function ExploreErrorBanner(props: {
   readonly onRetry: () => void;
 }) {
   return (
-    <div className="rounded-md border border-scout-danger/40 bg-scout-danger/10 p-3 text-sm text-scout-ink space-y-2">
+    <div className="rounded-md border border-scout-danger-fill/40 bg-scout-danger-fill/10 p-3 text-sm text-scout-ink space-y-2">
       <div className="flex items-center justify-between gap-3">
         <span className="font-medium">{props.pageError}</span>
         <Button
@@ -453,7 +502,7 @@ function ExploreErrorBanner(props: {
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger/10 transition-colors group"
+            className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger-fill/10 transition-colors group"
           >
             <span>Technical details</span>
             <ChevronDown

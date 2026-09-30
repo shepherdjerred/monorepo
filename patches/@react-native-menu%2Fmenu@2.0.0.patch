@@ -1,0 +1,14 @@
+diff --git a/ios/MenuViewManager.mm b/ios/MenuViewManager.mm
+index 3d149b3e7426b8f7c999603ddf1e15e12331c33a..c644d8b6e953b002439f6c3be6227732bee30b73 100644
+--- a/ios/MenuViewManager.mm
++++ b/ios/MenuViewManager.mm
+@@ -1,6 +1,8 @@
+ #import <React/RCTViewManager.h>
+ #import <React/RCTUIManager.h>
+-#import "RCTBridge.h"
++// Patched: bare "RCTBridge.h" does not resolve against React-Core-prebuilt
++// (RN 0.87+); the React-module-qualified import matches lines 1-2.
++#import <React/RCTBridge.h>
+ 
+ #ifdef RCT_NEW_ARCH_ENABLED
+ // NEW ARCH

@@ -1,6 +1,8 @@
 ---
 name: chezmoi-helper
-description: "Use this skill for Chezmoi dotfiles management - templates, scripts, multi-machine config, and CLI operations When …"
+description: |
+  Chezmoi dotfiles management - templates, scripts, multi-machine config, and CLI operations
+  When user works with chezmoi, dotfiles, mentions chezmoi commands, .tmpl files, or dotfile management
 ---
 
 # Chezmoi Helper Agent

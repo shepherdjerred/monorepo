@@ -1,7 +1,12 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
-import { SCOUT_TRPC_NON_FAULT_CODES } from "./scout-alert-constants.ts";
+import {
+  SCOUT_GATEWAY_OWNER_BY_STAGE,
+  SCOUT_TRPC_NON_FAULT_CODES,
+} from "./scout-alert-constants.ts";
+import { getScoutDurableRuleGroup } from "./scout-durable-rules.ts";
+import { getScoutTemporalRuleGroup } from "./scout-temporal-rules.ts";
 
 /**
  * tRPC result codes that are ordinary traffic on a public web surface rather
@@ -18,152 +23,11 @@ import { SCOUT_TRPC_NON_FAULT_CODES } from "./scout-alert-constants.ts";
  * alert meant to catch it. These rules use absolute counts over a window
  * instead, sized to what "obviously wrong" looks like at this scale.
  */
-function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
-  return {
-    name: "scout-temporal",
-    rules: [
-      {
-        alert: "ScoutTemporalDisconnected",
-        annotations: {
-          summary: "Scout's embedded Temporal supervisor is disconnected",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has rejected durable starts because its Temporal supervisor has been disconnected for five minutes. Legacy execution must remain stopped; restore Temporal connectivity.",
-          ),
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          '(min by (environment) (scout_temporal_connected{environment=~"beta|prod"}) == 0) or absent(scout_temporal_connected{environment="beta"}) or absent(scout_temporal_connected{environment="prod"})',
-        ),
-        for: "5m",
-        labels: { severity: "critical" },
-      },
-      {
-        alert: "ScoutTemporalWorkerMissing",
-        annotations: {
-          summary: "A Scout Temporal task-queue worker is missing",
-          message:
-            "Scout must expose workflow, realtime, interactive, background, and lake Workers after Discord readiness. Inspect the embedded Worker supervisor before changing concurrency.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          '(count by (environment) (scout_temporal_workers{environment=~"beta|prod"} == 1) < 5) or absent(scout_temporal_workers{environment="beta"}) or absent(scout_temporal_workers{environment="prod"})',
-        ),
-        for: "5m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalActivityFailing",
-        annotations: {
-          summary: "Scout Temporal Activities are failing",
-          message: escapePrometheusTemplate(
-            "Scout queue {{ $labels.task_queue }} has failed Activities in the last 30 minutes. Inspect the Workflow history and effect claims before retrying manually.",
-          ),
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'sum by (task_queue) (increase(activity_task_fail{task_queue=~"scout-(beta|prod).*"}[30m])) > 0',
-        ),
-        for: "10m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalTaskScheduleToStartHigh",
-        annotations: {
-          summary: "Scout Temporal tasks are waiting for a Worker",
-          message:
-            "Scout task p95 schedule-to-start latency has exceeded ten seconds. Inspect the affected task queue and embedded Worker resources before tuning concurrency.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'histogram_quantile(0.95, sum by (task_queue, le) (rate(task_schedule_to_start_latency_bucket{task_queue=~"scout-(beta|prod).*"}[5m]))) > 10000',
-        ),
-        for: "5m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalDurabilityMetricsUnknown",
-        annotations: {
-          summary: "Scout Temporal durability metrics are unavailable",
-          message:
-            "Scout could not query report outbox or interactive projection state. Restore the Scout database metric query before relying on the age and drift alerts.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          '(scout_temporal_report_outbox_oldest_timestamp_seconds < 0) or (scout_temporal_stale_product_projections < 0) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="beta"}) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="prod"}) or absent(scout_temporal_stale_product_projections{environment="beta"}) or absent(scout_temporal_stale_product_projections{environment="prod"})',
-        ),
-        for: "5m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalReportOutboxStale",
-        annotations: {
-          summary: "Scout's report Schedule outbox is stale",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has an unprocessed report Schedule outbox row older than five minutes. Inspect the singleton reconciler Workflow and Temporal Schedule.",
-          ),
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "scout_temporal_report_outbox_oldest_timestamp_seconds > 0 and (time() - scout_temporal_report_outbox_oldest_timestamp_seconds) > 300",
-        ),
-        for: "5m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalReportScheduleDrift",
-        annotations: {
-          summary: "Scout report Schedules differ from product state",
-          message:
-            "The report Schedule audit found a missing, drifted, orphaned, or ownership-mismatched Schedule. Unknown ownership mismatches are deliberately not deleted.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "scout_temporal_report_schedule_drift > 0 or scout_temporal_report_schedule_orphans > 0",
-        ),
-        for: "5m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalProductProjectionStale",
-        annotations: {
-          summary: "Scout product execution state is stale",
-          message:
-            "An Explore or report-AI projection has remained active beyond its 40-minute execution budget. Temporal remains authoritative; reconcile the product row from Workflow state.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "scout_temporal_stale_product_projections > 0",
-        ),
-        for: "5m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalProviderAttemptInterrupted",
-        annotations: {
-          summary: "Scout salvaged an ambiguous provider attempt",
-          message: escapePrometheusTemplate(
-            "Scout interrupted {{ $value }} {{ $labels.kind }} provider attempt(s) rather than risk duplicate model spend. Inspect persisted partial output and the original Worker interruption.",
-          ),
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "sum by (kind) (increase(scout_temporal_interrupted_provider_attempts_total[30m])) > 0",
-        ),
-        for: "1m",
-        labels: { severity: "warning" },
-      },
-      {
-        alert: "ScoutTemporalDuplicateEffectClaim",
-        annotations: {
-          summary: "Scout retried an ambiguous or mismatched external effect",
-          message: escapePrometheusTemplate(
-            "Scout observed {{ $value }} duplicate {{ $labels.kind }} effect claim(s) with outcome {{ $labels.outcome }}. Verify the stable Discord nonce or storage key prevented a duplicate effect.",
-          ),
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'sum by (kind, outcome) (increase(scout_temporal_duplicate_effect_claims_total{outcome=~"ambiguous_retry|kind_mismatch"}[30m])) > 0',
-        ),
-        for: "1m",
-        labels: { severity: "warning" },
-      },
-    ],
-  };
-}
 
 export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     getScoutTemporalRuleGroup(),
+    getScoutDurableRuleGroup(),
     {
       name: "scout-riot-api",
       rules: [
@@ -195,6 +59,38 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             "sum by (environment, source) (rate(riot_api_errors_total[15m])) * 60 > 10",
           ),
           for: "15m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
+          alert: "ScoutRiotApiAppRateLimitHigh",
+          annotations: {
+            summary: "Riot API app rate limit usage is elevated",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit > 0.7",
+          ),
+          for: "5m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "ScoutRiotApiAppRateLimitCritical",
+          annotations: {
+            summary: "Riot API app rate limit usage is critically high",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window. Requests may start being throttled with 429s.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit > 0.9",
+          ),
+          for: "5m",
           labels: {
             severity: "critical",
           },
@@ -326,7 +222,7 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
               "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected daily.",
             ),
             runbook_url:
-              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/scheduler.ts",
+              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/schedule/scheduler.ts",
           },
           // 25h = one day + 1h grace. system_source=COMPETITION uses 0 0 * * *.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -347,7 +243,7 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
               "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected weekly (Sunday).",
             ),
             runbook_url:
-              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/scheduler.ts",
+              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/schedule/scheduler.ts",
           },
           // 8d2h grace. system_source=COMMON_DENOMINATOR uses 0 18 * * 0.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -397,15 +293,34 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           // Whole-bot outage: if Scout drops off Discord nothing posts at all.
           // Previously only caught indirectly (and slowly) by the report-missed
           // alert; this pages within minutes.
+          //
+          // Scoped per stage to the role that actually holds the shard there —
+          // beta's `gateway` pod, prod's `combined` pod. The gauge is a plain
+          // prom-client gauge, so every pod that never opens a shard exports it
+          // as a truthful 0; an unscoped `min by (environment)` therefore reads
+          // beta's `application` pod as a Discord outage the moment the split
+          // lands. `SCOUT_GATEWAY_OWNER_BY_STAGE` is the mapping, and the one
+          // place to edit when prod splits too.
+          //
+          // The `absent()` half of each stage is not redundant with the
+          // threshold: scoping to one role means the rule goes quiet if that
+          // stage has no gateway-owning pod scheduled at all, and "nothing is
+          // holding the shard" is exactly the outage this alert exists for.
           alert: "ScoutDiscordDisconnected",
           annotations: {
             summary: "Scout is disconnected from Discord",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} has been disconnected from the Discord gateway for >5m. No reports, match updates, or competitions are posting. Check the pod and Discord status.",
+              "Scout {{ $labels.environment }} has been disconnected from the Discord gateway for >5m, or has no pod holding the gateway at all. No reports, match updates, or competitions are posting. Check the gateway-owning pod for that stage and Discord status.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "min by (environment) (discord_connection_status) == 0",
+            SCOUT_GATEWAY_OWNER_BY_STAGE.flatMap(({ environment, role }) => {
+              const selector = `discord_connection_status{environment="${environment}",role="${role}"}`;
+              return [
+                `(min by (environment) (${selector}) == 0)`,
+                `absent(${selector})`,
+              ];
+            }).join(" or "),
           ),
           for: "5m",
           labels: {

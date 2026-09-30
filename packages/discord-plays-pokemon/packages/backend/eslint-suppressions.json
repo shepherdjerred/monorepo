@@ -24,7 +24,7 @@
       "count": 1
     }
   },
-  "src/goal/catch-evidence.ts": {
+  "src/goal/memory/catch-evidence.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -59,7 +59,7 @@
       "count": 1
     }
   },
-  "src/goal/knowledge.ts": {
+  "src/goal/memory/knowledge.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

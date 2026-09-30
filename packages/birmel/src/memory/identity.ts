@@ -101,10 +101,9 @@ function scopeLocation(
   if (scope.userId !== null) {
     return ["user", scope.userId];
   }
-  if (memoryScope === "relationship") {
-    return ["relationship", ...scope.relatedUserIds];
-  }
-  return ["guild"];
+  return memoryScope === "relationship"
+    ? ["relationship", ...scope.relatedUserIds]
+    : ["guild"];
 }
 
 function hashIdentity(parts: unknown): string {

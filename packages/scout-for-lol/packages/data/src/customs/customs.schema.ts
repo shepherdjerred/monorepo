@@ -282,7 +282,14 @@ export const CustomAuditEventSchema = z.strictObject({
   actorId: z.string().min(1),
   action: z.string().min(1),
   payload: z.unknown(),
-  source: z.enum(["ACTIVITY", "DISCORD", "RIOT", "OPERATOR", "TEMPORAL"]),
+  source: z.enum([
+    "ACTIVITY",
+    "DISCORD",
+    "RIOT",
+    "SCOUT_CLIENT",
+    "OPERATOR",
+    "TEMPORAL",
+  ]),
   createdAt: z.iso.datetime(),
 });
 export type CustomAuditEvent = z.infer<typeof CustomAuditEventSchema>;

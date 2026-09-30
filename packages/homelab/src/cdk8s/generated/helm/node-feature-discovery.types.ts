@@ -311,10 +311,6 @@ export type NodefeaturediscoveryHelmValuesMaster = {
    */
   labels?: NodefeaturediscoveryHelmValuesMasterLabels;
   /**
-   * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity
-   * [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) for the nfd-master pods.
-   * -- NFD-Master
-   *
    * [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) for the nfd-master pods.
    *
    * @default {"nodeAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"weight":1,"preference":{"matchExpressions":[{"key":"node-role.kubernetes.io/control-plane","operator":"In","values":[""]}]}}]}}
@@ -980,18 +976,6 @@ export type NodefeaturediscoveryHelmValuesWorker = {
    */
   priorityClassName?: string | null;
   /**
-   * Update strategy for the nfd-worker DaemonSet. Defaults to a rolling
-   * update with `maxUnavailable: "10%"` so upgrades complete in a bounded
-   * number of waves on clusters of any size (the Kubernetes default of
-   * `maxUnavailable: 1` rolls one node at a time and makes Helm wait and
-   * Flux HelmRelease timeouts likely on large clusters). nfd-worker is
-   * stateless and node labels persist while a worker pod restarts, so a
-   * faster roll is safe. Set `maxUnavailable: 1` to restore the Kubernetes
-   * default. To use `type: OnDelete`, also set `rollingUpdate: null`
-   * (Helm deep-merges maps).
-   * [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
-   * -- NFD-Worker
-   *
    * Update strategy for the nfd-worker DaemonSet. Defaults to a rolling update with `maxUnavailable: "10%"` so upgrades complete in a bounded number of waves on clusters of any size (the Kubernetes default of `maxUnavailable: 1` rolls one node at a time and makes Helm wait and Flux HelmRelease timeouts likely on large clusters). nfd-worker is stateless and node labels persist while a worker pod restarts, so a faster roll is safe. Set `maxUnavailable: 1` to restore the Kubernetes default. To use `type: OnDelete`, also set `rollingUpdate: null` (Helm deep-merges maps). [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
    *
    * @default {"rollingUpdate":{"maxUnavailable":"10%"}}
@@ -1252,6 +1236,18 @@ export type NodefeaturediscoveryHelmValuesWorkerAffinity = object;
 
 export type NodefeaturediscoveryHelmValuesWorkerUpdateStrategy = {
   /**
+   * Update strategy for the nfd-worker DaemonSet. Defaults to a rolling
+   * update with `maxUnavailable: "10%"` so upgrades complete in a bounded
+   * number of waves on clusters of any size (the Kubernetes default of
+   * `maxUnavailable: 1` rolls one node at a time and makes Helm wait and
+   * Flux HelmRelease timeouts likely on large clusters). nfd-worker is
+   * stateless and node labels persist while a worker pod restarts, so a
+   * faster roll is safe. Set `maxUnavailable: 1` to restore the Kubernetes
+   * default. To use `type: OnDelete`, also set `rollingUpdate: null`
+   * (Helm deep-merges maps).
+   * [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
+   * -- NFD-Worker
+   *
    * @default {"maxUnavailable":"10%"}
    */
   rollingUpdate?: NodefeaturediscoveryHelmValuesWorkerUpdateStrategyRollingUpdate;

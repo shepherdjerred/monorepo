@@ -2,13 +2,21 @@ import { describe, expect, test } from "vitest";
 import {
   blockingPolicyForThreshold,
   evaluateGate,
+  evaluateMultiGate,
   firstReviewFindingCount,
+  gateExitCode,
   isBlocking,
+  REVIEW_GATE_BLOCKED_EXIT_CODE,
+  REVIEW_GATE_FAILURE_EXIT_CODE,
   type LowSeverityPolicy,
   reviewGateSkipReasonForAuthor,
+  type ProviderGateSnapshot,
 } from "./gate.ts";
+import { CODERABBIT_LOGIN } from "./providers/coderabbit.ts";
+import { coderabbitProvider } from "./providers/coderabbit.ts";
 import { codexProvider } from "./providers/codex.ts";
 import { greptileProvider } from "./providers/greptile.ts";
+import { qodoProvider } from "./providers/qodo.ts";
 import type { ReviewThread } from "./types.ts";
 
 function thread(overrides: Partial<ReviewThread>): ReviewThread {
@@ -38,13 +46,34 @@ function policy(
 }
 
 describe("reviewGateSkipReasonForAuthor", () => {
-  test("skips a GitHub Bot author when Codex cannot review it", () => {
+  test("skips a GitHub Bot author when the provider cannot review it", () => {
     expect(
       reviewGateSkipReasonForAuthor({
         author: {
           login: "long-summer-intern[bot]",
           type: "Bot",
         },
+        provider: qodoProvider,
+      }),
+    ).toBe("bot-author");
+  });
+
+  test("requires Codex review for a GitHub App-authored PR", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "justin-principal-engineer[bot]",
+          type: "Bot",
+        },
+        provider: codexProvider,
+      }),
+    ).toBeNull();
+  });
+
+  test("skips other GitHub App-authored PRs for Codex", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: { login: "renovate[bot]", type: "Bot" },
         provider: codexProvider,
       }),
     ).toBe("bot-author");
@@ -265,6 +294,85 @@ describe("evaluateGate", () => {
     expect(d.message).toContain("Codex");
   });
 
+  test("fails fast with quota remediation when the provider is blocked", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "usage-limited",
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("blocked (usage-limited)");
+    expect(d.message).toContain("abc123");
+    // The operator's next action is adding credits, not re-triggering.
+    expect(d.message).toContain("credits");
+    expect(d.message).not.toContain("Re-trigger");
+  });
+
+  test("a usage-limit block exits with the soft-fail quota status", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "usage-limited",
+    });
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_BLOCKED_EXIT_CODE);
+    expect(REVIEW_GATE_BLOCKED_EXIT_CODE).toBe(42);
+  });
+
+  test("findings, generic errors, and undeclared blocks exit with the hard failure status", () => {
+    const findings = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [thread({ priority: 0 })],
+    });
+    const errored = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+    });
+    const undeclared = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "something-else",
+    });
+    for (const d of [findings, errored, undeclared]) {
+      expect(d.state).toBe("failed");
+      expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+    }
+    expect(REVIEW_GATE_FAILURE_EXIT_CODE).not.toBe(
+      REVIEW_GATE_BLOCKED_EXIT_CODE,
+    );
+  });
+
+  test("a passing decision exits zero and a waiting one has no exit status", () => {
+    const passed = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [],
+    });
+    expect(gateExitCode(passed)).toBe(0);
+    const waiting = evaluateGate({
+      ...base,
+      reviewState: "reviewing",
+      threads: [],
+    });
+    expect(() => gateExitCode(waiting)).toThrow("no exit status");
+  });
+
+  test("keeps the generic errored message for an undeclared block reason", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "something-else",
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("did not complete successfully");
+    expect(d.message).toContain("something-else");
+  });
+
   test("passes when reviewed with no blocking threads", () => {
     const d = evaluateGate({
       ...base,
@@ -381,5 +489,308 @@ describe("evaluateGate", () => {
     expect(d.state).toBe("passed");
     expect(d.message).toContain("no-reviewable-files");
     expect(d.message).toContain("Greptile");
+  });
+});
+
+function snapshot(
+  overrides: Partial<ProviderGateSnapshot> & {
+    provider: ProviderGateSnapshot["provider"];
+  },
+): ProviderGateSnapshot {
+  return {
+    reviewState: "reviewed",
+    threads: [],
+    ...overrides,
+  };
+}
+
+describe("evaluateMultiGate", () => {
+  const head = "abc123";
+
+  test("one clean review passes while others are still reviewing", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({ provider: codexProvider }),
+        snapshot({ provider: coderabbitProvider, reviewState: "reviewing" }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+    expect(d.message).toContain("Codex");
+  });
+
+  test("an unresolved P0 vetoes an otherwise passing gate", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({ provider: codexProvider }),
+        snapshot({
+          provider: coderabbitProvider,
+          threads: [thread({ authorLogin: CODERABBIT_LOGIN, priority: 0 })],
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("veto");
+    expect(d.message).toContain("CodeRabbit");
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+  });
+
+  test("a P0 veto fails fast while another provider is still reviewing", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewing",
+          threads: [thread({ priority: 0 })],
+        }),
+        snapshot({ provider: coderabbitProvider, reviewState: "reviewing" }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("veto");
+  });
+
+  test("a P1 from another provider does not veto a pass", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({ provider: codexProvider }),
+        snapshot({
+          provider: coderabbitProvider,
+          reviewState: "reviewed",
+          // A P1 always blocks its own provider — but with Codex passed and
+          // no P0 standing anywhere, the gate still passes.
+          threads: [
+            thread({
+              authorLogin: CODERABBIT_LOGIN,
+              priority: 1,
+              raisedInReview: { ordinal: 2, hadBlockingSeverity: false },
+            }),
+          ],
+        }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+  });
+
+  test("resolved, outdated, or foreign P0 lookalikes do not veto", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({ provider: codexProvider }),
+        snapshot({
+          provider: coderabbitProvider,
+          threads: [
+            thread({
+              authorLogin: CODERABBIT_LOGIN,
+              priority: 0,
+              isResolved: true,
+            }),
+            thread({
+              authorLogin: CODERABBIT_LOGIN,
+              priority: 0,
+              isOutdated: true,
+            }),
+            thread({ authorLogin: "shepherdjerred", priority: 0 }),
+          ],
+        }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+  });
+
+  test("waits while any provider is still reviewing", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewing",
+          threads: [thread({ priority: 2 })],
+        }),
+        snapshot({ provider: coderabbitProvider, reviewState: "reviewing" }),
+      ],
+    });
+    expect(d.state).toBe("waiting");
+    expect(d.message).toContain("Codex");
+    expect(d.message).toContain("CodeRabbit");
+  });
+
+  test("unanimous blocks stay on the soft-fail path", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "errored",
+          blockedReason: "usage-limited",
+        }),
+        snapshot({
+          provider: coderabbitProvider,
+          reviewState: "errored",
+          blockedReason: "usage-limited",
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    if (d.state !== "failed") throw new Error("unreachable");
+    expect(d.blockedReason).toBe("usage-limited");
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_BLOCKED_EXIT_CODE);
+  });
+
+  test("a findings failure among blocks fails hard and names the ignored", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewed",
+          // P1, not P0: a P0 would take the veto branch instead of this one.
+          threads: [thread({ priority: 1 })],
+        }),
+        snapshot({
+          provider: coderabbitProvider,
+          reviewState: "errored",
+          blockedReason: "usage-limited",
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+    expect(d.message).toContain("Ignored blocked provider(s): CodeRabbit");
+  });
+});
+
+describe("evaluateMultiGate — skipped providers", () => {
+  const head = "abc123";
+
+  test("unanimous skips pass", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: qodoProvider,
+          skipReason: "bot-author",
+        }),
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "no-reviewable-files",
+        }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+    expect(d.message).toContain("skipped");
+  });
+
+  test("a skip is not a pass while others still review", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({ provider: codexProvider, reviewState: "reviewing" }),
+      ],
+    });
+    expect(d.state).toBe("waiting");
+    expect(d.message).toContain("Codex");
+  });
+
+  test("a skip beside a real pass still passes on the reviewer", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({ provider: codexProvider }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+    expect(d.message).toContain("Codex");
+    expect(d.message).not.toContain("Greptile");
+  });
+
+  test("a skip beside findings fails on the findings", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewed",
+          threads: [thread({ priority: 1 })],
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+  });
+
+  test("a skip beside quota blocks fails hard instead of soft-failing", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({
+          provider: codexProvider,
+          reviewState: "errored",
+          blockedReason: "usage-limited",
+        }),
+      ],
+    });
+    // Exit 42 means "no review could run", which is false here: Greptile
+    // declined the PR rather than blocking on it, so no provider reviewed.
+    expect(d.state).toBe("failed");
+    if (d.state !== "failed") throw new Error("unreachable");
+    expect(d.blockedReason).toBeNull();
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+    expect(d.message).toContain("Ignored blocked provider(s): Codex");
+  });
+
+  test("a stale P0 from a skipped provider still vetoes", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+          threads: [thread({ authorLogin: "greptile-apps", priority: 0 })],
+        }),
+        snapshot({ provider: codexProvider }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("veto");
+  });
+
+  test("throws loudly with no provider snapshots", () => {
+    expect(() =>
+      evaluateMultiGate({ head, policy: policy(), providers: [] }),
+    ).toThrow(/at least one provider/);
   });
 });

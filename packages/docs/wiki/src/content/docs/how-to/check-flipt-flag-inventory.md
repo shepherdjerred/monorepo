@@ -30,7 +30,8 @@ bun run check-flipt-flag-inventory
 
 The command checks every environment and product namespace declared in the
 managed inventory: `beta` and `prod`, each containing `scout`, `birmel`,
-`streambot`, `starlight-karma-bot`, `trmnl-dashboard`, and `temporal`.
+`streambot`, `starlight-karma-bot`, `trmnl-dashboard`, `temporal`, and
+`alert-dashboard`.
 
 Filter either dimension independently:
 
@@ -41,7 +42,7 @@ bun run check-flipt-flag-inventory -- --environment beta --namespace scout
 ```
 
 `FLIPT_ENVIRONMENT` and `FLIPT_NAMESPACE` are also accepted as exact filters.
-Without filters, the command always checks the complete twelve-pair matrix.
+Without filters, the command always checks the complete fourteen-pair matrix.
 
 ## 3. Create missing declared keys
 

@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 import {
+  computeKda,
   laneToString,
   LaneSchema,
   type Lane,
@@ -128,7 +129,7 @@ export type PlayerHistorySignals = z.infer<typeof PlayerHistorySignalsSchema>;
 // ============================================================================
 
 function kda(kills: number, deaths: number, assists: number): number {
-  return deaths === 0 ? kills + assists : (kills + assists) / deaths;
+  return computeKda({ kills, deaths, assists });
 }
 
 function laDateString(date: Date): string {
@@ -197,12 +198,9 @@ function lpThisWeekOf(rankPoints: RankPoint[], now: Date): number | undefined {
     );
   const first = inWindow[0];
   const last = inWindow.at(-1);
-  if (first?.rankBefore === undefined || last?.rankAfter === undefined) {
-    return undefined;
-  }
-  return (
-    rankToLeaguePoints(last.rankAfter) - rankToLeaguePoints(first.rankBefore)
-  );
+  return first?.rankBefore === undefined || last?.rankAfter === undefined
+    ? undefined
+    : rankToLeaguePoints(last.rankAfter) - rankToLeaguePoints(first.rankBefore);
 }
 
 function performanceOf(

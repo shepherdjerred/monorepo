@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 type ResolvedName = {
   id: string;
@@ -32,8 +32,9 @@ export function useDiscordNames(ids: (string | null)[]): {
   );
   return {
     resolve: (id) => {
-      if (id === null || query.data === undefined) return null;
-      return query.data[id] ?? null;
+      return id === null || query.data === undefined
+        ? null
+        : (query.data[id] ?? null);
     },
   };
 }

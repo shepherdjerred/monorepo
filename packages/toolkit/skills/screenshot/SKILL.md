@@ -49,9 +49,7 @@ AND `ENABLE_DEV_LOGIN=true`, which `dev:web` sets — so it never ships
 enabled to beta/prod) instead of a real Discord OAuth click-through.
 
 **Explicitly out of scope** (different tooling needed, not attempted here):
-`scout-for-lol/packages/desktop` (Tauri/Rust — no browser-drivable dev
-server) and `tasks-for-obsidian` (React Native/Metro — needs a
-simulator/device).
+`tasks-for-obsidian` (React Native/Metro — needs a simulator/device).
 
 ## Examples
 

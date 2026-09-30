@@ -48,7 +48,7 @@ export function HistoryPage(): React.JSX.Element {
   };
   return (
     <main>
-      <title>History · Alerts</title>
+      <title>History · Ops</title>
       <StaleNotice
         errors={eventsValue.status === "degraded" ? eventsValue.errors : []}
       />

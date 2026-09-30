@@ -163,10 +163,9 @@ function totalsFor(input: {
 
 /** `closes <t:…:R>`, omitted when the caller has no authoritative close time. */
 function closesClause(closesAt: Date | undefined): string {
-  if (closesAt === undefined) {
-    return "";
-  }
-  return ` · closes <t:${Math.floor(closesAt.getTime() / 1000).toString()}:R>`;
+  return closesAt === undefined
+    ? ""
+    : ` · closes <t:${Math.floor(closesAt.getTime() / 1000).toString()}:R>`;
 }
 
 /**
@@ -247,10 +246,9 @@ function houseClause(
 
 /** Characters a digest may use once the non-betting content is accounted for. */
 export function digestBudgetFor(base: string): number {
-  if (base.length === 0) {
-    return MAX_CONTENT_LENGTH;
-  }
-  return MAX_CONTENT_LENGTH - base.length - 2;
+  return base.length === 0
+    ? MAX_CONTENT_LENGTH
+    : MAX_CONTENT_LENGTH - base.length - 2;
 }
 
 /**

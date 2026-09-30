@@ -34,7 +34,7 @@
       "count": 2
     }
   },
-  "src/domain/quick-capture.ts": {
+  "src/domain/quick-capture/quick-capture.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

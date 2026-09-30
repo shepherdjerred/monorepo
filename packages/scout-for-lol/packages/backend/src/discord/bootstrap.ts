@@ -7,7 +7,12 @@ import {
   registerDiscordCommands,
   reconcileGuildScopedCommands,
 } from "#src/discord/rest.ts";
-import { handleGuildCreate } from "#src/discord/events/guild-create.ts";
+import {
+  handleGuildCreate,
+  type GuildInstallReplacementClaim,
+  type GuildInstallReplacement,
+} from "#src/discord/events/guild-create.ts";
+import { reconcileConnectedGuildInstalls } from "#src/discord/events/guild-install-reconciliation.ts";
 import { handleGuildDelete } from "#src/discord/events/guild-delete.ts";
 import {
   discordConnectionStatus,
@@ -20,11 +25,12 @@ import {
   getDiscordGatewayHealth,
   recordDiscordGatewayHeartbeat,
   setDiscordGatewayState,
-} from "#src/metrics/discord-gateway-health.ts";
+} from "#src/metrics/platform/discord-gateway-health.ts";
 import { voiceManager } from "#src/voice/index.ts";
 import { getVoiceAssistantManager } from "#src/voice-assistant/manager.ts";
 import { createLogger } from "#src/logger.ts";
 import { addDynamicConfigRefreshListener } from "#src/config/dynamic.ts";
+import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 
 const logger = createLogger("discord-bootstrap");
 
@@ -43,6 +49,12 @@ const clientsWithInteractionsInstalled = new WeakSet<Client>();
 
 /** How often the gateway's heartbeat clock and cache gauges are sampled. */
 const GATEWAY_SAMPLE_INTERVAL_MS = 30_000;
+
+/** Generation identity and boundary time for a departure awaiting its join. */
+export type ObservedRemovalMarker = {
+  readonly identity: symbol;
+  readonly observedAt: Date;
+};
 
 /**
  * Every gateway event this bot handles.
@@ -136,7 +148,75 @@ async function registerConnectedGuildCommands(
   }
 }
 
-async function handleNewGuild(guild: Guild): Promise<void> {
+function claimGuildReplacement(
+  replacementGuilds: WeakMap<Guild, GuildInstallReplacement>,
+  guild: Guild,
+): GuildInstallReplacementClaim | undefined {
+  const replacement = replacementGuilds.get(guild);
+  if (replacement === undefined) {
+    return undefined;
+  }
+  let claimedReplacement = replacement;
+  return {
+    replacement,
+    update: (updatedReplacement) => {
+      if (replacementGuilds.get(guild) !== claimedReplacement) {
+        return false;
+      }
+      replacementGuilds.set(guild, updatedReplacement);
+      claimedReplacement = updatedReplacement;
+      return true;
+    },
+    accept: () => {
+      if (replacementGuilds.get(guild) === claimedReplacement) {
+        replacementGuilds.delete(guild);
+      }
+    },
+  };
+}
+
+export function claimGuildInstallReplacement(params: {
+  readonly replacementGuilds: WeakMap<Guild, GuildInstallReplacement>;
+  readonly observedRemovals: Map<string, ObservedRemovalMarker>;
+  readonly guild: Guild;
+  readonly observedRemoval: ObservedRemovalMarker | undefined;
+}): GuildInstallReplacementClaim | undefined {
+  const guildReplacementClaim = claimGuildReplacement(
+    params.replacementGuilds,
+    params.guild,
+  );
+  const replacement =
+    guildReplacementClaim?.replacement ??
+    (params.observedRemoval === undefined
+      ? undefined
+      : {
+          kind: "observed-removal" as const,
+          observedAt: params.observedRemoval.observedAt,
+        });
+  if (replacement === undefined) {
+    return undefined;
+  }
+  return {
+    replacement,
+    update: (updatedReplacement) =>
+      guildReplacementClaim?.update(updatedReplacement) ?? false,
+    accept: () => {
+      guildReplacementClaim?.accept();
+      if (
+        params.observedRemovals.get(params.guild.id) === params.observedRemoval
+      ) {
+        params.observedRemovals.delete(params.guild.id);
+      }
+    },
+  };
+}
+
+async function handleNewGuild(
+  guild: Guild,
+  historicalUnavailableGuilds: Map<string, Guild>,
+  replacementGuilds: WeakMap<Guild, GuildInstallReplacement>,
+  observedRemovals: Map<string, ObservedRemovalMarker>,
+): Promise<void> {
   try {
     // Forced: Discord drops a guild's commands when the bot is removed, so a
     // rejoin must write even if this process still remembers the old payload.
@@ -150,7 +230,76 @@ async function handleNewGuild(guild: Guild): Promise<void> {
       tags: { source: "discord-guild-command-registration" },
     });
   }
-  await handleGuildCreate(guild);
+  // Recheck after command reconciliation: a departure plus genuine rejoin
+  // during that await must not reuse this ready-time historical marker. Guild
+  // IDs can be reused across gateway objects during this race, so identity
+  // rather than ID is the authority for both decisions.
+  const connectedGuild = guild.client.guilds.cache.get(guild.id);
+  if (connectedGuild !== guild) {
+    const replacement = replacementGuilds.get(guild);
+    if (connectedGuild !== undefined && replacement !== undefined) {
+      replacementGuilds.delete(guild);
+      replacementGuilds.set(connectedGuild, replacement);
+    }
+    return;
+  }
+  const isHistoricalConnection =
+    historicalUnavailableGuilds.get(guild.id) === guild;
+  const observedRemoval = observedRemovals.get(guild.id);
+  const replacementClaim = claimGuildInstallReplacement({
+    replacementGuilds,
+    observedRemovals,
+    guild,
+    observedRemoval,
+  });
+  if (
+    isHistoricalConnection ||
+    replacementClaim?.replacement.kind === "reconciliation-pending-retirement"
+  ) {
+    await reconcileConnectedGuildInstalls([guild], {
+      getConnectedGuild: (guildId) => guild.client.guilds.cache.get(guildId),
+      registerReplacement: (replacementGuild, replacement) => {
+        replacementGuilds.set(replacementGuild, replacement);
+      },
+      // A bounded retry must observe an update made by the previous claim.
+      // Reusing `replacementClaim` would expose its original readonly value
+      // even after update() stored a completed retirement in the WeakMap.
+      claimReplacement: (acceptedGuild) =>
+        claimGuildInstallReplacement({
+          replacementGuilds,
+          observedRemovals,
+          guild: acceptedGuild,
+          observedRemoval: observedRemovals.get(acceptedGuild.id),
+        }),
+    });
+    if (historicalUnavailableGuilds.get(guild.id) === guild) {
+      historicalUnavailableGuilds.delete(guild.id);
+    }
+    return;
+  }
+  await handleGuildCreate(guild, replacementClaim);
+  if (historicalUnavailableGuilds.get(guild.id) === guild) {
+    historicalUnavailableGuilds.delete(guild.id);
+  }
+}
+
+export function updateHistoricalUnavailableGuilds(
+  historicalUnavailableGuilds: Map<string, Guild>,
+  connectedGuilds: Iterable<Guild>,
+): void {
+  const connectedById = new Map(
+    [...connectedGuilds].map((guild) => [guild.id, guild]),
+  );
+  for (const [guildId, historicalGuild] of historicalUnavailableGuilds) {
+    if (connectedById.get(guildId) !== historicalGuild) {
+      historicalUnavailableGuilds.delete(guildId);
+    }
+  }
+  for (const guild of connectedById.values()) {
+    if (!guild.available) {
+      historicalUnavailableGuilds.set(guild.id, guild);
+    }
+  }
 }
 
 /**
@@ -182,6 +331,30 @@ function sampleGatewayHeartbeat(target: Client): void {
  * singleton so the bootstrap test can exercise it against its own client.
  */
 export function registerDiscordEventHandlers(target: Client): void {
+  // Guilds cached as unavailable at ready time need deferred reconciliation:
+  // their later GuildCreate means Discord made an existing connection
+  // available, not that Scout was newly installed.
+  const historicalUnavailableGuilds = new Map<string, Guild>();
+  const replacementGuilds = new WeakMap<Guild, GuildInstallReplacement>();
+  const observedRemovals = new Map<string, ObservedRemovalMarker>();
+  const lifecycleQueues = new Map<string, Promise<unknown>>();
+  const runGuildLifecycleTask = async (
+    guildId: string,
+    task: () => Promise<void>,
+  ): Promise<void> => {
+    try {
+      await enqueuePerKey(lifecycleQueues, guildId, task);
+    } catch (error) {
+      logger.error(
+        `[Discord Guild Lifecycle] Task failed for ${guildId}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "discord-guild-lifecycle", serverId: guildId },
+      });
+    }
+  };
+
   target.on(Events.Error, (error) => {
     logger.error("❌ Discord client error:", error);
     Sentry.captureException(error, {
@@ -292,6 +465,41 @@ export function registerDiscordEventHandlers(target: Client): void {
       },
     );
 
+    // `guildCreate` only tells us about a join as it happens. Cached guilds
+    // from before `GuildInstall` became an authorization source still need a
+    // row, otherwise the dashboard's picker hides a server where Scout is
+    // connected. This path is intentionally not `handleGuildCreate`: it must
+    // never welcome or re-onboard an existing server.
+    // Snapshot at ready time so a real `guildCreate` arriving while the
+    // asynchronous database reconciliation runs keeps its first-install
+    // lifecycle, rather than being mistaken for a historical connection.
+    const connectedGuildsAtReady = [...readyClient.guilds.cache.values()];
+    updateHistoricalUnavailableGuilds(
+      historicalUnavailableGuilds,
+      connectedGuildsAtReady,
+    );
+    for (const guild of connectedGuildsAtReady) {
+      void runGuildLifecycleTask(guild.id, async () => {
+        const observedRemovalAtStart = observedRemovals.get(guild.id);
+        await reconcileConnectedGuildInstalls([guild], {
+          getConnectedGuild: (guildId) => readyClient.guilds.cache.get(guildId),
+          registerReplacement: (replacementGuild, replacement) => {
+            replacementGuilds.set(replacementGuild, replacement);
+          },
+          // An older overlapping ready cycle can hand its exact provisional
+          // generation to this snapshot. Accepting the newer snapshot must
+          // finish that lifecycle, not discard it or leave it for a later
+          // availability guildCreate.
+          claimReplacement: (acceptedGuild) =>
+            claimGuildInstallReplacement({
+              replacementGuilds,
+              observedRemovals,
+              guild: acceptedGuild,
+              observedRemoval: observedRemovalAtStart,
+            }),
+        });
+      });
+    }
     void registerConnectedGuildCommands(readyClient.guilds.cache.keys());
   });
 
@@ -299,20 +507,50 @@ export function registerDiscordEventHandlers(target: Client): void {
   target.on(Events.GuildCreate, (guild) => {
     logger.info(`[Guild Create] Bot added to new server: ${guild.name}`);
     discordGuildsGauge.set(target.guilds.cache.size);
-    void handleNewGuild(guild);
+    void runGuildLifecycleTask(guild.id, async () => {
+      await handleNewGuild(
+        guild,
+        historicalUnavailableGuilds,
+        replacementGuilds,
+        observedRemovals,
+      );
+    });
   });
 
   // Handle bot being removed from servers (kicked, banned, or guild deleted)
   target.on(Events.GuildDelete, (guild) => {
     logger.info(`[Guild Delete] Bot removed from server: ${guild.name}`);
     discordGuildsGauge.set(target.guilds.cache.size);
-    void handleGuildDelete(guild);
+    historicalUnavailableGuilds.delete(guild.id);
+    if (guild.available) {
+      // Only generation identity is needed for compare-and-delete. Keeping the
+      // departed Guild here would retain its member and channel caches until a
+      // future rejoin or process restart.
+      observedRemovals.set(guild.id, {
+        identity: Symbol(),
+        observedAt: new Date(),
+      });
+    }
+    void runGuildLifecycleTask(guild.id, async () => {
+      await handleGuildDelete(guild);
+    });
   });
 
   // Voice-assistant auto-leave: when the session's channel holds no non-bot
-  // members any more, nobody consented to being listened to. The manager
-  // ignores guilds without an active session, so this stays a cheap check.
+  // members any more, nobody consented to being listened to. Also covers
+  // Scout's OWN voice state: an admin dragging the bot to a different
+  // channel moves its connection without ever going through `/scout join`,
+  // so that must end the session too rather than silently keep listening
+  // wherever the connection ends up. The manager ignores guilds without an
+  // active or pending session, so both checks stay cheap.
   target.on(Events.VoiceStateUpdate, (_oldState, newState) => {
+    if (newState.member?.id === target.user?.id) {
+      getVoiceAssistantManager().handleBotChannelChanged(
+        newState.guild.id,
+        newState.channelId,
+      );
+      return;
+    }
     getVoiceAssistantManager().handleVoiceStateUpdate(newState.guild.id);
   });
 }
@@ -339,15 +577,13 @@ export async function startDiscordGateway(target: Client = client) {
   registerDiscordEventHandlers(target);
 
   // A process that never logs in must not fail its liveness probe for a
-  // heartbeat it was never going to receive: `dev:web --no-discord-gateway`
-  // and the test runner both take these branches deliberately.
+  // heartbeat it was never going to receive. Whether this process owns a
+  // gateway at all is the runtime role's decision — a role without one never
+  // reaches this function and marks the gateway disabled itself (see
+  // `runtime/subsystems.ts`). The test runner is the remaining case that gets
+  // here and must not connect.
   if (Bun.env.NODE_ENV === "test") {
     logger.info("🧪 NODE_ENV=test — skipping Discord login");
-    setDiscordGatewayState("disabled");
-    return;
-  }
-  if (!configuration.enableDiscordGateway) {
-    logger.warn("⏭️  Discord gateway disabled — skipping Discord login");
     setDiscordGatewayState("disabled");
     return;
   }

@@ -15,13 +15,12 @@ import type { Logger } from "#src/logger.ts";
 // Empty when running locally; the Go-Live heuristic then catches peer userbots instead.
 export function readPeerUserbotIds(): readonly string[] {
   const raw = Bun.env["PEER_USERBOT_IDS"];
-  if (raw === undefined) {
-    return [];
-  }
-  return raw
-    .split(",")
-    .map((id) => id.trim())
-    .filter((id) => id.length > 0);
+  return raw === undefined
+    ? []
+    : raw
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0);
 }
 
 // The subset of createGameBot options each game supplies; the rest (userbot

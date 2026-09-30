@@ -68,21 +68,27 @@ export type FlagEvaluationOptions<T> = {
   readonly attributes?: FlagAttributes;
 };
 
+export class FlagNotFoundError extends Error {
+  readonly flagKey: string;
+
+  constructor(flagKey: string, message?: string) {
+    super(message ?? `Feature flag "${flagKey}" not found in Flipt`);
+    this.name = "FlagNotFoundError";
+    this.flagKey = flagKey;
+  }
+}
+
 /**
  * Error codes that mean "this source has no opinion", as opposed to "this
- * source answered".  Only these may fall through to a lower config layer.
+ * source answered". Only these may fall through to a lower config layer.
  *
- * `FLAG_NOT_FOUND` — the key is not defined in the backend.
- * `PROVIDER_NOT_READY` — the provider never initialized, so it cannot know.
+ * `PROVIDER_NOT_READY` — the provider never initialized (e.g. backend unreachable,
+ * 4xx/5xx, timeout), so it cannot know.
  *
- * Everything else, including `GENERAL` and `PARSE_ERROR`, means the source
- * tried and failed. Those must NOT fall through: a backend erroring on a flag
- * it does own is not the same as that flag being absent, and treating it as
- * absent would silently hand control to a stale env var.
+ * Everything else, including `FLAG_NOT_FOUND`, `GENERAL`, and `PARSE_ERROR`,
+ * is treated as a contract error or evaluation failure. When Flipt is reachable,
+ * a missing declared key must fail loudly rather than silently falling back.
  */
 export function isAbsent(result: FlagResult<unknown>): boolean {
-  return (
-    result.errorCode === "FLAG_NOT_FOUND" ||
-    result.errorCode === "PROVIDER_NOT_READY"
-  );
+  return result.errorCode === "PROVIDER_NOT_READY";
 }

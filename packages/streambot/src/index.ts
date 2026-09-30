@@ -14,7 +14,7 @@ import {
 } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { UserbotPool } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
-import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
+import { CommandBot } from "@shepherdjerred/streambot/discord/commands/command-bot.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {
@@ -40,6 +40,9 @@ import { featureFlagMetrics } from "@shepherdjerred/streambot/observability/metr
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import { mediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
+import { PinchtabSportsBrowser } from "@shepherdjerred/streambot/sports/pinchtab.ts";
+import { SportsService } from "@shepherdjerred/streambot/sports/sports-service.ts";
+import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -138,6 +141,14 @@ async function main(): Promise<void> {
     searchYoutube: (query, signal, limit) =>
       searchYoutube(config, query, signal, limit),
   });
+  const sportsBrowser = new PinchtabSportsBrowser({
+    baseUrl:
+      config.pinchtab.baseUrl ??
+      "http://pinchtab.pinchtab.svc.cluster.local:9867",
+    token: config.pinchtab.token,
+  });
+  const sports = new SportsService(sportsBrowser);
+  const sportsResolver = new BrowserSportsResolver(sportsBrowser);
 
   // Log every userbot in and snapshot guild membership before anything tries to acquire one.
   const pool = new UserbotPool(config.discord.userTokens, config);
@@ -158,8 +169,9 @@ async function main(): Promise<void> {
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
     listSources: (signal) => listExtractors(config, signal),
     resolvePlaySource: (source, signal) =>
-      resolveSource(config, source, signal),
+      resolveSource(config, source, signal, { sportsResolver }),
     discovery,
+    sports,
     history,
     featureGate: mediaFeatureGate,
   });
@@ -167,16 +179,22 @@ async function main(): Promise<void> {
     config,
     pool,
     resolveSource: (input, signal) =>
-      resolveSource(config, input.source, signal, input.preResolved),
+      resolveSource(config, input.source, signal, {
+        ...(input.preResolved === undefined
+          ? {}
+          : { preResolved: input.preResolved }),
+        sportsResolver,
+      }),
     announce: (channelId, message) => commandBot.announce(channelId, message),
     cards: commandBot.cards,
     library: () => library,
     resolvePlaySource: (source, signal) =>
-      resolveSource(config, source, signal),
+      resolveSource(config, source, signal, { sportsResolver }),
     voiceModels,
     voiceFeedbackClips,
     voiceCaptureManager,
     discovery,
+    sports,
     history,
     featureGate: mediaFeatureGate,
   });

@@ -54,8 +54,20 @@ export function accessibilityConfig(): TSESLint.FlatConfig.ConfigArray {
         "jsx-a11y/no-interactive-element-to-noninteractive-role": "error",
         // Enforce no noninteractive element interactions
         "jsx-a11y/no-noninteractive-element-interactions": "error",
-        // Enforce no noninteractive tabindex
-        "jsx-a11y/no-noninteractive-tabindex": "error",
+        // Enforce no noninteractive tabindex.
+        //
+        // `region` and `group` are allowed alongside the default `tabpanel`
+        // because WCAG requires the opposite of this rule's default for a
+        // scrolling container: a container that scrolls must be reachable by
+        // keyboard, which axe enforces as `scrollable-region-focusable`.
+        // Without the exception the two checks contradict each other and a
+        // scrollable code block cannot satisfy both. `group` is the shape that
+        // repeats — a landmark has to be distinguishable from its siblings, so
+        // several scrollable blocks of one kind on a page must be groups.
+        "jsx-a11y/no-noninteractive-tabindex": [
+          "error",
+          { roles: ["tabpanel", "region", "group"] },
+        ],
         // Enforce no redundant roles
         "jsx-a11y/no-redundant-roles": "error",
         // Enforce no static element interactions

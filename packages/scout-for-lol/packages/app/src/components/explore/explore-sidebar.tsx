@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from "react";
 import { Link } from "react-router";
 import {
   LoaderCircle,
+  Mic,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -15,7 +16,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/dropdown-menu";
+} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 
 /**
  * The conversation list.
@@ -143,6 +144,12 @@ function ConversationRow(props: {
           props.onSelect(conversation.id);
         }}
       >
+        {conversation.origin === "voice" && (
+          <Mic
+            className="mr-1.5 size-3.5 shrink-0 text-scout-subtle"
+            aria-label="Voice conversation"
+          />
+        )}
         <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
       </Link>
       <div className="relative flex size-7 shrink-0 items-center justify-center">
@@ -171,7 +178,7 @@ function ConversationRow(props: {
                 <span>Rename</span>
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="gap-2 text-sm text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
+                className="gap-2 text-sm text-scout-danger focus:bg-scout-danger-fill/10 focus:text-scout-danger"
                 onSelect={() => {
                   props.onDelete(conversation);
                 }}
@@ -205,7 +212,9 @@ function ConversationRunStatus(props: {
   return (
     <span
       className={`size-2 shrink-0 rounded-full ${
-        props.status === "completed" ? "bg-scout-primary" : "bg-scout-danger"
+        props.status === "completed"
+          ? "bg-scout-primary"
+          : "bg-scout-danger-fill"
       }`}
       role="status"
       aria-label={
@@ -222,12 +231,11 @@ function filterByTitle(
   search: string,
 ): ExploreConversation[] {
   const needle = search.trim().toLowerCase();
-  if (needle.length === 0) {
-    return conversations;
-  }
-  return conversations.filter((conversation) =>
-    conversation.title.toLowerCase().includes(needle),
-  );
+  return needle.length === 0
+    ? conversations
+    : conversations.filter((conversation) =>
+        conversation.title.toLowerCase().includes(needle),
+      );
 }
 
 type Group = { label: string; conversations: ExploreConversation[] };

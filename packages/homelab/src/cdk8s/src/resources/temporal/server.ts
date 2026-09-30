@@ -15,7 +15,7 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { TEMPORAL_POSTGRES_TLS_SECRET } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import {
@@ -151,8 +151,8 @@ export function createTemporalServerDeployment(
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(512),
-          limit: Size.gibibytes(2),
+          request: Size.gibibytes(2),
+          limit: Size.gibibytes(4),
         },
       },
       liveness: Probe.fromTcpSocket({

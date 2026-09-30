@@ -3,6 +3,8 @@ import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysis.ts";
 import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
 import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts";
+import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts";
+import { ExploreLoadoutCardSchema } from "#src/model/reports/explore-loadout-card.ts";
 
 /**
  * Contracts for the explore surface — a conversation over the whole report
@@ -18,9 +20,9 @@ import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts"
 
 export const EXPLORE_REQUEST_MAX_BYTES = 16 * 1024;
 export const EXPLORE_QUESTION_MAX_LENGTH = 2000;
-export const EXPLORE_MAX_STEPS = 12;
-export const EXPLORE_MAX_TOOL_CALLS = 30;
-export const EXPLORE_MAX_PREVIEW_CALLS = 8;
+export const EXPLORE_MAX_STEPS = 30;
+export const EXPLORE_MAX_TOOL_CALLS = 60;
+export const EXPLORE_MAX_PREVIEW_CALLS = 20;
 export const EXPLORE_MAX_OUTPUT_TOKENS = 4000;
 export const EXPLORE_TIMEOUT_MS = 180_000;
 /**
@@ -296,6 +298,15 @@ export const ExploreMessageSchema = z
     followUps: z.array(z.string()).default([]),
     preview: ReportAiPreviewSummarySchema.nullable().default(null),
     visualization: VisualizationSnapshotSchema.nullable().default(null),
+    matchCards: z.array(ExploreMatchCardSchema).max(5).default([]),
+    loadoutCards: z.array(ExploreLoadoutCardSchema).max(3).default([]),
+    /**
+     * The guilds this turn's capabilities were resolved from.
+     *
+     * Defaulted so every row written before the column existed still parses,
+     * and so the user turn — which carries none — is not a special case.
+     */
+    guildIds: z.array(z.string()).default([]),
     trace: z.array(ExploreTraceEntrySchema).default([]),
     createdAt: z.iso.datetime(),
   })
@@ -303,10 +314,27 @@ export const ExploreMessageSchema = z
 
 export type ExploreMessage = z.infer<typeof ExploreMessageSchema>;
 
+/**
+ * The final SSE event is consumed by tabs whose bundle can predate a server
+ * deployment. Keep it to the pre-card message shape: after `done`, current
+ * clients refetch the persisted transcript, where match cards are available.
+ *
+ * `guildIds` is omitted for the same reason and it is not optional: an open
+ * tab parses this event with a strict schema, so a key its bundle has never
+ * heard of makes the terminal event unparseable and the answer never lands.
+ */
+export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
+  matchCards: true,
+  loadoutCards: true,
+  guildIds: true,
+}).strict();
+export type ExploreStreamMessage = z.infer<typeof ExploreStreamMessageSchema>;
+
 export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
     title: ExploreConversationTitleSchema,
+    origin: z.enum(["legacy", "web", "discord", "voice"]).default("legacy"),
     shareToken: ExploreShareTokenSchema.nullable().default(null),
     /** The leaf a share link is pinned to, if the conversation is shared. */
     sharedLeafId: z.uuid().nullable().default(null),
@@ -530,7 +558,7 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("final"),
-      message: ExploreMessageSchema,
+      message: ExploreStreamMessageSchema,
       title: ExploreConversationTitleSchema,
       quota: z.array(ExploreQuotaSnapshotSchema),
     })

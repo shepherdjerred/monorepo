@@ -3,7 +3,7 @@ import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { ConfigMap } from "cdk8s-plus-31";
@@ -311,6 +311,19 @@ export function createLokiApp(chart: Chart) {
       limits_config: {
         retention_period: "90d",
         allow_structured_metadata: true, // Required for OTLP ingestion
+      },
+      // retention_period alone deletes nothing: retention only applies when
+      // the compactor has retention_enabled. Without this block the PVC grew
+      // unbounded (97.8 GiB with 200-day-old logs still queryable).
+      // SingleBinary runs the compactor in-process (target all), so config
+      // alone enables compaction and retention.
+      compactor: {
+        working_directory: "/var/loki/compactor", // Loki default; on the SingleBinary PVC
+        compaction_interval: "10m",
+        retention_enabled: true,
+        retention_delete_delay: "2h",
+        retention_delete_worker_count: 150,
+        delete_request_store: "filesystem",
       },
       storage: {
         type: "filesystem",

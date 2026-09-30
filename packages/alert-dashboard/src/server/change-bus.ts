@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const ChangeSchema = z.object({
   sequence: z.number().int().positive(),
-  reason: z.enum(["webhook", "reconciliation", "email", "retention"]),
+  reason: z.enum(["webhook", "reconciliation", "email", "retention", "ops"]),
 });
 export type Change = z.infer<typeof ChangeSchema>;
 

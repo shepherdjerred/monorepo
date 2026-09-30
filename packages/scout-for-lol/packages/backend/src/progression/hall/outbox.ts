@@ -6,9 +6,10 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { getHallOfFameUrl } from "#src/discord/commands/links.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
-import { parseProgressionJson } from "#src/progression/json.ts";
-import { HallBreakOutboxPayloadSchema } from "#src/progression/hall/evaluate-match.ts";
+import { captureHallRecordBroken } from "#src/analytics/hall.ts";
+import { parseHallBreakOutboxPayload } from "#src/progression/hall/evaluate-match.ts";
 import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
 import { loadProgressionOutboxRows } from "#src/progression/outbox.ts";
 import {
@@ -38,19 +39,24 @@ function recordLabel(id: string): string {
 
 function truncateToLength(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
-  if (maxLength <= 3) return text.slice(0, Math.max(0, maxLength));
-  return `${text.slice(0, maxLength - 3)}...`;
+  return maxLength <= 3
+    ? text.slice(0, Math.max(0, maxLength))
+    : `${text.slice(0, maxLength - 3)}...`;
 }
 
+/**
+ * Builds the record-break embed, or `null` when every queued record referenced
+ * a Hall record id since retired by a catalog rename (see
+ * {@link parseHallBreakOutboxPayload}) — nothing left worth notifying about.
+ */
 export function hallBreakEmbed(
   payloadJson: string,
   matchId: string,
-): EmbedBuilder {
-  const records = parseProgressionJson(
-    payloadJson,
-    HallBreakOutboxPayloadSchema,
-  );
-  const description = `Match ${escapeMarkdown(matchId)} set new guild records.`;
+  guildId: string,
+): EmbedBuilder | null {
+  const records = parseHallBreakOutboxPayload(payloadJson);
+  if (records.length === 0) return null;
+  const description = `Match ${escapeMarkdown(matchId)} set new guild records.\n[Open the Hall of Fame](${getHallOfFameUrl(guildId)})`;
   const rawFields = records.map((record) => ({
     name: `${queueLabel(record.queueFamilyId)} · ${recordLabel(record.recordId)}`,
     prefix: `${record.value.toLocaleString("en-US")} — `,
@@ -141,9 +147,23 @@ export async function deliverHallRecordBreakOutbox(): Promise<void> {
           lastError: null,
         },
       });
+      const embed = hallBreakEmbed(row.payloadJson, row.matchId, row.guildId);
+      if (embed === null) {
+        await completeScoutEffect(effectKey);
+        await prisma.hallRecordBreakOutbox.update({
+          where: { id: row.id },
+          data: {
+            deliveryStatus: "suppressed",
+            lastError:
+              "Every queued record referenced a Hall record id retired by a catalog rename",
+          },
+        });
+        hallRecordBreakDeliveries.inc({ status: "suppressed" });
+        continue;
+      }
       await sendChannelMessage(
         {
-          embeds: [hallBreakEmbed(row.payloadJson, row.matchId)],
+          embeds: [embed],
           allowedMentions: { parse: [] },
           nonce: discordNonce(row.id),
           enforceNonce: true,
@@ -157,6 +177,10 @@ export async function deliverHallRecordBreakOutbox(): Promise<void> {
         data: { deliveryStatus: "sent", sentAt: new Date(), lastError: null },
       });
       hallRecordBreakDeliveries.inc({ status: "sent" });
+      await captureHallRecordBroken({
+        guildId: row.guildId,
+        records: embed.toJSON().fields?.length ?? 0,
+      });
     } catch (error) {
       await recordScoutEffectFailure(effectKey, error);
       await prisma.hallRecordBreakOutbox.update({

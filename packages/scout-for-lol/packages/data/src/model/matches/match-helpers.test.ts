@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { RawMatchSchema } from "#src/league/raw-match.schema.ts";
 import type { RawParticipant } from "#src/league/raw-participant.schema.ts";
 import {
+  computeKda,
   getTeams,
   participantToChampion,
 } from "#src/model/matches/match-helpers.ts";
@@ -33,6 +34,20 @@ function setNestedString(
   if (last === undefined) throw new Error("empty path");
   Reflect.set(node, last, value);
 }
+
+describe("computeKda", () => {
+  test("divides takedowns by deaths", () => {
+    expect(computeKda({ kills: 6, deaths: 4, assists: 10 })).toBe(4);
+  });
+
+  test("scores a zero-death game as its takedowns", () => {
+    expect(computeKda({ kills: 5, deaths: 0, assists: 7 })).toBe(12);
+  });
+
+  test("is the ratio of sums when given aggregate totals", () => {
+    expect(computeKda({ kills: 30, deaths: 12, assists: 30 })).toBe(5);
+  });
+});
 
 describe("participantToChampion", () => {
   test("normalizes Riot casing quirk in championName (FiddleSticks → Fiddlesticks)", async () => {

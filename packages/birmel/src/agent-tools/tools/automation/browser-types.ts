@@ -10,8 +10,6 @@ import { z } from "zod";
 export const BrowserInputSchema = z.object({
   action: z
     .enum([
-      "start",
-      "list-profiles",
       "open",
       "tabs",
       "navigate",
@@ -21,26 +19,14 @@ export const BrowserInputSchema = z.object({
       "type",
       "press",
       "get-text",
-      "cookies",
       "close",
     ])
     .describe("The action to perform"),
-  profile: z.string().optional().describe("PinchTab profile name"),
-  instanceId: z.string().optional().describe("PinchTab instance ID"),
   tabId: z.string().optional().describe("PinchTab tab ID"),
+  profile: z.never().optional(),
+  instanceId: z.never().optional(),
+  filename: z.never().optional(),
   url: z.string().optional().describe("URL to navigate to (for navigate)"),
-  waitUntil: z
-    .enum(["load", "domcontentloaded", "networkidle"])
-    .optional()
-    .describe("Wait until page event (for navigate)"),
-  filename: z
-    .string()
-    .optional()
-    .describe("Screenshot filename (for screenshot)"),
-  fullPage: z
-    .boolean()
-    .optional()
-    .describe("Capture full scrollable page (for screenshot)"),
   selector: z
     .string()
     .optional()
@@ -57,6 +43,7 @@ export const BrowserInputSchema = z.object({
 export const BrowserOutputSchema = z.object({
   success: z.boolean(),
   message: z.string(),
+  effectDisposition: z.literal("not_applied").optional(),
   data: z
     .object({
       url: z.string().optional(),
@@ -65,9 +52,16 @@ export const BrowserOutputSchema = z.object({
       filename: z.string().optional(),
       text: z.string().optional(),
       provider: z.string().optional(),
-      instanceId: z.string().optional(),
       tabId: z.string().optional(),
-      raw: z.unknown().optional(),
+      tabs: z
+        .array(
+          z.object({
+            id: z.string(),
+            url: z.string().optional(),
+            title: z.string().optional(),
+          }),
+        )
+        .optional(),
     })
     .optional(),
 });

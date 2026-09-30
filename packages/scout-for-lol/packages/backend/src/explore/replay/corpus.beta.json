@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "stage": "beta",
+  "capturedAt": "2026-09-21T04:19:56.482Z",
+  "conversations": [
+    {
+      "conversationId": "403e9f24-186d-460a-882a-110e65c6f12b",
+      "leafId": "10d18d28-313f-4217-b210-c31c102fa2bd",
+      "kind": "dare-draft",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "c2008f9b-b9d1-4414-84e6-f94f5ad59db4",
+          "answerMessageId": "c5fbd132-145a-47d6-a950-441bdeb7dfa8"
+        }
+      ],
+      "note": "1 turn(s), dare-draft"
+    }
+  ]
+}

@@ -1,4 +1,8 @@
 import { expect, test } from "vitest";
+import {
+  findGeneratedStep,
+  readGeneratedSteps,
+} from "../lib/ci/generated-steps.ts";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,7 +12,7 @@ import {
   hashReleaseInputFiles,
   writeScoutReleaseState,
 } from "./scout-site-release.ts";
-import { selectPostHogSite } from "../lib/scout-analytics-config.ts";
+import { selectPostHogSite } from "../lib/scout/scout-analytics-config.ts";
 import {
   parseLegacyScoutReleaseManifest,
   parseScoutReleaseState,
@@ -17,8 +21,8 @@ import {
   resolveProdPin,
   siteReleaseIdentity,
   validateProdPinState,
-} from "../lib/scout-release-state.ts";
-import { hashSiteArchive } from "../lib/scout-site-storage.ts";
+} from "../lib/scout/scout-release-state.ts";
+import { hashSiteArchive } from "../lib/scout/scout-site-storage.ts";
 
 const DIGEST =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -28,6 +32,7 @@ const POSTHOG_REGISTRY = {
   projectToken: "phc_test",
   apiHost: "https://us.i.posthog.com",
   assetHost: "https://us-assets.i.posthog.com",
+  proxyHost: "https://j.sjer.red",
   sites: [
     {
       key: "scout-prod",
@@ -78,7 +83,9 @@ function versionCatalogSource(name: string, value: string): string {
 
 test("strict Scout release state binds version to build number", () => {
   const state = parseScoutReleaseState(stateJson());
+  expect(state.version).toBe("2.0.0-42");
   expect(siteReleaseIdentity(state)).toBe(`scout-site@${DIGEST}`);
+  expect(siteReleaseIdentity(state)).not.toBe(state.version);
   expect(() =>
     parseScoutReleaseState(stateJson({ version: "2.0.0-41" })),
   ).toThrow("does not match");
@@ -196,8 +203,9 @@ test("release source digest changes only with selected input content", async () 
   }
 });
 
-test("release input digest binds to the source commit", () => {
+test("release input digest binds to the source commit and displayed version", () => {
   const base = {
+    version: "2.0.0-42",
     sourceCommit: "0123456789012345678901234567890123456789",
     backendImageDigest: DIGEST,
     sourceInputsDigest: DIGEST,
@@ -217,6 +225,11 @@ test("release input digest binds to the source commit", () => {
       sourceCommit: "fedcba9876543210fedcba9876543210fedcba98",
     }),
   ).not.toBe(digest);
+  // A different displayed version must also produce a different identity —
+  // VITE_APP_VERSION / PUBLIC_APP_VERSION are baked into the site bytes.
+  expect(computeReleaseInputDigest({ ...base, version: "2.0.0-100" })).not.toBe(
+    digest,
+  );
   // A non-commit input change still changes the identity.
   expect(
     computeReleaseInputDigest({ ...base, backendImageDigest: `${DIGEST}0` }),
@@ -228,6 +241,7 @@ test("Scout release analytics map both hosts to the shared PostHog project", () 
     projectToken: "phc_test",
     apiHost: "https://us.i.posthog.com",
     assetHost: "https://us-assets.i.posthog.com",
+    proxyHost: "https://j.sjer.red",
     key: "scout-prod",
     domain: "scout-for-lol.com",
     sessionReplay: true,
@@ -240,6 +254,7 @@ test("Scout release analytics map both hosts to the shared PostHog project", () 
     projectToken: "phc_test",
     apiHost: "https://us.i.posthog.com",
     assetHost: "https://us-assets.i.posthog.com",
+    proxyHost: "https://j.sjer.red",
     key: "scout-beta",
     domain: "beta.scout-for-lol.com",
     sessionReplay: true,
@@ -270,29 +285,18 @@ test("release state output creates its parent directory", async () => {
   }
 });
 
-test("pipeline selects Scout for a source change or exact beta candidate", async () => {
-  const pipeline = await Bun.file(
-    new URL("../../.buildkite/pipeline.yml", import.meta.url),
-  ).text();
-  const betaStart = pipeline.indexOf("key: scout-beta-release");
-  const tagStart = pipeline.indexOf("key: scout-tag-release");
-  const beta = pipeline.slice(betaStart, tagStart);
-  expect(beta).toContain('."shepherdjerred/scout-for-lol/beta" // empty');
-  expect(beta).toContain("ci-changed.ts site-scout");
-  expect(beta).toContain(
-    'if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi',
+test("the Scout release lane selects on a source change or an exact beta candidate", async () => {
+  const steps = await readGeneratedSteps(
+    new URL("../..", import.meta.url).pathname,
   );
-  expect(beta).not.toContain("cancel_on_build_failing");
-  const prodStart = pipeline.indexOf("key: scout-prod-reconcile");
-  const prodEnd = pipeline.indexOf(
-    'label: ":terraform: OpenTofu apply — Cloudflare after tunnel gate',
-    prodStart,
-  );
-  expect(pipeline.slice(tagStart, prodEnd)).not.toContain(
-    "cancel_on_build_failing",
-  );
-  expect(pipeline.slice(prodStart, prodEnd)).toContain(
-    'reconcile-prod-pin --prod-pin "$$prod_pin"',
+  const beta = findGeneratedStep(steps, "scout-beta-release");
+  expect(beta).toBeDefined();
+  const commands = (beta?.commands ?? []).join("\n");
+  expect(commands).toContain('."shepherdjerred/scout-for-lol/beta" // empty');
+  expect(commands).toContain("ci-changed.ts site-scout");
+  // Nothing to release: no pushed backend image and no site source change.
+  expect(commands).toContain(
+    'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
   );
 });
 

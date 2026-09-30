@@ -18,6 +18,20 @@ afterEach(async () => {
   await shutdownFeatureFlags();
 });
 
+function createTestMetricsRecorder() {
+  const evaluations: unknown[] = [];
+  const errors: unknown[] = [];
+  const providerReadiness: number[] = [];
+  const snapshotAges: number[] = [];
+  const recorder = createFlagMetricsRecorder({
+    evaluations: { inc: (labels) => evaluations.push(labels) },
+    errors: { inc: (labels) => errors.push(labels) },
+    providerReady: { set: (value) => providerReadiness.push(value) },
+    snapshotAge: { set: (value) => snapshotAges.push(value) },
+  });
+  return { recorder, evaluations, errors, providerReadiness, snapshotAges };
+}
+
 describe("metric naming", () => {
   test("targetingKey is never a label", () => {
     // It is a guild or user id, so it would be unbounded cardinality.
@@ -26,16 +40,8 @@ describe("metric naming", () => {
   });
 
   test("adapts counters and gauges without owning their registry", () => {
-    const evaluations: unknown[] = [];
-    const errors: unknown[] = [];
-    const providerReadiness: number[] = [];
-    const snapshotAges: number[] = [];
-    const recorder = createFlagMetricsRecorder({
-      evaluations: { inc: (labels) => evaluations.push(labels) },
-      errors: { inc: (labels) => errors.push(labels) },
-      providerReady: { set: (value) => providerReadiness.push(value) },
-      snapshotAge: { set: (value) => snapshotAges.push(value) },
-    });
+    const { recorder, evaluations, errors, providerReadiness, snapshotAges } =
+      createTestMetricsRecorder();
 
     recorder.countEvaluation({
       flag: "known-flag",
@@ -59,32 +65,62 @@ describe("evaluation instrumentation", () => {
     const events: EvaluationEvent[] = [];
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
-      provider: new StaticProvider({ "known-flag": true }),
+      provider: new StaticProvider({ ai_reports_enabled: true }),
       onEvaluation: (event) => events.push(event),
     });
 
-    await isEnabled("known-flag", { default: false, targetingKey: "service" });
-    await isEnabled("missing-flag", {
+    await isEnabled("ai_reports_enabled", {
       default: false,
       targetingKey: "service",
     });
+    await expect(
+      isEnabled("betting_enabled", {
+        default: false,
+        targetingKey: "service",
+      }),
+    ).rejects.toThrow();
 
     expect(events).toEqual([
-      { flag: "known-flag", reason: "STATIC", errorCode: undefined },
-      { flag: "missing-flag", reason: "ERROR", errorCode: "FLAG_NOT_FOUND" },
+      { flag: "ai_reports_enabled", reason: "STATIC", errorCode: undefined },
+      { flag: "betting_enabled", reason: "ERROR", errorCode: "FLAG_NOT_FOUND" },
     ]);
+  });
+
+  test("counts FLAG_NOT_FOUND as an evaluation error", async () => {
+    const { recorder, errors } = createTestMetricsRecorder();
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({ ai_reports_enabled: true }),
+      metrics: recorder,
+    });
+
+    await isEnabled("ai_reports_enabled", {
+      default: false,
+      targetingKey: "service",
+    });
+    await expect(
+      isEnabled("betting_enabled", {
+        default: false,
+        targetingKey: "service",
+      }),
+    ).rejects.toThrow();
+
+    expect(errors).toEqual([{ operation: "evaluate" }]);
   });
 
   test("the observer is cleared on shutdown", async () => {
     const events: EvaluationEvent[] = [];
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
-      provider: new StaticProvider({ knob: true }),
+      provider: new StaticProvider({ ai_reports_enabled: true }),
       onEvaluation: (event) => events.push(event),
     });
     await shutdownFeatureFlags();
 
-    await isEnabled("knob", { default: false, targetingKey: "service" });
+    await isEnabled("ai_reports_enabled", {
+      default: false,
+      targetingKey: "service",
+    });
     expect(events).toEqual([]);
   });
 });

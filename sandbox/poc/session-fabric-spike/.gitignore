@@ -1,0 +1,3 @@
+node_modules/
+.spike-out/
+bun.lock

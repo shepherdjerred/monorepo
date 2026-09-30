@@ -1,6 +1,6 @@
 import {
   BucksDareHorizonKindSchema,
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   type BucksDareHorizonKind,
   type BucksDareState,
   type DiscordAccountId,
@@ -42,7 +42,7 @@ import {
 import { stakeDareContributionInTransaction } from "#src/betting/dares/settlement/dare-ledger.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
-import { bettingDaresTotal } from "#src/metrics/betting.ts";
+import { bettingDaresTotal } from "#src/metrics/betting/betting.ts";
 
 /**
  * Creating, confirming, and abandoning a dare proposal.
@@ -87,7 +87,7 @@ const WindowDaysSchema = z.number().int().min(1).max(DARE_MAX_WINDOW_DAYS);
 
 function proposalIssues(input: CreateProposedDareInput): string[] {
   const issues: string[] = [];
-  if (!BucksStakeSchema.safeParse(input.amount).success) {
+  if (!StorableBucksStakeSchema.safeParse(input.amount).success) {
     issues.push("The opening amount must be a positive whole number of BB");
   }
   if (input.targets.length === 0 || input.targets.length > DARE_MAX_TARGETS) {
@@ -277,10 +277,9 @@ export async function confirmDare(
         });
         if (claim.count !== 1) {
           const dareState = await currentDareState(tx, dare.id);
-          if (dareState === "proposed") {
-            return { kind: "proposal_expired" } as const;
-          }
-          return { kind: "already_resolved", dareState } as const;
+          return dareState === "proposed"
+            ? ({ kind: "proposal_expired" } as const)
+            : ({ kind: "already_resolved", dareState } as const);
         }
         const balance = await stakeDareContributionInTransaction(tx, {
           facts: {
@@ -292,7 +291,7 @@ export async function confirmDare(
           },
           bucksAccountId: account.id,
           discordId: input.challengerDiscordId,
-          amount,
+          amount: StorableBucksStakeSchema.parse(amount),
         });
         return { kind: "confirmed", balance } as const;
       },

@@ -26,8 +26,9 @@ export type MonarchSession = z.infer<typeof MonarchSessionSchema>;
 
 export function getSessionPath(): string {
   const explicit = Bun.env["MONARCH_SESSION_PATH"];
-  if (explicit !== undefined && explicit !== "") return explicit;
-  return DEFAULT_SESSION_PATH;
+  return explicit !== undefined && explicit !== ""
+    ? explicit
+    : DEFAULT_SESSION_PATH;
 }
 
 export async function loadMonarchSession(): Promise<MonarchSession> {
@@ -52,8 +53,7 @@ export function buildCookieHeader(
   nowMs = Date.now(),
 ): string {
   const valid = cookies.filter((cookie) => {
-    if (cookie.expires < 0) return true;
-    return cookie.expires * 1000 > nowMs;
+    return cookie.expires < 0 || cookie.expires * 1000 > nowMs;
   });
 
   return valid.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");

@@ -1,6 +1,6 @@
 ---
 name: git-helper
-description: "Use this skill for Safe, current Git operations for inspection, commits, history, recovery, merging, rebasing, work…"
+description: Safe, current Git operations for inspection, commits, history, recovery, merging, rebasing, worktrees, configuration, maintenance, and repository troubleshooting. Use for Git commands and diagnosis; load the repository's owning stack or branching skill before branch or PR mutations.
 ---
 
 # Git Helper
@@ -11,9 +11,9 @@ Inspect first, preserve user work, and use the repository's owning branch workfl
 
 In `shepherdjerred/monorepo`, every PR — human or agent, new or existing — is a git-spice stack. Load `monorepo-delivery` first; it is authoritative for branch creation, restacking, and publishing.
 
-When working in Conductor, use the provided isolated workspace; do not create a
-second worktree unless the user explicitly asks for one. Do not use a bare
-`gh pr create` or hand-written rebase in place of the owning stack tool.
+Use the provided isolated workspace; do not create a second worktree unless the
+user explicitly asks for one. Do not use a bare `gh pr create` or hand-written
+rebase in place of the owning stack tool.
 
 ## Current baseline
 

@@ -135,8 +135,7 @@ export function buildAuditEmailSubject(
   date: string,
   counts: ReturnType<typeof extractAuditSubjectCounts>,
 ): string {
-  if (counts === undefined) {
-    return `Homelab Audit ${date}`;
-  }
-  return `Homelab Audit ${date} — ${String(counts.red)} Red, ${String(counts.yellow)} Yellow, ${String(counts.green)} Green | ${String(counts.openAlerts)} open Alerts`;
+  return counts === undefined
+    ? `Homelab Audit ${date}`
+    : `Homelab Audit ${date} — ${String(counts.red)} Red, ${String(counts.yellow)} Yellow, ${String(counts.green)} Green | ${String(counts.openAlerts)} open Alerts`;
 }

@@ -17,9 +17,9 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
-import { streamReportAiEdit } from "#src/lib/report-ai-stream.ts";
+import { streamReportAiEdit } from "#src/lib/reports/report-ai-stream.ts";
 import { type ReportFormState } from "#src/components/report/report-form-fields.tsx";
 import { ReportQueryViewer } from "#src/components/report/report-query-viewer.tsx";
 import { ReportResultTable } from "#src/components/report/report-result-table.tsx";
@@ -363,9 +363,7 @@ export function selectBindingQuota(
   if (userDay !== undefined) return userDay;
 
   const anyUser = snapshots.find((s) => s.scope === "user_guild");
-  if (anyUser !== undefined) return anyUser;
-
-  return snapshots[0] ?? null;
+  return anyUser ?? snapshots[0] ?? null;
 }
 
 function quotaWindowLabel(
@@ -464,20 +462,16 @@ function statusDisabledReason(
   if (!status.enabled) {
     return status.disabledReason;
   }
-  if (status.activeRun) {
-    return "An AI edit is already running.";
-  }
-  return null;
+  return status.activeRun ? "An AI edit is already running." : null;
 }
 
 function progressClassName(tone: ProgressItem["tone"]): string {
   if (tone === "success") {
     return "text-xs text-[var(--scout-color-success)]";
   }
-  if (tone === "error") {
-    return "text-xs text-scout-danger";
-  }
-  return "text-xs text-scout-subtle";
+  return tone === "error"
+    ? "text-xs text-scout-danger"
+    : "text-xs text-scout-subtle";
 }
 
 function formatReset(resetsAt: string): string {

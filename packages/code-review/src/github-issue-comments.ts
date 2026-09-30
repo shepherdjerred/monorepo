@@ -1,3 +1,4 @@
+import { fetchBlockedReason } from "./github-blocked.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
 import {
   asRecord,
@@ -181,11 +182,10 @@ export function reviewCommentBoundToHead(input: {
   // a named commit, so once it uses them it is the only trustworthy answer:
   // preferring it both admits a review whose findings link no commit and
   // refuses a findings comment merely relinked to the new head.
-  if (input.acknowledgement !== null) {
-    return commitsNamedBy(input.acknowledgement.body).has(input.head);
-  }
-  if (input.reportsFindings) return false;
-  return reactionBoundToHead(input.updatedAt, input.headPushedAt);
+  return input.acknowledgement === null
+    ? !input.reportsFindings &&
+        reactionBoundToHead(input.updatedAt, input.headPushedAt)
+    : commitsNamedBy(input.acknowledgement.body).has(input.head);
 }
 
 function commitsNamedBy(body: string): Set<string> {
@@ -231,9 +231,9 @@ export async function resolveIssueCommentReview(input: {
       : scanned.review;
   const { completion } = input.provider;
   const reportsFindings =
-    comment === null || completion.kind !== "issue-comment"
-      ? false
-      : completion.parseFindings(comment).length > 0;
+    comment !== null &&
+    completion.kind === "issue-comment" &&
+    completion.parseFindings(comment).length > 0;
   if (
     comment !== null &&
     reviewCommentBoundToHead({
@@ -258,6 +258,29 @@ export async function resolveIssueCommentReview(input: {
           : acknowledgement.updatedAt,
       staleReaction: false,
       skipReason: null,
+      blockedReason: null,
+      issueComment: comment,
+    };
+  }
+  // The comment is not bound to this head. Before reporting `reviewing`, check
+  // whether the provider said it cannot review at all (quota exhaustion) — a
+  // block fails fast with its remediation instead of polling to the deadline.
+  const blockedReason = await fetchBlockedReason({
+    repo: input.repo,
+    number: input.prNumber,
+    token: input.token,
+    provider: input.provider,
+    headPushedAt: input.headPushedAt,
+  });
+  if (blockedReason !== null) {
+    return {
+      state: "errored",
+      completionSignal: "none",
+      reviewedCommit: null,
+      reviewedAt: comment?.updatedAt ?? null,
+      staleReaction: false,
+      skipReason: null,
+      blockedReason,
       issueComment: comment,
     };
   }
@@ -268,6 +291,7 @@ export async function resolveIssueCommentReview(input: {
     reviewedAt: comment?.updatedAt ?? null,
     staleReaction: false,
     skipReason: null,
+    blockedReason: null,
     issueComment: comment,
   };
 }

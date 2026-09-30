@@ -1,17 +1,21 @@
-import { checkActiveGames } from "#src/league/tasks/prematch/active-game-detection.ts";
+import {
+  checkActiveGames,
+  type PrematchV2CaptureCheck,
+} from "#src/league/tasks/prematch/active-game-detection.ts";
+import { deleteExpiredActiveGames } from "#src/league/tasks/prematch/active-game-queries.ts";
 import {
   abandonExpiredDareProposals,
   expireDareAcceptWindows,
 } from "#src/betting/dares/settlement/dare-sweep.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/dare-delivery.ts";
+import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
 import { expireDareV2AcceptWindows } from "#src/betting/dares/settlement/dare-sweep-v2.ts";
 import { refreshPendingDareV2Callouts } from "#src/betting/dares/presentation/dare-callout-v2.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { closeExpiredBettingWindows } from "#src/betting/settlement/sweep.ts";
-import { closeExpiredParlayWindows } from "#src/betting/parlays/parlay-sweep.ts";
-import { activatePendingParlayMarkets } from "#src/betting/parlays/parlay-publish.ts";
-import { refreshClosedParlayMessages } from "#src/betting/parlays/parlay-refresh.ts";
-import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
+import { closeExpiredParlayWindows } from "#src/betting/parlays/runtime/parlay-sweep.ts";
+import { activatePendingParlayMarkets } from "#src/betting/parlays/runtime/parlay-publish.ts";
+import { refreshClosedParlayMessages } from "#src/betting/parlays/runtime/parlay-refresh.ts";
+import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import {
   runMaintenanceSteps,
   type MaintenanceStep,
@@ -21,7 +25,37 @@ import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 
 const logger = createLogger("tasks-prematch");
 
-export async function checkPreMatch(): Promise<{
+/**
+ * Who detects live games in this pass.
+ *
+ * `v1` is the whole v1 pass: this process detects, announces and opens
+ * markets, skipping any game the V2 prematch path already took. `v2` means
+ * `scoutPrematchDiscoveryV2Workflow` already detected this pass's games, so
+ * only the rest of the prematch maintenance runs here, plus the `ActiveGame`
+ * expiry detection would otherwise have done.
+ */
+export type PrematchPassDetection =
+  | { activeGameDetection: "v1"; capturedByV2: PrematchV2CaptureCheck }
+  | { activeGameDetection: "v2" };
+
+function detectionStep(pass: PrematchPassDetection): MaintenanceStep {
+  if (pass.activeGameDetection === "v2") {
+    return {
+      name: "active-game expiry",
+      run: async () => {
+        await deleteExpiredActiveGames();
+      },
+    };
+  }
+  return {
+    name: "active-game detection",
+    run: async () => {
+      await checkActiveGames({ capturedByV2: pass.capturedByV2 });
+    },
+  };
+}
+
+export async function checkPreMatch(pass: PrematchPassDetection): Promise<{
   dareSummaries: DareSettlementSummary[];
 }> {
   logger.info("🎯 Starting pre-match check task");
@@ -33,12 +67,7 @@ export async function checkPreMatch(): Promise<{
     // failures are re-thrown at the end. Dare v2 recovery is outside every
     // feature flag so a rollout revocation cannot strand funded contracts.
     const steps: MaintenanceStep[] = [
-      {
-        name: "active-game detection",
-        run: async () => {
-          await checkActiveGames();
-        },
-      },
+      detectionStep(pass),
       {
         name: "dare v2 accept-window expiry",
         run: async () => {

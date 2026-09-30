@@ -6,7 +6,7 @@ import {
   afterEach,
   describe,
 } from "vitest";
-import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
+import { getChannelsSubscribedToPlayers } from "#src/database/subscribed-channels.ts";
 import {
   setSubscriptionFilters,
   setChannelFilters,

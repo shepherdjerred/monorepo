@@ -36,12 +36,52 @@ resource "aws_s3_bucket" "ts_mc" {
   bucket = "ts-mc"
 }
 
+resource "aws_s3_bucket" "ts_mc_docs" {
+  bucket = "ts-mc-docs"
+}
+
 resource "aws_s3_bucket" "webring" {
   bucket = "webring"
 }
 
 resource "aws_s3_bucket" "cook" {
   bucket = "cook"
+}
+
+# macos-cross.sjer.red — the macos-cross-compiler marketing site.
+resource "aws_s3_bucket" "macos_cross" {
+  # Keep this resource through the cutover apply so the provider can purge
+  # the retired site's non-empty bucket before the follow-up removes it.
+  bucket        = "macos-cross"
+  force_destroy = true
+}
+
+# cross-compilers.sjer.red — the macOS + Windows cross-compiler marketing
+# site. Replaces the macos-cross bucket, which is removed once the new domain
+# is verified live.
+resource "aws_s3_bucket" "cross_compilers" {
+  bucket = "cross-compilers"
+}
+
+# Private. The Apple SDK tarballs the published macos-cross-compiler images are
+# built from (packages/macos-cross-compiler/scripts/stage-xcode.sh), pinned by
+# sha256 in its sdks.json. Re-staging one needs a Mac with that exact Xcode
+# installed, so the objects are backed up rather than treated as rebuildable.
+#
+# The first tarball upload (scripts/release/macos-cross-compiler.ts upload)
+# created the bucket before this resource reached main — SeaweedFS creates a
+# bucket on its first PutObject — so adopt it instead of calling CreateBucket.
+import {
+  to = aws_s3_bucket.apple_sdks
+  id = "apple-sdks"
+}
+
+resource "aws_s3_bucket" "apple_sdks" {
+  bucket = "apple-sdks"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # stocks.sjer.red. This bucket predates its IaC declaration: when stocks was
@@ -65,6 +105,16 @@ resource "aws_s3_bucket" "stocks_sjer_red" {
 
 resource "aws_s3_bucket" "wiki_sjer_red" {
   bucket = "wiki-sjer-red"
+}
+
+# Scout's Storybook catalogs: the design system at the root, the management
+# app's components under /app/. Deliberately absent from
+# `static_site_immutable_prefixes`: Storybook's hashed chunks share the
+# `assets/` prefix with the unhashed Scout game art, fonts, and theme bootstrap
+# that scoutAssetsPlugin copies in, so an immutable rule there would pin those
+# forever.
+resource "aws_s3_bucket" "scout_design_system" {
+  bucket = "scout-design-system"
 }
 
 resource "aws_s3_bucket" "glitter_boys_ppl" {
@@ -108,17 +158,22 @@ resource "aws_s3_bucket" "relay_docs" {
 # that a still-open browser tab references. Any future manual deploy should
 # follow the same convention: re-upload the current build's hashed files (fresh
 # mtime resets their age) so only prior builds' hashes age out. Only buckets
-# the retired pipeline deployed to are listed; non-hashed sites (resume,
-# webring, glitter) and buckets never deployed to are intentionally omitted.
+# whose hashed prefixes deploy without `--delete` are listed; non-hashed
+# sites (resume, webring, glitter) and buckets never deployed to are
+# intentionally omitted.
 locals {
   static_site_immutable_prefixes = {
     "scout-frontend"      = ["app/assets/", "_astro/"]
     "scout-frontend-beta" = ["app/assets/", "_astro/"]
     "sjer-red"            = ["_astro/"]
     "cook"                = ["_astro/"]
+    "macos-cross"         = ["_astro/"]
+    "cross-compilers"     = ["_astro/"]
     "stocks-sjer-red"     = ["_astro/"]
     "wiki-sjer-red"       = ["_astro/"]
     "better-skill-capped" = ["assets/"]
+    "ts-mc"               = ["_astro/"]
+    "ts-mc-docs"          = ["_astro/"]
   }
   # OpenTofu's S3 backend intentionally inherits the state-only AWS identity
   # from the process. The AWS CLI provisioners mutate deployment buckets, so
@@ -138,9 +193,13 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.scout_frontend_beta,
     aws_s3_bucket.sjer_red,
     aws_s3_bucket.cook,
+    aws_s3_bucket.macos_cross,
+    aws_s3_bucket.cross_compilers,
     aws_s3_bucket.stocks_sjer_red,
     aws_s3_bucket.wiki_sjer_red,
     aws_s3_bucket.better_skill_capped,
+    aws_s3_bucket.ts_mc,
+    aws_s3_bucket.ts_mc_docs,
   ]
 
   input = {
@@ -259,6 +318,13 @@ resource "aws_s3_bucket" "llm_archive" {
   bucket = "llm-archive"
 }
 
+# Durable provider resume state for Temporal agent chats. Unlike the request
+# archive, these objects have no age-based lifecycle: an idle chat must remain
+# resumable until its catalog record is explicitly retired.
+resource "aws_s3_bucket" "agent_chat_sessions" {
+  bucket = "agent-chat-sessions"
+}
+
 resource "terraform_data" "llm_archive_lifecycle" {
   input = {
     bucket       = aws_s3_bucket.llm_archive.id
@@ -367,6 +433,36 @@ resource "terraform_data" "scout_site_releases_lifecycle" {
         }'
     EOT
   }
+}
+
+# Build-scoped CI handoff and artifact store. Steps pass values to later steps
+# in the same pipeline as `<pipeline number>/<key>.json`, and directory trees
+# under `artifacts/` — scripts/lib/ci/ci-handoff.ts and ci-artifact.ts, which
+# together replace Buildkite's meta-data and artifact stores.
+#
+# Declared so the handoff S3 identity has a bucket named in IaC to be scoped
+# against. That identity is not repo-managed: SeaweedFS reads its identities
+# from the `seaweedfs-s3-credentials` 1Password item through
+# `existingConfigSecret`, so nothing here can assert the scope. Scope it to the
+# BUCKET rather than a prefix — one bucket carries both the JSON keys and the
+# `artifacts/` trees, and a prefix-scoped grant would break the artifact half
+# while the handoff half kept working.
+#
+# The import block is here because the bucket already exists: it was created
+# empty, ahead of this declaration, precisely so that adoption is a fact rather
+# than a race. Left to itself the outcome was going to be the scout-site-releases
+# story again -- `verify` writes the caddyfile handoff on every build including
+# pull requests, `tofu-apply-seaweedfs` runs later in the same pipeline, so
+# SeaweedFS would auto-create the bucket on that first PutObject and every
+# subsequent apply would fail with BucketAlreadyExists. Creating it up front
+# removes the ordering question entirely.
+import {
+  to = aws_s3_bucket.ci_handoff
+  id = "ci-handoff"
+}
+
+resource "aws_s3_bucket" "ci_handoff" {
+  bucket = "ci-handoff"
 }
 
 # OpenTofu state backend for all modules

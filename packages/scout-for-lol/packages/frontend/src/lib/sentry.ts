@@ -36,7 +36,7 @@ export function initSentry(): void {
           /pinterest/i.test(value.value ?? "") &&
           value.stacktrace?.frames?.some((frame) =>
             /pinimg\.com|pinterest/i.test(frame.filename ?? ""),
-          ),
+          ) === true,
       );
       return fromPinterest === true ? null : event;
     },

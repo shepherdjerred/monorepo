@@ -5,7 +5,7 @@ import {
   platformToRegionalRoute,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { updateLastMatchTime } from "#src/database/index.ts";
+import { updateLastMatchTime } from "#src/database/account-cursors.ts";
 import { getRecentMatchIds } from "#src/league/api/match-history.ts";
 import { createLogger } from "#src/logger.ts";
 import { withTimeout } from "#src/utils/timeout.ts";

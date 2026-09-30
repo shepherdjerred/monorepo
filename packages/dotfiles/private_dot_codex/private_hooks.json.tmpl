@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/jerred/.codex/herdr-agent-state.sh' session",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ]{{ if eq .chezmoi.os "darwin" }},
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "{{ .chezmoi.homeDir }}/.local/bin/plannotator",
+            "timeout": 345600,
+            "type": "command"
+          }
+        ]
+      }
+    ]{{ end }}
+  }
+}

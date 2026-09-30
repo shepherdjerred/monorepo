@@ -4,8 +4,8 @@ import {
   assertCustomActivityPolicy,
   isAllowedCustomActivityOrigin,
   verifyCustomActivityTokenWithExpiry,
-} from "#src/customs/activity-auth.ts";
-import { customActivityActor } from "#src/customs/activity-actor.ts";
+} from "#src/customs/activity/activity-auth.ts";
+import { customActivityActor } from "#src/customs/activity/activity-actor.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";

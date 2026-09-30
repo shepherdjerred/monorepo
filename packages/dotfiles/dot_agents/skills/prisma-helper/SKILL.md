@@ -1,6 +1,8 @@
 ---
 name: prisma-helper
-description: "Use this skill for Prisma ORM for type-safe database access - schema design, migrations, queries, relations, and co…"
+description: |
+  Prisma ORM for type-safe database access - schema design, migrations, queries, relations, and connection management
+  When user works with Prisma, database schemas, migrations, Prisma Client queries, or mentions prisma commands
 ---
 
 # Prisma Helper Agent

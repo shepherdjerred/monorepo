@@ -37,6 +37,12 @@ project `AGENTS.md` or skill.
   calculation.
 - Browse when facts are current, uncertain, high stakes, or the user asks for
   sources. Prefer primary documentation and cite the page supporting the claim.
+- PinchTab is the browser for development and UI verification; lightpanda is for
+  curl-like scraping and extraction. Reach for another browser tool only when
+  neither fits.
+- A browser-visible change is not done until it has been rendered and looked at,
+  not only reasoned about from source. Other interactive surfaces — native,
+  React Native, Discord, terminal — use their own matching verification tool.
 - Render PDFs, Typst, documents, slides, spreadsheets, and visual assets with
   their matching skill and inspect the output, not only the source.
 - Use foreground polling or the product's monitoring facility for waits. Never
@@ -46,8 +52,12 @@ project `AGENTS.md` or skill.
 
 - Follow the repository's branch and PR workflow. Do not create or merge a PR
   unless the task authorizes it.
-- For visual changes, provide the smallest artifact that proves the behavior:
-  a screenshot for a state, a short recording for a flow, or a rendered asset.
+- In the `sjerred` Linear workspace, create agent-generated issues only in the
+  `AI` team. `SJ` is reserved for human-created issues; an agent may update an
+  existing `SJ` issue only when the task explicitly identifies it.
+- Visual and interactive changes ship with the smallest artifact that proves the
+  behavior, attached to the PR: a screenshot for a state, a short recording for
+  a flow, or a rendered asset. Capture it while verifying, not after review.
 - Keep commit and PR narratives about outcomes and verification, not agent
   activity.
 
@@ -61,10 +71,8 @@ project `AGENTS.md` or skill.
 - OpenCode uses native `AGENTS.md` and Claude-compatible discovery; do not add a
   prose copy.
 
-Keep global and root `AGENTS.md` files below 200 lines and 16 KiB. Keep nested
-project files below 120 lines and 8 KiB. Skill entrypoints should route, not
-serve as handbooks; use references or durable documentation for conditional
-detail.
+Skill entrypoints should route, not serve as handbooks; use references or
+durable documentation for conditional detail.
 
 ## Chezmoi
 

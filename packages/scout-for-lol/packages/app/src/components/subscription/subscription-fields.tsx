@@ -6,7 +6,12 @@ import {
   FieldError,
   Label,
   FormSection,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
+import {
+  ChannelAvailabilityMessage,
+  channelSelectDisabled,
+  type ChannelAvailability,
+} from "#src/components/channel-select-support.tsx";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import { SubscriptionFilterFields } from "#src/components/subscription/subscription-filter-fields.tsx";
@@ -25,12 +30,15 @@ type SubscriptionFieldsProps = {
   idPrefix: string;
   guildId: string;
   channels: { id: string; name: string }[];
+  channelAvailability?: ChannelAvailability;
+  onRetryChannels?: () => void;
 };
 
 const DEFAULT_SUBSCRIPTION_FIELDS_PROPS: SubscriptionFieldsProps = {
   idPrefix: "subscription",
   guildId: "",
   channels: [],
+  channelAvailability: { status: "ready" },
 };
 
 export const SubscriptionFields = withScoutForm({
@@ -52,6 +60,10 @@ export const SubscriptionFields = withScoutForm({
                 id={`${idPrefix}-channel`}
                 label="Channel"
                 placeholder="Pick a channel"
+                disabled={channelSelectDisabled(
+                  props.channelAvailability ?? { status: "ready" },
+                  props.channels.length,
+                )}
                 options={props.channels.map((channel) => ({
                   value: channel.id,
                   label: `#${channel.name}`,
@@ -60,6 +72,12 @@ export const SubscriptionFields = withScoutForm({
               />
             )}
           </form.AppField>
+          {props.channelAvailability !== undefined && (
+            <ChannelAvailabilityMessage
+              availability={props.channelAvailability}
+              onRetry={props.onRetryChannels}
+            />
+          )}
         </FormSection>
 
         <FormSection

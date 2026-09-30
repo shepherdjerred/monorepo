@@ -34,11 +34,9 @@ export function validateSnowflake(
     return `Invalid ${fieldName}. Use the numeric Discord ID from the message context (e.g., '123456789012345678'), not '@me'.`;
   }
 
-  if (!SNOWFLAKE_REGEX.test(value)) {
-    return `Invalid ${fieldName}. Discord IDs must be numeric strings (17-20 digits). Got: '${value}'`;
-  }
-
-  return null;
+  return SNOWFLAKE_REGEX.test(value)
+    ? null
+    : `Invalid ${fieldName}. Discord IDs must be numeric strings (17-20 digits). Got: '${value}'`;
 }
 
 /**

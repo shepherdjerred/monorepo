@@ -1,12 +1,18 @@
 import { BaseMediaStream } from "./BaseMediaStream.js";
-import type { WebRtcConnWrapper } from "../client/voice/WebRtcWrapper.js";
+import type { AudioFrameSink } from "./AudioSink.js";
 import type { StreamObserver } from "./StreamObserver.js";
 
 export class AudioStream extends BaseMediaStream {
-  private _conn: WebRtcConnWrapper;
+  /**
+   * Typed as the structural {@link AudioFrameSink} rather than the concrete connection wrapper:
+   * this class only ever calls `sendAudioFrame`, and widening the parameter lets a consumer slot
+   * a mixer/gain stage in front of the transport without a proxy object or a type assertion. The
+   * connection wrapper satisfies the type as-is, so the ordinary call site is unchanged.
+   */
+  private _conn: AudioFrameSink;
 
   constructor(
-    conn: WebRtcConnWrapper,
+    conn: AudioFrameSink,
     noSleep = false,
     observer?: StreamObserver,
   ) {

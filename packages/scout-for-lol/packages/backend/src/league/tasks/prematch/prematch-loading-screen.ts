@@ -11,6 +11,8 @@ import {
   UnsupportedLoadingScreenQueueError,
 } from "#src/league/tasks/prematch/loading-screen-errors.ts";
 import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { clashSurfaceEnabledForPuuids } from "#src/league/clash/access.ts";
+import { attachClashChrome } from "#src/league/clash/chrome.ts";
 import {
   loadingScreenToImage,
   loadingScreenToSvg,
@@ -58,10 +60,9 @@ export async function renderPrematchLoadingScreen(input: {
       trackedPlayers.map((p) => p.league.leagueAccount.puuid),
     );
 
-    loadingScreenData = await buildLoadingScreenData(
-      gameInfo,
-      trackedPuuidSet,
-      region,
+    loadingScreenData = await attachClashChrome(
+      await buildLoadingScreenData(gameInfo, trackedPuuidSet, region),
+      await clashSurfaceEnabledForPuuids([...trackedPuuidSet]),
     );
     const [image, svg] = await Promise.all([
       loadingScreenToImage(loadingScreenData),
@@ -90,17 +91,12 @@ export async function renderPrematchLoadingScreen(input: {
       try {
         await Promise.all([
           savePrematchImageToS3(
-            gameInfo.gameId,
+            gameInfo,
             image,
             queueType ?? "unknown",
             aliases,
           ),
-          savePrematchSvgToS3(
-            gameInfo.gameId,
-            svg,
-            queueType ?? "unknown",
-            aliases,
-          ),
+          savePrematchSvgToS3(gameInfo, svg, queueType ?? "unknown", aliases),
         ]);
       } catch (s3Error) {
         logger.error(

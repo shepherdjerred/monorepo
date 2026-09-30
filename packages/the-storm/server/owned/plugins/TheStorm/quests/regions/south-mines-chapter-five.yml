@@ -1,0 +1,82 @@
+# Mine work continues from the second manifest with basic light and rail
+# maintenance. No unsurveyed historical shaft is referenced.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-lantern-check:
+    name: The Lantern Check
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-second-manifest
+    text:
+      offer: Two carts have used the repaired line. I want the crew to check every lamp before we send a third.
+      accept: Bring lanterns and coal for a fresh light kit.
+      decline: The next cart will wait for a daylight inspection.
+      finish: The crew has replacement lights and fuel for another run.
+      summary: Restock the South Mines lighting after the second cart run.
+      questions: []
+    start: lights
+    stages:
+      lights:
+        journal: Bring Dorran 12 lanterns and 24 coal.
+        waiting: A route is only safe while the crew can see it.
+        complete: The mine light kit is ready for inspection.
+        objectives:
+          - deliver dorran 12 LANTERN
+          - deliver dorran 24 COAL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-rail-order:
+    name: The Rail Order
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-lantern-check
+    text:
+      offer: The line has proved itself twice. We should make a standard order for the spare rails the crew uses most.
+      accept: Craft rails in the main world so the crew can count a repeatable replacement batch.
+      decline: I will keep the last spare section set aside.
+      finish: The crew has a standard rail batch for future repairs.
+      summary: Make a repeatable spare-rail order for the South Mines crew.
+      questions: []
+    start: batch
+    stages:
+      batch:
+        journal: Craft 32 rails in the main world for Dorran's crew.
+        waiting: A standard batch makes every repair easier to count.
+        complete: The spare rails are ready to take to Dorran.
+        objectives:
+          - craft 32 RAIL
+        onComplete: []
+        next: [{ to: hand-in, when: [], label: none }]
+        timeLimit: none
+      hand-in:
+        journal: Bring Dorran the 32 spare rails.
+        waiting: The crew needs the rails on hand before the next repair.
+        complete: Dorran has a full spare-rail batch.
+        objectives:
+          - deliver dorran 32 RAIL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

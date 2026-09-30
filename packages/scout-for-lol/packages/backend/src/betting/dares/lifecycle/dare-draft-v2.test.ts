@@ -200,3 +200,65 @@ describe("prepareDareDraftV2", () => {
     });
   });
 });
+
+describe("prepareDareDraftV2 list copy", () => {
+  test("rejects status phrases that miss a game set", () => {
+    const plan = DareCompiledPlanV2Schema.parse({
+      version: 2,
+      maxEligibleGames: 1,
+      gameSets: [
+        {
+          name: "support_win",
+          targetKeys: ["T1"],
+          relationship: "independent",
+          queues: ["solo"],
+          predicate: {
+            kind: "comparison",
+            value: { kind: "participant", target: "T1", field: "win" },
+            operator: "eq",
+            threshold: true,
+          },
+          projections: [],
+          orderBy: "game_end_at_asc_match_id_asc",
+          limit: 1,
+        },
+      ],
+      result: {
+        kind: "matching_games",
+        gameSet: "support_win",
+        operator: "gte",
+        threshold: 1,
+      },
+    });
+    const target = DareTargetBindingV2Schema.parse({
+      key: "T1",
+      discordId: "20000000000000000",
+      playerId: 1,
+      alias: "Aaron",
+      accounts: [
+        {
+          puuid: "aaron-puuid",
+          trackingStartedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(
+      prepareDareDraftV2(
+        {
+          originalText: "Aaron wins as support.",
+          displayTitle: "Aaron wins a game as support",
+          statusPhrases: {},
+          plan,
+          targets: [target],
+          deadlineSpec: { kind: "relative", days: 7 },
+          openingStake: 5,
+        },
+        new Date("2026-09-01T00:00:00.000Z"),
+      ),
+    ).toMatchObject({
+      kind: "invalid",
+      issues: ["statusPhrases is missing English for support_win."],
+    });
+  });
+});

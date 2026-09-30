@@ -1,5 +1,6 @@
 import {
   championNameToDisplayName,
+  computeKda,
   type ArenaChampion,
 } from "@scout-for-lol/data";
 import { palette } from "@scout-for-lol/design-system/satori/colors";
@@ -14,11 +15,7 @@ const SPLASH_HEIGHT = 320;
 const TRACKED_WEIGHT = 1.12;
 
 export function getDamageSharePercent(damage: number, totalDamage: number) {
-  if (totalDamage === 0) {
-    return 0;
-  }
-
-  return round((damage / totalDamage) * 100, 0);
+  return totalDamage === 0 ? 0 : round((damage / totalDamage) * 100, 0);
 }
 
 export function PlayerColumn({
@@ -207,8 +204,9 @@ export function PlayerColumn({
 }
 
 function kdaRatio(kills: number, deaths: number, assists: number): string {
-  if (deaths === 0) {
-    return "Perfect";
-  }
-  return ((kills + assists) / deaths).toFixed(2);
+  // "Perfect" is an arena display convention for zero-death games; the
+  // numeric value everywhere else is the canonical computeKda.
+  return deaths === 0
+    ? "Perfect"
+    : computeKda({ kills, deaths, assists }).toFixed(2);
 }

@@ -31,8 +31,9 @@ function sourceSampler(frame: Buffer): HudSampler {
     lumaAt: (x, y) => {
       const px = Math.floor(x);
       const py = Math.floor(y);
-      if (px < 0 || py < 0 || px >= WIDTH || py >= HEIGHT) return 0;
-      return frame[(py * WIDTH + px) * BYTES_PER_PIXEL] ?? 0;
+      return px < 0 || py < 0 || px >= WIDTH || py >= HEIGHT
+        ? 0
+        : (frame[(py * WIDTH + px) * BYTES_PER_PIXEL] ?? 0);
     },
   };
 }

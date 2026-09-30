@@ -1,3 +1,4 @@
+export * from "./AudioSink.js";
 export * from "./LibavDemuxer.js";
 export * from "./StreamObserver.js";
 export * from "./letterbox.js";

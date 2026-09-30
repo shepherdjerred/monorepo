@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flipt.ts";
+import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/flipt.ts";
 import {
   createRepositoryInitializationScript,
   createSeedValidationScript,
@@ -247,6 +247,10 @@ describe("Flipt chart", () => {
             "starlight-karma-bot",
             "trmnl-dashboard",
             "temporal",
+            "alert-dashboard",
+            "storm",
+            "the-storm",
+            "the-storm-companion",
           ].map((namespace) => `${environment}.${namespace}.yaml`),
         )
         .toSorted(),
@@ -346,7 +350,13 @@ describe("Flipt network policy", () => {
     expect(policy.spec.egress).toHaveLength(1);
   });
 
-  it("allows the Temporal repo worker to read the managed snapshot", () => {
+  it.each([
+    ["the Temporal repo worker to read the managed snapshot", "temporal"],
+    // Without a consumer entry, Flipt ingress rejects storm-brain, flag
+    // reads degrade to defaults, and both endpoints stay 503 even after
+    // their flags are enabled.
+    ["storm-brain to read its classify/triage gates", "storm-brain"],
+  ])("allows %s", (_label, namespace) => {
     const policy = z
       .object({
         spec: z.object({
@@ -362,7 +372,7 @@ describe("Flipt network policy", () => {
         from: expect.arrayContaining([
           {
             namespaceSelector: {
-              matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              matchLabels: { "kubernetes.io/metadata.name": namespace },
             },
           },
         ]),

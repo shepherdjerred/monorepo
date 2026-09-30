@@ -7,6 +7,13 @@
     "jsxImportSource": "react",
     "noEmit": true
   },
-  "include": ["src/**/*", "scripts/**/*", "workbench/**/*", "vite.config.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*",
+    "scripts/**/*",
+    "e2e/**/*",
+    ".storybook/**/*",
+    "vite.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": ["node_modules", "storybook-static"]
 }

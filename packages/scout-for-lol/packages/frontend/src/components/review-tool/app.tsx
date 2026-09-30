@@ -20,17 +20,17 @@ import {
 import { CostTracker } from "#src/lib/review-tool/costs.ts";
 import { migrateFromLocalStorage } from "#src/lib/review-tool/storage.ts";
 import { AppHeader } from "./app-header.tsx";
-import { ConfigModal } from "./config-modal.tsx";
-import { SettingsPanel } from "./settings-panel.tsx";
-import { ResultsPanel } from "./results-panel.tsx";
-import { MatchBrowser } from "./match-browser.tsx";
-import { MatchDetailsPanel } from "./match-details-panel.tsx";
+import { ConfigModal } from "./config/config-modal.tsx";
+import { SettingsPanel } from "./config/settings-panel.tsx";
+import { ResultsPanel } from "./results/results-panel.tsx";
+import { MatchBrowser } from "./match/match-browser.tsx";
+import { MatchDetailsPanel } from "./match/match-details-panel.tsx";
 import {
   RankConfigPanel,
   createDefaultRankConfig,
   type RankConfig,
-} from "./rank-config-panel.tsx";
-import { RatingsAnalytics } from "./ratings-analytics.tsx";
+} from "./config/rank-config-panel.tsx";
+import { RatingsAnalytics } from "./results/ratings-analytics.tsx";
 import { Spinner } from "@scout-for-lol/design-system/components/spinner";
 import type {
   CompletedMatch,

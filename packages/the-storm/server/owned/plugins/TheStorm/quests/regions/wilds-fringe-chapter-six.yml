@@ -1,0 +1,83 @@
+# The patrol stocks a field kit and practices reporting back from the present Wilds fringe.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-field-kit:
+    name: "The Field Kit"
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-trail-menders
+    text:
+      offer: "Iovita stocked spare markers. The patrol also needs a small kit for shelter when it has to wait for daylight."
+      accept: "Craft campfires and shields for a field kit in the main world."
+      decline: "The patrol will travel light this time."
+      finish: "The watch has a field kit ready for a cautious patrol."
+      summary: "Prepare shelter and protection for a Wilds fringe patrol."
+      questions: []
+    start: kit
+    stages:
+      kit:
+        journal: "Craft 4 campfires and 2 shields in the main world."
+        waiting: "The patrol should be able to stop safely without pressing farther out."
+        complete: "The field kit is ready. Bring it to the Guard Captain."
+        objectives:
+          - craft 4 CAMPFIRE
+          - craft 2 SHIELD
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Bring the Guard Captain 4 campfires and 2 shields."
+        waiting: "The patrol needs the kit before it leaves the gate."
+        complete: "The Wilds patrol field kit is ready."
+        objectives:
+          - deliver guard-captain 4 CAMPFIRE
+          - deliver guard-captain 2 SHIELD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1
+
+  a-returning-signal:
+    name: "A Returning Signal"
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-field-kit
+    text:
+      offer: "A patrol with a field kit still has to tell the town it is back. I want a signal anyone on watch can recognize."
+      accept: "Bring lanterns and redstone torches for a return signal."
+      decline: "I will wait at the gate for the patrol."
+      finish: "The town watch has a simple signal to mark a safe return."
+      summary: "Stock a visible return signal for the Wilds fringe watch."
+      questions: []
+    start: signal
+    stages:
+      signal:
+        journal: "Bring Iovita 4 lanterns and 8 redstone torches."
+        waiting: "A signal should be distinct from an ordinary campfire."
+        complete: "The watch can recognize a returning patrol."
+        objectives:
+          - deliver iovita 4 LANTERN
+          - deliver iovita 8 REDSTONE_TORCH
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1

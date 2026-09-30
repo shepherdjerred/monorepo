@@ -264,8 +264,7 @@ export class TaskNotesClient {
       WireDeleteResponseSchema,
       { mutationId: options?.mutationId },
     );
-    if (!result.ok) return result;
-    return OK_VOID;
+    return result.ok ? OK_VOID : result;
   }
 
   /**
@@ -291,8 +290,7 @@ export class TaskNotesClient {
       PATHS.TASK_ARCHIVE(id),
       WireTaskSchema,
     );
-    if (!result.ok) return result;
-    return OK_VOID;
+    return result.ok ? OK_VOID : result;
   }
 
   /**
@@ -325,8 +323,9 @@ export class TaskNotesClient {
       WireQueryResponseSchema,
       { body: flatFilterToQueryTree(filter) },
     );
-    if (!result.ok) return result;
-    return ok({ tasks: result.value.tasks, total: result.value.filtered });
+    return result.ok
+      ? ok({ tasks: result.value.tasks, total: result.value.filtered })
+      : result;
   }
 
   async getFilterOptions(): Promise<Result<FilterOptions, AppError>> {
@@ -363,8 +362,7 @@ export class TaskNotesClient {
       PATHS.TIME_START(id),
       WireTaskSchema,
     );
-    if (!result.ok) return result;
-    return OK_VOID;
+    return result.ok ? OK_VOID : result;
   }
 
   async stopTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
@@ -373,8 +371,7 @@ export class TaskNotesClient {
       PATHS.TIME_STOP(id),
       WireTaskSchema,
     );
-    if (!result.ok) return result;
-    return OK_VOID;
+    return result.ok ? OK_VOID : result;
   }
 
   async getTaskTime(id: TaskId): Promise<Result<TaskTime, AppError>> {
@@ -422,8 +419,7 @@ export class TaskNotesClient {
     const query = parts.join("&");
     const path = query ? `${PATHS.CALENDARS}?${query}` : PATHS.CALENDARS;
     const result = await this.request("GET", path, WireCalendarEventsSchema);
-    if (!result.ok) return result;
-    return ok(result.value.events);
+    return result.ok ? ok(result.value.events) : result;
   }
 
   async health(): Promise<Result<HealthStatus, AppError>> {
@@ -516,15 +512,13 @@ export class TaskNotesClient {
     }
 
     const parsed = schema.safeParse(json);
-    if (!parsed.success) {
-      return err(
-        new ValidationError(
-          `Response validation failed: ${parsed.error.message}`,
-          parsed.error.issues,
-        ),
-      );
-    }
-
-    return ok(parsed.data);
+    return parsed.success
+      ? ok(parsed.data)
+      : err(
+          new ValidationError(
+            `Response validation failed: ${parsed.error.message}`,
+            parsed.error.issues,
+          ),
+        );
   }
 }

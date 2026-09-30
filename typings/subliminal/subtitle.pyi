@@ -1,0 +1,3 @@
+SUBTITLE_EXTENSIONS: tuple[str, ...]
+
+def fix_line_ending(content: bytes) -> bytes: ...

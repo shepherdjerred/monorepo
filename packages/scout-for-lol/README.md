@@ -89,17 +89,18 @@ are one-shot and each command starts a new saved conversation.
 **Built With:**
 
 - TypeScript + Bun runtime
+- Rust + egui for the Windows/macOS Scout Client
 - Discord.js for the bot framework
 - Prisma (PostgreSQL) for application state
 - tRPC for the backend ↔ web-app API contract
 - React + Satori + resvg for report image generation
 - DuckDB for the ScoutQL report query engine
-- Tauri (Rust) + React for the desktop client
 - Zod for runtime validation
 
 **Architecture:**
 
-- Automatic match polling every minute through Scout's native Riot API client
+- Automatic Riot match polling plus paired local-client observations for data
+  Riot omits, especially custom games, Clash, mastery, and challenges
 - S3 (SeaweedFS) is the canonical store for raw match and prematch JSON
 - A local DuckDB Parquet "report lake" derived from S3 powers ScoutQL
   scheduled/user-authored report queries
@@ -125,8 +126,8 @@ apply.
   authoring conversation.
 - Raw S3 match data is canonical; the local DuckDB/Parquet report lake is
   derived and rebuildable.
-- Tournament-code games and ordinary Riot ingestion retain distinct
-  provenance.
+- Managed custom games, local observations, and Riot ingestion retain distinct
+  provenance. Riot remains preferred when both sources have a complete match.
 - Stored betting and Dare semantics are versioned so existing records do not
   change meaning during a rollout.
 
@@ -137,12 +138,10 @@ packages/
   app/          - Vite + React SPA dashboard (scout-for-lol.com/app/)
   backend/      - Discord bot, tRPC/HTTP server, report lake, cron jobs
   data/         - Shared data models, schemas, and Data Dragon assets
-  desktop/      - Tauri desktop client for live game events
+  desktop/      - Pure-Rust egui Windows/macOS League observer
   docs-site/    - User documentation site
-  evals/        - Post-match review eval datasets and rating app
   frontend/     - Astro marketing site
   report/       - Match report image generation (React + Satori)
-  ui/           - Shared React UI components
 ```
 
 **Development:**
@@ -151,9 +150,9 @@ packages/
   unused-code (knip) and duplication (jscpd baseline ratchet) gates run at the
   monorepo root (`bun run knip`, `bun run jscpd`)
 - Type-safe with strict TypeScript; linting via ESLint + Prettier
-- CI runs on Buildkite for every PR and on merge to main (verification,
-  Playwright e2e, image build + smoke); lefthook git hooks run staged-file
-  checks locally
+- CI runs on Woodpecker for PRs and merges to main (verification, selected
+  image builds, and release lanes); lefthook git hooks run staged-file checks
+  locally
 
 **Environment:**
 The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=test`), placeholder values are used automatically—no real tokens needed for development.
@@ -169,6 +168,9 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 
 ## Privacy & Terms
 
-Scout stores only the minimum data necessary to provide notifications: Riot IDs, aliases, Discord channel information, and match history for competitions. We don't collect personal information beyond what's required for the service.
+Scout stores Riot IDs, aliases, Discord configuration, match history, and data
+explicitly uploaded by a paired Scout Client. The client limits collection to
+allowlisted gameplay, Clash, mastery, challenge, and replay resources; it does
+not collect League chat, friends, store, or purchase data.
 
 See [Privacy Policy](https://scout-for-lol.com/privacy) and [Terms of Service](https://scout-for-lol.com/tos) for details.

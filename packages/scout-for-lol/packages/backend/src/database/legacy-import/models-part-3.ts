@@ -8,7 +8,7 @@
  */
 import type { Prisma } from "#generated/prisma/client/index.js";
 import {
-  DesktopClientIdSchema,
+  PuuidKeyMapStatusSchema,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -44,7 +44,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       discordId: DiscordAccountIdSchema.parse(toStr(row, "discordId")),
       // Synthetic house accounts were added after the promoted SQLite image.
-      isHouse: row["isHouse"] === undefined ? false : toBool(row, "isHouse"),
+      isHouse: row["isHouse"] !== undefined && toBool(row, "isHouse"),
       balance: toInt(row, "balance"),
       // peekPassExpiresAt existed in some SQLite snapshots; the feature and
       // its column are retired, so the value is deliberately dropped. The
@@ -246,31 +246,6 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     findAll: (tx) => tx.subscription.findMany({ orderBy: [{ id: "asc" }] }),
   }),
   defineImportModel({
-    model: "DesktopClient",
-    idColumns: ["id"],
-    resetIdSequence: true,
-    transform: (row): Prisma.DesktopClientCreateManyInput => ({
-      id: DesktopClientIdSchema.parse(toInt(row, "id")),
-      userId: DiscordAccountIdSchema.parse(toStr(row, "userId")),
-      clientId: toStr(row, "clientId"),
-      hostname: toStrOrNull(row, "hostname"),
-      isConnected: toBool(row, "isConnected"),
-      lastHeartbeat: toDateOrNull(row, "lastHeartbeat"),
-      currentGameId: toStrOrNull(row, "currentGameId"),
-      voiceChannelId: toStrOrNull(row, "voiceChannelId"),
-      guildId: toStrOrNull(row, "guildId"),
-      activeSoundPackId: toIntOrNull(row, "activeSoundPackId"),
-      createdAt: toDate(row, "createdAt"),
-      updatedAt: toDate(row, "updatedAt"),
-    }),
-    createMany: async (tx, data) => {
-      const result = await tx.desktopClient.createMany({ data });
-      return result.count;
-    },
-    count: (tx) => tx.desktopClient.count(),
-    findAll: (tx) => tx.desktopClient.findMany({ orderBy: [{ id: "asc" }] }),
-  }),
-  defineImportModel({
     model: "BucksBet",
     idColumns: ["id"],
     resetIdSequence: true,
@@ -337,10 +312,6 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchId: toStrOrNull(row, "matchId"),
       betId: toIntOrNull(row, "betId"),
       parlayBetId: toIntOrNullIfMissing(row, "parlayBetId"),
-      // Weekly parlays did not exist in the legacy SQLite deployment. Include
-      // the post-cutover nullable column in the canonical digest material so
-      // verification compares the imported row to its full Postgres shape.
-      weeklyParlayBetId: null,
       predictedTeamId: toIntOrNull(row, "predictedTeamId"),
       actualWinningTeamId: toIntOrNull(row, "actualWinningTeamId"),
       context: toStr(row, "context"),
@@ -420,5 +391,53 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     },
     count: (tx) => tx.tournamentLobby.count(),
     findAll: (tx) => tx.tournamentLobby.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    // Carried across promotion because nothing can rebuild it: only the retired
+    // API key could map an old-domain PUUID back to a Riot ID. Losing it here
+    // would silently degrade every later lake rebuild to old-domain identifiers.
+    model: "PuuidKeyMap",
+    idColumns: ["oldPuuid"],
+    resetIdSequence: false,
+    transform: (row): Prisma.PuuidKeyMapCreateManyInput => ({
+      oldPuuid: toStr(row, "oldPuuid"),
+      gameName: toStrOrNull(row, "gameName"),
+      tagLine: toStrOrNull(row, "tagLine"),
+      newPuuid: toStrOrNull(row, "newPuuid"),
+      status: PuuidKeyMapStatusSchema.parse(toStr(row, "status")),
+      harvestedAt: toDateOrNull(row, "harvestedAt"),
+      resolvedAt: toDateOrNull(row, "resolvedAt"),
+      // Carried, not recomputed. A mapping is usable only once its rewrite
+      // landed, and dropping this on the way across would leave every imported
+      // mapping inactive — so the lake would re-derive old-domain identifiers
+      // against accounts that had already moved.
+      appliedAt: toDateOrNull(row, "appliedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.puuidKeyMap.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.puuidKeyMap.count(),
+    findAll: (tx) =>
+      tx.puuidKeyMap.findMany({ orderBy: [{ oldPuuid: "asc" }] }),
+  }),
+  defineImportModel({
+    // Carried for the same reason as the map: an unmanaged marker would be lost
+    // at promotion, and the database would then read as never migrated.
+    model: "PuuidKeyMigration",
+    idColumns: ["id"],
+    resetIdSequence: false,
+    transform: (row): Prisma.PuuidKeyMigrationCreateManyInput => ({
+      id: toInt(row, "id"),
+      appliedAt: toDateOrNull(row, "appliedAt"),
+      transitionOpen: toIntOrNullIfMissing(row, "transitionOpen") ?? 1,
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.puuidKeyMigration.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.puuidKeyMigration.count(),
+    findAll: (tx) =>
+      tx.puuidKeyMigration.findMany({ orderBy: [{ id: "asc" }] }),
   }),
 ];

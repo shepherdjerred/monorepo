@@ -52,7 +52,7 @@ const restrictedTwistedPattern = {
  * The ScoutQL v1 language, kept alive for exactly one consumer.
  *
  * `data/src/model/legacy/` holds the v1 lexer/parser/compiler because the
- * boot-time migration (`backend/scripts/migrate-scoutql-v2.ts`) verifies each
+ * boot-time migration (`backend/scripts/scoutql/migrate-scoutql-v2.ts`) verifies each
  * rewrite along two independent routes, and route A is "legacy text → legacy
  * plan → IR translation". Nothing else may reach it: it is deliberately absent
  * from the `@scout-for-lol/data` barrel, and this rule is what keeps a new
@@ -69,7 +69,7 @@ const restrictedLegacyScoutQlPattern = {
   // misses the third.
   regex: "(^|[./])legacy/",
   message:
-    "ScoutQL v1 is retired. Use @scout-for-lol/data/model/scoutql/* instead; only backend/scripts/scoutql-legacy-bridge.ts may reach the legacy language.",
+    "ScoutQL v1 is retired. Use @scout-for-lol/data/model/scoutql/* instead; only backend/scripts/scoutql/scoutql-legacy-bridge.ts may reach the legacy language.",
 };
 
 /**
@@ -78,8 +78,8 @@ const restrictedLegacyScoutQlPattern = {
  */
 const legacyScoutQlImportSites = [
   "packages/data/src/model/legacy/**/*.ts",
-  "packages/backend/scripts/scoutql-legacy-bridge.ts",
-  "packages/backend/scripts/scoutql-legacy-bridge.test.ts",
+  "packages/backend/scripts/scoutql/scoutql-legacy-bridge.ts",
+  "packages/backend/scripts/scoutql/scoutql-legacy-bridge.test.ts",
 ];
 
 const config = [
@@ -95,11 +95,9 @@ const config = [
       "./packages/app/tsconfig.json",
       "./packages/backend/tsconfig.json",
       "./packages/data/tsconfig.json",
+      "./packages/domain/tsconfig.json",
       "./packages/report/tsconfig.json",
       "./packages/temporal/tsconfig.json",
-      "./packages/desktop/tsconfig.json",
-      "./packages/evals/tsconfig.json",
-      "./packages/ui/tsconfig.json",
       "./tsconfig.scripts.json",
     ],
     ignores: [
@@ -203,14 +201,33 @@ const config = [
       "packages/data/src/index.ts",
       "packages/data/src/model/arena/index.ts",
       "packages/data/src/model/index.ts",
-      "packages/data/src/sound-pack/index.ts",
       "packages/report/src/browser.ts",
       "packages/report/src/index.ts",
       "packages/temporal/src/index.ts",
-      "packages/ui/src/components/sound-pack-editor/index.ts",
-      "packages/ui/src/index.ts",
       "packages/backend/src/voice/index.ts",
     ],
+    rules: { "custom-rules/no-re-exports": "off" },
+  },
+  // Re-export shims for identity schemas moved to @scout-for-lol/domain.
+  // Each file keeps exporting the same schema objects so the existing
+  // `@scout-for-lol/data` import sites are untouched and object identity is
+  // preserved across both packages.
+  {
+    files: [
+      "packages/data/src/model/competitions/competition.ts",
+      "packages/data/src/model/core/discord.ts",
+      "packages/data/src/model/riot/league-account.ts",
+      "packages/data/src/model/core/routes.ts",
+      "packages/data/src/model/bucks/bryan-bucks-money.ts",
+    ],
+    rules: { "custom-rules/no-re-exports": "off" },
+  },
+  // The Bryan Bucks storage-overflow error moved down to
+  // `@scout-for-lol/data` so the data-layer storable helpers can raise it.
+  // Every recovery path keys off `instanceof`, so the ledger re-exports that
+  // one class object rather than declaring a second one no catch would match.
+  {
+    files: ["packages/backend/src/betting/ledger.ts"],
     rules: { "custom-rules/no-re-exports": "off" },
   },
   // Large test file (1723 lines, test files have 1500 line limit).
@@ -230,17 +247,11 @@ const config = [
     ],
     rules: { "no-secrets/no-secrets": "off" },
   },
-  // Vite config runs in Node context, not Bun
-  {
-    files: ["packages/desktop/vite.config.ts"],
-    rules: { "custom-rules/prefer-bun-apis": "off" },
-  },
   // UI components use shadcn theme tokens by design
   {
     files: [
       "packages/frontend/src/components/ui/**",
       "packages/frontend/src/components/review-tool/ui/**",
-      "packages/evals/src/components/ui/**",
     ],
     rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
   },

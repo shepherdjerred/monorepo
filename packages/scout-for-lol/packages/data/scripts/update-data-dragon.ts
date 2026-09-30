@@ -3,7 +3,10 @@ import { z } from "zod";
 import { first } from "remeda";
 import { $ } from "bun";
 import { SummonerSchema } from "#src/data-dragon/summoner.ts";
-import { RuneTreeSchema } from "#src/data-dragon/runes.ts";
+import {
+  HistoricalRuneAssetSchema,
+  RuneTreeSchema,
+} from "#src/data-dragon/runes.ts";
 import {
   ItemSchema,
   ChampionListSchema,
@@ -30,6 +33,10 @@ import {
 } from "./riot-patch.ts";
 import { generateAbilityFactsAssets } from "./ability-facts.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
+import {
+  PatchChangesetHistorySchema,
+  type PatchChangeset,
+} from "#src/data-dragon/patch-notes.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
@@ -37,6 +44,7 @@ const IMG_DIR = `${ASSETS_DIR}/img`;
 const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx`;
 // Structured patch changeset consumed at review time (bundled asset).
 const PATCH_NOTES_ASSET = `${ASSETS_DIR}/patch-notes.json`;
+const PATCH_NOTES_HISTORY_ASSET = `${ASSETS_DIR}/patch-notes-history.json`;
 // Raw patch-notes provenance — committed but not imported at runtime.
 const PATCH_NOTES_ARCHIVE_DIR = `${import.meta.dir}/../patch-notes-archive`;
 // scout-for-lol/packages/data/scripts → monorepo root (for resolving prettier).
@@ -48,6 +56,13 @@ const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
 // Data Dragon splash ~180 KB), so it gets a slightly larger ceiling.
 const MAX_SPLASH_IMAGE_BYTES = 2 * BYTES_PER_MIB;
 const CLASSIC_BACKGROUND_PATH = `${IMG_DIR}/background/classic-jade.png`;
+// Riot match history still records these 15.23 Arena augments after they leave
+// the current catalog. Keep their original names and icons in the pinned cache.
+const HISTORICAL_ARENA_AUGMENT_VERSION = "15.23";
+const HISTORICAL_ARENA_AUGMENT_IDS = [71, 250] as const;
+// Match-V5 can retain runes after Riot removes them from the current patch.
+const HISTORICAL_RUNE_VERSION = "14.24.1";
+const HISTORICAL_RUNE_IDS = [8138] as const;
 
 /**
  * CommunityDragon *centered* splash art (≈1280×720) keyed by numeric champion
@@ -1249,6 +1264,51 @@ async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
   return runeImages.length;
 }
 
+async function downloadHistoricalRuneAssets(): Promise<number> {
+  const archive = await downloadAsset(
+    HISTORICAL_RUNE_VERSION,
+    "runesReforged.json",
+    RuneTreeSchema,
+  );
+  const archivedRunes = archive.flatMap((tree) =>
+    tree.slots.flatMap((slot, slotIndex) =>
+      slot.runes.map((rune) => ({
+        ...rune,
+        treeId: tree.id,
+        treeName: tree.name,
+        slot: slotIndex,
+      })),
+    ),
+  );
+  const runes = HISTORICAL_RUNE_IDS.map((id) => {
+    const rune = archivedRunes.find((candidate) => candidate.id === id);
+    if (rune === undefined) {
+      throw new Error(`Historical rune ${id.toString()} is missing`);
+    }
+    return rune;
+  });
+  const cache = HistoricalRuneAssetSchema.parse({
+    sourceVersion: HISTORICAL_RUNE_VERSION,
+    runes,
+  });
+  await Bun.write(
+    `${ASSETS_DIR}/historical-runes.json`,
+    JSON.stringify(cache, null, 2),
+  );
+  for (const rune of cache.runes) {
+    const filename = rune.icon.split("/").at(-1);
+    if (filename === undefined) {
+      throw new Error(`Historical rune ${rune.id.toString()} has no icon`);
+    }
+    await downloadImage(
+      `${BASE_URL}/cdn/img/${rune.icon}`,
+      `${IMG_DIR}/rune/${filename}`,
+    );
+  }
+  console.log(`✓ Cached ${String(cache.runes.length)} historical runes`);
+  return cache.runes.length;
+}
+
 const LANE_ICON_MAP: Record<string, string> = {
   top: "icon-position-top.png",
   jungle: "icon-position-jungle.png",
@@ -1284,12 +1344,31 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
 
   const data: unknown = await response.json();
   const parsed = ArenaAugmentsApiResponseSchema.parse(data);
+  const historicalResponse = await fetchWithRetry(
+    getArenaAugmentsUrl(HISTORICAL_ARENA_AUGMENT_VERSION),
+  );
+  if (!historicalResponse.ok) {
+    throw new Error(
+      `Failed to fetch historical Arena augments: ${String(historicalResponse.status)} ${historicalResponse.statusText}`,
+    );
+  }
+  const historicalData: unknown = await historicalResponse.json();
+  const historical = ArenaAugmentsApiResponseSchema.parse(historicalData);
+  const historicalAugments = HISTORICAL_ARENA_AUGMENT_IDS.map((id) => {
+    const augment = historical.augments.find(
+      (candidate) => candidate.id === id,
+    );
+    if (augment === undefined) {
+      throw new Error(`Historical Arena augment ${id.toString()} is missing`);
+    }
+    return augment;
+  });
 
   // Build the cache format keyed by ID
   const cache: Record<string, ArenaAugmentCacheEntry> = {};
   const iconPaths = new Set<string>();
 
-  for (const augment of parsed.augments) {
+  for (const augment of [...historicalAugments, ...parsed.augments]) {
     iconPaths.add(augment.iconLarge);
     iconPaths.add(augment.iconSmall);
 
@@ -1314,10 +1393,10 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
     JSON.stringify(cache, null, 2),
   );
   console.log(
-    `✓ Written arena-augments.json (${String(parsed.augments.length)} augments)`,
+    `✓ Written arena-augments.json (${String(Object.keys(cache).length)} augments)`,
   );
 
-  return { iconPaths, count: parsed.augments.length };
+  return { iconPaths, count: Object.keys(cache).length };
 }
 
 async function downloadAugmentImages(
@@ -1391,6 +1470,34 @@ async function saveRawPatchNotes(
   console.log(`✓ Archived raw patch ${patch.patch} notes`);
 }
 
+async function savePatchChangeset(changeset: PatchChangeset): Promise<void> {
+  const historyFile = Bun.file(PATCH_NOTES_HISTORY_ASSET);
+  const history =
+    historyFile.size === 0
+      ? []
+      : PatchChangesetHistorySchema.parse(await historyFile.json());
+  const merged = [
+    changeset,
+    ...history.filter((entry) => entry.patch !== changeset.patch),
+  ].sort((left, right) =>
+    right.patch.localeCompare(left.patch, undefined, { numeric: true }),
+  );
+  await Promise.all([
+    Bun.write(PATCH_NOTES_ASSET, `${JSON.stringify(changeset, null, 2)}\n`),
+    Bun.write(
+      PATCH_NOTES_HISTORY_ASSET,
+      `${JSON.stringify(merged, null, 2)}\n`,
+    ),
+  ]);
+  const prettierResult =
+    await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${PATCH_NOTES_ASSET} ${PATCH_NOTES_HISTORY_ASSET}`.quiet();
+  if (prettierResult.exitCode !== 0) {
+    throw new Error(
+      `prettier failed to format patch changesets (exit ${String(prettierResult.exitCode)}): ${prettierResult.stderr.toString()}`,
+    );
+  }
+}
+
 async function maybeAppendChangelogEntry(
   previousVersion: string | undefined,
   version: string,
@@ -1422,7 +1529,7 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
-  // Ask Opus through OpenRouter to analyze deterministically fetched patch notes
+  // Ask Opus to analyze deterministically fetched patch notes
   // (`summary` + per-change data feed the AI review) plus the Scout-focused
   // `changelogHighlights` consumed here for the "What's New" entry.
   // Best-effort: a failure (no credential, timeout, bad output) falls back to just
@@ -1430,22 +1537,10 @@ async function maybeAppendChangelogEntry(
   // than blocking the asset PR or shipping a garbage changeset.
   let highlights: string[] = [];
   try {
-    console.log(
-      `🤖 Analyzing patch ${patch.patch} notes via OpenRouter Opus...`,
-    );
+    console.log(`🤖 Analyzing patch ${patch.patch} notes via Opus...`);
     const officialPatchContent = await fetchOfficialPatchNotes(patch);
     const changeset = await analyzePatch(patch, officialPatchContent);
-    await Bun.write(
-      PATCH_NOTES_ASSET,
-      `${JSON.stringify(changeset, null, 2)}\n`,
-    );
-    const prettierResult =
-      await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${PATCH_NOTES_ASSET}`.quiet();
-    if (prettierResult.exitCode !== 0) {
-      throw new Error(
-        `prettier failed to format patch-notes.json (exit ${String(prettierResult.exitCode)}): ${prettierResult.stderr.toString()}`,
-      );
-    }
+    await savePatchChangeset(changeset);
     console.log(
       `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
     );
@@ -1453,7 +1548,7 @@ async function maybeAppendChangelogEntry(
     await saveRawPatchNotes(patch, officialPatchContent);
   } catch (error) {
     console.warn(
-      `⚠ OpenRouter patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
+      `⚠ Patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
     );
   }
 
@@ -1484,6 +1579,24 @@ async function main(): Promise<void> {
     const requestedVersion = process.argv.find((argument) =>
       /^\d+\.\d+\.\d+$/.test(argument),
     );
+    if (process.argv.includes("--arena-augments-only")) {
+      const previousVersion = await readPreviousVersion();
+      if (previousVersion === undefined) {
+        throw new Error("--arena-augments-only requires a committed version");
+      }
+      if (
+        requestedVersion !== undefined &&
+        requestedVersion !== previousVersion
+      ) {
+        throw new Error(
+          `--arena-augments-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
+        );
+      }
+      await fetchAndSaveArenaAugments(
+        getArenaAugmentsUrl(getCommunityDragonVersion(previousVersion)),
+      );
+      return;
+    }
     if (process.argv.includes("--classic-assets-only")) {
       const previousVersion = await readPreviousVersion();
       if (previousVersion === undefined) {
@@ -1619,6 +1732,7 @@ async function main(): Promise<void> {
     // assets/champion/{Key}.json files.
     await generateAbilityFacts(cdVersion, championNames);
     const runeImagesCount = await downloadRuneImages(runes);
+    const historicalRuneImagesCount = await downloadHistoricalRuneAssets();
     const augmentImagesCount = await downloadAugmentImages(
       communityDragonUrl,
       arenaAugmentsUrl,
@@ -1660,6 +1774,7 @@ async function main(): Promise<void> {
       itemImagesCount +
       championImagesCount +
       runeImagesCount +
+      historicalRuneImagesCount +
       augmentImagesCount +
       laneImagesCount +
       loadingImagesCount +
@@ -1683,6 +1798,9 @@ async function main(): Promise<void> {
       `  - ${String(classicImagesCount)} League Classic champion asset sets`,
     );
     console.log(`  - ${String(runeImagesCount)} rune images`);
+    console.log(
+      `  - ${String(historicalRuneImagesCount)} historical rune images`,
+    );
     console.log(`  - ${String(augmentImagesCount)} augment images`);
     console.log(`  - ${String(laneImagesCount)} lane position icons`);
     console.log(

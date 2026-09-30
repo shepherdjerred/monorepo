@@ -15,6 +15,7 @@ import {
   isPolicyEnabled,
   listGuildsWithFlagDeclared,
   listGuildsWithFlagEnabled,
+  ME,
   MY_SERVER,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
@@ -23,23 +24,35 @@ const OTHER_GUILD = DiscordGuildIdSchema.parse("2337623164146155593");
 const SOMEONE = DiscordAccountIdSchema.parse("160509172704739399");
 const originalEnvironment = Bun.env["ENVIRONMENT"];
 const PRODUCTION_DENIED_FLAGS = [
+  "betting_enabled",
+  "betting_player_bet_outcome_dm_enabled",
+  "betting_settlement_dm_enabled",
+  "bucks_transfers_enabled",
+  "bucks_dares_enabled",
+  "dare_v2",
+  "dare_extended_contracts_enabled",
+  "dare_notifications_enabled",
+  "custom_nights_enabled",
+  "duels_enabled",
+  "voice_assistant_enabled",
+] as const;
+
+/**
+ * Surfaces the policy deliberately does NOT deny: they are beta today by
+ * ordinary flag state, so production access is a Flipt decision. Without this
+ * list the denial test passes just as well when the policy denies everything.
+ */
+const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reports_enabled",
   "ai_reports_unlimited",
   "ai_reviews_enabled",
-  "betting_enabled",
-  "bucks_dares_enabled",
-  "dare_v2",
-  "bucks_transfers_enabled",
-  "weekly_parlays_enabled",
-  "betting_player_bet_outcome_dm_enabled",
-  "betting_settlement_dm_enabled",
   "challenge_runs_enabled",
+  "clash_surface",
   "competition_builder_v2_enabled",
-  "custom_nights_enabled",
-  "duels_enabled",
+  "explore_on_demand_riot_enabled",
   "hall_of_fame_enabled",
+  "mvp_votes_enabled",
   "scoutql_relational_enabled",
-  "tournament_lobbies_enabled",
 ] as const;
 
 beforeEach(() => {
@@ -81,22 +94,17 @@ describe("production hard-disable policy", () => {
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
       provider: new StaticProvider({
-        ai_reports_enabled: true,
-        ai_reports_unlimited: true,
-        ai_reviews_enabled: true,
         betting_enabled: true,
-        bucks_dares_enabled: true,
-        dare_v2: true,
-        bucks_transfers_enabled: true,
-        weekly_parlays_enabled: true,
         betting_player_bet_outcome_dm_enabled: true,
         betting_settlement_dm_enabled: true,
-        challenge_runs_enabled: true,
+        bucks_transfers_enabled: true,
+        bucks_dares_enabled: true,
+        dare_v2: true,
+        dare_extended_contracts_enabled: true,
+        dare_notifications_enabled: true,
         custom_nights_enabled: true,
         duels_enabled: true,
-        hall_of_fame_enabled: true,
-        scoutql_relational_enabled: true,
-        tournament_lobbies_enabled: true,
+        voice_assistant_enabled: true,
       }),
     });
 
@@ -104,6 +112,68 @@ describe("production hard-disable policy", () => {
       await expect(
         isPolicyEnabled(flag, { server: MY_SERVER, user: SOMEONE }),
       ).resolves.toBe(false);
+    }
+    await shutdownFeatureFlags();
+  });
+
+  test("drops beta rollouts from the production fallback", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    for (const flag of PRODUCTION_ALLOWED_FLAGS) {
+      expect(getFlag(flag, { server: MY_SERVER, user: ME })).toBe(false);
+      expect(listGuildsWithFlagEnabled(flag)).toEqual([]);
+    }
+  });
+
+  test("fails native-client ingress closed without the production provider", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
+    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
+  });
+
+  test("keeps those same beta rollouts outside production", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    resetConfigurationForTests();
+
+    expect(getFlag("hall_of_fame_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("mvp_votes_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("challenge_runs_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("clash_surface", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("custom_nights_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("ai_reports_unlimited", { user: ME })).toBe(true);
+    expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
+      MY_SERVER,
+    ]);
+    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
+    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
+  });
+
+  test("leaves every other surface to its ordinary flag", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({
+        ai_reports_enabled: true,
+        ai_reports_unlimited: true,
+        ai_reviews_enabled: true,
+        challenge_runs_enabled: true,
+        clash_surface: true,
+        competition_builder_v2_enabled: true,
+        explore_on_demand_riot_enabled: true,
+        hall_of_fame_enabled: true,
+        mvp_votes_enabled: true,
+        scoutql_relational_enabled: true,
+      }),
+    });
+
+    for (const flag of PRODUCTION_ALLOWED_FLAGS) {
+      await expect(
+        isPolicyEnabled(flag, { server: MY_SERVER, user: SOMEONE }),
+      ).resolves.toBe(true);
     }
     await shutdownFeatureFlags();
   });

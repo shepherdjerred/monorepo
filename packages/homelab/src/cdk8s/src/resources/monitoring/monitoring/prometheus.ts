@@ -1,37 +1,39 @@
 import { PrometheusRule } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import type { Chart } from "cdk8s";
 import { getHomeAssistantRuleGroups } from "./rules/homeassistant.ts";
-import { getVeleroRuleGroups } from "./rules/velero.ts";
-import { getArgoCDRuleGroups } from "./rules/argocd.ts";
-import { getResourceMonitoringRuleGroups } from "./rules/resource-monitoring.ts";
-import { getZfsMonitoringRuleGroups } from "./rules/zfs.ts";
-import { getSmartctlRuleGroups } from "./rules/smartctl.ts";
-import { getNvmeRuleGroups } from "./rules/nvme.ts";
+import { getVeleroRuleGroups } from "./rules/storage/velero.ts";
+import { getArgoCDRuleGroups } from "./rules/platform/argocd.ts";
+import { getResourceMonitoringRuleGroups } from "./rules/platform/resource-monitoring.ts";
+import { getZfsMonitoringRuleGroups } from "./rules/storage/zfs.ts";
+import { getSmartctlRuleGroups } from "./rules/storage/smartctl.ts";
+import { getNvmeRuleGroups } from "./rules/storage/nvme.ts";
 import { getGitckupRuleGroups } from "./rules/gitckup.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
 import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
 import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
-import { getR2StorageRuleGroups } from "./rules/r2-storage.ts";
+import { getR2StorageRuleGroups } from "./rules/storage/r2-storage.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
-import { getSeaweedfsRuleGroups } from "./rules/seaweedfs.ts";
+import { getSeaweedfsRuleGroups } from "./rules/storage/seaweedfs.ts";
 import { getPostalRuleGroups } from "./rules/postal.ts";
 import { getScoutRuleGroups } from "./rules/scout.ts";
 import { getTasknotesRuleGroups } from "./rules/tasknotes.ts";
-import { getClusterHygieneRuleGroups } from "./rules/cluster-hygiene.ts";
-import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
-import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
-import { getTemporalRuleGroups } from "./rules/temporal.ts";
+import { getClusterHygieneRuleGroups } from "./rules/platform/cluster-hygiene.ts";
+import { getEtcdCustomRuleGroups } from "./rules/platform/etcd-custom.ts";
+import { getZfsMaintenanceRuleGroups } from "./rules/storage/zfs-maintenance.ts";
+import { getTemporalRuleGroups } from "./rules/platform/temporal.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
 import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { getFliptRuleGroups } from "./rules/flipt.ts";
 import { getLlmRuleGroups } from "./rules/llm.ts";
-import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
+import { createWoodpeckerMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/woodpecker.ts";
+import { getOpsSnapshotRuleGroups } from "./rules/ops-snapshot.ts";
+import { getStormBrainRuleGroups } from "./rules/storm-brain.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
-import { getAlertingControlRuleGroups } from "./rules/alerting-control.ts";
+import { getAlertingControlRuleGroups } from "./rules/platform/alerting-control.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
-  createBuildkiteMonitoring(chart);
+  createWoodpeckerMonitoring(chart);
   createBuildkitdMonitoring(chart);
 
   // Keep the control signal, but do not let pending informational alerts make
@@ -358,6 +360,28 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getLlmRuleGroups(),
+    },
+  });
+
+  new PrometheusRule(chart, "prometheus-ops-snapshot-rules", {
+    metadata: {
+      name: "prometheus-ops-snapshot-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getOpsSnapshotRuleGroups(),
+    },
+  });
+
+  new PrometheusRule(chart, "prometheus-storm-brain-rules", {
+    metadata: {
+      name: "prometheus-storm-brain-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getStormBrainRuleGroups(),
     },
   });
 }

@@ -5,12 +5,132 @@ sidebar:
   order: 8
 ---
 
-The main Buildkite pipeline is the only writer for repository-backed homelab
-releases. You do not run these steps by hand — merging to `main` runs one
-`release-root` command that owns the complete sequence.
+The main CI pipeline normally writes repository-backed homelab releases. The
+first Woodpecker release uses the one-time bootstrap procedure below because
+the new pipeline cannot run until its own cluster resources have been released.
 
 This page is for reading the pipeline while it works, and for knowing what a
 failed stage means.
+
+## Bootstrap Woodpecker across the cutover
+
+1. Before merging the cutover PR, inspect the live `main` ruleset. If its old
+   Buildkite required check cannot complete, apply the targeted GitHub OpenTofu
+   ruleset change below with the old context override. Inspect the plan first:
+   it must change only the admin role's bypass to **pull-request-only** and keep
+   `buildkite/monorepo/pr` required. Review the PR's local verification and
+   chart dry run, then use that bypass to merge the PR. Do not report the
+   retired Buildkite check as passing. Confirm the merged commit is the current
+   `main`. Reserve a Woodpecker build number by canceling a pipeline before it
+   starts release work; do not reuse a number that published charts.
+2. From a clean checkout of that exact `main` commit, run the bootstrap script
+   once with `--dry-run`. It validates the chart inventory and the exact root
+   request without changing the cluster.
+3. Supply an ArgoCD admin token and the ChartMuseum credentials through the
+   configured credential wrapper, then run the same command without
+   `--dry-run`. The script suspends root auto-sync, publishes the complete chart
+   set at the reserved number plus 1,000,000, and calls `release-root` with an
+   exact revision and stable request ID. The old `buildkite` account is removed
+   during this release, so its token cannot complete the child syncs.
+4. [Enroll the vault-scoped 1Password service account](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/README.md#unattended-local-1password-access)
+   once in the operator's login Keychain. Apply the operator-run `argocd`
+   OpenTofu stack through that wrapper to create the `woodpecker` account token
+   in its 1Password item. Confirm the `ci-argocd-credentials`
+   Kubernetes Secret contains the new key and that its token can read `apps`.
+   Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
+   extension health. Set the repository's approval allowlist to the deployed
+   extension's trusted actors, while keeping `require_approval=all_events` and
+   only `volumes` trusted. Trigger a new PR pipeline and require its
+   `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
+   apply defers the required-check switch until this status exists on a real
+   PR head. The proof remains valid after that PR merges. Trigger a current-main
+   Woodpecker pipeline after that proof, watch its GitHub OpenTofu workflow,
+   then verify the GitHub ruleset requires the new context.
+5. Only after the new required check is active and healthy, retire the old
+   Buildkite requirement and service through the repository-owned release path.
+   Confirm the final ruleset has the declared PR-only admin bypass and does not
+   allow direct-push bypass.
+
+The premerge OpenTofu change uses the existing 1Password-backed backend and
+GitHub token. Run this only from the reviewed cutover branch. Stop if the plan
+changes the required contexts or any resource besides the `main` ruleset.
+The normal GitHub OpenTofu apply later uses the Woodpecker context default.
+
+```bash
+export TF_VAR_github_token='op://v64ocnykdqju4ui6j6pua56xw4/34gzcrhwdm34lpadyly3rcsu44/TOFU_GITHUB_TOKEN'
+scripts/onepassword/with-service-account.sh \
+  op run --env-file packages/homelab/src/tofu/service-account.env -- \
+  tofu -chdir=packages/homelab/src/tofu/github plan -input=false \
+  -target=github_repository_ruleset.monorepo_main \
+  -var=required_ci_status_context=buildkite/monorepo/pr
+scripts/onepassword/with-service-account.sh \
+  op run --env-file packages/homelab/src/tofu/service-account.env -- \
+  tofu -chdir=packages/homelab/src/tofu/github apply -input=false \
+  -target=github_repository_ruleset.monorepo_main \
+  -var=required_ci_status_context=buildkite/monorepo/pr
+unset TF_VAR_github_token
+```
+
+After merging, run the bootstrap script from the exact `main` commit:
+
+```bash
+bootstrap=packages/homelab/scripts/ci/bootstrap-woodpecker.ts
+commit="EXACT_MAIN_SHA"
+number="RESERVED_BUILD_NUMBER"
+bun --no-install "$bootstrap" "$commit" "$number" --dry-run
+bun --no-install "$bootstrap" "$commit" "$number"
+```
+
+The script refuses a dirty checkout, a commit other than current `main`, or a
+missing credential. It leaves the generated release inventory in a temporary
+directory named in its output. If publication or reconciliation fails, inspect
+that inventory and the ArgoCD operation before retrying with the same number.
+
+Woodpecker stores `approval_allowed_users` in its database, so the chart's
+`WOODPECKER_DEFAULT_APPROVAL_MODE=all_events` does not populate the allowlist.
+After confirming the deployed global configuration extension is exclusive,
+update the repository through the [Woodpecker repository
+API](https://woodpecker-ci.org/api). Import `TRUSTED_ACTORS` from the
+[extension source](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/authorization.ts)
+so the two gates admit the same accounts. The token remains in the process
+environment and is never printed:
+
+```bash
+WOODPECKER_API_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/covttsojandjk7fx62a3dbk7em/WOODPECKER_API_TOKEN' \
+scripts/onepassword/with-service-account.sh op run -- bun -e '
+import { TRUSTED_ACTORS } from "./packages/woodpecker-config-extension/src/authorization.ts";
+const url = "https://woodpecker.sjer.red/api/repos/1";
+const headers = {
+  Authorization: `Bearer ${process.env.WOODPECKER_API_TOKEN}`,
+  "Content-Type": "application/json",
+};
+const read = async () => {
+  const response = await fetch(url, { headers });
+  if (!response.ok) throw Error(`read: ${response.status}`);
+  return response.json();
+};
+const before = await read();
+if (before.full_name !== "shepherdjerred/monorepo" ||
+    before.require_approval !== "all_events" ||
+    !before.trusted?.volumes || before.trusted?.network ||
+    before.trusted?.security) throw Error("unexpected repository security settings");
+if (JSON.stringify(before.approval_allowed_users) !== JSON.stringify(TRUSTED_ACTORS)) {
+  const response = await fetch(url, {
+    method: "PATCH", headers,
+    body: JSON.stringify({ approval_allowed_users: TRUSTED_ACTORS }),
+  });
+  if (!response.ok) throw Error(`update: ${response.status}`);
+}
+const after = await read();
+if (JSON.stringify(after.approval_allowed_users) !== JSON.stringify(TRUSTED_ACTORS) ||
+    after.require_approval !== "all_events") throw Error("approval settings did not persist");
+console.log("trusted CI actors admitted; all-events approval remains enabled");
+'
+```
+
+Start a fresh PR pipeline after this update. Existing blocked pipelines still
+need individual approval and must not be treated as evidence of automatic
+admission.
 
 ## The sequence
 
@@ -37,19 +157,27 @@ the exact chart source. Only Applications whose auto-sync policy must stay
 disabled use local manifest overrides, so stage 4 owns child operations without
 racing ArgoCD while unchanged cluster-scoped resources still follow Argo's
 normal source-apply path. In stage 6, the
-[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 reapplies every exact sync wave before running the verified prune. Unchanged
 resources use source-selective syncs. The self-managed root Application alone
 uses a local override to keep auto-sync disabled between batches; the final
 prune restores that one policy. Stage 7 is the single authoritative scoped
 health gate.
 
-After verification, watch the serialized `openai`, `anthropic`, `discord`,
-`openrouter`, and `cloudflare-tokens` jobs. An ordinary main build plans each
-encrypted platform state and never applies it. After reviewing a plan, create a
-targeted build of the current main commit with `TOFU_PLATFORM_APPLY` set to
-exactly one of those stack names. The selector schedules only that no-retry
-platform job, which repeats the plan immediately before applying it.
+After verification, watch the serialized `openai`, `anthropic`, `discord`, and
+`cloudflare-tokens` jobs selected by the changed paths. Each job previews its
+encrypted platform state. For a change you intend to apply, trigger a manual
+build of the current main commit with `TOFU_PLATFORM_PLAN` set to exactly one
+of those stack names. The extension schedules only release admission and that
+stack's plan workflow. It saves the plan encrypted and prints its pipeline
+number and SHA-256 digest. Review that manual build's plan output after it
+finishes successfully. Within 24 hours, trigger another manual build of the
+same main commit with `TOFU_PLATFORM_APPLY` set to the stack and
+`TOFU_PLATFORM_PLAN_PIPELINE` set to the reviewed plan's pipeline number. This
+second build applies those saved plan bytes; it cannot calculate a replacement
+plan. It fails if main has moved, the plan has expired, or OpenTofu state has
+changed. Both builds receive only that stack's credentials. After a successful
+apply, the encrypted plan is replaced with a consumed marker.
 
 If one fails, stop the rollout at that platform. Inspect its vendor resources,
 encrypted state object, and intended 1Password rotation units. Resume only
@@ -112,19 +240,36 @@ Never classify prune candidates from `OutOfSync` or `requiresPruning` alone. Tha
 is how you delete a retained application.
 :::
 
+## If a static site deploy gets AccessDenied
+
+Compare the failing bucket with `scripts/release/deploy-site.ts` and the
+`ci-sites` identity in the `seaweedfs-s3-credentials` 1Password item. For a
+new site bucket, add its `Read`, `Write`, `List`, and `Tagging` actions to that
+identity without changing its credential or other bucket grants. Wait for the
+1Password operator to update the `seaweedfs-s3-credentials` Secret in the
+`seaweedfs` namespace.
+
+Use the existing 1Password-backed site credential to probe the new bucket with
+`aws s3api list-objects-v2`. It must succeed for the new bucket and return
+`AccessDenied` for `homelab-tofu-state`. Once both probes pass, retry the
+failed site release.
+
 ## If the image did not rebuild
 
 Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base.
 
-A later version-pin commit can cancel the rest of that build without
-invalidating its completed image build, smoke test, and durable pin-handoff
-evidence. Changes after that image-release commit still rebuild their affected
-closures; an unchanged pin-only successor does not rebuild and repin the same
-application forever.
+`version-commit-back` waits for `argocd-sync` before creating a pin commit.
+That ordering keeps its new main pipeline from superseding an exact-revision
+root release halfway through child reconciliation. A separate newer main push
+can still supersede the build; its completed image build, smoke test, and
+durable pin-handoff evidence remain valid. Changes after that image-release
+commit still rebuild their affected closures; an unchanged pin-only successor
+does not rebuild and repin the same application forever.
 
 If you expected a rebuild and got none, check whether your commit only moved a
-pin.
+pin. The `images` workflow prints its comparison base, changed paths, target
+reasons, and push outcomes as an image release summary in the Woodpecker log.
 
 If the image push finishes but candidate classification reports that no managed
 pin exists, do not retry the push. The comparison digest and commit-back key
@@ -177,7 +322,9 @@ full-source operation must report the restored root Application as `Synced` and
 every validated prune candidate as `Pruned`. A fully applied early batch or
 prune wave is not enough.
 
-Buildkite retries reuse the build UUID. `release-root` adopts an operation only
+A CI retry reuses the request id, which is derived from the pipeline number
+rather than generated — a random id would make a retry look like a different
+requester. `release-root` adopts an operation only
 when the UUID and revision match and its selected resources are exactly one
 desired batch, or when it is the unselected final prune. An unrelated active
 operation or an unexpected selection remains a hard failure. The operation must
@@ -198,8 +345,8 @@ Argo's ordinary sync request as well as the identity metadata.
 A release blocked here means the current operation must be inspected before
 retrying. Confirm the operation's request ID, revision, selected resources,
 phase marker, and prune flag in ArgoCD. Do not terminate it based on revision
-alone. Once the observed operation belongs to the same Buildkite build, retry
-the failed Buildkite job; the same command and build UUID adopt only that exact
+alone. Once the observed operation belongs to the same CI pipeline, restart
+the failed workflow; the same command and request id adopt only that exact
 operation and continue the release.
 
 ```bash
@@ -212,10 +359,16 @@ After the exact root operation reports all selected resources applied, the
 release process deliberately terminates its aggregate wait. This leaves an
 ArgoCD terminal message that does not describe release failure.
 
-Use the `homelab-release-result.json` artifact and the Buildkite
-`homelab-release-result` annotation as the receipt. `applied-verified` means
-the request ID, revision, selected resource results, and final child health
-all passed. No receipt means the release did not complete.
+Use the `homelab-release-result.json` handoff object and the CI
+`homelab-release-result` annotation as the receipt:
+
+- `applied-verified` means the request ID, revision, selected resource results,
+  and final health of the charts this build published all passed. Charts
+  retained at an earlier revision are reported as warnings, not waited on.
+- `superseded` means a newer build published its apps chart first. This build
+  applied nothing and succeeded; the newer build's receipt is the record.
+
+No receipt means the release did not complete.
 
 ## If you start a global sync manually
 
@@ -235,9 +388,9 @@ sync does not run that client-side check.
 ## Where it lives
 
 The workflow is defined by the
-[main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+[main release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
 and the
-[Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts).
+[Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts).
 
 ## Related
 

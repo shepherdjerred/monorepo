@@ -1,0 +1,105 @@
+deftemplatesuffix: lowres
+
+storage:
+  type: filetree
+
+components:
+  - class: org.dynmap.ClientConfigurationComponent
+  - class: org.dynmap.InternalClientUpdateComponent
+    sendhealth: true
+    sendposition: true
+    allowwebchat: false
+    includehiddenplayers: false
+    hideifsneaking: false
+    protected-player-info: false
+    hide-if-invisiblity-potion: true
+    hidenames: false
+  - class: org.dynmap.MarkersComponent
+    type: markers
+    showlabel: false
+    enablesigns: false
+    showspawn: true
+    spawnicon: world
+    spawnlabel: "Spawn"
+    showofflineplayers: false
+    showspawnbeds: false
+    showworldborder: true
+    worldborderlabel: "Border"
+  - class: org.dynmap.ClientComponent
+    type: playermarkers
+    showplayerfaces: true
+    showplayerhealth: true
+    showplayerbody: false
+    hidebydefault: false
+    label: "Players"
+  - class: org.dynmap.ClientComponent
+    type: timeofdayclock
+    showdigitalclock: true
+  - class: org.dynmap.ClientComponent
+    type: coord
+    label: "Location"
+    hidey: false
+
+display-whitelist: false
+renderinterval: 1
+renderacceleratethreshold: 60
+renderaccelerateinterval: 0.5
+tiles-rendered-at-once: 1
+parallelrendercnt: 1
+usenormalthreadpriority: false
+saverestorepending: true
+save-pending-period: 900
+zoomoutperiod: 30
+initial-zoomout-validate: true
+tileupdatedelay: 30
+enabletilehash: true
+smooth-lighting: true
+use-brightness-table: true
+image-format: jpg-q85
+use-generated-textures: true
+correct-water-lighting: true
+transparent-leaves: true
+ctm-support: true
+custom-colors-support: true
+compass-mode: newnorth
+
+render-triggers:
+  - blockupdate
+  - chunkpopulate
+  - chunkgenerate
+
+webpage-title: "Sjerred RLCraft Map"
+tilespath: web/tiles
+webpath: web
+exportpath: export
+webserver-bindaddress: 0.0.0.0
+webserver-port: 8123
+max-sessions: 20
+disable-webserver: false
+allow-symlinks: false
+login-enabled: false
+login-required: false
+timesliceinterval: 0.0
+maxchunkspertick: 50
+progressloginterval: 100
+updaterate: 3000
+fullrenderplayerlimit: 1
+updateplayerlimit: 0
+per-tick-time-limit: 25
+update-min-tps: 18.0
+fullrender-min-tps: 19.0
+zoomout-min-tps: 18.0
+showplayerfacesinmenu: true
+grayplayerswhenhidden: true
+showlayercontrol: true
+# Fresh RLCraft worlds are rendered into the flat overview first; make the
+# public landing page open on that rendered view instead of an empty surface.
+defaultzoom: 3
+defaultworld: world
+defaultmap: flat
+persist-ids-by-ip: false
+cyrillic-support: false
+snapshotcachesize: 250
+soft-ref-cache: true
+verbose: false
+dump-missing-blocks: false

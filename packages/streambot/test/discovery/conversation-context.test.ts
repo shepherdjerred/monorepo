@@ -28,4 +28,42 @@ describe("conversation context", () => {
       "Taylor Swift - Style",
     );
   });
+
+  test("fuzzy-matches a garbled retry against pending candidates", () => {
+    const context = new ConversationContextStore();
+    context.rememberCandidates(SCOPE, [
+      candidate("Travis Scott - SICKO MODE (Official Video)"),
+      candidate("Travis Scott - SICKO MODE"),
+    ]);
+
+    expect(context.select(SCOPE, "silco")?.title).toBe(
+      "Travis Scott - SICKO MODE (Official Video)",
+    );
+    expect(context.select(SCOPE, "play Suka mode")?.title).toBe(
+      "Travis Scott - SICKO MODE (Official Video)",
+    );
+  });
+
+  test("does not reuse a pending list for an unrelated new title", () => {
+    const context = new ConversationContextStore();
+    context.rememberCandidates(SCOPE, [
+      candidate("Dune: Part One"),
+      candidate("Dune: Part Two"),
+    ]);
+    expect(context.select(SCOPE, "one piece")).toBeNull();
+
+    context.rememberCandidates(SCOPE, [
+      candidate("Travis Scott - SICKO MODE (Official Video)"),
+      candidate("Travis Scott - SICKO MODE"),
+    ]);
+    expect(context.select(SCOPE, "play Psycho")).toBeNull();
+  });
+
+  test("does not reuse pending One More Time for One More Night", () => {
+    const context = new ConversationContextStore();
+    context.rememberCandidates(SCOPE, [
+      candidate("Daft Punk - One More Time (Official Video)"),
+    ]);
+    expect(context.select(SCOPE, "play One More Night")).toBeNull();
+  });
 });

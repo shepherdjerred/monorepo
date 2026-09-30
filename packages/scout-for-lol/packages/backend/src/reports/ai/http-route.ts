@@ -17,7 +17,7 @@ import {
 } from "#src/reports/ai/rate-limit.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
-import { scoutReportAiRunsTotal } from "#src/metrics/report-ai.ts";
+import { scoutReportAiRunsTotal } from "#src/metrics/reports/report-ai.ts";
 import { createTemporalReportAiResponse } from "#src/reports/ai/temporal-runtime.ts";
 
 const STREAM_PATH = "/api/reports/query-agent/stream";
@@ -127,10 +127,9 @@ function parseRequestBody(bodyText: string): ParsedRequestBody {
   try {
     const raw: unknown = JSON.parse(bodyText);
     const parsed = ReportAiEditRequestSchema.safeParse(raw);
-    if (!parsed.success) {
-      return { ok: false, message: parsed.error.message };
-    }
-    return { ok: true, input: parsed.data };
+    return parsed.success
+      ? { ok: true, input: parsed.data }
+      : { ok: false, message: parsed.error.message };
   } catch (error) {
     return { ok: false, message: errorMessage(error) };
   }
@@ -237,10 +236,7 @@ function statusForTrpcError(error: TRPCError): number {
   if (error.code === "BAD_REQUEST") {
     return 400;
   }
-  if (error.code === "TOO_MANY_REQUESTS") {
-    return 429;
-  }
-  return 500;
+  return error.code === "TOO_MANY_REQUESTS" ? 429 : 500;
 }
 
 function jsonError(

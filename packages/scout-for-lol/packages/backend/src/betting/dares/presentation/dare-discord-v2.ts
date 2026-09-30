@@ -1,4 +1,5 @@
 import {
+  StorableBucksStakeSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -41,11 +42,17 @@ function actionPayload(parsed: Extract<DareV2CustomId, { kind: "prepare" }>) {
     if (parsed.amount === null) {
       throw new Error("Dare v2 contribution button has no amount.");
     }
-    return { kind: "dare_contribute" as const, amount: parsed.amount };
+    return {
+      kind: "dare_contribute" as const,
+      // The custom-id parser yields a plain integer; parse it into the
+      // branded stake at this Discord boundary.
+      amount: StorableBucksStakeSchema.parse(parsed.amount),
+    };
   }
   if (parsed.action === "accept") return { kind: "dare_accept" as const };
-  if (parsed.action === "decline") return { kind: "dare_decline" as const };
-  return { kind: "dare_cancel" as const };
+  return parsed.action === "decline"
+    ? { kind: "dare_decline" as const }
+    : { kind: "dare_cancel" as const };
 }
 
 type DareV2DiscordContext = {

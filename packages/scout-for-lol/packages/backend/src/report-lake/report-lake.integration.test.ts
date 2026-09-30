@@ -297,9 +297,114 @@ describe("flatten", () => {
       expect(row.month).toBe(
         new Date(match.info.gameCreation).toISOString().slice(0, 7),
       );
+      expect(row.item0).toBe(participant.item0);
+      expect(row.item6).toBe(participant.item6);
+      expect(row.summoner_spell_1_id).toBe(participant.summoner1Id);
+      const primary = participant.perks.styles.find(
+        (style) => style.description === "primaryStyle",
+      );
+      const hasRunePage = (primary?.style ?? 0) > 0;
+      expect(row.primary_rune_style_id).toBe(
+        hasRunePage ? primary?.style : null,
+      );
+      expect(row.primary_rune_0_id).toBe(
+        hasRunePage ? (primary?.selections[0]?.perk ?? null) : null,
+      );
+    }
+  });
+});
+
+describe("flattened loadouts", () => {
+  test("maps Riot's all-zero rune sentinel to an unavailable rune page", async () => {
+    const match = await loadMatchFixture();
+    const first = match.info.participants[0];
+    if (first === undefined) throw new Error("fixture participant missing");
+    const zeroRunes = RawMatchSchema.parse({
+      ...match,
+      info: {
+        ...match.info,
+        participants: [
+          {
+            ...first,
+            perks: {
+              styles: first.perks.styles.map((style) => ({
+                ...style,
+                style: 0,
+                selections: style.selections.map((selection) => ({
+                  ...selection,
+                  perk: 0,
+                })),
+              })),
+              statPerks: { offense: 0, flex: 0, defense: 0 },
+            },
+          },
+        ],
+      },
+    });
+    const row = flattenMatch(zeroRunes)[0];
+    expect(row?.primary_rune_style_id).toBeNull();
+    expect(row?.secondary_rune_0_id).toBeNull();
+    expect(row?.stat_perk_defense_id).toBeNull();
+    expect(row?.perk_primary_style).toBeNull();
+    expect(row?.perk0).toBeNull();
+    expect(row?.perk5).toBeNull();
+    expect(row?.stat_perk_offense).toBeNull();
+  });
+
+  test("flattenMatch carries each participant's final build, spells and rune page", async () => {
+    const match = await loadMatchFixture();
+    const rows = flattenMatch(match);
+    for (const [index, participant] of match.info.participants.entries()) {
+      const row = rows[index];
+      if (row === undefined) {
+        throw new Error("row missing");
+      }
+      const primary = participant.perks.styles.find(
+        (style) => style.description === "primaryStyle",
+      );
+      const sub = participant.perks.styles.find(
+        (style) => style.description === "subStyle",
+      );
+      const hasRunePage = (primary?.style ?? 0) > 0;
+      expect(row).toMatchObject({
+        item0: participant.item0,
+        item6: participant.item6,
+        summoner1_id: participant.summoner1Id,
+        summoner2_id: participant.summoner2Id,
+        perk_primary_style: hasRunePage ? primary?.style : null,
+        perk_sub_style: hasRunePage ? (sub?.style ?? null) : null,
+        perk0: hasRunePage ? (primary?.selections[0]?.perk ?? null) : null,
+        perk4: hasRunePage ? (sub?.selections[0]?.perk ?? null) : null,
+      });
     }
   });
 
+  test("a participant without runes keeps its rune page NULL", async () => {
+    const match = await loadMatchFixture();
+    const [first, ...rest] = match.info.participants;
+    if (first === undefined) {
+      throw new Error("fixture has no participants");
+    }
+    const noRunes = RawMatchSchema.parse({
+      ...match,
+      info: {
+        ...match.info,
+        participants: [
+          { ...first, perks: { ...first.perks, styles: [] } },
+          ...rest,
+        ],
+      },
+    });
+    expect(flattenMatch(noRunes)[0]).toMatchObject({
+      perk_primary_style: null,
+      perk0: null,
+      stat_perk_offense: null,
+      summoner1_id: first.summoner1Id,
+    });
+  });
+});
+
+describe("flattened match relations", () => {
   test("flattens normalized teams and bans for ordinary SQL joins", async () => {
     const match = await loadMatchFixture();
     const ordinaryMatch = RawMatchSchema.parse({
@@ -385,6 +490,37 @@ describe("flatten", () => {
   });
 });
 
+test("retains Arena placement, subteam, and nonzero augment IDs", async () => {
+  const match = await loadMatchFixture();
+  const first = match.info.participants[0];
+  if (first === undefined) throw new Error("fixture participant missing");
+  const arena = RawMatchSchema.parse({
+    ...match,
+    info: {
+      ...match.info,
+      queueId: 1700,
+      gameMode: "CHERRY",
+      participants: [
+        {
+          ...first,
+          playerSubteamId: 3,
+          placement: 2,
+          subteamPlacement: 2,
+          playerAugment1: 4001,
+          playerAugment2: 0,
+        },
+      ],
+    },
+  });
+  expect(flattenMatch(arena)[0]).toMatchObject({
+    player_subteam_id: 3,
+    placement: 2,
+    subteam_placement: 2,
+    augment_1_id: 4001,
+    augment_2_id: null,
+  });
+});
+
 describe("rank-history compaction", () => {
   test("rebuild represents an empty supported rank-history source", async () => {
     const lakeDir = await makeLakeDir();
@@ -437,6 +573,27 @@ describe("rank-history compaction", () => {
 });
 
 describe("compactor", () => {
+  test("removes an unpublished rebuild after failure", async () => {
+    const originalBucket = Bun.env["S3_BUCKET_NAME"];
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+    const lakeDir = await makeLakeDir();
+    try {
+      await expect(runReportLakeRebuild({ lakeDir })).rejects.toThrow(
+        "S3_BUCKET_NAME not configured",
+      );
+      expect(await readdir(path.join(lakeDir, "builds"))).toEqual([]);
+    } finally {
+      if (originalBucket === undefined) {
+        delete Bun.env["S3_BUCKET_NAME"];
+      } else {
+        Bun.env["S3_BUCKET_NAME"] = originalBucket;
+      }
+      resetConfigurationForTests();
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
   test("rebuild publishes a build with parquet, accounts, and manifest", async () => {
     const match = await loadMatchFixture();
     const firstPuuid = match.metadata.participants[0];
@@ -700,6 +857,24 @@ describe("compactor idempotency and schema transitions", () => {
 });
 
 describe("compactor rank replacement and invalid input", () => {
+  test("serializes concurrent folds instead of skipping the contender", async () => {
+    const lakeDir = await makeLakeDir();
+    try {
+      await runReportLakeRebuild({ prisma, lakeDir });
+
+      const [first, second] = await Promise.all([
+        runReportLakeFold({ prisma, lakeDir }),
+        runReportLakeFold({ prisma, lakeDir }),
+      ]);
+
+      expect(first.tier).toBe("fold");
+      expect(second.tier).toBe("fold");
+      expect(second.buildId).not.toBe(first.buildId);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
   test("a newer daily rank snapshot atomically replaces every prior entry", async () => {
     const competitionId = CompetitionIdSchema.parse(78);
     const lakeDir = await makeLakeDir();

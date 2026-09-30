@@ -196,6 +196,18 @@ export function cleanYAMLComment(comment: string): string {
     const nextLine = lines[i + 1];
     const wordCount = line.split(/\s+/).length;
 
+    // A heading immediately followed by a reference describes the same key;
+    // it is not a disposable section separator. Keep it with the reference.
+    const nextNonEmpty = lines.slice(i + 1).find(Boolean);
+    if (
+      nextNonEmpty !== undefined &&
+      /^ref:/i.test(nextNonEmpty) &&
+      /\b(?:configuration|config|settings?|options?)\b/i.test(line)
+    ) {
+      cleaned.push(line);
+      continue;
+    }
+
     // Skip section headers
     if (isSectionHeader(line, nextLine)) {
       continue;
@@ -398,6 +410,34 @@ export function parseYAMLCommentsWithMetadata(
       }
     }
 
+    function firstChildKey(node: unknown): string | undefined {
+      const mapNodeCheck = MapNodeSchema.safeParse(node);
+      if (!mapNodeCheck.success) {
+        return undefined;
+      }
+      const firstItem = mapNodeCheck.data.items[0];
+      const pairCheck = PairSchema.safeParse(firstItem);
+      if (!pairCheck.success) {
+        return undefined;
+      }
+      const keyCheck = KeyValueSchema.safeParse(pairCheck.data.key);
+      return keyCheck.success ? keyCheck.data.value : undefined;
+    }
+
+    function commentDescribesKey(comment: string, key: string): boolean {
+      const normalizedComment = comment.toLowerCase();
+      const words = key
+        .replaceAll(/([a-z])([A-Z])/g, "$1 $2")
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((word) => word.length > 0)
+        .map((word) => word.replace(/s$/, ""));
+      return (
+        words.length > 0 &&
+        words.every((word) => normalizedComment.includes(word))
+      );
+    }
+
     // Recursively walk the YAML AST and extract comments
     function visitNode(
       node: unknown,
@@ -446,7 +486,16 @@ export function parseYAMLCommentsWithMetadata(
           },
           { index: i, mapComment },
         );
-        storeComment(comment, fullKey);
+        const childKey = firstChildKey(itemCheck.data.value);
+        if (
+          childKey !== undefined &&
+          /[A-Z]/.test(childKey) &&
+          commentDescribesKey(comment, childKey)
+        ) {
+          storeComment(comment, `${fullKey}.${childKey}`);
+        } else {
+          storeComment(comment, fullKey);
+        }
 
         const valueInheritedComment = extractCommentBefore(
           itemCheck.data.value,

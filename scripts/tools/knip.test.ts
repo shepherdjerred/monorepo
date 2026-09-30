@@ -15,7 +15,7 @@ test("knip gate materializes temporal's ha-schema so resolution is deterministic
   // the verify graph, which already runs generate, and nesting races the
   // per-package Prisma generate lock.
   expect(generateCommands).toEqual([
-    ["bun", "packages/temporal/scripts/ensure-ha-schema.ts"],
+    ["bun", "packages/temporal/scripts/homelab/ensure-ha-schema.ts"],
   ]);
   expect(generateCommands.flat()).not.toContain("turbo");
 });

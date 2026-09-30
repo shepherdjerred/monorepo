@@ -20,7 +20,7 @@ import { captureGuildRemoval } from "#src/analytics/guild-lifecycle.ts";
 import {
   enqueueReportScheduleDeletion,
   notifyReportScheduleReconciler,
-} from "#src/reports/temporal-schedules.ts";
+} from "#src/reports/schedule/temporal-schedules.ts";
 
 const logger = createLogger("cleanup-removed-guild");
 
@@ -35,6 +35,7 @@ export type RemovedGuildCleanupSummary = {
   permissionErrors: number;
   hallSettings: number;
   hallRecordBreakOutbox: number;
+  featureTipImpressions: number;
 };
 
 /**
@@ -131,6 +132,9 @@ export async function cleanupRemovedGuild(
       const hallSettings = await tx.hallSettings.deleteMany({
         where: { guildId: serverId },
       });
+      const featureTipImpressions = await tx.featureTipImpression.deleteMany({
+        where: { serverId },
+      });
       const accounts = await tx.account.deleteMany({ where: { serverId } });
       const players = await tx.player.deleteMany({ where: { serverId } });
       const permissionErrors = await tx.guildPermissionError.deleteMany({
@@ -148,6 +152,7 @@ export async function cleanupRemovedGuild(
         permissionErrors: permissionErrors.count,
         hallSettings: hallSettings.count,
         hallRecordBreakOutbox: hallRecordBreakOutbox.count,
+        featureTipImpressions: featureTipImpressions.count,
       };
     },
   );

@@ -60,8 +60,9 @@ function remainingForComparison(
   if (operator === "gte") return Math.max(target - current, 0);
   if (operator === "gt") return Math.max(target + 1 - current, 0);
   if (operator === "lte") return Math.max(current - target, 0);
-  if (operator === "lt") return Math.max(current - target + 1, 0);
-  return Math.abs(target - current);
+  return operator === "lt"
+    ? Math.max(current - target + 1, 0)
+    : Math.abs(target - current);
 }
 
 function aggregateValue(
@@ -163,17 +164,17 @@ function collectConditions(
   if (expression.kind === "matching_games" || expression.kind === "aggregate") {
     return [leafCondition(context, expression, path.join("."))];
   }
-  if (expression.kind === "not") {
-    return collectConditions(context, expression.operand, [...path, 0]);
-  }
-  return expression.operands.flatMap((operand, index) =>
-    collectConditions(context, operand, [...path, index]),
-  );
+  return expression.kind === "not"
+    ? collectConditions(context, expression.operand, [...path, 0])
+    : expression.operands.flatMap((operand, index) =>
+        collectConditions(context, operand, [...path, index]),
+      );
 }
 
 function combinedTruth(values: readonly DareTruthValue[]): DareTruthValue {
-  if (values.includes(false)) return false;
-  return values.every((value) => value === true) ? true : null;
+  return (
+    !values.includes(false) && (values.every((value) => value === true) || null)
+  );
 }
 
 function progressSignature(
@@ -208,12 +209,12 @@ function conditionRegressed(
   previous: DareProgressCondition | undefined,
   current: DareProgressCondition,
 ): boolean {
-  if (previous === undefined) return false;
-  if (previous.value === true && current.value === false) return true;
   return (
-    previous.remaining !== null &&
-    current.remaining !== null &&
-    current.remaining > previous.remaining
+    previous !== undefined &&
+    ((previous.value === true && current.value === false) ||
+      (previous.remaining !== null &&
+        current.remaining !== null &&
+        current.remaining > previous.remaining))
   );
 }
 
@@ -221,12 +222,12 @@ function conditionAdvanced(
   previous: DareProgressCondition | undefined,
   current: DareProgressCondition,
 ): boolean {
-  if (previous === undefined) return false;
-  if (previous.value === false && current.value === true) return true;
   return (
-    previous.remaining !== null &&
-    current.remaining !== null &&
-    current.remaining < previous.remaining
+    previous !== undefined &&
+    ((previous.value === false && current.value === true) ||
+      (previous.remaining !== null &&
+        current.remaining !== null &&
+        current.remaining < previous.remaining))
   );
 }
 
@@ -355,8 +356,9 @@ function progressSummary(
   if (value === true) {
     return "All current conditions are satisfied; awaiting finality.";
   }
-  if (value === null) return "Waiting for more eligible match evidence.";
-  return falseExpressionSummary(context, context.plan.result, [0]);
+  return value === null
+    ? "Waiting for more eligible match evidence."
+    : falseExpressionSummary(context, context.plan.result, [0]);
 }
 
 export function deriveDareProgressV2(input: {

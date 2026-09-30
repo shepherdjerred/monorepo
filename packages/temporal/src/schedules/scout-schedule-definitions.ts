@@ -1,5 +1,13 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
-import { scoutFixedScheduleId, type ScoutStage } from "@scout-for-lol/temporal";
+import {
+  SCOUT_WORKFLOW_NAMES,
+  scoutFixedScheduleId,
+  type ScoutStage,
+} from "@scout-for-lol/temporal";
+import {
+  scoutPipelineReconciliationV2InputCodec,
+  scoutPostMatchDiscoveryV2InputCodec,
+} from "@scout-for-lol/temporal/workflow-contracts-v2";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
 
@@ -10,7 +18,12 @@ const INITIAL_PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
 
 type ScoutInterval =
-  "20 seconds" | "30 seconds" | "1 minute" | "15 minutes" | "1 hour";
+  | "20 seconds"
+  | "30 seconds"
+  | "1 minute"
+  | "5 minutes"
+  | "15 minutes"
+  | "1 hour";
 
 type ScoutSchedule = {
   readonly name: string;
@@ -22,6 +35,7 @@ type ScoutIntervalSchedule = ScoutSchedule & {
   readonly every: ScoutInterval;
   readonly catchupWindow?: "5 minutes" | "1 hour";
   readonly offset?: "5 minutes";
+  readonly initiallyActive?: true;
 };
 
 type ScoutCronSchedule = ScoutSchedule & {
@@ -52,7 +66,9 @@ function intervalSchedule(
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
     memo: `Scout ${stage} ${schedule.name}`,
-    initialPauseNote: INITIAL_PAUSE_NOTE,
+    ...(schedule.initiallyActive
+      ? {}
+      : { initialPauseNote: INITIAL_PAUSE_NOTE }),
   };
 }
 
@@ -88,16 +104,14 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       catchupWindow: CATCHUP_TIGHT,
     }),
     intervalSchedule(stage, {
-      name: "tournament-lobby-poll",
-      workflowType: "scoutRealtimePollWorkflow",
-      args: [{ stage, kind: "tournament-lobbies", maximumAgeSeconds: 60 }],
-      every: "20 seconds",
-      catchupWindow: CATCHUP_TIGHT,
-    }),
-    intervalSchedule(stage, {
       name: "postmatch-discovery",
-      workflowType: "scoutPostMatchDiscoveryWorkflow",
-      args: [{ stage }],
+      workflowType: SCOUT_WORKFLOW_NAMES.postMatchDiscoveryV2,
+      args: [
+        scoutPostMatchDiscoveryV2InputCodec.serialize({
+          stage,
+          trigger: "schedule",
+        }),
+      ],
       every: "1 minute",
       catchupWindow: CATCHUP_TIGHT,
     }),
@@ -106,6 +120,18 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       workflowType: "scoutIngestionReconciliationWorkflow",
       args: [{ stage, trigger: "schedule" }],
       every: "1 minute",
+    }),
+    intervalSchedule(stage, {
+      name: "pipeline-reconciliation-v2",
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      args: [
+        scoutPipelineReconciliationV2InputCodec.serialize({
+          stage,
+          trigger: "schedule",
+        }),
+      ],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
     }),
     ...(stage === "beta"
       ? [
@@ -119,9 +145,32 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
         ]
       : []),
     intervalSchedule(stage, {
+      name: "notification-intent-expiry",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "notification-intent-expiry" }],
+      every: "5 minutes",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
+      name: "mvp-tally-refresh",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "mvp-tally-refresh" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+      // MVP voting is already live. This schedule repairs requests lost by a
+      // gateway restart and does not switch ingestion ownership.
+      initiallyActive: true,
+    }),
+    intervalSchedule(stage, {
       name: "competition-refresh",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-refresh" }],
+      every: "15 minutes",
+    }),
+    intervalSchedule(stage, {
+      name: "clash-snapshot",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "clash-snapshot" }],
       every: "15 minutes",
     }),
     intervalSchedule(stage, {
@@ -153,6 +202,13 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       name: "progression-outbox",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "progression-outbox" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
+      name: "progression-reconciliation",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "progression-reconciliation" }],
       every: "1 minute",
       catchupWindow: CATCHUP_TIGHT,
     }),

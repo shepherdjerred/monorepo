@@ -6,6 +6,7 @@ import {
   historyReferenceQuery,
   isHistoryReference,
 } from "@shepherdjerred/streambot/discovery/media-intent.ts";
+import { fuzzyMatchCandidate } from "@shepherdjerred/streambot/discovery/same-work.ts";
 
 const CONTEXT_TTL_MS = 5 * 60 * 1000;
 
@@ -85,6 +86,8 @@ export class ConversationContextStore {
       candidate.title.toLocaleLowerCase("en-US").includes(normalized),
     );
     if (titleMatch !== undefined) return titleMatch;
+    const fuzzy = fuzzyMatchCandidate(entry.candidates, reference);
+    if (fuzzy !== null) return fuzzy;
     if (!isHistoryReference(reference)) return null;
     const subject = historyReferenceQuery(reference).toLocaleLowerCase("en-US");
     const remembered = [entry.lastResult, ...entry.candidates].find(

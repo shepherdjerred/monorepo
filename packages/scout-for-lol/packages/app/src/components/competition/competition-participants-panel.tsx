@@ -8,20 +8,20 @@ import {
   ParticipantStatusSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { formatDate } from "#src/lib/format.ts";
+import { formatDate } from "#src/lib/format/format.ts";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
-import { Section } from "#src/components/section.tsx";
+import { Section } from "#src/components/chrome/section.tsx";
 import {
   Field,
   FieldError,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import {
   fieldErrorMessage,
   focusFirstInvalid,

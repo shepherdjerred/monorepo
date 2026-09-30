@@ -1,6 +1,6 @@
 ---
 name: bun-runtime-best-practices
-description: "Use this skill for Bun runtime APIs and current operational patterns for files, processes, modules, networking, dat…"
+description: Bun runtime APIs and current operational patterns for files, processes, modules, networking, databases, tests, and deployment. Use when writing or reviewing Bun-only TypeScript, selecting Bun versus Web or Node APIs, or migrating Node code to Bun.
 ---
 
 # Bun Runtime Best Practices

@@ -11,6 +11,7 @@ import SwiftUI
       .cursor: .available(PreviewData.shippingCursor),
       .kimi: .available(PreviewData.snapshot(.kimi, remaining: 18)),
       .grok: .available(PreviewData.snapshot(.grok, remaining: 3)),
+      .muse: .available(PreviewData.snapshot(.muse, remaining: 35)),
     ])
   )
 }
@@ -22,6 +23,9 @@ import SwiftUI
       .codex: .available(PreviewData.shippingCodex),
       .antigravity: .available(PreviewData.shippingAntigravity),
       .cursor: .available(PreviewData.shippingCursor),
+      .grok: .available(PreviewData.shippingGrok),
+      .kimi: .available(PreviewData.snapshot(.kimi, remaining: 42)),
+      .muse: .available(PreviewData.snapshot(.muse, remaining: 35)),
     ])
   )
 }

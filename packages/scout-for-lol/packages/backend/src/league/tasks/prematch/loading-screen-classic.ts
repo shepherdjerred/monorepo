@@ -64,8 +64,7 @@ export function orderClassicParticipants(
     (participant) => participant.team === "blue",
   );
   const red = participants.filter((participant) => participant.team === "red");
-  if (blue.length !== 5 || red.length !== 5) {
-    return participants;
-  }
-  return [...orderFullClassicTeam(blue), ...orderFullClassicTeam(red)];
+  return blue.length !== 5 || red.length !== 5
+    ? participants
+    : [...orderFullClassicTeam(blue), ...orderFullClassicTeam(red)];
 }

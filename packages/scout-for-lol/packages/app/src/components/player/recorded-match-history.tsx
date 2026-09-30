@@ -85,17 +85,11 @@ export function RecordedMatchHistory(props: {
             Scout hasn&apos;t recorded any games for this player yet.
           </p>
         ) : (
-          <>
-            <p className="text-sm text-scout-subtle">
-              This is Scout&apos;s stored coverage, not a complete Riot match
-              history. Each card identifies the account Scout observed.
-            </p>
-            <MatchHistoryList
-              entries={props.entries}
-              playerId={props.playerId}
-              profileSearch={props.profileSearch}
-            />
-          </>
+          <MatchHistoryList
+            entries={props.entries}
+            playerId={props.playerId}
+            profileSearch={props.profileSearch}
+          />
         )}
         {shouldShowMatchHistoryPager(props.entries.length, props.page) && (
           <MatchHistoryPager

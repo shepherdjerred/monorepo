@@ -16,8 +16,8 @@ import {
   installLandingCopy,
   installLandingResult,
   type InstallLandingResult,
-} from "#src/lib/install-landing-state.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+} from "#src/lib/onboarding/install-landing-state.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
  * Landing page Discord redirects to after the user adds the bot (the

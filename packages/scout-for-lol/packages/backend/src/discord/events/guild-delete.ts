@@ -18,7 +18,7 @@ import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { buildFeedbackRequestMessage } from "#src/discord/utils/feedback.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import { guildsLeftTotal } from "#src/metrics/web.ts";
+import { guildsLeftTotal } from "#src/metrics/platform/web.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("guild-delete");
@@ -67,23 +67,31 @@ export async function handleGuildDelete(guild: Guild): Promise<void> {
   try {
     const install = await prisma.guildInstall.findUnique({
       where: { serverId },
-      select: { installedAt: true, serverName: true },
+      select: {
+        installedAt: true,
+        serverName: true,
+        analyticsLifecycleTracked: true,
+      },
     });
-    if (install !== null) {
-      const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
-      await sendDM({
-        client: guild.client,
-        userId: ownerId,
-        message: buildFeedbackRequestMessage(guild.name),
-        kind: "feedback_request",
-        guildId: serverId,
-        budget: {
-          guildId: serverId,
-          serverName: install.serverName,
-          installedAt: install.installedAt,
-        },
-      });
+    if (install === null) {
+      return;
     }
+    if (!install.analyticsLifecycleTracked) {
+      return;
+    }
+    const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
+    await sendDM({
+      client: guild.client,
+      userId: ownerId,
+      message: buildFeedbackRequestMessage(guild.name),
+      kind: "feedback_request",
+      guildId: serverId,
+      budget: {
+        guildId: serverId,
+        serverName: install.serverName,
+        installedAt: install.installedAt,
+      },
+    });
   } catch (error) {
     logger.warn(
       `[Guild Delete] Could not send feedback request for guild ${guild.id}: ${getErrorMessage(error)}`,

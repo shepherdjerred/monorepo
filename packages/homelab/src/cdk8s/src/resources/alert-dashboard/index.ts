@@ -17,11 +17,12 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 const IMAGE = `ghcr.io/shepherdjerred/alert-dashboard:${versions["shepherdjerred/alert-dashboard"]}`;
 
@@ -137,6 +138,15 @@ export function createAlertDashboardDeployment(chart: Chart) {
         GRAFANA_URL: EnvValue.fromValue(
           "http://prometheus-grafana.prometheus.svc.cluster.local:80",
         ),
+        PROMETHEUS_URL: EnvValue.fromValue(
+          "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
+        ),
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_NAMESPACE: EnvValue.fromValue("alert-dashboard"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         POSTAL_HOST: EnvValue.fromValue(
           "http://postal-postal-web-service.postal.svc.cluster.local:5000",
         ),
@@ -147,6 +157,13 @@ export function createAlertDashboardDeployment(chart: Chart) {
         ALERT_DASHBOARD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "WEBHOOK_TOKEN",
+        }),
+        // Bearer token the Temporal ops-snapshot workflow presents on
+        // /internal/v1/ops/snapshots and /internal/v1/digests/:kind. The same
+        // value lives on the Temporal item.
+        OPS_INGEST_TOKEN: EnvValue.fromSecretValue({
+          secret,
+          key: "OPS_INGEST_TOKEN",
         }),
         GRAFANA_API_KEY: EnvValue.fromSecretValue({
           secret,
@@ -162,9 +179,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
           key: "POSTAL_HOST_HEADER",
         }),
         POSTAL_TO: EnvValue.fromSecretValue({ secret, key: "POSTAL_TO" }),
-        OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://tempo.tempo.svc.cluster.local:4318",
-        ),
+        OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
         OTEL_SERVICE_NAME: EnvValue.fromValue("alert-dashboard"),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
       },
@@ -185,6 +200,12 @@ export function createAlertDashboardDeployment(chart: Chart) {
   new TailscaleIngress(chart, "alert-dashboard-ingress", {
     service,
     host: "alerts",
+    probePath: "/healthz",
+  });
+  // The same app serves the ops overview. `alerts` stays for existing links.
+  new TailscaleIngress(chart, "alert-dashboard-ops-ingress", {
+    service,
+    host: "ops",
     probePath: "/healthz",
   });
   return deployment;

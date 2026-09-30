@@ -20,14 +20,9 @@ const fontsDir = `${packageRoot}assets/fonts/`;
 const frontendPublic = fileURLToPath(
   new URL("../../frontend/public/", import.meta.url),
 );
-const evalsPublic = fileURLToPath(
-  new URL("../../evals/public/", import.meta.url),
-);
 const docsPublic = fileURLToPath(
   new URL("../../docs-site/public/", import.meta.url),
 );
-const desktopDir = fileURLToPath(new URL("../../desktop/", import.meta.url));
-const desktopIcons = `${desktopDir}src-tauri/icons/`;
 const colors = scoutThemes["modern-light"].colors;
 const dark = scoutThemes["modern-dark"].colors;
 
@@ -78,8 +73,10 @@ function icoFromPngs(images: { size: number; png: Uint8Array }[]): Uint8Array {
 }
 
 function sameBytes(left: Uint8Array, right: Uint8Array): boolean {
-  if (left.byteLength !== right.byteLength) return false;
-  return left.every((value, index) => value === right[index]);
+  return (
+    left.byteLength === right.byteLength &&
+    left.every((value, index) => value === right[index])
+  );
 }
 
 async function emit(
@@ -234,7 +231,6 @@ const discordBanner = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 
 `;
 
 await mkdir(brandDir, { recursive: true });
-await mkdir(evalsPublic, { recursive: true });
 
 await emit(`${brandDir}emblem.svg`, emblem);
 await emit(`${brandDir}compass.svg`, compass);
@@ -268,7 +264,6 @@ await emit(
     { size: 48, png: png48 },
   ]),
 );
-await emit(`${evalsPublic}favicon.svg`, compass);
 await emit(`${docsPublic}favicon.svg`, compass);
 
 const ogSvg = await satori(
@@ -303,27 +298,6 @@ const ogSvg = await satori(
   },
 );
 await emit(`${brandDir}og-default.png`, pngFromSvg(ogSvg, 1200));
-
-if (!check) {
-  const tauri = Bun.spawnSync(
-    [
-      "bun",
-      "x",
-      "--no-install",
-      "@tauri-apps/cli",
-      "icon",
-      `${brandDir}app-icon-512.png`,
-      "-o",
-      desktopIcons,
-      "--ios-color",
-      colors.canvas,
-    ],
-    { cwd: desktopDir, stdout: "inherit", stderr: "inherit" },
-  );
-  if (tauri.exitCode !== 0) {
-    throw new Error("Failed to generate Tauri icons");
-  }
-}
 
 console.log(
   check ? "Scout brand assets are in sync" : "Generated Scout brand assets",

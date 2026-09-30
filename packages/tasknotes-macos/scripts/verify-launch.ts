@@ -37,6 +37,34 @@
 // concern produced `OffscreenSnapshot`'s `.prohibited` activation policy; that
 // technique is not available here because this is the real app, so the flags
 // plus the assertion stand in for it.
+//
+// ## Why a pre-existing copy does not fail the run
+//
+// The script used to refuse to launch when any copy of the Release bundle was
+// already running, so a previous run could never be mistaken for this one.
+// That refusal was correct attribution but a self-perpetuating wedge: build
+// 17476 was canceled between `open` and the SIGTERM cleanup, the orphaned app
+// survived (cancellation signals reach the job's processes, but the launched
+// app was adopted by launchd and lives outside them), and every later build
+// failed the pre-check without testing anything. Nothing reaps the orphan;
+// the CI host persists across builds.
+//
+// So the run snapshots the pids it finds at startup and asserts only on pids
+// that appear afterwards. A stale copy is host state, not evidence about this
+// build's bundle, and ignoring it cannot bless a broken build: the survival,
+// focus, and clean-shutdown assertions still run against exactly the copy this
+// run launched. The script only ever signals those pids; a pre-existing copy
+// is left alone, including a wedged one left running for inspection by an
+// earlier run. (Pid reuse inside the ~10s probe window would require the
+// allocator to wrap all the way around to a baseline value; macOS pids are
+// sequential to 99999, so this is not a real attribution hazard.)
+//
+// ## Why cancellation reaps the launched copy
+//
+// The trap below exists to close the orphaning window, not to duplicate the
+// normal shutdown. On SIGTERM/SIGINT it SIGTERMs exactly the pids this run
+// launched and then exits, so a canceled job stops leaking one idle GUI app
+// per cancellation onto the persistent CI host.
 
 import { readdir } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -62,7 +90,7 @@ function fail(message: string): never {
 }
 
 async function run(command: readonly string[]): Promise<string> {
-  const child = Bun.spawn(command, { stdout: "pipe", stderr: "pipe" });
+  const child = Bun.spawn([...command], { stdout: "pipe", stderr: "pipe" });
   const stdout = await new Response(child.stdout).text();
   const stderr = await new Response(child.stderr).text();
   const status = await child.exited;
@@ -86,21 +114,37 @@ async function crashReportNames(): Promise<ReadonlySet<string>> {
   }
 }
 
-/** The pids of every running copy of the app bundle under test. */
-async function runningPids(): Promise<readonly number[]> {
-  const child = Bun.spawn(
-    ["pgrep", "-f", `${appPath}/Contents/MacOS/TaskNotes`],
-    {
-      stdout: "pipe",
-      stderr: "ignore",
-    },
-  );
-  const stdout = await new Response(child.stdout).text();
-  await child.exited;
+/** Parse `pgrep` output into pids, ignoring blank and malformed lines. */
+export function parsePids(stdout: string): readonly number[] {
   return stdout
     .split("\n")
     .map((line) => Number.parseInt(line.trim(), 10))
     .filter((pid) => Number.isInteger(pid) && pid > 0);
+}
+
+/**
+ * The pids in `current` that were not already running at startup: exactly the
+ * copies this run launched. Everything this script asserts on or signals goes
+ * through this subtraction.
+ */
+export function excludeBaseline(
+  current: readonly number[],
+  baseline: ReadonlySet<number>,
+): readonly number[] {
+  return current.filter((pid) => !baseline.has(pid));
+}
+
+/** The pids of every running copy of the app bundle under test. */
+async function runningPids(
+  executablePath = `${appPath}/Contents/MacOS/TaskNotes`,
+): Promise<readonly number[]> {
+  const child = Bun.spawn(["pgrep", "-f", executablePath], {
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  const stdout = await new Response(child.stdout).text();
+  await child.exited;
+  return parsePids(stdout);
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -126,81 +170,117 @@ async function frontmostBundleId(): Promise<string> {
   return line.split('"')[3] ?? "";
 }
 
-const beforeCrashes = await crashReportNames();
-const frontBefore = await frontmostBundleId();
+/** Pids already running when this run started. Never asserted on, never signaled. */
+let baselinePids: ReadonlySet<number> = new Set();
 
-if ((await runningPids()).length > 0) {
-  fail(
-    "a copy of the Release bundle is already running; refusing to launch a second " +
-      "and mistake its survival for this one's",
-  );
+/**
+ * SIGTERM/SIGINT arrive here on job cancellation or Ctrl-C: reap exactly the
+ * copies this run launched, then exit with the conventional 128+signo status.
+ * Installed before `open` so the launch-to-cleanup window is covered. A signal
+ * that arrives before the launch simply finds nothing of ours to reap.
+ */
+async function reapOursAndExit(signal: "SIGTERM" | "SIGINT"): Promise<never> {
+  const ours = excludeBaseline(await runningPids(), baselinePids);
+  for (const pid of ours) {
+    try {
+      process.kill(pid, "SIGTERM");
+    } catch {
+      // Already gone; the run is over either way.
+    }
+  }
+  const deadline = Date.now() + shutdownMs;
+  while (Date.now() < deadline) {
+    if (excludeBaseline(await runningPids(), baselinePids).length === 0) break;
+    await sleep(200);
+  }
+  process.exit(signal === "SIGTERM" ? 143 : 130);
 }
 
-console.log(`verify-launch: launching ${appPath} in the background`);
-// `-g` does not bring it to the foreground, `-j` launches it hidden, `-n` opens
-// a new instance rather than activating an existing one.
-await run(["open", "-g", "-j", "-n", appPath]);
+async function main(): Promise<void> {
+  const beforeCrashes = await crashReportNames();
+  const frontBefore = await frontmostBundleId();
 
-await sleep(earlyProbeMs);
-let pids = await runningPids();
-if (pids.length === 0) {
-  const after = await crashReportNames();
-  const created = [...after].filter(
-    (name) => !beforeCrashes.has(name) && name.startsWith("TaskNotes"),
-  );
-  if (created.length > 0) {
-    const report = join(crashReports, created[0] ?? "");
-    const text = await Bun.file(report).text();
-    // The interesting line is the termination reason — for the bug this script
-    // exists to catch it names the code signature rather than a Swift frame.
-    const reason =
-      /"termination":\{[^}]*\}/.exec(text)?.[0] ??
-      /Library not loaded[^"]{0,200}/.exec(text)?.[0] ??
-      "no termination detail found";
+  baselinePids = new Set(await runningPids());
+  if (baselinePids.size > 0) {
+    // Host state, not evidence about this build's bundle: a copy orphaned by
+    // a canceled run (or left running deliberately for inspection) must not
+    // fail this run, and must not be mistaken for the copy launched below.
+    console.warn(
+      `verify-launch: ignoring ${baselinePids.size.toString()} already-running ` +
+        `copies (pids ${[...baselinePids].join(", ")}); asserting only on the copy launched below`,
+    );
+  }
+  process.on("SIGTERM", () => void reapOursAndExit("SIGTERM"));
+  process.on("SIGINT", () => void reapOursAndExit("SIGINT"));
+
+  console.log(`verify-launch: launching ${appPath} in the background`);
+  // `-g` does not bring it to the foreground, `-j` launches it hidden, `-n`
+  // opens a new instance rather than activating an existing one.
+  await run(["open", "-g", "-j", "-n", appPath]);
+
+  await sleep(earlyProbeMs);
+  let pids = excludeBaseline(await runningPids(), baselinePids);
+  if (pids.length === 0) {
+    const after = await crashReportNames();
+    const created = [...after].filter(
+      (name) => !beforeCrashes.has(name) && name.startsWith("TaskNotes"),
+    );
+    if (created.length > 0) {
+      const report = join(crashReports, created[0] ?? "");
+      const text = await Bun.file(report).text();
+      // The interesting line is the termination reason — for the bug this script
+      // exists to catch it names the code signature rather than a Swift frame.
+      const reason =
+        /"termination":\{[^}]*\}/.exec(text)?.[0] ??
+        /Library not loaded[^"]{0,200}/.exec(text)?.[0] ??
+        "no termination detail found";
+      fail(
+        `the app crashed within ${earlyProbeMs / 1000}s.\n  ${report}\n  ${reason}`,
+      );
+    }
     fail(
-      `the app crashed within ${earlyProbeMs / 1000}s.\n  ${report}\n  ${reason}`,
+      `the app was not running ${earlyProbeMs / 1000}s after launch, and wrote no crash ` +
+        "report. It may have exited cleanly, which a GUI app should not do.",
     );
   }
-  fail(
-    `the app was not running ${earlyProbeMs / 1000}s after launch, and wrote no crash ` +
-      "report. It may have exited cleanly, which a GUI app should not do.",
-  );
-}
 
-await sleep(lateProbeMs - earlyProbeMs);
-pids = await runningPids();
-if (pids.length === 0) {
-  fail(
-    `the app died between ${earlyProbeMs / 1000}s and ${lateProbeMs / 1000}s`,
-  );
-}
-
-const frontAfter = await frontmostBundleId();
-if (frontAfter !== frontBefore) {
-  // Not fatal to correctness, but this script runs while someone is typing.
-  fail(
-    `launching the app changed the frontmost application from "${frontBefore}" to ` +
-      `"${frontAfter}". It was launched with -g -j and must not activate itself.`,
-  );
-}
-
-for (const pid of pids) {
-  process.kill(pid, "SIGTERM");
-}
-
-const deadline = Date.now() + shutdownMs;
-while (Date.now() < deadline) {
-  if ((await runningPids()).length === 0) {
-    console.log(
-      `verify-launch: Release bundle launched, survived ${lateProbeMs / 1000}s, ` +
-        "never took focus, and exited on SIGTERM",
+  await sleep(lateProbeMs - earlyProbeMs);
+  pids = excludeBaseline(await runningPids(), baselinePids);
+  if (pids.length === 0) {
+    fail(
+      `the app died between ${earlyProbeMs / 1000}s and ${lateProbeMs / 1000}s`,
     );
-    process.exit(0);
   }
-  await sleep(200);
+
+  const frontAfter = await frontmostBundleId();
+  if (frontAfter !== frontBefore) {
+    // Not fatal to correctness, but this script runs while someone is typing.
+    fail(
+      `launching the app changed the frontmost application from "${frontBefore}" to ` +
+        `"${frontAfter}". It was launched with -g -j and must not activate itself.`,
+    );
+  }
+
+  for (const pid of pids) {
+    process.kill(pid, "SIGTERM");
+  }
+
+  const deadline = Date.now() + shutdownMs;
+  while (Date.now() < deadline) {
+    if (excludeBaseline(await runningPids(), baselinePids).length === 0) {
+      console.log(
+        `verify-launch: Release bundle launched, survived ${lateProbeMs / 1000}s, ` +
+          "never took focus, and exited on SIGTERM",
+      );
+      process.exit(0);
+    }
+    await sleep(200);
+  }
+
+  fail(
+    `the app did not exit within ${shutdownMs / 1000}s of SIGTERM, so its run loop is ` +
+      "wedged. Left running deliberately rather than SIGKILLed, so it can be inspected.",
+  );
 }
 
-fail(
-  `the app did not exit within ${shutdownMs / 1000}s of SIGTERM, so its run loop is ` +
-    "wedged. Left running deliberately rather than SIGKILLed, so it can be inspected.",
-);
+if (import.meta.main) await main();

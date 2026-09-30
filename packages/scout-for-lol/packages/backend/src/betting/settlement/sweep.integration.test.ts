@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
+  BucksDeltaSchema,
   BucksMatchingSummarySchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
@@ -49,7 +50,7 @@ async function makeOffer(input: {
   return await db.$transaction(async (tx) => {
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: 100,
+      delta: BucksDeltaSchema.parse(100),
       kind: "seed",
       context: { type: "seed", note: "close matching test wallet" },
     });
@@ -71,7 +72,7 @@ async function makeOffer(input: {
     });
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: -input.stake,
+      delta: BucksDeltaSchema.parse(-input.stake),
       kind: "bet_stake",
       matchId: MATCH_ID,
       betId: bet.id,

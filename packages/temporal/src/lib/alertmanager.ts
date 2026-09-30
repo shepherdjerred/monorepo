@@ -13,14 +13,22 @@ export type AlertPoster = (alerts: AlertmanagerAlert[]) => Promise<void>;
 /**
  * The real poster. POSTs to Alertmanager's write API. In-cluster the base URL
  * is `http://prometheus-kube-prometheus-alertmanager.prometheus:9093`.
+ *
+ * The POST races a timeout so a hung Alertmanager fails the calling activity
+ * (which retries) instead of hanging it: 30s matches the bounded-fetch
+ * precedent elsewhere in this package.
  */
-export function createAlertmanagerPoster(baseUrl: string): AlertPoster {
+export function createAlertmanagerPoster(
+  baseUrl: string,
+  timeoutMs = 30_000,
+): AlertPoster {
   return async (alerts: AlertmanagerAlert[]): Promise<void> => {
     const url = new URL("/api/v2/alerts", baseUrl);
     const res = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(alerts),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     if (!res.ok) {
       const body = await res.text();

@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
+} from "@scout-for-lol/design-system/components/overlays/dialog";
 import { ExploreVisualResult } from "#src/components/explore/explore-visual-result.tsx";
 
 /**
@@ -19,8 +19,8 @@ import { ExploreVisualResult } from "#src/components/explore/explore-visual-resu
  *
  * A `Dialog` rather than the design system's `Sheet`: the sheet is hardcoded
  * left-anchored at `min(22rem, 88vw)` with no side prop, so a wide right-hand
- * panel would mean a new design-system variant and the workbench goldens that
- * come with it — for a container. Radix also gives the dialog Escape and focus
+ * panel would mean a new design-system variant and the story coverage that
+ * comes with it — for a container. Radix also gives the dialog Escape and focus
  * handling that the composer's own window-level Escape already defers to via
  * `defaultPrevented`.
  *

@@ -1,22 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "source_snapshot_sha256": "4f1a3d22f3cadd5b3252185fbd1c29fff932974e7b190f775e51e08f55e1cd46",
     "corpus": {
-      "messages": 10036,
+      "messages": 10367,
       "date_range": {
         "start": "2021-01-01T09:17:58.911000+00:00",
-        "end": "2026-07-29T02:05:29.071000+00:00"
+        "end": "2026-09-21T00:13:36.974000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 7132,
-      "summarized_messages": 7132,
-      "chunks": 70,
+      "safe_messages": 7352,
+      "summarized_messages": 7352,
+      "chunks": 72,
       "direct_recent_messages": 500,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
+      "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-01-01T09:17:58.911000+00:00",
-        "end": "2026-07-29T02:05:29.071000+00:00"
+        "end": "2026-09-21T00:13:36.974000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -185,90 +188,90 @@
     "Sentence length: mostly under 10 words; let context be built by accumulation across messages rather than detailed exposition."
   ],
   "quotes": [
-    "Good fucking morning Glitter Bastards. Remember even if times are tough and your mind is burnt and your body is broken. The Glitter boys always have your back, stay strong 💪",
-    "Im highkey a BEAST lowkey a BEAST and midkey a BEAST rn",
-    "Get in here for FLEX QUEUEUEUEUEe",
-    "Good morning glitter WARRIORS. Have a productive and AW SOM day! Don’t let life get you down! Stay Hard! 🔥🔥🔥",
-    "# OFFICIAL GEX SUPPORT TIER LIST NO FLAME",
-    "# CALLING ALL FOOLS FOR 8 MAN ARENA 8 PM",
-    "I wanna host a Cocktail night at my place in Woodinville, let me know if you are interested and let me know what your favorite cocktail is, just so I can get more ingredients needed let me know!",
-    "──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌\n───▄▄██▌█ BEEP BEEP\n▄▄▄▌▐██▌█ -15 LP DELIVERY\n███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌\n▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)",
-    "Worlds Finals is Nov 2nd on a Saturday who wants to ruin their sleep schedule and watch with me",
-    "Heal tear item, muramana, and fimblewinter on senna",
-    "Let’s play Bird comp later",
-    "Windcatcher.. more like.. rain catcher!",
+    "Yeah but she has infinite scaling in her kit now",
+    "She gonna build full ad and still be tanky af from her passive",
+    "You gotta set it",
+    "Hell yeah bby",
+    "I’m down anytime",
+    "I love Justin",
     "I don’t think T1 could beat us at mayhem tbh we are basically T1 in mayhem for sure",
-    "Brian needs to rename to billieeileishfan",
+    "You after the wordle police catch you",
+    "Okay so Caitlyn is cheating again",
+    "that’s my duo partner you are talking about 🥺",
+    "I’m so dirty",
+    "More like Trynda mere hanging on with 1 hp",
+    "I love Jerred and his cats",
+    "I love you Long",
+    "They woke up 😭",
+    "Still talking shit about HLe",
+    "Bruh what is fearx cooking",
     "I gave a hint so your win today is nullified",
-    "IM A GLITTER BOY FOR LIFE",
-    "🚨 HLE TONIGHT 8 PM 🚨",
-    "But losing to G2 is a crime",
-    "Well my Pickems were cooked but I guess everyone else’s were too",
-    "GenG losing to unpaid interns is peak"
+    "YES, Skewmond went 11/0/2 on Nasus jungle in game 5",
+    "IM A GLITTER BOY FOR LIFE"
   ],
   "sample_messages": [
-    "!p 7 rings our last night",
-    "Jerred is secretly the streamer Piece of Sheet, change my mind",
-    "I was 3/5 and she was 12/5 lmfao",
-    "You have to completely close discord",
-    "Whose down for a valheim run",
-    "My duo partner has betrayed me",
-    "THATS MY MAN",
-    "League 🥵😡🤬☹️😊",
-    "Merry Christmas to all the real ones out there and may we have a good New Years!",
-    "I feel like a living meme now",
-    "Proud of you",
-    "Love you too bro",
-    "LETS GO BAAAAYBE",
-    "I’ve never lost a Fiora lane in my life",
-    "My toplane is a kingdom",
-    "But do you want to be my duo partner my last one abandoned me <a:pepeleave:937125262959706183>",
-    "Don’t fret or be in fear today. If any motherfucker messes with you I got your six",
-    "His prize is a kiss on the cheek from Brian, everyone give him a round of applause!!",
-    "Me go top",
-    "You were stalling our 1v1 for Aatrox nerfs you devilish dawg you",
-    "Unfortunately whenever I show them my Yasuo clips they run away <:thinking:692566005423144970>",
-    "Because I can carry games as Jarvan jg",
-    "The ground used to quake when they mentioned Billieeilishfan69’s name",
-    "I’m a fucking Glitter Boy for life",
-    "I like highly mechanical champions like Sion",
-    "You know we love you right?",
-    "WE RUN THIS SHIT",
-    "# ZOMBIES HAPPENING TONIGHT",
-    "I love Jerred",
-    "First listen, 6/10.\n\nSubsequent listens 8.5/10 solid album.\n\nBest songs: Peach Gelatto.\nHi Hello.\nSeesaw.\nRight Hand Girl.\n\nWorst song: Battittude."
+    "Shoulda washed the linen sheets",
+    "You're not down",
+    "Yerp",
+    "Phoenix is pretty cool 😎",
+    "No bday dinners today right?",
+    "2 more days til we are all the same time zone <:cooked:1329981523285508106>",
+    "Okay",
+    "I was lied to",
+    "Theres like 3 galio enjoyers",
+    "<:thumbsup:1399179267199205396>",
+    "Yeah…",
+    "<:chadge:1250350801503649843>",
+    "WTH Caitlyn <:tomfrownface:1215022461532242020>",
+    "Haha I forget",
+    "Rip",
+    "Ive seen these games before",
+    "Its dealt with",
+    "I think ive been to that store with Virmel",
+    "Nah",
+    "Just chillien with the king",
+    "Surely I’m fine 🙂",
+    "You look sad about something",
+    "Are we back",
+    "Yup",
+    "Danny needs to rename to filthy fire",
+    "nah",
+    "Lyon wins it",
+    "Faker had the first 9 death game of his career",
+    "I miss you Jake",
+    "Zekuh drops a banger Fizz game"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "LETS GOOOOOO\nOUR BOYS ACTUALLY DID IT 😭",
-      "WAIT\nTHE BUILD IS COOKING\nLate game monster",
-      "🚨 HLE TONIGHT 8 PM 🚨\nBe there or be Neko"
+      "OUR T1 IS COOKING 😎",
+      "LETS GO FLYQUEST",
+      "That’s a banger bro"
     ],
     "angry_or_frustrated": [
-      "Why are we letting Jax through picks man",
-      "Riot killed my favorite build again\nITS BEEN YEARS",
-      "Yeah I’m not playing top for awhile…\nGonna have to deal with this nonsense smh"
+      "Why are we letting Jax through",
+      "Riot what is this patch",
+      "I’m getting griefed again smh"
     ],
     "sad_or_disappointed": [
-      "My pickems… cooked 😭",
-      "Rip streak\nI couldn’t figure out the word",
-      "I’m so ronery\nWhere the bros at"
+      "Rip streak",
+      "I miss my duo partner",
+      "That loss was tragic"
     ],
     "supportive_or_caring": [
-      "Proud of you bro\nYou’re actually so good",
-      "Welcome back I missed you 😢",
-      "Have a good day Glitter warriors\nDon’t let life get you down 💪"
+      "You’re good bro",
+      "I got your back",
+      "Take your time, we can wait"
     ],
     "playful_or_teasing": [
-      "So we’re cheating now I see",
-      "Don’t make me post the VOD of that lane phase",
-      "Your win is nullified\nI gave you a hint 😎"
+      "You fraud dawg",
+      "Be there or be Neko",
+      "That’s your best play? xD"
     ],
     "neutral_or_logistical": [
-      "Ill be on in 45",
-      "Need 1\nFLEX LOBBY?",
-      "I’m walking back rn\nGive me 15 min"
+      "I’ll be on in 20",
+      "Need 1 more for flex",
+      "Starting at 8 if anyone’s down"
     ]
   },
   "concerns": []

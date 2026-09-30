@@ -26,11 +26,9 @@ const groups = R.pipe(
   <Background extraCss="bg-black">
     <Container width="normal">
       <div class="flex flex-col gap-12 mt-6 mb-6">
-        {
-          R.map(groups, ([year, entries]): JSX.Element => (
-            <BlogYear year={year} entries={entries} />
-          ))
-        }
+        {R.map(groups, ([year, entries]): JSX.Element => (
+          <BlogYear year={year} entries={entries} />
+        ))}
       </div>
     </Container>
   </Background>

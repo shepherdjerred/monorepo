@@ -7,7 +7,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero-schedules.ts";
+import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
 export function createVeleroApp(chart: Chart) {
   new Namespace(chart, `velero-namespace`, {
     metadata: {

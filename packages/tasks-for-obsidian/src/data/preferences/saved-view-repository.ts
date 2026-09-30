@@ -2,8 +2,8 @@ import {
   createDefaultSavedViewPreferences,
   decodeSavedViewPreferences,
   encodeSavedViewPreferences,
-} from "../../domain/saved-views";
-import type { SavedViewPreferences } from "../../domain/saved-views";
+} from "../../domain/saved-view/saved-views";
+import type { SavedViewPreferences } from "../../domain/saved-view/saved-views";
 
 export const SAVED_VIEW_PREFERENCES_STORAGE_KEY = "saved_view_preferences";
 

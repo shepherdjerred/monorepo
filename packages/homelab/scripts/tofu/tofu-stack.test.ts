@@ -1,0 +1,338 @@
+import { describe, expect, test } from "vitest";
+import {
+  buildTofuEnvironment,
+  desiredStateVariableValue,
+  validationInitArguments,
+} from "./tofu-stack.ts";
+import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
+import {
+  collectOnePasswordTargets,
+  loadPlatformDesiredState,
+  type PlatformStack,
+} from "#scripts/platform-desired-state.ts";
+
+const STATE_SOURCES = [
+  "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
+  "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
+];
+
+async function temporaryDirectory(): Promise<string> {
+  const process = Bun.spawn(["mktemp", "-d"], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(process.stdout).text(),
+    new Response(process.stderr).text(),
+    process.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(`mktemp failed: ${stderr}`);
+  }
+  return stdout.trim();
+}
+
+const STACKS: readonly TofuStack[] = [
+  "anthropic",
+  "anthropic-federation",
+  "argocd",
+  "arr",
+  "asuswrt",
+  "cloudflare",
+  "cloudflare-tokens",
+  "discord",
+  "github",
+  "google",
+  "openai",
+  "posthog",
+  "seaweedfs",
+  "tailscale",
+];
+
+describe("OpenTofu credential contracts", () => {
+  test.each(STACKS)("%s requests only its declared credentials", (stack) => {
+    const requested: string[] = [];
+    buildTofuEnvironment(stack, (environmentName) => {
+      requested.push(environmentName);
+      return `${environmentName}-value`;
+    });
+    const definition = STACK_MANIFEST[stack];
+    const objectSources =
+      definition.secretObject === undefined
+        ? []
+        : Object.values(definition.secretObject.entries);
+
+    expect(requested.toSorted()).toEqual(
+      [
+        ...STATE_SOURCES,
+        ...definition.credentials.map(({ source }) => source),
+        ...objectSources,
+      ].toSorted(),
+    );
+  });
+
+  test("does not inherit an unrelated ambient credential", () => {
+    Bun.env["UNRELATED_PLATFORM_SECRET"] = "must-not-cross-boundary";
+    try {
+      const environment = buildTofuEnvironment(
+        "openai",
+        (name) => `${name}-value`,
+      );
+      expect(environment["UNRELATED_PLATFORM_SECRET"]).toBeUndefined();
+    } finally {
+      delete Bun.env["UNRELATED_PLATFORM_SECRET"];
+    }
+  });
+
+  test("derives the AsusWRT provider version from the tracked declaration", async () => {
+    const provider = await Bun.file(
+      new URL("../../src/tofu/asuswrt/providers.tf", import.meta.url),
+    ).text();
+    expect(provider).toMatch(
+      /source\s*=\s*"shepherdjerred\/asuswrt"[\s\S]*?version\s*=\s*"0\.1\.0"/u,
+    );
+  });
+
+  test("requires the Cloudflare token registry for direct OpenTofu runs", async () => {
+    const variables = await Bun.file(
+      new URL("../../src/tofu/cloudflare-tokens/variables.tf", import.meta.url),
+    ).text();
+    expect(variables).not.toContain("default = {}");
+  });
+
+  test("keeps validation lockfiles read-only without requiring an AsusWRT lockfile", () => {
+    expect(validationInitArguments("openai")).toContain("-lockfile=readonly");
+    expect(validationInitArguments("openai")).not.toContain("-upgrade");
+    expect(validationInitArguments("asuswrt")).not.toContain(
+      "-lockfile=readonly",
+    );
+  });
+
+  test("provides the legacy PostHog validation passphrase", () => {
+    expect(STACK_MANIFEST.posthog.validationPassphraseVariable).toBe(
+      "state_passphrase",
+    );
+  });
+});
+
+const PLATFORM_STACKS: readonly PlatformStack[] = [
+  "openai",
+  "anthropic",
+  "anthropic-federation",
+  "google",
+  "discord",
+  "cloudflare-tokens",
+];
+
+describe("committed platform desired state", () => {
+  test.each(PLATFORM_STACKS)("%s matches its schema", async (platform) => {
+    const stackDir = new URL(`../../src/tofu/${platform}/`, import.meta.url)
+      .pathname;
+    await expect(
+      loadPlatformDesiredState(stackDir, platform),
+    ).resolves.toBeDefined();
+  });
+
+  test("rejects undeclared top-level variables", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "cloudflare-tokens",
+        cloudflare_api_tokens: {},
+        unexpected: {},
+      }),
+    );
+    await expect(
+      loadPlatformDesiredState(stackDir, "cloudflare-tokens"),
+    ).rejects.toThrow("Unrecognized key");
+  });
+
+  test("rejects a desired-state file for the wrong platform", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "cloudflare-tokens",
+        cloudflare_api_tokens: {},
+      }),
+    );
+    await expect(loadPlatformDesiredState(stackDir, "openai")).rejects.toThrow(
+      "Desired state for openai declares platform cloudflare-tokens",
+    );
+  });
+
+  test("rejects malformed Discord application metadata", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "discord",
+        discord_bots: {
+          broken: {
+            application_name: "Broken",
+            expected_application_id: "not-a-snowflake",
+            vault_item_id: "item",
+          },
+        },
+      }),
+    );
+    await expect(loadPlatformDesiredState(stackDir, "discord")).rejects.toThrow(
+      "expected_application_id must be numeric",
+    );
+  });
+
+  test("requires a valid 1Password item title for each minted Gemini key", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "google",
+        google_billing_account_id: null,
+        google_quota_project_id: null,
+        google_workloads: {
+          birmel: {
+            project_id: "sjerred-llm-birmel",
+            display_name: "LLM birmel",
+            monthly_budget_usd: 10,
+            ai_studio_spend_cap_usd: 10,
+            gemini_key_revision: 1,
+            gemini_quota_limits: {
+              "gemini-3-pro-image": {
+                requests_per_day: 50,
+                requests_per_minute: 5,
+              },
+            },
+            // CDK8s references the item by this title, so it must be a
+            // title the cluster's item path can carry.
+            onepassword_item_title: "Birmel Gemini Key",
+          },
+        },
+      }),
+    );
+    await expect(loadPlatformDesiredState(stackDir, "google")).rejects.toThrow(
+      "onepassword_item_title",
+    );
+  });
+
+  test("refuses a Gemini spend cap above its budget", async () => {
+    // The budget is the early warning and the AI Studio cap is the stop. A cap
+    // above the budget means the warning arrives after the stop should have.
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "google",
+        google_billing_account_id: null,
+        google_quota_project_id: null,
+        google_workloads: {
+          birmel: {
+            project_id: "sjerred-llm-birmel",
+            display_name: "LLM birmel",
+            monthly_budget_usd: 10,
+            ai_studio_spend_cap_usd: 50,
+            gemini_key_revision: 1,
+            gemini_quota_limits: {
+              "gemini-3-pro-image": {
+                requests_per_day: 50,
+                requests_per_minute: 5,
+              },
+            },
+            onepassword_item_title: "llm-gemini-birmel",
+          },
+        },
+      }),
+    );
+    await expect(loadPlatformDesiredState(stackDir, "google")).rejects.toThrow(
+      "must not exceed monthly_budget_usd",
+    );
+  });
+
+  test("keeps Anthropic token lifetimes inside the projected token's rotation", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "anthropic-federation",
+        anthropic_federation_workspaces: { prod: { name: "prod" } },
+        anthropic_federation_issuer: {
+          name: "cluster",
+          issuer_url: "https://cluster.example",
+          jwks_keys_json: "[]",
+          max_jwt_lifetime_seconds: 3600,
+        },
+        anthropic_federation_workloads: {
+          birmel: {
+            workspace_key: "prod",
+            namespace: "birmel",
+            token_lifetime_seconds: 3600,
+          },
+        },
+      }),
+    );
+    await expect(
+      loadPlatformDesiredState(stackDir, "anthropic-federation"),
+    ).rejects.toThrow();
+  });
+
+  test("collects handoffs nested in resource objects", () => {
+    expect(
+      collectOnePasswordTargets({
+        direct: {
+          vault_item_id: "direct-item",
+          vault_field: "direct-field",
+          name: "resource metadata",
+        },
+        nested: [
+          {
+            vault_item_id: "nested-item",
+            vault_field: "nested-field",
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        vault_item_id: "direct-item",
+        vault_field: "direct-field",
+      },
+      {
+        vault_item_id: "nested-item",
+        vault_field: "nested-field",
+      },
+    ]);
+  });
+
+  test("collects Discord item-only handoffs", () => {
+    expect(
+      collectOnePasswordTargets({
+        discord_bots: {
+          birmel: {
+            application_name: "Birmel",
+            expected_application_id: "123",
+            vault_item_id: "birmel-item",
+          },
+        },
+      }),
+    ).toEqual([{ vault_item_id: "birmel-item" }]);
+  });
+});
+
+describe("desired-state variables", () => {
+  test("passes strings literally and encodes every other type", () => {
+    // A string variable reads its environment value verbatim, so encoding it
+    // would deliver the quotes too and fail the variable's own validation.
+    expect(desiredStateVariableValue("012345-6789AB-CDEF01")).toBe(
+      "012345-6789AB-CDEF01",
+    );
+    expect(desiredStateVariableValue(null)).toBe("null");
+    expect(desiredStateVariableValue({ birmel: { budget: 10 } })).toBe(
+      '{"birmel":{"budget":10}}',
+    );
+  });
+});

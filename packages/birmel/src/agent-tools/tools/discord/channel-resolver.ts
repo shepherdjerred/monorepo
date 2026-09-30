@@ -4,6 +4,7 @@ import type {
   SendableChannels,
   TextBasedChannel,
 } from "discord.js";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 
 /**
  * Resolution result for a Discord channel lookup.
@@ -59,10 +60,9 @@ export function narrowToSendable(
   if (channel == null) {
     return { kind: "not-found" };
   }
-  if (channel.isSendable()) {
-    return { kind: "ok", channel };
-  }
-  return { kind: "wrong-type", actualType: describeChannelType(channel) };
+  return channel.isSendable()
+    ? { kind: "ok", channel }
+    : { kind: "wrong-type", actualType: describeChannelType(channel) };
 }
 
 /**
@@ -77,10 +77,9 @@ export function narrowToTextBased(
   if (channel == null) {
     return { kind: "not-found" };
   }
-  if (channel.isTextBased()) {
-    return { kind: "ok", channel };
-  }
-  return { kind: "wrong-type", actualType: describeChannelType(channel) };
+  return channel.isTextBased()
+    ? { kind: "ok", channel }
+    : { kind: "wrong-type", actualType: describeChannelType(channel) };
 }
 
 /**
@@ -105,6 +104,46 @@ export async function resolveTextBasedChannel(
   channelId: string,
 ): Promise<ChannelResolution<TextBasedChannel>> {
   return narrowToTextBased(await client.channels.fetch(channelId));
+}
+
+/** Reject Discord channel IDs that escape the guild which admitted the turn. */
+export async function validateChannelInGuild(
+  client: Client,
+  channelId: string,
+  guildId: string,
+): Promise<string | null> {
+  const channel = await client.channels.fetch(channelId);
+  if (channel == null) {
+    return `Channel ${channelId} not found (deleted or no access)`;
+  }
+  return !("guildId" in channel) || channel.guildId !== guildId
+    ? `Channel ${channelId} is not in this server`
+    : null;
+}
+
+/** Validate every present channel ID against the guild that admitted the turn. */
+export async function validateChannelsInRequestGuild(
+  client: Client,
+  channelIds: readonly (string | null | undefined)[],
+): Promise<string | null> {
+  const request = getRequestContext();
+  if (request == null) {
+    throw new Error("Discord channel operations require request context");
+  }
+  for (const channelId of channelIds) {
+    if (channelId == null) {
+      continue;
+    }
+    const error = await validateChannelInGuild(
+      client,
+      channelId,
+      request.guildId,
+    );
+    if (error != null) {
+      return error;
+    }
+  }
+  return null;
 }
 
 /**

@@ -38,6 +38,10 @@ export const QUALITY_RATCHET_EXCLUDED_DIRECTORIES = [
   "archive",
   "discord-video-stream",
   "target",
+  // Storybook's bundled output. Gitignored, but a local build leaves it in the
+  // working tree, and its vendored runtime carries dozens of eslint-disable
+  // comments that are not this repository's suppressions.
+  "storybook-static",
 ];
 
 const RULES: GrepRule[] = [
@@ -45,7 +49,7 @@ const RULES: GrepRule[] = [
     key: "eslint-disable",
     pattern: String.raw`^\s*(//|/\*)\s*eslint-disable`,
     searchPaths: ["packages/"],
-    includes: ["*.ts", "*.tsx"],
+    includes: ["*.ts", "*.tsx", "*.js", "*.jsx", "*.astro"],
     excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: ["/generated/"],
   },
@@ -59,7 +63,7 @@ const RULES: GrepRule[] = [
   },
   {
     key: "rust-allow",
-    pattern: String.raw`#\[allow\(`,
+    pattern: String.raw`#!?\[allow\(`,
     searchPaths: ["packages/"],
     includes: ["*.rs"],
     excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,

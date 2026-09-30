@@ -58,10 +58,9 @@ function computeNotifyDecision(
   if (existing.notificationStage === 1 && sinceLast >= WEEK_MS) {
     return "week";
   }
-  if (existing.notificationStage === 2 && sinceLast >= MONTH_MS) {
-    return "month";
-  }
-  return "none";
+  return existing.notificationStage === 2 && sinceLast >= MONTH_MS
+    ? "month"
+    : "none";
 }
 
 /**

@@ -6,14 +6,14 @@ import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
   classifyLlmProviderIssue,
+  providerForError,
   recordProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
-import {
-  isFeatureHardDisabled,
-  type FlagName,
-} from "#src/configuration/flags.ts";
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
-import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
+import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
+import { createScoutV2BackgroundActivities } from "#src/temporal/v2/background-activities.ts";
+import { createScoutV2LakeActivities } from "#src/temporal/v2/lake-activities.ts";
+import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
@@ -50,7 +50,7 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
     if (quotaFailure !== null) {
       recordProviderIssue({
         app: "scout-for-lol",
-        provider: "openrouter",
+        provider: providerForError(error),
         kind: "quota",
         source: "betting_parlay",
       });
@@ -65,84 +65,6 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
   });
 }
 
-export function hardDisabledFeatureForTemporalWork(
-  kind: string,
-): FlagName | null {
-  switch (kind) {
-    case "tournament-lobbies":
-      return "tournament_lobbies_enabled";
-    case "custom-nights-expiry":
-      return "custom_nights_enabled";
-    case "bucks-reconciliation":
-    case "weekly-bucks-leaderboard":
-      return "betting_enabled";
-    default:
-      return null;
-  }
-}
-
-function temporalWorkHardDisabled(kind: string): boolean {
-  const feature = hardDisabledFeatureForTemporalWork(kind);
-  return feature !== null && isFeatureHardDisabled(feature);
-}
-
-function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
-  return {
-    probeQueue,
-    pollRealtime: async (input) => {
-      if (temporalWorkHardDisabled(input.kind)) return;
-      await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
-        if (input.kind === "prematch") {
-          const { checkPreMatch } =
-            await import("#src/league/tasks/prematch/index.ts");
-          await checkPreMatch();
-        } else {
-          const { checkTournamentLobbies } =
-            await import("#src/league/tournament/poller.ts");
-          await checkTournamentLobbies();
-        }
-      });
-      Context.current().heartbeat({ kind: input.kind, phase: "complete" });
-    },
-    discoverPostMatchIds: async () =>
-      await heartbeatWhile(
-        { phase: "discovering-postmatch-intents" },
-        async () => {
-          const { discoverPostMatchIntents } =
-            await import("#src/league/tasks/postmatch/match-history-polling.ts");
-          return await discoverPostMatchIntents();
-        },
-      ),
-    runPostMatchMaintenance: async (input) => {
-      await heartbeatWhile({ phase: "postmatch-maintenance" }, async () => {
-        const { runPostMatchMaintenance } =
-          await import("#src/league/tasks/postmatch/index.ts");
-        await runPostMatchMaintenance({
-          settleDareV2Deadlines: input.settleDareV2Deadlines,
-          dareEvidenceWatermark:
-            input.evidenceWatermark === undefined
-              ? undefined
-              : new Date(input.evidenceWatermark),
-        });
-      });
-      Context.current().heartbeat({ phase: "complete" });
-    },
-    ingestMatch: async (input) => {
-      await heartbeatWhile(
-        { matchId: input.matchId, phase: "ingesting" },
-        async () => {
-          const { ingestDiscoveredMatch } =
-            await import("#src/league/tasks/postmatch/temporal-match-ingestion.ts");
-          await ingestDiscoveredMatch(input);
-        },
-      );
-      Context.current().heartbeat({
-        matchId: input.matchId,
-        phase: "complete",
-      });
-    },
-  };
-}
 function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive"] {
   return {
     probeQueue,
@@ -160,6 +82,7 @@ function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive
 }
 function createBackgroundActivities(): ScoutTemporalActivityGroups["background"] {
   return {
+    ...createScoutV2BackgroundActivities(),
     probeQueue,
     fetchInitialHistoryPage: async (input) => {
       return await heartbeatWhile(
@@ -188,6 +111,33 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             }
             throw error;
           }
+        },
+      );
+    },
+    importExploreHistory: async (input) => {
+      return await heartbeatWhile(
+        {
+          puuid: input.puuid,
+          requestedMatches: input.requestedMatches,
+          phase: "importing-explore-history",
+        },
+        async () => {
+          const { importExploreRankedHistory } =
+            await import("#src/league/explore-history/import.ts");
+          return await importExploreRankedHistory(input);
+        },
+      );
+    },
+    importExploreTimelines: async (input) => {
+      return await heartbeatWhile(
+        {
+          matchIds: input.matchIds,
+          phase: "importing-explore-timelines",
+        },
+        async () => {
+          const { importExploreTimelines } =
+            await import("#src/league/explore-history/timelines.ts");
+          return await importExploreTimelines(input);
         },
       );
     },
@@ -220,13 +170,17 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             take: 100,
           });
           const parsedDetachedWorks = detachedWorks.map((work) => {
-            if (work.kind !== "parlay-generation") {
+            if (
+              work.kind !== "parlay-generation" &&
+              work.kind !== "champion-mastery-refresh"
+            ) {
               throw ApplicationFailure.nonRetryable(
                 `Unknown Scout Temporal work kind ${work.kind}`,
                 "InvalidTemporalWorkKind",
               );
             }
-            const kind: "parlay-generation" = work.kind;
+            const kind: "parlay-generation" | "champion-mastery-refresh" =
+              work.kind;
             return { kind, workId: work.id };
           });
           const parsedInteractiveRuns = interactiveRuns.map((run) => {
@@ -278,7 +232,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "weekly-bucks-leaderboard": {
             const { runWeeklyBucksLeaderboard } =
-              await import("#src/betting/weekly/weekly-leaderboard.ts");
+              await import("#src/betting/leaderboard/weekly-leaderboard.ts");
             await runWeeklyBucksLeaderboard();
             break;
           }
@@ -320,8 +274,14 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "custom-nights-expiry": {
             const { expireCustomNights } =
-              await import("#src/customs/expiry.ts");
+              await import("#src/customs/game/expiry.ts");
             await expireCustomNights();
+            break;
+          }
+          case "notification-intent-expiry": {
+            const { runNotificationIntentExpiry } =
+              await import("#src/durable/match/intent-expiry.ts");
+            await runNotificationIntentExpiry();
             break;
           }
           case "progression-outbox": {
@@ -341,6 +301,24 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             ]);
             break;
           }
+          case "progression-reconciliation": {
+            const { reconcileCompetitiveProgression } =
+              await import("#src/progression/reconcile.ts");
+            await reconcileCompetitiveProgression(input.stage);
+            break;
+          }
+          case "mvp-tally-refresh": {
+            const { reconcilePendingMvpTallyRefreshes } =
+              await import("#src/mvp-votes/tally-reconciliation.ts");
+            await reconcilePendingMvpTallyRefreshes();
+            break;
+          }
+          case "clash-snapshot": {
+            const { runClashSnapshot } =
+              await import("#src/league/clash/snapshot.ts");
+            await runClashSnapshot();
+            break;
+          }
           case "prediction-ingest":
           case "legacy-backfill":
             unavailable(input.kind);
@@ -348,7 +326,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },
-    invokeScoutWeeklyParlayAction: invokeWeeklyParlayAction,
     syncScoutBryanBucksAnalytics: async () => {
       const result = await heartbeatWhile(
         { kind: "bryan-bucks-analytics", phase: "running" },
@@ -392,7 +369,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             );
           }
           const { drainReportScheduleOutbox } =
-            await import("#src/reports/schedule-reconciler.ts");
+            await import("#src/reports/schedule/schedule-reconciler.ts");
           return await drainReportScheduleOutbox(
             supervisor.client(),
             input.stage,
@@ -430,6 +407,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
 }
 function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
   return {
+    ...createScoutV2LakeActivities(),
     probeQueue,
     runDetachedLakeWork: runDetachedWork,
     runReportLakeJob: async (input) => {

@@ -21,16 +21,6 @@ export type BucksLifecycleTransition =
   | "bucks.parlay_bet.placed"
   | "bucks.parlay_bet.cancelled"
   | "bucks.parlay_bet.settled"
-  | "bucks.weekly_parlay.published"
-  | "bucks.weekly_parlay.opened"
-  | "bucks.weekly_parlay.started"
-  | "bucks.weekly_parlay.settled"
-  | "bucks.weekly_parlay.voided"
-  | "bucks.weekly_parlay_bet.placed"
-  | "bucks.weekly_parlay_bet.topped_up"
-  | "bucks.weekly_parlay_bet.cancelled"
-  | "bucks.weekly_parlay_bet.settled"
-  | "bucks.weekly_parlay.contribution_recorded"
   | "bucks.dare.proposed"
   | "bucks.dare.confirmed"
   | "bucks.dare.contributed"
@@ -60,7 +50,6 @@ type BucksPendingStake = {
 export function aggregateBucksPendingStakes(
   pendingOutcome: readonly BucksPendingOutcome[],
   pendingParlay: readonly BucksPendingStake[],
-  pendingWeekly: readonly BucksPendingStake[],
   pendingDare: readonly BucksPendingStake[] = [],
 ): Map<string, number> {
   const pendingByServer = new Map<string, number>();
@@ -72,8 +61,8 @@ export function aggregateBucksPendingStakes(
     );
   }
   // A dare's contributions are money at risk until the dare resolves — the
-  // same "pending stake" the outcome/parlay/weekly sources measure.
-  for (const bet of [...pendingParlay, ...pendingWeekly, ...pendingDare]) {
+  // same "pending stake" the outcome and parlay sources measure.
+  for (const bet of [...pendingParlay, ...pendingDare]) {
     addStake(pendingByServer, bet.bucksAccount.serverId, bet.stake);
   }
   return pendingByServer;

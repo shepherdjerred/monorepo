@@ -11,6 +11,7 @@ import {
   ARGOCD_SYNC_WAVE_ANNOTATION,
   APPLICATION_LIFECYCLE_ANNOTATION,
   APPLICATION_RESOURCES_FINALIZER,
+  APPLICATION_SYNC_WAVES,
   MANAGED_APPLICATION_LABEL,
   applyApplicationReleasePolicy,
 } from "./application-release-policy.ts";
@@ -89,8 +90,11 @@ describe("applyApplicationReleasePolicy", () => {
     expect(
       rootManifest.metadata.labels?.[MANAGED_APPLICATION_LABEL],
     ).toBeUndefined();
+    // The root Application deliberately shares the structural wave: the final
+    // full-source release operation proves this apply and its prunes without
+    // waiting on later-wave child health.
     expect(rootManifest.metadata.annotations[ARGOCD_SYNC_WAVE_ANNOTATION]).toBe(
-      "0",
+      APPLICATION_SYNC_WAVES.structural,
     );
     expect(rootManifest.spec.syncPolicy?.automated).toEqual({
       enabled: false,
@@ -107,7 +111,7 @@ describe("applyApplicationReleasePolicy", () => {
       ["prometheus", "-1"],
       ["temporal", "0"],
       ["kueue", "1"],
-      ["buildkite", "3"],
+      ["woodpecker", "3"],
       ["worker", "4"],
     ]);
     const applications = [...expectedWaves.keys()].map((name) =>

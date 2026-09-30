@@ -1,18 +1,36 @@
 import { describe, expect, test } from "vitest";
 import {
+  findGeneratedStep,
+  readGeneratedSteps,
+} from "../lib/ci/generated-steps.ts";
+import {
   DEFAULT_REQUEST_GRACE_SECONDS,
   DEFAULT_REQUEST_RETRY_SECONDS,
   requestGraceSecondsForProvider,
   reviewRequestScheduleBounds,
   SLOWEST_COMPLETED_REVIEW_SECONDS,
   validateReviewRequestSchedule,
-} from "../lib/review-gate-policy.ts";
+} from "../lib/review/review-gate-policy.ts";
 import {
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
+  resolveReviewGateProviders,
 } from "./wait-for-review.ts";
-import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
+import {
+  confirmPass,
+  PASS_CONFIRMATION_TICKS,
+  verifyPassBeforeAccepting,
+} from "../lib/review/review-gate-poll.ts";
+import {
+  type BlockingPolicy,
+  codexProvider,
+  qodoProvider,
+  REVIEW_GATE_BLOCKED_EXIT_CODE,
+  type ReviewThread,
+} from "@shepherdjerred/code-review";
+import type { ReviewStateResult } from "@shepherdjerred/code-review/github";
+import type { ProviderObservation } from "../lib/review/review-gate-observe.ts";
 
 describe("resolveReviewGateProvider", () => {
   test("defaults direct invocations to Codex", () => {
@@ -36,6 +54,63 @@ describe("resolveReviewGateProvider", () => {
     expect(() => resolveReviewGateProvider("unknown")).toThrow(
       "CI review gate requires Codex",
     );
+  });
+});
+
+function withReviewEnv(
+  providers: string | undefined,
+  provider: string | undefined,
+  fn: () => void,
+): void {
+  const savedProviders = Bun.env["REVIEW_PROVIDERS"];
+  const savedProvider = Bun.env["REVIEW_PROVIDER"];
+  if (providers === undefined) delete Bun.env["REVIEW_PROVIDERS"];
+  else Bun.env["REVIEW_PROVIDERS"] = providers;
+  if (provider === undefined) delete Bun.env["REVIEW_PROVIDER"];
+  else Bun.env["REVIEW_PROVIDER"] = provider;
+  try {
+    fn();
+  } finally {
+    if (savedProviders === undefined) delete Bun.env["REVIEW_PROVIDERS"];
+    else Bun.env["REVIEW_PROVIDERS"] = savedProviders;
+    if (savedProvider === undefined) delete Bun.env["REVIEW_PROVIDER"];
+    else Bun.env["REVIEW_PROVIDER"] = savedProvider;
+  }
+}
+
+function gateProviderIds(): string[] {
+  return resolveReviewGateProviders().map((provider) => provider.id);
+}
+
+describe("resolveReviewGateProviders", () => {
+  test("defaults to the required provider with no configuration", () => {
+    withReviewEnv(undefined, undefined, () => {
+      expect(gateProviderIds()).toEqual(["codex"]);
+    });
+  });
+
+  test("keeps the legacy singular contract", () => {
+    withReviewEnv(undefined, "codex", () => {
+      expect(gateProviderIds()).toEqual(["codex"]);
+    });
+    withReviewEnv(undefined, "qodo", () => {
+      expect(() => gateProviderIds()).toThrow("CI review gate requires Codex");
+    });
+  });
+
+  test("accepts a comma list with normalization and dedupe", () => {
+    withReviewEnv(" codex , Qodo,coderabbit,codex,", undefined, () => {
+      expect(gateProviderIds()).toEqual(["codex", "qodo", "coderabbit"]);
+    });
+  });
+
+  test("fails loudly on unknown or empty provider lists", () => {
+    withReviewEnv("codex,unknown", undefined, () => {
+      expect(() => gateProviderIds()).toThrow("Unknown review provider");
+    });
+    withReviewEnv(" , ", undefined, () => {
+      expect(() => gateProviderIds()).toThrow("at least one provider");
+    });
   });
 });
 
@@ -120,28 +195,25 @@ export function reviewGateStepBlockText(
  * How long the step spends on `toolchain.sh` and the filtered install before
  * wait-for-review.ts starts counting. Nothing bounds that preamble — a cold or
  * stale image pays for mise bootstrap and network downloads — so the margin is
- * deliberately generous. Getting it wrong reinstates the anonymous Buildkite
+ * deliberately generous. Getting it wrong reinstates the anonymous step-timeout
  * kill this whole change exists to prevent.
  */
 const PREAMBLE_MARGIN_SECONDS = 20 * 60;
 
-// Two timeouts govern this gate and only one of them explains itself. If
-// Buildkite's is the smaller, the job dies with an anonymous step timeout and
-// the operator cannot tell a slow provider from a broken one, so the ordering
-// is part of the gate's contract rather than a coincidence of two constants.
+// Two timeouts govern this gate and only one of them explains itself. If the
+// STEP's is the smaller, the job dies with an anonymous step timeout and the
+// operator cannot tell a slow provider from a broken one, so the ordering is
+// part of the gate's contract rather than a coincidence of two constants.
 describe("review gate timeout budget", () => {
-  test("expires before the Buildkite step that runs it", async () => {
-    // Resolved from this file: the suite runs with scripts/ as the cwd.
-    const pipeline = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/pipeline.yml`,
-    ).text();
-    for (const stepKey of ["codex-review-gate"]) {
-      expect(
-        reviewGateStepTimeoutSeconds(pipeline, stepKey),
-      ).toBeGreaterThanOrEqual(
-        DEFAULT_TIMEOUT_SECONDS + PREAMBLE_MARGIN_SECONDS,
-      );
-    }
+  test("expires before the CI step that runs it", async () => {
+    const steps = await readGeneratedSteps(
+      new URL("../..", import.meta.url).pathname,
+    );
+    const gate = findGeneratedStep(steps, "codex-review-gate");
+    expect(gate).toBeDefined();
+    expect((gate?.timeoutMinutes ?? 0) * 60).toBeGreaterThanOrEqual(
+      DEFAULT_TIMEOUT_SECONDS + PREAMBLE_MARGIN_SECONDS,
+    );
   });
 
   test("reads review-gate's own timeout, not a later step's", () => {
@@ -243,39 +315,39 @@ describe("review gate timeout budget", () => {
 // parser, and no change to that PR could have cleared it.
 describe("review gate source", () => {
   test("the required Codex gate uses the main-sourced wrapper", async () => {
-    const pipeline = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/pipeline.yml`,
-    ).text();
-    for (const [stepKey, provider] of [
-      ["codex-review-gate", "codex"],
-    ] as const) {
-      const command = reviewGateStepCommand(pipeline, stepKey);
-      expect(command).not.toContain(
-        "bun --no-install scripts/review/wait-for-review.ts",
-      );
-      expect(command.some((line) => line.includes("review-gate.sh"))).toBe(
-        true,
-      );
-      expect(reviewGateStepBlockText(pipeline, stepKey)).toContain(
-        `REVIEW_PROVIDER: ${provider}`,
-      );
-    }
+    const steps = await readGeneratedSteps(
+      new URL("../..", import.meta.url).pathname,
+    );
+    const gate = findGeneratedStep(steps, "codex-review-gate");
+    expect(gate).toBeDefined();
+    const commands = gate?.commands ?? [];
+    // The wrapper is what pins the gate to main's copy of the script; calling
+    // wait-for-review.ts directly would run the PR's own version of the gate
+    // that is supposed to be judging it.
+    expect(commands).not.toContain(
+      "bun --no-install scripts/review/wait-for-review.ts",
+    );
+    expect(commands.some((line) => line.includes("review-gate.sh"))).toBe(true);
   });
 
-  test("the required gate remains retryable", async () => {
-    const pipeline = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/pipeline.yml`,
-    ).text();
-    for (const stepKey of ["codex-review-gate"]) {
-      expect(reviewGateStepBlockText(pipeline, stepKey)).not.toContain(
-        "cancel_on_build_failing",
-      );
-    }
+  /**
+   * Buildkite needed an explicit `cancel_on_build_failing: false` to stop a
+   * failing sibling step from killing the gate mid-review. Woodpecker runs
+   * each workflow independently, so the property now follows from the gate
+   * depending on nothing: no other lane's failure can reach it.
+   */
+  test("the required gate cannot be cancelled by another lane failing", async () => {
+    const steps = await readGeneratedSteps(
+      new URL("../..", import.meta.url).pathname,
+    );
+    const gate = findGeneratedStep(steps, "codex-review-gate");
+    expect(gate).toBeDefined();
+    expect(gate?.dependsOn ?? []).toEqual([]);
   });
 
   test("the gate script checks out a ref and runs the gate from it", async () => {
     const script = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/scripts/review-gate.sh`,
+      `${import.meta.dir}/../../ci/scripts/review-gate.sh`,
     ).text();
     expect(script).toContain("git worktree add");
     expect(script).toContain("REVIEW_GATE_REF:-main");
@@ -283,5 +355,164 @@ describe("review gate source", () => {
     // The commit actually used has to reach the signal event, or a count still
     // cannot be attributed to the parser that produced it.
     expect(script).toContain("REVIEW_GATE_PARSER_COMMIT");
+    // Only the blocked-by-quota status passes, with a warning; Woodpecker has
+    // no per-status soft-fail, so the script is the only place it can live.
+    expect(script).toContain(
+      `QUOTA_EXIT_STATUS=${String(REVIEW_GATE_BLOCKED_EXIT_CODE)}`,
+    );
+    const quotaBranch = script.slice(
+      script.indexOf('if [[ "$GATE_STATUS" -eq "$QUOTA_EXIT_STATUS" ]]; then'),
+    );
+    expect(quotaBranch).toMatch(
+      /out of quota[\s\S]*exit 0\nfi\nexit "\$GATE_STATUS"/u,
+    );
+  });
+});
+
+describe("confirmPass", () => {
+  test("accepts a pass only on consecutive passing ticks", () => {
+    expect(PASS_CONFIRMATION_TICKS).toBe(2);
+    const first = confirmPass(true, 0);
+    expect(first).toEqual({ streak: 1, accepted: false });
+    expect(confirmPass(true, first.streak)).toEqual({
+      streak: 2,
+      accepted: true,
+    });
+  });
+
+  test("a waiting tick resets the streak", () => {
+    const first = confirmPass(true, 0);
+    const reset = confirmPass(false, first.streak);
+    expect(reset).toEqual({ streak: 0, accepted: false });
+    expect(confirmPass(true, reset.streak).accepted).toBe(false);
+  });
+});
+
+describe("verifyPassBeforeAccepting", () => {
+  const policy: BlockingPolicy = {
+    alwaysBlockingPriority: 1,
+    maxBlockingPriority: 3,
+    lowSeverity: "first-review-or-accompanied",
+  };
+  const config = {
+    repo: "shepherdjerred/monorepo",
+    number: 3189,
+    head: "abc123",
+    token: "token",
+    policy,
+  };
+  const reviewed: ReviewStateResult = {
+    state: "reviewed",
+    completionSignal: "review-at-head",
+    reviewedCommit: "abc123",
+    reviewedAt: "2026-09-27T04:00:00Z",
+    staleReaction: false,
+    skipReason: null,
+    blockedReason: null,
+  };
+  function observed(): ProviderObservation[] {
+    return [
+      {
+        provider: codexProvider,
+        skipped: false,
+        skipReason: null,
+        state: reviewed,
+        threads: [],
+        headRefOid: "abc123",
+        headPushedAt: null,
+        nextAttempt: 1,
+        decision: null,
+      },
+    ];
+  }
+
+  test("accepts when the re-fetch is still clean", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map([[codexProvider.id, []]]),
+        resolveCompletion: async () => reviewed,
+      }),
+    ).resolves.toBe(true);
+  });
+
+  test("a P0 posted after the tick's fetch fails fast", async () => {
+    const veto: ReviewThread = {
+      authorLogin: "chatgpt-codex-connector",
+      isResolved: false,
+      isOutdated: false,
+      path: "src/example.ts",
+      line: 1,
+      url: null,
+      priority: 0,
+      title: "Critical finding.",
+      threadId: "thread-1",
+      commentId: null,
+      raisedInReview: null,
+    };
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map([[codexProvider.id, [veto]]]),
+        resolveCompletion: async () => reviewed,
+      }),
+    ).rejects.toThrow(/veto the gate/);
+  });
+
+  test("fails closed with nothing to re-check", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: [],
+        fetchShared: async () => new Map(),
+      }),
+    ).resolves.toBe(false);
+  });
+
+  test("fails closed when the shared snapshot omits a provider", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map(),
+        resolveCompletion: async () => reviewed,
+      }),
+    ).resolves.toBe(false);
+  });
+
+  test("resolves completion before fetching findings", async () => {
+    // A P0 posted between the findings fetch and the completion lookup
+    // must not slip past terminal verification: completion is resolved
+    // first, then the shared findings snapshot is fetched.
+    const order: string[] = [];
+    await verifyPassBeforeAccepting({
+      ...config,
+      observed: observed(),
+      fetchShared: async () => {
+        order.push("fetch");
+        return new Map([[codexProvider.id, []]]);
+      },
+      resolveCompletion: async () => {
+        order.push("resolve");
+        return reviewed;
+      },
+    });
+    expect(order).toEqual(["resolve", "fetch"]);
+  });
+
+  test("a freshly unresolved provider keeps polling instead of accepting", async () => {
+    // The confirming tick saw reviewed; a dismissal afterwards must not be
+    // accepted — the fresh state says reviewing, so verification declines
+    // and the loop keeps polling instead of returning success.
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map([[codexProvider.id, []]]),
+        resolveCompletion: async () => ({ ...reviewed, state: "reviewing" }),
+      }),
+    ).resolves.toBe(false);
   });
 });

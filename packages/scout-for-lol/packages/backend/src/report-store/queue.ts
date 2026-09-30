@@ -10,10 +10,9 @@ export function competitionQueuesToStoredQueues(
   queues: readonly CompetitionQueueType[],
   gameVariant: CompetitionGameVariant,
 ): QueueType[] {
-  if (queues.includes("ALL")) {
-    return QueueTypeSchema.options.filter((queue) =>
-      queueMatchesGameVariant(queue, gameVariant),
-    );
-  }
-  return queues.map((queue) => QueueTypeSchema.parse(queue));
+  return queues.includes("ALL")
+    ? QueueTypeSchema.options.filter((queue) =>
+        queueMatchesGameVariant(queue, gameVariant),
+      )
+    : queues.map((queue) => QueueTypeSchema.parse(queue));
 }

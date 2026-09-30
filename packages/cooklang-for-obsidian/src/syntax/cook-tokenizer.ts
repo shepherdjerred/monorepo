@@ -86,9 +86,7 @@ function frontmatterToken(stream: CookStream, state: CookState): string | null {
   if (!state.inFrontmatter) return null;
 
   const metadataKey = frontmatterKeyToken(stream, state);
-  if (metadataKey !== null) return metadataKey;
-
-  return frontmatterValueToken(stream, state);
+  return metadataKey ?? frontmatterValueToken(stream, state);
 }
 
 function cooklangToken(stream: CookStream, state: CookState): string | null {

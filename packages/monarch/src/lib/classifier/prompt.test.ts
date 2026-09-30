@@ -1,9 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  buildCategoryList,
-  buildWeekPrompt,
-  buildAmazonBatchPrompt,
-} from "./prompt.ts";
+import { buildCategoryList, buildWeekPrompt } from "./prompt.ts";
 import type { MonarchCategory } from "../monarch/types.ts";
 import type { WeekWindow } from "../monarch/weeks.ts";
 import type { ResolvedTransaction } from "../enrichment.ts";
@@ -254,44 +250,5 @@ describe("buildWeekPrompt", () => {
     expect(prompt).toContain("transactionIndex");
     expect(prompt).toContain("categoryId");
     expect(prompt).toContain("confidence");
-  });
-});
-
-describe("buildAmazonBatchPrompt", () => {
-  test("includes item details with prices", () => {
-    const orders = [
-      {
-        orderIndex: 0,
-        items: [
-          { title: "Anker USB-C Hub", price: 29.99 },
-          { title: "Dog Food", price: 44.99 },
-        ],
-      },
-    ];
-
-    const prompt = buildAmazonBatchPrompt(mockCategories, orders);
-    expect(prompt).toContain("Anker USB-C Hub");
-    expect(prompt).toContain("$29.99");
-    expect(prompt).toContain("Dog Food");
-    expect(prompt).toContain("$44.99");
-    expect(prompt).toContain("Order #0");
-  });
-
-  test("includes needsSplit instruction", () => {
-    const prompt = buildAmazonBatchPrompt(mockCategories, []);
-    expect(prompt).toContain("needsSplit");
-  });
-
-  test("includes multiple orders", () => {
-    const orders = [
-      { orderIndex: 0, items: [{ title: "Item A", price: 10 }] },
-      { orderIndex: 1, items: [{ title: "Item B", price: 20 }] },
-    ];
-
-    const prompt = buildAmazonBatchPrompt(mockCategories, orders);
-    expect(prompt).toContain("Order #0");
-    expect(prompt).toContain("Order #1");
-    expect(prompt).toContain("Item A");
-    expect(prompt).toContain("Item B");
   });
 });

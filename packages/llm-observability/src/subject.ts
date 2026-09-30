@@ -90,8 +90,9 @@ export function setLlmSubject(ctx: Context, subject: LlmSubject): Context {
  */
 export function activeLlmSubject(): LlmSubject | undefined {
   const value = context.active().getValue(SUBJECT_CONTEXT_KEY);
-  if (value === undefined) return undefined;
-  return LlmSubjectContextValueSchema.parse(value);
+  return value === undefined
+    ? undefined
+    : LlmSubjectContextValueSchema.parse(value);
 }
 
 /**
@@ -107,8 +108,8 @@ export function activeLlmSubjectAttributes(): Record<string, string> {
  * Open an active span carrying the subject and run `fn` inside it.
  *
  * The span must be *active*, not merely created: `@shepherdjerred/llm-runtime`
- * reads `trace.getSpan(context.active())` when it builds a call's attribution
- * headers, so a call made outside an active span reaches OpenRouter with no
+ * reads `trace.getSpan(context.active())` when it builds a call's context
+ * headers, so a call made outside an active span reaches the provider with no
  * trace id and its cost log cannot be joined back to the trace that names the
  * subject. Wrapping the call site is what makes both work.
  */

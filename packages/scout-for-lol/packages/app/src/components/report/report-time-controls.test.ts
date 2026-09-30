@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { applyReportTimeSpec } from "@scout-for-lol/data/model/scoutql/report-time-spec.ts";
+import { applyReportTimeSpec } from "@scout-for-lol/data/model/scoutql/editor/report-time-spec.ts";
 import {
   compareAvailable,
   parseBucketChoice,

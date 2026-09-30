@@ -100,27 +100,6 @@ const SUBJECT_CASES = [
     expected: "Inspect production could not finish",
   },
   {
-    reportType: "ci-io-impact",
-    title: "CI I/O optimization impact",
-    execution: "complete",
-    verdict: "clear",
-    expected: "CI I/O report is ready",
-  },
-  {
-    reportType: "ci-io-impact",
-    title: "CI I/O optimization impact",
-    execution: "complete",
-    verdict: "pending",
-    expected: "CI I/O report is still pending",
-  },
-  {
-    reportType: "ci-io-impact",
-    title: "CI I/O optimization impact",
-    execution: "complete",
-    verdict: "attention",
-    expected: "Action needed: CI I/O target missed",
-  },
-  {
     reportType: "dependency-summary",
     title: "Weekly dependency summary",
     execution: "complete",
@@ -203,27 +182,6 @@ const SUBJECT_CASES = [
     execution: "failed",
     verdict: "inconclusive",
     expected: "Vulnerability scan failed",
-  },
-  {
-    reportType: "protobufjs-v8-watch",
-    title: "Temporal protobufjs v8 compatibility",
-    execution: "complete",
-    verdict: "pending",
-    expected: "Temporal still uses protobufjs v7",
-  },
-  {
-    reportType: "protobufjs-v8-watch",
-    title: "Temporal protobufjs v8 compatibility",
-    execution: "complete",
-    verdict: "attention",
-    expected: "Temporal can move to protobufjs v8",
-  },
-  {
-    reportType: "protobufjs-v8-watch",
-    title: "Temporal protobufjs v8 compatibility",
-    execution: "failed",
-    verdict: "inconclusive",
-    expected: "protobufjs compatibility check failed",
   },
   {
     reportType: "scout-data-dragon",
@@ -345,7 +303,7 @@ describe("ReportEnvelopeV1", () => {
         }),
       ).toBe(subjectCase.expected);
     }
-    expect(TAILORED_REPORT_TYPES).toHaveLength(12);
+    expect(TAILORED_REPORT_TYPES).toHaveLength(10);
     expect(TAILORED_REPORT_TYPES.every(hasTailoredReportPresentation)).toBe(
       true,
     );
@@ -366,17 +324,10 @@ describe("ReportEnvelopeV1", () => {
     expect(
       presentReport({
         ...validReport(),
-        reportType: "ci-io-impact",
+        reportType: "homelab-audit",
         verdict: "pending",
       }).statusLabel,
     ).toBe("Check incomplete");
-    expect(
-      presentReport({
-        ...validReport(),
-        reportType: "protobufjs-v8-watch",
-        verdict: "pending",
-      }).statusLabel,
-    ).toBe("No action needed");
     expect(
       presentReport({
         ...validReport(),
@@ -388,14 +339,11 @@ describe("ReportEnvelopeV1", () => {
   test("includes retirement recommendations when selecting review tone", () => {
     const presentation = presentReport({
       ...validReport(),
-      reportType: "ci-io-impact",
-      retirementRecommendation: "Retire the temporary CI I/O comparison.",
+      retirementRecommendation: "Retire the temporary comparison.",
     });
 
     expect(presentation.statusLabel).toBe("Review needed");
-    expect(presentation.actions).toEqual([
-      "Retire the temporary CI I/O comparison.",
-    ]);
+    expect(presentation.actions).toEqual(["Retire the temporary comparison."]);
   });
 
   test("rejects a clean claim without complete required evidence", () => {

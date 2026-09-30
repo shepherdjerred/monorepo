@@ -9,6 +9,7 @@
     "patches/**",
     "scripts/ci/ci-reporting.ts",
     "scripts/ci/coverage-cobertura.ts",
+    "scripts/ci/gradle-junit.ts",
     "scripts/ci-test-manifest.json",
     "scripts/ci/run-ci-test.ts",
     "packages/homelab/tsconfig.base.json",
@@ -26,6 +27,10 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
+    },
+    "@scout-for-lol/temporal#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     // Local codegen only (Prisma: birmel, scout backend, dpmk backend).
     // Live-credential codegen lives in generate:live and is NEVER in a
@@ -141,7 +146,7 @@
         "package.json",
         "packages/**",
         "scripts/**",
-        ".buildkite/**",
+        "ci/**",
         "!**/node_modules/**",
         "!**/dist/**",
         "!packages/dotfiles/dot_agents/skills/**"
@@ -150,7 +155,7 @@
     "//#check-ai-architecture": {
       "inputs": [
         "package.json",
-        ".buildkite/**",
+        "ci/**",
         "packages/**",
         "scripts/**",
         "!**/node_modules/**",
@@ -168,7 +173,7 @@
         "packages/**/package.json",
         "scripts/package.json",
         "!**/node_modules/**",
-        "scripts/checks/check-floating-deps.ts"
+        "scripts/checks/deps/check-floating-deps.ts"
       ]
     },
     "//#check-patched-deps": {
@@ -177,8 +182,8 @@
         "bun.lock",
         "patches/**",
         "packages/**/patches/*.patch",
-        "scripts/checks/check-patched-deps.ts",
-        ".buildkite/scripts/selectors/select-image-targets.ts"
+        "scripts/checks/deps/check-patched-deps.ts",
+        "ci/scripts/selectors/select-image-targets.ts"
       ]
     },
     // Every env var a pipeline step's scripts require must be provided by that
@@ -189,22 +194,34 @@
       "inputs": [
         "packages/version-catalog/src/catalog.json",
         "scripts/pin-candidates-state.json",
-        "scripts/checks/verify-worker-image-build-ids.ts"
+        "scripts/checks/ci/verify-worker-image-build-ids.ts"
       ]
     },
     "//#check-ci-env": {
       // Every tree requiredEnvFrom may analyze has to be hashed, not just the
-      // pipeline: the checker treats literal `.buildkite/scripts/*.ts`
+      // pipeline: the checker treats literal `ci/scripts/*.ts`
       // commands as entry points and follows their imports, so a requireEnv
       // added there would otherwise reuse a green cached result.
       "inputs": [
-        ".buildkite/pipeline.yml",
-        ".buildkite/scripts/**",
+        "ci/scripts/**",
         "scripts/**",
         "!scripts/node_modules/**",
         "packages/homelab/scripts/**",
         "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts"
+        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
+        // The grants come from the generated step model, so the generator is
+        // an input too; without it a grant change reused a green cached result.
+        "packages/woodpecker-config-extension/src/**"
+      ]
+    },
+    "//#check-ci-admission-budget": {
+      // The budget (cdk8s) and the step model (the generator) are the two
+      // halves this check compares; a change to either must re-run it.
+      "inputs": [
+        "scripts/checks/ci/check-ci-admission-budget.ts",
+        "scripts/lib/ci/generated-steps.ts",
+        "packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json",
+        "packages/woodpecker-config-extension/src/**"
       ]
     },
     "//#check-script-migrations": {
@@ -213,7 +230,7 @@
         "scripts/script-migrations.schema.json",
         "scripts/checks/check-script-migrations.ts",
         "scripts/**/*.ts",
-        ".buildkite/scripts/**",
+        "ci/scripts/**",
         "**/*.sh",
         "packages/**/*.ts",
         "packages/**/package.json",
@@ -234,9 +251,9 @@
         "scripts/package.json",
         "scripts/**/*.test.ts",
         "vitest.config.ts",
-        ".buildkite/scripts/**/*.ts",
-        ".buildkite/main-bootstrap.yml",
-        ".buildkite/pipeline.yml",
+        "ci/scripts/**/*.ts",
+        "ci/main-bootstrap.yml",
+        "ci/pipeline.yml",
         "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/Dockerfile",
@@ -393,7 +410,7 @@
       ]
     },
     "//#gitleaks": {
-      "env": ["BUILDKITE_COMMIT", "CI_CHANGED_BASE"],
+      "env": ["CI_COMMIT_SHA", "CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/gitleaks.ts",
         "**/*",
@@ -462,7 +479,7 @@
     },
     "//#env-var-names": {
       "inputs": [
-        "scripts/checks/check-env-var-names.ts",
+        "scripts/checks/ci/check-env-var-names.ts",
         "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}",
         "!**/node_modules/**",
         "!**/generated/**"
@@ -541,10 +558,19 @@
     },
     "//#react-version-sync": {
       "inputs": [
-        "scripts/checks/check-react-version-sync.ts",
+        "scripts/checks/deps/check-react-version-sync.ts",
         "**/package.json",
         "bun.lock",
         "!**/node_modules/**"
+      ]
+    },
+    "//#toolchain-version-sync": {
+      "inputs": [
+        "scripts/checks/deps/check-toolchain-version-sync.ts",
+        ".mise.toml",
+        "global.json",
+        "packages/macos-cross-compiler/Dockerfile",
+        "packages/windows-cross-compiler/Dockerfile"
       ]
     },
     "//#large-files-scout": {
@@ -634,7 +660,13 @@
       ]
     },
     "//#ruff": {
-      "inputs": ["ruff.toml", "**/*.py", "!**/node_modules/**", "!**/.venv/**"]
+      "inputs": [
+        "ruff.toml",
+        "scripts/tools/ruff-check.ts",
+        "**/*.py",
+        "!**/node_modules/**",
+        "!**/.venv/**"
+      ]
     },
     "//#pyright": {
       "inputs": [
@@ -648,7 +680,7 @@
     },
     "//#tunnel-dns-coverage": {
       "inputs": [
-        "scripts/checks/check-tunnel-dns-coverage.ts",
+        "scripts/checks/ci/check-tunnel-dns-coverage.ts",
         "packages/homelab/src/cdk8s/src/**/*.ts",
         "packages/homelab/src/tofu/cloudflare/*.tf"
       ]

@@ -3,22 +3,21 @@ import { parseMaxBlockingPriority } from "#commands/pr/review.ts";
 import {
   CODEX_GATE_CONTEXT,
   harvestVerdict,
-  jobIdFromTargetUrl,
+  pipelineNumberFromTargetUrl,
   nextPageUrl,
   REQUIRED_REVIEW_GATES,
   type GateStatus,
 } from "#lib/review/harvest.ts";
 
-const JOB = "01a00a5b-1c30-4310-8a10-20ddaaddca65";
+/** Woodpecker restarts at pipeline granularity, so the retry unit is a number. */
+const PIPELINE = "9633";
 const failed: GateStatus = {
   state: "failure",
-  targetUrl: `https://buildkite.com/sjerred/monorepo/builds/9633#${JOB}`,
+  targetUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${PIPELINE}`,
 };
 
 test("declares the required Codex gate context", () => {
-  expect(CODEX_GATE_CONTEXT).toBe(
-    "buildkite/monorepo/pr/robot-face-codex-review-gate-required",
-  );
+  expect(CODEX_GATE_CONTEXT).toBe("ci/woodpecker/pr/codex-review-gate");
   expect(REQUIRED_REVIEW_GATES).toEqual([
     { providerId: "codex", context: CODEX_GATE_CONTEXT },
   ]);
@@ -30,30 +29,26 @@ test("rejects malformed blocking-priority configuration", () => {
   );
 });
 
-describe("jobIdFromTargetUrl", () => {
-  test("reads the job out of the URL fragment", () => {
-    expect(jobIdFromTargetUrl(failed.targetUrl)).toBe(JOB);
+describe("pipelineNumberFromTargetUrl", () => {
+  test("reads the pipeline number out of the status URL", () => {
+    expect(pipelineNumberFromTargetUrl(failed.targetUrl)).toBe(PIPELINE);
+    expect(
+      pipelineNumberFromTargetUrl(
+        `https://woodpecker.sjer.red/repos/1/pipeline/${PIPELINE}/2`,
+      ),
+    ).toBe(PIPELINE);
   });
 
-  test("returns null when the status names only a build", () => {
-    // Retrying the whole build instead of the job would re-run every step,
-    // so a URL without a job must not be treated as retryable.
+  // Anything non-null here is reported as retryable and handed straight to
+  // `woodpecker-cli pipeline start`, so the match has to be strict.
+  test("returns null for a URL that names no pipeline", () => {
     expect(
-      jobIdFromTargetUrl("https://buildkite.com/sjerred/monorepo/builds/9633"),
-    ).toBeNull();
-  });
-
-  test("rejects a fragment that is not a job id", () => {
-    expect(jobIdFromTargetUrl("https://buildkite.com/x#not-a-uuid")).toBeNull();
-    // 36 characters of hex and hyphens, but not a UUID. Anything non-null here
-    // is reported as retryable and handed to `bk job retry`.
-    expect(
-      jobIdFromTargetUrl(`https://buildkite.com/x#${"-".repeat(36)}`),
+      pipelineNumberFromTargetUrl("https://woodpecker.sjer.red/repos/1"),
     ).toBeNull();
     expect(
-      jobIdFromTargetUrl(`https://buildkite.com/x#${"a".repeat(36)}`),
+      pipelineNumberFromTargetUrl("https://woodpecker.sjer.red/pipeline/abc"),
     ).toBeNull();
-    expect(jobIdFromTargetUrl(null)).toBeNull();
+    expect(pipelineNumberFromTargetUrl(null)).toBeNull();
   });
 });
 
@@ -66,7 +61,10 @@ describe("harvestVerdict", () => {
   };
 
   test("retries a gate that expired before a clean review landed", () => {
-    expect(harvestVerdict(stale)).toEqual({ retryable: true, jobId: JOB });
+    expect(harvestVerdict(stale)).toEqual({
+      retryable: true,
+      pipelineNumber: PIPELINE,
+    });
   });
 
   test("leaves a gate that failed on real findings alone", () => {
@@ -109,14 +107,14 @@ describe("harvestVerdict", () => {
     });
   });
 
-  test("does not retry when the status names no job", () => {
+  test("does not retry when the status names no pipeline", () => {
     const verdict = harvestVerdict({
       ...stale,
       gate: { state: "failure", targetUrl: null },
     });
     expect(verdict).toEqual({
       retryable: false,
-      reason: "gate status names no Buildkite job",
+      reason: "gate status names no CI pipeline",
     });
   });
 });

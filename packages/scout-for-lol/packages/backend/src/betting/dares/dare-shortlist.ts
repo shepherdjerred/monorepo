@@ -27,8 +27,7 @@ export const DareShortlistEntrySchema = z.strictObject({
   key: z.string().regex(/^T\d{1,2}$/),
   discordId: DiscordAccountIdSchema,
   /** Branded: `BucksDareTarget.playerId` is a real column, so the frozen
-   * entry carries the same `PlayerId` brand Prisma expects (unlike the
-   * weekly-parlay subjects, which only ever live inside a JSON string). */
+   * entry carries the same `PlayerId` brand Prisma expects. */
   playerId: PlayerIdSchema,
   alias: z.string().min(1),
   accounts: DareTargetAccountsSchema,
@@ -58,8 +57,7 @@ function compareTargets(a: GroupedTarget, b: GroupedTarget): number {
  * Guild-tracked people who can be dared: a non-null Discord identity, at least
  * one linked account, and not the challenger (you cannot put a bounty on
  * yourself). One entry per distinct Discord user, with the union of accounts
- * across every Player row that user owns — the same frozen-account shape the
- * weekly parlays store.
+ * across every Player row that user owns.
  */
 export async function buildDareShortlist(
   serverId: DiscordGuildId,

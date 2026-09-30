@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { agentActivities, reportActivities } from "./activities/index.ts";
+import {
+  agentActivities,
+  agentChatDeliveryActivities,
+  agentChatDispatchWorkerActivities,
+  agentChatReceiptWorkerActivities,
+  agentChatIngressActivities,
+  imessageAgentChatActivities,
+  reportActivities,
+} from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import {
   getWorkerRoleContract,
@@ -87,7 +95,11 @@ describe("Temporal worker role contracts", () => {
       runsGateway: true,
       validatesScheduleEnvironmentLocally: false,
       runsEventBridge: false,
-      workers: [],
+      workers: [
+        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS }),
+        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY }),
+        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE }),
+      ],
     });
     expect(getWorkerRoleContract("home")).toMatchObject({
       runsGateway: false,
@@ -116,6 +128,7 @@ describe("Temporal worker role contracts", () => {
     );
     expect(concurrency.get("home")).toBe(4);
     expect(concurrency.get("reports")).toBe(4);
+    expect(concurrency.get("control")).toBe(4);
     const serialRoles: Exclude<QueueWorkerRole, "workflows">[] = [
       "agent",
       "backup",
@@ -137,9 +150,31 @@ describe("Temporal worker role contracts", () => {
     expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
   });
 
-  it("dispatches CI I/O observability only through infra", () => {
-    expect(activityNamesFor("infra")).toContain("collectCiIoImpact");
-    expect(activityNamesFor("repo")).not.toContain("collectCiIoImpact");
+  it("isolates scheduled chat waiters from repo automation", () => {
+    const repoWorkers = getWorkerRoleContract("repo").workers;
+    expect(repoWorkers.map((worker) => worker.taskQueue)).toEqual([
+      TASK_QUEUES.REPO_AUTOMATION,
+      TASK_QUEUES.AGENT_CHAT_DISPATCH,
+      TASK_QUEUES.AGENT_CHAT_RECEIPTS,
+    ]);
+    const dispatchWorker = repoWorkers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.AGENT_CHAT_DISPATCH,
+    );
+    expect(dispatchWorker?.kind).toBe("activity");
+    if (dispatchWorker?.kind !== "activity") {
+      throw new Error("Missing scheduled agent chat dispatch worker");
+    }
+    expect(dispatchWorker.activities).toEqual(
+      agentChatDispatchWorkerActivities,
+    );
+    const receiptWorker = repoWorkers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.AGENT_CHAT_RECEIPTS,
+    );
+    expect(receiptWorker?.kind).toBe("activity");
+    if (receiptWorker?.kind !== "activity")
+      throw new Error("Missing agent chat receipt worker");
+    expect(receiptWorker.activities).toEqual(agentChatReceiptWorkerActivities);
+    expect(receiptWorker.maxConcurrentActivityTaskExecutions).toBe(1);
   });
 
   it("keeps report delivery capabilities separate from agent execution", () => {
@@ -151,5 +186,40 @@ describe("Temporal worker role contracts", () => {
     );
     expect(reportActivities).not.toHaveProperty("runAgentTask");
     expect(reportActivities).not.toHaveProperty("prepareAgentTaskWorkdir");
+  });
+
+  it("keeps Discord delivery on the credential-owning control worker", () => {
+    expect(activityNamesFor("control")).toEqual(
+      Object.keys(agentChatIngressActivities),
+    );
+    expect(agentActivities).not.toHaveProperty(
+      "deliverDiscordAgentChatMessage",
+    );
+    const deliveryWorker = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.taskQueue === TASK_QUEUES.AGENT_CHAT_DELIVERY,
+    );
+    expect(deliveryWorker).toMatchObject({
+      kind: "activity",
+      role: "control",
+      activities: agentChatDeliveryActivities,
+      maxConcurrentActivityTaskExecutions: 4,
+    });
+  });
+  it("isolates BlueBubbles polling and delivery from long-running ingress dispatch", () => {
+    const worker = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.taskQueue === TASK_QUEUES.AGENT_CHAT_IMESSAGE,
+    );
+    expect(worker).toMatchObject({
+      kind: "activity",
+      role: "control",
+      activities: imessageAgentChatActivities,
+      maxConcurrentActivityTaskExecutions: 4,
+    });
+    expect(Object.keys(agentActivities)).not.toContain(
+      "deliverImessageResponse",
+    );
+    expect(Object.keys(agentChatIngressActivities)).not.toContain(
+      "pollBlueBubblesMessages",
+    );
   });
 });

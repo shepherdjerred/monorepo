@@ -5,9 +5,9 @@ import {
   type ExploreStreamEvent,
   type ExploreTranscript,
 } from "@scout-for-lol/data";
-import { postEventStream } from "#src/lib/sse-stream.ts";
-import { httpErrorMessage } from "#src/lib/stream-http-error.ts";
-import { readCsrfCookie } from "#src/lib/trpc.ts";
+import { postEventStream } from "#src/lib/query/sse-stream.ts";
+import { httpErrorMessage } from "#src/lib/query/stream-http-error.ts";
+import { readCsrfCookie } from "#src/lib/query/trpc.ts";
 
 export async function observeExploreRun(params: {
   runId: string;
@@ -38,7 +38,7 @@ export async function fetchSharedTranscript(
   signal?: AbortSignal,
 ): Promise<ExploreTranscript> {
   const response = await fetch(
-    `/api/explore/shared/${encodeURIComponent(shareToken)}`,
+    `/api/explore/shared/${encodeURIComponent(shareToken)}?cards=2`,
     { credentials: "omit", ...(signal === undefined ? {} : { signal }) },
   );
   if (!response.ok) {

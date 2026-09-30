@@ -3,14 +3,18 @@
 Temporal workflow worker for the monorepo. It consolidates what used to be K8s
 CronJobs, in-process cron, and custom job queues into one durable, observable
 scheduler: declarative schedules (home automation, reports, maintenance),
-generic report-only Codex SDK agent tasks through OpenRouter, including the daily
+generic report-only Codex SDK agent tasks on an OpenAI project key, including the daily
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
+Closed PR cleanup matches Woodpecker pull-request refs or source-branch pushes
+at the exact head commit before cancelling active jobs.
 
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
-without a task queue. The credentialless `workflows` role owns deterministic
-Workflow execution on `monorepo-workflows`. The domain roles own only Activity
+plus the `agent-chat-ingress` command queue and isolated
+`agent-chat-delivery` queue. The credentialless
+`workflows` role owns deterministic Workflow execution on
+`monorepo-workflows`. The domain roles own only Activity
 Workers, with separate registries, credentials, service accounts, and
 concurrency budgets. The explicit `all` role composes every role in one process
 for local development.
@@ -22,26 +26,44 @@ Temporal's internal `temporal-system` namespace. Unexpected workflow starts in
 any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 
 The central Scout worker also polls its unchanged `scout` queue in `beta` for
-the beta-owned weekly parlay and Bryan Bucks analytics schedules; all other
-central queues are `prod` only.
+the beta-owned Bryan Bucks analytics schedule; all other central queues are
+`prod` only.
 
-| Role              | Queue or surface        | Activity concurrency |
-| ----------------- | ----------------------- | -------------------: |
-| `control`         | schedules and HTTP APIs |                 none |
-| `home`            | `home`                  |                    4 |
-| `reports`         | `reports`               |                    4 |
-| `infra`           | `infra`                 |                    1 |
-| `repo`            | `repo-automation`       |                    1 |
-| `scout`           | `scout`                 |                    1 |
-| `agent`           | `agent-task`            |                    1 |
-| `glitter-corpus`  | `glitter-corpus`        |                    1 |
-| `glitter-context` | `glitter-context`       |                    1 |
-| `maintenance`     | `maintenance`           |                    1 |
-| `workflows`       | `monorepo-workflows`    |                 none |
+| Role              | Queue or surface                                                                         | Activity concurrency |
+| ----------------- | ---------------------------------------------------------------------------------------- | -------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage` |          4 per queue |
+| `home`            | `home`                                                                                   |                    4 |
+| `reports`         | `reports`                                                                                |                    4 |
+| `infra`           | `infra`                                                                                  |                    1 |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                          |          1 per queue |
+| `scout`           | `scout`                                                                                  |                    1 |
+| `agent`           | `agent-task`                                                                             |                    1 |
+| `glitter-corpus`  | `glitter-corpus`                                                                         |                    1 |
+| `glitter-context` | `glitter-context`                                                                        |                    1 |
+| `maintenance`     | `maintenance`                                                                            |                    1 |
+| `workflows`       | `monorepo-workflows`                                                                     |                 none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
 credentials, concurrency, health, and metrics boundary.
+
+The agent worker keeps the Temporal poller at UID 0 and launches provider
+subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.
+The worker retains only `SETUID`, `SETGID`, `CHOWN`, `DAC_OVERRIDE`, and
+`KILL`: it must set the provider identity, transfer fresh checkouts, read and
+clean up private provider-owned session files, and terminate detached
+provider-UID processes before that shared identity is reused.
+Provider subprocesses lose these capabilities when their UID changes, and
+`allowPrivilegeEscalation: false` prevents regaining them.
+
+The shared agent runner keeps authentication separate from tool environments.
+API-key automation uses the Codex SDK. Subscription chats use Claude Agent
+SDK or Codex App Server with in-memory `chatgptAuthTokens` authentication and
+ephemeral credential storage. Subscription Codex requires an isolated
+`CODEX_HOME` without `auth.json`; dropped-UID Claude requires an explicit isolated
+`HOME`. Both providers receive writable session directories, restored to the
+worker after execution. Codex credential renewal is a terminal authentication
+failure requiring an updated credential source, not a session-file write.
 
 ## Quick start
 
@@ -64,10 +86,13 @@ candidate bundle, and runs an exact-version canary before opening a 10% ramp.
 Set `TEMPORAL_ADDRESS` to an
 operator-reachable endpoint; native calls use the existing `toolkit temporal`
 passthrough. The first ramp also requires `--stable-build-id <sha>` so an empty
-deployment has a rollback target. `advance` checks alert history across its
-clean windows. `promote` checks the 24-hour history, verifies the candidate
-pin's baked `GIT_SHA`, and writes the stable pin before changing routing so an
-interrupted command is safe to retry. `rollback` removes the exact active ramp,
+deployment has a rollback target. `advance` checks candidate and stable poller
+history, Prometheus rule-evaluation health, and candidate Build ID Workflow
+failure counters across each ramp window. Alerts from other workers remain
+visible in monitoring but do not block routing.
+`promote` checks the two-hour health history, verifies the candidate pin's baked
+`GIT_SHA`, and writes the stable pin before changing routing so an interrupted
+command is safe to retry. `rollback` removes the exact active ramp,
 even if a newer build registered. CI retains a Workflow candidate whenever its
 pin differs from stable, so a later image release cannot evict an in-flight
 ramp. After rollback and candidate-history drain, rerun `rollback` with no
@@ -81,23 +106,59 @@ The target defaults to `central`; `--target scout-beta` and `--target
 scout-prod` select the stage-local Scout deployment, queue, replay bundle,
 pinned canary, image repository, and catalog pins.
 
-The hourly `openai-complimentary-usage-hourly` schedule starts
-`runOpenAiComplimentaryUsageReconciliation` on `monorepo-workflows`. Pause it
-before repairing or replacing the Workflow bundle, then resume it only after a
-pinned canary and one bounded scheduled run complete. The Workflow delegates
-the OpenAI Usage and Costs calls to the isolated `billing` Activity queue. Live
-acceptance requires current `openai_project_usage_tokens`, zero official
-`openai_project_cost_usd`, a fresh reconciliation timestamp, and Scout review
-requests with `byok="true"`. The Prometheus rules use
-`exported_service="scout-for-lol-backend"` for Scout telemetry and
-`container="temporal-billing-worker"` for worker freshness; these labels are
-stable across pod recreations.
+The hourly `llm-billed-cost-hourly` schedule starts
+`runLlmBilledCostReconciliation` on `monorepo-workflows`. Pause it before
+repairing or replacing the Workflow bundle, then resume it only after a pinned
+canary and one bounded scheduled run complete. The Workflow delegates the OpenAI
+Costs/Usage and Anthropic Cost Report calls to the isolated `billing` Activity
+queue, whose worker alone holds `OPENAI_ADMIN_KEY` and
+`ANTHROPIC_ADMIN_API_KEY`. Live acceptance requires populated
+`llm_billed_cost_usd` for both providers and a fresh
+`llm_billed_reconciliation_last_success_timestamp_seconds`. The Prometheus rules
+use `container="temporal-billing-worker"` for worker freshness, which is stable
+across pod recreations. The retired `openai-complimentary-usage-hourly` schedule
+is deleted at registration.
 Scout extraction uses two capable image releases. The pre-entrypoint pin creates
 no pod. Copy the first capable candidate pin to stable; that creates only the
 credentialless stable poller. A later distinct candidate pin creates the ramp
 target, and `start --stable-build-id` establishes stable before sending 10% to
 candidate. The embedded poller remains only to drain old unversioned histories.
 Production remains embedded until beta acceptance completes.
+
+## BlueBubbles iMessage ingress
+
+The control worker starts `blueBubblesIngressWorkflow` when both
+`BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD` bootstrap credentials are present.
+Missing both leaves the connector inactive; a partial pair fails startup.
+Behavior uses the typed `temporal-agent-chat-imessage-*` flags, not environment
+variables. Production defaults off with an empty sender allowlist.
+
+The durable cursor excludes historical messages. Disabled or unowned polling
+advances the ROWID watermark, so activation does not backfill the disabled period.
+It advances by Messages database ROWID only after each command settles,
+and survives worker restarts and Continue-As-New. Incoming commands are processed
+in ROWID order so chat selection cannot race a following message. BlueBubbles
+retains incoming messages while a provider turn runs; ingestion resumes afterward.
+Only exact allowlisted sender handles in direct conversations are accepted.
+Outgoing messages, groups, attachments without text, and reactions are ignored.
+
+| Input                          | Operation                                                 |
+| ------------------------------ | --------------------------------------------------------- |
+| `/new claude <prompt>`         | Create and select a Claude Code chat                      |
+| `/new codex <prompt>`          | Create and select a Codex chat                            |
+| `/chats`                       | List recent chats from every transport and schedules      |
+| `/use <chat-id>`               | Select any existing chat, including catalog-evicted chats |
+| `/continue <chat-id> <prompt>` | Continue and select an explicit previous chat             |
+| Ordinary text                  | Continue the selected chat                                |
+| `/help`                        | Show command syntax and prompt limits                     |
+
+Prompts are limited to 4,000 characters. Poll responses are bounded to 2 MiB,
+999 messages, and 50 durable commands per batch. An oversized backlog fails
+without advancing the cursor. Polling retries connection failures with durable
+backoff. Replies use AppleScript, so the BlueBubbles Private API is unnecessary.
+Delivery has one attempt: an ambiguous send fails its command Workflow without
+repeating inference or sending another reply automatically. The checkpointed
+response remains in Temporal for operator inspection.
 
 ## Documentation
 

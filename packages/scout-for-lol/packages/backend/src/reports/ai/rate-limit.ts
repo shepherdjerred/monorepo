@@ -60,10 +60,9 @@ const engine = createQuotaEngine<ReportAiQuotaScope, ReportAiRateLimitIdentity>(
       if (scope === "global") {
         return "global";
       }
-      if (scope === "guild") {
-        return identity.guildId;
-      }
-      return `${identity.userId}:${identity.guildId}`;
+      return scope === "guild"
+        ? identity.guildId
+        : `${identity.userId}:${identity.guildId}`;
     },
   },
 );

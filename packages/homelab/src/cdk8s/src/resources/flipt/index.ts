@@ -16,9 +16,9 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { renderFliptFeatures } from "@shepherdjerred/feature-flags/flipt-features-renderer.ts";
 import {
@@ -30,7 +30,7 @@ export const FLIPT_PORT = 8080;
 
 // The image declares no ENTRYPOINT and `CMD ["/flipt","server"]`, so Kubernetes
 // `args` alone would try to exec the flag as a binary. The full command is
-// restated here. Verified against flipt/flipt:v2.11.0.
+// restated here. Verified against flipt/flipt:v2.13.0.
 const FLIPT_COMMAND = [
   "/flipt",
   "server",

@@ -33,10 +33,9 @@ export function formatSeriesValue(
   if (isPercentageSeries(snapshot, series)) {
     return formatPercent(value);
   }
-  if (series.displayKind === "duration") {
-    return formatDuration(value);
-  }
-  return formatValue(value);
+  return series.displayKind === "duration"
+    ? formatDuration(value)
+    : formatValue(value);
 }
 
 function padTimePart(part: number): string {
@@ -87,10 +86,9 @@ export function isPercentageSeries(
   if (snapshot.display.stack === "percent") return true;
   // v2 snapshots say what they are; pre-v2 ones are answered from the frozen
   // legacy table above.
-  if (series.displayKind !== undefined) {
-    return series.displayKind === "percent";
-  }
-  return LEGACY_RATE_METRICS.has(series.metric);
+  return series.displayKind === undefined
+    ? LEGACY_RATE_METRICS.has(series.metric)
+    : series.displayKind === "percent";
 }
 
 export function formatValue(value: number | null): string {

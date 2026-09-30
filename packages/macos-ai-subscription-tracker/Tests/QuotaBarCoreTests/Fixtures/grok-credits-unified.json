@@ -1,0 +1,16 @@
+{
+  "config": {
+    "creditUsagePercent": 9,
+    "currentPeriod": {
+      "type": "USAGE_PERIOD_TYPE_WEEKLY",
+      "start": "2026-09-06T21:23:49.187637+00:00",
+      "end": "2026-09-13T21:23:49.187637+00:00"
+    },
+    "productUsage": [
+      {
+        "product": "chat",
+        "usagePercent": 9
+      }
+    ]
+  }
+}

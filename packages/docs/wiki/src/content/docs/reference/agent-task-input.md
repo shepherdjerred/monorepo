@@ -154,24 +154,25 @@ inheriting the worker environment.
 
 | Input                                       | State in the SDK runtime                                 |
 | ------------------------------------------- | -------------------------------------------------------- |
-| Service-scoped OpenRouter API key           | present; it is the SDK's only inference credential       |
+| Service-scoped OpenAI project key           | present; it is the SDK's only inference credential       |
 | Other provider credentials                  | absent, including subscription credentials               |
 | Public GitHub repository credential         | absent; the throwaway clone is unauthenticated           |
 | `HOME`                                      | the throwaway workdir, not the worker image home         |
 | Prometheus and alert-dashboard URLs         | present without API credentials                          |
-| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC |
+| Kubernetes service address and mounted SA   | address present; owner-only token unreadable by provider |
 | Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the reports worker queue    |
-| ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                   |
+| ArgoCD, Grafana, Woodpecker, HA, Cloudflare | absent                                                   |
 
-The trusted, source-controlled agents are the exception. The homelab audit and
-the Scout season refresh do inherit the worker's operational credentials,
-because their prompts are code rather than user input; even there the bot's own
-GitHub credentials, every report-delivery credential, and every inference
-credential other than their own provider's are removed.
+The trusted, source-controlled agent is the exception. The Scout season refresh
+does inherit the worker's operational credentials, because its prompt is code
+rather than user input; even there the bot's own GitHub credentials, every
+report-delivery credential, and every inference credential other than its own
+provider's are removed.
 
-This lets generic investigations query the public repository, read-only
-Kubernetes API, Prometheus, and alert ledger without crossing the delivery or
-operational-credential boundaries. See
+This lets generic investigations query the public repository, Prometheus, and
+alert ledger without crossing the delivery or operational-credential
+boundaries. Direct Kubernetes access remains outside the provider subprocess.
+See
 [the agent task boundary](/explanation/temporal/agent-task-boundary/) for what
 that means.
 

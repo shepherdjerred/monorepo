@@ -2,17 +2,21 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   ExploreTraceEntrySchema,
+  ExploreMatchCardSchema,
   type DiscordAccountId,
   type ExploreAttachPoint,
 } from "@scout-for-lol/data";
 import { testAccountId } from "#src/testing/test-ids.ts";
+import { testExploreLoadoutCard } from "#src/explore/loadout-card-test-fixture.ts";
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
   appendExploreAnswer,
   deleteExploreConversation,
   listExploreConversations,
+  loadExploreRunResult,
   loadExploreTranscript,
+  loadExploreSpokenContent,
   loadSharedExploreTranscript,
   renameExploreConversation,
   resolveRegenerateTarget,
@@ -63,9 +67,80 @@ const ANSWER = {
   queryText:
     "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
   includeVisualization: false,
+  matchCards: [],
+  loadoutCards: [],
   caveats: ["Only 12 games."],
   followUps: ["How does that change by patch?"],
 };
+
+const MATCH_CARD = ExploreMatchCardSchema.parse({
+  size: "L",
+  match: {
+    matchId: "NA1_5635906026",
+    gameCreationMs: 1_788_627_280_000,
+    gameDurationSeconds: 1728,
+    queue: "Ranked Solo",
+    queueId: 420,
+    gameMode: "CLASSIC",
+    gameType: "MATCHED_GAME",
+    gameVersion: "16.17.1",
+    mapId: 11,
+    teams: [
+      {
+        teamId: 100,
+        win: true,
+        kills: 91,
+        objectives: { turrets: 8, inhibitors: 1, barons: 1, dragons: 3 },
+        participants: [
+          {
+            participantId: 1,
+            riotId: { gameName: "Blue", tagLine: "NA1" },
+            championId: 103,
+            championName: "Ahri",
+            position: "MIDDLE",
+            kills: 12,
+            deaths: 4,
+            assists: 10,
+            creepScore: 210,
+            goldEarned: 14_000,
+            visionScore: 22,
+            damageToChampions: 24_000,
+            killParticipation: 0.24,
+            damageShare: 0.21,
+            objectives: { turrets: 2, inhibitors: 0, barons: 0, dragons: 0 },
+          },
+        ],
+      },
+      {
+        teamId: 200,
+        win: false,
+        kills: 88,
+        objectives: { turrets: 3, inhibitors: 0, barons: 0, dragons: 1 },
+        participants: [
+          {
+            participantId: 6,
+            riotId: { gameName: "Red", tagLine: "NA1" },
+            championId: 157,
+            championName: "Yasuo",
+            position: "MIDDLE",
+            kills: 11,
+            deaths: 8,
+            assists: 8,
+            creepScore: 194,
+            goldEarned: 13_200,
+            visionScore: 18,
+            damageToChampions: 22_000,
+            killParticipation: 0.22,
+            damageShare: 0.2,
+            objectives: { turrets: 1, inhibitors: 0, barons: 0, dragons: 0 },
+          },
+        ],
+      },
+    ],
+  },
+});
+
+const LOADOUT_CARD = testExploreLoadoutCard("L");
 
 /** Ask a question and answer it, returning both message ids. */
 async function askAndAnswer(input: {
@@ -85,6 +160,7 @@ async function askAndAnswer(input: {
     attach: input.attach ?? { kind: "leaf" },
   });
   const answer = await appendExploreAnswer(prisma, {
+    guildIds: [],
     conversationId: started.conversationId,
     parentMessageId: started.messageId,
     answer: { ...ANSWER, answer: input.answer ?? ANSWER.answer },
@@ -108,7 +184,170 @@ async function path(conversationId: string): Promise<string[]> {
   return (transcript?.messages ?? []).map((message) => message.content);
 }
 
+describe("explore store — voice", () => {
+  test("persists Voice provenance without changing it on later turns", async () => {
+    const first = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Who is my lane opponent?",
+      attach: { kind: "leaf" },
+      origin: "voice",
+    });
+    await appendExploreAnswer(prisma, {
+      guildIds: [],
+      conversationId: first.conversationId,
+      parentMessageId: first.messageId,
+      answer: ANSWER,
+      preview: null,
+      visualization: null,
+      trace: [],
+    });
+    await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "What about their last hundred games?",
+      attach: { kind: "leaf" },
+      origin: "web",
+    });
+
+    const transcript = await loadExploreTranscript(
+      prisma,
+      first.conversationId,
+      userId,
+    );
+    expect(transcript?.conversation.origin).toBe("voice");
+  });
+
+  test("keeps the speech rendering private from transcript contracts", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Give me the full breakdown",
+      attach: { kind: "leaf" },
+      origin: "voice",
+    });
+    const message = await appendExploreAnswer(prisma, {
+      guildIds: [],
+      conversationId: started.conversationId,
+      parentMessageId: started.messageId,
+      answer: { ...ANSWER, spokenAnswer: "Short spoken summary." },
+      preview: null,
+      visualization: null,
+      trace: [],
+    });
+    expect(message).not.toHaveProperty("spokenContent");
+    await expect(
+      loadExploreSpokenContent(prisma, {
+        conversationId: started.conversationId,
+        messageId: message.id,
+        userId,
+      }),
+    ).resolves.toBe("Short spoken summary.");
+    await expect(
+      loadExploreSpokenContent(prisma, {
+        conversationId: started.conversationId,
+        messageId: message.id,
+        userId: otherUserId,
+      }),
+    ).resolves.toBeNull();
+  });
+
+  test("loads the answer produced by the run after the visible branch changes", async () => {
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Who should I play?",
+      answer: "Play Ahri.",
+    });
+    const secondTurn = await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "What is the backup pick?",
+      attach: { kind: "leaf" },
+      origin: "voice",
+    });
+    const secondAnswer = await appendExploreAnswer(prisma, {
+      guildIds: [],
+      conversationId: first.conversationId,
+      parentMessageId: secondTurn.messageId,
+      answer: {
+        ...ANSWER,
+        answer: "Play Orianna.",
+        spokenAnswer: "Orianna is the backup.",
+      },
+      preview: null,
+      visualization: null,
+      trace: [],
+    });
+    const runId = globalThis.crypto.randomUUID();
+    await prisma.scoutInteractiveRun.create({
+      data: {
+        id: runId,
+        kind: "explore",
+        ownerId: userId,
+        conversationId: first.conversationId,
+        payload: "{}",
+        state: "COMPLETED",
+        resultMessageId: secondAnswer.id,
+      },
+    });
+
+    expect(
+      await setExploreLeaf(
+        prisma,
+        first.conversationId,
+        userId,
+        first.answerId,
+      ),
+    ).toBe(true);
+    const result = await loadExploreRunResult(prisma, {
+      runId,
+      conversationId: first.conversationId,
+      userId,
+    });
+
+    expect(result?.answer.id).toBe(secondAnswer.id);
+    expect(result?.answer.content).toBe("Play Orianna.");
+    expect(result?.spokenContent).toBe("Orianna is the backup.");
+  });
+});
+
 describe("explore store", () => {
+  test("persists frozen match and loadout cards for the owner and shared transcript", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "What was the bloodiest match?",
+      attach: { kind: "leaf" },
+    });
+    await appendExploreAnswer(prisma, {
+      guildIds: [],
+      conversationId: started.conversationId,
+      parentMessageId: started.messageId,
+      answer: ANSWER,
+      preview: null,
+      visualization: null,
+      matchCards: [MATCH_CARD],
+      loadoutCards: [LOADOUT_CARD],
+      trace: [],
+    });
+    const token = await shareExploreConversation(
+      prisma,
+      started.conversationId,
+      userId,
+    );
+    const owner = await loadExploreTranscript(
+      prisma,
+      started.conversationId,
+      userId,
+    );
+    const shared = await loadSharedExploreTranscript(prisma, token ?? "");
+
+    expect(owner?.messages[1]?.matchCards).toEqual([MATCH_CARD]);
+    expect(shared?.messages[1]?.matchCards).toEqual([MATCH_CARD]);
+    expect(owner?.messages[1]?.loadoutCards).toEqual([LOADOUT_CARD]);
+    expect(shared?.messages[1]?.loadoutCards).toEqual([LOADOUT_CARD]);
+  });
+
   test("rolls back a persisted question when durable admission rejects", async () => {
     const first = await askAndAnswer({
       conversationId: null,
@@ -284,6 +523,7 @@ describe("explore store — background branches", () => {
       ),
     ).toBe(true);
     const backgroundAnswer = await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: first.conversationId,
       parentMessageId: running.messageId,
       answer: { ...ANSWER, answer: "Patch 26.16 favors Caitlyn." },
@@ -428,6 +668,7 @@ describe("explore store — branching", () => {
     expect(target.question).toBe("Which champion has the most games?");
 
     await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: first.conversationId,
       parentMessageId: target.messageId,
       answer: { ...ANSWER, answer: "Actually Caitlyn edges it." },

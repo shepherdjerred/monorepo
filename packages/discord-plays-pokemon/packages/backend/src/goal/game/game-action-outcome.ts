@@ -54,10 +54,11 @@ export function mapChanged(
   before: GameObservationV2,
   after: GameObservationV2,
 ): boolean {
-  if (before.world === null || after.world === null) return false;
   return (
-    before.world.mapGroup !== after.world.mapGroup ||
-    before.world.mapNum !== after.world.mapNum
+    before.world !== null &&
+    after.world !== null &&
+    (before.world.mapGroup !== after.world.mapGroup ||
+      before.world.mapNum !== after.world.mapNum)
   );
 }
 
@@ -65,17 +66,12 @@ export function tilesMoved(
   before: GameObservationV2,
   after: GameObservationV2,
 ): number {
-  if (
-    before.world === null ||
+  return before.world === null ||
     after.world === null ||
     mapChanged(before, after)
-  ) {
-    return 0;
-  }
-  return (
-    Math.abs(after.world.x - before.world.x) +
-    Math.abs(after.world.y - before.world.y)
-  );
+    ? 0
+    : Math.abs(after.world.x - before.world.x) +
+        Math.abs(after.world.y - before.world.y);
 }
 
 export function collisionProvesBlocked(
@@ -83,16 +79,14 @@ export function collisionProvesBlocked(
   before: GameObservationV2,
   after: GameObservationV2,
 ): boolean {
-  if (
-    direction === undefined ||
-    before.world === null ||
-    after.world === null ||
-    !sameWorldPosition(before, after) ||
-    after.world.facing !== direction
-  ) {
-    return false;
-  }
-  return !after.world.collision[direction].passable;
+  return (
+    direction !== undefined &&
+    before.world !== null &&
+    after.world !== null &&
+    sameWorldPosition(before, after) &&
+    after.world.facing === direction &&
+    !after.world.collision[direction].passable
+  );
 }
 
 export function meaningfulStateSignature(
@@ -206,15 +200,12 @@ function sameWorldPosition(
   left: GameObservationV2,
   right: GameObservationV2,
 ): boolean {
-  if (left.world === null || right.world === null) {
-    return left.world === right.world;
-  }
-  return (
-    left.world.mapGroup === right.world.mapGroup &&
-    left.world.mapNum === right.world.mapNum &&
-    left.world.x === right.world.x &&
-    left.world.y === right.world.y
-  );
+  return left.world === null || right.world === null
+    ? left.world === right.world
+    : left.world.mapGroup === right.world.mapGroup &&
+        left.world.mapNum === right.world.mapNum &&
+        left.world.x === right.world.x &&
+        left.world.y === right.world.y;
 }
 
 function facingChanged(

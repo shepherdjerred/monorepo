@@ -1,0 +1,3 @@
+▁HE Y ▁S CO U T :2.0 #0.05 @HEY_SCOUT
+▁S CO U T :2.0 #0.15 @SCOUT
+▁HE Y :2.0 #0.05 @HEY

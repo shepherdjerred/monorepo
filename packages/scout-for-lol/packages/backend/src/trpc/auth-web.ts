@@ -21,7 +21,7 @@ import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
-import { webSigninTotal } from "#src/metrics/web.ts";
+import { webSigninTotal } from "#src/metrics/platform/web.ts";
 import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import {
   DiscordAccountIdSchema,
@@ -115,8 +115,11 @@ function checkStateNonce(
   state: string,
   expectedNonce: string | undefined,
 ): boolean {
-  if (expectedNonce === undefined || expectedNonce.length === 0) return false;
-  return state.startsWith(`${expectedNonce}|`);
+  return (
+    expectedNonce !== undefined &&
+    expectedNonce.length > 0 &&
+    state.startsWith(`${expectedNonce}|`)
+  );
 }
 
 /**
@@ -586,9 +589,7 @@ export async function handleAuthRoutes(
     }
   }
 
-  if (url.pathname === "/api/auth/logout" && request.method === "POST") {
-    return handleWebLogout(request);
-  }
-
-  return null;
+  return url.pathname === "/api/auth/logout" && request.method === "POST"
+    ? handleWebLogout(request)
+    : null;
 }

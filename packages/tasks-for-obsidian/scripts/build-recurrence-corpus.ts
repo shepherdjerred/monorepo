@@ -448,7 +448,7 @@ export function auditCorpus(cases: readonly CorpusCase[]): AuditReport {
     const occurrences = new Set(entry.occurrences);
     for (const day of auditDaysFor(entry)) {
       const actual = shouldShowRecurringTaskOnDate(task, utcDate(day));
-      const expected = entry.outcome === "always" ? true : occurrences.has(day);
+      const expected = entry.outcome === "always" || occurrences.has(day);
       if (actual !== expected) {
         throw new Error(
           `audit mismatch for ${entry.id} on ${day}: shouldShowRecurringTaskOnDate=${String(actual)}, corpus=${String(expected)}`,

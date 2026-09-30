@@ -7,6 +7,7 @@ function makeCharge(
   overrides: Partial<ConserviceCharge> = {},
 ): ConserviceCharge {
   return {
+    billId: "2026-03",
     rowNumber: 1,
     description: "Rent",
     chargeAmount: 2000,
@@ -45,19 +46,22 @@ function makeTxn(
 }
 
 describe("groupByMonth", () => {
-  test("groups charges by month", () => {
+  test("groups the API's several post months into one monthly bill", () => {
     const charges = [
       makeCharge({
+        billId: "2026-03",
         postMonth: "2026-03-01",
         chargeTypeId: 19,
         chargeAmount: 2000,
       }),
       makeCharge({
+        billId: "2026-03",
         postMonth: "2026-03-15",
         chargeTypeId: 112,
         chargeAmount: 50,
       }),
       makeCharge({
+        billId: "2026-04",
         postMonth: "2026-04-01",
         chargeTypeId: 19,
         chargeAmount: 2000,
@@ -111,6 +115,40 @@ describe("groupByMonth", () => {
     expect(result[0]?.total).toBe(2050);
   });
 
+  test("keeps a move-out final statement out of that month's regular bill", () => {
+    // Both bills fall in April. Summing them would report $5,154.58 due, which
+    // neither the $4,887.67 regular payment nor the $266.91 final payment can
+    // match, and would attribute the final statement's water and trash to the
+    // regular month.
+    const charges = [
+      makeCharge({
+        billId: "2026-04-01",
+        postMonth: "2026-04-01",
+        chargeTypeId: 19,
+        chargeAmount: 4887.67,
+      }),
+      makeCharge({
+        billId: "2026-04-24",
+        postMonth: "2026-04-24",
+        chargeTypeId: 1,
+        chargeAmount: 246.64,
+      }),
+      makeCharge({
+        billId: "2026-04-24",
+        postMonth: "2026-04-24",
+        chargeTypeId: 3,
+        chargeAmount: 20.27,
+      }),
+    ];
+
+    const result = groupByMonth(charges);
+    expect(result).toHaveLength(2);
+    expect(result[0]?.total).toBeCloseTo(4887.67, 2);
+    expect(result[1]?.total).toBeCloseTo(266.91, 2);
+    // Both are April, so both remain candidates for an April payment.
+    expect(result.map((r) => r.month)).toEqual(["2026-04", "2026-04"]);
+  });
+
   test("includes service fees in rent", () => {
     const charges = [
       makeCharge({ chargeTypeId: 19, chargeAmount: 2000 }),
@@ -126,6 +164,7 @@ function makeMonth(
   overrides: Partial<ConserviceMonthSummary> = {},
 ): ConserviceMonthSummary {
   return {
+    billId: "2026-03",
     month: "2026-03",
     total: 4900,
     rent: 4500,
@@ -202,5 +241,43 @@ describe("matchBiltTransactions", () => {
       { category: "Water", amount: 100 },
       { category: "Gas & Electric", amount: 100 },
     ]);
+  });
+});
+
+function marchBill(
+  billId: string,
+  total: number,
+  rent: number,
+): ConserviceMonthSummary {
+  return {
+    billId,
+    month: "2026-03",
+    total,
+    rent,
+    pets: 0,
+    waterSewer: 0,
+    electric: 0,
+    trash: 0,
+    charges: [],
+  };
+}
+
+describe("matchBiltTransactions — two bills in one month", () => {
+  test("claims each bill once instead of giving both payments the first", () => {
+    // Within the $1 tolerance both transactions used to select the first
+    // sorted bill and take its breakdown, leaving the second bill unused.
+    const matches = matchBiltTransactions(
+      [
+        makeTxn({ id: "txn-a", amount: -4900 }),
+        makeTxn({ id: "txn-b", amount: -4900.5 }),
+      ],
+      [
+        marchBill("2026-03-a", 4900, 4900),
+        marchBill("2026-03-b", 4900.5, 4900.5),
+      ],
+    );
+
+    expect(matches).toHaveLength(2);
+    expect(new Set(matches.map((m) => m.month.billId)).size).toBe(2);
   });
 });

@@ -149,6 +149,7 @@ async function probePr(
     gate_wait_s: null,
     timed_out: false,
     stale_reaction: state.staleReaction,
+    blocked_reason: state.blockedReason,
     decision: null,
     // A probe reads state; it never asks for a review.
     request_attempts: null,

@@ -1,4 +1,4 @@
-import type { Chart } from "cdk8s";
+import { JsonPatch, type Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import {
   Certificate,
@@ -96,14 +96,21 @@ export function createCertManagerApp(chart: Chart) {
     },
   });
 
-  new ClusterIssuer(chart, "homelab-ca-cluster-issuer", {
-    metadata: {
-      name: HOMELAB_CLUSTER_ISSUER_NAME,
+  // ClusterIssuer is cluster-scoped. The containing apps chart is namespaced,
+  // so remove its inherited namespace from this cluster-scoped manifest.
+  const homelabCaClusterIssuer = new ClusterIssuer(
+    chart,
+    "homelab-ca-cluster-issuer",
+    {
+      metadata: {
+        name: HOMELAB_CLUSTER_ISSUER_NAME,
+      },
+      spec: {
+        ca: { secretName: HOMELAB_CLUSTER_CA_SECRET },
+      },
     },
-    spec: {
-      ca: { secretName: HOMELAB_CLUSTER_CA_SECRET },
-    },
-  });
+  );
+  homelabCaClusterIssuer.addJsonPatch(JsonPatch.remove("/metadata/namespace"));
 
   const certManagerValues: HelmValuesForChart<"cert-manager"> = {
     installCRDs: true,

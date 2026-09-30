@@ -3,7 +3,7 @@ import type {
   ScoutQlAggregateExpr,
   ScoutQlPredicate,
   ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   collectAggregateColumnNames,
   compileAggregateExpr,
@@ -13,7 +13,7 @@ import {
   inferScalarType,
   type AggregateContext,
 } from "#src/reports/duckdb/aggregate-sql.ts";
-import { buildPlanColumnMap } from "#src/reports/duckdb/expr-sql.ts";
+import { buildPlanColumnMap } from "#src/reports/duckdb/column-map.ts";
 import { frag } from "#src/reports/duckdb/sql-fragment.ts";
 import { paramValues } from "#src/testing/test-lake-files.ts";
 

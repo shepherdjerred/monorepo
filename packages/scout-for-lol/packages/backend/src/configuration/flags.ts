@@ -19,6 +19,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { isEnabled } from "@shepherdjerred/feature-flags";
+import type { ScoutBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import { isAbsent } from "@shepherdjerred/feature-flags/flag-result.ts";
 import { resolveEnvironment } from "#src/configuration.ts";
 
@@ -128,6 +129,17 @@ const LIMIT_REGISTRY: Record<LimitName, LimitConfig> = {
 type FlagOverride = {
   value: boolean;
   attributes: FlagAttributes;
+  /**
+   * Early access for the beta guild, and nothing more.
+   *
+   * The registry is the fail-closed fallback for when Flipt is unavailable,
+   * and the beta guild carries the same Discord id in both deployments. An
+   * unqualified rollout here would therefore switch a surface on in production
+   * for that guild the moment its hard disable is lifted. Marking the override
+   * beta-only keeps the fallback matching Flipt's production state, where the
+   * same flags carry no rollout at all.
+   */
+  betaOnly?: true;
 };
 
 /**
@@ -148,52 +160,63 @@ export type FlagName =
   | "dare_extended_contracts_enabled"
   | "dare_notifications_enabled"
   | "bucks_transfers_enabled"
-  | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
   | "competition_builder_v2_enabled"
   | "challenge_runs_enabled"
+  | "clash_surface"
   | "custom_nights_enabled"
   | "debug"
   | "duels_enabled"
   | "explore_creation_enabled"
+  | "explore_on_demand_riot_enabled"
+  | "feature_tips_enabled"
   | "hall_of_fame_enabled"
+  | "mvp_votes_enabled"
   | "initial_match_history_import_enabled"
+  | "scout_client_ingestion"
+  | "scout_operations_console_enabled"
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
-  | "tournament_lobbies_enabled"
+  | "scout_v2_postmatch_ownership_enabled"
+  | "scout_v2_prematch_ownership_enabled"
+  | "scout_v2_progression_notifications_enabled"
   | "voice_assistant_enabled";
+
+/**
+ * Compile-time proof that every local flag name remains a Flipt boolean flag:
+ * adding a name here that Flipt does not know fails typecheck at this line.
+ */
+type AssertFlagNameSubset<T extends ScoutBooleanFlagKey> = T;
 
 /** Flipt is authoritative when available. The registry remains a fail-closed
  * compatibility seed and test fixture for provider-unavailable evaluations. */
-export type PolicyFlagName = FlagName;
+export type PolicyFlagName = AssertFlagNameSubset<FlagName>;
 
 /**
- * Beta-only product surfaces that are permanently excluded from production.
- * This policy sits above both the local registry and Flipt so an operator
- * override cannot accidentally expose a forbidden production surface.
+ * Product surfaces that are permanently excluded from production. This policy
+ * sits above both the local registry and Flipt so an operator override cannot
+ * accidentally expose a forbidden production surface.
+ *
+ * The set is deliberately narrow: real-money-shaped Bryan Bucks surfaces
+ * (wallets, betting, parlays, transfers, and the Dares funded from them),
+ * custom games and duels, and the voice assistant, which captures audio.
+ * Everything else is governed by its
+ * ordinary flag, so a surface that is merely beta today stays a Flipt
+ * decision rather than a code change.
  */
 const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
   [
-    "ai_reports_enabled",
-    "ai_reports_unlimited",
-    "ai_reviews_enabled",
     "betting_enabled",
+    "betting_player_bet_outcome_dm_enabled",
+    "betting_settlement_dm_enabled",
+    "bucks_transfers_enabled",
     "bucks_dares_enabled",
     "dare_v2",
     "dare_extended_contracts_enabled",
     "dare_notifications_enabled",
-    "bucks_transfers_enabled",
-    "weekly_parlays_enabled",
-    "betting_player_bet_outcome_dm_enabled",
-    "betting_settlement_dm_enabled",
-    "challenge_runs_enabled",
-    "competition_builder_v2_enabled",
     "custom_nights_enabled",
     "duels_enabled",
-    "hall_of_fame_enabled",
-    "tournament_lobbies_enabled",
-    "scoutql_relational_enabled",
     "voice_assistant_enabled",
   ],
 );
@@ -205,32 +228,64 @@ export function isFeatureHardDisabled(name: FlagName): boolean {
 }
 
 /**
+ * The registry overrides that apply to the running deployment.
+ *
+ * Production drops every beta-only rollout, so a flag whose only affirmative
+ * entry is beta early access falls back to its default there. This is what
+ * keeps lifting a hard disable from switching a surface on by itself: the
+ * production decision moves to Flipt rather than arriving with the deploy.
+ */
+function applicableOverrides(config: FlagConfig): FlagOverride[] {
+  return resolveEnvironment() === "prod"
+    ? config.overrides.filter((override) => override.betaOnly !== true)
+    : config.overrides;
+}
+
+/**
  * Central registry for all boolean flags
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   hall_of_fame_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
+  },
+  mvp_votes_enabled: {
+    default: false,
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   challenge_runs_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
-  // Direct duels and structured events stay disabled in beta and production
-  // until Riot's written approval for classic objective rules and sub-20
-  // events is recorded. Pure domain behavior remains available to dev/stub
-  // tests while this rollout flag has no enabled compatibility override.
+  clash_surface: {
+    default: false,
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
+  },
   duels_enabled: {
     default: false,
-    overrides: [],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   custom_nights_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   competition_builder_v2_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   ai_reports_enabled: {
     default: false,
@@ -238,23 +293,13 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       {
         value: true,
         attributes: { server: MY_SERVER },
+        betaOnly: true,
       },
     ],
   },
   ai_reports_unlimited: {
     default: false,
-    overrides: [{ value: true, attributes: { user: ME } }],
-  },
-  /**
-   * Tournament-code custom lobbies (`/lobby`).
-   *
-   * The local override enables the beta test guild. This is permanently
-   * beta-only: production's hard-disable policy wins before this registry or
-   * Flipt is evaluated.
-   */
-  tournament_lobbies_enabled: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [{ value: true, attributes: { user: ME }, betaOnly: true }],
   },
   ai_reviews_enabled: {
     default: false,
@@ -262,6 +307,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       {
         value: true,
         attributes: { server: MY_SERVER },
+        betaOnly: true,
       },
     ],
   },
@@ -311,7 +357,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // because it exposes a wider query surface than Dare v2 creation itself.
   scoutql_relational_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   // Fee-bearing Bryan Bucks wallet transfers. This is narrower than the
   // betting economy itself, so the domain requires both flags. Production's
@@ -320,12 +368,15 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
-  // Week-spanning Bryan Bucks markets remain a narrower private-beta rollout
-  // than the betting economy itself. New positions require both flags;
-  // settlement and refunds deliberately do not.
-  weekly_parlays_enabled: {
+  // Feature-discovery tips append a line to messages Scout already sends, so
+  // they reach every reader of a channel rather than an opted-in subset. Beta
+  // first, and the percent and cooldown in dynamic config bound the noise once
+  // it is on.
+  feature_tips_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   // Settlement messages are a separate rollout from the betting economy: the
   // economy must keep paying or refunding open positions even while Discord
@@ -341,12 +392,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   },
   debug: {
     default: false,
-    overrides: [
-      {
-        value: true,
-        attributes: { user: ME },
-      },
-    ],
+    overrides: [{ value: true, attributes: { user: ME } }],
   },
   /**
    * Confirming an Explore-prepared report, subscription or competition.
@@ -362,6 +408,73 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
+  /** On-demand Riot reads are beta-only until their cost and rate impact settle. */
+  explore_on_demand_riot_enabled: {
+    default: false,
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
+  },
+  /**
+   * Offering the durable-pipeline operations console.
+   *
+   * VISIBILITY only. Who may operate the pipeline is the Git-managed allowlist
+   * in `operations/operator-allowlist.ts`, checked server-side on every
+   * operations procedure — this flag can only ever take the surface away, never
+   * grant anyone access to it, and turning it on for a non-operator changes
+   * nothing.
+   *
+   * Deliberately absent from `PRODUCTION_HARD_DISABLED_FLAGS`: an operations
+   * console that cannot exist in production is an operations console for the
+   * environment that needs it least. It ramps through Flipt instead, and is
+   * re-read at confirm time so revoking it also blocks intents already
+   * prepared.
+   */
+  scout_operations_console_enabled: {
+    default: false,
+    overrides: [],
+  },
+  /**
+   * Whether V2 owns scheduled post-match discovery.
+   *
+   * The rollback switch for the V2 cutover. The Schedule always starts
+   * `scoutPostMatchDiscoveryV2Workflow`; each run reads this first and, when
+   * it is off, hands the pass to v1's `scoutPostMatchDiscoveryWorkflow`
+   * instead. On here and in Flipt, because V2 is what runs today and an
+   * unreachable provider must not flip discovery to the other pipeline.
+   * Deliberately absent from `PRODUCTION_HARD_DISABLED_FLAGS`: production is
+   * the environment the switch exists for. A rollback flips it in Flipt and
+   * records the same value as an environment override in
+   * `managed-flag-inventory.json`, or the inventory check reports drift.
+   */
+  scout_v2_postmatch_ownership_enabled: {
+    default: true,
+    overrides: [],
+  },
+  /**
+   * Whether V2 owns scheduled prematch detection.
+   *
+   * The cutover switch for prematch. The `prematch-poll` Schedule always
+   * starts `scoutRealtimePollWorkflow`; each prematch run reads this first
+   * and, when it is on, runs `scoutPrematchDiscoveryV2Workflow` as a child
+   * for live-game detection and keeps only v1's prematch maintenance. Off
+   * here and in Flipt, because v1 is what runs today and an unreachable
+   * provider must not move detection to the other pipeline. Deliberately
+   * absent from `PRODUCTION_HARD_DISABLED_FLAGS`: it ramps per stage, beta
+   * first. Every ramp or rollback flips it in Flipt and records the same
+   * value as an environment override in `managed-flag-inventory.json`, or the
+   * inventory check reports drift.
+   */
+  scout_v2_prematch_ownership_enabled: {
+    default: false,
+    overrides: [],
+  },
+  /**
+   * Per server, mint new Hall record breaks as V2 intents. First path owns
+   * each guild and match; the flag is off by default and ramps per server.
+   * Targeting is mirrored in managed-flag-inventory.json.
+   */
+  scout_v2_progression_notifications_enabled: { default: false, overrides: [] },
   initial_match_history_import_enabled: {
     default: false,
     overrides: [],
@@ -370,15 +483,21 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
+  scout_client_ingestion: {
+    // Pairing and ingestion are available to every account through Flipt's
+    // managed environment rollout. The compatibility registry remains off so
+    // a provider outage fails closed instead of opening a new ingress surface.
+    default: false,
+    overrides: [],
+  },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *
-   * Guild-level opt-in for the beta test guild only. The flag decides where
-   * the subcommands register and whether `/scout join` may start a session;
-   * whether the voice pipeline loads at all is the `VOICE_ASSISTANT_ENABLED`
-   * env gate in `configuration.ts` — model verification is fatal at boot, and
-   * unauthenticated Flipt must never control audio capture. Production's
-   * hard-disable policy wins before this registry or Flipt is evaluated.
+   * Guild-level opt-in for the beta test guild only. This is the sole
+   * activation gate: it decides where the subcommands register, whether
+   * `/scout join` may load the voice pipeline and start a session, and whether
+   * an active session may keep capturing audio. Production's hard-disable
+   * policy wins before this registry or Flipt is evaluated.
    */
   voice_assistant_enabled: {
     default: false,
@@ -520,7 +639,7 @@ export function getFlag(
   }
   const config = FLAG_REGISTRY[name];
   const override: boolean | undefined = findBestMatch(
-    config.overrides,
+    applicableOverrides(config),
     attributes,
   );
   return override ?? config.default;
@@ -617,7 +736,7 @@ function listWholeGuildOverrides(
   }
 
   const guilds = new Set<DiscordGuildId>();
-  for (const override of config.overrides) {
+  for (const override of applicableOverrides(config)) {
     if (!accept(override.value)) {
       continue;
     }

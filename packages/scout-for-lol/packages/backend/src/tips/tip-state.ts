@@ -1,0 +1,121 @@
+import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
+import { parseTipKey } from "#src/tips/tip-catalog.ts";
+
+/**
+ * Who a tip is aimed at. A guild-channel message has no `discordId`; a DM
+ * carries the recipient's, so one member's cadence never spends the channel's.
+ */
+export type TipAudience = {
+  serverId: DiscordGuildId;
+  discordId?: DiscordAccountId | undefined;
+};
+
+/** "" is the guild-channel audience; see the model's sentinel note. */
+function audienceWhere(audience: TipAudience) {
+  return {
+    serverId: audience.serverId,
+    audienceId: audience.discordId ?? "",
+  };
+}
+
+/**
+ * The tip keys this audience has already been shown.
+ *
+ * Every key is parsed at this database boundary: an unrecognised one is
+ * corrupt persisted state and fails loudly here rather than quietly occupying
+ * the shown-set.
+ */
+export async function shownTipKeys(
+  audience: TipAudience,
+  db: ExtendedPrismaClient = prisma,
+): Promise<Set<FeatureTipKey>> {
+  const rows = await db.featureTipImpression.findMany({
+    where: audienceWhere(audience),
+    select: { tipKey: true },
+  });
+  return new Set(rows.map((row) => parseTipKey(row.tipKey)));
+}
+
+/** When this audience last saw a tip, or undefined if it never has. */
+export async function lastTipShownAt(
+  audience: TipAudience,
+  db: ExtendedPrismaClient = prisma,
+): Promise<Date | undefined> {
+  const rows = await db.featureTipImpression.findMany({
+    where: audienceWhere(audience),
+    select: { shownAt: true, tipKey: true },
+  });
+  for (const row of rows) parseTipKey(row.tipKey);
+  return rows.reduce<Date | undefined>(
+    (latest, row) =>
+      latest === undefined || row.shownAt > latest ? row.shownAt : latest,
+    undefined,
+  );
+}
+
+/**
+ * Claim a tip for this audience, returning whether the claim was won.
+ *
+ * The insert IS the claim. Two deliveries to the same guild can run
+ * concurrently — two channels, or a post-match and a pre-match message — and
+ * both can read the same cooldown and shown-set before either writes. The
+ * unique constraint settles it: exactly one insert survives, so the same tip
+ * cannot go out twice.
+ *
+ * Claiming happens before the send rather than after, so the loser of a race
+ * never renders the tip at all. {@link releaseTipClaim} undoes the claim when
+ * the send then fails.
+ */
+export async function claimTip(
+  input: TipAudience & { tipKey: FeatureTipKey; shownAt?: Date },
+  db: ExtendedPrismaClient = prisma,
+): Promise<boolean> {
+  const { count } = await db.featureTipImpression.createMany({
+    data: [
+      {
+        ...audienceWhere(input),
+        tipKey: input.tipKey,
+        claimedAt: input.shownAt ?? new Date(),
+        ...(input.shownAt === undefined ? {} : { shownAt: input.shownAt }),
+      },
+    ],
+    skipDuplicates: true,
+  });
+  return count > 0;
+}
+
+/** Mark a claimed row as a delivered impression without changing its timestamp. */
+export async function confirmTipClaim(
+  input: TipAudience & { tipKey: FeatureTipKey },
+  db: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await db.featureTipImpression.updateMany({
+    where: {
+      ...audienceWhere(input),
+      tipKey: input.tipKey,
+      claimedAt: { not: null },
+    },
+    data: { claimedAt: null },
+  });
+}
+
+/**
+ * Give a claimed tip back after a failed send, so it stays eligible.
+ *
+ * Deliberately narrow: it deletes only this audience's row for this tip, and
+ * only the caller that won the claim ever calls it.
+ */
+export async function releaseTipClaim(
+  input: TipAudience & { tipKey: FeatureTipKey },
+  db: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await db.featureTipImpression.deleteMany({
+    where: {
+      ...audienceWhere(input),
+      tipKey: input.tipKey,
+      claimedAt: { not: null },
+    },
+  });
+}

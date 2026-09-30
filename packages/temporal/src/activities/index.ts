@@ -1,6 +1,5 @@
 import { fetcherActivities } from "./fetcher.ts";
-import { depsSummaryActivities } from "./maintenance/deps-summary.ts";
-import { depsSummaryLegacyActivities } from "./maintenance/deps-summary-legacy.ts";
+import { depsSummaryActivities } from "./maintenance/deps-summary/deps-summary.ts";
 import { dnsAuditActivities } from "./homelab/dns-audit.ts";
 import {
   golinkClusterActivities,
@@ -16,8 +15,9 @@ import { dataDragonActivities } from "./data-dragon/data-dragon.ts";
 import { lanePriorActivities } from "./lane-prior-refresh.ts";
 import { scoutSeasonRefreshActivities } from "./scout/scout-season-refresh.ts";
 import { veleroOrphanAuditActivities } from "./homelab/velero-orphan-audit.ts";
+import { veleroR2OrphanAuditActivities } from "./homelab/velero-r2-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
-import { cancelBuildkiteBuildsActivities } from "./cancel-buildkite-builds.ts";
+import { cancelCiPipelinesActivities } from "./cancel-ci-pipelines.ts";
 import { checkPrMergeConflictsActivities } from "./maintenance/check-pr-merge-conflicts.ts";
 import { llmCatalogRefreshActivities } from "./agent/llm-catalog-refresh.ts";
 import { scoutImageGcActivities } from "./scout/scout-image-gc.ts";
@@ -27,26 +27,35 @@ import { scoutShowcaseRefreshActivities } from "./scout/scout-showcase-refresh.t
 import { scheduleRehearsalActivities } from "./scout/schedule-rehearsal.ts";
 import { scoutQueueWindowsActivities } from "./scout/scout-queue-windows.ts";
 import { glitterCorpusActivities } from "./glitter/corpus/glitter-corpus.ts";
-import { glitterContextRefreshActivities } from "./glitter/context/glitter-context-refresh.ts";
-import { glitterContextAuditActivities } from "./glitter/context/glitter-context-audit.ts";
+import { glitterContextRefreshActivities } from "./glitter/context/refresh/glitter-context-refresh.ts";
+import { glitterContextAuditActivities } from "./glitter/context/audit/glitter-context-audit.ts";
 import { weatherActivities } from "./weather.ts";
-import { workflowFailureWatchActivities } from "./maintenance/workflow-failure-watch-activity.ts";
+import { workflowFailureWatchActivities } from "./maintenance/workflow-failure/workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance/maintenance.ts";
 import { mainVulnScanActivities } from "./maintenance/main-vuln-scan.ts";
 import { mainVulnScanAlertActivities } from "./maintenance/main-vuln-scan-alerts.ts";
-import { linkRotScanActivities } from "./maintenance/link-rot-scan.ts";
-import { linkRotScanAlertActivities } from "./maintenance/link-rot-scan-alerts.ts";
+import { linkRotScanActivities } from "./maintenance/link-rot/link-rot-scan.ts";
+import { linkRotScanAlertActivities } from "./maintenance/link-rot/link-rot-scan-alerts.ts";
 import { reportDeliveryActivities } from "./reports/report-delivery.ts";
-import { protobufWatchActivities } from "./maintenance/protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
-import { ciIoImpactActivities } from "./maintenance/ci-io-impact.ts";
+import { ciIoObservabilityActivities } from "./maintenance/ci-io-observability.ts";
 import { freshrssActivities } from "./maintenance/freshrss.ts";
-import { scoutWeeklyParlayActivities } from "./scout/scout-weekly-parlay.ts";
 import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
-import { openAiComplimentaryUsageActivities } from "./agent/openai-complimentary-usage.ts";
+import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
+import { opsActivities } from "./ops/ops-activities.ts";
+import { miningResetActivities } from "./homelab/mining-reset.ts";
+import { agentChatActivities } from "./agent/chat/run-agent-chat-turn.ts";
+import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-turn.ts";
+import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
+import { discordAgentChatActivities } from "./agent/chat/discord-ingress.ts";
+import { httpAgentChatActivities } from "./agent/chat/http-ingress.ts";
+import { pollBlueBubblesMessages } from "./agent/imessage/poll.ts";
+import { prepareImessageCommand } from "./agent/imessage/prepare.ts";
+import { deliverImessageResponse } from "./agent/imessage/deliver.ts";
+import { waitForImessageCommand } from "./agent/imessage/wait.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -71,24 +80,36 @@ export const infraActivities = {
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...veleroOrphanAuditActivities,
+  ...veleroR2OrphanAuditActivities,
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,
-  ...ciIoImpactActivities,
+  ...ciIoObservabilityActivities,
+  ...opsActivities,
+};
+
+export const miningResetWorkerActivities = {
+  ...miningResetActivities,
 };
 
 export const repoActivities = {
   ...fetcherActivities,
   ...depsSummaryActivities,
-  ...depsSummaryLegacyActivities,
   ...golinkSyncActivities,
-  ...cancelBuildkiteBuildsActivities,
+  ...cancelCiPipelinesActivities,
   ...checkPrMergeConflictsActivities,
   ...llmCatalogRefreshActivities,
   ...pokeemeraldDataRefreshActivities,
-  ...protobufWatchActivities,
   ...freshrssActivities,
   ...fliptFlagInventoryActivities,
+};
+
+export const agentChatDispatchWorkerActivities = {
+  ...agentChatDispatchActivities,
+};
+
+export const agentChatReceiptWorkerActivities = {
+  ...agentChatReceiptActivities,
 };
 
 export const scoutActivities = {
@@ -98,13 +119,13 @@ export const scoutActivities = {
   ...scoutImageGcActivities,
   ...scoutShowcaseRefreshActivities,
   ...scoutQueueWindowsActivities,
-  ...scoutWeeklyParlayActivities,
   ...scoutBryanBucksActivities,
   ...scheduleRehearsalActivities,
 };
 
 export const agentActivities = {
   ...agentTaskActivities,
+  ...agentChatActivities,
 };
 
 export const glitterCorpusWorkerActivities = {
@@ -126,5 +147,21 @@ export const backupWorkerActivities = {
 };
 
 export const billingActivities = {
-  ...openAiComplimentaryUsageActivities,
+  ...llmBilledCostActivities,
+};
+
+export const agentChatIngressActivities = {
+  ...discordAgentChatActivities,
+  ...httpAgentChatActivities,
+};
+export const agentChatDeliveryActivities = {
+  deliverDiscordAgentChatMessage:
+    discordAgentChatActivities.deliverDiscordAgentChatMessage,
+};
+
+export const imessageAgentChatActivities = {
+  pollBlueBubblesMessages,
+  prepareImessageCommand,
+  deliverImessageResponse,
+  waitForImessageCommand,
 };

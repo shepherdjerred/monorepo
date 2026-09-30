@@ -1,5 +1,5 @@
 {
-  "scripts/backfill-overdue-season-comps.ts": {
+  "scripts/backfill/backfill-overdue-season-comps.ts": {
     "@typescript-eslint/prefer-optional-chain": {
       "count": 1
     }
@@ -38,16 +38,6 @@
       "count": 1
     }
   },
-  "scripts/evaluate-lane-priors.ts": {
-    "custom-rules/prefer-structured-logging": {
-      "count": 1
-    }
-  },
-  "scripts/generate-lane-priors.ts": {
-    "custom-rules/prefer-structured-logging": {
-      "count": 1
-    }
-  },
   "scripts/inspect-pipeline-trace.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
@@ -68,14 +58,19 @@
       "count": 1
     }
   },
-  "scripts/lane-prior-cli.ts": {
-    "@typescript-eslint/no-deprecated": {
+  "scripts/lane-priors/evaluate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
       "count": 1
     }
   },
-  "scripts/migrate-scoutql-v2.test.ts": {
-    "unicorn/no-await-expression-member": {
-      "count": 3
+  "scripts/lane-priors/generate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "scripts/lane-priors/lane-prior-cli.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
     }
   },
   "scripts/outreach.ts": {
@@ -107,7 +102,7 @@
       "count": 1
     }
   },
-  "scripts/scoutql-v2-rewrite-render.ts": {
+  "scripts/scoutql/scoutql-v2-rewrite-render.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -117,7 +112,7 @@
       "count": 1
     }
   },
-  "scripts/smoke.ts": {
+  "scripts/smoke/smoke.ts": {
     "custom-rules/prefer-structured-logging": {
       "count": 2
     }
@@ -151,14 +146,19 @@
       "count": 2
     }
   },
-  "src/betting/announce.ts": {
+  "src/betting/markets/matching.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/markets/matching.ts": {
+  "src/betting/parlays/model/parlay-pricing.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
+    }
+  },
+  "src/betting/parlays/model/parlay-stats.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
     }
   },
   "src/betting/parlays/parlay-evaluator.ts": {
@@ -176,27 +176,17 @@
       "count": 1
     }
   },
-  "src/betting/parlays/parlay-place-bet.ts": {
+  "src/betting/parlays/runtime/parlay-place-bet.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/parlays/parlay-pricing.ts": {
+  "src/betting/parlays/runtime/parlay-publish.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/parlays/parlay-publish.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlays/parlay-settle.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
-  "src/betting/parlays/parlay-stats.ts": {
+  "src/betting/parlays/runtime/parlay-settle.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }
@@ -226,21 +216,6 @@
       "count": 1
     }
   },
-  "src/betting/weekly/weekly-parlay-contribution.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/weekly/weekly-parlay-open.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/weekly/weekly-parlay-settle.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/database/legacy-import/run-import.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -261,7 +236,7 @@
       "count": 1
     }
   },
-  "src/explore/run-turn.ts": {
+  "src/explore/runs/run-turn.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -292,11 +267,6 @@
     }
   },
   "src/league/review/test-reviews.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/league/tasks/cleanup/reconcile-removed-guilds.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -352,11 +322,6 @@
     }
   },
   "src/testing/postgres-server.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/trpc/context.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

@@ -131,6 +131,11 @@ export function createSeekablePlayer(
 
   function teardownConn() {
     if (!conn) return;
+    // A "voice" segment never opened anything: it borrowed the shared voice connection, which the
+    // consumer also uses for its own audio, so there is nothing here it may take back. Clearing the
+    // speaking flag or the video attributes would be reaching into somebody else's state — see the
+    // ownership note on PlayStreamOptions.type.
+    if (playType === "voice") return;
     if (playType === "go-live") streamer.stopStream();
     else streamer.signalVideo(false);
     conn.mediaConnection.setSpeaking(false);
@@ -282,7 +287,9 @@ export function createSeekablePlayer(
         if (!streamer.voiceConnection)
           throw new Error("Bot is not connected to a voice channel");
         conn = streamer.voiceConnection.webRtcConn;
-        streamer.signalVideo(true);
+        // "camera" announces video on the shared voice connection; "voice" announces nothing,
+        // because it sends nothing but audio and the connection is not its to reconfigure.
+        if (playType === "camera") streamer.signalVideo(true);
       }
       // `initial: true` — a failed first attach rejects here (startup/graph-init failure) instead of
       // being swallowed into `finished`, so callers can distinguish it from a mid-stream crash.

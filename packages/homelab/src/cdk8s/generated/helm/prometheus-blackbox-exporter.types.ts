@@ -62,6 +62,8 @@ export type PrometheusblackboxexporterHelmValuesPodSecurityContext = object;
 
 export type PrometheusblackboxexporterHelmValuesSecurityContext = {
   /**
+   * User and Group to run blackbox-exporter container as
+   *
    * @default 1000
    */
   runAsUser?: number;
@@ -1044,10 +1046,6 @@ export type PrometheusblackboxexporterHelmValues = {
    */
   strategy?: PrometheusblackboxexporterHelmValuesStrategy;
   /**
-   * Optionally specify an array of imagePullSecrets.
-   * Secrets must be manually created in the namespace.
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-   *
    * @default {...} (5 keys)
    */
   image?: PrometheusblackboxexporterHelmValuesImage;
@@ -1058,8 +1056,6 @@ export type PrometheusblackboxexporterHelmValues = {
    */
   podSecurityContext?: PrometheusblackboxexporterHelmValuesPodSecurityContext;
   /**
-   * User and Group to run blackbox-exporter container as
-   *
    * @default {...} (6 keys)
    */
   securityContext?: PrometheusblackboxexporterHelmValuesSecurityContext;

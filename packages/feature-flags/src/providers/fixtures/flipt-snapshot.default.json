@@ -9,11 +9,11 @@
       "description": "",
       "enabled": true,
       "type": "VARIANT_FLAG_TYPE",
-      "createdAt": "2026-08-21T05:03:24.618486Z",
-      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "createdAt": "2026-09-24T19:32:38.891290Z",
+      "updatedAt": "2026-09-24T19:32:38.891290Z",
       "rules": [
         {
-          "id": "9a47eb09-1b6b-4151-9945-db0534b8b691",
+          "id": "9b56abe5-210e-4aa7-9aab-159d30e0a01d",
           "segments": [
             {
               "key": "everyone",
@@ -27,7 +27,7 @@
           "segmentOperator": "OR_SEGMENT_OPERATOR",
           "distributions": [
             {
-              "ruleId": "9a47eb09-1b6b-4151-9945-db0534b8b691",
+              "ruleId": "9b56abe5-210e-4aa7-9aab-159d30e0a01d",
               "variantKey": "gpt-5.6-sol",
               "variantAttachment": "null",
               "rollout": 100
@@ -43,8 +43,8 @@
       "description": "",
       "enabled": true,
       "type": "BOOLEAN_FLAG_TYPE",
-      "createdAt": "2026-08-21T05:03:24.618486Z",
-      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "createdAt": "2026-09-24T19:32:38.891290Z",
+      "updatedAt": "2026-09-24T19:32:38.891290Z",
       "rules": [],
       "rollouts": []
     },
@@ -54,8 +54,8 @@
       "description": "",
       "enabled": false,
       "type": "BOOLEAN_FLAG_TYPE",
-      "createdAt": "2026-08-21T05:03:24.618486Z",
-      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "createdAt": "2026-09-24T19:32:38.891290Z",
+      "updatedAt": "2026-09-24T19:32:38.891290Z",
       "rules": [],
       "rollouts": []
     },
@@ -65,8 +65,8 @@
       "description": "",
       "enabled": false,
       "type": "BOOLEAN_FLAG_TYPE",
-      "createdAt": "2026-08-21T05:03:24.618486Z",
-      "updatedAt": "2026-08-21T05:03:24.618486Z",
+      "createdAt": "2026-09-24T19:32:38.891290Z",
+      "updatedAt": "2026-09-24T19:32:38.891290Z",
       "rules": [],
       "rollouts": [
         {
@@ -80,5 +80,5 @@
       ]
     }
   ],
-  "digest": "75289fe4be9cd9a17d35a567c6384165b7848a49"
+  "digest": "49515220acf7fb574f8178d5c3bbcdb9b4890b5c"
 }

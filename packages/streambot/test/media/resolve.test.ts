@@ -5,6 +5,9 @@ import {
   resolvePlayQuery,
 } from "@shepherdjerred/streambot/discord/resolve.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import { NoUsableFormatError } from "@shepherdjerred/streambot/sources/format-select.ts";
+import { parseFfprobeOutput } from "@shepherdjerred/streambot/sources/probe.ts";
+import { assertSportsHasAudioAndVideo } from "@shepherdjerred/streambot/sources/resolve.ts";
 
 const entries: LibraryEntry[] = [
   {
@@ -22,6 +25,24 @@ describe("isHttpUrl", () => {
     expect(isHttpUrl("ftp://example.com")).toBe(false);
     expect(isHttpUrl("just text")).toBe(false);
   });
+});
+
+test("live sports requires a confirmed positive audio channel count", () => {
+  const video = {
+    codec_type: "video",
+    codec_name: "h264",
+    width: 1280,
+    height: 720,
+  };
+  const audio = { codec_type: "audio", codec_name: "aac" };
+  const missingChannels = parseFfprobeOutput({ streams: [video, audio] });
+  const valid = parseFfprobeOutput({
+    streams: [video, { ...audio, channels: 2 }],
+  });
+  expect(() => assertSportsHasAudioAndVideo(missingChannels)).toThrow(
+    "did not provide both audio and video",
+  );
+  expect(() => assertSportsHasAudioAndVideo(valid)).not.toThrow();
 });
 
 describe("resolvePlayQuery", () => {
@@ -49,6 +70,22 @@ describe("resolvePlayQuery", () => {
 });
 
 describe("classifyPlayError", () => {
+  test("explains an item with no playable format, per media kind", () => {
+    // Matched by class rather than by message text: this is our own failure, not yt-dlp stderr.
+    expect(
+      classifyPlayError(
+        new NoUsableFormatError("music", "selector: bestaudio/best"),
+        "url",
+      ),
+    ).toBe("That item has no audio stream I can play.");
+    expect(
+      classifyPlayError(
+        new NoUsableFormatError("video", "selector: best"),
+        "url",
+      ),
+    ).toContain("mode:music");
+  });
+
   test("recognizes an unsupported site", () => {
     const message = classifyPlayError(
       new Error(

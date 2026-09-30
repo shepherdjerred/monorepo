@@ -52,7 +52,7 @@ function notReady<T>(defaultValue: T): ResolutionDetails<T> {
  *
  * ## Why `listFlags()` decides absence
  *
- * Verified against flipt/flipt:v2.11.0, not assumed from docs:
+ * Verified against flipt/flipt:v2.13.0, not assumed from docs:
  *
  * - `evaluateBoolean` on an unknown key **throws**. It does not return a
  *   not-found reason.

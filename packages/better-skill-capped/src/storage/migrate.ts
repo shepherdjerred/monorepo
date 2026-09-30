@@ -27,10 +27,7 @@ function legacyItemKind(item: Record<string, unknown>): Kind {
   if ("matchLink" in item) {
     return "commentary";
   }
-  if ("videos" in item) {
-    return "course";
-  }
-  return "video";
+  return "videos" in item ? "course" : "video";
 }
 
 function toIsoDate(input: string): string {

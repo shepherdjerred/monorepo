@@ -3,21 +3,25 @@ import {
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
 } from "#src/model/reports/explore-answer.ts";
+import { ExploreLoadoutCardRequestsSchema } from "#src/model/reports/explore-loadout-card.ts";
 import {
+  ExploreMessageSchema,
+  ExploreStreamMessageSchema,
   ExploreTraceEntrySchema,
   parseExploreStreamEvent,
 } from "#src/model/reports/explore.ts";
 
 describe("ExploreAnswerSchema", () => {
-  test("defaults includeVisualization to false so a missing key does not attach a chart", () => {
-    expect(
-      ExploreAnswerSchema.parse({
-        answer: "Ahri leads.",
-        queryText: null,
-        caveats: [],
-        followUps: [],
-      }).includeVisualization,
-    ).toBe(false);
+  test("defaults cards and includeVisualization when older callers omit them", () => {
+    const answer = ExploreAnswerSchema.parse({
+      answer: "Ahri leads.",
+      spokenAnswer: null,
+      queryText: null,
+      caveats: [],
+      followUps: [],
+    });
+    expect(answer.includeVisualization).toBe(false);
+    expect(answer.loadoutCards).toEqual([]);
   });
 
   test("the wire schema requires includeVisualization", () => {
@@ -34,14 +38,90 @@ describe("ExploreAnswerSchema", () => {
       ExploreAnswerSchema.parse(
         ExploreAnswerWireSchema.parse({
           answer: "Ahri leads.",
+          spokenAnswer: null,
           title: null,
           queryText: null,
           includeVisualization: true,
+          matchCards: [],
+          loadoutCards: [],
           caveats: [],
           followUps: [],
         }),
       ).includeVisualization,
     ).toBe(true);
+  });
+
+  test("requires loadoutCards in strict wire answers", () => {
+    expect(
+      ExploreAnswerWireSchema.safeParse({
+        answer: "Ahri's build is attached.",
+        spokenAnswer: null,
+        title: null,
+        queryText: null,
+        includeVisualization: false,
+        matchCards: [],
+        caveats: [],
+        followUps: [],
+      }).success,
+    ).toBe(false);
+  });
+
+  test("limits model-selected cards to five with at most one large card", () => {
+    const answer = {
+      answer: "The match was a bloodbath.",
+      spokenAnswer: null,
+      title: null,
+      queryText: "SELECT match_id FROM matches",
+      includeVisualization: false,
+      caveats: [],
+      followUps: [],
+    };
+    expect(
+      ExploreAnswerWireSchema.safeParse({
+        ...answer,
+        matchCards: [
+          { matchId: "NA1_1", size: "L" },
+          { matchId: "NA1_2", size: "L" },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      ExploreAnswerWireSchema.safeParse({
+        ...answer,
+        matchCards: [
+          { matchId: "NA1_1", size: "S" },
+          { matchId: "NA1_2", size: "S" },
+          { matchId: "NA1_3", size: "S" },
+          { matchId: "NA1_4", size: "S" },
+          { matchId: "NA1_5", size: "S" },
+          { matchId: "NA1_6", size: "S" },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("ExploreLoadoutCardRequestsSchema", () => {
+  test("limits cards to three and rejects a duplicate participant pair", () => {
+    const first = {
+      matchId: "NA1_1",
+      puuid: "0192af5b-0c88-7c3a-a17f-858c0a170001",
+      size: "S",
+    };
+    expect(
+      ExploreLoadoutCardRequestsSchema.safeParse([
+        first,
+        { ...first, size: "L" },
+      ]).success,
+    ).toBe(false);
+    expect(
+      ExploreLoadoutCardRequestsSchema.safeParse([
+        first,
+        { ...first, matchId: "NA1_2" },
+        { ...first, matchId: "NA1_3" },
+        { ...first, matchId: "NA1_4" },
+      ]).success,
+    ).toBe(false);
   });
 });
 
@@ -67,6 +147,30 @@ describe("ExploreTraceEntrySchema", () => {
 });
 
 describe("parseExploreStreamEvent", () => {
+  test("keeps final stream messages compatible with pre-card tabs", () => {
+    const message = ExploreMessageSchema.parse({
+      id: "018f7ee5-2d88-7d88-b5ea-1f82c55367b2",
+      role: "assistant",
+      content: "The match was a bloodbath.",
+      createdAt: "2026-09-10T04:00:00.000Z",
+    });
+    const {
+      matchCards: _matchCards,
+      loadoutCards: _loadoutCards,
+      guildIds: _guildIds,
+      ...streamMessage
+    } = message;
+
+    const parsed = ExploreStreamMessageSchema.parse(streamMessage);
+    expect(parsed).not.toHaveProperty("matchCards");
+    expect(parsed).not.toHaveProperty("loadoutCards");
+    // A tab whose bundle predates a column parses this event strictly, so an
+    // extra key means the terminal event never parses and the answer never
+    // lands. Every field added to ExploreMessageSchema has to be omitted here.
+    expect(parsed).not.toHaveProperty("guildIds");
+    expect(() => ExploreStreamMessageSchema.parse(message)).toThrow();
+  });
+
   test("parses a known event", () => {
     const event = parseExploreStreamEvent({
       type: "answer_delta",

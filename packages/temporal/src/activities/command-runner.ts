@@ -44,3 +44,27 @@ export async function captureCommand(
   ]);
   return { stdout, stderr, exitCode };
 }
+
+export type BinaryCommandCapture = {
+  stdout: Uint8Array;
+  stderr: string;
+  exitCode: number;
+};
+
+export async function captureBinaryCommand(
+  command: string[],
+  options: RawCommandOptions,
+): Promise<BinaryCommandCapture> {
+  const process = Bun.spawn(command, {
+    cwd: options.cwd,
+    env: mergeCommandEnvironment(Bun.env, options.env),
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(process.stdout).bytes(),
+    new Response(process.stderr).text(),
+    process.exited,
+  ]);
+  return { stdout, stderr, exitCode };
+}

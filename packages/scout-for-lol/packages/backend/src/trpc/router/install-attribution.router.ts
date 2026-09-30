@@ -54,8 +54,9 @@ function withinRateLimit(callerKey: string): boolean {
 
 function callerKeyFor(ctx: Context): string {
   const sessionId = ctx.webSession?.discordId;
-  if (sessionId !== undefined) return `u:${sessionId}`;
-  return `ip:${ctx.clientIp ?? "unknown"}`;
+  return sessionId === undefined
+    ? `ip:${ctx.clientIp ?? "unknown"}`
+    : `u:${sessionId}`;
 }
 
 /** Exposed for tests so the limiter can't leak state between cases. */

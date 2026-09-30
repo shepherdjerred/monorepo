@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   hasSuppressionPattern,
   isPostalBoundaryViolation,
+  staleExclusions,
 } from "./check-suppressions.ts";
 
 describe("hasSuppressionPattern", () => {
@@ -15,6 +16,13 @@ describe("hasSuppressionPattern", () => {
 
   test("does not mistake an ESLint rule name for a directive", () => {
     expect(hasSuppressionPattern('"no-abusive-eslint-disable",')).toBe(false);
+  });
+
+  test("detects Java suppressions", () => {
+    expect(hasSuppressionPattern('@SuppressWarnings("NullAway")')).toBe(true);
+    expect(hasSuppressionPattern("int x = 1; // NOPMD")).toBe(true);
+    expect(hasSuppressionPattern("// CHECKSTYLE:OFF")).toBe(true);
+    expect(hasSuppressionPattern("SuppressWarnings are banned")).toBe(false);
   });
 
   test("continues to detect non-ESLint suppressions", () => {
@@ -52,5 +60,23 @@ describe("isPostalBoundaryViolation", () => {
         "sendPostalEmail({})",
       ),
     ).toBe(false);
+  });
+});
+
+describe("staleExclusions", () => {
+  test("reports every exclusion when nothing is tracked", () => {
+    expect(staleExclusions([])).toContain("scripts/prompts/");
+  });
+
+  test("keeps a prefix exclusion alive through any file beneath it", () => {
+    expect(staleExclusions(["scripts/prompts/refine.md"])).not.toContain(
+      "scripts/prompts/",
+    );
+  });
+
+  test("keeps a basename exclusion alive through a nested match", () => {
+    expect(staleExclusions(["packages/x/AGENTS.md"])).not.toContain(
+      "AGENTS.md",
+    );
   });
 });

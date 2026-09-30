@@ -11,30 +11,24 @@ import {
   asRecord,
   type CheckConclusion,
   conclusionField,
+  eachIssueComment,
   GITHUB_API_URL,
   getJsonWithLink,
-  graphqlRequest,
   recordField,
   splitRepo,
   stringField,
 } from "./github-http.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
+import { fetchBlockedReason } from "./github-blocked.ts";
 import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
 } from "./github-issue-comments.ts";
-import { ALWAYS_BLOCKING_PRIORITY } from "./gate.ts";
-import {
-  attributeRaisedInReview,
-  type ParsedReviewThread,
-  parseThreadPage,
-  parseReviewPage,
-  type ProviderReview,
-  REVIEW_REVIEWS_QUERY,
-  REVIEW_THREADS_QUERY,
-} from "./github-review-threads.ts";
 import { isProviderAuthor } from "./identity.ts";
-import { mergeDuplicateFindings } from "./merge-findings.ts";
+import {
+  assembleProviderThreads,
+  fetchReviewListing,
+} from "./github-review-snapshot.ts";
 import type { CompletionSignal } from "./signal.ts";
 import type {
   PullRequestAuthor,
@@ -101,63 +95,24 @@ export async function fetchReviewThreads(input: {
    */
   issueComment?: ReviewIssueComment | null | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
-  const { owner, name } = splitRepo(input.repo);
-  const parsed: ParsedReviewThread[] = [];
-  const providerReviews: ProviderReview[] = [];
-  let headRefOid: string | null = null;
-  let cursor: string | null = null;
-  for (;;) {
-    const payload = await graphqlRequest(
-      REVIEW_THREADS_QUERY,
-      { owner, name, number: input.number, cursor },
-      input.token,
-    );
-    const page = parseThreadPage(payload, input.provider);
-    if (page.headRefOid !== null) headRefOid = page.headRefOid;
-    parsed.push(...page.threads);
-    if (!page.hasNextPage || page.endCursor === null) break;
-    cursor = page.endCursor;
-  }
-  let reviewCursor: string | null = null;
-  for (;;) {
-    const payload = await graphqlRequest(
-      REVIEW_REVIEWS_QUERY,
-      { owner, name, number: input.number, cursor: reviewCursor },
-      input.token,
-    );
-    const page = parseReviewPage(payload);
-    providerReviews.push(...page.reviews);
-    if (!page.hasNextPage || page.endCursor === null) break;
-    reviewCursor = page.endCursor;
-  }
-  // Attribution needs every page: a thread's ordinal is its review's position
-  // among all of this provider's reviews, including clean reviews that opened
-  // no thread and therefore do not appear in `parsed`.
-  const threads: ReviewThread[] = attributeRaisedInReview(
-    parsed,
-    input.provider,
-    ALWAYS_BLOCKING_PRIORITY,
-    providerReviews,
-  );
+  const listing = await fetchReviewListing(input);
   const { completion } = input.provider;
-  if (completion.kind === "issue-comment") {
-    const comment =
-      input.issueComment === undefined
-        ? await fetchLatestProviderIssueComment({
-            repo: input.repo,
-            number: input.number,
-            token: input.token,
-            provider: input.provider,
-          })
-        : input.issueComment;
-    if (comment !== null) {
-      threads.push(...completion.parseFindings(comment));
-    }
-  }
-  return {
-    threads: mergeDuplicateFindings(threads, input.provider),
-    headRefOid,
-  };
+  const comment =
+    completion.kind === "issue-comment" && input.issueComment === undefined
+      ? await fetchLatestProviderIssueComment({
+          repo: input.repo,
+          number: input.number,
+          token: input.token,
+          provider: input.provider,
+        })
+      : (input.issueComment ?? null);
+  return assembleProviderThreads({
+    provider: input.provider,
+    threadPayloads: listing.threadPayloads,
+    reviewPayloads: listing.reviewPayloads,
+    headRefOid: listing.headRefOid,
+    issueComment: comment,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -254,25 +209,16 @@ export async function fetchSkipReason(input: {
 }): Promise<string | null> {
   const skip = input.provider.detectSkip;
   if (skip === null) return null;
-  let url: string | null =
-    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
-  while (url !== null) {
-    const { payload, linkNext } = await getJsonWithLink(url, input.token);
-    const comments = Array.isArray(payload) ? payload : [];
-    for (const rawItem of comments) {
-      const item = asRecord(rawItem);
-      if (item === null) continue;
-      const user = recordField(item, "user");
-      const login = user === null ? null : stringField(user, "login");
-      if (!isProviderAuthor(input.provider, login)) continue;
-      const body = stringField(item, "body");
-      if (body === null) continue;
-      if (!body.includes(skip.marker)) continue;
-      for (const { match, reason } of skip.reasons) {
-        if (body.includes(match)) return reason;
-      }
+  for await (const item of eachIssueComment(input)) {
+    const user = recordField(item, "user");
+    const login = user === null ? null : stringField(user, "login");
+    if (!isProviderAuthor(input.provider, login)) continue;
+    const body = stringField(item, "body");
+    if (body === null) continue;
+    if (!body.includes(skip.marker)) continue;
+    for (const { match, reason } of skip.reasons) {
+      if (body.includes(match)) return reason;
     }
-    url = linkNext;
   }
   return null;
 }
@@ -302,6 +248,10 @@ export async function fetchLatestProviderReview(input: {
       const user = recordField(item, "user");
       const login = user === null ? null : stringField(user, "login");
       if (!isProviderAuthor(input.provider, login)) continue;
+      // A dismissed review is withdrawn: it must not satisfy completion, or
+      // a dismissal after the last observation would still read as reviewed.
+      // Fall through to an older non-dismissed review, or none.
+      if (stringField(item, "state") === "DISMISSED") continue;
       const submittedAt = stringField(item, "submitted_at");
       const score = Date.parse(submittedAt ?? "");
       const normalized = Number.isFinite(score)
@@ -394,6 +344,12 @@ export type ReviewStateResult = {
   issueComment?: ReviewIssueComment | null;
   /** Provider skip reason (check-run providers only), or null. */
   skipReason: string | null;
+  /**
+   * Provider-side block slug (e.g. `"usage-limited"`), or null. Set only with
+   * `state: "errored"`: no review happened, so the gate fails fast with the
+   * provider's remediation instead of polling to its deadline.
+   */
+  blockedReason: string | null;
 };
 
 /**
@@ -443,9 +399,33 @@ export async function resolveReviewState(input: {
         reviewedAt,
         staleReaction: false,
         skipReason: null,
+        blockedReason: null,
       };
     }
-    // No completed check-run yet — the provider may have skipped review.
+    // No completed check-run yet — the provider may be blocked (quota
+    // exhaustion) or may have skipped review. A block is checked first and
+    // fails: when no review happened, failing closed beats a passing skip.
+    // (No check-run provider declares a blocked signal today, so this returns
+    // before fetching; a future one needs the caller to resolve `headPushedAt`
+    // for check-run providers too, or the signal stays unbound forever.)
+    const blockedReason = await fetchBlockedReason({
+      repo,
+      number: prNumber,
+      token,
+      provider,
+      headPushedAt,
+    });
+    if (blockedReason !== null) {
+      return {
+        state: "errored",
+        completionSignal: "none",
+        reviewedCommit: null,
+        reviewedAt: null,
+        staleReaction: false,
+        skipReason: null,
+        blockedReason,
+      };
+    }
     const skipReason = await fetchSkipReason({
       repo,
       number: prNumber,
@@ -464,11 +444,37 @@ export async function resolveReviewState(input: {
       reviewedAt: null,
       staleReaction: false,
       skipReason,
+      blockedReason: null,
     };
   }
 
   // review-at-head (Codex): reviewed iff the latest review is at head; else a
   // 👍 reaction means reviewed-clean.
+  return resolveReviewAtHeadState({
+    provider,
+    repo,
+    head,
+    prNumber,
+    token,
+    headPushedAt,
+  });
+}
+
+/**
+ * Resolve whether a `review-at-head` provider finished reviewing `head`: its
+ * latest review is at head, else a head-bound 👍 reaction means reviewed-clean,
+ * else a provider-side block (quota exhaustion) fails fast — otherwise still
+ * reviewing.
+ */
+async function resolveReviewAtHeadState(input: {
+  provider: ReviewProvider;
+  repo: string;
+  head: string;
+  prNumber: number;
+  token: string;
+  headPushedAt: string | null;
+}): Promise<ReviewStateResult> {
+  const { provider, repo, head, prNumber, token, headPushedAt } = input;
   const review = await fetchLatestProviderReview({
     repo,
     number: prNumber,
@@ -483,14 +489,22 @@ export async function resolveReviewState(input: {
       reviewedAt: review.submittedAt,
       staleReaction: false,
       skipReason: null,
+      blockedReason: null,
     };
   }
-  const thumbsUp = await fetchProviderThumbsUp({
-    repo,
-    number: prNumber,
-    token,
-    provider,
-  });
+  // Providers without a clean signal always post a review object, so a missing
+  // review means "not reviewed yet" — skip the reaction lookup entirely rather
+  // than letting another reviewer's 👍 satisfy this provider's gate.
+  const completion = provider.completion;
+  const thumbsUp =
+    completion.kind === "review-at-head" && completion.cleanSignal === "none"
+      ? null
+      : await fetchProviderThumbsUp({
+          repo,
+          number: prNumber,
+          token,
+          provider,
+        });
   // A 👍 reaction carries no commit SHA, so it only counts as "reviewed clean
   // at head" when it can be independently tied to the current head: the
   // reaction must have been created at/after the head was pushed. A reaction
@@ -498,24 +512,41 @@ export async function resolveReviewState(input: {
   // reaction when the push time is unknown — leaves the gate `reviewing` so a
   // new head cannot pass before the provider re-reviews it. Such a reaction is
   // still reported via `staleReaction` for telemetry.
-  if (thumbsUp !== null) {
-    if (reactionBoundToHead(thumbsUp.createdAt, headPushedAt)) {
-      return {
-        state: "reviewed",
-        completionSignal: "thumbsup-reaction",
-        reviewedCommit: head,
-        reviewedAt: thumbsUp.createdAt,
-        staleReaction: false,
-        skipReason: null,
-      };
-    }
+  if (
+    thumbsUp !== null &&
+    reactionBoundToHead(thumbsUp.createdAt, headPushedAt)
+  ) {
     return {
-      state: "reviewing",
+      state: "reviewed",
+      completionSignal: "thumbsup-reaction",
+      reviewedCommit: head,
+      reviewedAt: thumbsUp.createdAt,
+      staleReaction: false,
+      skipReason: null,
+      blockedReason: null,
+    };
+  }
+  // No review at head and no bound clean signal. Before reporting `reviewing`,
+  // check whether the provider said it cannot review at all (quota exhaustion)
+  // — a block fails fast with its remediation instead of polling to the
+  // deadline. A completed review above already won over any block notice, which
+  // is the right order: the review happened, whatever an earlier attempt said.
+  const blockedReason = await fetchBlockedReason({
+    repo,
+    number: prNumber,
+    token,
+    provider,
+    headPushedAt,
+  });
+  if (blockedReason !== null) {
+    return {
+      state: "errored",
       completionSignal: "none",
       reviewedCommit: review?.commitId ?? null,
       reviewedAt: review?.submittedAt ?? null,
-      staleReaction: true,
+      staleReaction: thumbsUp !== null,
       skipReason: null,
+      blockedReason,
     };
   }
   return {
@@ -523,7 +554,8 @@ export async function resolveReviewState(input: {
     completionSignal: "none",
     reviewedCommit: review?.commitId ?? null,
     reviewedAt: review?.submittedAt ?? null,
-    staleReaction: false,
+    staleReaction: thumbsUp !== null,
     skipReason: null,
+    blockedReason: null,
   };
 }

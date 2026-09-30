@@ -40,6 +40,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import {
   classifyLlmProviderIssue,
+  providerForError,
   recordProviderIssue,
   resolveProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
@@ -190,14 +191,15 @@ function didReportLlmProviderIssue(
   const providerIssueKind = classifyLlmProviderIssue(error);
   if (providerIssueKind === null) return false;
 
+  const provider = providerForError(error);
   recordProviderIssue({
     app: "scout-for-lol",
-    provider: "openrouter",
+    provider,
     kind: providerIssueKind,
     source: "match_review",
   });
   logger.warn(
-    `OpenRouter provider issue while generating AI review for ${context.matchId}: ${providerIssueKind}`,
+    `${provider} provider issue while generating AI review for ${context.matchId}: ${providerIssueKind}`,
   );
   return true;
 }
@@ -206,7 +208,6 @@ function resolveLlmProviderIssues(): void {
   for (const kind of PROVIDER_ISSUE_KINDS) {
     resolveProviderIssue({
       app: "scout-for-lol",
-      provider: "openrouter",
       kind,
       source: "match_review",
     });
@@ -259,7 +260,7 @@ export async function generateMatchReview(
   const textClient = getTextGenerationClient();
   if (textClient === undefined) {
     logger.info(
-      "OpenRouter API key not configured, skipping review generation",
+      "No LLM provider credentials configured, skipping review generation",
     );
     return undefined;
   }
@@ -325,17 +326,10 @@ export async function generateMatchReview(
     clientsInput.image = imageClient;
   }
 
-  // Get default stage configs and conditionally disable image generation
-  // Generate images only 33% of the time to reduce costs
+  // Get default stage configs with image generation enabled for every review.
+  // The flash image model is cheap enough ($0.039/image) that 100% coverage
+  // costs less per review than the old 33% pro-preview rate.
   const stages = getDefaultStageConfigs();
-  const shouldGenerateImage = Math.random() < 0.33;
-  if (shouldGenerateImage) {
-    logger.info("Image generation enabled for this review (33% probability)");
-  } else {
-    stages.imageDescription.enabled = false;
-    stages.imageGeneration.enabled = false;
-    logger.info("Image generation disabled for this review (67% probability)");
-  }
 
   const promptsInput: Parameters<typeof generateFullMatchReview>[0]["prompts"] =
     {

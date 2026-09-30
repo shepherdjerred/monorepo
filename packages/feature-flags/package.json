@@ -8,6 +8,7 @@
     "./*": "./src/*"
   },
   "scripts": {
+    "generate": "bun run scripts/generate-flag-types.ts",
     "build": "bun build ./src/index.ts --target bun --outdir dist",
     "lint": "bunx --no-install eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
@@ -31,7 +32,7 @@
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   }
 }

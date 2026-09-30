@@ -51,9 +51,24 @@ kubectl logs -n media -l cdk8s.io/metadata.addr=media-whisperbridge-c85075a8
    - Enable **Deep analyze media file to get audio tracks language** for best results
 
 7. Go to **Settings** -> **Subtitles**
-   - Lower the **Minimum Score** if you want Whisper-generated subtitles to be automatically used:
-     - Episodes: below 241/360 (~67%)
-     - Movies: below 61/120 (~51%)
+   - Lower the **Minimum Score** if you want Whisper-generated subtitles to be automatically
+     used. The field is a percentage, not a raw score (defaults: 90 episodes, 80 movies), so
+     the raw Whisper ceilings translate to:
+     - Episodes: approximately `61` (220/360 before the hearing-impaired bonus)
+     - Movies: approximately `33` (60/180 before the hearing-impaired bonus)
+
+## Language limitation
+
+Whisper **transcribes** in the language of the audio track, and **translates only into
+English**. It can transcribe Chinese audio, but cannot translate English audio into
+Chinese. Generated subtitles do not meet the human-authored Simplified policy.
+
+Practical consequences:
+
+- Whisper can provide English transcription or translation, subject to matching thresholds.
+- Whisper can transcribe other languages when an audio track in that language is present.
+- Chinese subtitles for English audio must come from a text provider
+  or from an embedded track via the `embeddedsubtitles` provider.
 
 ## Testing
 
@@ -73,7 +88,7 @@ kubectl logs -n media deployment/media-whisperbridge
 ### Verify Groq API key is loaded
 
 ```bash
-kubectl get secret -n media media-groq-secrets -o yaml
+kubectl get onepassworditem -n media
 ```
 
 ### Test the endpoint directly

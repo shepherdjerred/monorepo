@@ -6,13 +6,10 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
  * least one Riot account, ordered by `id` ascending for deterministic
  * downstream processing.
  *
- * Shared by dare shortlist building and weekly-parlay subject loading: both
- * start from this exact candidate set and diverge only in how they group or
- * label the rows afterward — dares union accounts across every `Player` row
- * one Discord user owns, while weekly parlays treat each `Player` row as its
- * own subject. The query itself is one definition so the two candidate
- * pools can never silently disagree about who counts as "tracked and
- * linked".
+ * Shared by every consumer that needs the guild's candidate set, so they can
+ * never silently disagree about who counts as "tracked and linked". Consumers
+ * diverge only in how they group or label the rows afterward — dares, for
+ * instance, union accounts across every `Player` row one Discord user owns.
  */
 export function findTrackedPlayersWithAccounts(
   serverId: DiscordGuildId,

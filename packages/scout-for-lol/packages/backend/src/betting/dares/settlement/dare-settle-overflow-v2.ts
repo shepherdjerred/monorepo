@@ -5,6 +5,7 @@ import {
   type RefundableDareV2Row,
 } from "#src/betting/dares/settlement/dare-void-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 
 export async function settleDareV2OrVoidOnStorageOverflow(
   input: {
@@ -12,6 +13,8 @@ export async function settleDareV2OrVoidOnStorageOverflow(
     prismaClient: ExtendedPrismaClient;
     now: Date;
     matchId?: string | undefined;
+    /** Whether the match this settles is owed a public delivery. */
+    notify: DareNotificationDisposition;
   },
   settle: () => Promise<DareV2SettlementSummary | undefined>,
 ): Promise<DareV2SettlementSummary | undefined> {
@@ -23,7 +26,7 @@ export async function settleDareV2OrVoidOnStorageOverflow(
       input.dare,
       "storage_overflow",
       input.prismaClient,
-      input.now,
+      { now: input.now, notify: input.notify },
     );
     return voided
       ? {

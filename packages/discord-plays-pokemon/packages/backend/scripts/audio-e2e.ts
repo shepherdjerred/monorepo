@@ -28,8 +28,7 @@ import { logger } from "#src/logger.ts";
 
 function argValue(flag: string): string | undefined {
   const i = process.argv.indexOf(flag);
-  if (i === -1) return undefined;
-  return process.argv[i + 1];
+  return i === -1 ? undefined : process.argv[i + 1];
 }
 function argFlag(flag: string): boolean {
   return process.argv.includes(flag);

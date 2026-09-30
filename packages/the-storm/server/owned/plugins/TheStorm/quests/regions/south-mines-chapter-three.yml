@@ -1,0 +1,93 @@
+# Dorran and Marcus coordinate ore carts after the mapped seam and rail line.
+# Mining credit is earned only in the permanent main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  ore-cart-manifest:
+    name: Ore Cart Manifest
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed rails-below
+    text:
+      offer: The rail line is supplied. Before a cart carries ore, I want a manifest that matches what the miners actually find.
+      accept: Mine iron ore in the main world, then bring paper and a compass for the first cart's record.
+      decline: The cart will wait for a proper count.
+      finish: The first load has a count and a route. Marcus can move it without guessing.
+      summary: Survey an iron load and write the first mine-cart manifest.
+      questions: []
+    start: count
+    stages:
+      count:
+        journal: Mine 12 deepslate iron ore in the main world.
+        waiting: Record the seam, not an estimate from the cart yard.
+        complete: The ore is counted. Dorran needs the manifest materials.
+        objectives:
+          - mine 12 DEEPSLATE_IRON_ORE
+        onComplete: []
+        next: [{ to: manifest, when: [], label: none }]
+        timeLimit: none
+      manifest:
+        journal: Bring Dorran 8 paper and a compass for the ore manifest.
+        waiting: The cart needs both a count and a route.
+        complete: The first manifest is ready for Marcus.
+        objectives:
+          - deliver dorran 8 PAPER
+          - deliver dorran 1 COMPASS
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  the-miners-share:
+    name: The Miners' Share
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed ore-cart-manifest
+    text:
+      offer: The first manifest accounts for ore, but the miners who laid the line need food and replacement tools on the returning cart.
+      accept: Bring bread, coal and iron. Then tell Marcus which load belongs to the crew.
+      decline: The crew will finish its shift before the next cart.
+      finish: Marcus has the crew's return load set aside. The miners will be ready for another shift.
+      summary: Supply the South Mines crew from the returning ore cart.
+      questions: []
+    start: share
+    stages:
+      share:
+        journal: Bring Dorran 16 bread, 16 coal and 8 iron ingots.
+        waiting: A returning cart should carry more than an empty chest.
+        complete: The crew's supplies are ready. Marcus needs the manifest.
+        objectives:
+          - deliver dorran 16 BREAD
+          - deliver dorran 16 COAL
+          - deliver dorran 8 IRON_INGOT
+        onComplete: []
+        next: [{ to: carter, when: [], label: none }]
+        timeLimit: none
+      carter:
+        journal: Tell Marcus which return load belongs to the miners.
+        waiting: Marcus can keep the crew's supplies separate from market stock.
+        complete: The miners' share is marked on the cart record.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

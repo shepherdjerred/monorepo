@@ -13,8 +13,8 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { trackOutboundClick } from "#src/lib/analytics.ts";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const INSTALL_URL = "/api/discord/install?surface=manage_servers";
 

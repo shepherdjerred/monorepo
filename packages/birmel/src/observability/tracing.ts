@@ -347,8 +347,9 @@ export type DiscordSpanAttributes = {
  * the conditional pushed that function past the cognitive-complexity limit.
  */
 function subjectAttributes(userId: string | undefined): Record<string, string> {
-  if (userId === undefined || userId === "") return {};
-  return llmSubjectAttributes({ kind: "discord_user", id: userId });
+  return userId === undefined || userId === ""
+    ? {}
+    : llmSubjectAttributes({ kind: "discord_user", id: userId });
 }
 
 /**
@@ -364,11 +365,15 @@ function withSubjectContext<T>(
   userId: string | undefined,
   fn: () => Promise<T>,
 ): Promise<T> {
-  if (userId === undefined || userId === "") return fn();
-  return otelContext.with(
-    setLlmSubject(otelContext.active(), { kind: "discord_user", id: userId }),
-    fn,
-  );
+  return userId === undefined || userId === ""
+    ? fn()
+    : otelContext.with(
+        setLlmSubject(otelContext.active(), {
+          kind: "discord_user",
+          id: userId,
+        }),
+        fn,
+      );
 }
 
 /**

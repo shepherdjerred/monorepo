@@ -37,10 +37,9 @@ export async function prForCommit(sha: string): Promise<PrInfo | null> {
     return null;
   }
   const pr = res.data[0];
-  if (pr == null) {
-    return null;
-  }
-  return { number: pr.number, state: pr.state, url: pr.url };
+  return pr == null
+    ? null
+    : { number: pr.number, state: pr.state, url: pr.url };
 }
 
 /** Open "bump image versions" PRs — a non-empty list means a release is in flight. */

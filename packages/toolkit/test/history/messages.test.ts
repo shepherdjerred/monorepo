@@ -3,7 +3,7 @@ import {
   openingPrompt,
   openingPromptHash,
   parseConversationEnvelope,
-} from "#lib/history/messages.ts";
+} from "#lib/history/query/messages.ts";
 
 function parsedOpening(secondBlock: string) {
   return parseConversationEnvelope(

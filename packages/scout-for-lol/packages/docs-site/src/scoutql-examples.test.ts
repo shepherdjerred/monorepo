@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import path from "node:path";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
-import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/editor/lint.ts";
 
 /**
  * Every ScoutQL example in the documentation is compiled by the real compiler.

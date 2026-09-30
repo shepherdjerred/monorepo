@@ -1,4 +1,5 @@
 import {
+  computeKda,
   RawMatchSchema,
   resolveQueueTypeFromGame,
   type QueueType,
@@ -28,12 +29,8 @@ function metricValue(
       return participant.assists;
     case "deaths":
       return participant.deaths;
-    case "kda": {
-      const takedowns = participant.kills + participant.assists;
-      return participant.deaths === 0
-        ? takedowns
-        : takedowns / participant.deaths;
-    }
+    case "kda":
+      return computeKda(participant);
     case "gold":
       return participant.goldEarned;
     case "damage_to_champions":
@@ -71,7 +68,7 @@ export function includeMatchForReportGraph(
     match.info.gameMode,
     match.info.gameType,
   );
-  return queue === undefined ? false : queueFilter.includes(queue);
+  return queue !== undefined && queueFilter.includes(queue);
 }
 
 export async function generateReportGraph(

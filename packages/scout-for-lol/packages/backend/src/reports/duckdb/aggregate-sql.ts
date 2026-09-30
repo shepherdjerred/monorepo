@@ -4,21 +4,23 @@ import type {
   ScoutQlHavingPredicate,
   ScoutQlPredicate,
   ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import { scalarParam } from "#src/reports/duckdb/lake.ts";
 import type { SqlFragment } from "#src/reports/duckdb/lake.ts";
 import {
   compilePredicate,
   compileScalarExpr,
   recordColumnNames,
-  resolveColumn,
   walkPredicate,
   walkScalarExpr,
-  type ColumnMap,
   type ExprContext,
   type PredicateWalkNode,
-  type SqlTypeClass,
 } from "#src/reports/duckdb/expr-sql.ts";
+import {
+  resolveColumn,
+  type ColumnMap,
+  type SqlTypeClass,
+} from "#src/reports/duckdb/column-map.ts";
 import {
   EMPTY_FRAGMENT,
   emitArithmetic,
@@ -76,8 +78,7 @@ export function inferScalarType(
         const left = inferScalarType(node.left, columns);
         const right = inferScalarType(node.right, columns);
         if (left === "timestamp" || left === "date") return left;
-        if (right === "timestamp" || right === "date") return right;
-        return "numeric";
+        return right === "timestamp" || right === "date" ? right : "numeric";
       })
       .with({ kind: "at-time-zone" }, (): SqlTypeClass => "timestamp")
       .with({ kind: "cast" }, (node): SqlTypeClass =>
@@ -120,14 +121,9 @@ function filterSuffix(
   filter: ScoutQlPredicate | undefined,
   ctx: AggregateContext,
 ): SqlFragment {
-  if (filter === undefined) {
-    return EMPTY_FRAGMENT;
-  }
-  return seq(
-    " FILTER (WHERE ",
-    compilePredicate(filter, scalarContext(ctx)),
-    ")",
-  );
+  return filter === undefined
+    ? EMPTY_FRAGMENT
+    : seq(" FILTER (WHERE ", compilePredicate(filter, scalarContext(ctx)), ")");
 }
 
 function numericCastSuffix(

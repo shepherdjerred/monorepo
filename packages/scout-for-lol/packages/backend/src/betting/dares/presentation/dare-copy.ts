@@ -5,7 +5,7 @@ import {
   type BucksDareHorizonKind,
   type BucksDareState,
 } from "@scout-for-lol/data";
-import { withRulesHint } from "#src/betting/copy.ts";
+import { countLabel, withRulesHint } from "#src/betting/copy.ts";
 import {
   DARE_RATE_LABELS,
   formatDareRateThreshold,
@@ -15,17 +15,16 @@ import type {
   DareContributorRefund,
   DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import {
   PARTICIPANT_BOOLEAN_CATALOG,
   PARTICIPANT_NUMERIC_CATALOG,
-} from "#src/betting/parlays/parlay-catalog.ts";
-import { countLabel } from "#src/betting/weekly/weekly-parlay-discord-copy.ts";
+} from "#src/betting/parlays/model/parlay-catalog.ts";
 
 /**
  * Pure copy builders for every dare Discord surface.
  *
- * No Discord imports and no I/O (weekly-parlay-discord-copy precedent): every
+ * No Discord imports and no I/O: every
  * function turns frozen facts into a string, so the exact user-visible text is
  * pinned by plain unit tests. The condition text is ALWAYS the code-rendered
  * `conditionSummary` — model prose never reaches a message. Numbers, not
@@ -48,10 +47,9 @@ function dareHorizonPhrase(
   horizonKind: BucksDareHorizonKind,
   windowDays: number | null,
 ): string {
-  if (horizonKind === "next_game") {
-    return "their next eligible game";
-  }
-  return `**${formatInteger(windowDays ?? 0)} ${countLabel(windowDays ?? 0, "day")}** from the moment every target accepts`;
+  return horizonKind === "next_game"
+    ? "their next eligible game"
+    : `**${formatInteger(windowDays ?? 0)} ${countLabel(windowDays ?? 0, "day")}** from the moment every target accepts`;
 }
 
 /** The ephemeral confirmation the challenger approves — description text for
@@ -151,13 +149,11 @@ export type DareCalloutView = {
 
 function comparisonSymbol(operator: "gte" | "lte" | "eq"): string {
   if (operator === "gte") return "≥";
-  if (operator === "lte") return "≤";
-  return "exactly";
+  return operator === "lte" ? "≤" : "exactly";
 }
 
 function championSuffix(champion: string | null): string {
-  if (champion === null) return "";
-  return ` on ${championNameToDisplayName(champion)}`;
+  return champion === null ? "" : ` on ${championNameToDisplayName(champion)}`;
 }
 
 /** Compact per-leaf progress label, e.g. "Wins" or "Games with ≥ 10 kills". */
@@ -173,10 +169,9 @@ export function dareLeafProgressLabel(leaf: DareLeaf): string {
       ? `Games with ${label}${suffix}`
       : `Games without ${label}${suffix}`;
   }
-  if (predicate.kind === "participant_numeric") {
-    return `Games with ${comparisonSymbol(predicate.operator)} ${formatParlayNumericValue(predicate.field, predicate.threshold)} ${PARTICIPANT_NUMERIC_CATALOG[predicate.field].label}${suffix}`;
-  }
-  return `Games with ${comparisonSymbol(predicate.operator)} ${formatDareRateThreshold(predicate.thresholdScaled)} ${DARE_RATE_LABELS[predicate.field]}${suffix}`;
+  return predicate.kind === "participant_numeric"
+    ? `Games with ${comparisonSymbol(predicate.operator)} ${formatParlayNumericValue(predicate.field, predicate.threshold)} ${PARTICIPANT_NUMERIC_CATALOG[predicate.field].label}${suffix}`
+    : `Games with ${comparisonSymbol(predicate.operator)} ${formatDareRateThreshold(predicate.thresholdScaled)} ${DARE_RATE_LABELS[predicate.field]}${suffix}`;
 }
 
 /** Pair the canonical leaves with their qualifying-game counts. */
@@ -197,8 +192,9 @@ export function dareProgressLine(progress: DareLeafProgress): string {
 
 function checklistLine(target: DareCalloutTarget): string {
   if (target.declined) return `• 🐔 <@${target.discordId}> — declined`;
-  if (target.accepted) return `• ✅ <@${target.discordId}> — accepted`;
-  return `• ⏳ <@${target.discordId}>`;
+  return target.accepted
+    ? `• ✅ <@${target.discordId}> — accepted`
+    : `• ⏳ <@${target.discordId}>`;
 }
 
 const FINAL_HEADERS: Partial<Record<BucksDareState, string>> = {

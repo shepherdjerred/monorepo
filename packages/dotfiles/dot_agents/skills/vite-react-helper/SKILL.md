@@ -1,6 +1,8 @@
 ---
 name: vite-react-helper
-description: "Use this skill for Vite + React for fast modern web development - build config, HMR, hooks, state management, and p…"
+description: |
+  Vite + React for fast modern web development - build config, HMR, hooks, state management, and performance patterns
+  When user works with Vite, React, creates components, manages state, uses hooks, or configures Vite builds
 ---
 
 # Vite + React Helper Agent

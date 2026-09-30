@@ -4,7 +4,10 @@ import { beforeAll, afterAll, vi } from "vitest";
 beforeAll(() => {
   Bun.env["DISCORD_TOKEN"] = "test-discord-token";
   Bun.env["DISCORD_CLIENT_ID"] = "123456789012345678";
-  Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
+  Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+  // Birmel's image model is Gemini. Tests mock the generation call, but the
+  // runtime still resolves the provider, which needs a credential.
+  Bun.env["GEMINI_API_KEY"] = "test-gemini-key";
 });
 
 afterAll(() => {
@@ -26,6 +29,21 @@ vi.mock("discord.js", () => ({
     }
     once() {
       /* noop */
+    }
+  },
+  // Mirrors the real builder's defaults: an omitted name or description reads
+  // back as null, which is what the delivery tests assert against.
+  AttachmentBuilder: class MockAttachmentBuilder {
+    attachment: unknown;
+    name: string | null;
+    description: string | null;
+    constructor(
+      attachment: unknown,
+      data: { name?: string; description?: string } = {},
+    ) {
+      this.attachment = attachment;
+      this.name = data.name ?? null;
+      this.description = data.description ?? null;
     }
   },
   GatewayIntentBits: {

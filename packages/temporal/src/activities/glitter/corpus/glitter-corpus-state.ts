@@ -1,9 +1,9 @@
 import type {
   ChannelStateManifest,
   CurrentMessage,
-} from "#shared/glitter-corpus.ts";
-import { projectionChecksum } from "#shared/glitter-corpus-projection.ts";
-import type { ChannelStateResult } from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus.ts";
+import { projectionChecksum } from "#shared/glitter/glitter-corpus-projection.ts";
+import type { ChannelStateResult } from "#shared/glitter/glitter-corpus-activity-types.ts";
 import { writeChannelState } from "./glitter-corpus-io.ts";
 import type { CorpusStore } from "./glitter-corpus-store.ts";
 

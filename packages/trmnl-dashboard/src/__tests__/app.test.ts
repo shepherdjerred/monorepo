@@ -13,18 +13,12 @@ const config: AppConfig = {
     token: "ha-token",
     batteryThreshold: 20,
     unavailableIgnoredDomains: [],
+    unavailableIgnoredEntityGlobs: [],
     presence: [],
     security: [],
     climate: [],
   },
-  homelab: {
-    prometheusUrl: "http://prometheus.local",
-    alertDashboardUrl: "http://alerts.local",
-    bugsinkUrl: "http://bugsink.local/api/canonical/0",
-    kubernetesUrl: "https://kubernetes.default.svc",
-    kubernetesTokenPath: "/tmp/token",
-    kubernetesCaPath: "/tmp/ca.crt",
-  },
+  opsDashboardUrl: "http://ops.local",
 };
 
 const homePayload: HomePayload = {

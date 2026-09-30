@@ -1,0 +1,237 @@
+{
+  "gameId": 5645340874,
+  "gameStartTime": 1789867832147,
+  "gameMode": "CLASSIC",
+  "mapId": 11,
+  "gameType": "CUSTOM",
+  "gameQueueConfigId": 700,
+  "gameLength": -32,
+  "platformId": "NA1",
+  "participants": [
+    {
+      "championId": 234,
+      "puuid": "USJtQZMADgqBhUAJOGZE5Erw3KvPrOJaEw9f5LNJYobjXCbGuSYs_e3Ddbn1V5EKwiQu2MS17gMN3A",
+      "teamId": 100,
+      "riotId": "Dıaz#NA1",
+      "spell1Id": 11,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 43,
+      "bot": false,
+      "profileIconId": 4762,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8010],
+        "perkStyle": 8000,
+        "perkSubStyle": 8300
+      }
+    },
+    {
+      "championId": 777,
+      "puuid": "FJg31vgQ6JcfgeZtLqSxCo-McHnY9Fl18BvJQRMPwqY3nDIU_MJ-8K85gKkjg1SMtc3jwNPoJSma0w",
+      "teamId": 100,
+      "riotId": "VeXeD#4999",
+      "spell1Id": 4,
+      "spell2Id": 12,
+      "lastSelectedSkinIndex": 46,
+      "bot": false,
+      "profileIconId": 2076,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8008],
+        "perkStyle": 8000,
+        "perkSubStyle": 8400
+      }
+    },
+    {
+      "championId": 112,
+      "puuid": "vtG8ibh-0K64GCF98QLhw3qFjatF36jOeh5PwyrFZ3slqWS1Q7AVCpYhBHCF-BnAwgApOunOkCrJbA",
+      "teamId": 100,
+      "riotId": "Natural Talent#007",
+      "spell1Id": 12,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 25,
+      "bot": false,
+      "profileIconId": 1422,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8992],
+        "perkStyle": 8200,
+        "perkSubStyle": 8400
+      }
+    },
+    {
+      "championId": 82,
+      "puuid": "7zehoasW_KVXM6w2VRkX0YKrUdcfBq6db7Pn6MdTdZnclv2sbUJA2y_ZluhITkszLpion4NZlnO4eg",
+      "teamId": 100,
+      "riotId": "Ray#LyaR",
+      "spell1Id": 4,
+      "spell2Id": 12,
+      "lastSelectedSkinIndex": 8,
+      "bot": false,
+      "profileIconId": 1151,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8010],
+        "perkStyle": 8000,
+        "perkSubStyle": 8400
+      }
+    },
+    {
+      "championId": 111,
+      "puuid": "3sCbGKVjf0cprJBIFvm4mWDIf47CjhC4Y4PDPeobXWUhgdbjTOI9ELSLQ1PKp4ftBPNgiFDFR6_I8g",
+      "teamId": 100,
+      "riotId": "JAYMAN#NA1",
+      "spell1Id": 14,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 3,
+      "bot": false,
+      "profileIconId": 4066,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8439],
+        "perkStyle": 8400,
+        "perkSubStyle": 8300
+      }
+    },
+    {
+      "championId": 5,
+      "puuid": "IuAbJ0-z2tFEh1VAS6Yruycom07BPS4u-FZN36tBEqN74GnE2agjN1Ol5D774IYAYVeDYUlB7iIguQ",
+      "teamId": 200,
+      "riotId": "joontea#2446",
+      "spell1Id": 11,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 53,
+      "bot": false,
+      "profileIconId": 7144,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8010],
+        "perkStyle": 8000,
+        "perkSubStyle": 8300
+      }
+    },
+    {
+      "championId": 267,
+      "puuid": "V9IYwApFz6UHPyK_U8QaKf42PfAXE1y2v3ShkAEbmRzpbCUsRyMf7gnFs5uSZu_3LjmLHvAvD6n_Kg",
+      "teamId": 200,
+      "riotId": "hinano#333",
+      "spell1Id": 7,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 32,
+      "bot": false,
+      "profileIconId": 7019,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8214],
+        "perkStyle": 8200,
+        "perkSubStyle": 8400
+      }
+    },
+    {
+      "championId": 236,
+      "puuid": "HWSwYd9YLQMx9AGXHMuYHlwdXEsciCV2PIjDPTj-n_wRNzw1Bfk_JySYEetIxx2t-j0zgPcTL7fOrQ",
+      "teamId": 200,
+      "riotId": "PIain#Plain",
+      "spell1Id": 4,
+      "spell2Id": 21,
+      "lastSelectedSkinIndex": 23,
+      "bot": false,
+      "profileIconId": 7015,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8005],
+        "perkStyle": 8000,
+        "perkSubStyle": 8300
+      }
+    },
+    {
+      "championId": 36,
+      "puuid": "-tZJSAlJMM14lz2ceEd7K1vJAmtgPdD-guot-frtaI5fL0XE3CNPItsI8ycVgQmLfm_HioZwlIDRbQ",
+      "teamId": 200,
+      "riotId": "HitBonners#NA1",
+      "spell1Id": 12,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 0,
+      "bot": false,
+      "profileIconId": 3839,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8437],
+        "perkStyle": 8400,
+        "perkSubStyle": 8300
+      }
+    },
+    {
+      "championId": 910,
+      "puuid": "N4dgWxkY3B7EN-z9r3PYuOWMi8iLBEpV2l-mtna6JCXPmNZwUWVsWEeo-WsVNQHaXcR_DtUkkeoMtQ",
+      "teamId": 200,
+      "riotId": "Delay Onion#NA1",
+      "spell1Id": 4,
+      "spell2Id": 12,
+      "lastSelectedSkinIndex": 0,
+      "bot": false,
+      "profileIconId": 581,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8229],
+        "perkStyle": 8200,
+        "perkSubStyle": 8300
+      }
+    }
+  ],
+  "bannedChampions": [
+    {
+      "championId": 134,
+      "teamId": 100,
+      "pickTurn": 1
+    },
+    {
+      "championId": 876,
+      "teamId": 200,
+      "pickTurn": 2
+    },
+    {
+      "championId": 805,
+      "teamId": 100,
+      "pickTurn": 3
+    },
+    {
+      "championId": 60,
+      "teamId": 200,
+      "pickTurn": 4
+    },
+    {
+      "championId": 84,
+      "teamId": 100,
+      "pickTurn": 5
+    },
+    {
+      "championId": 120,
+      "teamId": 200,
+      "pickTurn": 6
+    },
+    {
+      "championId": 121,
+      "teamId": 200,
+      "pickTurn": 7
+    },
+    {
+      "championId": 517,
+      "teamId": 100,
+      "pickTurn": 8
+    },
+    {
+      "championId": 104,
+      "teamId": 200,
+      "pickTurn": 9
+    },
+    {
+      "championId": 203,
+      "teamId": 100,
+      "pickTurn": 10
+    }
+  ],
+  "observers": {
+    "encryptionKey": "gUxLL1q0K+McVqjxXR0VjDR57R1u0qL3"
+  }
+}

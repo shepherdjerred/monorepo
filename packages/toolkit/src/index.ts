@@ -16,7 +16,7 @@ Usage:
 
 Platform commands (native CLI passthroughs):
   gh          GitHub CLI (GH_REPO=shepherdjerred/monorepo)
-  bk          Buildkite CLI (organization sjerred)
+  woodpecker  Woodpecker CI CLI
   git-spice   Stacked branch and PR workflow
   linear      Linear CLI (--workspace sjerred)
   posthog     PostHog CLI (project 549883)
@@ -30,12 +30,15 @@ Platform commands (native CLI passthroughs):
   tailscale   Tailscale CLI
 
 Monorepo workflows:
-  pr health [PR_NUMBER]        Check merge, exact-head Buildkite CI, and review
+  brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
+  pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
   deployed [SELECTOR]          Trace a commit or service to the live homelab
   screenshot <PKG> [ROUTE]     Start a site and capture a browser screenshot
+  screenshot-server <PKG>      Start a site without browser credentials
   alerts <list|show>           Query the durable alert ledger
+  ops summary [--needs-me]     Summarize the homelab ops snapshot
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
   history <SUBCOMMAND>         Search private local agent history
@@ -51,16 +54,48 @@ Passthrough behavior:
 
 Examples:
   toolkit gh pr view
-  toolkit bk build list --pipeline monorepo --branch main
+  toolkit woodpecker pipeline ls shepherdjerred/monorepo
   toolkit prom query 'up == 0'
   toolkit loki query '{namespace="temporal"}'
   toolkit pr health
+  toolkit brim --dry-run
   toolkit deployed scout/prod
+  toolkit ops summary --needs-me
   toolkit history recent --since 7d
   toolkit history search "kubernetes" --since 30d
   toolkit history show <ID> --query "kubernetes"
 `);
 }
+
+type SubcommandHandler = (
+  subcommand: string | undefined,
+  args: string[],
+) => Promise<void>;
+
+/** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
+const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  [
+    "alerts",
+    () => import("./handlers/alerts.ts").then((m) => m.handleAlertsCommand),
+  ],
+  ["ops", () => import("./handlers/ops.ts").then((m) => m.handleOpsCommand)],
+  [
+    "bugsink",
+    () => import("./handlers/bugsink.ts").then((m) => m.handleBugsinkCommand),
+  ],
+  [
+    "discord",
+    () => import("./handlers/discord.ts").then((m) => m.handleDiscordCommand),
+  ],
+  [
+    "history",
+    () => import("./handlers/history.ts").then((m) => m.handleHistoryCommand),
+  ],
+  [
+    "backup",
+    () => import("./handlers/backup.ts").then((m) => m.handleBackupCommand),
+  ],
+]);
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -91,6 +126,12 @@ async function main(): Promise<void> {
   }
 
   const subcommand = args[1];
+  const loadSubcommandHandler = SUBCOMMAND_HANDLERS.get(command);
+  if (loadSubcommandHandler !== undefined) {
+    const handler = await loadSubcommandHandler();
+    await handler(subcommand, args.slice(2));
+    return;
+  }
   switch (command) {
     case "pr": {
       const { handlePrCommand } = await import("./handlers/pr.ts");
@@ -108,29 +149,19 @@ async function main(): Promise<void> {
       await handleScreenshotCommand(subcommand, args.slice(1));
       return;
     }
-    case "alerts": {
-      const { handleAlertsCommand } = await import("./handlers/alerts.ts");
-      await handleAlertsCommand(subcommand, args.slice(2));
+    case "screenshot-server": {
+      const { screenshotServerCommand } =
+        await import("./commands/screenshot/server.ts");
+      if (subcommand === undefined || args.length !== 2) {
+        console.error("Usage: toolkit screenshot-server <package>");
+        process.exit(1);
+      }
+      await screenshotServerCommand(subcommand);
       return;
     }
-    case "bugsink": {
-      const { handleBugsinkCommand } = await import("./handlers/bugsink.ts");
-      await handleBugsinkCommand(subcommand, args.slice(2));
-      return;
-    }
-    case "discord": {
-      const { handleDiscordCommand } = await import("./handlers/discord.ts");
-      await handleDiscordCommand(subcommand, args.slice(2));
-      return;
-    }
-    case "history": {
-      const { handleHistoryCommand } = await import("./handlers/history.ts");
-      await handleHistoryCommand(subcommand, args.slice(2));
-      return;
-    }
-    case "backup": {
-      const { handleBackupCommand } = await import("./handlers/backup.ts");
-      await handleBackupCommand(subcommand, args.slice(2));
+    case "brim": {
+      const { handleBrimCommand } = await import("./handlers/brim.ts");
+      await handleBrimCommand(args.slice(1));
       return;
     }
     default:

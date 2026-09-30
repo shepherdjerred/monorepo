@@ -11,21 +11,20 @@ import type {
   RawParticipant,
 } from "@scout-for-lol/data";
 import {
+  computeKda,
   rankToLeaguePoints,
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
+import { participantAugmentLakeFields } from "#src/report-lake/arena.ts";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
+import { participantLoadoutLakeRow } from "#src/report-lake/loadout.ts";
 
 /**
  * Flatten raw Riot documents into report-lake rows.
  *
  * These are the ONLY places lake rows are produced (staging appends at ingest
  * and compaction rebuilds), so the derivations below define lake semantics.
- * They intentionally match the fact-table derivations in
- * report-store/store.ts (participantKda / participantCreepScore /
- * participantSurrendered) — pinned by unit tests — until the fact tables are
- * dropped in the follow-up PR.
  */
 
 type AccountWithPlayer = Prisma.AccountGetPayload<{
@@ -33,8 +32,7 @@ type AccountWithPlayer = Prisma.AccountGetPayload<{
 }>;
 
 function participantKda(participant: RawParticipant): number {
-  const takedowns = participant.kills + participant.assists;
-  return participant.deaths === 0 ? takedowns : takedowns / participant.deaths;
+  return computeKda(participant);
 }
 
 function participantCreepScore(participant: RawParticipant): number {
@@ -49,6 +47,30 @@ function participantEarlySurrendered(participant: RawParticipant): boolean {
   return (
     participant.gameEndedInEarlySurrender || participant.teamEarlySurrendered
   );
+}
+
+/**
+ * Summoner spells and the rune page. Riot lists the primary tree then the
+ * secondary; perk0 is the keystone. A mode without runes (Arena) records no
+ * styles, which stays NULL rather than a made-up page.
+ */
+function participantLoadout(participant: RawParticipant) {
+  const loadout = participantLoadoutLakeRow(participant);
+  return {
+    summoner1_id: participant.summoner1Id,
+    summoner2_id: participant.summoner2Id,
+    perk_primary_style: loadout.primary_rune_style_id,
+    perk_sub_style: loadout.secondary_rune_style_id,
+    perk0: loadout.primary_rune_0_id,
+    perk1: loadout.primary_rune_1_id,
+    perk2: loadout.primary_rune_2_id,
+    perk3: loadout.primary_rune_3_id,
+    perk4: loadout.secondary_rune_0_id,
+    perk5: loadout.secondary_rune_1_id,
+    stat_perk_offense: loadout.stat_perk_offense_id,
+    stat_perk_flex: loadout.stat_perk_flex_id,
+    stat_perk_defense: loadout.stat_perk_defense_id,
+  };
 }
 
 export function flattenMatch(match: RawMatch): MatchLakeRow[] {
@@ -88,6 +110,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     individual_position: participant.individualPosition,
     lane: participant.lane ?? null,
     role: participant.role ?? null,
+    ...participantLoadoutLakeRow(participant),
     win: participant.win,
     surrendered: participantSurrendered(participant),
     early_surrendered: participantEarlySurrendered(participant),
@@ -153,6 +176,15 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     placement: participant.placement ?? null,
     subteam_placement: participant.subteamPlacement ?? null,
     player_subteam_id: participant.playerSubteamId ?? null,
+    item0: participant.item0,
+    item1: participant.item1,
+    item2: participant.item2,
+    item3: participant.item3,
+    item4: participant.item4,
+    item5: participant.item5,
+    item6: participant.item6,
+    ...participantAugmentLakeFields(participant),
+    ...participantLoadout(participant),
   }));
 }
 

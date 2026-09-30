@@ -7,6 +7,7 @@ initializeObservability();
 
 import { handleMessage } from "./agent-runtime/message-handler.ts";
 import { executeIsolatedAgentJob } from "./agent-runtime/job-agent.ts";
+import { getCapabilityCatalog } from "./agent-tools/tools/tool-sets.ts";
 import { getConfig } from "./config/index.ts";
 import {
   initializeDynamicConfig,
@@ -46,18 +47,24 @@ async function shutdown(exitCode: number): Promise<void> {
 
 async function main(): Promise<void> {
   const config = getConfig();
+  // Refuse to boot when tool metadata and the executable inventory disagree:
+  // that mismatch is how a tool ends up with no timeout or risk class. The
+  // router used to force this check by building its catalog; nothing else does.
+  const capabilities = getCapabilityCatalog();
   await initializeDynamicConfig({
     log: (message) => {
       logger.warn(message);
     },
   });
   logger.info("Starting Birmel 3.0", {
-    model: config.openRouter.model,
-    classifierModel: config.openRouter.classifierModel,
-    memoryModel: config.openRouter.memoryModel,
+    model: config.llm.model,
+    classifierModel: config.llm.classifierModel,
+    memoryModel: config.llm.memoryModel,
     personaEnabled: config.persona.enabled,
     telemetryEnabled: config.telemetry.enabled,
     trustedActorCount: config.authority.trustedUserIds.length,
+    registeredToolCount: capabilities.length,
+    maxSteps: config.agent.maxSteps,
   });
 
   const client = getDiscordClient();

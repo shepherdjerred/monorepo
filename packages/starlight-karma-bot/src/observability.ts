@@ -8,6 +8,7 @@
  *  visible only in container logs. */
 import * as Sentry from "@sentry/bun";
 import configuration from "#src/configuration.ts";
+import { filterStarlightSentryEvent } from "#src/sentry-filters.ts";
 
 let initialized = false;
 
@@ -23,6 +24,7 @@ export function initObservability(): void {
     dsn: configuration.sentryDsn,
     environment: configuration.environment,
     release: configuration.gitSha,
+    beforeSend: filterStarlightSentryEvent,
   });
   console.warn("[App] Sentry initialized");
 

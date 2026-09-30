@@ -140,10 +140,7 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     options: CallServiceOptions | undefined,
   ): string {
     const base = `/api/services/${encodeURIComponent(domain)}/${encodeURIComponent(service)}`;
-    if (options?.returnResponse === true) {
-      return `${base}?return_response`;
-    }
-    return base;
+    return options?.returnResponse === true ? `${base}?return_response` : base;
   }
 
   private async request(
@@ -154,10 +151,7 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     const response = await this.rawRequest(method, path, options.body);
     await this.assertOk(response, method, path, options.notFoundResource);
     const text = await response.text();
-    if (text === "") {
-      return undefined;
-    }
-    return RawJson.parse(JSON.parse(text));
+    return text === "" ? undefined : RawJson.parse(JSON.parse(text));
   }
 
   private async assertOk(

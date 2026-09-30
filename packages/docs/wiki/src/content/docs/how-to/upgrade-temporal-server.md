@@ -1,6 +1,6 @@
 ---
 title: Upgrade the Temporal server
-description: Stage a schema-first Temporal server upgrade, prove the database backup and TLS gates, and roll back the binary safely.
+description: Stage a schema-first Temporal server upgrade, prove the schema and TLS gates, and roll back the binary safely.
 sidebar:
   order: 6
 ---
@@ -43,27 +43,44 @@ both appear.
 ## Deploy one server version
 
 Confirm the pull request pins `temporalio/server` and
-`temporalio/admin-tools` to the same release. The first migration is 1.30.6.
-The 1.31.2 change is a separate future release and must not merge until the
-1.30.6 acceptance below is recorded.
+`temporalio/admin-tools` to the same release, and that it moves the server by
+exactly one release from the version currently running. Do not merge it until
+the running release has recorded runtime acceptance.
 
-Argo runs two ordered PreSync hooks before touching the server Deployment:
-
-1. `temporal-backup-preflight` requires the newest `6hourly-backup` to be less
-   than seven hours old, completed without errors, and to have completed every
-   attempted volume snapshot.
-2. `temporal-schema-migration` runs the matching admin-tools image and updates
-   both the core and visibility PostgreSQL schemas over verified TLS.
+Before touching the server Deployment, Argo runs `temporal-schema-migration`,
+a Sync hook at wave -1. It runs the matching admin-tools image and updates both
+the core and visibility PostgreSQL schemas over verified TLS.
 
 A failed hook fails the Argo sync, so the old server stays running. Do not skip
-or delete a failed hook to force the rollout. Repair the backup, certificate,
-database, or schema problem and retry the same release.
+or delete a failed hook to force the rollout. Repair the certificate, database,
+or schema problem and retry the same release.
 
-Watch the gates and the Deployment:
+The temporal child sync waits up to 20 minutes because the migration hook may
+run up to 15 minutes: DDL that rewrites a hot table runs under live server
+traffic. The visibility v1.14 migration (two `STORED` generated columns on a
+6 GiB `executions_visibility`) needed most of that budget across two attempts.
+The waiter must outlast the hook, so both numbers live together in
+`temporal-release-budgets.ts`, which the chart and the release script share.
+
+If a sync times out mid-migration, check whether the DDL landed before the
+version marker:
+
+```sh
+kubectl --namespace temporal exec temporal-postgresql-0 -- \
+  psql -U postgres -d temporal_visibility -c "SELECT * FROM schema_version;"
+kubectl --namespace temporal exec temporal-postgresql-0 -- \
+  psql -U postgres -d temporal_visibility -c "\d executions_visibility"
+```
+
+`temporal-sql-tool` tolerates already-applied statements
+(`Duplicate update ... Ignoring it and continue`), so retrying the same
+release resumes a partially applied migration instead of restarting it: the
+landed statements are skipped as duplicates and only the pending work remains.
+
+Watch the migration and the Deployment:
 
 ```sh
 kubectl --namespace temporal get jobs,pods --watch
-kubectl --namespace temporal logs job/temporal-backup-preflight
 kubectl --namespace temporal logs job/temporal-schema-migration
 kubectl --namespace temporal rollout status deployment/temporal-temporal-server
 ```
@@ -105,20 +122,19 @@ Do not roll a database schema backward. Temporal supports deploying the older
 server binary against the already-upgraded schema during rollback.
 
 Revert only the server image pin to the last accepted release, keep the newer
-schema in place, and run the same backup and schema hooks. The schema update is
+schema in place, and run the same schema hook. The schema update is
 idempotent and should report no pending migrations. After the old Deployment
 is healthy, repeat the runtime acceptance checks above.
 
 If the database or its certificate is unhealthy, stop. A server-image rollback
-does not repair persistence and must not be used to bypass a failed backup or
-TLS gate.
+does not repair persistence and must not be used to bypass a failed TLS gate.
 
 ## Advance to the next release
 
-Prepare 1.31.2 only after 1.30.6 has passed runtime acceptance. Update the
-server and admin-tools pins together, obtain another current successful Velero
-backup, and repeat the complete procedure. Never stack the unverified second
-upgrade on the first release branch.
+Prepare the next release only after the current one has passed runtime
+acceptance. Update the server and admin-tools pins together and repeat the
+complete procedure. Never
+stack an unverified second upgrade on the first release branch.
 
 ## Related
 

@@ -18,3 +18,11 @@ export function getDocsUrl(): string {
 export function getExploreConversationUrl(conversationId: string): string {
   return `${getOrigin()}/app/explore/${conversationId}`;
 }
+
+export function getExploreMatchUrl(matchId: string): string {
+  return `${getOrigin()}/app/explore/matches/${matchId}`;
+}
+
+export function getHallOfFameUrl(guildId: string): string {
+  return `${getOrigin()}/app/halls/${guildId}`;
+}

@@ -3,10 +3,9 @@ import { sortedTimeline, type TimelineItem } from "#lib/fold";
 import { describe } from "./format.ts";
 
 function clockTime(epoch: number): string {
-  if (epoch === 0) {
-    return "--:--:--";
-  }
-  return new Date(epoch).toLocaleTimeString([], { hour12: false });
+  return epoch === 0
+    ? "--:--:--"
+    : new Date(epoch).toLocaleTimeString([], { hour12: false });
 }
 
 function hasBody(body: unknown): boolean {

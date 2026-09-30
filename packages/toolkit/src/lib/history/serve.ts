@@ -1,5 +1,13 @@
 import { appendFile, chmod, mkdir, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
+import { defaultSnapshotsPath } from "#lib/brim/cache.ts";
+import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { createOtlpMetricsExporter } from "./metrics-push.ts";
+import {
+  startUsageMetricsExport,
+  type UsageMetricsExport,
+} from "./usage-metrics.ts";
 import { createHistorySources } from "./sources.ts";
 import { HistoryIndex } from "./index.ts";
 import { defaultHistoryPaths, defaultHistoryRuntimePaths } from "./paths.ts";
@@ -9,7 +17,12 @@ import {
 } from "./ipc.ts";
 import type { HistoryPaths, HistoryRuntimePaths } from "./paths.ts";
 import type { HistoryDaemonState } from "./ipc.ts";
-import type { HistorySource, HistorySourceResult } from "./types.ts";
+import type {
+  HistorySource,
+  HistorySourceName,
+  HistorySourceResult,
+  HistorySourceStatus,
+} from "./types.ts";
 
 const INTERVAL_SECONDS = 30;
 const SOURCE_SCAN_CONCURRENCY = 2;
@@ -32,9 +45,31 @@ async function logLine(
   await chmod(logPath, 0o600);
 }
 
+/**
+ * Sources that must block a destructive reindex: a failing source with
+ * indexed documents would lose them when the schema is dropped, and its
+ * cache would then only ever re-emit subsequently changed files. Missing
+ * sources (no error) and failing sources with nothing indexed are safe.
+ */
+export function rebuildBlockers(
+  results: readonly HistorySourceResult[],
+  statuses: readonly HistorySourceStatus[],
+): readonly HistorySourceName[] {
+  const indexed = new Map(
+    statuses.map((status) => [status.source, status.indexedDocuments]),
+  );
+  return results
+    .filter(
+      (result) =>
+        result.error !== null && (indexed.get(result.source) ?? 0) > 0,
+    )
+    .map((result) => result.source);
+}
+
 export async function scanHistorySources(
   sources: readonly HistorySource[],
   paths: HistoryPaths,
+  force = false,
 ): Promise<HistorySourceResult[]> {
   const results: HistorySourceResult[] = [];
   for (
@@ -46,11 +81,43 @@ export async function scanHistorySources(
       ...(await Promise.all(
         sources
           .slice(offset, offset + SOURCE_SCAN_CONCURRENCY)
-          .map(async (source) => source.scan(paths)),
+          .map(async (source) => source.scan(paths, { force })),
       )),
     );
   }
   return results;
+}
+
+/**
+ * Starts the usage metrics push when `historyMetricsPushEnabled` resolves
+ * true. Read once at boot; restart the daemon after changing it.
+ */
+async function startMetricsExportIfEnabled(
+  runtimePaths: HistoryRuntimePaths,
+): Promise<UsageMetricsExport | null> {
+  const config = await loadToolkitConfig();
+  const enabled = await config.get("historyMetricsPushEnabled");
+  if (!enabled.value) {
+    await logLine(runtimePaths, "usage metrics push disabled", {
+      source: enabled.source,
+    });
+    return null;
+  }
+  const endpoint = await config.get("historyMetricsPushEndpoint");
+  await logLine(runtimePaths, "usage metrics push enabled", {
+    enabledSource: enabled.source,
+    endpoint: endpoint.value,
+    endpointSource: endpoint.source,
+  });
+  return startUsageMetricsExport({
+    ledgerPath: runtimePaths.usageExportDb,
+    snapshotsPath: defaultSnapshotsPath(),
+    exporter: createOtlpMetricsExporter(endpoint.value),
+    hostname: os.hostname(),
+    log: async (message, extra) => {
+      await logLine(runtimePaths, message, extra);
+    },
+  });
 }
 
 export async function runHistoryDaemon(): Promise<void> {
@@ -68,6 +135,7 @@ export async function runHistoryDaemon(): Promise<void> {
   await rm(runtimePaths.socket, { force: true });
 
   const index = await HistoryIndex.open(runtimePaths);
+  const metricsExport = await startMetricsExportIfEnabled(runtimePaths);
   const sources = createHistorySources();
   const labels = new Map(sources.map((source) => [source.name, source.label]));
   let lastScanAt: string | null = null;
@@ -78,24 +146,65 @@ export async function runHistoryDaemon(): Promise<void> {
     stop: (closeActiveConnections?: boolean) => Promise<void>;
   } | null = null;
 
+  // Metrics are a side channel: a failed refresh is logged and retried on
+  // the next scan rather than taking down history search.
+  const refreshMetrics = async (): Promise<void> => {
+    if (metricsExport === null) {
+      return;
+    }
+    try {
+      const refresh = await metricsExport.refresh(index, new Date());
+      if (refresh.seeded || refresh.newKeys > 0 || refresh.prunedKeys > 0) {
+        await logLine(runtimePaths, "usage metrics ledger refreshed", {
+          ...refresh,
+        });
+      }
+    } catch (error: unknown) {
+      await logLine(runtimePaths, "usage metrics refresh failed", {
+        error: getErrorMessage(error),
+      });
+    }
+  };
+
   const scan = async (force: boolean): Promise<void> => {
     if (scanning) {
       return;
     }
     scanning = true;
     try {
-      const results = await scanHistorySources(sources, paths);
-      await index.ingest(results, force);
+      const results = await scanHistorySources(sources, paths, force);
+      let effectiveForce = force;
+      if (force) {
+        const blocked = rebuildBlockers(results, index.statuses(labels));
+        if (blocked.length > 0) {
+          effectiveForce = false;
+          await logLine(runtimePaths, "history reindex refused rebuild", {
+            reason:
+              "sources failing with indexed documents; ingesting without dropping the schema",
+            sources: blocked,
+          });
+        }
+      }
+      await index.ingest(results, effectiveForce);
+      // Caches advance only now that the results are indexed: a dropped
+      // scan must re-read the same files next pass.
+      for (const source of sources) {
+        source.commitScan?.();
+      }
       lastScanAt = new Date().toISOString();
       await logLine(runtimePaths, "history scan complete", {
-        force,
+        force: effectiveForce,
         sources: results.map((result) => ({
           source: result.source,
           available: result.available,
-          documents: result.documents.length,
+          documents: result.sourceIds.length,
+          changed: result.complete
+            ? result.sourceIds.length
+            : result.documents.length,
           error: result.error,
         })),
       });
+      await refreshMetrics();
     } catch (error: unknown) {
       await logLine(runtimePaths, "history scan failed", {
         error: getErrorMessage(error),
@@ -139,6 +248,13 @@ export async function runHistoryDaemon(): Promise<void> {
     }
     await logLine(runtimePaths, "history daemon stopping", { reason });
     await server?.stop(true);
+    try {
+      await metricsExport?.shutdown();
+    } catch (error: unknown) {
+      await logLine(runtimePaths, "usage metrics shutdown failed", {
+        error: getErrorMessage(error),
+      });
+    }
     index.close();
     await rm(runtimePaths.socket, { force: true });
     await rm(runtimePaths.state, { force: true });

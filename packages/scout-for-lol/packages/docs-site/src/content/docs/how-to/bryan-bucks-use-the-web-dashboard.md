@@ -20,8 +20,7 @@ every open market:
   as the Discord market message does. Pick a side, enter a stake (or use the
   quick 1 BB / 5 BB buttons), and place. While the window is open you can add
   to your position or cancel it.
-- **Match parlays** and **weekly parlays** show the legs and fixed YES/NO
-  odds. Weekly parlays show aggregate totals only.
+- **Match parlays** show the legs and fixed YES/NO odds.
 
 Cancelling shows you the exact amount you get back and the fee before you
 confirm. The numbers are computed for your position; the rules behind them are

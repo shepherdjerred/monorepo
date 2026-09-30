@@ -4,6 +4,8 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   getDocsUrl,
   getExploreConversationUrl,
+  getExploreMatchUrl,
+  getHallOfFameUrl,
 } from "#src/discord/commands/links.ts";
 import { exploreActionRow } from "#src/discord/scout/messages.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
@@ -34,6 +36,12 @@ describe("stage-aware Discord links", () => {
     expect(getDocsUrl()).toBe("https://beta.scout-for-lol.com/docs/");
     expect(getExploreConversationUrl("conversation-id")).toBe(
       "https://beta.scout-for-lol.com/app/explore/conversation-id",
+    );
+    expect(getExploreMatchUrl("NA1_1234567890")).toBe(
+      "https://beta.scout-for-lol.com/app/explore/matches/NA1_1234567890",
+    );
+    expect(getHallOfFameUrl("100000000000000001")).toBe(
+      "https://beta.scout-for-lol.com/app/halls/100000000000000001",
     );
   });
 

@@ -24,9 +24,14 @@ import type {
   SqliteRow,
 } from "#src/database/legacy-import/convert.ts";
 import { toDate, toInt, toStr } from "#src/database/legacy-import/convert.ts";
+import {
+  assertPuuidRemapIsIntact,
+  optionalTablesForLegacySnapshot,
+} from "#src/database/legacy-import/legacy-optional-tables.ts";
 import { IMPORT_MODELS_PART_1 } from "#src/database/legacy-import/models-part-1.ts";
 import { IMPORT_MODELS_PART_2 } from "#src/database/legacy-import/models-part-2.ts";
 import { IMPORT_MODELS_PART_3 } from "#src/database/legacy-import/models-part-3.ts";
+import { legacySqliteSourceDigest } from "#src/database/legacy-import/sqlite-source-digest.ts";
 
 /**
  * Structural client requirement so both the plain PrismaClient (entrypoint
@@ -57,23 +62,6 @@ const SENTINEL_MODELS = new Set([
 ]);
 
 const MARKER_TABLE = "_legacy_sqlite_import";
-
-// The currently promoted SQLite image predates the parlay migration. An absent
-// BucksOpenPosition table is reconstructed from pending bets in open pools;
-// absent post-baseline attribution and parlay tables are empty historical
-// models. Every other missing table remains a hard compatibility error.
-const LEGACY_OPTIONAL_TABLES = new Set([
-  "InstallAttributionToken",
-  "BucksOpenPosition",
-  "BucksParlayDefinition",
-  "BucksParlayMarket",
-  "BucksParlayBet",
-  // The promoted SQLite image predates the tournament-lobby migration. Newer
-  // snapshots carry these tables and import them; older snapshots treat them
-  // as empty so the cutover can still complete.
-  "TournamentRegistration",
-  "TournamentLobby",
-]);
 
 function quoteIdentifier(identifier: string): string {
   return `"${identifier.replaceAll('"', '""')}"`;
@@ -128,73 +116,6 @@ async function getImportMarker(
     : { source: marker.source, sourceDigest: marker.source_digest };
 }
 
-function sqliteDigestValue(value: unknown): unknown {
-  if (typeof value === "bigint") {
-    return value.toString();
-  }
-  if (value instanceof Uint8Array) {
-    return [...value];
-  }
-  return value;
-}
-
-function sqliteDigestRow(row: unknown): string {
-  if (row === null || typeof row !== "object" || Array.isArray(row)) {
-    throw new Error("Unexpected SQLite snapshot row shape");
-  }
-  return JSON.stringify(
-    Object.entries(row)
-      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-      .map(([key, value]) => [key, sqliteDigestValue(value)]),
-  );
-}
-
-function sqliteSourceDigest(sqlitePath: string): string {
-  // Read through SQLite instead of hashing only db.sqlite. SQLite exposes
-  // committed WAL pages through this connection, so the digest represents the
-  // state the importer will actually read after an unclean rollback shutdown.
-  const db = new Database(sqlitePath, { readonly: true, safeIntegers: true });
-  const hasher = new Bun.CryptoHasher("sha256");
-  try {
-    const schemaRows: unknown = db
-      .query(
-        "SELECT name, sql FROM sqlite_master WHERE type = 'table' ORDER BY name",
-      )
-      .all();
-    if (!Array.isArray(schemaRows)) {
-      throw new TypeError("Unexpected SQLite schema result shape");
-    }
-    for (const schemaRow of schemaRows) {
-      if (
-        schemaRow === null ||
-        typeof schemaRow !== "object" ||
-        Array.isArray(schemaRow)
-      ) {
-        throw new TypeError("Unexpected SQLite schema row shape");
-      }
-      const entries = Object.entries(schemaRow);
-      const name: unknown = entries.find(([key]) => key === "name")?.[1];
-      const sql: unknown = entries.find(([key]) => key === "sql")?.[1];
-      if (typeof name !== "string" || typeof sql !== "string") {
-        throw new TypeError("SQLite schema row has invalid name or SQL");
-      }
-      const rows: unknown = db
-        .query(`SELECT * FROM ${quoteIdentifier(name)}`)
-        .all();
-      if (!Array.isArray(rows)) {
-        throw new TypeError(`Unexpected SQLite rows for ${name}`);
-      }
-      hasher.update(`${name}\u{0}${sql}\u{0}`);
-      for (const row of rows.map((value) => sqliteDigestRow(value)).sort()) {
-        hasher.update(`${row}\u{0}`);
-      }
-    }
-    return hasher.digest("hex");
-  } finally {
-    db.close();
-  }
-}
-
 async function postgresHasData(prisma: ImportClient): Promise<boolean> {
   for (const spec of IMPORT_MODELS) {
     if (!SENTINEL_MODELS.has(spec.model)) {
@@ -241,10 +162,10 @@ function readSqliteRows(
   db: Database,
   spec: ImportModelSpec,
   missingTables: Set<string>,
+  optionalTables: ReadonlySet<string>,
 ): SqliteRow[] {
-  if (!sqliteTableExists(db, spec.model)) {
-    if (LEGACY_OPTIONAL_TABLES.has(spec.model)) {
-      missingTables.add(spec.model);
+  if (missingTables.has(spec.model)) {
+    if (optionalTables.has(spec.model)) {
       return [];
     }
     throw new Error(
@@ -321,16 +242,42 @@ function restoreMissingOpenPositions(
 }
 
 function readSourceRows(db: Database): Map<string, SqliteRow[]> {
-  const missingTables = new Set<string>();
+  const missingTables = new Set(
+    IMPORT_MODELS.filter((spec) => !sqliteTableExists(db, spec.model)).map(
+      (spec) => spec.model,
+    ),
+  );
+  const optionalTables = optionalTablesForLegacySnapshot(missingTables);
   const sourceRows = new Map<string, SqliteRow[]>();
   for (const spec of IMPORT_MODELS) {
-    const rows = readSqliteRows(db, spec, missingTables);
+    const rows = readSqliteRows(db, spec, missingTables, optionalTables);
     sourceRows.set(
       spec.model,
       spec.model === "ExploreMessage" ? topoSortByParent(rows) : rows,
     );
   }
   restoreMissingOpenPositions(sourceRows, missingTables);
+  const migrationRows = sourceRows.get("PuuidKeyMigration") ?? [];
+  const mapRows = sourceRows.get("PuuidKeyMap") ?? [];
+  for (const row of migrationRows) {
+    if (row["transitionOpen"] !== undefined) {
+      continue;
+    }
+    // Older SQLite snapshots have no explicit state. A null marker alongside
+    // stamped mappings is an interrupted apply, not an opened later transition.
+    row["transitionOpen"] = mapRows.some(
+      (mapping) =>
+        mapping["appliedAt"] !== null && mapping["appliedAt"] !== undefined,
+    )
+      ? 0
+      : 1;
+  }
+  assertPuuidRemapIsIntact({
+    mapMissing: missingTables.has("PuuidKeyMap"),
+    appliedCutovers: (sourceRows.get("PuuidKeyMigration") ?? []).filter(
+      (row) => row["appliedAt"] !== null && row["appliedAt"] !== undefined,
+    ).length,
+  });
   return sourceRows;
 }
 
@@ -370,7 +317,7 @@ export async function runImport(
   await ensureMarkerTable(prisma);
   const sqliteFile = Bun.file(sqlitePath);
   const sourceDigest =
-    sqliteFile.size === 0 ? null : sqliteSourceDigest(sqlitePath);
+    sqliteFile.size === 0 ? null : legacySqliteSourceDigest(sqlitePath);
 
   const marker = await getImportMarker(prisma);
   if (marker !== null) {

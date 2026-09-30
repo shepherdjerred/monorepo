@@ -47,10 +47,10 @@ export function parseTimemarkSeconds(timemark?: string): number | undefined {
   const h = Number(parts[0]);
   const m = Number(parts[1]);
   const s = Number(parts[2]);
-  if (![h, m, s].every((n) => Number.isFinite(n))) {
-    return undefined;
-  }
-  return sign * (h * 3600 + m * 60 + s);
+  const totalSeconds = h * 3600 + m * 60 + s;
+  return [h, m, s].every((n) => Number.isFinite(n))
+    ? sign * totalSeconds
+    : undefined;
 }
 
 /**
@@ -83,6 +83,24 @@ export const STALL_AFTER_SECONDS = 20;
 /** Cadence of the progress-age watchdog tick. Injectable so tests can drive it deterministically. */
 export const PROGRESS_TICK_MS = 1000;
 
+export type StreamObserverOptions = {
+  /** Watchdog cadence. Defaults to {@link PROGRESS_TICK_MS}. */
+  readonly progressTickMs?: number;
+  /**
+   * This segment carries audio only (music over the normal voice connection), so the video-only
+   * signals must be **absent rather than zero**.
+   *
+   * Writing `hw_decode_engaged = 0` for a stream with no picture reads on a dashboard exactly like
+   * "hardware decode broke", and a `ffmpeg_fps` pinned at 0 reads like a frozen encoder. Neither is
+   * true: there is no video path to report on. The labelled ones (`ffmpeg_fps`,
+   * `pipeline_queue_depth{kind:"video"}`) therefore stay absent; `hw_decode_engaged` carries no
+   * labels and so cannot be absent once written at all, but it keeps the last video segment's
+   * reading instead of being overwritten with a false alarm. `dispose` correspondingly leaves a
+   * concurrent video session's series alone rather than resetting gauges this segment never wrote.
+   */
+  readonly audioOnly?: boolean;
+};
+
 /**
  * Build a {@link StreamObserver} for one streaming segment. `hardware` labels the metrics with the
  * path the segment is attempting. `now` is injectable for deterministic tests. `onStall` (optional)
@@ -92,7 +110,7 @@ export const PROGRESS_TICK_MS = 1000;
  * parsed, so the caller can resume from the true producer position rather than the wall-clock one
  * (which over-counts when ffmpeg was producing below realtime). Each `onCommand` starts a fresh
  * progress epoch (a `/seek` restarts ffmpeg at a new `-ss`, so its timemark restarts near zero).
- * `progressTickMs` sets the watchdog cadence (default {@link PROGRESS_TICK_MS}).
+ * {@link StreamObserverOptions} carries the watchdog cadence and the audio-only suppression flag.
  *
  * Always call the returned `dispose()` when the segment ends to stop the internal progress-age
  * timer. Without it, each call leaves a live `setInterval` writing to the shared
@@ -103,9 +121,11 @@ export function createStreamObserver(
   hardware: boolean,
   now: () => number = Date.now,
   onStall?: (lastMediaSeconds: number | undefined) => void,
-  progressTickMs: number = PROGRESS_TICK_MS,
+  options: StreamObserverOptions = {},
 ): StreamObserverHandle {
   const hw = hardware ? "true" : "false";
+  const progressTickMs = options.progressTickMs ?? PROGRESS_TICK_MS;
+  const audioOnly = options.audioOnly ?? false;
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
   let lastProgressWallMs: number | undefined;
@@ -144,18 +164,25 @@ export function createStreamObserver(
     // stale readings survive indefinitely (a frozen 1.397x speed_ratio manufactured a false
     // "healthy 1.4x baseline" during the 2026-07-18 investigation — the bug reproduced 3×).
     ffmpegSpeedRatio.reset();
-    ffmpegFps.reset();
     ffmpegBitrateKbps.reset();
     ffmpegProgressAgeSeconds.reset();
     playbackBehindSeconds.reset();
+    if (audioOnly) {
+      // Only the series this segment actually wrote. A blanket reset here would wipe a concurrent
+      // video session's fps and video queue depth — gauges an audio-only segment never touched.
+      pipelineQueueDepth.remove("audio");
+      return;
+    }
+    ffmpegFps.reset();
     pipelineQueueDepth.reset();
   };
 
   const observer: StreamObserver = {
     onCommand: (command) => {
       const engaged = commandUsesHardwareDecode(command);
-      hwDecodeEngaged.set(engaged ? 1 : 0);
-      log.info("ffmpeg command", { command, hwDecodeEngaged: engaged });
+      if (!audioOnly) hwDecodeEngaged.set(engaged ? 1 : 0);
+      // The command can contain signed media URLs and HTTP authorization headers.
+      log.info("ffmpeg command started", { hwDecodeEngaged: engaged });
       // A new command is a new progress epoch. A `/seek` restarts ffmpeg at a new `-ss` offset, so
       // its output timemark restarts near zero; without resetting the previous media/wall samples,
       // the "media advanced" check would compare the new low timemark against the old (higher) one,
@@ -182,7 +209,7 @@ export function createStreamObserver(
       });
     },
     onProgress: (progress) => {
-      if (typeof progress.currentFps === "number") {
+      if (!audioOnly && typeof progress.currentFps === "number") {
         ffmpegFps.set({ hardware: hw }, progress.currentFps);
       }
       if (typeof progress.currentKbps === "number") {
@@ -253,7 +280,7 @@ export function createStreamObserver(
       }
     },
     onQueueDepth: (depth) => {
-      pipelineQueueDepth.set({ kind: "video" }, depth.video);
+      if (!audioOnly) pipelineQueueDepth.set({ kind: "video" }, depth.video);
       pipelineQueueDepth.set({ kind: "audio" }, depth.audio);
     },
   };

@@ -11,9 +11,9 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
-import { voidReasonText } from "#src/betting/outcome-message.ts";
+import { voidReasonText } from "#src/betting/notify/outcome-message.ts";
 import {
   buildSettlementDmMessages,
   SETTLEMENT_DM_NOTIFICATION_HINT,
@@ -22,19 +22,20 @@ import {
   type TeamRecipient,
 } from "#src/betting/settlement/settlement-dm.ts";
 import { shortTeamName } from "#src/betting/team.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   getBucksNotificationPreferencesForUsers,
   markBucksSettlementDmHintShown,
-} from "#src/betting/notification-preferences.ts";
+} from "#src/betting/notify/notification-preferences.ts";
 import { client } from "#src/discord/client.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
+import { decorateEmbedWithFeatureTip } from "#src/tips/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { bettingSettlementDmsTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementDmsTotal } from "#src/metrics/betting/betting.ts";
 
 const logger = createLogger("betting-settlement-dm");
 
@@ -98,16 +99,52 @@ const defaultSettlementDmDeliveryDependencies: SettlementDmDeliveryDependencies 
     observeBucksDelivery,
   };
 
+type TippedSettlementDm = Awaited<
+  ReturnType<typeof decorateEmbedWithFeatureTip>
+>;
+
+async function handleSettlementDmDeliveryError(input: {
+  error: unknown;
+  status: DmStatus | undefined;
+  tipped: TippedSettlementDm | undefined;
+  recipientKind: "bettor" | "player";
+  matchId: string;
+  recipientId: string;
+}): Promise<void> {
+  if (input.status !== "sent") await input.tipped?.release();
+  // `sendDM` handles expected Discord failures. The observer still needs
+  // a rejection to count those statuses, but they are not Sentry errors.
+  bettingSettlementDmsTotal.inc({
+    recipient: input.recipientKind,
+    result: input.status ?? "failed",
+  });
+  if (input.error instanceof SettlementDmStatusError) {
+    logger.info(
+      `Bryan Bucks DM for ${input.matchId} to ${input.recipientId} returned ${input.error.status}.`,
+    );
+  } else {
+    logger.error(
+      `❌ Could not deliver Bryan Bucks DM for ${input.matchId} to ${input.recipientId}:`,
+      input.error,
+    );
+    Sentry.captureException(input.error, {
+      tags: {
+        source: "betting-settlement-dm",
+        matchId: input.matchId,
+      },
+    });
+  }
+}
+
 async function playerRecipientsForRoster(input: {
   roster: readonly BucksPoolParticipant[];
   serverId: DiscordGuildId;
   prismaClient: ExtendedPrismaClient;
 }): Promise<TeamRecipient[]> {
   const trackedParticipants = input.roster.flatMap((participant) => {
-    if (participant.puuid === null || participant.trackedAlias === undefined) {
-      return [];
-    }
-    return [{ puuid: participant.puuid, teamId: participant.teamId }];
+    return participant.puuid === null || participant.trackedAlias === undefined
+      ? []
+      : [{ puuid: participant.puuid, teamId: participant.teamId }];
   });
   if (trackedParticipants.length === 0) {
     return [];
@@ -360,6 +397,22 @@ export async function deliverSettlementDms(
   });
   for (const message of messages) {
     let status: DmStatus | undefined;
+    // A DM carries the notification hint or a feature tip, never both: two
+    // asides on one settlement receipt is the noise the DM budget exists to
+    // prevent, and the hint is the more actionable of the two.
+    const tipped = message.showHint
+      ? undefined
+      : await decorateEmbedWithFeatureTip(
+          message.embed,
+          {
+            serverId: guildId,
+            discordId: DiscordAccountIdSchema.parse(message.recipientId),
+            surface: "bucks_dm",
+          },
+          // The caller's client, so a tip read and the settlement it rides on
+          // see the same database.
+          { db: prismaClient },
+        );
     try {
       await dependencies.observeBucksDelivery(
         {
@@ -375,7 +428,7 @@ export async function deliverSettlementDms(
             // The plain rendering is the audit-log record; the embed is what
             // the recipient sees, with the hint as content above it.
             message: message.content,
-            embeds: [message.embed],
+            embeds: [tipped?.embed ?? message.embed],
             ...(message.showHint
               ? { contentWithEmbeds: SETTLEMENT_DM_NOTIFICATION_HINT }
               : {}),
@@ -395,6 +448,7 @@ export async function deliverSettlementDms(
           message.kind === "betting_settlement_receipt" ? "bettor" : "player",
         result: "sent",
       });
+      await tipped?.confirm();
       if (hintRecipientIds.has(message.recipientId)) {
         try {
           await dependencies.markNotificationHintShown(
@@ -415,29 +469,15 @@ export async function deliverSettlementDms(
         }
       }
     } catch (error) {
-      // `sendDM` handles expected Discord failures. The observer still needs
-      // a rejection to count those statuses, but they are not Sentry errors.
-      bettingSettlementDmsTotal.inc({
-        recipient:
+      await handleSettlementDmDeliveryError({
+        error,
+        status,
+        tipped,
+        recipientKind:
           message.kind === "betting_settlement_receipt" ? "bettor" : "player",
-        result: status ?? "failed",
+        matchId: input.summary.matchId,
+        recipientId: message.recipientId,
       });
-      if (error instanceof SettlementDmStatusError) {
-        logger.info(
-          `Bryan Bucks DM for ${input.summary.matchId} to ${message.recipientId} returned ${error.status}.`,
-        );
-      } else {
-        logger.error(
-          `❌ Could not deliver Bryan Bucks DM for ${input.summary.matchId} to ${message.recipientId}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "betting-settlement-dm",
-            matchId: input.summary.matchId,
-          },
-        });
-      }
     }
   }
 }

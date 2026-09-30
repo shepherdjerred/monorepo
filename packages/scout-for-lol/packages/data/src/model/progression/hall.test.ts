@@ -39,6 +39,19 @@ function matchRow(): MatchLakeRow {
     individual_position: "BOTTOM",
     lane: "BOTTOM",
     role: "CARRY",
+    summoner_spell_1_id: 4,
+    summoner_spell_2_id: 7,
+    primary_rune_style_id: null,
+    primary_rune_0_id: null,
+    primary_rune_1_id: null,
+    primary_rune_2_id: null,
+    primary_rune_3_id: null,
+    secondary_rune_style_id: null,
+    secondary_rune_0_id: null,
+    secondary_rune_1_id: null,
+    stat_perk_offense_id: null,
+    stat_perk_flex_id: null,
+    stat_perk_defense_id: null,
     win: true,
     surrendered: false,
     early_surrendered: false,
@@ -86,7 +99,7 @@ function matchRow(): MatchLakeRow {
     double_kills: 2,
     triple_kills: 1,
     quadra_kills: 0,
-    penta_kills: 0,
+    penta_kills: 2,
     largest_multi_kill: 3,
     killing_sprees: 2,
     first_blood_kill: true,
@@ -103,6 +116,32 @@ function matchRow(): MatchLakeRow {
     placement: null,
     subteam_placement: null,
     player_subteam_id: null,
+    item0: 0,
+    item1: 0,
+    item2: 0,
+    item3: 0,
+    item4: 0,
+    item5: 0,
+    item6: 0,
+    augment_1_id: null,
+    augment_2_id: null,
+    augment_3_id: null,
+    augment_4_id: null,
+    augment_5_id: null,
+    augment_6_id: null,
+    summoner1_id: null,
+    summoner2_id: null,
+    perk_primary_style: null,
+    perk_sub_style: null,
+    perk0: null,
+    perk1: null,
+    perk2: null,
+    perk3: null,
+    perk4: null,
+    perk5: null,
+    stat_perk_offense: null,
+    stat_perk_flex: null,
+    stat_perk_defense: null,
   };
 }
 
@@ -152,7 +191,7 @@ describe("Hall of Fame domain", () => {
     const expected = {
       kills: 14,
       assists: 17,
-      largest_multikill: 3,
+      pentakills: 2,
       champion_damage: 30_000,
       champion_damage_per_minute: 1000,
       damage_taken: 22_000,
@@ -230,5 +269,34 @@ describe("Hall of Fame domain", () => {
         candidate(holderTwo, 11),
       ),
     ).toMatchObject({ kind: "break", value: 11, holders: [holderTwo] });
+  });
+
+  test("pentakills record requires at least one pentakill", () => {
+    const zeroPenta: HallCandidate = {
+      queueFamilyId: "ranked_sr",
+      recordId: "pentakills",
+      value: 0,
+      holder: holderOne,
+      evidence: {
+        matchId: "match-penta-0",
+        gameEndAt: "2026-01-01T00:30:00.000Z",
+        value: 0,
+        holder: holderOne,
+      },
+    };
+    expect(compareHallCandidate(null, [], [], zeroPenta)).toEqual({
+      kind: "below",
+    });
+
+    const onePenta: HallCandidate = {
+      ...zeroPenta,
+      value: 1,
+      evidence: { ...zeroPenta.evidence, value: 1 },
+    };
+    expect(compareHallCandidate(null, [], [], onePenta)).toMatchObject({
+      kind: "break",
+      value: 1,
+      holders: [holderOne],
+    });
   });
 });

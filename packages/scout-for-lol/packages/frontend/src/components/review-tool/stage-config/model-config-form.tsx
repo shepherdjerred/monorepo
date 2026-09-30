@@ -1,4 +1,4 @@
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import type { ModelConfig } from "#src/lib/review-tool/config/schema.ts";
 import { modelSupportsParameter } from "@scout-for-lol/data";

@@ -1,10 +1,10 @@
 import { z } from "zod";
 import type { GoalControlContext, Routed } from "./control-context.ts";
-import { formatHistoryForPrompt } from "#src/goal/history-summary.ts";
+import { formatHistoryForPrompt } from "#src/goal/memory/history-summary.ts";
 import {
   KnowledgeDomainSchema,
   loadKnowledgeBase,
-} from "#src/goal/knowledge.ts";
+} from "#src/goal/memory/knowledge.ts";
 import { truncateForToolLog } from "#src/goal/goal-tool-log.ts";
 
 const HistoryQuerySchema = z.strictObject({

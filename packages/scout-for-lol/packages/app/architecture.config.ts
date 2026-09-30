@@ -17,8 +17,8 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * in behind a rule.
  *
  * The client/server boundary is **not** expressible here. The app names the
- * backend's `AppRouter` type — three `import type` statements in `lib/trpc.ts`
- * and `lib/trpc-options.ts` — and must never import backend runtime, but each
+ * backend's `AppRouter` type — three `import type` statements in `lib/query/trpc.ts`
+ * and `lib/query/trpc-options.ts` — and must never import backend runtime, but each
  * cruise is scoped to its own source root on purpose (a package must not be
  * failed by a dependency's internals), so a cross-package edge is invisible to
  * this check. The boundary holds today; enforcing it needs a different

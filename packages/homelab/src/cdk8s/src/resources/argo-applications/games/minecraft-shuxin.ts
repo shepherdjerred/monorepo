@@ -2,9 +2,11 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
+import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
   createMinecraftConfigMaps,
@@ -12,8 +14,8 @@ import {
   getMinecraftExtraEnv,
   getMinecraftPluginConfigInitContainer,
   getMinecraftPluginNames,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-config.ts";
-import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-drift-check.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-config.ts";
+import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-drift-check.ts";
 
 const NAMESPACE = "minecraft-shuxin";
 
@@ -48,6 +50,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
     replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
     workloadAsStatefulSet: true,
+    extraPodSpec: { priorityClassName: BURST_SERVICE_PRIORITY },
     strategyType: "RollingUpdate",
     // mc-router annotation for hostname-based routing (must be top-level)
     serviceAnnotations: {
@@ -71,31 +74,18 @@ export function createMinecraftShuxinApp(chart: Chart) {
       version: versions.paper,
       type: "PAPER",
       motd: "Jerred & Shuxin",
-      whitelist: [
-        "RiotShielder",
-        "vietnamesechovy",
-        "XiguaShuxin",
-        "XiguaJerred",
-      ].join(","),
+      whitelist: ["vietnamesechovy", "XiguaShuxin", "XiguaJerred"].join(","),
       spawnProtection: 0,
       viewDistance: 15,
       memory: "7G",
       forcegameMode: true,
       // Use ClusterIP - mc-router handles external routing for Java Edition
       serviceType: "ClusterIP",
+      // Clean up superseded plugin jars left behind when a pinned download
+      // URL's filename changes between versions.
+      removeOldMods: true,
       extraPorts: [
-        {
-          service: {
-            enabled: true,
-            port: 8100,
-          },
-          protocol: "TCP",
-          containerPort: 8100,
-          name: "bluemap",
-          ingress: {
-            enabled: false,
-          },
-        },
+        getMinecraftBlueMapPort(),
         {
           // Bedrock port (UDP) - mc-router doesn't support UDP, so this needs NodePort
           // Note: Bedrock clients can only connect when server is running
@@ -126,7 +116,10 @@ export function createMinecraftShuxinApp(chart: Chart) {
         // Floodgate - allows Bedrock players to join with Xbox accounts
         "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot",
         // GeyserExtras - Bedrock QoL improvements for Geyser/Floodgate players
-        "https://cdn.modrinth.com/data/kOfJBurB/versions/riRUqxfR/GeyserExtras-Spigot.jar",
+        // intentionally removed: v2.0.0-BETA-11 (the latest Modrinth build) throws
+        // NoSuchFieldError against the installed Geyser-Spigot API and fails to
+        // enable/disable. Re-add once an upstream build supports this Geyser version:
+        // "https://cdn.modrinth.com/data/kOfJBurB/versions/riRUqxfR/GeyserExtras-Spigot.jar",
         // BedrockPlayerSupport - GUI helpers and UX for Bedrock players
         "https://cdn.modrinth.com/data/hQnZEOj0/versions/1aczasDY/BedrockPlayerSupport-2.1.1-all.jar",
         // ProtocolLib - packet manipulation library (dependency for some plugins)

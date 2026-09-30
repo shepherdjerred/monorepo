@@ -1,0 +1,28 @@
+# A SwiftUI app mixing Swift, Objective-C, C, and C++ sources in one target:
+# a bridging header exposes the C-family code to Swift, and Objective-C calls
+# back into Swift through the generated MixedApp-Swift.h.
+name: MixedApp
+options:
+  bundleIdPrefix: dev.macos-cross
+  deploymentTarget:
+    macOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "6"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  MixedApp:
+    type: application
+    platform: macOS
+    sources: [App]
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+    settings:
+      base:
+        CODE_SIGN_IDENTITY: "-"
+        SWIFT_OBJC_BRIDGING_HEADER: App/MixedApp-Bridging-Header.h

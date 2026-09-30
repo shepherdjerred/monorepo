@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -7,17 +7,27 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
 
 FROM deps AS build
-# `@shepherdjerred/loaded` exports TypeScript source rather than a built dist,
-# so having its package.json present for the install is not enough — the
-# client build has to be able to read the files its export map points at.
-COPY --parents tsconfig.base.json packages/alert-dashboard packages/eslint-config packages/loaded ./
+# `@shepherdjerred/loaded` and the ops packages export TypeScript source rather
+# than a built dist, so having their package.json present for the install is
+# not enough — the client build has to be able to read the files their export
+# maps point at.
+COPY --parents \
+  tsconfig.base.json \
+  packages/alert-dashboard \
+  packages/eslint-config \
+  packages/loaded \
+  packages/ops-model \
+  packages/ops-clients \
+  packages/config \
+  packages/feature-flags \
+  ./
 RUN cd packages/alert-dashboard && bun run build
 
 FROM base AS prod-deps
@@ -25,9 +35,9 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/alert-dashboard'
 
@@ -37,9 +47,15 @@ COPY --from=prod-deps /app/ /app/
 # install can use different peer-context hashes, so copying its node_modules
 # over this tree would point at packages that do not exist in prod-deps.
 COPY --from=build --exclude=node_modules /app/packages/alert-dashboard /app/packages/alert-dashboard
-# It is a production dependency, so the prod install symlinks it; without the
-# source here that symlink dangles in the runtime image.
-COPY --parents packages/loaded ./
+# These are production dependencies, so the prod install symlinks them; without
+# the source here those symlinks dangle in the runtime image.
+COPY --parents \
+  packages/loaded \
+  packages/ops-model \
+  packages/ops-clients \
+  packages/config \
+  packages/feature-flags \
+  ./
 # Bake Prisma's migration engines into the production dependency tree. Bun's
 # production install omits lifecycle scripts, so the CLI would otherwise
 # download engines on first use. Runtime executes as uid 1000 over root-owned
@@ -54,13 +70,13 @@ USER 1000:1000
 CMD ["bun", "src/server/index.ts"]
 
 FROM runtime AS smoke
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=alert-dashboard
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Exercise Prisma as the deployed non-root user so a missing baked engine fails
 # the image gate instead of crash-looping the migration init container.
 RUN cd /app/packages/alert-dashboard && bunx --no-install prisma --version
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

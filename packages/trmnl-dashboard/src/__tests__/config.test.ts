@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { loadConfig, parseEntities } from "../config.ts";
-import { worstStatus } from "../status.ts";
+import {
+  entityIdMatchesGlob,
+  isExpectedUnavailable,
+  loadConfig,
+  parseEntities,
+  UNAVAILABLE_IGNORED_ENTITY_GLOBS,
+} from "../config.ts";
+import { statusFromSeverity, worstStatus } from "../status.ts";
 
 describe("parseEntities", () => {
   it("parses entity labels", () => {
@@ -30,10 +36,44 @@ describe("loadConfig", () => {
     });
 
     expect(config.displayTimeZone).toBe("America/Los_Angeles");
-    expect(config.homelab.bugsinkUrl).toBe(
-      "http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
+    expect(config.opsDashboardUrl).toBe(
+      "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
     );
     expect(config.homeAssistant.unavailableIgnoredDomains).toContain("scene");
+    expect(config.homeAssistant.unavailableIgnoredDomains).toContain(
+      "conversation",
+    );
+    expect(config.homeAssistant.unavailableIgnoredEntityGlobs).toEqual(
+      UNAVAILABLE_IGNORED_ENTITY_GLOBS,
+    );
+    expect(UNAVAILABLE_IGNORED_ENTITY_GLOBS).toContain("media_player.rooftop");
+    expect(UNAVAILABLE_IGNORED_ENTITY_GLOBS).toContain("sensor.ipad_*");
+  });
+
+  it("treats companion diagnostics and portable speakers as expected gaps", () => {
+    expect(entityIdMatchesGlob("sensor.ipad_2_ssid", "sensor.ipad_*")).toBe(
+      true,
+    );
+    expect(
+      entityIdMatchesGlob("media_player.bedroom", "media_player.rooftop"),
+    ).toBe(false);
+    expect(
+      isExpectedUnavailable(
+        "media_player.rooftop",
+        [],
+        ["media_player.rooftop"],
+      ),
+    ).toBe(true);
+    expect(
+      isExpectedUnavailable("climate.bedroom", ["scene"], ["sensor.ipad_*"]),
+    ).toBe(false);
+    expect(
+      isExpectedUnavailable(
+        "conversation.home_assistant",
+        ["conversation"],
+        [],
+      ),
+    ).toBe(true);
   });
 
   it("accepts port zero for an OS-assigned listener", () => {
@@ -51,5 +91,18 @@ describe("worstStatus", () => {
   it("returns the highest severity", () => {
     expect(worstStatus(["ok", "warning", "unknown"])).toBe("warning");
     expect(worstStatus(["ok", "error", "warning"])).toBe("error");
+    expect(worstStatus(["ok", "unknown"])).toBe("unknown");
+  });
+
+  it("treats nothing observed as unknown", () => {
+    expect(worstStatus([])).toBe("unknown");
+  });
+});
+
+describe("statusFromSeverity", () => {
+  it("folds informational severity into ok for the e-ink screens", () => {
+    expect(statusFromSeverity("info")).toBe("ok");
+    expect(statusFromSeverity("unknown")).toBe("unknown");
+    expect(statusFromSeverity("error")).toBe("error");
   });
 });

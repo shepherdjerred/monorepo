@@ -41,13 +41,14 @@ export default defineConfig({
     //
     // A dev server is what kept failing here. The browser-E2E lane runs
     // `turbo run test:e2e --concurrency=2`, which pairs this package with the
-    // design-system workbench — 48 tests over six browser projects at three
-    // workers — inside one CPU-limited pod. Vite's dependency optimizer has to
-    // scan the whole graph (including design-system's source) before it binds,
-    // so it lost that race and the port never opened: build 13670 timed out at
-    // 60s, and after raising the budget to 120s and adding --force, build 13917
-    // timed out again at 120s having printed nothing at all. Raising it a third
-    // time treats a starvation symptom; not optimizing at all removes it.
+    // design-system Storybook catalog inside one CPU-limited pod. Vite's
+    // dependency optimizer has to scan the whole graph (including
+    // design-system's source) before it binds, so it lost that race and the
+    // port never opened: build 13670 timed out at 60s, and after raising the
+    // budget to 120s and adding --force, build 13917 timed out again at 120s
+    // having printed nothing at all. Raising it a third time treats a
+    // starvation symptom; not optimizing at all removes it. The design-system
+    // lane now serves its prebuilt catalog the same way, for the same reason.
     //
     // Nothing here needs a dev server: the flows stub every /api and /trpc call
     // with page.route, so `server.proxy` is never exercised, and the shared

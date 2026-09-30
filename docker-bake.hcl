@@ -3,7 +3,7 @@
 # identical workspace bun-install layer the app images share — replacing the
 # serial per-image loop (45-52 min images step, build 5644/5656).
 #
-# CI (.buildkite/scripts/images/bake-images.ts) invokes this with
+# CI (ci/scripts/images/bake-images.ts) invokes this with
 # VERSION/GIT_SHA/PUSH_CACHE set; local `docker buildx bake <target>` works
 # with the dev defaults (cache is read-only unless PUSH_CACHE=true — writing
 # the ghcr buildcache refs needs a docker-container builder + push creds).
@@ -82,10 +82,10 @@ group "app" {
     "temporal-worker",
     "trmnl-dashboard",
     "scout-for-lol",
-    "scout-evals",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
-    "openrouter-broadcast-ingest",
+    "storm-brain",
+    "woodpecker-config-extension",
   ]
 }
 
@@ -106,6 +106,17 @@ target "birmel" {
   cache-to   = cacheto("birmel")
 }
 
+# The service Woodpecker asks for each build's pipeline. Without it there is
+# no graph to run, so it is an app image like any other rather than something
+# built out of band.
+target "woodpecker-config-extension" {
+  inherits   = ["_app"]
+  dockerfile = "packages/woodpecker-config-extension/Dockerfile"
+  tags       = imagetags("woodpecker-config-extension")
+  cache-from = cachefrom("woodpecker-config-extension")
+  cache-to   = cacheto("woodpecker-config-extension")
+}
+
 target "alert-dashboard" {
   inherits   = ["_app"]
   dockerfile = "packages/alert-dashboard/Dockerfile"
@@ -120,22 +131,6 @@ target "tasknotes-server" {
   tags       = imagetags("tasknotes-server")
   cache-from = cachefrom("tasknotes-server")
   cache-to   = cacheto("tasknotes-server")
-}
-
-target "openrouter-broadcast-ingest" {
-  inherits   = ["_app"]
-  dockerfile = "packages/openrouter-broadcast-ingest/Dockerfile"
-  tags       = imagetags("openrouter-broadcast-ingest")
-  cache-from = cachefrom("openrouter-broadcast-ingest")
-  cache-to   = cacheto("openrouter-broadcast-ingest")
-}
-
-target "scout-evals" {
-  inherits   = ["_app"]
-  dockerfile = "packages/scout-for-lol/packages/evals/Dockerfile"
-  tags       = imagetags("scout-evals")
-  cache-from = cachefrom("scout-evals")
-  cache-to   = cacheto("scout-evals")
 }
 
 target "starlight-karma-bot" {
@@ -199,9 +194,17 @@ target "discord-plays-mario-kart" {
   cache-to   = cacheto("discord-plays-mario-kart")
 }
 
+target "storm-brain" {
+  inherits   = ["_app"]
+  dockerfile = "packages/storm-brain/Dockerfile"
+  tags       = imagetags("storm-brain")
+  cache-from = cachefrom("storm-brain")
+  cache-to   = cacheto("storm-brain")
+}
+
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "redlib"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server"]
 }
 
 target "caddy-s3proxy" {
@@ -227,4 +230,17 @@ target "redlib" {
   tags       = imagetags("redlib")
   cache-from = cachefrom("redlib")
   cache-to   = cacheto("redlib")
+}
+
+# The Storm's Minecraft server (minecraft-tsmc): pre-patched Paper, the pinned
+# plugin jars, TheStorm.jar built from packages/the-storm/plugin, and the
+# repository-owned config bundle. See packages/the-storm/server/README.md.
+target "the-storm-server" {
+  context    = "packages/the-storm"
+  contexts   = { managed-flags = "packages/feature-flags/src" }
+  dockerfile = "server/Dockerfile"
+  target     = "image"
+  tags       = imagetags("the-storm-server")
+  cache-from = cachefrom("the-storm-server")
+  cache-to   = cacheto("the-storm-server")
 }

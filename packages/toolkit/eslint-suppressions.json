@@ -19,32 +19,27 @@
       "count": 1
     }
   },
-  "src/lib/history/codex-history.ts": {
+  "src/lib/history/sources/codex-history.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/lib/history/conductor.ts": {
+  "src/lib/history/sources/conductor.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/lib/history/index.ts": {
+  "src/lib/history/query/results.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/lib/history/results.ts": {
+  "src/lib/history/sources/codex.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/lib/history/sources.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/lib/history/text.ts": {
+  "src/lib/history/query/text.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

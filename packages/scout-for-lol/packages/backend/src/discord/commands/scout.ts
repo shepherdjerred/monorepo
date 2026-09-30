@@ -11,7 +11,7 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
+import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import {
   exploreActionRow,
@@ -118,6 +118,7 @@ export async function executeScout(
       userId: identity.userId,
       question: question.data,
       attach: { kind: "leaf" },
+      origin: "discord",
     });
     const started = { ...created, question: question.data };
     const transcript = await loadExploreTranscript(

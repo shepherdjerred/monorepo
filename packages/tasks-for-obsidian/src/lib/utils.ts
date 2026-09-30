@@ -25,8 +25,9 @@ export function pluralize(
   singular: string,
   plural?: string,
 ): string {
-  if (count === 1) return `${count} ${singular}`;
-  return `${count} ${plural ?? `${singular}s`}`;
+  return count === 1
+    ? `${count} ${singular}`
+    : `${count} ${plural ?? `${singular}s`}`;
 }
 
 export function generateId(): string {

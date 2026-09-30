@@ -37,10 +37,7 @@ function str(value: string | undefined): string | undefined {
 }
 
 function bool(value: string | undefined): boolean | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  return value.toLowerCase() === "true";
+  return value === undefined ? undefined : value.toLowerCase() === "true";
 }
 
 /**
@@ -71,6 +68,10 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       userTokens: list(env["USER_TOKENS"]) ?? list(env["TOKEN"]),
       adminIds: list(env["ADMIN_IDS"]),
       peerUserbotIds: list(env["PEER_USERBOT_IDS"]),
+    },
+    pinchtab: {
+      baseUrl: str(env["PINCHTAB_BASE_URL"]),
+      token: str(env["PINCHTAB_TOKEN"]),
     },
     library: {
       videosDir: env["VIDEOS_DIR"],

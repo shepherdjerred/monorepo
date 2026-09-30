@@ -265,7 +265,7 @@ describe("cancelBet — returning a position", () => {
       }),
     ).toEqual([
       { kind: "seed", delta: HOUSE_BANKROLL },
-      { kind: "seed", delta: -SEED_GRANT },
+      { kind: "seed", delta: 0 - SEED_GRANT },
       { kind: "cancel_fee", delta: 1 },
     ]);
     const pairedCut = await db.bucksLedgerEntry.findMany({

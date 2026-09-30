@@ -29,11 +29,6 @@ import {
   type TraceClaudeAgentMetadata as InnerTraceClaudeAgentMetadata,
 } from "./claude-agent-wrapper.ts";
 import {
-  traceTextStream as innerTraceTextStream,
-  type TraceTextStreamMetadata as InnerTraceTextStreamMetadata,
-  type TraceTextStreamFinal as InnerTraceTextStreamFinal,
-} from "./text-stream-wrapper.ts";
-import {
   createCodexJsonlParser as innerCreateCodexJsonlParser,
   pumpCodexStdout as innerPumpCodexStdout,
   addCodexUsage as innerAddCodexUsage,
@@ -120,14 +115,6 @@ export const traceClaudeAgent: typeof innerTraceClaudeAgent = (
   transformMessage,
 ) => innerTraceClaudeAgent(metadata, run, transformMessage);
 export type TraceClaudeAgentMetadata = Identity<InnerTraceClaudeAgentMetadata>;
-
-export function traceTextStream(
-  ...args: Parameters<typeof innerTraceTextStream>
-): ReturnType<typeof innerTraceTextStream> {
-  return innerTraceTextStream(...args);
-}
-export type TraceTextStreamMetadata = Identity<InnerTraceTextStreamMetadata>;
-export type TraceTextStreamFinal = Identity<InnerTraceTextStreamFinal>;
 
 export function createCodexJsonlParser(
   ...args: Parameters<typeof innerCreateCodexJsonlParser>

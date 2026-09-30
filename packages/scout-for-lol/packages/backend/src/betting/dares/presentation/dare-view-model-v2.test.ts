@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { DareV2InspectionSchema } from "#src/betting/dares/presentation/dare-view-model-v2.ts";
+import {
+  DareV2InspectionSchema,
+  DareV2ListItemSchema,
+} from "#src/betting/dares/presentation/dare-view-model-v2.ts";
 import { TWISTED_FATE_SAME_GAME_PLAN } from "#src/betting/dares/dare-v2-test-fixtures.ts";
 
 /**
@@ -41,5 +44,35 @@ describe("Dare v2 inspection response", () => {
         gameSets: [],
       }).success,
     ).toBe(false);
+  });
+
+  test("list items expose authored English title and per-game-set phrases", () => {
+    expect(
+      DareV2ListItemSchema.shape.displayTitle.safeParse(
+        "Aaron wins a game as support",
+      ).success,
+    ).toBe(true);
+    expect(
+      DareV2ListItemSchema.shape.displayTitle.safeParse(null).success,
+    ).toBe(true);
+    expect(
+      DareV2ListItemSchema.shape.statusPhrases.safeParse({
+        support_win: "support wins",
+      }).success,
+    ).toBe(true);
+    expect(
+      DareV2ListItemSchema.shape.statusPhrases.safeParse(null).success,
+    ).toBe(true);
+  });
+
+  test("list items require the challenger's original wording", () => {
+    expect(
+      DareV2ListItemSchema.shape.originalText.safeParse(
+        "I bet Aaron can't win a game playing support",
+      ).success,
+    ).toBe(true);
+    expect(DareV2ListItemSchema.shape.originalText.safeParse("").success).toBe(
+      false,
+    );
   });
 });

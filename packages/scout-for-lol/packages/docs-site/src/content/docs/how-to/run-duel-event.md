@@ -11,9 +11,9 @@ entry fees, prizes, bets, or Bryan Bucks markets.
 
 ## Confirm the feature is available
 
-Duel access is controlled per Scout environment and server. Classic objective
-rules and events below 20 participants remain unavailable in beta and
-production until Scout records Riot's written approval for them.
+Duel access is controlled per Scout environment and server by the
+`duels_enabled` flag. When it is off for a server, every duel page and action
+reports that duels are not enabled there.
 
 ## Create a direct challenge
 
@@ -53,9 +53,14 @@ hours to 14 days; the default is seven days.
 
 ## Ready up and play
 
-Scout provisions a Tournament code only after every assigned player marks
-ready. Authorized participants read the code in the web app. Discord receives
-only a readiness or status message and never contains the code.
+After every assigned player marks ready, either participant creates a normal
+custom lobby in League and invites the assigned players. At least one player in
+the match must run a paired Scout Client. Scout observes the lobby and binds it
+only when the roster exactly matches the pending duel.
+
+Keep the client running through the post-game screen. It uploads the local
+result evidence and any completed ROFL replay. Riot match data remains the
+preferred result when Riot provides it.
 
 Scout evaluates the earliest configured objective. Kill and turret times come
 from exact timeline events; lane CS comes from participant frames. Complete

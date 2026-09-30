@@ -33,14 +33,17 @@ generated `struct`, that is not churn to rubber-stamp. It is the gate firing.
 ```bash
 cargo xtask generate-bindings        # regenerate, in place
 cargo xtask check-bindings           # regenerate + git diff --exit-code  (gate 7)
-cargo xtask build-xcframework        # + lipo + xcodebuild → artifacts/
+cargo xtask build-xcframework        # + lipo, XCFramework written → artifacts/
 cargo xtask verify-swift             # + compile and run Swift against it
 ```
 
 `generate-bindings` and `check-bindings` need only cargo and run on **Linux**;
 UniFFI reads its metadata out of the built library's symbol table, and that
-metadata is host-independent. `build-xcframework` and `verify-swift` need
-`lipo`, `xcodebuild`, and a Swift toolchain, so they are macOS-only.
+metadata is host-independent. `build-xcframework` needs the Apple Rust
+targets and `lipo`; it writes the XCFramework itself, in `xcodebuild
+-create-xcframework`'s exact layout, so it runs on macOS or in the
+[`apple-cross`](../../apple-cross/) Linux image. `verify-swift` compiles and
+runs a Swift smoke test, so it is macOS-only.
 
 ## Build settings on this package
 

@@ -4,7 +4,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["generate", "^build"],
-      "outputs": ["dist/**", "src/generated/**", "styles/generated/**"]
+      // Composition changes the emitted manager, so a composed build must not
+      // reuse a plain build's cache entry.
+      "env": ["SCOUT_STORYBOOK_COMPOSED"],
+      "outputs": [
+        "storybook-static/**",
+        "src/generated/**",
+        "styles/generated/**"
+      ]
     },
     "generate": {
       "outputs": ["src/generated/**", "styles/generated/**"]

@@ -34,7 +34,7 @@
       "count": 1
     }
   },
-  "src/misc/minecraft-config.ts": {
+  "src/misc/minecraft/minecraft-config.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

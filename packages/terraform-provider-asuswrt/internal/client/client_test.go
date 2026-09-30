@@ -339,6 +339,37 @@ func TestClientInsecureTLS(t *testing.T) {
 	}
 }
 
+func TestClientRejectsUntrustedTLSByDefault(t *testing.T) {
+	t.Parallel()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /login.cgi", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(t, w, map[string]string{"asus_token": "tls-token"})
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("parsing server URL: %v", err)
+	}
+
+	port, err := strconv.Atoi(u.Port())
+	if err != nil {
+		t.Fatalf("parsing server port: %v", err)
+	}
+
+	c := client.New(client.Config{
+		Host: u.Hostname(), Username: "admin", Password: "pass",
+		Port: port, HTTPS: true,
+	})
+
+	if _, err := c.NvramGet(context.Background(), []string{"computer_name"}); err == nil {
+		t.Fatal("expected untrusted TLS certificate to be rejected by default")
+	}
+}
+
 func TestClientLoginResponseMalformedJSON(t *testing.T) {
 	t.Parallel()
 

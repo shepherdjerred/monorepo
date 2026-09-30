@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
-import { formatDate } from "#src/lib/format.ts";
+import { formatDate } from "#src/lib/format/format.ts";
 
 export type BucksLedgerEntryView = {
   id: number;

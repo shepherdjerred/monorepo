@@ -7,9 +7,11 @@
     "./assets": "./src/assets/index.tsx",
     "./brand": "./src/brand/index.tsx",
     "./build": "./src/build/index.ts",
-    "./components/input": "./src/components/field.tsx",
-    "./components/label": "./src/components/field.tsx",
-    "./components/textarea": "./src/components/field.tsx",
+    "./components/input": "./src/components/forms/field.tsx",
+    "./components/label": "./src/components/forms/field.tsx",
+    "./components/textarea": "./src/components/forms/field.tsx",
+    "./components/overlays/*": "./src/components/overlays/*.tsx",
+    "./components/forms/*": "./src/components/forms/*.tsx",
     "./components/*": "./src/components/*.tsx",
     "./domain/*": "./src/domain/*.tsx",
     "./layout": "./src/layout/index.tsx",
@@ -23,21 +25,24 @@
     "./satori/og-card": "./src/brand/og-card.ts",
     "./satori/classic-fonts": "./src/satori/classic-fonts.ts",
     "./satori/classic-style": "./src/satori/classic-style.ts",
+    "./satori/clash-style": "./src/satori/clash-style.ts",
     "./satori/colors": "./src/satori/colors.ts",
     "./satori/file-assets": "./src/satori/file-assets.ts",
     "./satori/fonts": "./src/satori/fonts.ts",
+    "./storybook/e2e": "./src/storybook/e2e.ts",
+    "./storybook/preview": "./src/storybook/preview.ts",
     "./styles.css": "./styles/index.css",
     "./themes": "./src/generated/tokens.ts"
   },
   "imports": {
     "#src/*": "./src/*",
     "#styles/*": "./styles/*",
-    "#tokens/*": "./tokens/*",
-    "#workbench/*": "./workbench/*"
+    "#tokens/*": "./tokens/*"
   },
   "scripts": {
-    "build": "bun run generate && vite build",
-    "dev": "vite",
+    "build": "bun run generate && bun x --no-install storybook build",
+    "dev": "bun run generate && bun x --no-install storybook dev --port 6006 --no-open",
+    "preview": "bun x --no-install vite preview --outDir storybook-static --host 127.0.0.1 --port 6006 --strictPort",
     "generate": "bun run scripts/generate-tokens.ts",
     "generate:brand": "bun run scripts/generate-brand.ts",
     "check:generated": "bun run scripts/generate-tokens.ts --check && bun run scripts/generate-brand.ts --check",
@@ -46,7 +51,7 @@
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "test:e2e": "bun --no-install --bun playwright test",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bun x --no-install eslint src scripts workbench",
+    "lint": "bun x --no-install eslint src scripts e2e .storybook --max-warnings=0",
     "format": "bun x --no-install prettier --check ."
   },
   "dependencies": {
@@ -70,8 +75,8 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
     "opentype.js": "^2.0.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "satori": "^0.33.0",
@@ -80,22 +85,25 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
-    "@playwright/test": "1.62.1",
-    "@types/bun": "1.4.0",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^6.0.0",
-    "ajv": "^8.20.0",
-    "eslint": "^10.3.0",
-    "prettier": "^3.9.6",
-    "typescript": "^6.0.3",
+    "@playwright/test": "1.63.0",
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
+    "@types/bun": "1.4.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "5.0.1",
+    "ajv": "^8.20.0",
+    "eslint": "^10.7.0",
+    "prettier": "^3.9.9",
+    "storybook": "^10.6.0",
+    "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1"
   },
   "peerDependencies": {
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   }
 }

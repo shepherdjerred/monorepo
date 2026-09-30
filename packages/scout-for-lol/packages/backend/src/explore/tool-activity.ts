@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { EXPLORE_ACTIVITY_MAX_LENGTH } from "@scout-for-lol/data";
-import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type { ExploreToolResultInspection } from "#src/explore/tool-inspection.ts";
+import { EXPLORE_SKILL_NAMES } from "#src/explore/skills/registry.ts";
 
 /**
  * The owner-only live status strings.
@@ -97,6 +98,7 @@ function querySourceLabel(queryText: string): string | null {
 
 const QueryInputSchema = z.looseObject({ queryText: z.string() });
 const PlayerQueryInputSchema = z.looseObject({ query: z.string() });
+const SkillInputSchema = z.looseObject({ skill: z.string() });
 const PlayerResultSchema = z.looseObject({
   candidates: z.array(z.unknown()),
 });
@@ -123,6 +125,9 @@ export function toolCallActivity(
   genericMessage: string,
 ): string {
   const fallback = clampActivity(genericMessage, "Working…");
+  if (toolName === "load_skill") {
+    return skillLoadActivity(input, fallback);
+  }
   if (toolName === "resolve_player") {
     const parsed = PlayerQueryInputSchema.safeParse(input);
     return parsed.success
@@ -146,6 +151,22 @@ export function toolCallActivity(
     );
   }
   return fallback;
+}
+
+/**
+ * Which skill is being read. The name is only used to LOOK UP a canonical
+ * registry entry — the emitted string is the registry's own name, never text
+ * the model wrote.
+ */
+function skillLoadActivity(input: unknown, fallback: string): string {
+  const parsed = SkillInputSchema.safeParse(input);
+  const skillName =
+    parsed.success && EXPLORE_SKILL_NAMES.includes(parsed.data.skill)
+      ? parsed.data.skill
+      : null;
+  return skillName === null
+    ? fallback
+    : clampActivity(`Reading the ${skillName} skill`, fallback);
 }
 
 function playerResultActivity(
@@ -208,8 +229,7 @@ export function toolResultActivity(
   if (toolName === "resolve_player") {
     return playerResultActivity(input, inspection, fallback);
   }
-  if (toolName === "run_report_query") {
-    return queryResultActivity(inspection, fallback);
-  }
-  return fallback;
+  return toolName === "run_report_query"
+    ? queryResultActivity(inspection, fallback)
+    : fallback;
 }

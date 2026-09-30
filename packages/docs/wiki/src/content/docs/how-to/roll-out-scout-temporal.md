@@ -13,7 +13,7 @@ compatibility, and promote the same accepted image to production.
 
 Confirm each layer independently:
 
-1. The complete stack is green at its exact head in Buildkite.
+1. The complete stack is green at its exact head in CI.
 2. The candidate image digest and baked Git SHA match the commit under review.
 3. Argo reports the Temporal and Scout applications `Synced` and `Healthy`.
 4. Scout HTTP and Discord processes are healthy in beta.
@@ -52,6 +52,22 @@ bun run canary -- \
 The result must name `scout-beta-realtime`, `scout-beta-interactive`,
 `scout-beta-background`, and `scout-beta-lake`. A missing result means that
 Activity Worker is not polling its declared queue; stop the rollout.
+
+## Enable the durable reconciliation schedules
+
+The [two reconciliation Schedules](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts)
+are created paused on each stage.
+
+1. Keep both paused until the matching Scout Workflow bundle passes replay and
+   the stage has healthy Workflow and background Activity pollers.
+2. Unpause `pipeline-reconciliation-v2` in beta. Confirm it drives a pending
+   intent before enabling new V2 notification kinds. Repeat after production's
+   own rollout checks.
+3. When the Hall and Duel V1 drains are ready to retire, unpause
+   `progression-reconciliation` and observe one successful run. Then deploy the
+   change that removes reconciliation from the
+   [`progression-outbox` Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/activities.ts).
+   Keep the old outbox Schedule until its rows are drained or dispositioned.
 
 ## Start the beta Workflow Deployment ramp
 
@@ -105,7 +121,7 @@ While the beta ramp is active:
 7. Force a report Schedule cron and task-queue mismatch, reconcile it, and
    confirm the desired definition returns while an operator pause is preserved.
 
-## Advance and soak beta
+## Advance and accept beta
 
 Use the rollout command to advance only after its alert and health windows are
 clean:
@@ -120,8 +136,8 @@ TEMPORAL_NAMESPACE=beta bun run worker-deployment advance -- \
   --build-id <candidate-image-git-sha>
 ```
 
-Record the beta image digest, deployed commit, routing state, and soak start
-time. Observe the candidate for at least 24 hours. The soak passes only when:
+Record the beta image digest, deployed commit, and routing state. Observe the
+candidate at 100% traffic. Promote when:
 
 - every fixed and per-report Schedule has the expected ownership and policy;
 - all four Activity queues retain pollers and acceptable schedule-to-start
@@ -134,7 +150,7 @@ time. Observe the candidate for at least 24 hours. The soak passes only when:
 - representative daily and weekly triggers complete with their expected
   Discord and report-lake effects.
 
-Promote only after the command verifies the full observation window:
+The promotion command verifies the two-hour health window again:
 
 ```bash
 TEMPORAL_NAMESPACE=beta bun run worker-deployment promote -- \

@@ -91,7 +91,7 @@ type PrToCheck = {
   baseRef: string;
 };
 
-type CheckOutcome = "success" | "failure" | "errored" | "skipped-dry-run";
+type CheckOutcome = "success" | "failure" | "errored";
 
 type CheckResult = {
   prNumber: number;
@@ -107,8 +107,6 @@ export type CheckPrMergeConflictsResult = {
   conflicts: number;
   clean: number;
   errored: number;
-  skippedKillSwitch: boolean;
-  dryRun: boolean;
   durationSeconds: number;
 };
 
@@ -119,19 +117,6 @@ function jsonLog(
 ): void {
   console.warn(
     JSON.stringify({ level, msg: message, component: COMPONENT, ...fields }),
-  );
-}
-
-function isKillSwitchEnabled(): boolean {
-  return (
-    (Bun.env["MERGE_CONFLICT_CHECK_ENABLED"] ?? "true").toLowerCase() === "true"
-  );
-}
-
-function isDryRun(): boolean {
-  return (
-    (Bun.env["MERGE_CONFLICT_CHECK_DRY_RUN"] ?? "false").toLowerCase() ===
-    "true"
   );
 }
 
@@ -210,12 +195,11 @@ type ProcessPrArgs = {
   runMergeBase: NonNullable<ConflictCheckDeps["runMergeBase"]>;
   runMergeTree: NonNullable<ConflictCheckDeps["runMergeTree"]>;
   targetUrl: string | undefined;
-  dryRun: boolean;
   trigger: "main" | "pr";
 };
 
 async function processPr(args: ProcessPrArgs): Promise<CheckResult> {
-  const { pr, workDir, client, owner, repo, dryRun, trigger, targetUrl } = args;
+  const { pr, workDir, client, owner, repo, trigger, targetUrl } = args;
   try {
     const mergeBase = await args.runMergeBase(workDir, pr.number);
     const result = await args.runMergeTree(workDir, mergeBase, pr.number);
@@ -232,22 +216,6 @@ async function processPr(args: ProcessPrArgs): Promise<CheckResult> {
     const description = hasConflict
       ? `Conflicts with main in ${String(conflictPaths.length)} file(s)`
       : "Clean merge with main";
-
-    if (dryRun) {
-      jsonLog("info", "dry-run: would post commit status", {
-        prNumber: pr.number,
-        headSha: pr.headSha,
-        state,
-        description,
-        conflictPaths: conflictPaths.slice(0, 20),
-      });
-      return {
-        prNumber: pr.number,
-        headSha: pr.headSha,
-        outcome: "skipped-dry-run",
-        conflictPaths,
-      };
-    }
 
     await client.createCommitStatus({
       owner,
@@ -305,7 +273,6 @@ async function processPr(args: ProcessPrArgs): Promise<CheckResult> {
 function emptyResult(
   trigger: "main" | "pr",
   start: number,
-  flags: { skippedKillSwitch: boolean; dryRun: boolean },
 ): CheckPrMergeConflictsResult {
   return {
     trigger,
@@ -313,8 +280,6 @@ function emptyResult(
     conflicts: 0,
     clean: 0,
     errored: 0,
-    skippedKillSwitch: flags.skippedKillSwitch,
-    dryRun: flags.dryRun,
     durationSeconds: (Date.now() - start) / 1000,
   };
 }
@@ -337,10 +302,9 @@ async function enumeratePrs(
     }));
   }
   const single = pickSinglePr(input);
-  if (single === null) {
-    return { skipped: true, reason: "base-not-main" };
-  }
-  return [single];
+  return single === null
+    ? { skipped: true, reason: "base-not-main" }
+    : [single];
 }
 
 export async function runCheckPrMergeConflictsImpl(
@@ -349,14 +313,6 @@ export async function runCheckPrMergeConflictsImpl(
 ): Promise<CheckPrMergeConflictsResult> {
   const start = Date.now();
   const trigger = triggerLabel(input);
-  const dryRun = isDryRun();
-
-  if (!isKillSwitchEnabled()) {
-    jsonLog("info", "kill switch: MERGE_CONFLICT_CHECK_ENABLED=false; no-op", {
-      kind: input.kind,
-    });
-    return emptyResult(trigger, start, { skippedKillSwitch: true, dryRun });
-  }
 
   const tokenResult = await (
     deps.createInstallationToken ?? createGitHubAppInstallationToken
@@ -369,7 +325,7 @@ export async function runCheckPrMergeConflictsImpl(
       prNumber: input.kind === "single-pr" ? input.prNumber : undefined,
       baseRef: input.kind === "single-pr" ? input.baseRef : undefined,
     });
-    return emptyResult(trigger, start, { skippedKillSwitch: false, dryRun });
+    return emptyResult(trigger, start);
   }
   const prs = enumerated;
 
@@ -379,7 +335,7 @@ export async function runCheckPrMergeConflictsImpl(
     });
     const elapsed = (Date.now() - start) / 1000;
     prMergeConflictCheckDurationSeconds.observe({ trigger }, elapsed);
-    return emptyResult(trigger, start, { skippedKillSwitch: false, dryRun });
+    return emptyResult(trigger, start);
   }
 
   const prepare = deps.prepareWorkDir ?? defaultPrepareWorkDir;
@@ -404,7 +360,6 @@ export async function runCheckPrMergeConflictsImpl(
         runMergeBase,
         runMergeTree,
         targetUrl: deps.targetUrl,
-        dryRun,
         trigger,
       }),
     );
@@ -422,7 +377,6 @@ export async function runCheckPrMergeConflictsImpl(
       conflicts,
       clean,
       errored,
-      dryRun,
       durationSeconds,
     });
 
@@ -432,8 +386,6 @@ export async function runCheckPrMergeConflictsImpl(
       conflicts,
       clean,
       errored,
-      skippedKillSwitch: false,
-      dryRun,
       durationSeconds,
     };
   } finally {

@@ -38,10 +38,10 @@ import {
 } from "#src/betting/dares/lifecycle/dare-accept.ts";
 import { contributeToDare } from "#src/betting/dares/lifecycle/dare-contribute.ts";
 import { formatDareCustomId } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { client } from "#src/discord/client.ts";
+import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -107,7 +107,7 @@ export type DareMessageEditor = (input: {
 }) => Promise<void>;
 
 const defaultEditMessage: DareMessageEditor = async (input) => {
-  const channel = await client.channels.fetch(input.channelId);
+  const channel = await fetchChannelForDelivery(input.channelId);
   if (channel?.isTextBased() !== true) {
     throw new Error(
       `Bryan Bucks dare channel ${input.channelId} is unavailable or not text based`,

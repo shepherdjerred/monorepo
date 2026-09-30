@@ -4,9 +4,10 @@ import type {
   TextGenerationClient,
 } from "@scout-for-lol/data";
 import {
-  createOpenRouterRuntime,
-  parseOpenRouterMetadata,
-  type OpenRouterRuntime,
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+  parseNativeUsage,
+  type LlmRuntime,
 } from "@shepherdjerred/llm-runtime";
 import {
   serializeBodyAttribute,
@@ -19,12 +20,15 @@ import {
   recordTokenUsage,
 } from "#src/league/review/openai-budget.ts";
 
-let cachedRuntime: OpenRouterRuntime | undefined;
+let cachedRuntime: LlmRuntime | undefined;
 
-export function getOpenRouterRuntime(): OpenRouterRuntime | undefined {
-  if (config.openRouterApiKey === undefined) return undefined;
-  cachedRuntime ??= createOpenRouterRuntime({
-    apiKey: config.openRouterApiKey,
+export function getLlmRuntime(): LlmRuntime | undefined {
+  // Scout's review models are OpenAI today, so an unconfigured OpenAI key is
+  // what "AI review is off" means here. A model routed elsewhere still fails
+  // loudly inside the runtime rather than silently returning no client.
+  if (!config.inferenceConfigured) return undefined;
+  cachedRuntime ??= createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-for-lol-backend",
     appName: "Scout for LoL",
     metricsRegister: registry,
@@ -33,7 +37,7 @@ export function getOpenRouterRuntime(): OpenRouterRuntime | undefined {
 }
 
 export function getTextGenerationClient(): TextGenerationClient | undefined {
-  const runtime = getOpenRouterRuntime();
+  const runtime = getLlmRuntime();
   if (runtime === undefined) return undefined;
   return {
     generate: async (params) => {
@@ -53,13 +57,12 @@ export function getTextGenerationClient(): TextGenerationClient | undefined {
       });
       const inputTokens = result.usage.inputTokens ?? 0;
       const outputTokens = result.usage.outputTokens ?? 0;
-      const metadata = parseOpenRouterMetadata({
+      const metadata = parseNativeUsage({
         requestedModel: params.model,
+        provider: runtime.providerFor(params.model).provider,
         responseId: result.finalStep.response.id,
         resolvedModel: result.finalStep.response.modelId,
         usage: result.usage,
-        providerMetadata: result.finalStep.providerMetadata,
-        responseBody: result.finalStep.response.body,
       });
       recordTokenUsage(inputTokens, outputTokens, params.model);
       return {
@@ -67,14 +70,24 @@ export function getTextGenerationClient(): TextGenerationClient | undefined {
         finishReason: result.finishReason,
         inputTokens,
         outputTokens,
-        openRouter: metadata,
+        provider: {
+          provider: metadata.provider,
+          responseId: metadata.responseId,
+          requestedModel: metadata.requestedModel,
+          resolvedModel: metadata.resolvedModel,
+          serviceTier: metadata.serviceTier,
+          catalogCostUsd: metadata.catalogCostUsd,
+        },
       };
     },
   };
 }
 
 export function getImageGenerationClient(): ImageGenerationClient | undefined {
-  const runtime = getOpenRouterRuntime();
+  // Production Scout intentionally has no Gemini project. Text credentials
+  // alone must not advertise an image client that will fail at the first call.
+  if (providerCredentialsFromEnv().google === undefined) return undefined;
+  const runtime = getLlmRuntime();
   if (runtime === undefined) return undefined;
   return {
     generate: async (params) =>
@@ -82,7 +95,7 @@ export function getImageGenerationClient(): ImageGenerationClient | undefined {
         {
           service: runtime.service,
           callSite: params.workload,
-          system: "openrouter",
+          system: runtime.providerFor(params.model).provider,
         },
         {
           model: params.model,
@@ -98,9 +111,10 @@ export function getImageGenerationClient(): ImageGenerationClient | undefined {
           );
           const { headers } = runtime.callOptions({
             workload: params.workload,
+            model: params.model,
           });
           const result = await generateImage({
-            model: runtime.imageModel(params.model),
+            model: runtime.imageModel(params.model, params.workload),
             prompt: params.prompt,
             abortSignal: AbortSignal.timeout(params.timeoutMs),
             headers,

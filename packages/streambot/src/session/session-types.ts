@@ -21,7 +21,7 @@ import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type {
   PlayerCardManager,
   PlayerCardPort,
-} from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+} from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
 import type { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
@@ -33,6 +33,7 @@ import type { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voic
 import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
+import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import type { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 import type {
   VoiceDebugCaptureStatus,
@@ -210,4 +211,5 @@ export type SessionManagerDeps = {
   readonly discovery?: DiscoveryService;
   readonly history?: MediaHistoryStore;
   readonly featureGate?: MediaFeatureGate;
+  readonly sports?: SportsCatalog;
 };

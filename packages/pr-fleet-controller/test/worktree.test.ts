@@ -126,10 +126,9 @@ const okRun = (): Promise<CommandResult> =>
 
 function managerWith(porcelain: string): WorktreeManager {
   const mustRun = (executable: string, args: string[]): Promise<string> => {
-    if (executable === "git" && args[0] === "worktree" && args[1] === "list") {
-      return Promise.resolve(porcelain);
-    }
-    return Promise.resolve("");
+    return executable === "git" && args[0] === "worktree" && args[1] === "list"
+      ? Promise.resolve(porcelain)
+      : Promise.resolve("");
   };
   return new WorktreeManager({
     checkout: "/tmp/checkout",
@@ -420,10 +419,9 @@ function scriptProvision(
   const calls: string[][] = [];
   const mustRun = (executable: string, args: string[]): Promise<string> => {
     calls.push([executable, ...args]);
-    if (executable === "git" && args[0] === "worktree" && args[1] === "list") {
-      return Promise.resolve(porcelain);
-    }
-    return Promise.resolve("");
+    return executable === "git" && args[0] === "worktree" && args[1] === "list"
+      ? Promise.resolve(porcelain)
+      : Promise.resolve("");
   };
   const run = (request: CommandRequest): Promise<CommandResult> => {
     calls.push([request.executable, ...request.args]);

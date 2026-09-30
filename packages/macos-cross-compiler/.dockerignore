@@ -1,0 +1,7 @@
+macros/.build
+applebuild/.build
+out
+.stage/*.tar.zst
+.stage/*.tar.zst.sha256
+samples/**/.build*
+samples/**/target

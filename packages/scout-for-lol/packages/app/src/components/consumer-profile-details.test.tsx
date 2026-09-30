@@ -1,16 +1,55 @@
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { ChampionComparisonTable } from "#src/components/champion-comparison-table.tsx";
-import { MatchScoreboards } from "#src/components/match-scoreboard.tsx";
-import { retainedEventFields } from "#src/components/match-timeline.tsx";
-import { FRAME_COLUMNS } from "#src/components/timeline-frame-table.tsx";
+import { MatchLoadoutSchema } from "@scout-for-lol/data";
+import { ChampionComparisonTable } from "#src/components/match/champion-comparison-table.tsx";
 import {
-  ChampionPoolTable,
+  MatchScoreboards,
+  RolePairedMatchScoreboard,
+} from "#src/components/match/match-scoreboard.tsx";
+import { retainedEventFields } from "#src/components/match/match-timeline.tsx";
+import { FRAME_COLUMNS } from "#src/components/match/timeline-frame-table.tsx";
+import { ChampionPoolTable } from "#src/components/player/champion-pool-table.tsx";
+import {
   MatchHistoryList,
   PlayerSummaryCards,
   RankValue,
 } from "#src/components/player/player-profile-sections.tsx";
+
+const loadout = MatchLoadoutSchema.parse({
+  itemIds: [6672, 3006, 3031, 3085, 3072, 0, 3340],
+  summonerSpellIds: [4, 6],
+  runes: {
+    primaryStyleId: 8000,
+    primaryRuneIds: [8005, 9111, 9104, 8017],
+    secondaryStyleId: 8100,
+    secondaryRuneIds: [8139, 8135],
+    statShardIds: { offense: 5005, flex: 5008, defense: 5002 },
+  },
+});
+
+const participant = {
+  participantId: 1,
+  teamId: 100,
+  selectedPlayer: true,
+  riotId: { gameName: "Launch", tagLine: "NA1" },
+  championId: 22,
+  championName: "Ashe",
+  position: "BOTTOM",
+  win: true,
+  kills: 5,
+  deaths: 2,
+  assists: 8,
+  creepScore: 180,
+  goldEarned: 12_000,
+  visionScore: 22,
+  damageToChampions: 20_000,
+  killParticipation: 0.6,
+  damageShare: 0.4,
+  objectives: { turrets: 1, inhibitors: 0, barons: 0, dragons: 0 },
+  scoutAliases: [{ playerId: 4, alias: "Me", guildName: "Friends" }],
+  loadout,
+};
 
 function router(children: React.ReactNode): React.ReactNode {
   return <MemoryRouter>{children}</MemoryRouter>;
@@ -98,6 +137,7 @@ describe("player profile details", () => {
               csPerMinute: 6,
               killParticipation: 0.6,
               leaguePointsDelta: 20,
+              loadout,
               account: { gameName: "Player", tagLine: "NA1", region: "NA" },
             },
           ]}
@@ -106,6 +146,7 @@ describe("player profile details", () => {
     );
     expect(html).toContain("/players/7/matches/NA1_123");
     expect(html).toContain("games=all");
+    expect(html).toContain("View full rune page");
   });
 });
 
@@ -161,30 +202,10 @@ describe("champion comparison and match timeline", () => {
   });
 
   test("renders both team scoreboards and marks the launching player", () => {
-    const participant = {
-      participantId: 1,
-      teamId: 100,
-      selectedPlayer: true,
-      riotId: { gameName: "Launch", tagLine: "NA1" },
-      championId: 22,
-      championName: "Ashe",
-      position: "BOTTOM",
-      win: true,
-      kills: 5,
-      deaths: 2,
-      assists: 8,
-      creepScore: 180,
-      goldEarned: 12_000,
-      visionScore: 22,
-      damageToChampions: 20_000,
-      killParticipation: 0.6,
-      damageShare: 0.4,
-      objectives: { turrets: 1, inhibitors: 0, barons: 0, dragons: 0 },
-      scoutAliases: [{ playerId: 4, alias: "Me", guildName: "Friends" }],
-    };
     const html = renderToStaticMarkup(
       router(
         <MatchScoreboards
+          showLoadout
           teams={[
             {
               teamId: 100,
@@ -214,5 +235,61 @@ describe("champion comparison and match timeline", () => {
     expect(html).toContain("Team 200");
     expect(html).toContain("Selected");
     expect(html).toContain("Me (Friends)");
+  });
+
+  test("renders a side-by-side lane matchup with 15-minute deltas", () => {
+    const roles = ["top", "jungle", "middle", "adc", "support"] as const;
+    const blueParticipants = roles.map((role, index) => ({
+      ...participant,
+      participantId: index + 1,
+      teamId: 100,
+      position: role,
+      selectedPlayer: index === 0,
+    }));
+    const redParticipants = roles.map((role, index) => ({
+      ...participant,
+      participantId: index + 6,
+      teamId: 200,
+      position: role,
+      selectedPlayer: false,
+      win: false,
+    }));
+    const html = renderToStaticMarkup(
+      router(
+        <RolePairedMatchScoreboard
+          teams={[
+            {
+              teamId: 100,
+              win: true,
+              participants: blueParticipants,
+              objectives: { turrets: 5, inhibitors: 1, barons: 1, dragons: 3 },
+            },
+            {
+              teamId: 200,
+              win: false,
+              participants: redParticipants,
+              objectives: { turrets: 2, inhibitors: 0, barons: 0, dragons: 1 },
+            },
+          ]}
+          matchups={roles.map((role, index) => ({
+            role,
+            blueParticipantId: index + 1,
+            redParticipantId: index + 6,
+            at15: {
+              timestampMs: 900_000,
+              goldDelta: 500,
+              creepScoreDelta: 10,
+              xpDelta: 300,
+            },
+          }))}
+        />,
+      ),
+    );
+    expect(html).toContain("Lane matchup");
+    expect(html).toContain("Blue Δ @ 15m");
+    expect(html).toContain("+500 gold");
+    expect(html).toContain("+10 CS");
+    expect(html).toContain("+300 XP");
+    expect(html).toContain("View full rune page");
   });
 });

@@ -8,7 +8,7 @@ import {
   SheetContent,
   SheetTitle,
   SheetTrigger,
-} from "#src/components/sheet.tsx";
+} from "#src/components/overlays/sheet.tsx";
 import { ThemeMenu } from "#src/runtime/theme-menu.tsx";
 import { cn } from "#src/lib/cn.ts";
 import { surfaceHref as joinSurfaceHref } from "#src/layout/origins.ts";
@@ -82,8 +82,7 @@ export function parseNavbarSessionState(payload: unknown): boolean | undefined {
   if (typeof data !== "object" || data === null || !("user" in data))
     return undefined;
   const user: unknown = data.user;
-  if (user === null) return false;
-  return typeof user === "object" ? true : undefined;
+  return user !== null && (typeof user === "object" || undefined);
 }
 
 export function useNavbarSessionState(): boolean {

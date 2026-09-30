@@ -1,9 +1,9 @@
 import type { DuckDBValue } from "@duckdb/node-api";
-import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type {
   ScoutQlGroupSize,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   compileGroupFactsProjection,
@@ -16,6 +16,7 @@ import {
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
 import { resolveLakeFiles, type BoundParam } from "#src/reports/duckdb/lake.ts";
+import { loadServerPeople } from "#src/reports/server-people.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import type {
   CompiledOutputColumn,
@@ -44,7 +45,7 @@ import type {
   PlanAggregationResult,
   PlanOutputEvidence,
   PlanOutputValue,
-} from "#src/reports/plan-rows.ts";
+} from "#src/reports/query/plan-rows.ts";
 
 /**
  * Execute a compiled ScoutQL v2 plan against the report lake.
@@ -67,6 +68,8 @@ export type PlanExecutionInput = {
   playerPuuids?: Map<number, string[]> | undefined;
   /** Guild-only pre-resolved player scoping (competition path). */
   playerIds?: number[] | undefined;
+  /** Stops an Explore query when the caller stops or times out the turn. */
+  abortSignal?: AbortSignal | undefined;
   lakeDir?: string | undefined;
 };
 
@@ -83,10 +86,20 @@ function bindParams(
 
 async function queryInput(input: PlanExecutionInput): Promise<PlanQueryInput> {
   const files = await resolveLakeFiles(input.lakeDir ?? resolveLakeDir());
+  // Merged before compiling: the merge is transitive, so it runs in code.
+  const serverPeople =
+    input.scope.kind === "servers"
+      ? await loadServerPeople(
+          files.accountsParquet,
+          input.scope.serverIds,
+          input.abortSignal,
+        )
+      : undefined;
   return {
     plan: input.plan,
     scope: input.scope,
     files,
+    serverPeople,
     range: input.range,
     limit: input.limit,
     playerPuuids: input.playerPuuids,
@@ -107,22 +120,25 @@ export async function runPlanAggregation(
     return EMPTY_RESULT;
   }
   const RowSchema = planRowSchema(compiled.columns);
-  return await withDuckDBConnection(async (session) => {
-    const rawRows = await session.run(
-      compiled.aggregateSql,
-      bindParams(session, compiled.aggregateParams),
-    );
-    const scannedRows = await session.run(
-      compiled.scannedSql,
-      bindParams(session, compiled.scannedParams),
-    );
-    return {
-      rows: rawRows.map((row) =>
-        planRowFrom(RowSchema.parse(row), compiled.columns),
-      ),
-      rowsScanned: scannedCount(scannedRows[0]),
-    };
-  });
+  return await withDuckDBConnection(
+    async (session) => {
+      const rawRows = await session.run(
+        compiled.aggregateSql,
+        bindParams(session, compiled.aggregateParams),
+      );
+      const scannedRows = await session.run(
+        compiled.scannedSql,
+        bindParams(session, compiled.scannedParams),
+      );
+      return {
+        rows: rawRows.map((row) =>
+          planRowFrom(RowSchema.parse(row), compiled.columns),
+        ),
+        rowsScanned: scannedCount(scannedRows[0]),
+      };
+    },
+    input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal },
+  );
 }
 
 function scannedCount(row: unknown): number {
@@ -221,29 +237,32 @@ async function runGroupAggregation(
   }
   const RowSchema = groupFactRowSchema(projection.columns);
   const gameLevelColumns = groupGameLevelColumns();
-  return await withDuckDBConnection(async (session) => {
-    const rawRows = await session.run(
-      projection.factsSql,
-      bindParams(session, projection.factsParams),
-    );
-    const scannedRows = await session.run(
-      projection.scannedSql,
-      bindParams(session, projection.scannedParams),
-    );
-    const facts = rawRows.map((row) =>
-      groupFactFrom(RowSchema.parse(row), projection.columns),
-    );
-    const groups = foldGroupCombinations({ facts, size, gameLevelColumns });
-    return {
-      rows: aggregateFoldedGroups({
-        plan: input.plan,
-        groups,
-        gameLevelColumns,
-        limit: input.limit,
-      }),
-      rowsScanned: scannedCount(scannedRows[0]),
-    };
-  });
+  return await withDuckDBConnection(
+    async (session) => {
+      const rawRows = await session.run(
+        projection.factsSql,
+        bindParams(session, projection.factsParams),
+      );
+      const scannedRows = await session.run(
+        projection.scannedSql,
+        bindParams(session, projection.scannedParams),
+      );
+      const facts = rawRows.map((row) =>
+        groupFactFrom(RowSchema.parse(row), projection.columns),
+      );
+      const groups = foldGroupCombinations({ facts, size, gameLevelColumns });
+      return {
+        rows: aggregateFoldedGroups({
+          plan: input.plan,
+          groups,
+          gameLevelColumns,
+          limit: input.limit,
+        }),
+        rowsScanned: scannedCount(scannedRows[0]),
+      };
+    },
+    input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal },
+  );
 }
 
 function groupFactFrom(

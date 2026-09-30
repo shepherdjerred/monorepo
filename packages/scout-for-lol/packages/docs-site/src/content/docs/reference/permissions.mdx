@@ -7,7 +7,10 @@ sidebar:
 
 import DataTable from "../../../components/DataTable.astro";
 import { PERMISSION_CATALOG } from "@scout-for-lol/data/model/permissions/catalog.ts";
-import { ROLES } from "@scout-for-lol/data/model/permissions/roles.ts";
+import {
+  PLAYER_PERMISSIONS,
+  ROLES,
+} from "@scout-for-lol/data/model/permissions/roles.ts";
 
 export const resources = Object.entries(PERMISSION_CATALOG);
 export const permissionRows = resources.flatMap(([resource, entry]) =>
@@ -20,6 +23,12 @@ export const permissionRows = resources.flatMap(([resource, entry]) =>
 
 A permission is a `resource:action` pair. A grant stores one row per permission,
 so access can be a named role preset or any hand-picked set.
+
+## Player
+
+Every member of a server where Scout is installed holds the **Player** role
+without a grant. Grants add to it; nothing removes it. It holds:
+{PLAYER_PERMISSIONS.map((permission) => `${permission.resource}:${permission.action}`).join(", ")}.
 
 ## Roles
 
@@ -36,6 +45,9 @@ a preset displays as that role; anything else displays as **custom**.
     },
   ]}
 />
+
+Every grantable role already includes Player. A member whose grants add
+nothing to Player displays as **Player**.
 
 Discord server administrators and the server owner always have full access
 regardless of grants, and always display as **Admin**.

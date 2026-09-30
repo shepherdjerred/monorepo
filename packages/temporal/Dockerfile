@@ -7,7 +7,7 @@
 # out to: gh (pr-agent PR review/summary + PR creation),
 # kubectl (bugsink-housekeeping / zfs-maintenance `kubectl exec`),
 # github-mcp-server (pr-agent's MCP GitHub backend), talosctl / tofu / argocd /
-# velero / bk / temporal / gcx / toolkit (homelab-audit-daily runbook + preflight —
+# velero / woodpecker-cli / temporal / gcx / toolkit (homelab-audit-daily runbook + preflight —
 # see src/activities/homelab/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES),
 # and the direct maintenance runtimes Kometa, uv, and Trivy.
 # scripts/smoke.ts asserts every one of these boots + is on PATH.
@@ -22,7 +22,7 @@
 # Arch: the production cluster is amd64; local builds are arm64. Every download
 # is arch-guarded (`dpkg --print-architecture`) so both build with native
 # binaries — no QEMU fallback needed.
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the artifact builds below ─────────
@@ -34,9 +34,9 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile \
   --filter '@shepherdjerred/temporal' \
@@ -53,23 +53,26 @@ COPY --parents \
   packages/glitter-context \
   packages/home-assistant \
   packages/llm-models \
+  packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
+  packages/config \
+  packages/ops-model \
+  packages/ops-clients \
+  packages/version-catalog/package.json \
+  packages/version-catalog/src/index.ts \
   ./
 # Home Assistant is published with a dist-based export. Build it in the
 # artifact stage so the runtime image does not resolve the workspace link to a
 # source package with no gitignored dist directory.
 RUN cd packages/home-assistant && bun run build
 # llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
-# consumer that imports it (temporal's pr-review cost activity) crashes at
+# consumer that imports it (temporal's LLM cost accounting) crashes at
 # startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
 # catalog is compiled first. (home-assistant and llm-observability export their
 # `src/` directly and need no build.)
 RUN cd packages/llm-models && bun run build
-# The weekly parlay lifecycle is exported as a bundled module so the runtime
-# image never depends on source JSON loading or a gitignored developer dist.
-RUN cd packages/scout-for-lol/packages/data && bun run build
 # Glitter context also exports gitignored dist files. Its build validates and
 # bundles the language-neutral JSON before Temporal imports it at startup.
 RUN cd packages/glitter-context && bun run build
@@ -89,9 +92,9 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/temporal'
 
@@ -107,19 +110,19 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
 # renovate: datasource=github-releases depName=kubernetes/kubectl
-ARG KUBECTL_VERSION=v1.36.3
+ARG KUBECTL_VERSION=v1.37.0
 # renovate: datasource=github-releases depName=github/github-mcp-server
 ARG GITHUB_MCP_SERVER_VERSION=1.3.0
 # renovate: datasource=github-releases depName=siderolabs/talos
-ARG TALOSCTL_VERSION=v1.13.7
+ARG TALOSCTL_VERSION=v1.14.1
 # renovate: datasource=github-releases depName=opentofu/opentofu
 ARG TOFU_VERSION=1.12.3
 # renovate: datasource=github-releases depName=argoproj/argo-cd
 ARG ARGOCD_CLI_VERSION=v3.4.5
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
 ARG VELERO_CLI_VERSION=v1.18.2
-# renovate: datasource=github-releases depName=buildkite/cli
-ARG BUILDKITE_CLI_VERSION=3.48.0
+# renovate: datasource=github-releases depName=woodpecker-ci/woodpecker
+ARG WOODPECKER_CLI_VERSION=3.18.1
 # renovate: datasource=github-releases depName=temporalio/cli
 ARG TEMPORAL_CLI_VERSION=1.7.3
 # renovate: datasource=github-releases depName=grafana/gcx
@@ -132,13 +135,13 @@ ARG TRIVY_VERSION=0.72.0
 # renovate: datasource=github-releases depName=lycheeverse/lychee versioning=loose
 ARG LYCHEE_VERSION=lychee-v0.24.2
 # renovate: datasource=github-releases depName=Kometa-Team/Kometa
-ARG KOMETA_VERSION=2.4.5
+ARG KOMETA_VERSION=2.5.1
 # Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
 # "ubi:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
 ARG POSTGRESQL_BINARIES_VERSION=16.15.0
-ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
+ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 
 # --- Base system deps: ca-certificates, curl, git, libxml2, and the pod-local agent firewall ---
 # libxml2 is for the postgresql-binaries `postgres` server below: only that one
@@ -152,7 +155,7 @@ ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends ca-certificates curl git iptables libxml2 util-linux; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---
@@ -247,24 +250,25 @@ RUN set -e; \
     rm -rf /tmp/velero.tar.gz "/tmp/${dir}"; \
     velero version --client-only
 
-# --- Buildkite CLI (per-arch tarball, SHA256-verified) ---
+# --- Woodpecker CLI (per-arch tarball, SHA256-verified) ---
+# Replaces the Buildkite CLI. `toolkit woodpecker` shells out to this binary,
+# and the homelab audit's CI preflight runs through it.
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
-    case "$arch" in amd64) bkarch=amd64 ;; arm64) bkarch=arm64 ;; \
+    case "$arch" in amd64) wparch=amd64 ;; arm64) wparch=arm64 ;; \
       *) echo "unsupported architecture: $arch" >&2; exit 1 ;; esac; \
-    base="https://github.com/buildkite/cli/releases/download/v${BUILDKITE_CLI_VERSION}"; \
-    dir="bk_${BUILDKITE_CLI_VERSION}_linux_${bkarch}"; \
-    tarball="${dir}.tar.gz"; \
-    curl -fsSL "$base/$tarball" -o /tmp/bk.tar.gz; \
-    curl -fsSL "$base/bk_${BUILDKITE_CLI_VERSION}_checksums.txt" -o /tmp/bk.checksums.txt; \
-    expected="$(grep " $tarball$" /tmp/bk.checksums.txt | awk '{print $1}')"; \
+    base="https://github.com/woodpecker-ci/woodpecker/releases/download/v${WOODPECKER_CLI_VERSION}"; \
+    tarball="woodpecker-cli_linux_${wparch}.tar.gz"; \
+    curl -fsSL "$base/$tarball" -o /tmp/wp.tar.gz; \
+    curl -fsSL "$base/checksums.txt" -o /tmp/wp.checksums.txt; \
+    expected="$(grep " $tarball$" /tmp/wp.checksums.txt | awk '{print $1}')"; \
     [ -n "$expected" ] || { echo "no checksum entry for $tarball" >&2; exit 1; }; \
-    actual="$(sha256sum /tmp/bk.tar.gz | awk '{print $1}')"; \
-    [ "$expected" = "$actual" ] || { echo "bk checksum mismatch (expected $expected, got $actual)" >&2; exit 1; }; \
-    tar -xzf /tmp/bk.tar.gz -C /usr/local/bin --strip-components=1 "${dir}/bk"; \
-    chmod +x /usr/local/bin/bk; \
-    rm /tmp/bk.tar.gz /tmp/bk.checksums.txt; \
-    bk --version
+    actual="$(sha256sum /tmp/wp.tar.gz | awk '{print $1}')"; \
+    [ "$expected" = "$actual" ] || { echo "woodpecker-cli checksum mismatch (expected $expected, got $actual)" >&2; exit 1; }; \
+    tar -xzf /tmp/wp.tar.gz -C /usr/local/bin woodpecker-cli; \
+    chmod +x /usr/local/bin/woodpecker-cli; \
+    rm /tmp/wp.tar.gz /tmp/wp.checksums.txt; \
+    woodpecker-cli --version
 
 # --- Temporal CLI (per-arch tarball, SHA256-verified) ---
 RUN set -e; \
@@ -416,6 +420,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/temporal \
   packages/temporal-observability \
+  packages/config \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
@@ -424,16 +429,18 @@ COPY --parents \
   packages/llm-observability \
   packages/s3-signed-request \
   packages/llm-runtime \
+  packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/temporal \
   packages/seaweedfs-backup \
+  packages/ops-model \
+  packages/ops-clients \
   ./
 
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
-COPY --from=build /app/packages/scout-for-lol/packages/data/dist packages/scout-for-lol/packages/data/dist
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 
 # Verify the copied toolkit binary boots, then ensure the HA schema: the worker
@@ -442,7 +449,7 @@ COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 # into place if a generated schema isn't present. Idempotent, dependency-free —
 # runs here because it writes into the source tree.
 RUN toolkit --version \
-    && bun packages/temporal/scripts/ensure-ha-schema.ts
+    && bun packages/temporal/scripts/homelab/ensure-ha-schema.ts
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown
@@ -462,9 +469,9 @@ CMD ["bun", "src/worker.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+# excludes ci/, so stage it here (never in the pushed image stage).
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=temporal-worker
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Smoke runs as the non-root deploy uid (1000, the app deployment convention),
@@ -473,6 +480,6 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

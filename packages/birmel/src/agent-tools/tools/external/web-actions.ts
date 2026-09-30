@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fetchSafePublicText } from "@shepherdjerred/birmel/utils/safe-fetch.ts";
 
 type WebResult = {
   success: boolean;
@@ -33,23 +34,8 @@ export async function handleFetchUrl(
   if (url == null || url.length === 0) {
     return { success: false, message: "url is required for fetch-url" };
   }
-  const response = await fetch(url, {
-    headers: { "User-Agent": "Birmel Discord Bot/1.0" },
-  });
-  if (!response.ok) {
-    return {
-      success: false,
-      message: `Failed to fetch URL: ${String(response.status)}`,
-    };
-  }
-  const contentType = response.headers.get("content-type") ?? "";
-  if (
-    !contentType.includes("text/html") &&
-    !contentType.includes("text/plain")
-  ) {
-    return { success: false, message: "URL does not return text content" };
-  }
-  const html = await response.text();
+  const response = await fetchSafePublicText(url);
+  const html = response.text;
   const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
   const title = titleMatch?.[1]?.trim();
   let content = html
@@ -68,7 +54,7 @@ export async function handleFetchUrl(
     data: {
       ...(title != null && title.length > 0 && { title }),
       content,
-      url,
+      url: response.url,
     },
   };
 }

@@ -1,0 +1,289 @@
+import { describe, expect, test, vi } from "vitest";
+import {
+  commandUsesHardwareDecode,
+  createStreamObserver,
+  parseTimemarkSeconds,
+} from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import {
+  ffmpegFps,
+  ffmpegSpeedRatio,
+  hwDecodeEngaged,
+  pipelineQueueDepth,
+  sendLateFramesTotal,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
+
+describe("parseTimemarkSeconds", () => {
+  test("parses HH:MM:SS.ss", () => {
+    expect(parseTimemarkSeconds("00:00:00.00")).toBe(0);
+    expect(parseTimemarkSeconds("01:02:03.50")).toBeCloseTo(3723.5, 3);
+    expect(parseTimemarkSeconds("-00:00:01.00")).toBe(-1);
+  });
+  test("returns undefined for junk", () => {
+    expect(parseTimemarkSeconds()).toBeUndefined();
+    expect(parseTimemarkSeconds("nope")).toBeUndefined();
+    expect(parseTimemarkSeconds("1:2")).toBeUndefined();
+  });
+});
+
+describe("commandUsesHardwareDecode", () => {
+  test("detects the VAAPI decode flags / scale filter", () => {
+    expect(
+      commandUsesHardwareDecode(
+        "ffmpeg -hwaccel vaapi -hwaccel_output_format vaapi -i in.mkv -vf scale_vaapi=w=1920:h=1080 out",
+      ),
+    ).toBe(true);
+    expect(
+      commandUsesHardwareDecode("ffmpeg -i in.mkv -vf scale=1920:1080 out"),
+    ).toBe(false);
+  });
+});
+
+describe("createStreamObserver", () => {
+  test("derives the realtime ratio from timemark advance vs wall-clock", async () => {
+    let wall = 1000;
+    const { observer, dispose } = createStreamObserver(true, () => wall);
+    // First progress establishes the baseline (no ratio yet).
+    observer.onProgress?.({ timemark: "00:00:10.00" });
+    // 5 media-seconds advance over 10 wall-seconds => ratio 0.5 (behind realtime).
+    wall = 11_000;
+    observer.onProgress?.({ timemark: "00:00:15.00" });
+    const speed = await ffmpegSpeedRatio.get();
+    const sample = speed.values.find((v) => v.labels.hardware === "true");
+    expect(sample?.value).toBeCloseTo(0.5, 3);
+    dispose();
+  });
+
+  test("onCommand sets hw-decode engaged", async () => {
+    const { observer, dispose } = createStreamObserver(false);
+    observer.onCommand?.("ffmpeg -hwaccel vaapi -i in.mkv out");
+    const engaged = await hwDecodeEngaged.get();
+    expect(engaged.values[0]?.value).toBe(1);
+    observer.onCommand?.("ffmpeg -i in.mkv out");
+    const disengaged = await hwDecodeEngaged.get();
+    expect(disengaged.values[0]?.value).toBe(0);
+    dispose();
+  });
+
+  test("does not log signed media URLs or headers from the ffmpeg command", () => {
+    const write = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+    const { observer, dispose } = createStreamObserver(false);
+    try {
+      observer.onCommand?.(
+        "ffmpeg -headers 'Authorization: Bearer sensitive' -i 'https://edgestream4.pro/live.m3u8?st=sensitive' out",
+      );
+      const output = write.mock.calls.map(([chunk]) => String(chunk)).join("");
+      expect(output).toContain("ffmpeg command started");
+      expect(output).not.toContain("sensitive");
+      expect(output).not.toContain("edgestream4.pro");
+    } finally {
+      dispose();
+      write.mockRestore();
+    }
+  });
+
+  test("onSendStats counts late frames only when ratio > 1", async () => {
+    const beforeMetric = await sendLateFramesTotal.get();
+    const before =
+      beforeMetric.values.find((v) => v.labels.kind === "video")?.value ?? 0;
+    const { observer, dispose } = createStreamObserver(true);
+    observer.onSendStats?.({
+      kind: "video",
+      ptsMs: 0,
+      ratio: 0.5,
+      sendTime: 10,
+      frametime: 20,
+      behindMs: 0,
+      syncWaitMs: 0,
+    });
+    observer.onSendStats?.({
+      kind: "video",
+      ptsMs: 20,
+      ratio: 1.5,
+      sendTime: 30,
+      frametime: 20,
+      behindMs: 0,
+      syncWaitMs: 0,
+    });
+    const afterMetric = await sendLateFramesTotal.get();
+    const after =
+      afterMetric.values.find((v) => v.labels.kind === "video")?.value ?? 0;
+    expect(after - before).toBe(1);
+    dispose();
+  });
+
+  test("dispose stops the progress-age timer so stale segments don't race on the gauge", async () => {
+    let wall = 1000;
+    const { observer, dispose } = createStreamObserver(true, () => wall);
+    observer.onCommand?.("ffmpeg -i in.mkv out");
+    // Advance wall time well past the stall threshold.
+    wall += 10_000;
+    // dispose before the interval fires.
+    dispose();
+    // A second call to dispose must be safe (idempotent).
+    dispose();
+  });
+});
+
+/** Let the fast (2ms) watchdog interval fire at least once. */
+const tick = () => new Promise((resolve) => setTimeout(resolve, 25));
+
+function stallWatchdogHarness() {
+  const wall = { value: 0 };
+  const stalls: (number | undefined)[] = [];
+  const streamObserver = createStreamObserver(
+    true,
+    () => wall.value,
+    (lastMediaSeconds) => stalls.push(lastMediaSeconds),
+    { progressTickMs: 2 },
+  );
+  streamObserver.observer.onCommand?.("ffmpeg -i in.mkv out");
+  return { ...streamObserver, wall, stalls };
+}
+
+function advanceMedia(
+  observer: ReturnType<typeof createStreamObserver>["observer"],
+  wall: { value: number },
+  wallOffset = 0,
+): void {
+  for (let second = 1; second <= 25; second++) {
+    wall.value = wallOffset + second * 1000;
+    observer.onProgress?.({
+      timemark: `00:00:${String(second).padStart(2, "0")}.00`,
+    });
+  }
+}
+
+describe("createStreamObserver stall watchdog", () => {
+  test("a wedged ffmpeg emitting the SAME timemark still trips the stall watchdog and reports the last media position", async () => {
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
+    // First parseable sample arms the watchdog at wall=1000 with media at 5s.
+    wall.value = 1000;
+    observer.onProgress?.({ timemark: "00:00:05.00" });
+    // A wedged process keeps reporting the SAME media timemark — the watchdog must NOT re-arm.
+    wall.value = 2000;
+    observer.onProgress?.({ timemark: "00:00:05.00" });
+    // 21s past the last real media advance (wall=1000).
+    wall.value = 22_000;
+    await tick();
+
+    expect(stalls.length).toBeGreaterThanOrEqual(1);
+    // The reported position is the last DELIVERED media timemark (5s), not a wall-clock figure.
+    expect(stalls[0]).toBe(5);
+    dispose();
+  });
+
+  test("advancing media keeps the watchdog armed (no false stall)", async () => {
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
+    // Media advances in lockstep with wall-clock across a span > STALL_AFTER_SECONDS.
+    advanceMedia(observer, wall);
+    await tick();
+
+    expect(stalls).toHaveLength(0);
+    dispose();
+  });
+
+  test("a seek (new onCommand) starts a fresh epoch — healthy post-seek playback is not a false stall", async () => {
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
+    // Play healthily well past the stall threshold so the pre-seek media baseline is high (25s).
+    advanceMedia(observer, wall);
+    // A /seek restarts ffmpeg at a new -ss → new onCommand, and its output timemark restarts near
+    // zero. Without an epoch reset the low post-seek timemarks stay < the old 25s baseline, never
+    // re-arm the watchdog, and a false stall fires ~20s later despite healthy playback.
+    wall.value = 26_000;
+    observer.onCommand?.("ffmpeg -ss 120 -i in.mkv out");
+    advanceMedia(observer, wall, 26_000);
+    await tick();
+
+    expect(stalls).toHaveLength(0);
+    dispose();
+  });
+
+  test("the stall fires once per silence (not every tick)", async () => {
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
+    wall.value = 1000;
+    observer.onProgress?.({ timemark: "00:00:05.00" });
+    wall.value = 30_000; // deep into the stall; many watchdog ticks will elapse during the wait
+    await tick();
+
+    expect(stalls).toHaveLength(1);
+    dispose();
+  });
+});
+
+async function engagedValue(): Promise<number | undefined> {
+  const metric = await hwDecodeEngaged.get();
+  return metric.values[0]?.value;
+}
+
+describe("audio-only segments suppress the video-only gauges", () => {
+  /**
+   * Absent, not zero. A music segment has no picture, and writing `0` into these series makes a
+   * dashboard read "hardware decode broke" and "the encoder froze" — both of which are alarming and
+   * neither of which is true. Each assertion below is paired with the video control that proves the
+   * suppression is conditional rather than a gauge that simply stopped working.
+   */
+  test("hw_decode_engaged is left alone by a music segment", async () => {
+    // This gauge carries no labels, so prom-client exports it from the moment it is first written
+    // and there is no such thing as "absent" for it. What suppression buys is that a song does not
+    // overwrite the last video segment's reading with a 0 that means "hardware decode broke".
+    const video = createStreamObserver(false);
+    video.observer.onCommand?.("ffmpeg -hwaccel vaapi -i in.mkv out");
+    await expect(engagedValue()).resolves.toBe(1);
+    video.dispose();
+
+    const music = createStreamObserver(false, undefined, undefined, {
+      audioOnly: true,
+    });
+    music.observer.onCommand?.("ffmpeg -i in.webm -vn -c:a libopus out");
+    await expect(engagedValue()).resolves.toBe(1);
+    music.dispose();
+
+    // The control: the same command through a video observer DOES write the 0, so the assertion
+    // above is about the audioOnly flag rather than about the command line.
+    const videoAgain = createStreamObserver(false);
+    videoAgain.observer.onCommand?.("ffmpeg -i in.webm -vn -c:a libopus out");
+    await expect(engagedValue()).resolves.toBe(0);
+    videoAgain.dispose();
+  });
+
+  test("ffmpeg_fps is not written for a music segment", async () => {
+    ffmpegFps.reset();
+    const music = createStreamObserver(false, undefined, undefined, {
+      audioOnly: true,
+    });
+    music.observer.onProgress?.({ timemark: "00:00:01.00", currentFps: 0 });
+    const duringMusic = await ffmpegFps.get();
+    expect(duringMusic.values).toEqual([]);
+    music.dispose();
+
+    const video = createStreamObserver(false);
+    video.observer.onProgress?.({ timemark: "00:00:01.00", currentFps: 30 });
+    const duringVideo = await ffmpegFps.get();
+    expect(duringVideo.values[0]?.value).toBe(30);
+    video.dispose();
+  });
+
+  test("only the audio queue depth is reported, and dispose leaves the video series alone", async () => {
+    pipelineQueueDepth.reset();
+    const video = createStreamObserver(false);
+    video.observer.onQueueDepth?.({ video: 7, audio: 3 });
+
+    const music = createStreamObserver(false, undefined, undefined, {
+      audioOnly: true,
+    });
+    music.observer.onQueueDepth?.({ video: 0, audio: 5 });
+    const during = await pipelineQueueDepth.get();
+    expect(during.values.find((v) => v.labels.kind === "video")?.value).toBe(7);
+    expect(during.values.find((v) => v.labels.kind === "audio")?.value).toBe(5);
+
+    // The music segment ends. A blanket reset here would wipe the concurrent video session's
+    // series — a gauge the music segment never wrote and has no business clearing.
+    music.dispose();
+    const after = await pipelineQueueDepth.get();
+    expect(after.values.find((v) => v.labels.kind === "video")?.value).toBe(7);
+    expect(after.values.find((v) => v.labels.kind === "audio")).toBeUndefined();
+    video.dispose();
+  });
+});

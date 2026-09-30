@@ -1,6 +1,6 @@
 import {
   BUCKS_INT32_MAX,
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   BucksDareStateSchema,
   OPEN_BUCKS_DARE_STATES,
   type BucksDareState,
@@ -19,7 +19,7 @@ import {
 import { stakeDareContributionInTransaction } from "#src/betting/dares/settlement/dare-ledger.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
-import { bettingDareContributionsTotal } from "#src/metrics/betting.ts";
+import { bettingDareContributionsTotal } from "#src/metrics/betting/betting.ts";
 
 /**
  * Piling Bucks onto a dare's pot.
@@ -60,7 +60,7 @@ export async function contributeToDare(
   if (!(await daresFeatureEnabled(input.serverId, dependencies))) {
     return { kind: "feature_disabled" };
   }
-  const amountResult = BucksStakeSchema.safeParse(input.amount);
+  const amountResult = StorableBucksStakeSchema.safeParse(input.amount);
   if (!amountResult.success) {
     return { kind: "invalid_amount" };
   }
@@ -130,13 +130,10 @@ export async function contributeToDare(
           select: { dareState: true, potTotal: true },
         });
         const freshState = BucksDareStateSchema.parse(fresh.dareState);
-        if (
-          OPEN_BUCKS_DARE_STATES.includes(freshState) &&
+        return OPEN_BUCKS_DARE_STATES.includes(freshState) &&
           fresh.potTotal + amount > BUCKS_INT32_MAX
-        ) {
-          return { kind: "pot_full", potTotal: fresh.potTotal } as const;
-        }
-        return { kind: "too_late", dareState: freshState } as const;
+          ? ({ kind: "pot_full", potTotal: fresh.potTotal } as const)
+          : ({ kind: "too_late", dareState: freshState } as const);
       }
       const balance = await stakeDareContributionInTransaction(tx, {
         facts: {

@@ -36,7 +36,7 @@ import {
   endCustomNight,
   prepareCustomNight,
   selectCustomAccount,
-} from "#src/customs/night-lifecycle-service.ts";
+} from "#src/customs/game/night-lifecycle-service.ts";
 import {
   assignCustomTeam,
   chooseCustomCaptains,
@@ -44,15 +44,15 @@ import {
   prepareCustomGame,
   randomizeTeams,
   undoDraftPick,
-} from "#src/customs/game-service.ts";
+} from "#src/customs/game/game-service.ts";
 import {
   lockCustomTeams,
   retryCustomCode,
   setCustomVoiceOverride,
   substituteCustomParticipant,
   voidCustomGame,
-} from "#src/customs/game-operation-service.ts";
-import { continueCustomNight } from "#src/customs/intermission-service.ts";
+} from "#src/customs/game/game-operation-service.ts";
+import { continueCustomNight } from "#src/customs/game/intermission-service.ts";
 import {
   arrangeCustomVoice,
   returnCustomVoiceToLobby,

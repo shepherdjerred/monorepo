@@ -37,8 +37,7 @@ export const MAX_CRASH_RETRIES = 3;
 /** Pipeline the given attempt runs on (attempt = context.crashRetries at invoke time). */
 export function pipelineForAttempt(crashRetries: number): PipelineMode {
   if (crashRetries <= 1) return "hw";
-  if (crashRetries === 2) return "hw-upload";
-  return "sw";
+  return crashRetries === 2 ? "hw-upload" : "sw";
 }
 
 // Wedge guards: no invoked actor may hold its state forever. The state-exit AbortSignal fired by
@@ -159,10 +158,9 @@ export function externalStopMessage(event: PlaybackEvent): string {
   if (event.type === "STREAMER_VOICE_DETACHED") {
     return event.reason ?? "streamer voice detached";
   }
-  if (event.type === "PRODUCER_FAILED") {
-    return event.reason;
-  }
-  return EXTERNAL_STOP_MESSAGES.get(event.type) ?? "external stream event";
+  return event.type === "PRODUCER_FAILED"
+    ? event.reason
+    : (EXTERNAL_STOP_MESSAGES.get(event.type) ?? "external stream event");
 }
 
 /** Narrow an unknown actor error to a {@link StreamCrashError}, or null. */

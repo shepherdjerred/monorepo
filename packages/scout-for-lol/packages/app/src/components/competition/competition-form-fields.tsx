@@ -7,13 +7,17 @@ import {
   visibilityToString,
 } from "@scout-for-lol/data";
 import {
+  ChannelSelectControl,
+  type ChannelAvailability,
+} from "#src/components/channel-select-support.tsx";
+import {
   Field,
   FieldDescription,
   FieldError,
   FormSection,
   Label,
-} from "@scout-for-lol/design-system/components/input";
-import { ChampionCombobox } from "#src/components/champion-combobox.tsx";
+} from "@scout-for-lol/design-system/components/forms/field";
+import { ChampionCombobox } from "#src/components/match/champion-combobox.tsx";
 import {
   COMPETITION_CRITERIA_OPTIONS,
   RANKED_COMPETITION_QUEUES,
@@ -27,7 +31,7 @@ import {
   fieldErrorMessage,
   withScoutForm,
 } from "#src/components/semantic-form.tsx";
-import { browserTimezone } from "#src/lib/competition-time.ts";
+import { browserTimezone } from "#src/lib/bucks/competition-time.ts";
 import type { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
 
 export type FormState = z.input<typeof CompetitionFormValueSchema>;
@@ -62,11 +66,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 type CompetitionFormFieldsProps = {
   locked: boolean;
   channels: { id: string; name: string }[] | undefined;
+  channelAvailability?: ChannelAvailability;
+  onRetryChannels?: () => void;
 };
 
 const DEFAULT_PROPS: CompetitionFormFieldsProps = {
   locked: false,
   channels: undefined,
+  channelAvailability: { status: "ready" },
 };
 
 export const CompetitionFormFields = withScoutForm({
@@ -115,15 +122,16 @@ export const CompetitionFormFields = withScoutForm({
           </form.AppField>
           <form.AppField name="channelId">
             {(field) => (
-              <field.NativeSelectField
+              <ChannelSelectControl
                 id="competition-channel"
                 label="Announcement channel"
-                placeholder="Pick a channel"
-                options={(props.channels ?? []).map((channel) => ({
-                  value: channel.id,
-                  label: `#${channel.name}`,
-                }))}
-                required
+                value={field.state.value}
+                channels={props.channels ?? []}
+                availability={props.channelAvailability}
+                onRetry={props.onRetryChannels}
+                renderSelect={(selectProps) => (
+                  <field.NativeSelectField {...selectProps} />
+                )}
               />
             )}
           </form.AppField>

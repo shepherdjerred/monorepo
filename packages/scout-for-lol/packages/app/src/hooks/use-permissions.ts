@@ -6,12 +6,12 @@ import {
   type PermissionSet,
   createPermissionSet,
 } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import {
   type QueryError,
   resolvePermissionQueryError,
   shouldQueryScopedPermissions,
-} from "#src/lib/permission-query-state.ts";
+} from "#src/lib/player/permission-query-state.ts";
 
 export type GuildPermissions = {
   /**

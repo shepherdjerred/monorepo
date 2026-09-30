@@ -5,8 +5,8 @@ import type {
   ExploreTraceRawValue,
   ExploreTraceStatus,
 } from "@scout-for-lol/data";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
-import { formatDuration } from "#src/lib/format-duration.ts";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
+import { formatDuration } from "#src/lib/format/format-duration.ts";
 
 export function ExploreToolTrace(props: {
   trace: ExploreTraceEntry[];
@@ -258,6 +258,11 @@ function StatusIcon(props: { status: ExploreTraceStatus }) {
 }
 
 function toolLabel(toolName: string): string {
+  if (toolName === "load_skill") {
+    return "Load skill instructions";
+  }
+  // No longer registered on new turns; kept for traces persisted before the
+  // ScoutQL reference moved into the scoutql skill.
   if (toolName === "get_report_language") {
     return "Read ScoutQL reference";
   }
@@ -282,10 +287,7 @@ function toolLabel(toolName: string): string {
   if (toolName === "query_bucks_ledger") {
     return "Query Bryan Bucks ledger";
   }
-  if (toolName === "query_bucks_bets") {
-    return "Query Bryan Bucks bets";
-  }
-  return toolName;
+  return toolName === "query_bucks_bets" ? "Query Bryan Bucks bets" : toolName;
 }
 
 function statusLabel(status: ExploreTraceStatus): string {
@@ -295,10 +297,7 @@ function statusLabel(status: ExploreTraceStatus): string {
   if (status === "succeeded") {
     return "Completed";
   }
-  if (status === "failed") {
-    return "Failed";
-  }
-  return "Interrupted";
+  return status === "failed" ? "Failed" : "Interrupted";
 }
 
 function formatBytes(byteLength: number): string {

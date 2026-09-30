@@ -1,6 +1,7 @@
 import { ApiObject, Chart, JsonPatch, type App } from "cdk8s";
 import { z } from "zod";
 import { releaseChartRevisions } from "./release-configuration.ts";
+import { BURST_SERVICE_PRIORITY } from "./misc/priority-classes.ts";
 
 export const APPLICATION_RESOURCES_FINALIZER =
   "resources-finalizer.argocd.argoproj.io";
@@ -21,11 +22,12 @@ export const APPLICATION_SYNC_WAVES = {
   certificate: "-2",
   // After the cluster CA so Alertmanager can require postal-smtp-ca.
   prometheus: "-1",
+  burstPriorityClass: "-1",
   temporal: "0",
   structural: "0",
   kueue: "1",
   dependentConfiguration: "2",
-  buildkite: "3",
+  woodpecker: "3",
   leaf: "4",
 } as const;
 
@@ -82,6 +84,12 @@ function certificateIsCa(resource: ApiObject): boolean {
 
 function applicationSyncWave(name: string): string {
   if (name === "apps") {
+    // The root chart renders its own Application, and the final full-source
+    // release operation must prove that apply plus its prunes without waiting
+    // on later-wave child health. Keeping the self-reference in the structural
+    // wave is what lets that operation reach its applied precondition early;
+    // ordering it after the children would couple every release to their
+    // health. See `explanation/homelab/release-safety`.
     return APPLICATION_SYNC_WAVES.structural;
   }
   if (name === "1password") {
@@ -99,13 +107,18 @@ function applicationSyncWave(name: string): string {
   if (name === "kueue") {
     return APPLICATION_SYNC_WAVES.kueue;
   }
-  if (name === "buildkite") {
-    return APPLICATION_SYNC_WAVES.buildkite;
-  }
-  return APPLICATION_SYNC_WAVES.leaf;
+  return name === "woodpecker"
+    ? APPLICATION_SYNC_WAVES.woodpecker
+    : APPLICATION_SYNC_WAVES.leaf;
 }
 
 function rootResourceSyncWave(resource: ApiObject): string {
+  if (
+    resource.kind === "PriorityClass" &&
+    resource.name === BURST_SERVICE_PRIORITY
+  ) {
+    return APPLICATION_SYNC_WAVES.burstPriorityClass;
+  }
   if (
     resource.kind === "MutatingAdmissionPolicy" ||
     resource.kind === "ValidatingAdmissionPolicy"
@@ -126,22 +139,18 @@ function rootResourceSyncWave(resource: ApiObject): string {
       return APPLICATION_SYNC_WAVES.clusterIssuer;
     }
     if (resource.kind === "Certificate") {
-      if (certificateIsCa(resource)) {
-        return APPLICATION_SYNC_WAVES.certificateAuthority;
-      }
-      return APPLICATION_SYNC_WAVES.certificate;
+      return certificateIsCa(resource)
+        ? APPLICATION_SYNC_WAVES.certificateAuthority
+        : APPLICATION_SYNC_WAVES.certificate;
     }
     return APPLICATION_SYNC_WAVES.certificateIssuer;
   }
-  if (
-    resource.apiGroup === "kueue.x-k8s.io" ||
+  return resource.apiGroup === "kueue.x-k8s.io" ||
     resource.apiGroup === "monitoring.coreos.com" ||
     resource.apiGroup === "networking.cfargotunnel.com" ||
     (resource.apiGroup === "tailscale.com" && resource.kind === "ProxyClass")
-  ) {
-    return APPLICATION_SYNC_WAVES.dependentConfiguration;
-  }
-  return APPLICATION_SYNC_WAVES.structural;
+    ? APPLICATION_SYNC_WAVES.dependentConfiguration
+    : APPLICATION_SYNC_WAVES.structural;
 }
 
 function applyResourceReleasePolicy(

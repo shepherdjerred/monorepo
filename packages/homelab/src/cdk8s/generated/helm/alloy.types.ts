@@ -548,9 +548,6 @@ export type AlloyHelmValuesControllerPodDisruptionBudget = {
 
 export type AlloyHelmValuesControllerAutoscaling = {
   /**
-   * Creates a HorizontalPodAutoscaler for controller type deployment.
-   * Deprecated: Please use controller.autoscaling.horizontal instead
-   *
    * @default false
    */
   enabled?: boolean;

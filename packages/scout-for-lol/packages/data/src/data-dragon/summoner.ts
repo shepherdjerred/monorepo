@@ -44,3 +44,23 @@ export const SummonerSchema = z.object({
 });
 
 export const summoner = SummonerSchema.parse(summonerData);
+
+export type SummonerSpellInfo = (typeof summoner.data)[string];
+
+export function findSummonerSpells(query: string): SummonerSpellInfo[] {
+  const normalized = query.trim().toLowerCase();
+  const entries = Object.values(summoner.data);
+  const exact = entries.filter(
+    (spell) =>
+      spell.name.toLowerCase() === normalized ||
+      spell.id.toLowerCase() === normalized ||
+      spell.key === normalized,
+  );
+  if (exact.length > 0) {
+    const classic = exact.filter((spell) => spell.modes.includes("CLASSIC"));
+    return classic.length > 0 ? classic : exact;
+  }
+  return entries.filter((spell) =>
+    spell.name.toLowerCase().includes(normalized),
+  );
+}

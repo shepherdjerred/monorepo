@@ -7,7 +7,7 @@ import {
 import type {
   ScoutQlOutput,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
 import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
@@ -21,15 +21,15 @@ import {
   effectiveRowLimit,
   resultFromPlanRows,
   withoutComparison,
-} from "#src/reports/query-aggregates.ts";
-import type { ReportQueryResult } from "#src/reports/query-types.ts";
+} from "#src/reports/query/query-aggregates.ts";
+import type { ReportQueryResult } from "#src/reports/query/query-types.ts";
 import {
   evaluateAggregate,
   evaluateHaving,
   evaluatePredicate,
   type AggregateEvalContext,
   type FactRow,
-} from "#src/reports/aggregate-eval.ts";
+} from "#src/reports/query/aggregate-eval.ts";
 import {
   compareOutputs,
   groupEvidence,
@@ -38,7 +38,7 @@ import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
 import type {
   PlanAggregateRow,
   PlanOutputValue,
-} from "#src/reports/plan-rows.ts";
+} from "#src/reports/query/plan-rows.ts";
 
 /**
  * The rank snapshot sources (`rank_current`, `competition_rank`).
@@ -64,6 +64,7 @@ export type RankReportInput = {
   plan: ScoutQlPlan;
   competitionId: number;
   now: Date;
+  rowLimitCeiling?: number | undefined;
 };
 
 type RankGroup = {
@@ -93,7 +94,12 @@ export async function rankReportResult(
   return resultFromPlanRows({
     plan: input.plan,
     rows: withoutComparison(
-      aggregateRankLeaderboard(input.plan, leaderboard, showsRankNames),
+      aggregateRankLeaderboard(
+        input.plan,
+        leaderboard,
+        showsRankNames,
+        input.rowLimitCeiling,
+      ),
     ),
     rowsScanned: leaderboard.length,
     // A snapshot answers "as of now"; it has no window to state.
@@ -117,8 +123,9 @@ export function aggregateRankLeaderboard(
   plan: ScoutQlPlan,
   leaderboard: RankedLeaderboardEntry[],
   showsRankNames: boolean,
+  rowLimitCeiling?: number,
 ): PlanAggregateRow[] {
-  const limit = effectiveRowLimit(plan);
+  const limit = effectiveRowLimit(plan, rowLimitCeiling);
   const where = plan.where;
   const survivors =
     where === undefined
@@ -229,10 +236,9 @@ function rankOutputValue(
   group: RankGroup,
   ctx: AggregateEvalContext,
 ): LakeScalar {
-  if (output.expr.kind === "grouping-ref") {
-    return group.keys[output.expr.index] ?? null;
-  }
-  return evaluateAggregate(output.expr, ctx);
+  return output.expr.kind === "grouping-ref"
+    ? (group.keys[output.expr.index] ?? null)
+    : evaluateAggregate(output.expr, ctx);
 }
 
 /**

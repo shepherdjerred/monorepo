@@ -8,10 +8,15 @@ import {
 } from "@temporalio/worker";
 import type { ScoutStage } from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
+import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
+import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
+import type {
+  ScoutV2BackgroundActivities,
+  ScoutV2LakeActivities,
+  ScoutV2NotificationActivities,
+} from "#src/temporal/v2/durable-activity-surface.ts";
 import { createLogger } from "#src/logger.ts";
-import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
-import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import {
   createTemporalClientTracingInterceptor,
   createTemporalWorkerTracing,
@@ -98,14 +103,30 @@ function installConfiguredRuntime(): void {
   });
 }
 
+/**
+ * Every queue serves both pipelines. v1's Activities and their V2 counterparts
+ * are declared on the same queue classes in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`,
+ * so one worker registration carries both and an open v1 execution and a V2 one
+ * dispatch to the same place — which is what makes the V2 rollout a matter of
+ * starting Workflows rather than of moving workers.
+ *
+ * The V2 groups are split by queue rather than by domain because the queue is
+ * the promise being made. The notification lane spans two of them: its four
+ * short domain commits and its Discord send are `realtime`, where latency is
+ * the product, while its render is `background`, where a slow Satori pass
+ * cannot sit in front of a live match.
+ */
 type RealtimeActivities = Pick<
   ScoutTemporalActivities,
   | "pollRealtime"
   | "discoverPostMatchIds"
   | "runPostMatchMaintenance"
   | "ingestMatch"
+  | "reconcileIngestedMatchCursor"
   | "probeQueue"
->;
+> &
+  ScoutV2MatchActivities &
+  ScoutV2NotificationActivities;
 type InteractiveActivities = Pick<
   ScoutTemporalActivities,
   "runInteractive" | "persistInteractiveOutcome" | "probeQueue"
@@ -113,6 +134,8 @@ type InteractiveActivities = Pick<
 type BackgroundActivities = Pick<
   ScoutTemporalActivities,
   | "fetchInitialHistoryPage"
+  | "importExploreHistory"
+  | "importExploreTimelines"
   | "reconcileIngestion"
   | "runBackgroundJob"
   | "runDetachedBackgroundWork"
@@ -121,15 +144,13 @@ type BackgroundActivities = Pick<
   | "refreshDuelSeries"
   | "markDuelSeriesOverdue"
   | "probeQueue"
-> & {
-  invokeScoutWeeklyParlayAction: (
-    action: WeeklyParlayControlAction,
-  ) => Promise<WeeklyParlayControlResult>;
-  syncScoutBryanBucksAnalytics: () => Promise<{
-    status: "reconciled" | "skipped";
-    detail: string;
-  }>;
-};
+> &
+  ScoutV2BackgroundActivities & {
+    syncScoutBryanBucksAnalytics: () => Promise<{
+      status: "reconciled" | "skipped";
+      detail: string;
+    }>;
+  };
 type LakeActivities = Pick<
   ScoutTemporalActivities,
   | "runReportLakeJob"
@@ -138,7 +159,8 @@ type LakeActivities = Pick<
   | "recomputeChallengeRunPage"
   | "markChallengeRunRecomputeFailure"
   | "probeQueue"
->;
+> &
+  ScoutV2LakeActivities;
 
 export type ScoutTemporalActivityGroups = {
   readonly realtime: RealtimeActivities;
@@ -153,6 +175,18 @@ export type ScoutTemporalSupervisorOptions = {
   readonly stage: ScoutStage;
   readonly activities: ScoutTemporalActivityGroups;
   readonly callGraphTracing: boolean;
+  /**
+   * The workers this process polls with, from its runtime role's capability
+   * table. An empty set is legitimate: the `gateway` role needs the Temporal
+   * *client* (commands start Workflows) and runs none of their Activities.
+   */
+  readonly workers: readonly ScoutTemporalQueueClass[];
+  /**
+   * Workers added later, by {@link ScoutTemporalSupervisor.enableDeferredWorkers}.
+   * Only `combined` uses this, to hold the gateway-cache-reading Activities
+   * back until its own Discord shard is ready.
+   */
+  readonly deferredWorkers: readonly ScoutTemporalQueueClass[];
 };
 
 /**
@@ -212,7 +246,7 @@ function createScoutTemporalTracing(
 
 export async function createConnectedRuntime(
   options: ScoutTemporalSupervisorOptions,
-  discordWorkersEnabled: boolean,
+  queueClasses: ReadonlySet<ScoutTemporalQueueClass>,
 ): Promise<ConnectedRuntime> {
   installTemporalRuntime();
   const nativeConnection =
@@ -248,31 +282,37 @@ export async function createConnectedRuntime(
       },
       ...(tracing === undefined ? {} : { sinks: tracing.sinks }),
     };
-    workers.push(
-      await Worker.create({
-        ...commonOptions,
-        taskQueue: queues.workflow,
-        workflowsPath: workflowsPath(),
-        maxConcurrentWorkflowTaskExecutions: 4,
-      }),
-    );
-    workers.push(
-      await Worker.create({
-        ...commonOptions,
-        taskQueue: queues.interactive,
-        activities: options.activities.interactive,
-        maxConcurrentActivityTaskExecutions: 2,
-      }),
-    );
-    workers.push(
-      await Worker.create({
-        ...commonOptions,
-        taskQueue: queues.lake,
-        activities: options.activities.lake,
-        maxConcurrentActivityTaskExecutions: 1,
-      }),
-    );
-    if (discordWorkersEnabled) {
+    if (queueClasses.has("workflow")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.workflow,
+          workflowsPath: workflowsPath(),
+          maxConcurrentWorkflowTaskExecutions: 4,
+        }),
+      );
+    }
+    if (queueClasses.has("interactive")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.interactive,
+          activities: options.activities.interactive,
+          maxConcurrentActivityTaskExecutions: 2,
+        }),
+      );
+    }
+    if (queueClasses.has("lake")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.lake,
+          activities: options.activities.lake,
+          maxConcurrentActivityTaskExecutions: 1,
+        }),
+      );
+    }
+    if (queueClasses.has("realtime")) {
       workers.push(
         await Worker.create({
           ...commonOptions,
@@ -281,6 +321,8 @@ export async function createConnectedRuntime(
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );
+    }
+    if (queueClasses.has("background")) {
       workers.push(
         await Worker.create({
           ...commonOptions,

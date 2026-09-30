@@ -4,11 +4,12 @@ import type {
   RawTimeline,
 } from "@scout-for-lol/data";
 import * as Sentry from "@sentry/bun";
-import { reportStoreIngestTotal } from "#src/metrics/report-store.ts";
+import { reportStoreIngestTotal } from "#src/metrics/reports/report-store.ts";
 import {
   ingestMatch,
   ingestPrematch,
   ingestTimeline,
+  type MatchIngestResult,
 } from "#src/report-store/store.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -26,6 +27,12 @@ type TimelineIngestOptions = {
   timeline: RawTimeline;
   source: string;
   trackedPlayerAliases: string[];
+  /**
+   * The match's `info.gameCreation`. It partitions the timeline's S3 key onto
+   * the same day as the match payload, so the caller must supply the match's
+   * own timestamp rather than letting the upload time stand in for it.
+   */
+  gameCreatedAt: Date;
 };
 
 type PrematchIngestOptions = {
@@ -70,11 +77,16 @@ function recordFailure(
  * Thin metric wrappers over the S3-authoritative ingest. On failure they record
  * the failure metric and RE-THROW — the caller (e.g. the polling cursor gate)
  * decides how to react. A swallowed failure would silently lose the match.
+ *
+ * The match wrapper passes the ingest's whole answer through, artifact
+ * descriptor included, because the durable bridge above it stamps the
+ * observation with that identity. Summarising the result here is what left the
+ * observation's artifact columns NULL for every live match.
  */
 
 export async function recordMatchForReportStore(
   options: MatchIngestOptions,
-): Promise<{ staged: boolean; stored: boolean }> {
+): Promise<MatchIngestResult> {
   try {
     const result = await ingestMatch(
       options.match,
@@ -98,6 +110,7 @@ export async function recordTimelineForReportStore(
     const staged = await ingestTimeline(
       options.timeline,
       options.trackedPlayerAliases,
+      options.gameCreatedAt,
     );
     recordSuccess("timeline", options.source);
     logger.info(

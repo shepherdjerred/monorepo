@@ -18,7 +18,7 @@ import {
   handleDelete,
   handleReorder,
   handleSetPermissions,
-} from "./channel-actions.ts";
+} from "./actions/channel-actions.ts";
 
 const logger = loggers.tools.child("discord.channels");
 

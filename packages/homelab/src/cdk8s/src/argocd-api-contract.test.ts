@@ -33,7 +33,7 @@ async function runSyncManagedAtRevision(origin: string) {
     [
       "bun",
       "--no-install",
-      "scripts/argocd.ts",
+      "scripts/argocd/argocd.ts",
       "sync-managed",
       "worker",
       "--revision",
@@ -131,7 +131,7 @@ for (const contractCase of contract.cases.filter(
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "health-wait",
           "missing",
           "--timeout",

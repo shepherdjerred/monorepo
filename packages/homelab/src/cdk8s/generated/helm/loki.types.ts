@@ -1216,7 +1216,6 @@ a..."
   adminToken?: LokiHelmValuesEnterpriseAdminToken;
   canarySecret?: unknown;
   /**
-   * Note: Uses enterprise.adminToken.secret value to mount the admin token used to call the admin api.
    * The provisioner is disabled by default because it requires an out-of-band admin token secret
    * (created via GEL `tokengen`) referenced by `enterprise.adminToken.secret`. After creating that
    * secret, set both `enterprise.adminToken.secret` and `enterprise.provisioner.enabled: true`.
@@ -2314,8 +2313,7 @@ export type LokiHelmValuesGateway = {
    */
   terminationGracePeriodSeconds?: number;
   /**
-   * Affinity for gateway pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -3132,8 +3130,7 @@ export type LokiHelmValuesSingleBinary = {
    */
   hostUsers?: string;
   /**
-   * Affinity for single binary pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
@@ -3413,8 +3410,7 @@ export type LokiHelmValuesWrite = {
    */
   hostUsers?: string;
   /**
-   * Affinity for write pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -3790,8 +3786,7 @@ export type LokiHelmValuesRead = {
    */
   hostUsers?: string;
   /**
-   * Affinity for read pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -4065,8 +4060,7 @@ export type LokiHelmValuesBackend = {
    */
   hostUsers?: string;
   /**
-   * Affinity for backend pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -4381,8 +4375,7 @@ export type LokiHelmValuesIngester = {
   lifecycle?: LokiHelmValuesIngesterLifecycle;
   topologySpreadConstraints?: LokiHelmValuesIngesterTopologySpreadConstraintsElement[];
   /**
-   * Affinity for ingester pods. Ignored if zoneAwareReplication is enabled.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -4419,7 +4412,6 @@ export type LokiHelmValuesIngester = {
   startupProbe?: LokiHelmValuesIngesterStartupProbe;
   /**
    * UpdateStrategy for the ingester StatefulSets.
-   * Optional for updateStrategy.type=RollingUpdate. See [Partitioned rolling updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions) in the StatefulSet docs for details.
    *
    * @default {"type":"RollingUpdate"}
    */
@@ -4909,8 +4901,7 @@ export type LokiHelmValuesDistributor = {
    */
   terminationGracePeriodSeconds?: number;
   /**
-   * Affinity for distributor pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -5102,8 +5093,7 @@ export type LokiHelmValuesQuerier = {
   terminationGracePeriodSeconds?: number;
   topologySpreadConstraints?: LokiHelmValuesQuerierTopologySpreadConstraintsElement[];
   /**
-   * Affinity for querier pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -5341,8 +5331,7 @@ export type LokiHelmValuesQueryFrontend = {
    */
   terminationGracePeriodSeconds?: number;
   /**
-   * Affinity for query-frontend pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -5535,8 +5524,7 @@ export type LokiHelmValuesQueryScheduler = {
    */
   terminationGracePeriodSeconds?: number;
   /**
-   * Affinity for query-scheduler pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -5679,8 +5667,7 @@ export type LokiHelmValuesIndexGateway = {
    */
   lifecycle?: LokiHelmValuesIndexGatewayLifecycle;
   /**
-   * Affinity for index-gateway pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -5711,8 +5698,6 @@ export type LokiHelmValuesIndexGateway = {
   trafficDistribution?: string;
   /**
    * UpdateStrategy for the indexGateway StatefulSet.
-   * Optional for updateStrategy.type=RollingUpdate. See [Partitioned rolling updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions) in the StatefulSet docs for details.
-   * Configuration for the compactor
    *
    * @default {"type":"RollingUpdate"}
    */
@@ -5868,8 +5853,7 @@ export type LokiHelmValuesCompactor = {
    */
   podAnnotations?: LokiHelmValuesCompactorPodAnnotations;
   /**
-   * Affinity for compactor pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -6170,8 +6154,7 @@ export type LokiHelmValuesBloomGateway = {
    */
   podAnnotations?: LokiHelmValuesBloomGatewayPodAnnotations;
   /**
-   * Affinity for bloom-gateway pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -6421,8 +6404,7 @@ export type LokiHelmValuesBloomPlanner = {
    */
   podAnnotations?: LokiHelmValuesBloomPlannerPodAnnotations;
   /**
-   * Affinity for bloom-planner pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -6692,8 +6674,7 @@ export type LokiHelmValuesBloomBuilder = {
    */
   terminationGracePeriodSeconds?: number;
   /**
-   * Affinity for bloom-builder pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -6835,8 +6816,7 @@ export type LokiHelmValuesPatternIngester = {
    */
   podAnnotations?: LokiHelmValuesPatternIngesterPodAnnotations;
   /**
-   * Affinity for pattern ingester pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -7115,8 +7095,7 @@ export type LokiHelmValuesRuler = {
    */
   terminationGracePeriodSeconds?: number;
   /**
-   * Affinity for ruler pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -7306,8 +7285,7 @@ export type LokiHelmValuesOverridesExporter = {
    */
   terminationGracePeriodSeconds?: number;
   /**
-   * Affinity for overrides-exporter pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
@@ -8543,9 +8521,6 @@ export type LokiHelmValuesRolloutoperator = {
    */
   enabled?: boolean;
   /**
-   * podSecurityContext is the pod security context for the rollout operator.
-   * When installing on OpenShift, override podSecurityContext settings with
-   *
    * @default {...} (5 keys)
    */
   podSecurityContext?: LokiHelmValuesRolloutoperatorPodSecurityContext;
@@ -8559,6 +8534,9 @@ export type LokiHelmValuesRolloutoperator = {
 
 export type LokiHelmValuesRolloutoperatorPodSecurityContext = {
   /**
+   * podSecurityContext is the pod security context for the rollout operator.
+   * When installing on OpenShift, override podSecurityContext settings with
+   *
    * @default 10001
    */
   fsGroup?: number;
@@ -9541,8 +9519,7 @@ export type LokiHelmValuesTableManager = {
    */
   hostUsers?: string;
   /**
-   * Affinity for table-manager pods.
-   * The value will be passed through tpl.
+   * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
   /**
@@ -9736,9 +9713,6 @@ export type LokiHelmValues = {
    */
   ingress?: LokiHelmValuesIngress;
   /**
-   * Migration
-   * Options that may be necessary when performing a migration from another helm chart
-   *
    * @default {"fromDistributed":{"enabled":false,"memberlistService":""}}
    */
   migrate?: LokiHelmValuesMigrate;

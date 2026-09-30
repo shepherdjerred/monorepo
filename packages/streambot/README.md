@@ -1,10 +1,11 @@
 # streambot
 
-Discord video-streaming orchestrator: streams local media files and yt-dlp/URL
-sources into Discord voice channels, controlled entirely through a `/stream`
-slash command (`/stream play`, `skip`, `queue`, `seek`, `volume`, `chapters`,
-`help`, `sources`, …). One Bun process serves many servers — and many voice
-channels per server — concurrently.
+Discord media orchestrator: streams local media files and yt-dlp/URL sources
+into Discord voice channels, controlled entirely through a `/stream` slash
+command (`/stream play`, `skip`, `queue`, `seek`, `volume`, `chapters`, `help`,
+`sources`, …). Music plays as audio over the voice connection; video plays as a
+Go Live stream. One Bun process serves many servers — and many voice channels
+per server — concurrently.
 
 Media requests default to a federated history, local-library, and YouTube
 search. Character renditions such as “Beggin by Plankton” also search explicit
@@ -33,6 +34,17 @@ therefore splits identities:
   cross-server history with the current guild's history. Favorites and saved
   queues remain until explicitly removed. Raw audio and transcripts never
   enter this database.
+- **Transports** — the userbot emits media two ways, chosen per item. Music
+  plays as microphone audio over the ordinary voice connection (`speaking: 1`,
+  a green ring); video plays as a Go Live stream. Both share the one voice
+  connection the session already joined, so a queue alternates between them
+  without rejoining. A single mixer owns every outbound audio frame, because
+  the assistant speaks over that same connection and two Opus writers on one
+  RTP timestamp interleave into noise rather than mixing. Which one an item is
+  comes from yt-dlp metadata plus an ffprobe of the chosen input, overridable
+  with `/stream play mode:`, and gated by a typed Flipt flag that forces video
+  when off. See the
+  [transports explanation](../docs/wiki/src/content/docs/explanation/streambot-transports.md).
 - **Streamer** — ffmpeg-driven voice streaming via
   [`@shepherdjerred/discord-video-stream`](../discord-video-stream/), the
   in-repo fork of `@dank074/discord-video-stream` (seekable player, VAAPI
@@ -48,6 +60,24 @@ selection, favorites, saved queues, “my usual,” and local-series continuatio
 The matching slash groups are `/stream playback`, `/stream history`, and
 `/stream personal`. Assistant V2 and durable history are independently guarded
 by typed Flipt flags and default off outside their rollout targets.
+
+Sports listings and live sports playback are a separate, default-off Flipt
+feature. `/stream playback sports` lists the provider entries for today; voice
+can list them on request, and a game title tries StreamEast before TVSportsLive
+unless a provider is named. Future events are informational and are never
+queued; TVSportsLive posts without a kickoff time are marked unconfirmed and
+validated when selected. Playback uses the stable provider page as the source
+identity and resolves the live HLS input at play time through PinchTab. The
+resolver opens the approved embedded player, captures its successful HLS request,
+and has ffprobe select a rendition with real video dimensions and audio before
+FFmpeg sends it to Discord. HLS URLs are not written to media history. Live sports
+offer play, skip/stop, and volume controls only. The bot needs PinchTab's
+`PINCHTAB_BASE_URL` and `PINCHTAB_TOKEN`; the homelab deployment supplies the
+service address and the shared 1Password-backed token. See
+[`sports-service.ts`](src/sports/sports-service.ts) for matching,
+[`sports-resolver.ts`](src/sports/sports-resolver.ts) for runtime resolution,
+and the [managed flag inventory](../feature-flags/FLAG-INVENTORY.md) for rollout
+scope.
 
 Active playback sessions also expose an end-to-end voice diagnostic path. Each
 wake candidate owns one correlated trace from Discord receive and local
@@ -88,6 +118,7 @@ bun run start            # run once
 bun run test             # unit tests (machine, config, sources) — no ffmpeg needed
 bun run test:integration # real-ffmpeg subtitle tests (needs ffmpeg + libass)
 bun run e2e              # live e2e against the dedicated test Discord server
+bun run e2e:sports       # manual live sports browser → Discord Go Live check
 bun run e2e:voice-recovery # live voice-loss recovery e2e
 bun run typecheck
 bun run lint
@@ -95,6 +126,11 @@ bun run docker:build     # build the image (repo-root build context)
 bun run smoke            # smoke script
 ```
 
-The live e2e runs need real tokens and test-guild IDs via environment. See
+The live e2e runs need real tokens and test-guild IDs via environment.
+`e2e:sports` additionally needs `E2E_SPORTS_URL`, `PINCHTAB_BASE_URL`, and
+`PINCHTAB_TOKEN`; `E2E_PINCHTAB_PROFILE` can isolate local browser state. Run it
+against an empty voice channel while that event's HLS
+stream is available. It checks browser discovery, ffprobe, and actual Discord
+audio/video sends, then leaves the channel. See
 [AGENTS.md](AGENTS.md) for the small set of always-on package constraints and
 the linked wiki pages above for voice architecture and diagnostics.

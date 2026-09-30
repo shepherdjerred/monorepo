@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
-import MarketingTracking from "#src/components/MarketingTracking.astro";
-import SeoHead from "#src/components/SeoHead.astro";
+import MarketingTracking from "#src/components/marketing/MarketingTracking.astro";
+import SeoHead from "#src/components/layout/SeoHead.astro";
 
 interface Props {
   title: string;
@@ -56,7 +56,8 @@ const posthogSessionReplay =
       data-posthog-asset-host={posthogAssetHost}
       data-posthog-site-key={posthogSiteKey}
       data-posthog-site-domain={posthogSiteDomain}
-      data-posthog-session-replay={posthogSessionReplay}></script>
+      data-posthog-session-replay={posthogSessionReplay}
+    ></script>
     <script>
       import { initSentry } from "../lib/sentry";
       initSentry();

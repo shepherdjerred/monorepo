@@ -4,8 +4,8 @@ import {
   GuildInventorySchema,
   type DiscordApiChannel,
   type GuildInventory,
-} from "#shared/glitter-corpus.ts";
-import { sha256 } from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus.ts";
+import { sha256 } from "#shared/glitter/glitter-corpus-projection.ts";
 import { canReadChannelHistory, scopeEntry } from "./glitter-corpus-scope.ts";
 import {
   DiscordRestClient,

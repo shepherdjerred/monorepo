@@ -105,66 +105,109 @@ export const ContextBundleSchema = z.object({
 });
 export type ContextBundle = z.infer<typeof ContextBundleSchema>;
 
-export const SpecialistIdSchema = z.enum([
-  "messaging",
-  "server",
-  "moderation",
-  "automation",
-]);
-export type SpecialistId = z.infer<typeof SpecialistIdSchema>;
-
-export const RouteIdSchema = z.union([z.literal("direct"), SpecialistIdSchema]);
-export type RouteId = z.infer<typeof RouteIdSchema>;
-
-export const RouteDispositionSchema = z.enum([
+/**
+ * What a turn turned out to be, reported by the agent on the way out.
+ *
+ * This used to be chosen up front by a cheap classifier before any tool could
+ * run, which meant the least-informed participant in the system committed the
+ * turn to one tool and one tool set. It is an outcome now: you only know
+ * whether a request was supported after you have looked.
+ */
+export const TurnDispositionSchema = z.enum([
   "conversation",
   "supported",
   "unsupported",
 ]);
-export type RouteDisposition = z.infer<typeof RouteDispositionSchema>;
+export type TurnDisposition = z.infer<typeof TurnDispositionSchema>;
 
-export const RouteDecisionSchema = z
-  .strictObject({
-    route: RouteIdSchema,
-    disposition: RouteDispositionSchema,
-    primaryToolId: z.string().min(1).max(64).nullable(),
-    confidence: z.number().min(0).max(1),
-    rationale: z.string().max(500),
-  })
-  .superRefine((decision, context) => {
-    if (decision.disposition === "supported") {
-      if (decision.route === "direct") {
-        context.addIssue({
-          code: "custom",
-          path: ["route"],
-          message: "Supported work must select a specialist route",
-        });
-      }
-      if (decision.primaryToolId === null) {
-        context.addIssue({
-          code: "custom",
-          path: ["primaryToolId"],
-          message: "Supported work must name its primary registered tool",
-        });
-      }
-      return;
-    }
-    if (decision.route !== "direct") {
-      context.addIssue({
-        code: "custom",
-        path: ["route"],
-        message: "Conversation and unsupported work must use the direct route",
-      });
-    }
-    if (decision.primaryToolId !== null) {
-      context.addIssue({
-        code: "custom",
-        path: ["primaryToolId"],
-        message: "Conversation and unsupported work cannot name a primary tool",
-      });
-    }
-  });
-export type RouteDecision = z.infer<typeof RouteDecisionSchema>;
+/**
+ * The agent's structured final answer.
+ *
+ * This carried two extra self-reports - `reliedOnToolCallIds` and
+ * `performedMutation` - that a gate then checked. The runtime already records
+ * every call it made and whether it succeeded, so asking the model to restate
+ * that made a forgotten field indistinguishable from a lie: a turn whose work
+ * demonstrably succeeded still failed. The self-reports are gone; `disposition`
+ * stays because it is an outcome label the runtime cannot infer, and it feeds
+ * the AgentRun record and scheduled-job effect handling.
+ */
+export const TurnAnswerSchema = z.strictObject({
+  answer: z.string().min(1),
+  disposition: TurnDispositionSchema,
+});
+export type TurnAnswer = z.infer<typeof TurnAnswerSchema>;
+
+export const ToolIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+export const EffectDispositionSchema = z.enum([
+  "not_applied",
+  "applied",
+  "unknown",
+]);
+export const ToolDomainResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string().min(1),
+  effectDisposition: EffectDispositionSchema.optional(),
+  data: z.unknown().optional(),
+});
+export const ToolResultForSessionSchema = z.object({
+  toolCallId: z.string().min(1).max(200),
+  toolName: ToolIdSchema,
+  input: z.unknown(),
+  output: ToolDomainResultSchema,
+});
+export const SessionToolEventSchema = z.strictObject({
+  toolCallId: z.string().min(1).max(200),
+  toolId: ToolIdSchema,
+  inputSummary: z.string().min(1).max(384),
+  resultSummary: z.string().min(1).max(384),
+  content: z.string().min(1).max(1024),
+  success: z.boolean(),
+  effectDisposition: EffectDispositionSchema.optional(),
+});
+export type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
+
+export const CREDENTIAL_KEY_PATTERN =
+  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?|invite[_-]?code)$/i;
+
+export const DISCORD_SENSITIVE_URL_PATTERN =
+  /(?:https?:\/\/)?(?:(?:canary\.|ptb\.)?discord(?:app)?\.com\/(?:api\/webhooks\/\d+|invite)|discord\.gg)\/[\w-]+/gi;
+
+export const CookieEntrySchema = z
+  .object({ name: z.string(), value: z.unknown() })
+  .and(
+    z.union([
+      z.object({ domain: z.unknown() }),
+      z.object({ path: z.unknown() }),
+      z.object({ httpOnly: z.unknown() }),
+      z.object({ secure: z.unknown() }),
+      z.object({ sameSite: z.unknown() }),
+      z.object({ expires: z.unknown() }),
+    ]),
+  );
+
+export const InviteEntrySchema = z
+  .object({ code: z.string().nullable().optional() })
+  .and(
+    z.union([
+      z.object({ url: z.string() }),
+      z.object({ channelId: z.unknown() }),
+      z.object({ inviterId: z.unknown() }),
+      z.object({ uses: z.unknown() }),
+    ]),
+  );
+
+export function redactInviteFields(entry: object): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(entry)) {
+    result[key] =
+      val != null && (key === "code" || key === "url") ? "[REDACTED]" : val;
+  }
+  return result;
+}
 
 export const ToolRiskClassSchema = z.enum([
   "read",
@@ -183,10 +226,17 @@ export const RequiredRequestContextSchema = z.enum([
 
 export const BirmelToolMetadataSchema = z.object({
   id: z.string().min(1),
-  specialist: SpecialistIdSchema,
   riskClass: ToolRiskClassSchema,
   timeoutMs: z.number().int().positive(),
   requiredRequestContext: z.array(RequiredRequestContextSchema),
+  /**
+   * Action values that are inherently non-mutating on a composite tool whose
+   * overall riskClass is above "read". Only needed for a tool that mixes
+   * read and write operations under one id (e.g. manage-role's "list"/"get"
+   * alongside "create"/"delete") - a tool with a uniform riskClass needs no
+   * override here.
+   */
+  readActions: z.array(z.string().min(1).max(64)).optional(),
 });
 export type BirmelToolMetadata = z.infer<typeof BirmelToolMetadataSchema>;
 
@@ -210,7 +260,23 @@ export const MemoryClaimStatusSchema = z.enum([
 ]);
 export type MemoryClaimStatus = z.infer<typeof MemoryClaimStatusSchema>;
 
-export const MemoryCandidateSchema = z.object({
+export const RELATIONSHIP_MEMORY_MIN_RELATED_USERS = 2;
+export const USER_MEMORY_MAX_RELATED_USERS = 1;
+
+// Persistence normalizes related IDs through a Set before it counts them
+// (see normalizeDiscordIds), so ["1","1"] is one user, not two. Counting raw
+// array length here would accept exactly the shape that then throws.
+function distinctRelatedUserCount(relatedUserIds: readonly string[]): number {
+  return new Set(relatedUserIds).size;
+}
+
+// The scope/relatedUserIds pairing is a cross-field rule, so the plain object
+// shape cannot express it and every extraction that got it wrong reached
+// buildIncomingStoredClaim and threw. Stating it here instead means
+// generateValidatedObject feeds the issue back to the model as a corrective
+// prompt and the model fixes its own output. Refinements do not appear in the
+// generated JSON Schema, so structured-output compatibility is unchanged.
+const MemoryCandidateBaseSchema = z.object({
   scope: MemoryScopeSchema,
   subject: z.string().min(1).max(500),
   predicate: z.string().min(1).max(200),
@@ -223,9 +289,36 @@ export const MemoryCandidateSchema = z.object({
   relatedUserIds: z.array(DiscordIdSchema),
   sourceDiscordMessageIds: z.array(DiscordIdSchema).min(1),
 });
+
+export const MemoryCandidateSchema = MemoryCandidateBaseSchema.refine(
+  (candidate) =>
+    candidate.scope !== "relationship" ||
+    distinctRelatedUserCount(candidate.relatedUserIds) >=
+      RELATIONSHIP_MEMORY_MIN_RELATED_USERS,
+  {
+    message:
+      'A "relationship" memory must list at least two distinct related user IDs. Use scope "user" for a claim about one person, and never repeat the same ID twice.',
+    path: ["relatedUserIds"],
+  },
+).refine(
+  (candidate) =>
+    candidate.scope !== "user" ||
+    distinctRelatedUserCount(candidate.relatedUserIds) <=
+      USER_MEMORY_MAX_RELATED_USERS,
+  {
+    message:
+      'A "user" memory accepts at most one related user ID. Use scope "relationship" for a claim about two or more people.',
+    path: ["relatedUserIds"],
+  },
+);
 export type MemoryCandidate = z.infer<typeof MemoryCandidateSchema>;
 
-export const MemoryClaimSchema = MemoryCandidateSchema.extend({
+// Built from the unrefined base, not from MemoryCandidateSchema: this schema
+// retypes validFrom and validUntil from ISO strings to Date, which Zod cannot
+// do on a schema carrying refinements. That costs nothing here — a claim only
+// exists because buildIncomingStoredClaim already enforced the
+// scope/relatedUserIds rule on the way in.
+export const MemoryClaimSchema = MemoryCandidateBaseSchema.extend({
   id: z.uuid(),
   guildId: DiscordIdSchema,
   channelId: DiscordIdSchema.nullable(),
@@ -263,7 +356,7 @@ export const MemoryRevisionInputSchema = z.object({
 });
 export type MemoryRevisionInput = z.infer<typeof MemoryRevisionInputSchema>;
 
-export const SpecialistTaskPacketSchema = z.object({
+export const TaskPacketSchema = z.object({
   request: z.string(),
   guildId: DiscordIdSchema,
   channelId: DiscordIdSchema,
@@ -276,4 +369,4 @@ export const SpecialistTaskPacketSchema = z.object({
   attachments: z.array(TurnAttachmentSchema).default([]),
   referenceResolutionError: ReferenceResolutionErrorSchema.optional(),
 });
-export type SpecialistTaskPacket = z.infer<typeof SpecialistTaskPacketSchema>;
+export type TaskPacket = z.infer<typeof TaskPacketSchema>;

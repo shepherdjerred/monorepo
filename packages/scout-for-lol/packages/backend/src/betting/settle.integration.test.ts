@@ -1,6 +1,8 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import type * as SentryModule from "@sentry/bun";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   BucksLedgerContextSchema,
   BucksMatchingSummarySchema,
   DiscordGuildIdSchema,
@@ -15,7 +17,16 @@ import {
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { settleBettingForMatch } from "#src/betting/settle.ts";
+import {
+  closeAndSettleBettingForMatch,
+  settleBettingForMatch,
+} from "#src/betting/settle.ts";
+import {
+  announcingSettlementSink,
+  SettlementCheckpointError,
+} from "#src/betting/notify/announcement-sink.ts";
+import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
 import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
@@ -27,6 +38,18 @@ import {
   VOID_GRACE_MS,
 } from "#src/betting/constants.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import { BucksCorruptIdentityError } from "#src/betting/settlement/corrupt-identity.ts";
+import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting/betting.ts";
+
+// Sentry is spied so the corrupt-row classification can be asserted; every
+// other export on the module stays real.
+const { captureException } = vi.hoisted(() => ({
+  captureException: vi.fn((..._args: unknown[]): string => ""),
+}));
+vi.mock("@sentry/bun", async (importOriginal) => {
+  const actual = await importOriginal<typeof SentryModule>();
+  return { ...actual, captureException };
+});
 
 const { prisma: db } = createTestDatabase("bucks-settle");
 
@@ -78,7 +101,7 @@ async function makeBettor(input: {
   return await db.$transaction(async (tx) => {
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: startingBalance,
+      delta: BucksDeltaSchema.parse(startingBalance),
       kind: "seed",
       context: { type: "seed", note: "settlement test wallet" },
     });
@@ -93,7 +116,7 @@ async function makeBettor(input: {
     });
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: -input.stake,
+      delta: BucksDeltaSchema.parse(-input.stake),
       kind: "bet_stake",
       matchId: MATCH_ID,
       betId: bet.id,
@@ -127,11 +150,31 @@ async function makeBalancedPool(stake = 10) {
   return { pool, winner, loser };
 }
 
-function withDuration(seconds: number): RawMatch {
+/**
+ * A remake as Riot reports one: the early-surrender flags are set on every
+ * participant. Duration is not the signal — an AFK surrender is available from
+ * 2:55 and is a real result that bets must still settle against.
+ */
+function asRemake(): RawMatch {
   return RawMatchSchema.parse({
     ...fixture,
-    info: { ...fixture.info, gameDuration: seconds },
+    info: {
+      ...fixture.info,
+      gameDuration: 120,
+      participants: fixture.info.participants.map((participant) => ({
+        ...participant,
+        gameEndedInEarlySurrender: true,
+        teamEarlySurrendered: true,
+      })),
+    },
   });
+}
+
+async function corruptRowsObserved(field: string): Promise<number> {
+  const metric = await bettingSettlementCorruptRowsTotal.get();
+  return metric.values
+    .filter((value) => value.labels.field === field)
+    .reduce((sum, value) => sum + value.value, 0);
 }
 
 async function clearAll() {
@@ -257,6 +300,44 @@ describe("settleBettingForMatch", () => {
     ).toEqual(["principal", "profit"]);
   });
 
+  test("settles a large pool inside one settlement transaction", async () => {
+    // Production pools outgrew the 5s interactive-transaction default
+    // (observed expiry at 5.4s): settlement runs sequential per-bet updates
+    // and credits whose count scales with pool size. This pins the
+    // many-bet path end to end; the local database is too fast to
+    // reproduce the expiry itself, so the raised timeout is covered by
+    // inspection plus the production issue going quiet.
+    const pool = await makePool();
+    const bettors = 30;
+    for (let i = 0; i < bettors; i += 1) {
+      await makeBettor({
+        poolId: pool.id,
+        discordId: bucksTestDiscordId(100 + i),
+        teamId: WINNING_TEAM,
+        stake: 10,
+      });
+      await makeBettor({
+        poolId: pool.id,
+        discordId: bucksTestDiscordId(200 + i),
+        teamId: LOSING_TEAM,
+        stake: 10,
+      });
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary).toMatchObject({
+      winnersPool: 300,
+      losersPool: 300,
+      houseCut: 60,
+      voidReason: undefined,
+    });
+    expect(summary?.bets).toHaveLength(bettors * 2);
+    const staked =
+      summary?.bets.reduce((sum, bet) => sum + bet.matchedStake, 0) ?? 0;
+    const paid = summary?.bets.reduce((sum, bet) => sum + bet.payout, 0) ?? 0;
+    expect(paid + (summary?.houseCut ?? 0)).toBe(staked);
+  });
+
   test("keeps a one-Buck winning match profitable", async () => {
     const { winner } = await makeBalancedPool(1);
     const [summary] = await settleBettingForMatch(fixture, db);
@@ -376,7 +457,7 @@ describe("settlement claims and idempotency", () => {
 describe("refunds and house settlement", () => {
   test("refunds matched stake without fees on a remake", async () => {
     const { winner, loser } = await makeBalancedPool();
-    const [summary] = await settleBettingForMatch(withDuration(120), db);
+    const [summary] = await settleBettingForMatch(asRemake(), db);
     expect(summary?.voidReason).toBe("remake");
     expect(summary?.houseCut).toBe(0);
     expect(
@@ -445,7 +526,7 @@ describe("refunds and house settlement", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: BUCKS_INT32_MAX,
+        delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX),
         kind: "seed",
         context: { type: "seed", note: "full house wallet" },
       });
@@ -487,7 +568,7 @@ describe("refunds and house settlement", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: 2,
+        delta: BucksDeltaSchema.parse(2),
         kind: "seed",
         context: { type: "seed", note: "limited house reserve" },
       });
@@ -615,7 +696,7 @@ describe("settlement storage bounds", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: BUCKS_INT32_MAX - 1,
+        delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX - 1),
         kind: "seed",
         context: { type: "seed", note: "nearly full house wallet" },
       });
@@ -630,6 +711,172 @@ describe("settlement storage bounds", () => {
         select: { balance: true },
       }),
     ).toEqual({ balance: BUCKS_INT32_MAX - 1 });
+  });
+
+  test("refunds through the overflow path when a side's matched total exceeds Int32", async () => {
+    // Placement lets one side aggregate past Int32 (matchBucksOffers caps a
+    // team total at Number.MAX_SAFE_INTEGER), so the pool-level sums in the
+    // settlement summary must not fail Int32 validation: the per-bet payout
+    // overflow has to reach the storage-overflow refund retry instead.
+    const stake = 2_000_000_000;
+    const pool = await makePool();
+    const bettors = [];
+    for (const [index, teamId] of [
+      WINNING_TEAM,
+      WINNING_TEAM,
+      LOSING_TEAM,
+      LOSING_TEAM,
+    ].entries()) {
+      bettors.push(
+        await makeBettor({
+          poolId: pool.id,
+          discordId: bucksTestDiscordId(index + 1),
+          teamId,
+          stake,
+          startingBalance: stake,
+        }),
+      );
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.winnersPool).toBe(2 * stake);
+    expect(summary?.losersPool).toBe(2 * stake);
+    expect(summary?.houseCut).toBe(0);
+    for (const bettor of bettors) {
+      expect(
+        await db.bucksAccount.findUniqueOrThrow({
+          where: { id: bettor.account.id },
+          select: { balance: true },
+        }),
+      ).toEqual({ balance: stake });
+    }
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      }),
+    ).toEqual({ poolState: "voided" });
+  });
+
+  test("routes an over-Int32 aggregate house cut through the overflow refund path", async () => {
+    // Twelve winners' fees sum to 2.4e9 — past Int32 — while every per-bet
+    // value fits its Int column (gross payout 2e9). A decided settlement can
+    // never commit this pool: the guild house wallet is itself an Int column
+    // and cannot store the aggregate fees, so the wallet boundary raises the
+    // typed overflow and the refund retry voids the pool. Re-branding the
+    // summary's aggregate houseCut to Int32 would turn this into a ZodError
+    // at summary construction that bypasses the retry and wedges the pool.
+    const winnerStake = 1_000_000_000;
+    const loserStake = 2_000_000_000;
+    const pool = await makePool();
+    const bettors = [];
+    for (let index = 0; index < 12; index += 1) {
+      bettors.push({
+        stake: winnerStake,
+        ...(await makeBettor({
+          poolId: pool.id,
+          discordId: bucksTestDiscordId(index + 1),
+          teamId: WINNING_TEAM,
+          stake: winnerStake,
+          startingBalance: winnerStake,
+        })),
+      });
+    }
+    for (let index = 0; index < 6; index += 1) {
+      bettors.push({
+        stake: loserStake,
+        ...(await makeBettor({
+          poolId: pool.id,
+          discordId: bucksTestDiscordId(index + 13),
+          teamId: LOSING_TEAM,
+          stake: loserStake,
+          startingBalance: loserStake,
+        })),
+      });
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.winnersPool).toBe(12_000_000_000);
+    expect(summary?.losersPool).toBe(12_000_000_000);
+    expect(summary?.bets).toHaveLength(18);
+    for (const bettor of bettors) {
+      expect(
+        await db.bucksAccount.findUniqueOrThrow({
+          where: { id: bettor.account.id },
+          select: { balance: true },
+        }),
+      ).toEqual({ balance: bettor.stake });
+    }
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      }),
+    ).toEqual({ poolState: "voided" });
+  });
+});
+
+describe("corrupt stored identity", () => {
+  test("fails loudly and leaves the pool claimable when a stored subjectPuuid is malformed", async () => {
+    captureException.mockClear();
+    const pool = await makePool();
+    const corrupted = await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 10,
+    });
+    await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(2),
+      teamId: LOSING_TEAM,
+      stake: 10,
+    });
+    // Match first, then corrupt the stored PUUID the way a legacy row or a
+    // Riot format change would surface at settlement time.
+    await closeBettingWindowsForMatch(MATCH_ID, db);
+    await db.bucksBet.update({
+      where: { id: corrupted.bet.id },
+      data: { subjectPuuid: "only10char" },
+    });
+    const observedBefore = await corruptRowsObserved("subject_puuid");
+
+    const summaries = await settleBettingForMatch(fixture, db);
+
+    // No summary and no state change: the pool stays claimable for a retry
+    // after the row is repaired, with every matched stake still escrowed.
+    expect(summaries).toHaveLength(0);
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      }),
+    ).toEqual({ poolState: "closed" });
+    expect(
+      await db.bucksBet.findUniqueOrThrow({
+        where: { id: corrupted.bet.id },
+        select: { betOutcome: true },
+      }),
+    ).toEqual({ betOutcome: "pending" });
+    // The failure is classified, not swallowed: the dedicated corrupt-row
+    // metric and Sentry event identify the pool, bet, and field so an
+    // operator can repair the row.
+    expect(await corruptRowsObserved("subject_puuid")).toBe(observedBefore + 1);
+    expect(captureException).toHaveBeenCalledWith(
+      expect.any(BucksCorruptIdentityError),
+      expect.objectContaining({
+        tags: expect.objectContaining({
+          source: "betting-settle-corrupt-row",
+        }),
+        extra: {
+          poolId: pool.id,
+          betId: corrupted.bet.id,
+          field: "subject_puuid",
+        },
+      }),
+    );
   });
 });
 
@@ -883,7 +1130,7 @@ describe("reconcileBucksBalances", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: 5,
+        delta: BucksDeltaSchema.parse(5),
         kind: "seed",
         context: { type: "seed", note: "reconciliation test" },
       });
@@ -1004,5 +1251,154 @@ describe("reconcileBucksBalances", () => {
         message: expect.stringContaining("does not match the pool result"),
       }),
     );
+  });
+});
+
+describe("the announcement instruction a settlement records", () => {
+  test("is written with the settling transaction's own handle", async () => {
+    // Proven by BEHAVIOUR rather than by identity: the Prisma transaction
+    // client is a proxy and re-extends, so comparing it to the ambient client
+    // tells you nothing. What does tell you is whether the write survives a
+    // rollback. This sink records for real and then throws, so the settling
+    // transaction aborts after the row was written.
+    //
+    // Inside the transaction, the row goes back with it and nothing survives.
+    // Written through the ambient client it would have committed on its own,
+    // leaving an instruction to announce a settlement that never happened.
+    await makeBalancedPool(10);
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: async (handle, item) => {
+          await recordSettlementAnnouncementItem(handle, {
+            matchId: RiotMatchIdSchema.parse(MATCH_ID),
+            item,
+          });
+          throw new Error("the settlement failed after recording");
+        },
+      }),
+    ).resolves.toMatchObject({ settlements: [] });
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: MATCH_ID },
+      }),
+    ).toEqual([]);
+  });
+
+  test("records one instruction per family this match produced", async () => {
+    await makeBalancedPool(10);
+    const recorded: { family: string; itemKey: string }[] = [];
+
+    const { settlements } = await closeAndSettleBettingForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: (_handle, item) => {
+        recorded.push({ family: item.family, itemKey: item.itemKey });
+        return Promise.resolve();
+      },
+    });
+
+    expect(settlements).toHaveLength(1);
+    // Two, because this call both CLOSES the pool and settles it, and each
+    // is its own announcement: closure tells the guild its offers matched,
+    // settlement tells it what they were paid. Each is written in the
+    // transaction that produced it.
+    expect(recorded).toEqual([
+      { family: "closure", itemKey: settlements[0]?.serverId },
+      { family: "settlement", itemKey: settlements[0]?.serverId },
+    ]);
+  });
+
+  test("a checkpoint failure escapes instead of being logged as one pool's", async () => {
+    // The money path. `reportPoolSettlementFailure` exists so one guild's
+    // corrupt pool cannot cost every other guild its settlement, and it
+    // answers by logging, paging and returning normally. A checkpoint failure
+    // is a different class of thing: the pool rolled back AND this
+    // settlement never became recoverable. Absorbed here, the caller records
+    // a settlement receipt, every retry then reads that receipt and skips
+    // settlement, and these bettors are never paid.
+    const { pool } = await makeBalancedPool(10);
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: (_handle, item) =>
+          Promise.reject(
+            new SettlementCheckpointError({
+              family: item.family,
+              itemKey: item.itemKey,
+              retryable: true,
+              message: "the checkpoint row could not be written",
+              cause: new Error("connection reset"),
+            }),
+          ),
+      }),
+    ).rejects.toBeInstanceOf(SettlementCheckpointError);
+
+    // And the pool is left exactly as a retry needs to find it. The failure
+    // now surfaces at the CLOSURE, which is the first family this call
+    // produces, so the match claim rolls back with it and the next attempt
+    // closes and settles from the start.
+    const standing = await db.bucksMatchPool.findUniqueOrThrow({
+      where: { id: pool.id },
+    });
+    expect(standing.poolState).toBe("closed");
+    expect(standing.matchedAt).toBeNull();
+    const bets = await db.bucksBet.findMany({ where: { poolId: pool.id } });
+    expect(bets).not.toHaveLength(0);
+    expect(bets.map((bet) => bet.betOutcome)).toEqual(
+      bets.map(() => "pending"),
+    );
+  });
+
+  test("an ordinary pool failure is still absorbed, one guild at a time", async () => {
+    // The exemption is narrow on purpose. Everything that is NOT a checkpoint
+    // failure keeps the per-pool isolation this handler was written for, so
+    // widening the escape is a visible change rather than a silent one.
+    //
+    // Asserted on the per-pool REPORT rather than only on the return value:
+    // the outer handler also returns normally, so a rethrow that skipped past
+    // this one would still resolve and prove nothing.
+    await makeBalancedPool(10);
+    captureException.mockClear();
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: () =>
+          Promise.reject(new Error("an ordinary pool failure")),
+      }),
+    ).resolves.toMatchObject({ settlements: [] });
+
+    expect(captureException).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        tags: expect.objectContaining({ source: "betting-sweep-force-close" }),
+      }),
+    );
+  });
+
+  test("a settled pool always leaves its instruction behind", async () => {
+    // The pair of the first test: when the settlement DOES commit, so does
+    // the instruction, in the same transaction.
+    await makeBalancedPool(10);
+
+    const { settlements } = await closeAndSettleBettingForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: async (handle, item) => {
+        await recordSettlementAnnouncementItem(handle, {
+          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          item,
+        });
+      },
+    });
+
+    expect(settlements).toHaveLength(1);
+    const stored = await db.matchSettlementAnnouncement.findMany({
+      where: { riotMatchId: MATCH_ID },
+      orderBy: { family: "asc" },
+    });
+    expect(stored.map((row) => row.family)).toEqual(["closure", "settlement"]);
   });
 });

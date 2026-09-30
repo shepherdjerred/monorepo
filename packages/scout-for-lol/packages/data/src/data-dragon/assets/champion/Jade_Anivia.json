@@ -386,6 +386,68 @@
           "name": "Victorious Anivia (Challenger)",
           "chromas": false,
           "parentSkin": 46
+        },
+        {
+          "id": "34056",
+          "num": 56,
+          "name": "Old God Anivia",
+          "chromas": false
+        },
+        {
+          "id": "34057",
+          "num": 57,
+          "name": "Old God Anivia (Ruby)",
+          "chromas": true,
+          "parentSkin": 56
+        },
+        {
+          "id": "34058",
+          "num": 58,
+          "name": "Old God Anivia (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34059",
+          "num": 59,
+          "name": "Old God Anivia (Citrine)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34060",
+          "num": 60,
+          "name": "Old God Anivia (Pearl)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34061",
+          "num": 61,
+          "name": "Old God Anivia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34062",
+          "num": 62,
+          "name": "Old God Anivia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34063",
+          "num": 63,
+          "name": "Old God Anivia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34064",
+          "num": 64,
+          "name": "Old God Anivia (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 56
         }
       ],
       "lore": "Anivia is a benevolent winged spirit who endures endless cycles of life, death, and rebirth to protect the Freljord. A demigod born of unforgiving ice and bitter winds, she wields those elemental powers to thwart any who dare disturb her homeland. Anivia guides and protects the tribes of the harsh north, who revere her as a symbol of hope, and a portent of great change. She fights with every ounce of her being, knowing that through her sacrifice, her memory will endure, and she will be reborn into a new tomorrow.",
@@ -400,9 +462,7 @@
         "If you're playing a ranged champion, stay far enough away from Anivia so you can dodge Flash Frost more easily.",
         "Try to fight Anivia in the lanes. In the jungle she can block pathways with lower ranks of Crystallize."
       ],
-      "tags": [
-        "Mage"
-      ],
+      "tags": ["Mage"],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -455,95 +515,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
-          ],
+          "cooldown": [11, 10, 9, 8, 7],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [
-            80,
-            85,
-            90,
-            95,
-            100
-          ],
+          "cost": [80, 85, 90, 95, 100],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -561,13 +549,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1075,
-            1075,
-            1075,
-            1075,
-            1075
-          ],
+          "range": [1075, 1075, 1075, 1075, 1075],
           "rangeBurn": "1075",
           "image": {
             "full": "FlashFrost.png",
@@ -586,103 +568,27 @@
           "description": "Anivia condenses the moisture in the air into an impassable wall of ice to block all movement. The wall only lasts a short duration before it melts.",
           "tooltip": "Anivia summons a wall of ice {{ wallwidth }} units wide. The wall lasts for {{ wallduration }} seconds before it melts.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Width"
-            ],
-            "effect": [
-              "{{ wallwidth }} -> {{ wallwidthNL }}"
-            ]
+            "label": ["Width"],
+            "effect": ["{{ wallwidth }} -> {{ wallwidthNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            17,
-            17,
-            17,
-            17,
-            17
-          ],
+          "cooldown": [17, 17, 17, 17, 17],
           "cooldownBurn": "17",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              400,
-              500,
-              600,
-              700,
-              800
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [5, 5, 5, 5, 5],
+            [400, 500, 600, 700, 800],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -700,13 +606,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-          ],
+          "range": [1000, 1000, 1000, 1000, 1000],
           "rangeBurn": "1000",
           "image": {
             "full": "Crystallize.png",
@@ -725,103 +625,27 @@
           "description": "With a flap of her wings, Anivia blasts a freezing gust of wind at her target, dealing damage. If the target was recently hit by Flash Frost or damaged by a fully formed Glacial Storm, the damage they take is doubled.",
           "tooltip": "Anivia blasts an enemy with a freezing wind, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Against <keywordMajor>Chilled</keywordMajor> enemies, Anivia deals <magicDamage>{{ empowereddamage }} magic damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage"
-            ],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}"
-            ]
+            "label": ["Damage"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            4,
-            4,
-            4,
-            4,
-            4
-          ],
+          "cooldown": [4, 4, 4, 4, 4],
           "cooldownBurn": "4",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -839,13 +663,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            650,
-            650,
-            650,
-            650,
-            650
-          ],
+          "range": [650, 650, 650, 650, 650],
           "rangeBurn": "650",
           "image": {
             "full": "Frostbite.png",
@@ -880,71 +698,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            4,
-            3,
-            2
-          ],
+          "cooldown": [4, 3, 2],
           "cooldownBurn": "4/3/2",
-          "cost": [
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -962,11 +732,7 @@
           "vars": [],
           "costType": " + {{ manacostpersecond }} Mana per second",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "GlacialStorm.png",

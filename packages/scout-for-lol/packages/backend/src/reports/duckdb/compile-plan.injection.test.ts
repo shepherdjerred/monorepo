@@ -8,12 +8,12 @@ import type {
   ScoutQlAggregateExpr,
   ScoutQlPredicate,
   ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import type {
   ScoutQlGrouping,
   ScoutQlOutput,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import {
   compileGroupFactsProjection,
   compileScoutQlPlanQuery,
@@ -370,8 +370,9 @@ function randomPredicate(
   const roll = rnd();
   const child = () => randomPredicate(rnd, pool, depth - 1);
   if (roll < 0.4) return { kind: "and", operands: [child(), child()] };
-  if (roll < 0.8) return { kind: "or", operands: [child(), child()] };
-  return { kind: "not", operand: child() };
+  return roll < 0.8
+    ? { kind: "or", operands: [child(), child()] }
+    : { kind: "not", operand: child() };
 }
 
 function randomAggregate(rnd: Rnd, pool: ColumnPool): ScoutQlAggregateExpr {
@@ -551,6 +552,8 @@ const CLOSED_STRING_LITERALS = new Set([
   "'Surrender'",
   "'Played out'",
   "'unknown'",
+  // Riot's empty position, folded into 'unknown'.
+  "''",
   "'Not Arena'",
   "'All'",
   "' • '",

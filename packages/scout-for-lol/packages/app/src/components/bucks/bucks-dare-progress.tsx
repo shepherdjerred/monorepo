@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import type { DarePollHealth, DareProgress } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ErrorState } from "@scout-for-lol/design-system/domain/states";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function DareProgressPanel(props: { progress: DareProgress }) {
   return (
@@ -228,13 +228,10 @@ export function formatDareEvidenceJson(value: unknown): string {
   const serialized = JSON.stringify(
     value,
     (key, current: unknown) => {
-      if (
-        typeof current === "number" &&
+      return typeof current === "number" &&
         (key === "skill_slot" || key === "skillSlot")
-      ) {
-        return ["Q", "W", "E", "R"][current - 1] ?? current;
-      }
-      return current;
+        ? (["Q", "W", "E", "R"][current - 1] ?? current)
+        : current;
     },
     2,
   );

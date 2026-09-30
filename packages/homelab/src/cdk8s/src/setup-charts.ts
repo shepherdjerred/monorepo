@@ -3,35 +3,36 @@ import { createAppsChart } from "./cdk8s-charts/apps.ts";
 import { createScoutChart } from "./cdk8s-charts/scout.ts";
 import { createStarlightKarmaBotChart } from "./cdk8s-charts/starlight-karma-bot.ts";
 import { createDdnsChart } from "./cdk8s-charts/ddns.ts";
-import { createRedlibChart } from "./cdk8s-charts/redlib.ts";
+import { createRedlibChart } from "./cdk8s-charts/media/redlib.ts";
 import { createBirmelChart } from "./cdk8s-charts/birmel.ts";
-import { createCloudflareTunnelChart } from "./cdk8s-charts/cloudflare-tunnel.ts";
-import { createMediaChart } from "./cdk8s-charts/media.ts";
+import { createCloudflareTunnelChart } from "./cdk8s-charts/platform/cloudflare-tunnel.ts";
+import { createMediaChart } from "./cdk8s-charts/media/media.ts";
 import { createHomeChart } from "./cdk8s-charts/home.ts";
-import { createPostalChart } from "./cdk8s-charts/postal.ts";
-import { createSyncthingChart } from "./cdk8s-charts/syncthing.ts";
-import { createGolinkChart } from "./cdk8s-charts/golink.ts";
-import { createFreshRssChart } from "./cdk8s-charts/freshrss.ts";
+import { createPostalChart } from "./cdk8s-charts/platform/postal.ts";
+import { createSyncthingChart } from "./cdk8s-charts/media/syncthing.ts";
+import { createGolinkChart } from "./cdk8s-charts/platform/golink.ts";
+import { createFreshRssChart } from "./cdk8s-charts/media/freshrss.ts";
 import { createPinchtabChart } from "./cdk8s-charts/pinchtab.ts";
-import { createFliptChart } from "./cdk8s-charts/flipt.ts";
-import { createPokemonChart } from "./cdk8s-charts/pokemon.ts";
-import { createMarioKartChart } from "./cdk8s-charts/mario-kart.ts";
+import { createFliptChart } from "./cdk8s-charts/platform/flipt.ts";
+import { createPokemonChart } from "./cdk8s-charts/games/pokemon.ts";
+import { createMarioKartChart } from "./cdk8s-charts/games/mario-kart.ts";
 import { createGickupChart } from "./cdk8s-charts/gickup.ts";
-import { createGrafanaDbChart } from "./cdk8s-charts/grafana-db.ts";
+import { createGrafanaDbChart } from "./cdk8s-charts/platform/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
-import { createBugsinkChart } from "./cdk8s-charts/bugsink.ts";
-import { createScoutEvalsChart } from "./cdk8s-charts/scout-evals.ts";
+import { createBugsinkChart } from "./cdk8s-charts/platform/bugsink.ts";
+import { createWoodpeckerChart } from "./cdk8s-charts/platform/woodpecker.ts";
+import { createPhoenixChart } from "./cdk8s-charts/platform/phoenix.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createRelayChart } from "./cdk8s-charts/relay.ts";
-import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
+import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
-import { createTurboCacheChart } from "./cdk8s-charts/turbo-cache.ts";
-import { createBuildkitdChart } from "./cdk8s-charts/buildkitd.ts";
-import { createAlertDashboardChart } from "./cdk8s-charts/alert-dashboard.ts";
-import { createStashChart } from "./cdk8s-charts/stash.ts";
-import { createOpenRouterBroadcastIngestChart } from "./cdk8s-charts/openrouter-broadcast-ingest.ts";
+import { createTurboCacheChart } from "./cdk8s-charts/platform/turbo-cache.ts";
+import { createBuildkitdChart } from "./cdk8s-charts/platform/buildkitd.ts";
+import { createAlertDashboardChart } from "./cdk8s-charts/platform/alert-dashboard.ts";
+import { createStashChart } from "./cdk8s-charts/media/stash.ts";
+import { createStormBrainChart } from "./cdk8s-charts/storm-brain.ts";
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
-import { resetProbeRegistry } from "./misc/probe-registry.ts";
+import { resetProbeRegistry } from "./misc/probes/probe-registry.ts";
 import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
 
 /**
@@ -74,7 +75,8 @@ export async function setupCharts(app: App): Promise<void> {
   await createGickupChart(app);
   createGrafanaDbChart(app);
   createBugsinkChart(app);
-  createScoutEvalsChart(app);
+  createWoodpeckerChart(app);
+  createPhoenixChart(app);
   createTasknotesChart(app);
   createAlertDashboardChart(app);
   createRelayChart(app);
@@ -83,7 +85,7 @@ export async function setupCharts(app: App): Promise<void> {
   createTurboCacheChart(app);
   createBuildkitdChart(app);
   createStashChart(app);
-  createOpenRouterBroadcastIngestChart(app);
+  createStormBrainChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

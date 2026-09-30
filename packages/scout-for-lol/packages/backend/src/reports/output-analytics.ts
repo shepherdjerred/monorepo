@@ -4,7 +4,7 @@ import { match } from "ts-pattern";
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-types.ts";
+} from "#src/reports/query/query-types.ts";
 import {
   chartNumber,
   chartSeries,
@@ -14,8 +14,8 @@ import {
   type MetricDisplay,
 } from "#src/reports/report-chart-values.ts";
 import { resolveHeatmapAxes } from "#src/reports/heatmap-axes.ts";
-import { planGroupingNames } from "#src/reports/plan-columns.ts";
-import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
+import { planGroupingNames } from "#src/reports/query/plan-columns.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import {
   chartBase,
   chartRows,

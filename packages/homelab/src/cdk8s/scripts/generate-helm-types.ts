@@ -56,8 +56,49 @@ async function main() {
   }
 }
 
-const MAX_FETCH_ATTEMPTS = 3;
-const RETRY_BACKOFF_MS = 3000;
+// Chart registries (registry.k8s.io in particular) enforce *per-minute* request
+// quotas: a 429 clears only when the quota window rolls over. A flat 3s x 3
+// backoff gave up ~21s in — still inside that window — so a single quota blip
+// failed the whole deploy-paths gate on an otherwise-correct tree. Back off
+// exponentially so the retries outlast a full minute (5s + 10s + 20s + 40s =
+// 75s of waiting at minimum, before jitter).
+const MAX_FETCH_ATTEMPTS = 5;
+const RETRY_BASE_BACKOFF_MS = 5000;
+const RETRY_MAX_BACKOFF_MS = 60_000;
+// Charts are fetched sequentially, so a genuine registry outage would otherwise
+// spend the full per-chart backoff on every chart and blow the step's 30 minute
+// timeout — turning a precise "registry unreachable" error into an opaque
+// timeout. Cap the waiting across the whole run: blips (one or two charts) get
+// the full backoff, an outage fails fast and loudly.
+const RETRY_TOTAL_BUDGET_MS = 5 * 60_000;
+
+/**
+ * Delay before retry `attempt` (1-based: the wait *after* the attempt-th
+ * failure). Exponential from {@link RETRY_BASE_BACKOFF_MS}, capped at
+ * {@link RETRY_MAX_BACKOFF_MS}, with up to +25% jitter so concurrent builds
+ * pulling the same charts do not retry in lockstep and re-collide on the same
+ * quota window. `jitterFraction` is supplied by the caller (in [0, 1)) to keep
+ * this pure and testable; jitter only ever lengthens a wait, so the minimum
+ * total backoff is guaranteed.
+ */
+export function helmFetchRetryDelayMs(
+  attempt: number,
+  jitterFraction: number,
+): number {
+  if (!Number.isInteger(attempt) || attempt < 1) {
+    throw new Error(
+      `retry attempt must be a positive integer, got ${attempt.toString()}`,
+    );
+  }
+  if (!(jitterFraction >= 0 && jitterFraction < 1)) {
+    throw new Error(
+      `jitterFraction must be in [0, 1), got ${jitterFraction.toString()}`,
+    );
+  }
+  const exponential = RETRY_BASE_BACKOFF_MS * 2 ** (attempt - 1);
+  const capped = Math.min(exponential, RETRY_MAX_BACKOFF_MS);
+  return Math.round(capped * (1 + 0.25 * jitterFraction));
+}
 
 async function generateHelmTypes(outputDir: string) {
   // Do NOT wipe the output directory: chart fetches hit the network and can
@@ -89,6 +130,7 @@ async function generateHelmTypes(outputDir: string) {
 
   // Generate types for each chart, retrying transient (network) fetch failures.
   const failures: string[] = [];
+  let retryWaitSpentMs = 0;
 
   for (const chart of charts) {
     console.log(`\n🔍 Processing ${chart.name}...`);
@@ -100,17 +142,26 @@ async function generateHelmTypes(outputDir: string) {
         console.log(`✅ Generated types for ${chart.name}`);
         break;
       } catch (error) {
-        if (attempt < MAX_FETCH_ATTEMPTS) {
-          console.warn(
-            `⚠️  Attempt ${attempt.toString()}/${MAX_FETCH_ATTEMPTS.toString()} for ${chart.name} failed; retrying...`,
-          );
-          await Bun.sleep(RETRY_BACKOFF_MS);
-        } else {
+        if (attempt >= MAX_FETCH_ATTEMPTS) {
           console.error(
             `❌ Failed to process ${chart.name} after ${MAX_FETCH_ATTEMPTS.toString()} attempts:`,
             error,
           );
+          break;
         }
+        const delayMs = helmFetchRetryDelayMs(attempt, Math.random());
+        if (retryWaitSpentMs + delayMs > RETRY_TOTAL_BUDGET_MS) {
+          console.error(
+            `❌ Giving up on ${chart.name} at attempt ${attempt.toString()}: this run has spent its ${Math.round(RETRY_TOTAL_BUDGET_MS / 1000).toString()}s retry budget, so the chart registries are down rather than rate limiting:`,
+            error,
+          );
+          break;
+        }
+        retryWaitSpentMs += delayMs;
+        console.warn(
+          `⚠️  Attempt ${attempt.toString()}/${MAX_FETCH_ATTEMPTS.toString()} for ${chart.name} failed; retrying in ${Math.round(delayMs / 1000).toString()}s...`,
+        );
+        await Bun.sleep(delayMs);
       }
     }
     if (!generated) {

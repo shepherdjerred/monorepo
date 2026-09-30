@@ -12,11 +12,15 @@ export type HistoryPaths = {
   readonly cursorConversationDb: string;
   readonly standaloneOpenCodeDb: string;
   readonly standaloneOpenCodeAuth: string;
+  readonly antigravityRoots: readonly string[];
+  readonly grokHome: string;
+  readonly codexSessionsDir: string;
 };
 
 export type HistoryRuntimePaths = {
   readonly historyDir: string;
   readonly indexDb: string;
+  readonly usageExportDb: string;
   readonly socket: string;
   readonly state: string;
   readonly logsDir: string;
@@ -44,6 +48,15 @@ export function defaultHistoryPaths(home = os.homedir()): HistoryPaths {
     ),
     standaloneOpenCodeDb: path.join(home, ".local/share/opencode/opencode.db"),
     standaloneOpenCodeAuth: path.join(home, ".local/share/opencode/auth.json"),
+    antigravityRoots: [
+      ".gemini/antigravity",
+      ".gemini/antigravity-cli",
+      ".gemini/antigravity-ide",
+      ".gemini/antigravity-backup",
+      ".config/antigravity",
+    ].map((root) => path.join(home, root)),
+    grokHome: path.join(home, ".grok"),
+    codexSessionsDir: path.join(home, ".codex/sessions"),
   };
 }
 
@@ -54,6 +67,7 @@ export function defaultHistoryRuntimePaths(
   return {
     historyDir,
     indexDb: path.join(historyDir, "index.sqlite"),
+    usageExportDb: path.join(historyDir, "usage-export.sqlite"),
     socket: path.join(historyDir, "daemon.sock"),
     state: path.join(historyDir, "state.json"),
     logsDir: path.join(historyDir, "logs"),

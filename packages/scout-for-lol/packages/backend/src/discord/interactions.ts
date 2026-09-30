@@ -16,12 +16,7 @@ import {
   isParlayCustomId,
   parseParlayCustomId,
 } from "#src/betting/parlays/parlay-custom-id.ts";
-import { handleParlayBetButton } from "#src/betting/parlays/parlay-bet-button.ts";
-import {
-  isWeeklyParlayCustomId,
-  parseWeeklyParlayCustomId,
-} from "#src/betting/weekly/weekly-parlay-custom-id.ts";
-import { handleWeeklyParlayBetButton } from "#src/betting/weekly/weekly-parlay-bet-button.ts";
+import { handleParlayBetButton } from "#src/betting/parlays/runtime/parlay-bet-button.ts";
 import {
   isDareCustomId,
   parseDareCustomId,
@@ -45,13 +40,25 @@ import {
   isScoutCustomId,
   parseScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
+import {
+  handleMvpVoteButton,
+  type VoteButtonInteraction,
+} from "#src/mvp-votes/button-handler.ts";
+import { isVoteCustomId, parseVoteCustomId } from "#src/mvp-votes/custom-id.ts";
+import {
+  handleMvpVoteSelect,
+  type VoteSelectInteraction,
+} from "#src/mvp-votes/select-handler.ts";
+import {
+  handleMvpVoteModal,
+  type VoteModalInteraction,
+} from "#src/mvp-votes/modal-handler.ts";
 
 const logger = createLogger("discord-interactions");
 
 async function captureButtonActivity(
   interaction: RoutableButtonInteraction,
-  activityKind:
-    "outcome_bet" | "parlay_bet" | "weekly_parlay_bet" | "navigation" | "dare",
+  activityKind: "outcome_bet" | "parlay_bet" | "navigation" | "dare",
   status: "success" | "error",
 ): Promise<void> {
   await captureBucksMemberActivity({
@@ -89,6 +96,14 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
     await routeButton(interaction);
     return;
   }
+  if (interaction.isStringSelectMenu()) {
+    await routeStringSelect(interaction);
+    return;
+  }
+  if (interaction.isModalSubmit()) {
+    await routeModalSubmit(interaction);
+    return;
+  }
   if (interaction.isChatInputCommand()) {
     await handleChatInputCommand(interaction);
   }
@@ -105,36 +120,22 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
   ScoutPublishButtonInteraction &
-  DareButtonInteraction & {
+  DareButtonInteraction &
+  VoteButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;
   };
 
-async function routeWeeklyParlayButton(
-  interaction: RoutableButtonInteraction,
-): Promise<void> {
-  try {
-    if (parseWeeklyParlayCustomId(interaction.customId) === undefined) {
-      discordComponentsTotal.inc({ namespace: "bbw", status: "malformed" });
-      await interaction.deferUpdate();
-      return;
-    }
-    await handleWeeklyParlayBetButton(interaction);
-    await captureButtonActivity(interaction, "weekly_parlay_bet", "success");
-    discordComponentsTotal.inc({ namespace: "bbw", status: "success" });
-  } catch (error) {
-    await captureButtonActivity(interaction, "weekly_parlay_bet", "error");
-    logger.error("❌ Error handling a weekly Bryan Bucks button:", error);
-    discordComponentsTotal.inc({ namespace: "bbw", status: "error" });
-    if (interaction.deferred && !interaction.replied) {
-      await interaction.editReply({
-        content:
-          "😵 Something went wrong placing that weekly parlay bet. Try again shortly.",
-      });
-    }
-  }
-}
+export type RoutableSelectInteraction = VoteSelectInteraction & {
+  deferUpdate: () => Promise<unknown>;
+};
+
+export type RoutableModalInteraction = VoteModalInteraction & {
+  deferUpdate: () => Promise<unknown>;
+  deferred: boolean;
+  replied: boolean;
+};
 
 async function routeDareButton(
   interaction: RoutableButtonInteraction,
@@ -235,10 +236,6 @@ export async function routeButton(
     }
     return;
   }
-  if (isWeeklyParlayCustomId(interaction.customId)) {
-    await routeWeeklyParlayButton(interaction);
-    return;
-  }
   if (isBucksNavigationId(interaction.customId)) {
     try {
       if (parseBucksNavigationId(interaction.customId) === undefined) {
@@ -270,6 +267,10 @@ export async function routeButton(
 
   if (isScoutCustomId(interaction.customId)) {
     await routeScoutButton(interaction);
+    return;
+  }
+  if (isVoteCustomId(interaction.customId)) {
+    await routeVoteButton(interaction);
     return;
   }
   if (!isBucksCustomId(interaction.customId)) {
@@ -312,6 +313,80 @@ export async function routeButton(
     if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({
         content: "😵 Something went wrong placing that bet. Try again shortly.",
+      });
+    }
+  }
+}
+
+async function routeVoteButton(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    if (parseVoteCustomId(interaction.customId)?.kind !== "button") {
+      discordComponentsTotal.inc({ namespace: "vote", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleMvpVoteButton(interaction);
+    discordComponentsTotal.inc({ namespace: "vote", status: "success" });
+  } catch (error) {
+    logger.error("Error handling an MVP vote button:", error);
+    discordComponentsTotal.inc({ namespace: "vote", status: "error" });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content: "Something went wrong recording that vote. Try again shortly.",
+      });
+    }
+  }
+}
+
+export async function routeStringSelect(
+  interaction: RoutableSelectInteraction,
+): Promise<void> {
+  if (!isVoteCustomId(interaction.customId)) {
+    discordComponentsTotal.inc({ namespace: "unknown", status: "ignored" });
+    return;
+  }
+  try {
+    if (parseVoteCustomId(interaction.customId)?.kind !== "select") {
+      discordComponentsTotal.inc({ namespace: "vote", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleMvpVoteSelect(interaction);
+    discordComponentsTotal.inc({ namespace: "vote", status: "success" });
+  } catch (error) {
+    logger.error("Error handling an MVP vote select:", error);
+    discordComponentsTotal.inc({ namespace: "vote", status: "error" });
+    await interaction.reply({
+      content: "Something went wrong recording that vote. Try again shortly.",
+      ephemeral: true,
+      allowedMentions: { parse: [] },
+    });
+  }
+}
+
+export async function routeModalSubmit(
+  interaction: RoutableModalInteraction,
+): Promise<void> {
+  if (!isVoteCustomId(interaction.customId)) {
+    discordComponentsTotal.inc({ namespace: "unknown", status: "ignored" });
+    return;
+  }
+  try {
+    if (parseVoteCustomId(interaction.customId)?.kind !== "modal") {
+      discordComponentsTotal.inc({ namespace: "vote", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleMvpVoteModal(interaction);
+    discordComponentsTotal.inc({ namespace: "vote", status: "success" });
+  } catch (error) {
+    logger.error("Error handling an MVP vote modal:", error);
+    discordComponentsTotal.inc({ namespace: "vote", status: "error" });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content: "Something went wrong saving that reason. Try again shortly.",
       });
     }
   }

@@ -1,24 +1,25 @@
 import {
+  BucksStakeSchema,
   BucksLedgerKindSchema,
   BucksParlayMarketStateSchema,
   BucksParlaySideSchema,
-  BucksWeeklyParlayMarketStateSchema,
   BucksPoolRosterSchema,
   BucksPoolStateSchema,
   RiotTeamIdSchema,
+  creditOf,
+  debitOf,
   type BucksLedgerKind,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { SEED_GRANT } from "#src/betting/constants.ts";
-import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import {
   applyBucksDelta,
   InsufficientBucksError,
 } from "#src/betting/ledger.ts";
-import { ParlaySubjectsSchema } from "#src/betting/parlays/parlay-criteria.ts";
+import { ParlaySubjectsSchema } from "#src/betting/parlays/model/parlay-criteria.ts";
 import type { PendingPosition } from "#src/betting/accounts/pending-position.ts";
-import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly/weekly-parlay-criteria.ts";
 import {
   hasTrackedPlayersOnBothTeams,
   outcomeLabel,
@@ -61,10 +62,9 @@ export async function findEligiblePlayer(
     select: { id: true, alias: true },
     orderBy: { id: "asc" },
   });
-  if (player === null) {
-    return undefined;
-  }
-  return { playerId: player.id, alias: player.alias };
+  return player === null
+    ? undefined
+    : { playerId: player.id, alias: player.alias };
 }
 
 export type BucksAccountRef = {
@@ -151,7 +151,7 @@ export async function ensureBucksAccount(
       try {
         await applyBucksDelta(tx, {
           bucksAccountId: house.id,
-          delta: -SEED_GRANT,
+          delta: debitOf(SEED_GRANT),
           kind: "seed",
           context: {
             type: "seed",
@@ -168,7 +168,7 @@ export async function ensureBucksAccount(
       }
       const balance = await applyBucksDelta(tx, {
         bucksAccountId: created.id,
-        delta: SEED_GRANT,
+        delta: creditOf(SEED_GRANT),
         kind: "seed",
         context: {
           type: "seed",
@@ -332,13 +332,7 @@ export async function getPersonalBucksView(
       return;
     }
 
-    const [
-      outcomeBets,
-      parlayAggregate,
-      parlayBets,
-      weeklyAggregate,
-      weeklyBets,
-    ] = await Promise.all([
+    const [outcomeBets, parlayAggregate, parlayBets] = await Promise.all([
       tx.bucksBet.findMany({
         where: { bucksAccountId: account.id, betOutcome: "pending" },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -384,31 +378,6 @@ export async function getPersonalBucksView(
           },
         },
       }),
-      tx.bucksWeeklyParlayBet.aggregate({
-        where: { bucksAccountId: account.id, betOutcome: "pending" },
-        _sum: { stake: true },
-        _count: true,
-      }),
-      tx.bucksWeeklyParlayBet.findMany({
-        where: { bucksAccountId: account.id, betOutcome: "pending" },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        take: 10,
-        select: {
-          id: true,
-          createdAt: true,
-          stake: true,
-          side: true,
-          marketId: true,
-          market: {
-            select: {
-              periodKey: true,
-              bettingClosesAt: true,
-              marketState: true,
-              definition: { select: { subjects: true } },
-            },
-          },
-        },
-      }),
     ]);
 
     const outcomePositions = outcomeBets.map((bet) => {
@@ -435,7 +404,7 @@ export async function getPersonalBucksView(
           anchorTeamId: subject.teamId,
           mixedTeams: hasTrackedPlayersOnBothTeams(roster),
         }),
-        offeredStake: bet.stake,
+        offeredStake: BucksStakeSchema.parse(bet.stake),
         matchedStake: bet.matchedStake,
         unmatchedStake: bet.unmatchedStake,
         closesAt: bet.pool.closesAt,
@@ -457,29 +426,7 @@ export async function getPersonalBucksView(
       closesAt: bet.market.closesAt,
       poolState: BucksParlayMarketStateSchema.parse(bet.market.marketState),
     }));
-    const weeklyPositions = weeklyBets.map((bet) => ({
-      id: bet.id,
-      createdAt: bet.createdAt,
-      marketType: "parlay" as const,
-      // Period key alone isn't unique across two slots in the same period.
-      matchId: `weekly:${bet.market.periodKey}:${bet.marketId.toString()}`,
-      subjectAlias: `Weekly (${WeeklyParlaySubjectsSchema.parse(
-        JSON.parse(bet.market.definition.subjects),
-      )
-        .map((subject) => subject.alias)
-        .join(", ")})`,
-      side: BucksParlaySideSchema.parse(bet.side),
-      stake: bet.stake,
-      closesAt: bet.market.bettingClosesAt,
-      poolState: BucksWeeklyParlayMarketStateSchema.parse(
-        bet.market.marketState,
-      ),
-    }));
-    const pendingPositions = [
-      ...outcomePositions,
-      ...parlayPositions,
-      ...weeklyPositions,
-    ]
+    const pendingPositions = [...outcomePositions, ...parlayPositions]
       .toSorted(
         (left, right) =>
           right.createdAt.getTime() - left.createdAt.getTime() ||
@@ -494,11 +441,8 @@ export async function getPersonalBucksView(
         outcomeBets.reduce(
           (total, bet) => total + (bet.matchedStake ?? bet.stake),
           0,
-        ) +
-        (parlayAggregate._sum.stake ?? 0) +
-        (weeklyAggregate._sum.stake ?? 0),
-      pendingPositionCount:
-        outcomeBets.length + parlayAggregate._count + weeklyAggregate._count,
+        ) + (parlayAggregate._sum.stake ?? 0),
+      pendingPositionCount: outcomeBets.length + parlayAggregate._count,
       pendingPositions,
     };
   });

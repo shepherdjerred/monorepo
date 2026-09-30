@@ -5,59 +5,64 @@ import {
   type RouteObject,
 } from "react-router";
 import { Login } from "#src/routes/login.tsx";
-import { GuildPicker } from "#src/routes/guild-picker.tsx";
+import { GuildPicker } from "#src/routes/guild/guild-picker.tsx";
 import { ManageServers } from "#src/routes/manage-servers.tsx";
-import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
-import { GuildAudit } from "#src/routes/guild-audit.tsx";
-import { GuildAccess } from "#src/routes/guild-access.tsx";
+import { GuildSubscriptions } from "#src/routes/guild/guild-subscriptions.tsx";
+import { GuildAudit } from "#src/routes/guild/guild-audit.tsx";
+import { GuildAccess } from "#src/routes/guild/guild-access.tsx";
 import { CustomsHistory } from "#src/routes/customs-history.tsx";
 import {
   GuildPermissionsGate,
   GuildSectionIndex,
   GuildWorkspace,
-} from "#src/routes/guild-workspace.tsx";
-import { PlayerList } from "#src/routes/player-list.tsx";
-import { PlayerDetail } from "#src/routes/player-detail.tsx";
-import { CompetitionList } from "#src/routes/competition-list.tsx";
-import { CompetitionDetail } from "#src/routes/competition-detail.tsx";
-import { CompetitionForm } from "#src/routes/competition-form.tsx";
-import { ReportList } from "#src/routes/report-list.tsx";
-import { ReportDetail } from "#src/routes/report-detail.tsx";
-import { ReportForm } from "#src/routes/report-form.tsx";
-import { ReportHelp } from "#src/routes/report-help.tsx";
+} from "#src/routes/guild/guild-workspace.tsx";
+import { PlayerList } from "#src/routes/players/player-list.tsx";
+import { PlayerDetail } from "#src/routes/players/player-detail.tsx";
+import { CompetitionList } from "#src/routes/competitions/competition-list.tsx";
+import { CompetitionDetail } from "#src/routes/competitions/competition-detail.tsx";
+import { CompetitionForm } from "#src/routes/competitions/competition-form.tsx";
+import { ReportList } from "#src/routes/reports/report-list.tsx";
+import { ReportDetail } from "#src/routes/reports/report-detail.tsx";
+import { ReportForm } from "#src/routes/reports/report-form.tsx";
+import { ReportHelp } from "#src/routes/reports/report-help.tsx";
 import { Explore } from "#src/routes/explore.tsx";
 import { ExploreShared } from "#src/routes/explore-shared.tsx";
-import { ConsumerPlayerSearch } from "#src/routes/consumer-player-search.tsx";
-import { ConsumerPlayerProfile } from "#src/routes/consumer-player-profile.tsx";
-import { ConsumerChampion } from "#src/routes/consumer-champion.tsx";
-import { ConsumerMatch } from "#src/routes/consumer-match.tsx";
+import { ConsumerPlayerSearch } from "#src/routes/consumer/consumer-player-search.tsx";
+import { ConsumerPlayerProfile } from "#src/routes/consumer/consumer-player-profile.tsx";
+import { ConsumerChampion } from "#src/routes/consumer/consumer-champion.tsx";
+import { ConsumerMatch } from "#src/routes/consumer/consumer-match.tsx";
+import { ExploreMatch } from "#src/routes/explore-match.tsx";
 import {
   ConsumerGuildWorkspace,
   ConsumerWorkspace,
-} from "#src/routes/consumer-workspace.tsx";
-import { BucksWorkspace } from "#src/routes/bucks-workspace.tsx";
-import { BucksOverview } from "#src/routes/bucks-overview.tsx";
-import { BucksDares } from "#src/routes/bucks-dares.tsx";
-import { BucksHistory } from "#src/routes/bucks-history.tsx";
-import { BucksLeaderboard } from "#src/routes/bucks-leaderboard.tsx";
-import { BucksSettings } from "#src/routes/bucks-settings.tsx";
+} from "#src/routes/consumer/consumer-workspace.tsx";
+import { BucksWorkspace } from "#src/routes/bucks/bucks-workspace.tsx";
+import { BucksOverview } from "#src/routes/bucks/bucks-overview.tsx";
+import { BucksDares } from "#src/routes/bucks/bucks-dares.tsx";
+import { BucksHistory } from "#src/routes/bucks/bucks-history.tsx";
+import { BucksLeaderboard } from "#src/routes/bucks/bucks-leaderboard.tsx";
+import { BucksSettings } from "#src/routes/bucks/bucks-settings.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
+import { OperationsMatches } from "#src/routes/operations/operations-matches.tsx";
+import { OperationsWorkspace } from "#src/routes/operations/operations-workspace.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
-import { HallOfFame } from "#src/routes/hall-of-fame.tsx";
+import { HallOfFame, HallPicker } from "#src/routes/hall-of-fame.tsx";
 import { HallSettings } from "#src/routes/hall-settings.tsx";
-import { ChallengeCatalog } from "#src/routes/challenge-catalog.tsx";
-import { ChallengeTemplate } from "#src/routes/challenge-template.tsx";
-import { ChallengeDraft } from "#src/routes/challenge-draft.tsx";
-import { ChallengeRun } from "#src/routes/challenge-run.tsx";
-import { DuelOverview } from "#src/routes/duel-overview.tsx";
-import { DuelEvent } from "#src/routes/duel-event.tsx";
-import { DuelSeries } from "#src/routes/duel-series.tsx";
-import { DuelStandings } from "#src/routes/duel-standings.tsx";
-import { DuelHeadToHead } from "#src/routes/duel-head-to-head.tsx";
-import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
-import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
+import { ChallengeCatalog } from "#src/routes/challenges/challenge-catalog.tsx";
+import { ChallengeTemplate } from "#src/routes/challenges/challenge-template.tsx";
+import { ChallengeDraft } from "#src/routes/challenges/challenge-draft.tsx";
+import { ChallengeRun } from "#src/routes/challenges/challenge-run.tsx";
+import { ConsumerClash } from "#src/routes/consumer/consumer-clash.tsx";
+import { DuelOverview } from "#src/routes/competitions/duel-overview.tsx";
+import { DuelEvent } from "#src/routes/competitions/duel-event.tsx";
+import { DuelSeries } from "#src/routes/competitions/duel-series.tsx";
+import { DuelStandings } from "#src/routes/competitions/duel-standings.tsx";
+import { DuelHeadToHead } from "#src/routes/competitions/duel-head-to-head.tsx";
+import { RouteErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
+import { ScoutClientPairing } from "#src/routes/scout-client-pairing.tsx";
+import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/player/guild-route-permissions.ts";
 import {
   accessLoader,
   auditLoader,
@@ -68,13 +73,14 @@ import {
   consumerPlayersLoader,
   exploreLoader,
   guildLoader,
+  operationsLoader,
   playerDetailLoader,
   playersLoader,
   reportDetailLoader,
   reportsLoader,
   requireSessionLoader,
   subscriptionsLoader,
-} from "#src/lib/route-loaders.ts";
+} from "#src/lib/routes/route-loaders.ts";
 
 // Each `/g/:guildId` child carries its own errorElement so a section failure
 // renders inside GuildWorkspace's outlet — the workspace nav chrome survives.
@@ -227,6 +233,12 @@ export const routes: RouteObject[] = [
             element: <ConsumerWorkspace />,
             children: [
               {
+                path: "explore/matches/:matchId",
+                element: <ExploreMatch />,
+                loader: exploreLoader,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
                 path: "explore/:conversationId?",
                 element: <Explore />,
                 loader: exploreLoader,
@@ -255,6 +267,11 @@ export const routes: RouteObject[] = [
                 errorElement: <RouteErrorPanel />,
               },
               {
+                path: "halls",
+                element: <HallPicker />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
                 path: "halls/:guildId",
                 element: <ConsumerGuildWorkspace />,
                 errorElement: <RouteErrorPanel />,
@@ -269,6 +286,11 @@ export const routes: RouteObject[] = [
               {
                 path: "challenges",
                 element: <ChallengeCatalog />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "clash",
+                element: <ConsumerClash />,
                 errorElement: <RouteErrorPanel />,
               },
               {
@@ -359,6 +381,29 @@ export const routes: RouteObject[] = [
           { path: "manage", element: <ManageServers /> },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
+          {
+            path: "scout-client/pair/:pairingId",
+            element: <ScoutClientPairing />,
+            errorElement: <RouteErrorPanel />,
+          },
+          {
+            // The operator surface. `OperationsWorkspace` is the gate and the
+            // gate is the server: its probe is an operations procedure, so the
+            // allowlist decides this route the same way it decides every call
+            // made beneath it. The rollout flag can only remove the surface.
+            path: "operations",
+            element: <OperationsWorkspace />,
+            loader: operationsLoader,
+            errorElement: <RouteErrorPanel />,
+            children: [
+              { index: true, element: <Navigate to="matches" replace /> },
+              {
+                path: "matches",
+                element: <OperationsMatches />,
+                errorElement: <RouteErrorPanel />,
+              },
+            ],
+          },
           {
             path: "g/:guildId",
             element: <GuildWorkspace />,

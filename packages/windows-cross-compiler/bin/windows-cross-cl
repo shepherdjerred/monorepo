@@ -1,0 +1,28 @@
+#!/bin/sh
+# clang-cl for a Windows MSVC target, using the image's MSVC CRT and Windows SDK.
+# Installed as <triple>-cl, e.g. x86_64-pc-windows-msvc-cl or
+# aarch64-pc-windows-msvc-cl; arguments are clang-cl (cl.exe-style) arguments.
+set -eu
+
+triple=$(basename "$0")
+triple=${triple%-cl}
+case "$triple" in
+  x86_64-pc-windows-msvc) arch=x86_64 ;;
+  aarch64-pc-windows-msvc) arch=aarch64 ;;
+  *)
+    echo "windows-cross-cl: unsupported target '$triple'" >&2
+    exit 2
+    ;;
+esac
+
+xwin=${WINDOWS_CROSS_XWIN:-/opt/windows-cross/xwin/xwin}
+LIB="$xwin/crt/lib/$arch;$xwin/sdk/lib/um/$arch;$xwin/sdk/lib/ucrt/$arch"
+export LIB
+
+exec clang-cl --target="$triple" -fuse-ld=lld-link \
+  /imsvc "$xwin/crt/include" \
+  /imsvc "$xwin/sdk/include/ucrt" \
+  /imsvc "$xwin/sdk/include/um" \
+  /imsvc "$xwin/sdk/include/shared" \
+  /imsvc "$xwin/sdk/include/winrt" \
+  "$@"

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "threshold": 0.35,
+  "assets": {
+    "melspectrogram": "ba2b0e0f8b7b875369a2c89cb13360ff53bac436f2895cced9f479fa65eb176f",
+    "embedding": "70d164290c1d095d1d4ee149bc5e00543250a7316b59f31d056cff7bd3075c1f",
+    "classifier": "cda4a943ea52a0935e16c3648ca2efe8ae110bbfc2d0acf270d2a920e44285ce",
+    "smokePositive": "20450c2d1ef30736721bfe990844199b71b1ede14ad0a03e980b89c921493cb8"
+  },
+  "training": {
+    "positiveUtterances": 120000,
+    "adversarialUtterances": 120000,
+    "generalNegativeHours": 2000,
+    "humanHoldoutIncluded": false
+  }
+}

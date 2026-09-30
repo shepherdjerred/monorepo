@@ -81,10 +81,11 @@ export async function loadReportRunVisualization(
     const response = await createS3Client().send(
       new GetObjectCommand({ Bucket: bucket, Key: key }),
     );
-    if (!response.Body) return null;
-    return VisualizationSnapshotSchema.parse(
-      JSON.parse(await response.Body.transformToString()),
-    );
+    return response.Body
+      ? VisualizationSnapshotSchema.parse(
+          JSON.parse(await response.Body.transformToString()),
+        )
+      : null;
   } catch (error) {
     if (AwsS3NotFoundErrorSchema.safeParse(error).success) return null;
     logger.error(`[S3ReportRun] Failed to load visualization ${key}:`, error);

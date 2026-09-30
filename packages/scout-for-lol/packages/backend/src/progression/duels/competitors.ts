@@ -18,6 +18,17 @@ export type DuelCompetitorSelection = {
   readonly teamName?: string;
 };
 
+export function duelCompetitorsUseOneRiotRegion(
+  competitors: readonly {
+    readonly members: readonly { readonly region: string }[];
+  }[],
+): boolean {
+  const regions = competitors.flatMap((competitor) =>
+    competitor.members.map((member) => member.region),
+  );
+  return regions.length > 0 && new Set(regions).size === 1;
+}
+
 export async function resolveDuelCompetitorSelection(
   db: DuelAccountReader,
   guildId: DiscordGuildId,

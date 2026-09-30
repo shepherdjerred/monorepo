@@ -285,9 +285,8 @@ export class StreamLatencyTracker {
     if (inputReceivedAtMs === undefined) {
       return this.pendingVideoInputReceivedAtMs;
     }
-    if (this.pendingVideoInputReceivedAtMs === undefined) {
-      return inputReceivedAtMs;
-    }
-    return Math.min(inputReceivedAtMs, this.pendingVideoInputReceivedAtMs);
+    return this.pendingVideoInputReceivedAtMs === undefined
+      ? inputReceivedAtMs
+      : Math.min(inputReceivedAtMs, this.pendingVideoInputReceivedAtMs);
   }
 }

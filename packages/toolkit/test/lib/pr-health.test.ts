@@ -1,143 +1,137 @@
 import { describe, expect, test } from "vitest";
-import type { BuildkiteBuild } from "#lib/buildkite/ci.ts";
+import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import type { GitHubCheck, PullRequest } from "#lib/github/types.ts";
 import { buildPrHealthReport, ciHealth } from "#commands/pr/health.ts";
 
 const HEAD_SHA = "0123456789abcdef0123456789abcdef01234567";
 
-function build(
-  state: string,
-  jobs: BuildkiteBuild["jobs"] = [],
-): BuildkiteBuild {
-  return {
-    number: 1234,
-    commit: HEAD_SHA,
-    state,
-    web_url: "https://buildkite.com/sjerred/monorepo/builds/1234",
-    jobs,
-  };
+function pipeline(
+  status: string,
+  workflows: WoodpeckerPipeline["workflows"] = [],
+): WoodpeckerPipeline {
+  return { number: 1234, commit: HEAD_SHA, status, workflows };
 }
 
-function job(
+function workflow(
   state: string,
-  softFailed = false,
-  id = "job-uuid",
-): BuildkiteBuild["jobs"][number] {
-  return {
-    id,
-    name: id,
-    state,
-    web_url: `https://buildkite.com/sjerred/monorepo/builds/1234#${id}`,
-    soft_failed: softFailed,
-  };
+  name = "verify",
+): WoodpeckerPipeline["workflows"][number] {
+  return { name, state };
 }
 
-function githubCheck(
-  bucket: string,
-  name = "buildkite/monorepo/pr",
-): GitHubCheck {
+function githubCheck(bucket: string, name = "ci/woodpecker/pr"): GitHubCheck {
   return {
     name,
     state: bucket.toUpperCase(),
     bucket,
-    link: "https://buildkite.com/sjerred/monorepo/builds/1234",
+    link: "https://woodpecker.sjer.red/repos/1/pipeline/1234",
   };
 }
 
 describe("PR health CI fixtures", () => {
-  test("passing exact-head Buildkite build is healthy", () => {
-    const result = ciHealth(HEAD_SHA, [githubCheck("pass")], build("passed"));
+  test("passing exact-head pipeline is healthy", () => {
+    const result = ciHealth(
+      HEAD_SHA,
+      [githubCheck("pass")],
+      pipeline("success"),
+    );
     expect(result.status).toBe("HEALTHY");
     expect(result.details).toContain(
-      "Buildkite build #1234 for exact head 0123456789ab: PASSED",
+      "Woodpecker pipeline #1234 for exact head 0123456789ab: SUCCESS",
     );
   });
 
-  test("running exact-head Buildkite build is pending", () => {
+  test("running exact-head pipeline is pending", () => {
     const result = ciHealth(
       HEAD_SHA,
       [githubCheck("pending")],
-      build("running"),
+      pipeline("running"),
     );
     expect(result.status).toBe("PENDING");
   });
 
-  test("running build with a hard-failed job is unhealthy", () => {
+  test("running pipeline with a failed workflow is unhealthy", () => {
     const result = ciHealth(
       HEAD_SHA,
       [githubCheck("pending")],
-      build("running", [job("failed", false, "failed-job")]),
+      pipeline("running", [workflow("failure", "failed-workflow")]),
     );
     expect(result.status).toBe("UNHEALTHY");
-    expect(result.commands).toContain("toolkit bk job log failed-job --agent");
+    expect(result.commands).toContain(
+      "toolkit woodpecker pipeline log show shepherdjerred/monorepo 1234",
+    );
   });
 
-  test("waiting exact-head Buildkite build is pending", () => {
+  test("pending exact-head pipeline is pending", () => {
     const result = ciHealth(
       HEAD_SHA,
       [githubCheck("pending")],
-      build("waiting"),
+      pipeline("pending"),
     );
     expect(result.status).toBe("PENDING");
   });
 
-  test("failed build is unhealthy and prints per-job log commands", () => {
+  test("failed pipeline is unhealthy and prints a log command per workflow", () => {
     const result = ciHealth(
       HEAD_SHA,
       [githubCheck("fail")],
-      build("failed", [
-        {
-          id: "job-uuid",
-          name: "Typecheck",
-          state: "failed",
-          web_url:
-            "https://buildkite.com/sjerred/monorepo/builds/1234#job-uuid",
-        },
-      ]),
+      pipeline("failure", [workflow("failure", "typecheck")]),
     );
     expect(result.status).toBe("UNHEALTHY");
-    expect(result.commands).toContain("toolkit bk job log job-uuid --agent");
+    expect(result.details.join("\n")).toContain("typecheck");
+    expect(result.commands).toContain(
+      "toolkit woodpecker pipeline log show shepherdjerred/monorepo 1234",
+    );
   });
 
-  test("canceled build is unhealthy", () => {
+  test("killed pipeline is unhealthy", () => {
     expect(
-      ciHealth(HEAD_SHA, [githubCheck("cancel")], build("canceled")).status,
+      ciHealth(HEAD_SHA, [githubCheck("cancel")], pipeline("killed")).status,
     ).toBe("UNHEALTHY");
   });
 
-  test.each(["skipped", "not_run"])(
-    "terminal %s build is unhealthy",
+  /** A skipped or declined pipeline never ran the gates. */
+  test.each(["skipped", "declined", "error"])(
+    "terminal %s pipeline is unhealthy",
     (state) => {
-      expect(ciHealth(HEAD_SHA, [], build(state)).status).toBe("UNHEALTHY");
+      expect(ciHealth(HEAD_SHA, [], pipeline(state)).status).toBe("UNHEALTHY");
     },
   );
 
-  test("absent exact-head Buildkite build is pending", () => {
+  test("absent exact-head pipeline is pending", () => {
     const result = ciHealth(HEAD_SHA, [], null);
     expect(result.status).toBe("PENDING");
-    expect(result.details[0]).toContain("No Buildkite build found");
+    expect(result.details[0]).toContain("No Woodpecker pipeline found");
     expect(result.commands).toContain(
-      `toolkit bk build list --pipeline sjerred/monorepo --commit ${HEAD_SHA}`,
+      "toolkit woodpecker pipeline ls shepherdjerred/monorepo",
     );
   });
 
-  test("authoritative passed Buildkite state wins over stale failed GitHub metadata", () => {
-    const result = ciHealth(HEAD_SHA, [githubCheck("fail")], build("passed"));
+  test("authoritative success wins over stale failed GitHub metadata", () => {
+    const result = ciHealth(
+      HEAD_SHA,
+      [githubCheck("fail")],
+      pipeline("success"),
+    );
     expect(result.status).toBe("HEALTHY");
     expect(result.details).toContain(
-      "GitHub's Buildkite check metadata does not match authoritative build #1234; using Buildkite",
+      "GitHub's check metadata disagrees with authoritative pipeline #1234; trusting Woodpecker",
     );
   });
 
-  test("authoritative failed Buildkite state wins over stale passing GitHub metadata", () => {
-    const result = ciHealth(HEAD_SHA, [githubCheck("pass")], build("failed"));
+  test("authoritative failure wins over stale passing GitHub metadata", () => {
+    const result = ciHealth(
+      HEAD_SHA,
+      [githubCheck("pass")],
+      pipeline("failure"),
+    );
     expect(result.status).toBe("UNHEALTHY");
     expect(result.details).toContain(
-      "GitHub's Buildkite check metadata does not match authoritative build #1234; using Buildkite",
+      "GitHub's check metadata disagrees with authoritative pipeline #1234; trusting Woodpecker",
     );
   });
 
-  test("non-Buildkite GitHub checks still contribute to health", () => {
+  test("external GitHub checks still contribute to health", () => {
     const result = ciHealth(
       HEAD_SHA,
       [
@@ -148,53 +142,45 @@ describe("PR health CI fixtures", () => {
           link: "https://example.test/check",
         },
       ],
-      build("passed"),
+      pipeline("success"),
     );
     expect(result.status).toBe("UNHEALTHY");
   });
 
-  test("soft-failed Buildkite jobs do not make a passed build unhealthy", () => {
+  /**
+   * There is no soft-failure state any more. The advisory scanners decide
+   * inside their own command whether findings are fatal and exit 0 when they
+   * are not, so a findings-only Trivy run reports success rather than needing
+   * the health check to know it is advisory.
+   */
+  test("an advisory lane that found something still reports success", () => {
     const result = ciHealth(
       HEAD_SHA,
-      [githubCheck("fail")],
-      build("passed", [
-        {
-          id: "soft-job",
-          name: "Trivy findings",
-          state: "failed",
-          web_url:
-            "https://buildkite.com/sjerred/monorepo/builds/1234#soft-job",
-          soft_failed: true,
-        },
-      ]),
+      [githubCheck("pass")],
+      pipeline("success", [workflow("success", "trivy")]),
     );
     expect(result.status).toBe("HEALTHY");
-    expect(result.commands).not.toContain(
-      "toolkit bk job log soft-job --agent",
-    );
+    expect(result.details.join("\n")).not.toContain("trivy");
   });
 
-  test("conditionally broken jobs are not reported as hard failures", () => {
+  test("unfinished workflows are not reported as failures", () => {
     const result = ciHealth(
       HEAD_SHA,
       [],
-      build("running", [job("broken", false, "conditional-job")]),
+      pipeline("running", [workflow("running", "images")]),
     );
     expect(result.status).toBe("PENDING");
-    expect(result.details.join("\n")).not.toContain("conditional-job");
-    expect(result.commands).not.toContain(
-      "toolkit bk job log conditional-job --agent",
-    );
+    expect(result.details.join("\n")).not.toContain("images");
   });
 
-  test("mixed passed and pending Buildkite checks match a running build", () => {
+  test("mixed passed and pending checks match a running pipeline", () => {
     const result = ciHealth(
       HEAD_SHA,
       [
-        githubCheck("pending", "buildkite/monorepo/pr"),
-        githubCheck("pass", "buildkite/monorepo/pr/upload"),
+        githubCheck("pending", "ci/woodpecker/pr"),
+        githubCheck("pass", "ci/woodpecker/pr/verify"),
       ],
-      build("running"),
+      pipeline("running"),
     );
     expect(result.details.join("\n")).not.toContain("does not match");
   });
@@ -225,7 +211,7 @@ describe("PR health report", () => {
         headSha: HEAD_SHA,
       },
       githubChecks: [githubCheck("pass")],
-      buildkiteBuild: build("passed"),
+      ciPipeline: pipeline("success"),
       reviews: [{ author: "reviewer", state: "APPROVED" }],
     });
     expect(Object.keys(report)).toEqual([
@@ -249,7 +235,7 @@ describe("PR health report", () => {
         headSha: HEAD_SHA,
       },
       githubChecks: [githubCheck("pass")],
-      buildkiteBuild: build("passed"),
+      ciPipeline: pipeline("success"),
       reviews: [{ author: "reviewer", state: "APPROVED" }],
     });
     expect(report.overallStatus).toBe("UNHEALTHY");

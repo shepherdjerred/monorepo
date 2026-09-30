@@ -26,8 +26,8 @@ const OptionalEnvSchema = z.object({
 });
 const RequiredEnvSchema = z.object({
   VITE_POSTHOG_PROJECT_TOKEN: z.string().regex(/^phc_[A-Za-z0-9]+$/),
-  VITE_POSTHOG_API_HOST: z.literal("https://us.i.posthog.com"),
-  VITE_POSTHOG_ASSET_HOST: z.literal("https://us-assets.i.posthog.com"),
+  VITE_POSTHOG_API_HOST: z.literal("https://j.sjer.red"),
+  VITE_POSTHOG_ASSET_HOST: z.literal("https://j.sjer.red"),
   VITE_POSTHOG_SITE_KEY: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   VITE_POSTHOG_SITE_DOMAIN: z.string().min(1),
   VITE_POSTHOG_SESSION_REPLAY: z.enum(["true", "false"]),
@@ -35,8 +35,8 @@ const RequiredEnvSchema = z.object({
 
 export type AnalyticsConfig = {
   projectToken: string;
-  apiHost: "https://us.i.posthog.com";
-  assetHost: "https://us-assets.i.posthog.com";
+  apiHost: "https://j.sjer.red";
+  assetHost: "https://j.sjer.red";
   siteKey: string;
   siteDomain: string;
   sessionReplay: boolean;
@@ -481,9 +481,13 @@ export function normalizePath(pathname: string): string {
     // already-templated `s` segment. The token is the share credential — it
     // is templated away before anything reaches PostHog.
     .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
-    .replace(/^\/explore\/(?!s(?:\/|$))[^/]+/, "/explore/:conversationId");
+    .replace(/^\/explore\/matches\/[^/]+/, "/explore/matches/:matchId")
+    .replace(
+      /^\/explore\/(?!s(?:\/|$)|matches(?:\/|$))[^/]+/,
+      "/explore/:conversationId",
+    );
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken|matches\/:matchId))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/clash|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 

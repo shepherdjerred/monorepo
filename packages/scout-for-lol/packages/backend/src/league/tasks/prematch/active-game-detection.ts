@@ -4,11 +4,16 @@ import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
+import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
 import {
-  isArenaQueueOrMode,
-  MatchIdSchema,
-} from "@scout-for-lol/data/index.ts";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+  getAccountConfigsByPuuids,
+  getAccountsWithState,
+} from "#src/database/player-accounts.ts";
+import {
+  isLikelyPreStartLobby,
+  rosterIsAsCompleteAsItWillGet,
+} from "#src/league/tasks/prematch/spectator-roster.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
@@ -33,6 +38,7 @@ import {
 } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 import { recordPrematchForReportStore } from "#src/report-store/live-ingest.ts";
+import { recordClashPrematchSightings } from "#src/league/clash/sighting.ts";
 
 const logger = createLogger("prematch-active-game-detection");
 
@@ -48,39 +54,16 @@ let checkStartTime: number | undefined;
 const CHECK_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
 /**
- * Constants for the "pre-start / partial-roster lobby" defer path.
+ * Retry budget for a roster that is still filling.
  *
- * Riot's Spectator API surfaces a game during its pre-game countdown — for a
- * custom 5v5 as soon as the creator clicks Play, and for matched games as the
- * lobby forms. In that window the payload reports `gameLength < 0` and fewer
- * than 10 participants because not everyone has loaded in yet. This is NOT
- * custom-only: matched event modes (ARAM: Mayhem / event ARAM, queues
- * 3200/3220/3270) routinely arrive with 2-4 of 10 participants (confirmed from
- * archived spectator payloads — gameLength of -17 to -58s). Building a
- * loading-screen image off that partial snapshot throws inside
- * `buildLoadingScreenData` (the layout schema requires a full roster), which
- * used to look like a real detection error in Bugsink. The fix: detect this
- * state, retry the spectator fetch a couple of times in-process, and if the
- * roster still hasn't filled, skip the upsert+notify path so the next 30s cron
- * tick re-evaluates once the game has actually started.
+ * Riot surfaces a game during its pre-game countdown, so the first read often
+ * arrives short. A couple of in-process retries usually catch the full roster;
+ * anything still short is left for the next 30-second tick, which is cheaper
+ * than holding this one open. See `spectator-roster.ts` for what "short"
+ * means and why a started game is a different case.
  */
-const STANDARD_PARTICIPANT_COUNT = 10;
 const LOBBY_RETRY_LIMIT = 2;
 const LOBBY_RETRY_DELAY_MS = 2000;
-
-/**
- * A standard or ARAM roster is exactly 10 players; Arena is 16/18 and is
- * validated by its own schema. Any other non-Arena game reporting fewer than
- * 10 participants is an incomplete Spectator snapshot — almost always the
- * pre-game countdown (`gameLength < 0`), though we also defer the rare
- * started-but-undersized lobby rather than throw on it.
- */
-function isLikelyPreStartLobby(gameInfo: RawCurrentGameInfo): boolean {
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return false;
-  }
-  return gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT;
-}
 
 async function refetchLobbyUntilFilled(
   initial: RawCurrentGameInfo,
@@ -98,26 +81,99 @@ async function refetchLobbyUntilFilled(
     );
     await Bun.sleep(retryDelayMs);
     const retry = await getActiveGame(puuid, region);
-    // If the API errors mid-retry, record the failure in the circuit breaker
-    // so repeated failures during the retry window trip the breaker for
-    // subsequent players in the same cron tick.
-    if (retry.upstreamError) {
-      spectatorCircuit.recordFailure(
-        new Error(
-          `Spectator API upstream error during pre-start lobby retry for ${puuid}`,
-        ),
-        { source: "spectator-retry", puuid, region },
-      );
+    // Any answer that is not a fresh payload ends the retry loop with the most
+    // recent one, and the caller's outer logic decides — v1's behaviour before
+    // the spectator boundary distinguished its three outcomes, kept exactly.
+    // It is safe HERE in a way it would not be in the V2 capture: this runs on
+    // a 30-second cron with no durable conclusion, so a missed retry costs one
+    // tick rather than the whole snapshot.
+    if (retry.kind === "unavailable") {
+      // Only a genuine upstream outage feeds the breaker, so repeated failures
+      // during the retry window trip it for later players in the same tick.
+      if (retry.upstream) {
+        spectatorCircuit.recordFailure(
+          new Error(
+            `Spectator API upstream error during pre-start lobby retry for ${puuid}`,
+          ),
+          { source: "spectator-retry", puuid, region },
+        );
+      }
       return latest;
     }
-    // Player left the lobby between retries — fall back to the most recent
-    // payload so the caller's outer logic decides.
-    if (!retry.game) {
+    // Player left the lobby between retries.
+    if (retry.kind === "not-in-game") {
       return latest;
     }
     latest = retry.game;
   }
   return latest;
+}
+
+/**
+ * One player's spectator read, reduced to the only thing this poller acts on:
+ * a game to process, or nothing.
+ *
+ * The three outcomes the boundary now distinguishes collapse back to two HERE,
+ * deliberately, because that is v1's behaviour and it is safe in v1. This runs
+ * on a 30-second cron and records nothing durable about a skip, so an
+ * unanswered read costs one tick. The V2 capture cannot make the same trade —
+ * its conclusion is sealed by a completed Workflow ID — which is why the
+ * distinction lives at the boundary rather than being flattened inside it.
+ *
+ * Extracted from the polling loop so the collapse is stated once, somewhere it
+ * can explain itself, rather than adding a branch to a function already at its
+ * complexity budget.
+ */
+async function pollPlayerForGame(
+  puuid: LeaguePuuid,
+  region: PlayerConfigEntry["league"]["leagueAccount"]["region"],
+): Promise<RawCurrentGameInfo | undefined> {
+  const spectator = await getActiveGame(puuid, region);
+  if (spectator.kind === "unavailable") {
+    if (spectator.upstream) {
+      // Feed the failure into the circuit breaker (rate-limited Sentry reporting)
+      spectatorCircuit.recordFailure(
+        new Error(`Spectator API upstream error for ${puuid}`),
+        { source: "spectator", puuid, region },
+      );
+      return undefined;
+    }
+    // A validation failure or a one-off HTTP error still proves the API is
+    // reachable, so it closes the breaker exactly as it did before.
+    spectatorCircuit.recordSuccess();
+    return undefined;
+  }
+  // A 404 is an answer, so the API is reachable.
+  spectatorCircuit.recordSuccess();
+  return spectator.kind === "in-game" ? spectator.game : undefined;
+}
+
+/**
+ * Log and count a roster this tick will not act on.
+ *
+ * The two reasons look the same from here and are not the same fact. One is a
+ * lobby still loading in; the other is a game already under way whose roster is
+ * simply short, which is what a custom against bots looks like because Riot
+ * never lists them. Counting them apart is what makes the second visible.
+ */
+function recordDeferredRoster(
+  alias: string,
+  gameInfo: RawCurrentGameInfo,
+): void {
+  const settled = rosterIsAsCompleteAsItWillGet(gameInfo);
+  const participants = gameInfo.participants.length.toString();
+  const gameId = gameInfo.gameId.toString();
+  const gameLength = gameInfo.gameLength.toString();
+  logger.info(
+    settled
+      ? `[${alias}] ⏳ Deferring gameId=${gameId} — ${participants}/10 participants and the game has already started (gameLength=${gameLength}), so this is the roster Riot will report; bots are never listed`
+      : `[${alias}] ⏳ Deferring pre-start gameId=${gameId} — only ${participants}/10 participants present (gameLength=${gameLength}); next cron tick will retry`,
+  );
+  // The original label is kept for Grafana dashboard continuity; the new one
+  // separates "still filling" from "this is the roster".
+  prematchDetectionsTotal.inc({
+    status: settled ? "deferred_undersized_roster" : "deferred_custom_prestart",
+  });
 }
 
 async function processPrematchWithRetryCleanup(input: {
@@ -132,6 +188,12 @@ async function processPrematchWithRetryCleanup(input: {
       source: "prematch_live",
       trackedPlayerAliases: input.trackedPlayers.map((p) => p.alias),
     });
+    await recordClashPrematchSightings(
+      input.gameInfo,
+      new Set(
+        input.trackedPlayers.map((player) => player.league.leagueAccount.puuid),
+      ),
+    );
     return await sendPrematchNotification(input.gameInfo, input.trackedPlayers);
   } catch (error) {
     if (!(error instanceof PrematchNotificationPostDeliveryError)) {
@@ -172,18 +234,34 @@ function shouldSkipCheck(): boolean {
 }
 
 /**
+ * Whether the V2 prematch path already took one game, asked before v1
+ * announces a game it has not tracked. V2 writes no `ActiveGame` row, so
+ * without this a flip from V2 back to v1 mid-game would announce the game a
+ * second time and open its markets after the fact.
+ */
+export type PrematchV2CaptureCheck = (game: {
+  platformId: string;
+  gameId: number;
+  puuid: LeaguePuuid;
+}) => Promise<boolean>;
+
+/**
  * Main function to check for active games across all tracked players.
  *
  * Detects when tracked players enter a game and sends a single notification
  * per game, listing all tracked players in that game.
  *
- * @param lobbyRetryDelayMs - Override the retry delay for pre-start lobby
- *   refetch attempts. Defaults to LOBBY_RETRY_DELAY_MS (2000ms).
+ * @param options.capturedByV2 - Asked for each game this pass has not
+ *   tracked; a game V2 already took is skipped.
+ * @param options.lobbyRetryDelayMs - Override the retry delay for pre-start
+ *   lobby refetch attempts. Defaults to LOBBY_RETRY_DELAY_MS (2000ms).
  *   Pass 0 in tests to skip the real-time sleep.
  */
-export async function checkActiveGames(
-  lobbyRetryDelayMs: number = LOBBY_RETRY_DELAY_MS,
-): Promise<void> {
+export async function checkActiveGames(options: {
+  capturedByV2: PrematchV2CaptureCheck;
+  lobbyRetryDelayMs?: number;
+}): Promise<void> {
+  const lobbyRetryDelayMs = options.lobbyRetryDelayMs ?? LOBBY_RETRY_DELAY_MS;
   if (shouldSkipCheck()) {
     return;
   }
@@ -194,6 +272,9 @@ export async function checkActiveGames(
   logger.info("🔍 Starting pre-match active game check");
 
   try {
+    // The live-guild filter decides WORKLOAD only: which accounts this tick
+    // spends Spectator calls on. It must never decide who a detected game's
+    // notification is about — see `trackedPlayersInGame` below.
     const accountsWithState = await getAccountsWithState(
       prisma,
       getActiveServerIds(),
@@ -247,12 +328,6 @@ export async function checkActiveGames(
       `📊 ${activeGames.length.toString()} active game(s) currently tracked across ${priorGameIdByPuuid.size.toString()} player(s)`,
     );
 
-    // Build lookup of all tracked puuids for cross-referencing with game participants
-    const allTrackedPuuids = new Set(
-      accountsWithState.map((a) => a.config.league.leagueAccount.puuid),
-    );
-    const allPlayerConfigs = accountsWithState.map((a) => a.config);
-
     const currentTime = new Date();
 
     const eligible = accountsWithState.filter(
@@ -294,22 +369,8 @@ export async function checkActiveGames(
       }
 
       try {
-        const initial = await getActiveGame(puuid, region);
-        const { upstreamError } = initial;
-
-        if (upstreamError) {
-          // Feed the failure into the circuit breaker (rate-limited Sentry reporting)
-          spectatorCircuit.recordFailure(
-            new Error(`Spectator API upstream error for ${puuid}`),
-            { source: "spectator", puuid, region },
-          );
-          continue;
-        }
-
-        // Any non-upstream response (success, 404, validation error) means the API is reachable
-        spectatorCircuit.recordSuccess();
-
-        if (!initial.game) {
+        const initial = await pollPlayerForGame(puuid, region);
+        if (initial === undefined) {
           continue;
         }
 
@@ -317,21 +378,17 @@ export async function checkActiveGames(
         // Spectator before all 10 players have loaded in. Retry a couple of
         // times in-process; if still incomplete, defer to the next 30s cron
         // tick (do NOT upsert) so a partial roster never reaches the builder.
-        const gameInfo = isLikelyPreStartLobby(initial.game)
+        const gameInfo = isLikelyPreStartLobby(initial)
           ? await refetchLobbyUntilFilled(
-              initial.game,
+              initial,
               puuid,
               region,
               lobbyRetryDelayMs,
             )
-          : initial.game;
+          : initial;
 
         if (isLikelyPreStartLobby(gameInfo)) {
-          logger.info(
-            `[${player.alias}] ⏳ Deferring pre-start gameId=${gameInfo.gameId.toString()} — only ${gameInfo.participants.length.toString()}/10 participants present (gameLength=${gameInfo.gameLength.toString()}); next cron tick will retry`,
-          );
-          // Metric label kept as-is for Grafana dashboard continuity.
-          prematchDetectionsTotal.inc({ status: "deferred_custom_prestart" });
+          recordDeferredRoster(player.alias, gameInfo);
           continue;
         }
 
@@ -350,17 +407,37 @@ export async function checkActiveGames(
           continue;
         }
 
-        // Find ALL tracked players in this game's participants.
+        if (
+          await options.capturedByV2({
+            platformId: gameInfo.platformId,
+            gameId: gameInfo.gameId,
+            puuid,
+          })
+        ) {
+          logger.info(
+            `[${player.alias}] ⏭️  Skipping ${matchId} — the V2 prematch path already captured it`,
+          );
+          prematchDetectionsTotal.inc({ status: "owned_by_v2" });
+          trackedMatchIds.add(matchId);
+          continue;
+        }
+
+        // Find ALL tracked players in this game's participants — the AUDIENCE:
+        // whose channels are notified, whose Classic participation is awarded,
+        // and which PUUIDs the ActiveGame row records. Read unfiltered, not from
+        // the workload roster above: `getActiveServerIds()` fails open while the
+        // gateway is not ready but NARROWS once it is, so a guild removed
+        // mid-match would otherwise silently drop its players from a game the
+        // rest of the roster is still being told about.
         // KNOWN LIMITATION: matched by puuid only, so privacy-scrubbed players
         // (null puuid in Spectator-V5) are not matched here and are dropped from
         // the pre-match notification/image. This is accepted data loss.
         const trackedPlayersInGame: PlayerConfigEntry[] =
-          allPlayerConfigs.filter((p) =>
-            gameInfo.participants.some(
-              (participant) =>
-                participant.puuid === p.league.leagueAccount.puuid &&
-                allTrackedPuuids.has(p.league.leagueAccount.puuid),
-            ),
+          await getAccountConfigsByPuuids(
+            gameInfo.participants.flatMap((participant) => {
+              const parsed = LeaguePuuidSchema.safeParse(participant.puuid);
+              return parsed.success ? [parsed.data] : [];
+            }),
           );
 
         const trackedPuuidsInGame = trackedPlayersInGame.map(

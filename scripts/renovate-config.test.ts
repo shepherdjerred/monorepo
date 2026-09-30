@@ -199,7 +199,7 @@ test("drives Playwright upgrades from the official image source only", async () 
   });
 
   const dockerfile = await Bun.file(
-    `${root}/.buildkite/ci-playwright/Dockerfile`,
+    `${root}/ci/ci-playwright/Dockerfile`,
   ).text();
   expect(dockerfile).toContain(
     "# renovate: datasource=docker depName=mcr.microsoft.com/playwright",
@@ -230,6 +230,17 @@ test("groups Talos, Kubernetes, and installer updates into one PR", async () => 
   });
 });
 
+test("groups the AI SDK so ai and @ai-sdk/otel bump together", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) => candidate.groupName === "AI SDK",
+  );
+
+  expect(rule?.matchPackageNames).toEqual(["ai", "@ai-sdk/**"]);
+});
+
 test("keeps direct TypeScript on 6 without constraining the native alias", async () => {
   const config = RenovateConfigSchema.parse(
     await Bun.file(`${root}/renovate.json`).json(),
@@ -243,6 +254,7 @@ test("keeps direct TypeScript on 6 without constraining the native alias", async
   expect(rule).toEqual({
     description:
       "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+    groupName: "typescript",
     matchManagers: ["bun", "npm"],
     matchDepNames: ["typescript"],
     allowedVersions: "<7",
@@ -270,34 +282,32 @@ test("keeps the custom Corretto manager authoritative for mise Java", async () =
   });
 });
 
-test("ignores only the bogus qBittorrent v20 release while retaining semantic tags", async () => {
+test("rejects stale qBittorrent Ubuntu tags while retaining semantic app tags", async () => {
   const config = RenovateConfigSchema.parse(
     await Bun.file(`${root}/renovate.json`).json(),
   );
-  const exactIgnore = config.packageRules.find(
-    (candidate) =>
-      candidate.description ===
-      "Ignore bogus LinuxServer qBittorrent v20 tag; it is not an app release",
-  );
-  const semanticOnly = config.packageRules.find(
-    (candidate) =>
-      candidate.description ===
-      "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
+  const description =
+    "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are stale Ubuntu YY.MM-based image tags, not qBittorrent app versions. qBittorrent never zero-pads its minor version, so rejecting a leading-zero minor excludes them while keeping every semantic app tag.";
+  const rules = config.packageRules.filter((candidate) =>
+    candidate.matchPackageNames?.includes("linuxserver/qbittorrent"),
   );
 
-  expect(exactIgnore).toEqual({
-    description:
-      "Ignore bogus LinuxServer qBittorrent v20 tag; it is not an app release",
-    matchPackageNames: ["linuxserver/qbittorrent"],
-    matchNewValue: "/^v?20$/",
-    enabled: false,
-  });
-  expect(semanticOnly).toEqual({
-    description:
-      "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
-    matchPackageNames: ["linuxserver/qbittorrent"],
-    allowedVersions: String.raw`/^[0-9]+\.[0-9]+\.[0-9]+$/`,
-  });
+  expect(rules).toEqual([
+    {
+      description,
+      matchPackageNames: ["linuxserver/qbittorrent"],
+      allowedVersions: String.raw`/^[0-9]+\.(0|[1-9][0-9]*)\.[0-9]+$/`,
+    },
+  ]);
+
+  const allowedVersions = rules[0]?.allowedVersions;
+  if (allowedVersions === undefined) {
+    throw new Error("qBittorrent rule is missing allowedVersions");
+  }
+  const allowed = new RegExp(allowedVersions.slice(1, -1));
+  expect(allowed.test("20.04.1")).toBe(false);
+  expect(allowed.test("5.2.3")).toBe(true);
+  expect(allowed.test("5.10.0")).toBe(true);
 });
 
 test("updates application Dockerfile tool pins without hardcoded test fixtures", async () => {
@@ -345,6 +355,92 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
     matchDepNames: ["yt-dlp/yt-dlp"],
     matchFileNames: ["packages/streambot/Dockerfile"],
   });
+});
+
+test("extracts an Apple codesign version pin from the macOS cross-compiler Dockerfile", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const manager = config.customManagers.find((candidate) =>
+    candidate.managerFilePatterns.includes(
+      "packages/macos-cross-compiler/Dockerfile",
+    ),
+  );
+  if (manager === undefined) {
+    throw new Error("Apple codesign Renovate manager is missing");
+  }
+  const expression = manager.matchStrings[0];
+  if (expression === undefined) {
+    throw new Error("Apple codesign matcher is missing");
+  }
+  const source = await Bun.file(
+    `${root}/packages/macos-cross-compiler/Dockerfile`,
+  ).text();
+  const match = new RegExp(expression).exec(source);
+  expect(match?.groups?.["depName"]).toBe("indygreg/apple-platform-rs");
+  expect(match?.groups?.["currentValue"]).toBe("0.29.0");
+});
+
+test("extracts identical Swift base image digest pins from both sources", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const manager = config.customManagers.find(
+    (candidate) => candidate.depNameTemplate === "swift",
+  );
+  if (manager === undefined) {
+    throw new Error("Swift base image Renovate manager is missing");
+  }
+
+  const sources = [
+    await Bun.file(`${root}/packages/macos-cross-compiler/sdks.json`).text(),
+    await Bun.file(`${root}/packages/macos-cross-compiler/Dockerfile`).text(),
+  ];
+  expect(manager.matchStrings).toHaveLength(2);
+  expect(manager.matchStrings[0]).toContain("swiftImage");
+  expect(manager.matchStrings[1]).toContain("SWIFT_IMAGE");
+
+  const expressions = [
+    /"swiftImage":\s*"swift:(?<currentValue>[^@"]+)@(?<currentDigest>sha256:[a-f0-9]{64})"/,
+    /ARG\s+SWIFT_IMAGE=swift:(?<currentValue>[^@\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})/,
+  ];
+  const pins = expressions.flatMap((expression, index) => {
+    const source = sources[index];
+    if (source === undefined) {
+      throw new Error(
+        `Missing Swift source for expression ${index.toString()}`,
+      );
+    }
+    const match = expression.exec(source);
+    const currentValue = match?.groups?.["currentValue"];
+    const currentDigest = match?.groups?.["currentDigest"];
+    if (currentValue === undefined || currentDigest === undefined) {
+      throw new Error(
+        `Swift expression ${index.toString()} did not extract a complete pin`,
+      );
+    }
+    return [`${currentValue}@${currentDigest}`];
+  });
+
+  expect(manager.managerFilePatterns).toEqual([
+    "packages/macos-cross-compiler/sdks.json",
+    "packages/macos-cross-compiler/Dockerfile",
+  ]);
+  expect(pins[0]).toEqual(pins[1]);
+});
+
+test("groups eslint and prettier bumps across the workspace into single PRs", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const eslintRule = config.packageRules.find(
+    (candidate) => candidate.groupName === "eslint",
+  );
+  const prettierRule = config.packageRules.find(
+    (candidate) => candidate.groupName === "prettier",
+  );
+  expect(eslintRule?.matchDepNames).toEqual(["eslint"]);
+  expect(prettierRule?.matchDepNames).toEqual(["prettier"]);
 });
 
 test("extracts identical Emscripten tag and digest pins from both sources", async () => {
@@ -397,7 +493,7 @@ test("extracts identical Emscripten tag and digest pins from both sources", asyn
     "packages/discord-plays-mario-kart/Dockerfile",
   ]);
   expect(pins).toEqual([
-    "6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765",
-    "6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765",
+    "6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65",
+    "6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65",
   ]);
 });

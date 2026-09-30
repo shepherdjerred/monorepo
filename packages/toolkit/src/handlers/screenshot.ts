@@ -22,6 +22,7 @@ Options:
   --viewport <WxH>          e.g. 1280x800
   --theme <light|dark>
   --full-page               Capture the full scrollable page
+  --base-url <url>          Capture against an already-running server
   --json                    Machine-readable {path, url, durationMs}
   --list                    Print the package registry and exit
 
@@ -87,6 +88,7 @@ export async function handleScreenshotCommand(
       viewport: { type: "string" },
       theme: { type: "string" },
       "full-page": { type: "boolean", default: false },
+      "base-url": { type: "string" },
       json: { type: "boolean", default: false },
     },
     allowPositionals: true,
@@ -144,6 +146,7 @@ export async function handleScreenshotCommand(
           : parseViewport(values.viewport),
       theme,
       fullPage: values["full-page"],
+      baseUrl: values["base-url"],
     });
 
     if (values.json) {

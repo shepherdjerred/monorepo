@@ -1,0 +1,92 @@
+# The historical windmill altar inspires a present-day storm safety plan.
+# No old altar block, weather window or vanished location is required.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-rain-signal:
+    name: The Rain Signal
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed a-clear-record
+    text:
+      offer: We can compare two clean mill records now. What we still lack is a visible warning when a storm reaches the fields.
+      accept: Craft a lightning rod and bring lanterns to Martha for the watch kit.
+      decline: Martha will keep watching the clouds by eye.
+      finish: Martha has a signal kit and the register says who will check it.
+      summary: Equip the windmill watch with a clear storm signal.
+      questions: []
+    start: conductor
+    stages:
+      conductor:
+        journal: Craft a lightning rod in the main world for the mill watch.
+        waiting: A conductor gives the watch a clear point to inspect.
+        complete: The rod is ready. Martha needs it with lights for the watch.
+        objectives:
+          - craft 1 LIGHTNING_ROD
+        onComplete: []
+        next: [{ to: kit, when: [], label: none }]
+        timeLimit: none
+      kit:
+        journal: Bring Martha a lightning rod and 4 lanterns.
+        waiting: The mill watch needs a safe, visible signal.
+        complete: Martha can inspect the signal during her rounds.
+        objectives:
+          - deliver martha 1 LIGHTNING_ROD
+          - deliver martha 4 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  after-the-storm:
+    name: After the Storm
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-rain-signal
+    text:
+      offer: A signal protects the mill, but the harvest still needs a plan for the morning after rough weather.
+      accept: Bring seed and wheat for a reserve, then ask Braxton to put the reserve beside the mill records.
+      decline: I will keep what I can under cover.
+      finish: The reserve is counted. The mill story ends with a harvest people can use.
+      summary: Build a harvest reserve and close the windmill watch record.
+      questions: []
+    start: reserve
+    stages:
+      reserve:
+        journal: Bring Martha 32 wheat seeds and 32 wheat.
+        waiting: A reserve helps the town recover after a storm.
+        complete: The harvest is safe. Braxton should enter the count.
+        objectives:
+          - deliver martha 32 WHEAT_SEEDS
+          - deliver martha 32 WHEAT
+        onComplete: []
+        next: [{ to: record, when: [], label: none }]
+        timeLimit: none
+      record:
+        journal: Ask Braxton to record the post-storm harvest reserve.
+        waiting: A counted reserve is easier to share fairly.
+        complete: Braxton has closed the mill watch entry.
+        objectives:
+          - talk braxton
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

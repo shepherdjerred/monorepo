@@ -7,6 +7,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createBirmelDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/birmel/index.ts";
 import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createBirmelChart(app: App) {
   const chart = new Chart(app, "birmel", {
@@ -17,6 +18,11 @@ export function createBirmelChart(app: App) {
   new Namespace(chart, "birmel-namespace", {
     metadata: {
       name: "birmel",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/audit": "restricted",
+        "pod-security.kubernetes.io/warn": "restricted",
+      },
     },
   });
 
@@ -46,7 +52,7 @@ export function createBirmelChart(app: App) {
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, Flipt, Tempo (OTLP), PinchTab, and external HTTPS
+  // NetworkPolicy: Allow egress to DNS, Flipt, the OTLP trace gateway, PinchTab, and external HTTPS
   new KubeNetworkPolicy(chart, "birmel-egress-netpol", {
     metadata: { name: "birmel-egress-netpol" },
     spec: {
@@ -54,24 +60,13 @@ export function createBirmelChart(app: App) {
       policyTypes: ["Egress"],
       egress: [
         // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        // Tempo OTLP (tempo.tempo.svc.cluster.local:4318)
+        dnsEgressRule(),
+        // OTLP trace gateway (alloy-gateway.alloy-gateway.svc.cluster.local:4318)
         {
           to: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
               },
             },
           ],

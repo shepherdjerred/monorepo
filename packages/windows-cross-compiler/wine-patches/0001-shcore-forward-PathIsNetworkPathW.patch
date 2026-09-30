@@ -1,0 +1,15 @@
+shcore: Forward ordinal 170 (PathIsNetworkPathW) to shlwapi.
+
+makepri.exe imports it from SHCORE.dll by ordinal; the stub aborts the process.
+
+--- a/dlls/shcore/shcore.spec
++++ b/dlls/shcore/shcore.spec
+@@ -136,7 +136,7 @@
+ 160 stub -noname SHWaitForSendMessageThread
+ 161 stub -noname SHWaitForThreadWithWakeMask
+ 162 stub -noname SHQueueUserWorkItem
+-170 stub -noname PathIsNetworkPathW
++170 stdcall -noname PathIsNetworkPathW(wstr) shlwapi.PathIsNetworkPathW
+ 171 stub -noname PathIsNetworkPathA
+ 172 stub -noname PathBuildRootW
+ 173 stub -noname PathBuildRootA

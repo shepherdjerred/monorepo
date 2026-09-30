@@ -23,7 +23,7 @@ function invocation(command: string, args: readonly string[] = []) {
 describe("passthrough registry", () => {
   test.each([
     ["gh", "gh", []],
-    ["bk", "bk", []],
+    ["woodpecker", "woodpecker-cli", []],
     ["git-spice", "git-spice", []],
     ["linear", "linear", ["--workspace", "sjerred"]],
     ["posthog", "posthog-cli", []],
@@ -43,7 +43,6 @@ describe("passthrough registry", () => {
 
   test("injects environment defaults", () => {
     expect(invocation("gh").env["GH_REPO"]).toBe("shepherdjerred/monorepo");
-    expect(invocation("bk").env["BUILDKITE_ORGANIZATION_SLUG"]).toBe("sjerred");
     expect(invocation("posthog").env["POSTHOG_CLI_PROJECT_ID"]).toBe("549883");
     expect(invocation("argocd").env["ARGOCD_SERVER"]).toBe(
       "argocd.tailnet-1a49.ts.net",
@@ -95,8 +94,8 @@ describe("passthrough registry", () => {
     const temporalEnv = buildPassthroughInvocation("temporal", ["workflow"], {
       TEMPORAL_ADDRESS: "temporal.example:7233",
     });
-    const buildkiteEnv = buildPassthroughInvocation("bk", [], {
-      BUILDKITE_ORGANIZATION_SLUG: "other-org",
+    const linearEnv = buildPassthroughInvocation("linear", ["issue", "list"], {
+      LINEAR_API_KEY: "placeholder",
     });
     const argocdEnv = buildPassthroughInvocation("argocd", [], {
       ARGOCD_SERVER: "other.example",
@@ -111,7 +110,7 @@ describe("passthrough registry", () => {
     ).toBeUndefined();
     expect(argocdFlag?.env["ARGOCD_SERVER"]).toBeUndefined();
     expect(temporalEnv?.args).toEqual(["workflow"]);
-    expect(buildkiteEnv?.env["BUILDKITE_ORGANIZATION_SLUG"]).toBe("other-org");
+    expect(linearEnv?.args).toEqual(["issue", "list"]);
     expect(argocdEnv?.env["ARGOCD_SERVER"]).toBe("other.example");
   });
 

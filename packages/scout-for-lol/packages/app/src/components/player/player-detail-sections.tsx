@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/dropdown-menu";
+} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -40,8 +40,7 @@ type AccountRow = {
 };
 
 function formatDate(value: Date | string | null): string {
-  if (value === null) return "—";
-  return new Date(value).toLocaleString();
+  return value === null ? "—" : new Date(value).toLocaleString();
 }
 
 function channelLabel(
@@ -73,6 +72,14 @@ function competitionTitleSuffix(competition: {
   return CompetitionStatusSchema.parse(competition.status) === "ENDED"
     ? " (ended)"
     : "";
+}
+
+function MobileTableScrollHint() {
+  return (
+    <p className="px-3 pt-3 text-xs text-scout-subtle md:hidden">
+      Swipe or scroll horizontally to see all columns.
+    </p>
+  );
 }
 
 export type PlayerSubscriptionRow = {
@@ -108,120 +115,123 @@ export function PlayerSubscriptionsTable(props: {
     );
   }
   return (
-    <Table>
-      <caption className="sr-only">
-        Channel subscriptions for this player
-      </caption>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Channel</TableHead>
-          <TableHead>Filters</TableHead>
-          <TableHead>Created by</TableHead>
-          <TableHead>Created</TableHead>
-          {hasActions && (
-            <TableHead className="w-1">
-              <span className="sr-only">Actions</span>
-            </TableHead>
-          )}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {props.subscriptions.map((subscription) => (
-          <TableRow key={subscription.id}>
-            <TableCell>
-              {channelLabel(props.channels, subscription.channelId)}
-            </TableCell>
-            <TableCell className="text-scout-subtle">
-              <FilterSummary
-                filters={subscription.filters}
-                isMuted={subscription.isMuted}
-              />
-            </TableCell>
-            <TableCell>
-              <DiscordUser
-                id={subscription.creatorDiscordId}
-                name={subscription.creatorDiscordUser}
-              />
-            </TableCell>
-            <TableCell>{formatDate(subscription.createdTime)}</TableCell>
+    <>
+      <MobileTableScrollHint />
+      <Table className="min-w-[48rem]">
+        <caption className="sr-only">
+          Channel subscriptions for this player
+        </caption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Channel</TableHead>
+            <TableHead>Filters</TableHead>
+            <TableHead>Created by</TableHead>
+            <TableHead>Created</TableHead>
             {hasActions && (
+              <TableHead className="w-1">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {props.subscriptions.map((subscription) => (
+            <TableRow key={subscription.id}>
               <TableCell>
-                <div className="flex items-center justify-end gap-1">
-                  {props.canUpdate && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        props.onEditFilters(subscription);
-                      }}
-                    >
-                      Edit filters
-                    </Button>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                {channelLabel(props.channels, subscription.channelId)}
+              </TableCell>
+              <TableCell className="text-scout-subtle">
+                <FilterSummary
+                  filters={subscription.filters}
+                  isMuted={subscription.isMuted}
+                />
+              </TableCell>
+              <TableCell>
+                <DiscordUser
+                  id={subscription.creatorDiscordId}
+                  name={subscription.creatorDiscordUser}
+                />
+              </TableCell>
+              <TableCell>{formatDate(subscription.createdTime)}</TableCell>
+              {hasActions && (
+                <TableCell>
+                  <div className="flex items-center justify-end gap-1">
+                    {props.canUpdate && (
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
-                        aria-label="Subscription actions"
+                        size="sm"
+                        onClick={() => {
+                          props.onEditFilters(subscription);
+                        }}
                       >
-                        <MoreHorizontal className="h-4 w-4" />
+                        Edit filters
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {props.canUpdate && (
-                        <>
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              props.onMove(subscription);
-                            }}
-                          >
-                            Move to another channel
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={props.mutationPending}
-                            onSelect={() => {
-                              props.onToggleMute(subscription);
-                            }}
-                          >
-                            {subscription.isMuted ? "Unmute" : "Mute"}
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      {props.canCreate && (
-                        <DropdownMenuItem
-                          onSelect={() => {
-                            props.onAddChannel(subscription);
-                          }}
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Subscription actions"
                         >
-                          Add channel
-                        </DropdownMenuItem>
-                      )}
-                      {props.canDelete && (
-                        <>
-                          <DropdownMenuSeparator />
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {props.canUpdate && (
+                          <>
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                props.onMove(subscription);
+                              }}
+                            >
+                              Move to another channel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={props.mutationPending}
+                              onSelect={() => {
+                                props.onToggleMute(subscription);
+                              }}
+                            >
+                              {subscription.isMuted ? "Unmute" : "Mute"}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {props.canCreate && (
                           <DropdownMenuItem
-                            disabled={props.mutationPending}
-                            className="text-scout-danger focus:text-scout-danger"
                             onSelect={() => {
-                              props.onRemove(subscription);
+                              props.onAddChannel(subscription);
                             }}
                           >
-                            Remove
+                            Add channel
                           </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </TableCell>
-            )}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+                        )}
+                        {props.canDelete && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              disabled={props.mutationPending}
+                              className="text-scout-danger focus:text-scout-danger"
+                              onSelect={() => {
+                                props.onRemove(subscription);
+                              }}
+                            >
+                              Remove
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }
 
@@ -239,101 +249,104 @@ export function PlayerAccountsTable(props: {
     return <p className="p-3 text-sm text-scout-subtle">No accounts.</p>;
   }
   return (
-    <Table>
-      <caption className="sr-only">Riot accounts for this player</caption>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Alias</TableHead>
-          <TableHead>Riot ID</TableHead>
-          <TableHead>Region</TableHead>
-          <TableHead>Last match</TableHead>
-          <TableHead>Last checked</TableHead>
-          {(props.canEdit || props.canTransfer || props.canDelete) && (
-            <TableHead className="w-1">
-              <span className="sr-only">Actions</span>
-            </TableHead>
-          )}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {props.accounts.map((account) => (
-          <TableRow key={account.id}>
-            <TableCell className="font-medium">{account.alias}</TableCell>
-            <TableCell>
-              {account.riotGameName === null ? (
-                <span className="text-scout-subtle">Not resolved</span>
-              ) : (
-                <span className="font-medium">
-                  {account.riotGameName}
-                  <span className="text-scout-subtle">
-                    #{account.riotTagLine}
-                  </span>
-                </span>
-              )}
-            </TableCell>
-            <TableCell>{account.region}</TableCell>
-            <TableCell>{formatDate(account.lastMatchTime)}</TableCell>
-            <TableCell>{formatDate(account.lastCheckedAt)}</TableCell>
+    <>
+      <MobileTableScrollHint />
+      <Table className="min-w-[56rem]">
+        <caption className="sr-only">Riot accounts for this player</caption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Alias</TableHead>
+            <TableHead>Riot ID</TableHead>
+            <TableHead>Region</TableHead>
+            <TableHead>Last match</TableHead>
+            <TableHead>Last checked</TableHead>
             {(props.canEdit || props.canTransfer || props.canDelete) && (
-              <TableCell>
-                <div className="flex justify-end gap-1">
-                  {props.canEdit && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        props.onEdit(account);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  )}
-                  {props.canTransfer && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={account.riotGameName === null}
-                      title={
-                        account.riotGameName === null
-                          ? "Waiting for the Riot ID to resolve — this refreshes automatically"
-                          : undefined
-                      }
-                      onClick={() => {
-                        props.onTransfer(account);
-                      }}
-                    >
-                      Transfer
-                    </Button>
-                  )}
-                  {props.canDelete && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={
-                        account.riotGameName === null || props.deletePending
-                      }
-                      title={
-                        account.riotGameName === null
-                          ? "Waiting for the Riot ID to resolve — this refreshes automatically"
-                          : undefined
-                      }
-                      onClick={() => {
-                        props.onDelete(account);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
+              <TableHead className="w-1">
+                <span className="sr-only">Actions</span>
+              </TableHead>
             )}
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {props.accounts.map((account) => (
+            <TableRow key={account.id}>
+              <TableCell className="font-medium">{account.alias}</TableCell>
+              <TableCell>
+                {account.riotGameName === null ? (
+                  <span className="text-scout-subtle">Not resolved</span>
+                ) : (
+                  <span className="font-medium">
+                    {account.riotGameName}
+                    <span className="text-scout-subtle">
+                      #{account.riotTagLine}
+                    </span>
+                  </span>
+                )}
+              </TableCell>
+              <TableCell>{account.region}</TableCell>
+              <TableCell>{formatDate(account.lastMatchTime)}</TableCell>
+              <TableCell>{formatDate(account.lastCheckedAt)}</TableCell>
+              {(props.canEdit || props.canTransfer || props.canDelete) && (
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    {props.canEdit && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          props.onEdit(account);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                    {props.canTransfer && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={account.riotGameName === null}
+                        title={
+                          account.riotGameName === null
+                            ? "Waiting for the Riot ID to resolve — this refreshes automatically"
+                            : undefined
+                        }
+                        onClick={() => {
+                          props.onTransfer(account);
+                        }}
+                      >
+                        Transfer
+                      </Button>
+                    )}
+                    {props.canDelete && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={
+                          account.riotGameName === null || props.deletePending
+                        }
+                        title={
+                          account.riotGameName === null
+                            ? "Waiting for the Riot ID to resolve — this refreshes automatically"
+                            : undefined
+                        }
+                        onClick={() => {
+                          props.onDelete(account);
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }
 
@@ -391,52 +404,55 @@ export function CompetitionSection(props: {
       {props.rows.length === 0 ? (
         <p className="p-3 text-sm text-scout-subtle">None.</p>
       ) : (
-        <Table>
-          <caption className="sr-only">
-            Competitions this player participates in
-          </caption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Competition</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Visibility</TableHead>
-              <TableHead>Dates</TableHead>
-              <TableHead>Invite</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {props.rows.map((participant) => (
-              <TableRow key={participant.id}>
-                <TableCell className="font-medium">
-                  <Link
-                    className="underline"
-                    to={`/g/${props.guildId}/competitions/${participant.competition.id.toString()}`}
-                  >
-                    {participant.competition.title}
-                  </Link>
-                  {competitionTitleSuffix(participant.competition)}
-                </TableCell>
-                <TableCell>
-                  {participantStatusLabel(participant.status)}
-                </TableCell>
-                <TableCell>
-                  {visibilityLabel(participant.competition.visibility)}
-                </TableCell>
-                <TableCell className="text-scout-subtle">
-                  {formatDate(participant.competition.startDate)} to{" "}
-                  {formatDate(participant.competition.endDate)}
-                </TableCell>
-                <TableCell className="text-scout-subtle">
-                  <DiscordUser
-                    id={participant.invitedBy}
-                    name={participant.invitedByUser}
-                  />{" "}
-                  / {formatDate(participant.invitedAt)}
-                </TableCell>
+        <>
+          <MobileTableScrollHint />
+          <Table className="min-w-[48rem]">
+            <caption className="sr-only">
+              Competitions this player participates in
+            </caption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Competition</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Visibility</TableHead>
+                <TableHead>Dates</TableHead>
+                <TableHead>Invite</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {props.rows.map((participant) => (
+                <TableRow key={participant.id}>
+                  <TableCell className="font-medium">
+                    <Link
+                      className="underline"
+                      to={`/g/${props.guildId}/competitions/${participant.competition.id.toString()}`}
+                    >
+                      {participant.competition.title}
+                    </Link>
+                    {competitionTitleSuffix(participant.competition)}
+                  </TableCell>
+                  <TableCell>
+                    {participantStatusLabel(participant.status)}
+                  </TableCell>
+                  <TableCell>
+                    {visibilityLabel(participant.competition.visibility)}
+                  </TableCell>
+                  <TableCell className="text-scout-subtle">
+                    {formatDate(participant.competition.startDate)} to{" "}
+                    {formatDate(participant.competition.endDate)}
+                  </TableCell>
+                  <TableCell className="text-scout-subtle">
+                    <DiscordUser
+                      id={participant.invitedBy}
+                      name={participant.invitedByUser}
+                    />{" "}
+                    / {formatDate(participant.invitedAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </>
       )}
     </Section>
   );

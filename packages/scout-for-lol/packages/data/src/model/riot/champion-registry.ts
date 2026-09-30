@@ -114,7 +114,7 @@ export function getChampionIdByName(name: string): ChampionId | undefined {
   const normalized = normalizeSearchTerm(name);
   const aliasTarget =
     CHAMPION_ALIASES[normalized] ?? CHAMPION_ALIASES[name.toLowerCase()];
-  if (aliasTarget) {
+  if (aliasTarget !== undefined) {
     const aliased = championByKey.get(aliasTarget.toLowerCase());
     if (aliased) return aliased.id;
   }
@@ -164,15 +164,13 @@ export function normalizeChampionName(championName: string): string {
 
   const alias =
     CHAMPION_ALIASES[lower] ?? CHAMPION_ALIASES[normalizeSearchTerm(decoded)];
-  if (alias) {
+  if (alias !== undefined) {
     const aliased = championByKey.get(alias.toLowerCase());
     if (aliased) return aliased.key;
   }
 
   const byName = championByName.get(normalizeSearchTerm(decoded));
-  if (byName) return byName.key;
-
-  return decoded;
+  return byName ? byName.key : decoded;
 }
 
 /**
@@ -209,9 +207,9 @@ export function searchChampions(
 
     const aStarts = aSearch.startsWith(normalizedQuery) ? 1 : 0;
     const bStarts = bSearch.startsWith(normalizedQuery) ? 1 : 0;
-    if (aStarts !== bStarts) return bStarts - aStarts;
-
-    return a.name.localeCompare(b.name);
+    return aStarts === bStarts
+      ? a.name.localeCompare(b.name)
+      : bStarts - aStarts;
   });
 
   return sorted.slice(0, limit).map((c) => ({

@@ -671,14 +671,7 @@
                             "minLength": 1
                           },
                           "details": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "status": {
                             "type": "string",
@@ -703,24 +696,10 @@
                             ]
                           },
                           "due": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "scheduled": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "contexts": {
                             "type": "array",
@@ -741,14 +720,7 @@
                             }
                           },
                           "recurrence": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "recurrenceAnchor": {
                             "anyOf": [
@@ -762,14 +734,7 @@
                             ]
                           },
                           "timeEstimate": {
-                            "anyOf": [
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["number", "null"]
                           },
                           "extraFields": {
                             "type": "object",
@@ -1273,14 +1238,7 @@
                             "minLength": 1
                           },
                           "details": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "status": {
                             "type": "string",
@@ -1305,24 +1263,10 @@
                             ]
                           },
                           "due": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "scheduled": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "contexts": {
                             "type": "array",
@@ -1343,14 +1287,7 @@
                             }
                           },
                           "recurrence": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["string", "null"]
                           },
                           "recurrenceAnchor": {
                             "anyOf": [
@@ -1364,14 +1301,7 @@
                             ]
                           },
                           "timeEstimate": {
-                            "anyOf": [
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": ["number", "null"]
                           },
                           "extraFields": {
                             "type": "object",
@@ -1762,7 +1692,10 @@
                   {
                     "type": "string"
                   }
-                ]
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
               },
               "path": {
                 "type": "string"

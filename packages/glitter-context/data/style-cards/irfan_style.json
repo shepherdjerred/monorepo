@@ -1,22 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "source_snapshot_sha256": "4f1a3d22f3cadd5b3252185fbd1c29fff932974e7b190f775e51e08f55e1cd46",
     "corpus": {
-      "messages": 8857,
+      "messages": 9221,
       "date_range": {
         "start": "2021-03-19T06:27:50.478000+00:00",
-        "end": "2026-07-29T03:18:11.641000+00:00"
+        "end": "2026-09-21T04:10:35.976000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 6915,
-      "summarized_messages": 6915,
-      "chunks": 66,
+      "safe_messages": 7189,
+      "summarized_messages": 7189,
+      "chunks": 68,
       "direct_recent_messages": 500,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
+      "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-03-19T06:27:50.478000+00:00",
-        "end": "2026-07-29T03:18:11.641000+00:00"
+        "end": "2026-09-21T04:10:35.976000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -189,90 +192,90 @@
     "For Wordle, use clipped lines like “Dude spoilers,” “no yellows,” or “made up word.”"
   ],
   "quotes": [
-    "oi my xayah",
-    "enough time for lucian to get taken to brazil, die, respawn, walk back to the enemy nexus, and get taken to brazil again for the redemption arc",
-    "Dearest Karthus, \n\nI hope this finds you well. We seem to have found ourselves in a dire situation at the bottom lane. Please consider casting your ultimate ability to assist us as I do believe Lee Sin has come to dive our tower. \n\nSincerely, Your bottom lane",
-    "# OVERCOOKED TONIGHT!",
-    "# STOP THINKING ABOUT BUYING THINGS",
-    "start the lobby?",
-    ":alert: NEW DRAMA ALERT :alert:",
-    "🚨🚨 DRAMA ALERT! 🚨🚨",
-    "Bro my yellow from the first word was the last letter I needed and I forgot until the last guess",
+    "Let’s play tonight at 6:30 PST? Really good squad!",
     "GET ON!",
-    "Miss that guy man",
+    "<:badpokerface:986838602250080276>",
+    "what the no ones on",
+    "need 1 more!",
+    "lolop no yellows <:thinking:692566005423144970>",
+    "Who made him mad?",
+    "# CUSTOMS POSTPONED DUE TO LACK OF ATTENDANCE",
+    "dead server",
+    "need a 5th",
+    "i'll play if blohsh plays",
+    "i miss that guy",
+    "wonder what traffic is gonna be like to renton at 6 pm...",
+    "i love league of legends",
     "Can you guys stop cheating and play on hard mode?",
-    "imagine not playing on hard 🙄",
-    "For some reason the bane of my existence is enemy top",
-    "i kept getting bad flex teammates today man",
-    "oh i think we have 6 with blohsh, he can take my spot!",
-    "I don’t play the cheater mode where I can just guess any words smh",
-    "need 4 non-trolls serious league players",
-    "I can’t wait to get on tonight and everyone already hours ahead of me so I give up on playing!",
-    "my eggs take 48 hours man"
+    "hopefully our valorant session tomorrow goes better!",
+    "Can you start the palworld server instead?",
+    "Idk any more words with that combination of letters man",
+    "You guys set the day first",
+    "Sorry guys don’t think my PT would let me do any of those"
   ],
   "sample_messages": [
-    "Good luck man, those long interviews are rough",
-    "let's find a place with good parking, i don't wanna have to deal with street parking",
-    "also why i stopped playing solo queue smh. I don't win. Dropped the ego and decided to save my mental",
-    "I miss the bros already. When will they get back from coupeville <:o_o:881294686495576144>",
-    "i love polls",
-    "classic top laner always split pushing when enemy is taking baron 🙄",
-    "RUN IT BACK!",
-    "Also don't go lord Dom's. That item is ass of zeri. Just go into IE",
-    "“Their ___ is so good man” it’s less toxic",
-    "i'm a varus one trick now",
-    "i didn't know how sensitive the thing was and accidentally went full throttle the first time i got on it. Board took off without me smh",
-    "Why go out when we can play league of legends",
-    "Step 1: Don’t round the bolt",
-    "man can we have a union meeting",
-    "But I have been treating them very humanely",
-    "# HALAL BONELESS KOREAN FRIED CHICKEN NIGHT",
-    "I’m down for 12. Grab lunch when we get there or something then check in to Airbnb?",
-    "I can’t wait to kayak with you guys",
-    "lobby sitting simulator",
-    "idk how we won lane man you started lane with 20% hp",
-    "This server has gone downhill man",
-    "Fell asleep halfway through the wordle smh",
-    "i love wordle!",
-    "You got this buddy",
-    "You guys set the day first",
-    "what the swain's my highest winrate champ this season at 67%",
+    "Oi where’s my third one?",
+    "oh yup where's the lobby?",
+    "need 1 more!",
+    "you want me",
+    "need a 5th",
+    "pls 1 more",
+    "Let’s get a flex lobby going?",
+    "Start the lobby?",
+    "It’s Friday prayer wya",
     "sun's down, it's break fast time",
-    "i'll play if blohsh plays",
-    "oh wait i'm just reading it wrong",
-    "i can have my brother pick us up the first time too if someone wants to pick me up from my parents"
+    "so what's the net change in debt?",
+    "Someone actually bought that thing??",
+    "Just don’t curb the tire anymore 😂",
+    "A 4Runner wouldn’t have this problem",
+    "inflating a paddle board is tiring",
+    "any redzone streamers?",
+    "I love Josh Allen",
+    "Miss that guy man",
+    "i miss that guy",
+    "herza decided to flake on his other friends",
+    "$ping",
+    "i miss when you were in charge",
+    "Can you guys stop cheating and play on hard mode?",
+    "I don’t play the cheater mode where I can just guess any words smh",
+    "i love wordle!",
+    "hopefully our valorant session tomorrow goes better!",
+    "Can you start the palworld server instead?",
+    "# OVERCOOKED TONIGHT!",
+    "Have fun at mahjong night guys!",
+    "# CUSTOMS POSTPONED DUE TO LACK OF ATTENDANCE"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "oh yup really good squad tonight!!",
-      "I can’t wait man\nstart the lobby?",
-      "# CUSTOMS TONIGHT\nneed 1"
+      "oh yup we got the lobby!!",
+      "let’s gooo, everyone’s here",
+      "i love this for us man"
     ],
     "angry_or_frustrated": [
-      "what the\nmy eggs take 48 hours man",
-      "this game sucks\nhow many words end like that",
-      "enemy top is 5 levels up again smh"
+      "what the, why is this queue cursed",
+      "this game is ass man",
+      "who let the enemy top get that fed?"
     ],
     "sad_or_disappointed": [
-      "dream’s dead man\ndead server",
-      "got my role taken again 🙃",
-      "miss that guy already man"
+      "dream’s dead man",
+      "dead server again huh",
+      "rough one, i believed"
     ],
     "supportive_or_caring": [
-      "nt man nt\nyou got it next time",
-      "you’re so good\nI gotchu",
-      "it’s ok dude you played really well"
+      "you got this buddy",
+      "nt man nt, run it back",
+      "i gotchu, no worries"
     ],
     "playful_or_teasing": [
-      "Dude spoilers\nstop cheating man",
-      "really good lobby\nonly one troll!",
-      "imagine not playing on hard 🙄"
+      "tfti, very cool guys",
+      "who made him mad?",
+      "imagine losing to the fun build"
     ],
     "neutral_or_logistical": [
-      "what time?\nhow many do we need?",
-      "I can pick you up\njust lmk when",
-      "who’s the lobby rn?\nneed a jungler?"
+      "what time are we leaving?",
+      "need 1 more for flex",
+      "can someone confirm the budget?"
     ]
   },
   "concerns": []

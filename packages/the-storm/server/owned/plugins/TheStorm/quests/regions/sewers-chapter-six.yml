@@ -1,0 +1,73 @@
+# The sewer watch turns sample results into a route that can be repeated safely.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-sample-labels:
+    name: "The Sample Labels"
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed a-rainwater-check
+    text:
+      offer: "The water kit is ready, but an unmarked bottle tells us nothing. Give each sample a date and grate number."
+      accept: "Bring paper and ink for the sample labels."
+      decline: "I will tie scraps to the bottles for now."
+      finish: "Every bottle can now be traced to a patrol and a grate."
+      summary: "Label the sewer watch water-sample kit."
+      questions: []
+    start: labels
+    stages:
+      labels:
+        journal: "Bring Iovita 12 paper and 2 ink sacs."
+        waiting: "The patrol should label each sample before leaving the grate."
+        complete: "The sewer sample bottles have proper labels."
+        objectives:
+          - deliver iovita 12 PAPER
+          - deliver iovita 2 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1
+
+  the-safe-grate-map:
+    name: "The Safe Grate Map"
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-sample-labels
+    text:
+      offer: "Iovita can compare the water now. A map of the inspected grates will keep the next patrol out of an unverified drain."
+      accept: "Bring maps and compasses for the surface route."
+      decline: "I will lead the next patrol myself."
+      finish: "The watch has a surface route it can repeat without entering an unknown drain."
+      summary: "Equip the sewer patrol with a current safe-route map."
+      questions: []
+    start: map
+    stages:
+      map:
+        journal: "Bring the Guard Captain 2 maps and 2 compasses."
+        waiting: "A safe route must be drawn from the present town."
+        complete: "The surface grate route is mapped for the watch."
+        objectives:
+          - deliver guard-captain 2 MAP
+          - deliver guard-captain 2 COMPASS
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1

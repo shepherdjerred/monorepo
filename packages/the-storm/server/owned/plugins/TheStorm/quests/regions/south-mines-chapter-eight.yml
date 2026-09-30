@@ -1,0 +1,83 @@
+# The measured cart line becomes an owned, maintainable mine routine.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-repair-bench:
+    name: "The Repair Bench"
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-ore-account
+    text:
+      offer: "Marcus can account for the ore. I want spare tools and carts at a repair bench before the next crew takes the line."
+      accept: "Craft iron pickaxes and minecarts in the main world."
+      decline: "The crew will keep sharing the last spare cart."
+      finish: "The line has a repair bench stocked for another crew."
+      summary: "Stock the South Mines repair bench for the cart line."
+      questions: []
+    start: bench
+    stages:
+      bench:
+        journal: "Craft 4 iron pickaxes and 2 minecarts in the main world."
+        waiting: "A safe line needs tools ready before a cart breaks."
+        complete: "Dorran has tools and carts for the repair bench."
+        objectives:
+          - craft 4 IRON_PICKAXE
+          - craft 2 MINECART
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  the-line-handover:
+    name: "The Line Handover"
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-repair-bench
+    text:
+      offer: "The repair bench and ore account are ready. Write the line's current route and maintenance record, then have Dorran take charge of the next crew."
+      accept: "Bring maps, paper and ink, then report to Dorran."
+      decline: "I will keep the cart notes until the crew meets."
+      finish: "The South Mines line belongs to a crew that can inspect, repair and account for it."
+      summary: "Hand the checked South Mines cart line to its next crew."
+      questions: []
+    start: record
+    stages:
+      record:
+        journal: "Bring Marcus 2 maps, 20 paper and 3 ink sacs."
+        waiting: "The handover should name the present route and its repair bench."
+        complete: "Marcus has a current line handover record."
+        objectives:
+          - deliver marcus 2 MAP
+          - deliver marcus 20 PAPER
+          - deliver marcus 3 INK_SAC
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Ask Dorran to take the line's maintenance record."
+        waiting: "The next crew should hear the route from its foreman."
+        complete: "Dorran accepts the line handover."
+        objectives:
+          - talk dorran
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation townsfolk 1

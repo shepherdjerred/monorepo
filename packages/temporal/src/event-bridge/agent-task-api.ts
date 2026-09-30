@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { ZodError } from "zod/v4";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { AgentTaskInputV2Schema } from "#shared/agent/agent-task.ts";
+import { buildAgentChatApiRoutes } from "./agent-chat-api.ts";
 
 const COMPONENT = "agent-task-api";
 const DEFAULT_PORT = 9467;
@@ -36,10 +37,7 @@ function bearerToken(header: string | undefined): string | undefined {
     return undefined;
   }
   const prefix = "Bearer ";
-  if (!header.startsWith(prefix)) {
-    return undefined;
-  }
-  return header.slice(prefix.length);
+  return header.startsWith(prefix) ? header.slice(prefix.length) : undefined;
 }
 
 function bearerMatches(
@@ -51,10 +49,7 @@ function bearerMatches(
   }
   const a = Buffer.from(presented);
   const b = Buffer.from(expected);
-  if (a.length !== b.length) {
-    return false;
-  }
-  return timingSafeEqual(a, b);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export function buildAgentTaskApiApp(
@@ -65,6 +60,7 @@ export function buildAgentTaskApiApp(
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
+  app.route("/", buildAgentChatApiRoutes(token, client));
 
   app.post("/agent-tasks", async (c) => {
     if (!bearerMatches(bearerToken(c.req.header("authorization")), token)) {

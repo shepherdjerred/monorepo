@@ -84,9 +84,9 @@ async function queryEmbedding(content: string): Promise<number[] | null> {
   const runtime = getLlmRuntime();
   try {
     const result = await embed({
-      model: runtime.embeddingModel(config.openRouter.embeddingModel),
+      model: runtime.embeddingModel(config.llm.embeddingModel),
       value: content,
-      abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
+      abortSignal: AbortSignal.timeout(config.agent.auxiliaryTimeoutMs),
       ...runtime.callOptions({ workload: "birmel.context.embed" }),
     });
     return result.embedding;

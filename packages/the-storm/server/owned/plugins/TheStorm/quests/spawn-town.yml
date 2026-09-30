@@ -1,0 +1,929 @@
+# Owned by the repository; the plugin never writes it.
+# Spawn Town side quests, ported from the 2017 server (Blackvein Quests and the
+# BetonQuest packs) with modern item names, the recorded bugs fixed, and
+# amounts scaled so one player can finish each alone.
+#
+# A stage is done when all its objectives are; `next` then picks where to go
+# (`complete` finishes the quest). `waiting` is what the stage's NPC says if you
+# talk to them before you are done; `complete` is what they say when you are.
+
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-blacksmiths-task:
+    name: A Blacksmith's Task
+    giver: thomas
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements: []
+    text:
+      offer: "ink:blacksmith#offer"
+      accept: I would be happy to take the materials needed to make the basic weaponry. Bring them as you find them.
+      decline: No problem. Please come back later!
+      finish: Thanks again for your help. That should be all for now!
+      summary: Thomas needs materials to forge new gear for the town guards.
+      questions:
+        - label: What's with all these attacks?
+          answer: Recently, we have seen more bandits and hostile mobs lurking in our territory. The guards have done well to protect us, but their barracks are now filled with dull and broken weapons.
+    start: gather
+    stages:
+      gather:
+        journal: Thomas needs 32 iron ingots, 16 coal, 16 sticks, 16 string, 16 feathers, 12 gold ingots and 4 diamonds. The attacks are getting worse.
+        waiting: Ahah! Bring me whatever you have; I'll take it a piece at a time.
+        complete: Ahah! This is perfect!
+        objectives:
+          - deliver thomas 32 IRON_INGOT
+          - deliver thomas 16 COAL
+          - deliver thomas 16 STICK
+          - deliver thomas 16 STRING
+          - deliver thomas 16 FEATHER
+          - deliver thomas 12 GOLD_INGOT
+          - deliver thomas 4 DIAMOND
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 1
+      - reputation townsfolk 1
+
+  an-enchanting-errand:
+    name: An Enchanting Errand
+    giver: thomas
+    category: side
+    repeat: once
+    estimatedMinutes: 90
+    requirements:
+      - completed a-blacksmiths-task
+    text:
+      offer: The town guard has put in a huge order for arms and armour. I can't possibly fill it by myself! How would you like to be my apprentice, and enchant some of it for me?
+      accept: I need a Sharpness V diamond sword, a Protection IV diamond chestplate and Thorns III diamond leggings.
+      decline: Hmm... come back when you're ready to learn.
+      finish: The town guard and I thank you for your help.
+      summary: Thomas wants enchanted diamond gear for the town guard's order.
+      questions: []
+    start: enchant
+    stages:
+      enchant:
+        journal: Enchant a Sharpness V diamond sword, a Protection IV diamond chestplate and Thorns III diamond leggings for Thomas.
+        waiting: Remember, I need Sharpness V, Protection IV and Thorns III.
+        complete: Fine work. You'd make a smith yet.
+        objectives:
+          - deliver thomas 1 DIAMOND_SWORD[enchant=sharpness:5]
+          - deliver thomas 1 DIAMOND_CHESTPLATE[enchant=protection:4]
+          - deliver thomas 1 DIAMOND_LEGGINGS[enchant=thorns:3]
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 2000
+      - points 5
+      - reputation townsfolk 1
+      - reputation storm-watch 1
+
+  a-thoughtful-gift:
+    name: A Thoughtful Gift
+    giver: nat
+    category: side
+    repeat: once
+    estimatedMinutes: 30
+    requirements: []
+    text:
+      offer: Nat ignores you...
+      accept: "...Hm? Oh. Hi. Were you going to say something?"
+      decline: "*You start blushing and back away.*"
+      finish: "*Nat is busy kissing her boyfriend.*"
+      summary: You have decided to win Nat over with flowers.
+      questions: []
+    start: dandelions
+    stages:
+      dandelions:
+        journal: You decide to give 6 dandelions to Nat.
+        waiting: Nat ignores you...
+        complete: Flowers? For me? How thoughtful of you, my boyfriend would never give me a gift. These are great, but I'd love some sunflowers!
+        objectives:
+          - deliver nat 6 DANDELION
+        onComplete: []
+        next: [{ to: sunflowers, when: [], label: none }]
+        timeLimit: none
+      sunflowers:
+        journal: Sunflowers... the more the better! I'll put in the extra effort and find 10 for Nat.
+        waiting: I'd like my sunflowers in a bunch of 10.
+        complete: I actually hate sunflowers. I'll give you a chance to make it up, though. Bring me some tulips!
+        objectives:
+          - deliver nat 10 SUNFLOWER
+        onComplete: []
+        next: [{ to: red-tulips, when: [], label: none }]
+        timeLimit: none
+      red-tulips:
+        journal: Seems Nat didn't like those sunflowers. I must make it up to her with 10 red tulips.
+        waiting: What's taking you so long!
+        complete: I absolutely HATE the colour red! Bring me some orange tulips instead.
+        objectives:
+          - deliver nat 10 RED_TULIP
+        onComplete: []
+        next: [{ to: orange-tulips, when: [], label: none }]
+        timeLimit: none
+      orange-tulips:
+        journal: I guess I should go find 10 orange tulips now.
+        waiting: "*Nat ignores you.*"
+        complete: I loved those orange tulips! Can you get me some thorny rose bushes to give to my boyfriend? I hate him!
+        objectives:
+          - deliver nat 10 ORANGE_TULIP
+        onComplete: []
+        next: [{ to: rose-bushes, when: [], label: none }]
+        timeLimit: none
+      rose-bushes:
+        journal: With these 12 rose bushes I will be able to make Nat mine!
+        waiting: I need the 12 thorny bushes ASAP!
+        complete: none
+        objectives:
+          - deliver nat 12 ROSE_BUSH
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - message You see Nat kissing her boyfriend as you return. In spite, you slyly lift 500 crystals from his pocket. You're too good for her anyway.
+      - crystals 500
+
+  from-ingots-to-rails:
+    name: From Ingots to Rails
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements: []
+    text:
+      offer: The mayor approved construction of a rail down to our deepest mine! We need you to bring iron and wood to craft the rails.
+      accept: I need you to bring me 64 iron and 16 oak logs.
+      decline: Why? This rail is crucial for our mines to operate at full capacity. Without it, this city will not be able to support itself.
+      finish: Thank you. Here's some money for your help.
+      summary: Marcus needs iron and wood for the new mine rail.
+      questions: []
+    start: materials
+    stages:
+      materials:
+        journal: I need to bring 64 iron ingots and 16 oak logs to Marcus for the rail.
+        waiting: Iron for the rails, oak for the sleepers. Bring what you've got.
+        complete: Perfect for the sleepers! And the iron will make fine rails.
+        objectives:
+          - deliver marcus 64 IRON_INGOT
+          - deliver marcus 16 OAK_LOG
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 1
+      - reputation townsfolk 1
+
+  nurturing-growth:
+    name: Nurturing Growth
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements: []
+    text:
+      offer: Our wheat farm is producing enough for our entire town, but it's a bit lacking in variety. Bring me some plants and I'll help change that.
+      accept: Wonderful! Eight of every sapling you can find, please.
+      decline: That's fine. If you come across any new seeds, please lend us some in the future. I'll make it worth your time.
+      finish: Thanks again! Our farm will now be able to produce the wide variety of crops the land supplies us with!
+      summary: Martha wants to bring some variety to the town farm.
+      questions: []
+    start: saplings
+    stages:
+      saplings:
+        journal: Martha wants plants to make the farm less bland. I'll get her 8 of every sapling.
+        waiting: Hello! We're setting up the farm for renovation.
+        complete: Thanks for the saplings. Now our farm will look all spruced up!
+        objectives:
+          - deliver martha 8 OAK_SAPLING
+          - deliver martha 8 SPRUCE_SAPLING
+          - deliver martha 8 BIRCH_SAPLING
+          - deliver martha 8 JUNGLE_SAPLING
+          - deliver martha 8 ACACIA_SAPLING
+          - deliver martha 8 DARK_OAK_SAPLING
+        onComplete: []
+        next: [{ to: seeds, when: [], label: none }]
+        timeLimit: none
+      seeds:
+        journal: They need crops to grow now. 32 wheat seeds, and 16 each of sugar cane, cocoa beans, pumpkin, melon and beetroot seeds.
+        waiting: We're now planning out the areas for the crops.
+        complete: We can finally start sowing the see- Oh... Seems like we've forgotten to till the land. Could you bring us a diamond hoe?
+        objectives:
+          - deliver martha 32 WHEAT_SEEDS
+          - deliver martha 16 SUGAR_CANE
+          - deliver martha 16 COCOA_BEANS
+          - deliver martha 16 PUMPKIN_SEEDS
+          - deliver martha 16 MELON_SEEDS
+          - deliver martha 16 BEETROOT_SEEDS
+        onComplete: []
+        next: [{ to: hoe, when: [], label: none }]
+        timeLimit: none
+      hoe:
+        journal: All that's left to do is give them a diamond hoe.
+        waiting: All we need is that diamond hoe to begin our new farm.
+        complete: none
+        objectives:
+          - deliver martha 1 DIAMOND_HOE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 2
+      - reputation townsfolk 1
+
+  a-wizards-study:
+    name: A Wizard's Study
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 60
+    requirements: []
+    text:
+      offer: Despite my ability to perform magic, it seems that I need you to bring supplies to construct my study with.
+      accept: Wool first. Pink, magenta and purple, and plenty of it.
+      decline: Hmph. Non-magical folk.
+      finish: Well, it took you long enough. You non-magical folk are always so slow.
+      summary: Walter the wizard needs supplies for his study.
+      questions: []
+    start: wool
+    stages:
+      wool:
+        journal: Walter wants 24 each of pink, magenta and purple wool for his study.
+        waiting: Colours, colours. I did say pink, magenta and purple.
+        complete: I don't really like this colour.
+        objectives:
+          - deliver walter 24 PINK_WOOL
+          - deliver walter 24 MAGENTA_WOOL
+          - deliver walter 24 PURPLE_WOOL
+        onComplete: []
+        next: [{ to: shelves, when: [], label: none }]
+        timeLimit: none
+      shelves:
+        journal: Now Walter needs 16 bookshelves and 32 glowstone.
+        waiting: Hurry up, please.
+        complete: Hurry up, please. There's one more thing.
+        objectives:
+          - deliver walter 16 BOOKSHELF
+          - deliver walter 32 GLOWSTONE
+        onComplete: []
+        next: [{ to: finishing, when: [], label: none }]
+        timeLimit: none
+      finishing:
+        journal: Walter's study needs an enchanting table and an ender chest.
+        waiting: An enchanting table and an ender chest. Surely even you can manage that.
+        complete: Finally.
+        objectives:
+          - deliver walter 1 ENCHANTING_TABLE
+          - deliver walter 1 ENDER_CHEST
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 850
+      - points 3
+      - reputation townsfolk 1
+
+  somethings-fishy:
+    name: Something's Fishy
+    giver: stanley
+    category: side
+    repeat: once
+    estimatedMinutes: 15
+    requirements: []
+    text:
+      offer: I'm having a bit of a bad day. Could you bring me something to cheer me up?
+      accept: Anything. Anything at all.
+      decline: That's fine. I'll be OK, like always.
+      finish: I haven't laughed that hard in years! Thank you so much! Here, you can have all of this.
+      summary: Stanley is having a bad day and needs cheering up.
+      questions:
+        - label: What would make you laugh?
+          answer: I've tried everything... just find me something I wouldn't be able to find normally.
+    start: cheer-up
+    stages:
+      cheer-up:
+        journal: Stanley has spent a long time searching for something funny. Perhaps something obscure is the key?
+        waiting: My day has just been so dull...
+        complete: A clownfish? ... B-b-bwahahahaaaa!
+        objectives:
+          - deliver stanley 1 TROPICAL_FISH | Bring Stanley something funny
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - message Stanley's face contorts, as if something were trying to escape from the void inside him.
+      - crystals 350
+
+  insomnia:
+    name: Insomnia
+    giver: addison
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements: []
+    text:
+      offer: It's been hard sleeping with all these mobs outside... Would you mind helping me out?
+      accept: Thin out the spiders first, would you? And bring me what they drop.
+      decline: "...I'll just lie awake, then."
+      finish: Thank you! Now I can sleep in peace...
+      summary: Addison can't sleep for the mobs outside the tavern.
+      questions: []
+    start: spiders
+    stages:
+      spiders:
+        journal: Kill 12 spiders and bring Addison 16 spider eyes and 32 string.
+        waiting: They skitter all night. All night!
+        complete: Ah, flesh of the undead! Just what I need for a good night's rest.
+        objectives:
+          - kill 12 SPIDER
+          - deliver addison 16 SPIDER_EYE
+          - deliver addison 32 STRING
+        onComplete: []
+        next: [{ to: zombies, when: [], label: none }]
+        timeLimit: none
+      zombies:
+        journal: Now the zombies. Kill 12 and bring Addison 3 buckets of milk.
+        waiting: The groaning is almost worse than the skittering.
+        complete: Milk? Why'd you bring me milk?
+        objectives:
+          - kill 12 ZOMBIE
+          - deliver addison 3 MILK_BUCKET
+        onComplete: []
+        next: [{ to: traps, when: [], label: none }]
+        timeLimit: none
+      traps:
+        journal: Addison wants to set traps. Bring 32 arrows, 4 dispensers, 8 TNT and 8 tripwire hooks.
+        waiting: Arrows, dispensers, TNT and tripwire hooks. Trust me.
+        complete: I just need to set this up...
+        objectives:
+          - deliver addison 32 ARROW
+          - deliver addison 4 DISPENSER
+          - deliver addison 8 TNT
+          - deliver addison 8 TRIPWIRE_HOOK
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 1050
+      - points 2
+      - reputation townsfolk 1
+
+  troubles-brewing:
+    name: Trouble's Brewing
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 80
+    requirements: []
+    text:
+      offer: Hello there! I've been working on a potion of... healing... and I need just a few more ingredients. You can help me with that, right?
+      accept: Wonderful. Let's start with something simple.
+      decline: Pity. Another time, perhaps.
+      finish: Why, thank you! You best stay out of the city for a while... for your own good...
+      summary: Iovita is brewing a potion of "healing".
+      questions: []
+    start: simple
+    stages:
+      simple:
+        journal: Iovita needs 15 poppies, 30 bones, 40 wheat seeds and 20 string.
+        waiting: Just the simple things to start.
+        complete: Ah yes, just what I needed to start this concoction.
+        objectives:
+          - deliver iovita 15 POPPY
+          - deliver iovita 30 BONE
+          - deliver iovita 40 WHEAT_SEEDS
+          - deliver iovita 20 STRING
+        onComplete: []
+        next: [{ to: nether, when: [], label: none }]
+        timeLimit: none
+      nether:
+        journal: Now 6 blaze rods, 3 ghast tears and 32 rotten flesh.
+        waiting: The nether has everything a healer needs. Mostly.
+        complete: Smells delightful...
+        objectives:
+          - deliver iovita 6 BLAZE_ROD
+          - deliver iovita 3 GHAST_TEAR
+          - deliver iovita 32 ROTTEN_FLESH
+        onComplete: []
+        next: [{ to: skull, when: [], label: none }]
+        timeLimit: none
+      skull:
+        journal: The final ingredient is a wither skeleton skull. What kind of healing potion is this?
+        waiting: Just one more ingredient. A skull. From a wither skeleton.
+        complete: Ahaha! Death and destruction shall rain down!
+        objectives:
+          - deliver iovita 1 WITHER_SKELETON_SKULL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - give 1 POTION[potion=strong_healing]
+      - crystals 2000
+      - points 5
+
+  without-a-home:
+    name: Without a Home
+    giver: mason
+    category: side
+    repeat: once
+    estimatedMinutes: 20
+    requirements: []
+    text:
+      offer: My family and I were forced to leave our home. We have nothing. Would you fetch us some materials?
+      accept: Could we have some wheat, potatoes and white wool to make ourselves a bed?
+      decline: It really is a cold winter...
+      finish: Thank you very much! Now I can at least feed my family.
+      summary: Mason's family lost their home and needs food and bedding.
+      questions: []
+    start: supplies
+    stages:
+      supplies:
+        journal: I should bring them 64 wheat, 32 potatoes and 16 white wool.
+        waiting: Thanks for your generosity. It really is a cold winter...
+        complete: Perfect for the bed lining.
+        objectives:
+          - deliver mason 64 WHEAT
+          - deliver mason 32 POTATO
+          - deliver mason 16 WHITE_WOOL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - message Mason's eyes begin to glow with hope. You feel relieved.
+      - crystals 300
+      - points 1
+      - reputation townsfolk 1
+
+  cades-cheese-fetish:
+    name: Cade's Cheese Fetish
+    giver: cade
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements: []
+    text:
+      offer: Hello there, I've a request to make of you. I need some money to buy myself some cheese. Care to spare some?
+      accept: Gold will do. Cheese isn't cheap, you know.
+      decline: Your loss. More cheese for me.
+      finish: "*Creeped out by Cade, you take his crystals and run for it.*"
+      summary: Cade wants cheese. Badly.
+      questions: []
+    start: money
+    stages:
+      money:
+        journal: Cade wants 36 gold nuggets and 3 gold ingots to buy cheese.
+        waiting: I need some money to buy myself some cheese.
+        complete: This cheese isn't very good at all. I need something better!
+        objectives:
+          - deliver cade 36 GOLD_NUGGET
+          - deliver cade 3 GOLD_INGOT
+        onComplete: []
+        next: [{ to: lookalike, when: [], label: none }]
+        timeLimit: none
+      lookalike:
+        journal: The shops are out of cheese. Cade wants something that looks like it; 2 gold blocks and 24 glowstone ought to do.
+        waiting: The shops seem to be out of stock... could you bring me something which looks similar to cheese?
+        complete: That's a bit better...
+        objectives:
+          - deliver cade 2 GOLD_BLOCK
+          - deliver cade 24 GLOWSTONE
+        onComplete: []
+        next: [{ to: smell, when: [], label: none }]
+        timeLimit: none
+      smell:
+        journal: Rumour says a rabbit's foot and a bucket of lava smell and taste like cheese.
+        waiting: I've heard rumours of certain items which smell and taste like cheese.
+        complete: What's that addicting smell? Oh my, this cheese-smelling foot is perfect for me!
+        objectives:
+          - deliver cade 1 RABBIT_FOOT
+          - deliver cade 1 LAVA_BUCKET
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 1
+
+  out-fishing:
+    name: Out Fishing
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 30
+    requirements: []
+    text:
+      offer: Every day I bring a loaf of bread home for my wife, but she's growing tired of it! She asked for something more exotic, but I never have the time to search for such a delicacy. I'll reward you if you bring me something she'd enjoy!
+      accept: Fish! Nobody here eats fish. That'll be exotic enough.
+      decline: Bread again, then.
+      finish: Fish! That's very exotic here. Maybe now my wife will stop nagging me.
+      summary: Oswin's wife wants something more exotic than bread.
+      questions: []
+    start: fishing
+    stages:
+      fishing:
+        journal: Catch 15 fish and bring Oswin 15 raw cod.
+        waiting: Any luck at the water?
+        complete: Thank you.
+        objectives:
+          - fish 15 any
+          - deliver oswin 15 COD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 2
+
+  a-shady-request:
+    name: A Shady Request
+    giver: fergus
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements: []
+    text:
+      offer: Hey you! Yes, you! Would you care to help out a single parent and his 3 children? We're desperate for help...
+      accept: Coal, to start. 32 of it. The nights are so cold.
+      decline: Heartless. Truly heartless.
+      finish: "...Hahaha!! I can't believe you actually fell for it!! You actually believed I needed your help. Come on kids, let's go home."
+      summary: Fergus, a single parent, is desperate for help.
+      questions: []
+    start: coal
+    stages:
+      coal:
+        journal: Fergus needs 32 coal to keep his children warm.
+        waiting: Just the coal, please. The children are shivering.
+        complete: Thank you! We've also had some trouble gathering gear to defend ourselves against mobs. Could you bring us 32 iron ingots?
+        objectives:
+          - deliver fergus 32 COAL
+        onComplete: []
+        next: [{ to: iron, when: [], label: none }]
+        timeLimit: none
+      iron:
+        journal: Fergus needs 32 iron ingots to defend his family from mobs.
+        waiting: Iron, for defending ourselves. From mobs.
+        complete: Ahh, this should be good enough to kill... mobs. Now on to the money part... Ever since my wife died I've hardly had any money. 32 gold ingots should be enough for a few months...
+        objectives:
+          - deliver fergus 32 IRON_INGOT
+        onComplete: []
+        next: [{ to: gold, when: [], label: none }]
+        timeLimit: none
+      gold:
+        journal: Fergus needs 32 gold ingots to feed his family.
+        waiting: Gold. For food. For the children.
+        complete: I'm sure I'll have enough money for food now! Now, the last thing... I've heard about these rare things called "diamonds". You can make an enchanting table with them. Could you get 4 for me?
+        objectives:
+          - deliver fergus 32 GOLD_INGOT
+        onComplete: []
+        next: [{ to: diamonds, when: [], label: none }]
+        timeLimit: none
+      diamonds:
+        journal: Fergus wants 4 diamonds. For an enchanting table, apparently.
+        waiting: Just the diamonds and we're done. Promise.
+        complete: Thanks, man...
+        objectives:
+          - deliver fergus 4 DIAMOND
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - points 4
+      - title conned
+
+  a-cold-winter:
+    name: A Cold Winter
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 90
+    requirements: []
+    text:
+      offer: Winter is approaching fast and I worry for the wellbeing of my family. We need supplies to help us survive; I fear you're the only one who can help us.
+      accept: Fuel first. We'll freeze before we starve.
+      decline: I understand. We'll manage... somehow.
+      finish: I don't know what to say... you've saved my family from the cold. I don't have much to give, but I hope this will do.
+      summary: Lenox's family needs supplies to survive the winter.
+      questions: []
+    start: fuel
+    stages:
+      fuel:
+        journal: Lenox needs 16 netherrack, 32 oak logs and 32 coal to keep the fires going.
+        waiting: Fuel first. Anything that burns.
+        complete: Thank you!
+        objectives:
+          - deliver lenox 16 NETHERRACK
+          - deliver lenox 32 OAK_LOG
+          - deliver lenox 32 COAL
+        onComplete: []
+        next: [{ to: shelter, when: [], label: none }]
+        timeLimit: none
+      shelter:
+        journal: Now 8 furnaces, 32 torches, a bed, a clock and a compass.
+        waiting: A warm, lit home. That's all we ask.
+        complete: Perfect!
+        objectives:
+          - deliver lenox 8 FURNACE
+          - deliver lenox 32 TORCH
+          - deliver lenox 1 WHITE_BED
+          - deliver lenox 1 CLOCK
+          - deliver lenox 1 COMPASS
+        onComplete: []
+        next: [{ to: defence, when: [], label: none }]
+        timeLimit: none
+      defence:
+        journal: Lenox needs a bow, 32 arrows and an iron sword to keep the family safe.
+        waiting: The mobs grow bolder in the dark months.
+        complete: Looks like this will keep us safe...
+        objectives:
+          - deliver lenox 1 BOW
+          - deliver lenox 32 ARROW
+          - deliver lenox 1 IRON_SWORD
+        onComplete: []
+        next: [{ to: food, when: [], label: none }]
+        timeLimit: none
+      food:
+        journal: Food for the winter. 6 mushroom stew, 20 bread, 10 apples, 16 melon slices, 16 carrots and 16 baked potatoes.
+        waiting: The children are always hungry.
+        complete: Yummy!
+        objectives:
+          - deliver lenox 6 MUSHROOM_STEW
+          - deliver lenox 20 BREAD
+          - deliver lenox 10 APPLE
+          - deliver lenox 16 MELON_SLICE
+          - deliver lenox 16 CARROT
+          - deliver lenox 16 BAKED_POTATO
+        onComplete: []
+        next: [{ to: clothes, when: [], label: none }]
+        timeLimit: none
+      clothes:
+        journal: Warm clothes. A set of leather armour and 8 leather.
+        waiting: Leather keeps the cold out.
+        complete: This'll help keep us safe, thanks!
+        objectives:
+          - deliver lenox 1 LEATHER_HELMET
+          - deliver lenox 1 LEATHER_CHESTPLATE
+          - deliver lenox 1 LEATHER_LEGGINGS
+          - deliver lenox 1 LEATHER_BOOTS
+          - deliver lenox 8 LEATHER
+        onComplete: []
+        next: [{ to: hay, when: [], label: none }]
+        timeLimit: none
+      hay:
+        journal: Finally, 16 hay bales for the animals.
+        waiting: The animals need to eat too.
+        complete: Thanks!
+        objectives:
+          - deliver lenox 16 HAY_BLOCK
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 1500
+      - points 4
+      - reputation townsfolk 2
+
+  alchemy-and-metallurgy:
+    name: Alchemy and Metallurgy
+    giver: leight
+    category: side
+    repeat: once
+    estimatedMinutes: 70
+    requirements: []
+    text:
+      offer: Sir, would you like to turn iron into gold?
+      accept: Excellent! First, the basics. Logs, a flint and steel, and a cauldron.
+      decline: Your loss. Gold waits for no one.
+      finish: It's done! You can have some of the gold, since you helped me out a little...
+      summary: Leight claims he can turn iron into gold.
+      questions: []
+    start: basics
+    stages:
+      basics:
+        journal: Leight needs 32 oak logs, a flint and steel and a cauldron.
+        waiting: The basics first. Every alchemist starts with fire.
+        complete: Looks good.
+        objectives:
+          - deliver leight 32 OAK_LOG
+          - deliver leight 1 FLINT_AND_STEEL
+          - deliver leight 1 CAULDRON
+        onComplete: []
+        next: [{ to: books, when: [], label: none }]
+        timeLimit: none
+      books:
+        journal: Leight needs 16 books.
+        waiting: Books. The more boring, the better.
+        complete: Boring books are just what we need to get this done.
+        objectives:
+          - deliver leight 16 BOOK
+        onComplete: []
+        next: [{ to: reagents, when: [], label: none }]
+        timeLimit: none
+      reagents:
+        journal: Reagents from far and wide. 16 nether wart, 3 ghast tears, 32 glowstone dust, 32 redstone and 16 nether quartz.
+        waiting: The rarer, the better.
+        complete: A long trek for such precious items.
+        objectives:
+          - deliver leight 16 NETHER_WART
+          - deliver leight 3 GHAST_TEAR
+          - deliver leight 32 GLOWSTONE_DUST
+          - deliver leight 32 REDSTONE
+          - deliver leight 16 QUARTZ
+        onComplete: []
+        next: [{ to: rabbit, when: [], label: none }]
+        timeLimit: none
+      rabbit:
+        journal: Leight needs 3 rabbit's feet. Poor rabbits.
+        waiting: Luck is an ingredient too, you know.
+        complete: Poor creatures had to die, but it's worth it. Gold, baby!
+        objectives:
+          - deliver leight 3 RABBIT_FOOT
+        onComplete: []
+        next: [{ to: iron, when: [], label: none }]
+        timeLimit: none
+      iron:
+        journal: The iron itself. 64 iron ingots and a clock to time the reaction.
+        waiting: We're almost ready to begin.
+        complete: We're ready to begin!
+        objectives:
+          - deliver leight 64 IRON_INGOT
+          - deliver leight 1 CLOCK
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - give 16 GOLD_INGOT
+      - crystals 1250
+      - points 2
+
+  for-science:
+    name: For Science!
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 90
+    requirements: []
+    text:
+      offer: My latest invention is coming along quite well! They all laughed at the idea of a diamond-to-coal converter, but I'm close to done! I just need you to bring me a small collection of items before I can power it up.
+      accept: Let's start with the frame.
+      decline: They all laughed. You'll see!
+      finish: Thanks! This'll help my research greatly...
+      summary: Winston is building a diamond-to-coal converter.
+      questions: []
+    start: frame
+    stages:
+      frame:
+        journal: The frame. An enchanting table, 16 bookshelves, a brewing stand, an anvil and 16 pistons.
+        waiting: The frame is the foundation of all science.
+        complete: Flawless!
+        objectives:
+          - deliver winston 1 ENCHANTING_TABLE
+          - deliver winston 16 BOOKSHELF
+          - deliver winston 1 BREWING_STAND
+          - deliver winston 1 ANVIL
+          - deliver winston 16 PISTON
+        onComplete: []
+        next: [{ to: wiring, when: [], label: none }]
+        timeLimit: none
+      wiring:
+        journal: The wiring. Redstone, torches, comparators, repeaters, levers, buttons, dispensers and note blocks.
+        waiting: Redstone, redstone, redstone.
+        complete: Isn't redstone amazing?
+        objectives:
+          - deliver winston 32 REDSTONE
+          - deliver winston 8 REDSTONE_TORCH
+          - deliver winston 4 COMPARATOR
+          - deliver winston 4 REPEATER
+          - deliver winston 2 LEVER
+          - deliver winston 2 STONE_BUTTON
+          - deliver winston 2 DISPENSER
+          - deliver winston 2 NOTE_BLOCK
+        onComplete: []
+        next: [{ to: volatile, when: [], label: none }]
+        timeLimit: none
+      volatile:
+        journal: The volatile part. TNT, flint and steel, lava, fire charges, slime balls, books and glowstone dust.
+        waiting: Handle with care!
+        complete: Careful!
+        objectives:
+          - deliver winston 4 TNT
+          - deliver winston 2 FLINT_AND_STEEL
+          - deliver winston 2 LAVA_BUCKET
+          - deliver winston 8 FIRE_CHARGE
+          - deliver winston 8 SLIME_BALL
+          - deliver winston 8 BOOK
+          - deliver winston 16 GLOWSTONE_DUST
+        onComplete: []
+        next: [{ to: power, when: [], label: none }]
+        timeLimit: none
+      power:
+        journal: Power and control. Redstone blocks and lamps, repeaters, comparators, hoppers, droppers, pressure plates and daylight detectors.
+        waiting: This is almost everything!
+        complete: This is everything!
+        objectives:
+          - deliver winston 4 REDSTONE_BLOCK
+          - deliver winston 4 REDSTONE_LAMP
+          - deliver winston 4 REPEATER
+          - deliver winston 4 COMPARATOR
+          - deliver winston 6 HOPPER
+          - deliver winston 6 DROPPER
+          - deliver winston 4 HEAVY_WEIGHTED_PRESSURE_PLATE
+          - deliver winston 4 LIGHT_WEIGHTED_PRESSURE_PLATE
+          - deliver winston 4 DAYLIGHT_DETECTOR
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 1500
+      - points 4
+      - title scientist
+
+  boberts-request:
+    name: Bobert's Request
+    giver: bobert
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements: []
+    text:
+      offer: H- hey, do you have any... sugar?
+      accept: Th-thirty-two. Of sugar. For... reasons.
+      decline: Mmm... okay...
+      finish: I don't feel so well...
+      summary: Bobert, outside the bakery, has a sweet tooth.
+      questions: []
+    start: sugar
+    stages:
+      sugar:
+        journal: Bobert wants 32 "sugar".
+        waiting: The sugar. You have it?
+        complete: Mmmm...
+        objectives:
+          - deliver bobert 32 SUGAR | Bring Bobert 32 "sugar"
+        onComplete: []
+        next: [{ to: cookies, when: [], label: none }]
+        timeLimit: none
+      cookies:
+        journal: Malachi kicked Bobert out of the bakery. He wants 32 cookies.
+        waiting: Malachi kicked me out of the bakery... can you get me some cookies?
+        complete: These better not be raisin!
+        objectives:
+          - deliver bobert 32 COOKIE
+        onComplete: []
+        next: [{ to: water, when: [], label: none }]
+        timeLimit: none
+      water:
+        journal: Bobert is going on a diet. He wants 3 buckets of water.
+        waiting: This is a disgusting amount of cookies... I need to go on a diet. Bring me some water!
+        complete: Ew! Who would drink this?
+        objectives:
+          - deliver bobert 3 WATER_BUCKET
+        onComplete: []
+        next: [{ to: carrots, when: [], label: none }]
+        timeLimit: none
+      carrots:
+        journal: For his diet, Bobert also wants 32 carrots.
+        waiting: For my diet, I'll need some carrots too. Bring me some, peasant.
+        complete: They aren't even dipped in chocolate?
+        objectives:
+          - deliver bobert 32 CARROT
+        onComplete: []
+        next: [{ to: cake, when: [], label: none }]
+        timeLimit: none
+      cake:
+        journal: The diet is over. Bobert wants a cake.
+        waiting: I can't keep up with this diet thing, just bring me some cake, okay?
+        complete: Vanilla!
+        objectives:
+          - deliver bobert 1 CAKE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 1

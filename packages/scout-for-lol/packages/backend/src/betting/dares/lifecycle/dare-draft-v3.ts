@@ -1,5 +1,5 @@
 import {
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   DARE_SQL_V3_EVALUATOR_VERSION,
   DARE_V2_MAX_TARGETS,
   DareDeadlineSpecV2Schema,
@@ -27,11 +27,18 @@ import {
   type DareV2Dependencies,
 } from "#src/betting/dares/dare-v2-common.ts";
 import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dares/sql/dare-sql-v3-description.ts";
+import {
+  statusPhraseCoverageIssues,
+  storedStatusPhrasesJson,
+  type DareStatusPhrases,
+} from "#src/betting/dares/presentation/dare-list-copy.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type DareDraftV3Definition = {
   originalText: string;
+  displayTitle?: string | undefined;
+  statusPhrases?: DareStatusPhrases | undefined;
   queryText: string;
   plainLanguage: string;
   targets: readonly DareTargetBindingV2[];
@@ -44,6 +51,8 @@ export type DareDraftV3Definition = {
 
 export type PreparedDareDraftV3 = {
   originalText: string;
+  displayTitle: string | null;
+  statusPhrases: DareStatusPhrases | null;
   compilation: DareSqlV3Compilation;
   plainLanguage: string;
   targets: DareTargetBindingV2[];
@@ -103,7 +112,7 @@ export async function prepareDareDraftV3(
 > {
   const targets = DareTargetBindingV2Schema.array().parse(definition.targets);
   const deadlineSpec = DareDeadlineSpecV2Schema.parse(definition.deadlineSpec);
-  const stake = BucksStakeSchema.safeParse(definition.openingStake);
+  const stake = StorableBucksStakeSchema.safeParse(definition.openingStake);
   const issues = definitionIssues(definition, now);
   if (!stake.success) {
     issues.push("The opening stake must be a positive whole number of BB.");
@@ -122,6 +131,13 @@ export async function prepareDareDraftV3(
       kind: "invalid",
       issues: [error instanceof Error ? error.message : String(error)],
     };
+  }
+  const phraseIssues = statusPhraseCoverageIssues(
+    compilation.resultStructure.gameSets.map((gameSet) => gameSet.name),
+    definition.statusPhrases,
+  );
+  if (phraseIssues.length > 0) {
+    return { kind: "invalid", issues: phraseIssues };
   }
   const historyDays = definition.historyDays ?? 30;
   if (
@@ -145,6 +161,8 @@ export async function prepareDareDraftV3(
     kind: "valid",
     draft: {
       originalText: definition.originalText,
+      displayTitle: definition.displayTitle ?? null,
+      statusPhrases: definition.statusPhrases ?? null,
       compilation,
       plainLanguage: definition.plainLanguage,
       targets,
@@ -170,6 +188,8 @@ function revisionData(draft: PreparedDareDraftV3, revision: number) {
     openingStake: draft.openingStake,
     plainLanguage: draft.plainLanguage,
     semanticProofPlan: renderDareSqlV3SemanticProofPlan(draft.compilation),
+    displayTitle: draft.displayTitle,
+    statusPhrasesJson: storedStatusPhrasesJson(draft.statusPhrases),
     translationJson: null,
   };
 }

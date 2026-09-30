@@ -20,7 +20,7 @@ export type ParlayCardMarket = {
   yesOdds: string;
   noOdds: string;
   yourPosition: { side: string; stake: number } | null;
-  /** Named positions (match parlays) — weekly parlays pass aggregates instead. */
+  /** Named positions (match parlays); aggregate-only markets omit these. */
   positions?: { discordId: string; side: string; stake: number }[];
   aggregate?: { bettorCount: number; totalStaked: number };
 };

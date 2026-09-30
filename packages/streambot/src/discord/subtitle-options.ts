@@ -27,6 +27,5 @@ export function subtitlesSuffix(pref: SubtitlePref | undefined): string {
       ? " _(subtitles: on)_"
       : ` _(subtitles: ${pref.language})_`;
   }
-  if (pref?.language !== undefined) return ` _(subtitles: ${pref.language})_`;
-  return "";
+  return pref?.language === undefined ? "" : ` _(subtitles: ${pref.language})_`;
 }

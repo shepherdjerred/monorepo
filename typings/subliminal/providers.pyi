@@ -1,0 +1,3 @@
+from bs4 import BeautifulSoup
+
+def ParserBeautifulSoup(markup: str, parsers: list[str]) -> BeautifulSoup: ...

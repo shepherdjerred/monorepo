@@ -103,6 +103,7 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJob = {
    */
   automountServiceAccountToken?: boolean;
   /**
+   * Container-specific security context configuration
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
    *
    * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
@@ -1108,8 +1109,6 @@ export type KubeprometheusstackHelmValuesPrometheuswindowsexporter = {
    */
   releaseLabel?: boolean;
   /**
-   * Set job label to 'windows-exporter' as required by the default Prometheus rules and Grafana dashboards
-   *
    * @default {"jobLabel":"windows-exporter"}
    */
   podLabels?: KubeprometheusstackHelmValuesPrometheuswindowsexporterPodLabels;
@@ -1143,6 +1142,8 @@ export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPrometheusMoni
 
 export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPodLabels = {
   /**
+   * Set job label to 'windows-exporter' as required by the default Prometheus rules and Grafana dashboards
+   *
    * @default "windows-exporter"
    */
   jobLabel?: string;
@@ -1212,6 +1213,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   verticalPodAutoscaler?: KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscaler;
   /**
+   * Alertmanager configuration directives
    * ref: https://prometheus.io/docs/alerting/configuration/#configuration-file
    * https://prometheus.io/webtools/alerting/routing-tree-editor/
    *
@@ -1277,7 +1279,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   ingress?: KubeprometheusstackHelmValuesAlertmanagerIngress;
   /**
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"sessionPersistence":{},"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"timeouts":{},"sessionPersistence":{},"additionalRules":[]}}
    */
   route?: KubeprometheusstackHelmValuesAlertmanagerRoute;
   /**
@@ -1297,7 +1299,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    * Configuration for creating a Gateway API route that will map to each Alertmanager replica service
    * alertmanager.servicePerReplica must be enabled
    *
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostPrefix":"","hostDomain":"","parentRefs":[],"httpsRedirect":false,"filters":[],"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"sessionPersistence":{},"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostPrefix":"","hostDomain":"","parentRefs":[],"httpsRedirect":false,"filters":[],"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"timeouts":{},"sessionPersistence":{},"additionalRules":[]}}
    */
   routePerReplica?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplica;
   /**
@@ -1314,13 +1316,14 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
   servicePerReplica?: KubeprometheusstackHelmValuesAlertmanagerServicePerReplica;
   /**
    * Configuration for creating a ServiceMonitor for AlertManager
+   * Settings affecting alertmanagerSpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#alertmanagerspec
    *
    * @default {...} (16 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesAlertmanagerServiceMonitor;
   /**
-   * @default {...} (61 keys)
+   * @default {...} (62 keys)
    */
   alertmanagerSpec?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec;
   /**
@@ -1623,7 +1626,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerIngressLabels = {
 
 export type KubeprometheusstackHelmValuesAlertmanagerRoute = {
   /**
-   * @default {...} (12 keys)
+   * @default {...} (13 keys)
    */
   main?: KubeprometheusstackHelmValuesAlertmanagerRouteMain;
 };
@@ -1669,6 +1672,13 @@ export type KubeprometheusstackHelmValuesAlertmanagerRouteMain = {
   matches?: KubeprometheusstackHelmValuesAlertmanagerRouteMainMatchesElement[];
   filters?: unknown[];
   /**
+   * Timeouts for the generated HTTPRoute backend rule.
+   * Requires Gateway API CRDs and a controller that support HTTPRoute timeouts.
+   *
+   * @default {}
+   */
+  timeouts?: KubeprometheusstackHelmValuesAlertmanagerRouteMainTimeouts;
+  /**
    * Session persistence configuration for the route rule.
    *
    * @default {}
@@ -1710,6 +1720,8 @@ export type KubeprometheusstackHelmValuesAlertmanagerRouteMainMatchesPath = {
    */
   value?: string;
 };
+
+export type KubeprometheusstackHelmValuesAlertmanagerRouteMainTimeouts = object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerRouteMainSessionPersistence =
   {
@@ -1820,7 +1832,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaTlsSecretP
 
 export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplica = {
   /**
-   * @default {...} (13 keys)
+   * @default {...} (14 keys)
    */
   main?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMain;
 };
@@ -1879,6 +1891,13 @@ export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMain = {
   filters?: unknown[];
   matches?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainMatchesElement[];
   /**
+   * Timeouts for the generated HTTPRoute backend rule.
+   * Requires Gateway API CRDs and a controller that support HTTPRoute timeouts.
+   *
+   * @default {}
+   */
+  timeouts?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainTimeouts;
+  /**
    * Session persistence configuration for the route rule.
    *
    * @default {}
@@ -1925,6 +1944,9 @@ export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainMatchesP
     value?: string;
   };
 
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainTimeouts =
+  object;
+
 export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainSessionPersistence =
   {
     /**
@@ -1962,7 +1984,6 @@ export type KubeprometheusstackHelmValuesAlertmanagerService = {
    */
   port?: number;
   /**
-   * Port for Alertmanager cluster communication
    * To be used with a proxy extraContainer port
    *
    * @default 9093
@@ -1996,9 +2017,6 @@ export type KubeprometheusstackHelmValuesAlertmanagerService = {
    */
   sessionAffinity?: string;
   /**
-   * If you want to modify the ClientIP sessionAffinity timeout
-   * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
-   *
    * @default {"clientIP":{"timeoutSeconds":10800}}
    */
   sessionAffinityConfig?: KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfig;
@@ -2041,6 +2059,9 @@ export type KubeprometheusstackHelmValuesAlertmanagerServiceIpDualStack = {
 export type KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfig =
   {
     /**
+     * If you want to modify the ClientIP sessionAffinity timeout
+     * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
+     *
      * @default {"timeoutSeconds":10800}
      */
     clientIP?: KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfigClientIP;
@@ -2229,8 +2250,6 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
   automountServiceAccountToken?: boolean;
   configMaps?: unknown[];
   /**
-   * ConfigSecret is the name of a Kubernetes Secret in the same namespace as the Alertmanager object, which contains configuration for
-   * this Alertmanager instance. Defaults to 'alertmanager-' The secret is mounted into /etc/alertmanager/config.
    * WebTLSConfig defines the TLS parameters for HTTPS
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#alertmanagerwebspec
    *
@@ -2430,6 +2449,14 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
    */
   clusterGossipInterval?: string;
   /**
+   * clusterPeerName defines the name this instance advertises to other cluster peers, defaulting to the pod name.
+   * Literal values and references to environment variables available in the container (e.g. "$(POD_NAME).$(NAMESPACE)") are both accepted.
+   * Requires Alertmanager >= v0.30.0.
+   *
+   * @default ""
+   */
+  clusterPeerName?: string;
+  /**
    * clusterPeerTimeout determines timeout for cluster peering.
    * Needs to be specified as GoDuration, a time duration that can be parsed by Go's time.ParseDuration() (e.g. 45ms, 30s, 1m, 1h20m15s)
    *
@@ -2533,7 +2560,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.34.0"
+   * @default "v0.34.1"
    */
   tag?: string;
   /**
@@ -2683,7 +2710,7 @@ export type KubeprometheusstackHelmValuesGrafana = {
   /**
    * "timeInterval": "5s"
    *
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   operator?: KubeprometheusstackHelmValuesGrafanaOperator;
   /**
@@ -2712,8 +2739,6 @@ export type KubeprometheusstackHelmValuesGrafana = {
    */
   adminUser?: string;
   /**
-   * Use an existing secret for the admin user.
-   *
    * @default {"existingSecret":"","userKey":"admin-user","passwordKey":"admin-password"}
    */
   admin?: KubeprometheusstackHelmValuesGrafanaAdmin;
@@ -2778,6 +2803,18 @@ export type KubeprometheusstackHelmValuesGrafanaOperator = {
    * @default false
    */
   dashboardsConfigMapRefEnabled?: boolean;
+  /**
+   * Provision GrafanaDatasource CRs instead of a file-based datasource ConfigMap
+   * Covers the default Prometheus datasource, the per-replica Prometheus datasources, the
+   * Alertmanager datasource and every entry of grafana.additionalDataSources
+   * An entry of grafana.additionalDataSources may carry `valuesFrom` and `plugins`, both are
+   * moved from the datasource to the CR spec
+   * grafana.additionalDataSourcesString, grafana.deleteDatasources and grafana.prune have no CR
+   * equivalent and keep using the ConfigMap
+   *
+   * @default false
+   */
+  datasourcesEnabled?: boolean;
   /**
    * Annotations for GrafanaDashboard Cr
    *
@@ -2875,8 +2912,6 @@ export type KubeprometheusstackHelmValuesGrafanaIngress = {
    */
   enabled?: boolean;
   /**
-   * IngressClassName for Grafana Ingress.
-   * Should be provided if Ingress is enable.
    * Annotations for Grafana Ingress
    * kubernetes.io/ingress.class: nginx
    * kubernetes.io/tls-acme: "true"
@@ -3084,8 +3119,6 @@ export type KubeprometheusstackHelmValuesGrafanaSidecarDatasources = {
    */
   uid?: string;
   /**
-   * URL of prometheus datasource
-   * url: http://prometheus-stack-prometheus:9090/
    * Prometheus request timeout in seconds
    * Query parameters to add, as a URL-encoded string,
    * to query Prometheus
@@ -3228,11 +3261,15 @@ export type KubeprometheusstackHelmValuesKubeApiServer = {
    */
   enabled?: boolean;
   /**
-   * @default {"serverName":"kubernetes","insecureSkipVerify":false}
+   * TLS configuration of the ServiceMonitor endpoint. Rendered as-is, so any field of the
+   * Prometheus Operator SafeTLSConfig type can be set here.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeTLSConfig
+   *
+   * @default {"serverName":"kubernetes","insecureSkipVerify":false,"ca":{"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}}
    */
   tlsConfig?: KubeprometheusstackHelmValuesKubeApiServerTlsConfig;
   /**
-   * @default {...} (14 keys)
+   * @default {...} (15 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeApiServerServiceMonitor;
   /**
@@ -3247,6 +3284,11 @@ export type KubeprometheusstackHelmValuesKubeApiServer = {
 
 export type KubeprometheusstackHelmValuesKubeApiServerTlsConfig = {
   /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
    * @default "kubernetes"
    */
   serverName?: string;
@@ -3254,6 +3296,28 @@ export type KubeprometheusstackHelmValuesKubeApiServerTlsConfig = {
    * @default false
    */
   insecureSkipVerify?: boolean;
+  /**
+   * @default {"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}
+   */
+  ca?: KubeprometheusstackHelmValuesKubeApiServerTlsConfigCa;
+};
+
+export type KubeprometheusstackHelmValuesKubeApiServerTlsConfigCa = {
+  /**
+   * @default {"name":"kube-root-ca.crt","key":"ca.crt"}
+   */
+  configMap?: KubeprometheusstackHelmValuesKubeApiServerTlsConfigCaConfigMap;
+};
+
+export type KubeprometheusstackHelmValuesKubeApiServerTlsConfigCaConfigMap = {
+  /**
+   * @default "kube-root-ca.crt"
+   */
+  name?: string;
+  /**
+   * @default "ca.crt"
+   */
+  key?: string;
 };
 
 export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitor = {
@@ -3267,6 +3331,15 @@ export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
+   *
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
+   */
+  authorization?: KubeprometheusstackHelmValuesKubeApiServerServiceMonitorAuthorization;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -3320,6 +3393,35 @@ export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitor = {
   targetLabels?: unknown[];
 };
 
+export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorAuthorization =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default "Bearer"
+     */
+    type?: string;
+    /**
+     * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+     */
+    credentials?: KubeprometheusstackHelmValuesKubeApiServerServiceMonitorAuthorizationCredentials;
+  };
+
+export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
+
 export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitorSelector = {
   /**
    * @default {"component":"apiserver","provider":"kubernetes"}
@@ -3372,7 +3474,7 @@ export type KubeprometheusstackHelmValuesKubelet = {
    */
   jobNameOverride?: string;
   /**
-   * @default {...} (30 keys)
+   * @default {...} (31 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeletServiceMonitor;
 };
@@ -3462,13 +3564,18 @@ export type KubeprometheusstackHelmValuesKubeletServiceMonitor = {
    */
   https?: boolean;
   /**
-   * Skip TLS certificate validation when scraping.
-   * This is enabled by default because kubelet serving certificate deployed by kubeadm is by default self-signed
-   * ref: https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#kubelet-serving-certs
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
    *
-   * @default true
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
    */
-  insecureSkipVerify?: boolean;
+  authorization?: KubeprometheusstackHelmValuesKubeletServiceMonitorAuthorization;
+  /**
+   * @default {"insecureSkipVerify":true,"ca":{"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}}
+   */
+  tlsConfig?: KubeprometheusstackHelmValuesKubeletServiceMonitorTlsConfig;
   /**
    * Enable scraping /metrics/probes from kubelet's service
    *
@@ -3532,6 +3639,71 @@ export type KubeprometheusstackHelmValuesKubeletServiceMonitorAttachMetadata = {
    */
   node?: boolean;
 };
+
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorAuthorization = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default "Bearer"
+   */
+  type?: string;
+  /**
+   * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+   */
+  credentials?: KubeprometheusstackHelmValuesKubeletServiceMonitorAuthorizationCredentials;
+};
+
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
+
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorTlsConfig = {
+  /**
+   * TLS configuration of the ServiceMonitor endpoint. Only applies when scraping over https.
+   * Rendered as-is, so any field of the Prometheus Operator SafeTLSConfig type can be set here.
+   * insecureSkipVerify is enabled by default because the kubelet serving certificate deployed by
+   * kubeadm is self-signed.
+   * ref: https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#kubelet-serving-certs
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeTLSConfig
+   *
+   * @default true
+   */
+  insecureSkipVerify?: boolean;
+  /**
+   * @default {"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}
+   */
+  ca?: KubeprometheusstackHelmValuesKubeletServiceMonitorTlsConfigCa;
+};
+
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorTlsConfigCa = {
+  /**
+   * @default {"name":"kube-root-ca.crt","key":"ca.crt"}
+   */
+  configMap?: KubeprometheusstackHelmValuesKubeletServiceMonitorTlsConfigCaConfigMap;
+};
+
+export type KubeprometheusstackHelmValuesKubeletServiceMonitorTlsConfigCaConfigMap =
+  {
+    /**
+     * @default "kube-root-ca.crt"
+     */
+    name?: string;
+    /**
+     * @default "ca.crt"
+     */
+    key?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeletServiceMonitorCAdvisorMetricRelabelingsElement =
   {
@@ -3726,8 +3898,23 @@ export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitor = {
    */
   selector?: KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorSelector;
   https?: unknown;
-  insecureSkipVerify?: unknown;
-  serverName?: unknown;
+  /**
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
+   *
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
+   */
+  authorization?: KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorAuthorization;
+  /**
+   * TLS configuration of the ServiceMonitor endpoint. Only applies when scraping over https.
+   * Rendered as-is, so any field of the Prometheus Operator SafeTLSConfig type can be set here.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeTLSConfig
+   *
+   * @default {"insecureSkipVerify":true,"ca":{"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}}
+   */
+  tlsConfig?: KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorTlsConfig;
   metricRelabelings?: unknown[];
   relabelings?: unknown[];
   /**
@@ -3741,6 +3928,72 @@ export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitor = {
 
 export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorSelector =
   object;
+
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorAuthorization =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default "Bearer"
+     */
+    type?: string;
+    /**
+     * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+     */
+    credentials?: KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorAuthorizationCredentials;
+  };
+
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
+
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorTlsConfig =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default true
+     */
+    insecureSkipVerify?: boolean;
+    /**
+     * @default {"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}
+     */
+    ca?: KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorTlsConfigCa;
+  };
+
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorTlsConfigCa =
+  {
+    /**
+     * @default {"name":"kube-root-ca.crt","key":"ca.crt"}
+     */
+    configMap?: KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorTlsConfigCaConfigMap;
+  };
+
+export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorTlsConfigCaConfigMap =
+  {
+    /**
+     * @default "kube-root-ca.crt"
+     */
+    name?: string;
+    /**
+     * @default "ca.crt"
+     */
+    key?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitorAdditionalLabels =
   object;
@@ -3858,18 +4111,48 @@ export type KubeprometheusstackHelmValuesCoreDnsServiceMonitor = {
   additionalLabels?: KubeprometheusstackHelmValuesCoreDnsServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
   /**
-   * File containing bearer token to be used when scraping targets
-   * Empty value do not send any bearer token.
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
    *
-   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
    */
-  bearerTokenFile?: string;
+  authorization?: KubeprometheusstackHelmValuesCoreDnsServiceMonitorAuthorization;
 };
 
 export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorSelector = object;
 
 export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorAdditionalLabels =
   object;
+
+export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorAuthorization = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default "Bearer"
+   */
+  type?: string;
+  /**
+   * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+   */
+  credentials?: KubeprometheusstackHelmValuesCoreDnsServiceMonitorAuthorizationCredentials;
+};
+
+export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeDns = {
   /**
@@ -3996,18 +4279,48 @@ export type KubeprometheusstackHelmValuesKubeDnsServiceMonitor = {
   additionalLabels?: KubeprometheusstackHelmValuesKubeDnsServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
   /**
-   * File containing bearer token to be used when scraping targets
-   * Empty value do not send any bearer token.
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
    *
-   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
    */
-  bearerTokenFile?: string;
+  authorization?: KubeprometheusstackHelmValuesKubeDnsServiceMonitorAuthorization;
 };
 
 export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorSelector = object;
 
 export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorAdditionalLabels =
   object;
+
+export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorAuthorization = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default "Bearer"
+   */
+  type?: string;
+  /**
+   * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+   */
+  credentials?: KubeprometheusstackHelmValuesKubeDnsServiceMonitorAuthorizationCredentials;
+};
+
+export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeEtcd = {
   /**
@@ -4025,7 +4338,7 @@ export type KubeprometheusstackHelmValuesKubeEtcd = {
    */
   service?: KubeprometheusstackHelmValuesKubeEtcdService;
   /**
-   * @default {...} (22 keys)
+   * @default {...} (18 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitor;
 };
@@ -4111,25 +4424,14 @@ export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitor = {
    */
   scheme?: string;
   /**
-   * @default false
+   * TLS configuration of the ServiceMonitor endpoint. Only applies when scheme is https.
+   * Rendered as-is, so any field of the Prometheus Operator SafeTLSConfig type can be set here.
+   * etcd requires client certificates, see the commented example above.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeTLSConfig
+   *
+   * @default {"insecureSkipVerify":false}
    */
-  insecureSkipVerify?: boolean;
-  /**
-   * @default ""
-   */
-  serverName?: string;
-  /**
-   * @default ""
-   */
-  caFile?: string;
-  /**
-   * @default ""
-   */
-  certFile?: string;
-  /**
-   * @default ""
-   */
-  keyFile?: string;
+  tlsConfig?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitorTlsConfig;
   /**
    * @default "http-metrics"
    */
@@ -4152,12 +4454,26 @@ export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitor = {
   additionalLabels?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
   /**
-   * File containing bearer token to be used when scraping targets
-   * Empty value do not send any bearer token.
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
    *
-   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
    */
-  bearerTokenFile?: string;
+  authorization?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAuthorization;
+};
+
+export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorTlsConfig = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default false
+   */
+  insecureSkipVerify?: boolean;
 };
 
 export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorSelector =
@@ -4165,6 +4481,34 @@ export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorSelector =
 
 export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAdditionalLabels =
   object;
+
+export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAuthorization = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default "Bearer"
+   */
+  type?: string;
+  /**
+   * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+   */
+  credentials?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAuthorizationCredentials;
+};
+
+export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeScheduler = {
   /**
@@ -4277,8 +4621,23 @@ export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitor = {
    * @default {}
    */
   selector?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorSelector;
-  insecureSkipVerify?: unknown;
-  serverName?: unknown;
+  /**
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
+   *
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
+   */
+  authorization?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAuthorization;
+  /**
+   * TLS configuration of the ServiceMonitor endpoint. Only applies when scraping over https.
+   * Rendered as-is, so any field of the Prometheus Operator SafeTLSConfig type can be set here.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeTLSConfig
+   *
+   * @default {"insecureSkipVerify":true,"ca":{"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}}
+   */
+  tlsConfig?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorTlsConfig;
   metricRelabelings?: unknown[];
   relabelings?: unknown[];
   /**
@@ -4296,6 +4655,72 @@ export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitor = {
 
 export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorSelector =
   object;
+
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAuthorization =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default "Bearer"
+     */
+    type?: string;
+    /**
+     * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+     */
+    credentials?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAuthorizationCredentials;
+  };
+
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
+
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorTlsConfig =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default true
+     */
+    insecureSkipVerify?: boolean;
+    /**
+     * @default {"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}
+     */
+    ca?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorTlsConfigCa;
+  };
+
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorTlsConfigCa =
+  {
+    /**
+     * @default {"name":"kube-root-ca.crt","key":"ca.crt"}
+     */
+    configMap?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorTlsConfigCaConfigMap;
+  };
+
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorTlsConfigCaConfigMap =
+  {
+    /**
+     * @default "kube-root-ca.crt"
+     */
+    name?: string;
+    /**
+     * @default "ca.crt"
+     */
+    key?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAdditionalLabels =
   object;
@@ -4340,7 +4765,7 @@ export type KubeprometheusstackHelmValuesKubeProxy = {
    */
   service?: KubeprometheusstackHelmValuesKubeProxyService;
   /**
-   * @default {...} (17 keys)
+   * @default {...} (18 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeProxyServiceMonitor;
 };
@@ -4440,6 +4865,14 @@ export type KubeprometheusstackHelmValuesKubeProxyServiceMonitor = {
    * @default false
    */
   https?: boolean;
+  /**
+   * TLS configuration of the ServiceMonitor endpoint. Only applies when scraping over https.
+   * Rendered as-is, so any field of the Prometheus Operator SafeTLSConfig type can be set here.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeTLSConfig
+   *
+   * @default {"ca":{"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}}
+   */
+  tlsConfig?: KubeprometheusstackHelmValuesKubeProxyServiceMonitorTlsConfig;
   metricRelabelings?: unknown[];
   relabelings?: unknown[];
   /**
@@ -4450,19 +4883,81 @@ export type KubeprometheusstackHelmValuesKubeProxyServiceMonitor = {
   additionalLabels?: KubeprometheusstackHelmValuesKubeProxyServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
   /**
-   * File containing bearer token to be used when scraping targets
-   * Empty value do not send any bearer token.
+   * Bearer credentials used to scrape this component. Rendered as-is, so any field of the
+   * Prometheus Operator SafeAuthorization type can be set here. Set to null to scrape without
+   * authentication.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.SafeAuthorization
    *
-   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
    */
-  bearerTokenFile?: string;
+  authorization?: KubeprometheusstackHelmValuesKubeProxyServiceMonitorAuthorization;
 };
 
 export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorSelector =
   object;
 
+export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorTlsConfig = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default {"configMap":{"name":"kube-root-ca.crt","key":"ca.crt"}}
+   */
+  ca?: KubeprometheusstackHelmValuesKubeProxyServiceMonitorTlsConfigCa;
+};
+
+export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorTlsConfigCa = {
+  /**
+   * @default {"name":"kube-root-ca.crt","key":"ca.crt"}
+   */
+  configMap?: KubeprometheusstackHelmValuesKubeProxyServiceMonitorTlsConfigCaConfigMap;
+};
+
+export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorTlsConfigCaConfigMap =
+  {
+    /**
+     * @default "kube-root-ca.crt"
+     */
+    name?: string;
+    /**
+     * @default "ca.crt"
+     */
+    key?: string;
+  };
+
 export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorAdditionalLabels =
   object;
+
+export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorAuthorization =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+    /**
+     * @default "Bearer"
+     */
+    type?: string;
+    /**
+     * @default {"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}
+     */
+    credentials?: KubeprometheusstackHelmValuesKubeProxyServiceMonitorAuthorizationCredentials;
+  };
+
+export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorAuthorizationCredentials =
+  {
+    /**
+     * @default "{{ include "kube-prometheus-stack.prometheus.to..."
+     */
+    name?: string;
+    /**
+     * @default "token"
+     */
+    key?: string;
+  };
 
 export type KubeprometheusstackHelmValuesKubeStateMetrics = {
   /**
@@ -4713,8 +5208,6 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheus = {
    */
   [key: string]: unknown;
   /**
-   * Attach node metadata to discovered targets. Requires Prometheus v2.35.0 and above.
-   *
    * @default {...} (12 keys)
    */
   monitor?: KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusMonitor;
@@ -4882,10 +5375,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   prometheusInstanceNamespaces?: unknown[];
   thanosRulerInstanceNamespaces?: unknown[];
   /**
-   * The clusterDomain value will be added to the cluster.peer option of the alertmanager.
-   * Without this specified option cluster.peer will have value alertmanager-monitoring-alertmanager-0.alertmanager-operated:9094 (default value)
-   * With this specified option cluster.peer will have value alertmanager-monitoring-alertmanager-0.alertmanager-operated.namespace.svc.cluster-domain:9094
-   *
    * @default {"enabled":false,"flavor":"kubernetes"}
    */
   networkPolicy?: KubeprometheusstackHelmValuesPrometheusOperatorNetworkPolicy;
@@ -5013,6 +5502,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorSecurityContext;
   hostUsers?: unknown;
   /**
+   * Container-specific security context configuration
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
    *
    * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
@@ -5031,10 +5521,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
    */
   image?: KubeprometheusstackHelmValuesPrometheusOperatorImage;
   /**
-   * Prometheus image to use for prometheuses managed by the operator
-   * Prometheus image registry to use for prometheuses managed by the operator
-   * Alertmanager image to use for alertmanagers managed by the operator
-   * Alertmanager image registry to use for alertmanagers managed by the operator
    * Prometheus-config-reloader
    *
    * @default {"image":{"registry":"quay.io","repository":"prometheus-operator/prometheus-config-reloader","tag":"","sha":""},"enableProbe":false,"resources":{}}
@@ -5066,8 +5552,10 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   thanosRulerInstanceSelector?: string;
   /**
    * Set a Field Selector to filter watched secrets
+   * `kubernetes.io/service-account-token` secrets are no longer excluded, so that changes to the
+   * secret the control-plane ServiceMonitors authenticate with trigger a reconciliation.
    *
-   * @default "type!=kubernetes.io/dockercfg,type!=kubernetes...."
+   * @default "type!=kubernetes.io/dockercfg,type!=helm.sh/rel..."
    */
   secretFieldSelector?: string;
   /**
@@ -5209,10 +5697,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooks = {
    * @default {}
    */
   objectSelector?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksObjectSelector;
-  /**
-   * @default {}
-   */
-  matchConditions?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMatchConditions;
+  matchConditions?: unknown[];
   /**
    * argocd.argoproj.io/hook: PreSync
    *
@@ -5234,9 +5719,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooks = {
    */
   patch?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatch;
   /**
-   * Security context for create job container
-   * Security context for patch job container
-   *
    * @default {"securityContext":{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}}
    */
   createSecretJob?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJob;
@@ -5265,9 +5747,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksName
   object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksObjectSelector =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMatchConditions =
   object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksMutatingWebhookConfiguration =
@@ -5439,6 +5918,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDepl
      */
     securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContext;
     /**
+     * Container-specific security context configuration
      * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
      *
      * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
@@ -5845,7 +6325,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.7"
+     * @default "1.8.8"
      */
     tag?: string;
     /**
@@ -5926,6 +6406,9 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJob =
   {
     /**
+     * Security context for create job container
+     * Security context for patch job container
+     *
      * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
      */
     securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContext;
@@ -6492,7 +6975,11 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   annotations?: KubeprometheusstackHelmValuesPrometheusAnnotations;
   /**
-   * Additional labels for Prometheus
+   * Name of the PodMonitor to create
+   * Additional labels to set used for the PodMonitorSelector. Together with standard labels from
+   * the chart
+   * Pod label for use in assembling a job name of the form <label value>-<port>
+   * If no label is specified, the pod endpoint name is used.
    *
    * @default {}
    */
@@ -6504,7 +6991,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   networkPolicy?: KubeprometheusstackHelmValuesPrometheusNetworkPolicy;
   /**
-   * @default {...} (4 keys)
+   * @default {...} (5 keys)
    */
   serviceAccount?: KubeprometheusstackHelmValuesPrometheusServiceAccount;
   /**
@@ -6584,7 +7071,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * Being BETA this can/will change in the future without notice, do not use unless you want to take that risk
    * [[ref]](https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1alpha2)
    *
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"sessionPersistence":{},"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"timeouts":{},"sessionPersistence":{},"additionalRules":[]}}
    */
   route?: KubeprometheusstackHelmValuesPrometheusRoute;
   /**
@@ -6598,17 +7085,18 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * Configuration for creating a Gateway API route that will map to each Prometheus replica service
    * prometheus.servicePerReplica must be enabled
    *
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostPrefix":"","hostDomain":"","parentRefs":[],"httpsRedirect":false,"filters":[],"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"sessionPersistence":{},"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostPrefix":"","hostDomain":"","parentRefs":[],"httpsRedirect":false,"filters":[],"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"timeouts":{},"sessionPersistence":{},"additionalRules":[]}}
    */
   routePerReplica?: KubeprometheusstackHelmValuesPrometheusRoutePerReplica;
   /**
+   * Settings affecting prometheusSpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#prometheusspec
    *
    * @default {...} (14 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesPrometheusServiceMonitor;
   /**
-   * @default {...} (138 keys)
+   * @default {...} (140 keys)
    */
   prometheusSpec?: KubeprometheusstackHelmValuesPrometheusPrometheusSpec;
   additionalRulesForClusterRole?: unknown[];
@@ -6660,6 +7148,20 @@ export type KubeprometheusstackHelmValuesPrometheusServiceAccount = {
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Create a `kubernetes.io/service-account-token` Secret for the Prometheus service account.
+   * The control-plane ServiceMonitors reference it by default, because ServiceMonitors can only
+   * authenticate through a Secret and Kubernetes no longer creates one automatically.
+   * The resulting token is long-lived and does not expire; disable this and set the
+   * `authorization` values of the control-plane components if you manage the credential yourself.
+   * Only rendered together with the service account, so it requires `prometheus.enabled` and
+   * `create` above. Leaving a control-plane component on the default `authorization` while the
+   * Secret is not rendered is a rendering error rather than a silently broken ServiceMonitor.
+   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#manually-create-an-api-token-for-a-serviceaccount
+   *
+   * @default true
+   */
+  createTokenSecret?: boolean;
 };
 
 export type KubeprometheusstackHelmValuesPrometheusServiceAccountAnnotations = {
@@ -6984,9 +7486,6 @@ export type KubeprometheusstackHelmValuesPrometheusService = {
    */
   sessionAffinity?: string;
   /**
-   * If you want to modify the ClientIP sessionAffinity timeout
-   * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
-   *
    * @default {"clientIP":{"timeoutSeconds":10800}}
    */
   sessionAffinityConfig?: KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfig;
@@ -7023,6 +7522,9 @@ export type KubeprometheusstackHelmValuesPrometheusServiceIpDualStack = {
 export type KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfig =
   {
     /**
+     * If you want to modify the ClientIP sessionAffinity timeout
+     * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
+     *
      * @default {"timeoutSeconds":10800}
      */
     clientIP?: KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfigClientIP;
@@ -7282,7 +7784,7 @@ export type KubeprometheusstackHelmValuesPrometheusIngressLabels = {
 
 export type KubeprometheusstackHelmValuesPrometheusRoute = {
   /**
-   * @default {...} (12 keys)
+   * @default {...} (13 keys)
    */
   main?: KubeprometheusstackHelmValuesPrometheusRouteMain;
 };
@@ -7328,6 +7830,13 @@ export type KubeprometheusstackHelmValuesPrometheusRouteMain = {
   matches?: KubeprometheusstackHelmValuesPrometheusRouteMainMatchesElement[];
   filters?: unknown[];
   /**
+   * Timeouts for the generated HTTPRoute backend rule.
+   * Requires Gateway API CRDs and a controller that support HTTPRoute timeouts.
+   *
+   * @default {}
+   */
+  timeouts?: KubeprometheusstackHelmValuesPrometheusRouteMainTimeouts;
+  /**
    * Session persistence configuration for the route rule.
    *
    * @default {}
@@ -7369,6 +7878,8 @@ export type KubeprometheusstackHelmValuesPrometheusRouteMainMatchesPath = {
    */
   value?: string;
 };
+
+export type KubeprometheusstackHelmValuesPrometheusRouteMainTimeouts = object;
 
 export type KubeprometheusstackHelmValuesPrometheusRouteMainSessionPersistence =
   {
@@ -7464,7 +7975,7 @@ export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaTlsSecretPer
 
 export type KubeprometheusstackHelmValuesPrometheusRoutePerReplica = {
   /**
-   * @default {...} (13 keys)
+   * @default {...} (14 keys)
    */
   main?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMain;
 };
@@ -7523,6 +8034,13 @@ export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMain = {
   filters?: unknown[];
   matches?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainMatchesElement[];
   /**
+   * Timeouts for the generated HTTPRoute backend rule.
+   * Requires Gateway API CRDs and a controller that support HTTPRoute timeouts.
+   *
+   * @default {}
+   */
+  timeouts?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainTimeouts;
+  /**
    * Session persistence configuration for the route rule.
    *
    * @default {}
@@ -7567,6 +8085,9 @@ export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainMatchesPat
      */
     value?: string;
   };
+
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainTimeouts =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainSessionPersistence =
   {
@@ -7987,10 +8508,17 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    */
   retentionSize?: string;
   /**
+   * Maximum percentage of the data volume's capacity used by the metrics, between 0 and 100.
+   * Requires Prometheus >= v3.11.0, ignored by older versions.
+   *
+   * @default ""
+   */
+  retentionPercentage?: string;
+  /**
    * Allow out-of-order/out-of-bounds samples ingested into Prometheus for a specified duration
    * See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#tsdb
    *
-   * @default {"outOfOrderTimeWindow":"0s"}
+   * @default {"outOfOrderTimeWindow":"0s","chunkEncoding":{},"staleSeriesCompactionThreshold":""}
    */
   tsdb?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecTsdb;
   /**
@@ -8403,6 +8931,13 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    */
   ruleQueryOffset?: string;
   /**
+   * Configuration of the Prometheus rules' engine. Changing these triggers a restart of the pods.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.Rules
+   *
+   * @default {}
+   */
+  rules?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecRules;
+  /**
    * RuntimeConfig configures the values for the Prometheus process behavior.
    *
    * @default {}
@@ -8540,7 +9075,22 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTsdb = {
    * @default "0s"
    */
   outOfOrderTimeWindow?: string;
+  /**
+   * Per-chunk-type encoding overrides, requires Prometheus >= v3.13.0.
+   *
+   * @default {}
+   */
+  chunkEncoding?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecTsdbChunkEncoding;
+  /**
+   * Ratio of stale series in memory, between 0 and 1, at which stale series are compacted into persistent blocks.
+   *
+   * @default ""
+   */
+  staleSeriesCompactionThreshold?: string;
 };
+
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTsdbChunkEncoding =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMetadata =
   object;
@@ -8606,6 +9156,8 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecThanos =
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTracingConfig =
   object;
 
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRules = object;
+
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuntime =
   object;
 
@@ -8660,7 +9212,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
    */
   ingress?: KubeprometheusstackHelmValuesThanosRulerIngress;
   /**
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"sessionPersistence":{},"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"timeouts":{},"sessionPersistence":{},"additionalRules":[]}}
    */
   route?: KubeprometheusstackHelmValuesThanosRulerRoute;
   /**
@@ -8671,13 +9223,14 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
   service?: KubeprometheusstackHelmValuesThanosRulerService;
   /**
    * Configuration for creating a ServiceMonitor for the ThanosRuler service
+   * Settings affecting thanosRulerpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#thanosrulerspec
    *
    * @default {...} (15 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesThanosRulerServiceMonitor;
   /**
-   * @default {...} (68 keys)
+   * @default {...} (69 keys)
    */
   thanosRulerSpec?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec;
   /**
@@ -8776,7 +9329,7 @@ export type KubeprometheusstackHelmValuesThanosRulerIngressLabels = {
 
 export type KubeprometheusstackHelmValuesThanosRulerRoute = {
   /**
-   * @default {...} (12 keys)
+   * @default {...} (13 keys)
    */
   main?: KubeprometheusstackHelmValuesThanosRulerRouteMain;
 };
@@ -8822,6 +9375,13 @@ export type KubeprometheusstackHelmValuesThanosRulerRouteMain = {
   matches?: KubeprometheusstackHelmValuesThanosRulerRouteMainMatchesElement[];
   filters?: unknown[];
   /**
+   * Timeouts for the generated HTTPRoute backend rule.
+   * Requires Gateway API CRDs and a controller that support HTTPRoute timeouts.
+   *
+   * @default {}
+   */
+  timeouts?: KubeprometheusstackHelmValuesThanosRulerRouteMainTimeouts;
+  /**
    * Session persistence configuration for the route rule.
    *
    * @default {}
@@ -8863,6 +9423,8 @@ export type KubeprometheusstackHelmValuesThanosRulerRouteMainMatchesPath = {
    */
   value?: string;
 };
+
+export type KubeprometheusstackHelmValuesThanosRulerRouteMainTimeouts = object;
 
 export type KubeprometheusstackHelmValuesThanosRulerRouteMainSessionPersistence =
   {
@@ -9242,6 +9804,12 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
    * @default "web"
    */
   portName?: string;
+  /**
+   * Scheduler to use for Pod scheduling, defaulting to the Kubernetes default scheduler.
+   *
+   * @default ""
+   */
+  schedulerName?: string;
   terminationGracePeriodSeconds?: unknown;
   /**
    * WebTLSConfig defines the TLS parameters for HTTPS
@@ -9702,12 +10270,14 @@ export type KubeprometheusstackHelmValues = {
    */
   windowsMonitoring?: KubeprometheusstackHelmValuesWindowsMonitoring;
   /**
+   * Configuration for prometheus-windows-exporter
    * ref: https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter
    *
    * @default {...} (4 keys)
    */
   "prometheus-windows-exporter"?: KubeprometheusstackHelmValuesPrometheuswindowsexporter;
   /**
+   * Configuration for alertmanager
    * ref: https://prometheus.io/docs/alerting/alertmanager/
    * foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0
    * someoneelse:$apr1$DMZX2Z4q$6SbQIfyuLQd.xmo/P0m2c.
@@ -9747,13 +10317,13 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Component scraping coreDns. Use either this or kubeDns
    *
-   * @default {"enabled":true,"service":{"enabled":true,"port":9153,"targetPort":9153,"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"enabled":true,"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","port":"http-metrics","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"additionalLabels":{},"targetLabels":[],"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token"}}
+   * @default {"enabled":true,"service":{"enabled":true,"port":9153,"targetPort":9153,"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"enabled":true,"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","port":"http-metrics","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"additionalLabels":{},"targetLabels":[],"authorization":{"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}}}
    */
   coreDns?: KubeprometheusstackHelmValuesCoreDns;
   /**
    * Component scraping kubeDns. Use either this or coreDns
    *
-   * @default {"enabled":false,"service":{"dnsmasq":{"port":10054,"targetPort":10054},"skydns":{"port":10055,"targetPort":10055},"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"dnsmasqMetricRelabelings":[],"dnsmasqRelabelings":[],"additionalLabels":{},"targetLabels":[],"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token"}}
+   * @default {"enabled":false,"service":{"dnsmasq":{"port":10054,"targetPort":10054},"skydns":{"port":10055,"targetPort":10055},"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"dnsmasqMetricRelabelings":[],"dnsmasqRelabelings":[],"additionalLabels":{},"targetLabels":[],"authorization":{"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}}}
    */
   kubeDns?: KubeprometheusstackHelmValuesKubeDns;
   /**
@@ -10075,6 +10645,7 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.alertmanagerSpec.portName"?: string;
   "alertmanager.alertmanagerSpec.clusterAdvertiseAddress"?: string;
   "alertmanager.alertmanagerSpec.clusterGossipInterval"?: string;
+  "alertmanager.alertmanagerSpec.clusterPeerName"?: string;
   "alertmanager.alertmanagerSpec.clusterPeerTimeout"?: string;
   "alertmanager.alertmanagerSpec.clusterPushpullInterval"?: string;
   "alertmanager.alertmanagerSpec.clusterLabel"?: string;
@@ -10092,6 +10663,7 @@ export type KubeprometheusstackHelmParameters = {
   "grafana.forceDeployDashboards"?: string;
   "grafana.defaultDashboardsEnabled"?: string;
   "grafana.operator.dashboardsConfigMapRefEnabled"?: string;
+  "grafana.operator.datasourcesEnabled"?: string;
   "grafana.operator.resyncPeriod"?: string;
   "grafana.operator.folder"?: string;
   "grafana.operator.folderUID"?: string;
@@ -10146,8 +10718,13 @@ export type KubeprometheusstackHelmParameters = {
   "kubeApiServer.enabled"?: string;
   "kubeApiServer.tlsConfig.serverName"?: string;
   "kubeApiServer.tlsConfig.insecureSkipVerify"?: string;
+  "kubeApiServer.tlsConfig.ca.configMap.name"?: string;
+  "kubeApiServer.tlsConfig.ca.configMap.key"?: string;
   "kubeApiServer.serviceMonitor.enabled"?: string;
   "kubeApiServer.serviceMonitor.interval"?: string;
+  "kubeApiServer.serviceMonitor.authorization.type"?: string;
+  "kubeApiServer.serviceMonitor.authorization.credentials.name"?: string;
+  "kubeApiServer.serviceMonitor.authorization.credentials.key"?: string;
   "kubeApiServer.serviceMonitor.sampleLimit"?: string;
   "kubeApiServer.serviceMonitor.targetLimit"?: string;
   "kubeApiServer.serviceMonitor.labelLimit"?: string;
@@ -10180,7 +10757,12 @@ export type KubeprometheusstackHelmParameters = {
   "kubelet.serviceMonitor.labelValueLengthLimit"?: string;
   "kubelet.serviceMonitor.proxyUrl"?: string;
   "kubelet.serviceMonitor.https"?: string;
-  "kubelet.serviceMonitor.insecureSkipVerify"?: string;
+  "kubelet.serviceMonitor.authorization.type"?: string;
+  "kubelet.serviceMonitor.authorization.credentials.name"?: string;
+  "kubelet.serviceMonitor.authorization.credentials.key"?: string;
+  "kubelet.serviceMonitor.tlsConfig.insecureSkipVerify"?: string;
+  "kubelet.serviceMonitor.tlsConfig.ca.configMap.name"?: string;
+  "kubelet.serviceMonitor.tlsConfig.ca.configMap.key"?: string;
   "kubelet.serviceMonitor.probes"?: string;
   "kubelet.serviceMonitor.resource"?: string;
   "kubelet.serviceMonitor.resourcePath"?: string;
@@ -10227,8 +10809,12 @@ export type KubeprometheusstackHelmParameters = {
   "kubeControllerManager.serviceMonitor.port"?: string;
   "kubeControllerManager.serviceMonitor.jobLabel"?: string;
   "kubeControllerManager.serviceMonitor.https"?: string;
-  "kubeControllerManager.serviceMonitor.insecureSkipVerify"?: string;
-  "kubeControllerManager.serviceMonitor.serverName"?: string;
+  "kubeControllerManager.serviceMonitor.authorization.type"?: string;
+  "kubeControllerManager.serviceMonitor.authorization.credentials.name"?: string;
+  "kubeControllerManager.serviceMonitor.authorization.credentials.key"?: string;
+  "kubeControllerManager.serviceMonitor.tlsConfig.insecureSkipVerify"?: string;
+  "kubeControllerManager.serviceMonitor.tlsConfig.ca.configMap.name"?: string;
+  "kubeControllerManager.serviceMonitor.tlsConfig.ca.configMap.key"?: string;
   "kubeControllerManager.serviceMonitor.metricRelabelings"?: string;
   "kubeControllerManager.serviceMonitor.relabelings"?: string;
   "kubeControllerManager.serviceMonitor.targetLabels"?: string;
@@ -10252,7 +10838,9 @@ export type KubeprometheusstackHelmParameters = {
   "coreDns.serviceMonitor.metricRelabelings"?: string;
   "coreDns.serviceMonitor.relabelings"?: string;
   "coreDns.serviceMonitor.targetLabels"?: string;
-  "coreDns.serviceMonitor.bearerTokenFile"?: string;
+  "coreDns.serviceMonitor.authorization.type"?: string;
+  "coreDns.serviceMonitor.authorization.credentials.name"?: string;
+  "coreDns.serviceMonitor.authorization.credentials.key"?: string;
   "kubeDns.enabled"?: string;
   "kubeDns.service.dnsmasq.port"?: string;
   "kubeDns.service.dnsmasq.targetPort"?: string;
@@ -10274,7 +10862,9 @@ export type KubeprometheusstackHelmParameters = {
   "kubeDns.serviceMonitor.dnsmasqMetricRelabelings"?: string;
   "kubeDns.serviceMonitor.dnsmasqRelabelings"?: string;
   "kubeDns.serviceMonitor.targetLabels"?: string;
-  "kubeDns.serviceMonitor.bearerTokenFile"?: string;
+  "kubeDns.serviceMonitor.authorization.type"?: string;
+  "kubeDns.serviceMonitor.authorization.credentials.name"?: string;
+  "kubeDns.serviceMonitor.authorization.credentials.key"?: string;
   "kubeEtcd.enabled"?: string;
   "kubeEtcd.endpoints"?: string;
   "kubeEtcd.service.enabled"?: string;
@@ -10292,17 +10882,15 @@ export type KubeprometheusstackHelmParameters = {
   "kubeEtcd.serviceMonitor.labelValueLengthLimit"?: string;
   "kubeEtcd.serviceMonitor.proxyUrl"?: string;
   "kubeEtcd.serviceMonitor.scheme"?: string;
-  "kubeEtcd.serviceMonitor.insecureSkipVerify"?: string;
-  "kubeEtcd.serviceMonitor.serverName"?: string;
-  "kubeEtcd.serviceMonitor.caFile"?: string;
-  "kubeEtcd.serviceMonitor.certFile"?: string;
-  "kubeEtcd.serviceMonitor.keyFile"?: string;
+  "kubeEtcd.serviceMonitor.tlsConfig.insecureSkipVerify"?: string;
   "kubeEtcd.serviceMonitor.port"?: string;
   "kubeEtcd.serviceMonitor.jobLabel"?: string;
   "kubeEtcd.serviceMonitor.metricRelabelings"?: string;
   "kubeEtcd.serviceMonitor.relabelings"?: string;
   "kubeEtcd.serviceMonitor.targetLabels"?: string;
-  "kubeEtcd.serviceMonitor.bearerTokenFile"?: string;
+  "kubeEtcd.serviceMonitor.authorization.type"?: string;
+  "kubeEtcd.serviceMonitor.authorization.credentials.name"?: string;
+  "kubeEtcd.serviceMonitor.authorization.credentials.key"?: string;
   "kubeScheduler.enabled"?: string;
   "kubeScheduler.jobNameOverride"?: string;
   "kubeScheduler.endpoints"?: string;
@@ -10323,8 +10911,12 @@ export type KubeprometheusstackHelmParameters = {
   "kubeScheduler.serviceMonitor.https"?: string;
   "kubeScheduler.serviceMonitor.port"?: string;
   "kubeScheduler.serviceMonitor.jobLabel"?: string;
-  "kubeScheduler.serviceMonitor.insecureSkipVerify"?: string;
-  "kubeScheduler.serviceMonitor.serverName"?: string;
+  "kubeScheduler.serviceMonitor.authorization.type"?: string;
+  "kubeScheduler.serviceMonitor.authorization.credentials.name"?: string;
+  "kubeScheduler.serviceMonitor.authorization.credentials.key"?: string;
+  "kubeScheduler.serviceMonitor.tlsConfig.insecureSkipVerify"?: string;
+  "kubeScheduler.serviceMonitor.tlsConfig.ca.configMap.name"?: string;
+  "kubeScheduler.serviceMonitor.tlsConfig.ca.configMap.key"?: string;
   "kubeScheduler.serviceMonitor.metricRelabelings"?: string;
   "kubeScheduler.serviceMonitor.relabelings"?: string;
   "kubeScheduler.serviceMonitor.targetLabels"?: string;
@@ -10352,10 +10944,14 @@ export type KubeprometheusstackHelmParameters = {
   "kubeProxy.serviceMonitor.port"?: string;
   "kubeProxy.serviceMonitor.jobLabel"?: string;
   "kubeProxy.serviceMonitor.https"?: string;
+  "kubeProxy.serviceMonitor.tlsConfig.ca.configMap.name"?: string;
+  "kubeProxy.serviceMonitor.tlsConfig.ca.configMap.key"?: string;
   "kubeProxy.serviceMonitor.metricRelabelings"?: string;
   "kubeProxy.serviceMonitor.relabelings"?: string;
   "kubeProxy.serviceMonitor.targetLabels"?: string;
-  "kubeProxy.serviceMonitor.bearerTokenFile"?: string;
+  "kubeProxy.serviceMonitor.authorization.type"?: string;
+  "kubeProxy.serviceMonitor.authorization.credentials.name"?: string;
+  "kubeProxy.serviceMonitor.authorization.credentials.key"?: string;
   "kubeStateMetrics.enabled"?: string;
   "kube-state-metrics.releaseLabel"?: string;
   "kube-state-metrics.prometheusScrape"?: string;
@@ -10414,6 +11010,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.admissionWebhooks.timeoutSeconds"?: string;
   "prometheusOperator.admissionWebhooks.enabled"?: string;
   "prometheusOperator.admissionWebhooks.caBundle"?: string;
+  "prometheusOperator.admissionWebhooks.matchConditions"?: string;
   "prometheusOperator.admissionWebhooks.deployment.enabled"?: string;
   "prometheusOperator.admissionWebhooks.deployment.replicas"?: string;
   "prometheusOperator.admissionWebhooks.deployment.podDisruptionBudget.enabled"?: string;
@@ -10590,6 +11187,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.serviceAccount.create"?: string;
   "prometheus.serviceAccount.name"?: string;
   "prometheus.serviceAccount.automountServiceAccountToken"?: string;
+  "prometheus.serviceAccount.createTokenSecret"?: string;
   "prometheus.thanosService.enabled"?: string;
   "prometheus.thanosService.externalTrafficPolicy"?: string;
   "prometheus.thanosService.type"?: string;
@@ -10755,7 +11353,9 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.scrapeConfigSelectorNilUsesHelmValues"?: string;
   "prometheus.prometheusSpec.retention"?: string;
   "prometheus.prometheusSpec.retentionSize"?: string;
+  "prometheus.prometheusSpec.retentionPercentage"?: string;
   "prometheus.prometheusSpec.tsdb.outOfOrderTimeWindow"?: string;
+  "prometheus.prometheusSpec.tsdb.staleSeriesCompactionThreshold"?: string;
   "prometheus.prometheusSpec.walCompression"?: string;
   "prometheus.prometheusSpec.paused"?: string;
   "prometheus.prometheusSpec.replicas"?: string;
@@ -10917,6 +11517,7 @@ export type KubeprometheusstackHelmParameters = {
   "thanosRuler.thanosRulerSpec.initContainers"?: string;
   "thanosRuler.thanosRulerSpec.priorityClassName"?: string;
   "thanosRuler.thanosRulerSpec.portName"?: string;
+  "thanosRuler.thanosRulerSpec.schedulerName"?: string;
   "thanosRuler.thanosRulerSpec.terminationGracePeriodSeconds"?: string;
   "thanosRuler.thanosRulerSpec.podManagementPolicy"?: string;
   "thanosRuler.thanosRulerSpec.version"?: string;

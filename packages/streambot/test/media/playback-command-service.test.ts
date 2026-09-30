@@ -2,6 +2,9 @@ import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
+import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
@@ -10,7 +13,10 @@ const USER = UserIdSchema.parse("100000000000000001");
 const OTHER = UserIdSchema.parse("100000000000000002");
 const ADMIN = UserIdSchema.parse("100000000000000003");
 
-function createService(overrides: Partial<PlaybackView> = {}) {
+function createService(
+  overrides: Partial<PlaybackView> = {},
+  dependencyOverrides: Partial<PlaybackCommandServiceDeps> = {},
+) {
   const events: PlaybackEvent[] = [];
   const resolvedKinds: string[] = [];
   const seeks: number[] = [];
@@ -22,6 +28,7 @@ function createService(overrides: Partial<PlaybackView> = {}) {
       requesterId: USER,
       chapters: [],
       kind: "file",
+      mediaKind: null,
       sourceId: "file:/current.mkv",
       durationSeconds: 600,
     },
@@ -59,6 +66,7 @@ function createService(overrides: Partial<PlaybackView> = {}) {
       return Promise.resolve({
         title: "YouTube result",
         ffmpegInput: "https://media.invalid/video",
+        mediaKind: "video",
         chapters: [],
       });
     },
@@ -66,6 +74,7 @@ function createService(overrides: Partial<PlaybackView> = {}) {
       announcements.push(message);
       return Promise.resolve();
     },
+    ...dependencyOverrides,
   });
   return { service, events, resolvedKinds, seeks, announcements };
 }
@@ -123,6 +132,119 @@ describe("PlaybackCommandService", () => {
     expect(events).toEqual([]);
   });
 
+  test("does not let a source override bypass the sports feature gate", async () => {
+    const { service, events, resolvedKinds } = createService();
+    await expect(
+      service.play({
+        query: "Bears vs Packers",
+        source: "auto",
+        placement: "queue",
+        userId: USER,
+        sourceOverride: {
+          kind: "url",
+          url: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+        },
+      }),
+    ).rejects.toThrow("Sports streams are not enabled here.");
+    expect(resolvedKinds).toEqual([]);
+    expect(events).toEqual([]);
+  });
+
+  test("rejects subtitle options for a live sports stream before dispatch", async () => {
+    const { service, events } = createService(
+      {},
+      {
+        guildId: "100000000000000004",
+        channelId: "100000000000000005",
+        featureGate: {
+          assistantV2: async () => false,
+          history: async () => false,
+          musicOverVoice: async () => false,
+          sportsStreaming: async () => true,
+        },
+      },
+    );
+    for (const subtitles of [{ enabled: true }, { language: "en" }]) {
+      await expect(
+        service.play({
+          query: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+          source: "auto",
+          placement: "queue",
+          userId: USER,
+          spoken: false,
+          subtitles,
+        }),
+      ).rejects.toThrow("Live sports streams do not support subtitle options");
+    }
+    expect(events).toEqual([]);
+  });
+
+  test("validates sports at request time but only reuses a signed URL for play now", async () => {
+    const pageUrl = "https://v2.streameast.ga/nfl/bears-vs-packers/";
+    const event = {
+      id: "streameast:game",
+      provider: "streameast" as const,
+      title: "Bears vs Packers",
+      status: "live" as const,
+      startsAt: null,
+      pageUrl,
+    };
+    for (const [placement, eventType] of [
+      ["queue", "ADD"],
+      ["next", "ADD_NEXT"],
+      ["now", "PLAY_NOW"],
+    ] as const) {
+      const resolvedUrls: string[] = [];
+      const { service, events } = createService(
+        {},
+        {
+          guildId: "100000000000000004",
+          channelId: "100000000000000005",
+          featureGate: {
+            assistantV2: async () => false,
+            history: async () => false,
+            musicOverVoice: async () => false,
+            sportsStreaming: async () => true,
+          },
+          sports: {
+            listToday: async () => [event],
+            search: async () => ({ kind: "found", events: [event] }),
+          },
+          resolvePlaySource: async (source) => {
+            if (source.kind !== "url") throw new Error("Expected sports page");
+            resolvedUrls.push(source.url);
+            return {
+              title: event.title,
+              ffmpegInput: "https://signed.example/live.m3u8",
+              mediaKind: "video",
+              chapters: [],
+            };
+          },
+        },
+      );
+      await service.play({
+        query: event.title,
+        source: "auto",
+        placement,
+        userId: USER,
+      });
+      expect(resolvedUrls).toEqual([pageUrl]);
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject({
+        type: eventType,
+        source: { kind: "url", url: pageUrl, mode: "video" },
+      });
+      if (placement === "now") {
+        expect(events[0]).toHaveProperty(
+          "preResolved.ffmpegInput",
+          "https://signed.example/live.m3u8",
+        );
+      } else {
+        expect(events[0]).not.toHaveProperty("preResolved");
+      }
+    }
+  });
+
   test("blocked sources shame publicly and deny tersely by voice", async () => {
     const { service, events, announcements } = createService();
     await expect(
@@ -147,6 +269,7 @@ describe("PlaybackCommandService", () => {
           requesterId: OTHER,
           chapters: [],
           kind: "file",
+          mediaKind: null,
           sourceId: "file:/queued.mkv",
           durationSeconds: 60,
         },
@@ -167,6 +290,7 @@ describe("PlaybackCommandService queue and chapter surface", () => {
       requesterId: USER,
       chapters: [],
       kind: "file" as const,
+      mediaKind: null,
       sourceId: "file:/queued.mkv",
       durationSeconds: 60,
     };
@@ -203,6 +327,7 @@ describe("PlaybackCommandService queue and chapter surface", () => {
         requesterId: USER,
         chapters,
         kind: "file",
+        mediaKind: null,
         sourceId: "file:/current.mkv",
         durationSeconds: 600,
       },
@@ -303,6 +428,7 @@ describe("PlaybackCommandService queue and chapter surface", () => {
         return {
           title: "late",
           ffmpegInput: "https://media.invalid/late",
+          mediaKind: "video",
           chapters: [],
         };
       },
@@ -317,5 +443,85 @@ describe("PlaybackCommandService queue and chapter surface", () => {
       }),
     ).rejects.toBeDefined();
     expect(events).toEqual([]);
+  });
+});
+
+describe("PlaybackCommandService voice previous", () => {
+  test("voice previous keeps the spoken transport hint", async () => {
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      const media = {
+        title: "Previous Song",
+        provider: "youtube" as const,
+        source: {
+          kind: "url" as const,
+          url: "https://youtu.be/previous",
+        },
+      };
+      const requestId = history.recordQueueRequest({
+        scope: {
+          guildId: "guild-one",
+          channelId: "channel-one",
+          userId: USER,
+        },
+        rawQuery: media.title,
+        intent: inferMediaIntent({ query: media.title }),
+        media,
+        nowMs: 1000,
+      });
+      history.recordPlaybackStart({
+        requestId,
+        scope: {
+          guildId: "guild-one",
+          channelId: "channel-one",
+          userId: USER,
+        },
+        media,
+        nowMs: 1000,
+      });
+      const spoken: (boolean | undefined)[] = [];
+      const events: PlaybackEvent[] = [];
+      const config = loadConfig({
+        BOT_TOKEN: "bot",
+        USER_TOKENS: "userbot",
+        VIDEOS_DIR: "/videos",
+      });
+      const service = new PlaybackCommandService({
+        config,
+        dispatch: (event) => events.push(event),
+        view: () => ({
+          state: "idle",
+          current: null,
+          queue: [],
+          loop: "off",
+          volume: 100,
+          positionSeconds: null,
+        }),
+        library: () => [],
+        setVolume: () => Promise.resolve(true),
+        seek: () => Promise.resolve(true),
+        announce: () => Promise.resolve(),
+        history,
+        guildId: "guild-one",
+        channelId: "channel-one",
+        resolvePlaySource: (source) => {
+          spoken.push(source.spoken);
+          return Promise.resolve({
+            title: "Previous Song",
+            ffmpegInput: "https://media.invalid/previous",
+            mediaKind: "music",
+            chapters: [],
+          });
+        },
+      });
+      await service.previous(USER, undefined, { spoken: true });
+      expect(spoken).toEqual([true]);
+      expect(events[0]).toMatchObject({
+        type: "PLAY_NOW",
+        source: { spoken: true },
+      });
+    } finally {
+      history.close();
+    }
   });
 });

@@ -247,8 +247,7 @@ export class SyncEngine {
         return client.updateTask(command.taskId, command.payload, options);
       case "delete": {
         const result = await client.deleteTask(command.taskId, options);
-        if (!result.ok) return result;
-        return { ok: true, value: null };
+        return result.ok ? { ok: true, value: null } : result;
       }
       case "set_status":
         return client.toggleTaskStatus(command.taskId, command.status, options);

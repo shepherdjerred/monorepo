@@ -85,8 +85,9 @@ function championAlt(
   suffix: string,
 ): string {
   if (alt !== undefined) return alt;
-  if (optional === true) return `Unknown champion${suffix}`;
-  return `${getBrowserChampionName(champion)}${suffix}`;
+  return optional === true
+    ? `Unknown champion${suffix}`
+    : `${getBrowserChampionName(champion)}${suffix}`;
 }
 
 export function ChampionPortrait({

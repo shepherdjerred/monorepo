@@ -345,6 +345,87 @@ describe("createSeekablePlayer", () => {
     ]);
   });
 
+  test('type "camera" signals video on the shared voice connection and clears it on teardown', async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(
+      streamer,
+      "video.mkv",
+      { play: { type: "camera" } },
+      f.deps,
+    );
+    await player.start();
+    player.stop();
+    await player.finished;
+
+    expect(streamer.calls.createStream).toBe(0);
+    // One signalVideo(true) on start, one signalVideo(false) on teardown.
+    expect(streamer.calls.signalVideo).toBe(2);
+    expect(streamer.conn.speaking).toContain(false);
+  });
+
+  test('type "voice" borrows the voice connection without opening or signalling anything', async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(
+      streamer,
+      "song.webm",
+      { play: { type: "voice" } },
+      f.deps,
+    );
+
+    await player.start();
+
+    expect(streamer.calls.createStream).toBe(0);
+    expect(streamer.calls.signalVideo).toBe(0);
+    expect(f.attachCalls[0]?.conn).toBe(streamer.conn);
+    expect(f.attachCalls[0]?.configureConn).toBe(true);
+  });
+
+  test('type "voice" teardown touches nothing on the shared connection', async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(
+      streamer,
+      "song.webm",
+      { play: { type: "voice" } },
+      f.deps,
+    );
+    await player.start();
+
+    f.segments[0]?.resolve(); // natural end of the track
+    f.ffmpeg[0]?.resolve();
+    await player.finished;
+
+    // The voice connection is shared — the consumer speaks its own audio over it and arbitrates
+    // the speaking flag. A teardown that cleared it here would silence that other source.
+    expect(streamer.calls.stopStream).toBe(0);
+    expect(streamer.calls.signalVideo).toBe(0);
+    expect(streamer.conn.speaking).toEqual([]);
+    expect(streamer.conn.videoAttrs).toEqual([]);
+  });
+
+  test('type "voice" seeks by re-preparing without reconfiguring the connection', async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(
+      streamer,
+      "song.webm",
+      { play: { type: "voice" } },
+      f.deps,
+    );
+    await player.start();
+
+    await player.seek(45);
+
+    expect(f.prepareCalls).toEqual([{ startTime: undefined }, { startTime: 45 }]);
+    expect(f.attachCalls.map((c) => c.configureConn)).toEqual([true, false]);
+    expect(f.attachCalls[1]?.conn).toBe(f.attachCalls[0]?.conn);
+    expect(player.position).toBe(45);
+    expect(streamer.calls.stopStream).toBe(0);
+    expect(streamer.calls.signalVideo).toBe(0);
+  });
+
   test("setVolume delegates to the active segment controller", async () => {
     const streamer = makeStreamer();
     const f = makeDeps();

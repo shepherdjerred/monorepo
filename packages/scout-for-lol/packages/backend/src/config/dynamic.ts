@@ -10,12 +10,13 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { createLogger } from "#src/logger.ts";
-import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
+import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 import configuration from "#src/configuration.ts";
 import {
-  TournamentApiModeSchema,
-  type TournamentApiMode,
-} from "#src/configuration/tournament-mode.ts";
+  DEFAULT_EXPLORE_QUOTA_LIMITS,
+  ExploreQuotaLimitsInputSchema,
+  type ExploreQuotaLimits,
+} from "#src/configuration/explore-quota.ts";
 
 const logger = createLogger("config-dynamic");
 
@@ -64,6 +65,24 @@ const DEFINITION = {
     default: [],
     names: { env: "EXPLORE_GUILD_ALLOWLIST" },
   },
+  /**
+   * Explore's question ceilings, as one object.
+   *
+   * Flag-capable because these bound model spend: a cost surprise should be
+   * answerable by moving the ceiling, not by waiting for a deploy. The schema
+   * rejects a partially-sane policy rather than letting one through, since an
+   * unreachable window refuses requests while naming a limit the caller has
+   * not actually reached.
+   */
+  exploreQuotaLimits: {
+    schema: ExploreQuotaLimitsInputSchema,
+    sources: ["flag", "env", "default"],
+    default: DEFAULT_EXPLORE_QUOTA_LIMITS,
+    names: {
+      flag: "scout-explore-quota-limits",
+      env: "EXPLORE_QUOTA_LIMITS",
+    },
+  },
   llmHourlyTokenBudget: {
     schema: z.coerce.number().int().positive(),
     sources: ["flag", "env", "default"],
@@ -96,38 +115,30 @@ const DEFINITION = {
     names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
   },
   /**
-   * Which tournament API the tournament client talks to.
-   *
-   * Not bootstrap — nothing needs it to construct the flag client — so it is
-   * flag-capable and can be flipped the hour the Riot key gains tournament
-   * access, with no deploy.
-   *
-   * Defaults to "stub" because that is the safe state: stub codes cannot
-   * create a real game, so a misconfigured deploy fails visibly at lobby
-   * creation rather than minting live codes nobody expected.
-   *
-   * Caveat worth knowing: Scout's flag targetingKey is the constant
-   * "scout-backend", so flipping this in Flipt moves beta and prod together.
-   * That is inert while no prod guild has tournament lobbies enabled, and
-   * stops being inert the moment one does.
+   * Percent of eligible messages that carry a feature tip. The roll is only
+   * reached after the audience's cooldown has expired and an unused, available
+   * tip exists, so this bounds noise within that set rather than overall.
    */
-  tournamentApiMode: {
-    schema: TournamentApiModeSchema,
-    sources: ["flag", "env", "default"],
-    default: "stub",
-    names: { flag: "scout-tournament-api-mode", env: "TOURNAMENT_API_MODE" },
-  },
-  /**
-   * How many lobbies one guild may have open at once. Bounds the poll budget:
-   * each open lobby costs one lobby-events call per 20-second tick.
-   */
-  tournamentMaxOpenLobbies: {
-    schema: z.coerce.number().int().positive(),
+  featureTipPercent: {
+    schema: z.coerce.number().int().min(0).max(100),
     sources: ["flag", "env", "default"],
     default: 10,
     names: {
-      flag: "scout-tournament-max-open-lobbies",
-      env: "TOURNAMENT_MAX_OPEN_LOBBIES",
+      flag: "scout-feature-tip-percent",
+      env: "FEATURE_TIP_PERCENT",
+    },
+  },
+  /**
+   * Minimum hours between two tips to the same audience. A busy server must
+   * not out-earn a quiet one on tips, so pacing is time-based, not volume-based.
+   */
+  featureTipCooldownHours: {
+    schema: z.coerce.number().int().positive(),
+    sources: ["flag", "env", "default"],
+    default: 72,
+    names: {
+      flag: "scout-feature-tip-cooldown-hours",
+      env: "FEATURE_TIP_COOLDOWN_HOURS",
     },
   },
   temporalCallGraphTracing: {
@@ -144,13 +155,14 @@ const DEFINITION = {
  */
 export type DynamicConfigSeed = {
   exploreGuildAllowlist: string[];
+  exploreQuotaLimits: ExploreQuotaLimits;
   llmHourlyTokenBudget: number;
   llmDailyTokenBudget: number;
   reportAiModel?: string;
   bettingParlayAiModel?: string;
   exploreModel?: string;
-  tournamentApiMode?: TournamentApiMode;
-  tournamentMaxOpenLobbies?: number;
+  featureTipPercent?: number;
+  featureTipCooldownHours?: number;
   // Required, unlike the rest: `temporalCallGraphTracing()` is read
   // unconditionally at boot, and `snapshot.get` throws on an unseeded key. Its
   // `?? false` guards a null snapshot, not that throw — so an optional field
@@ -176,13 +188,15 @@ function buildSnapshot(
               targetingKey: "scout-backend",
               kinds: {
                 exploreGuildAllowlist: "string",
+                // A JSON object arrives as a string, like the allowlist.
+                exploreQuotaLimits: "string",
                 llmHourlyTokenBudget: "number",
                 llmDailyTokenBudget: "number",
                 reportAiModel: "string",
                 bettingParlayAiModel: "string",
                 exploreModel: "string",
-                tournamentApiMode: "string",
-                tournamentMaxOpenLobbies: "number",
+                featureTipPercent: "number",
+                featureTipCooldownHours: "number",
                 temporalCallGraphTracing: "boolean",
               },
             }),
@@ -285,6 +299,16 @@ export function exploreGuildAllowlist(): string[] {
   );
 }
 
+/**
+ * Read per request rather than captured at module load, so an operator's
+ * change lands on the next question instead of the next deploy.
+ */
+export function exploreQuotaLimits(): ExploreQuotaLimits {
+  return (
+    snapshot?.get("exploreQuotaLimits") ?? configuration.exploreQuotaLimits
+  );
+}
+
 export function llmHourlyTokenBudget(): number {
   return (
     snapshot?.get("llmHourlyTokenBudget") ?? configuration.llmHourlyTokenBudget
@@ -325,14 +349,14 @@ export async function refreshDynamicConfig(): Promise<void> {
   await notifyRefreshListeners();
 }
 
-export function tournamentApiMode(): TournamentApiMode {
-  return snapshot?.get("tournamentApiMode") ?? configuration.tournamentApiMode;
+export function featureTipPercent(): number {
+  return snapshot?.get("featureTipPercent") ?? configuration.featureTipPercent;
 }
 
-export function tournamentMaxOpenLobbies(): number {
+export function featureTipCooldownHours(): number {
   return (
-    snapshot?.get("tournamentMaxOpenLobbies") ??
-    configuration.tournamentMaxOpenLobbies
+    snapshot?.get("featureTipCooldownHours") ??
+    configuration.featureTipCooldownHours
   );
 }
 

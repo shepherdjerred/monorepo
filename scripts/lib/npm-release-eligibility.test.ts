@@ -193,8 +193,8 @@ describe("consumer file classification", () => {
   });
 });
 
-describe("initial package releases", () => {
-  test("classifies Home Assistant's configured first release in a tagless repo", async () => {
+describe("tagless packages", () => {
+  test("fails loudly when a published package has no release tag", async () => {
     const policy = NPM_PACKAGE_POLICIES.find(
       (candidate) => candidate.name === "@shepherdjerred/home-assistant",
     );
@@ -208,26 +208,15 @@ describe("initial package releases", () => {
       await mkdir(path.join(root, policy.path), { recursive: true });
       await Bun.write(
         packagePath,
-        JSON.stringify(
-          {
-            name: policy.name,
-            version: policy.initialVersion,
-          },
-          null,
-          2,
-        ) + "\n",
+        JSON.stringify({ name: policy.name, version: "0.1.0" }, null, 2) + "\n",
       );
       await Bun.$`git -C ${root} init --quiet`;
       await Bun.$`git -C ${root} add ${path.join(policy.path, "package.json")}`;
       await Bun.$`git -C ${root} -c user.name=eligibility-test -c user.email=eligibility-test@example.com commit --quiet -m initial`;
 
-      const decision = await classifyPackageRelease(root, policy);
-
-      expect(decision).toMatchObject({
-        packageName: "@shepherdjerred/home-assistant",
-        latestTag: "initial release",
-        eligible: true,
-      });
+      await expect(classifyPackageRelease(root, policy)).rejects.toThrow(
+        "No release tag found for @shepherdjerred/home-assistant",
+      );
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -239,42 +228,55 @@ describe("historical release regressions", () => {
     await fetchNpmPackageTags(process.cwd());
   });
 
-  test("Webring analytics and TypeDoc-only releases are excluded", async () => {
-    const policy = NPM_PACKAGE_POLICIES.find(
-      (candidate) => candidate.name === "webring",
-    );
-    if (policy === undefined) throw new Error("Webring policy is missing");
+  // These historical comparisons read Git trees from fetched tags. The
+  // repository is large and a loaded CI node can take more than Vitest's
+  // default five seconds without changing the release decision.
+  const historicalGitTimeout = 15_000;
 
-    const oneNine = await classifyPackageReleaseRange(
-      process.cwd(),
-      policy,
-      "webring-v1.8.0",
-      "webring-v1.9.0",
-    );
-    const oneTen = await classifyPackageReleaseRange(
-      process.cwd(),
-      policy,
-      "webring-v1.9.0",
-      "webring-v1.10.0",
-    );
-    expect(oneNine.eligible).toBe(false);
-    expect(oneTen.eligible).toBe(false);
-  });
+  test(
+    "Webring analytics and TypeDoc-only releases are excluded",
+    async () => {
+      const policy = NPM_PACKAGE_POLICIES.find(
+        (candidate) => candidate.name === "webring",
+      );
+      if (policy === undefined) throw new Error("Webring policy is missing");
 
-  test("Astro CI and devDependency-only release is excluded", async () => {
-    const policy = NPM_PACKAGE_POLICIES.find(
-      (candidate) => candidate.name === "astro-opengraph-images",
-    );
-    if (policy === undefined) throw new Error("Astro policy is missing");
+      const oneNine = await classifyPackageReleaseRange(
+        process.cwd(),
+        policy,
+        "webring-v1.8.0",
+        "webring-v1.9.0",
+      );
+      const oneTen = await classifyPackageReleaseRange(
+        process.cwd(),
+        policy,
+        "webring-v1.9.0",
+        "webring-v1.10.0",
+      );
+      expect(oneNine.eligible).toBe(false);
+      expect(oneTen.eligible).toBe(false);
+    },
+    historicalGitTimeout,
+  );
 
-    const decision = await classifyPackageReleaseRange(
-      process.cwd(),
-      policy,
-      "astro-opengraph-images-v1.17.4",
-      "astro-opengraph-images-v1.18.0",
-    );
-    expect(decision.eligible).toBe(false);
-  });
+  test(
+    "Astro CI and devDependency-only release is excluded",
+    async () => {
+      const policy = NPM_PACKAGE_POLICIES.find(
+        (candidate) => candidate.name === "astro-opengraph-images",
+      );
+      if (policy === undefined) throw new Error("Astro policy is missing");
+
+      const decision = await classifyPackageReleaseRange(
+        process.cwd(),
+        policy,
+        "astro-opengraph-images-v1.17.4",
+        "astro-opengraph-images-v1.18.0",
+      );
+      expect(decision.eligible).toBe(false);
+    },
+    historicalGitTimeout,
+  );
 
   test("missing release tags fail closed", async () => {
     const policy = NPM_PACKAGE_POLICIES[0];

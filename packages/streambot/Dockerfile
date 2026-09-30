@@ -17,7 +17,7 @@
 # dependencies and the rest of the monorepo source never reach the final
 # image, and the source layer only invalidates when a closure package changes —
 # not on every repo commit.
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── base-build: runtime libs + build toolchain for native postinstalls ──────
@@ -55,9 +55,9 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/streambot'
 
@@ -85,9 +85,9 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
+  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/streambot'
 
@@ -226,8 +226,8 @@ FROM runtime AS smoke
 COPY --from=deps /app/ /app/
 COPY vitest.config.ts /app/vitest.config.ts
 COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=streambot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 USER 1000:1000
@@ -236,11 +236,11 @@ ENV HOME=/tmp
 # It needs the runtime rootfs (ffmpeg + libass + zimg + fonts) AND a Vitest
 # runner, and the published image deliberately carries no development
 # dependencies — so it cannot run from the shared harness, which also executes
-# against the pushed digest (.buildkite/application-image-smoke.Dockerfile).
+# against the pushed digest (ci/application-image-smoke.Dockerfile).
 RUN mkdir -p /tmp/videos \
     && cd /app/packages/streambot \
     && bun run test:integration
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image
 # Corpus evaluation is deliberately NOT a build dependency: it is a multi-hour acceptance

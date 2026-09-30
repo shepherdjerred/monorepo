@@ -58,13 +58,11 @@ async function existingSubscription(
     where: { serverId_alias: { serverId: input.guildId, alias: input.alias } },
     include: { subscriptions: { select: { channelId: true } } },
   });
-  if (
-    player?.subscriptions.some((row) => row.channelId === input.channelId) ===
-    true
-  ) {
-    return `${input.alias} is already subscribed in that channel. Adding this account would only attach it to the existing player.`;
-  }
-  return null;
+  return player?.subscriptions.some(
+    (row) => row.channelId === input.channelId,
+  ) === true
+    ? `${input.alias} is already subscribed in that channel. Adding this account would only attach it to the existing player.`
+    : null;
 }
 
 /**
@@ -90,7 +88,7 @@ export async function prepareSubscriptionCreation(
     );
   }
 
-  const channelRefusal = requirePostableChannel(context, {
+  const channelRefusal = await requirePostableChannel(context, {
     guildId: parsed.guildId,
     channelId: parsed.channelId,
   });
@@ -122,7 +120,7 @@ export async function prepareSubscriptionCreation(
   return await mintCreationIntent(context, {
     payload: subscriptionPayload(parsed, resolved),
     guildId: parsed.guildId,
-    summary: `Track ${resolved.gameName}#${resolved.tagLine} (${parsed.region}) as "${parsed.alias}" in ${lookup.guild.name}, posting to #${postableChannelName(context, parsed.guildId, parsed.channelId)}.`,
+    summary: `Track ${resolved.gameName}#${resolved.tagLine} (${parsed.region}) as "${parsed.alias}" in ${lookup.guild.name}, posting to #${await postableChannelName(context, parsed.guildId, parsed.channelId)}.`,
   });
 }
 

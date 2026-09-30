@@ -53,10 +53,9 @@ function subPermissionRefusal(
     input.scheduledUpdates.enabled ||
     input.scheduledUpdates.cronExpression !== DEFAULT_COMPETITION_CRON ||
     input.scheduledUpdates.timezone !== DEFAULT_SCHEDULE_TIMEZONE;
-  if (customizesSchedule && !permissions.can("competitions", "schedule")) {
-    return "Configuring leaderboard updates needs the competitions:schedule permission this user does not have. Offer to create the competition with the default schedule.";
-  }
-  return null;
+  return customizesSchedule && !permissions.can("competitions", "schedule")
+    ? "Configuring leaderboard updates needs the competitions:schedule permission this user does not have. Offer to create the competition with the default schedule."
+    : null;
 }
 
 /**
@@ -82,7 +81,7 @@ export async function prepareCompetitionCreation(
     );
   }
 
-  const channelRefusal = requirePostableChannel(context, {
+  const channelRefusal = await requirePostableChannel(context, {
     guildId: parsed.guildId,
     channelId: parsed.channelId,
   });
@@ -127,7 +126,7 @@ export async function prepareCompetitionCreation(
   return await mintCreationIntent(context, {
     payload,
     guildId: parsed.guildId,
-    summary: `${write.visibility === "SERVER_WIDE" ? "Server-wide" : "Invite-only"} competition "${write.title}" in ${lookup.guild.name}, scored by ${write.criteria.type}, posting to #${postableChannelName(context, parsed.guildId, parsed.channelId)}, ${describeWindow(dates)}.`,
+    summary: `${write.visibility === "SERVER_WIDE" ? "Server-wide" : "Invite-only"} competition "${write.title}" in ${lookup.guild.name}, scored by ${write.criteria.type}, posting to #${await postableChannelName(context, parsed.guildId, parsed.channelId)}, ${describeWindow(dates)}.`,
   });
 }
 

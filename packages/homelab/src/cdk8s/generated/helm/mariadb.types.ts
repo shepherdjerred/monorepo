@@ -2,7 +2,10 @@
 
 export type MariadbHelmValuesGlobal = {
   /**
-   * Global Docker Image registry
+   * Copyright Broadcom, Inc. All Rights Reserved.
+   * Global Docker image parameters
+   * Please, note that this will override the image parameters, including dependencies, configured to use the global value
+   * Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
    *
    * @default ""
    */
@@ -708,6 +711,7 @@ explicit_defaults_fo..."
    */
   service?: MariadbHelmValuesPrimaryService;
   /**
+   * MariaDB primary Pod Disruption Budget configuration
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
    * @default {"create":true,"minAvailable":"","maxUnavailable":""}
@@ -1459,6 +1463,7 @@ explicit_defaults_fo..."
    */
   service?: MariadbHelmValuesSecondaryService;
   /**
+   * MariaDB secondary Pod Disruption Budget configuration
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
    * @default {"create":true,"minAvailable":"","maxUnavailable":""}
@@ -2851,6 +2856,12 @@ export type MariadbHelmValuesNetworkPolicy = {
   extraIngress?: unknown[];
   extraEgress?: unknown[];
   /**
+   * Allow access from pods with client label set to "true". Ignored if `networkPolicy.allowExternal` is true.
+   *
+   * @default true
+   */
+  addExternalClientAccess?: boolean;
+  /**
    * [object] Labels to match to allow traffic from other namespaces
    *
    * @default {}
@@ -2862,19 +2873,22 @@ export type MariadbHelmValuesNetworkPolicy = {
    * @default {}
    */
   ingressNSPodMatchLabels?: MariadbHelmValuesNetworkPolicyIngressNSPodMatchLabels;
+  /**
+   * [object] Labels to match pods in the same release to allow traffic from. Ignored if `networkPolicy.allowExternal` is true.
+   *
+   * @default {}
+   */
+  ingressReleaseMatchLabels?: MariadbHelmValuesNetworkPolicyIngressReleaseMatchLabels;
 };
 
 export type MariadbHelmValuesNetworkPolicyIngressNSMatchLabels = object;
 
 export type MariadbHelmValuesNetworkPolicyIngressNSPodMatchLabels = object;
 
+export type MariadbHelmValuesNetworkPolicyIngressReleaseMatchLabels = object;
+
 export type MariadbHelmValues = {
   /**
-   * Copyright Broadcom, Inc. All Rights Reserved.
-   * Global Docker image parameters
-   * Please, note that this will override the image parameters, including dependencies, configured to use the global value
-   * Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
-   *
    * @default {...} (6 keys)
    */
   global?: MariadbHelmValuesGlobal;
@@ -3043,7 +3057,7 @@ export type MariadbHelmValues = {
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
    *
-   * @default {...} (7 keys)
+   * @default {...} (9 keys)
    */
   networkPolicy?: MariadbHelmValuesNetworkPolicy;
 };
@@ -3402,4 +3416,5 @@ export type MariadbHelmParameters = {
   "networkPolicy.allowExternalEgress"?: string;
   "networkPolicy.extraIngress"?: string;
   "networkPolicy.extraEgress"?: string;
+  "networkPolicy.addExternalClientAccess"?: string;
 };

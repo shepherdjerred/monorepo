@@ -1,122 +1,54 @@
-import { Output, stepCountIs, tool, ToolLoopAgent } from "ai";
-import { z } from "zod";
+import { Output, stepCountIs, ToolLoopAgent } from "ai";
 import {
-  type DiscordAccountId,
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
-  EXPLORE_MAX_PREVIEW_CALLS,
   EXPLORE_MAX_STEPS,
-  EXPLORE_MAX_TOOL_CALLS,
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
   modelSupportsParameter,
-  ReportAiModelPreviewSummarySchema,
-  ReportQueryTextSchema,
   type ExploreAnswer,
-  type DiscordChannelId,
-  type ExploreMessage,
-  type ExploreStreamEvent,
+  type ExploreMatchCard,
+  type ExploreLoadoutCard,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/format-expr.ts";
+import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
 import { exploreModel } from "#src/config/dynamic.ts";
-import { prisma } from "#src/database/index.ts";
 import {
-  createBucksExploreTools,
-  resolveBucksCapability,
-} from "#src/explore/bucks-tools.ts";
-import { createDareExploreTools } from "#src/explore/dare-tool-definitions.ts";
-import { dareExploreEnabled } from "#src/explore/dare-tool-context.ts";
-import {
-  challengeExploreEnabled,
-  createChallengeExploreTools,
-} from "#src/explore/challenge-tools.ts";
-import {
-  resolveCreationCapability,
-  type CreationCapability,
-} from "#src/explore/creation/capability.ts";
-import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
+  createExploreTools,
+  type ExploreAgentParams,
+  type RunState,
+} from "#src/explore/agent-tools.ts";
+import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
-import type { ExploreSurface } from "#src/explore/surface.ts";
-import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
-import { createLogger } from "#src/logger.ts";
 import { drainExploreStreams } from "#src/explore/stream.ts";
+import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
+import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
+import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
+import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
+import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
+import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
+import { hydrateExploreLoadoutCards } from "#src/explore-match/loadout-view.ts";
+import { clashExploreEnabled } from "#src/league/clash/access.ts";
+import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
+import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
 } from "#src/league/review/openai-budget.ts";
-import {
-  scoutExploreTokensUsedTotal,
-  scoutExploreToolCallsTotal,
-} from "#src/metrics/explore.ts";
-import {
-  createFormatTool,
-  createLanguageTool,
-  createValidateTool,
-  QueryResultToolOutputSchema,
-  validateQuery,
-  type ToolTracker,
-} from "#src/reports/ai/scoutql-tools.ts";
-import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
-import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
-import { resolvePlayerIdentities } from "#src/reports/identity.ts";
-import {
-  withLlmSubjectSpan,
-  type LlmSubject,
-} from "@shepherdjerred/llm-observability/subject";
+import { createLogger } from "#src/logger.ts";
+import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
 
 const logger = createLogger("explore-agent");
-
-export type ExploreAgentParams = {
-  runId: string;
-  conversationId: string;
-  /**
-   * Who this turn is being answered for. Required rather than optional: an
-   * Explore turn always has an asker, and an optional field would quietly
-   * produce unattributed spend the first time a caller forgot it.
-   */
-  subject: LlmSubject;
-  question: string;
-  /** Prior turns of this conversation, oldest first. */
-  history: ExploreMessage[];
-  /**
-   * The asker's Discord servers, used only to resolve a `player('…')` alias.
-   * Explore is global otherwise; this is the one lookup that reads per-server
-   * data, so it stays bounded to servers this person belongs to.
-   */
-  guildIds: string[];
-  /**
-   * The asker. Only the Bryan Bucks account tool reads it — the tool is
-   * structurally scoped to the requester's own balance.
-   */
-  requesterId: DiscordAccountId;
-  /** Discord-originated dare drafts keep the invoking channel as metadata. */
-  originChannelId: DiscordChannelId | null;
-  /**
-   * Which product surface this turn is answered on. Creation tools are
-   * web-only; see `explore/surface.ts` for why that is structural rather than
-   * a policy choice.
-   */
-  surface: ExploreSurface;
-  abortSignal: AbortSignal;
-  emit: (event: ExploreStreamEvent) => void | Promise<void>;
-};
 
 export type ExploreAgentResult = {
   answer: ExploreAnswer;
   /** The result of the last successful query, kept for the transcript. */
   preview: ReportAiPreviewSummary | null;
   visualization: VisualizationSnapshot | null;
-};
-
-type RunState = {
-  toolCalls: number;
-  previewCalls: number;
-  /** Result of the most recent successful query, attached to the answer. */
-  lastPreview: ReportAiPreviewSummary | null;
-  lastVisualization: VisualizationSnapshot | null;
+  /** Frozen, source-backed artifacts requested by the model. */
+  matchCards: ExploreMatchCard[];
+  loadoutCards: ExploreLoadoutCard[];
 };
 
 export async function streamExploreAgent(
@@ -133,9 +65,9 @@ async function streamExploreAgentInternal(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
   const model = exploreModel();
-  const runtime = getOpenRouterRuntime();
+  const runtime = getLlmRuntime();
   if (runtime === undefined) {
-    throw new Error("OPENROUTER_API_KEY is required for explore");
+    throw new Error("OpenAI credentials are required for explore");
   }
   assertWithinBudget();
 
@@ -144,12 +76,17 @@ async function streamExploreAgentInternal(
     previewCalls: 0,
     lastPreview: null,
     lastVisualization: null,
+    lastMatchIds: new Set(),
+    lastQueryMatchIds: new Set(),
+    lastQueryLoadoutPairs: new Set(),
+    loadedSkills: new Set(),
   };
 
   // Derived per turn rather than persisted, so Temporal recovery and flag
   // revocation both re-evaluate; a guild losing `betting_enabled` loses the
   // tools on its very next turn.
   const bucksCapability = await resolveBucksCapability(params.guildIds);
+  const mvpVotesCapability = await resolveMvpVotesCapability(params.guildIds);
   const daresEnabled = await dareExploreEnabled(bucksCapability);
   const challengesEnabled = await challengeExploreEnabled(params.guildIds);
   // Tier 1 only: a surface comparison and one flag read per guild. The
@@ -159,34 +96,46 @@ async function streamExploreAgentInternal(
     surface: params.surface,
     guildIds: params.guildIds,
   });
+  const riotHistoryEnabled = await riotHistoryExploreEnabled(params.guildIds);
+  const clashEnabled = await clashExploreEnabled(params.guildIds);
+  const hallCapability = await resolveHallCapability(params.guildIds);
+
+  const clock = { currentTime: new Date().toISOString() };
+  const skillOptions = {
+    bucks: bucksCapability === null ? null : clock,
+    mvpVotes: mvpVotesCapability === null ? null : clock,
+    dares: daresEnabled,
+    challenges: challengesEnabled,
+    creation: creationCapability !== null,
+    riotHistory: riotHistoryEnabled,
+    clash: clashEnabled,
+    hallOfFame: hallCapability !== null,
+    surface: params.surface,
+  };
 
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
-    instructions: exploreAgentInstructions({
-      bucks:
-        bucksCapability === null
-          ? null
-          : { currentTime: new Date().toISOString() },
-      dares: daresEnabled,
-      challenges: challengesEnabled,
-      creation: creationCapability !== null,
-    }),
+    instructions: exploreAgentInstructions(skillOptions),
     model: runtime.languageModel(model, ["tools"]),
     tools: createExploreTools({
       params,
       state,
+      skillOptions,
       bucksCapability,
+      mvpVotesCapability,
       daresEnabled,
       challengesEnabled,
       creationCapability,
+      riotHistoryEnabled,
+      clashEnabled,
+      hallCapability,
     }),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
-    // supportsTemperature: false, and the runtime asks OpenRouter for
-    // `require_parameters` whenever a call needs tools or structured output.
-    // Sending temperature to a model that does not accept it therefore leaves
-    // zero eligible endpoints and the whole turn fails with a 404 "No endpoints
-    // found that can handle the requested parameters" — not a soft downgrade.
+    // supportsTemperature: false, and the provider rejects the parameter
+    // outright: OpenAI answers a reasoning model's temperature with a 400
+    // "Unsupported parameter", so the whole turn fails rather than soft
+    // downgrading.
     ...(modelSupportsParameter(model, "temperature")
       ? { temperature: 0.2 }
       : {}),
@@ -194,7 +143,12 @@ async function streamExploreAgentInternal(
     output: Output.object({ schema: ExploreAnswerWireSchema }),
     ...runtime.callOptions({
       workload: "scout.explore",
+      model,
       sessionId: params.runId,
+      // One cache partition for every turn. The per-turn session id would
+      // otherwise partition it, and no turn could reuse another's cached
+      // prompt — which is most of what a turn sends.
+      promptCacheKey: "scout.explore",
     }),
   });
 
@@ -211,6 +165,27 @@ async function streamExploreAgentInternal(
   const streamState = await drainExploreStreams(stream, params.emit);
 
   const answer = ExploreAnswerSchema.parse(await stream.output);
+  if (
+    params.surface === "voice" &&
+    (answer.spokenAnswer === null || answer.spokenAnswer === undefined)
+  ) {
+    throw new Error("Voice Explore answers require spokenAnswer");
+  }
+  const matchCards =
+    params.surface === "web" || params.surface === "voice"
+      ? await hydrateExploreMatchCards({
+          requests: answer.matchCards,
+          eligibleMatchIds: state.lastMatchIds,
+        })
+      : [];
+  const loadoutCards =
+    params.surface === "web" || params.surface === "voice"
+      ? await hydrateExploreLoadoutCards({
+          requests: answer.loadoutCards,
+          eligiblePairs: state.lastQueryLoadoutPairs,
+          abortSignal: params.abortSignal,
+        })
+      : [];
 
   // Streaming depends on the model emitting `answer` early enough for the
   // partial snapshots to carry it. If that ever stops holding — a reordered
@@ -235,21 +210,81 @@ async function streamExploreAgentInternal(
     answer,
     preview: answer.includeVisualization ? state.lastPreview : null,
     visualization: answer.includeVisualization ? state.lastVisualization : null,
+    matchCards,
+    loadoutCards,
   };
 }
 
-type ExploreModelMessage =
+export type ExploreModelMessage =
   { role: "user"; content: string } | { role: "assistant"; content: string };
+
+type MatchCardReplayContext = {
+  size: string;
+  match: {
+    matchId: string;
+    teams: readonly { teamId: number; win: boolean; kills: number }[];
+  };
+};
+
+type LoadoutCardReplayContext = Pick<
+  ExploreLoadoutCard,
+  | "matchId"
+  | "size"
+  | "championName"
+  | "finalItems"
+  | "runePage"
+  | "buildPathRecorded"
+>;
+
+/** Preserve the visible card order so follow-ups can refer to “the first card”. */
+export function matchCardReplayContext(
+  cards: readonly MatchCardReplayContext[],
+): string {
+  if (cards.length === 0) return "";
+  const entries = cards.map((card, index) => {
+    const teams = card.match.teams
+      .map(
+        (team) =>
+          `Team ${team.teamId.toString()} ${team.win ? "won" : "lost"} (${team.kills.toString()} kills)`,
+      )
+      .join("; ");
+    return `Card ${String(index + 1)} (${card.size}): ${card.match.matchId}; ${teams}.`;
+  });
+  return `\n\n[Match cards shown in order]\n${entries.join("\n")}`;
+}
+
+export function loadoutCardReplayContext(
+  cards: readonly LoadoutCardReplayContext[],
+): string {
+  if (cards.length === 0) return "";
+  const entries = cards.map((card, index) => {
+    const items = card.finalItems.flatMap((item) =>
+      item.itemId === null
+        ? []
+        : [item.name ?? `Unknown item ID ${item.itemId.toString()}`],
+    );
+    const keystone = card.runePage.keystone?.name ?? "unknown keystone";
+    return `Card ${String(index + 1)} (${card.size}): ${card.matchId}; ${card.championName}; final build ${items.join(", ") || "empty"}; ${keystone}; ${card.buildPathRecorded ? "build path recorded" : "build path not recorded"}.`;
+  });
+  return `\n\n[Loadout cards shown in order]\n${entries.join("\n")}`;
+}
 
 /**
  * Rebuild the conversation as model messages.
  *
  * History comes from the database, never from the client, so a caller cannot
- * forge prior turns to steer an answer. Assistant turns replay only the prose
- * and the query that produced it — not the full row set, which would blow up
- * the context for questions that no longer depend on it.
+ * forge prior turns to steer an answer. Assistant turns replay their prose,
+ * query, and compact card identities — not the full row set, which would blow
+ * up context for questions that no longer depend on it.
+ *
+ * Exported so the Explore replay eval can record what the model was actually
+ * given, rather than a reconstruction of it. A bundle that shows an
+ * approximation of the prompt cannot answer "why did this turn differ", which
+ * is the only question it exists to answer.
  */
-function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
+export function buildMessages(
+  params: ExploreAgentParams,
+): ExploreModelMessage[] {
   const recent = params.history.slice(-EXPLORE_MAX_HISTORY_TURNS * 2);
   const messages = recent.map((message): ExploreModelMessage =>
     message.role === "assistant"
@@ -257,191 +292,10 @@ function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
           role: "assistant",
           content:
             message.queryText === null
-              ? message.content
-              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}`,
+              ? `${message.content}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}`
+              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}`,
         }
       : { role: "user", content: message.content },
   );
   return [...messages, { role: "user", content: params.question }];
-}
-
-type ExploreToolsOptions = {
-  params: ExploreAgentParams;
-  state: RunState;
-  bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>;
-  daresEnabled: boolean;
-  challengesEnabled: boolean;
-  creationCapability: CreationCapability | null;
-};
-
-function createExploreTools(options: ExploreToolsOptions) {
-  const {
-    params,
-    state,
-    bucksCapability,
-    daresEnabled,
-    challengesEnabled,
-    creationCapability,
-  } = options;
-  const track: ToolTracker = async (toolName, work) => {
-    state.toolCalls++;
-    if (state.toolCalls > EXPLORE_MAX_TOOL_CALLS) {
-      scoutExploreToolCallsTotal.inc({
-        tool_name: toolName,
-        status: "limited",
-      });
-      throw new Error("This question used too many steps. Try a simpler one.");
-    }
-    try {
-      const result = await work();
-      scoutExploreToolCallsTotal.inc({
-        tool_name: toolName,
-        status: "success",
-      });
-      return result;
-    } catch (error) {
-      scoutExploreToolCallsTotal.inc({ tool_name: toolName, status: "error" });
-      throw error;
-    }
-  };
-
-  /**
-   * Who a name means, before a query is spent on it.
-   *
-   * `player('…')` resolves the same way at execution, so this is not required
-   * for correctness — it exists so the agent can disambiguate a name that
-   * matches two people, and can tell the reader which accounts an answer
-   * folded together. Its output deliberately carries PUUIDs for the model's
-   * own reasoning only; they never reach query text, which is what the
-   * `player('…')` call form is for.
-   */
-  const resolvePlayer = tool({
-    description:
-      "Find out who a name refers to before querying: accepts a Scout alias, a Riot ID, or a game name, and returns each matching person with every account and past Riot ID they have used. Use the returned displayName inside player('…').",
-    inputSchema: z.object({ query: z.string().min(1).max(100) }).strict(),
-    outputSchema: z
-      .object({
-        candidates: z.array(
-          z.object({
-            displayName: z.string(),
-            riotIds: z.array(z.string()),
-            accounts: z.number(),
-            games: z.number(),
-            firstSeen: z.string(),
-            lastSeen: z.string(),
-            matchedBy: z.enum(["alias", "riot_id"]),
-          }),
-        ),
-        message: z.string(),
-      })
-      .strict(),
-    execute: (inputData) =>
-      track("resolve_player", async () => {
-        const found = await resolvePlayerIdentities({
-          query: inputData.query,
-          guildIds: params.guildIds,
-        });
-        return {
-          candidates: found.map((identity) => ({
-            displayName: identity.displayName,
-            riotIds: identity.riotIds,
-            accounts: identity.puuids.length,
-            games: identity.games,
-            firstSeen: identity.firstSeen,
-            lastSeen: identity.lastSeen,
-            matchedBy: identity.matchedBy,
-          })),
-          message:
-            found.length === 0
-              ? `No player matches "${inputData.query}". Say the data does not cover them rather than guessing at a similar name.`
-              : found.length === 1
-                ? `One match. Use player(${quoteScoutQlString(found[0]?.displayName ?? inputData.query)}) in the query.`
-                : `${found.length.toString()} people match. Ask which one they meant before querying.`,
-        };
-      }),
-  });
-
-  const runReportQuery = tool({
-    description:
-      "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool.",
-    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
-    outputSchema: QueryResultToolOutputSchema,
-    execute: (inputData) =>
-      track("run_report_query", async () => {
-        state.previewCalls++;
-        if (state.previewCalls > EXPLORE_MAX_PREVIEW_CALLS) {
-          throw new Error("This question ran too many queries.");
-        }
-        const validation = validateQuery(inputData.queryText);
-        if (!validation.ok || validation.formattedQueryText === null) {
-          return {
-            ok: false,
-            message: validation.message,
-            formattedQueryText: null,
-            preview: null,
-          };
-        }
-
-        const result = await executeReportQuery({
-          prisma,
-          scope: GLOBAL_SCOPE,
-          askerGuildIds: params.guildIds,
-          queryText: validation.formattedQueryText,
-        });
-        const preview = reportQueryPreviewSummary(result);
-        const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
-        state.lastPreview = preview;
-        state.lastVisualization = result.visualization ?? null;
-
-        await params.emit({
-          type: "preview",
-          preview,
-          visualization: result.visualization ?? null,
-        });
-        return {
-          ok: true,
-          message:
-            preview.rowsReturned === 0
-              ? `No rows matched after scanning ${preview.rowsScanned.toString()} rows. The data does not cover this — say so rather than estimating.`
-              : `Returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
-          formattedQueryText: validation.formattedQueryText,
-          preview: modelPreview,
-        };
-      }),
-  });
-
-  return {
-    get_report_language: createLanguageTool(track),
-    resolve_player: resolvePlayer,
-    validate_report_query: createValidateTool(track),
-    run_report_query: runReportQuery,
-    format_report_query: createFormatTool(track),
-    ...(bucksCapability === null
-      ? {}
-      : createBucksExploreTools({
-          capability: bucksCapability,
-          requesterId: params.requesterId,
-          track,
-        })),
-    ...(bucksCapability === null || !daresEnabled
-      ? {}
-      : createDareExploreTools({
-          capability: bucksCapability,
-          requesterId: params.requesterId,
-          conversationId: params.conversationId,
-          originChannelId: params.originChannelId,
-          track,
-        })),
-    ...(challengesEnabled
-      ? createChallengeExploreTools({
-          requesterId: params.requesterId,
-          track,
-        })
-      : {}),
-    ...createCreationExploreTools({
-      capability: creationCapability,
-      requesterId: params.requesterId,
-      track,
-    }),
-  };
 }

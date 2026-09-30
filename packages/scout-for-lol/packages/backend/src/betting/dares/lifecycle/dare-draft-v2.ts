@@ -1,6 +1,6 @@
 import {
   BUCKS_INT32_MAX,
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   DARE_V2_MAX_QUERY_LENGTH,
   DARE_V2_MAX_TARGETS,
   DARE_EVALUATOR_V2_VERSION,
@@ -34,6 +34,11 @@ import {
 } from "#src/betting/dares/presentation/dare-render-v2.ts";
 import { compileDareScoutQlPlanV2 } from "#src/betting/dares/sql/dare-scoutql-plan-compiler-v2.ts";
 import { dareValueNeedsTimeline } from "#src/betting/dares/evaluation/dare-value-v2.ts";
+import {
+  statusPhraseCoverageIssues,
+  storedStatusPhrasesJson,
+  type DareStatusPhrases,
+} from "#src/betting/dares/presentation/dare-list-copy.ts";
 
 const TIMELINE_UNSUPPORTED_QUEUES = new Set([
   "arena",
@@ -43,6 +48,8 @@ const TIMELINE_UNSUPPORTED_QUEUES = new Set([
 
 export type DareDraftV2Definition = {
   originalText: string;
+  displayTitle?: string | undefined;
+  statusPhrases?: DareStatusPhrases | undefined;
   plan: DareCompiledPlanV2;
   targets: readonly DareTargetBindingV2[];
   deadlineSpec: DareDeadlineSpecV2;
@@ -59,6 +66,8 @@ export type DareDraftV2Input = DareDraftV2Definition & {
 
 export type PreparedDareDraftV2 = {
   originalText: string;
+  displayTitle: string | null;
+  statusPhrases: DareStatusPhrases | null;
   plan: DareCompiledPlanV2;
   targets: DareTargetBindingV2[];
   deadlineSpec: DareDeadlineSpecV2;
@@ -75,12 +84,9 @@ function expressionNeedsTimeline(
   if (expression.kind === "comparison") {
     return dareValueNeedsTimeline(expression.value);
   }
-  if (expression.kind === "not") {
-    return expressionNeedsTimeline(expression.operand);
-  }
-  return expression.operands.some((operand) =>
-    expressionNeedsTimeline(operand),
-  );
+  return expression.kind === "not"
+    ? expressionNeedsTimeline(expression.operand)
+    : expression.operands.some((operand) => expressionNeedsTimeline(operand));
 }
 
 function gameSetNeedsTimeline(
@@ -110,7 +116,7 @@ export function prepareDareDraftV2(
   const plan = planResult.data;
   const targets = DareTargetBindingV2Schema.array().parse(definition.targets);
   const deadlineSpec = DareDeadlineSpecV2Schema.parse(definition.deadlineSpec);
-  const stake = BucksStakeSchema.safeParse(definition.openingStake);
+  const stake = StorableBucksStakeSchema.safeParse(definition.openingStake);
   const issues = darePlanSemanticIssues(plan, targets);
   if (!stake.success)
     issues.push("The opening stake must be a positive whole number of BB.");
@@ -134,6 +140,12 @@ export function prepareDareDraftV2(
       );
     }
   }
+  issues.push(
+    ...statusPhraseCoverageIssues(
+      plan.gameSets.map((gameSet) => gameSet.name),
+      definition.statusPhrases,
+    ),
+  );
   issues.push(...dareDraftDeadlineIssues(deadlineSpec, now));
   const canonicalScoutQl = formatDareScoutQlV2(plan);
   if (canonicalScoutQl.length > DARE_V2_MAX_QUERY_LENGTH) {
@@ -178,6 +190,8 @@ export function prepareDareDraftV2(
     kind: "valid",
     draft: {
       originalText: definition.originalText,
+      displayTitle: definition.displayTitle ?? null,
+      statusPhrases: definition.statusPhrases ?? null,
       plan,
       targets,
       deadlineSpec,
@@ -236,6 +250,8 @@ function revisionData(
     openingStake: draft.openingStake,
     plainLanguage: draft.plainLanguage,
     semanticProofPlan: draft.semanticProofPlan,
+    displayTitle: draft.displayTitle,
+    statusPhrasesJson: storedStatusPhrasesJson(draft.statusPhrases),
     translationJson: draft.translationJson ?? null,
   };
 }

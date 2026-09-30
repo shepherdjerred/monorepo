@@ -21,10 +21,10 @@ import {
   AGENT_JOB_LEASE_GRACE_MS,
   waitForTimedOutExecution,
 } from "@shepherdjerred/birmel/scheduler/agent-job-timeout-fence.ts";
+import type { AgentJobRuntimeDependencies } from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
 import {
   configureAgentJobRuntime,
   executeDurableAgentJob,
-  type AgentJobRuntimeDependencies,
 } from "@shepherdjerred/birmel/scheduler/jobs/scheduled-tasks.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -42,10 +42,12 @@ export function setAgentJobRuntimeDependencies(
 }
 const toolResultStatus = {
   isSuccess(value: unknown): boolean {
-    if (typeof value !== "object" || value == null || !("success" in value)) {
-      return true;
-    }
-    return value.success !== false;
+    return (
+      typeof value !== "object" ||
+      value == null ||
+      !("success" in value) ||
+      value.success !== false
+    );
   },
 };
 function parseScheduleKind(value: string): AgentJobScheduleKind {
@@ -53,6 +55,17 @@ function parseScheduleKind(value: string): AgentJobScheduleKind {
     return value;
   }
   throw new Error(`Unknown schedule kind: ${value}`);
+}
+async function finalizeCancelledRun(
+  finalized: boolean,
+  job: AgentJob,
+  runId: string,
+  claimId: string,
+): Promise<boolean> {
+  return (
+    finalized ||
+    (await finalizeCancelledAgentJobRun({ jobId: job.id, runId, claimId }))
+  );
 }
 async function markJobSuccess(
   job: AgentJob,
@@ -100,13 +113,7 @@ async function markJobSuccess(
     });
     return true;
   });
-  return finalized
-    ? true
-    : await finalizeCancelledAgentJobRun({
-        jobId: job.id,
-        runId,
-        claimId,
-      });
+  return finalizeCancelledRun(finalized, job, runId, claimId);
 }
 async function markJobFailure(
   job: AgentJob,
@@ -163,13 +170,7 @@ async function markJobFailure(
     });
     return true;
   });
-  return finalized
-    ? true
-    : await finalizeCancelledAgentJobRun({
-        jobId: job.id,
-        runId,
-        claimId,
-      });
+  return finalizeCancelledRun(finalized, job, runId, claimId);
 }
 async function markJobTimedOut(
   job: AgentJob,

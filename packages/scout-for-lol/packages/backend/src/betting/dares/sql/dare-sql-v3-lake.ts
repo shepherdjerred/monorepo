@@ -9,7 +9,6 @@ import {
   type DareTargetBindingV2,
   type DuckDbColumnType,
 } from "@scout-for-lol/data";
-import { REMAKE_MAX_DURATION_SECONDS } from "#src/betting/constants.ts";
 import { duckDbEmptySelect } from "#src/report-lake/schema.ts";
 import { relationalScoutQlStatementFromImmutableAst } from "#src/reports/duckdb/relational-scoutql.ts";
 import {
@@ -118,11 +117,9 @@ export async function createDareSqlV3LakeRelations(
      GROUP BY match_id
      HAVING BOOL_OR(
        COALESCE(end_of_game_result <> 'GameComplete', TRUE)
-       OR COALESCE(game_duration_seconds < ?, TRUE)
        OR COALESCE(game_ended_in_early_surrender, FALSE)
        OR COALESCE(team_early_surrendered, FALSE)
      )`,
-    [REMAKE_MAX_DURATION_SECONDS],
   );
   const allTargetAccounts = input.targets.flatMap((target) => target.accounts);
   const targetMembership = allTargetAccounts.map(
@@ -212,13 +209,9 @@ export async function createDareSqlV3LakeRelations(
 
 function isTeamIdReference(value: JsonValue | undefined): boolean {
   const expression = objectValue(value);
-  if (
-    expression === null ||
-    stringValue(expression["class"]) !== "COLUMN_REF"
-  ) {
-    return false;
-  }
   return (
+    expression !== null &&
+    stringValue(expression["class"]) === "COLUMN_REF" &&
     stringValue(arrayValue(expression["column_names"]).at(-1)) === "team_id"
   );
 }
@@ -229,16 +222,16 @@ function containsOpponentTeamComparison(value: JsonValue): boolean {
   }
   const expression = objectValue(value);
   if (expression === null) return false;
-  if (
+  const isOpponentComparison =
     stringValue(expression["class"]) === "COMPARISON" &&
     stringValue(expression["type"]) === "COMPARE_NOTEQUAL" &&
     isTeamIdReference(expression["left"]) &&
-    isTeamIdReference(expression["right"])
-  ) {
-    return true;
-  }
-  return Object.values(expression).some((child) =>
-    containsOpponentTeamComparison(child),
+    isTeamIdReference(expression["right"]);
+  return (
+    isOpponentComparison ||
+    Object.values(expression).some((child) =>
+      containsOpponentTeamComparison(child),
+    )
   );
 }
 

@@ -1,3 +1,12 @@
+import type {
+  DareResolution,
+  DareSettlementSummary,
+} from "#src/betting/dares/settlement/dare-settlement-types.ts";
+import {
+  announcingSettlementSink,
+  recordAnnouncement,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
 import {
   BucksDareHorizonKindSchema,
   type BucksDareHorizonKind,
@@ -14,16 +23,14 @@ import {
 import {
   dareMoneyFactsInTransaction,
   refundDareContributionsInTransaction,
-  type DareContributorRefund,
   type DareLedgerFacts,
-  type DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   bettingDareSettlementsTotal,
   bettingDaresTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 
 /**
  * Types and refund/void helpers shared between `dare-settle.ts` (match-driven
@@ -31,37 +38,6 @@ import {
  * keep `dare-settle.ts` under the repo's 500-line cap — every symbol here is
  * consumed by both callers.
  */
-
-export type DareResolution =
-  "captured" | "achieved" | "unachieved" | "voided" | "expired" | "abandoned";
-
-/**
- * What one dare resolution (or progress capture) looked like, for the
- * Discord delivery layer to announce. The domain stays Discord-free: it
- * returns these and never sends anything.
- */
-export type DareSettlementSummary = {
-  dareId: number;
-  serverId: string;
-  channelId: string;
-  /** JSON BucksMessageRef for the public callout, when one was recorded. */
-  messageRef: string | null;
-  matchId: string | undefined;
-  resolution: DareResolution;
-  horizonKind: BucksDareHorizonKind;
-  challengerDiscordId: string;
-  targetAliases: string[];
-  conditionSummary: string;
-  potTotal: number;
-  /** Per-target payouts — populated only for `achieved`. */
-  payouts: DareTargetPayout[];
-  /** Per-contributor refunds — populated for `unachieved`, `voided`, and
-   * `expired`. */
-  refunds: DareContributorRefund[];
-  voidReason: string | undefined;
-  /** Per-leaf qualifying-game counts after this capture, canonical order. */
-  leafCounts: number[] | undefined;
-};
 
 /**
  * Thrown by {@link import("#src/betting/dares/settlement/dare-settle.ts").settleDaresForMatch}
@@ -181,25 +157,30 @@ export function baseSummary(
   };
 }
 
-export type DareVoidReason = "unknown_evaluator" | "storage_overflow";
+export type DareVoidReason =
+  "unknown_evaluator" | "storage_overflow" | "version_retired";
 
 /**
  * Void an active dare with FULL refunds and no cut, in its own transaction.
  *
  * Two callers: a stored evaluator version this code no longer implements
  * (capture and the window sweep), and a payout that cannot be persisted
- * without overflowing Int32 wallet storage (the weekly-parlay
- * `storage_overflow` precedent). Returns undefined when another resolution
- * won the claim. Deliberately takes a `DareRefundView`, never a `ParsedDare`:
- * voiding must not require the conditions blob to parse.
+ * without overflowing Int32 wallet storage. Returns undefined when another
+ * resolution won the claim. Deliberately takes a `DareRefundView`, never a
+ * `ParsedDare`: voiding must not require the conditions blob to parse.
  */
 export async function voidDareWithFullRefund(
   dare: DareRefundView,
   prismaClient: ExtendedPrismaClient,
   now: Date,
-  input: { voidReason: DareVoidReason; surface: "postmatch" | "sweep" },
+  input: {
+    voidReason: DareVoidReason;
+    surface: "postmatch" | "sweep";
+    /** Who may announce this void; v1's behaviour by default. */
+    sink?: SettlementAnnouncementSink | undefined;
+  },
 ): Promise<DareSettlementSummary | undefined> {
-  const outcome = await prismaClient.$transaction(async (tx) => {
+  const settled = await prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksDare.updateMany({
       where: { id: dare.row.id, dareState: "active" },
       data: {
@@ -218,9 +199,26 @@ export async function voidDareWithFullRefund(
       withCut: false,
       voidReason: input.voidReason,
     });
-    return { refunds, potTotal: facts.potTotal };
+    // The summary is BUILT and checkpointed here rather than assembled after
+    // the transaction, because this void is a fallback: it runs when a
+    // capture failed, in a transaction of its own, and its summary is the
+    // only record of a refund that a retry cannot reproduce — the Dare is
+    // terminal once this commits, so the re-run finds nothing to settle. An
+    // instruction written afterwards can be lost in the gap.
+    const built = baseSummary(dare, "voided", dare.facts.matchId);
+    built.potTotal = facts.potTotal;
+    built.refunds = refunds;
+    built.voidReason = input.voidReason;
+    await recordAnnouncement({
+      sink: input.sink ?? announcingSettlementSink,
+      db: tx,
+      family: "dare-summary",
+      itemKey: String(built.dareId),
+      payload: built,
+    });
+    return built;
   });
-  if (outcome === undefined) return undefined;
+  if (settled === undefined) return undefined;
   bettingDaresTotal.inc({ result: "voided" });
   bettingDareSettlementsTotal.inc({ outcome: "voided" });
   logBucksTransition({
@@ -232,9 +230,5 @@ export async function voidDareWithFullRefund(
     reason: input.voidReason,
     surface: input.surface,
   });
-  const summary = baseSummary(dare, "voided");
-  summary.potTotal = outcome.potTotal;
-  summary.refunds = outcome.refunds;
-  summary.voidReason = input.voidReason;
-  return summary;
+  return settled;
 }

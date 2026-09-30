@@ -2,13 +2,21 @@ import { Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
-import { updateBettingMetrics } from "#src/metrics/betting-sweep.ts";
+import { databaseMetricSweepsEnabled } from "#src/metrics/sweep-policy.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
 import "#src/metrics/product-analytics.ts";
-import "#src/metrics/feature-flags.ts";
-import "#src/metrics/discord-gateway-health.ts";
+import "#src/metrics/platform/feature-flags.ts";
+import "#src/metrics/platform/discord-gateway-health.ts";
 import "#src/metrics/progression.ts";
+// The guild-health gauges live in their own module only because this file is at
+// its line cap, so they still have to be registered wherever these are. This
+// used to be done by importing `usage.ts` from the bottom of the file, which
+// reached them through their only consumer and dragged `usage.ts`'s import of
+// this module back in behind it. That pair was an eager cycle held open only by
+// a second, deferred edge that has since moved into `sweeps.ts`; importing the
+// leaf directly says what is actually needed and closes it.
+import "#src/metrics/guild-health.ts";
 
 const logger = createLogger("metrics");
 
@@ -16,12 +24,27 @@ logger.info("📊 Initializing Prometheus metrics");
 
 /**
  * Add default labels to all metrics
+ *
+ * `role` is what makes every series answer "which deployment shape emitted
+ * this". Before the runtime split one pod emitted everything, so an aggregate
+ * over `environment` was the whole story; split into roles, that same
+ * aggregate quietly mixes pods that own a subsystem with pods that
+ * deliberately do not. `discord_connection_status` is the sharp case: a
+ * gateway-less pod never starts a shard, so it reports 0 truthfully, and
+ * `min by (environment)` over that reads as a Discord outage. Carrying the
+ * role on every series is what lets an alert say which pods it is asking
+ * about.
+ *
+ * Bounded by construction — the value is the four-member `ScoutRuntimeRole`
+ * Zod enum, and `parseScoutRuntimeRole` throws at boot on anything else rather
+ * than letting an unrecognised role reach a label.
  */
 registry.setDefaultLabels({
   service: "scout-for-lol-backend",
   version: configuration.version,
   environment: configuration.environment,
   git_sha: configuration.gitSha,
+  role: configuration.runtimeRole,
 });
 
 // =======================
@@ -195,6 +218,10 @@ export const prematchDetectionsTotal = new Counter({
   name: "prematch_detections_total",
   help: "Total pre-match game detections",
   // Status values: "detected", "already_tracked", "deferred_custom_prestart"
+  // (roster still filling during the loading screen),
+  // "deferred_undersized_roster" (the game has started, so this is the roster
+  // Riot will report — notably, bots are never listed at all) and
+  // "owned_by_v2" (the V2 prematch path already captured this game)
   labelNames: ["status"] as const,
   registers: [registry],
 });
@@ -742,31 +769,41 @@ function updateUptimeMetric(): void {
   applicationUptime.set(uptimeSeconds);
 }
 
-// Update uptime every 10 seconds
-setInterval(() => {
+/**
+ * Update uptime every 10 seconds, without holding the process open.
+ *
+ * This runs at import time, so every script that reaches metrics — directly or
+ * through the database, the config or the Explore agent — inherits it. Without
+ * `unref` that timer is a live handle forever: a CLI that has written its
+ * output and disconnected everything still never exits, because a timer nobody
+ * is waiting for is still a reason to stay alive.
+ *
+ * That cost real time. The replay and capture CLIs appeared to hang after
+ * finishing their work, and the cause was read as a DuckDB handle more than
+ * once before it was measured. A long-lived server is unaffected: its HTTP
+ * listener holds the loop open, and an unref'd interval still fires.
+ */
+const uptimeTimer = setInterval(() => {
   updateUptimeMetric();
 }, 10_000);
+uptimeTimer.unref();
 
 logger.info("✅ Prometheus metrics initialized successfully");
-
-// Import and initialize usage metrics collection
-// This must be after all metric definitions to avoid circular dependencies
-import "@scout-for-lol/backend/metrics/usage.ts";
 
 /**
  * Get all metrics as Prometheus-formatted text
  * Public API for exporting metrics to Prometheus
+ *
+ * The database-sweeping collectors run only on the role that owns them (see
+ * `metrics/sweep-policy.ts`); every role still serves the process, HTTP,
+ * Discord and worker metrics recorded in-line by the code that produced them.
  */
 export async function getMetrics(): Promise<string> {
-  // Dynamic import to avoid circular dependency issues
-  const { updateUsageMetrics } = await import("./usage.js");
-  const { updateLimitMetrics } = await import("./limits.js");
   updateUptimeMetric();
-  await updateUsageMetrics();
-  await updateLimitMetrics();
-  await updateBettingMetrics();
-  const { updateScoutTemporalDurabilityMetrics } =
-    await import("#src/metrics/temporal.ts");
-  await updateScoutTemporalDurabilityMetrics();
+  if (databaseMetricSweepsEnabled()) {
+    // Dynamic import to avoid circular dependency issues
+    const { runDatabaseMetricSweeps } = await import("#src/metrics/sweeps.ts");
+    await runDatabaseMetricSweeps();
+  }
   return await registry.metrics();
 }

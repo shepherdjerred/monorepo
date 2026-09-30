@@ -18,7 +18,7 @@ import {
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
 import { ChallengeAccountSelection } from "#src/components/challenge/challenge-account-selection.tsx";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const AccountSelectionSchema = z.strictObject({
   accountIds: z.array(z.number().int().positive()).min(1),
@@ -106,7 +106,7 @@ export function ChallengeAccountEditor(props: {
           </fieldset>
           <ServerFormError error={error} />
           <FormPendingStatus pending={change.isPending}>
-            Recomputing challenge run…
+            Updating now...
           </FormPendingStatus>
           <Button type="submit" disabled={disabled}>
             Recompute with accounts

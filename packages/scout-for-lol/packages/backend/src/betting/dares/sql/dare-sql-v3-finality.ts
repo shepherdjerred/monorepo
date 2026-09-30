@@ -73,17 +73,14 @@ function raceLaneForExists(value: JsonValue): string | null {
   const subquery = objectValue(expression["subquery"]);
   const node = objectValue(subquery?.["node"]);
   const from = objectValue(node?.["from_table"]);
-  if (
-    node === null ||
+  return node === null ||
     from === null ||
     stringValue(node["type"]) !== "SELECT_NODE" ||
     stringValue(from["type"]) !== "BASE_TABLE" ||
     arrayValue(node["modifiers"]).length > 0 ||
     !matchedColumn(node["where_clause"])
-  ) {
-    return null;
-  }
-  return stringValue(from["table_name"]);
+    ? null
+    : stringValue(from["table_name"]);
 }
 
 export function validateDareSqlV3RaceRootFromAst(

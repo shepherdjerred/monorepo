@@ -6,32 +6,41 @@ import {
   resolveEnvironment,
 } from "#src/configuration.ts";
 import configuration from "#src/configuration.ts";
+import { SCOUT_RUNTIME_ROLES } from "#src/configuration/runtime-role.ts";
 
 Bun.env["TEMPORAL_NAMESPACE"] ??= "dev";
 
 type TrackedKey =
   | "ENVIRONMENT"
   | "NODE_ENV"
-  | "ENABLE_DISCORD_GATEWAY"
-  | "ENABLE_BACKGROUND_JOBS"
+  | "SCOUT_RUNTIME_ROLE"
+  | "SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"
   | "TEMPORAL_ADDRESS"
   | "TEMPORAL_NAMESPACE"
   | "TEMPORAL_SCHEDULE_RECONCILIATION"
   | "BB_ASK_MODEL"
-  | "EXPLORE_MODEL";
+  | "EXPLORE_MODEL"
+  | "REPORT_DUCKDB_THREADS"
+  | "REPORT_DUCKDB_MEMORY_LIMIT"
+  | "REPORT_DUCKDB_TEMP_DIR"
+  | "REPORT_DUCKDB_MAX_TEMP_SIZE";
 
 function snapshotEnv(): Record<TrackedKey, string | undefined> {
   return {
     ENVIRONMENT: Bun.env["ENVIRONMENT"],
     NODE_ENV: Bun.env.NODE_ENV,
-    ENABLE_DISCORD_GATEWAY: Bun.env["ENABLE_DISCORD_GATEWAY"],
-    ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
+    SCOUT_RUNTIME_ROLE: Bun.env["SCOUT_RUNTIME_ROLE"],
+    SCOUT_DEV_SKIP_REPORT_LAKE_FOLD: Bun.env["SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"],
     TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
     TEMPORAL_NAMESPACE: Bun.env["TEMPORAL_NAMESPACE"],
     TEMPORAL_SCHEDULE_RECONCILIATION:
       Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"],
     BB_ASK_MODEL: Bun.env["BB_ASK_MODEL"],
     EXPLORE_MODEL: Bun.env["EXPLORE_MODEL"],
+    REPORT_DUCKDB_THREADS: Bun.env["REPORT_DUCKDB_THREADS"],
+    REPORT_DUCKDB_MEMORY_LIMIT: Bun.env["REPORT_DUCKDB_MEMORY_LIMIT"],
+    REPORT_DUCKDB_TEMP_DIR: Bun.env["REPORT_DUCKDB_TEMP_DIR"],
+    REPORT_DUCKDB_MAX_TEMP_SIZE: Bun.env["REPORT_DUCKDB_MAX_TEMP_SIZE"],
   };
 }
 
@@ -48,13 +57,17 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
     if (
       key === "ENVIRONMENT" ||
       key === "NODE_ENV" ||
-      key === "ENABLE_DISCORD_GATEWAY" ||
-      key === "ENABLE_BACKGROUND_JOBS" ||
+      key === "SCOUT_RUNTIME_ROLE" ||
+      key === "SCOUT_DEV_SKIP_REPORT_LAKE_FOLD" ||
       key === "TEMPORAL_ADDRESS" ||
       key === "TEMPORAL_NAMESPACE" ||
       key === "TEMPORAL_SCHEDULE_RECONCILIATION" ||
       key === "BB_ASK_MODEL" ||
-      key === "EXPLORE_MODEL"
+      key === "EXPLORE_MODEL" ||
+      key === "REPORT_DUCKDB_THREADS" ||
+      key === "REPORT_DUCKDB_MEMORY_LIMIT" ||
+      key === "REPORT_DUCKDB_TEMP_DIR" ||
+      key === "REPORT_DUCKDB_MAX_TEMP_SIZE"
     ) {
       restoreEnvKey(key, snapshot[key]);
     }
@@ -135,16 +148,35 @@ describe("local runtime flags", () => {
     restoreEnv(initial);
   });
 
-  test("allows secondary development instances to disable gateway and jobs", () => {
+  test("defaults to the combined runtime role", () => {
     Bun.env["ENVIRONMENT"] = "dev";
-    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
-    Bun.env["ENABLE_BACKGROUND_JOBS"] = "false";
+    delete Bun.env["SCOUT_RUNTIME_ROLE"];
     resetConfigurationForTests();
 
-    expect(configuration.enableDiscordGateway).toBe(false);
-    expect(configuration.enableBackgroundJobs).toBe(false);
+    expect(configuration.runtimeRole).toBe("combined");
+    expect(configuration.skipReportLakeFold).toBe(false);
     expect(configuration.temporalAddress).toBeUndefined();
     expect(configuration.temporalNamespace).toBe("dev");
+  });
+
+  test("lets a secondary development instance run the gatewayless role", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["SCOUT_RUNTIME_ROLE"] = "application";
+    Bun.env["SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"] = "true";
+    resetConfigurationForTests();
+
+    expect(configuration.runtimeRole).toBe("application");
+    expect(configuration.skipReportLakeFold).toBe(true);
+  });
+
+  test("accepts every declared runtime role in beta", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["TEMPORAL_NAMESPACE"] = "beta";
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      Bun.env["SCOUT_RUNTIME_ROLE"] = role;
+      resetConfigurationForTests();
+      expect(configuration.runtimeRole).toBe(role);
+    }
   });
 
   test("requires an active Temporal namespace", () => {
@@ -187,24 +219,26 @@ describe("local runtime flags", () => {
     expect(configuration.temporalScheduleReconciliation).toBe("auto");
   });
 
-  test("rejects disabled gateway or jobs outside development", () => {
-    Bun.env["ENVIRONMENT"] = "beta";
-    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+  test("rejects an unrecognised runtime role loudly", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["SCOUT_RUNTIME_ROLE"] = "aplication";
     resetConfigurationForTests();
 
-    expect(() => configuration.enableDiscordGateway).toThrow(
-      /may only be disabled in environment=dev/,
+    // A typo'd role that silently fell back to `combined` would put a second
+    // gateway connection and a second report-lake writer into the cluster.
+    expect(() => configuration.runtimeRole).toThrow(
+      /Invalid SCOUT_RUNTIME_ROLE="aplication", expected one of: combined, application, gateway, activity-worker/,
     );
   });
 
-  test("rejects background jobs enabled while the gateway is disabled", () => {
-    Bun.env["ENVIRONMENT"] = "dev";
-    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
-    Bun.env["ENABLE_BACKGROUND_JOBS"] = "true";
+  test("rejects skipping the boot report-lake fold outside development", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["TEMPORAL_NAMESPACE"] = "beta";
+    Bun.env["SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"] = "true";
     resetConfigurationForTests();
 
-    expect(() => configuration.enableBackgroundJobs).toThrow(
-      /ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY/,
+    expect(() => configuration.skipReportLakeFold).toThrow(
+      /may only be set in environment=dev/,
     );
   });
 
@@ -219,41 +253,76 @@ describe("local runtime flags", () => {
   });
 });
 
+describe("report DuckDB configuration", () => {
+  const initial = snapshotEnv();
+
+  afterEach(() => {
+    restoreEnv(initial);
+  });
+
+  test("defaults to the plan's query resources and bounded spill", () => {
+    delete Bun.env["REPORT_DUCKDB_THREADS"];
+    delete Bun.env["REPORT_DUCKDB_MEMORY_LIMIT"];
+    delete Bun.env["REPORT_DUCKDB_TEMP_DIR"];
+    delete Bun.env["REPORT_DUCKDB_MAX_TEMP_SIZE"];
+    resetConfigurationForTests();
+
+    expect(configuration.reportDuckDbThreads).toBe(4);
+    expect(configuration.reportDuckDbMemoryLimit).toBe("3GB");
+    expect(configuration.reportDuckDbTempDir).toBeUndefined();
+    expect(configuration.reportDuckDbMaxTempSize).toBe("7GiB");
+  });
+
+  test("reads the configured resource and spill limits", () => {
+    Bun.env["REPORT_DUCKDB_THREADS"] = "4";
+    Bun.env["REPORT_DUCKDB_MEMORY_LIMIT"] = "3GB";
+    Bun.env["REPORT_DUCKDB_TEMP_DIR"] = "/scratch/duckdb";
+    Bun.env["REPORT_DUCKDB_MAX_TEMP_SIZE"] = "7GiB";
+    resetConfigurationForTests();
+
+    expect(configuration.reportDuckDbThreads).toBe(4);
+    expect(configuration.reportDuckDbMemoryLimit).toBe("3GB");
+    expect(configuration.reportDuckDbTempDir).toBe("/scratch/duckdb");
+    expect(configuration.reportDuckDbMaxTempSize).toBe("7GiB");
+  });
+});
+
 describe("parseVoiceAssistantConfiguration", () => {
-  test("defaults to disabled with the production asset path", () => {
+  test("defaults to the production asset path with no credential", () => {
     const config = parseVoiceAssistantConfiguration({
-      enabled: false,
       openAiApiKey: undefined,
+      openAiApiKeyFile: undefined,
       assetsDir: undefined,
       kwsRuntime: undefined,
     });
     expect(config).toEqual({
-      enabled: false,
       assetsDir: "/opt/scout/voice",
       kwsRuntime: "auto",
     });
   });
 
-  test("enabled requires an OpenAI key", () => {
+  // Activation is the `voice_assistant_enabled` Flipt flag, so a missing
+  // credential is a runtime answer ("not configured here"), never a parse or
+  // boot failure — a deployment that will not serve voice simply omits it.
+  test("a missing credential parses cleanly instead of throwing", () => {
     expect(() =>
       parseVoiceAssistantConfiguration({
-        enabled: true,
         openAiApiKey: undefined,
-        assetsDir: undefined,
-        kwsRuntime: undefined,
+        openAiApiKeyFile: undefined,
+        assetsDir: "/tmp/voice",
+        kwsRuntime: "wasm",
       }),
-    ).toThrow(/OPENAI_API_KEY/);
+    ).not.toThrow();
   });
 
-  test("accepts a complete enabled configuration", () => {
+  test("accepts a complete configuration", () => {
     const config = parseVoiceAssistantConfiguration({
-      enabled: true,
       openAiApiKey: "sk-test",
+      openAiApiKeyFile: undefined,
       assetsDir: "/tmp/voice",
       kwsRuntime: "wasm",
     });
     expect(config).toEqual({
-      enabled: true,
       openAiApiKey: "sk-test",
       assetsDir: "/tmp/voice",
       kwsRuntime: "wasm",
@@ -263,8 +332,8 @@ describe("parseVoiceAssistantConfiguration", () => {
   test("a present invalid runtime throws instead of falling back", () => {
     expect(() =>
       parseVoiceAssistantConfiguration({
-        enabled: false,
         openAiApiKey: undefined,
+        openAiApiKeyFile: undefined,
         assetsDir: undefined,
         kwsRuntime: "gpu",
       }),

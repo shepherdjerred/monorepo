@@ -2,11 +2,13 @@
  * Web UI helpers for picking guilds and channels, and for bootstrapping the
  * caller's per-guild permissions.
  *
- * `listManageable` returns every guild the user can touch in Scout — Discord
- * admins/owners (root) plus anyone holding at least one Scout grant — each
- * enriched with the caller's effective permission set so the SPA can gate its
- * nav and controls. `myPermissions` is the same set for a single guild (used on
- * deep-links and after a role change). `listChannels` lists postable channels
+ * `listManageable` returns every guild the user can manage in Scout — Discord
+ * admins/owners (root) plus anyone whose grants add something to the implicit
+ * Player role every member holds — each enriched with the caller's effective
+ * permission set so the SPA can gate its nav and controls. A member with no
+ * such grant still reads the server; they are not listed as a manager of it.
+ * `myPermissions` is the same set for a single guild (used on deep-links and
+ * after a role change). `listChannels` lists postable channels
  * and is gated on `channels:read`.
  */
 
@@ -15,6 +17,8 @@ import {
   type Permission,
   ALL_PERMISSIONS,
   DiscordGuildIdSchema,
+  exceedsPlayer,
+  memberPermissions,
   parseStoredPermissionKey,
 } from "@scout-for-lol/data";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
@@ -22,13 +26,13 @@ import {
   guildProcedure,
   resolveGuildPermissions,
 } from "#src/trpc/guild-permission.ts";
-import { client as discordClient } from "#src/discord/client.ts";
-import {
-  hasAdministrator,
-  isDevGuildOverrideGuild,
-} from "#src/lib/discord-rest.ts";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { installedGuildIdsAmong } from "#src/lib/discord/installed-guilds.ts";
 import { listPostableChannels } from "#src/lib/discord/postable-channels.ts";
-import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
+import {
+  callDiscordForRequest,
+  fetchUserGuildsForRequest,
+} from "#src/trpc/discord-upstream.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -37,16 +41,21 @@ const logger = createLogger("guild-router");
 
 export const guildRouter = router({
   /**
-   * Guilds the signed-in user can access in Scout, each with the caller's
+   * Guilds the signed-in user can manage in Scout, each with the caller's
    * effective permissions: Discord admins/owners get every permission, everyone
-   * else gets their granted set. Guilds with no access are omitted.
+   * else the Player baseline plus their grants. Guilds where grants add nothing
+   * to Player are omitted: the picker, onboarding and chip counts all mean
+   * "servers you can manage", which every member of every server is not.
    */
   listManageable: webProcedure.query(async ({ ctx }) => {
     const userGuilds = await fetchUserGuildsForRequest(ctx.user);
-    const botGuildIds = new Set(discordClient.guilds.cache.map((g) => g.id));
-    const present = userGuilds.filter(
-      (g) => botGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
+    // One `GuildInstall` query for the whole picker; see
+    // `installed-guilds.ts` for why the bulk path does not confirm negatives
+    // against Discord the way the single-guild path does.
+    const installedGuildIds = await installedGuildIdsAmong(
+      userGuilds.map((g) => g.id),
     );
+    const present = userGuilds.filter((g) => installedGuildIds.has(g.id));
 
     // One query for the user's grants across all present guilds (no N+1).
     const grantRows = await prisma.serverPermission.findMany({
@@ -67,21 +76,27 @@ export const guildRouter = router({
       await Promise.all(
         present.map(async (guild) => {
           const guildId = DiscordGuildIdSchema.parse(guild.id);
-          const [customNightsEnabled, hallOfFameEnabled] = await Promise.all([
-            isPolicyEnabled("custom_nights_enabled", { server: guildId }),
-            isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
-          ]);
-          return [guildId, { customNightsEnabled, hallOfFameEnabled }] as const;
+          const [customNightsEnabled, hallOfFameEnabled, mvpVotesEnabled] =
+            await Promise.all([
+              isPolicyEnabled("custom_nights_enabled", { server: guildId }),
+              isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
+              isPolicyEnabled("mvp_votes_enabled", { server: guildId }),
+            ]);
+          return [
+            guildId,
+            { customNightsEnabled, hallOfFameEnabled, mvpVotesEnabled },
+          ] as const;
         }),
       ),
     );
 
     const manageable = present.flatMap((g) => {
       const isDiscordAdmin = g.owner || hasAdministrator(g.permissions);
+      const granted = grantsByGuild.get(g.id) ?? [];
+      if (!isDiscordAdmin && !exceedsPlayer(granted)) return [];
       const permissions: Permission[] = isDiscordAdmin
         ? [...ALL_PERMISSIONS]
-        : (grantsByGuild.get(g.id) ?? []);
-      if (permissions.length === 0) return [];
+        : memberPermissions(granted);
       const featureAvailability = featureAvailabilityByGuild.get(
         DiscordGuildIdSchema.parse(g.id),
       );
@@ -128,5 +143,8 @@ export const guildRouter = router({
    */
   listChannels: guildProcedure("channels", "read")
     .input(z.object({ guildId: DiscordGuildIdSchema }))
-    .query(({ input }) => listPostableChannels(input.guildId)),
+    .query(
+      async ({ input }) =>
+        await callDiscordForRequest(() => listPostableChannels(input.guildId)),
+    ),
 });

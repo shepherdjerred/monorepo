@@ -12,19 +12,13 @@ import { featureFlagMetrics } from "@shepherdjerred/birmel/observability/metrics
 import { getConfig } from "./index.ts";
 import type { Config } from "./schema.ts";
 
-const DynamicBooleanSchema = z.preprocess(
-  (value) =>
-    typeof value === "string"
-      ? value.toLowerCase() === "true"
-        ? true
-        : value.toLowerCase() === "false"
-          ? false
-          : value
-      : value,
-  z.boolean(),
-);
+const DynamicBooleanSchema = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const lowered = value.toLowerCase();
+  return lowered === "true" || (lowered !== "false" && value);
+}, z.boolean());
 const PositiveIntegerSchema = z.coerce.number().int().positive();
-const MaxStepsSchema = z.coerce.number().int().min(1).max(8);
+const MaxStepsSchema = z.coerce.number().int().min(1).max(24);
 const ReasoningEffortSchema = z.enum(["minimal", "low", "medium", "high"]);
 const StringSchema = z.string().trim().min(1);
 
@@ -136,25 +130,25 @@ const DEFINITION = {
   agentMaxSteps: {
     schema: MaxStepsSchema,
     sources: ["flag", "env", "default"],
-    default: 8,
+    default: 12,
     names: { flag: "birmel-agent-max-steps", env: "AGENT_MAX_STEPS" },
   },
   agentResponseTimeoutMs: {
     schema: PositiveIntegerSchema,
     sources: ["flag", "env", "default"],
-    default: 120_000,
+    default: 300_000,
     names: {
       flag: "birmel-agent-response-timeout-ms",
       env: "AGENT_RESPONSE_TIMEOUT_MS",
     },
   },
-  agentRouterTimeoutMs: {
+  agentAuxiliaryTimeoutMs: {
     schema: PositiveIntegerSchema,
     sources: ["flag", "env", "default"],
     default: 30_000,
     names: {
-      flag: "birmel-agent-router-timeout-ms",
-      env: "AGENT_ROUTER_TIMEOUT_MS",
+      flag: "birmel-agent-auxiliary-timeout-ms",
+      env: "AGENT_AUXILIARY_TIMEOUT_MS",
     },
   },
   responderEngagementWindowMs: {
@@ -216,7 +210,7 @@ function createSnapshot(
           maxTokens: "number",
           agentMaxSteps: "number",
           agentResponseTimeoutMs: "number",
-          agentRouterTimeoutMs: "number",
+          agentAuxiliaryTimeoutMs: "number",
           responderEngagementWindowMs: "number",
           responderTranscriptWindowMs: "number",
           responderTranscriptMaxMessages: "number",
@@ -240,17 +234,17 @@ function createSnapshot(
       activityTrackingEnabled: config.activityTracking.enabled,
       electionsEnabled: config.elections.enabled,
       imageGenerationEnabled: config.imageGeneration.enabled,
-      llmModel: config.openRouter.model,
-      classifierModel: config.openRouter.classifierModel,
-      memoryModel: config.openRouter.memoryModel,
-      embeddingModel: config.openRouter.embeddingModel,
-      imageModel: config.openRouter.imageModel,
+      llmModel: config.llm.model,
+      classifierModel: config.llm.classifierModel,
+      memoryModel: config.llm.memoryModel,
+      embeddingModel: config.llm.embeddingModel,
+      imageModel: config.llm.imageModel,
       personaStyleModel: config.persona.styleModel,
-      reasoningEffort: config.openRouter.reasoningEffort,
-      maxTokens: config.openRouter.maxTokens,
+      reasoningEffort: config.llm.reasoningEffort,
+      maxTokens: config.llm.maxTokens,
       agentMaxSteps: config.agent.maxSteps,
       agentResponseTimeoutMs: config.agent.responseTimeoutMs,
-      agentRouterTimeoutMs: config.agent.routerTimeoutMs,
+      agentAuxiliaryTimeoutMs: config.agent.auxiliaryTimeoutMs,
       responderEngagementWindowMs: config.responder.engagementWindowMs,
       responderTranscriptWindowMs: config.responder.transcriptWindowMs,
       responderTranscriptMaxMessages: config.responder.transcriptMaxMessages,
@@ -270,17 +264,17 @@ function applySnapshot(snapshot: Snapshot, config: Config): void {
   config.activityTracking.enabled = snapshot.get("activityTrackingEnabled");
   config.elections.enabled = snapshot.get("electionsEnabled");
   config.imageGeneration.enabled = snapshot.get("imageGenerationEnabled");
-  config.openRouter.model = snapshot.get("llmModel");
-  config.openRouter.classifierModel = snapshot.get("classifierModel");
-  config.openRouter.memoryModel = snapshot.get("memoryModel");
-  config.openRouter.embeddingModel = snapshot.get("embeddingModel");
-  config.openRouter.imageModel = snapshot.get("imageModel");
+  config.llm.model = snapshot.get("llmModel");
+  config.llm.classifierModel = snapshot.get("classifierModel");
+  config.llm.memoryModel = snapshot.get("memoryModel");
+  config.llm.embeddingModel = snapshot.get("embeddingModel");
+  config.llm.imageModel = snapshot.get("imageModel");
   config.persona.styleModel = snapshot.get("personaStyleModel");
-  config.openRouter.reasoningEffort = snapshot.get("reasoningEffort");
-  config.openRouter.maxTokens = snapshot.get("maxTokens");
+  config.llm.reasoningEffort = snapshot.get("reasoningEffort");
+  config.llm.maxTokens = snapshot.get("maxTokens");
   config.agent.maxSteps = snapshot.get("agentMaxSteps");
   config.agent.responseTimeoutMs = snapshot.get("agentResponseTimeoutMs");
-  config.agent.routerTimeoutMs = snapshot.get("agentRouterTimeoutMs");
+  config.agent.auxiliaryTimeoutMs = snapshot.get("agentAuxiliaryTimeoutMs");
   config.responder.engagementWindowMs = snapshot.get(
     "responderEngagementWindowMs",
   );

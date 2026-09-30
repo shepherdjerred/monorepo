@@ -17,7 +17,7 @@ import {
   PARLAY_SCHEMA_VERSION,
   selectParlayTeam,
   type ParlaySubject,
-} from "#src/betting/parlays/parlay-criteria.ts";
+} from "#src/betting/parlays/model/parlay-criteria.ts";
 import {
   generatedParlaySchemaFor,
   parlayProposalSchemaFor,
@@ -30,11 +30,11 @@ import {
   numericThresholdDiagnostics,
   priceParlay,
   type ParlayPrice,
-} from "#src/betting/parlays/parlay-pricing.ts";
+} from "#src/betting/parlays/model/parlay-pricing.ts";
 import {
   buildProposalStatistics,
   statLegsForProposal,
-} from "#src/betting/parlays/parlay-stats.ts";
+} from "#src/betting/parlays/model/parlay-stats.ts";
 import {
   PARLAY_PROMPT_VERSION,
   buildParlayGenerationContext,
@@ -42,11 +42,11 @@ import {
   buildParlayThresholdPrompt,
   PARLAY_SYSTEM_PROMPT,
   type ParlayGenerationContext,
-} from "#src/betting/parlays/parlay-prompt.ts";
+} from "#src/betting/parlays/model/parlay-prompt.ts";
 import { buildRosterForButtons } from "#src/betting/markets/prematch-subject.ts";
-import { publishParlayDefinition } from "#src/betting/parlays/parlay-publish.ts";
+import { publishParlayDefinition } from "#src/betting/parlays/runtime/parlay-publish.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
+import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
@@ -55,7 +55,7 @@ import {
   bettingParlayGenerationDurationSeconds,
   bettingParlayGenerationTotal,
   bettingParlayTokensTotal,
-} from "#src/metrics/betting-parlay.ts";
+} from "#src/metrics/betting/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 import { enqueueParlayGeneration } from "#src/temporal/work-store.ts";
 import type { StartParlayGenerationInput } from "#src/betting/parlays/parlay-generation-types.ts";
@@ -71,6 +71,7 @@ type GenerationStatus =
   | "budget_refused"
   | "timeout"
   | "invalid_output"
+  | "provider_quota"
   | "provider_error"
   | "persistence_error"
   | "unpriceable";
@@ -187,9 +188,9 @@ async function generateAndPersistDefinition(
   deadline: AbortSignal,
   prismaClient: ExtendedPrismaClient,
 ): Promise<number> {
-  const runtime = getOpenRouterRuntime();
+  const runtime = getLlmRuntime();
   if (runtime === undefined) {
-    throw new Error("OPENROUTER_API_KEY is required for parlay generation");
+    throw new Error("OpenAI credentials are required for parlay generation");
   }
   const model = bettingParlayAiModel();
 
@@ -270,7 +271,6 @@ async function generateAndPersistDefinition(
   );
   resolveProviderIssue({
     app: "scout-for-lol",
-    provider: "openrouter",
     kind: "quota",
     source: "betting_parlay",
   });
@@ -366,8 +366,9 @@ function generationStatusForError(
   const shared = sharedLlmFailureKind(deadline, error);
   if (shared !== undefined) return shared;
   if (error instanceof ParlayPersistenceError) return "persistence_error";
-  if (error instanceof ParlayUnpriceableError) return "unpriceable";
-  return "provider_error";
+  return error instanceof ParlayUnpriceableError
+    ? "unpriceable"
+    : "provider_error";
 }
 
 /** Start the caught background task only after normal prematch delivery and
@@ -433,6 +434,7 @@ async function runParlayGenerationInternal(
       status === "budget_refused" ||
       status === "timeout" ||
       status === "invalid_output" ||
+      status === "provider_quota" ||
       status === "unpriceable";
     if (expected) {
       logger.info(

@@ -1,4 +1,4 @@
-import { ApplicationFailure, Context } from "@temporalio/activity";
+import { Context } from "@temporalio/activity";
 import {
   scoutSeasonRefreshSubprocessExitTotal,
   scoutSeasonRefreshTokensTotal,
@@ -13,11 +13,14 @@ import {
   startToCloseTimeoutMsOrUndefined,
 } from "#activities/agent/agent-task-runtime.ts";
 import {
-  createCodexAgentEventHandler,
-  createCodexSecretRefreshHandler,
-  CodexAgentSdkRunError,
-  runCodexAgentSdk,
-} from "#activities/agent/codex-agent-sdk-runner.ts";
+  createAgentSecretRefreshHandler,
+  createTemporalAgentEventHandler,
+} from "#lib/agent-runner/callbacks.ts";
+import { runCodexAgentTurn } from "#lib/agent-runner/codex.ts";
+import {
+  AgentTurnExecutionError,
+  nonRetryableGenerationFailure,
+} from "#lib/agent-runner/errors.ts";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
@@ -51,9 +54,9 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
 export async function runSeasonAgent(
   input: SeasonAgentRunInput,
 ): Promise<SeasonAgentRunResult> {
-  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (openRouterApiKey === undefined || openRouterApiKey === "") {
-    throw new Error("OPENROUTER_API_KEY is required");
+  const openAiApiKey = Bun.env["OPENAI_API_KEY"];
+  if (openAiApiKey === undefined || openAiApiKey === "") {
+    throw new Error("OPENAI_API_KEY is required");
   }
   const prompt = buildSeasonRefreshPrompt({
     today: new Date().toISOString().slice(0, 10),
@@ -97,18 +100,25 @@ export async function runSeasonAgent(
 
   let result;
   try {
-    result = await runCodexAgentSdk({
+    result = await runCodexAgentTurn({
       service: "temporal",
       callSite: "scout-season-refresh",
       prompt,
       model: input.model,
       maxTurns: input.maxTurns,
+      turnBudgetKind: "turns",
       cwd: input.workdir,
-      env: envForTrustedAgent({ OPENROUTER_API_KEY: openRouterApiKey }),
+      auth: { kind: "openai-api-key", apiKey: openAiApiKey },
+      env: envForTrustedAgent({ OPENAI_API_KEY: openAiApiKey }),
       signal,
+      sandboxPolicy: {
+        sandboxMode: "danger-full-access",
+        networkAccessEnabled: true,
+        webSearchMode: "live",
+      },
       redactTokens: secretState.tokens,
-      beforeEvent: createCodexSecretRefreshHandler(secretState.refresh),
-      onEvent: createCodexAgentEventHandler({
+      beforeEvent: createAgentSecretRefreshHandler(secretState.refresh),
+      onEvent: createTemporalAgentEventHandler({
         nextEventCount: () => {
           eventCount += 1;
           return eventCount;
@@ -118,15 +128,8 @@ export async function runSeasonAgent(
     });
   } catch (error: unknown) {
     scoutSeasonRefreshSubprocessExitTotal.inc({ exit_code: "sdk_failed" });
-    if (error instanceof CodexAgentSdkRunError && error.generationStarted) {
-      throw ApplicationFailure.create({
-        message: error.message,
-        cause: error,
-        nonRetryable: true,
-        type: error.possiblyAppliedEffects
-          ? "ScoutSeasonRefreshPossiblyAppliedFailure"
-          : "ScoutSeasonRefreshBilledGenerationFailure",
-      });
+    if (error instanceof AgentTurnExecutionError && error.generationStarted) {
+      throw nonRetryableGenerationFailure(error, "ScoutSeasonRefresh");
     }
     throw error;
   } finally {
@@ -138,16 +141,16 @@ export async function runSeasonAgent(
   for (const [direction, count] of [
     ["input", result.usage.inputTokens],
     ["output", result.usage.outputTokens],
-    ["cache_create", result.usage.cacheCreationInputTokens],
-    ["cache_read", result.usage.cacheReadInputTokens],
+    ["cache_create", result.usage.cacheWriteInputTokens],
+    ["cache_read", result.usage.cachedInputTokens],
   ] as const) {
     scoutSeasonRefreshTokensTotal.inc({ model: input.model, direction }, count);
   }
   return {
     exitCode: 0,
     durationMs: result.durationMs,
-    costUsd: result.costUsd,
+    costUsd: undefined,
     numTurns: result.numTurns,
-    resultText: result.resultText,
+    resultText: result.finalText ?? "",
   };
 }

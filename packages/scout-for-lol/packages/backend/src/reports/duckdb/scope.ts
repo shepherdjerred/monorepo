@@ -22,13 +22,40 @@ import type { DiscordGuildId } from "@scout-for-lol/data";
  * whole lake by accident. Global has to be asked for.
  */
 export type LakeQueryScope =
-  { kind: "guild"; serverId: DiscordGuildId } | { kind: "global" };
+  | { kind: "guild"; serverId: DiscordGuildId }
+  /**
+   * The tracked players of several servers at once, merged into people so a
+   * player several of them track counts once (see `server-people.ts`). One
+   * server is always `guild`, never a one-element list, so a single-server
+   * answer is exactly what that server's reports show.
+   */
+  | { kind: "servers"; serverIds: readonly DiscordGuildId[] }
+  | { kind: "global" };
 
 export function guildScope(serverId: DiscordGuildId): LakeQueryScope {
   return { kind: "guild", serverId };
 }
 
 export const GLOBAL_SCOPE: LakeQueryScope = { kind: "global" };
+
+/** One server is guild scope; several are the merged `servers` scope. */
+export function serversScope(
+  serverIds: readonly DiscordGuildId[],
+): LakeQueryScope {
+  const unique = [...new Set(serverIds)];
+  const [first, ...rest] = unique;
+  if (first === undefined) {
+    throw new Error("A server scope needs at least one server.");
+  }
+  return rest.length === 0
+    ? guildScope(first)
+    : { kind: "servers", serverIds: unique };
+}
+
+/** Whether rows are a set of servers' tracked players, labelled by alias. */
+export function isTrackedScope(scope: LakeQueryScope): boolean {
+  return scope.kind !== "global";
+}
 
 /**
  * The server id a guild-scoped operation requires, or a hard failure.
@@ -40,8 +67,8 @@ export function requireGuildScope(
   scope: LakeQueryScope,
   what: string,
 ): DiscordGuildId {
-  if (scope.kind === "global") {
-    throw new Error(`${what} is not available in global scope.`);
+  if (scope.kind !== "guild") {
+    throw new Error(`${what} needs exactly one server's scope.`);
   }
   return scope.serverId;
 }

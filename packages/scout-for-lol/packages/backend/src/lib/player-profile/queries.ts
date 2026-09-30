@@ -1,16 +1,22 @@
 import { z } from "zod";
 import {
+  computeKda,
+  isArenaQueueOrMode,
   LOW_SAMPLE_GAME_THRESHOLD,
   PlayerProfileGameWindowSchema,
   PlayerProfileQueueSelectionSchema,
   QueueTypeSchema,
   leaguePointsDelta,
   type DiscordGuildId,
+  type MatchLoadout,
   type PlayerId,
   type PlayerProfileGameWindow,
   type QueueType,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { buildPlayerBehavior } from "#src/lib/player-profile/behavior.ts";
+import { matchLoadoutFromLakeRow } from "#src/report-lake/loadout.ts";
+import { arenaAugmentsFromLakeRow } from "#src/report-lake/arena.ts";
 import { PlayerLookupInput } from "#src/lib/player-admin/shared.ts";
 import {
   latestRanks,
@@ -27,6 +33,8 @@ import {
   type LakePlayerMatchHistoryRow,
   type MatchHistoryCursor,
 } from "#src/reports/duckdb/lake-reads.ts";
+import { accountSummaries } from "#src/lib/player-profile/account-summaries.ts";
+import { fetchHistoryRosters } from "#src/reports/duckdb/community/history-roster.ts";
 
 /**
  * Read models for the player profile surface.
@@ -69,6 +77,15 @@ export type MatchHistoryEntry = {
   gameCreationMs: number;
   gameDurationSeconds: number;
   queue: string | null;
+  queueId: number;
+  gameMode: string;
+  placement: number | null;
+  augments: { id: number; name: string }[];
+  roster: {
+    teamId: number;
+    championName: string;
+    riotId: { gameName: string | null; tagLine: string };
+  }[];
   championId: number;
   championName: string;
   teamPosition: string;
@@ -85,6 +102,7 @@ export type MatchHistoryEntry = {
   damageShare: number | null;
   /** LP change for this game; null unless both before and after are known. */
   leaguePointsDelta: number | null;
+  loadout: MatchLoadout;
   account: {
     gameName: string | null;
     tagLine: string | null;
@@ -110,12 +128,20 @@ async function decorateHistoryRows(
   const matchIds = rows.map((row) => row.match_id);
   const puuids = accounts.map((account) => account.puuid);
 
-  const [teamTotals, rankRows] = await Promise.all([
+  const [teamTotals, rankRows, rosterRows] = await Promise.all([
     fetchTeamTotalsForMatches({ matchIds }),
     prisma.matchRankHistory.findMany({
       where: { matchId: { in: matchIds }, puuid: { in: puuids } },
     }),
+    fetchHistoryRosters({ matchIds }),
   ]);
+
+  const rostersByMatch = new Map<string, typeof rosterRows>();
+  for (const roster of rosterRows) {
+    const entries = rostersByMatch.get(roster.match_id) ?? [];
+    entries.push(roster);
+    rostersByMatch.set(roster.match_id, entries);
+  }
 
   const totalsByKey = new Map(
     teamTotals.map((total) => [
@@ -146,6 +172,20 @@ async function decorateHistoryRows(
       gameCreationMs: row.game_creation_ms,
       gameDurationSeconds: row.game_duration_seconds,
       queue: row.queue,
+      queueId: row.queue_id,
+      gameMode: row.game_mode,
+      placement: isArenaQueueOrMode(row.queue_id, row.game_mode)
+        ? (row.subteam_placement ?? row.placement)
+        : null,
+      augments: arenaAugmentsFromLakeRow(row),
+      roster: (rostersByMatch.get(row.match_id) ?? []).map((participant) => ({
+        teamId: participant.team_id,
+        championName: participant.champion_name,
+        riotId: {
+          gameName: participant.riot_id_game_name,
+          tagLine: participant.riot_id_tagline,
+        },
+      })),
       championId: row.champion_id,
       championName: row.champion_name,
       teamPosition: row.team_position,
@@ -172,6 +212,7 @@ async function decorateHistoryRows(
         before === undefined || after === undefined
           ? null
           : leaguePointsDelta(before, after),
+      loadout: matchLoadoutFromLakeRow(row),
       account: {
         gameName: account.riotGameName,
         tagLine: account.riotTagLine,
@@ -188,6 +229,7 @@ async function matchHistoryForPlayer(
     cursor?: MatchHistoryCursor;
     queue?: string;
     queues?: QueueType[];
+    championSearch?: string;
     games?: PlayerProfileGameWindow;
   },
 ): Promise<{
@@ -213,6 +255,9 @@ async function matchHistoryForPlayer(
     ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
     ...(input.queue === undefined ? {} : { queue: input.queue }),
     ...(input.queues === undefined ? {} : { queues: input.queues }),
+    ...(input.championSearch === undefined
+      ? {}
+      : { championSearch: input.championSearch }),
   });
   const page = rows.slice(0, pageLimit);
   const last =
@@ -258,6 +303,7 @@ export async function getConsumerPlayerMatchHistory(input: {
   cursor?: MatchHistoryCursor;
   queues?: QueueType[];
   games: PlayerProfileGameWindow;
+  championSearch?: string;
 }) {
   const player = await resolveConsumerPlayerPuuids(input);
   return matchHistoryForPlayer(player, input);
@@ -268,25 +314,43 @@ export type ChampionPoolEntry = {
   championName: string;
   games: number;
   wins: number;
+  losses: number;
   winRate: number;
   kda: number;
+  averageKills: number;
+  averageDeaths: number;
+  averageAssists: number;
+  averageCs: number;
   csPerMinute: number;
+  damagePerMinute: number;
+  averageDamage: number;
+  averageVisionScore: number;
+  teamPosition: string | null;
   /** True when `games` is too small for the rates above to mean much. */
   lowSample: boolean;
 };
 
-async function accountSummaries(accounts: ProfileAccount[]) {
-  return Promise.all(
-    accounts.map(async (account) => ({
-      gameName: account.riotGameName,
-      tagLine: account.riotTagLine,
-      region: account.region,
-      riotIdUpdatedAt: account.riotIdUpdatedAt,
-      lastMatchTime: account.lastMatchTime,
-      lastCheckedAt: account.lastCheckedAt,
-      ranks: await latestRanks([account.puuid]),
-    })),
-  );
+function calculatePreferredPositions(recent: MatchHistoryEntry[]): {
+  position: string;
+  games: number;
+  percentage: number;
+}[] {
+  const counts = new Map<string, number>();
+  for (const entry of recent) {
+    const pos = entry.teamPosition.trim().toUpperCase();
+    if (pos !== "INVALID" && pos !== "") {
+      counts.set(pos, (counts.get(pos) ?? 0) + 1);
+    }
+  }
+  const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+  if (total === 0) return [];
+  return [...counts.entries()]
+    .map(([position, games]) => ({
+      position,
+      games,
+      percentage: Math.round((games / total) * 100),
+    }))
+    .sort((a, b) => b.games - a.games);
 }
 
 async function profileSummaryForPlayer(
@@ -307,6 +371,7 @@ async function profileSummaryForPlayer(
       riotIds: [],
       ranks: { solo: undefined, flex: undefined },
       recentForm: null,
+      behavior: null,
       championPool: [],
       minGamesForRate: MIN_GAMES_FOR_RATE,
     };
@@ -329,6 +394,13 @@ async function profileSummaryForPlayer(
   ]);
 
   const recent = await decorateHistoryRows(recentRows, player.accounts);
+  const behavior = await buildPlayerBehavior({
+    puuids: player.puuids,
+    recentRows,
+    roleShare: calculatePreferredPositions(recent),
+    ...(filters.queue === undefined ? {} : { queue: filters.queue }),
+    ...(filters.queues === undefined ? {} : { queues: filters.queues }),
+  });
   const participations = recent
     .map((entry) => entry.killParticipation)
     .filter((value) => value !== null);
@@ -344,6 +416,7 @@ async function profileSummaryForPlayer(
         tagLine: account.riotTagLine,
       })),
     ranks,
+    behavior,
     recentForm:
       recent.length === 0
         ? null
@@ -358,20 +431,37 @@ async function profileSummaryForPlayer(
                 ? null
                 : participations.reduce((sum, value) => sum + value, 0) /
                   participations.length,
+            averageCs:
+              recent.reduce((sum, entry) => sum + entry.creepScore, 0) /
+              recent.length,
+            averageCsPerMinute:
+              recent.reduce((sum, entry) => sum + entry.csPerMinute, 0) /
+              recent.length,
+            averageVisionScore:
+              recent.reduce((sum, entry) => sum + entry.visionScore, 0) /
+              recent.length,
+            preferredPositions: calculatePreferredPositions(recent),
           },
     championPool: pool.map((row): ChampionPoolEntry => {
       const minutes = row.time_played / 60;
+      const games = row.games > 0 ? row.games : 1;
       return {
         championId: row.champion_id,
         championName: row.champion_name,
         games: row.games,
         wins: row.wins,
+        losses: Math.max(0, row.games - row.wins),
         winRate: row.games > 0 ? row.wins / row.games : 0,
-        kda:
-          row.deaths === 0
-            ? row.kills + row.assists
-            : (row.kills + row.assists) / row.deaths,
+        kda: computeKda(row),
+        averageKills: row.kills / games,
+        averageDeaths: row.deaths / games,
+        averageAssists: row.assists / games,
+        averageCs: row.creep_score / games,
         csPerMinute: minutes > 0 ? row.creep_score / minutes : 0,
+        damagePerMinute: minutes > 0 ? row.damage_to_champions / minutes : 0,
+        averageDamage: row.damage_to_champions / games,
+        averageVisionScore: row.vision_score / games,
+        teamPosition: row.team_position,
         lowSample: row.games < MIN_GAMES_FOR_RATE,
       };
     }),

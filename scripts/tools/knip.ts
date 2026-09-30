@@ -28,7 +28,7 @@ import { run } from "../lib/run.ts";
 
 /** Commands that materialize generated files knip must be able to resolve. */
 export const generateCommands = [
-  ["bun", "packages/temporal/scripts/ensure-ha-schema.ts"],
+  ["bun", "packages/temporal/scripts/homelab/ensure-ha-schema.ts"],
 ];
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BUCKS_INT32_MAX } from "./bryan-bucks.ts";
+import { BUCKS_INT32_MAX } from "./bryan-bucks-money.ts";
 import {
   DARE_V2_TEST_CONTRACT_BASE,
   DARE_V2_TEST_GAME_SET,

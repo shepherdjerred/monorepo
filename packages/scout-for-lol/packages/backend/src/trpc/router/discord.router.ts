@@ -7,6 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { type Permission, P } from "@scout-for-lol/data";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
+import { callDiscordForRequest } from "#src/trpc/discord-upstream.ts";
 import { resolveGuildPermissions } from "#src/trpc/guild-permission.ts";
 import {
   MAX_IDS_PER_RESOLVE,
@@ -38,8 +39,13 @@ export const discordRouter = router({
 
   /**
    * Typeahead search for members of a guild. The roster is available to callers
-   * holding any action whose UI needs a member selector; the Discord lookup
-   * still returns [] on failure so an authorized form degrades gracefully.
+   * holding any action whose UI needs a member selector.
+   *
+   * A failure to reach Discord surfaces as SERVICE_UNAVAILABLE rather than an
+   * empty result: `[]` has to keep meaning "nobody matched", or the picker tells
+   * the user their teammate is not in the server when the truth is that Scout
+   * could not ask. `callDiscordForRequest` also counts the failure, so a broken
+   * install is visible in metrics instead of looking like an unpopular server.
    */
   searchMembers: webProcedure
     .input(SearchMembersInputSchema)
@@ -55,6 +61,6 @@ export const discordRouter = router({
             "Missing a permission that authorizes Discord member selection",
         });
       }
-      return searchGuildMembers(input);
+      return await callDiscordForRequest(() => searchGuildMembers(input));
     }),
 });

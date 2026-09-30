@@ -6,6 +6,7 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createPinchtabDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/pinchtab/index.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 const PINCHTAB_PORT = 9867;
 
@@ -18,12 +19,17 @@ export function createPinchtabChart(app: App) {
   new Namespace(chart, "pinchtab-namespace", {
     metadata: {
       name: "pinchtab",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/audit": "restricted",
+        "pod-security.kubernetes.io/warn": "restricted",
+      },
     },
   });
 
   createPinchtabDeployment(chart);
 
-  // NetworkPolicy: allow ingress from birmel (the only consumer) and Tailscale
+  // NetworkPolicy: allow ingress from birmel, Bazarr, Streambot, and Tailscale
   // (dashboard/API access via TailscaleIngress) on the pinchtab port.
   new KubeNetworkPolicy(chart, "pinchtab-ingress-netpol", {
     metadata: { name: "pinchtab-ingress-netpol" },
@@ -33,6 +39,18 @@ export function createPinchtabChart(app: App) {
       ingress: [
         {
           from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: { matchLabels: { app: "bazarr" } },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: { matchLabels: { app: "streambot" } },
+            },
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "birmel" },
@@ -66,8 +84,8 @@ export function createPinchtabChart(app: App) {
     },
   });
 
-  // NetworkPolicy: allow egress to DNS and the open internet (HTTP/HTTPS) so the
-  // browser can navigate to arbitrary sites.
+  // NetworkPolicy documents the same HTTPS-only public browsing boundary that
+  // the pod-local firewall enforces for the current Flannel CNI.
   new KubeNetworkPolicy(chart, "pinchtab-egress-netpol", {
     metadata: { name: "pinchtab-egress-netpol" },
     spec: {
@@ -75,25 +93,11 @@ export function createPinchtabChart(app: App) {
       policyTypes: ["Egress"],
       egress: [
         // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        // External HTTP/HTTPS for arbitrary browsing.
+        dnsEgressRule(),
+        // External HTTPS for public browsing.
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [
-            { port: IntOrString.fromNumber(80), protocol: "TCP" },
-            { port: IntOrString.fromNumber(443), protocol: "TCP" },
-          ],
+          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
         },
       ],
     },

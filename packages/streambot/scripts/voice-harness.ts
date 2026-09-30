@@ -8,13 +8,13 @@ import {
 } from "@shepherdjerred/streambot/voice/local-voice.ts";
 import {
   DryRunVoiceCommandPort,
-  listAvfoundationAudioDevices,
   LocalVoiceProbe,
   type LocalVoiceProbeResult,
   startMacMicrophoneCapture,
   type MacMicrophoneCapture,
 } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
 import {
+  listAvfoundationAudioDevices,
   wakePcmToOpenAiPcm,
   type AssistantAudioSink,
 } from "@shepherdjerred/voice-assistant";

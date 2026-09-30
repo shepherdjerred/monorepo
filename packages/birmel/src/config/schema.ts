@@ -41,8 +41,12 @@ export const DiscordConfigSchema = z.object({
   clientId: DiscordIdSchema,
 });
 
-export const OpenRouterConfigSchema = z.object({
-  apiKey: z.string().min(1, "OPENROUTER_API_KEY is required"),
+/**
+ * Model selection only. Provider credentials are not configuration: the LLM
+ * runtime reads them from the environment itself, so this schema no longer
+ * gates boot on a key — which is what made the old gateway variable fatal.
+ */
+export const LlmConfigSchema = z.object({
   model: z.string().trim().min(1).default("gpt-5.6-sol"),
   classifierModel: z.string().trim().min(1).default("gpt-5.4-nano"),
   memoryModel: z.string().trim().min(1).default("gpt-5.4-nano"),
@@ -55,9 +59,15 @@ export const OpenRouterConfigSchema = z.object({
 });
 
 export const AgentConfigSchema = z.object({
-  maxSteps: z.number().int().min(1).max(8).default(8),
-  responseTimeoutMs: z.number().int().positive().default(120_000),
-  routerTimeoutMs: z.number().int().positive().default(30_000),
+  // The agent investigates and may change approach mid-turn, so the budget is
+  // a real one rather than the old 8-step ceiling sized for "call the one tool
+  // the router already picked". 12 matches Scout's explore agent.
+  maxSteps: z.number().int().min(1).max(24).default(12),
+  // Turns are allowed to take a while; progress is surfaced in the reply.
+  responseTimeoutMs: z.number().int().positive().default(300_000),
+  // Short helper calls that are not the turn itself: the admission classifier
+  // and context embedding. These previously borrowed the router's timeout.
+  auxiliaryTimeoutMs: z.number().int().positive().default(30_000),
 });
 
 export const AuthorityConfigSchema = z.object({
@@ -119,7 +129,7 @@ export const PersonaConfigSchema = z.object({
  * After the bot has been directly engaged in a channel (an @mention or wake
  * word), it stays "engaged" for `engagementWindowMs`. While engaged, each
  * subsequent allowed-user message is run through a cheap GPT-nano classifier
- * (`openRouter.classifierModel`) to decide whether to respond — enabling natural
+ * (`llm.classifierModel`) to decide whether to respond — enabling natural
  * follow-up without re-pinging. Transcript bounds control how much recent
  * channel history is fed to the classifier and the main agent.
  */
@@ -153,12 +163,6 @@ export const ActivityTrackingConfigSchema = z.object({
     .default([]),
 });
 
-export const ShellConfigSchema = z.object({
-  enabled: z.boolean().default(true),
-  defaultTimeout: z.number().int().positive().default(30_000),
-  maxTimeout: z.number().int().positive().default(300_000),
-});
-
 export const SchedulerConfigSchema = z.object({
   enabled: z.boolean().default(true),
   maxTasksPerGuild: z.number().int().positive().default(100),
@@ -171,7 +175,6 @@ export const SchedulerConfigSchema = z.object({
 
 export const BrowserConfigSchema = z.object({
   enabled: z.boolean().default(true),
-  provider: z.enum(["pinchtab", "playwright"]).default("pinchtab"),
   headless: z.boolean().default(true),
   viewportWidth: z.number().int().positive().default(1280),
   viewportHeight: z.number().int().positive().default(720),
@@ -202,7 +205,7 @@ export const ImageGenerationConfigSchema = z.object({
 
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
-  openRouter: OpenRouterConfigSchema,
+  llm: LlmConfigSchema,
   imageGeneration: ImageGenerationConfigSchema,
   agent: AgentConfigSchema,
   authority: AuthorityConfigSchema,
@@ -213,7 +216,6 @@ export const ConfigSchema = z.object({
   sentry: SentryConfigSchema,
   persona: PersonaConfigSchema,
   responder: ResponderConfigSchema,
-  shell: ShellConfigSchema,
   scheduler: SchedulerConfigSchema,
   browser: BrowserConfigSchema,
   birthdays: BirthdayConfigSchema,
@@ -224,7 +226,7 @@ export const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
-export type OpenRouterConfig = z.infer<typeof OpenRouterConfigSchema>;
+export type LlmConfig = z.infer<typeof LlmConfigSchema>;
 export type ImageGenerationConfig = z.infer<typeof ImageGenerationConfigSchema>;
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
 export type AuthorityConfig = z.infer<typeof AuthorityConfigSchema>;
@@ -235,7 +237,6 @@ export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
 export type SentryConfig = z.infer<typeof SentryConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
 export type ResponderConfig = z.infer<typeof ResponderConfigSchema>;
-export type ShellConfig = z.infer<typeof ShellConfigSchema>;
 export type SchedulerConfig = z.infer<typeof SchedulerConfigSchema>;
 export type BrowserConfig = z.infer<typeof BrowserConfigSchema>;
 export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;

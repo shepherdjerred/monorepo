@@ -1,5 +1,4 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
-import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";
@@ -11,6 +10,8 @@ import {
 } from "./schedule-types.ts";
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
+import { MINECRAFT_SCHEDULES } from "./minecraft-schedule-definitions.ts";
+import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -29,9 +30,6 @@ import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 //     that needs a staleness guard inside the workflow.)
 //   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
 //     is "ran this cycle," so running late after a server outage is acceptable.
-//   * CATCHUP_WEEKLY_PARLAY — Scout's Sunday publication window. A missed
-//     publication may be replayed through the betting window so the market is
-//     still available before Monday scoring begins.
 //
 // Inferred string-literal types, NOT `: Duration`. `Duration` is
 // `StringValue | number`, and under the old CI's per-package Node16 install the canary
@@ -44,8 +42,6 @@ import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 // keeps every catchup value off the error-typed `Duration` path entirely.
 export const CATCHUP_TIGHT = "5 minutes";
 export const CATCHUP_RELAXED = "1 hour";
-export const CATCHUP_WEEKLY_PARLAY = "12 hours";
-export const WEEKLY_PARLAY_CRON_EXPRESSION = `0 ${WEEKLY_PARLAY_LIFECYCLE.openHour.toString()} * * 0`;
 
 // The declared catchup tiers as a literal union (not `Duration`), so reading
 // the optional schedule field in buildSchedulePolicies can never yield an
@@ -55,6 +51,8 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...EARLY_SCHEDULES,
   ...SCOUT_SCHEDULES,
   ...BACKUP_SCHEDULES,
+  ...MINECRAFT_SCHEDULES,
+  ...AGENT_CHAT_SCHEDULES,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",
@@ -158,7 +156,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
-    memo: "Weekly LLM model-catalog cross-check vs models.dev, LiteLLM, and OpenRouter (opens a PR on drift)",
+    memo: "Weekly LLM model-catalog cross-check vs models.dev and LiteLLM (opens a PR on drift)",
   },
   {
     id: "scout-season-refresh-weekly",
@@ -174,7 +172,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     // Two 30-minute research attempts, their 5-minute backoff, and both
     // possible three-attempt report deliveries fit inside this bound.
     workflowExecutionTimeout: "90 minutes",
-    memo: "Weekly LoL season-date drift check (Codex SDK Luna through OpenRouter → PR if drifted)",
+    memo: "Weekly LoL season-date drift check (Codex SDK Luna on OpenAI → PR if drifted)",
   },
   {
     id: "scout-showcase-refresh-weekly",
@@ -195,29 +193,6 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Weekly marketing-showcase refresh — regenerates the committed showcase PNGs + asset index from scout-prod, opens a PR on drift (generatedAt-only churn suppressed)",
   },
   {
-    id: "scout-weekly-parlay",
-    namespace: "beta",
-    workflowType: "runScoutWeeklyParlayWorkflow",
-    args: [{}],
-    // Sunday 12:00 PT. The workflow remains open through the following Sunday
-    // 11:00 PT and owns the reminder, start, six progress updates, and final
-    // reconciliation for one immutable period/slot.
-    timing: {
-      kind: "cron",
-      expression: WEEKLY_PARLAY_CRON_EXPRESSION,
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    // Preserve the full Sunday betting window when Temporal itself is down.
-    catchupWindow: CATCHUP_WEEKLY_PARLAY,
-    // A delayed final reconciliation for one period must not suppress the
-    // next Sunday's distinct period execution.
-    overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-    memo: "Weekly Scout Bryan Bucks parlay lifecycle from Sunday publication through final settlement",
-    initialPauseNote:
-      "Awaiting the approved Discord fixture cycle before private-beta activation",
-  },
-  {
     id: "scout-bryan-bucks-analytics",
     namespace: "beta",
     workflowType: "runScoutBryanBucksAnalyticsWorkflow",
@@ -229,7 +204,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "5 minutes",
+    // Five 2m Activity attempts plus 2m10s of retry backoff need more than the
+    // old five-minute Workflow deadline. The 15m cap fits that envelope while
+    // SKIP still prevents concurrent snapshot publication.
+    workflowExecutionTimeout: "15 minutes",
     memo: "Every-15-minute committed Bryan Bucks ledger and economy analytics sync",
   },
   {
@@ -269,7 +247,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
   },
   {
-    id: "buildkite-uv-cache-prune-weekly",
+    id: "ci-uv-cache-prune-weekly",
     workflowType: "runUvCachePruneWorkflow",
     args: [],
     timing: {
@@ -281,10 +259,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Weekly Buildkite uv cache prune on the CI node",
+    memo: "Weekly uv cache prune on the CI node",
   },
   {
-    id: "buildkite-trivy-db-refresh",
+    id: "ci-trivy-db-refresh",
     workflowType: "runTrivyDbRefreshWorkflow",
     args: [],
     timing: {
@@ -296,7 +274,21 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Buildkite Trivy vulnerability database refresh every six hours",
+    memo: "Trivy vulnerability database refresh every six hours",
+  },
+  {
+    id: "ci-io-telemetry-daily",
+    workflowType: "runCiIoTelemetry",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 7 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily CI I/O recording rule and dashboard health check",
   },
   ...SECURITY_SCHEDULES,
   {
@@ -364,7 +356,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   {
     id: "glitter-context-refresh-weekly",
     workflowType: "runGlitterContextRefresh",
-    args: [{ maxEstimatedCostUsd: 1 }],
+    args: [{ maxEstimatedCostUsd: 10 }],
     // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
     timing: {
       kind: "cron",
@@ -383,7 +375,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     requiredEnvironment: [
       "GLITTER_DISCORD_GUILD_ID",
       ...GLITTER_CORPUS_STORAGE_ENV,
-      "OPENROUTER_API_KEY",
+      "OPENAI_API_KEY",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",
@@ -403,7 +395,31 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
-    memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology.",
+    memo: "Daily Velero orphan ZFS snapshot and ZFSBackup-CR detection — emits Prometheus metrics for both orphan pathologies.",
+  },
+  {
+    id: "velero-r2-orphan-audit",
+    workflowType: "runVeleroR2OrphanAuditWorkflow",
+    args: [],
+    // 04:00 PT — after the local audit so both halves of the orphan picture
+    // land before the morning backup rush.
+    timing: {
+      kind: "cron",
+      expression: "0 4 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Daily Velero orphan R2 prefix detection — emits Prometheus metrics for unreferenced zfspv-incr backup data.",
+    initialPauseNote:
+      "Awaiting read-only R2 credential for the homelab bucket (see runbooks/r2-capacity-remediation.md)",
+    requiredEnvironment: [
+      "VELERO_R2_S3_ENDPOINT",
+      "VELERO_R2_S3_BUCKET",
+      "VELERO_R2_S3_ACCESS_KEY_ID",
+      "VELERO_R2_S3_SECRET_ACCESS_KEY",
+    ],
   },
   {
     id: "golink-sync",

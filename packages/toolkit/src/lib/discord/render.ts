@@ -35,10 +35,9 @@ export function renderMessage(message: IpcMessage): string {
 }
 
 export function renderMessages(messages: IpcMessage[]): string {
-  if (messages.length === 0) {
-    return "No messages.";
-  }
-  return messages.map((message) => renderMessage(message)).join("\n");
+  return messages.length === 0
+    ? "No messages."
+    : messages.map((message) => renderMessage(message)).join("\n");
 }
 
 export function renderStatus(status: StatusResponse): string {

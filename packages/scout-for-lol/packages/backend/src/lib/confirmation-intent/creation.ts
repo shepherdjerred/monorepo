@@ -343,8 +343,7 @@ export async function executeCreationIntent(
   if (payload.kind === "report") {
     return await executeReport(tx, { ...params, payload });
   }
-  if (payload.kind === "competition") {
-    return await executeCompetition(tx, { ...params, payload });
-  }
-  return await executeSubscription(tx, { ...params, payload });
+  return payload.kind === "competition"
+    ? await executeCompetition(tx, { ...params, payload })
+    : await executeSubscription(tx, { ...params, payload });
 }

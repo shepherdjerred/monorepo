@@ -1,4 +1,5 @@
 import type { CompletedMatch } from "@scout-for-lol/data";
+import { computeKda as canonicalKda } from "@scout-for-lol/data";
 
 export type Grade = "S+" | "S" | "A" | "B" | "C" | "D";
 
@@ -7,10 +8,7 @@ export function computeKda(
   deaths: number,
   assists: number,
 ): number {
-  if (deaths === 0) {
-    return kills + assists;
-  }
-  return (kills + assists) / deaths;
+  return canonicalKda({ kills, deaths, assists });
 }
 
 export function gradeFromKda(kda: number): Grade {
@@ -18,8 +16,7 @@ export function gradeFromKda(kda: number): Grade {
   if (kda >= 4.5) return "S";
   if (kda >= 3) return "A";
   if (kda >= 2) return "B";
-  if (kda >= 1) return "C";
-  return "D";
+  return kda >= 1 ? "C" : "D";
 }
 
 export function gradeForPlayer(

@@ -249,8 +249,9 @@ export async function pumpCodexStdout(
 }
 
 function truncate(value: string, limit: number): string {
-  if (value.length <= limit) return value;
-  return `${value.slice(0, limit)}… (${String(value.length - limit)} more chars)`;
+  return value.length <= limit
+    ? value
+    : `${value.slice(0, limit)}… (${String(value.length - limit)} more chars)`;
 }
 
 function stringifyError(error: unknown): string {

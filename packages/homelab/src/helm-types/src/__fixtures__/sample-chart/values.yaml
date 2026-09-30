@@ -7,7 +7,7 @@ image:
   # -- Image pull policy.
   pullPolicy: IfNotPresent
   # -- Image tag; defaults to the chart appVersion when empty.
-  tag: "@sha256:5a88c9c45479443d7be2eadc894b4ed0a9801bae03d97a5760ae13b5c2005942"
+  tag: "@sha256:abe47724e466aeab9a345d8e46a221c2fa8953c7848bb4a3bd9976a7199f8cf2"
 
 # -- Whether the service is enabled.
 serviceEnabled: true

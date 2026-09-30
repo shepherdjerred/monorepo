@@ -168,8 +168,7 @@ function enrichResults(sourceDb: Database, results: SearchResult[]): void {
 
 function difficultyColor(difficulty: string): string {
   if (difficulty === "Easy") return "\u{1B}[32m";
-  if (difficulty === "Medium") return "\u{1B}[33m";
-  return "\u{1B}[31m";
+  return difficulty === "Medium" ? "\u{1B}[33m" : "\u{1B}[31m";
 }
 
 function displayResults(

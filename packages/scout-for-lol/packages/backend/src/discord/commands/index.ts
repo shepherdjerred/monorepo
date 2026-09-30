@@ -17,10 +17,9 @@ import {
 import { executeHelp } from "#src/discord/commands/help.ts";
 import { executeList } from "#src/discord/commands/list.ts";
 import { executeTrack } from "#src/discord/commands/track.ts";
-import { executeBb } from "#src/discord/commands/bb.ts";
+import { executeBb } from "#src/discord/commands/bb/bb.ts";
 import { executeScout } from "#src/discord/commands/scout.ts";
 import { executeScoutVoice } from "#src/discord/commands/scout-voice.ts";
-import { executeLobby } from "#src/discord/commands/lobby.ts";
 
 const logger = createLogger("discord-commands");
 
@@ -81,9 +80,6 @@ export async function handleChatInputCommand(
         await executeScout(interaction);
         break;
       }
-      case "lobby":
-        await executeLobby(interaction);
-        break;
       default:
         await interaction.reply({
           content:
@@ -121,6 +117,7 @@ export async function handleChatInputCommand(
     await captureDiscordCommandUsed({
       guildId: interaction.guildId,
       commandName,
+      subcommand: interaction.options.getSubcommand(false),
       status: commandStatus,
     });
     if (commandName === "bb") {

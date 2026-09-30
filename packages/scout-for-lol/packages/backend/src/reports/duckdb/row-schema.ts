@@ -66,12 +66,9 @@ export const DuckDbScalarSchema: z.ZodType<LakeScalar> = z
       return safeNumber(value, ctx);
     }
     if (value !== null && typeof value === "object") {
-      if ("micros" in value) {
-        return new Date(
-          safeNumber(value.micros / MICROS_PER_MS, ctx),
-        ).toISOString();
-      }
-      return Number(value.value) / 10 ** value.scale;
+      return "micros" in value
+        ? new Date(safeNumber(value.micros / MICROS_PER_MS, ctx)).toISOString()
+        : Number(value.value) / 10 ** value.scale;
     }
     return value;
   });
@@ -121,8 +118,12 @@ export function planRowSchema(
     [columns.playerId]: DuckDbScalarSchema,
     [columns.discordId]: DuckDbScalarSchema,
   };
+  // Keys normalize as outputs do, because an output that echoes a grouping
+  // reads the key column itself. A boolean key — GROUP BY first_dragon,
+  // GROUP BY outcome — otherwise reached the output reader as a raw boolean
+  // and failed the whole query as "not normalized".
   for (const key of columns.groupingKeys) {
-    shape[key] ??= DuckDbScalarSchema;
+    shape[key] ??= OutputValueSchema;
   }
   for (const output of columns.outputs) {
     shape[output.alias] ??= OutputValueSchema;
@@ -137,10 +138,9 @@ function evidenceAliases(
   evidence: CompiledPlanColumns["outputs"][number]["evidence"],
 ): string[] {
   if (evidence.kind === "rate") return [evidence.successes, evidence.trials];
-  if (evidence.kind === "ratio") {
-    return [evidence.numerator, evidence.denominator];
-  }
-  return [evidence.sampleCount];
+  return evidence.kind === "ratio"
+    ? [evidence.numerator, evidence.denominator]
+    : [evidence.sampleCount];
 }
 
 export const LakeScannedRowSchema = z.object({ scanned: DuckDbScalarSchema });

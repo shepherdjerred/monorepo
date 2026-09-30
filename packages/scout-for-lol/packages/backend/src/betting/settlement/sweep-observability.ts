@@ -5,7 +5,7 @@ import {
   bettingHouseFillsTotal,
   bettingPoolsClosedTotal,
   bettingStakeBucksTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 
 /**
  * Count and log a pool that just closed and matched.

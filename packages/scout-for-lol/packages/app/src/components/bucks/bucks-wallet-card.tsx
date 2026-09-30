@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { formatInteger } from "@scout-for-lol/data";
-import { docsHref } from "#src/lib/surface-origins.ts";
+import { docsHref } from "#src/lib/routes/surface-origins.ts";
 
 function Stat(props: { label: string; value: string }) {
   return (

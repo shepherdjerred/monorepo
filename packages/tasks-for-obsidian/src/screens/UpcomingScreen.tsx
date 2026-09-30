@@ -5,7 +5,7 @@ import type { CompositeScreenProps } from "@react-navigation/native";
 import type { Task } from "../domain/types";
 import { deriveUpcomingWeek } from "../domain/agenda";
 import { calendarDayOrNull } from "../domain/calendar-day";
-import { createCaptureSeed } from "../domain/quick-capture-seed";
+import { createCaptureSeed } from "../domain/quick-capture/quick-capture-seed";
 import { localTodayYmd } from "../domain/recurrence";
 import type { RootStackParamList } from "../navigation/types";
 import type { MainTabScreenProps } from "../navigation/main-tabs";

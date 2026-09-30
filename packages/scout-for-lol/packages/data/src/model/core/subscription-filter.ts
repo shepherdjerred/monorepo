@@ -80,18 +80,18 @@ export function filtersPass(
   spec: SubscriptionFilterSpec | null,
   ctx: FilterMatchContext,
 ): boolean {
-  if (spec === null || spec.filters.length === 0) {
-    return true;
-  }
-  return spec.filters.every((filter) =>
-    match(filter)
-      .with(
-        { type: "queue" },
-        (queueFilter) =>
-          ctx.queueType !== undefined &&
-          queueFilter.queues.includes(ctx.queueType),
-      )
-      .exhaustive(),
+  return (
+    spec === null ||
+    spec.filters.every((filter) =>
+      match(filter)
+        .with(
+          { type: "queue" },
+          (queueFilter) =>
+            ctx.queueType !== undefined &&
+            queueFilter.queues.includes(ctx.queueType),
+        )
+        .exhaustive(),
+    )
   );
 }
 
@@ -119,14 +119,13 @@ export function serializeSubscriptionFilters(
 export function subscriptionFilterQueues(
   spec: SubscriptionFilterSpec | null | undefined,
 ): QueueType[] {
-  if (spec == null) {
-    return [];
-  }
-  return spec.filters.flatMap((filter) =>
-    match(filter)
-      .with({ type: "queue" }, (queueFilter) => queueFilter.queues)
-      .exhaustive(),
-  );
+  return spec == null
+    ? []
+    : spec.filters.flatMap((filter) =>
+        match(filter)
+          .with({ type: "queue" }, (queueFilter) => queueFilter.queues)
+          .exhaustive(),
+      );
 }
 
 /** Short human-readable summary of a filter spec (e.g. for UI / replies). */
@@ -134,10 +133,9 @@ export function describeSubscriptionFilters(
   spec: SubscriptionFilterSpec | null | undefined,
 ): string {
   const queues = subscriptionFilterQueues(spec);
-  if (queues.length === 0) {
-    return "all queues";
-  }
-  return queueDisplayLabels(queues).join(", ");
+  return queues.length === 0
+    ? "all queues"
+    : queueDisplayLabels(queues).join(", ");
 }
 
 /**

@@ -2,11 +2,12 @@ import { App, Chart } from "cdk8s";
 import { describe, expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/postal.ts";
+import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/postal.ts";
 import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import {
   createCertManagerApp,
   HOMELAB_CLUSTER_CA_FILE,
+  HOMELAB_CLUSTER_ISSUER_NAME,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
 import { createPrometheusApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/prometheus.ts";
 import {
@@ -176,6 +177,13 @@ describe("Alertmanager Postal SMTP TLS", () => {
         })
         .parse(ca.spec),
     ).toMatchObject({ isCA: true });
+
+    const clusterIssuer = findResource(
+      resources,
+      "ClusterIssuer",
+      HOMELAB_CLUSTER_ISSUER_NAME,
+    );
+    expect(clusterIssuer.metadata).not.toHaveProperty("namespace");
 
     const trust = findResource(
       resources,

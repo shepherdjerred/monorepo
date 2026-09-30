@@ -104,14 +104,14 @@ bun run glitter:refresh-local \
 ```
 
 It needs `GLITTER_DISCORD_GUILD_ID`, the `GLITTER_CORPUS_S3_*` credentials, and
-`OPENROUTER_API_KEY`; `--dry-run=false` additionally needs the `GITHUB_APP_*`
+the provider key its models route to (`OPENAI_API_KEY` for the catalog defaults); `--dry-run=false` additionally needs the `GITHUB_APP_*`
 credentials because it opens the PR. Cached generation artifacts are keyed by
 request digest rather than by run, so a local run reuses everything a production
 run already paid for. Pin `--snapshot-id`/`--snapshot-sha256` to reuse the most
 cache; omit both to read the latest verified snapshot.
 
-The weekly schedule passes a $1 uncached-cost kill switch. Extraction and
-synthesis use Luna so one bounded generation reservation can fit under that
+The weekly schedule passes a $10 uncached-cost kill switch. Extraction and
+synthesis use Luna so bounded generation reservations can fit under that
 cap while retaining the existing semantic retries and completion-token
 headroom. Budget exhaustion is expected bounded progress: exact current v3
 request artifacts remain available to later weekly runs, but no PR is opened
@@ -138,7 +138,7 @@ rather than risk re-charging.
 Run the audit against a pinned snapshot before deciding whether to start a
 manual refresh. It computes the same request hashes as production, validates
 every current v3 hit, and reports misses plus synthesis stages blocked by
-missing upstream outputs. It does not call OpenRouter and does not write
+missing upstream outputs. It does not call a model provider and does not write
 generation artifacts or spend receipts.
 
 ```bash
@@ -161,9 +161,9 @@ zero integrity failures, and `memory.peak` at or below 3 GiB. If peak memory is
 higher, split graph verification into per-channel activities; do not raise the
 4 GiB limit again.
 
-Then run the pinned cache audit and confirm there are no new OpenRouter spans or
+Then run the pinned cache audit and confirm there are no new `gen_ai.*` spans or
 cost metrics and no artifact or spend-receipt writes. On the next weekly
-refresh, confirm actual uncached spend is at most $1. Budget exhaustion is an
+refresh, confirm actual uncached spend is at most $10. Budget exhaustion is an
 acceptable bounded-progress result; a completed run must produce a reviewable
 PR and valid generation summary.
 

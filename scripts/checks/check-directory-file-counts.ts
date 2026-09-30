@@ -1,29 +1,28 @@
 /**
  * Directory file-count governance.
  *
- * A flat directory stops being a domain and becomes a dumping ground somewhere
- * past fifty modules. This check draws that line mechanically.
+ * A flat authored directory stops being a domain and becomes a dumping ground
+ * somewhere past twenty-five modules. This check draws that line mechanically.
  *
  * Two budgets per directory, counted independently: source files and colocated
  * test files. A `foo.test.ts` is not a new concept, so it must not consume the
- * module budget — a directory may hold fifty modules and their fifty tests.
+ * module budget — a directory may hold twenty-five modules and their
+ * twenty-five tests.
  *
- * There is no allowlist and no exempt path. While the repository is being
- * reorganized, `CEILING` sits above `TARGET` and is lowered by each
- * reorganization PR; it is a single global number, so no directory is ever
- * individually excused, and nothing new may exceed today's worst case.
+ * Authored directories have no allowlist. Generated trees and `sandbox/` are
+ * not authored domains: generated output is machine-written, and
+ * `sandbox/archive` is do-not-modify, so a rule that could block either is a
+ * rule that cannot be obeyed. No authored directory may exceed `LIMIT`
+ * files in either budget.
  */
 
 import { trackedExistingFiles } from "../lib/tracked-files.ts";
 
-/** Lowered by each reorganization PR until it reaches `TARGET`. */
-export const CEILING = 69;
-
-/** The permanent limit. When `CEILING` reaches this, the workstream is done. */
-export const TARGET = 50;
+/** The permanent per-directory limit for each budget. */
+export const LIMIT = 25;
 
 /** Advisory only — never affects the exit code. */
-export const WARN_THRESHOLD = 25;
+export const WARN_THRESHOLD = 20;
 
 const CODE_EXTENSIONS = new Set([
   "astro",
@@ -46,13 +45,16 @@ const CODE_EXTENSIONS = new Set([
  */
 const EXCLUDED_PREFIX = "sandbox/";
 
+/** Path segment for machine-written trees (Helm types, Prisma client, tokens). */
+const GENERATED_SEGMENT = "generated";
+
 /**
  * Test-file conventions, one per in-scope language.
  *
  * The budget split only means anything if a test is recognised as a test in
  * whatever language it is written in. Charging `foo_test.go` or `FooTests.swift`
- * to the source budget would make a directory of 30 modules and their 30
- * conventionally named tests fail a 50-module limit it never actually exceeded.
+ * to the source budget would make a directory of 20 modules and their 20
+ * conventionally named tests fail a 25-module limit it never actually exceeded.
  *
  * Each pattern is anchored on its own extension, so no language's convention
  * can classify another language's files.
@@ -95,6 +97,7 @@ export type Violation = {
 /** Whether a path counts toward either budget. */
 export function isCountedPath(path: string): boolean {
   if (path.startsWith(EXCLUDED_PREFIX)) return false;
+  if (path.split("/").includes(GENERATED_SEGMENT)) return false;
   const extension = path.slice(path.lastIndexOf(".") + 1);
   return CODE_EXTENSIONS.has(extension);
 }
@@ -157,21 +160,21 @@ function violationsAbove(
   );
 }
 
-/** Directories exceeding `ceiling` — these fail the check. */
+/** Directories exceeding `limit` — these fail the check. */
 export function findErrors(
   tallies: Iterable<DirectoryTally>,
-  ceiling: number = CEILING,
+  limit: number = LIMIT,
 ): Violation[] {
-  return violationsAbove(tallies, ceiling);
+  return violationsAbove(tallies, limit);
 }
 
-/** Directories over the advisory threshold but within `ceiling`. */
+/** Directories over the advisory threshold but within `limit`. */
 export function findWarnings(
   tallies: Iterable<DirectoryTally>,
-  ceiling: number = CEILING,
+  limit: number = LIMIT,
 ): Violation[] {
   return violationsAbove(tallies, WARN_THRESHOLD).filter(
-    (violation) => violation.count <= ceiling,
+    (violation) => violation.count <= limit,
   );
 }
 
@@ -187,14 +190,13 @@ export function findWarnings(
 export function reportedDirectories(
   requestedPaths: readonly string[] | undefined,
 ): ReadonlySet<string> | undefined {
-  if (requestedPaths === undefined || requestedPaths.length === 0) {
-    return undefined;
-  }
-  return new Set(
-    requestedPaths
-      .filter((path) => isCountedPath(path))
-      .map((path) => directoryOf(path)),
-  );
+  return requestedPaths === undefined || requestedPaths.length === 0
+    ? undefined
+    : new Set(
+        requestedPaths
+          .filter((path) => isCountedPath(path))
+          .map((path) => directoryOf(path)),
+      );
 }
 
 function describe(violation: Violation): string {
@@ -222,12 +224,12 @@ export async function checkDirectoryFileCounts(
   const errors = findErrors(tallies);
   for (const error of errors) {
     console.error(
-      `ERROR: ${describe(error)} (limit ${CEILING.toString()}). Split into sub-domains.`,
+      `ERROR: ${describe(error)} (limit ${LIMIT.toString()}). Split into sub-domains.`,
     );
   }
   if (errors.length > 0) {
     throw new Error(
-      `${errors.length.toString()} directory budget(s) exceed the limit of ${CEILING.toString()}.`,
+      `${errors.length.toString()} directory budget(s) exceed the limit of ${LIMIT.toString()}.`,
     );
   }
 }

@@ -22,10 +22,11 @@ bun run pr:fleet \
 `--author` adds your own drafts to the fleet and keeps bot-authored PRs out.
 Drop it to take every open PR.
 
-Set `OPENROUTER_API_KEY` before starting the controller. Pick one stable model
-ID from the repository catalog; that exact model powers both the conversational
-master and every worker through OpenRouter. OpenRouter may fall back between
-upstream providers, but the controller never changes model identity silently.
+Pick one stable model ID from the repository catalog, and set the key for the
+provider it routes to (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or
+`GEMINI_API_KEY`) before starting the controller. That exact model powers both
+the conversational master and every worker, and the controller fails at startup
+when its provider has no key.
 
 ## 2. Watch it
 

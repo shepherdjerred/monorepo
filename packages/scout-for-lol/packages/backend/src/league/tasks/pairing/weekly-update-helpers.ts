@@ -3,6 +3,8 @@ import type {
   IndividualPlayerStats,
 } from "@scout-for-lol/data/index.ts";
 import { calculatePairingStats } from "./calculate-pairings.ts";
+import { prisma } from "#src/database/index.ts";
+import { loadPuuidRemap } from "#src/report-lake/puuid-remap.ts";
 import type { ServerPlayer } from "./get-server-players.ts";
 
 // Minimum games required for a pairing to be included in rankings
@@ -26,10 +28,9 @@ export function findSurrenderLeaders(
       surrenderRate: p.surrenders / p.totalGames,
     }))
     .toSorted((a, b) => {
-      if (b.surrenderRate !== a.surrenderRate) {
-        return b.surrenderRate - a.surrenderRate;
-      }
-      return b.surrenders - a.surrenders;
+      return b.surrenderRate === a.surrenderRate
+        ? b.surrenders - a.surrenders
+        : b.surrenderRate - a.surrenderRate;
     });
 
   if (playersWithSurrenders.length === 0) {
@@ -65,6 +66,9 @@ export async function calculateAllModeStats(
   aram: ServerPairingStats;
 }> {
   const { players, startDate, endDate, serverId } = options;
+  // Loaded once and shared: all three modes read the same historical payloads,
+  // which carry the PUUIDs of whichever Riot key captured them.
+  const puuidRemap = await loadPuuidRemap(prisma);
 
   const [ranked, arena, aram] = await Promise.all([
     calculatePairingStats({
@@ -72,6 +76,7 @@ export async function calculateAllModeStats(
       startDate,
       endDate,
       serverId,
+      puuidRemap,
       gameMode: "ranked",
     }),
     calculatePairingStats({
@@ -79,6 +84,7 @@ export async function calculateAllModeStats(
       startDate,
       endDate,
       serverId,
+      puuidRemap,
       gameMode: "arena",
     }),
     calculatePairingStats({
@@ -86,6 +92,7 @@ export async function calculateAllModeStats(
       startDate,
       endDate,
       serverId,
+      puuidRemap,
       gameMode: "aram",
     }),
   ]);

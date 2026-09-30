@@ -8,7 +8,7 @@ struct QuotaBarApp: App {
   @State private var apiModel: APIPlatformModel
   @State private var launchAtLogin: LaunchAtLoginController
   private let manualCredentials: ManualCredentialStore
-  private let openRouterCredentials: OpenRouterCredentialStore
+  private let apiCredentials: APIPlatformCredentialStore
   private let startupError: String?
 
   init() {
@@ -31,8 +31,8 @@ struct QuotaBarApp: App {
       startupError = "Brim could not configure its provider URLs."
     }
     self.manualCredentials = manualCredentials
-    let openRouterCredentials = OpenRouterCredentialStore()
-    self.openRouterCredentials = openRouterCredentials
+    let apiCredentials = APIPlatformCredentialStore()
+    self.apiCredentials = apiCredentials
     self.startupError = startupError
     let model = QuotaBarModel(
       providers: providers,
@@ -41,7 +41,7 @@ struct QuotaBarApp: App {
       historyStore: JSONUsageHistoryStore(),
       providerFactory: providerFactory
     )
-    let apiModel = APIPlatformModel(settings: settings, credentials: openRouterCredentials)
+    let apiModel = APIPlatformModel(settings: settings, credentials: apiCredentials)
     _model = State(initialValue: model)
     _apiModel = State(initialValue: apiModel)
     _launchAtLogin = State(initialValue: LaunchAtLoginController())
@@ -62,7 +62,7 @@ struct QuotaBarApp: App {
         model: model,
         apiModel: apiModel,
         manualCredentials: manualCredentials,
-        openRouterCredentials: openRouterCredentials,
+        apiCredentials: apiCredentials,
         launchAtLogin: launchAtLogin
       )
     }

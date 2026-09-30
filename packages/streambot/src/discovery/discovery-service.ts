@@ -4,6 +4,7 @@ import type {
   MediaCandidate,
 } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import { ConversationContextStore } from "@shepherdjerred/streambot/discovery/conversation-context.ts";
+import { pickOfficialSameWork } from "@shepherdjerred/streambot/discovery/same-work.ts";
 import {
   expandMediaQueries,
   historyReferenceQuery,
@@ -189,10 +190,11 @@ export class DiscoveryService {
   }
 
   private async isHistoryEnabled(scope: DiscoveryScope): Promise<boolean> {
-    if (this.deps.history === undefined) return false;
-    return this.deps.historyEnabled === undefined
-      ? true
-      : await this.deps.historyEnabled(scope);
+    return (
+      this.deps.history !== undefined &&
+      (this.deps.historyEnabled === undefined ||
+        (await this.deps.historyEnabled(scope)))
+    );
   }
 
   async resolve(
@@ -203,6 +205,11 @@ export class DiscoveryService {
     const candidates = await this.search(intent, scope, signal);
     const first = candidates[0];
     if (first === undefined) return { kind: "not-found" };
+    const official = pickOfficialSameWork(candidates);
+    if (official !== undefined) {
+      this.context.rememberResult(scope, official);
+      return { kind: "found", candidate: official };
+    }
     const second = candidates[1];
     const confident =
       intent.selection === "anything" ||

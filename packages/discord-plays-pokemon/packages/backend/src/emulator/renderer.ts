@@ -142,14 +142,11 @@ export function createRenderer(): Renderer {
     ) {
       return rd16((REG + 0x48) >> 1) & 0x3f;
     }
-    if (
-      dispcnt & 0x40_00 &&
+    return dispcnt & 0x40_00 &&
       inWindowRange(x, rd16((REG + 0x42) >> 1)) &&
       inWindowRange(y, rd16((REG + 0x46) >> 1))
-    ) {
-      return (rd16((REG + 0x48) >> 1) >> 8) & 0x3f;
-    }
-    return rd16((REG + 0x4a) >> 1) & 0x3f;
+      ? (rd16((REG + 0x48) >> 1) >> 8) & 0x3f
+      : rd16((REG + 0x4a) >> 1) & 0x3f;
   }
 
   function activeBlendColor(
@@ -175,8 +172,7 @@ export function createRenderer(): Renderer {
     }
     const evy = Math.min(rd16((REG + 0x54) >> 1) & 0x1f, 16);
     if (effect === 2) return color.map((c) => c + (((255 - c) * evy) >> 4));
-    if (effect === 3) return color.map((c) => c - ((c * evy) >> 4));
-    return color;
+    return effect === 3 ? color.map((c) => c - ((c * evy) >> 4)) : color;
   }
 
   function putPixel(x: number, y: number, color: Color, layer = 0x20): void {
@@ -253,13 +249,13 @@ export function createRenderer(): Renderer {
     const py = entry & 0x8_00 ? 7 - (sy & 7) : sy & 7;
     if (color256) {
       const colorIndex = rd8(charBase + tile * 64 + py * 8 + px);
-      if (!colorIndex) return null;
-      return gbaColor(rd16((PAL >> 1) + colorIndex));
+      return colorIndex ? gbaColor(rd16((PAL >> 1) + colorIndex)) : null;
     }
     const packed = rd8(charBase + tile * 32 + py * 4 + (px >> 1));
     const colorIndex = px & 1 ? packed >> 4 : packed & 15;
-    if (!colorIndex) return null;
-    return gbaColor(rd16((PAL >> 1) + palette * 16 + colorIndex));
+    return colorIndex
+      ? gbaColor(rd16((PAL >> 1) + palette * 16 + colorIndex))
+      : null;
   }
 
   function affineBgPixel(bg: number, x: number, y: number): Color | null {
@@ -292,8 +288,7 @@ export function createRenderer(): Renderer {
     const tilesPerRow = size >> 3;
     const tile = rd8(screenBase + (sy >> 3) * tilesPerRow + (sx >> 3));
     const colorIndex = rd8(charBase + tile * 64 + (sy & 7) * 8 + (sx & 7));
-    if (!colorIndex) return null;
-    return gbaColor(rd16((PAL >> 1) + colorIndex));
+    return colorIndex ? gbaColor(rd16((PAL >> 1) + colorIndex)) : null;
   }
 
   type Layer = { bg: number; type: "text" | "affine"; priority: number };

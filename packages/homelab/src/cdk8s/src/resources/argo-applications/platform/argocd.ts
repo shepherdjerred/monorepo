@@ -269,16 +269,16 @@ export function createArgoCdApp(chart: Chart) {
         // exec.enabled toggles the ArgoCD UI pod-terminal (kubectl exec). Kept
         // off: argocd-server is internet-reachable via the Cloudflare tunnel and
         // an enabled terminal turns an admin-credential compromise into in-pod
-        // RCE. The buildkite account only has the release workflow's application
+        // RCE. The woodpecker account only has the release workflow's application
         // sync/get access plus root-app manifest override, not exec.
         "exec.enabled": false,
         "timeout.reconciliation": "60s",
         "statusbadge.enabled": true,
-        "accounts.buildkite": "apiKey",
-        "accounts.buildkite.enabled": true,
+        "accounts.woodpecker": "apiKey",
+        "accounts.woodpecker.enabled": true,
         // ArgoCD removed built-in Application CR health in 1.8. Restore the
         // documented app-of-apps check so the root app inherits child app and
-        // workload health without widening the Buildkite account's RBAC.
+        // workload health without widening the Woodpecker account's RBAC.
         "resource.customizations.health.argoproj.io_Application":
           ARGO_APPLICATION_HEALTH_LUA,
         // A newly-created cert-manager Certificate reports Ready=False with
@@ -343,7 +343,7 @@ return hs`,
         // repository-backed child auto-sync uses a manifest override only on
         // the root app-of-apps Application.
         "policy.csv":
-          "p, buildkite, applications, sync, default/*, allow\np, buildkite, applications, get, default/*, allow\np, buildkite, applications, override, default/apps, allow",
+          "p, woodpecker, applications, sync, default/*, allow\np, woodpecker, applications, get, default/*, allow\np, woodpecker, applications, override, default/apps, allow",
       },
     },
   };

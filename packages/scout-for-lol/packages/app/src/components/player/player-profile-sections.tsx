@@ -1,29 +1,22 @@
 import {
-  championNameToDisplayName,
+  computeKda,
   divisionToString,
+  type MatchLoadout,
   type Rank,
 } from "@scout-for-lol/data";
 import { SCOUT_RANKS } from "@scout-for-lol/design-system/assets";
-import { useState } from "react";
 import { Link } from "react-router";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@scout-for-lol/design-system/components/table";
-import { ChampionIcon } from "#src/components/champion-icon.tsx";
-import { formatRiotId } from "#src/lib/riot-id-format.ts";
+import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
+import { MatchLoadoutDisplay } from "#src/components/match/match-loadout.tsx";
+import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
+import { regionName } from "#src/lib/regions.ts";
 import { RankDisplay } from "@scout-for-lol/design-system/domain/rank-display";
 
 export function formatPercent(value: number | null): string {
@@ -31,16 +24,16 @@ export function formatPercent(value: number | null): string {
 }
 
 function formatKda(kills: number, deaths: number, assists: number): string {
-  const value = deaths === 0 ? kills + assists : (kills + assists) / deaths;
-  return value.toFixed(2);
+  return computeKda({ kills, deaths, assists }).toFixed(2);
 }
 
 function formatRelative(epochMs: number): string {
   const days = Math.floor((Date.now() - epochMs) / 86_400_000);
   if (days <= 0) return "today";
   if (days === 1) return "yesterday";
-  if (days < 30) return `${days.toString()}d ago`;
-  return new Date(epochMs).toLocaleDateString();
+  return days < 30
+    ? `${days.toString()}d ago`
+    : new Date(epochMs).toLocaleDateString();
 }
 
 export function RankCard(props: { label: string; rank: Rank | undefined }) {
@@ -86,6 +79,21 @@ export function RankValue(props: {
   );
 }
 
+export function formatPosition(position: string): string {
+  const normalized = position.trim().toUpperCase();
+  const map: Record<string, string> = {
+    TOP: "Top",
+    JUNGLE: "Jungle",
+    MIDDLE: "Mid",
+    MID: "Mid",
+    BOTTOM: "Bot",
+    BOT: "Bot",
+    UTILITY: "Support",
+    SUPPORT: "Support",
+  };
+  return map[normalized] ?? position;
+}
+
 type RecentForm = {
   games: number;
   wins: number;
@@ -93,29 +101,88 @@ type RecentForm = {
   deaths: number;
   assists: number;
   averageKillParticipation: number | null;
+  averageCs?: number | null;
+  averageCsPerMinute?: number | null;
+  averageVisionScore?: number | null;
+  preferredPositions?: {
+    position: string;
+    games: number;
+    percentage: number;
+  }[];
 };
 
-export function RecentFormCard(props: { form: RecentForm }) {
+export function RecentFormCard(props: {
+  form: RecentForm;
+  className?: string | undefined;
+}) {
   const { form } = props;
   const losses = form.games - form.wins;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          Last {form.games.toString()} games
-        </CardTitle>
+    <Card className={props.className}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Last {form.games.toString()} games
+          </CardTitle>
+          {form.preferredPositions && form.preferredPositions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              {form.preferredPositions.map((pos) => (
+                <Badge
+                  key={pos.position}
+                  variant="secondary"
+                  className="px-1.5 py-0 text-[11px] font-medium"
+                >
+                  {formatPosition(pos.position)}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="space-y-1">
-        <p className="text-lg font-semibold">
-          {form.wins.toString()}W {losses.toString()}L
-          <span className="ml-2 text-sm font-normal text-muted-foreground">
-            {formatPercent(form.games > 0 ? form.wins / form.games : null)}
-          </span>
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {formatKda(form.kills, form.deaths, form.assists)} KDA ·{" "}
-          {formatPercent(form.averageKillParticipation)} kill participation
-        </p>
+      <CardContent className="space-y-2.5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <p className="text-lg font-semibold">
+            {form.wins.toString()}W {losses.toString()}L
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              {formatPercent(form.games > 0 ? form.wins / form.games : null)}
+            </span>
+          </p>
+          <p className="text-sm font-medium text-muted-foreground">
+            {formatKda(form.kills, form.deaths, form.assists)} KDA
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 border-t border-border pt-2 text-xs">
+          <div>
+            <p className="text-muted-foreground">Kill part.</p>
+            <p className="font-semibold text-foreground">
+              {formatPercent(form.averageKillParticipation)}
+            </p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">CS / min</p>
+            <p className="font-semibold text-foreground">
+              {form.averageCsPerMinute !== null &&
+              form.averageCsPerMinute !== undefined
+                ? `${form.averageCsPerMinute.toFixed(1)}/m`
+                : "—"}
+              {form.averageCs !== null && form.averageCs !== undefined ? (
+                <span className="ml-1 text-[11px] font-normal text-muted-foreground">
+                  ({Math.round(form.averageCs).toString()})
+                </span>
+              ) : null}
+            </p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Vision</p>
+            <p className="font-semibold text-foreground">
+              {form.averageVisionScore !== null &&
+              form.averageVisionScore !== undefined
+                ? form.averageVisionScore.toFixed(1)
+                : "—"}
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -125,136 +192,32 @@ export function PlayerSummaryCards(props: {
   ranks: { solo?: Rank; flex?: Rank; ranked5s?: Rank };
   recentForm: RecentForm | null;
 }) {
-  const cards = [
-    props.ranks.solo === undefined ? null : (
-      <RankCard key="solo" label="Ranked solo/duo" rank={props.ranks.solo} />
-    ),
-    props.ranks.flex === undefined ? null : (
-      <RankCard key="flex" label="Ranked flex" rank={props.ranks.flex} />
-    ),
-    props.ranks.ranked5s === undefined ? null : (
-      <RankCard key="ranked5s" label="Ranked 5s" rank={props.ranks.ranked5s} />
-    ),
-    props.recentForm === null ? null : (
-      <RecentFormCard key="form" form={props.recentForm} />
-    ),
-  ].filter((card) => card !== null);
-  if (cards.length === 0) {
+  const hasRanked5s = props.ranks.ranked5s !== undefined;
+  const rankCount =
+    (props.ranks.solo ? 1 : 0) +
+    (props.ranks.flex ? 1 : 0) +
+    (hasRanked5s ? 1 : 0);
+
+  if (rankCount === 0 && props.recentForm === null) {
     return null;
-  }
-  return <div className="grid gap-4 md:grid-cols-4">{cards}</div>;
-}
-
-type ChampionRow = {
-  championId: number;
-  championName: string;
-  games: number;
-  wins: number;
-  winRate: number;
-  kda: number;
-  csPerMinute: number;
-  lowSample: boolean;
-};
-
-export function ChampionPoolTable(props: {
-  rows: ChampionRow[];
-  minGamesForRate: number;
-  profileSearch: string;
-}) {
-  const [page, setPage] = useState(0);
-  if (props.rows.length === 0) {
-    return (
-      <p className="text-sm text-scout-subtle">
-        No games in Scout&apos;s history for this player yet.
-      </p>
-    );
   }
 
   return (
-    <div className="space-y-2">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Champion</TableHead>
-            <TableHead className="text-right">Games</TableHead>
-            <TableHead className="text-right">Win rate</TableHead>
-            <TableHead className="text-right">KDA</TableHead>
-            <TableHead className="text-right">CS/min</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {props.rows.slice(page * 10, page * 10 + 10).map((row) => (
-            <TableRow key={row.championId}>
-              <TableCell>
-                <span className="flex items-center gap-2">
-                  <ChampionIcon championName={row.championName} decorative />
-                  <Link
-                    className="font-medium underline-offset-4 hover:underline"
-                    to={`/champions/${row.championId.toString()}${props.profileSearch}`}
-                  >
-                    {championNameToDisplayName(row.championName)}
-                  </Link>
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                {row.games.toString()}
-              </TableCell>
-              <TableCell className="text-right">
-                {/* A rate over a handful of games is noise; say so rather than
-                    printing a confident number next to a real one. */}
-                {row.lowSample ? (
-                  <span className="text-muted-foreground">
-                    {formatPercent(row.winRate)}*
-                  </span>
-                ) : (
-                  formatPercent(row.winRate)
-                )}
-              </TableCell>
-              <TableCell className="text-right">{row.kda.toFixed(2)}</TableCell>
-              <TableCell className="text-right">
-                {row.csPerMinute.toFixed(1)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {props.rows.length > 10 && (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            Page {(page + 1).toString()} of{" "}
-            {Math.ceil(props.rows.length / 10).toString()}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={page === 0}
-              onClick={() => {
-                setPage((current) => current - 1);
-              }}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={(page + 1) * 10 >= props.rows.length}
-              onClick={() => {
-                setPage((current) => current + 1);
-              }}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {props.ranks.solo !== undefined && (
+        <RankCard label="Ranked solo/duo" rank={props.ranks.solo} />
       )}
-      {props.rows.some((row) => row.lowSample) && (
-        <p className="text-xs text-muted-foreground">
-          * Fewer than {props.minGamesForRate.toString()} games — treat the rate
-          as indicative only.
-        </p>
+      {props.ranks.flex !== undefined && (
+        <RankCard label="Ranked flex" rank={props.ranks.flex} />
+      )}
+      {props.ranks.ranked5s !== undefined && (
+        <RankCard label="Ranked 5s" rank={props.ranks.ranked5s} />
+      )}
+      {props.recentForm !== null && (
+        <RecentFormCard
+          className={rankCount <= 2 ? "sm:col-span-2" : undefined}
+          form={props.recentForm}
+        />
       )}
     </div>
   );
@@ -275,6 +238,14 @@ type MatchEntry = {
   csPerMinute: number;
   killParticipation: number | null;
   leaguePointsDelta: number | null;
+  loadout?: MatchLoadout | undefined;
+  placement?: number | null;
+  augments?: { id: number; name: string | null }[];
+  roster?: {
+    teamId: number;
+    championName: string;
+    riotId: { gameName: string | null; tagLine: string };
+  }[];
   account: {
     gameName: string | null;
     tagLine: string | null;
@@ -283,7 +254,7 @@ type MatchEntry = {
 };
 
 function matchAccountLabel(account: MatchEntry["account"]): string {
-  return formatRiotId(account, account.region);
+  return formatRiotId(account, regionName(account.region));
 }
 
 function LeaguePointsBadge(props: { delta: number | null }) {
@@ -323,15 +294,17 @@ export function MatchHistoryList(props: {
           key={entry.matchId}
           className={`flex flex-wrap items-center gap-3 rounded-md border p-3 ${
             entry.win
-              ? "border-scout-success bg-scout-success/10"
-              : "border-scout-danger bg-scout-danger/10"
+              ? "border-scout-success-fill bg-scout-success-fill/10"
+              : "border-scout-danger-fill bg-scout-danger-fill/10"
           }`}
         >
           <ChampionIcon championName={entry.championName} size="md" />
           <div className="min-w-32">
             <p className="text-sm font-medium text-scout-ink">
               {props.playerId === undefined ? (
-                entry.win ? (
+                entry.placement !== undefined && entry.placement !== null ? (
+                  `#${entry.placement.toString()} placement`
+                ) : entry.win ? (
                   "Victory"
                 ) : (
                   "Defeat"
@@ -341,7 +314,11 @@ export function MatchHistoryList(props: {
                   className="underline-offset-4 hover:underline"
                   to={`/players/${props.playerId.toString()}/matches/${encodeURIComponent(entry.matchId)}${props.profileSearch}`}
                 >
-                  {entry.win ? "Victory" : "Defeat"}
+                  {entry.placement !== undefined && entry.placement !== null
+                    ? `#${entry.placement.toString()} placement`
+                    : entry.win
+                      ? "Victory"
+                      : "Defeat"}
                 </Link>
               )}
             </p>
@@ -375,9 +352,58 @@ export function MatchHistoryList(props: {
               {formatPercent(entry.killParticipation)} KP
             </p>
           </div>
+          {entry.loadout !== undefined && (
+            <div className="overflow-x-auto py-1">
+              <MatchLoadoutDisplay loadout={entry.loadout} />
+            </div>
+          )}
+          {(entry.augments?.length ?? 0) > 0 && (
+            <p className="text-xs text-scout-subtle">
+              Augments:{" "}
+              {entry.augments
+                ?.map((augment) => augment.name ?? `#${augment.id.toString()}`)
+                .join(" · ")}
+            </p>
+          )}
+          {entry.roster?.length === 10 &&
+            new Set(entry.roster.map((participant) => participant.teamId))
+              .size === 2 && (
+              <div className="flex flex-col gap-1" aria-label="Match roster">
+                {[
+                  ...new Set(
+                    entry.roster.map((participant) => participant.teamId),
+                  ),
+                ].map((teamId) => (
+                  <div key={teamId} className="flex flex-wrap gap-1">
+                    {entry.roster
+                      ?.filter((participant) => participant.teamId === teamId)
+                      .map((participant, index) => (
+                        <span
+                          key={`${teamId.toString()}:${index.toString()}`}
+                          className="flex max-w-24 items-center gap-0.5 text-[10px] text-scout-subtle"
+                          title={formatRiotId(
+                            participant.riotId,
+                            "Unknown Riot ID",
+                          )}
+                        >
+                          <ChampionIcon
+                            championName={participant.championName}
+                            size="sm"
+                          />
+                          <span className="truncate">
+                            {participant.riotId.gameName ?? "Unknown"}
+                          </span>
+                        </span>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            )}
           <div className="ml-auto flex items-center gap-2">
             {entry.teamPosition.length > 0 && (
-              <Badge variant="outline">{entry.teamPosition}</Badge>
+              <Badge variant="outline">
+                {formatPosition(entry.teamPosition)}
+              </Badge>
             )}
             <LeaguePointsBadge delta={entry.leaguePointsDelta} />
           </div>

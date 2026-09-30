@@ -1,10 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import {
-  ExploreMessageSchema,
-  VisualizationSnapshotSchema,
-  type ExploreMessage,
-} from "@scout-for-lol/data";
+import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
+import { winRateByPatchChart } from "#src/lib/storybook/story-fixtures.ts";
 import {
   ExploreVisualResult,
   describeSelectedPoint,
@@ -54,48 +51,17 @@ const CHARTABLE_PREVIEW = {
   renderKind: "TABLE" as const,
 };
 
-const PERSISTED_LINE_CHART = VisualizationSnapshotSchema.parse({
-  version: 1,
-  generatedAt: "2026-08-14T12:00:30.000Z",
-  kind: "LINE_CHART",
+const PERSISTED_LINE_CHART = winRateByPatchChart({
   title: "Win rate by patch",
-  temporal: {
-    window: { kind: "relative", days: 30 },
-    bucket: "patch",
-    timezone: "UTC",
-  },
-  bucket: "patch",
-  display: {
-    theme: null,
-    palette: null,
-    smooth: false,
-    stack: "none",
-    rollingWindow: null,
-    cumulative: false,
-    sparkline: false,
-    options: null,
-  },
-  series: [
+  points: [
     {
-      id: "win_rate",
-      label: "Win rate",
-      metric: "win_rate",
-      displayKind: "percent",
-      additive: false,
-      points: [
-        {
-          key: "26.15",
-          label: "26.15",
-          start: "2026-08-01T00:00:00.000Z",
-          end: "2026-08-14T00:00:00.000Z",
-          value: 0.54,
-          evidence: { sampleSize: 25 },
-        },
-      ],
+      patch: "26.15",
+      start: "2026-08-01T00:00:00.000Z",
+      end: "2026-08-14T00:00:00.000Z",
+      value: 0.54,
+      sampleSize: 25,
     },
   ],
-  annotations: [],
-  trends: [],
 });
 
 describe("ExploreVisualResult", () => {

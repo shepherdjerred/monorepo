@@ -115,15 +115,14 @@ is confirmed.
 
 ## Buttons
 
-The pre-match message carries the outcome market's controls. Match and weekly
-parlay messages carry their own controls. All three mutate their message rather
-than posting a receipt for each bet.
+The pre-match message carries the outcome market's controls. Match parlay
+messages carry their own controls. Both mutate their message rather than
+posting a receipt for each bet.
 
 | Message        | Buttons                                                            |
 | -------------- | ------------------------------------------------------------------ |
 | Pre-match card | `WIN · 1 BB`, `WIN · 5 BB`, `LOSE · 1 BB`, `LOSE · 5 BB`, `Cancel` |
 | Match parlay   | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
-| Weekly parlay  | `YES · 1 BB`, `NO · 1 BB`, `Cancel`                                |
 | Dare draft     | `Confirm and fund`, `Revise in Explore`, `Cancel draft`            |
 | Funded dare    | `Accept`, `Decline`, `Cancel and refund`, `Pile on` denominations  |
 | `/bb history`  | `Previous`, `Next`                                                 |
@@ -141,15 +140,6 @@ Per eligible game, at most:
 | Pre-match  | The parlay market, if one could be priced                |
 | Post-match | The normal match report                                  |
 | Post-match | One settlement embed, replying to the report             |
-
-Weekly parlays are separate from this per-game sequence. Scout publishes a new
-message for the market, the betting reminder, every progress update, and the
-settlement. Each message puts its current status or result first, then shows
-applicable conditions, activity qualification, bets, and relevant timing.
-Settlements explicitly say whether they resolved YES, resolved NO, or were
-voided and refunded. Public updates mention the frozen featured players and people who
-placed bets, with duplicates removed. They expose only aggregate YES/NO totals—
-never a person's side or stake.
 
 Bets never add messages. Placing, topping up, and cancelling all edit the
 market message in place. A successful `/bb transfer` is the exception: it adds

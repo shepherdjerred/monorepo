@@ -62,10 +62,9 @@ export function placeStartedExploreRun(input: {
   if (input.fromKey === input.conversationId) {
     return next;
   }
-  if (input.displayedConversationId === input.conversationId) {
-    return removeExploreClientRun(next, input.fromKey);
-  }
-  return setExploreClientRun(next, input.fromKey, input.run);
+  return input.displayedConversationId === input.conversationId
+    ? removeExploreClientRun(next, input.fromKey)
+    : setExploreClientRun(next, input.fromKey, input.run);
 }
 
 export function dropNewConversationAlias(input: {
@@ -85,10 +84,9 @@ export function dropNewConversationAlias(input: {
   }
   const aliasConversationId =
     alias.summary?.conversationId ?? alias.turn.conversationId;
-  if (aliasConversationId !== input.displayedConversationId) {
-    return input.current;
-  }
-  return removeExploreClientRun(input.current, NEW_CONVERSATION_KEY);
+  return aliasConversationId === input.displayedConversationId
+    ? removeExploreClientRun(input.current, NEW_CONVERSATION_KEY)
+    : input.current;
 }
 
 export function clearExploreClientError(

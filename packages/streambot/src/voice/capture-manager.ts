@@ -1,7 +1,7 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { voiceCaptureDropsTotal } from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import type { VoiceAttemptHandle } from "@shepherdjerred/voice-assistant/attempt.ts";
+import type { VoiceAttemptHandle } from "@shepherdjerred/voice-assistant/realtime/attempt.ts";
 import {
   ObservedVoiceAttempt,
   type VoiceAttemptCandidate,
@@ -17,7 +17,7 @@ import {
 import {
   encodePcm16MonoWaveBytes,
   encodePcm16Samples,
-} from "@shepherdjerred/voice-assistant/wave-io.ts";
+} from "@shepherdjerred/voice-assistant/audio/wave-io.ts";
 
 const log = logger.child("voice-capture-manager");
 const SAMPLE_RATE = 16_000;
@@ -29,6 +29,7 @@ const MAX_DEBUG_BYTES = 96 * 1024 * 1024;
 export type VoiceSessionIdentity = {
   readonly guildId: string;
   readonly channelId: string;
+  readonly sessionId: string;
 };
 
 export type VoiceDebugCaptureStatus = VoiceSessionIdentity & {
@@ -246,7 +247,7 @@ export class VoiceCaptureManager implements VoiceAttemptObserver {
       speakerMappings.push({ filename, userId: speaker.userId });
     }
     const manifest = VoiceCaptureManifestSchema.parse({
-      schemaVersion: 1,
+      schemaVersion: 2,
       captureId: active.captureId,
       kind: "debug-window",
       committedAt: new Date(endedAtMs).toISOString(),
@@ -254,6 +255,7 @@ export class VoiceCaptureManager implements VoiceAttemptObserver {
       endedAt: new Date(endedAtMs).toISOString(),
       guildId: active.guildId,
       channelId: active.channelId,
+      sessionId: active.sessionId,
       terminalOutcome: outcome,
       truncated: active.truncated,
       truncationReason: active.truncationReason,
@@ -296,6 +298,7 @@ export class VoiceCaptureManager implements VoiceAttemptObserver {
       captureId: active.captureId,
       guildId: active.guildId,
       channelId: active.channelId,
+      sessionId: active.sessionId,
       startedAtMs: active.startedAtMs,
       expiresAtMs: active.expiresAtMs,
       speakerCount: active.speakers.size,

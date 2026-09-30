@@ -3,6 +3,7 @@ import {
   type AramLoadingScreenData,
   type QueueType,
   type StandardLoadingScreenData,
+  type Team,
 } from "@scout-for-lol/data";
 import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { font } from "@scout-for-lol/design-system/satori/fonts";
@@ -77,6 +78,34 @@ function roleOrderedParticipants(
     .toSorted((left, right) => laneRank(left.lane) - laneRank(right.lane));
 }
 
+function teamLabel(
+  data: StandardLoadingScreenData | AramLoadingScreenData,
+  side: Team,
+  fallback: string,
+): string {
+  const banner =
+    side === "blue" ? data.clashChrome?.blueTeam : data.clashChrome?.redTeam;
+  return banner === undefined
+    ? fallback
+    : `${banner.abbreviation} · ${banner.name}`;
+}
+
+function VsDivider() {
+  return (
+    <span
+      style={{
+        fontSize: "36px",
+        fontFamily: font.title,
+        fontWeight: 800,
+        color: palette.gold[4],
+        textShadow: `0 0 20px ${palette.gold[4]}40`,
+      }}
+    >
+      VS
+    </span>
+  );
+}
+
 export function StandardLayout({
   data,
 }: {
@@ -104,27 +133,16 @@ export function StandardLayout({
       <TeamRow
         participants={blueTeam}
         teamSide="blue"
-        label="Blue Team"
+        label={teamLabel(data, "blue", "Blue Team")}
         queueType={data.queueType}
       />
 
-      {/* VS divider */}
-      <span
-        style={{
-          fontSize: "36px",
-          fontFamily: font.title,
-          fontWeight: 800,
-          color: palette.gold[4],
-          textShadow: `0 0 20px ${palette.gold[4]}40`,
-        }}
-      >
-        VS
-      </span>
+      <VsDivider />
 
       <TeamRow
         participants={redTeam}
         teamSide="red"
-        label="Red Team"
+        label={teamLabel(data, "red", "Red Team")}
         queueType={data.queueType}
       />
     </div>

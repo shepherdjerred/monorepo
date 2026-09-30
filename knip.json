@@ -7,13 +7,13 @@
   "playwright": false,
   "workspaces": {
     ".": {
-      "entry": [".buildkite/scripts/**/*.ts"],
-      "project": [".buildkite/**/*.ts"]
+      "entry": ["ci/scripts/**/*.ts"],
+      "project": ["ci/**/*.ts"]
     },
     "scripts": {
       "entry": [
         "*.ts",
-        "checks/*.ts",
+        "checks/**/*.ts",
         "ci/*.ts",
         "release/*.ts",
         "tools/*.ts",
@@ -23,6 +23,12 @@
         "lib/image-pin-catalog.ts"
       ],
       "project": ["**/*.ts"]
+    },
+    "packages/woodpecker-config-extension": {
+      // dump-steps.ts is invoked as a subprocess by check-ci-env (see
+      // scripts/lib/ci/generated-steps.ts), which knip cannot see.
+      "entry": ["src/dump-steps.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/birmel": {
       "project": ["src/**/*.ts", "prisma/**/*.prisma"]
@@ -113,7 +119,10 @@
     "packages/homelab/src/cdk8s": {
       "entry": ["src/**/*.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
-      "ignoreDependencies": ["cdk8s-cli"]
+      // `homelab` is a graph edge, not an import: the Argo CD script tests
+      // here spawn packages/homelab/scripts, so a change there must select
+      // this package's tests.
+      "ignoreDependencies": ["cdk8s-cli", "homelab"]
     },
     "packages/homelab/src/helm-types": {
       "entry": [
@@ -182,6 +191,10 @@
       "entry": ["scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
+    "packages/scout-for-lol/packages/domain": {
+      "entry": ["src/**/*.test.ts", "architecture-fixtures/**/*.ts"],
+      "project": ["src/**/*.ts", "architecture-fixtures/**/*.ts"]
+    },
     "packages/scout-for-lol/packages/report": {
       "project": ["src/**/*.{ts,tsx}"]
     },
@@ -199,32 +212,25 @@
       "project": ["src/**/*.{ts,tsx,astro,mdx}", "*.ts", "public/**/*.js"]
     },
     "packages/scout-for-lol/packages/app": {
-      "entry": ["src/**/*.test.ts", "index.html"],
-      "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
-    },
-    "packages/scout-for-lol/packages/evals": {
       "entry": [
-        "playwright.config.ts",
-        "src/scripts/**/*.ts",
         "src/**/*.test.ts",
+        "index.html",
+        "playwright.config.ts",
+        "src/**/*.stories.tsx",
         "e2e/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,css}", "e2e/**/*.ts", "*.ts"]
+      "project": [
+        "src/**/*.{ts,tsx,css,mdx}",
+        ".storybook/**/*.{ts,tsx}",
+        "e2e/**/*.ts",
+        "*.ts"
+      ]
     },
     "packages/scout-for-lol/packages/design-audit": {
       "entry": ["playwright.config.ts"]
     },
     "packages/scout-for-lol/packages/design-system": {
-      "entry": ["playwright.config.ts"]
-    },
-    "packages/scout-for-lol/packages/desktop": {
-      "entry": ["src/main.tsx"],
-      "project": ["src/**/*.{ts,tsx,css}"],
-      "vite": false,
-      "postcss": false
-    },
-    "packages/scout-for-lol/packages/ui": {
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": ["playwright.config.ts", "src/**/*.stories.tsx", "e2e/**/*.ts"]
     },
     "packages/scout-for-lol": {
       "entry": ["scripts/**/*.ts"],
@@ -234,13 +240,24 @@
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
     },
+    "packages/cross-compilers-site": {
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
+    },
     "packages/monarch": {
-      "entry": ["src/**/*.test.ts", "src/lib/*/classify.ts", "scripts/**/*.ts"],
+      "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/stocks-sjer-red": {
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,astro,css}", "*.ts"]
+    },
+    "packages/ts-mc": {
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,astro,css}", "*.ts"]
+    },
+    "packages/ts-mc-docs": {
+      "project": ["src/**/*.{ts,astro,mdx}", "*.ts"]
     },
     "packages/streambot": {
       "entry": ["test/**/*.ts", "integration/**/*.ts", "e2e/**/*.ts"],
@@ -249,6 +266,16 @@
         "test/**/*.ts",
         "integration/**/*.ts",
         "e2e/**/*.ts"
+      ]
+    },
+    // Vitest configs and global setup are reached through test:e2e; the
+    // Woodpecker lane invokes prepare-sidecar.ts as a script. Knip cannot
+    // infer either command-line entry from imports.
+    "packages/the-storm": {
+      "entry": [
+        "vitest.e2e.config.ts",
+        "tests/e2e/global-setup.ts",
+        "tests/e2e/prepare-sidecar.ts"
       ]
     },
     "packages/temporal": {
@@ -264,8 +291,8 @@
       "project": ["src/**/*.ts"]
     },
     "packages/toolkit": {
-      "entry": ["src/**/*.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/**/*.ts", "src/**/*.tsx"],
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "packages/tasknotes-macos": {
       "entry": ["scripts/*.ts"],
@@ -354,15 +381,10 @@
     "@prisma/client-runtime-utils",
     "@resvg/resvg-js",
     "@scout-for-lol/data",
-    "@scout-for-lol/ui",
     "@shepherdjerred/eslint-config",
     "@svgr/plugin-jsx",
     "@tailwindcss/forms",
-    "@tailwindcss/postcss",
     "@tanstack/eslint-plugin-query",
-    "@tauri-apps/api",
-    "@tauri-apps/plugin-dialog",
-    "@tauri-apps/plugin-fs",
     "@temporalio/testing",
     "@total-typescript/ts-reset",
     "@types/eslint-plugin-jsx-a11y",
@@ -372,9 +394,7 @@
     "@typescript-eslint/eslint-plugin",
     "@typescript-eslint/parser",
     "@typescript-eslint/utils",
-    "@vitejs/plugin-react",
     "@vitejs/plugin-react-swc",
-    "autoprefixer",
     "debug",
     "eslint-config-prettier",
     "eslint-import-resolver-typescript-bun",
@@ -391,7 +411,6 @@
     "jiti",
     "keyboardjs",
     "lodash",
-    "postcss",
     "prism-media",
     "react",
     "remeda",
@@ -400,7 +419,6 @@
     "ts-pattern",
     "tslib",
     "typescript-eslint",
-    "vite-tsconfig-paths",
     "yoga-wasm-web",
     "zod"
   ],
@@ -412,9 +430,6 @@
   ],
   "ignoreIssues": {
     "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
-    "packages/discord-plays-mario-kart/packages/backend/src/observability/tracing.ts": [
-      "exports"
-    ],
     "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [
       "exports"
     ],
@@ -436,27 +451,10 @@
     "packages/discord-plays-pokemon/packages/backend/src/game/command/command.ts": [
       "exports"
     ],
-    "packages/discord-plays-pokemon/packages/backend/src/observability/tracing.ts": [
-      "exports"
-    ],
     "packages/home-assistant/src/codegen/introspect.ts": ["exports"],
-    "packages/monarch/src/lib/classifier/cache.ts": ["exports"],
-    "packages/monarch/src/lib/classifier/claude.ts": ["exports"],
     "packages/monarch/src/lib/conservice/client.ts": ["exports"],
     "packages/monarch/src/lib/enrichment.ts": ["exports"],
     "packages/monarch/src/lib/monarch/api.ts": ["exports"],
-    "packages/scout-for-lol/packages/app/src/components/ui/dialog.tsx": [
-      "exports"
-    ],
-    "packages/scout-for-lol/packages/app/src/components/ui/dropdown-menu.tsx": [
-      "exports"
-    ],
-    "packages/scout-for-lol/packages/app/src/components/ui/select.tsx": [
-      "exports"
-    ],
-    "packages/scout-for-lol/packages/desktop/src/components/ui/card.tsx": [
-      "exports"
-    ],
     "packages/scout-for-lol/packages/frontend/src/lib/review-tool/reset-defaults.ts": [
       "exports"
     ],
@@ -466,7 +464,6 @@
   },
   "ignoreBinaries": [
     "argocd",
-    "buildkite-agent",
     "ffmpeg",
     "ffprobe",
     "go",
@@ -482,7 +479,6 @@
     "swiftlint",
     "tflint",
     "uv",
-    "uvx",
     "velero",
     "xcodegen"
   ]

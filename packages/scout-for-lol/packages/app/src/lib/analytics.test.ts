@@ -42,8 +42,8 @@ type IdentityCall =
 
 const TEST_CONFIG: AnalyticsConfig = {
   projectToken: "phc_test",
-  apiHost: "https://us.i.posthog.com",
-  assetHost: "https://us-assets.i.posthog.com",
+  apiHost: "https://j.sjer.red",
+  assetHost: "https://j.sjer.red",
   siteKey: "scout-beta",
   siteDomain: "beta.scout-for-lol.com",
   sessionReplay: true,
@@ -182,6 +182,7 @@ describe("normalizePath", () => {
     expect(normalizePath("/challenges/drafts/draft-123")).toBe(
       "/challenges/drafts/:draftId",
     );
+    expect(normalizePath("/clash")).toBe("/clash");
     expect(normalizePath("/challenge-runs/run-123")).toBe(
       "/challenge-runs/:runId",
     );
@@ -206,6 +207,9 @@ describe("normalizePath", () => {
 
   test("templates explore conversation ids", () => {
     expect(normalizePath("/explore")).toBe("/explore");
+    expect(normalizePath("/explore/matches/NA1_5635906026")).toBe(
+      "/explore/matches/:matchId",
+    );
     expect(normalizePath("/explore/1b4e28ba-2fa1-41d2-883f-0016d3cca427")).toBe(
       "/explore/:conversationId",
     );

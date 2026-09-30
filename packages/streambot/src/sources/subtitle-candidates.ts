@@ -14,8 +14,7 @@ export function listSubtitleCandidatesForSource(
   source: Source,
   signal: AbortSignal,
 ): Promise<SubtitleCandidate[]> {
-  if (source.kind === "file") {
-    return listSubtitleCandidatesForFile(config, source.path, signal);
-  }
-  return listSubtitleTracksForYtdlp(config, source, signal);
+  return source.kind === "file"
+    ? listSubtitleCandidatesForFile(config, source.path, signal)
+    : listSubtitleTracksForYtdlp(config, source, signal);
 }

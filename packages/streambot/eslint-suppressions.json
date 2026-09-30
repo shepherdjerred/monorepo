@@ -1,7 +1,7 @@
 {
   "scripts/voice-harness-evaluate.ts": {
     "sonarjs/cognitive-complexity": {
-      "count": 2
+      "count": 1
     }
   },
   "scripts/voice-human-holdout-evaluate.ts": {

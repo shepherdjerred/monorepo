@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
+import {
+  RUNE_SPELL_COLUMNS,
+  SCOUTQL_LOADOUT_LAKE_COLUMNS,
+  ScoutQlLoadoutLakeSchema,
+} from "#src/model/reports/loadout-columns.ts";
 
 /**
  * Report-lake table schemas — the single source of truth for lake column
@@ -17,6 +23,14 @@ import { z } from "zod";
  *
  * This module must stay browser-safe: zod only, no node/Bun imports.
  */
+
+/**
+ * A loadout id: an item slot (0 is empty), a summoner spell, or a rune.
+ * Defaulted so a row staged before these columns existed still parses — the
+ * schema fingerprint rebuilds every lake file with them, so no query reads
+ * that default. NULL otherwise means Riot recorded none (Arena has no runes).
+ */
+const ItemSlotSchema = z.number().nullable().default(null);
 
 export const MatchLakeRowSchema = z.object({
   // Match keys
@@ -54,6 +68,21 @@ export const MatchLakeRowSchema = z.object({
   individual_position: z.string(),
   lane: z.string().nullable(),
   role: z.string().nullable(),
+  // End-of-game loadout. Rune fields are collectively NULL for modes whose
+  // payload contains Riot's all-zero sentinel instead of a rune page.
+  summoner_spell_1_id: z.number(),
+  summoner_spell_2_id: z.number(),
+  primary_rune_style_id: z.number().nullable(),
+  primary_rune_0_id: z.number().nullable(),
+  primary_rune_1_id: z.number().nullable(),
+  primary_rune_2_id: z.number().nullable(),
+  primary_rune_3_id: z.number().nullable(),
+  secondary_rune_style_id: z.number().nullable(),
+  secondary_rune_0_id: z.number().nullable(),
+  secondary_rune_1_id: z.number().nullable(),
+  stat_perk_offense_id: z.number().nullable(),
+  stat_perk_flex_id: z.number().nullable(),
+  stat_perk_defense_id: z.number().nullable(),
   // Outcome
   win: z.boolean(),
   surrendered: z.boolean(),
@@ -134,47 +163,24 @@ export const MatchLakeRowSchema = z.object({
   placement: z.number().nullable(),
   subteam_placement: z.number().nullable(),
   player_subteam_id: z.number().nullable(),
+  // Final inventory: Riot's six slots and the trinket.
+  item0: ItemSlotSchema,
+  item1: ItemSlotSchema,
+  item2: ItemSlotSchema,
+  item3: ItemSlotSchema,
+  item4: ItemSlotSchema,
+  item5: ItemSlotSchema,
+  item6: ItemSlotSchema,
+  augment_1_id: z.number().nullable(),
+  augment_2_id: z.number().nullable(),
+  augment_3_id: z.number().nullable(),
+  augment_4_id: z.number().nullable(),
+  augment_5_id: z.number().nullable(),
+  augment_6_id: z.number().nullable(),
+  ...ScoutQlLoadoutLakeSchema.shape,
 });
 
 export type MatchLakeRow = z.infer<typeof MatchLakeRowSchema>;
-
-export const MatchTeamLakeRowSchema = z.object({
-  match_id: z.string(),
-  month: z.string(),
-  team_id: z.number(),
-  win: z.boolean(),
-  baron_kills: z.number(),
-  first_baron: z.boolean(),
-  champion_kills: z.number(),
-  first_champion_kill: z.boolean(),
-  dragon_kills: z.number(),
-  first_dragon: z.boolean(),
-  inhibitor_kills: z.number(),
-  first_inhibitor: z.boolean(),
-  rift_herald_kills: z.number(),
-  first_rift_herald: z.boolean(),
-  tower_kills: z.number(),
-  first_tower: z.boolean(),
-  void_grub_kills: z.number().nullable(),
-  first_void_grub: z.boolean().nullable(),
-  atakhan_kills: z.number().nullable(),
-  first_atakhan: z.boolean().nullable(),
-  epic_monster_feat_state: z.number().nullable(),
-  first_blood_feat_state: z.number().nullable(),
-  first_turret_feat_state: z.number().nullable(),
-});
-
-export type MatchTeamLakeRow = z.infer<typeof MatchTeamLakeRowSchema>;
-
-export const MatchTeamBanLakeRowSchema = z.object({
-  match_id: z.string(),
-  month: z.string(),
-  team_id: z.number(),
-  pick_turn: z.number(),
-  champion_id: z.number(),
-});
-
-export type MatchTeamBanLakeRow = z.infer<typeof MatchTeamBanLakeRowSchema>;
 
 export const PrematchLakeRowSchema = z.object({
   dedupe_key: z.string(),
@@ -259,6 +265,19 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     individual_position: "VARCHAR",
     lane: "VARCHAR",
     role: "VARCHAR",
+    summoner_spell_1_id: "INTEGER",
+    summoner_spell_2_id: "INTEGER",
+    primary_rune_style_id: "INTEGER",
+    primary_rune_0_id: "INTEGER",
+    primary_rune_1_id: "INTEGER",
+    primary_rune_2_id: "INTEGER",
+    primary_rune_3_id: "INTEGER",
+    secondary_rune_style_id: "INTEGER",
+    secondary_rune_0_id: "INTEGER",
+    secondary_rune_1_id: "INTEGER",
+    stat_perk_offense_id: "INTEGER",
+    stat_perk_flex_id: "INTEGER",
+    stat_perk_defense_id: "INTEGER",
     win: "BOOLEAN",
     surrendered: "BOOLEAN",
     early_surrendered: "BOOLEAN",
@@ -323,7 +342,79 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     placement: "INTEGER",
     subteam_placement: "INTEGER",
     player_subteam_id: "INTEGER",
+    item0: "INTEGER",
+    item1: "INTEGER",
+    item2: "INTEGER",
+    item3: "INTEGER",
+    item4: "INTEGER",
+    item5: "INTEGER",
+    item6: "INTEGER",
+    augment_1_id: "INTEGER",
+    augment_2_id: "INTEGER",
+    augment_3_id: "INTEGER",
+    augment_4_id: "INTEGER",
+    augment_5_id: "INTEGER",
+    augment_6_id: "INTEGER",
+    ...SCOUTQL_LOADOUT_LAKE_COLUMNS,
   };
+
+/** The final-inventory slot columns. */
+export const ITEM_SLOT_COLUMNS = [
+  "item0",
+  "item1",
+  "item2",
+  "item3",
+  "item4",
+  "item5",
+  "item6",
+] as const;
+
+const REBUILD_GATED_COLUMNS = new Set<string>([
+  ...ITEM_SLOT_COLUMNS,
+  ...MATCH_REBUILD_GATED_COLUMNS,
+]);
+const UI_REBUILD_GATED_COLUMNS = new Set<string>(MATCH_REBUILD_GATED_COLUMNS);
+/**
+ * Loadout columns: items, spells and runes. A read selects them only when
+ * a query names one (see MATCH_READ_COLUMNS).
+ */
+export const LOADOUT_COLUMNS: readonly string[] = [
+  ...ITEM_SLOT_COLUMNS,
+  ...RUNE_SPELL_COLUMNS,
+];
+
+const LOADOUT = new Set<string>(LOADOUT_COLUMNS);
+
+/**
+ * The match columns every ordinary read selects: fields available without
+ * explicitly requesting loadout data or waiting for the lake rebuild.
+ *
+ * A read names its columns, and a build published before a column existed
+ * fails every read that names it until the lake is rebuilt (the backend's
+ * lakeSchemaFingerprint). Loadout columns are read only by queries that name
+ * one, so a deploy that adds them leaves every other match read working
+ * while the rebuild runs.
+ */
+export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
+  Object.fromEntries(
+    Object.entries(MATCH_LAKE_COLUMNS).filter(
+      ([name]) => !REBUILD_GATED_COLUMNS.has(name) && !LOADOUT.has(name),
+    ),
+  );
+
+/** MATCH_READ_COLUMNS plus explicitly named loadout or UI rebuild columns. */
+export function matchReadColumns(
+  loadout: readonly string[],
+): Record<string, DuckDbColumnType> {
+  const selected = new Set(loadout);
+  return Object.fromEntries(
+    Object.entries(MATCH_LAKE_COLUMNS).filter(
+      ([name]) =>
+        (!UI_REBUILD_GATED_COLUMNS.has(name) && !LOADOUT.has(name)) ||
+        selected.has(name),
+    ),
+  );
+}
 
 export const PREMATCH_LAKE_COLUMNS: Record<
   keyof PrematchLakeRow,
@@ -348,46 +439,6 @@ export const PREMATCH_LAKE_COLUMNS: Record<
   summoner_name: "VARCHAR",
   selected_skin_index: "INTEGER",
   bot: "BOOLEAN",
-};
-
-export const MATCH_TEAM_LAKE_COLUMNS: Record<
-  keyof MatchTeamLakeRow,
-  DuckDbColumnType
-> = {
-  match_id: "VARCHAR",
-  month: "VARCHAR",
-  team_id: "INTEGER",
-  win: "BOOLEAN",
-  baron_kills: "INTEGER",
-  first_baron: "BOOLEAN",
-  champion_kills: "INTEGER",
-  first_champion_kill: "BOOLEAN",
-  dragon_kills: "INTEGER",
-  first_dragon: "BOOLEAN",
-  inhibitor_kills: "INTEGER",
-  first_inhibitor: "BOOLEAN",
-  rift_herald_kills: "INTEGER",
-  first_rift_herald: "BOOLEAN",
-  tower_kills: "INTEGER",
-  first_tower: "BOOLEAN",
-  void_grub_kills: "INTEGER",
-  first_void_grub: "BOOLEAN",
-  atakhan_kills: "INTEGER",
-  first_atakhan: "BOOLEAN",
-  epic_monster_feat_state: "INTEGER",
-  first_blood_feat_state: "INTEGER",
-  first_turret_feat_state: "INTEGER",
-};
-
-export const MATCH_TEAM_BAN_LAKE_COLUMNS: Record<
-  keyof MatchTeamBanLakeRow,
-  DuckDbColumnType
-> = {
-  match_id: "VARCHAR",
-  month: "VARCHAR",
-  team_id: "INTEGER",
-  pick_turn: "INTEGER",
-  champion_id: "INTEGER",
 };
 
 export const ACCOUNT_LAKE_COLUMNS: Record<

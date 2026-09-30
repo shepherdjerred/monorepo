@@ -43,8 +43,7 @@ export type ActiveSessionRuntime = {
 
 function fallbackScreenMode(seats: number): ScreenMode {
   if (seats <= 1) return "1p";
-  if (seats === 2) return "2p-horizontal";
-  return "quad";
+  return seats === 2 ? "2p-horizontal" : "quad";
 }
 
 /**

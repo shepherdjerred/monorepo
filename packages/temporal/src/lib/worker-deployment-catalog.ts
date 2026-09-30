@@ -99,9 +99,8 @@ function pinStateEntriesEqual(
   left: PinStateEntry | undefined,
   right: PinStateEntry,
 ): boolean {
-  if (left === undefined) return false;
   return (
-    left.buildNumber === right.buildNumber &&
+    left?.buildNumber === right.buildNumber &&
     left.version === right.version &&
     left.digest === right.digest &&
     left.gitSha === right.gitSha

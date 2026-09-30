@@ -2,7 +2,7 @@ import { FileText } from "lucide-react";
 import {
   SCOUTQL_PRESETS,
   type ScoutQlPreset,
-} from "@scout-for-lol/data/model/scoutql/presets.ts";
+} from "@scout-for-lol/data/model/scoutql/editor/presets.ts";
 import {
   Card,
   CardContent,

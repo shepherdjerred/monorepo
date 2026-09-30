@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
-import { createCaptureSeed } from "../domain/quick-capture-seed";
+import { createCaptureSeed } from "../domain/quick-capture/quick-capture-seed";
 import {
   EMPTY_FILTER,
   DEFAULT_SORT,

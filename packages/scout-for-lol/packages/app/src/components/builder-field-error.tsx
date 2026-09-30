@@ -1,4 +1,4 @@
-import { FieldError } from "@scout-for-lol/design-system/components/input";
+import { FieldError } from "@scout-for-lol/design-system/components/forms/field";
 
 export function builderErrorAttributes(
   error: string | undefined,

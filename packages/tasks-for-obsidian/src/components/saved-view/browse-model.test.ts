@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { createDefaultSavedViewPreferences } from "../../domain/saved-views";
+import { createDefaultSavedViewPreferences } from "../../domain/saved-view/saved-views";
 import { TaskSchema } from "../../domain/schemas";
 import {
   activeTasksForDimension,

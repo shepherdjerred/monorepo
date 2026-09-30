@@ -1,10 +1,10 @@
 {
-  "scripts/argocd-apply-safety.ts": {
+  "scripts/argocd/argocd-apply-safety.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "scripts/argocd.ts": {
+  "scripts/argocd/argocd.ts": {
     "@typescript-eslint/no-base-to-string": {
       "count": 1
     },
@@ -69,7 +69,7 @@
       "count": 1
     }
   },
-  "scripts/helm-release-core.ts": {
+  "scripts/helm/helm-release-core.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -109,7 +109,7 @@
       "count": 1
     }
   },
-  "src/cdk8s/src/misc/minecraft-config.ts": {
+  "src/cdk8s/src/misc/minecraft/minecraft-config.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

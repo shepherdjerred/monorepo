@@ -1,7 +1,7 @@
 import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
+import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
 import { ContainerEnvSchema } from "./testing/container-env-schema.ts";
 
 const TemporalResourceSchema = z

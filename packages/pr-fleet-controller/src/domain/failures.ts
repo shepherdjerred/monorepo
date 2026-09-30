@@ -9,12 +9,11 @@ export function combineFailures(
   failure: unknown,
 ): Error {
   const next = normalizeFailure(failure);
-  if (current === undefined || current === next) {
-    return next;
-  }
-  return new AggregateError(
-    [current, next],
-    "Controller and shutdown both failed",
-    { cause: next },
-  );
+  return current === undefined || current === next
+    ? next
+    : new AggregateError(
+        [current, next],
+        "Controller and shutdown both failed",
+        { cause: next },
+      );
 }

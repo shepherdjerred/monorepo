@@ -11,7 +11,7 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
-} from "@shepherdjerred/voice-assistant/attempt.ts";
+} from "@shepherdjerred/voice-assistant/realtime/attempt.ts";
 import {
   voiceToolSchemas,
   type LoopArguments,
@@ -33,15 +33,6 @@ function isAdvancedPlay(name: ToolName, toolArguments: unknown): boolean {
   if (name !== "play") return false;
   const parsed = voiceToolSchemas.play.safeParse(toolArguments);
   return parsed.success && parsed.data.placement === "now";
-}
-
-function safeToolArgumentMetadata(toolArguments: unknown): {
-  readonly fieldCount: number;
-} {
-  if (typeof toolArguments !== "object" || toolArguments === null) {
-    return { fieldCount: 0 };
-  }
-  return { fieldCount: Object.keys(toolArguments).length };
 }
 
 /** User/session-bound command surface shared by production execution and local dry runs. */
@@ -80,6 +71,7 @@ export type VoiceCommandPort = {
   readonly listChapters: () => string | Promise<string>;
   readonly getQueue: () => string | Promise<string>;
   readonly getNowPlaying: () => string | Promise<string>;
+  readonly listSports?: (signal: AbortSignal) => string | Promise<string>;
   /** Optional rollout gate for newly added assistant-v2 controls. */
   readonly isAssistantV2Enabled?: () => Promise<boolean>;
   /** Monotonic version incremented when the current turn asks for a numbered selection. */
@@ -89,10 +81,21 @@ export type VoiceCommandPort = {
 export function bindPlaybackVoiceCommandPort(
   service: PlaybackCommandService,
   userId: UserId,
+  attempt?: VoiceAttemptHandle,
 ): VoiceCommandPort {
+  const observed = attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
   return {
     play: async (input, signal) => {
-      const result = await service.play({ ...input, userId, signal });
+      const spokenCommand = observed.spokenCommand();
+      const { provider, ...playInput } = input;
+      const result = await service.play({
+        ...playInput,
+        ...(provider === undefined ? {} : { provider }),
+        userId,
+        signal,
+        spoken: true,
+        ...(spokenCommand === null ? {} : { utterance: spokenCommand }),
+      });
       return result.message;
     },
     skip: () => service.skip(userId).message,
@@ -125,7 +128,11 @@ export function bindPlaybackVoiceCommandPort(
     resume: () => service.resume(userId).message,
     restart: () => service.restart(userId).message,
     previous: async (signal) => {
-      const result = await service.previous(userId, signal);
+      const spokenCommand = observed.spokenCommand();
+      const result = await service.previous(userId, signal, {
+        spoken: true,
+        ...(spokenCommand === null ? {} : { utterance: spokenCommand }),
+      });
       return result.message;
     },
     // Five grounded titles is plenty for one spoken disambiguation and keeps the tool result
@@ -136,6 +143,7 @@ export function bindPlaybackVoiceCommandPort(
     listChapters: () => service.listChapters(),
     getQueue: () => service.getQueue(),
     getNowPlaying: () => service.getNowPlaying(),
+    listSports: (signal) => service.listSports(userId, signal),
     isAssistantV2Enabled: () => service.isAssistantV2Enabled(userId),
     clarificationVersion: () => service.clarificationVersion(),
   };
@@ -157,12 +165,14 @@ export function createStreambotVoiceTools(
     operation: () => string | Promise<string>,
   ): Promise<string> {
     const startedAt = performance.now();
-    const safeArguments = safeToolArgumentMetadata(toolArguments);
     return await attempt.runStage(
       `streambot.voice.tool.${name}`,
       {
         "streambot.voice.tool.name": name,
-        "streambot.voice.tool.arguments": JSON.stringify(safeArguments),
+        "streambot.voice.tool.argument_fields":
+          typeof toolArguments === "object" && toolArguments !== null
+            ? Object.keys(toolArguments).length
+            : 0,
         "streambot.voice.tool.mutating": mutating,
       },
       async (span) => {
@@ -219,12 +229,11 @@ export function createStreambotVoiceTools(
           );
           span.setAttributes({
             "streambot.voice.tool.outcome": outcome,
-            "streambot.voice.tool.result": result ?? "",
             "streambot.voice.tool.duration_ms": durationMs,
           });
           attempt.tool({
             name,
-            arguments: safeArguments,
+            arguments: toolArguments,
             ...(result === undefined ? {} : { result }),
             outcome,
             durationMs,
@@ -238,7 +247,7 @@ export function createStreambotVoiceTools(
     tool({
       name: "play",
       description:
-        "Play or queue a media title from the local library or YouTube search.",
+        "Play or queue a media title. For a sports game, set provider to auto unless the speaker names StreamEast or TVSportsLive; omit provider for ordinary music or video.",
       parameters: voiceToolSchemas.play,
       execute: (input) =>
         invoke("play", true, input, () =>
@@ -407,5 +416,24 @@ export function createStreambotVoiceTools(
       execute: (input) =>
         invoke("get_now_playing", false, input, () => commands.getNowPlaying()),
     }),
+    ...(commands.listSports === undefined
+      ? []
+      : [
+          tool({
+            name: "list_sports",
+            description:
+              "List live and later-today sports streams from the supported providers. This does not start playback.",
+            parameters: voiceToolSchemas.listSports,
+            execute: (input) =>
+              invoke(
+                "list_sports",
+                false,
+                input,
+                () =>
+                  commands.listSports?.(transactionSignal) ??
+                  "Sports listings are not available.",
+              ),
+          }),
+        ]),
   ];
 }

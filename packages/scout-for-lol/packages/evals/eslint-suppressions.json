@@ -1,7 +1,0 @@
-{
-  "src/materialization/materialize-case.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  }
-}

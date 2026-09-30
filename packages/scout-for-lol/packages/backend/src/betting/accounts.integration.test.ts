@@ -169,7 +169,7 @@ describe("ensureBucksAccount", () => {
       },
       {
         bucksAccountId: house.id,
-        delta: -SEED_GRANT,
+        delta: 0 - SEED_GRANT,
         balanceAfter: HOUSE_BANKROLL - SEED_GRANT,
       },
       {

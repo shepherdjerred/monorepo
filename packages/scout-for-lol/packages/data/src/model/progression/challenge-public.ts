@@ -95,6 +95,7 @@ export const ChallengeEvidenceMatchSchema = z.strictObject({
   championName: z.string().min(1),
   role: z.string().min(1),
   win: z.boolean(),
+  placement: z.number().int().positive().nullable().default(null),
   kills: z.number().nonnegative(),
   deaths: z.number().nonnegative(),
   assists: z.number().nonnegative(),

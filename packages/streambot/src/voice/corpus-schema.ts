@@ -4,6 +4,18 @@ export const VOICE_CORPUS_VERSION = 1;
 export const VOICE_CORPUS_CLIP_COUNT = 400;
 export const VOICE_CORPUS_MAX_BYTES = 20 * 1024 * 1024;
 
+/**
+ * One manifest format literal per wake-phrase corpus, so a corpus can never be verified or
+ * evaluated against another phrase's fixtures by accident. Parsing always pins the exact literal
+ * for the corpus being read; the union exists only for typing manifests generically.
+ */
+export const VOICE_CORPUS_FORMATS = [
+  "streambot-discord-opus-v1",
+  "scout-discord-opus-v1",
+] as const;
+
+export type VoiceCorpusFormat = (typeof VOICE_CORPUS_FORMATS)[number];
+
 export const VoiceCorpusAugmentationSchema = z.strictObject({
   kind: z.enum([
     "clean",
@@ -46,17 +58,26 @@ export const VoiceCorpusEntrySchema = z.strictObject({
   sha256: z.string().regex(/^[0-9a-f]{64}$/),
 });
 
-export const VoiceCorpusManifestSchema = z.strictObject({
-  version: z.literal(VOICE_CORPUS_VERSION),
-  format: z.literal("streambot-discord-opus-v1"),
-  disclosure: z.literal(
-    "AI-generated and procedurally generated speech/audio; no recordings of people or copyrighted media.",
-  ),
-  entries: z.array(VoiceCorpusEntrySchema).max(VOICE_CORPUS_CLIP_COUNT),
-});
+export function voiceCorpusManifestSchema(format: VoiceCorpusFormat) {
+  return z.strictObject({
+    version: z.literal(VOICE_CORPUS_VERSION),
+    format: z.literal(format),
+    disclosure: z.literal(
+      "AI-generated and procedurally generated speech/audio; no recordings of people or copyrighted media.",
+    ),
+    entries: z.array(VoiceCorpusEntrySchema).max(VOICE_CORPUS_CLIP_COUNT),
+  });
+}
+
+/** The historical streambot corpus schema; per-phrase code uses the factory above. */
+export const VoiceCorpusManifestSchema = voiceCorpusManifestSchema(
+  "streambot-discord-opus-v1",
+);
 
 export type VoiceCorpusEntry = z.infer<typeof VoiceCorpusEntrySchema>;
-export type VoiceCorpusManifest = z.infer<typeof VoiceCorpusManifestSchema>;
+export type VoiceCorpusManifest = z.infer<
+  ReturnType<typeof voiceCorpusManifestSchema>
+>;
 export type VoiceCorpusAugmentation = z.infer<
   typeof VoiceCorpusAugmentationSchema
 >;

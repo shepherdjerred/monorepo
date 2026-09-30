@@ -20,6 +20,8 @@ const EnvironmentSchema = z
       .min(1)
       .default("prometheus.tailnet-1a49.ts.net"),
     HOST: z.string().min(1).default("0.0.0.0"),
+    OPS_INGEST_TOKEN: z.string().min(32),
+    PROMETHEUS_URL: z.url(),
     PORT: z.coerce.number().int().min(1).max(65_535).default(7341),
     POSTAL_API_KEY: z.string().min(1).optional(),
     POSTAL_FROM: z.email().optional(),

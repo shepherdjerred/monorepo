@@ -1,7 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Deployment, DeploymentStrategy, Service, Volume } from "cdk8s-plus-31";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import {
   LINUXSERVER_GID,
   withCommonLinuxServerProps,

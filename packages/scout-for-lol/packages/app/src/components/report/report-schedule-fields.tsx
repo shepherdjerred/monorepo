@@ -11,7 +11,7 @@ import {
   FieldError,
   Input,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { TimezoneSelect } from "#src/components/timezone-select.tsx";
 import { fieldErrorMessage } from "#src/components/semantic-form.tsx";
 
@@ -182,7 +182,7 @@ export function ReportScheduleFields(props: {
             autoCapitalize="none"
             spellCheck={false}
             required
-            aria-invalid={props.cron.error === undefined ? undefined : true}
+            aria-invalid={props.cron.error !== undefined || undefined}
             aria-describedby={
               props.cron.error === undefined
                 ? "report-schedule-cron-description"

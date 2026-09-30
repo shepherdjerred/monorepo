@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import type { DiscordAccountId } from "@scout-for-lol/data";
+import type {
+  DiscordAccountId,
+  ExploreQuotaSnapshot,
+} from "@scout-for-lol/data";
 import { testAccountId } from "#src/testing/test-ids.ts";
 import {
   getExploreQuotaStatus,
@@ -27,15 +30,36 @@ function completeTurn(id: DiscordAccountId, at: number): void {
   ticket.finish();
 }
 
-/** Remaining questions in the per-minute user bucket. */
-function minuteRemaining(id: DiscordAccountId, at: number): number {
+function minuteSnapshot(
+  id: DiscordAccountId,
+  at: number,
+): ExploreQuotaSnapshot {
   const snapshot = getExploreQuotaStatus({ userId: id }, at).quota.find(
     (entry) => entry.scope === "user" && entry.window === "minute",
   );
   if (snapshot === undefined) {
     throw new Error("expected a per-minute user quota snapshot");
   }
-  return snapshot.remaining;
+  return snapshot;
+}
+
+/** Remaining questions in the per-minute user bucket. */
+function minuteRemaining(id: DiscordAccountId, at: number): number {
+  return minuteSnapshot(id, at).remaining;
+}
+
+/**
+ * Read from the engine rather than restated here: these tests are about the
+ * reserve/commit/release contract, and hard-coding the allowance made every
+ * one of them fail the next time the limit was tuned.
+ */
+const MINUTE_LIMIT = minuteSnapshot(userId, now).limit;
+
+/** Spend the whole per-minute allowance, leaving the bucket empty. */
+function exhaustMinute(id: DiscordAccountId, at: number): void {
+  for (let index = 0; index < MINUTE_LIMIT; index++) {
+    completeTurn(id, at);
+  }
 }
 
 describe("explore rate limit", () => {
@@ -95,16 +119,16 @@ describe("explore rate limit", () => {
   });
 
   test("the per-minute allowance is enforced and then resets", () => {
-    for (let index = 0; index < 4; index++) {
-      completeTurn(userId, now);
-    }
+    exhaustMinute(userId, now);
 
     const limited = tryStartExploreTurn({ userId }, now);
     expect(limited.allowed).toBe(false);
     if (limited.allowed) {
       throw new Error("expected a rejection");
     }
-    expect(limited.reason).toContain("4 of 4 questions");
+    expect(limited.reason).toContain(
+      `${MINUTE_LIMIT.toString()} of ${MINUTE_LIMIT.toString()} questions`,
+    );
     expect(limited.retryAfterSeconds).toBeGreaterThan(0);
 
     // A fixed window starts at its first request, so it clears a minute later.
@@ -114,9 +138,7 @@ describe("explore rate limit", () => {
   });
 
   test("quotas are charged per user, not shared between people", () => {
-    for (let index = 0; index < 4; index++) {
-      completeTurn(userId, now);
-    }
+    exhaustMinute(userId, now);
     expect(tryStartExploreTurn({ userId }, now).allowed).toBe(false);
 
     const other = tryStartExploreTurn({ userId: otherUserId }, now);
@@ -158,7 +180,7 @@ describe("explore rate limit", () => {
   });
 
   test("concurrent reservations cannot over-admit the final quota slot", () => {
-    for (let index = 0; index < 3; index++) {
+    for (let index = 0; index < MINUTE_LIMIT - 1; index++) {
       completeTurn(userId, now);
     }
 
@@ -207,9 +229,7 @@ describe("explore rate limit", () => {
   });
 
   test("a rejected turn reports the quota it hit", () => {
-    for (let index = 0; index < 4; index++) {
-      completeTurn(userId, now);
-    }
+    exhaustMinute(userId, now);
     const limited = tryStartExploreTurn({ userId }, now);
     if (limited.allowed) {
       throw new Error("expected a rejection");
@@ -218,6 +238,6 @@ describe("explore rate limit", () => {
       (snapshot) => snapshot.scope === "user" && snapshot.window === "minute",
     );
     expect(minute?.remaining).toBe(0);
-    expect(minute?.used).toBe(4);
+    expect(minute?.used).toBe(MINUTE_LIMIT);
   });
 });

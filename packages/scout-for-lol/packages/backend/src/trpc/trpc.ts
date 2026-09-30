@@ -11,8 +11,8 @@ import {
 } from "@scout-for-lol/data";
 import type { Context } from "#src/trpc/context.ts";
 import configuration from "#src/configuration.ts";
-import { trpcCallDuration, trpcCallsTotal } from "#src/metrics/web.ts";
-import { assertCustomActivityPolicy } from "#src/customs/activity-auth.ts";
+import { trpcCallDuration, trpcCallsTotal } from "#src/metrics/platform/web.ts";
+import { assertCustomActivityPolicy } from "#src/customs/activity/activity-auth.ts";
 
 /**
  * Find the missing `{ resource, action }` a FORBIDDEN carries. The
@@ -24,8 +24,9 @@ function findMissingPermission(error: unknown, depth = 0): Permission | null {
   if (error === null || typeof error !== "object" || depth > 6) return null;
   const parsed = PermissionDeniedCauseSchema.safeParse(error);
   if (parsed.success) return parsed.data.missingPermission;
-  if ("cause" in error) return findMissingPermission(error.cause, depth + 1);
-  return null;
+  return "cause" in error
+    ? findMissingPermission(error.cause, depth + 1)
+    : null;
 }
 
 const t = initTRPC.context<Context>().create({
@@ -101,39 +102,9 @@ const isAuthenticated = middleware(async ({ ctx, next }) => {
 });
 
 /**
- * Middleware that enforces API token authentication (for desktop clients)
- */
-const hasApiToken = middleware(async ({ ctx, next }) => {
-  if (!ctx.apiToken) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Valid API token required",
-    });
-  }
-  if (!ctx.user) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "User not found",
-    });
-  }
-  return next({
-    ctx: {
-      ...ctx,
-      apiToken: ctx.apiToken,
-      user: ctx.user,
-    },
-  });
-});
-
-/**
  * Protected procedure - requires session-based authentication
  */
 export const protectedProcedure = instrumentedProcedure.use(isAuthenticated);
-
-/**
- * Desktop client procedure - requires API token authentication
- */
-export const desktopClientProcedure = instrumentedProcedure.use(hasApiToken);
 
 const hasActivitySession = middleware(async ({ ctx, next }) => {
   if (ctx.activitySession === null) {

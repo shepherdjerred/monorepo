@@ -132,13 +132,12 @@ function validateCalendarWindow(
 export function temporalWindowDays(
   window: TemporalWindow | CalendarDateRange,
 ): number {
-  if ("kind" in window && window.kind === "relative") return window.days;
-  return (
-    differenceInCalendarDays(
-      parseISO(window.endDate),
-      parseISO(window.startDate),
-    ) + 1
-  );
+  return "kind" in window && window.kind === "relative"
+    ? window.days
+    : differenceInCalendarDays(
+        parseISO(window.endDate),
+        parseISO(window.startDate),
+      ) + 1;
 }
 
 export function resolveTemporalBucket(
@@ -147,8 +146,7 @@ export function resolveTemporalBucket(
 ): ResolvedTemporalBucket {
   if (requested !== "auto") return requested;
   if (windowDays <= 60) return "day";
-  if (windowDays <= 365) return "week";
-  return "month";
+  return windowDays <= 365 ? "week" : "month";
 }
 
 export const ConfidenceIntervalSchema = z

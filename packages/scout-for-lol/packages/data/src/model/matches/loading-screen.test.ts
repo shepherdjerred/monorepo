@@ -10,6 +10,7 @@ import {
   QueueDisplayNameSchema,
   makeQueueDisplayName,
   loadingScreenLayoutForQueueType,
+  isClashQueueType,
   type LoadingScreenLayout,
 } from "#src/model/matches/loading-screen.ts";
 import {
@@ -46,6 +47,7 @@ describe("LoadingScreenLayoutSchema", () => {
     { queueType: "classic", layout: "classic" },
     { queueType: "classic aram mayhem", layout: "classic" },
     { queueType: "solo", layout: "standard" },
+    { queueType: "clash", layout: "standard" },
     { queueType: "custom", layout: "standard" },
   ];
 
@@ -567,5 +569,14 @@ describe("ClassicLoadingScreenDataSchema", () => {
         gameStartTime: Date.now(),
       }),
     ).toThrow();
+  });
+});
+
+describe("isClashQueueType", () => {
+  test("selects SR Clash and ARAM Clash", () => {
+    expect(isClashQueueType("clash")).toBe(true);
+    expect(isClashQueueType("aram clash")).toBe(true);
+    expect(isClashQueueType("solo")).toBe(false);
+    expect(isClashQueueType("aram")).toBe(false);
   });
 });

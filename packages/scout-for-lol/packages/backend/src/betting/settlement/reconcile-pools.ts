@@ -1,9 +1,10 @@
 import {
+  BucksAmountSchema,
   BucksMatchingSummarySchema,
   type BucksMatchingSummary,
 } from "@scout-for-lol/data";
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
-import { settlementHouseCut } from "#src/betting/house-cut.ts";
+import { settlementHouseCut } from "#src/betting/eligibility/house-cut.ts";
 import {
   auditFinding,
   type BucksAuditSink,
@@ -203,7 +204,10 @@ function auditHouseExposure(
       houseBet.predictedTeamId !== summary.houseTeamId ||
       houseBet.stake !== summary.houseFill ||
       houseBet.matchedStake !== summary.houseFill ||
-      houseDebit !== -summary.houseFill);
+      // The debit is the negative side of the same movement, so its magnitude
+      // is what must equal the fill. Negating the ledger figure rather than
+      // the summary's leaves the branded pool total unmodified.
+      -houseDebit !== summary.houseFill);
   if (
     emptyHouseInvalid ||
     fundedHouseInvalid ||
@@ -283,7 +287,7 @@ function expectedTerminalSettlement(
         ? matchedStake * 2
         : 0;
   const fee = settlementHouseCut({
-    matchedProfit: won ? matchedStake : 0,
+    matchedProfit: BucksAmountSchema.parse(won ? matchedStake : 0),
     isHouse: bet.bucksAccount.isHouse,
   });
   return {

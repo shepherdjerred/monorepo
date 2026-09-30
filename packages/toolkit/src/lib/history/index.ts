@@ -3,16 +3,27 @@ import { chmod, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { HistoryRuntimePaths } from "./paths.ts";
-import { ftsQuery } from "./query.ts";
-import type {
-  HistorySourceName,
-  HistoryRuntimeRef,
-  HistorySourceResult,
-  HistorySourceStatus,
-  IndexedHistoryRecord,
+import { ftsQuery } from "./query/query.ts";
+import {
+  parseHistorySourceName,
+  type HistoryRuntimeRef,
+  type HistorySourceName,
+  type HistorySourceResult,
+  type HistorySourceStatus,
+  type IndexedHistoryRecord,
+  type UsageReport,
 } from "./types.ts";
+import { ingestResults } from "./ingest.ts";
+import {
+  queryUsage,
+  queryUsageEventsForDocument,
+  queryUsageFingerprints,
+  type ExportableUsageEvent,
+  type UsageDocumentFingerprint,
+  type UsageQueryOptions,
+} from "./usage-query.ts";
 
-const INDEX_SCHEMA_VERSION = 2;
+const INDEX_SCHEMA_VERSION = 3;
 
 type HistoryQueryOptions = {
   readonly since: string | null;
@@ -45,25 +56,6 @@ const StatusRowSchema = z.object({
   error: z.string().nullable(),
 });
 
-const SourceStateRowSchema = z.object({
-  fingerprint: z.string(),
-  available: z.number(),
-  error: z.string().nullable(),
-});
-
-function sourceNeedsIngest(
-  force: boolean,
-  fingerprint: string,
-  previousState: z.infer<typeof SourceStateRowSchema> | null,
-): boolean {
-  return (
-    force ||
-    previousState?.available !== 1 ||
-    previousState.error !== null ||
-    previousState.fingerprint !== fingerprint
-  );
-}
-
 function addRuntimeExclusions(
   clauses: string[],
   values: (string | number)[],
@@ -78,27 +70,40 @@ function addRuntimeExclusions(
 }
 
 function parseSourceName(value: string): HistorySourceName {
-  if (
-    value === "conductor" ||
-    value === "claude" ||
-    value === "codex" ||
-    value === "cursor" ||
-    value === "opencode-conductor" ||
-    value === "opencode-standalone"
-  ) {
-    return value;
-  }
-  throw new Error(`Unknown history source in index: ${value}`);
+  return parseHistorySourceName(value, "in index");
 }
 
-function hashDocument(
-  title: string,
-  dialogue: string,
-  toolOutput: string,
+function filterClauses(options: HistoryQueryOptions): {
+  clauses: string[];
+  values: (string | number)[];
+} {
+  const clauses: string[] = [];
+  const values: (string | number)[] = [];
+  if (options.since !== null) {
+    clauses.push("d.updated_at >= ?");
+    values.push(options.since);
+  }
+  if (options.source !== null) {
+    clauses.push("d.source = ?");
+    values.push(options.source);
+  }
+  if (options.openingPromptHash !== undefined) {
+    clauses.push("d.opening_prompt_hash = ?");
+    values.push(options.openingPromptHash);
+  }
+  addRuntimeExclusions(clauses, values, options.excludedRuntimes ?? []);
+  return { clauses, values };
+}
+
+function paginationClause(
+  options: HistoryQueryOptions,
+  values: (string | number)[],
 ): string {
-  const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(JSON.stringify([title, dialogue, toolOutput]));
-  return hasher.digest("hex");
+  if (options.limit === undefined) {
+    return "";
+  }
+  values.push(options.limit, options.offset ?? 0);
+  return " LIMIT ? OFFSET ?";
 }
 
 async function secureIndexFiles(indexPath: string): Promise<void> {
@@ -135,6 +140,35 @@ function schemaVersion(database: Database): number {
     .parse(database.query("PRAGMA user_version").get()).user_version;
 }
 
+const REQUIRED_TABLES = [
+  "documents",
+  "history_fts",
+  "source_state",
+  "usage_events",
+] as const;
+
+/**
+ * Whether the index matches this build's schema. The version alone is not
+ * enough: two unrelated schemas both shipped as v3 (one without
+ * `usage_events`), so a v3 index can still be missing required tables.
+ */
+function schemaIsCurrent(database: Database): boolean {
+  if (schemaVersion(database) !== INDEX_SCHEMA_VERSION) {
+    return false;
+  }
+  const tables = new Set(
+    z
+      .array(z.object({ name: z.string() }))
+      .parse(
+        database
+          .query("SELECT name FROM sqlite_master WHERE type = 'table'")
+          .all(),
+      )
+      .map((row) => row.name),
+  );
+  return REQUIRED_TABLES.every((table) => tables.has(table));
+}
+
 function createSchema(database: Database): void {
   database.run(`
     CREATE TABLE documents (
@@ -168,18 +202,39 @@ function createSchema(database: Database): void {
       last_scan_at TEXT,
       error TEXT
     );
+    CREATE TABLE usage_events (
+      document_id INTEGER NOT NULL REFERENCES documents(id),
+      source TEXT NOT NULL,
+      occurred_at TEXT NOT NULL,
+      model TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL DEFAULT 0,
+      output_tokens INTEGER NOT NULL DEFAULT 0,
+      cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+      cache_creation_tokens INTEGER NOT NULL DEFAULT 0,
+      cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+      reasoning_tokens INTEGER NOT NULL DEFAULT 0,
+      cost_usd REAL,
+      cost_complete INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE INDEX usage_events_document_id_idx ON usage_events(document_id);
+    CREATE INDEX usage_events_occurred_at_idx ON usage_events(occurred_at);
     PRAGMA user_version = ${String(INDEX_SCHEMA_VERSION)};
   `);
 }
 
+function rebuildSchemaCore(database: Database): void {
+  database.run(`
+    DROP TABLE IF EXISTS history_fts;
+    DROP TABLE IF EXISTS usage_events;
+    DROP TABLE IF EXISTS documents;
+    DROP TABLE IF EXISTS source_state;
+  `);
+  createSchema(database);
+}
+
 function rebuildSchema(database: Database): void {
   database.transaction(() => {
-    database.run(`
-      DROP TABLE IF EXISTS history_fts;
-      DROP TABLE IF EXISTS documents;
-      DROP TABLE IF EXISTS source_state;
-    `);
-    createSchema(database);
+    rebuildSchemaCore(database);
   })();
 }
 
@@ -207,20 +262,22 @@ export class HistoryIndex {
       create: !readonly,
       strict: true,
     });
+    // Readers race the daemon's scans; wait for its write lock instead of
+    // failing with "database is locked".
+    database.run("PRAGMA busy_timeout = 5000;");
     const version = schemaVersion(database);
-    if (readonly && version !== INDEX_SCHEMA_VERSION) {
+    const current = schemaIsCurrent(database);
+    if (readonly && !current) {
       database.close();
       throw new Error(
-        `History index schema is v${String(version)}; restart the daemon to rebuild v${String(INDEX_SCHEMA_VERSION)}.`,
+        `History index schema is v${String(version)} without the current tables; restart the daemon to rebuild v${String(INDEX_SCHEMA_VERSION)}.`,
       );
     }
     const index = new HistoryIndex(database, runtimePaths.indexDb);
     if (!readonly) {
       try {
-        index.#database.run(
-          "PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;",
-        );
-        if (version !== INDEX_SCHEMA_VERSION) {
+        index.#database.run("PRAGMA journal_mode = WAL;");
+        if (!current) {
           rebuildSchema(index.#database);
         }
         await secureIndexFiles(runtimePaths.indexDb);
@@ -244,177 +301,23 @@ export class HistoryIndex {
     results: readonly HistorySourceResult[],
     force = false,
   ): Promise<void> {
-    if (force) {
-      rebuildSchema(this.#database);
-    }
-    const upsert = this.#database.prepare(`
-      INSERT INTO documents
-        (source, source_id, title, path, workspace, agent, created_at, updated_at,
-         runtime_id, opening_prompt_hash, content_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(source, source_id) DO UPDATE SET
-        title = excluded.title,
-        path = excluded.path,
-        workspace = excluded.workspace,
-        agent = excluded.agent,
-        created_at = excluded.created_at,
-        updated_at = excluded.updated_at,
-        runtime_id = excluded.runtime_id,
-        opening_prompt_hash = excluded.opening_prompt_hash,
-        content_hash = excluded.content_hash
-    `);
-    const findExisting = this.#database.prepare(
-      "SELECT id, content_hash FROM documents WHERE source = ? AND source_id = ?",
-    );
-    const insertFts = this.#database.prepare(
-      "INSERT INTO history_fts(rowid, title, dialogue, tool_output) VALUES (?, ?, ?, ?)",
-    );
-    const deleteFts = this.#database.prepare(
-      "DELETE FROM history_fts WHERE rowid = ?",
-    );
-    const deleteDocument = this.#database.prepare(
-      "DELETE FROM documents WHERE id = ?",
-    );
-    const updateState = this.#database.prepare(`
-      INSERT INTO source_state
-        (source, available, indexed_documents, fingerprint, last_scan_at, error)
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(source) DO UPDATE SET
-        available = excluded.available,
-        indexed_documents = excluded.indexed_documents,
-        fingerprint = excluded.fingerprint,
-        last_scan_at = excluded.last_scan_at,
-        error = excluded.error
-    `);
-
-    const transaction = this.#database.transaction(() => {
-      for (const result of results) {
-        const existingIds = this.#database
-          .prepare("SELECT id, source_id FROM documents WHERE source = ?")
-          .all(result.source)
-          .map((row: unknown) =>
-            z.object({ id: z.number(), source_id: z.string() }).parse(row),
-          );
-        const seenIds = new Set<string>();
-        const stateRow = this.#database
-          .prepare(
-            "SELECT fingerprint, available, error FROM source_state WHERE source = ?",
-          )
-          .get(result.source);
-        const previousState =
-          stateRow == null ? null : SourceStateRowSchema.parse(stateRow);
-        const changed = sourceNeedsIngest(
-          force,
-          result.fingerprint,
-          previousState,
-        );
-
-        if (changed && result.available && result.error === null) {
-          for (const document of result.documents) {
-            seenIds.add(document.sourceId);
-            const contentHash = hashDocument(
-              document.title,
-              document.dialogueText,
-              document.toolOutputText,
-            );
-            const existing = findExisting.get(
-              document.source,
-              document.sourceId,
-            );
-            const existingRow =
-              existing == null
-                ? null
-                : z
-                    .object({ id: z.number(), content_hash: z.string() })
-                    .parse(existing);
-            if (
-              existingRow !== null &&
-              existingRow.content_hash !== contentHash
-            ) {
-              deleteFts.run(existingRow.id);
-            }
-            upsert.run(
-              document.source,
-              document.sourceId,
-              document.title,
-              document.path,
-              document.workspace,
-              document.agent,
-              document.createdAt,
-              document.updatedAt,
-              document.runtimeId,
-              document.openingPromptHash,
-              contentHash,
-            );
-            if (existingRow?.content_hash !== contentHash) {
-              const replacement = z
-                .object({ id: z.number() })
-                .parse(findExisting.get(document.source, document.sourceId));
-              insertFts.run(
-                replacement.id,
-                document.title,
-                document.dialogueText,
-                document.toolOutputText,
-              );
-            }
-          }
-
-          for (const existingId of existingIds) {
-            if (!seenIds.has(existingId.source_id)) {
-              deleteFts.run(existingId.id);
-              deleteDocument.run(existingId.id);
-            }
-          }
-        }
-
-        updateState.run(
-          result.source,
-          result.available ? 1 : 0,
-          changed && result.error === null
-            ? result.documents.length
-            : this.count(result.source),
-          result.fingerprint,
-          result.error === null && result.available
-            ? new Date().toISOString()
-            : null,
-          result.error,
-        );
+    // The rebuild and its ingest share one transaction: a failed reindex
+    // rolls back to the previous index instead of leaving an empty one the
+    // unadvanced scan caches could never repopulate.
+    this.#database.transaction(() => {
+      if (force) {
+        rebuildSchemaCore(this.#database);
       }
-    });
-    transaction();
+      ingestResults(this.#database, results, force);
+    })();
     await secureIndexFiles(this.#indexPath);
   }
 
-  private count(source: HistorySourceName): number {
-    return z
-      .object({ count: z.number() })
-      .parse(
-        this.#database
-          .prepare("SELECT count(*) AS count FROM documents WHERE source = ?")
-          .get(source),
-      ).count;
-  }
-
   search(query: string, options: HistoryQueryOptions): IndexedHistoryRecord[] {
-    const clauses = ["history_fts MATCH ?"];
-    const values: (string | number)[] = [ftsQuery(query)];
-    if (options.since !== null) {
-      clauses.push("d.updated_at >= ?");
-      values.push(options.since);
-    }
-    if (options.source !== null) {
-      clauses.push("d.source = ?");
-      values.push(options.source);
-    }
-    if (options.openingPromptHash !== undefined) {
-      clauses.push("d.opening_prompt_hash = ?");
-      values.push(options.openingPromptHash);
-    }
-    addRuntimeExclusions(clauses, values, options.excludedRuntimes ?? []);
-    const pagination = options.limit === undefined ? "" : " LIMIT ? OFFSET ?";
-    if (options.limit !== undefined) {
-      values.push(options.limit, options.offset ?? 0);
-    }
+    const { clauses, values } = filterClauses(options);
+    clauses.unshift("history_fts MATCH ?");
+    values.unshift(ftsQuery(query));
+    const pagination = paginationClause(options, values);
     return this.#database
       .prepare(
         `SELECT d.id, d.source, d.source_id, d.title, d.path, d.workspace,
@@ -431,25 +334,8 @@ export class HistoryIndex {
   }
 
   recent(options: HistoryQueryOptions): IndexedHistoryRecord[] {
-    const clauses: string[] = [];
-    const values: (string | number)[] = [];
-    if (options.since !== null) {
-      clauses.push("d.updated_at >= ?");
-      values.push(options.since);
-    }
-    if (options.source !== null) {
-      clauses.push("d.source = ?");
-      values.push(options.source);
-    }
-    if (options.openingPromptHash !== undefined) {
-      clauses.push("d.opening_prompt_hash = ?");
-      values.push(options.openingPromptHash);
-    }
-    addRuntimeExclusions(clauses, values, options.excludedRuntimes ?? []);
-    const pagination = options.limit === undefined ? "" : " LIMIT ? OFFSET ?";
-    if (options.limit !== undefined) {
-      values.push(options.limit, options.offset ?? 0);
-    }
+    const { clauses, values } = filterClauses(options);
+    const pagination = paginationClause(options, values);
     return this.#database
       .prepare(
         `SELECT id, source, source_id, title, path, workspace, agent,
@@ -493,5 +379,17 @@ export class HistoryIndex {
           error: row.error,
         };
       });
+  }
+
+  usage(options: UsageQueryOptions): UsageReport {
+    return queryUsage(this.#database, options);
+  }
+
+  usageFingerprints(): UsageDocumentFingerprint[] {
+    return queryUsageFingerprints(this.#database);
+  }
+
+  usageEventsForDocument(documentId: number): ExportableUsageEvent[] {
+    return queryUsageEventsForDocument(this.#database, documentId);
   }
 }

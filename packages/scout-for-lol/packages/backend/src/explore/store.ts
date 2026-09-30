@@ -1,16 +1,12 @@
-import { z } from "zod";
 import {
   EXPLORE_TITLE_MAX_LENGTH,
-  ExploreConversationSchema,
-  ExploreMessageSchema,
-  ExploreTraceEntrySchema,
-  ReportAiPreviewSummarySchema,
-  VisualizationSnapshotSchema,
   type DiscordAccountId,
   type ExploreAnswer,
   type ExploreAttachPoint,
   type ExploreConversation,
   type ExploreMessage,
+  type ExploreMatchCard,
+  type ExploreLoadoutCard,
   type ExploreTraceEntry,
   type ExploreTranscript,
   type ReportAiPreviewSummary,
@@ -18,11 +14,17 @@ import {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
-  deepestLeafFrom,
-  pathToLeaf,
-  siblingsOf,
-  versionPosition,
-} from "#src/explore/tree.ts";
+  buildTranscript,
+  toConversation,
+  toMessage,
+  versionsOf,
+} from "#src/explore/store-mappers.ts";
+import { deepestLeafFrom } from "#src/explore/tree.ts";
+
+export type ExploreTurnStoreClient = Pick<
+  ExtendedPrismaClient,
+  "exploreConversation" | "exploreMessage"
+>;
 
 /**
  * Storage for explore conversations.
@@ -42,9 +44,6 @@ import {
  * an empty turn — a share link silently losing its chart is worse than an
  * error.
  */
-
-const StringArraySchema = z.array(z.string());
-const TraceArraySchema = z.array(ExploreTraceEntrySchema);
 
 /**
  * The conversation or message a turn refers to does not exist, or is not the
@@ -67,122 +66,6 @@ export class ExploreInvalidTurnError extends Error {
   }
 }
 
-type ConversationRow = {
-  id: string;
-  title: string;
-  shareToken: string | null;
-  sharedLeafId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type MessageRow = {
-  id: string;
-  parentId: string | null;
-  role: string;
-  content: string;
-  queryText: string | null;
-  caveats: string;
-  followUps: string;
-  preview: string | null;
-  visualization: string | null;
-  trace: string | null;
-  createdAt: Date;
-};
-
-function parseJsonColumn<T>(
-  raw: string | null,
-  schema: z.ZodType<T>,
-  column: string,
-): T | null {
-  if (raw === null) {
-    return null;
-  }
-  const parsed: unknown = JSON.parse(raw);
-  const result = schema.safeParse(parsed);
-  if (!result.success) {
-    throw new Error(
-      `Stored explore ${column} does not match its schema: ${result.error.message}`,
-    );
-  }
-  return result.data;
-}
-
-export function toMessage(
-  row: MessageRow,
-  versions: { siblingIds: string[]; index: number; count: number },
-): ExploreMessage {
-  return ExploreMessageSchema.parse({
-    id: row.id,
-    role: row.role,
-    parentId: row.parentId,
-    siblingIds: versions.siblingIds,
-    versionIndex: versions.index,
-    versionCount: versions.count,
-    content: row.content,
-    queryText: row.queryText,
-    caveats: parseJsonColumn(row.caveats, StringArraySchema, "caveats") ?? [],
-    followUps:
-      parseJsonColumn(row.followUps, StringArraySchema, "followUps") ?? [],
-    preview: parseJsonColumn(
-      row.preview,
-      ReportAiPreviewSummarySchema,
-      "preview",
-    ),
-    visualization: parseJsonColumn(
-      row.visualization,
-      VisualizationSnapshotSchema,
-      "visualization",
-    ),
-    trace: parseJsonColumn(row.trace, TraceArraySchema, "trace") ?? [],
-    createdAt: row.createdAt.toISOString(),
-  });
-}
-
-function toConversation(row: ConversationRow): ExploreConversation {
-  return ExploreConversationSchema.parse({
-    id: row.id,
-    title: row.title,
-    shareToken: row.shareToken,
-    sharedLeafId: row.sharedLeafId,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  });
-}
-
-/** Position and sibling ids, derived together so they cannot disagree. */
-export function versionsOf(
-  nodes: { id: string; parentId: string | null; createdAt: Date }[],
-  messageId: string,
-): { siblingIds: string[]; index: number; count: number } {
-  const position = versionPosition(nodes, messageId);
-  return {
-    siblingIds: siblingsOf(nodes, messageId).map((sibling) => sibling.id),
-    index: position.index,
-    count: position.count,
-  };
-}
-
-/**
- * Turn a loaded conversation into the transcript for one path.
- *
- * Every message of the conversation is loaded, not just the path — sibling
- * counts for the version arrows need the whole tree, and a conversation is
- * small enough that one query beats one per level.
- */
-function buildTranscript(
-  conversation: ConversationRow,
-  rows: MessageRow[],
-  leafId: string | null,
-): ExploreTranscript {
-  const resolvedLeaf = leafId ?? deepestLeafFrom(rows, null);
-  const path = pathToLeaf(rows, resolvedLeaf);
-  return {
-    conversation: toConversation(conversation),
-    messages: path.map((row) => toMessage(row, versionsOf(rows, row.id))),
-  };
-}
-
 /**
  * Derive a conversation title from its opening question.
  *
@@ -192,10 +75,9 @@ function buildTranscript(
  */
 export function titleFromQuestion(question: string): string {
   const collapsed = question.replaceAll(/\s+/g, " ").trim();
-  if (collapsed.length <= EXPLORE_TITLE_MAX_LENGTH) {
-    return collapsed;
-  }
-  return `${collapsed.slice(0, EXPLORE_TITLE_MAX_LENGTH - 1).trimEnd()}…`;
+  return collapsed.length <= EXPLORE_TITLE_MAX_LENGTH
+    ? collapsed
+    : `${collapsed.slice(0, EXPLORE_TITLE_MAX_LENGTH - 1).trimEnd()}…`;
 }
 
 export async function listExploreConversations(
@@ -211,7 +93,7 @@ export async function listExploreConversations(
 }
 
 export async function loadExploreTranscript(
-  prisma: ExtendedPrismaClient,
+  prisma: ExploreTurnStoreClient,
   conversationId: string,
   userId: DiscordAccountId,
   /**
@@ -225,14 +107,9 @@ export async function loadExploreTranscript(
     where: { id: conversationId, userId },
     include: { messages: true },
   });
-  if (row === null) {
-    return null;
-  }
-  return buildTranscript(
-    row,
-    row.messages,
-    leafIdOverride ?? row.currentLeafId,
-  );
+  return row === null
+    ? null
+    : buildTranscript(row, row.messages, leafIdOverride ?? row.currentLeafId);
 }
 
 /**
@@ -250,10 +127,9 @@ export async function loadSharedExploreTranscript(
     where: { shareToken },
     include: { messages: true },
   });
-  if (row === null) {
-    return null;
-  }
-  return buildTranscript(row, row.messages, row.sharedLeafId);
+  return row === null
+    ? null
+    : buildTranscript(row, row.messages, row.sharedLeafId);
 }
 
 /**
@@ -266,13 +142,15 @@ export async function loadSharedExploreTranscript(
  * cannot express, because the root's parent is null.
  */
 export async function startExploreTurn(
-  prisma: ExtendedPrismaClient,
+  prisma: ExploreTurnStoreClient,
   input: {
     conversationId: string | null;
     newId?: string;
     userId: DiscordAccountId;
     question: string;
     attach: ExploreAttachPoint;
+    /** Server-owned surface that creates a new conversation. */
+    origin?: "legacy" | "web" | "discord" | "voice";
   },
 ): Promise<{
   conversationId: string;
@@ -289,6 +167,7 @@ export async function startExploreTurn(
         ...(input.newId === undefined ? {} : { id: input.newId }),
         userId: input.userId,
         title: titleFromQuestion(input.question),
+        origin: input.origin ?? "legacy",
         messages: { create: { role: "user", content: input.question } },
       },
       include: { messages: true },
@@ -389,7 +268,7 @@ export async function startExploreTurn(
  * answer where a reader expects them.
  */
 export async function resolveRegenerateTarget(
-  prisma: ExtendedPrismaClient,
+  prisma: ExploreTurnStoreClient,
   input: {
     conversationId: string;
     userId: DiscordAccountId;
@@ -441,6 +320,16 @@ export async function appendExploreAnswer(
     answer: ExploreAnswer;
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
+    matchCards?: ExploreMatchCard[] | undefined;
+    loadoutCards?: ExploreLoadoutCard[] | undefined;
+    /**
+     * The guilds this turn resolved its capabilities from.
+     *
+     * Recorded per turn rather than per conversation: a conversation belongs
+     * to a person, but the tools a turn had depended on this, and replaying it
+     * with the wrong guild silently changes which tools existed.
+     */
+    guildIds: readonly string[];
     trace: ExploreTraceEntry[];
     /**
      * Move the visible branch only if it still names the leaf this run began
@@ -456,6 +345,7 @@ export async function appendExploreAnswer(
       parentId: input.parentMessageId,
       role: "assistant",
       content: input.answer.answer,
+      spokenContent: input.answer.spokenAnswer ?? null,
       queryText: input.answer.queryText,
       caveats: JSON.stringify(input.answer.caveats),
       followUps: JSON.stringify(input.answer.followUps),
@@ -469,6 +359,16 @@ export async function appendExploreAnswer(
         input.answer.includeVisualization && input.visualization !== null
           ? JSON.stringify(input.visualization)
           : null,
+      guildIds:
+        input.guildIds.length === 0 ? null : JSON.stringify(input.guildIds),
+      matchCards:
+        input.matchCards === undefined || input.matchCards.length === 0
+          ? null
+          : JSON.stringify(input.matchCards),
+      loadoutCards:
+        input.loadoutCards === undefined || input.loadoutCards.length === 0
+          ? null
+          : JSON.stringify(input.loadoutCards),
       trace: JSON.stringify(input.trace),
     },
   });
@@ -494,6 +394,71 @@ export async function appendExploreAnswer(
     select: { id: true, parentId: true, createdAt: true },
   });
   return toMessage(row, versionsOf(siblings, row.id));
+}
+
+/** Load speech text without adding it to the public transcript contract. */
+export async function loadExploreSpokenContent(
+  prisma: ExtendedPrismaClient,
+  input: {
+    conversationId: string;
+    messageId: string;
+    userId: DiscordAccountId;
+  },
+): Promise<string | null> {
+  const row = await prisma.exploreMessage.findFirst({
+    where: {
+      id: input.messageId,
+      conversationId: input.conversationId,
+      role: "assistant",
+      conversation: { userId: input.userId },
+    },
+    select: { spokenContent: true },
+  });
+  return row?.spokenContent ?? null;
+}
+
+/**
+ * Load the exact answer persisted by one durable Explore run. The run result
+ * is authoritative even when another tab changed the conversation's visible
+ * branch while that run was working.
+ */
+export async function loadExploreRunResult(
+  prisma: ExtendedPrismaClient,
+  input: {
+    runId: string;
+    conversationId: string;
+    userId: DiscordAccountId;
+  },
+): Promise<{ answer: ExploreMessage; spokenContent: string | null } | null> {
+  const run = await prisma.scoutInteractiveRun.findFirst({
+    where: {
+      id: input.runId,
+      kind: "explore",
+      ownerId: input.userId,
+      conversationId: input.conversationId,
+    },
+    select: { resultMessageId: true },
+  });
+  if (run?.resultMessageId === null || run?.resultMessageId === undefined) {
+    return null;
+  }
+  const row = await prisma.exploreMessage.findFirst({
+    where: {
+      id: run.resultMessageId,
+      conversationId: input.conversationId,
+      role: "assistant",
+      conversation: { userId: input.userId },
+    },
+  });
+  if (row === null) return null;
+  const siblings = await prisma.exploreMessage.findMany({
+    where: { conversationId: input.conversationId },
+    select: { id: true, parentId: true, createdAt: true },
+  });
+  return {
+    answer: toMessage(row, versionsOf(siblings, row.id)),
+    spokenContent: row.spokenContent,
+  };
 }
 
 /**
@@ -587,10 +552,7 @@ export async function shareExploreConversation(
     // The token is only real once the row carries it. Returning one from an
     // update that matched nothing — the conversation deleted in between —
     // would hand the owner a link that can only ever 404.
-    if (updated.count === 0) {
-      return null;
-    }
-    return shareToken;
+    return updated.count === 0 ? null : shareToken;
   });
 }
 

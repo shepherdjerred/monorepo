@@ -16,10 +16,9 @@ describe("withBoundedRetry", () => {
     let calls = 0;
     const attempt = vi.fn(() => {
       calls += 1;
-      if (calls < 3) {
-        return Promise.reject(new Error("transient"));
-      }
-      return Promise.resolve("recovered");
+      return calls < 3
+        ? Promise.reject(new Error("transient"))
+        : Promise.resolve("recovered");
     });
     const delays: number[] = [];
     const result = await withBoundedRetry(

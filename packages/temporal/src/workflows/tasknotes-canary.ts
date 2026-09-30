@@ -8,7 +8,7 @@ import type {
   ReportDeliveryActivities,
 } from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { reportActivityTaskQueue } from "./report-activity-queue.ts";
+import { reportActivityTaskQueue } from "./scout/report-activity-queue.ts";
 
 const activities = proxyActivities<TasknotesCanaryActivities>({
   taskQueue: TASK_QUEUES.INFRA,
@@ -16,10 +16,9 @@ const activities = proxyActivities<TasknotesCanaryActivities>({
   retry: { maximumAttempts: 3 },
 });
 function taskCountDrop(result: TasknotesCanaryResult): number | undefined {
-  if (result.baseline === undefined || result.baseline.tasks === 0) {
-    return undefined;
-  }
-  return (result.baseline.tasks - result.engine.tasks) / result.baseline.tasks;
+  return result.baseline === undefined || result.baseline.tasks === 0
+    ? undefined
+    : (result.baseline.tasks - result.engine.tasks) / result.baseline.tasks;
 }
 
 export function tasknotesReport(

@@ -1,5 +1,6 @@
 import { Client, Connection } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
+import { sanitizeHttpCredentialBreadcrumb } from "./observability/http-credentials.ts";
 import { DefaultLogger, NativeConnection, Runtime } from "@temporalio/worker";
 import type { Worker } from "@temporalio/worker";
 import { registerSchedules } from "./schedules/register-schedules.ts";
@@ -18,6 +19,7 @@ import { log as jsonLog } from "./observability/log.ts";
 import {
   parseWorkerRole,
   type WorkerRole,
+  workerRoleRunsAgent,
 } from "./shared/infra/worker-role.ts";
 import {
   parseTemporalBootstrap,
@@ -26,7 +28,7 @@ import {
 } from "./shared/infra/temporal-bootstrap.ts";
 import { getWorkerRoleContract } from "./worker-config.ts";
 import {
-  executionDomainForTaskQueue,
+  executionDomainForTaskQueues,
   parseTemporalBootstrapMetadata,
 } from "./shared/execution-metadata.ts";
 import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-client-interceptor.ts";
@@ -57,6 +59,7 @@ import {
   restoreGlitterCorpusMetricsAfterWorkerStart,
   restoreSeaweedFsMetricsAfterWorkerStart,
 } from "./observability/restore-startup-metrics.ts";
+import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -124,6 +127,7 @@ function initSentry(): void {
   }
 
   Sentry.init({
+    beforeBreadcrumb: sanitizeHttpCredentialBreadcrumb,
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
     release: Bun.env["VERSION"],
@@ -144,19 +148,12 @@ async function initializeTemporalTracing(
   bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>,
 ) {
   const taskQueues = roleContract.workers.map((worker) => worker.taskQueue);
-  const soleWorker = roleContract.workers.at(0);
-  if (soleWorker === undefined && roleContract.workers.length === 1) {
-    throw new Error("Single-worker Temporal role has no Worker configuration");
-  }
   const callGraphTracing = await initializeCallGraphTracing({
     environment: bootstrapMetadata.environment,
     workerRole: role,
   });
   const tracingRuntime = initializeTracing({
-    domain:
-      soleWorker !== undefined && roleContract.workers.length === 1
-        ? executionDomainForTaskQueue(soleWorker.taskQueue)
-        : "platform",
+    domain: executionDomainForTaskQueues(taskQueues),
     environment: bootstrapMetadata.environment,
     namespace,
     taskQueue: taskQueues.join(","),
@@ -252,12 +249,12 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
   let httpServers: EventBridgeHandle | undefined;
   if (shouldReconcile && options.roleContract.runsGateway) {
     await registerGatewaySchedules(options, clientConnection);
-    httpServers = startHttpServers(client);
+    httpServers = await startHttpServers(client);
   } else if (options.roleContract.runsGateway) {
     jsonLog("info", "Schedule reconciliation disabled", {
       namespace: options.namespace,
     });
-    httpServers = startHttpServers(client);
+    httpServers = await startHttpServers(client);
   }
   return {
     ...(httpServers === undefined ? {} : { httpServers }),
@@ -287,6 +284,9 @@ function localReleaseCommit(value: string | undefined): string {
 
 async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
+  if (workerRoleRunsAgent(role)) {
+    await prepareAgentChatRuntimeRoot();
+  }
   const bootstrap = parseTemporalBootstrap(Bun.env);
   const roleContract = getWorkerRoleContract(role);
   const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);

@@ -194,14 +194,11 @@ async function refreshUserToken(user: User): Promise<string> {
 export async function getFreshUserAccessToken(user: User): Promise<string> {
   const expiresAt = user.tokenExpiresAt;
   // Refresh if expired or within 60s of expiry.
-  if (
-    expiresAt !== null &&
+  return expiresAt !== null &&
     user.discordAccessToken !== null &&
     expiresAt.getTime() > Date.now() + 60_000
-  ) {
-    return user.discordAccessToken;
-  }
-  return refreshUserToken(user);
+    ? user.discordAccessToken
+    : refreshUserToken(user);
 }
 
 type CachedGuilds = {
@@ -247,7 +244,8 @@ export function devGuildOverride(input: {
     // snowflake back into consumer-facing UI. The id remains authoritative
     // for access checks; the ordinal only distinguishes multiple fixtures.
     name: `Dev Guild ${(index + 1).toString()}`,
-    icon: null,
+    icon:
+      id === "1337623164146155593" ? "847f22af55d2a9dc3ec87e66384a7d07" : null,
     owner: true,
     permissions: ADMINISTRATOR_BIT.toString(),
   }));

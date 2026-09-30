@@ -1,9 +1,15 @@
 import {
   agentActivities,
+  agentChatDispatchWorkerActivities,
+  agentChatReceiptWorkerActivities,
+  agentChatDeliveryActivities,
+  agentChatIngressActivities,
+  imessageAgentChatActivities,
   glitterContextWorkerActivities,
   glitterCorpusWorkerActivities,
   homeActivities,
   infraActivities,
+  miningResetWorkerActivities,
   repoActivities,
   reportActivities,
   scoutActivities,
@@ -16,6 +22,7 @@ import type { WorkerRole } from "./shared/infra/worker-role.ts";
 
 export type QueueWorkerRole =
   | "agent"
+  | "control"
   | "backup"
   | "billing"
   | "glitter-context"
@@ -47,6 +54,27 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
+    activities: agentChatIngressActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY,
+    activities: agentChatDeliveryActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE,
+    activities: imessageAgentChatActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
   {
     kind: "activity",
     role: "billing",
@@ -84,9 +112,30 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
   },
   {
     kind: "activity",
+    role: "infra",
+    taskQueue: TASK_QUEUES.MINING_RESET,
+    activities: miningResetWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
     role: "repo",
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     activities: repoActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "repo",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_DISPATCH,
+    activities: agentChatDispatchWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "repo",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_RECEIPTS,
+    activities: agentChatReceiptWorkerActivities,
     maxConcurrentActivityTaskExecutions: 1,
   },
   {
@@ -159,13 +208,10 @@ function roleOwnsDefinition(
   if (definition.kind === "workflow") {
     return false;
   }
-  if (role === "glitter") {
-    return (
-      definition.role === "glitter-corpus" ||
-      definition.role === "glitter-context"
-    );
-  }
-  return role === definition.role;
+  return role === "glitter"
+    ? definition.role === "glitter-corpus" ||
+        definition.role === "glitter-context"
+    : role === definition.role;
 }
 
 export type WorkerRoleContract = {

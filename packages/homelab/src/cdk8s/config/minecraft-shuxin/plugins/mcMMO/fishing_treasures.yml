@@ -638,32 +638,6 @@ Shake:
       XP: 0
       Drop_Chance: 100.0
       Drop_Level: 0
-  MUSHROOM_COW:
-    MILK_BUCKET:
-      Amount: 1
-      XP: 0
-      Drop_Chance: 5.0
-      Drop_Level: 0
-    MUSHROOM_STEW:
-      Amount: 1
-      XP: 0
-      Drop_Chance: 5.0
-      Drop_Level: 0
-    LEATHER:
-      Amount: 1
-      XP: 0
-      Drop_Chance: 30.0
-      Drop_Level: 0
-    BEEF:
-      Amount: 1
-      XP: 0
-      Drop_Chance: 30.0
-      Drop_Level: 0
-    RED_MUSHROOM:
-      Amount: 2
-      XP: 0
-      Drop_Chance: 30.0
-      Drop_Level: 0
   PIG:
     PORKCHOP:
       Amount: 1
@@ -841,4 +815,30 @@ Shake:
       Amount: 1
       XP: 0
       Drop_Chance: 98.0
+      Drop_Level: 0
+  MOOSHROOM:
+    MILK_BUCKET:
+      Amount: 1
+      XP: 0
+      Drop_Chance: 5.0
+      Drop_Level: 0
+    MUSHROOM_STEW:
+      Amount: 1
+      XP: 0
+      Drop_Chance: 5.0
+      Drop_Level: 0
+    LEATHER:
+      Amount: 1
+      XP: 0
+      Drop_Chance: 30.0
+      Drop_Level: 0
+    BEEF:
+      Amount: 1
+      XP: 0
+      Drop_Chance: 30.0
+      Drop_Level: 0
+    RED_MUSHROOM:
+      Amount: 2
+      XP: 0
+      Drop_Chance: 30.0
       Drop_Level: 0

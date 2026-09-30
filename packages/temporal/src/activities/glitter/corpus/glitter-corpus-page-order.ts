@@ -1,4 +1,4 @@
-import { compareSnowflakes } from "#shared/glitter-corpus-projection.ts";
+import { compareSnowflakes } from "#shared/glitter/glitter-corpus-projection.ts";
 
 export function assertDiscordPageOrder(input: {
   messageIds: readonly string[];

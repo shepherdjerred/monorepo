@@ -130,15 +130,12 @@ describe("queryMatchesByDateRange - single day", () => {
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_1003", date) })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
-    // Query for matches with puuid1 or puuid2
-    const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
-
-    expect(results.length).toBe(3);
-    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
-      "TEST_1001",
-      "TEST_1002",
-      "TEST_1003",
-    ]);
+    await expectRangeMatchIds(
+      date,
+      date,
+      [puuid1, puuid2],
+      ["TEST_1001", "TEST_1002", "TEST_1003"],
+    );
   });
 
   test("paginates through all S3 list results for a day", async () => {
@@ -169,6 +166,7 @@ describe("queryMatchesByDateRange - single day", () => {
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
       [puuid],
+      new Map(),
     );
 
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -209,6 +207,7 @@ describe("queryMatchesByDateRange - single day", () => {
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
       [puuid],
+      new Map(),
     );
 
     expect(results.map((m) => m.metadata.matchId)).toEqual(["TEST_2011"]);
@@ -258,14 +257,12 @@ describe("queryMatchesByDateRange - single day", () => {
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_2003", date) })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
-    // Query for matches with targetPuuid only
-    const results = await queryMatchesByDateRange(date, date, [targetPuuid]);
-
-    expect(results.length).toBe(2);
-    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
-      "TEST_2001",
-      "TEST_2003",
-    ]);
+    await expectRangeMatchIds(
+      date,
+      date,
+      [targetPuuid],
+      ["TEST_2001", "TEST_2003"],
+    );
   });
 
   test("returns empty array when no matches found", async () => {
@@ -279,11 +276,54 @@ describe("queryMatchesByDateRange - single day", () => {
       Contents: [],
     });
 
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results).toEqual([]);
   });
 });
+
+/**
+ * Stub S3 the way it actually serves a day range: one listing per day prefix,
+ * then the object for each key. Shared because several range tests set up the
+ * identical three-day shape and differ only in ids and dates.
+ */
+/**
+ * Run a range query and assert exactly which matches come back. Shared because
+ * every range test differs only in the window, the PUUIDs, and the expected ids.
+ */
+async function expectRangeMatchIds(
+  from: Date,
+  to: Date,
+  puuids: string[],
+  expected: string[],
+): Promise<void> {
+  const results = await queryMatchesByDateRange(from, to, puuids, new Map());
+  expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual(expected);
+}
+
+function stubMatchesByDay(
+  entries: readonly {
+    id: string;
+    date: Date;
+    match: ReturnType<typeof createMockMatch>;
+  }[],
+): void {
+  for (const { id, date, match } of entries) {
+    const key = generateMatchKey(id, date);
+    const prefix = `games/${date.toISOString().slice(0, 10).replaceAll("-", "/")}/`;
+    s3Mock
+      .on(ListObjectsV2Command, { Prefix: prefix })
+      .resolves({ Contents: [{ Key: key }] });
+    s3Mock
+      .on(GetObjectCommand, { Key: key })
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match)));
+  }
+}
 
 describe("queryMatchesByDateRange - date range", () => {
   test("returns matches across multiple days", async () => {
@@ -298,40 +338,18 @@ describe("queryMatchesByDateRange - date range", () => {
     const match2 = createMockMatch("TEST_3002", [puuid, "OTHER-2"], date2);
     const match3 = createMockMatch("TEST_3003", [puuid, "OTHER-3"], date3);
 
-    // Mock S3 responses for each day
-    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/15/" }).resolves({
-      Contents: [{ Key: generateMatchKey("TEST_3001", date1) }],
-    });
-
-    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/16/" }).resolves({
-      Contents: [{ Key: generateMatchKey("TEST_3002", date2) }],
-    });
-
-    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/17/" }).resolves({
-      Contents: [{ Key: generateMatchKey("TEST_3003", date3) }],
-    });
-
-    s3Mock
-      .on(GetObjectCommand, { Key: generateMatchKey("TEST_3001", date1) })
-      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
-
-    s3Mock
-      .on(GetObjectCommand, { Key: generateMatchKey("TEST_3002", date2) })
-      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
-
-    s3Mock
-      .on(GetObjectCommand, { Key: generateMatchKey("TEST_3003", date3) })
-      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
-
-    // Query the entire range
-    const results = await queryMatchesByDateRange(date1, date3, [puuid]);
-
-    expect(results.length).toBe(3);
-    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
-      "TEST_3001",
-      "TEST_3002",
-      "TEST_3003",
+    stubMatchesByDay([
+      { id: "TEST_3001", date: date1, match: match1 },
+      { id: "TEST_3002", date: date2, match: match2 },
+      { id: "TEST_3003", date: date3, match: match3 },
     ]);
+
+    await expectRangeMatchIds(
+      date1,
+      date3,
+      [puuid],
+      ["TEST_3001", "TEST_3002", "TEST_3003"],
+    );
   });
 
   test("handles partial date ranges", async () => {
@@ -361,14 +379,12 @@ describe("queryMatchesByDateRange - date range", () => {
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_4003", date3) })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
-    // Query only middle 2 days
-    const results = await queryMatchesByDateRange(date2, date3, [puuid]);
-
-    expect(results.length).toBe(2);
-    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
-      "TEST_4002",
-      "TEST_4003",
-    ]);
+    await expectRangeMatchIds(
+      date2,
+      date3,
+      [puuid],
+      ["TEST_4002", "TEST_4003"],
+    );
   });
 
   test("handles month boundary crossing", async () => {
@@ -382,38 +398,18 @@ describe("queryMatchesByDateRange - date range", () => {
     const match2 = createMockMatch("TEST_5002", [puuid], date2);
     const match3 = createMockMatch("TEST_5003", [puuid], date3);
 
-    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/31/" }).resolves({
-      Contents: [{ Key: generateMatchKey("TEST_5001", date1) }],
-    });
-
-    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/02/01/" }).resolves({
-      Contents: [{ Key: generateMatchKey("TEST_5002", date2) }],
-    });
-
-    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/02/02/" }).resolves({
-      Contents: [{ Key: generateMatchKey("TEST_5003", date3) }],
-    });
-
-    s3Mock
-      .on(GetObjectCommand, { Key: generateMatchKey("TEST_5001", date1) })
-      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
-
-    s3Mock
-      .on(GetObjectCommand, { Key: generateMatchKey("TEST_5002", date2) })
-      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
-
-    s3Mock
-      .on(GetObjectCommand, { Key: generateMatchKey("TEST_5003", date3) })
-      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
-
-    const results = await queryMatchesByDateRange(date1, date3, [puuid]);
-
-    expect(results.length).toBe(3);
-    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
-      "TEST_5001",
-      "TEST_5002",
-      "TEST_5003",
+    stubMatchesByDay([
+      { id: "TEST_5001", date: date1, match: match1 },
+      { id: "TEST_5002", date: date2, match: match2 },
+      { id: "TEST_5003", date: date3, match: match3 },
     ]);
+
+    await expectRangeMatchIds(
+      date1,
+      date3,
+      [puuid],
+      ["TEST_5001", "TEST_5002", "TEST_5003"],
+    );
   });
 });
 
@@ -421,7 +417,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
   test("returns empty array when PUUIDs array is empty", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
 
-    const results = await queryMatchesByDateRange(date, date, []);
+    const results = await queryMatchesByDateRange(date, date, [], new Map());
 
     expect(results).toEqual([]);
   });
@@ -455,7 +451,12 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .callsFake(() => createMockGetObjectResponse("{ invalid json content"));
 
     // Query should skip invalid JSON and return valid match
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(1);
     expect(results[0]?.metadata.matchId).toBe("TEST_6001");
@@ -509,15 +510,12 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_7003", date) })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
-    // Query for puuid1 and puuid2
-    const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
-
-    expect(results.length).toBe(3); // All matches contain at least one of the PUUIDs
-    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
-      "TEST_7001",
-      "TEST_7002",
-      "TEST_7003",
-    ]);
+    await expectRangeMatchIds(
+      date,
+      date,
+      [puuid1, puuid2],
+      ["TEST_7001", "TEST_7002", "TEST_7003"],
+    );
   });
 
   test("handles S3 GetObject errors gracefully", async () => {
@@ -546,7 +544,12 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .rejects(new Error("S3 GetObject failed"));
 
     // Query should handle error and return valid match
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(1);
     expect(results[0]?.metadata.matchId).toBe("TEST_8001");
@@ -558,7 +561,7 @@ describe("queryMatchesByDateRange - S3 configuration", () => {
     // This tests the early return for empty PUUIDs
     const date = new Date("2025-01-15T12:00:00Z");
 
-    const results = await queryMatchesByDateRange(date, date, []);
+    const results = await queryMatchesByDateRange(date, date, [], new Map());
 
     expect(results).toEqual([]);
   });
@@ -581,7 +584,12 @@ describe("queryMatchesByDateRange - data verification", () => {
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_9001", date) })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match)));
 
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(1);
     const retrieved = results[0];

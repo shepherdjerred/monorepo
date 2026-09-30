@@ -14,24 +14,27 @@ import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import {
   EXPLORE_STREAM_PATH,
   handleExploreRoute,
-} from "#src/explore/http-route.ts";
-import { exploreRunManager } from "#src/explore/run-manager.ts";
+} from "#src/explore/http/http-route.ts";
+import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { handleVersion } from "#src/http/version.ts";
-import { handleTournamentCallback } from "#src/http/tournament-callback.ts";
 import {
   classifyMethod,
   classifyRoute,
   statusClass,
 } from "#src/http/route-label.ts";
-import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
-import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
-import { handleCustomAuthRoutes } from "#src/customs/activity-auth-http.ts";
+import {
+  httpRequestDuration,
+  httpRequestsTotal,
+} from "#src/metrics/platform/web.ts";
+import { handleBryanBucksControl } from "#src/http/bryan-bucks-control.ts";
+import { handleCustomAuthRoutes } from "#src/customs/activity/activity-auth-http.ts";
 import {
   CUSTOMS_SOCKET_PATH,
   customSocketHandlers,
   upgradeCustomSocket,
   type CustomSocketData,
 } from "#src/customs/socket.ts";
+import { handleScoutClientRoute } from "#src/scout-client/http.ts";
 
 const logger = createLogger("http-server");
 
@@ -67,15 +70,15 @@ const EXPECTED_CLIENT_ERROR_CODES = new Set<string>([
  * CORS headers for API responses.
  *
  * We only emit CORS headers when the request's `Origin` matches the
- * configured web-app origin (i.e. the SPA). For every other caller — Tauri
- * desktop clients, server-to-server traffic, or anything cross-origin — we
+ * configured web-app origin (i.e. the SPA). For every other caller —
+ * server-to-server traffic or anything cross-origin — we
  * return no CORS headers at all. Browsers refuse the response, which is
  * what we want for cross-origin browser callers; non-browser clients
  * ignore CORS entirely.
  *
  * `Authorization` is intentionally NOT in `Access-Control-Allow-Headers`:
- * the SPA uses cookies + X-CSRF-Token, and the desktop client isn't a
- * browser. Add it back deliberately if a future browser flow needs Bearer.
+ * the SPA uses cookies + X-CSRF-Token. Add it back deliberately if a future
+ * browser flow needs Bearer.
  */
 function corsHeadersFor(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin");
@@ -182,6 +185,9 @@ const server = Bun.serve<CustomSocketData>({
  * {@link withHttpMetrics}, including the 404 fallback and error paths.
  */
 async function dispatch(request: Request, url: URL): Promise<Response> {
+  const scoutClientResponse = await handleScoutClientRoute(request, url);
+  if (scoutClientResponse !== null) return scoutClientResponse;
+
   const customsAuthResponse = await handleCustomAuthRoutes(request, url);
   if (customsAuthResponse !== null) return customsAuthResponse;
 
@@ -220,31 +226,11 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
     return handleVersion(request, corsHeadersFor(request));
   }
 
-  // Riot tournament provider callback.
-  //
-  // Registering a provider REQUIRES a callback URL, so this endpoint has to
-  // exist. It acknowledges and discards, and mutates nothing.
-  //
-  // That restraint is the point. tournament-v5 has no shared secret and no
-  // signature, so the URL is the only credential — a handler that wrote
-  // anything would be an unauthenticated injection path into the canonical S3
-  // match store. It would also be a second ingest path competing with the
-  // match-history cursor, whose S3 write is what gates the cursor advance. And
-  // the stub emits no callbacks at all, so none of it could be tested before
-  // the key gains tournament access.
-  //
-  // What it does buy: proof the URL is live if Riot ever validates it at
-  // registration, and real latency data (callback arrival vs. games/by-code
-  // resolution) to justify promoting this to an accelerator later.
-  if (url.pathname === "/api/riot/tournament-callback") {
-    return handleTournamentCallback(request);
-  }
-
-  // Retained only for Workflow histories that predate the embedded-Activity
-  // patch. The route is absent unless its private bootstrap token is present.
-  const weeklyParlayResponse = await handleWeeklyParlayControl(request, url);
-  if (weeklyParlayResponse !== null) {
-    return weeklyParlayResponse;
+  // Internal Bryan Bucks analytics reconciliation, driven by the Temporal
+  // analytics Schedule. Absent unless its private bootstrap token is present.
+  const bryanBucksResponse = await handleBryanBucksControl(request, url);
+  if (bryanBucksResponse !== null) {
+    return bryanBucksResponse;
   }
 
   // Metrics endpoint for Prometheus
@@ -282,7 +268,7 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   // environment=dev AND the explicit, default-off ENABLE_DEV_LOGIN flag, so a
   // beta/prod deploy that omits ENVIRONMENT (which defaults to "dev") still
   // fails closed rather than exposing an unauthenticated session-minting
-  // endpoint. Set only by scripts/dev-web.ts.
+  // endpoint. Set only by scripts/dev/dev-web.ts.
   if (
     configuration.environment === "dev" &&
     configuration.enableDevLogin &&

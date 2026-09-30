@@ -1,77 +1,154 @@
-import { Glob } from "bun";
-import path from "node:path";
 import type { AppleReceipt, AppleReceiptItem } from "./types.ts";
+import { loadEmailIndex, readIndexedEmail } from "../mail/index.ts";
+import { extractTextBody } from "../mail/parse.ts";
 import { log } from "../logger.ts";
 
 const MONTHS: Record<string, string> = {
-  Jan: "01",
-  Feb: "02",
-  Mar: "03",
-  Apr: "04",
-  May: "05",
-  Jun: "06",
-  Jul: "07",
-  Aug: "08",
-  Sep: "09",
-  Oct: "10",
-  Nov: "11",
-  Dec: "12",
+  jan: "01",
+  feb: "02",
+  mar: "03",
+  apr: "04",
+  may: "05",
+  jun: "06",
+  jul: "07",
+  aug: "08",
+  sep: "09",
+  oct: "10",
+  nov: "11",
+  dec: "12",
 };
 
+// Returns "" when the text carries no recognizable date so callers fail
+// closed instead of letting NaN date math pass a window check.
+//
+// Months arrive both abbreviated ("Sep 10, 2024") and spelled out
+// ("August 30, 2026"), so the first three letters do the lookup.
 export function parseAppleDate(text: string): string {
-  const match = /(\w{3})\s+(\d{1,2}),\s+(\d{4})/.exec(text);
-  if (!match) return text;
-  const month = MONTHS[match[1] ?? ""];
-  if (month === undefined) return text;
+  const match = /([a-z]{3,9})\.?\s+(\d{1,2}),\s+(\d{4})/i.exec(text);
+  if (!match) return "";
+  const month = MONTHS[(match[1] ?? "").slice(0, 3).toLowerCase()];
+  if (month === undefined) return "";
   const day = (match[2] ?? "").padStart(2, "0");
   const year = match[3] ?? "";
   return `${year}-${month}-${day}`;
 }
 
-function extractPlainTextBody(emlContent: string): string {
-  const boundaryMatch = /boundary="([^"]+)"/.exec(emlContent);
-  if (!boundaryMatch) {
-    const headerEnd = emlContent.indexOf("\n\n");
-    return headerEnd === -1 ? emlContent : emlContent.slice(headerEnd + 2);
-  }
+// Apple has emailed three receipt layouts, and each field has to be read
+// through a list of fallbacks rather than one pattern:
+//
+//  - the original plain text labels every field with a colon
+//    ("ORDER ID:", "DATE:", "TOTAL:"), one item per line;
+//  - a later HTML layout drops the colons ("DATE Aug 11, 2026") and strips to
+//    a single flat line, which is why a pattern requiring the colon rejected
+//    the receipt outright;
+//  - the current subscription-renewal layout has no TOTAL row at all. It
+//    prints the date as "Receipt August 30, 2026" and leaves the charged
+//    amount to be read as subtotal plus tax.
+//
+// `\bTOTAL` cannot match inside "Subtotal" — there is no word boundary
+// between "b" and "t" — so the labelled total stays unambiguous.
+const ORDER_ID = /ORDER\s+ID:?\s*([A-Z0-9]{6,})/i;
+const LABELLED_DATE = /\bDATE:?\s+([a-z]{3,9}\.?\s+\d{1,2},\s+\d{4})/i;
+const RECEIPT_DATE = /\bReceipt\s+([a-z]{3,9}\s+\d{1,2},\s+\d{4})/i;
+const LABELLED_TOTAL = /\bTOTAL:?\s*\$?([\d,]+\.\d{2})/i;
+const SUBTOTAL = /\bSubtotal:?\s*\$?([\d,]+\.\d{2})/i;
+const TAX = /\bTax:?\s*\$?([\d,]+\.\d{2})/i;
 
-  const boundary = boundaryMatch[1] ?? "";
-  const parts = emlContent.split(`--${boundary}`);
-
-  for (const part of parts) {
-    if (/Content-Type:\s*text\/plain/i.test(part)) {
-      const bodyStart = part.indexOf("\n\n");
-      if (bodyStart !== -1) {
-        return part.slice(bodyStart + 2);
-      }
-    }
-  }
-
-  const headerEnd = emlContent.indexOf("\n\n");
-  return headerEnd === -1 ? emlContent : emlContent.slice(headerEnd + 2);
+function money(raw: string | undefined): number {
+  const value = Number.parseFloat((raw ?? "0").replaceAll(",", ""));
+  return Number.isFinite(value) ? value : 0;
 }
 
-export function parseAppleReceipt(emlContent: string): AppleReceipt | null {
-  const body = extractPlainTextBody(emlContent);
+function parseReceiptDate(body: string): string {
+  const labelled = LABELLED_DATE.exec(body);
+  if (labelled) return parseAppleDate(labelled[1] ?? "");
+  const printed = RECEIPT_DATE.exec(body);
+  return printed ? parseAppleDate(printed[1] ?? "") : "";
+}
 
-  const orderMatch = /ORDER\s+ID:\s*(\S+)/i.exec(body);
+// What the card was actually charged, which is what the matcher compares
+// against the transaction.
+function parseReceiptTotal(body: string): number {
+  const labelled = LABELLED_TOTAL.exec(body);
+  if (labelled) return money(labelled[1]);
+  const subtotal = SUBTOTAL.exec(body);
+  if (!subtotal) return 0;
+  const tax = TAX.exec(body);
+  return money(subtotal[1]) + (tax === null ? 0 : money(tax[1]));
+}
+
+export function parseAppleReceipt(body: string): AppleReceipt | null {
+  const orderMatch = ORDER_ID.exec(body);
   if (!orderMatch) return null;
 
-  const dateMatch = /DATE:\s*(.+)/i.exec(body);
-  const totalMatch = /TOTAL:\s*\$?([\d,.]+)/i.exec(body);
+  const lineItems = parseAppleItems(body);
 
-  const orderId = orderMatch[1] ?? "";
-  const date = dateMatch ? parseAppleDate(dateMatch[1]?.trim() ?? "") : "";
-  const total = totalMatch
-    ? Number.parseFloat((totalMatch[1] ?? "0").replaceAll(",", ""))
-    : 0;
+  return {
+    orderId: orderMatch[1] ?? "",
+    date: parseReceiptDate(body),
+    total: parseReceiptTotal(body),
+    // The flat layouts put the whole receipt on one line, so there are no
+    // per-item lines to read.
+    items: lineItems.length > 0 ? lineItems : parseFlatItems(body),
+  };
+}
 
-  const items = parseAppleItems(body);
+// Where the purchased items stop and the payment summary begins. Some
+// layouts print no subtotal and go straight from the item to the total.
+const ITEM_REGION_END = /\bSubtotal\b|\bBilling and Payment\b|\bTOTAL\b/i;
+// The last header field before the items start.
+const ITEM_REGION_START = /DOCUMENT\s+NO\.?:?\s*\d+|APPLE\s+ACCOUNT:?\s*\S+/gi;
+const PRICE = /\$(\d+(?:,\d{3})*\.\d{2})/g;
+// A separate non-global copy: `exec` on a global regex advances its lastIndex,
+// and matchAll would then inherit the advanced position.
+const FIRST_PRICE = /\$\d+(?:,\d{3})*\.\d{2}/;
+// A title runs until the first of these: everything after is receipt
+// furniture, not the name of what was bought. "… App Jerred's MacBook Pro"
+// names the device the purchase was made on, which is not part of the item.
+// "App Store" is the section label, not that marker, so it is excluded.
+const TITLE_END =
+  /\s+(?:Renews\b|In-App Purchase\b|Report a Problem\b|(?:iOS\s+)?App\s+(?!Store\b)\S)/i;
+const SECTION_LABEL = /^(?:App|Mac App|iTunes|Apple|Book)\s*Store\s+/i;
+const SUBSCRIPTION = /\bRenews\b|\((?:Monthly|Yearly|Annual)\)/i;
 
-  return { orderId, date, total, items };
+// Items from a receipt that stripped to a single line.
+function parseFlatItems(body: string): AppleReceiptItem[] {
+  const end = ITEM_REGION_END.exec(body);
+  const head = body.slice(0, end?.index ?? body.length);
+
+  // The items begin at the last header field that still precedes the first
+  // price. "Apple Account" also appears among the footer links, so a marker
+  // found after the prices is footer text rather than a header.
+  const firstPrice = FIRST_PRICE.exec(head)?.index ?? head.length;
+  let start = 0;
+  for (const marker of head.matchAll(ITEM_REGION_START)) {
+    const markerEnd = marker.index + marker[0].length;
+    if (markerEnd <= firstPrice) start = markerEnd;
+  }
+  const region = head.slice(start);
+
+  const items: AppleReceiptItem[] = [];
+  let cursor = 0;
+  for (const match of region.matchAll(PRICE)) {
+    const segment = region.slice(cursor, match.index);
+    cursor = match.index + match[0].length;
+
+    const price = money(match[1]);
+    const title = (segment.split(TITLE_END)[0] ?? "")
+      .replaceAll(/\s+/g, " ")
+      .trim()
+      .replace(SECTION_LABEL, "")
+      .trim();
+    if (title === "" || price === 0) continue;
+    if (SKIP_TITLES.has(title.toLowerCase())) continue;
+
+    items.push({ title, price, isSubscription: SUBSCRIPTION.test(segment) });
+  }
+  return items;
 }
 
 const SKIP_TITLES = new Set(["tax", "subtotal", "total", "total:"]);
+const SUBSCRIPTION_LINE = /\b(?:subscription|renews|monthly|yearly|annual)\b/i;
 
 function parseAppleItems(body: string): AppleReceiptItem[] {
   const items: AppleReceiptItem[] = [];
@@ -88,9 +165,10 @@ function parseAppleItems(body: string): AppleReceiptItem[] {
     if (title === "" || price === 0) continue;
     if (SKIP_TITLES.has(title.toLowerCase())) continue;
 
-    const nextLine = (lines[i + 1] ?? "").trim().toLowerCase();
-    const isSubscription =
-      nextLine.includes("subscription") || nextLine.includes("renews");
+    // The billing period and the renewal date are printed on separate lines
+    // under the item, so one line of lookahead is not enough.
+    const following = `${lines[i + 1] ?? ""} ${lines[i + 2] ?? ""}`;
+    const isSubscription = SUBSCRIPTION_LINE.test(following);
 
     items.push({ title, price, isSubscription });
   }
@@ -98,35 +176,34 @@ function parseAppleItems(body: string): AppleReceiptItem[] {
   return items;
 }
 
-export async function findAppleEmails(mailDir: string): Promise<string[]> {
-  const results: string[] = [];
-  const glob = new Glob("**/*.eml");
+const APPLE_RECEIPT_SUBJECT = /your receipt from apple/i;
 
-  for await (const file of glob.scan(mailDir)) {
-    const filePath = path.join(mailDir, file);
-    const content = await Bun.file(filePath).text();
+// Loads Apple receipts from the shared MailMate index — every account and
+// mailbox, with decoded (quoted-printable etc.) bodies.
+export async function loadAppleReceipts(): Promise<AppleReceipt[]> {
+  const index = await loadEmailIndex();
+  const receiptEmails = index.filter((e) =>
+    APPLE_RECEIPT_SUBJECT.test(e.subject),
+  );
+  log.info(`Found ${String(receiptEmails.length)} Apple receipt emails`);
 
-    if (/Subject:.*Your receipt from Apple/i.test(content)) {
-      results.push(filePath);
-    }
-  }
-
-  log.info(`Found ${String(results.length)} Apple receipt emails`);
-  return results;
-}
-
-export async function loadAppleReceipts(
-  mailDir: string,
-): Promise<AppleReceipt[]> {
-  const emailPaths = await findAppleEmails(mailDir);
   const receipts: AppleReceipt[] = [];
-
-  for (const emailPath of emailPaths) {
-    const content = await Bun.file(emailPath).text();
-    const receipt = parseAppleReceipt(content);
+  let moved = 0;
+  for (const entry of receiptEmails) {
+    const raw = await readIndexedEmail(entry);
+    if (raw === undefined) {
+      moved++;
+      continue;
+    }
+    const receipt = parseAppleReceipt(extractTextBody(raw));
     if (receipt) {
       receipts.push(receipt);
     }
+  }
+  if (moved > 0) {
+    log.info(
+      `${String(moved)} indexed messages have moved since the index was built`,
+    );
   }
 
   log.info(`Parsed ${String(receipts.length)} Apple receipts`);

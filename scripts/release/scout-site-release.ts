@@ -7,7 +7,7 @@ import { optionalEnv, requireEnv, run } from "../lib/run.ts";
 import {
   readScoutPostHogSite,
   requireMarketingIdentifiers,
-} from "../lib/scout-analytics-config.ts";
+} from "../lib/scout/scout-analytics-config.ts";
 import {
   CANONICAL_DIGEST_PATTERN,
   parseScoutReleaseState,
@@ -19,8 +19,8 @@ import {
   siteReleaseIdentity,
   validateProdPinState,
   type ScoutReleaseState,
-} from "../lib/scout-release-state.ts";
-import { reconcileLegacyScoutProd } from "../lib/scout-legacy-site-storage.ts";
+} from "../lib/scout/scout-release-state.ts";
+import { reconcileLegacyScoutProd } from "../lib/scout/scout-legacy-site-storage.ts";
 import {
   archiveScout,
   assertScoutArchiveBytes,
@@ -30,7 +30,7 @@ import {
   reconcileScoutProd,
   readScoutStateByInput,
   SCOUT_RELEASE_WORK_DIR,
-} from "../lib/scout-site-storage.ts";
+} from "../lib/scout/scout-site-storage.ts";
 
 const SITE_PACKAGE_DIR = "packages/scout-for-lol";
 const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";
@@ -73,7 +73,7 @@ async function marketingIdentifiers(): Promise<{
 }
 
 async function resolveGitSha(): Promise<string> {
-  const fromCi = optionalEnv("BUILDKITE_COMMIT");
+  const fromCi = optionalEnv("CI_COMMIT_SHA");
   if (fromCi !== null) {
     return fromCi;
   }
@@ -102,17 +102,19 @@ export async function hashReleaseInputFiles(
 }
 
 /**
- * Content-address a Scout release by its build inputs. `sourceCommit` is part
- * of the identity on purpose: the site build bakes the commit into the
- * deployable bytes (`VITE_GIT_SHA` / `PUBLIC_GIT_SHA` in `buildSite`), so the
- * bytes are commit-dependent. Leaving the commit out let two commits with
- * otherwise-identical inputs share an archive identity yet produce different
- * bytes, tripping the immutable-archive guard — and, once a build was canceled
- * mid-archive, the orphaned record wedged every later release. Binding the
- * identity to the commit keeps content-addressing honest: same identity ⇒ same
- * bytes.
+ * Content-address a Scout release by its build inputs. `sourceCommit` and
+ * `version` are part of the identity on purpose: `buildSite` bakes both into
+ * the deployable bytes (`VITE_GIT_SHA` / `PUBLIC_GIT_SHA` and
+ * `VITE_APP_VERSION` / `PUBLIC_APP_VERSION`), so the bytes are
+ * commit- and version-dependent. Leaving either out lets two releases share
+ * an archive identity yet produce different bytes, tripping the
+ * immutable-archive guard — and, for version, leaving a reused archive
+ * displaying a stale `2.0.0-<build>` after `retagScoutReleaseState`.
+ * Binding the identity to those baked fields keeps content-addressing
+ * honest: same identity ⇒ same bytes.
  */
 export function computeReleaseInputDigest(inputs: {
+  version: string;
   sourceCommit: string;
   backendImageDigest: string;
   sourceInputsDigest: string;
@@ -123,7 +125,8 @@ export function computeReleaseInputDigest(inputs: {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(
     JSON.stringify({
-      schema: "scout-release-input/v3",
+      schema: "scout-release-input/v4",
+      version: inputs.version,
       sourceCommit: inputs.sourceCommit,
       backendImageDigest: inputs.backendImageDigest,
       sourceInputsDigest: inputs.sourceInputsDigest,
@@ -174,20 +177,22 @@ async function buildSite(
   const env: Record<string, string> = {
     VITE_SENTRY_RELEASE: identity,
     PUBLIC_SENTRY_RELEASE: identity,
-    VITE_APP_VERSION: identity,
-    PUBLIC_APP_VERSION: identity,
+    // Footer / mismatch chip: 2.0.0-<build>. Sentry and the archive keep
+    // `identity` (scout-site@sha256:…), which is the content-addressed id.
+    VITE_APP_VERSION: state.version,
+    PUBLIC_APP_VERSION: state.version,
     VITE_GIT_SHA: sourceCommit,
     PUBLIC_GIT_SHA: sourceCommit,
     VITE_CONTRACT_HASH: await contractHash(),
     VITE_POSTHOG_PROJECT_TOKEN: posthogSite.projectToken,
-    VITE_POSTHOG_API_HOST: posthogSite.apiHost,
-    VITE_POSTHOG_ASSET_HOST: posthogSite.assetHost,
+    VITE_POSTHOG_API_HOST: posthogSite.proxyHost,
+    VITE_POSTHOG_ASSET_HOST: posthogSite.proxyHost,
     VITE_POSTHOG_SITE_KEY: posthogSite.key,
     VITE_POSTHOG_SITE_DOMAIN: posthogSite.domain,
     VITE_POSTHOG_SESSION_REPLAY: String(posthogSite.sessionReplay),
     PUBLIC_POSTHOG_PROJECT_TOKEN: posthogSite.projectToken,
-    PUBLIC_POSTHOG_API_HOST: posthogSite.apiHost,
-    PUBLIC_POSTHOG_ASSET_HOST: posthogSite.assetHost,
+    PUBLIC_POSTHOG_API_HOST: posthogSite.proxyHost,
+    PUBLIC_POSTHOG_ASSET_HOST: posthogSite.proxyHost,
     PUBLIC_POSTHOG_SITE_KEY: posthogSite.key,
     PUBLIC_POSTHOG_SITE_DOMAIN: posthogSite.domain,
     PUBLIC_POSTHOG_SESSION_REPLAY: String(posthogSite.sessionReplay),
@@ -246,7 +251,9 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
     throw new Error(`source commit is not canonical: ${sourceCommit}`);
   }
   const marketing = await marketingIdentifiers();
+  const version = `2.0.0-${buildNumber.toString()}`;
   const releaseInputDigest = computeReleaseInputDigest({
+    version,
     sourceCommit,
     backendImageDigest,
     sourceInputsDigest: await releaseSourceDigest(),
@@ -257,7 +264,7 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
   const provisional = ScoutReleaseStateSchema.parse({
     schema: "scout-release-state/v1",
     buildNumber,
-    version: `2.0.0-${buildNumber.toString()}`,
+    version,
     sourceCommit,
     backendImageDigest,
     siteArchiveDigest: PLACEHOLDER_DIGEST,

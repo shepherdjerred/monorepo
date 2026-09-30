@@ -1,0 +1,24 @@
+name: TheStorm
+version: '${version}'
+main: com.shepherdjerred.thestorm.TheStormPlugin
+api-version: '26.2'
+description: The Storm (ts-mc.net) gameplay
+authors: [ShepherdJerred]
+website: https://ts-mc.net
+dependencies:
+  server:
+    # The world module requires Multiverse to load wilds and mining before TheStorm starts.
+    Multiverse-Core:
+      load: BEFORE
+      required: true
+      join-classpath: false
+    # Tracks grants levels as LuckPerms groups; LuckPerms must be enabled first.
+    LuckPerms:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    # Towns draws claim markers when BlueMap is present.
+    BlueMap:
+      load: BEFORE
+      required: false
+      join-classpath: true

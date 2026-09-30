@@ -1,0 +1,37 @@
+{
+  "name": "@shepherdjerred/the-storm-brain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./rcon": {
+      "types": "./src/rcon.ts",
+      "import": "./src/rcon.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --target=bun --outdir=dist --external=mineflayer",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "test": "bun --no-install --bun vitest --config ../../../vitest.config.ts run src",
+    "lint": "bunx eslint --cache .",
+    "pilot": "bun run src/cli.ts",
+    "test:ci": "bun ../../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../scripts/ci/run-ci-test.ts"
+  },
+  "dependencies": {
+    "@shepherdjerred/config": "workspace:*",
+    "@shepherdjerred/feature-flags": "workspace:*",
+    "@shepherdjerred/llm-models": "workspace:*",
+    "mineflayer": "4.39.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.1"
+  }
+}

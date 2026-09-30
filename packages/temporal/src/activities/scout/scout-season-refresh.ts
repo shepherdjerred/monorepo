@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import nodePath from "node:path";
 import { simpleGit } from "simple-git";
@@ -269,6 +269,8 @@ async function prepareWorkdir(input: ScoutSeasonRefreshInput): Promise<{
   const tempDir = await mkdtemp(
     nodePath.join(tmpdir(), "scout-season-refresh-"),
   );
+  // The isolated provider must traverse the parent of its owned checkout.
+  await chmod(tempDir, 0o711);
   const repoDir = `${tempDir}/monorepo`;
   await simpleGit().clone(REPO_URL, repoDir, [
     "--branch",

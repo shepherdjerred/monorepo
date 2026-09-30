@@ -18,7 +18,7 @@ import type {
   OnboardingStepKind,
 } from "@scout-for-lol/data";
 import { track } from "#src/lib/analytics.ts";
-import { trpcClient } from "#src/lib/trpc.ts";
+import { trpcClient } from "#src/lib/query/trpc.ts";
 
 export function reportOnboardingStep(step: OnboardingStepKind): void {
   track("onboarding_step", { step });

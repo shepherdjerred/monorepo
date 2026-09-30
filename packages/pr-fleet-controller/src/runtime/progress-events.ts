@@ -140,8 +140,7 @@ export function classifyFleetFailure(error: unknown): FleetFailureClass {
   if (/aborted|abort/i.test(message)) {
     return "command-aborted";
   }
-  if (/operator input|waiting-for-answer/i.test(message)) {
-    return "operator-input-required";
-  }
-  return "unknown";
+  return /operator input|waiting-for-answer/i.test(message)
+    ? "operator-input-required"
+    : "unknown";
 }

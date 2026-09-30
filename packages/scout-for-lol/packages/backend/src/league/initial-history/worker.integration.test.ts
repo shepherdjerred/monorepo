@@ -80,8 +80,10 @@ vi.doMock("#src/report-lake/compactor.ts", () => ({ runReportLakeFold }));
 
 const { getPuuidsBlockedFromLivePolling } =
   await import("#src/league/initial-history/live-polling.ts");
-const { enqueueInitialMatchHistoryImport } =
-  await import("#src/league/initial-history/enqueue.ts");
+const {
+  enqueueInitialMatchHistoryImport,
+  initialMatchHistoryImportLockWaiters,
+} = await import("#src/league/initial-history/enqueue.ts");
 const { resetInitialHistoryWorkerStateForTests, runInitialHistoryImportTick } =
   await import("#src/league/initial-history/worker.ts");
 
@@ -183,7 +185,18 @@ async function verifyConcurrentReenqueueWins(): Promise<void> {
   await transactionReady.promise;
 
   const workerTick = runInitialHistoryImportTick(prisma, initialRequestAt);
-  await new Promise((resolve) => setTimeout(resolve, 25));
+  // The worker must already be blocked on THIS puuid's advisory lock before we
+  // commit. A fixed sleep lets a slow claim start after the re-enqueue, so the
+  // tick legitimately advances the new job to `matches`. So does any wait that
+  // can be satisfied by someone else's lock: `pg_locks` is cluster-wide and the
+  // suites of this package share one Postgres server, so a count of all
+  // contended advisory locks is answered by a neighbouring suite — or another
+  // worktree — and this test then races exactly as the sleep did.
+  await vi.waitFor(async () => {
+    expect(
+      await initialMatchHistoryImportLockWaiters(prisma, importedPuuid),
+    ).toBeGreaterThan(0);
+  }, 10_000);
   releaseTransaction.resolve(undefined);
   await Promise.all([accountCreation, workerTick]);
 

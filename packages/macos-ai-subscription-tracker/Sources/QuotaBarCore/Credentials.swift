@@ -2,65 +2,6 @@ public import Foundation
 import SQLite3
 import Security
 
-public protocol KeychainClient: Sendable {
-  func read(service: String, account: String?) throws -> Data?
-  func write(_ data: Data, service: String, account: String) throws
-  func delete(service: String, account: String) throws
-}
-
-public struct SystemKeychainClient: KeychainClient, Sendable {
-  public init() {}
-
-  public func read(service: String, account: String?) throws -> Data? {
-    var query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecReturnData as String: true,
-      kSecMatchLimit as String: kSecMatchLimitOne,
-    ]
-    if let account { query[kSecAttrAccount as String] = account }
-    var result: AnyObject?
-    let status = SecItemCopyMatching(query as CFDictionary, &result)
-    if status == errSecItemNotFound { return nil }
-    guard status == errSecSuccess else { throw QuotaError.keychain(status: status) }
-    guard let data = result as? Data else { throw QuotaError.keychain(status: errSecDecode) }
-    return data
-  }
-
-  public func write(_ data: Data, service: String, account: String) throws {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: account,
-    ]
-    let attributes: [String: Any] = [
-      kSecValueData as String: data,
-      kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-    ]
-    let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-    if updateStatus == errSecSuccess { return }
-    guard updateStatus == errSecItemNotFound else {
-      throw QuotaError.keychain(status: updateStatus)
-    }
-    var item = query
-    for (key, value) in attributes { item[key] = value }
-    let addStatus = SecItemAdd(item as CFDictionary, nil)
-    guard addStatus == errSecSuccess else { throw QuotaError.keychain(status: addStatus) }
-  }
-
-  public func delete(service: String, account: String) throws {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: account,
-    ]
-    let status = SecItemDelete(query as CFDictionary)
-    guard status == errSecSuccess || status == errSecItemNotFound else {
-      throw QuotaError.keychain(status: status)
-    }
-  }
-}
-
 public actor ManualCredentialStore: CredentialStore {
   public static let service = "com.sjerred.QuotaBar.credentials"
   private let keychain: any KeychainClient
@@ -110,8 +51,11 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let fileManager: FileManager
   private let homeDirectory: URL
   private let kimiCodeHome: URL?
+  private let grokHome: URL?
   private let cursorStateDatabase: URL?
-  private let claudeKeychain: any KeychainClient
+  private let claudeKeychain: any KeychainReading
+  private let museKeychain: any KeychainReading
+  private let museKeychainCache: MuseKeychainCredentialCache
   private let selectionLock = NSLock()
   private var rejectedTokens: [ProviderID: Set<String>] = [:]
 
@@ -119,22 +63,27 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     fileManager: FileManager = .default,
     homeDirectory: URL? = nil,
     kimiCodeHome: URL? = nil,
+    grokHome: URL? = nil,
     cursorStateDatabase: URL? = nil,
-    claudeKeychain: any KeychainClient = SystemKeychainClient()
+    claudeKeychain: any KeychainReading = SecurityToolKeychainClient(),
+    museKeychain: any KeychainReading = SecurityToolKeychainClient(),
+    dateProvider: @escaping @Sendable () -> Date = { Date.now }
   ) {
     self.fileManager = fileManager
     self.homeDirectory = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
-    if let kimiCodeHome {
-      self.kimiCodeHome = kimiCodeHome
-    } else if let configured = ProcessInfo.processInfo.environment["KIMI_CODE_HOME"],
-      !configured.isEmpty
-    {
-      self.kimiCodeHome = URL(fileURLWithPath: configured, isDirectory: true)
-    } else {
-      self.kimiCodeHome = nil
-    }
+    self.kimiCodeHome = Self.configuredHome(kimiCodeHome, environmentKey: "KIMI_CODE_HOME")
+    self.grokHome = Self.configuredHome(grokHome, environmentKey: "GROK_HOME")
     self.cursorStateDatabase = cursorStateDatabase
     self.claudeKeychain = claudeKeychain
+    self.museKeychain = museKeychain
+    self.museKeychainCache = MuseKeychainCredentialCache(dateProvider: dateProvider)
+  }
+
+  private static func configuredHome(_ explicit: URL?, environmentKey: String) -> URL? {
+    if let explicit { return explicit }
+    guard let configured = ProcessInfo.processInfo.environment[environmentKey], !configured.isEmpty
+    else { return nil }
+    return URL(fileURLWithPath: configured, isDirectory: true)
   }
 
   public func credential(
@@ -152,7 +101,14 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     case .antigravity: credential = nil
     case .cursor: credential = try readCursor(excluding: excludedTokens)
     case .kimi: credential = try readCurrentKimiCredential(excluding: excludedTokens)
-    case .grok: credential = try readOpenCode(provider: provider, excluding: excludedTokens)
+    case .muse: credential = try readMuse(excluding: excludedTokens)
+    case .grok:
+      credential = try GrokCLICredentialDiscovery.read(
+        grokHome: grokHome,
+        homeDirectory: homeDirectory,
+        fileManager: fileManager,
+        excluding: excludedTokens
+      )
     }
     guard let credential else { throw QuotaError.credentialsMissing(provider) }
     return try credential.requireCurrent(for: provider)
@@ -455,44 +411,79 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   }
 }
 
-public actor CompositeCredentialStore: CredentialStore {
-  private let manual: ManualCredentialStore
-  private let local: any CredentialStore
-  private var rejectedManualTokens: [ProviderID: Set<String>] = [:]
-
-  public init(manual: ManualCredentialStore, local: any CredentialStore) {
-    self.manual = manual
-    self.local = local
+private extension LocalCredentialStore {
+  var museAuthFileURL: URL {
+    let environment = ProcessInfo.processInfo.environment
+    if let override = environment["MUSE_AUTH_PATH"], !override.isEmpty {
+      return URL(fileURLWithPath: override)
+    }
+    if let configured = environment["XDG_CONFIG_HOME"], !configured.isEmpty {
+      return URL(fileURLWithPath: configured, isDirectory: true)
+        .appendingPathComponent("muse/auth.json")
+    }
+    return homeDirectory.appendingPathComponent(".config/muse/auth.json")
   }
 
-  public func credential(
-    for provider: ProviderID,
-    rejecting rejectedCredential: ProviderCredential?
-  ) async throws -> ProviderCredential {
-    guard provider.supportsManualCredentialOverride else {
-      return try await local.credential(for: provider, rejecting: rejectedCredential)
+  func readMuse(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
+    guard let file = try decodeFile(MuseAuthFile.self, at: museAuthFileURL, provider: .muse)
+    else { return nil }
+    let source = museAuthFileURL.path
+    if let token = file.providers?.meta?.oauthToken {
+      let credential = try makeCredential(token, source: source)
+      return excludedTokens.contains(credential.accessToken) ? nil : credential
     }
-    // Remember every manual token rejected during the current replacement sequence, not just
-    // the one passed to this call — a caller (e.g. GrokProvider/CodexProvider) that restarts a
-    // whole fetch across several 401s only ever excludes its most recent credential, so without
-    // this history an already-rejected manual token would be handed out again once a later
-    // local token is rejected, oscillating between the two forever instead of exhausting.
-    //
-    // `rejecting: nil` only happens at the start of a fresh top-level fetch (never mid-restart,
-    // which always excludes the credential that just failed), so it marks a new replacement
-    // sequence and resets the history. Without this, one rejected manual token would suppress
-    // the saved override for the app's entire lifetime, surviving a transient failure or even
-    // the user removing and re-saving the same credential.
-    var rejected = rejectedCredential == nil ? [] : (rejectedManualTokens[provider] ?? [])
-    if let rejectedCredential {
-      rejected.insert(rejectedCredential.accessToken)
+    guard file.providers?.meta?.usesKeychain == true else { return nil }
+    // `muse` rewrites auth.json alongside the keychain item on rotation, so the file mtime is
+    // a silent rotation signal: reuse the cached token between rotations instead of prompting.
+    let fileMTime = museAuthFileMTime()
+    if let cached = museKeychainCache.credential(
+      fileMTime: fileMTime, excluding: excludedTokens
+    ) {
+      return cached
     }
-    rejectedManualTokens[provider] = rejected
-    if let manualCredential = try await manual.credentialIfPresent(for: provider),
-      !rejected.contains(manualCredential.accessToken)
-    {
-      return manualCredential
+    if museKeychainCache.isReadSuppressed(fileMTime: fileMTime) {
+      throw QuotaError.commandFailed("security")
     }
-    return try await local.credential(for: provider, rejecting: rejectedCredential)
+    let data: Data?
+    do {
+      data = try museKeychain.read(service: "ai.meta.dev.credentials", account: "meta")
+    } catch {
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      throw error
+    }
+    guard let data else {
+      museKeychainCache.clear()
+      return nil
+    }
+    let bundle: MuseKeychainBundle
+    do {
+      bundle = try decode(MuseKeychainBundle.self, from: data, provider: .muse)
+    } catch {
+      // A paid-for read that decoded to nothing usable backs off like any failed read.
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      throw error
+    }
+    guard let token = bundle.oauthToken else {
+      museKeychainCache.clear()
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      return nil
+    }
+    let credential = try makeCredential(token, source: "macOS Keychain")
+    museKeychainCache.store(credential, fileMTime: fileMTime)
+    guard !excludedTokens.contains(credential.accessToken) else {
+      // The keychain still holds the token that just failed: suppress re-reads until rotation
+      // instead of prompting for the same unusable token on every poll.
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      return nil
+    }
+    return credential
+  }
+
+  private func museAuthFileMTime() -> Date? {
+    guard
+      let attributes = try? fileManager.attributesOfItem(atPath: museAuthFileURL.path),
+      let mtime = attributes[.modificationDate] as? Date
+    else { return nil }
+    return mtime
   }
 }

@@ -1,35 +1,25 @@
 import { generateText } from "ai";
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
+  providerCredentialsFromEnv,
   generateValidatedObject,
   StructuredOutputUsageError,
-  openRouterWebSearchTool,
-  type OpenRouterRuntime,
+  webSearchTool,
+  type LlmRuntime,
 } from "@shepherdjerred/llm-runtime";
-import { z } from "zod";
-import type { MonarchCategory } from "../monarch/types.ts";
-import type {
-  AmazonBatchResponse,
-  AmazonOrderInput,
-  VenmoClassificationResponse,
-} from "./types.ts";
-import {
-  buildSystemPrompt,
-  buildAmazonBatchPrompt,
-  buildVenmoClassificationPrompt,
-} from "./prompt.ts";
-import type { VenmoMatch } from "../venmo/matcher.ts";
+import type { z } from "zod";
+import { buildSystemPrompt } from "./prompt.ts";
 import type { UsageSummary } from "../usage.ts";
 import { createUsageTracker } from "../usage.ts";
 
-let runtime: OpenRouterRuntime | undefined;
+let runtime: LlmRuntime | undefined;
 let modelId = "claude-sonnet-5";
 let tracker: ReturnType<typeof createUsageTracker> | undefined;
 let webSearchEnabled = false;
 
-export function initLlm(apiKey: string, model?: string): void {
-  runtime = createOpenRouterRuntime({
-    apiKey,
+export function initLlm(model?: string): void {
+  runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "monarch",
     appName: "Monarch Transaction Classifier",
   });
@@ -46,7 +36,7 @@ export function getUsageSummary(): UsageSummary {
   return tracker.getSummary();
 }
 
-export function getRuntime(): OpenRouterRuntime {
+export function getRuntime(): LlmRuntime {
   if (runtime === undefined) throw new Error("Call initLlm() first");
   return runtime;
 }
@@ -64,23 +54,6 @@ export function isWebSearchEnabled(): boolean {
   return webSearchEnabled;
 }
 
-const AmazonBatchSchema = z.object({
-  orders: z.array(
-    z.object({
-      orderIndex: z.number(),
-      items: z.array(
-        z.object({
-          title: z.string(),
-          price: z.number(),
-          categoryId: z.string(),
-          categoryName: z.string(),
-        }),
-      ),
-      needsSplit: z.boolean(),
-    }),
-  ),
-});
-
 type LlmResponse = {
   usage: { inputTokens: number; outputTokens: number };
 };
@@ -89,7 +62,7 @@ async function researchPrompt(userPrompt: string): Promise<{
   evidence: string;
   usage: LlmResponse["usage"];
 }> {
-  const openRouter = getRuntime();
+  const llm = getRuntime();
   if (!webSearchEnabled) {
     return {
       evidence: "Research disabled.",
@@ -97,15 +70,15 @@ async function researchPrompt(userPrompt: string): Promise<{
     };
   }
   const result = await generateText({
-    model: openRouter.languageModel(modelId, ["tools", "webSearch"]),
+    model: llm.languageModel(modelId, ["tools", "webSearch"]),
     system:
       "Research unfamiliar merchants for a personal-finance classification task. Return concise factual evidence only; do not attempt to emit the final JSON contract.",
     prompt: userPrompt,
     tools: {
-      web_search: openRouterWebSearchTool(openRouter, 20),
+      web_search: webSearchTool(llm, modelId, 20),
     },
     maxOutputTokens: 4096,
-    ...openRouter.callOptions({ workload: "monarch.batch.research" }),
+    ...llm.callOptions({ workload: "monarch.batch.research", model: modelId }),
   });
   const usage = {
     inputTokens: result.usage.inputTokens ?? 0,
@@ -115,23 +88,15 @@ async function researchPrompt(userPrompt: string): Promise<{
   return { evidence: result.text.slice(-40_000), usage };
 }
 
-export async function callLlmAndParse<T>(
-  prompt: string,
-  schema: z.ZodType<T>,
-): Promise<T> {
-  const { result } = await callLlmAndParseWithUsage(prompt, schema);
-  return result;
-}
-
 export async function callLlmAndParseWithUsage<T>(
   prompt: string,
   schema: z.ZodType<T>,
 ): Promise<{ result: T; usage: LlmResponse["usage"] }> {
-  const openRouter = getRuntime();
+  const llm = getRuntime();
   const research = await researchPrompt(prompt);
   let finalized;
   try {
-    finalized = await generateValidatedObject(openRouter, {
+    finalized = await generateValidatedObject(llm, {
       model: modelId,
       schema,
       schemaName: "monarch_classification",
@@ -155,34 +120,6 @@ export async function callLlmAndParseWithUsage<T>(
   };
   tracker?.record(finalized.usage.tokens.input, finalized.usage.tokens.output);
   return { result: finalized.object, usage };
-}
-
-const VenmoClassificationSchema = z.object({
-  payments: z.array(
-    z.object({
-      note: z.string(),
-      amount: z.number(),
-      categoryId: z.string(),
-      categoryName: z.string(),
-      confidence: z.enum(["high", "medium", "low"]),
-    }),
-  ),
-});
-
-export async function classifyVenmoPayments(
-  categories: MonarchCategory[],
-  matches: VenmoMatch[],
-): Promise<VenmoClassificationResponse> {
-  const prompt = buildVenmoClassificationPrompt(categories, matches);
-  return callLlmAndParse(prompt, VenmoClassificationSchema);
-}
-
-export async function classifyAmazonBatch(
-  categories: MonarchCategory[],
-  orders: AmazonOrderInput[],
-): Promise<AmazonBatchResponse> {
-  const prompt = buildAmazonBatchPrompt(categories, orders);
-  return callLlmAndParse(prompt, AmazonBatchSchema);
 }
 
 type SplitItem = {

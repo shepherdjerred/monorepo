@@ -12,8 +12,8 @@ GitOps release can go wrong.
 ```mermaid
 sequenceDiagram
   accTitle: Homelab release sequence
-  accDescr: One Buildkite release command suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, preflights and reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
-  participant BK as Buildkite
+  accDescr: One CI release command suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, preflights and reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
+  participant BK as CI
   participant CM as ChartMuseum
   participant Root as apps Application
   participant Child as child Applications
@@ -51,7 +51,7 @@ without starting an automatic child operation. Keeping unchanged resources on
 the source path is significant: Argo applies the chart-owned object itself,
 rather than treating a local manifest as an alternate desired tree whose result
 may be reported as applied without updating a cluster-scoped prerequisite. The
-[manifest-override batcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd-manifest-overrides.ts)
+[manifest-override batcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd-manifest-overrides.ts)
 splits only the rewritten Application requests at 750 kB. ArgoCD v3.4.5's
 [operation-state constructor](https://github.com/argoproj/argo-cd/blob/564b94973b284b8de98da7cee6eeade2cb941e46/controller/sync.go#L76-L81)
 copies the original request into status. In this cluster, a request near the
@@ -74,11 +74,11 @@ revision, but disagreement between them is a hard identity failure.
 The waves are an architecture contract, not incident-specific ordering.
 Admission policy objects land first, followed by the 1Password controller and
 items, infrastructure providers, certificate resources, the root Application,
-Kueue, dependent configuration, Buildkite, and leaf workloads. This also makes
+Kueue, dependent configuration, CI, and leaf workloads. This also makes
 an ordinary manual global sync safe: all members of a wave apply before ArgoCD
 waits on health, and no prerequisite is hidden behind a leaf workload.
 
-Disabling every child creates a second ordering obligation: Buildkite must
+Disabling every child creates a second ordering obligation: the release must
 explicitly reconcile external children as well as charts published by this
 repository. The release renders the exact root revision again, orders its
 Application manifests by numeric sync wave, and combines two revision sources.
@@ -119,14 +119,14 @@ exempting a missing Secret because cert-manager
 [records a failed request as `Issuing=False`](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/controller/certificates/issuing/issuing_controller.go#L408-L430)
 while the missing-Secret Ready condition can remain unchanged. A different
 false Ready reason or failed issuance stays `Degraded`. The
-[five-minute release operation timeout](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml#L1547-L1556)
+[five-minute release operation timeout](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
 still fails a Certificate that never becomes ready. Ignoring Certificate health
 would let later CA and workload waves race a missing trust Secret, so the
 release does not use that shortcut.
 
 Both request shapes remain isolated by numeric sync wave and exact resource
 identity. After explicit child reconciliation completes, the
-[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 reapplies the exact desired tree in isolated wave batches. This restores every
 child auto-sync policy without letting an unhealthy earlier wave hide a later
 one. Unchanged resources again use the exact source, while the self-managed root
@@ -137,6 +137,10 @@ That final operation must report the root Application and every prune candidate
 captured before it began; other desired-resource coverage comes from the
 completed batches. A resumed exact prune does not classify new candidates from
 the post-prune tree, because successful candidates are absent by design.
+`finalize-async-sync` for `apps` uses that same prune-result boundary: it
+terminates only a marked full-source prune, requires the root Application in
+the applied result, and reads the prune-candidate inventory persisted on that
+operation instead of reclassifying the post-prune tree.
 Aggregate child health remains deferred to the scoped release gate.
 
 This split proof is deliberate. The root chart contains its own Application,
@@ -151,6 +155,26 @@ terminal failures remain `Progressing` or `Degraded`, while a current
 `Synced`/`Healthy` state wins over stale failed operation history. Only the
 recursive `apps` Application carries `IgnoreHealthCheck=true`; child
 Application health remains an ordering and acceptance signal.
+
+`IgnoreHealthCheck=true` only removes a resource from an Application's aggregate
+health. ArgoCD's sync engine still gates each wave on the health it computes for
+every resource in that wave, so the root chart's own `apps` Application reads
+`Progressing` for as long as its operation runs and the final full-source
+operation can never reach `Succeeded` by itself. That is why it is terminated
+once applied, and why the self-reference stays in the structural wave rather
+than after the children it manages: the operation has to prove the root apply
+and its prune candidates without waiting on later-wave child health, which the
+completed batches already cover.
+
+Termination of that self-wait is re-requested rather than requested once.
+ArgoCD terminates an operation by writing `Terminating` into
+`status.operationState`, and the application controller rewrites that whole
+object — phase included — whenever it persists operation progress, so a request
+can be accepted and then silently discarded. The release command repeats the
+request on every poll that still observes a `Running` operation. A discarded
+termination costs more than one build: it leaves the root Application
+permanently busy, and every later build fails its first root sync with `another
+operation is already in progress`.
 
 ## Why manual global sync preserves child options
 
@@ -187,6 +211,14 @@ before submitting the child operation, so the operator sees the exact resource
 and field instead of a partially applied sync. The preflight does not invent a
 fallback or silently replace resources; remediation remains an explicit source
 or operator decision.
+
+A target resource may make that decision explicit with both `Force=true` and
+`Replace=true` in its `argocd.argoproj.io/sync-options` annotation. Argo deletes
+and recreates that one resource instead of patching it, so immutable-field and
+probe-handler update checks do not apply to it. The preflight still checks
+repository image downgrades, and either option by itself remains insufficient.
+This exception is deliberately resource-scoped; Application-wide replacement
+does not bypass the check.
 
 Every desired automated policy includes an explicit `enabled` boolean. The
 [release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
@@ -244,10 +276,10 @@ independently unhealthy. Waiting synchronously on the root would mean waiting on
 every one of them, and a single permanently unhealthy child would hold the
 release open forever.
 
-So the [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+So the [main release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
 separates root application from release-scoped health. One
-[atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
-retains the exact Buildkite request identity while ArgoCD applies the root
+[atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
+retains the exact CI request identity while ArgoCD applies the root
 revision. It sends every desired wave as bounded exact-source selections plus
 local overrides only where policy is deliberately rewritten. It compares each
 batch's reported group, kind, and name identities with its exact selection and
@@ -266,8 +298,8 @@ asynchronously. A second process can read before the accepted operation appears.
 Keeping submission and finalization together lets the command poll through that
 gap and distinguish stale state from its own operation.
 
-Buildkite retries reuse the build UUID. The
-[operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+A CI retry reuses the request identity. The
+[operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 adopts only the same request ID and revision. It refuses any unrelated active
 operation. For the root workflow, the active resource selection must also equal
 one exact desired batch or the unselected final prune. Each owned operation
@@ -279,8 +311,8 @@ adoptable as the final prune only when that marker says `prune` and Argo's prune
 flag is true, so an older full-source operation cannot borrow prior-batch proof.
 A generated per-operation UUID binds the top-level live operation to its
 completed status. This lets a retry accept a stable, fully applied result while
-rejecting stale status from an earlier POST with the same Buildkite identity.
-Recovery is the same `release-root` command with the same Buildkite UUID, not a
+rejecting stale status from an earlier POST with the same request identity.
+Recovery is the same `release-root` command with the same request id, not a
 second public finalizer command. It recognizes only operations whose request
 identity, exact revision, selected resources, phase marker, and prune mode fit
 the expected step. An unrelated operation remains a hard failure.
@@ -289,7 +321,7 @@ After termination, the top-level live operation is authoritative. Its absence
 means the health wait is gone even if `status.operationState` still says
 `Running` or `Terminating`; a different operation UUID in live or completed
 state still proves replacement and fails the release. Natural success uses the
-[same boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts):
+[same boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts):
 a `Succeeded` status does not finish the command until the live operation
 clears.
 
@@ -326,7 +358,10 @@ a misleading Dockerfile from hiding what the unauthenticated kubelet and the
 published artifact would expose later.
 
 Application image selection uses the newest `main` commit whose `images` and
-`version-commit-back` jobs both passed as its comparison base.
+`version-commit-back` jobs both passed as its comparison base. The image job
+fetches a bounded window of `main` history before validating that commit,
+because its Woodpecker clone contains only the current commit. If the prior
+release is older than that window, selection rebuilds every image.
 
 The image publisher reads current comparison digests and commit-back keys from
 the structured `packages/version-catalog/src/catalog.json` source of truth.
@@ -343,8 +378,12 @@ evidence.
 
 So a later pin commit cancels the remaining build without invalidating that
 evidence. Changes after the image-release commit still rebuild their affected
-closures, and an unchanged pin-only successor does not rebuild and repin the
-same application forever.
+closures. The catalog's `catalog.json` is deployment state: image publishing
+reads it to compare and write pins, while production Dockerfiles leave it out
+of the application layers. The Temporal operator rollout command reads the
+catalog from its checkout. Image selection therefore ignores changes to that
+JSON file but still selects changes to the catalog parser. A pin
+commit cannot rebuild and repin the same application forever.
 
 ## Related
 

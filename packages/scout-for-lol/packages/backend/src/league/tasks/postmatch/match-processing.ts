@@ -4,7 +4,7 @@ import type {
   MatchId,
 } from "@scout-for-lol/data/index.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
-import { updateLastProcessedMatch } from "#src/database/index.ts";
+import { updateLastProcessedMatch } from "#src/database/account-cursors.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 
