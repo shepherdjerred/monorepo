@@ -14,7 +14,7 @@ import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   fetchTimelineFramePage,
-  fetchTimelineFramesAt,
+  fetchTimelineFramesAtIndex,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
@@ -140,7 +140,7 @@ const coverage: TimelineCoverageLakeRow = {
   event_count: 3,
   participant_count: 2,
   first_frame_timestamp_ms: 60_000,
-  last_frame_timestamp_ms: 120_000,
+  last_frame_timestamp_ms: 900_023,
 };
 
 beforeAll(async () => {
@@ -206,8 +206,8 @@ beforeAll(async () => {
     ],
     timelineFrames: [
       frame({
-        index: 1,
-        timestamp: 120_000,
+        index: 15,
+        timestamp: 900_023,
         participantId: 2,
         puuid: playerTwo,
       }),
@@ -315,10 +315,13 @@ describe("consumer profile lake reads", () => {
       lakeDir,
     });
     expect(laterFrames.map((row) => row.participant_id)).toEqual([2]);
+  });
+
+  test("selects the minute-15 frame despite Riot timestamp jitter", async () => {
     expect(
-      await fetchTimelineFramesAt({
+      await fetchTimelineFramesAtIndex({
         matchId,
-        timestampMs: 120_000,
+        frameIndex: 15,
         lakeDir,
       }),
     ).toEqual([

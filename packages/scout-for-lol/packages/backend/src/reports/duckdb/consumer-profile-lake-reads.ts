@@ -400,15 +400,15 @@ const LaneDeltaFrameSchema = z.object({
 
 export type LaneDeltaFrame = z.infer<typeof LaneDeltaFrameSchema>;
 
-export async function fetchTimelineFramesAt(options: {
+export async function fetchTimelineFramesAtIndex(options: {
   matchId: string;
-  timestampMs: number;
+  frameIndex: number;
   lakeDir?: string;
 }): Promise<LaneDeltaFrame[]> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
   const source = buildTimelineParticipantFramesSource(files, {
-    sql: "match_id = ? AND frame_timestamp_ms = ?",
-    params: [scalarParam(options.matchId), scalarParam(options.timestampMs)],
+    sql: "match_id = ? AND frame_index = ?",
+    params: [scalarParam(options.matchId), scalarParam(options.frameIndex)],
   });
   if (source === undefined) return [];
   return await runSource({

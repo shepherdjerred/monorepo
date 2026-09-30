@@ -6,7 +6,8 @@ import type {
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
 
-const LANE_DELTA_TIMESTAMP_MS = 900_000;
+export const LANE_DELTA_MINUTE = 15;
+const LANE_DELTA_TIMESTAMP_MS = LANE_DELTA_MINUTE * 60_000;
 
 export type RoleMatchup = {
   role: Lane;
