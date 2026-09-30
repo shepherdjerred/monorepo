@@ -423,6 +423,7 @@ final class GravesPaperTest {
         .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
     harness.until(() -> harness.store.pendingDrops().join().size() == 3);
     harness.until(() -> graveBlock().getType() == Material.AIR);
+    harness.until(() -> harness.world.getEntitiesByClass(ItemDisplay.class).size() == 3);
 
     assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
     assertThat(harness.world.getEntitiesByClass(ItemDisplay.class)).hasSize(3);
