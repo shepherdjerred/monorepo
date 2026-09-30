@@ -12,6 +12,14 @@
 - `generated/helm/` — **committed** TypeScript types for Helm chart values
 - `imports/` — generated Kubernetes/CRD types (`bun run update-imports`)
 
+## Static-site SPA routes
+
+`src/misc/s3-static-site.ts` generates Caddy routes for S3-backed sites. A
+configured SPA prefix rewrites extensionless document paths to its index object
+before the S3 lookup, so deep links return HTTP 200. Paths ending in a file
+extension keep their original lookup and return HTTP 404 when the asset is
+missing. The S3 error page remains available for that 404 response.
+
 ## Helm value types
 
 The committed types in `generated/helm/` are the source of truth — CI does not regenerate them. When bumping a chart version in `src/versions.ts`, regenerate and commit:
