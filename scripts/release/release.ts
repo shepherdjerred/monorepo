@@ -123,7 +123,7 @@ async function main(): Promise<void> {
   const env = auth.env;
 
   try {
-    // The canonical Buildkite checkout intentionally uses --no-tags. Fetch the
+    // The canonical CI checkout intentionally uses --no-tags. Fetch the
     // authoritative package tags before the fail-closed eligibility preflight.
     await fetchNpmPackageTags(root, env);
     const releasePrTarget = await resolveReleaseTarget(root, env);

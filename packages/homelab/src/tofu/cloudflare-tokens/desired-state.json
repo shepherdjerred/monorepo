@@ -2,9 +2,9 @@
   "$schema": "../platform-desired-state.schema.json",
   "platform": "cloudflare-tokens",
   "cloudflare_api_tokens": {
-    "buildkite": {
+    "woodpecker": {
       "supersedes_id": "409e97aba1f4bacff237d260edebbfd1",
-      "name": "monorepo Buildkite Cloudflare 2026-08",
+      "name": "monorepo Woodpecker Cloudflare 2026-08",
       "policies": [
         {
           "effect": "allow",

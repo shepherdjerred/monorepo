@@ -231,7 +231,7 @@ export async function imageRuntimeFingerprint(
   // without diagnostics (an unretryable exit 1) and misclassify a pinned-image
   // failure as `pin-unresolvable-bumped`, changing the promotion outcome on a
   // temporary blip. Preserve the diagnostics as a TransientError so `runMain`
-  // exits EXIT_TRANSIENT and Buildkite retries the job.
+  // exits EXIT_TRANSIENT for the CI retry wrapper.
   if (bakeFailureIsTransient(diagnostics)) {
     throw new TransientError(
       `Transient failure inspecting ${image}: ${detail}`,

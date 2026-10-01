@@ -102,31 +102,16 @@ committed).
    on liskov first.
 
 6. **Watchdog**: run the verification in `patches/watchdog.yaml`, then apply it.
-7. **Merge the join PR** (Buildkite pinning + tolerations + weighted Kueue
-   admission — they land in one ArgoCD sync by design). Then recreate the git-mirrors
-   PVC on liskov (it is a node-local ZFS volume currently bound on
-   torvalds; step pods pinned to liskov cannot mount it):
-
-   ```bash
-   kubectl delete pvc buildkite-git-mirrors -n buildkite
-   # ArgoCD recreates it; first consumer on liskov binds it there.
-   ```
-
-8. **Confirm**: first builds run on liskov (`kubectl get pods -n buildkite
--o wide`); new Buildkite Jobs carry `kueue.x-k8s.io/queue-name: default`,
-   oversized workloads are `suspend: true` rather than rejected, and the
-   `kueue-system` application is Healthy. Cancel/retry any build whose Job was
-   created before Kueue was enabled and has no queue label. Confirm the
-   `buildkitd-cache-liskov` PVC is bound on liskov and buildkitd is Ready.
-   Then remove the retired cache claim still bound to torvalds:
-
-   ```bash
-   kubectl delete pvc buildkitd-cache -n buildkitd
-   ```
-
-   Grafana node
-   dashboards show both nodes; smartctl/nvme/zfs collector pods present on
-   liskov.
+7. **Reconcile CI placement** through the repository release workflow. The
+   Woodpecker pipeline pins step and service pods to liskov, with the CI
+   toleration and resource requests used by Kueue admission. Cache claims are
+   declared in `src/cdk8s/src/resources/woodpecker/caches.ts`; inspect their
+   node binding before running consumers.
+8. **Confirm**: builds run on liskov (`kubectl get pods -n woodpecker-ci
+-o wide`), oversized workloads wait for Kueue admission, and the
+   `kueue-system` application is Healthy. Confirm `buildkitd-cache-liskov` is
+   bound on liskov and buildkitd is Ready. Grafana node dashboards show both
+   nodes, with smartctl/nvme/zfs collector pods present on liskov.
 
 ## After the soak
 

@@ -124,7 +124,7 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
     script: "packages/homelab/scripts/tofu/tofu-stack.ts",
     names: ["POSTHOG_CLI_API_KEY", "POSTHOG_TOFU_STATE_PASSPHRASE"],
     reason:
-      "The shared PR Tofu pod plans only seaweedfs, tailscale, buildkite, arr, " +
+      "The shared PR Tofu pod plans only seaweedfs, tailscale, arr, " +
       "github, and cloudflare. posthog has its own credential-isolated plan pod.",
   },
   {

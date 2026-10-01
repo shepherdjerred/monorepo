@@ -1,5 +1,5 @@
 /**
- * Parsing a Buildkite step's shell command: which env names it assigns, where
+ * Parsing a CI step's shell command: which env names it assigns, where
  * those assignments are in force, and which repository scripts it invokes.
  *
  * Split out of check-ci-env.ts, which sits at the repo's max-lines cap (the

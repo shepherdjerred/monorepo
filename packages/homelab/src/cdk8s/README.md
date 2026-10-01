@@ -22,13 +22,13 @@ missing. The S3 error page remains available for that 404 response.
 
 ## Helm value types
 
-The committed types in `generated/helm/` are the source of truth — CI does not regenerate them. When bumping a chart version in `src/versions.ts`, regenerate and commit:
+The committed types in `generated/helm/` are the source of truth — CI does not regenerate them. When changing a chart in `../../../version-catalog/src/catalog.json`, regenerate and commit:
 
 ```bash
 bun run generate-helm-types
 ```
 
-The `helm-types-drift-check` Buildkite step fails any PR that changes a generator input without regenerating.
+The Woodpecker Helm types drift check fails any PR that changes a generator input without regenerating.
 
 ## 1Password lint
 

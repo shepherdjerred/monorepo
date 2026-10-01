@@ -4,7 +4,7 @@
  *
  * A build version is publication identity, not a reason to publish. The
  * comparison base is ChartMuseum's newest published 2.0.0-N chart, regardless
- * of whether the producing Buildkite build later passed, failed, or was
+ * of whether the producing CI build later passed, failed, or was
  * canceled. Changed leaves are published before the coordinating apps chart.
  */
 

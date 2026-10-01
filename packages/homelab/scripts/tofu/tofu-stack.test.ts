@@ -280,7 +280,9 @@ describe("committed platform desired state", () => {
       loadPlatformDesiredState(stackDir, "anthropic-federation"),
     ).rejects.toThrow();
   });
+});
 
+describe("platform credential handoffs", () => {
   test("collects handoffs nested in resource objects", () => {
     expect(
       collectOnePasswordTargets({
@@ -306,6 +308,75 @@ describe("committed platform desired state", () => {
         vault_field: "nested-field",
       },
     ]);
+  });
+
+  test("archived Anthropic keys retain metadata without a vault handoff", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../platform-desired-state.schema.json",
+        platform: "anthropic",
+        anthropic_workspaces: {},
+        anthropic_api_keys: {
+          retired: {
+            api_key_id: "apikey-retired",
+            name: "Retired integration",
+            status: "archived",
+          },
+        },
+        anthropic_workspace_members: {},
+      }),
+    );
+    const state = await loadPlatformDesiredState(stackDir, "anthropic");
+    expect(collectOnePasswordTargets(state)).toEqual([]);
+  });
+
+  test.each(["active", "inactive"])(
+    "%s Anthropic keys still require a vault handoff",
+    async (status) => {
+      const stackDir = await temporaryDirectory();
+      await Bun.write(
+        `${stackDir}/desired-state.json`,
+        JSON.stringify({
+          $schema: "../platform-desired-state.schema.json",
+          platform: "anthropic",
+          anthropic_workspaces: {},
+          anthropic_api_keys: {
+            missing: { api_key_id: "apikey-missing", name: "Missing", status },
+          },
+          anthropic_workspace_members: {},
+        }),
+      );
+      await expect(
+        loadPlatformDesiredState(stackDir, "anthropic"),
+      ).rejects.toThrow();
+    },
+  );
+
+  test("archived Anthropic keys cannot retain a vault handoff", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../platform-desired-state.schema.json",
+        platform: "anthropic",
+        anthropic_workspaces: {},
+        anthropic_api_keys: {
+          retired: {
+            api_key_id: "apikey-retired",
+            name: "Retired integration",
+            status: "archived",
+            vault_item_id: "obsolete-item",
+            vault_field: "obsolete-key",
+          },
+        },
+        anthropic_workspace_members: {},
+      }),
+    );
+    await expect(
+      loadPlatformDesiredState(stackDir, "anthropic"),
+    ).rejects.toThrow();
   });
 
   test("collects Discord item-only handoffs", () => {

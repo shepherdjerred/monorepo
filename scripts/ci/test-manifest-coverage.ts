@@ -97,8 +97,8 @@ export function isAccountedFor(workspace: Workspace, file: string): boolean {
 
 /**
  * Test files a workspace owns, relative to it. Nested workspaces own their own
- * files. The root scripts workspace also owns `.buildkite/scripts/`, which its
- * Vitest config includes as `../.buildkite/scripts`.
+ * files. The root scripts workspace also owns `ci/scripts/`, which its
+ * Vitest config includes as `../ci/scripts`.
  */
 export function workspaceTestFiles(
   workspace: WorkspaceDirectory,
@@ -118,7 +118,7 @@ export function workspaceTestFiles(
       files.push(file.slice(workspace.directory.length + 1));
     } else if (
       workspace.directory === "scripts" &&
-      isUnder(file, ".buildkite/scripts")
+      isUnder(file, "ci/scripts")
     ) {
       files.push(`../${file}`);
     }

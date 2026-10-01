@@ -1212,7 +1212,7 @@ function splitRootSyncBatches(
  * Deliberately carries no release identity, unlike every phase of
  * `release-root`. This runs in `helm-push`, before the release exists, and only
  * rewrites each child's auto-sync policy to the same suspended value, so a
- * Buildkite retry can re-apply it blindly. Identity binding exists to decide
+ * CI retry can re-apply it blindly. Identity binding exists to decide
  * between adopting and restarting an in-flight operation; there is nothing to
  * decide when repeating the operation is the correct outcome either way.
  */
@@ -1747,7 +1747,7 @@ async function assertRootPruneSafe(
  * (e.g. an unreachable kyverno admission webhook rejecting every apply) pass
  * this step and surface two steps later as a tofu tunnel-gate timeout with a
  * misleading symptom (build 5748). Failing here puts the error at the step
- * that caused it, where Buildkite's automatic retry re-syncs through
+ * that caused it, where the CI retry wrapper re-syncs through
  * transient webhook downtime.
  */
 type SyncOptions = {
@@ -3098,7 +3098,7 @@ async function releaseHealthWait(
 }
 
 /**
- * A Buildkite retry restarts `release-root` from the top, but the interrupted
+ * A CI retry restarts `release-root` from the top, but the interrupted
  * attempt may have died with a later root phase still live. Staging cannot
  * adopt a `batch` or `prune` operation, so it would reject an operation this
  * release legitimately owns and no retry could ever recover. Resume at the
@@ -3640,7 +3640,7 @@ async function main(): Promise<void> {
       return;
     }
     // Internal compatibility primitives keep the detailed lifecycle tests and
-    // exact-operation recovery path executable. Buildkite and operator docs
+    // exact-operation recovery path executable. CI and operator docs
     // expose only release-root and sync-managed.
     case "sync": {
       const revision = flag(argv, "revision");

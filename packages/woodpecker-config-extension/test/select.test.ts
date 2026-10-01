@@ -390,6 +390,26 @@ describe("ported lanes", () => {
     expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
   });
 
+  test("Paper copies staged plugins and Bukkit configuration into its data directory", () => {
+    const paperStep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    const paperService = paperStep?.services?.find(
+      (service) => service.name === "paper",
+    );
+    const dataDir = paperStep?.environment?.["STORM_E2E_DATA_DIR"];
+    if (dataDir === undefined)
+      throw new Error("Paper data directory is required");
+    expect(paperService?.environment?.["COPY_PLUGINS_SRC"]).toBe(
+      paperStep?.environment?.["STORM_E2E_PLUGIN_DIR"],
+    );
+    expect(paperService?.environment?.["COPY_CONFIG_SRC"]).toBe(
+      `${dataDir}/config`,
+    );
+    expect(paperService?.environment?.["COPY_CONFIG_DEST"]).toBe("/data");
+  });
+
   test("Paper E2E connects its fake brain through the service network", () => {
     const paperStep = buildPipelineSteps({
       images: IMAGES,

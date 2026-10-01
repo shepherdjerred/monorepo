@@ -3,7 +3,7 @@
  * files. Package-scoped (a TS program is a package), not file-scoped; Turbo
  * cache makes repeats cheap. Concurrency is 1 so parallel worktrees do not
  * each spawn a laptop-sized `tsc` storm. Tests, dependents, and `verify`
- * stay out — those are still focused Turbo / Buildkite.
+ * stay out — those are still focused Turbo / Woodpecker.
  */
 import path from "node:path";
 import { z } from "zod";
