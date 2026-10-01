@@ -3,61 +3,61 @@
     "better-skill-capped.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "clauderon.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "discord-plays-pokemon.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "glitter-boys.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "jerredshepherd.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "scout-for-lol.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "shepherdjerred.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "sjer.red": {
       "wildcardMail": false,
       "tls13": "zrt",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "statically-typed.com": {
       "wildcardMail": true,
       "tls13": "on",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     },
     "ts-mc.net": {
       "wildcardMail": true,
       "tls13": "zrt",
-      "mtaStsPublished": false,
+      "mtaStsPublished": true,
       "fastmailReady": true
     }
   },
