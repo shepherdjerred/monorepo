@@ -82,13 +82,13 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     });
   });
 
-  test("pins the image by the catalog's the-storm-server digest", () => {
+  test("pins the image by the accepted production digest", () => {
     const values = tsmcValues();
     expect(values["image"]).toEqual({
       repository: "ghcr.io/shepherdjerred/the-storm-server",
-      tag: versions["shepherdjerred/the-storm-server"],
+      tag: versions["shepherdjerred/the-storm-server/prod"],
     });
-    expect(versions["shepherdjerred/the-storm-server"]).toMatch(
+    expect(versions["shepherdjerred/the-storm-server/prod"]).toMatch(
       /@sha256:[a-f\d]{64}$/,
     );
   });

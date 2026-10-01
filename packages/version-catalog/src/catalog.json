@@ -1522,6 +1522,19 @@
       ]
     },
     {
+      "name": "shepherdjerred/the-storm-server/prod",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1003373@sha256:af95c857b8a2e682eb0601b52ba0c2388753f869b9f68ceb3019dbc46d413228",
+      "notes": [
+        "Accepted minecraft-tsmc production image. Promote explicitly after consistent backup, independent restore, progression archive, and clone acceptance.",
+        "CI publishes and updates shepherdjerred/the-storm-server separately; candidate publication never activates production."
+      ]
+    },
+    {
       "name": "shepherdjerred/tasknotes-server",
       "category": "internal-image",
       "artifactType": "image",

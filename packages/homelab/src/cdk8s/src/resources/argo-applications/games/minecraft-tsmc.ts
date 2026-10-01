@@ -99,7 +99,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // The chart sets no command or args, so the image's storm-entrypoint runs.
     image: {
       repository: "ghcr.io/shepherdjerred/the-storm-server",
-      tag: versions["shepherdjerred/the-storm-server"],
+      // Candidate publication must not activate an unprepared production volume.
+      tag: versions["shepherdjerred/the-storm-server/prod"],
     },
     resources: {
       requests: {
@@ -174,6 +175,17 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // Kicks idle players after 60 minutes (server.properties
       // player-idle-timeout, formerly set by the synced server.properties).
       PLAYER_IDLE_TIMEOUT: "60",
+      // Required by the accepted legacy image until the archive-verified cutover.
+      DISCORDSRV_TOKEN: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
+        },
+      },
+      CFG_DISCORD_CHANNEL_ID: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
+        },
+      },
       STORM_BRAIN_BEARER_TOKEN: {
         valueFrom: {
           secretKeyRef: {

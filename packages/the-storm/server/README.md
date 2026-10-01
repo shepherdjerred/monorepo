@@ -5,6 +5,12 @@ pre-patched Paper, TheStorm, ten supporting plugins, and repository-owned
 configuration. The image builds through `docker-bake.hcl`; CI publication and
 the version catalog control its GitOps release.
 
+CI updates the candidate pin `shepherdjerred/the-storm-server`. The live chart
+uses the separately accepted `shepherdjerred/the-storm-server/prod` pin. Publish
+the candidate first, complete the backup, restore, archive, and clone checks
+below, then promote its exact digest into the production pin through a PR.
+Candidate publication cannot restart production with an unprepared volume.
+
 ## Plugin and configuration ownership
 
 All 21 Storm modules are enabled in `owned/plugins/TheStorm/config.yml`.
@@ -99,7 +105,9 @@ have passed.
    representative player flows before reconciling production through the
    repository release workflow. Never route the clone to production Discord
    or Microsoft player authentication.
-6. Reconcile the published image and chart revision through GitOps. Confirm
+6. Promote the verified candidate digest into the production catalog pin and
+   remove the legacy `DISCORDSRV_TOKEN` and `CFG_DISCORD_CHANNEL_ID` chart refs.
+   Reconcile the published image and chart revision through GitOps. Confirm
    the exact eleven-plugin runtime set, all 21 modules, successful asynchronous
    world checks, brain readiness, and the authenticated Discord bridge.
 7. Verify the windmill spawn and altar, mine entrance south of town, trainers
