@@ -1,15 +1,15 @@
 """Exercise archive safety against real files and SQLite databases."""
 
 import importlib.util
-from contextlib import closing
 import json
-from pathlib import Path
 import shutil
 import sqlite3
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import closing
+from pathlib import Path
 
 spec = importlib.util.spec_from_file_location("progression", Path(__file__).with_name("archive-progression.py"))
 assert spec is not None and spec.loader is not None
@@ -89,8 +89,16 @@ class ArchiveTest(unittest.TestCase):
         self.assertFalse(self.database.exists())
 
     def test_refuses_a_running_server_lock(self):
-        code = "import fcntl,sys; f=open(sys.argv[1],'r+b'); fcntl.lockf(f,fcntl.LOCK_EX); print('locked',flush=True); sys.stdin.read()"
-        with subprocess.Popen([sys.executable, "-c", code, str(self.data / "world/session.lock")], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True) as process:
+        code = (
+            "import fcntl,sys; f=open(sys.argv[1],'r+b'); fcntl.lockf(f,fcntl.LOCK_EX); "
+            "print('locked',flush=True); sys.stdin.read()"
+        )
+        with subprocess.Popen(
+            [sys.executable, "-c", code, str(self.data / "world/session.lock")],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+        ) as process:
             assert process.stdout is not None and process.stdin is not None
             self.assertEqual(process.stdout.readline().strip(), "locked")
             try:

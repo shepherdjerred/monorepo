@@ -2,30 +2,56 @@
 """One-time, stopped-server progression archive; worlds and player data stay put."""
 
 import argparse
-from contextlib import ExitStack, closing
 import fcntl
 import hashlib
 import json
-from pathlib import Path
 import sqlite3
+from contextlib import ExitStack, closing
+from pathlib import Path
 
 MARKER = ".the-storm-progression-v1.json"
 LEGACY = (
-    "ChestSort", "ChunkyBorder", "CombatLog", "CraftBook5", "DecentHolograms",
-    "DiscordSRV", "DynamicShop", "Essentials", "EssentialsSpawn", "GravesX",
-    "LevelledMobs", "Lunamatic", "MobArena", "PlaceholderAPI", "Plan",
-    "ProtocolLib", "Sleeper", "Towny", "Vault", "VentureChat", "WorldGuard",
-    "XConomy", "mcMMO", "LWC",
+    "ChestSort",
+    "ChunkyBorder",
+    "CombatLog",
+    "CraftBook5",
+    "DecentHolograms",
+    "DiscordSRV",
+    "DynamicShop",
+    "Essentials",
+    "EssentialsSpawn",
+    "GravesX",
+    "LevelledMobs",
+    "Lunamatic",
+    "MobArena",
+    "PlaceholderAPI",
+    "Plan",
+    "ProtocolLib",
+    "Sleeper",
+    "Towny",
+    "Vault",
+    "VentureChat",
+    "WorldGuard",
+    "XConomy",
+    "mcMMO",
+    "LWC",
 )
-TARGETS = tuple(f"plugins/{name}" for name in LEGACY) + (
+TARGETS = (
+    *(f"plugins/{name}" for name in LEGACY),
     "plugins/TheStorm/the-storm.db",
     "plugins/TheStorm/the-storm.db-wal",
     "plugins/TheStorm/the-storm.db-shm",
 )
 PENDING = (
-    "arena_pending_rewards", "essentials_teleport_attempts", "essentials_kit_deliveries",
-    "shops_refund_failure", "qol_rtp_attempt", "qol_grave", "qol_grave_items",
-    "towns_pending_payout", "quests_pending_world",
+    "arena_pending_rewards",
+    "essentials_teleport_attempts",
+    "essentials_kit_deliveries",
+    "shops_refund_failure",
+    "qol_rtp_attempt",
+    "qol_grave",
+    "qol_grave_items",
+    "towns_pending_payout",
+    "quests_pending_world",
 )
 
 
