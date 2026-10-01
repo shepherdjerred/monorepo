@@ -68,7 +68,7 @@ set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 # posthog-cli reads POSTHOG_CLI_*, not the POSTHOG_API_KEY label the value is
 # stored under. The dedicated item also supplies the encrypted state passphrase.
 set -gx POSTHOG_CLI_PROJECT_ID '549883'
-set -gx POSTHOG_TOFU_STATE_PASSPHRASE '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/POSTHOG_TOFU_STATE_PASSPHRASE" }}'
+set -gx POSTHOG_TOFU_STATE_PASSPHRASE '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/msdtltp4yy72ntrkanowlq7k24" }}'
 # Deliberately NOT exported here. src/tofu/cloudflare authenticates from
 # CLOUDFLARE_API_TOKEN ambiently, so a global export would let a bare
 # `tofu apply` with no `op run` authenticate and apply instead of failing

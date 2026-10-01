@@ -29,6 +29,7 @@ import {
   publishPlatformPlan,
   consumeReviewedPlatformPlan,
 } from "./platform-plan-handoff.ts";
+import { applicationSecrets } from "./application-secrets.ts";
 
 const STACKS_REL = "src/tofu";
 
@@ -398,6 +399,16 @@ async function main(): Promise<void> {
   if (stackName === undefined) usage();
   const stack = parseTofuStack(stackName);
   const action = parseAction(positional[1]);
+  if (stack === "application-secrets") {
+    // Initial phase is source preparation only. No CI credential grants,
+    // backend initialization, imports, plans or writes for this stack yet.
+    if (action !== "validate")
+      throw new Error(
+        "application-secrets is preparation-only; only validate is enabled.",
+      );
+    if (Object.keys(applicationSecrets.credentials).length === 0)
+      throw new Error("application-secrets catalog is empty");
+  }
   if (
     (action === "prepare" || action === "apply-saved") &&
     !REVIEWABLE_PLATFORM_STACKS.has(stack)

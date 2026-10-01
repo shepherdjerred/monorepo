@@ -104,6 +104,9 @@ const OpFieldSchema = z.object({
   label: z.string().optional(),
   value: z.string().optional(),
   type: z.string().optional(),
+  section: z
+    .object({ id: z.string(), label: z.string().optional() })
+    .optional(),
 });
 
 const OpUrlSchema = z.object({
@@ -120,6 +123,8 @@ const OpFileSchema = z.object({
 export const OpItemSchema = z.object({
   id: z.string(),
   title: z.string(),
+  version: z.number().int().optional(),
+  category: z.string().optional(),
   fields: z.array(OpFieldSchema).optional(),
   urls: z.array(OpUrlSchema).optional(),
   files: z.array(OpFileSchema).optional(),
