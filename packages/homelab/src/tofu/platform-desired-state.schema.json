@@ -952,6 +952,10 @@
           "vault_field"
         ],
         "properties": {
+          "managed": {
+            "type": "boolean",
+            "default": true
+          },
           "supersedes_id": {
             "type": "string",
             "minLength": 1

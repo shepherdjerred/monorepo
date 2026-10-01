@@ -28,6 +28,10 @@
               "name": "Zone Settings Write"
             },
             {
+              "id": "c03055bc037c4ea9afb9a9f104b7b721",
+              "name": "SSL and Certificates Write"
+            },
+            {
               "id": "fb6778dc191143babbfaa57993f1d275",
               "name": "Zone WAF Write"
             }
@@ -43,6 +47,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "temporal-audit": {
+      "managed": false,
       "supersedes_id": "409e97aba1f4bacff237d260edebbfd1",
       "name": "Temporal Cloudflare audit 2026-08",
       "policies": [
@@ -83,6 +88,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "cf-cli": {
+      "managed": false,
       "supersedes_id": "6a2be1d4b515e085c81bbe6999445d51",
       "name": "cf CLI Cloudflare 2026-08",
       "policies": [
@@ -127,6 +133,7 @@
       "vault_field": "credential"
     },
     "cloudflare-operator": {
+      "managed": false,
       "supersedes_id": "4d76466089e0e37912b698c584085af3",
       "name": "Cloudflare Operator 2026-08",
       "policies": [
@@ -159,6 +166,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "r2-exporter": {
+      "managed": false,
       "supersedes_id": "ce9ab72576cbff081c3f774c49afa922",
       "name": "R2 Exporter 2026-08",
       "policies": [
@@ -181,6 +189,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "ddns": {
+      "managed": false,
       "supersedes_id": "86e250662681397b4d12a0ab1e8fd266",
       "name": "DDNS sjer.red 2026-08",
       "policies": [
