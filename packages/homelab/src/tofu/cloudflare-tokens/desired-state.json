@@ -12,6 +12,10 @@
             {
               "id": "bf7481a1826f439697cb59a20b22293e",
               "name": "Workers R2 Storage Write"
+            },
+            {
+              "id": "abe78e2276664f4db588c1f675a77486",
+              "name": "Mass URL Redirects Write"
             }
           ],
           "resources": {
