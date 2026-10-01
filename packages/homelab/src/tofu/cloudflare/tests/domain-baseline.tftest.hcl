@@ -42,6 +42,7 @@ run "configure_certificate_alert_delivery" {
       length(cloudflare_ct_alerting.ct) == 1 &&
       cloudflare_ct_alerting.ct[0].enabled &&
       cloudflare_ct_alerting.ct[0].emails == tolist(["root@sjer.red"]) &&
+      terraform_data.ct_recipient[0].triggers_replace == "root@sjer.red" &&
       length(cloudflare_ct_alerting.ct_existing) == 0
     )
     error_message = "Enabling certificate monitoring must configure delivery to the owned inbox."
@@ -55,6 +56,7 @@ run "preserve_existing_certificate_alert_recipients" {
   assert {
     condition = (
       length(cloudflare_ct_alerting.ct) == 0 &&
+      length(terraform_data.ct_recipient) == 0 &&
       length(cloudflare_ct_alerting.ct_existing) == 1 &&
       cloudflare_ct_alerting.ct_existing[0].enabled
     )
