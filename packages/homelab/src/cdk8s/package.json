@@ -38,6 +38,7 @@
     "constructs": "^10.6.0",
     "cron-parser": "^5.5.0",
     "fast-xml-parser": "5.11.1",
+    "homelab": "workspace:*",
     "lodash": "4.18.1",
     "remeda": "^2.33.7",
     "ts-pattern": "^5.9.0",
@@ -49,7 +50,6 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
-    "homelab": "workspace:*",
     "@temporalio/testing": "1.24.0",
     "@types/bun": "1.4.2",
     "@types/lodash": "^4.17.24",
