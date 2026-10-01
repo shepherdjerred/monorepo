@@ -125,6 +125,36 @@ const PLATFORM_STACKS: readonly PlatformStack[] = [
 ];
 
 describe("committed platform desired state", () => {
+  test("rejects a nonboolean Cloudflare token management flag", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../platform-desired-state.schema.json",
+        platform: "cloudflare-tokens",
+        cloudflare_api_tokens: {
+          broken: {
+            managed: "false",
+            supersedes_id: "legacy-token",
+            name: "Replacement",
+            policies: [
+              {
+                effect: "allow",
+                permission_groups: [{ id: "permission", name: "DNS Read" }],
+                resources: { zone: "*" },
+              },
+            ],
+            vault_item_id: "item",
+            vault_field: "CLOUDFLARE_API_TOKEN",
+          },
+        },
+      }),
+    );
+    await expect(
+      loadPlatformDesiredState(stackDir, "cloudflare-tokens"),
+    ).rejects.toThrow("expected boolean");
+  });
+
   test.each(PLATFORM_STACKS)("%s matches its schema", async (platform) => {
     const stackDir = new URL(`../../src/tofu/${platform}/`, import.meta.url)
       .pathname;

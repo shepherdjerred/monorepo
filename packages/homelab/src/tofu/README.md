@@ -146,7 +146,7 @@ manual. A generated token value is exposed only as a sensitive handoff paired
 with its existing 1Password rotation unit; an operator writes and proves that
 handoff before revoking the superseded token.
 
-The committed registry creates a distinct replacement for Woodpecker, the
+The committed registry describes a distinct replacement for Woodpecker, the
 Temporal audit worker, local `cf` tooling, cloudflare-operator, the R2 exporter,
 and DDNS. Each entry records the active token ID it supersedes, readable
 permission names plus their stable Cloudflare IDs, exact account or zone
@@ -154,6 +154,13 @@ resources, and the existing 1Password field or JSON path. The Woodpecker and
 Temporal entries deliberately split their currently shared credential. The
 bootstrap identity must have API Tokens Read and Write; ordinary consumer
 tokens do not receive token-administration permissions.
+
+Set a token's `managed` field to `false` to retain its policy and handoff
+metadata without creating a replacement. An omitted field defaults to `true`.
+Only Woodpecker is enabled during the initial token-stack bootstrap; the other
+consumers retain their existing credentials. Enable each remaining replacement
+in a separate reviewed rollout. Disabling an already managed token plans its
+deletion, so inspect the exact plan before changing that field.
 
 ### Discord
 

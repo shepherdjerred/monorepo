@@ -1,5 +1,7 @@
 resource "cloudflare_api_token" "managed" {
-  for_each = var.cloudflare_api_tokens
+  for_each = {
+    for name, token in var.cloudflare_api_tokens : name => token if token.managed
+  }
 
   name = each.value.name
   policies = [
