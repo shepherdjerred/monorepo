@@ -3,12 +3,8 @@ import path from "node:path";
 import type { TestProject } from "vitest/node";
 import { z } from "zod";
 import { startFakeBrain } from "./harness/fake-brain.ts";
-import {
-  serverLogs,
-  startServer,
-  stormTestConfig,
-  type ServerInfo,
-} from "./harness/server.ts";
+import { gameplayFixtures } from "./gameplay-fixtures.ts";
+import { serverLogs, startServer, type ServerInfo } from "./harness/server.ts";
 
 declare module "vitest" {
   // Declaration merging with Vitest's ProvidedContext requires an interface.
@@ -27,15 +23,6 @@ const stormJar = path.join(
   "libs",
   "TheStorm.jar",
 );
-const mechanicsE2eJar = path.join(
-  packageRoot,
-  "plugin",
-  "modules",
-  "mechanics",
-  "build",
-  "libs",
-  "TheStormMechanicsE2E.jar",
-);
 const ownedConfigDir = path.join(
   packageRoot,
   "server",
@@ -43,8 +30,6 @@ const ownedConfigDir = path.join(
   "plugins",
   "TheStorm",
 );
-const ownedConfig = path.join(ownedConfigDir, "config.yml");
-const mechanicsConfig = path.join(ownedConfigDir, "mechanics.yml");
 
 const ExternalServerSchema = z.object({
   STORM_E2E_HOST: z.string().min(1),
@@ -58,6 +43,7 @@ const ExternalServerSchema = z.object({
 });
 
 export default async function setup(project: TestProject) {
+  const full = Bun.env["STORM_E2E_FULL"] === "1";
   // The agent refuses to start without its token, so both local and sidecar
   // runs use the same strict fake brain contract.
   const external = Bun.env["STORM_E2E_HOST"] !== undefined;
@@ -85,22 +71,16 @@ export default async function setup(project: TestProject) {
   }
 
   const server = await startServer({
-    cacheDir: path.join(packageRoot, ".cache", "e2e"),
+    cacheDir: path.join(
+      packageRoot,
+      ".cache",
+      "e2e",
+      ...(full ? ["full"] : []),
+    ),
     bootTimeoutMs: 180_000,
     warmCache: Bun.env["STORM_E2E_COLD"] !== "1",
     stormJar,
-    // Mechanics runs once through its test plugin, which owns the Paper world
-    // fixture; enabling the production module would register duplicate listeners.
-    stormConfig: stormTestConfig(await Bun.file(ownedConfig).text(), [
-      "economy",
-      "chat",
-      "tracks",
-      "towns",
-      "tickets",
-      "agent",
-    ]),
-    mechanicsE2eJar,
-    mechanicsConfig: await Bun.file(mechanicsConfig).text(),
+    ...(await gameplayFixtures(packageRoot, full)),
     ownedConfigDir,
     brain: { baseUrl: brainBaseUrl, token: brainToken },
     sweep: {
@@ -109,7 +89,7 @@ export default async function setup(project: TestProject) {
       redriveBackoffMinutes: 0,
       slaAfterMinutes: 10_080,
     },
-    agent: { mode: "shadow", reviewSamplePercent: 100 },
+    agent: { mode: full ? "active" : "shadow", reviewSamplePercent: 100 },
   });
   if (server.info.kind === "container") {
     console.warn(

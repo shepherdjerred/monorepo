@@ -6,3 +6,7 @@
 # Never list a directory a plugin writes runtime data into: plugins/TheStorm
 # holds the-storm.db, so it is not a root. Its YAML files are still overwritten
 # from server/owned/ on every boot by itzg's /plugins sync.
+plugins/TheStorm/arena/arenas
+plugins/TheStorm/npcs
+plugins/TheStorm/quests
+plugins/TheStorm/shops

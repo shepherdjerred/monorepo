@@ -69,6 +69,7 @@ final class EssentialsPaperTest {
   void banIsOursAndKicksOnceRecorded() {
     harness = PaperHarness.start(directory, new FakeWallets());
     var griefer = harness.server.addPlayer("Griefer");
+    assertThat(griefer.isOnline()).as("the ban target joined successfully").isTrue();
 
     harness.server.dispatchCommand(
         harness.server.getConsoleSender(), "tempban Griefer 3d griefing");

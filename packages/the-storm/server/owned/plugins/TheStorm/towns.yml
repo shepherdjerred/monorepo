@@ -59,10 +59,55 @@ grief:
   # anyone may have moved it, so it counts as coming from where it was dropped.
   thrownItemMemoryTicks: 100
 
-# Admin regions must be entered only after their actual main-world structures
-# and bounds are verified. The historical files contain no usable spawn or
-# arena coordinates, and the arena definition is still a build placeholder.
-# An empty list keeps arbitrary terrain free of region protection and spawn
-# suppression. Each region needs a real area, its allowed actions, and its mob
-# spawn policy before enabling it here.
-regions: []
+# Existing Spawn Town, windmill and Colosseum. PvP and construction are denied
+# in these admin regions; doors, NPCs and gameplay teleports remain usable.
+regions:
+  - id: spawn
+    name: Spawn Town
+    areas:
+      chunks: []
+      cuboids:
+        - world: world
+          from: { x: -96, y: -64, z: -70 }
+          to: { x: 163, y: 319, z: 110 }
+    allow:
+      - action: INTERACT
+        subjects:
+          [
+            DOOR,
+            TRAPDOOR,
+            FENCE_GATE,
+            BUTTON,
+            LEVER,
+            PRESSURE_PLATE,
+            TRIPWIRE,
+            BELL,
+          ]
+      - action: INTERACT_ENTITY
+        subjects: [VILLAGER, VEHICLE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]
+    mobSpawns:
+      limited: true
+      allow: [CUSTOM, COMMAND]
+  - id: arena
+    name: The Colosseum
+    areas:
+      chunks: []
+      cuboids:
+        - world: world
+          from: { x: 164, y: 30, z: -60 }
+          to: { x: 290, y: 100, z: 64 }
+    allow:
+      - action: INTERACT
+        subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]
+      - action: BREAK
+        subjects: [CREAKING_HEART]
+      - action: OPEN_CONTAINER
+        subjects: [CONTAINER]
+    mobSpawns:
+      limited: true
+      allow:
+        [CUSTOM, COMMAND, SPELL, REINFORCEMENTS, SLIME_SPLIT, JOCKEY, MOUNT]

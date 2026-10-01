@@ -61,10 +61,12 @@ final class TownsConfigTest {
   }
 
   @Test
-  void theShippedFileHasNoUnverifiedRegions() {
+  void theShippedFileProtectsTheMeasuredTownAndArena() {
     var config = ConfigFiles.load(SHIPPED, TownsConfig.class);
 
-    assertThat(config.regions()).isEmpty();
+    assertThat(config.regions())
+        .extracting(com.shepherdjerred.thestorm.towns.domain.region.AdminRegion::id)
+        .containsExactly("spawn", "arena");
     assertThat(config.claims().worlds()).containsExactly("world");
     assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
   }

@@ -164,7 +164,11 @@ public final class ArenaHarness implements AutoCloseable {
       for (var file : FILES) {
         var target = directory.resolve(file);
         Files.createDirectories(target.getParent());
-        Files.copy(SHIPPED.resolve(file), target);
+        var source =
+            file.equals("arena/arenas/colosseum.yml")
+                ? Path.of("src/test/resources/colosseum.yml")
+                : SHIPPED.resolve(file);
+        Files.copy(source, target);
       }
     } catch (IOException e) {
       throw new UncheckedIOException(e);

@@ -82,13 +82,13 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     });
   });
 
-  test("pins the image by the catalog's the-storm-server digest", () => {
+  test("pins the image by the accepted production digest", () => {
     const values = tsmcValues();
     expect(values["image"]).toEqual({
       repository: "ghcr.io/shepherdjerred/the-storm-server",
-      tag: versions["shepherdjerred/the-storm-server"],
+      tag: versions["shepherdjerred/the-storm-server/prod"],
     });
-    expect(versions["shepherdjerred/the-storm-server"]).toMatch(
+    expect(versions["shepherdjerred/the-storm-server/prod"]).toMatch(
       /@sha256:[a-f\d]{64}$/,
     );
   });
@@ -206,9 +206,19 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     expect(server["spawnProtection"]).toBe(0);
   });
 
-  test("preserves the legacy LWCX jar until towns protection is enabled", async () => {
+  test("retires PVC-only jars alongside the enabled towns protection", async () => {
     const text = await dockerfile();
-    expect(text).toContain("REMOVE_OLD_MODS_EXCLUDE=LWCX*.jar,LWC*.jar");
+    expect(text).toMatch(/^\s*REMOVE_OLD_MODS_EXCLUDE=$/mu);
+    const config = z
+      .object({ modules: z.object({ towns: z.literal(true) }) })
+      .parse(
+        parseYaml(
+          await Bun.file(
+            `${serverDir}/owned/plugins/TheStorm/config.yml`,
+          ).text(),
+        ),
+      );
+    expect(config.modules.towns).toBe(true);
     expect(tsmcValues()["minecraftServer"]).toMatchObject({
       removeOldMods: true,
     });

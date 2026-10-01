@@ -1,10 +1,12 @@
 import { chmod, chown, cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
-import { stagePlugins, stormTestConfig } from "./harness/server.ts";
+import { stagePlugins } from "./harness/server.ts";
+import { gameplayFixtures } from "./gameplay-fixtures.ts";
 import { paper } from "./harness/pins.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "..", "..");
+const full = Bun.env["STORM_E2E_FULL"] === "1";
 const stormJar = path.join(
   packageRoot,
   "plugin",
@@ -13,32 +15,7 @@ const stormJar = path.join(
   "libs",
   "TheStorm.jar",
 );
-const mechanicsE2eJar = path.join(
-  packageRoot,
-  "plugin",
-  "modules",
-  "mechanics",
-  "build",
-  "libs",
-  "TheStormMechanicsE2E.jar",
-);
-const ownedConfig = path.join(
-  packageRoot,
-  "server",
-  "owned",
-  "plugins",
-  "TheStorm",
-  "config.yml",
-);
-const mechanicsConfig = path.join(
-  packageRoot,
-  "server",
-  "owned",
-  "plugins",
-  "TheStorm",
-  "mechanics.yml",
-);
-const ownedConfigDir = path.dirname(ownedConfig);
+const ownedConfigDir = path.join(packageRoot, "server/owned/plugins/TheStorm");
 const pluginVolume = Bun.env["STORM_E2E_PLUGIN_DIR"];
 const dataVolume = Bun.env["STORM_E2E_DATA_DIR"];
 const rconPassword = Bun.env["STORM_E2E_RCON_PASSWORD"];
@@ -70,18 +47,7 @@ const stagingDir = path.join(
 );
 const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
   stormJar,
-  // The mechanics E2E plugin owns its real-Paper fixture and must be the only
-  // mechanics runtime to avoid duplicate listeners.
-  stormConfig: stormTestConfig(await Bun.file(ownedConfig).text(), [
-    "economy",
-    "chat",
-    "tracks",
-    "towns",
-    "tickets",
-    "agent",
-  ]),
-  mechanicsE2eJar,
-  mechanicsConfig: await Bun.file(mechanicsConfig).text(),
+  ...(await gameplayFixtures(packageRoot, full)),
   ownedConfigDir,
   brain: {
     baseUrl: `http://${brainHost}:${brainPort.toString()}`,
@@ -93,7 +59,7 @@ const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
     redriveBackoffMinutes: 0,
     slaAfterMinutes: 10_080,
   },
-  agent: { mode: "shadow", reviewSamplePercent: 100 },
+  agent: { mode: full ? "active" : "shadow", reviewSamplePercent: 100 },
   warmCache: false,
 });
 await rm(pluginVolume, { recursive: true, force: true });

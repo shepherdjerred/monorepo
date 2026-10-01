@@ -35,6 +35,26 @@ tasks.jar { enabled = false }
 
 tasks.assemble { dependsOn(tasks.shadowJar) }
 
+// Disposable world fixtures for the full-module real-Paper suite. This jar is
+// separate from TheStorm.jar and is never copied into the production image.
+val e2e = sourceSets.create("e2e") {
+  compileClasspath += configurations.compileClasspath.get()
+  runtimeClasspath += output + compileClasspath
+}
+configurations[e2e.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly.get())
+val fixturesJar = tasks.register<Jar>("fixturesJar") {
+  archiveFileName = "TheStormFixtures.jar"
+  from(e2e.output)
+  dependsOn(e2e.classesTaskName)
+}
+tasks.assemble { dependsOn(fixturesJar) }
+
+val archiveTest = tasks.register<Exec>("archiveTest") {
+  workingDir(rootProject.file("../server"))
+  commandLine("python3", "-m", "unittest", "-v", "test_archive_progression.py")
+}
+tasks.test { dependsOn(archiveTest) }
+
 val runServerDirectory = rootProject.file("run")
 val prepareRunServerContent =
     tasks.register<Copy>("prepareRunServerContent") {

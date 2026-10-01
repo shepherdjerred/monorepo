@@ -38,7 +38,7 @@ export const THE_STORM_PAPER_VERSION = "26.2";
  * URLs, config ConfigMaps or copy init containers here.
  */
 export function createMinecraftTsmcApp(chart: Chart) {
-  // DiscordSRV credentials. Required fields (UPPERCASE_SNAKE labels, matching
+  // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
   // the env-var refs below): DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID.
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
     spec: {
@@ -99,7 +99,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // The chart sets no command or args, so the image's storm-entrypoint runs.
     image: {
       repository: "ghcr.io/shepherdjerred/the-storm-server",
-      tag: versions["shepherdjerred/the-storm-server"],
+      // Candidate publication must not activate an unprepared production volume.
+      tag: versions["shepherdjerred/the-storm-server/prod"],
     },
     resources: {
       requests: {
@@ -132,8 +133,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       version: THE_STORM_PAPER_VERSION,
       type: "PAPER",
       serviceType: "ClusterIP",
-      // The image removes stale jars but preserves the PVC-only LWCX jar
-      // until the towns module takes over container protection.
+      // The Storm owns gameplay and locks; the image retires every stale jar.
       removeOldMods: true,
 
       extraPorts: [
@@ -175,10 +175,15 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // Kicks idle players after 60 minutes (server.properties
       // player-idle-timeout, formerly set by the synced server.properties).
       PLAYER_IDLE_TIMEOUT: "60",
-      // DiscordSRV reads its bot token natively from DISCORDSRV_TOKEN.
+      // Required by the accepted legacy image until the archive-verified cutover.
       DISCORDSRV_TOKEN: {
         valueFrom: {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
+        },
+      },
+      CFG_DISCORD_CHANNEL_ID: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
         },
       },
       STORM_BRAIN_BEARER_TOKEN: {
@@ -195,13 +200,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
         },
       },
       DISCORD_CHANNEL_ID: {
-        valueFrom: {
-          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
-        },
-      },
-      // Interpolated into plugins/DiscordSRV/config.yml by the image's
-      // PATCH_DEFINITIONS (server/patches/discordsrv-config.json).
-      CFG_DISCORD_CHANNEL_ID: {
         valueFrom: {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
         },

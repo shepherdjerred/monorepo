@@ -51,13 +51,13 @@ COPY server/owned/plugins/ /plugins/
 COPY server/owned.roots server/remove.list /bundle/
 COPY server/patches/ /bundle/patches/
 COPY server/plugins.json /opt/the-storm/plugins.json
+COPY server/archive-progression.py /opt/the-storm/archive-progression.py
 COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 
 # PAPER_CUSTOM_JAR + bundlerRepoDir: run the pre-patched Paper, no download.
 # PATCH_DEFINITIONS: force the keys we set in files plugins rewrite themselves.
 # SYNC_SKIP_NEWER_IN_DESTINATION=false: the image wins over a plugin's rewrite.
-# Keep the existing PVC-only LWCX jar while towns protection is disabled.
-# The cleanup still removes other stale jars before syncing the pinned set.
+# The towns module owns locks. Every stale top-level jar is retired.
 ENV TYPE=PAPER \
   VERSION=26.2 \
   PAPER_CUSTOM_JAR=/opt/paper/paper-26.2-129.jar \
@@ -66,7 +66,7 @@ ENV TYPE=PAPER \
   PATCH_DEFINITIONS=/bundle/patches \
   SYNC_SKIP_NEWER_IN_DESTINATION=false \
   REMOVE_OLD_MODS=true \
-  REMOVE_OLD_MODS_EXCLUDE=LWCX*.jar,LWC*.jar
+  REMOVE_OLD_MODS_EXCLUDE=
 
 ENTRYPOINT ["/usr/local/bin/storm-entrypoint"]
 

@@ -20,7 +20,7 @@ final class AgentConfigTest {
   static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm/agent.yml");
 
   private static final String BRAIN_BASE_URL =
-      "http://storm-brain-service.storm-brain.svc.cluster.local:3000";
+      "http://storm-brain-storm-brain-service.storm-brain.svc.cluster.local:3000";
 
   private static Result<AgentConfig, List<Problem>> parse(String yaml) {
     return StrictYaml.parse("agent.yml", yaml, AgentConfig.class);
@@ -47,7 +47,7 @@ final class AgentConfigTest {
     var config = ok(parse(Files.readString(SHIPPED)));
 
     assertThat(config.reviewSamplePercent()).isEqualTo(10);
-    assertThat(config.shadow()).isTrue();
+    assertThat(config.shadow()).isFalse();
     assertThat(config.classifyThreshold()).isEqualTo(0.8);
     assertThat(config.triageThreshold()).isEqualTo(0.7);
     assertThat(config.resolveThreshold()).isEqualTo(0.95);
@@ -128,7 +128,7 @@ final class AgentConfigTest {
 
   @Test
   void rejectsABadMode() throws Exception {
-    var yaml = Files.readString(SHIPPED).replace("mode: shadow", "mode: armed");
+    var yaml = Files.readString(SHIPPED).replace("mode: active", "mode: armed");
 
     assertThat(problems(parse(yaml))).contains("mode must be shadow or active");
   }

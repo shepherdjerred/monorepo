@@ -12,12 +12,15 @@ describe("applyCurrentBuildImageOverrides", () => {
       "shepherdjerred/scout/prod": "old@sha256:prod",
       "shepherdjerred/worker/workflows/stable": "old@sha256:old",
       "shepherdjerred/worker/workflows/candidate": "old@sha256:old",
+      "shepherdjerred/the-storm-server": "old@sha256:old",
+      "shepherdjerred/the-storm-server/prod": "old@sha256:accepted",
     };
     applyCurrentBuildImageOverrides(
       versions,
       JSON.stringify({
         "shepherdjerred/worker": `sha256:${"a".repeat(64)}`,
         "shepherdjerred/scout": `sha256:${"b".repeat(64)}`,
+        "shepherdjerred/the-storm-server": `sha256:${"c".repeat(64)}`,
       }),
       "2.0.0-42",
     );
@@ -27,6 +30,8 @@ describe("applyCurrentBuildImageOverrides", () => {
       "shepherdjerred/scout/prod": "old@sha256:prod",
       "shepherdjerred/worker/workflows/stable": "old@sha256:old",
       "shepherdjerred/worker/workflows/candidate": `2.0.0-42@sha256:${"a".repeat(64)}`,
+      "shepherdjerred/the-storm-server": `2.0.0-42@sha256:${"c".repeat(64)}`,
+      "shepherdjerred/the-storm-server/prod": "old@sha256:accepted",
     });
 
     const scoutVersions: Record<string, string> = {

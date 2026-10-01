@@ -124,6 +124,7 @@ export const VersionMapSchema = z
     "relay-server": z.string(),
     "shepherdjerred/caddy-s3proxy": z.string(),
     "shepherdjerred/the-storm-server": z.string(),
+    "shepherdjerred/the-storm-server/prod": z.string(),
     "shepherdjerred/tasknotes-server": z.string(),
     "shepherdjerred/obsidian-headless": z.string(),
     "temporalio/server": z.string(),

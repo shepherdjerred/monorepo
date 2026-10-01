@@ -113,12 +113,12 @@ upgrades:
 # Right-click one of these blocks in the rain, holding gear, with shards in
 # your inventory. The first is the emerald block inside the spawn windmill.
 # The block there must be `material`, or the module refuses to start.
-# PLACEHOLDER coordinates (v4's -71 74 -243): set them to the rebuilt windmill.
+# The emerald block inside the existing main-world windmill.
 altars:
   - world: "minecraft:overworld"
-    x: -71
-    y: 74
-    z: -243
+    x: 74
+    y: 68
+    z: 66
     material: EMERALD_BLOCK
 
 bonuses:

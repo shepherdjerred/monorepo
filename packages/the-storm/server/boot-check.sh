@@ -11,8 +11,8 @@
 #      jar REMOVE_OLD_MODS must delete;
 #   3. second boot with --network none: the runtime state survived, the stray
 #      jar is gone, /data/plugins/*.jar is the image's jar set on this fixture,
-#      and the patches (including ${CFG_*} interpolation) applied. The live
-#      LWCX jar exception is outside this synthetic fixture.
+#      and the patches applied. A separate test-only plugin prepares synthetic
+#      worlds and blocks for the shipped coordinates; it never enters the image.
 #
 # legacy: a volume pre-filled with the config tree the old minecraft-tsmc init
 #   container copied (packages/homelab/src/cdk8s/config/minecraft-tsmc from
@@ -31,6 +31,8 @@ mkdir -p "$logs"
 repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 volume=the-storm-boot-check-$$
 fixture=$(mktemp -d)
+fixtures_jar=$repo/packages/the-storm/plugin/dist/build/libs/TheStormFixtures.jar
+[[ -f $fixtures_jar ]] || { echo 'Build TheStormFixtures.jar with the package build first' >&2; exit 1; }
 manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json)
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
 plugins+=(TheStorm)
@@ -71,8 +73,10 @@ boot() { # label [docker run args...]
     --tmpfs /tmp:exec,uid=1000,gid=3000 \
     --cap-drop ALL --security-opt no-new-privileges \
     --mount "type=volume,src=$volume,dst=/data,volume-nocopy" \
+    -v "$fixtures_jar:/plugins/TheStormFixtures.jar:ro" \
     -e EULA=TRUE -e ONLINE_MODE=FALSE -e MEMORY=3G \
-    -e SPAWN_PROTECTION=0 -e CFG_DISCORD_CHANNEL_ID=storm-boot-check-channel \
+    -e SPAWN_PROTECTION=0 -e STORM_BRAIN_BEARER_TOKEN=storm-boot-check-brain-token \
+    -e DISCORD_BOT_TOKEN=invalid-storm-fixture-token -e DISCORD_CHANNEL_ID=1 \
     "$image" >/dev/null
   local started=$SECONDS
   for _ in $(seq 1 600); do
@@ -93,25 +97,26 @@ boot() { # label [docker run args...]
   if grep -E 'Error occurred while enabling|Could not load plugin|Ambiguous plugin name' "$log"; then
     fail "$label: a plugin failed to load or enable"
   fi
-  # A plugin that disables itself before "Done" (e.g. an unsupported server
-  # version) is not running. DiscordSRV is exempt: without a bot token, which
-  # a local check never has, it disables itself by design.
+  # No plugin may disable itself before Done. The deliberately malformed test
+  # Discord token leaves its external bridge offline, but its module stays on.
   if awk '/Done \(/ { exit } { print }' "$log" |
-    grep -E '\] Disabling [A-Za-z0-9_-]+ v' | grep -v '\[DiscordSRV\]'; then
+    grep -E '\] Disabling [A-Za-z0-9_-]+ v'; then
     fail "$label: a plugin disabled itself during startup"
   fi
   echo "[$label] all ${#plugins[@]} plugins enabled"
+  grep -q 'Enabled modules:' "$log" || fail "$label: Storm modules did not start"
+  [[ $(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr ',' '\n' | wc -l) -eq 21 ]] ||
+    fail "$label: expected all 21 Storm modules"
+  if grep -E 'Could not prepare arenas|Could not validate shard altars|Spawn preparation failed' "$log"; then
+    fail "$label: required world fixtures failed"
+  fi
 }
 
 expect_patched() { # label: the patch step's values are in place
   on_volume grep -qx 'spawn-protection=0' /data/server.properties ||
     fail "$1: server.properties does not turn vanilla spawn protection off"
-  on_volume grep -qx 'auto-afk-timeout: 1200' /data/plugins/Essentials/config.yml ||
-    fail "$1: Essentials config.yml was not patched"
   on_volume grep -q 'thunder-chance: 10000' /data/spigot.yml ||
     fail "$1: spigot.yml was not patched"
-  on_volume grep -q 'storm-boot-check-channel' /data/plugins/DiscordSRV/config.yml ||
-    fail "$1: DiscordSRV config.yml was not patched with CFG_DISCORD_CHANNEL_ID"
 }
 
 expect_bedrock() { # label: first-boot config and generated Floodgate key exist
@@ -124,6 +129,22 @@ expect_bedrock() { # label: first-boot config and generated Floodgate key exist
   on_volume test -s /data/plugins/floodgate/key.pem ||
     fail "$1: Floodgate did not create its runtime key"
 }
+
+# An existing volume must fail before any content or progression mutation.
+new_volume
+on_volume bash -c 'mkdir -p /data/world /data/plugins/TheStorm/npcs; printf preserved-world > /data/world/level.dat; printf preserved-content > /data/plugins/TheStorm/npcs/unowned.yml'
+if on_volume /usr/local/bin/storm-entrypoint >"$logs/unprepared.log" 2>&1; then
+  fail "unprepared: existing volume was accepted without a verified restore"
+fi
+grep -q 'existing data requires archive-progression.py' "$logs/unprepared.log" ||
+  fail "unprepared: failed outside the preparation gate"
+[[ $(on_volume cat /data/world/level.dat) == preserved-world ]] ||
+  fail "unprepared: world data changed"
+[[ $(on_volume cat /data/plugins/TheStorm/npcs/unowned.yml) == preserved-content ]] ||
+  fail "unprepared: content changed before preparation"
+on_volume test ! -e /data/.the-storm-progression-v1.json ||
+  fail "unprepared: preparation marker was created"
+echo '[unprepared] refused activation and preserved existing files'
 
 # ── fresh ────────────────────────────────────────────────────────────────────
 new_volume
@@ -148,7 +169,7 @@ assert row == ("survives",), row
 ' || fail "the-storm.db lost its data across a boot"
 on_volume test -f /data/plugins/TheStorm/runtime-state.txt || fail "runtime file in plugins/TheStorm was deleted"
 on_volume test ! -e /data/plugins/Stray-1.0.jar || fail "REMOVE_OLD_MODS left a stray jar"
-expected=$( (jq -r '.plugins[].file' <<<"$manifest"; echo TheStorm.jar) | sort)
+expected=$( (jq -r '.plugins[].file' <<<"$manifest"; echo TheStorm.jar; echo TheStormFixtures.jar) | sort)
 actual=$(on_volume find /data/plugins -maxdepth 1 -name '*.jar' -printf '%f\n' | sort)
 [[ $expected == "$actual" ]] || fail "/data/plugins jars differ from the image: $(diff <(echo "$expected") <(echo "$actual"))"
 expect_patched fresh

@@ -30,7 +30,7 @@ final class ShardsConfigTest {
     assertThat(config.item().material()).isEqualTo("PRISMARINE_SHARD");
     assertThat(config.altars())
         .first()
-        .isEqualTo(new AltarLocation("minecraft:overworld", -71, 74, -243, "EMERALD_BLOCK"));
+        .isEqualTo(new AltarLocation("minecraft:overworld", 74, 68, 66, "EMERALD_BLOCK"));
     assertThat(config.upgrades().tiers())
         .extracting(TierRule::cost)
         .containsExactly(1, 2, 4, 6, 10);

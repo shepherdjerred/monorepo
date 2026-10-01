@@ -22,13 +22,19 @@ final class WorldConfigTest {
                   throw new AssertionError(err.toString());
                 });
     assertThat(config.sleepPercentage()).isEqualTo(50);
-    assertThat(config.crier()).isEqualTo(new CrierConfig(false, "world"));
+    assertThat(config.crier()).isEqualTo(new CrierConfig(true, "world"));
     assertThat(config.ambient())
-        .isEqualTo(new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"));
-    assertThat(config.digest()).isEqualTo(new DigestConfig(false, "world", "America/Los_Angeles"));
+        .isEqualTo(new AmbientConfig(true, "world", 68, 69, 66, 24, 8, "America/Los_Angeles"));
+    assertThat(config.digest()).isEqualTo(new DigestConfig(true, "world", "America/Los_Angeles"));
     assertThat(config.merchant())
         .isEqualTo(
-            new MerchantConfig(false, "world", java.util.List.of(), 12, 20, "America/Los_Angeles"));
+            new MerchantConfig(
+                true,
+                "world",
+                java.util.List.of(new MerchantAnchor(65, 69, 66)),
+                12,
+                20,
+                "America/Los_Angeles"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
         .containsExactly("wilds", "peaks", "mining");
@@ -36,6 +42,18 @@ final class WorldConfigTest {
         .extracting(WorldSpec::preset)
         .containsExactly("large_biomes", "amplified", "normal");
     assertThat(SleepFraction.skips(1, 2, config.sleepPercentage())).isTrue();
+  }
+
+  @Test
+  void nativeBordersRejectInvalidCentersAndDiameters() {
+    for (var size : new double[] {0, -1, Double.NaN, Double.POSITIVE_INFINITY, 60_000_000}) {
+      assertThatThrownBy(() -> new WorldBorderSpec("world", 0, 0, size))
+          .isInstanceOf(IllegalArgumentException.class);
+    }
+    assertThatThrownBy(() -> new WorldBorderSpec("world", Double.NaN, 0, 100))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new WorldBorderSpec("world", 0, 30_000_000, 100))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -73,6 +91,7 @@ final class WorldConfigTest {
                 new WorldConfig(
                     50,
                     java.util.List.of(new WorldSpec("wilds", "normal", true)),
+                    java.util.List.of(),
                     new CrierConfig(false, "world"),
                     new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"),
                     new DigestConfig(true, "world", "America/Los_Angeles"),

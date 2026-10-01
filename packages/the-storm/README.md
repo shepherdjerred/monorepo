@@ -43,8 +43,8 @@ Axes, Archery, Unarmed, Acrobatics and Repair. Each level is earned on a
 1–1000 scale; power level is the sum of those levels. `/skills` shows progress,
 `/skills <skill>` shows XP to the next level, and `/skills top` shows the
 power-level leaderboard. The state lives in the shared SQLite database;
-historical mcMMO player data is intentionally not migrated after the world
-reset.
+historical mcMMO player data is archived rather than migrated. The activation
+resets plugin progression while preserving worlds, builds, and vanilla inventories.
 
 Gathering and Fishing gain a capped extra-drop chance, combat skills gain a
 capped bonus against eligible mobs, and Acrobatics reduces fall damage.
@@ -53,8 +53,8 @@ material in the offhand to use Repair. Spawner-created, scripted quest and
 arena mobs and non-mob entities do not give combat XP. Player-placed gathering
 blocks, fertilized flowers and grass, and logs grown from player-planted
 saplings stay ineligible across restarts through the `skills_placed_block`
-table. Block markers follow pistons, falling blocks, and Enderman movement. The module
-remains off until the old mcMMO plugin is removed in the same rollout.
+table. Block markers follow pistons, falling blocks, and Enderman movement.
+The module is enabled alongside retirement of the old mcMMO plugin.
 
 The separate `brain/` pilot remains disabled and starts only with its explicit
 `--run` command. When enabled for a supervised trial, it checks for a human
@@ -72,6 +72,8 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
+All 21 modules ship enabled. Existing volumes must satisfy the one-time archive
+contract in [server/README.md](server/README.md) before the image starts.
 
 Storm Shards award ore drops only in chunks generated after the shards module
 activates. Older chunks may contain player-placed ore from before provenance
@@ -170,13 +172,14 @@ disconnected rather than triggering terrain generation in the arrival event.
 
 The world module requires every world in `server/owned/plugins/TheStorm/world.yml`
 to be provisioned and loaded before TheStorm enables. A missing world stops the
-server rather than generating terrain during plugin startup. Keep the world
-module disabled until an operator has provisioned `wilds` (large biomes),
+server rather than generating terrain during plugin startup. Operators provision
+`wilds` (large biomes),
 `peaks` (amplified), and `mining` (normal), and confirmed their loaded names and
 presets. The plugin checks the loaded name and NORMAL environment; Paper does
 not expose reliable preset metadata for an existing world, so preset acceptance
 remains an operator check. A mining reset must likewise make the replacement
-world available before TheStorm enables again.
+world available before TheStorm enables again. Multiverse remains a required
+startup dependency. Native borders are declared in the same typed file.
 
 Towns separates land rights from container rights. Claims control building,
 while a lock controls opening a lockable container on claimed land. New
@@ -200,12 +203,12 @@ town busy until their transfers finish, so deletion cannot race a balance change
 ### Main-world crier
 
 The world module also owns an on-demand `/crier` bulletin. Its separate
-`world.yml` `crier.enabled` setting ships as `false`; the world module itself
-also remains disabled in `config.yml`. The `/crier` command registers with the
+`world.yml` `crier.enabled` setting ships as `true`. The `/crier` command registers with the
 module and evaluates `the-storm-crier-enabled` in Flipt for each player. Both
 the typed file safety gate and the managed flag must allow the command; a
 missing or failed Flipt evaluation leaves it unavailable. The managed flag is
-enabled in beta and defaults off in production; Java flag IDs are checked
+enabled in the beta inventory; production stays gated until live acceptance.
+Java flag IDs are checked
 against the shared inventory during Gradle compilation. Once enabled, the
 command works only for players in `world`. It reports observed weather and
 game time, then rotates one historical Storm fact by full game day. The archive
@@ -214,10 +217,9 @@ the recovered Storm history (old spawn landmarks, the Bridge Hobo quest, the
 2015 Easter hunt, and Braxton's bank). It makes no claim that those landmarks
 or quests exist in the current world. There is no timer or automatic broadcast.
 
-`world.yml` also keeps `ambient.enabled` off. Its configured center uses the
+`world.yml` enables `ambient.enabled`. Its configured center uses the
 block position of the repo-owned Essentials gameplay spawn in `world`
-(`-440, 71, -66`), independently of the Bukkit world spawn. Confirm that
-center against the live windmill before enabling it. When enabled, a player arriving
+(`68, 69, 66`), independently of the Bukkit world spawn. A player arriving
 within the configured radius and height of that center hears one crier
 bark, grounded in current weather and a rotating archival fact. Join, world
 entry, and movement into the spawn area can trigger it, at most once per
@@ -225,7 +227,7 @@ Pacific date per player. The last-heard date persists on the player. This is
 new authored behavior inspired by the old windmill and Storm history, not a
 recovered NPC script. It has no recurring task or server-wide broadcast.
 
-The separate `world.yml` `digest.enabled` setting also ships as `false` and
+The separate `world.yml` `digest.enabled` setting ships as `true` and
 requires `crier.enabled`. When enabled, `/crier digest` reads the current
 Pacific date's ledger for `world` and replies only to the requesting player in
 that world. It counts distinct players who joined or entered the main world
@@ -240,17 +242,14 @@ and an on-demand read in `world` after GitOps deployment.
 
 ### Windmill trader visit
 
-The world module's `world.yml` `merchant.enabled` setting ships as `false`,
-with `anchors: []`. Before enabling it, inspect the current main-world
-windmill area and set `anchors` to a list with exactly one measured `x`, `y`,
-and `z` block for the trader's feet. The block below must be solid, with two
-air blocks above it. Use a spot players can reach without obstructing the
-windmill. The listener refuses an unsafe or unloaded anchor; it never chooses
-another position. The world module itself must also be enabled in `config.yml`.
+The world module's `world.yml` `merchant.enabled` setting ships as `true`,
+with a measured anchor at `(65,69,66)` outside the existing windmill. The
+block below must be solid, with two air blocks above it. The listener refuses
+an unsafe or unloaded anchor; it never chooses another position.
 The independent managed `the-storm-merchant-enabled` flag must evaluate true
-for the arriving player. It defaults off in production; Flipt errors or missing
-bootstrap settings keep visits off. The beta declaration is enabled for
-acceptance, but the YAML placement gate remains off until measured.
+for the arriving player. The beta inventory enables it; production stays gated
+until live acceptance. Flipt errors or
+missing bootstrap settings keep visits off.
 
 On the first join, world entry, teleport, respawn, or block movement within `arrivalRadius` of
 the anchor on a Pacific date, one named Wandering Trader appears in `world`.
@@ -267,7 +266,7 @@ For live acceptance, first verify the measured anchor and open the feature
 through GitOps and target the managed flag. With a player in `world`, verify the spawn, trade offers,
 same-day limit, natural despawn, and next-day rotation. Roll back by setting
 `merchant.enabled` to `false`; a trader already spawned can remain until its
-native despawn. Keep this feature off until that placement and gameplay check.
+native despawn.
 
 Arena restores keep the database snapshot until a later player login confirms
 that Paper saved the restored inventory and its matching persistent-data marker
@@ -348,8 +347,8 @@ mechanics and door coordinates were not recovered.
 
 Only the main hand counts; opening either half records the lower half. Visits
 are stored on the player's persistent data, survive restarts, and reset on the
-next local day. The module remains disabled in `config.yml` until the authored
-doors have been placed and checked in the main world. The historical premium
+next local day. The module is enabled with measured doors in the existing town
+and windmill. Offsets use the preserved Bukkit spawn `(0,65,0)`. The historical premium
 ranks, disguise packs, and horse prizes are not granted by these item events.
 
 - Code copied from GPL/LGPL plugins keeps its license header.

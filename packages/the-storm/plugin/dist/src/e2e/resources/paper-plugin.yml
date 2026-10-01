@@ -1,0 +1,15 @@
+name: TheStormFixtures
+version: "1.0.0"
+main: com.shepherdjerred.thestorm.e2e.StormFixtures
+api-version: "26.2"
+description: Test-only synthetic world fixtures; never ship to production
+dependencies:
+  server:
+    Multiverse-Core:
+      load: BEFORE
+      required: true
+      join-classpath: false
+    TheStorm:
+      load: AFTER
+      required: true
+      join-classpath: false
