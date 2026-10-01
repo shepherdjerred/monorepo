@@ -6,12 +6,8 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { MatchReview } from "#src/components/match/match-review.tsx";
-import {
-  matchQueueLabel,
-  supportsReviewMap,
-} from "#src/lib/player/match-review.ts";
+import { matchQueueLabel } from "#src/lib/player/match-review.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
 import { useExploreMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
@@ -74,15 +70,9 @@ export function ExploreMatch() {
       <MatchReview
         source={{ kind: "explore" }}
         matchId={matchId}
-        teams={match.teams}
-        showRiftMap={supportsReviewMap(match)}
-        durationSeconds={match.gameDurationSeconds}
-        matchups={match.roleMatchups}
-      >
-        {tallyValue.status === "done" && tallyValue.data !== null && (
-          <MatchMvpTally tally={tallyValue.data} />
-        )}
-      </MatchReview>
+        match={match}
+        tally={tallyValue.status === "done" ? tallyValue.data : null}
+      />
     </PageShell>
   );
 }

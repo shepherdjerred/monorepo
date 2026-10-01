@@ -2,10 +2,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  matchQueueLabel,
-  supportsReviewMap,
-} from "#src/lib/player/match-review.ts";
+import { matchQueueLabel } from "#src/lib/player/match-review.ts";
 import { ArenaSubteams } from "#src/components/match/match-arena-subteams.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -16,7 +13,6 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { MatchReview } from "#src/components/match/match-review.tsx";
-import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
 import { track } from "#src/lib/analytics.ts";
 import { useConsumerMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -124,20 +120,14 @@ export function ConsumerMatch() {
       <MatchReview
         source={{ kind: "consumer", playerId }}
         matchId={matchId}
-        teams={match.teams}
-        showRiftMap={supportsReviewMap(match)}
-        durationSeconds={match.gameDurationSeconds}
-        matchups={match.roleMatchups}
+        match={match}
+        tally={tallyValue.status === "done" ? tallyValue.data : null}
         arena={
           match.arenaSubteams !== null && match.arenaSubteams.length > 0 ? (
             <ArenaSubteams subteams={match.arenaSubteams} />
           ) : undefined
         }
-      >
-        {tallyValue.status === "done" && tallyValue.data !== null && (
-          <MatchMvpTally tally={tallyValue.data} />
-        )}
-      </MatchReview>
+      />
     </PageShell>
   );
 }

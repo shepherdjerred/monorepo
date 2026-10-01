@@ -17,13 +17,45 @@ import {
   type ReviewSource,
 } from "./match-review-timeline.tsx";
 import { ChampionIcon } from "./champion-icon.tsx";
+import { MatchMvpTally, type MatchMvpTallyView } from "./match-mvp-tally.tsx";
 import {
   laneOpponent,
   participantName,
   teamName,
+  supportsReviewMap,
 } from "#src/lib/player/match-review.ts";
 
 export function MatchReview(props: {
+  source: ReviewSource;
+  matchId: string;
+  match: {
+    teams: MatchTeam[];
+    mapId: number;
+    queueId: number;
+    gameMode: string;
+    gameVersion: string;
+    gameDurationSeconds: number;
+    roleMatchups: RoleMatchup[] | null;
+  };
+  tally: MatchMvpTallyView | null;
+  arena?: ReactNode;
+}) {
+  return (
+    <MatchReviewContent
+      source={props.source}
+      matchId={props.matchId}
+      teams={props.match.teams}
+      showRiftMap={supportsReviewMap(props.match)}
+      durationSeconds={props.match.gameDurationSeconds}
+      matchups={props.match.roleMatchups}
+      arena={props.arena}
+    >
+      {props.tally !== null && <MatchMvpTally tally={props.tally} />}
+    </MatchReviewContent>
+  );
+}
+
+function MatchReviewContent(props: {
   source: ReviewSource;
   matchId: string;
   teams: MatchTeam[];
