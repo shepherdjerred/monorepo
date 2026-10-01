@@ -1,4 +1,4 @@
-import { cp, mkdir, rm } from "node:fs/promises";
+import { chmod, chown, cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
 import { stagePlugins, stormTestConfig } from "./harness/server.ts";
@@ -102,6 +102,15 @@ await mkdir(pluginVolume, { recursive: true });
 await mkdir(dataVolume, { recursive: true });
 await cp(stagedPlugins, pluginVolume, { recursive: true });
 await mkdir(path.join(dataVolume, "logs"), { recursive: true });
+// The runner creates this shared directory as root; Paper writes as uid 1000.
+await chown(path.join(dataVolume, "logs"), 1000, 1000);
+await chmod(path.join(dataVolume, "logs"), 0o770);
+// The suite reconnects disposable players faster than Bukkit's default throttle.
+await mkdir(path.join(dataVolume, "config"), { recursive: true });
+await Bun.write(
+  path.join(dataVolume, "config", "bukkit.yml"),
+  "settings:\n  connection-throttle: -1\n",
+);
 
 const brainDeadline = Date.now() + 60_000;
 for (;;) {
