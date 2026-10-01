@@ -73,7 +73,7 @@ describe("packagesForStagedPaths", () => {
     ).toEqual(["@scout-for-lol/backend"]);
   });
 
-  test("maps scripts and Buildkite TypeScript onto root-scripts", () => {
+  test("maps scripts and CI TypeScript onto root-scripts", () => {
     expect(
       packagesForStagedPaths(
         [
@@ -85,7 +85,7 @@ describe("packagesForStagedPaths", () => {
     ).toEqual(["@shepherdjerred/root-scripts"]);
   });
 
-  test("maps Buildkite ESLint suppressions and tsconfig onto root-scripts", () => {
+  test("maps CI ESLint suppressions and tsconfig onto root-scripts", () => {
     expect(
       packagesForStagedPaths(
         ["ci/eslint-suppressions.json", "ci/tsconfig.json"],

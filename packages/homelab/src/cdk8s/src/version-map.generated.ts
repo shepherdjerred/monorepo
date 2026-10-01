@@ -74,7 +74,6 @@ export const VersionMapSchema = z
     "freshrss/freshrss": z.string(),
     "oven/bun": z.string(),
     "pinchtab/pinchtab": z.string(),
-    "agent-stack-k8s": z.string(),
     "texlive/texlive": z.string(),
     "grafana/tempo": z.string(),
     "minio/mc": z.string(),

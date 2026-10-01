@@ -146,11 +146,11 @@ manual. A generated token value is exposed only as a sensitive handoff paired
 with its existing 1Password rotation unit; an operator writes and proves that
 handoff before revoking the superseded token.
 
-The committed registry creates a distinct replacement for Buildkite, the
+The committed registry creates a distinct replacement for Woodpecker, the
 Temporal audit worker, local `cf` tooling, cloudflare-operator, the R2 exporter,
 and DDNS. Each entry records the active token ID it supersedes, readable
 permission names plus their stable Cloudflare IDs, exact account or zone
-resources, and the existing 1Password field or JSON path. The Buildkite and
+resources, and the existing 1Password field or JSON path. The Woodpecker and
 Temporal entries deliberately split their currently shared credential. The
 bootstrap identity must have API Tokens Read and Write; ordinary consumer
 tokens do not receive token-administration permissions.
@@ -195,7 +195,9 @@ imported API-key metadata. Its API-key resource is import-only and never returns
 secret material, so invitations and rotated key creation remain documented
 manual bootstrap steps. The committed key metadata records the existing
 1Password rotation unit, including a JSON path when needed, that receives a
-manually created replacement.
+manually created replacement. Archived keys retain their ID, name, and status
+without a vault rotation target. Destruction protection keeps this metadata
+managed even after the credential has been retired.
 
 ### Anthropic workload identity federation
 

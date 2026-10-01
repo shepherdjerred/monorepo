@@ -295,7 +295,7 @@ if (import.meta.main) {
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     // Only a provider-declared block (quota exhaustion) exits with the status
-    // the Buildkite step soft-fails on; timeouts, configuration errors, and
+    // the CI review step soft-fails on; timeouts, configuration errors, and
     // findings all keep the hard failure status.
     process.exit(
       error instanceof ReviewGateFailure

@@ -23,7 +23,7 @@ export const platformTofuPaths = [
   "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
 ] as const;
 
-// Stacks Buildkite can plan and apply. anthropic-federation and google are
+// Stacks Woodpecker can plan and apply. anthropic-federation and google are
 // operator-applied (an org:admin OAuth token and a user's ADC respectively),
 // so they validate in CI but never appear here.
 export const platformTofuStacks = [

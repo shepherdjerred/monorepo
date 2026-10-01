@@ -131,7 +131,7 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
     }
 
     // Stream the real generated config: the dind daemon cannot bind-mount a
-    // path from the Buildkite command container.
+    // path from the CI command container.
     const validate = await run(
       [
         "docker",

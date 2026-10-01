@@ -19,7 +19,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         },
         {
           "path": "integration/sqlite.integration.test.ts",
@@ -221,7 +221,7 @@
       "excludedSuites": [
         {
           "path": "tests",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -458,7 +458,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -474,7 +474,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -531,7 +531,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -1037,7 +1037,7 @@
     {
       "package": "@shepherdjerred/macos-cross-compiler",
       "directory": "packages/macos-cross-compiler",
-      "reason": "Compiler image smoke tests are paused in CI, so the sample builds and Mach-O checks are currently unverified by Buildkite. The smoke stage remains available for explicit local image validation. The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
+      "reason": "Compiler image smoke tests are paused in CI, so the sample builds and Mach-O checks are currently unverified by Woodpecker. The smoke stage remains available for explicit local image validation. The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
     },
     {
       "package": "@shepherdjerred/hkctl",

@@ -845,12 +845,22 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "api_key_id",
-          "name",
-          "status",
-          "vault_item_id",
-          "vault_field"
+        "required": ["api_key_id", "name", "status"],
+        "oneOf": [
+          {
+            "properties": { "status": { "enum": ["active", "inactive"] } },
+            "required": ["vault_item_id", "vault_field"]
+          },
+          {
+            "properties": { "status": { "const": "archived" } },
+            "not": {
+              "anyOf": [
+                { "required": ["vault_item_id"] },
+                { "required": ["vault_field"] },
+                { "required": ["vault_json_path"] }
+              ]
+            }
+          }
         ],
         "properties": {
           "api_key_id": {
@@ -863,7 +873,7 @@
           },
           "status": {
             "type": "string",
-            "minLength": 1
+            "enum": ["active", "inactive", "archived"]
           },
           "vault_item_id": {
             "type": "string",

@@ -1,11 +1,8 @@
 /**
  * Homelab release admission: the decision, without the I/O.
  *
- * Extracted so the Buildkite entry point and the Woodpecker one share one
- * implementation during the migration. Only the transport differs between
- * them -- which build metadata store the verdict is published to -- and the
- * rule about which build may release must not be allowed to drift between the
- * two while both exist.
+ * The Woodpecker entry point uses this decision before publishing the verdict
+ * to the encrypted CI handoff store.
  */
 
 import { asRecord } from "../json.ts";

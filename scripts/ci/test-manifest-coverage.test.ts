@@ -180,22 +180,41 @@ describe("workspaceTestFiles", () => {
     ).toEqual(["scripts/a.test.ts"]);
   });
 
-  test("gives the root scripts workspace only .buildkite/scripts tests", () => {
+  test("gives the root scripts workspace only ci/scripts tests", () => {
     expect(
       workspaceTestFiles(
         workspace({ directory: "scripts" }),
         [
           "scripts/a.test.ts",
-          ".buildkite/scripts/b.test.ts",
-          ".buildkite/other.test.ts",
+          "ci/scripts/b.test.ts",
+          "ci/other.test.ts",
+          ".buildkite/scripts/retired.test.ts",
         ],
         ["scripts"],
       ),
-    ).toEqual(["a.test.ts", "../.buildkite/scripts/b.test.ts"]);
+    ).toEqual(["a.test.ts", "../ci/scripts/b.test.ts"]);
   });
 });
 
 describe("unrunTestFiles", () => {
+  test("rejects CI tests missing from the root scripts test selection", () => {
+    expect(
+      unrunTestFiles(
+        manifest([
+          workspace({
+            package: "@shepherdjerred/root-scripts",
+            directory: "scripts",
+            steps: [{ runner: "vitest", args: ["a.test.ts"] }],
+          }),
+        ]),
+        ["scripts/a.test.ts", "ci/scripts/b.test.ts"],
+        ["scripts"],
+      ),
+    ).toEqual([
+      "scripts/ci-test-manifest.json (@shepherdjerred/root-scripts): no step runs ../ci/scripts/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
+    ]);
+  });
+
   test("names each test file no step runs", () => {
     expect(
       unrunTestFiles(

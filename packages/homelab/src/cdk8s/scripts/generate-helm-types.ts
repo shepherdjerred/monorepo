@@ -10,7 +10,7 @@
  *   --check    Regenerate into a throwaway dir and FAIL (exit 1) if the result
  *              differs from the committed `generated/helm/` tree — without
  *              mutating it. Runs in CI as the `helm-types-drift-check`
- *              Buildkite step (PR-only, self-scoped to generator-input
+ *              Woodpecker step (PR-only, self-scoped to generator-input
  *              changes), so a catalog chart bump that wasn't regenerated
  *              fails its PR instead of drifting silently.
  */

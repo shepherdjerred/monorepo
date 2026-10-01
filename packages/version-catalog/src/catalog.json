@@ -874,19 +874,6 @@
       "value": "0.15.2@sha256:a2205fc99765e42ce566dae3c8ff9fc3e3338cf44decb816ddb3d54d8d4bc05d"
     },
     {
-      "name": "agent-stack-k8s",
-      "category": "upstream",
-      "artifactType": "helm-chart",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io/buildkite/helm",
-        "versioning": "semver",
-        "packageName": "agent-stack-k8s"
-      },
-      "value": "0.50.0@sha256:9d0d052f73362fe28143faa9b0a5ee3fdefedc93e2d7ad9ab8f65b15d50ca4bd"
-    },
-    {
       "name": "texlive/texlive",
       "category": "upstream",
       "artifactType": "image",

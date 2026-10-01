@@ -20,7 +20,7 @@ describe("affected verification filters", () => {
     ]);
   });
 
-  test("selects root scripts when Buildkite scripts change", async () => {
+  test("selects root scripts when CI scripts change", async () => {
     expect(
       await affectedVerifyFilters(
         { CI_CHANGED_BASE: "abc123" },

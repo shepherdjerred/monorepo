@@ -76,9 +76,9 @@ RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 # The bun download cache is NOT baked into this image anymore. The old
 # bun-cache-warm stage added ~1 GiB compressed that re-pushed/re-pulled on
 # every lockfile change; CI pods now share a persistent node-local cache
-# volume instead (buildkite-bun-cache PVC, mounted by the agent-stack
-# pod-spec-patch in packages/homelab/src/cdk8s/src/resources/argo-applications/
-# buildkite.ts). The static pipeline points BUN_INSTALL_CACHE_DIR at the
+# volume instead (woodpecker-bun-cache PVC, mounted by the generated
+# pipeline's Kubernetes backend options). The pipeline points
+# BUN_INSTALL_CACHE_DIR at the
 # mount's data subdirectory. Every install holds a shared lock while the
 # threshold-based collector takes the exclusive lock before clearing the
 # cache. The shared cache stays warm across builds without living in the image;
