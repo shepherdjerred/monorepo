@@ -23,6 +23,7 @@ import type {
 import {
   loadWorkspaces,
   targetClosureDirs,
+  workspaceSourceChanges,
 } from "./select-image-targets-workspaces.ts";
 import type { WorkspacePackage } from "./select-image-targets-workspaces.ts";
 import { unpublishedImagePinInspectionFailure } from "./select-image-targets-pins.ts";
@@ -242,14 +243,12 @@ function addClosureReasons(
   packages: ReadonlyMap<string, WorkspacePackage>,
   reasons: Map<string, string[]>,
 ): void {
-  for (const [target, owner] of Object.entries(IMAGE_TARGET_OWNERS)) {
-    const dirs = targetClosureDirs(target, owner, packages);
-    for (const path of changedPaths) {
-      const dir = dirs.find((candidate) => path.startsWith(candidate));
-      if (dir !== undefined) {
-        addReason(reasons, target, `workspace closure: ${path} under ${dir}/`);
-      }
-    }
+  for (const { target, path, dir } of workspaceSourceChanges(
+    changedPaths,
+    IMAGE_TARGET_OWNERS,
+    packages,
+  )) {
+    addReason(reasons, target, `workspace closure: ${path} under ${dir}/`);
   }
 }
 

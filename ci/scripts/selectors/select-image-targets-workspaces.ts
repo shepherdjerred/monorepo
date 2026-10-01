@@ -34,6 +34,49 @@ const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
 // runtime workspace lists a tooling helper as a development dependency.
 const NON_IMAGE_WORKSPACE_DIRS = new Set(["scripts/"]);
 
+// Temporal copies only the registry from homelab. Dependency fingerprints
+// still use the entire closure; source selection follows the copied files.
+const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
+  Record<string, Readonly<Record<string, readonly string[]>>>
+> = {
+  "temporal-worker": {
+    "packages/homelab": [
+      "packages/homelab/package.json",
+      "packages/homelab/src/domain-registry.ts",
+      "packages/homelab/src/domain-registry.json",
+    ],
+  },
+};
+
+function workspaceSourceMatches(
+  target: string,
+  dir: string,
+  path: string,
+): boolean {
+  const inputs = PARTIAL_WORKSPACE_SOURCE_INPUTS[target]?.[dir] ?? [`${dir}/`];
+  return inputs.some((prefix) =>
+    prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix,
+  );
+}
+
+export function workspaceSourceChanges(
+  changedPaths: readonly string[],
+  owners: Readonly<Record<string, string>>,
+  packages: ReadonlyMap<string, WorkspacePackage>,
+): { target: string; path: string; dir: string }[] {
+  const changes = [];
+  for (const [target, owner] of Object.entries(owners)) {
+    const dirs = targetClosureDirs(target, owner, packages);
+    for (const path of changedPaths) {
+      const dir = dirs.find((candidate) =>
+        workspaceSourceMatches(target, candidate, path),
+      );
+      if (dir !== undefined) changes.push({ target, path, dir });
+    }
+  }
+  return changes;
+}
+
 function stringArray(value: unknown, label: string): string[] {
   if (
     !Array.isArray(value) ||

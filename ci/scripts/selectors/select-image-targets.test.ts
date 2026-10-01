@@ -101,8 +101,6 @@ describe("selectImageTargets", () => {
 
   test("rebuilds infra when the generated Caddyfile changes", async () => {
     for (const path of [
-      "packages/homelab/src/domain-registry.json",
-      "packages/homelab/src/domain-registry.ts",
       "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
       "packages/homelab/src/cdk8s/src/misc/common.ts",
       "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
@@ -110,6 +108,21 @@ describe("selectImageTargets", () => {
     ]) {
       expect(await select([path])).toEqual(["infra"]);
     }
+  });
+
+  test("rebuilds both registry consumers while keeping homelab image sources scoped", async () => {
+    for (const path of [
+      "packages/homelab/src/domain-registry.json",
+      "packages/homelab/src/domain-registry.ts",
+    ]) {
+      expect(await select([path])).toEqual(["infra", "temporal-worker"]);
+    }
+    expect(await select(["packages/homelab/package.json"])).toEqual([
+      "temporal-worker",
+    ]);
+    expect(
+      await select(["packages/homelab/src/tofu/cloudflare/domain-baseline.tf"]),
+    ).toEqual([]);
   });
 
   test("rebuilds infra when The Storm's server image inputs change", async () => {
