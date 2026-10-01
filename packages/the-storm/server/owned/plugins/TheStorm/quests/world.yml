@@ -22,22 +22,23 @@ factions:
 variables:
   login-claims: How many daily login rewards Anna has paid the player
 
-# PLACEHOLDER COORDINATES until the world around spawn is built out.
+# Existing mine entrance south of town, identified near the supplied player
+# position (-39.625, 66, 163.112). Its timber stairs descend into the tunnel.
 regions:
   south-entrance:
     name: South Entrance
     world: minecraft:overworld
-    x: -170.0
-    y: 70.0
-    z: -28.0
-    radius: 15.0
+    x: -40.0
+    y: 66.0
+    z: 163.0
+    radius: 6.0
   south-mines:
     name: South Mines
     world: minecraft:overworld
-    x: -300.0
-    y: 60.0
-    z: -14.0
-    radius: 35.0
+    x: -36.0
+    y: 58.0
+    z: 170.0
+    radius: 7.0
 
 # Custom objective and action ids other modules report through QuestHooks.
 hooks: {}

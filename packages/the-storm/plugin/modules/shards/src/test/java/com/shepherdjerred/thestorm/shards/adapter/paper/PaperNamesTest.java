@@ -17,7 +17,7 @@ final class PaperNamesTest {
 
   /** Until the manager sets the real windmill coordinates, the placeholder altar fails. */
   private static final String PLACEHOLDER_ALTAR =
-      "altars: expected EMERALD_BLOCK at minecraft:overworld -71 74 -243 but found AIR";
+      "altars: expected EMERALD_BLOCK at minecraft:overworld 74 68 66 but found AIR";
 
   private final Harness harness = new Harness();
   // MockBukkit creates only the overworld. Keep the shipped rules and point their world list at
@@ -59,7 +59,7 @@ final class PaperNamesTest {
   }
 
   @Test
-  void everyShippedNameExistsAndOnlyThePlaceholderAltarIsMissing() {
+  void everyShippedNameExistsAndTheSyntheticWorldNeedsItsAltarFixture() {
     assertThat(PaperNames.problems(shipped, harness.server)).isEmpty();
     assertThat(PaperNames.altarProblemsAsync(shipped, this::block).join())
         .containsExactly(PLACEHOLDER_ALTAR);

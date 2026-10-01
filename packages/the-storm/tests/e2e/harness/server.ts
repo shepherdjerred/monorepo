@@ -1,8 +1,13 @@
 import { createHash, randomBytes } from "node:crypto";
-import { cp, mkdir, readdir, rm } from "node:fs/promises";
+import { chmod, cp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { docker } from "./docker.ts";
+import {
+  overlayAgentTopLevel,
+  overlayBrainUrl,
+  overlaySweep,
+} from "./config-overlays.ts";
 import {
   paper,
   serverImage,
@@ -55,6 +60,7 @@ export type StartServerOptions = {
   stormJar: string;
   mechanicsE2eJar?: string;
   mechanicsConfig?: string;
+  fixturesJar?: string;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
   /** Repository-owned plugin config directory. */
@@ -216,6 +222,7 @@ export async function stagePlugins(
     | "stormConfig"
     | "mechanicsE2eJar"
     | "mechanicsConfig"
+    | "fixturesJar"
     | "warmCache"
   > &
     Partial<
@@ -242,6 +249,12 @@ export async function stagePlugins(
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
     });
+  }
+  if (options.fixturesJar !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStormFixtures.jar"),
+      Bun.file(options.fixturesJar),
+    );
   }
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),
@@ -309,58 +322,11 @@ const warmMounts = [
 // Instead they ride in through /plugins and are copied back out after boot.
 const luckPermsLibs = path.join("LuckPerms", "libs");
 
-async function overlayBrainUrl(
-  stagedAgentYml: string,
-  baseUrl: string,
-): Promise<void> {
-  const content = await Bun.file(stagedAgentYml).text();
-  const overlaid = content.replace(
-    /^ {2}baseUrl: .*$/m,
-    `  baseUrl: ${baseUrl}`,
-  );
-  if (overlaid === content) {
-    throw new Error(`No brain.baseUrl line to overlay in ${stagedAgentYml}`);
-  }
-  await Bun.write(stagedAgentYml, overlaid);
-}
-
-async function overlayAgentTopLevel(
-  stagedAgentYml: string,
-  agent: StartServerOptions["agent"],
-): Promise<void> {
-  const content = await Bun.file(stagedAgentYml).text();
-  const lines = content.split("\n");
-  for (const [key, value] of Object.entries(agent)) {
-    const index = lines.findIndex((line) => line.startsWith(`${key}: `));
-    if (index === -1) {
-      throw new Error(
-        `No top-level ${key} line to overlay in ${stagedAgentYml}`,
-      );
-    }
-    lines[index] = `${key}: ${value.toString()}`;
-  }
-  await Bun.write(stagedAgentYml, lines.join("\n"));
-}
-
-async function overlaySweep(
-  stagedAgentYml: string,
-  sweep: StartServerOptions["sweep"],
-): Promise<void> {
-  const content = await Bun.file(stagedAgentYml).text();
-  const lines = content.split("\n");
-  for (const [key, value] of Object.entries(sweep)) {
-    const index = lines.findIndex((line) => line.startsWith(`  ${key}: `));
-    if (index === -1) {
-      throw new Error(`No sweep.${key} line to overlay in ${stagedAgentYml}`);
-    }
-    lines[index] = `  ${key}: ${value.toString()}`;
-  }
-  await Bun.write(stagedAgentYml, lines.join("\n"));
-}
-
 function serverEnv(
   rconPassword: string,
   brainToken: string,
+  full: boolean,
+  brainUrl: string,
 ): Record<string, string> {
   return {
     EULA: "TRUE",
@@ -371,6 +337,16 @@ function serverEnv(
     ENABLE_RCON: "true",
     RCON_PASSWORD: rconPassword,
     STORM_BRAIN_BEARER_TOKEN: brainToken,
+    // Deliberately malformed test token: JDA rejects it locally, without
+    // authenticating to or posting in a real Discord server.
+    ...(full
+      ? {
+          DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
+          DISCORD_CHANNEL_ID: "1",
+          FLIPT_URL: brainUrl,
+          FLIPT_ENVIRONMENT: "prod",
+        }
+      : {}),
     // Keep boot hermetic: do not fetch third-party default configs.
     SKIP_DOWNLOAD_DEFAULTS: "true",
     MEMORY: "1G",
@@ -392,6 +368,13 @@ async function bootContainer(
 ): Promise<Omit<ServerInfo & { kind: "container" }, "bootMs">> {
   await docker(["start", id]);
   await waitForLog(id, /Done \(\d+\.\d+s\)! For help/u, deadline);
+  const { stdout: logs } = await docker(["logs", id]);
+  if (
+    logs.includes("The Storm failed to enable") ||
+    logs.includes("Error occurred while enabling")
+  ) {
+    throw new Error(`Server plugin startup failed:\n${logs.slice(-12_000)}`);
+  }
   const game = await publishedPort(id, 25_565);
   const rcon = await publishedPort(id, 25_575);
   // The Done line proves the game port; prove RCON accepts and executes a
@@ -442,6 +425,7 @@ export async function startServer(
   // breaks back-to-back bot joins from the test runner.
   const bukkitYml = path.join(stagingDir, "bukkit.yml");
   await Bun.write(bukkitYml, "settings:\n  connection-throttle: -1\n");
+  await chmod(bukkitYml, 0o666);
 
   const rconPassword = randomBytes(24).toString("hex");
   const { stdout: containerId } = await docker([
@@ -462,9 +446,14 @@ export async function startServer(
           `${path.join(cacheDir, dir)}:${target}`,
         ])
       : []),
-    ...Object.entries(serverEnv(rconPassword, options.brain.token)).flatMap(
-      ([key, value]) => ["-e", `${key}=${value}`],
-    ),
+    ...Object.entries(
+      serverEnv(
+        rconPassword,
+        options.brain.token,
+        options.fixturesJar !== undefined,
+        options.brain.baseUrl,
+      ),
+    ).flatMap(([key, value]) => ["-e", `${key}=${value}`]),
     serverImage,
   ]);
   const id = containerId.trim();

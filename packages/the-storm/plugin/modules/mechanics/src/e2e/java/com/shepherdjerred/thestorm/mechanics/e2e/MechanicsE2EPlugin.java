@@ -38,7 +38,9 @@ import org.jspecify.annotations.Nullable;
 public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
 
   private static final int BRIDGE_Y = -55;
-  private static final int PISTON_X = 8;
+  // Synthetic machinery belongs outside the shipped town and arena protections.
+  private static final int BRIDGE_X = 400;
+  private static final int PISTON_X = 408;
   private static final int PISTON_Y = -45;
   private static final int PISTON_Z = 0;
 
@@ -92,24 +94,24 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
   }
 
   private void prepareBridge(World world) {
-    for (int x = -2; x <= 2; x++) {
+    for (int x = BRIDGE_X - 2; x <= BRIDGE_X + 2; x++) {
       for (int z = -2; z <= 5; z++) {
         set(world, x, BRIDGE_Y - 2, z, "minecraft:stone");
       }
     }
-    var near = world.getBlockAt(0, BRIDGE_Y, 0);
-    var far = world.getBlockAt(0, BRIDGE_Y, 4);
-    set(world, 0, BRIDGE_Y, 1, "minecraft:stone");
-    set(world, 0, BRIDGE_Y, 3, "minecraft:stone");
-    set(world, 0, BRIDGE_Y + 1, 0, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 4, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 1, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 2, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 3, "minecraft:oak_planks");
+    var near = world.getBlockAt(BRIDGE_X, BRIDGE_Y, 0);
+    var far = world.getBlockAt(BRIDGE_X, BRIDGE_Y, 4);
+    set(world, BRIDGE_X, BRIDGE_Y, 1, "minecraft:stone");
+    set(world, BRIDGE_X, BRIDGE_Y, 3, "minecraft:stone");
+    set(world, BRIDGE_X, BRIDGE_Y + 1, 0, "minecraft:oak_planks");
+    set(world, BRIDGE_X, BRIDGE_Y + 1, 4, "minecraft:oak_planks");
+    set(world, BRIDGE_X, BRIDGE_Y + 1, 1, "minecraft:oak_planks");
+    set(world, BRIDGE_X, BRIDGE_Y + 1, 2, "minecraft:oak_planks");
+    set(world, BRIDGE_X, BRIDGE_Y + 1, 3, "minecraft:oak_planks");
     configureSign(near, "north", "[Bridge]");
     configureSign(far, "south", "[Bridge]");
-    bindSpan(near, "0," + (BRIDGE_Y + 1) + ",0", "0," + BRIDGE_Y + ",4", true);
-    bindSpan(far, "0," + (BRIDGE_Y + 1) + ",4", "0," + BRIDGE_Y + ",0", false);
+    bindSpan(near, BRIDGE_X + "," + (BRIDGE_Y + 1) + ",0", BRIDGE_X + "," + BRIDGE_Y + ",4", true);
+    bindSpan(far, BRIDGE_X + "," + (BRIDGE_Y + 1) + ",4", BRIDGE_X + "," + BRIDGE_Y + ",0", false);
   }
 
   private void prepareSuperPush(World world) {

@@ -126,6 +126,22 @@ final class EconomyCommandsTest {
   }
 
   @Test
+  void aReturningVanillaPlayerReceivesTheStormGrantOnlyOnce() throws Exception {
+    var alice = new PlayerMock(server, "Alice");
+    server.getPlayerList().addOfflinePlayer(alice);
+    server.getPlayerList().setFirstPlayed(alice.getUniqueId(), 1);
+    assertThat(alice.hasPlayedBefore()).isTrue();
+    server.addPlayer(alice);
+    awaitLine(alice, WELCOME);
+    assertThat(balance(alice)).isEqualTo(Crystals.of(500));
+
+    alice.disconnect();
+    alice.reconnect();
+    assertThat(settle(alice)).noneMatch(line -> line.contains("Welcome!"));
+    assertThat(balance(alice)).isEqualTo(Crystals.of(500));
+  }
+
+  @Test
   void balanceShowsYourOwnCrystals() throws Exception {
     var alice = join("Alice");
 

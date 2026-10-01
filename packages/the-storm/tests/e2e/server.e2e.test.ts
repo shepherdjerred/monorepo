@@ -102,13 +102,13 @@ describe("multi-player flows", () => {
     secondBot,
     rcon,
   }) => {
-    await rcon.command(`tp ${bot.username} 0.5 -60 0.5`);
-    await rcon.command(`tp ${secondBot.username} 4.5 -60 0.5`);
+    await rcon.command(`tp ${bot.username} 400.5 -60 0.5`);
+    await rcon.command(`tp ${secondBot.username} 404.5 -60 0.5`);
     await waitUntil(
       "bots teleported",
       () =>
-        bot.entity.position.distanceTo(new Vec3(0.5, -60, 0.5)) < 0.1 &&
-        secondBot.entity.position.distanceTo(new Vec3(4.5, -60, 0.5)) < 0.1,
+        bot.entity.position.distanceTo(new Vec3(400.5, -60, 0.5)) < 0.1 &&
+        secondBot.entity.position.distanceTo(new Vec3(404.5, -60, 0.5)) < 0.1,
     );
     await waitUntil(
       "bots see each other",
@@ -122,7 +122,7 @@ describe("multi-player flows", () => {
     await heard;
 
     // Grief-style flow: the first bot breaks a block; the second observes it.
-    const target = new Vec3(2, -60, 0);
+    const target = new Vec3(402, -60, 0);
     await rcon.command(`setblock ${blockArgs(target)} minecraft:dirt`);
     await waitUntil(
       "both bots see dirt",

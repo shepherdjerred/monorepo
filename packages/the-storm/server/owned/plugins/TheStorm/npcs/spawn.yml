@@ -2,10 +2,7 @@
 # The NPCs of Spawn Town. Every file in this folder has the same five
 # sections (write {} for an empty one); ids are shared across files.
 #
-# PLACEHOLDER COORDINATES: every position below is a stand-in near 0,64,0
-# until Spawn Town is rebuilt. Stand where an NPC belongs and run
-# `/npc here <id>` to get a block to paste, then `/npc reload`.
-#
+# Positions are measured in the existing Spawn Town buildings and market.
 # Optional references are written as `none`, never left out.
 
 # Named spots schedules send NPCs to. `home` is reserved: it always means
@@ -13,50 +10,50 @@
 places:
   market:
     world: minecraft:overworld
-    x: 0.5
-    y: 64.0
-    z: 12.5
+    x: -35.5
+    y: 64
+    z: 0.5
     yaw: 0.0
     pitch: 0.0
   tavern-door:
     world: minecraft:overworld
-    x: -9.5
-    y: 64.0
-    z: 4.5
+    x: -4.5
+    y: 67
+    z: 64.5
     yaw: 90.0
     pitch: 0.0
   tavern-bed:
     world: minecraft:overworld
-    x: -14.5
-    y: 64.6
-    z: 8.5
+    x: -10.5
+    y: 71.6
+    z: 68.5
     yaw: 180.0
     pitch: 0.0
   smithy-door:
     world: minecraft:overworld
-    x: 9.5
-    y: 64.0
-    z: 4.5
+    x: -49.5
+    y: 70
+    z: 24.5
     yaw: -90.0
     pitch: 0.0
   smith-bed:
     world: minecraft:overworld
-    x: 14.5
-    y: 64.6
-    z: 8.5
+    x: -21.5
+    y: 71.6
+    z: 63.5
     yaw: 180.0
     pitch: 0.0
   east-watch:
     world: minecraft:overworld
-    x: 16.5
-    y: 64.0
-    z: 0.5
+    x: 39.5
+    y: 68
+    z: 9.5
     yaw: -90.0
     pitch: 0.0
   west-watch:
     world: minecraft:overworld
-    x: -16.5
-    y: 64.0
+    x: -59.5
+    y: 69
     z: 0.5
     yaw: 90.0
     pitch: 0.0
@@ -181,13 +178,13 @@ dialogues:
             then: trainer
           - label: Goodbye
             then: close
-  # A placeholder until the bank opens.
+  # Braxton's exchange connects villager trades with crystals.
   braxton:
     title: Braxton
     start: greet
     nodes:
       greet:
-        text: The Storm Bank opens soon. Keep your crystals close.
+        text: Bring emeralds and village goods to Braxton's Exchange. Run /shop braxtons-exchange to trade.
         next: none
         options:
           - label: Goodbye
@@ -248,9 +245,9 @@ npcs:
     skin: vanilla:wide/steve
     home:
       world: minecraft:overworld
-      x: 4.5
-      y: 64.0
-      z: -6.5
+      x: -35.5
+      y: 64
+      z: 0.5
       yaw: 0.0
       pitch: 0.0
     pose: standing
@@ -264,9 +261,9 @@ npcs:
     skin: vanilla:wide/kai
     home:
       world: minecraft:overworld
-      x: 2.5
-      y: 64.0
-      z: -6.5
+      x: -37.5
+      y: 64
+      z: 0.5
       yaw: 0.0
       pitch: 0.0
     pose: standing
@@ -280,9 +277,9 @@ npcs:
     skin: vanilla:wide/efe
     home:
       world: minecraft:overworld
-      x: 0.5
-      y: 64.0
-      z: -6.5
+      x: -39.5
+      y: 64
+      z: 0.5
       yaw: 0.0
       pitch: 0.0
     pose: standing
@@ -296,9 +293,9 @@ npcs:
     skin: vanilla:slim/alex
     home:
       world: minecraft:overworld
-      x: -1.5
-      y: 64.0
-      z: -6.5
+      x: -43.5
+      y: 66
+      z: 0.5
       yaw: 0.0
       pitch: 0.0
     pose: standing
@@ -312,9 +309,9 @@ npcs:
     skin: vanilla:wide/noor
     home:
       world: minecraft:overworld
-      x: -3.5
-      y: 64.0
-      z: -6.5
+      x: -59.5
+      y: 69
+      z: 0.5
       yaw: 0.0
       pitch: 0.0
     pose: standing
@@ -328,9 +325,9 @@ npcs:
     skin: vanilla:wide/zuri
     home:
       world: minecraft:overworld
-      x: 0.5
-      y: 64.0
-      z: 6.5
+      x: -53.5
+      y: 69
+      z: -1.5
       yaw: 180.0
       pitch: 0.0
     pose: standing
@@ -344,9 +341,9 @@ npcs:
     skin: vanilla:slim/sunny
     home:
       world: minecraft:overworld
-      x: -12.5
-      y: 64.0
-      z: 4.5
+      x: -11.5
+      y: 67
+      z: 69.5
       yaw: 90.0
       pitch: 0.0
     pose: standing
@@ -360,9 +357,9 @@ npcs:
     skin: vanilla:wide/makena
     home:
       world: minecraft:overworld
-      x: 12.5
-      y: 64.0
-      z: 4.5
+      x: -49.5
+      y: 70
+      z: 24.5
       yaw: -90.0
       pitch: 0.0
     pose: standing
@@ -376,9 +373,9 @@ npcs:
     skin: vanilla:wide/steve
     home:
       world: minecraft:overworld
-      x: 16.5
-      y: 64.0
-      z: 0.5
+      x: 39.5
+      y: 68
+      z: 9.5
       yaw: -90.0
       pitch: 0.0
     pose: standing
@@ -392,9 +389,9 @@ npcs:
     skin: vanilla:wide/kai
     home:
       world: minecraft:overworld
-      x: -16.5
-      y: 64.0
-      z: 0.5
+      x: -54.5
+      y: 69
+      z: -1.5
       yaw: 90.0
       pitch: 0.0
     pose: standing

@@ -74,12 +74,12 @@ public final class EssentialsPaper {
 
   /**
    * Registers everything. Throws if the configured kits name unknown items or enchantments, or the
-   * spawn is not a safe place to stand in a loaded chunk.
+   * spawn is unsafe. An unloaded existing spawn is checked asynchronously with logins held closed.
    */
   public static EssentialsPaper start(ModuleContext context, EssentialsConfig config, App app) {
     var server = context.plugin().getServer();
     var runtime = new PaperRuntime(server, context.scheduler(), context.time(), context.logger());
-    requireSafeSpawn(runtime, config);
+    var spawnPreparation = SpawnPreparation.start(context, config);
     var kitItems = KitItems.build(config.kits());
     var kits =
         new PlayerCommands.Kits(
@@ -125,6 +125,7 @@ public final class EssentialsPaper {
     var afkListener = new AfkListener(runtime, app.afk(), playerCommands);
     List<Listener> listeners =
         List.of(
+            spawnPreparation,
             new TeleportListener(
                 runtime, flow, new TeleportListener.Places(back, safe, config.spawn())),
             new BanListener(runtime, app.moderation()),
@@ -142,31 +143,6 @@ public final class EssentialsPaper {
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, afkListener::sweep),
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, tpaCommands::expire));
     return new EssentialsPaper(listeners, tasks, flow, permissions);
-  }
-
-  /**
-   * The spawn is where new players arrive, so a bad one would drop them into a wall, lava or the
-   * void. Checked on the main thread at enable, only when the spawn chunk is already loaded.
-   */
-  private static void requireSafeSpawn(PaperRuntime runtime, EssentialsConfig config) {
-    var spawn = config.spawn();
-    var location = Positions.toLocation(runtime.server(), spawn);
-    if (location.isEmpty()) {
-      throw new IllegalStateException(
-          "essentials.yml spawn names world '" + spawn.world() + "', which is not loaded");
-    }
-    var at = location.orElseThrow();
-    if (!at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) {
-      throw new IllegalStateException(
-          "essentials.yml spawn at " + spawn.describe() + " is in an unloaded chunk");
-    }
-    if (!SafeLocations.isSafe(at)) {
-      throw new IllegalStateException(
-          "essentials.yml spawn at "
-              + spawn.describe()
-              + " is not safe: it needs a solid block underfoot and two open blocks above it,"
-              + " with no lava, fire or other hazards");
-    }
   }
 
   /** Stops everything started here except commands, which Paper keeps until shutdown. */

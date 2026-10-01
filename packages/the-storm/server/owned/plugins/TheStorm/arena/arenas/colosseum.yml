@@ -1,9 +1,8 @@
 # An arena. Owned by the repository; the plugin never writes it. The file name
 # must be the arena's id. Every key is required and unknown keys are errors.
 #
-# PLACEHOLDER COORDINATES: build the arena near spawn, then stand on each spot
-# and run /arena here (thestorm.arena.admin); it prints each position as YAML
-# to copy in. The module checks at enable that the world is loaded, that every
+# Coordinates of the existing Colosseum and its underground class lobby.
+# The module checks at enable that the world is loaded, that every
 # point but the exit and join signs lies inside the region, that the exit lies
 # outside it, and that every loot chest is a container.
 #
@@ -17,60 +16,57 @@ world: world
 # The box players and mobs are kept inside, both corners included; min must
 # not exceed max on any axis.
 region:
-  min: { x: 1000, y: 60, z: 1000 }
-  max: { x: 1060, y: 90, z: 1060 }
+  min: { x: 164, y: 30, z: -60 }
+  max: { x: 290, y: 100, z: 64 }
 
 # Where players wait, pick a class and ready up (inside the region).
-lobby: { x: 1010.5, y: 64.0, z: 1010.5, yaw: 0.0, pitch: 0.0 }
+lobby: { x: 224.5, y: 33.0, z: 2.5, yaw: 90.0, pitch: 0.0 }
 # Where spectators watch from (inside the region).
-spectator: { x: 1030.5, y: 80.0, z: 1030.5, yaw: 0.0, pitch: 30.0 }
+spectator: { x: 227.5, y: 66.0, z: 50.5, yaw: 180.0, pitch: 30.0 }
 # Where a fighter who dies respawns, outside the region; their belongings are
 # then restored and they return to where they joined from.
-exit: { x: 990.5, y: 64.0, z: 990.5, yaw: 180.0, pitch: 0.0 }
+exit: { x: 160.5, y: 68.0, z: 2.5, yaw: 90.0, pitch: 0.0 }
 
 # Where fighters start, shared in turn.
 playerSpawns:
-  - { x: 1030.5, y: 64.0, z: 1025.5, yaw: 0.0, pitch: 0.0 }
-  - { x: 1035.5, y: 64.0, z: 1030.5, yaw: 90.0, pitch: 0.0 }
-  - { x: 1030.5, y: 64.0, z: 1035.5, yaw: 180.0, pitch: 0.0 }
-  - { x: 1025.5, y: 64.0, z: 1030.5, yaw: -90.0, pitch: 0.0 }
+  - { x: 227.5, y: 43.0, z: 2.5, yaw: 0.0, pitch: 0.0 }
+  - { x: 224.5, y: 43.0, z: 2.5, yaw: 90.0, pitch: 0.0 }
+  - { x: 200.5, y: 42.0, z: 2.5, yaw: -90.0, pitch: 0.0 }
+  - { x: 250.5, y: 42.0, z: 2.5, yaw: 90.0, pitch: 0.0 }
 
 # Where mobs appear; keep them a little away from the player spawns. The
 # Creaking's heart grows on these blocks, so leave them clear.
 mobSpawns:
-  - { x: 1005.5, y: 64.0, z: 1030.5 }
-  - { x: 1055.5, y: 64.0, z: 1030.5 }
-  - { x: 1030.5, y: 64.0, z: 1005.5 }
-  - { x: 1030.5, y: 64.0, z: 1055.5 }
-  - { x: 1010.5, y: 64.0, z: 1050.5 }
-  - { x: 1050.5, y: 64.0, z: 1010.5 }
+  - { x: 227.5, y: 41.0, z: -29.5 }
+  - { x: 227.5, y: 42.0, z: 32.5 }
+  - { x: 227.5, y: 41.0, z: -24.5 }
+  - { x: 205.5, y: 42.0, z: 20.5 }
+  - { x: 249.5, y: 42.0, z: -19.5 }
 
 # The block (usually a sign) to right-click for each class, in the lobby.
 classSigns:
-  knight: { x: 1005, y: 65, z: 1005 }
-  archer: { x: 1006, y: 65, z: 1005 }
-  madman: { x: 1007, y: 65, z: 1005 }
-  guardian: { x: 1008, y: 65, z: 1005 }
-  healer: { x: 1009, y: 65, z: 1005 }
-  wolfmaster: { x: 1010, y: 65, z: 1005 }
-  tank: { x: 1011, y: 65, z: 1005 }
-  oddjob: { x: 1012, y: 65, z: 1005 }
-  chemist: { x: 1013, y: 65, z: 1005 }
-  vanguard: { x: 1014, y: 65, z: 1005 }
-  lancer: { x: 1015, y: 65, z: 1005 }
+  knight: { x: 220, y: 34, z: 3 }
+  archer: { x: 220, y: 35, z: 3 }
+  madman: { x: 220, y: 34, z: 1 }
+  guardian: { x: 220, y: 35, z: 1 }
+  healer: { x: 220, y: 34, z: 0 }
+  wolfmaster: { x: 220, y: 35, z: 2 }
+  tank: { x: 220, y: 34, z: 4 }
+  oddjob: { x: 220, y: 36, z: 2 }
+# All eleven classes remain available with /arena class <class>.
 
 # The block to right-click when ready (MobArena's iron block).
-readyBlock: { x: 1010, y: 63, z: 1015 }
+readyBlock: { x: 220, y: 33, z: 2 }
 
 # Hidden chests, refilled with loot at the start of every game.
 lootChests:
-  - { x: 1002, y: 61, z: 1058 }
-  - { x: 1058, y: 61, z: 1002 }
-  - { x: 1058, y: 61, z: 1058 }
+  - { x: 179, y: 48, z: 2 }
+  - { x: 227, y: 48, z: -46 }
+  - { x: 275, y: 48, z: 2 }
 
 # Signs outside the arena that join it when right-clicked.
 joinSigns:
-  - { x: 992, y: 65, z: 990 }
+  - { x: 171, y: 60, z: 2 }
 
 # 1 is Ominous I (arena.yml tiers).
 tier: 1

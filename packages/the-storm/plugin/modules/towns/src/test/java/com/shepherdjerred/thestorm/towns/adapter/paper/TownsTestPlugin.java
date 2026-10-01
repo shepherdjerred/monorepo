@@ -66,12 +66,13 @@ public class TownsTestPlugin extends JavaPlugin {
     var directory = Objects.requireNonNull(TownsTestPlugin.directory, "directory");
     try {
       var shipped = Files.readString(SHIPPED_CONFIG);
-      if (!shipped.contains("regions: []")) {
-        throw new IllegalStateException("shipped towns config no longer has an empty region list");
+      var regions = shipped.indexOf("\nregions:");
+      if (regions < 0) {
+        throw new IllegalStateException("shipped towns config has no regions section");
       }
       Files.writeString(
           directory.resolve("towns.yml"),
-          shipped.replace("regions: []", Files.readString(TEST_REGIONS)));
+          shipped.substring(0, regions + 1) + Files.readString(TEST_REGIONS));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

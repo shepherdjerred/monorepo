@@ -105,13 +105,12 @@ final class ShippedContentTest {
   }
 
   @Test
-  void theBankerSaysTheBankOpensSoon() {
+  void theBankerPointsPlayersToTheAvailableExchange() {
     var content = shipped();
     var braxton = content.npc("braxton").orElseThrow();
     assertThat(braxton.roles()).containsExactly("banker");
     var greet = content.dialogue(braxton).orElseThrow().nodes().get("greet");
-    assertThat(java.util.Objects.requireNonNull(greet).text())
-        .isEqualTo("The Storm Bank opens soon. Keep your crystals close.");
+    assertThat(java.util.Objects.requireNonNull(greet).text()).contains("/shop braxtons-exchange");
     assertThat(braxton.trainer()).isEmpty();
   }
 

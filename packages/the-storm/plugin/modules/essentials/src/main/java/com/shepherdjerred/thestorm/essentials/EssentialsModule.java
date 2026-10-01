@@ -59,6 +59,7 @@ public final class EssentialsModule implements StormModule {
     context.services().provide(AfkStatus.class, afk);
 
     var moderation = ModerationService.load(new JooqModerationLogStore(database), context.time());
+    context.services().provide(ModerationService.class, moderation);
     var players = PlayerDirectory.load(new JooqPlayerStore(database));
     var warps = WarpDirectory.load(new JooqWarpStore(database));
     logLoad(context, moderation.loaded(), "the moderation log");

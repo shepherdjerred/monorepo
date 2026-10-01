@@ -119,6 +119,27 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
     port,
     fetch: async (request) => {
       const url = new URL(request.url);
+      if (
+        url.pathname === "/evaluate/v1/boolean" &&
+        request.method === "POST"
+      ) {
+        const evaluated = z
+          .object({
+            namespace_key: z.literal("the-storm"),
+            flag_key: z.enum([
+              "the-storm-crier-enabled",
+              "the-storm-merchant-enabled",
+            ]),
+            entity_id: z.uuid(),
+            context: z.object({ world: z.literal("world") }).strict(),
+          })
+          .strict()
+          .safeParse(await request.json());
+        return !evaluated.success ||
+          request.headers.get("x-flipt-environment") !== "prod"
+          ? new Response("invalid evaluation", { status: 400 })
+          : Response.json({ enabled: true });
+      }
       if (url.pathname === "/v1/__control") {
         return control(request, state);
       }

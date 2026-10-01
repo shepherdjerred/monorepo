@@ -5,6 +5,7 @@ import { stagePlugins, stormTestConfig } from "./harness/server.ts";
 import { paper } from "./harness/pins.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "..", "..");
+const full = Bun.env["STORM_E2E_FULL"] === "1";
 const stormJar = path.join(
   packageRoot,
   "plugin",
@@ -72,16 +73,27 @@ const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
   stormJar,
   // The mechanics E2E plugin owns its real-Paper fixture and must be the only
   // mechanics runtime to avoid duplicate listeners.
-  stormConfig: stormTestConfig(await Bun.file(ownedConfig).text(), [
-    "economy",
-    "chat",
-    "tracks",
-    "towns",
-    "tickets",
-    "agent",
-  ]),
-  mechanicsE2eJar,
-  mechanicsConfig: await Bun.file(mechanicsConfig).text(),
+  stormConfig: full
+    ? await Bun.file(ownedConfig).text()
+    : stormTestConfig(await Bun.file(ownedConfig).text(), [
+        "economy",
+        "chat",
+        "tracks",
+        "towns",
+        "tickets",
+        "agent",
+      ]),
+  ...(full
+    ? {
+        fixturesJar: path.join(
+          packageRoot,
+          "plugin/dist/build/libs/TheStormFixtures.jar",
+        ),
+      }
+    : {
+        mechanicsE2eJar,
+        mechanicsConfig: await Bun.file(mechanicsConfig).text(),
+      }),
   ownedConfigDir,
   brain: {
     baseUrl: `http://${brainHost}:${brainPort.toString()}`,
@@ -93,7 +105,7 @@ const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
     redriveBackoffMinutes: 0,
     slaAfterMinutes: 10_080,
   },
-  agent: { mode: "shadow", reviewSamplePercent: 100 },
+  agent: { mode: full ? "active" : "shadow", reviewSamplePercent: 100 },
   warmCache: false,
 });
 await rm(pluginVolume, { recursive: true, force: true });

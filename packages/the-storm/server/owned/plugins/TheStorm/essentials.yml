@@ -3,15 +3,15 @@
 # unknown keys are errors, and durations are ISO-8601 (PT3S, PT10M, PT1H).
 
 # Where /spawn leads, where new players arrive, and where players without a bed
-# or respawn anchor respawn. Placeholder: set to the windmill spawn. The module
+# or respawn anchor respawn. The entrance of the existing windmill. The module
 # refuses to start unless this is a safe spot (solid block underfoot, two open
 # blocks above, no hazards) in a loaded world.
 spawn:
   world: world
-  x: 0.5
-  y: 64.0
-  z: 0.5
-  yaw: 0.0
+  x: 68.5
+  y: 69.0
+  z: 66.5
+  yaw: -90.0
   pitch: 0.0
 
 teleports:
@@ -127,7 +127,7 @@ rules:
 
       <dark_aqua>4. No harassment.</dark_aqua> Not in chat, and no following, trapping or spamming anyone.
 
-      <dark_aqua>5. PvP is on.</dark_aqua> Spawn is PvP-free. Soon /pvp will switch yours off or on, once a week.
+      <dark_aqua>5. PvP is on.</dark_aqua> Spawn is PvP-free. /pvp switches yours off or on, once a week.
     - |-
       <dark_aqua>6. No hacks or bug exploits.</dark_aqua>
 

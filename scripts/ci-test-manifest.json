@@ -967,6 +967,10 @@
         {
           "path": "tests/e2e",
           "reason": "Real-server E2E runs through test:e2e in the dedicated paper-e2e-pr Woodpecker lane, with Paper as a service and Mineflayer clients. The full reporting task does not start the game server."
+        },
+        {
+          "path": "tests/full",
+          "reason": "All 21 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
         }
       ]
     },

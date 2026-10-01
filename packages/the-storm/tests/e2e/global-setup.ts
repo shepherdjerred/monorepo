@@ -58,6 +58,7 @@ const ExternalServerSchema = z.object({
 });
 
 export default async function setup(project: TestProject) {
+  const full = Bun.env["STORM_E2E_FULL"] === "1";
   // The agent refuses to start without its token, so both local and sidecar
   // runs use the same strict fake brain contract.
   const external = Bun.env["STORM_E2E_HOST"] !== undefined;
@@ -85,22 +86,38 @@ export default async function setup(project: TestProject) {
   }
 
   const server = await startServer({
-    cacheDir: path.join(packageRoot, ".cache", "e2e"),
+    cacheDir: path.join(
+      packageRoot,
+      ".cache",
+      "e2e",
+      ...(full ? ["full"] : []),
+    ),
     bootTimeoutMs: 180_000,
     warmCache: Bun.env["STORM_E2E_COLD"] !== "1",
     stormJar,
     // Mechanics runs once through its test plugin, which owns the Paper world
     // fixture; enabling the production module would register duplicate listeners.
-    stormConfig: stormTestConfig(await Bun.file(ownedConfig).text(), [
-      "economy",
-      "chat",
-      "tracks",
-      "towns",
-      "tickets",
-      "agent",
-    ]),
-    mechanicsE2eJar,
-    mechanicsConfig: await Bun.file(mechanicsConfig).text(),
+    stormConfig: full
+      ? await Bun.file(ownedConfig).text()
+      : stormTestConfig(await Bun.file(ownedConfig).text(), [
+          "economy",
+          "chat",
+          "tracks",
+          "towns",
+          "tickets",
+          "agent",
+        ]),
+    ...(full
+      ? {
+          fixturesJar: path.join(
+            packageRoot,
+            "plugin/dist/build/libs/TheStormFixtures.jar",
+          ),
+        }
+      : {
+          mechanicsE2eJar,
+          mechanicsConfig: await Bun.file(mechanicsConfig).text(),
+        }),
     ownedConfigDir,
     brain: { baseUrl: brainBaseUrl, token: brainToken },
     sweep: {
@@ -109,7 +126,7 @@ export default async function setup(project: TestProject) {
       redriveBackoffMinutes: 0,
       slaAfterMinutes: 10_080,
     },
-    agent: { mode: "shadow", reviewSamplePercent: 100 },
+    agent: { mode: full ? "active" : "shadow", reviewSamplePercent: 100 },
   });
   if (server.info.kind === "container") {
     console.warn(

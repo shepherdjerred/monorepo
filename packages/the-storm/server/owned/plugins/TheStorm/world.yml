@@ -5,35 +5,40 @@
 # the night, on every overworld. Entering a bed is the only vote.
 
 sleepPercentage: 50
-# The crier reads current main-world weather and time only when asked. It
-# remains disabled until the world module and command are playtested live.
+# Preserve the former ChunkyBorder radii using native border diameters.
+borders:
+  - { world: world, centerX: 0.0, centerZ: 0.0, size: 40000.0 }
+  - { world: world_nether, centerX: 0.0, centerZ: 0.0, size: 10000.0 }
+  - { world: world_the_end, centerX: 0.0, centerZ: 0.0, size: 5000.0 }
+# The crier reads current main-world weather and time only when asked.
 crier:
-  enabled: false
+  enabled: true
   world: world
 # One weather-grounded archive bark on arrival near the windmill spawn per
 # Pacific date. Event-driven; no repeating task or automatic server broadcast.
 ambient:
-  enabled: false
+  enabled: true
   world: world
-  # Block position of the repo-owned Essentials spawn.yml gameplay arrival.
-  spawnX: -440
-  spawnY: 71
-  spawnZ: -66
+  # Same measured windmill entrance as essentials.yml.
+  spawnX: 68
+  spawnY: 69
+  spawnZ: 66
   spawnRadius: 24
   verticalRadius: 8
   timeZone: America/Los_Angeles
 # Records only observed arrivals and deaths after activation. The command is
 # read-only, on demand, and requires crier.enabled above.
 digest:
-  enabled: false
+  enabled: true
   world: world
   timeZone: America/Los_Angeles
-# The single anchor must be measured at the current windmill spawn before enabling.
+# Clear cobblestone outside the windmill, away from its door and altar.
 # A nearby arrival can begin one finite, item-barter visit per Pacific date.
 merchant:
-  enabled: false
+  enabled: true
   world: world
-  anchors: []
+  anchors:
+    - { x: 65, y: 69, z: 66 }
   arrivalRadius: 12
   visitMinutes: 20
   timeZone: America/Los_Angeles
