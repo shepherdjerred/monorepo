@@ -28,6 +28,10 @@
               "name": "Zone Settings Write"
             },
             {
+              "id": "c03055bc037c4ea9afb9a9f104b7b721",
+              "name": "SSL and Certificates Write"
+            },
+            {
               "id": "fb6778dc191143babbfaa57993f1d275",
               "name": "Zone WAF Write"
             }
