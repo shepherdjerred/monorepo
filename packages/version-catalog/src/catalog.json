@@ -1515,7 +1515,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003373@sha256:af95c857b8a2e682eb0601b52ba0c2388753f869b9f68ceb3019dbc46d413228",
+      "value": "2.0.0-1003738@sha256:73094e32e152277e0022fe4caf91416ac77e39e476df48bdcb11035289fc7b38",
       "notes": [
         "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
         "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
@@ -1603,7 +1603,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003724@sha256:00c074f4a245968e618ea8ea62d7319dd9e5546cf33bf95656608846843cea69",
+      "value": "2.0.0-1003738@sha256:e0f069f47e57b0c7064a4a6b157bb423323ce54de3cb2976b1e6d9c35e2b6242",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"

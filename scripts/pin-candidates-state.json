@@ -37,21 +37,21 @@
       "buildNumber": 16936
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 1003676,
       "version": "2.0.0-1003676",
-      "digest": "sha256:bb5711150bb0eb9025ff2e14ddc3456a4e8ee27a94ce29c58d791f6cd1b4aa30"
+      "digest": "sha256:bb5711150bb0eb9025ff2e14ddc3456a4e8ee27a94ce29c58d791f6cd1b4aa30",
+      "buildNumber": 1003676
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      "buildNumber": 1003507,
       "version": "2.0.0-1003507",
       "digest": "sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c",
-      "gitSha": "56f22c5ec456ee2389ac02a5aa30298457bfe74a"
+      "gitSha": "56f22c5ec456ee2389ac02a5aa30298457bfe74a",
+      "buildNumber": 1003507
     },
     "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       "version": "2.0.0-1003507",
       "digest": "sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c",
-      "buildNumber": 1003507,
-      "gitSha": "56f22c5ec456ee2389ac02a5aa30298457bfe74a"
+      "gitSha": "56f22c5ec456ee2389ac02a5aa30298457bfe74a",
+      "buildNumber": 1003507
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-1003676",
@@ -74,9 +74,9 @@
       "buildNumber": 1003676
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1003724,
-      "version": "2.0.0-1003724",
-      "digest": "sha256:00c074f4a245968e618ea8ea62d7319dd9e5546cf33bf95656608846843cea69"
+      "buildNumber": 1003738,
+      "version": "2.0.0-1003738",
+      "digest": "sha256:e0f069f47e57b0c7064a4a6b157bb423323ce54de3cb2976b1e6d9c35e2b6242"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-1002826",
@@ -89,9 +89,9 @@
       "buildNumber": 1002817
     },
     "shepherdjerred/the-storm-server": {
-      "version": "2.0.0-1003373",
-      "digest": "sha256:af95c857b8a2e682eb0601b52ba0c2388753f869b9f68ceb3019dbc46d413228",
-      "buildNumber": 1003373
+      "buildNumber": 1003738,
+      "version": "2.0.0-1003738",
+      "digest": "sha256:73094e32e152277e0022fe4caf91416ac77e39e476df48bdcb11035289fc7b38"
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-1003676",
