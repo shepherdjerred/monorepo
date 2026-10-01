@@ -207,7 +207,8 @@ The world module also owns an on-demand `/crier` bulletin. Its separate
 module and evaluates `the-storm-crier-enabled` in Flipt for each player. Both
 the typed file safety gate and the managed flag must allow the command; a
 missing or failed Flipt evaluation leaves it unavailable. The managed flag is
-enabled in beta and production; Java flag IDs are checked
+enabled in the beta inventory; production stays gated until live acceptance.
+Java flag IDs are checked
 against the shared inventory during Gradle compilation. Once enabled, the
 command works only for players in `world`. It reports observed weather and
 game time, then rotates one historical Storm fact by full game day. The archive
@@ -246,7 +247,8 @@ with a measured anchor at `(65,69,66)` outside the existing windmill. The
 block below must be solid, with two air blocks above it. The listener refuses
 an unsafe or unloaded anchor; it never chooses another position.
 The independent managed `the-storm-merchant-enabled` flag must evaluate true
-for the arriving player. It is enabled in production and beta; Flipt errors or
+for the arriving player. The beta inventory enables it; production stays gated
+until live acceptance. Flipt errors or
 missing bootstrap settings keep visits off.
 
 On the first join, world entry, teleport, respawn, or block movement within `arrivalRadius` of

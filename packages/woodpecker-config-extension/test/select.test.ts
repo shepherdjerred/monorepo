@@ -400,6 +400,7 @@ describe("Paper acceptance lanes", () => {
       expect(paper?.environment?.["COPY_PLUGINS_SRC"]).toBe(
         candidate.environment?.["STORM_E2E_PLUGIN_DIR"],
       );
+      expect(paper?.commands?.[0]).toContain("bukkit.yml /data/bukkit.yml");
       const pluginPath = candidate.environment?.["STORM_E2E_PLUGIN_DIR"];
       if (typeof pluginPath !== "string")
         throw new Error(`missing plugin path for ${lane}`);
