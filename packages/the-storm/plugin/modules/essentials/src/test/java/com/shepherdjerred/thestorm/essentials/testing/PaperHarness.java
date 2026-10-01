@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.EssentialsModule;
+import com.shepherdjerred.thestorm.essentials.app.ModerationService;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -82,6 +83,11 @@ public final class PaperHarness implements AutoCloseable {
       MockBukkit.loadWith(
           HarnessPlugin.class,
           new PluginDescriptionFile("TheStorm", "1", HarnessPlugin.class.getName()));
+      // MockBukkit fires real pre-login events when tests add players. Wait for
+      // the ban-list replay so a startup refusal cannot masquerade as a ban kick.
+      var moderation = services.require(ModerationService.class);
+      harness.until(() -> moderation.loaded().isDone());
+      moderation.loaded().join();
     } catch (RuntimeException e) {
       harness.close();
       throw e;
