@@ -107,7 +107,9 @@ function TimelineReview(props: Props & { data: ReviewTimeline }) {
   const first = snapshots[0];
   if (first === undefined || last === undefined)
     throw new Error("Timeline has no snapshots");
-  const [time, setTime] = useState(Math.min(900_000, last.timestampMs));
+  const [time, setTime] = useState(
+    Math.max(first.timestampMs, Math.min(900_000, last.timestampMs)),
+  );
   const [category, setCategory] = useState("all");
   const [teamFilter, setTeamFilter] = useState(0);
   const [playerFilter, setPlayerFilter] = useState(0);

@@ -4,13 +4,13 @@ import type { HistoryCursor } from "#src/components/player/recorded-match-histor
 
 const Cursors = z.array(
   z.object({
-    gameCreationMs: z.number(),
-    matchId: z.string(),
-    consumed: z.number().optional(),
+    gameCreationMs: z.number().int(),
+    matchId: z.string().min(1),
+    consumed: z.number().int().nonnegative().optional(),
   }),
 );
 
-function readCursors(value: string | null): HistoryCursor[] {
+export function readCursors(value: string | null): HistoryCursor[] {
   if (value === null) return [];
   try {
     const parsed = Cursors.safeParse(JSON.parse(value));

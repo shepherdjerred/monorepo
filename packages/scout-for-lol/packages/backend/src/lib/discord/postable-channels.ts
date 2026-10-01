@@ -89,6 +89,7 @@ export async function readGuildChannelPostability(
   // obtain their channel permissions from Discord.
   if (
     isDevGuildOverrideGuild(guildId) &&
+    URL.canParse(configuration.databaseUrl) &&
     new URL(configuration.databaseUrl).pathname === "/scout_design_audit"
   ) {
     const channels: DiscordGuildChannel[] = [

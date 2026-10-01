@@ -5,10 +5,9 @@ const positions = new Map<string, number>();
 
 /** Search edits keep their place; page navigation starts at the page heading. */
 export function useRoutePresentation() {
-  const { pathname } = useLocation();
+  const { pathname, key } = useLocation();
   const navigationType = useNavigationType();
-  const navigation = useRef(navigationType);
-  navigation.current = navigationType;
+  const previous = useRef<{ pathname: string; key: string } | null>(null);
   useEffect(() => {
     const prior = history.scrollRestoration;
     history.scrollRestoration = "manual";
@@ -17,23 +16,41 @@ export function useRoutePresentation() {
     };
   }, []);
   useEffect(() => {
-    const type = navigation.current;
+    const type = navigationType;
+    const samePage =
+      previous.current?.pathname === pathname && previous.current.key !== key;
+    previous.current = { pathname, key };
+    const keepPlace = samePage && type !== NavigationType.Pop;
     const target =
-      type === NavigationType.Pop ? (positions.get(pathname) ?? 0) : 0;
-    let restored = false;
+      type === NavigationType.Pop
+        ? (positions.get(key) ?? window.scrollY)
+        : keepPlace
+          ? window.scrollY
+          : 0;
+    let restored = keepPlace;
+    let allowClamp = false;
+    let y = target;
     let frame = 0;
     function update() {
       const heading = document.querySelector<HTMLElement>("main h1");
-      if (heading === null) return;
-      document.title = `${heading.textContent} · Scout`;
+      if (heading !== null) document.title = `${heading.textContent} · Scout`;
       if (restored) return;
-      if (document.documentElement.scrollHeight < target + innerHeight) return;
-      heading.tabIndex = -1;
-      if (type !== NavigationType.Pop) heading.focus({ preventScroll: true });
+      if (
+        !allowClamp &&
+        (heading === null ||
+          document.documentElement.scrollHeight < target + innerHeight)
+      )
+        return;
+      if (heading !== null) {
+        heading.tabIndex = -1;
+        if (!samePage && type !== NavigationType.Pop)
+          heading.focus({ preventScroll: true });
+      }
       window.scrollTo({ top: target, behavior: "instant" });
+      y = window.scrollY;
       restored = true;
     }
-    window.scrollTo({ top: 0, behavior: "instant" });
+    if (!keepPlace) window.scrollTo({ top: 0, behavior: "instant" });
     const observer = new MutationObserver(() => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(update);
@@ -41,19 +58,23 @@ export function useRoutePresentation() {
     observer.observe(document.body, { childList: true, subtree: true });
     const resize = new ResizeObserver(update);
     resize.observe(document.body);
-    frame = requestAnimationFrame(update);
-    let y = target;
+    update();
+    const timeout = globalThis.setTimeout(() => {
+      allowClamp = true;
+      update();
+    }, 2000);
     const record = () => {
       if (restored) y = window.scrollY;
     };
     window.addEventListener("scroll", record, { passive: true });
     return () => {
-      positions.set(pathname, y);
+      positions.set(key, y);
       observer.disconnect();
       resize.disconnect();
       cancelAnimationFrame(frame);
+      globalThis.clearTimeout(timeout);
       window.removeEventListener("scroll", record);
     };
     // Same-path tab and filter changes must not reset scrolling or focus.
-  }, [pathname]);
+  }, [pathname, key, navigationType]);
 }
