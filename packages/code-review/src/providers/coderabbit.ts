@@ -4,6 +4,7 @@ import type {
   ReviewThread,
   UnattributedBodyFinding,
 } from "../types.ts";
+import { z } from "zod";
 
 /**
  * CodeRabbit (`coderabbitai` GitHub app) — reviewed this repository May 2026
@@ -11,8 +12,8 @@ import type {
  *
  * Completion: CodeRabbit posts a `COMMENTED` PR review per reviewed commit and
  * re-reviews on push, like Codex — but unlike Codex it always posts a review
- * object (even a nitpick-only one, PR #918), so a missing review means "not
- * reviewed yet" and there is no clean signal to declare.
+ * object for findings. Clean reviews can instead finish in the walkthrough
+ * comment (PR #3364): its final coverage metadata names the reviewed head.
  *
  * Findings live on two surfaces with identical badge markup: addressable
  * inline threads, and "outside diff range" sections in the review body for
@@ -32,6 +33,50 @@ export const CODERABBIT_LOGIN = "coderabbitai";
  * prose must not count.
  */
 const CODERABBIT_SEVERITY_RE = /_(?:🔴\s*Critical|🟠\s*Major|🟡\s*Minor)_/u;
+
+const COVERAGE_MARKER = "<!-- final_review_risk_coverage:";
+const CoverageSchema = z.object({
+  sourceCommitId: z.string().regex(/^[0-9a-f]{40}$/u),
+  coveredCommitId: z.string().regex(/^[0-9a-f]{40}$/u),
+  kind: z.literal("reviewed"),
+});
+
+/** A walkthrough or rewritten commit links alone do not prove completion. */
+export function parseCoderabbitCleanHead(body: string): string | null {
+  if (CODERABBIT_SEVERITY_RE.test(body)) return null;
+  if (
+    body.split(COVERAGE_MARKER).length !== 2 ||
+    body.split("<!-- recent_review_start -->").length !== 2
+  )
+    return null;
+  const recent =
+    /<!-- recent_review_start -->([\s\S]*?)<!-- recent_review_end -->/u.exec(
+      body,
+    );
+  if (
+    recent?.[1]?.includes(
+      "No actionable comments were generated in the recent review.",
+    ) !== true
+  )
+    return null;
+  const matches = [
+    ...body.matchAll(/<!-- final_review_risk_coverage:(.*?) -->/gu),
+  ];
+  if (matches.length !== 1) return null;
+  const encoded = matches[0]?.[1];
+  if (encoded === undefined) return null;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(encoded);
+  } catch {
+    return null;
+  }
+  const parsed = CoverageSchema.safeParse(raw);
+  return !parsed.success ||
+    parsed.data.sourceCommitId !== parsed.data.coveredCommitId
+    ? null
+    : parsed.data.coveredCommitId;
+}
 
 /** The bold title on the line after the badge line. */
 const CODERABBIT_TITLE_RE = /\*\*([^*]+)\*\*/u;
@@ -207,7 +252,13 @@ export const coderabbitProvider: ReviewProvider = {
   parseFindingTitle: parseCoderabbitFindingTitle,
   findingKey: coderabbitFindingKey,
   parseReviewBodyFindings: parseCoderabbitReviewBodies,
-  completion: { kind: "review-at-head", cleanSignal: "none" },
+  completion: {
+    kind: "review-at-head",
+    cleanSignal: {
+      marker: COVERAGE_MARKER,
+      parseReviewedHead: parseCoderabbitCleanHead,
+    },
+  },
   detectSkip: null,
   // Hitting the plan's review or credit limit posts an issue comment instead
   // of a review (PRs #915/#921), so without this the gate polls to its

@@ -192,9 +192,9 @@ describe("coderabbitProvider", () => {
   test("declares the observed identity, completion, and triggers", () => {
     expect(coderabbitProvider.id).toBe("coderabbit");
     expect(coderabbitProvider.authorLogins).toEqual([CODERABBIT_LOGIN]);
-    expect(coderabbitProvider.completion).toEqual({
+    expect(coderabbitProvider.completion).toMatchObject({
       kind: "review-at-head",
-      cleanSignal: "none",
+      cleanSignal: { marker: "<!-- final_review_risk_coverage:" },
     });
     expect(coderabbitProvider.requestReview).toEqual({
       command: "@coderabbitai review",

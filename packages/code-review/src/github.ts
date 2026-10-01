@@ -20,6 +20,7 @@ import {
 } from "./github-http.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
 import { fetchBlockedReason } from "./github-blocked.ts";
+import { fetchCleanCompletionComment } from "./github-clean-comments.ts";
 import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
@@ -496,15 +497,35 @@ async function resolveReviewAtHeadState(input: {
   // review means "not reviewed yet" — skip the reaction lookup entirely rather
   // than letting another reviewer's 👍 satisfy this provider's gate.
   const completion = provider.completion;
+  const cleanComment = await fetchCleanCompletionComment({
+    repo,
+    number: prNumber,
+    token,
+    provider,
+    head,
+    headPushedAt,
+  });
+  if (cleanComment !== null) {
+    return {
+      state: "reviewed",
+      completionSignal: "issue-comment",
+      reviewedCommit: head,
+      reviewedAt: cleanComment.reviewedAt,
+      staleReaction: false,
+      skipReason: null,
+      blockedReason: null,
+    };
+  }
   const thumbsUp =
-    completion.kind === "review-at-head" && completion.cleanSignal === "none"
-      ? null
-      : await fetchProviderThumbsUp({
+    completion.kind === "review-at-head" &&
+    completion.cleanSignal === "thumbsup-reaction"
+      ? await fetchProviderThumbsUp({
           repo,
           number: prNumber,
           token,
           provider,
-        });
+        })
+      : null;
   // A 👍 reaction carries no commit SHA, so it only counts as "reviewed clean
   // at head" when it can be independently tied to the current head: the
   // reaction must have been created at/after the head was pushed. A reaction
