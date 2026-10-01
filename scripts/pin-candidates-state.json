@@ -47,6 +47,12 @@
       "digest": "sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c",
       "gitSha": "56f22c5ec456ee2389ac02a5aa30298457bfe74a"
     },
+    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
+      "version": "2.0.0-1003507",
+      "digest": "sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c",
+      "buildNumber": 1003507,
+      "gitSha": "56f22c5ec456ee2389ac02a5aa30298457bfe74a"
+    },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-1003373",
       "digest": "sha256:cd77869bfec803b97985e64625aa922c8992b2adf3ffc298b7e53c0495fd8230",
