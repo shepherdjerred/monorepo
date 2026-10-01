@@ -259,11 +259,23 @@ resource "cloudflare_zone_setting" "security_header" {
   }
 }
 
+resource "terraform_data" "ct_recipient" {
+  count            = var.ct_alert_recipient == null ? 0 : 1
+  triggers_replace = var.ct_alert_recipient
+}
+
 resource "cloudflare_ct_alerting" "ct" {
   count   = var.ct_alert_recipient == null ? 0 : 1
   zone_id = var.zone_id
   enabled = true
   emails  = [var.ct_alert_recipient]
+  # Provider 5.25 sends only changed fields on Update, but the API requires
+  # enabled even for an email-only update. Create sends the complete payload;
+  # this provider's Delete is a no-op, so replacement never disables alerts.
+  lifecycle {
+    create_before_destroy = true
+    replace_triggered_by  = [terraform_data.ct_recipient[0]]
+  }
 }
 
 resource "cloudflare_ct_alerting" "ct_existing" {
