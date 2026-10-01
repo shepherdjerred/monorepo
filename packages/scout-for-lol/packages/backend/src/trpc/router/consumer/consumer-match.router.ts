@@ -17,7 +17,7 @@ import {
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-  fetchTimelineFramesAtIndex,
+  fetchTimelineFramesAtTime,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
@@ -26,6 +26,7 @@ import {
 } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   fetchMatchTimelineEvents,
+  fetchMatchReviewTimeline,
   fetchMatchTimelineFrames,
   MATCH_KEY_EVENT_TYPES,
 } from "#src/trpc/router/match-timeline.ts";
@@ -246,9 +247,9 @@ export const consumerMatchRouter = router({
         limit: 40,
         eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
-      fetchTimelineFramesAtIndex({
+      fetchTimelineFramesAtTime({
         matchId: input.matchId,
-        frameIndex: LANE_DELTA_MINUTE,
+        timestampMs: LANE_DELTA_MINUTE * 60_000,
       }),
     ]);
     return {
@@ -276,6 +277,13 @@ export const consumerMatchRouter = router({
     .query(async ({ ctx, input }) => {
       await authorizeMatch(ctx.user, input);
       return await fetchMatchTimelineFrames(input);
+    }),
+
+  reviewTimeline: protectedProcedure
+    .input(MatchInput)
+    .query(async ({ ctx, input }) => {
+      await authorizeMatch(ctx.user, input);
+      return await fetchMatchReviewTimeline({ matchId: input.matchId });
     }),
 
   chartSeries: protectedProcedure

@@ -1,8 +1,8 @@
-# Scout management app
+# Scout web app
 
-The Scout SPA, served at `/app/` on scout-for-lol.com. Guild owners manage
-players, reports, subscriptions, competitions, Bryan Bucks, and Explore
-conversations here. Data comes from `@scout-for-lol/backend` over tRPC; UI comes
+The Scout SPA, served at `/app/` on scout-for-lol.com. Members review players
+and matches or ask questions in Explore. Server managers configure tracked
+players, reports, subscriptions, competitions, and Bryan Bucks. Data comes from `@scout-for-lol/backend` over tRPC; UI comes
 from `@scout-for-lol/design-system`.
 
 Run it against a local backend with the Scout dev harness rather than this
@@ -12,6 +12,21 @@ package's `dev` script directly:
 bun run --filter='./packages/scout-for-lol' dev:web    # backend :3000, SPA :5180
 bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session URL
 ```
+
+## Player and match review
+
+Player profiles keep their tab, game window, queues, champion filter, and
+history cursors in the URL. Match links carry that state back to the profile;
+route presentation restores scroll on browser Back.
+
+Consumer and Explore matches share the match review components, with separate
+authorization through `consumerMatch.reviewTimeline` and
+`exploreMatch.reviewTimeline`. Each endpoint reads compact snapshots and all
+key events from the existing report lake. Scrubbing and event filters run
+locally. Positions and comparisons use the last recorded snapshot at or before
+the selected time; the UI labels that time and never interpolates movement.
+Advanced event and frame tables load only when expanded. Consumer identity
+and access checks remain separate from Explore's neutral match presentation.
 
 ## Storybook
 

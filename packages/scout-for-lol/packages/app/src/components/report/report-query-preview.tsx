@@ -102,8 +102,7 @@ export function ReportQueryPreview(props: {
             evidence={result.evidence}
           />
           <p className="text-xs text-scout-subtle">
-            {result.rows.length} row(s) · {result.rowsScanned} fact row(s)
-            scanned
+            Results: {result.rows.length}
           </p>
         </>
       )}

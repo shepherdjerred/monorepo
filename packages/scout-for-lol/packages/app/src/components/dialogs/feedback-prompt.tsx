@@ -140,10 +140,11 @@ export function FeedbackPrompt() {
     <>
       <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-scout-surface px-3 py-1.5 text-xs text-scout-subtle shadow-md">
         <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-        <span>How&apos;s Scout working out?</span>
+        <span className="hidden sm:inline">How&apos;s Scout working out?</span>
         <button
           type="button"
-          className="font-medium text-scout-ink underline-offset-2 hover:underline"
+          className="min-h-6 font-medium text-scout-ink underline-offset-2 hover:underline"
+          aria-label="Tell us how Scout is working"
           onClick={() => {
             track("feedback_shown");
             setOpen(true);
@@ -154,7 +155,7 @@ export function FeedbackPrompt() {
         <button
           type="button"
           aria-label="Dismiss"
-          className="text-sm leading-none text-scout-subtle hover:text-scout-ink"
+          className="size-6 shrink-0 text-sm leading-none text-scout-subtle hover:text-scout-ink"
           onClick={dismiss}
         >
           ×

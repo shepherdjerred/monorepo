@@ -297,22 +297,6 @@ export function PlayerDetail() {
               <p className="text-sm text-scout-danger">{actionError}</p>
             )}
 
-            <PlayerSummaryCards
-              player={player}
-              competitionCount={competitions.length}
-              canLink={perms.can("players", "link")}
-              unlinkPending={unlinkMutation.isPending}
-              onLink={() => {
-                setLinkOpen(true);
-              }}
-              onUnlink={() => {
-                if (!globalThis.confirm(`Unlink Discord from "${alias}"?`)) {
-                  return;
-                }
-                unlinkMutation.mutate({ guildId, playerAlias: alias });
-              }}
-            />
-
             <Section
               title="Riot accounts"
               action={
@@ -385,6 +369,28 @@ export function PlayerDetail() {
               refresh={refresh}
               setActionError={setActionError}
             />
+
+            <details>
+              <summary className="cursor-pointer font-medium">
+                Player details and linked Discord account
+              </summary>
+              <div className="mt-4">
+                <PlayerSummaryCards
+                  player={player}
+                  competitionCount={competitions.length}
+                  canLink={perms.can("players", "link")}
+                  unlinkPending={unlinkMutation.isPending}
+                  onLink={() => {
+                    setLinkOpen(true);
+                  }}
+                  onUnlink={() => {
+                    if (!globalThis.confirm(`Unlink Discord from "${alias}"?`))
+                      return;
+                    unlinkMutation.mutate({ guildId, playerAlias: alias });
+                  }}
+                />
+              </div>
+            </details>
 
             <CompetitionSection
               title="Competitions"

@@ -97,7 +97,7 @@ export function PlayerRankHistoryPanel(props: {
           <CardHeader>
             <CardTitle>Could not load ranked history</CardTitle>
             <CardDescription>
-              Scout could not read this player&apos;s rank snapshots. Try again.
+              Rank history couldn’t load. Try again.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -121,13 +121,10 @@ export function PlayerRankHistoryCard(props: { history: RankHistoryView }) {
       <div>
         <h2 className="text-xl font-semibold">Ranked history</h2>
         <p className="text-sm text-scout-subtle">
-          Live post-match snapshots Scout recorded for{" "}
-          {history.currentSplit.displayName},{" "}
+          {history.currentSplit.displayName} ·{" "}
           {granularity === "game"
-            ? "plotted per game"
-            : "plotted as daily closes"}
-          . This is not a Riot career graph, and it does not change with the
-          game filters below.
+            ? "Rank after each game"
+            : "Last rank each day"}
         </p>
       </div>
       <Tabs defaultValue="solo">
@@ -188,8 +185,7 @@ function QueueRankHistory(props: {
   if (!queueHasCurrentPoints(props.queue)) {
     body = (
       <p className="text-sm text-scout-subtle">
-        Scout has no ranked snapshots for this queue in {props.splitName}. Rank
-        history starts when Scout processes a live ranked game.
+        No rank history for this queue in {props.splitName} yet.
       </p>
     );
   } else if (hasVisible) {
@@ -390,7 +386,7 @@ export function preparePeriodSeries(
 export function emptyRangeMessage(period: RankHistoryPeriod): string {
   const days = RANK_HISTORY_PERIOD_CONFIG[period].days;
   return days === undefined
-    ? "Scout has no ranked snapshots in view for this queue."
+    ? "No rank history for this queue yet."
     : `Scout recorded no ranked games in the last ${days.toString()} days.`;
 }
 

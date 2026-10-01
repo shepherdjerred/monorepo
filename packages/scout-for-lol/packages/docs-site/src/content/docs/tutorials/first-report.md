@@ -23,13 +23,12 @@ A chart that posts itself on a schedule:
 
 ## 1. Open the report editor
 
-Go to the [Scout dashboard](/app/), choose your server, open the **Reports**
+Go to [Manage Scout](/app/manage), choose your server, open **Reports**
 tab, and choose **New report**.
 
 ## 2. Start from a preset
 
-The editor opens with a categorized preset list on the left and a **Live
-preview** on the right. Under **Leaderboards**, choose **Most games played**. It
+Choose **Use a preset**. Under **Leaderboards**, choose **Most games played**. It
 loads this query into the editor:
 
 ```scoutql
@@ -124,7 +123,7 @@ the preview re-renders each one against your own data:
 
 ## 6. Give it a title and a destination
 
-Above the editor, fill in:
+In the report form, fill in:
 
 - **Title** — `Weekly damage leaders`.
 - **Channel** — the channel the report should post to.

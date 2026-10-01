@@ -43,15 +43,19 @@ export function UserMenu(props: { username: string }) {
         <Button
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-sm font-medium"
+          className="min-w-0 max-w-28 gap-1.5 text-sm font-medium sm:max-w-52"
+          aria-label={`Account: ${props.username}`}
         >
-          @{props.username}
-          <ChevronDown className="h-4 w-4 opacity-60" aria-hidden="true" />
+          <span className="truncate">@{props.username}</span>
+          <ChevronDown
+            className="h-4 w-4 shrink-0 opacity-60"
+            aria-hidden="true"
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-52">
         <DropdownMenuLabel className="font-normal !text-left !block px-2 py-1.5">
-          <span className="block text-xs font-semibold text-scout-ink">
+          <span className="block break-all text-xs font-semibold text-scout-ink">
             @{props.username}
           </span>
           <span className="block text-[11px] text-scout-subtle">

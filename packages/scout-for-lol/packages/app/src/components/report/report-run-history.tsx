@@ -52,9 +52,7 @@ export function ReportRunHistory(props: {
                   </>
                 )}
                 <span>·</span>
-                <span>
-                  {run.rowsReturned} rows / {run.rowsScanned} scanned
-                </span>
+                <span>Results: {run.rowsReturned}</span>
               </div>
 
               {run.errorMessage !== null && (
@@ -64,7 +62,7 @@ export function ReportRunHistory(props: {
               {run.querySnapshot !== null && (
                 <details className="rounded-md border border-border">
                   <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-scout-subtle">
-                    ScoutQL snapshot
+                    Query used
                   </summary>
                   <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap break-words border-t border-border bg-scout-hover/50 p-3 font-mono text-xs leading-5">
                     {run.querySnapshot}

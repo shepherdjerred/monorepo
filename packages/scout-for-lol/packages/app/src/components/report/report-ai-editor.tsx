@@ -290,8 +290,7 @@ export function ReportAiEditor(props: {
             <p className="text-xs font-medium">Draft preview</p>
             <ReportResultTable columns={preview.columns} rows={preview.rows} />
             <p className="text-xs text-scout-subtle">
-              {preview.rows.length.toString()} row(s) ·{" "}
-              {preview.rowsScanned.toLocaleString()} fact row(s) scanned
+              Results: {preview.rows.length.toString()}
             </p>
           </div>
         )}

@@ -5,9 +5,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
+import { MatchReview } from "#src/components/match/match-review.tsx";
+import {
+  matchQueueLabel,
+  supportsReviewMap,
+} from "#src/lib/player/match-review.ts";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
-import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
 import { useExploreMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
@@ -42,6 +46,7 @@ export function ExploreMatch() {
         <Card>
           <CardHeader>
             <CardTitle>Match unavailable</CardTitle>
+            <Button onClick={() => void detail.refetch()}>Retry</Button>
           </CardHeader>
         </Card>
       </PageShell>
@@ -49,42 +54,35 @@ export function ExploreMatch() {
   }
 
   const match = value.data.match;
-  const participantIds = match.teams.flatMap((team) =>
-    team.participants.map((participant) => participant.participantId),
-  );
   return (
     <PageShell>
       <header>
         <p className="text-sm font-medium text-primary">Explore match</p>
         <h1 className="text-3xl font-semibold tracking-tight">
-          {match.queue ?? `Queue ${match.queueId.toString()}`}
+          {matchQueueLabel(match.queue)}
         </h1>
         <p className="mt-2 text-sm text-scout-subtle">
           {UTC_TIME.format(new Date(match.gameCreationMs))} UTC ·{" "}
           {duration(match.gameDurationSeconds)} · Patch {match.gameVersion} ·
-          Map {match.mapId.toString()}
+          {match.mapId === 11
+            ? "Summoner’s Rift"
+            : match.mapId === 12
+              ? "Howling Abyss"
+              : ""}
         </p>
       </header>
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-2xl font-semibold">Team scoreboards</h2>
-          <p className="text-sm text-scout-subtle">
-            This neutral Explore view contains no guild aliases or
-            selected-player state.
-          </p>
-        </div>
-        <MatchScoreboards teams={match.teams} />
-      </section>
-      {tallyValue.status === "done" && tallyValue.data !== null && (
-        <MatchMvpTally tally={tallyValue.data} />
-      )}
-      <MatchTimeline
+      <MatchReview
         source={{ kind: "explore" }}
         matchId={matchId}
-        coverage={value.data.timeline.coverage}
-        keyEvents={value.data.timeline.keyEvents}
-        participantIds={participantIds}
-      />
+        teams={match.teams}
+        showRiftMap={supportsReviewMap(match)}
+        durationSeconds={match.gameDurationSeconds}
+        matchups={match.roleMatchups}
+      >
+        {tallyValue.status === "done" && tallyValue.data !== null && (
+          <MatchMvpTally tally={tallyValue.data} />
+        )}
+      </MatchReview>
     </PageShell>
   );
 }

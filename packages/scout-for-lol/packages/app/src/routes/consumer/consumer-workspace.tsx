@@ -28,7 +28,7 @@ export function ConsumerGuildWorkspace() {
       <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
         <ForbiddenPanel
           title="Missing guild id"
-          message="This guild-scoped route requires a guild."
+          message="Choose a server to continue."
         />
       </div>
     );

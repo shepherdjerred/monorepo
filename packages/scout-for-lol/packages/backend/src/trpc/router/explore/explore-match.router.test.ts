@@ -163,3 +163,19 @@ describe("exploreMatch.chartSeries", () => {
     ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
   });
 });
+
+describe("exploreMatch.reviewTimeline authorization", () => {
+  test("denies a viewer outside the Explore allowlist before reading a match", async () => {
+    setAllowlist(testGuildId("222222"));
+    await expect(
+      trpc.authedCaller().exploreMatch.reviewTimeline({ matchId: MATCH_ID }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(fetchFullMatch).not.toHaveBeenCalled();
+  });
+  test("denies a missing match", async () => {
+    fetchFullMatch.mockResolvedValueOnce([]);
+    await expect(
+      trpc.authedCaller().exploreMatch.reviewTimeline({ matchId: MATCH_ID }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});

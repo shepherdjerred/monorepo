@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 import {
   parsePlayerProfileFilters,
@@ -12,19 +11,18 @@ export function usePlayerProfileUrlState(): {
 } {
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = parsePlayerProfileFilters(searchParams);
-  const canonical = playerProfileSearchParams(filters).toString();
-
-  useEffect(() => {
-    if (searchParams.toString() === canonical) return;
-    setSearchParams(canonical, { replace: true });
-  }, [canonical, searchParams, setSearchParams]);
 
   return {
     filters,
     setFilters(nextFilters) {
-      setSearchParams(playerProfileSearchParams(nextFilters), {
-        replace: true,
-      });
+      const next = new URLSearchParams(searchParams);
+      next.delete("games");
+      next.delete("queue");
+      next.delete("page");
+      next.delete("cursor");
+      for (const [key, value] of playerProfileSearchParams(nextFilters))
+        next.append(key, value);
+      setSearchParams(next, { replace: true });
     },
   };
 }

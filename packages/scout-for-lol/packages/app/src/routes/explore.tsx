@@ -2,14 +2,10 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router";
-import { ArrowDown, ChevronDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreSuggestionChips } from "#src/components/explore/transcript/explore-suggestion-chips.tsx";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@scout-for-lol/design-system/components/collapsible";
+import { ExploreErrorBanner } from "#src/components/explore/transcript/explore-error-banner.tsx";
 import { ExploreComposer } from "#src/components/explore/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore/explore-header.tsx";
 import { ExploreShareRow } from "#src/components/explore/explore-share.tsx";
@@ -49,6 +45,19 @@ import { useTRPC } from "#src/lib/query/trpc.ts";
  */
 const EXPLORE_CONTAINER_CLASS =
   "mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col gap-4 px-6 py-8 sm:px-8 sm:py-12 [overscroll-behavior:none]";
+
+function conversationLayout(empty: boolean, composerHeight: number) {
+  return {
+    transcriptClass: empty ? "space-y-4" : "min-h-0 flex-1 space-y-4 pb-4",
+    transcriptStyle:
+      composerHeight === 0 || empty
+        ? undefined
+        : { paddingBottom: `${composerHeight.toString()}px` },
+    composerClass: empty
+      ? "w-full pb-4"
+      : "sticky bottom-0 w-full pointer-events-none pt-8 pb-4 explore-composer-fade",
+  };
+}
 
 export function Explore() {
   const { conversationId: routeConversationId } = useExploreParams();
@@ -320,6 +329,12 @@ export function Explore() {
         }
       : undefined;
 
+  const emptyConversation = shouldShowExploreSuggestions({
+    messageCount: messages.length,
+    pendingQuestion,
+    pendingTurn,
+  });
+  const layout = conversationLayout(emptyConversation, composerHeight);
   return (
     <div className={EXPLORE_CONTAINER_CLASS}>
       <ExploreHeader
@@ -334,14 +349,7 @@ export function Explore() {
         pendingTurn,
       }) && <ExploreSuggestionChips onSelect={ask} enabled={enabled} />}
 
-      <div
-        className="min-h-0 flex-1 space-y-4 pb-4"
-        style={
-          composerHeight === 0
-            ? undefined
-            : { paddingBottom: `${String(composerHeight)}px` }
-        }
-      >
+      <div className={layout.transcriptClass} style={layout.transcriptStyle}>
         <ExploreTranscript
           messages={messages}
           pendingQuestion={pendingQuestion}
@@ -378,10 +386,7 @@ export function Explore() {
           effect. `explore-composer-fade` carries the gradient (see global.css
           for why it is not built from `from-*`/`to-*`); it is the canvas colour
           in every theme, which switches with `data-scout-mode`. */}
-      <div
-        ref={setComposerElement}
-        className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 explore-composer-fade"
-      >
+      <div ref={setComposerElement} className={layout.composerClass}>
         <ExploreJumpToLatest pinned={pinned} onClick={scrollToBottom} />
         <div className="pointer-events-auto">
           <ExploreComposer
@@ -475,78 +480,3 @@ function ExploreQuota(props: {
  * Separated from the component so the route's own logic stays about handling
  * turns rather than unwrapping query state.
  */
-
-function ExploreErrorBanner(props: {
-  readonly pageError: string;
-  readonly conversationId: string | null;
-  readonly runId?: string | null | undefined;
-  readonly retryTargetId?: string | null | undefined;
-  readonly executedSteps: number;
-  readonly onRetry: () => void;
-}) {
-  return (
-    <div className="rounded-md border border-scout-danger-fill/40 bg-scout-danger-fill/10 p-3 text-sm text-scout-ink space-y-2">
-      <div className="flex items-center justify-between gap-3">
-        <span className="font-medium">{props.pageError}</span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          onClick={props.onRetry}
-        >
-          Retry
-        </Button>
-      </div>
-      <Collapsible className="space-y-1.5 pt-0.5">
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger-fill/10 transition-colors group"
-          >
-            <span>Technical details</span>
-            <ChevronDown
-              className="size-3 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
-              aria-hidden="true"
-            />
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="rounded border border-scout-border/60 bg-scout-surface p-2.5 text-xs font-mono space-y-1 overflow-x-auto select-text">
-            <div>
-              <span className="text-scout-subtle">Error: </span>
-              <span className="text-scout-danger font-semibold">
-                {props.pageError}
-              </span>
-            </div>
-            {props.conversationId !== null && (
-              <div>
-                <span className="text-scout-subtle">Conversation ID: </span>
-                <span>{props.conversationId}</span>
-              </div>
-            )}
-            {props.runId !== undefined && props.runId !== null && (
-              <div>
-                <span className="text-scout-subtle">Run ID: </span>
-                <span>{props.runId}</span>
-              </div>
-            )}
-            {props.retryTargetId !== undefined &&
-              props.retryTargetId !== null && (
-                <div>
-                  <span className="text-scout-subtle">Question ID: </span>
-                  <span>{props.retryTargetId}</span>
-                </div>
-              )}
-            {props.executedSteps > 0 && (
-              <div>
-                <span className="text-scout-subtle">Executed steps: </span>
-                <span>{props.executedSteps.toString()}</span>
-              </div>
-            )}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
-  );
-}

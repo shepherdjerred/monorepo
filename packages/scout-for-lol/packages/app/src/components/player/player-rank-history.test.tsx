@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup as render } from "react-dom/server";
+import type { ReactNode } from "react";
+import { ScoutThemeProvider } from "@scout-for-lol/design-system/runtime";
 import { RankSchema, type PlayerRankHistory } from "@scout-for-lol/data";
 import {
   PlayerRankHistoryCard,
@@ -21,6 +23,10 @@ const EMERALD = RankSchema.parse({
   wins: 20,
   losses: 16,
 });
+
+function renderToStaticMarkup(node: ReactNode) {
+  return render(<ScoutThemeProvider surface="app">{node}</ScoutThemeProvider>);
+}
 const PLATINUM = RankSchema.parse({
   tier: "platinum",
   division: 1,
@@ -95,10 +101,10 @@ describe("player rank history", () => {
     expect(html).toContain("Flex");
     expect(html).toContain("Ranked 5s");
     expect(html).toContain("2026 Season 3");
-    expect(html).toContain("no ranked snapshots");
+    expect(html).toContain("No rank history for this queue");
     expect(html).toContain("Previous seasons");
     expect(html).toContain("2026 Season 2");
-    expect(html).toContain("live ranked game");
+    expect(html).toContain("Last rank each day");
   });
 
   test("renders a current-split chart region for a populated queue", () => {

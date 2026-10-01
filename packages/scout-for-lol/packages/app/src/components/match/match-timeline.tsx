@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { TimelineFrameTable } from "#src/components/match/timeline-frame-table.tsx";
-import { TimelineCharts } from "#src/components/match/match-timeline-charts.tsx";
 import {
   TimelinePagination,
   type TimelineCursor,
@@ -31,14 +30,6 @@ type TimelineData = {
       { nextCursor: TimelineCursor | null; rows: TimelineFrame[] } | undefined;
     isError: boolean;
     isFetching: boolean;
-  };
-  chart: {
-    data:
-      | {
-          points: RouterOutputs["consumerMatch"]["chartSeries"]["points"];
-        }
-      | undefined;
-    isError: boolean;
   };
 };
 
@@ -108,7 +99,6 @@ type MatchTimelineProps = {
   source: { kind: "consumer"; playerId: number } | { kind: "explore" };
   matchId: string;
   coverage: Coverage;
-  keyEvents: TimelineEvent[];
   participantIds: number[];
 };
 
@@ -139,11 +129,6 @@ function ConsumerMatchTimeline(
         timelineQueryOptions(props.coverage),
       ),
     ),
-    chart: useQuery(
-      trpc.consumerMatch.chartSeries.queryOptions(baseInput, {
-        enabled: props.coverage !== null,
-      }),
-    ),
   };
   return <MatchTimelineContent {...props} data={data} state={state} />;
 }
@@ -164,11 +149,6 @@ function ExploreMatchTimeline(props: Omit<MatchTimelineProps, "source">) {
         timelineFramesInput(baseInput, state),
         timelineQueryOptions(props.coverage),
       ),
-    ),
-    chart: useQuery(
-      trpc.exploreMatch.chartSeries.queryOptions(baseInput, {
-        enabled: props.coverage !== null,
-      }),
     ),
   };
   return <MatchTimelineContent {...props} data={data} state={state} />;
@@ -199,9 +179,7 @@ function MatchTimelineContent(
         <CardHeader>
           <CardTitle>Timeline not captured</CardTitle>
           <CardDescription>
-            Scout retained the match overview, but no normalized timeline was
-            captured for this game. Opening this page never requests it from
-            Riot.
+            No timeline is available for this match.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -210,49 +188,6 @@ function MatchTimelineContent(
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Timeline</h2>
-        <p className="text-sm text-scout-subtle">
-          {props.coverage.frame_count.toLocaleString()} frames and{" "}
-          {props.coverage.event_count.toLocaleString()} events retained by
-          Scout.
-        </p>
-      </div>
-
-      {props.data.chart.isError ? (
-        <p className="text-sm text-scout-danger">
-          Timeline charts did not load.
-        </p>
-      ) : props.data.chart.data === undefined ? (
-        <p className="text-sm text-scout-subtle">Loading timeline charts…</p>
-      ) : (
-        <TimelineCharts points={props.data.chart.data.points} />
-      )}
-
-      <section className="space-y-3">
-        <h3 className="text-xl font-semibold">Key events</h3>
-        {props.keyEvents.length === 0 ? (
-          <p className="text-sm text-scout-subtle">
-            No categorized key events were retained.
-          </p>
-        ) : (
-          <ol className="space-y-2 border-l pl-5">
-            {props.keyEvents.map((event) => (
-              <li key={event.event_id} className="text-sm">
-                <strong>{eventTitle(event)}</strong>
-                <span className="ml-2 text-scout-subtle">
-                  {event.monster_type ??
-                    event.building_type ??
-                    (event.killer_id === null
-                      ? ""
-                      : `Participant ${event.killer_id.toString()}`)}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-
       <div className="flex flex-wrap gap-4 rounded-lg border bg-card p-4">
         <label className="space-y-1 text-sm font-medium">
           <span className="block">Event type</span>

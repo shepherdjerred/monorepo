@@ -17,7 +17,7 @@ describe("administrator homepage", () => {
   test("presents the complete administrator-focused value proposition", () => {
     expect(homepage).toContain('title="Scout for League of Legends"');
     expect(homepage).toContain(
-      "Track your server’s League players with pre-match alerts and detailed recaps, run competitions and scheduled reports, then let members explore recorded games and shared player profiles.",
+      "Get match recaps in Discord. Review your players’ performance, compare champions, and follow every climb.",
     );
     expect(homepage).toContain('title="Everything your League server needs"');
     for (const feature of [
@@ -38,20 +38,19 @@ describe("administrator homepage", () => {
     );
   });
 
-  test("uses one Get Started action in the hero and final call to action", () => {
+  test("offers installation and the player app in the hero", () => {
     expect(homepage).not.toContain("View Documentation");
     expect(homepage).not.toContain("Read the docs");
     expect(homepage).not.toContain("DOCS_URL");
-    expect(homepage.match(/text: "Get Started"/g)).toHaveLength(2);
+    expect(homepage).toContain('text: "Add to Discord"');
+    expect(homepage).toContain('text: "Open player app"');
+    expect(homepage).toContain("href: APP_PLAYERS_URL");
   });
 
-  test("centers the home hero in the viewport space below its two chrome rows", () => {
-    expect(homepage).toContain(
-      'class="grid min-h-svh min-w-0 grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)]"',
-    );
-    expect(hero).toContain('size === "home" ? "flex items-center"');
-    expect(hero).not.toContain(
-      '"scout-hero scout-section relative isolate px-6 lg:px-8"',
+  test("shows a real report alongside the hero benefit", () => {
+    expect(homepage).toContain("imageSrc={matchImg}");
+    expect(hero).toContain(
+      'alt="Scout match recap with player builds, ranks, and team stats"',
     );
   });
 

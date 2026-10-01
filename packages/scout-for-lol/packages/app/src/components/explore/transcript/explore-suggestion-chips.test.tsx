@@ -16,11 +16,13 @@ function renderChips(onSelect = vi.fn()): string {
 }
 
 describe("ExploreSuggestionChips", () => {
+  test("keeps the initial suggestions stable between visits", () => {
+    expect(renderChips()).toBe(renderChips());
+  });
+
   test("renders the explore description, shuffle button, and chips", () => {
     const markup = renderChips();
-    expect(markup).toContain(
-      "Ask about champions, queues, positions, patches, or players",
-    );
+    expect(markup).toContain("Ask about your players, champions, or matches.");
     expect(markup).not.toContain("League ladder");
     expect(markup).toContain("Shuffle");
     expect(markup).toContain('aria-label="Show different suggestions"');

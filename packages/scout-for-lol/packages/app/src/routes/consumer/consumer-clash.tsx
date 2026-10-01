@@ -56,7 +56,7 @@ function ClashScheduleSection(props: {
           Schedule
         </h2>
         <p className="text-sm text-scout-subtle">
-          Upcoming phases from Clash-v1 for platforms Scout snapshots.
+          Upcoming Clash tournaments in your region.
         </p>
       </div>
       {props.schedule.isPending ? (
@@ -137,7 +137,7 @@ function ClashRosterSection(props: {
   const teams = props.roster.data?.teams ?? [];
   const emptyMessage = props.registrationOpen
     ? "Registration is open, nobody tracked has signed up."
-    : "No tracked player in this server is registered in the current snapshot.";
+    : "No tracked players are registered yet.";
   return (
     <section className="space-y-3" aria-labelledby="clash-roster-title">
       <div>

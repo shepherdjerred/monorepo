@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@scout-for-lol/design-system/components/tabs";
 import { Link, useNavigate, useParams } from "react-router";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -45,13 +51,12 @@ function previewTitle(title: string): string {
   return title === "" ? "Preview" : title;
 }
 
-function ReportCreateTools(props: { show: boolean; children: ReactNode }) {
-  return props.show ? (
-    <div className="grid gap-4 lg:grid-cols-2">{props.children}</div>
-  ) : null;
+function queryEditorDisclosure(isEdit: boolean, entryMethod: string) {
+  return isEdit || entryMethod === "query" ? "expanded" : "collapsed";
 }
 
 export function ReportForm() {
+  const [entryMethod, setEntryMethod] = useState("preset");
   const { guildId, reportId: idParam } = useParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -221,24 +226,50 @@ export function ReportForm() {
             }}
           />
 
-          <ReportCreateTools show={idParam === undefined}>
-            <ReportCommonPresets
-              onUsePreset={(preset) => {
-                form.setFieldValue("title", preset.title);
-                form.setFieldValue("description", preset.description);
-                form.setFieldValue("queryText", preset.query);
-              }}
-            />
-            <ReportAiEditor
-              guildId={safeGuildId}
-              state={state}
-              onApplyDraft={(draft) => {
-                form.setFieldValue("title", draft.title);
-                form.setFieldValue("description", draft.description);
-                form.setFieldValue("queryText", draft.queryText);
-              }}
-            />
-          </ReportCreateTools>
+          {idParam === undefined && (
+            <Tabs value={entryMethod} onValueChange={setEntryMethod}>
+              <TabsList
+                aria-label="Start a report"
+                className="flex h-auto flex-wrap justify-start"
+              >
+                <TabsTrigger value="preset">Use a preset</TabsTrigger>
+                <TabsTrigger value="describe">Describe a report</TabsTrigger>
+                <TabsTrigger value="query">Write a query</TabsTrigger>
+              </TabsList>
+              <TabsContent
+                value="preset"
+                className="max-h-80 overflow-y-auto rounded-lg focus-visible:outline-2"
+              >
+                <ReportCommonPresets
+                  onUsePreset={(preset) => {
+                    form.setFieldValue("title", preset.title);
+                    form.setFieldValue("description", preset.description);
+                    form.setFieldValue("queryText", preset.query);
+                    setEntryMethod("query");
+                    requestAnimationFrame(() =>
+                      formElement.current?.querySelector("input")?.focus(),
+                    );
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="describe">
+                <ReportAiEditor
+                  guildId={safeGuildId}
+                  state={state}
+                  onApplyDraft={(draft) => {
+                    form.setFieldValue("title", draft.title);
+                    form.setFieldValue("description", draft.description);
+                    form.setFieldValue("queryText", draft.queryText);
+                    setEntryMethod("query");
+                    requestAnimationFrame(() =>
+                      formElement.current?.querySelector("input")?.focus(),
+                    );
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="query" />
+            </Tabs>
+          )}
 
           <form
             ref={formElement}
@@ -263,6 +294,16 @@ export function ReportForm() {
                     void channelsQuery.refetch();
                   }}
                   queryHelpHref={`/g/${safeGuildId}/reports/help`}
+                  queryEditorDisclosure={queryEditorDisclosure(
+                    isEdit,
+                    entryMethod,
+                  )}
+                  queryEditorOpen={
+                    queryEditorDisclosure(isEdit, entryMethod) === "expanded"
+                  }
+                  onQueryEditorOpenChange={(open) => {
+                    if (open) setEntryMethod("query");
+                  }}
                 />
               </fieldset>
 
@@ -291,16 +332,21 @@ export function ReportForm() {
               sourceCompetitionId={existing?.sourceCompetitionId ?? null}
             />
           </form>
-          <ReportDataExplorer
-            guildId={safeGuildId}
-            onInsertIdentifier={(identifier) => {
-              form.setFieldValue("queryText", (current) =>
-                current.trim().length === 0
-                  ? identifier
-                  : `${current} ${identifier}`,
-              );
-            }}
-          />
+          <details>
+            <summary className="cursor-pointer text-sm font-medium">
+              Query reference
+            </summary>
+            <ReportDataExplorer
+              guildId={safeGuildId}
+              onInsertIdentifier={(identifier) => {
+                form.setFieldValue("queryText", (current) =>
+                  current.trim().length === 0
+                    ? identifier
+                    : `${current} ${identifier}`,
+                );
+              }}
+            />
+          </details>
           <UnsavedFormDialog blocker={blocker} />
         </div>
       )}

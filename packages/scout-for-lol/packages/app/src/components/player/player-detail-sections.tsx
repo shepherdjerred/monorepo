@@ -10,6 +10,7 @@ import { MoreHorizontal } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { FilterSummary } from "#src/components/subscription/subscription-filter-summary.tsx";
+import { regionName } from "#src/lib/regions.ts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -283,7 +284,7 @@ export function PlayerAccountsTable(props: {
                   </span>
                 )}
               </TableCell>
-              <TableCell>{account.region}</TableCell>
+              <TableCell>{regionName(account.region)}</TableCell>
               <TableCell>{formatDate(account.lastMatchTime)}</TableCell>
               <TableCell>{formatDate(account.lastCheckedAt)}</TableCell>
               {(props.canEdit || props.canTransfer || props.canDelete) && (

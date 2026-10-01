@@ -231,8 +231,8 @@ describe("champion comparison and match timeline", () => {
         />,
       ),
     );
-    expect(html).toContain("Team 100");
-    expect(html).toContain("Team 200");
+    expect(html).toContain("Blue team");
+    expect(html).toContain("Red team");
     expect(html).toContain("Selected");
     expect(html).toContain("Me (Friends)");
   });
@@ -286,7 +286,7 @@ describe("champion comparison and match timeline", () => {
       ),
     );
     expect(html).toContain("Lane matchup");
-    expect(html).toContain("Blue Δ @ 15m");
+    expect(html).toContain("advantage · 15m");
     expect(html).toContain("+500 gold");
     expect(html).toContain("+10 CS");
     expect(html).toContain("+300 XP");

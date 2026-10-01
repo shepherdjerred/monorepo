@@ -22,6 +22,8 @@ import {
   hasPermission,
 } from "#src/lib/discord/channel-permissions.ts";
 import { createLogger } from "#src/logger.ts";
+import configuration from "#src/configuration.ts";
+import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
 
 const logger = createLogger("discord-postable-channels");
 
@@ -82,6 +84,35 @@ export async function readGuildChannelPostability(
   guildId: DiscordGuildId,
   dependencies: PostableChannelDependencies = defaultDependencies(),
 ): Promise<GuildChannelPostability | null> {
+  // The loopback dev-login harness owns this disposable database. Its channel
+  // fixture is shared by pickers and channel guards; deployed requests still
+  // obtain their channel permissions from Discord.
+  if (
+    isDevGuildOverrideGuild(guildId) &&
+    new URL(configuration.databaseUrl).pathname === "/scout_design_audit"
+  ) {
+    const channels: DiscordGuildChannel[] = [
+      {
+        id: "1337623164146155594",
+        name: "match-reports",
+        type: ChannelType.GuildText,
+        parent_id: null,
+        permission_overwrites: [],
+      },
+      {
+        id: "1337623164146155595",
+        name: "leaderboards",
+        type: ChannelType.GuildText,
+        parent_id: null,
+        permission_overwrites: [],
+      },
+    ];
+    return {
+      channels,
+      isPostable: (channel) =>
+        channels.some((candidate) => candidate.id === channel.id),
+    };
+  }
   const { rest } = dependencies;
   const [channels, roles, me] = await Promise.all([
     rest.guildChannels(guildId),

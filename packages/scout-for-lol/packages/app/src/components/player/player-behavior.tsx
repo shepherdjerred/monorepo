@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
+import { formatPosition } from "#src/components/player/player-profile-sections.tsx";
 
 type Form = {
   games: number;
@@ -83,14 +84,15 @@ export function PlayerBehavior(props: { behavior: Behavior | null }) {
               ? "No recorded roles"
               : behavior.roleShare.map((role) => (
                   <span key={role.position}>
-                    {role.position}: {role.percentage.toString()}% (
-                    {role.games.toString()})
+                    {formatPosition(role.position)}:{" "}
+                    {role.percentage.toString()}% ({role.games.toString()}{" "}
+                    games)
                   </span>
                 ))}
           </div>
         </div>
         <p>
-          Current recorded streak:{" "}
+          Current streak:{" "}
           {behavior.streak === null
             ? "No games"
             : `${behavior.streak.atLeast ? "at least " : ""}${behavior.streak.games.toString()} ${behavior.streak.result}${behavior.streak.games === 1 ? "" : "s"}`}
@@ -100,14 +102,13 @@ export function PlayerBehavior(props: { behavior: Behavior | null }) {
           <ActivityHeatmap times={behavior.activityTimes} />
         </div>
         <div>
-          <p className="font-medium">Recent 20 vs. current Riot act</p>
+          <p className="font-medium">Last 20 games vs. this act</p>
           {act === undefined ||
           act === null ||
           recent === null ||
           behavior.currentAct === null ? (
             <p className="text-scout-subtle">
-              Current act comparison unavailable until Riot act dates and
-              recorded games are available.
+              No comparison available for this act yet.
             </p>
           ) : (
             <p className="text-scout-subtle">

@@ -294,7 +294,6 @@ export const Retained: Story = {
     source: { kind: "consumer", playerId: PLAYER_ID },
     matchId: MATCH_ID,
     coverage: COVERAGE,
-    keyEvents: KEY_EVENTS,
     participantIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   },
   parameters: { seedQueries: [seedTimeline] },
@@ -305,7 +304,6 @@ export const NotCaptured: Story = {
     source: { kind: "consumer", playerId: PLAYER_ID },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
 };
@@ -315,7 +313,6 @@ export const Loading: Story = {
     source: { kind: "consumer", playerId: PLAYER_ID },
     matchId: MATCH_ID,
     coverage: COVERAGE,
-    keyEvents: [],
     participantIds: [1, 2, 3, 4, 5],
   },
 };
@@ -325,7 +322,6 @@ export const FrameTable: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => (
@@ -346,7 +342,6 @@ export const FrameTableError: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => (
@@ -367,7 +362,6 @@ export const Pagination: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => (
@@ -402,7 +396,6 @@ export const ChampionPicker: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => <ChampionComboboxExample />,
