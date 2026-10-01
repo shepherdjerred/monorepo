@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003373@sha256:660febd13879cc10cfe439bc06a2d820c53faf03d990e317c6f2cd75de6a9ed8",
+      "value": "2.0.0-1003584@sha256:9e26de3b5ed62450b6da25f175d12aa47b933e1b55cbc286f77ce19d7bf08eb6",
       "notes": [
         "not managed by renovate — built from packages/streambot and updated by CI version commit-back."
       ]
@@ -773,7 +773,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003373@sha256:7ee9aece4eeaff27f5e9445d2f8663563b185f4efbf9a42f2882a92b4c279ea6",
+      "value": "2.0.0-1003584@sha256:a10779ff59e8c27fdb8859c02d1b789850a0513279ab866679b1ab45c594658e",
       "notes": ["not managed by renovate"]
     },
     {
@@ -783,7 +783,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003373@sha256:563c128d87efe7619317d4cb48ac72ffdba5abdeba8d7c4f087e8443fa8963d7",
+      "value": "2.0.0-1003648@sha256:e815eb628664e376fb8c04b558aa5014a425e1eb44c59f3b012351255a1dd9b8",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -1603,7 +1603,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003507@sha256:f6561b454a96028294d43d9c9eb56ae80ae5d189f0696835a7546cef19b091f0",
+      "value": "2.0.0-1003648@sha256:e7565f01b87d9f6b3434291e0751ea017102fa75fcc5c49514b80685539af98e",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"

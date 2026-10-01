@@ -7,9 +7,9 @@
       "buildNumber": 1003373
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-1003373",
-      "digest": "sha256:7ee9aece4eeaff27f5e9445d2f8663563b185f4efbf9a42f2882a92b4c279ea6",
-      "buildNumber": 1003373
+      "version": "2.0.0-1003584",
+      "digest": "sha256:a10779ff59e8c27fdb8859c02d1b789850a0513279ab866679b1ab45c594658e",
+      "buildNumber": 1003584
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-16936",
@@ -58,9 +58,9 @@
       "buildNumber": 1003373
     },
     "shepherdjerred/streambot": {
-      "version": "2.0.0-1003373",
-      "digest": "sha256:660febd13879cc10cfe439bc06a2d820c53faf03d990e317c6f2cd75de6a9ed8",
-      "buildNumber": 1003373
+      "version": "2.0.0-1003584",
+      "digest": "sha256:9e26de3b5ed62450b6da25f175d12aa47b933e1b55cbc286f77ce19d7bf08eb6",
+      "buildNumber": 1003584
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-1003373",
@@ -68,9 +68,9 @@
       "buildNumber": 1003373
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1003507,
-      "version": "2.0.0-1003507",
-      "digest": "sha256:f6561b454a96028294d43d9c9eb56ae80ae5d189f0696835a7546cef19b091f0"
+      "buildNumber": 1003648,
+      "version": "2.0.0-1003648",
+      "digest": "sha256:e7565f01b87d9f6b3434291e0751ea017102fa75fcc5c49514b80685539af98e"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-1002826",
@@ -93,9 +93,9 @@
       "buildNumber": 1003373
     },
     "shepherdjerred/woodpecker-config-extension": {
-      "version": "2.0.0-1003373",
-      "digest": "sha256:563c128d87efe7619317d4cb48ac72ffdba5abdeba8d7c4f087e8443fa8963d7",
-      "buildNumber": 1003373
+      "version": "2.0.0-1003648",
+      "digest": "sha256:e815eb628664e376fb8c04b558aa5014a425e1eb44c59f3b012351255a1dd9b8",
+      "buildNumber": 1003648
     }
   }
 }
