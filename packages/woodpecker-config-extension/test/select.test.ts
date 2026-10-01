@@ -387,35 +387,55 @@ describe("Paper acceptance lanes", () => {
     }
   });
 
-  test("Paper acceptance lanes copy their staged plugins and isolate full-module fixtures", () => {
-    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    const paths: string[] = [];
-    for (const full of [false, true]) {
+  test.each([false, true])(
+    "Paper lane full=%s copies staged plugins and config",
+    (full) => {
+      const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
       const lane = full ? "paper-full-e2e-pr" : "paper-e2e-pr";
       const candidate = steps.find((item) => item.key === lane);
       if (candidate === undefined) throw new Error(`missing lane ${lane}`);
       const paper = candidate.services?.find(
         (service) => service.name === "paper",
       );
-      expect(paper?.environment?.["COPY_PLUGINS_SRC"]).toBe(
-        candidate.environment?.["STORM_E2E_PLUGIN_DIR"],
+      if (
+        paper?.environment === undefined ||
+        candidate.environment === undefined
+      )
+        throw new Error(`missing Paper environment for ${lane}`);
+      const dataDir = candidate.environment["STORM_E2E_DATA_DIR"];
+      if (typeof dataDir !== "string")
+        throw new Error(`missing data path for ${lane}`);
+      expect(paper.environment["COPY_PLUGINS_SRC"]).toBe(
+        candidate.environment["STORM_E2E_PLUGIN_DIR"],
       );
-      expect(paper?.commands?.[0]).toContain("bukkit.yml /data/bukkit.yml");
-      const pluginPath = candidate.environment?.["STORM_E2E_PLUGIN_DIR"];
+      expect(paper.environment["COPY_CONFIG_SRC"]).toBe(`${dataDir}/config`);
+      expect(paper.environment["COPY_CONFIG_DEST"]).toBe("/data");
+      const pluginPath = candidate.environment["STORM_E2E_PLUGIN_DIR"];
       if (typeof pluginPath !== "string")
         throw new Error(`missing plugin path for ${lane}`);
-      paths.push(pluginPath);
-      expect(candidate.environment?.["STORM_E2E_FULL"]).toBe(full ? "1" : "0");
+      expect(candidate.environment["STORM_E2E_FULL"]).toBe(full ? "1" : "0");
       expect(candidate.commands.at(-1)).toContain(
         full ? "test:full" : "test:e2e",
       );
       if (full) {
-        expect(paper?.environment?.["FLIPT_ENVIRONMENT"]).toBe("prod");
-        expect(paper?.environment?.["DISCORD_BOT_TOKEN"]).toBe(
+        expect(paper.environment["FLIPT_ENVIRONMENT"]).toBe("prod");
+        expect(paper.environment["DISCORD_BOT_TOKEN"]).toBe(
           "invalid-storm-fixture-token",
         );
       }
-    }
+    },
+  );
+
+  test("Paper acceptance lanes isolate their plugin volumes", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const paths = ["paper-e2e-pr", "paper-full-e2e-pr"].map((lane) => {
+      const pluginPath = steps.find((item) => item.key === lane)?.environment?.[
+        "STORM_E2E_PLUGIN_DIR"
+      ];
+      if (typeof pluginPath !== "string")
+        throw new Error(`missing plugin path for ${lane}`);
+      return pluginPath;
+    });
     expect(paths[0]).not.toBe(paths[1]);
   });
 
