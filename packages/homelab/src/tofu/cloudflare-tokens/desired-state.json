@@ -32,6 +32,14 @@
               "name": "SSL and Certificates Write"
             },
             {
+              "id": "9ff81cbbe65c400b97d92c3c1033cab6",
+              "name": "Cache Settings Write"
+            },
+            {
+              "id": "74e1036f577a48528b78d2413b40538d",
+              "name": "Dynamic URL Redirects Write"
+            },
+            {
               "id": "fb6778dc191143babbfaa57993f1d275",
               "name": "Zone WAF Write"
             }
