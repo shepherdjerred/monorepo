@@ -1,0 +1,70 @@
+{
+  "domains": {
+    "better-skill-capped.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "clauderon.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "discord-plays-pokemon.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "glitter-boys.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "jerredshepherd.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "scout-for-lol.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "shepherdjerred.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "sjer.red": {
+      "wildcardMail": false,
+      "tls13": "zrt",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "statically-typed.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    },
+    "ts-mc.net": {
+      "wildcardMail": true,
+      "tls13": "zrt",
+      "mtaStsPublished": false,
+      "fastmailReady": true
+    }
+  },
+  "mailPolicy": {
+    "version": "STSv1",
+    "mode": "enforce",
+    "mx": ["in1-smtp.messagingengine.com", "in2-smtp.messagingengine.com"],
+    "maxAge": 86400
+  }
+}

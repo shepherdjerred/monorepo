@@ -128,17 +128,45 @@ Woodpecker drives the CI stacks via `packages/homelab/scripts/tofu/tofu-stack.ts
 
 ### Cloudflare
 
-Each domain gets its own `.tf` file (e.g. `scout-for-lol-com.tf`) containing:
+Each domain's `.tf` file owns its existing zone and application-specific records.
+The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
+DKIM, SPF, DMARC, TLS reporting, CAA, HTTPS/TLS/HSTS settings, and certificate
+transparency monitoring. `baseline-migrations.tf` preserves existing state
+addresses; `baseline-imports.tf` adopts previously implicit control-plane settings.
 
-| Resource                    | Purpose                                             |
-| --------------------------- | --------------------------------------------------- |
-| `cloudflare_zone`           | DNS zone                                            |
-| `cloudflare_bot_management` | AI bot blocking, crawler protection, fight mode     |
-| `cloudflare_record` (SPF)   | `v=spf1 -all` (reject all email, except `sjer.red`) |
-| `cloudflare_record` (DMARC) | `v=DMARC1; p=reject` policy                         |
+[`domain-registry.json`](../domain-registry.json) is the domain inventory and
+MTA-STS policy source for both OpenTofu and Caddy. Every managed zone needs a
+registry entry and a `baseline_zone_ids` binding. The Tunnel DNS coverage guard
+checks the actual module CNAME and fails if either inventory or binding is missing.
+Keep existing application records, Postal selectors, and `rp` routing outside
+the module. Wildcard inbound MX does not authorize arbitrary subdomain senders.
 
-Domains: `scout-for-lol.com`, `discord-plays-pokemon.com`, `better-skill-capped.com`, `clauderon.com`,
-`jerredshepherd.com`, `ts-mc.net`, `sjer.red`, `glitter-boys.com`, `shepherdjerred.com`
+Fastmail account onboarding precedes MX cutover: add each domain, preserve
+existing addresses, add `root@domain`, and direct its catch-all to the existing
+inbox. Keep `dmarc@sjer.red` able to receive aggregate DMARC and TLS reports.
+Set `fastmailReady` only after confirming the domain in Fastmail. Until then,
+the module preserves deny-all SPF and provisions no inbound MX. Prepared DKIM
+selectors and policy hosts can deploy before account-side mail activation.
+
+`mtaStsPublished` starts false while Caddy policy hosts and DNS deploy. Set it
+true only after public HTTPS policy and SMTP STARTTLS verification. OpenTofu
+checks the HTTPS status, exact body, and plain-text content type before creating
+the discovery TXT; its revision is a hash of the shared policy. Caddy serves the
+policy inline without an S3 bucket. Body-aware probes require HTTP 200 without
+redirects. HSTS retains a one-day rollback window and excludes preload.
+
+The CI Cloudflare token needs `SSL and Certificates Write` for CT alerting,
+in addition to its existing DNS and zone settings permissions. Preserve existing
+CT recipients. Registrar auto-renew, transfer lock, privacy, and account MFA
+remain operator checks because this stack does not own those settings.
+
+Credential-free publication gate tests:
+
+```bash
+domain_test_data=$(mktemp -d /tmp/domain-baseline-tests.XXXXXX)
+TF_DATA_DIR="$domain_test_data" tofu -chdir=packages/homelab/src/tofu/cloudflare init -backend=false
+TF_DATA_DIR="$domain_test_data" tofu -chdir=packages/homelab/src/tofu/cloudflare test -filter=tests/domain-baseline.tftest.hcl
+```
 
 Scoped `cloudflare_api_token` resources live in the isolated
 `cloudflare-tokens` state. The bootstrap token and legacy global API key remain

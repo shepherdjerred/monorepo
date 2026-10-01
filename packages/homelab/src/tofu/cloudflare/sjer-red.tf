@@ -386,53 +386,7 @@ resource "cloudflare_dns_record" "sjer_red_cname_woodpecker" {
   proxied = true
 }
 
-# FastMail DKIM
-resource "cloudflare_dns_record" "sjer_red_dkim_fm1" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "fm1._domainkey"
-  type    = "CNAME"
-  content = "fm1.sjer.red.dkim.fmhosted.com"
-  proxied = false
-}
-
-resource "cloudflare_dns_record" "sjer_red_dkim_fm2" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "fm2._domainkey"
-  type    = "CNAME"
-  content = "fm2.sjer.red.dkim.fmhosted.com"
-  proxied = false
-}
-
-resource "cloudflare_dns_record" "sjer_red_dkim_fm3" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "fm3._domainkey"
-  type    = "CNAME"
-  content = "fm3.sjer.red.dkim.fmhosted.com"
-  proxied = false
-}
-
-# ── MX (FastMail) ───────────────────────────────────────────────────────────
-
-resource "cloudflare_dns_record" "sjer_red_mx1" {
-  zone_id  = cloudflare_zone.sjer_red.id
-  ttl      = 1
-  name     = "sjer.red"
-  type     = "MX"
-  content  = "in1-smtp.messagingengine.com"
-  priority = 10
-}
-
-resource "cloudflare_dns_record" "sjer_red_mx2" {
-  zone_id  = cloudflare_zone.sjer_red.id
-  ttl      = 1
-  name     = "sjer.red"
-  type     = "MX"
-  content  = "in2-smtp.messagingengine.com"
-  priority = 20
-}
+# Postal bounce routing
 
 resource "cloudflare_dns_record" "sjer_red_mx_rp1" {
   zone_id  = cloudflare_zone.sjer_red.id
@@ -610,78 +564,7 @@ resource "cloudflare_dns_record" "sjer_red_srv_submission" {
 
 # ── TXT ─────────────────────────────────────────────────────────────────────
 
-resource "cloudflare_dns_record" "sjer_red_spf" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sjer.red"
-  type    = "TXT"
-  content = "v=spf1 include:spf.messagingengine.com -all"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_dmarc"
-  type    = "TXT"
-  content = "v=DMARC1; p=reject; rua=mailto:dmarc@sjer.red; ruf=mailto:dmarc@sjer.red; fo=1"
-}
-
-# DMARC aggregate report authorization for external domains (RFC 7489 §7.1)
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_ts_mc_net" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "ts-mc.net._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_scout_for_lol_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "scout-for-lol.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_better_skill_capped_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "better-skill-capped.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_discord_plays_pokemon_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "discord-plays-pokemon.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_clauderon_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "clauderon.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_jerredshepherd_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "jerredshepherd.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_glitter_boys_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "glitter-boys.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
+# Postal bounce sender authentication
 
 resource "cloudflare_dns_record" "sjer_red_spf_rp" {
   zone_id = cloudflare_zone.sjer_red.id
@@ -725,92 +608,6 @@ resource "cloudflare_dns_record" "sjer_red_acme_syncthing" {
   content = "FR8t1KHtHXWGKfERJqTZVcPitpVKmAKENo6auaz9OV0"
 }
 
-# DNSSEC
-resource "cloudflare_zone_dnssec" "sjer_red" {
-  zone_id = cloudflare_zone.sjer_red.id
-  status  = "active"
-}
-
-# ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────
-resource "cloudflare_dns_record" "sjer_red_caa_issue_letsencrypt" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sjer.red"
-  type    = "CAA"
-  data = {
-    flags = 0
-    tag   = "issue"
-    value = "letsencrypt.org"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_caa_issue_google_trust_services" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sjer.red"
-  type    = "CAA"
-  data = {
-    flags = 0
-    tag   = "issue"
-    value = "pki.goog; cansignhttpexchanges=yes"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_caa_issue_sectigo" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sjer.red"
-  type    = "CAA"
-  data = {
-    flags = 0
-    tag   = "issue"
-    value = "sectigo.com"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_caa_issue_ssl_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sjer.red"
-  type    = "CAA"
-  data = {
-    flags = 0
-    tag   = "issue"
-    value = "ssl.com"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_caa_issuewild_none" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sjer.red"
-  type    = "CAA"
-  data = {
-    flags = 0
-    tag   = "issuewild"
-    value = ";"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_caa_iodef" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sjer.red"
-  type    = "CAA"
-  data = {
-    flags = 0
-    tag   = "iodef"
-    value = "mailto:dmarc@sjer.red"
-  }
-}
-
-# ── Edge hardening: min TLS 1.2 + HSTS (1-day rollback window) ──────────────
-resource "cloudflare_zone_setting" "sjer_red_min_tls_version" {
-  zone_id    = cloudflare_zone.sjer_red.id
-  setting_id = "min_tls_version"
-  value      = "1.2"
-}
-
 # WebSockets are on by default for every Cloudflare plan, but mariokart.sjer.red's
 # driver feed depends on them: it serves H.264 over a raw WebSocket with no
 # polling fallback, so a dashboard toggle here would silently break in-browser
@@ -820,29 +617,6 @@ resource "cloudflare_zone_setting" "sjer_red_websockets" {
   zone_id    = cloudflare_zone.sjer_red.id
   setting_id = "websockets"
   value      = "on"
-}
-
-resource "cloudflare_zone_setting" "sjer_red_security_header" {
-  zone_id    = cloudflare_zone.sjer_red.id
-  setting_id = "security_header"
-  value = {
-    strict_transport_security = {
-      enabled            = true
-      max_age            = 86400
-      include_subdomains = true
-      nosniff            = true
-      preload            = false
-    }
-  }
-}
-
-# ── TLSRPT: ask senders to report STARTTLS failures ─────────────────────────
-resource "cloudflare_dns_record" "sjer_red_tlsrpt" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_smtp._tls"
-  type    = "TXT"
-  content = "v=TLSRPTv1; rua=mailto:dmarc@sjer.red"
 }
 
 # ── Static-asset caching: respect the immutable Cache-Control the deploy sets on

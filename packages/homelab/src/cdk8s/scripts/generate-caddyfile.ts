@@ -4,6 +4,7 @@
  * Used for CI validation with caddy validate.
  */
 import { generateCaddyfile } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
+import { mailPolicyHosts } from "homelab/src/domain-registry.ts";
 import {
   staticSites,
   S3_ENDPOINT,
@@ -11,6 +12,7 @@ import {
 
 const caddyfile = generateCaddyfile({
   sites: staticSites,
+  mailPolicies: mailPolicyHosts,
   s3Endpoint: S3_ENDPOINT,
 });
 

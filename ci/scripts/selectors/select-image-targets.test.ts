@@ -110,6 +110,21 @@ describe("selectImageTargets", () => {
     }
   });
 
+  test("rebuilds both registry consumers while keeping homelab image sources scoped", async () => {
+    for (const path of [
+      "packages/homelab/src/domain-registry.json",
+      "packages/homelab/src/domain-registry.ts",
+    ]) {
+      expect(await select([path])).toEqual(["infra", "temporal-worker"]);
+    }
+    expect(await select(["packages/homelab/package.json"])).toEqual([
+      "temporal-worker",
+    ]);
+    expect(
+      await select(["packages/homelab/src/tofu/cloudflare/domain-baseline.tf"]),
+    ).toEqual([]);
+  });
+
   test("rebuilds infra when The Storm's server image inputs change", async () => {
     for (const path of [
       "packages/the-storm/server/Dockerfile",

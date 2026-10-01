@@ -1,17 +1,6 @@
 import { promises as dns } from "node:dns";
+import { domainRegistry } from "homelab/src/domain-registry.ts";
 import type { DnsCheckResult, DnsRecordResult } from "#shared/types.ts";
-
-// Domain lists — these match the values from the homelab cdk8s dns-audit chart.
-// They are loaded as activity inputs so the workflow stays deterministic.
-const EMAIL_DOMAINS = ["sjer.red", "ts-mc.net"];
-
-const NO_EMAIL_DOMAINS = [
-  "shepherdjerred.com",
-  "scout-for-lol.com",
-  "better-skill-capped.com",
-  "discord-plays-pokemon.com",
-  "clauderon.com",
-];
 
 function ok(message: string): DnsRecordResult {
   return { status: "ok", message };
@@ -120,8 +109,12 @@ export const dnsAuditActivities = {
     noEmailDomains: string[];
   }> {
     return Promise.resolve({
-      emailDomains: EMAIL_DOMAINS,
-      noEmailDomains: NO_EMAIL_DOMAINS,
+      emailDomains: Object.entries(domainRegistry.domains)
+        .filter(([, settings]) => settings.fastmailReady)
+        .map(([domain]) => domain),
+      noEmailDomains: Object.entries(domainRegistry.domains)
+        .filter(([, settings]) => !settings.fastmailReady)
+        .map(([domain]) => domain),
     });
   },
 

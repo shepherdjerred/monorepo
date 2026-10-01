@@ -11,6 +11,7 @@
     }
   },
   "include": [
+    "src/domain-registry.ts",
     "scripts/ci/bootstrap-woodpecker.ts",
     "scripts/argocd/argocd.ts",
     "scripts/argocd/argocd-apply-safety.ts",

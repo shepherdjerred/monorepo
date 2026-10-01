@@ -1,4 +1,5 @@
 export const legacyTofuPaths = [
+  "packages/homelab/src/domain-registry.json",
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/argocd",
   "packages/homelab/src/tofu/arr",

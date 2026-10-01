@@ -19,6 +19,12 @@ Workers, with separate registries, credentials, service accounts, and
 concurrency budgets. The explicit `all` role composes every role in one process
 for local development.
 
+The infra worker's daily DNS audit reads the validated
+`packages/homelab/src/domain-registry.json` inventory in its `getDomains`
+Activity. Domains with `fastmailReady` are audited as mail domains; the others
+are audited as parked. The inventory ships in the worker image, and Activity
+results keep Workflow replay independent of later inventory changes.
+
 Temporal namespaces are environment-scoped: local servers use `dev`, Scout
 beta uses `beta`, and production plus shared control-plane jobs use `prod`.
 The shared cluster contains only the active `beta` and `prod` namespaces plus
