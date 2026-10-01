@@ -155,7 +155,15 @@ the discovery TXT; its revision is a hash of the shared policy. Caddy serves the
 policy inline without an S3 bucket. Body-aware probes require HTTP 200 without
 redirects. HSTS retains a one-day rollback window and excludes preload.
 
-The CI Cloudflare token needs `SSL and Certificates Write` for CT alerting,
+The account Bulk Redirect ruleset is also managed by OpenTofu. Its existing
+`sjerred` and disabled `resume` list references retain their stable rule IDs;
+the lists themselves remain external inputs. The two personal `.com` domains'
+mail-policy hosts are excluded from the broad `sjerred` redirect so they can
+reach the tunnel. The ruleset has `prevent_destroy` to guard replacement or
+deletion while its declaration remains in the stack.
+
+The CI Cloudflare token needs `SSL and Certificates Write` for CT alerting
+and account-scoped `Mass URL Redirects Write` for the Bulk Redirect ruleset,
 in addition to its existing DNS and zone settings permissions. Preserve existing
 CT recipients with the explicit null `ct_alert_recipient` override; new alerts
 deliver to the confirmed `root@sjer.red` inbox by default. The baseline keeps
