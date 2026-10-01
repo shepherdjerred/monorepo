@@ -1,5 +1,5 @@
 import { z } from "zod";
-import inventory from "./domain-registry.json";
+import inventory from "./domain-registry.json" with { type: "json" };
 
 export const MailPolicySchema = z.strictObject({
   version: z.literal("STSv1"),

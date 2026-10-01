@@ -2045,6 +2045,7 @@
         "discord.js": "^14.27.0",
         "fflate": "^0.8.3",
         "firebase": "^12.12.1",
+        "homelab": "workspace:*",
         "hono": "^4.12.18",
         "marked": "^18.0.3",
         "octokit": "^5.0.4",

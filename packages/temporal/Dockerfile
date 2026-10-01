@@ -48,6 +48,8 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/homelab/src/domain-registry.ts \
+  packages/homelab/src/domain-registry.json \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
@@ -419,6 +421,8 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/homelab/src/domain-registry.ts \
+  packages/homelab/src/domain-registry.json \
   packages/temporal-observability \
   packages/config \
   packages/feature-flags \
