@@ -24,7 +24,12 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
     `commit_id === head`; because a clean PR leaves no review artifact,
     `cleanSignal: "thumbsup-reaction"` detects "reviewed, nothing to flag"
     (Codex). `cleanSignal: "none"` declares the provider always posts a
-    review object, so a missing review means "not reviewed yet" (CodeRabbit).
+    review object, so a missing review means "not reviewed yet". CodeRabbit
+    also accepts its completed clean comment: trusted bot identity, a fresh
+    timestamp, an explicit no-actionable-comments result, and final coverage
+    metadata whose source and covered SHAs both equal the head are required.
+    Walkthrough text and rewritten commit links alone never count. Inline and
+    review-body findings still pass through the existing severity gate.
   - `issue-comment`: the provider maintains findings in a persistent issue
     comment and posts a separate acknowledgement naming each reviewed head
     (Qodo). Consumers reuse that same comment snapshot when parsing findings.

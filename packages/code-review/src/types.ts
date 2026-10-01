@@ -127,7 +127,8 @@ export type ReviewIssueComment = {
  *   mode leave no artifact on a clean PR, so `cleanSignal` says how to detect
  *   "reviewed, nothing to flag" — currently a 👍 reaction from the provider
  *   (Codex), or `"none"` when the provider always posts a review object and a
- *   missing review means "not reviewed yet" (CodeRabbit).
+ *   missing review means "not reviewed yet". A provider may instead declare a
+ *   parser for an explicitly completed, clean comment naming the reviewed SHA.
  * - `issue-comment`: the provider maintains findings in a review issue comment
  *   and posts an independent acknowledgement naming each reviewed head. A
  *   clean review with no acknowledgement falls back to the comment's
@@ -135,7 +136,16 @@ export type ReviewIssueComment = {
  */
 export type CompletionStrategy =
   | { kind: "check-run"; namePattern: RegExp }
-  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" | "none" }
+  | {
+      kind: "review-at-head";
+      cleanSignal:
+        | "thumbsup-reaction"
+        | "none"
+        | {
+            marker: string;
+            parseReviewedHead: (body: string) => string | null;
+          };
+    }
   | {
       kind: "issue-comment";
       marker: string;
