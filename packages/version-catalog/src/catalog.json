@@ -724,7 +724,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
       "notes": [
         "Candidate Scout prod Workflow Worker image - advanced explicitly after beta acceptance",
         "not managed by renovate"
@@ -737,7 +737,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
       "notes": [
         "Stable Scout prod Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
