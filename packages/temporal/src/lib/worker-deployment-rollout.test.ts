@@ -41,6 +41,8 @@ type Fixture = {
   candidateFailures?: number;
   historicalRuleEvaluationSamples?: number;
   historicalPollerSamples?: number;
+  historicalCombinedPollers?: number;
+  historicalNonstickyPollers?: number;
   historicalEvaluationProgress?: number;
   historicalEvaluationAgeSeconds?: number;
   evaluationAgeSeconds?: number;
@@ -148,9 +150,26 @@ function increaseMetricValue(
       : undefined;
 }
 
+function pollerMetricValue(
+  expression: string,
+  fixture: Fixture,
+): number | undefined {
+  if (
+    expression.includes('poller_type=~"workflow_task|sticky_workflow_task"')
+  ) {
+    return fixture.historicalCombinedPollers ?? 1;
+  }
+  return expression.includes("max_over_time") &&
+    expression.includes('poller_type="workflow_task"')
+    ? (fixture.historicalNonstickyPollers ?? 1)
+    : undefined;
+}
+
 function metricValue(expression: string, fixture: Fixture): number {
   const increased = increaseMetricValue(expression, fixture);
   if (increased !== undefined) return increased;
+  const poller = pollerMetricValue(expression, fixture);
+  if (poller !== undefined) return poller;
   if (expression.includes("time() - max by")) {
     return fixture.evaluationAgeSeconds ?? 1;
   }
@@ -866,6 +885,54 @@ describe("Worker Deployment rollout safety", () => {
         ),
       ),
     ).rejects.toThrow("Workflow poller history for");
+  });
+
+  test("accepts continuous combined pollers with brief nonsticky gaps", async () => {
+    const commands: string[][] = [];
+    await executeWorkerDeploymentRollout(
+      await options("advance", new Date("2026-08-29T00:31:00Z")),
+      fixtureRunner(
+        {
+          rampingBuildId: CANDIDATE,
+          rampPercentage: 10,
+          rampChangedTime: "2026-08-29T00:00:00Z",
+          historicalCombinedPollers: 1,
+          historicalNonstickyPollers: 1,
+        },
+        commands,
+      ),
+    );
+    const queries = commands.flat();
+    expect(
+      queries.some((argument) =>
+        argument.includes('poller_type=~"workflow_task|sticky_workflow_task"'),
+      ),
+    ).toBe(true);
+    expect(
+      queries.some((argument) =>
+        argument.includes("max_over_time((sum(temporal_worker_num_pollers"),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([
+    [{ historicalCombinedPollers: 0 }, "Workflow poller for"],
+    [{ historicalNonstickyPollers: 0 }, "Nonsticky Workflow poller for"],
+  ])("rejects a sustained poller outage: %j", async (outage, message) => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            ...outage,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow(message);
   });
 
   test("rejects promotion when the candidate pin was built from another commit", async () => {

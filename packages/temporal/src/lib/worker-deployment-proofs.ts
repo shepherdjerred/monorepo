@@ -310,14 +310,28 @@ async function requirePollerHistory(input: {
       `Workflow poller history for ${buildId} on ${taskQueue} covered only ${String(pollerHistorySamples)} samples during the required ${duration} rollout window`,
     );
   }
+  const combinedPollerSelector = `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type=~"workflow_task|sticky_workflow_task"})`;
   const pollerSamples = await queryRolloutMetric(
-    `min_over_time((${pollerSelector})[${duration}:])`,
+    `min_over_time((${combinedPollerSelector})[${duration}:30s])`,
     `${duration} ${buildId} ${taskQueue} Workflow poller history query`,
     run,
   );
   if (pollerSamples < 1) {
     throw new Error(
       `Workflow poller for ${buildId} on ${taskQueue} was unavailable during the required ${duration} rollout window`,
+    );
+  }
+  // Core can briefly report zero nonsticky pollers while sticky pollers remain
+  // active. Keep the new-Workflow queue live by requiring a nonsticky poller in
+  // every one-minute interval, in addition to uninterrupted combined coverage.
+  const nonstickyPollerSamples = await queryRolloutMetric(
+    `min_over_time((max_over_time((${pollerSelector})[1m:30s]))[${duration}:30s])`,
+    `${duration} ${buildId} ${taskQueue} nonsticky Workflow poller history query`,
+    run,
+  );
+  if (nonstickyPollerSamples < 1) {
+    throw new Error(
+      `Nonsticky Workflow poller for ${buildId} on ${taskQueue} was unavailable for at least one minute during the required ${duration} rollout window`,
     );
   }
 }
