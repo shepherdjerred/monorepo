@@ -42,15 +42,15 @@ turns that resource into the same-named Kubernetes Secret. Wait for the
 Application to become synced and healthy, then confirm both resources exist:
 
 ```bash
-kubectl get onepassworditem -n woodpecker <secret-name>
-kubectl get secret -n woodpecker <secret-name>
+kubectl get onepassworditem -n woodpecker-ci <secret-name>
+kubectl get secret -n woodpecker-ci <secret-name>
 ```
 
 Print key names only and compare them with the manifest. Do not print or decode
 values:
 
 ```bash
-kubectl get secret -n woodpecker <secret-name> -o json |
+kubectl get secret -n woodpecker-ci <secret-name> -o json |
   jq -r '.data | keys[]'
 ```
 
@@ -60,9 +60,9 @@ Confirm the step identity still cannot enumerate or read Kubernetes Secrets:
 
 ```bash
 kubectl auth can-i list secrets \
-  --as=system:serviceaccount:woodpecker:woodpecker-job -n woodpecker
+  --as=system:serviceaccount:woodpecker-ci:woodpecker-job -n woodpecker-ci
 kubectl auth can-i get secrets \
-  --as=system:serviceaccount:woodpecker:woodpecker-job -n woodpecker
+  --as=system:serviceaccount:woodpecker-ci:woodpecker-job -n woodpecker-ci
 ```
 
 Both commands must return `no`. Inspect a pod from each affected step and
@@ -92,5 +92,11 @@ trying another rotation.
 
 ## 6. Retire the previous identity
 
-After the exact-main step and its deployment acceptance pass, revoke the prior
-provider identity.
+After the exact-main step and its deployment acceptance pass, check every
+consumer of the prior provider identity before revoking it.
+
+For Cloudflare, compare `supersedes_id` values in the
+[token registry](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/cloudflare-tokens/desired-state.json). Woodpecker and
+Temporal audit share the same legacy token. Keep that token active while
+`temporal-audit` is deferred with `managed: false`. Revoke it only after the
+Temporal replacement has been handed off and its live acceptance passes too.
