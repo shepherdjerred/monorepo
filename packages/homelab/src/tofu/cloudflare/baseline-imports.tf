@@ -20,9 +20,14 @@ import {
 }
 
 import {
-  for_each = local.baseline_zone_ids
-  to       = module.domain_baseline[each.key].cloudflare_ct_alerting.ct
+  for_each = { for domain, zone_id in local.baseline_zone_ids : domain => zone_id if domain != "better-skill-capped.com" }
+  to       = module.domain_baseline[each.key].cloudflare_ct_alerting.ct[0]
   id       = each.value
+}
+
+import {
+  to = module.domain_baseline["better-skill-capped.com"].cloudflare_ct_alerting.ct_existing[0]
+  id = local.baseline_zone_ids["better-skill-capped.com"]
 }
 
 import {

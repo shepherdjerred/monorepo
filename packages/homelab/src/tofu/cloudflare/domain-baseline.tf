@@ -32,5 +32,7 @@ module "domain_baseline" {
   wildcard_mail     = each.value.wildcardMail
   tls_1_3           = each.value.tls13
   mta_sts_published = each.value.mtaStsPublished
-  mail_policy       = local.domain_registry.mailPolicy
+  # This zone already has an alert recipient; retain it during adoption.
+  ct_alert_recipient = each.key == "better-skill-capped.com" ? null : "root@sjer.red"
+  mail_policy        = local.domain_registry.mailPolicy
 }

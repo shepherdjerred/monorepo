@@ -34,6 +34,34 @@ run "bootstrap_without_discovery" {
   }
 }
 
+run "configure_certificate_alert_delivery" {
+  command = plan
+  module { source = "./modules/domain-baseline" }
+  assert {
+    condition = (
+      length(cloudflare_ct_alerting.ct) == 1 &&
+      cloudflare_ct_alerting.ct[0].enabled &&
+      cloudflare_ct_alerting.ct[0].emails == tolist(["root@sjer.red"]) &&
+      length(cloudflare_ct_alerting.ct_existing) == 0
+    )
+    error_message = "Enabling certificate monitoring must configure delivery to the owned inbox."
+  }
+}
+
+run "preserve_existing_certificate_alert_recipients" {
+  command = plan
+  module { source = "./modules/domain-baseline" }
+  variables { ct_alert_recipient = null }
+  assert {
+    condition = (
+      length(cloudflare_ct_alerting.ct) == 0 &&
+      length(cloudflare_ct_alerting.ct_existing) == 1 &&
+      cloudflare_ct_alerting.ct_existing[0].enabled
+    )
+    error_message = "Adopting existing alerts must retain their recipient configuration."
+  }
+}
+
 run "wait_for_fastmail_onboarding" {
   command = plan
   module { source = "./modules/domain-baseline" }

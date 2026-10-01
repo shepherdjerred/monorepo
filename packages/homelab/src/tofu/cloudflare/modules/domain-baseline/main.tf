@@ -50,6 +50,16 @@ variable "mta_sts_published" {
   description = "Publish discovery only after HTTPS policy and SMTP STARTTLS acceptance checks."
 }
 
+variable "ct_alert_recipient" {
+  type        = string
+  default     = "root@sjer.red"
+  description = "Owned inbox for certificate alerts. Explicit null preserves existing Cloudflare recipients."
+  validation {
+    condition     = var.ct_alert_recipient == null || can(regex("^[^ @,]+@[^ @,]+\\.[^ @,]+$", var.ct_alert_recipient))
+    error_message = "Use a single email address, or null to preserve existing recipients."
+  }
+}
+
 variable "mail_policy" {
   type = object({
     version = string
@@ -250,9 +260,17 @@ resource "cloudflare_zone_setting" "security_header" {
 }
 
 resource "cloudflare_ct_alerting" "ct" {
+  count   = var.ct_alert_recipient == null ? 0 : 1
   zone_id = var.zone_id
   enabled = true
-  # Omitting emails preserves Cloudflare's existing/default administrator recipients.
+  emails  = [var.ct_alert_recipient]
+}
+
+resource "cloudflare_ct_alerting" "ct_existing" {
+  count   = var.ct_alert_recipient == null ? 1 : 0
+  zone_id = var.zone_id
+  enabled = true
+  # Retain previously configured recipients without exposing their addresses in source.
   lifecycle {
     ignore_changes = [emails]
   }

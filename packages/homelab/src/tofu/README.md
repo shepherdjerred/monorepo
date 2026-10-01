@@ -157,7 +157,10 @@ redirects. HSTS retains a one-day rollback window and excludes preload.
 
 The CI Cloudflare token needs `SSL and Certificates Write` for CT alerting,
 in addition to its existing DNS and zone settings permissions. Preserve existing
-CT recipients. Registrar auto-renew, transfer lock, privacy, and account MFA
+CT recipients with the explicit null `ct_alert_recipient` override; new alerts
+deliver to the confirmed `root@sjer.red` inbox by default. The baseline keeps
+the previously configured recipient on `better-skill-capped.com`. Registrar
+auto-renew, transfer lock, privacy, and account MFA
 remain operator checks because this stack does not own those settings.
 
 Credential-free publication gate tests:
