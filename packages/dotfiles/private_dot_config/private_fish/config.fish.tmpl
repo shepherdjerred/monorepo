@@ -62,7 +62,7 @@ set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqb
 set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_AUTH_TOKEN" }}'
 set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
-set -gx LINEAR_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/LINEAR_API_KEY" }}'
+set -gx LINEAR_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/Section_2asirbjrrxc5apqr4s7qqfm4f4/puqwftbxah4ys746ahp6jjrxpq" }}'
 # Dedicated local agent identities for toolkit discord. The user identity can
 # invoke other bots and join voice; the bot identity provides reliable message
 # content and voice-state access.
@@ -70,9 +70,9 @@ set -gx DISCORD_USER_TOKEN '{{ onepasswordRead "op://Personal/sskm6skq3mwnyqnhrm
 set -gx DISCORD_BOT_TOKEN '{{ onepasswordRead "op://Personal/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN" }}'
 # posthog-cli reads POSTHOG_CLI_*, not the POSTHOG_API_KEY label the value is
 # stored under. The dedicated item also supplies the encrypted state passphrase.
-set -gx POSTHOG_CLI_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/POSTHOG_API_KEY" }}'
+set -gx POSTHOG_CLI_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/m7vvkd6ymu6pqk32zm7kqfynve" }}'
 set -gx POSTHOG_CLI_PROJECT_ID '549883'
-set -gx POSTHOG_TOFU_STATE_PASSPHRASE '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/POSTHOG_TOFU_STATE_PASSPHRASE" }}'
+set -gx POSTHOG_TOFU_STATE_PASSPHRASE '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/msdtltp4yy72ntrkanowlq7k24" }}'
 # Deliberately NOT named CLOUDFLARE_API_TOKEN. src/tofu/cloudflare authenticates
 # from that name ambiently, so exporting it globally would let a bare `tofu apply`
 # with no `op run` authenticate and apply instead of failing closed. ~/.local/bin/cf

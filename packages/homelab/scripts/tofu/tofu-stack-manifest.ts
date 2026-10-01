@@ -18,6 +18,7 @@ export type StackDefinition = {
 };
 
 export type TofuStack =
+  | "application-secrets"
   | "anthropic"
   | "anthropic-federation"
   | "argocd"
@@ -45,6 +46,15 @@ export const STATE_CREDENTIALS: readonly CredentialMapping[] = [
 ];
 
 export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
+  "application-secrets": {
+    encrypted: true,
+    credentials: [
+      {
+        source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+        target: "TF_VAR_tofu_state_encryption_passphrase",
+      },
+    ],
+  },
   anthropic: {
     platform: "anthropic",
     encrypted: true,
@@ -227,6 +237,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
 };
 
 const TOFU_STACKS: readonly TofuStack[] = [
+  "application-secrets",
   "anthropic",
   "anthropic-federation",
   "argocd",

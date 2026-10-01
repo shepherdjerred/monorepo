@@ -30,9 +30,9 @@ item as the Velero cloud credentials); do not resolve them into a checked-in
 env file:
 
 ```bash
-export CLOUDFLARE_R2_ACCESS_KEY_ID='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/CLOUDFLARE_R2_ACCESS_KEY_ID'
-export CLOUDFLARE_R2_SECRET_ACCESS_KEY='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/CLOUDFLARE_R2_SECRET_ACCESS_KEY'
-export CLOUDFLARE_R2_ENDPOINT='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/CLOUDFLARE_R2_ENDPOINT'
+export CLOUDFLARE_R2_ACCESS_KEY_ID='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/ymzh6wey7jw3mwpspsfbft7neu'
+export CLOUDFLARE_R2_SECRET_ACCESS_KEY='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/t6ctg5wex25auwqzdu5ztymncu'
+export CLOUDFLARE_R2_ENDPOINT='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/3dkox447jng7s3vjcbknaztjwe'
 ```
 
 ## Step 1: Read-only triage
