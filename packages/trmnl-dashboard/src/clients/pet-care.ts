@@ -238,8 +238,12 @@ function classifyHopper(
   title: string | undefined,
   fault: string | null,
 ): { health: HopperHealth; label: string } {
-  const label = title ?? value ?? fault ?? "Unavailable";
-  const combined = [value, title, fault]
+  // Whisker reports the raw HopperFaultClear enum even when the hopper is
+  // Ready. Only this explicit sentinel means no fault; unsupported fault
+  // values remain actionable and a missing indicator remains unknown.
+  const activeFault = fault === "HopperFaultClear" ? null : fault;
+  const label = title ?? value ?? activeFault ?? "Unavailable";
+  const combined = [value, title, activeFault]
     .filter((part) => part != null)
     .join(" ")
     .toLowerCase();
@@ -250,7 +254,7 @@ function classifyHopper(
     return { health: "motor-fault", label };
   }
   if (
-    fault != null ||
+    activeFault != null ||
     combined.includes("fault") ||
     combined.includes("error")
   ) {
