@@ -16,18 +16,39 @@ pinchtab daemon install
 pinchtab config set browser.binary \
   '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
 
-# Allow browsing the public internet with content safety enabled
-pinchtab config set security.idpi.enabled true
-pinchtab config set security.allowedDomains '*'
-pinchtab config set security.idpi.strictMode true
-pinchtab config set security.idpi.scanContent true
-pinchtab config set security.idpi.wrapContent true
+# Broad browsing and page evaluation are intentional on this trusted Mac.
+# Merge only the policy: preserve the daemon's token, profiles, and state.
+# Website access includes local/LAN/tailnet hosts; task authorization still
+# governs which sites an agent uses and which account actions it performs.
+pinchtab config patch '{
+  "server": { "bind": "127.0.0.1" },
+  "security": {
+    "allowedDomains": ["*"],
+    "allowEvaluate": true,
+    "allowCookies": false,
+    "allowDownload": false,
+    "allowUpload": false,
+    "allowClipboard": false,
+    "allowMacro": false,
+    "allowScreencast": false,
+    "allowStateExport": false,
+    "allowNetworkIntercept": false,
+    "allowFileScheme": false,
+    "trustedResolveCIDRs": [],
+    "trustedProxyCIDRs": [],
+    "attach": { "enabled": false, "forwardProxyAuth": false },
+    "idpi": {
+      "enabled": true,
+      "strictMode": true,
+      "scanContent": true,
+      "wrapContent": true
+    }
+  }
+}'
+pinchtab config validate
 
 # Full stealth for sites with bot detection (e.g. X, Reddit)
 pinchtab config set instanceDefaults.stealthLevel full
-
-# Enable JS eval for React-heavy sites
-pinchtab config set security.allowEvaluate true
 
 # Install uBlock Origin extension
 STATE_DIR="$HOME/Library/Application Support/pinchtab"

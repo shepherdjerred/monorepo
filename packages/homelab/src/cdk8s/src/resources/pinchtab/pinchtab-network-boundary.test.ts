@@ -13,6 +13,41 @@ const NamespaceSchema = z.object({
   }),
 });
 
+const ConfigMapSchema = z.object({
+  kind: z.literal("ConfigMap"),
+  metadata: z.object({ name: z.literal("pinchtab-config") }),
+  data: z.object({ "config.json": z.string() }),
+});
+
+const BrowserConfigSchema = z.object({
+  server: z.object({ bind: z.string(), port: z.string() }),
+  security: z.object({
+    allowedDomains: z.array(z.string()),
+    allowEvaluate: z.boolean(),
+    allowCookies: z.boolean(),
+    allowDownload: z.boolean(),
+    allowUpload: z.boolean(),
+    allowClipboard: z.boolean(),
+    allowMacro: z.boolean(),
+    allowScreencast: z.boolean(),
+    allowStateExport: z.boolean(),
+    allowNetworkIntercept: z.boolean(),
+    allowFileScheme: z.boolean(),
+    trustedResolveCIDRs: z.array(z.string()),
+    trustedProxyCIDRs: z.array(z.string()),
+    attach: z.object({
+      enabled: z.boolean(),
+      forwardProxyAuth: z.boolean(),
+    }),
+    idpi: z.object({
+      enabled: z.boolean(),
+      strictMode: z.boolean(),
+      scanContent: z.boolean(),
+      wrapContent: z.boolean(),
+    }),
+  }),
+});
+
 const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
   spec: z.object({
@@ -87,6 +122,45 @@ function resources(): unknown[] {
 }
 
 describe("PinchTab network boundary", () => {
+  test("allows website browsing and eval while keeping other capabilities closed", () => {
+    const configMap = resources().flatMap((resource) => {
+      const parsed = ConfigMapSchema.safeParse(resource);
+      return parsed.success ? [parsed.data] : [];
+    })[0];
+    if (configMap == null) {
+      throw new Error("PinchTab configuration must be synthesized");
+    }
+    const config = BrowserConfigSchema.parse(
+      JSON.parse(configMap.data["config.json"]),
+    );
+    expect(config.server).toEqual({ bind: "0.0.0.0", port: "9867" });
+    expect(config.security).toEqual({
+      allowedDomains: ["*"],
+      allowEvaluate: true,
+      allowCookies: false,
+      allowDownload: false,
+      allowUpload: false,
+      allowClipboard: false,
+      allowMacro: false,
+      allowScreencast: false,
+      allowStateExport: false,
+      allowNetworkIntercept: false,
+      allowFileScheme: false,
+      trustedResolveCIDRs: [],
+      trustedProxyCIDRs: [],
+      attach: { enabled: false, forwardProxyAuth: false },
+      idpi: {
+        enabled: true,
+        strictMode: true,
+        scanContent: true,
+        wrapContent: true,
+      },
+    });
+    expect(JSON.parse(configMap.data["config.json"])).not.toHaveProperty(
+      "server.token",
+    );
+  });
+
   test("admits only the explicit NET_ADMIN firewall init container", () => {
     const synthesized = resources();
     const namespace = synthesized.flatMap((resource) => {
