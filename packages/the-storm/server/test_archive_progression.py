@@ -69,6 +69,50 @@ class ArchiveTest(unittest.TestCase):
         self.assertTrue(self.database.exists())
         self.assertFalse((self.data / progression.MARKER).exists())
 
+    def test_archive_only_preserves_player_data_and_records_no_backup(self):
+        before = progression.fingerprint(self.data / "world")
+        progression.archive(self.data, None, None, archive_only=True)
+        self.assertEqual(progression.fingerprint(self.data / "world"), before)
+        self.assertEqual((self.data / "plugins/LuckPerms/runtime.db").read_bytes(), b"preserved-permissions")
+        receipt = json.loads((self.data / progression.MARKER).read_text(encoding="utf-8"))
+        self.assertEqual(receipt, {"version": 1, "status": "complete", "mode": "archive-only", "backupId": None})
+        self.assertFalse(self.database.exists())
+        self.database.write_bytes(b"new-progression")
+        progression.archive(self.data, None, None, archive_only=True)
+        self.assertEqual(self.database.read_bytes(), b"new-progression")
+
+    def test_archive_only_resumes_moves_and_refuses_mode_switches(self):
+        archived = self.data / "progression-archives/v1/plugins/Essentials"
+        archived.parent.mkdir(parents=True)
+        (self.data / "plugins/Essentials").rename(archived)
+        progression.save_marker(self.data / progression.MARKER, "preparing", None, "archive-only")
+        with self.assertRaisesRegex(ValueError, "original archive mode"):
+            self.run_archive()
+        progression.archive(self.data, None, None, archive_only=True)
+        self.assertTrue((archived / "userdata/player.yml").exists())
+        self.assertFalse(self.database.exists())
+
+    def test_archive_only_refuses_pending_obligations_and_conflicting_targets(self):
+        with closing(sqlite3.connect(self.database)) as connection, connection:
+            connection.execute("CREATE TABLE qol_grave (player TEXT)")
+            connection.execute("INSERT INTO qol_grave VALUES ('player')")
+        with self.assertRaisesRegex(ValueError, "qol_grave"):
+            progression.archive(self.data, None, None, archive_only=True)
+        self.assertTrue(self.database.exists())
+        self.assertFalse((self.data / progression.MARKER).exists())
+        with closing(sqlite3.connect(self.database)) as connection, connection:
+            connection.execute("DELETE FROM qol_grave")
+        (self.data / "progression-archives/v1/plugins/Essentials").mkdir(parents=True)
+        with self.assertRaisesRegex(ValueError, "Both live and archived"):
+            progression.archive(self.data, None, None, archive_only=True)
+
+    def test_archive_only_rejects_symlinks_and_backup_arguments(self):
+        with self.assertRaisesRegex(ValueError, "does not accept"):
+            progression.archive(self.data, self.restored, "backup-123", archive_only=True)
+        (self.data / "plugins/LWC").symlink_to(self.root, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlink target"):
+            progression.archive(self.data, None, None, archive_only=True)
+
     def test_pending_arena_inventory_must_be_recovered(self):
         with closing(sqlite3.connect(self.database)) as connection, connection:
             connection.execute("CREATE TABLE arena_snapshots (player TEXT, restored_at INTEGER)")

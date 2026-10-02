@@ -330,6 +330,27 @@ describe("Managed flag inventory validation", () => {
 });
 
 describe("The Storm companion pilot rollout", () => {
+  test("activates production gameplay and brain features with safe global defaults", () => {
+    for (const [namespace, keys] of [
+      ["storm", ["storm-brain-classify-enabled", "storm-brain-triage-enabled"]],
+      ["the-storm", ["the-storm-crier-enabled", "the-storm-merchant-enabled"]],
+    ] as const) {
+      const flags = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        namespace,
+      );
+      for (const key of keys) {
+        expect(flags.find((flag) => flag.key === key)).toMatchObject({
+          default: true,
+        });
+        expect(
+          managedFlagInventory.flags.find((flag) => flag.key === key),
+        ).toMatchObject({ default: false });
+      }
+    }
+  });
+
   test("targets Alt 1 in beta while keeping production and fallback off", () => {
     const key = "the-storm-companion-pilot-enabled";
     const declared = managedFlagInventory.flags.find(

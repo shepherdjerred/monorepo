@@ -1855,6 +1855,38 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "storm-brain-classify-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "storm-brain-triage-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-crier-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-merchant-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "ai_reports_enabled",
           "type": "boolean",
           "default": false,
