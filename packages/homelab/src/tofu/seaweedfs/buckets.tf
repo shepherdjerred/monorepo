@@ -1,4 +1,8 @@
 # Static site buckets (served via Caddy s3proxy)
+resource "aws_s3_bucket" "statically_typed" {
+  bucket = "statically-typed"
+}
+
 resource "aws_s3_bucket" "better_skill_capped" {
   bucket = "better-skill-capped"
 }

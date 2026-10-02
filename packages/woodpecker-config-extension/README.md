@@ -50,6 +50,15 @@ catalog. ArgoCD must reconcile that new pin before Woodpecker generates
 pipelines with changed extension code. The original bootstrap image is not a
 substitute for this release path.
 
+## Static-site delivery
+
+The sites lane builds selected packages through the repository deploy catalog
+after OpenTofu creates their SeaweedFS buckets. Cloudflare DNS apply waits for
+both site publication and ArgoCD reconciliation, so a new hostname has content
+and a tunnel route before DNS exposes it. Each site declares its workspace
+filter, changed-path inputs, and deploy target; build inputs outside its package
+must also be included in those selectors.
+
 ## Port status
 
 Woodpecker owns verification, images, OpenTofu, Playwright, and releases. The

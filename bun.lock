@@ -1770,6 +1770,20 @@
         "vitest": "5.0.1",
       },
     },
+    "packages/statically-typed": {
+      "name": "@shepherdjerred/statically-typed",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.1",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/stocks-sjer-red": {
       "name": "stocks-sjer-red",
       "version": "1.0.0",
@@ -4174,6 +4188,8 @@
     "@shepherdjerred/s3-signed-request": ["@shepherdjerred/s3-signed-request@workspace:packages/s3-signed-request"],
 
     "@shepherdjerred/seaweedfs-backup": ["@shepherdjerred/seaweedfs-backup@workspace:packages/seaweedfs-backup"],
+
+    "@shepherdjerred/statically-typed": ["@shepherdjerred/statically-typed@workspace:packages/statically-typed"],
 
     "@shepherdjerred/storm-brain": ["@shepherdjerred/storm-brain@workspace:packages/storm-brain"],
 

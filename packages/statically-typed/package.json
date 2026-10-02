@@ -1,0 +1,31 @@
+{
+  "name": "@shepherdjerred/statically-typed",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal Statically Typed anchor page",
+  "imports": {
+    "#scripts/*": "./scripts/*"
+  },
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "dev": "bun run scripts/dev.ts",
+    "preview": "bun run scripts/preview.ts",
+    "lint": "bunx --no-install eslint . --max-warnings=0",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
+    "deploy": "bun ../../scripts/release/deploy-site.ts statically-typed"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "5.0.1",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.1"
+  }
+}

@@ -16,6 +16,12 @@ export const deployScripts = [
 ] as const;
 
 export const sitePaths = {
+  "site-statically-typed": [
+    ...workspacePaths,
+    "packages/statically-typed",
+    "packages/scout-for-lol/packages/design-system/assets/fonts/BerkeleyMono/BerkeleyMono-Regular.woff2",
+    ...deployScripts,
+  ],
   "site-sjer-red": [
     ...workspacePaths,
     "packages/sjer.red",

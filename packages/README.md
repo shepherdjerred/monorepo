@@ -46,6 +46,7 @@ hold only scoped invariants that agents must keep in context.
 | Package                                         | Description                                                    |
 | ----------------------------------------------- | -------------------------------------------------------------- |
 | [sjer.red](sjer.red/)                           | Personal website (Astro)                                       |
+| [statically-typed](statically-typed/)           | Minimal Berkeley Mono anchor page with a Bun build             |
 | [resume](resume/)                               | LaTeX resume, built and deployed from CI                       |
 | [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)              |
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin   |

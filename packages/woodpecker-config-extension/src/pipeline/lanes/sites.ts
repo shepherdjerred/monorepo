@@ -42,6 +42,11 @@ const AWS_ALIASES = [
 
 /** Sites built from source in this step, with the workspace each needs. */
 const SOURCE_BUILT_SITES = [
+  {
+    lane: "site-statically-typed",
+    site: "statically-typed",
+    filter: "'@shepherdjerred/statically-typed'",
+  },
   { lane: "site-webring", site: "webring", filter: "webring" },
   {
     lane: "site-cooklang",

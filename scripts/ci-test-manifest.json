@@ -605,6 +605,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/statically-typed",
+      "directory": "packages/statically-typed",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "starlight-karma-bot",
       "directory": "packages/starlight-karma-bot",
       "steps": [
