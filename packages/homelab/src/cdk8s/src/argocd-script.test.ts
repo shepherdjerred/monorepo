@@ -4,6 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import {
+  runArgocdCommand,
   operationForRootSyncRequest,
   operationForSyncRequest,
   operationResponseForRootSync,
@@ -130,7 +131,7 @@ describe("Argo CD prune safety", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -148,15 +149,8 @@ describe("Argo CD prune safety", () => {
             ARGOCD_SERVER_URL: server.url.origin,
             ARGOCD_TOKEN: "test-token",
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");
@@ -200,7 +194,7 @@ describe("Argo CD prune safety", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -222,14 +216,8 @@ describe("Argo CD prune safety", () => {
             ARGOCD_SERVER_URL: server.url.origin,
             ARGOCD_TOKEN: "test-token",
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).not.toBe(0);
       expect(stderr).toContain("Argo operation revision mismatch");
@@ -241,7 +229,7 @@ describe("Argo CD prune safety", () => {
 });
 
 test("Argo CD root pruning requires an exact revision", async () => {
-  const process = Bun.spawn(
+  const { exitCode, stderr } = await runArgocdCommand(
     [
       "bun",
       "--no-install",
@@ -259,14 +247,8 @@ test("Argo CD root pruning requires an exact revision", async () => {
         ARGOCD_SERVER_URL: "http://127.0.0.1:1",
         ARGOCD_TOKEN: "test-token",
       },
-      stderr: "pipe",
-      stdout: "pipe",
     },
   );
-  const [exitCode, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stderr).text(),
-  ]);
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain(
@@ -275,18 +257,10 @@ test("Argo CD root pruning requires an exact revision", async () => {
 });
 
 test("Argo CD CLI usage exposes one root release command", async () => {
-  const process = Bun.spawn(
+  const { exitCode, stderr } = await runArgocdCommand(
     ["bun", "--no-install", "scripts/argocd/argocd.ts"],
-    {
-      cwd: path.resolve(import.meta.dir, "../../.."),
-      stderr: "pipe",
-      stdout: "pipe",
-    },
+    { cwd: path.resolve(import.meta.dir, "../../..") },
   );
-  const [exitCode, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stderr).text(),
-  ]);
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain(
@@ -314,7 +288,7 @@ test("release-root owns the complete dry-run lifecycle", async () => {
   );
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stdout, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -328,17 +302,8 @@ test("release-root owns the complete dry-run lifecycle", async () => {
         "11111111-1111-4111-8111-111111111111",
         "--dry-run",
       ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        stderr: "pipe",
-        stdout: "pipe",
-      },
+      { cwd: path.resolve(import.meta.dir, "../../..") },
     );
-    const [exitCode, stdout, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
@@ -378,7 +343,7 @@ test("release-root rejects an inventory that names another apps revision", async
   );
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stdout, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -392,17 +357,8 @@ test("release-root rejects an inventory that names another apps revision", async
         RELEASE_REQUEST_ID,
         "--dry-run",
       ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        stderr: "pipe",
-        stdout: "pipe",
-      },
+      { cwd: path.resolve(import.meta.dir, "../../..") },
     );
-    const [exitCode, stdout, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).not.toBe(0);
     expect(stderr).toContain(
@@ -469,7 +425,7 @@ describe("Argo CD root prune safety", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -489,14 +445,8 @@ describe("Argo CD root prune safety", () => {
             ARGOCD_SERVER_URL: server.url.origin,
             ARGOCD_TOKEN: "test-token",
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).not.toBe(0);
       expect(stderr).toContain("cascading resources finalizer is missing");
@@ -562,7 +512,7 @@ describe("Argo CD root prune safety", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -583,15 +533,8 @@ describe("Argo CD root prune safety", () => {
             ARGOCD_SERVER_URL: server.url.origin,
             ARGOCD_TOKEN: "test-token",
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");
@@ -721,7 +664,7 @@ describe("Argo CD release gating", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -741,15 +684,8 @@ describe("Argo CD release gating", () => {
             ARGOCD_TOKEN: "test-token",
             CHARTMUSEUM_ORIGIN: server.url.origin,
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toContain(
@@ -821,7 +757,7 @@ function expectStagedRootRequests(syncBodies: readonly unknown[]): void {
 
 describe("Argo CD root release staging", () => {
   test("requires an exact root revision", async () => {
-    const process = Bun.spawn(
+    const { exitCode, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -830,16 +766,8 @@ describe("Argo CD root release staging", () => {
         "apps",
         "--dry-run",
       ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        stderr: "pipe",
-        stdout: "pipe",
-      },
+      { cwd: path.resolve(import.meta.dir, "../../..") },
     );
-    const [exitCode, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).not.toBe(0);
     expect(stderr).toContain(
@@ -934,7 +862,7 @@ describe("Argo CD root release staging", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -956,15 +884,8 @@ describe("Argo CD root release staging", () => {
             ARGOCD_TOKEN: "test-token",
             CHARTMUSEUM_ORIGIN: server.url.origin,
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");
@@ -991,7 +912,7 @@ async function runReconcileRelease(
   const expectedPath = path.join(directory, "expected.json");
   await Bun.write(expectedPath, JSON.stringify(expected));
   try {
-    const process = Bun.spawn(
+    const { exitCode, stdout, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -1011,15 +932,8 @@ async function runReconcileRelease(
           ARGOCD_TOKEN: "test-token",
           CHARTMUSEUM_ORIGIN: origin,
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stdout, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-    ]);
     return { exitCode, stdout, stderr };
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -1376,7 +1290,7 @@ describe("Argo CD operator script", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -1395,15 +1309,8 @@ describe("Argo CD operator script", () => {
             ARGOCD_SERVER_URL: server.url.origin,
             ARGOCD_TOKEN: "test-token",
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");
@@ -1454,7 +1361,7 @@ describe("Argo CD operator script", () => {
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -1471,15 +1378,8 @@ describe("Argo CD operator script", () => {
             ARGOCD_SERVER_URL: server.url.origin,
             ARGOCD_TOKEN: "test-token",
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");

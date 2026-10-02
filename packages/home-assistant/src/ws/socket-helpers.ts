@@ -22,10 +22,6 @@ export type WebSocketLike = {
 
 export type WebSocketLikeCtor = new (url: string) => WebSocketLike;
 
-export function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export function waitForOpen(socket: WebSocketLike): Promise<void> {
   return new Promise((resolve, reject) => {
     if (socket.readyState === socket.OPEN) {

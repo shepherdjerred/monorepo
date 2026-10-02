@@ -242,9 +242,16 @@ function buildLitterRobot(
     return null;
   }
   return {
-    status: componentStatus(alerts, (alert) =>
-      alert.alertname.startsWith("LitterRobot"),
-    ),
+    status: worstStatus([
+      componentStatus(alerts, (alert) =>
+        alert.alertname.startsWith("LitterRobot"),
+      ),
+      robot.sourceFresh
+        ? robot.faulted || !robot.online
+          ? "warning"
+          : "ok"
+        : "unknown",
+    ]),
     name: "Storage",
     online: robot.online,
     ready: robot.ready,

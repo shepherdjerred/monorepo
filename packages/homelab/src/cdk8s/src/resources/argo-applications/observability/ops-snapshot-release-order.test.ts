@@ -2,6 +2,7 @@ import { App, Chart } from "cdk8s";
 import { expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
+import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import { createFliptApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/flipt.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts";
@@ -17,13 +18,16 @@ const ApplicationSchema = z.object({
 
 test("both ops snapshot consumers reconcile before Temporal emits new source contracts", () => {
   const app = new App();
-  const chart = new Chart(app, "ops-contract-order");
+  const chart = new Chart(app, "apps");
   // Construct the producer first: compatibility must follow declarative waves,
   // independently of resource creation order or alphabetical names.
   createTemporalApp(chart);
   createTrmnlDashboardApp(chart);
   createAlertDashboardApp(chart);
   createFliptApp(chart);
+  // Exercise the final root policy, which is authoritative over annotations
+  // declared by individual Application constructors.
+  applyApplicationReleasePolicy(app);
   const applications = parseAllDocuments(app.synthYaml()).map((document) =>
     ApplicationSchema.parse(document.toJS()),
   );
@@ -40,8 +44,8 @@ test("both ops snapshot consumers reconcile before Temporal emits new source con
   expect(applications).toHaveLength(4);
   for (const consumer of ["alert-dashboard", "trmnl-dashboard"]) {
     expect(wave(consumer)).toBeLessThan(wave("temporal"));
-    // The shared flag service may start in the same wave; neither consumer
-    // requires Temporal or upstream observations to become ready.
+    // The shared flag service precedes consumers; neither consumer requires
+    // Temporal or upstream observations to become ready.
     expect(wave("flipt")).toBeLessThanOrEqual(wave(consumer));
   }
 });

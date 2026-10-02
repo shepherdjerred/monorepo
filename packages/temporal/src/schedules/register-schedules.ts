@@ -117,6 +117,8 @@ const DELETED_BETA_SCHEDULE_IDS = [
   "scout-beta-progression-outbox",
   // Beta twin of scout-prod-tournament-lobby-poll.
   "scout-beta-tournament-lobby-poll",
+  // The executor moved to prod; its Scout Activity still targets beta data.
+  "scout-bryan-bucks-analytics",
 ] as const;
 
 // Schedule deletion prevents future starts but does not stop an execution that
@@ -301,8 +303,18 @@ export function routeDynamicAgentTaskSchedule(
   };
 }
 
-async function reconcileDynamicAgentTaskSchedules(
-  scheduleClient: Client["schedule"],
+export async function reconcileDynamicAgentTaskSchedules(
+  scheduleClient: {
+    list: () => AsyncIterable<{
+      scheduleId: string;
+      memo?: Record<string, unknown>;
+    }>;
+    getHandle: (id: string) => {
+      update: (
+        updater: (prev: ScheduleUpdateOptions) => ScheduleUpdateOptions,
+      ) => Promise<unknown>;
+    };
+  },
   declaredIds: ReadonlySet<string>,
   bootstrap: TemporalBootstrapMetadata,
 ): Promise<void> {
@@ -316,10 +328,21 @@ async function reconcileDynamicAgentTaskSchedules(
     ) {
       continue;
     }
-    await scheduleClient
-      .getHandle(summary.scheduleId)
-      .update((prev) => routeDynamicAgentTaskSchedule(prev, bootstrap));
-    console.warn(`Updated dynamic agent-task schedule: ${summary.scheduleId}`);
+    try {
+      await scheduleClient
+        .getHandle(summary.scheduleId)
+        .update((prev) => routeDynamicAgentTaskSchedule(prev, bootstrap));
+      console.warn(
+        `Updated dynamic agent-task schedule: ${summary.scheduleId}`,
+      );
+    } catch (error: unknown) {
+      // A user can delete a dynamic schedule after visibility lists it.
+      // Missing is already reconciled; authorization and other failures aren't.
+      if (!(error instanceof ScheduleNotFoundError)) throw error;
+      console.warn(
+        `Dynamic agent-task schedule disappeared: ${summary.scheduleId}`,
+      );
+    }
   }
 }
 

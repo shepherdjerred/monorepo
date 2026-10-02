@@ -551,7 +551,9 @@ export async function createPrometheusApp(chart: Chart) {
         namespace: "prometheus",
       },
       syncPolicy: {
-        automated: { enabled: true },
+        // Prune chart-owned resources retired by changes such as switching the
+        // renderer from its generated Secret to the shared 1Password Secret.
+        automated: { enabled: true, prune: true },
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
       ignoreDifferences: [

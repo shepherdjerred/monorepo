@@ -408,10 +408,6 @@
       "clones": 1,
       "tokens": 118
     },
-    "packages/home-assistant/test/ws.test.ts|packages/home-assistant/test/ws.test.ts": {
-      "clones": 1,
-      "tokens": 108
-    },
     "packages/homelab/scripts/check-suppressions.ts|packages/scout-for-lol/scripts/check-suppressions.ts": {
       "clones": 1,
       "tokens": 101
@@ -455,10 +451,6 @@
     "packages/homelab/src/cdk8s/grafana/shared/dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
       "clones": 1,
       "tokens": 70
-    },
-    "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
-      "clones": 1,
-      "tokens": 72
     },
     "packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 3,
@@ -504,10 +496,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/homelab/src/cdk8s/src/argocd-api-contract.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/homelab/src/cdk8s/src/argocd-application-readiness.ts|packages/homelab/src/cdk8s/src/argocd-application-readiness.ts": {
       "clones": 1,
       "tokens": 88
@@ -516,57 +504,37 @@
       "clones": 6,
       "tokens": 505
     },
-    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 1,
-      "tokens": 82
-    },
-    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 2,
-      "tokens": 152
-    },
-    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 1,
-      "tokens": 82
-    },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts": {
-      "clones": 5,
-      "tokens": 437
-    },
-    "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 2,
-      "tokens": 262
+      "clones": 1,
+      "tokens": 72
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 10,
-      "tokens": 901
+      "clones": 3,
+      "tokens": 227
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
       "clones": 13,
-      "tokens": 1391
+      "tokens": 1249
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
       "clones": 2,
       "tokens": 152
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 4,
-      "tokens": 365
+      "clones": 3,
+      "tokens": 281
     },
     "packages/homelab/src/cdk8s/src/argocd-script-support.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 3,
       "tokens": 267
     },
     "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 11,
-      "tokens": 1097
-    },
-    "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 2,
-      "tokens": 216
+      "clones": 8,
+      "tokens": 668
     },
     "packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 6,
-      "tokens": 688
+      "tokens": 650
     },
     "packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
       "clones": 1,

@@ -1,3 +1,4 @@
+import { ExploreCardSelectionError } from "./card-selection-error.ts";
 import {
   ExploreMatchCardSchema,
   ExploreMatchSnapshotSchema,
@@ -216,7 +217,8 @@ export function assertEligibleExploreMatchCardRequests(input: {
 }): void {
   for (const request of input.requests) {
     if (!input.eligibleMatchIds.has(request.matchId)) {
-      throw new Error(
+      throw new ExploreCardSelectionError(
+        "match",
         `Explore match card ${request.matchId} was not returned as card-supported by the latest query`,
       );
     }

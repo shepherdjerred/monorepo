@@ -51,6 +51,7 @@ const outcomeActivities = proxyActivities<OutcomeActivities>({
  * Records a check-and-skip workflow's terminal outcome:
  *  - `executed` — the body ran (side effects applied)
  *  - `skipped`  — a guard returned early; no side effects
+ *  - `interrupted` — a witnessed start was subsequently returned to base by a command
  *
  * Two channels:
  *  1. Workflow memo (`outcome`, `outcomeReason`) — visible in Temporal UI /
@@ -203,6 +204,7 @@ export function shouldStopVacuum(state: string): boolean {
 export async function startEligibleVacuums(): Promise<{
   active: string[];
   started: string[];
+  requestedAt: Record<string, string>;
 }> {
   const active: string[] = [];
   const startable: string[] = [];
@@ -230,11 +232,13 @@ export async function startEligibleVacuums(): Promise<{
   }
 
   const started: string[] = [];
+  const requestedAt: Record<string, string> = {};
   for (const vacuum of startable) {
+    requestedAt[vacuum] = new Date(Date.now()).toISOString();
     await callServiceUnchecked("vacuum", "start", { entity_id: vacuum });
     started.push(vacuum);
   }
-  return { active, started };
+  return { active, started, requestedAt };
 }
 
 /**
@@ -285,6 +289,58 @@ export async function verifyStartedVacuums(
       "VacuumStartVerificationError",
     );
   }
+}
+
+export const VACUUM_HISTORY_PATCH = "vacuum-start-history-v1";
+
+/** Witness short cleaning transitions that ordinary delayed state polling misses. */
+export async function verifyVacuumStartHistory(
+  vacuums: readonly string[],
+  requestedAt: Record<string, string>,
+  options: { delaySeconds: number; retries: number; retryDelaySeconds: number },
+): Promise<boolean> {
+  if (vacuums.length === 0) return false;
+  await sleep(options.delaySeconds * 1000);
+  const results = await Promise.all(
+    vacuums.map(async (vacuum) => {
+      const requestTime = requestedAt[vacuum];
+      if (requestTime === undefined)
+        throw new Error(`Missing vacuum request time for ${vacuum}`);
+      for (let attempt = 0; attempt <= options.retries; attempt += 1) {
+        const evidence = await activities.getVacuumStartEvidence(
+          vacuum,
+          requestTime,
+        );
+        if (
+          evidence.started &&
+          evidence.commandedReturn &&
+          (VACUUM_START_STATES.has(evidence.currentState) ||
+            VACUUM_ACTIVE_STATES.has(evidence.currentState))
+        ) {
+          return { vacuum, verified: true, interrupted: true };
+        }
+        if (
+          evidence.started &&
+          VACUUM_ACTIVE_STATES.has(evidence.currentState)
+        ) {
+          return { vacuum, verified: true, interrupted: false };
+        }
+        if (attempt < options.retries)
+          await sleep(options.retryDelaySeconds * 1000);
+      }
+      return { vacuum, verified: false, interrupted: false };
+    }),
+  );
+  const failed = results
+    .filter((result) => !result.verified)
+    .map((result) => result.vacuum);
+  if (failed.length > 0) {
+    throw ApplicationFailure.nonRetryable(
+      `Vacuum start verification failed: ${failed.join(", ")} did not become active or was stopped without a return command`,
+      "VacuumStartVerificationError",
+    );
+  }
+  return results.some((result) => result.interrupted);
 }
 
 export function matchExact(expected: string): (state: string) => boolean {

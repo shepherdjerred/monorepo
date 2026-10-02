@@ -3,7 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { SyncInfoEntrySchema } from "./argocd-script-support.ts";
+import {
+  runArgocdCommand,
+  SyncInfoEntrySchema,
+} from "./argocd-script-support.ts";
 
 const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
 const ARGOCD_SCRIPT = path.join(PACKAGE_ROOT, "scripts/argocd/argocd.ts");
@@ -191,7 +194,7 @@ function releaseOperationInfo(phase: "batch" | "prune") {
 }
 
 test("root release finalization requires exact revision and request identity", async () => {
-  const process = Bun.spawn(
+  const { exitCode, stderr } = await runArgocdCommand(
     [
       "bun",
       "--no-install",
@@ -202,16 +205,8 @@ test("root release finalization requires exact revision and request identity", a
       "2.0.0-43",
       "--dry-run",
     ],
-    {
-      cwd: path.resolve(import.meta.dir, "../../.."),
-      stderr: "pipe",
-      stdout: "pipe",
-    },
+    { cwd: path.resolve(import.meta.dir, "../../..") },
   );
-  const [exitCode, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stderr).text(),
-  ]);
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain(
@@ -335,7 +330,7 @@ test("root release finalization applies every exact wave before accepting a part
   });
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stdout, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -358,15 +353,8 @@ test("root release finalization applies every exact wave before accepting a part
           ARGOCD_TOKEN: "test-token",
           CHARTMUSEUM_ORIGIN: server.url.origin,
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stdout, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
@@ -531,7 +519,7 @@ for (const clusterScoped of [
     });
 
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
         [
           "bun",
           "--no-install",
@@ -554,15 +542,8 @@ for (const clusterScoped of [
             ARGOCD_TOKEN: "test-token",
             CHARTMUSEUM_ORIGIN: server.url.origin,
           },
-          stderr: "pipe",
-          stdout: "pipe",
         },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");
@@ -685,37 +666,32 @@ test("root release finalization adopts the exact active prune without another PO
   });
 
   try {
-    const unmarkedProcess = Bun.spawn(
-      [
-        "bun",
-        "--no-install",
-        "scripts/argocd/argocd.ts",
-        "finalize-root-release",
-        "apps",
-        "--revision",
-        "2.0.0-43",
-        "--request-id",
-        RELEASE_REQUEST_ID,
-        "--timeout",
-        "1",
-      ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        env: {
-          ...Bun.env,
-          ARGOCD_POLL_INTERVAL_MS: "5",
-          ARGOCD_SERVER_URL: server.url.origin,
-          ARGOCD_TOKEN: "test-token",
-          CHARTMUSEUM_ORIGIN: server.url.origin,
+    const { exitCode: unmarkedExitCode, stderr: unmarkedStderr } =
+      await runArgocdCommand(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd/argocd.ts",
+          "finalize-root-release",
+          "apps",
+          "--revision",
+          "2.0.0-43",
+          "--request-id",
+          RELEASE_REQUEST_ID,
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_POLL_INTERVAL_MS: "5",
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+          },
         },
-        stderr: "pipe",
-        stdout: "pipe",
-      },
-    );
-    const [unmarkedExitCode, unmarkedStderr] = await Promise.all([
-      unmarkedProcess.exited,
-      new Response(unmarkedProcess.stderr).text(),
-    ]);
+      );
     expect(unmarkedExitCode).not.toBe(0);
     expect(unmarkedStderr).toContain(
       "full-source operation is not the marked final root prune",
@@ -724,7 +700,7 @@ test("root release finalization adopts the exact active prune without another PO
     expect(deleteRequests).toBe(0);
 
     marked = true;
-    const process = Bun.spawn(
+    const { exitCode, stdout, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -747,15 +723,8 @@ test("root release finalization adopts the exact active prune without another PO
           ARGOCD_TOKEN: "test-token",
           CHARTMUSEUM_ORIGIN: server.url.origin,
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stdout, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
@@ -848,7 +817,7 @@ test("release-root resumes at a live later phase instead of restaging", async ()
   );
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stdout, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -876,15 +845,8 @@ test("release-root resumes at a live later phase instead of restaging", async ()
           ARGOCD_TOKEN: "test-token",
           CHARTMUSEUM_ORIGIN: server.url.origin,
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stdout, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
@@ -987,7 +949,7 @@ test("root release finalization refuses a batch selecting another namespace", as
   });
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -1010,14 +972,8 @@ test("root release finalization refuses a batch selecting another namespace", as
           ARGOCD_TOKEN: "test-token",
           CHARTMUSEUM_ORIGIN: server.url.origin,
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).not.toBe(0);
     expect(stderr).toContain("does not match an exact root batch");

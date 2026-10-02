@@ -1,6 +1,7 @@
 import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
 import { applyMissingManagedFlags } from "@shepherdjerred/feature-flags/flipt-missing-flag-apply.ts";
 import { applyScoutBetaDurableOwnership } from "@shepherdjerred/feature-flags/scout-beta-durable-ownership.ts";
+import { applyRetiredManagedFlags } from "@shepherdjerred/feature-flags/flipt-retired-flag-apply.ts";
 import {
   compareManagedFlagInventory,
   fetchFliptSnapshot,
@@ -20,6 +21,7 @@ export type FliptFlagInventoryResult = FliptFlagDriftAlertInput & {
   readonly createdFlags: readonly string[];
   readonly createdSegments: readonly string[];
   readonly migratedFlags: readonly string[];
+  readonly retiredFlags: readonly string[];
 };
 
 function requiredEnvironment(name: string): string {
@@ -36,6 +38,13 @@ export const fliptFlagInventoryActivities = {
   async checkFliptFlagInventory(): Promise<FliptFlagInventoryResult[]> {
     const url = requiredEnvironment("FLIPT_URL");
     const observedAt = new Date().toISOString();
+    const retired = await applyRetiredManagedFlags({ url });
+    const retiredByPair = new Map(
+      retired.map((result) => [
+        `${result.environment}/${result.namespace}`,
+        result.retiredFlags,
+      ]),
+    );
     const created = await applyMissingManagedFlags({ url });
     const migratedFlags = await applyScoutBetaDurableOwnership({ url });
     const createdByPair = new Map(
@@ -71,6 +80,8 @@ export const fliptFlagInventoryActivities = {
               namespace === "scout" && environment.key === "beta"
                 ? migratedFlags
                 : [],
+            retiredFlags:
+              retiredByPair.get(`${environment.key}/${namespace}`) ?? [],
             observedAt,
           };
         }),

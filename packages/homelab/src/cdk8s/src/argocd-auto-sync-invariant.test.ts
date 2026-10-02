@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import path from "node:path";
+import { runArgocdCommand } from "./argocd-script-support.ts";
 
 // An aborted release leaves every child carrying the suspension override it
 // applied while staging, and nothing reports it: suspension lives in `spec`
@@ -76,7 +77,7 @@ function serveAutoSyncVerification(options: {
 }
 
 async function runVerifyAutoSync(origin: string) {
-  const process = Bun.spawn(
+  const { exitCode, stdout, stderr } = await runArgocdCommand(
     [
       "bun",
       "--no-install",
@@ -94,15 +95,8 @@ async function runVerifyAutoSync(origin: string) {
         ARGOCD_TOKEN: "test-token",
         ARGOCD_POLL_INTERVAL_MS: "5",
       },
-      stderr: "pipe",
-      stdout: "pipe",
     },
   );
-  const [exitCode, stdout, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
-  ]);
   return { exitCode, stdout, stderr };
 }
 
@@ -261,7 +255,7 @@ test("verify-auto-sync gives up on a divergence that never settles", async () =>
 });
 
 test("verify-auto-sync requires an exact revision", async () => {
-  const process = Bun.spawn(
+  const { exitCode, stderr } = await runArgocdCommand(
     [
       "bun",
       "--no-install",
@@ -269,16 +263,8 @@ test("verify-auto-sync requires an exact revision", async () => {
       "verify-auto-sync",
       "apps",
     ],
-    {
-      cwd: path.resolve(import.meta.dir, "../../.."),
-      stderr: "pipe",
-      stdout: "pipe",
-    },
+    { cwd: path.resolve(import.meta.dir, "../../..") },
   );
-  const [exitCode, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stderr).text(),
-  ]);
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain("verify-auto-sync requires an exact --revision");

@@ -5,7 +5,6 @@ export function createTemporalApp(chart: Chart) {
   return new Application(chart, "temporal-app", {
     metadata: {
       name: "temporal",
-      annotations: { "argocd.argoproj.io/sync-wave": "-1" },
     },
     spec: {
       revisionHistoryLimit: 5,

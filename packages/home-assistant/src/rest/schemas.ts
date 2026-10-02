@@ -73,6 +73,19 @@ export const HistoryResponse = z.array(z.array(EntityState));
 
 export type HistoryResponse = z.infer<typeof HistoryResponse>;
 
+export const LogbookEntry = z
+  .object({
+    when: z.iso.datetime({ offset: true }),
+    entity_id: z.string().optional(),
+    state: z.string().optional(),
+    context_event_type: z.string().optional(),
+    context_domain: z.string().optional(),
+    context_service: z.string().optional(),
+  })
+  .loose();
+
+export type LogbookEntry = z.infer<typeof LogbookEntry>;
+
 export const ConfigEntryDiagnostics = z
   .object({
     home_assistant: z.record(z.string(), z.unknown()),

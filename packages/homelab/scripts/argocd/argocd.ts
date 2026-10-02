@@ -3019,10 +3019,13 @@ async function reconcileRelease(
     // already considers Synced, so a failure recorded against the current
     // revision stays on the Application forever, keeps the child reporting
     // Progressing, and blocks every later root health wave.
+    // Declared pruning also requires convergence when the source is unchanged:
+    // an OutOfSync child can still retain obsolete managed resources.
     const deployedExpectedExternalSource =
       !wanted.repositoryRelease &&
       deployed?.source !== undefined &&
       canonicalJson(deployed.source) === canonicalJson(wanted.source) &&
+      (!wanted.prune || syncStatus === "Synced") &&
       !failedCurrentOperation;
     if (deployedExpectedRepositoryRelease || deployedExpectedExternalSource) {
       continue;

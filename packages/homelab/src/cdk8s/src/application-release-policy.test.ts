@@ -109,6 +109,8 @@ describe("applyApplicationReleasePolicy", () => {
       ["argocd", "-18"],
       ["tailscale", "-18"],
       ["prometheus", "-1"],
+      ["alert-dashboard", "-1"],
+      ["trmnl-dashboard", "-1"],
       ["temporal", "0"],
       ["kueue", "1"],
       ["woodpecker", "3"],

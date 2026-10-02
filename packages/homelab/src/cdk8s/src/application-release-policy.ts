@@ -22,6 +22,8 @@ export const APPLICATION_SYNC_WAVES = {
   certificate: "-2",
   // After the cluster CA so Alertmanager can require postal-smtp-ca.
   prometheus: "-1",
+  // Accept the current ops snapshot contract before Activity workers emit it.
+  opsSnapshotConsumer: "-1",
   burstPriorityClass: "-1",
   temporal: "0",
   structural: "0",
@@ -100,6 +102,9 @@ function applicationSyncWave(name: string): string {
   }
   if (name === "prometheus") {
     return APPLICATION_SYNC_WAVES.prometheus;
+  }
+  if (name === "alert-dashboard" || name === "trmnl-dashboard") {
+    return APPLICATION_SYNC_WAVES.opsSnapshotConsumer;
   }
   if (name === "temporal") {
     return APPLICATION_SYNC_WAVES.temporal;
