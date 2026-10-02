@@ -75,6 +75,7 @@ export class RepositoryOpenTelemetry extends OpenTelemetry {
     // onto the parent that wraps it.
     const callerEnrichSpan = options.enrichSpan;
     super({
+      embedding: true,
       ...options,
       enrichSpan: (input) => ({
         ...callerEnrichSpan?.(input),

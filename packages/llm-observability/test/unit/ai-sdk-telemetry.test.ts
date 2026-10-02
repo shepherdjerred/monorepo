@@ -11,7 +11,6 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
   exporter.reset();
   const telemetry = new RepositoryOpenTelemetry({
     service: "test-service",
-    embedding: true,
   });
 
   telemetry.onStart({
@@ -75,6 +74,10 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
   expect(parent?.attributes["llm.call_site"]).toBe("test.embedding");
   expect(sdkOperation?.parentSpanContext?.spanId).toBe(
     parent?.spanContext().spanId,
+  );
+  expect(sdkOperation?.attributes["ai.value"]).toBe(JSON.stringify("hello"));
+  expect(sdkOperation?.attributes["ai.embedding"]).toBe(
+    JSON.stringify([0.1, 0.2]),
   );
 });
 

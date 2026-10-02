@@ -33,6 +33,10 @@ const BODY_ATTR_KEYS = [
   "ai.prompt",
   "ai.response.text",
   "ai.response.object",
+  "ai.value",
+  "ai.values",
+  "ai.embedding",
+  "ai.embeddings",
 ] as const;
 
 const BODY_ATTR_SET: ReadonlySet<string> = new Set(BODY_ATTR_KEYS);
@@ -185,7 +189,7 @@ export class LlmArchiveSpanProcessor implements SpanProcessor {
       return;
     }
 
-    const provider = stringAttr(span.attributes["gen_ai.system"]) ?? "unknown";
+    const provider = spanProvider(span);
     const serviceName =
       stringAttr(span.resource.attributes["service.name"]) ?? "unknown";
 
@@ -225,9 +229,8 @@ function hasLlmBodyAttributes(span: ReadableSpan): boolean {
 
 /**
  * Copy the attribute map with every body attribute's value passed through
- * `redactSecrets`. Body attributes are JSON-serialized strings (see
- * `serializeBodyAttribute`); non-string body values pass through unchanged
- * since redaction targets embedded credential text.
+ * `redactSecrets`. Embedding batches use arrays of JSON-serialized strings,
+ * so each element needs the same credential masking as a scalar body.
  */
 function redactBodyAttributes(
   attrs: Readonly<Record<string, AttributeValue | undefined>>,
@@ -235,10 +238,17 @@ function redactBodyAttributes(
   const result: Record<string, AttributeValue> = {};
   for (const [key, value] of Object.entries(attrs)) {
     if (value === undefined) continue;
-    result[key] =
-      typeof value === "string" && BODY_ATTR_SET.has(key)
-        ? redactBodyString(value)
-        : value;
+    if (typeof value === "string" && BODY_ATTR_SET.has(key)) {
+      result[key] = redactBodyString(value);
+    } else if (
+      BODY_ATTR_SET.has(key) &&
+      Array.isArray(value) &&
+      value.every((element) => typeof element === "string")
+    ) {
+      result[key] = value.map((element) => redactBodyString(element));
+    } else {
+      result[key] = value;
+    }
   }
   return result;
 }
@@ -246,7 +256,9 @@ function redactBodyAttributes(
 function redactBodyString(value: string): string {
   const parsed = safeJsonParse(value);
   const redacted = redactSecrets(parsed);
-  return typeof redacted === "string" ? redacted : JSON.stringify(redacted);
+  return typeof redacted === "string" && parsed === value
+    ? redacted
+    : JSON.stringify(redacted);
 }
 
 function refToAttributes(ref: ArchiveRef): Record<string, AttributeValue> {
@@ -271,7 +283,7 @@ function buildEnvelope(span: ReadableSpan): Record<string, unknown> {
     spanId: span.spanContext().spanId,
     capturedAt: new Date().toISOString(),
     service: stringAttr(span.resource.attributes["service.name"]) ?? "unknown",
-    provider: stringAttr(span.attributes["gen_ai.system"]) ?? "unknown",
+    provider: spanProvider(span),
     callSite: stringAttr(span.attributes["llm.call_site"]) ?? "unknown",
     request: {
       model: stringAttr(span.attributes["gen_ai.request.model"]),
@@ -316,6 +328,14 @@ function safeJsonParse(value: string): unknown {
 
 function stringAttr(value: AttributeValue | undefined): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+function spanProvider(span: ReadableSpan): string {
+  return (
+    stringAttr(span.attributes["gen_ai.system"]) ??
+    stringAttr(span.attributes["gen_ai.provider.name"]) ??
+    "unknown"
+  );
 }
 
 function numberAttr(value: AttributeValue | undefined): number | undefined {
