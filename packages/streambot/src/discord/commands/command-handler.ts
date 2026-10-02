@@ -60,6 +60,10 @@ export class CommandHandler {
       return;
     }
     if (group === "playback") {
+      if (sub === "join" || sub === "chapters") {
+        await this.runPlaybackCommand(sub, interaction);
+        return;
+      }
       await this.media.runPlayback(sub, interaction);
       return;
     }
@@ -403,7 +407,9 @@ export class CommandHandler {
     // reach the streamer and fail the segment.
     if (current.mediaKind === "music") {
       await interaction.reply(
-        "This is playing as audio only, so there's no picture to burn subtitles into. Requeue it with `mode:video` for a video stream.",
+        this.deps.playbackChannel === undefined
+          ? "This is playing as audio only, so there's no picture to burn subtitles into. Requeue it with `mode:video` for a video stream."
+          : "Channel 1 plays mic audio. Select channel 2 or higher and queue the video there to use subtitles.",
       );
       return;
     }

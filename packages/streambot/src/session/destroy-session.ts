@@ -21,6 +21,7 @@ export async function destroySession(
   await session.card.finalize();
   // Persist final position BEFORE stopping — getPosition() goes null once the stream stops.
   await saveSnapshot(session);
+  session.torndown = true;
   session.unsubscribe();
   session.actor.stop();
 }

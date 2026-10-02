@@ -16,6 +16,7 @@ import {
 } from "@shepherdjerred/feature-flags/observability.ts";
 import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { setPlaybackStates as recordPlaybackStates } from "@shepherdjerred/streambot/observability/playback-state-metrics.ts";
 
 const log = logger.child("metrics");
 
@@ -316,17 +317,12 @@ export function setSourceInfo(labels: {
 
 // --- playback machine -------------------------------------------------------
 
-const playbackStateGauge = new Gauge({
-  name: "streambot_playback_state",
-  help: "Current xstate playback-machine state (value 1 on the active state label)",
-  labelNames: ["state"] as const,
-  registers: [register],
-});
-
-/** Set the active machine state (resets others so exactly one label carries value 1). */
 export function setPlaybackState(state: string): void {
-  playbackStateGauge.reset();
-  playbackStateGauge.set({ state }, 1);
+  recordPlaybackStates([state]);
+}
+
+export function setPlaybackStates(states: readonly string[]): void {
+  recordPlaybackStates(states);
 }
 
 export const queueLength = new Gauge({

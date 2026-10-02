@@ -75,6 +75,13 @@ export class VoiceTopologyWatcher {
     }
     const oldChannelId = parseVoiceChannelId(oldState.channelId);
     const newChannelId = parseVoiceChannelId(newState.channelId);
+    if (oldChannelId !== null && oldChannelId !== newChannelId) {
+      this.deps.getSessions().numbered.selection.clear({
+        guildId: guildId.data,
+        channelId: oldChannelId,
+        userId: newState.id,
+      });
+    }
     if (
       this.handleStreamerTopology(
         guildId.data,
@@ -120,7 +127,7 @@ export class VoiceTopologyWatcher {
       newChannelId === null
         ? null
         : sessions.activeSessionByChannel(guildId, newChannelId);
-    if (oldMeta?.userId !== userId && newMeta?.userId !== userId) {
+    if (!this.ownsUser(oldMeta, userId) && !this.ownsUser(newMeta, userId)) {
       return false;
     }
 
@@ -138,6 +145,7 @@ export class VoiceTopologyWatcher {
         guildId,
         fromChannelId: oldChannelId,
         toChannelId: newChannelId,
+        ...(oldMeta?.userIds === undefined ? {} : { userId }),
       });
       if (moved) {
         this.clearAloneTimer(`${guildId}:${newChannelId}`);
@@ -153,7 +161,11 @@ export class VoiceTopologyWatcher {
       });
       // The session manager classifies the loss (kick vs transient) via the voice ws close code
       // and decides whether to stay down or reconnect-with-resume.
-      sessions.notifyStreamerDetached({ guildId, channelId: oldChannelId });
+      sessions.notifyStreamerDetached({
+        guildId,
+        channelId: oldChannelId,
+        ...(oldMeta?.userIds === undefined ? {} : { userId }),
+      });
       return true;
     }
 
@@ -185,7 +197,13 @@ export class VoiceTopologyWatcher {
           selfMute: memberState?.selfMute ?? false,
         };
       }),
-      { selfUserId: streamerId, peerUserbotIds: this.deps.peerUserbotIds },
+      {
+        selfUserId: streamerId,
+        peerUserbotIds: [
+          ...this.deps.peerUserbotIds,
+          ...this.deps.getSessions().poolUserIds(),
+        ],
+      },
     );
     const key = `${guildId}:${channelId}`;
     if (humanCount > 0) {
@@ -203,10 +221,13 @@ export class VoiceTopologyWatcher {
         guildId,
         channelId,
       });
-      this.deps
-        .getSessions()
-        .getExisting(guildId, channelId)
-        ?.dispatch({ type: "STOP" });
+      const sessions = this.deps.getSessions();
+      if (
+        sessions.activeSessionByChannel(guildId, channelId)?.userIds ===
+        undefined
+      )
+        sessions.getExisting(guildId, channelId)?.dispatch({ type: "STOP" });
+      else sessions.leaveRoom(guildId, channelId);
     }, ALONE_GRACE_MS);
     this.aloneTimers.set(key, timer);
   }
@@ -217,5 +238,11 @@ export class VoiceTopologyWatcher {
       clearTimeout(timer);
       this.aloneTimers.delete(key);
     }
+  }
+  private ownsUser(
+    meta: ReturnType<SessionManager["activeSessionByChannel"]>,
+    userId: string,
+  ): boolean {
+    return meta?.userId === userId || meta?.userIds?.includes(userId) === true;
   }
 }

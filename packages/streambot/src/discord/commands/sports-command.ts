@@ -15,6 +15,10 @@ import {
   UserIdSchema,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { sendSportsMenu } from "@shepherdjerred/streambot/discord/sports-menu.ts";
+import {
+  playbackChannelLabel,
+  NUMBERED_CHANNEL_HINT,
+} from "@shepherdjerred/streambot/types/playback-channel.ts";
 
 type SportsCommandDeps = Pick<
   PlaybackCommandServiceDeps,
@@ -23,7 +27,8 @@ type SportsCommandDeps = Pick<
   readonly getSessions: () => Pick<
     SessionManager,
     "ensureForPlay" | "releaseUnused"
-  >;
+  > &
+    Partial<Pick<SessionManager, "selectedChannel">>;
 };
 
 /** Resolve the current voice channel at selection time, rather than reserving a bot while browsing. */
@@ -50,10 +55,20 @@ export async function playSportsSelection(
   const voiceChannelId = ChannelIdSchema.parse(voiceId);
   const statusChannelId = ChannelIdSchema.parse(interaction.channelId);
   const sessions = deps.getSessions();
+  const playbackChannel = await sessions.selectedChannel?.({
+    guildId,
+    channelId: voiceChannelId,
+    userId,
+  });
+  if (playbackChannel === 1)
+    throw new PlaybackCommandBoundaryError(
+      `Sports need a video channel. ${NUMBERED_CHANNEL_HINT}`,
+    );
   const handle = sessions.ensureForPlay({
     guildId,
     voiceChannelId,
     statusChannelId,
+    ...(playbackChannel === undefined ? {} : { playbackChannel }),
   });
   if (handle === null) {
     throw new PlaybackCommandBoundaryError(
@@ -62,6 +77,7 @@ export async function playSportsSelection(
   }
   try {
     const playback = new PlaybackCommandService({
+      ...(playbackChannel === undefined ? {} : { playbackChannel }),
       ...deps,
       dispatch: handle.dispatch,
       view: handle.view,
@@ -83,9 +99,13 @@ export async function playSportsSelection(
       sourceOverride: { kind: "url", url: event.pageUrl, mode: "video" },
       spoken: false,
     });
-    return result.message;
+    return playbackChannel === undefined
+      ? result.message
+      : `${playbackChannelLabel(playbackChannel)}\n${result.message}`;
   } finally {
-    sessions.releaseUnused(guildId, voiceChannelId);
+    if (playbackChannel === undefined)
+      sessions.releaseUnused(guildId, voiceChannelId);
+    else sessions.releaseUnused(guildId, voiceChannelId, playbackChannel);
   }
 }
 

@@ -60,6 +60,9 @@ export type VoiceAssistantSessionOptions = {
   readonly guildId?: string;
   readonly channelId?: string;
   readonly commands: PlaybackCommandServiceDeps;
+  readonly commandsForUser?: (userId: string) => PlaybackCommandServiceDeps;
+  readonly afterTurn?: (userId: string) => void;
+  readonly peerUserbotIds?: ReadonlySet<string>;
   readonly announce: (message: string) => Promise<void>;
   readonly holdTeardown: () => () => void;
   /** Local pre-rendered feedback; absent in probes/tests, which keep the silent behavior. */
@@ -154,6 +157,10 @@ export class VoiceAssistantSession {
         voiceTurnsTotal.inc({ outcome: `abandoned-${reason}` });
       },
       onTurn: async (turn) => {
+        const turnService =
+          options.commandsForUser === undefined
+            ? service
+            : new PlaybackCommandService(options.commandsForUser(turn.userId));
         await turn.attempt.run(async () => {
           this.telemetry.turnStarted();
           try {
@@ -198,7 +205,7 @@ export class VoiceAssistantSession {
               const result = await runRealtimeVoiceTurn(options.config.voice, {
                 ...turn,
                 userId,
-                service,
+                service: turnService,
                 streamer: options.streamer,
                 signal: transaction.signal,
                 telemetry: this.telemetry,
@@ -261,6 +268,7 @@ export class VoiceAssistantSession {
             }
           } finally {
             this.telemetry.turnFinished();
+            options.afterTurn?.(turn.userId);
           }
         });
       },
@@ -275,9 +283,10 @@ export class VoiceAssistantSession {
     // Peer userbots (other in-house bots sharing the channel) are real user accounts whose
     // audio would otherwise reach the wake detector and could trigger commands attributed to
     // their IDs. Zero-and-drop preserves the erase-everything invariant.
-    const peerUserbotIds = new Set<string>(
-      options.config.discord.peerUserbotIds,
-    );
+    const peerUserbotIds = new Set<string>([
+      ...options.config.discord.peerUserbotIds,
+      ...(options.peerUserbotIds ?? []),
+    ]);
     options.streamer.setVoiceAudioListener((audio) => {
       if (peerUserbotIds.has(audio.userId)) {
         audio.opus.fill(0);

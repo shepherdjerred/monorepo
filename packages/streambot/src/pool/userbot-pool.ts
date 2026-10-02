@@ -22,6 +22,8 @@ export type UserbotProvider = {
   acquire: (guildId: string) => UserbotEntry | null;
   release: (entry: UserbotEntry) => void;
   canServe: (guildId: string) => boolean;
+  capacityFor?: (guildId: string) => number;
+  userIds?: () => ReadonlySet<string>;
 };
 
 /** Factory for pooled streamers — injectable so tests can supply fakes without a live gateway. */
@@ -76,6 +78,14 @@ export class UserbotPool implements UserbotProvider {
 
   canServe(guildId: string): boolean {
     return this.inner.canServe(guildId);
+  }
+
+  capacityFor(guildId: string): number {
+    return this.inner.capacityFor(guildId);
+  }
+
+  userIds(): ReadonlySet<string> {
+    return this.inner.userIds();
   }
 
   serveableGuildIds(): Set<string> {

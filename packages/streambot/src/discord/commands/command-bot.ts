@@ -11,10 +11,7 @@ import {
 } from "discord.js";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { CommandHandler } from "@shepherdjerred/streambot/discord/commands/command-handler.ts";
-import {
-  adaptCardInteraction,
-  adaptCommandInteraction,
-} from "@shepherdjerred/streambot/discord/interaction-adapters.ts";
+import { adaptCardInteraction } from "@shepherdjerred/streambot/discord/interaction-adapters.ts";
 import { registerGlobalCommands } from "@shepherdjerred/streambot/discord/commands/command-registration.ts";
 import { VoiceTopologyWatcher } from "@shepherdjerred/streambot/discord/voice-topology.ts";
 import { PlayerCardMessenger } from "@shepherdjerred/streambot/discord/player-card/player-card-message.ts";
@@ -23,10 +20,7 @@ import {
   safeHandleCardInteraction,
 } from "@shepherdjerred/streambot/discord/player-card/player-card-router.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
-import {
-  EMPTY_HANDLE,
-  type SessionHandle,
-} from "@shepherdjerred/streambot/session/session-types.ts";
+import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
@@ -52,6 +46,13 @@ import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import { runSportsCommand } from "@shepherdjerred/streambot/discord/commands/sports-command.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import {
+  resolveCommandTarget,
+  routeNumberedCommand,
+  labelPlaybackInteraction,
+} from "@shepherdjerred/streambot/discord/commands/numbered-command-routing.ts";
 
 const log = logger.child("command-bot");
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
@@ -139,11 +140,20 @@ export class CommandBot {
       sessionFor: (owner) =>
         this.deps
           .getSessions()
-          .getExisting(owner.guildId, owner.voiceChannelId),
+          .getExisting(
+            owner.guildId,
+            owner.voiceChannelId,
+            owner.playbackChannel,
+            owner.instanceId,
+          ),
       refreshCard: (owner) => {
         this.deps
           .getSessions()
-          .refreshCard(owner.guildId, owner.voiceChannelId);
+          .refreshCard(
+            owner.guildId,
+            owner.voiceChannelId,
+            owner.playbackChannel,
+          );
       },
       voiceChannelOf: (interaction) =>
         this.voiceChannelOf(interaction.guild, interaction.user),
@@ -289,58 +299,35 @@ export class CommandBot {
       : null;
     const sessions = this.deps.getSessions();
     const voiceChannelId = this.issuerVoiceChannel(interaction);
+    const numbered = await routeNumberedCommand({
+      interaction,
+      sessions,
+      guildId: guildId.data,
+      voiceChannelId,
+      adminIds: this.deps.config.discord.adminIds,
+    });
+    if (numbered.handled) return;
+    const { playbackChannel } = numbered;
 
-    let handle;
-    let announceChannel: ChannelId | null = invokedChannel;
-    if (PLAY_SUBCOMMANDS.has(sub)) {
-      if (voiceChannelId === null) {
-        await interaction.reply({
-          content:
-            "Join a voice channel first, then run that `/stream` command.",
-          flags: MessageFlags.Ephemeral,
-        });
-        return;
-      }
-      if (
-        await this.denyDisabledSessionStart(
+    const target = await resolveCommandTarget({
+      sessions,
+      interaction,
+      guildId: guildId.data,
+      voiceChannelId,
+      invokedChannel,
+      playbackChannel,
+      startingPlayback: PLAY_SUBCOMMANDS.has(sub),
+      stateless: STATELESS_SUBCOMMANDS.has(sub),
+      denyStart: () =>
+        this.denyDisabledSessionStart(
           sub,
           guildId.data,
-          voiceChannelId,
+          voiceChannelId ?? invokedChannel ?? "",
           interaction,
-        )
-      ) {
-        return;
-      }
-      const statusChannelId = invokedChannel ?? voiceChannelId;
-      handle = sessions.ensureForPlay({
-        guildId: guildId.data,
-        voiceChannelId,
-        statusChannelId,
-      });
-      if (handle === null) {
-        await interaction.reply({
-          content: "No stream bots are available right now — try again later.",
-          flags: MessageFlags.Ephemeral,
-        });
-        return;
-      }
-      announceChannel = statusChannelId;
-    } else if (STATELESS_SUBCOMMANDS.has(sub)) {
-      handle = EMPTY_HANDLE;
-    } else {
-      const existingVoiceChannelId = this.issuerVoiceChannel(interaction);
-      handle =
-        existingVoiceChannelId === null
-          ? null
-          : sessions.getExisting(guildId.data, existingVoiceChannelId);
-      if (handle === null) {
-        await interaction.reply({
-          content: "Nothing is playing in your voice channel.",
-          flags: MessageFlags.Ephemeral,
-        });
-        return;
-      }
-    }
+        ),
+    });
+    if (target === null) return;
+    const { handle, announceChannel } = target;
 
     await this.runCommand({
       handle,
@@ -351,6 +338,7 @@ export class CommandBot {
       subcommand: sub,
       sessions,
       voiceChannelId,
+      ...(playbackChannel === undefined ? {} : { playbackChannel }),
     });
   }
 
@@ -363,6 +351,7 @@ export class CommandBot {
     readonly subcommand: string;
     readonly sessions: SessionManager;
     readonly voiceChannelId: ChannelId | null;
+    readonly playbackChannel?: PlaybackChannelNumber;
   }): Promise<void> {
     try {
       await this.buildHandler(
@@ -370,13 +359,23 @@ export class CommandBot {
         input.announceChannel,
         input.guildId,
         input.channelId,
-      ).run(adaptCommandInteraction(input.interaction));
+      ).run(
+        labelPlaybackInteraction(
+          input.interaction,
+          input.playbackChannel,
+          PLAY_SUBCOMMANDS.has(input.subcommand),
+        ),
+      );
     } finally {
       if (
         input.voiceChannelId !== null &&
         PLAY_SUBCOMMANDS.has(input.subcommand)
       ) {
-        input.sessions.releaseUnused(input.guildId, input.voiceChannelId);
+        input.sessions.releaseUnused(
+          input.guildId,
+          input.voiceChannelId,
+          input.playbackChannel,
+        );
       }
     }
   }
@@ -417,6 +416,9 @@ export class CommandBot {
     channelId?: string | null,
   ): CommandHandler {
     return new CommandHandler({
+      ...(handle.playbackChannel === undefined
+        ? {}
+        : { playbackChannel: handle.playbackChannel }),
       config: this.deps.config,
       dispatch: handle.dispatch,
       view: handle.view,
@@ -485,7 +487,10 @@ export class CommandBot {
         command: interaction.commandName,
         error: getErrorMessage(error),
       });
-      const message = "Something went wrong handling that command.";
+      const message =
+        error instanceof PlaybackCommandBoundaryError
+          ? error.message
+          : "Something went wrong handling that command.";
       // This ack is best-effort: `replied`/`deferred` only flip after a
       // *successful* ack, so when the original reply was delivered but its
       // REST call rejected, this branch double-acks (40060). safeHandle is

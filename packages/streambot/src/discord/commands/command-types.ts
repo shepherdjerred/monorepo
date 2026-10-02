@@ -19,6 +19,7 @@ import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/disco
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 
 /**
  * The command layer's contract types.
@@ -64,6 +65,8 @@ export type CommandInteraction = {
 };
 
 export type CommandHandlerDeps = {
+  readonly playbackChannel?: PlaybackChannelNumber;
+  readonly leaveRoom?: () => void;
   readonly config: Config;
   readonly dispatch: (event: PlaybackEvent) => void;
   readonly view: () => PlaybackView;

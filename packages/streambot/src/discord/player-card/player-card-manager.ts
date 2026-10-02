@@ -23,6 +23,7 @@ import {
   type PlayerCardPayload,
 } from "@shepherdjerred/streambot/discord/player-card/player-card.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type {
   ChannelId,
   GuildId,
@@ -34,6 +35,8 @@ const log = logger.child("player-card");
 
 /** Which session a posted card belongs to, so a button click can be routed back to it. */
 export type CardOwner = {
+  readonly playbackChannel?: PlaybackChannelNumber;
+  readonly instanceId?: string;
   readonly guildId: GuildId;
   readonly voiceChannelId: ChannelId;
 };
@@ -210,7 +213,7 @@ export class PlayerCardManager {
    * is still playing at the new location.
    */
   reown(voiceChannelId: ChannelId): void {
-    this.owner = { guildId: this.owner.guildId, voiceChannelId };
+    this.owner = { ...this.owner, voiceChannelId };
     if (this.messageId !== null) {
       this.deps.port.register(this.messageId, this.owner);
     }
@@ -386,6 +389,9 @@ export class PlayerCardManager {
 
   private render(view: PlaybackView): PlayerCardPayload {
     return renderPlayerCard({
+      ...(this.owner.playbackChannel === undefined
+        ? {}
+        : { playbackChannel: this.owner.playbackChannel }),
       view,
       posterUrl: this.posterUrl,
       enabled: this.deps.enabled,

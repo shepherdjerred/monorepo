@@ -1,29 +1,16 @@
-import { createActor } from "xstate";
-import { playerCardEnabled } from "@shepherdjerred/streambot/config/dynamic.ts";
-import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import {
   createPosterFetcher,
   type PosterFetcher,
 } from "@shepherdjerred/streambot/metadata/tmdb.ts";
-import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
-import { buildPlaybackActors } from "@shepherdjerred/streambot/session/playback-actors.ts";
-import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import { PlayerCardManager } from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
 import {
-  playbackPositionSeconds,
   queueLength,
-  setPlaybackState,
-  voiceReconnectsTotal,
+  setPlaybackStates,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import {
   listPersistedStateFiles,
-  saveState,
+  deleteState,
   stateFilePath,
 } from "@shepherdjerred/streambot/state/persistence.ts";
-import {
-  buildSnapshot,
-  resumeKeyFor,
-} from "@shepherdjerred/streambot/state/resume.ts";
 import { moveSessionRecord } from "@shepherdjerred/streambot/session/session-move.ts";
 import { buildSessionHandle } from "@shepherdjerred/streambot/session/session-handle.ts";
 import {
@@ -31,37 +18,34 @@ import {
   type ResumeRunnerDeps,
 } from "@shepherdjerred/streambot/session/resume-runner.ts";
 import {
-  CHECKPOINT_MS,
-  RESUME_CONFIRM_MS,
   keyOf,
   type Session,
   type SessionHandle,
   type SpawnParams,
 } from "@shepherdjerred/streambot/session/session-types.ts";
 import { VoiceRecoveryCoordinator } from "@shepherdjerred/streambot/session/voice-recovery.ts";
-import { createPlaybackInspector } from "@shepherdjerred/streambot/session/playback-log.ts";
 import type {
   ChannelId,
   GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
-import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
-import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
 import { deleteSessionStateAfterFlush } from "@shepherdjerred/streambot/session/delete-session-state.ts";
-import { SessionObserver } from "@shepherdjerred/streambot/session/session-observer.ts";
 import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
+import { NumberedSessions } from "@shepherdjerred/streambot/session/numbered-sessions.ts";
+import { writeSessionSnapshot } from "@shepherdjerred/streambot/session/session-checkpoint.ts";
+import { createSession } from "@shepherdjerred/streambot/session/create-session.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 
 import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/session-types.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 
 const log = logger.child("session-manager");
 
 /**
- * Owns one playback session per `(guild, voice channel)`. A play command acquires a member-userbot
- * from the pool, spins up an isolated XState actor bound to that userbot's streamer, and tears it
- * down (releasing the userbot) when the channel goes idle. Concurrent sessions — across guilds or
- * across channels in one guild — are fully independent.
+ * Owns room-local playback actors. Numbered rooms share one account lease for 1+2, use additional
+ * accounts for 3+, and have one assistant. Legacy mixed queues retain their exclusive account.
  */
 export class SessionManager {
   private readonly deps: SessionManagerDeps;
@@ -70,9 +54,13 @@ export class SessionManager {
   private readonly voiceRecovery: VoiceRecoveryCoordinator<Session>;
   /** Shared TMDB poster lookup (when configured) — attaches a poster to now-playing announcements. */
   private readonly fetchPoster: PosterFetcher | undefined;
+  readonly numbered: NumberedSessions;
 
   constructor(deps: SessionManagerDeps) {
     this.deps = deps;
+    this.numbered = new NumberedSessions(deps, this.sessions, (params) =>
+      this.spawn(params),
+    );
     this.fetchPoster =
       deps.config.tmdb === undefined
         ? undefined
@@ -82,11 +70,20 @@ export class SessionManager {
       stateDir: deps.config.state.dir,
       announce: deps.announce,
       saveSnapshot: (session) => this.saveSnapshot(session),
+      discardState: (guildId, channelId, number) =>
+        number === undefined
+          ? deleteState(
+              stateFilePath(deps.config.state.dir, guildId, channelId),
+            )
+          : this.numbered.persistence.discard(guildId, channelId, number),
       hasActiveSession: (key) => this.sessions.has(key),
       resumeOne: (guildId, channelId, opts) =>
         this.resumeOne(guildId, channelId, {
           origin: "reconnect",
           reconnectAttempts: opts.reconnectAttempts,
+          ...(opts.playbackChannel === undefined
+            ? {}
+            : { playbackChannel: opts.playbackChannel }),
         }),
     });
   }
@@ -100,7 +97,22 @@ export class SessionManager {
     guildId: GuildId;
     voiceChannelId: ChannelId;
     statusChannelId: ChannelId;
+    playbackChannel?: PlaybackChannelNumber;
   }): SessionHandle | null {
+    if (params.playbackChannel !== undefined)
+      return this.numbered.ensure({
+        ...params,
+        playbackChannel: params.playbackChannel,
+      });
+    if (
+      this.numbered
+        .inRoom(params.guildId, params.voiceChannelId)
+        .some((session) => session.playbackChannel !== undefined)
+    ) {
+      throw new PlaybackCommandBoundaryError(
+        "This voice channel changed to numbered playback while the request was loading. Try again.",
+      );
+    }
     const existing = this.sessions.get(
       keyOf(params.guildId, params.voiceChannelId),
     );
@@ -128,16 +140,31 @@ export class SessionManager {
   }
 
   /** Handle for an already-running session at `(guildId, channelId)`, or null if there is none. */
-  getExisting(guildId: GuildId, channelId: ChannelId): SessionHandle | null {
-    const session = this.sessions.get(keyOf(guildId, channelId));
+  getExisting(
+    guildId: GuildId,
+    channelId: ChannelId,
+    playbackChannel?: PlaybackChannelNumber,
+    instanceId?: string,
+  ): SessionHandle | null {
+    const session = this.sessions.get(
+      keyOf(guildId, channelId, playbackChannel),
+    );
+    if (instanceId !== undefined && session?.instanceId !== instanceId)
+      return null;
     return session === undefined
       ? null
       : buildSessionHandle(this.deps.config, session);
   }
 
   /** Release a session that was allocated for a command which produced no playback event. */
-  releaseUnused(guildId: GuildId, channelId: ChannelId): void {
-    const session = this.sessions.get(keyOf(guildId, channelId));
+  releaseUnused(
+    guildId: GuildId,
+    channelId: ChannelId,
+    playbackChannel?: PlaybackChannelNumber,
+  ): void {
+    const session = this.sessions.get(
+      keyOf(guildId, channelId, playbackChannel),
+    );
     if (session === undefined || session.hasStarted) return;
     const snapshot = session.actor.getSnapshot();
     const { stateName } = describeSnapshot(snapshot);
@@ -155,12 +182,23 @@ export class SessionManager {
   activeSessionByChannel(
     guildId: GuildId,
     channelId: ChannelId,
-  ): { voiceChannelId: ChannelId; userId: string | null } | null {
-    const session = this.sessions.get(keyOf(guildId, channelId));
+  ): {
+    voiceChannelId: ChannelId;
+    userId: string | null;
+    userIds?: readonly string[];
+  } | null {
+    const session = this.numbered.inRoom(guildId, channelId)[0];
     if (session === undefined) {
       return null;
     }
     return {
+      ...(session.playbackChannel === undefined
+        ? {}
+        : {
+            userIds: this.numbered
+              .inRoom(guildId, channelId)
+              .map((active) => active.entry.userbot.userId()),
+          }),
       voiceChannelId: session.voiceChannelId,
       userId: session.entry.userbot.userId(),
     };
@@ -171,8 +209,14 @@ export class SessionManager {
    * effect that doesn't pass through the machine (a live seek), so the channel sees it immediately
    * instead of at the next tick.
    */
-  refreshCard(guildId: GuildId, channelId: ChannelId): void {
-    this.sessions.get(keyOf(guildId, channelId))?.card.refresh();
+  refreshCard(
+    guildId: GuildId,
+    channelId: ChannelId,
+    playbackChannel?: PlaybackChannelNumber,
+  ): void {
+    this.sessions
+      .get(keyOf(guildId, channelId, playbackChannel))
+      ?.card.refresh();
   }
 
   /**
@@ -192,7 +236,12 @@ export class SessionManager {
     guildId: GuildId;
     fromChannelId: ChannelId;
     toChannelId: ChannelId;
+    userId?: string;
   }): boolean {
+    const numbered = this.numbered.move(params, (session) =>
+      this.saveSnapshot(session),
+    );
+    if (numbered !== null) return numbered;
     const moved = moveSessionRecord({
       stateDir: this.deps.config.state.dir,
       ...params,
@@ -235,12 +284,20 @@ export class SessionManager {
     }
   }
 
-  private resumeOne(
+  private async resumeOne(
     guildId: GuildId,
     channelId: ChannelId,
-    opts: { origin: "boot" | "reconnect"; reconnectAttempts?: number },
+    opts: {
+      origin: "boot" | "reconnect";
+      reconnectAttempts?: number;
+      playbackChannel?: PlaybackChannelNumber;
+    },
   ) {
-    return resumeSession(this.resumeRunnerDeps(), guildId, channelId, opts);
+    const numbered = await this.numbered.resume(guildId, channelId, opts);
+    return (
+      numbered ??
+      resumeSession(this.resumeRunnerDeps(), guildId, channelId, opts)
+    );
   }
 
   private resumeRunnerDeps(): ResumeRunnerDeps {
@@ -258,11 +315,15 @@ export class SessionManager {
   /** Flush + stop every session (keeping state files for resume). Call on process shutdown. */
   async destroyAll(): Promise<void> {
     this.voiceRecovery.cancelAll();
+    await this.numbered.shutdown();
     const sessions = [...this.sessions.values()];
-    this.sessions.clear();
     for (const session of sessions) {
       await destroySession(session, (active) => this.saveSnapshot(active));
+      if (session.playbackChannel !== undefined)
+        await this.numbered.leases.release(session.entry);
     }
+    await this.numbered.leases.drain();
+    this.sessions.clear();
   }
 
   /**
@@ -273,13 +334,23 @@ export class SessionManager {
   notifyStreamerDetached(params: {
     guildId: GuildId;
     channelId: ChannelId;
+    userId?: string;
   }): void {
-    const session = this.sessions.get(keyOf(params.guildId, params.channelId));
+    const session = this.numbered.inRoom(params.guildId, params.channelId)[0];
     if (session === undefined) {
       log.info("streamer detach notification with no active session", params);
       return;
     }
-    this.beginVoiceRecovery(session);
+    for (const active of this.numbered.inRoom(
+      params.guildId,
+      params.channelId,
+    )) {
+      if (
+        params.userId === undefined ||
+        active.entry.userbot.userId() === params.userId
+      )
+        this.beginVoiceRecovery(active);
+    }
   }
 
   /**
@@ -303,110 +374,42 @@ export class SessionManager {
 
   /** The session's voice channel was deleted: stop that session. */
   notifyChannelDeleted(guildId: GuildId, channelId: ChannelId): void {
-    const session = this.sessions.get(keyOf(guildId, channelId));
-    session?.actor.send({ type: "CHANNEL_DELETED", channelId });
+    for (const session of this.numbered.inRoom(guildId, channelId))
+      session.actor.send({ type: "CHANNEL_DELETED", channelId });
+  }
+
+  selectedChannel(
+    scope: DiscoveryScope,
+  ): Promise<PlaybackChannelNumber | undefined> {
+    return this.numbered.selected(scope);
+  }
+  poolUserIds(): ReadonlySet<string> {
+    return this.deps.pool.userIds?.() ?? new Set();
+  }
+  leaveRoom(guildId: GuildId, channelId: ChannelId): void {
+    for (const session of this.numbered.inRoom(guildId, channelId))
+      session.actor.send({ type: "LEAVE" });
   }
 
   private spawn(params: SpawnParams): Session {
-    const { entry } = params;
-    const actors = buildPlaybackActors({
-      entry,
-      resolveSource: this.deps.resolveSource,
-      teardownHold: () => session.teardownHold,
-    });
-    const actor = createActor(createPlaybackMachine(actors), {
-      input: params.input,
-      inspect: createPlaybackInspector(
-        keyOf(params.guildId, params.voiceChannelId),
-      ),
-    });
-    const reporter = new StatusReporter((message) =>
-      this.deps.announce(params.statusChannelId, message),
-    );
-    // Build before the session record so `view()` can close over actor and userbot directly.
-    const card = new PlayerCardManager({
-      owner: {
-        guildId: params.guildId,
-        voiceChannelId: params.voiceChannelId,
-      },
-      statusChannelId: params.statusChannelId,
-      port: this.deps.cards,
-      view: () =>
-        buildPlaybackView(actor.getSnapshot(), entry.userbot.getPosition()),
-      enabled: playerCardEnabled(this.deps.config.playerCard.enabled),
-      tickMs: this.deps.config.playerCard.tickMs,
-      repostAfterMessages: this.deps.config.playerCard.repostAfterMessages,
-      ...(this.fetchPoster === undefined
-        ? {}
-        : { fetchPoster: this.fetchPoster }),
-    });
-
-    const session: Session = {
-      key: keyOf(params.guildId, params.voiceChannelId),
-      guildId: params.guildId,
-      voiceChannelId: params.voiceChannelId,
-      statusChannelId: params.statusChannelId,
-      entry,
-      actor,
-      reporter,
-      card,
-      unsubscribe: () => {
-        /* replaced once the actor subscription is created below */
-      },
-      hasStarted: false,
-      persistResumeKey: params.resumeKey,
-      persistResumeAttempts: params.resumeAttempts,
-      resumeConfirmed: false,
-      bootAtMs: Date.now(),
-      lastKnownPositionSeconds: params.seekSeconds ?? 0,
-      checkpointTimer: null,
-      snapshotTail: Promise.resolve(),
-      torndown: false,
-      preserveStateOnTeardown: params.preserveStateOnTeardown ?? false,
-      reconnectAttempts: params.reconnectAttempts ?? 0,
-      recoveredFromVoiceLoss: params.recoveredFromVoiceLoss ?? false,
-      voiceRecoveryStarted: false,
-      pendingSubtitleMenu: false,
-      historyRunRecorded: false,
-      voiceAssistant: null,
-      teardownHold: new TeardownHold(() => {
+    return createSession(params, {
+      deps: this.deps,
+      fetchPoster: this.fetchPoster,
+      sessions: this.sessions,
+      teardown: (session) => {
         this.teardown(session);
-      }),
-    };
-    session.voiceAssistant = createSessionVoiceAssistant(this.deps, session);
-    // Trigger 1: the fork's voice ws `close` event, including silent-to-EOF cases.
-    entry.userbot.setVoiceCloseListener(() => {
-      this.beginVoiceRecovery(session);
-    });
-    // Stall watchdog: ffmpeg alive but producing nothing → the machine's bounded stall recovery
-    // (retry at position, pipeline ladder). Without this the machine would sit in `streaming`
-    // forever on a wedged pipeline.
-    entry.userbot.setStallListener((info) => {
-      session.actor.send({
-        type: "PRODUCER_STALLED",
-        reason: info.reason,
-        positionSeconds: info.positionSeconds,
-      });
-    });
-
-    const observer = new SessionObserver({
-      session,
-      history: this.deps.history,
+      },
+      beginVoiceRecovery: (session) => {
+        this.beginVoiceRecovery(session);
+      },
       totalQueueLength: () => this.totalQueueLength(),
+      updateStates: () => {
+        this.updatePlaybackStates();
+      },
+      saveSnapshot: (session) => this.saveSnapshot(session),
+      refreshAssistant: (guildId, channelId) =>
+        this.numbered.refreshAssistant(guildId, channelId),
     });
-    const subscription = actor.subscribe((snapshot) => {
-      observer.handle(snapshot);
-    });
-    session.unsubscribe = () => {
-      subscription.unsubscribe();
-    };
-
-    actor.start();
-    session.checkpointTimer = setInterval(() => {
-      void this.saveSnapshot(session);
-    }, CHECKPOINT_MS);
-    this.sessions.set(session.key, session);
-    return session;
   }
 
   /**
@@ -419,6 +422,11 @@ export class SessionManager {
       return;
     }
     this.sessions.delete(session.key);
+    if (session.playbackChannel !== undefined)
+      void this.numbered.refreshAssistant(
+        session.guildId,
+        session.voiceChannelId,
+      );
     if (session.checkpointTimer !== null) {
       clearInterval(session.checkpointTimer);
       session.checkpointTimer = null;
@@ -435,8 +443,12 @@ export class SessionManager {
     session.entry.userbot.setVoiceCloseListener(null);
     session.entry.userbot.setStallListener(null);
     session.voiceAssistant?.close();
-    session.entry.userbot.setVoiceAudioListener(null);
-    this.deps.pool.release(session.entry);
+    if (session.playbackChannel === undefined) {
+      session.entry.userbot.setVoiceAudioListener(null);
+      this.deps.pool.release(session.entry);
+    } else {
+      void this.numbered.leases.release(session.entry);
+    }
     // A preserved file only makes sense for an error-driven end; a natural finish (lastError
     // null) has nothing to resume even mid-recovery, so it cleans up as usual.
     const keepFile = session.preserveStateOnTeardown && lastError !== null;
@@ -448,12 +460,18 @@ export class SessionManager {
       });
     } else {
       // Delete resume state only AFTER any in-flight checkpoint settles (see deleteSessionStateAfterFlush).
-      void deleteSessionStateAfterFlush(this.deps.config.state.dir, session);
+      if (session.playbackChannel === undefined)
+        void deleteSessionStateAfterFlush(this.deps.config.state.dir, session);
+      else if (session.instanceId !== undefined)
+        void this.numbered.persistence.remove(
+          session.guildId,
+          session.voiceChannelId,
+          session.playbackChannel,
+          session.instanceId,
+        );
     }
     queueLength.set(this.totalQueueLength());
-    if (this.sessions.size === 0) {
-      setPlaybackState("idle");
-    }
+    this.updatePlaybackStates();
     log.info("session ended", {
       guildId: session.guildId,
       channelId: session.voiceChannelId,
@@ -479,6 +497,14 @@ export class SessionManager {
     return total;
   }
 
+  private updatePlaybackStates(): void {
+    setPlaybackStates(
+      [...this.sessions.values()].map(
+        (session) => describeSnapshot(session.actor.getSnapshot()).stateName,
+      ),
+    );
+  }
+
   /** Serialize snapshot writes per session so a fired interval and the shutdown flush don't race. */
   private saveSnapshot(session: Session): Promise<void> {
     const previous = session.snapshotTail;
@@ -490,66 +516,11 @@ export class SessionManager {
     return run;
   }
 
-  private async writeSnapshot(session: Session): Promise<void> {
-    // A checkpoint queued on the tail before teardown must not re-create the deleted state file.
-    if (session.torndown) {
-      return;
-    }
-    const { context } = session.actor.getSnapshot();
-    const live = session.entry.userbot.getPosition();
-    if (context.pausedPositionSeconds !== null) {
-      session.lastKnownPositionSeconds = context.pausedPositionSeconds;
-    } else if (context.current === null) {
-      session.lastKnownPositionSeconds = 0;
-    } else if (live !== null) {
-      session.lastKnownPositionSeconds = live;
-    }
-    playbackPositionSeconds.set(session.lastKnownPositionSeconds);
-    if (
-      !session.resumeConfirmed &&
-      Date.now() - session.bootAtMs >= RESUME_CONFIRM_MS
-    ) {
-      session.resumeConfirmed = true;
-      // A confirmed session no longer needs voice-loss recovery scaffolding: count the recovery
-      // as a success, reset the incident attempt counter, and let teardown delete state normally.
-      if (session.recoveredFromVoiceLoss) {
-        voiceReconnectsTotal.inc({ outcome: "success" });
-        log.info("voice reconnect confirmed healthy", {
-          guildId: session.guildId,
-          channelId: session.voiceChannelId,
-        });
-      }
-      session.reconnectAttempts = 0;
-      session.preserveStateOnTeardown = false;
-    }
-    if (session.resumeConfirmed) {
-      session.persistResumeKey =
-        context.current === null ? null : resumeKeyFor(context.current.source);
-      session.persistResumeAttempts = 0;
-    }
-    const state = buildSnapshot({
-      context,
-      positionSeconds: session.lastKnownPositionSeconds,
-      savedAt: Date.now(),
-      resumeKey: session.persistResumeKey,
-      resumeAttempts: session.persistResumeAttempts,
-      statusChannelId: session.statusChannelId,
-    });
-    try {
-      await saveState(
-        stateFilePath(
-          this.deps.config.state.dir,
-          session.guildId,
-          session.voiceChannelId,
-        ),
-        state,
-      );
-    } catch (error) {
-      log.error("failed to persist resume state", {
-        guildId: session.guildId,
-        channelId: session.voiceChannelId,
-        error: getErrorMessage(error),
-      });
-    }
+  private writeSnapshot(session: Session): Promise<void> {
+    return writeSessionSnapshot(
+      this.deps.config,
+      session,
+      this.numbered.persistence,
+    );
   }
 }

@@ -1383,6 +1383,33 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-numbered-channels-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Enable room-local numbered playback slots: mic on 1, shared Go Live on 2, extra video on 3+.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-player-card-repost-after-messages",
       "owner": "streambot",
       "namespace": "streambot",
