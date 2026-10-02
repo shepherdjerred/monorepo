@@ -29,7 +29,7 @@ const KnownRolloutsSchema = z.array(
 const ResourceSchema = z.object({
   resource: z.object({
     key: z.string(),
-    namespaceKey: z.literal("default"),
+    namespaceKey: z.literal("scout"),
     payload: FlagPayloadSchema,
   }),
   revision: z.string().min(1),
@@ -44,7 +44,7 @@ export async function applyScoutBetaDurableOwnership(input: {
   fetcher?: FliptFetcher;
 }): Promise<string[]> {
   const fetcher = input.fetcher ?? fetch;
-  const endpoint = `${input.url}/api/v2/environments/beta/namespaces/default/resources`;
+  const endpoint = `${input.url}/api/v2/environments/beta/namespaces/scout/resources`;
   const updated: string[] = [];
   for (const key of FLAG_KEYS) {
     const response = await fetcher(
@@ -76,7 +76,7 @@ export async function applyScoutBetaDurableOwnership(input: {
       },
       body: JSON.stringify({
         environmentKey: "beta",
-        namespaceKey: "default",
+        namespaceKey: "scout",
         key,
         revision: current.revision,
         payload: {

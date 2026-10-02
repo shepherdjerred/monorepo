@@ -68,7 +68,7 @@ export const fliptFlagInventoryActivities = {
             createdFlags: applied?.createdFlags ?? [],
             createdSegments: applied?.createdSegments ?? [],
             migratedFlags:
-              namespace === "default" && environment.key === "beta"
+              namespace === "scout" && environment.key === "beta"
                 ? migratedFlags
                 : [],
             observedAt,
