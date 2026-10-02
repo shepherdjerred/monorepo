@@ -4,7 +4,9 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   IntOrString,
+  KubePersistentVolumeClaim,
   KubeService,
+  Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
@@ -16,11 +18,40 @@ export function createSeaweedfsApp(chart: Chart) {
   new Namespace(chart, "seaweedfs-namespace", {
     metadata: {
       name: "seaweedfs",
+      annotations: { "argocd.argoproj.io/sync-wave": "-2" },
       labels: {
         "pod-security.kubernetes.io/enforce": "privileged",
       },
     },
   });
+
+  // Adopt and expand the existing claims before changing immutable Helm claim
+  // templates. Preserve their names and bindings; the root release owns quota
+  // changes, while SeaweedFS continues mounting the same datasets.
+  for (const [name, storage] of [
+    ["data-filer-seaweedfs-filer-0", "4Gi"],
+    ["data-seaweedfs-volume-0", "1Ti"],
+  ] as const) {
+    new KubePersistentVolumeClaim(chart, `${name}-capacity`, {
+      metadata: {
+        name,
+        namespace: "seaweedfs",
+        labels: {
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "true",
+        },
+        annotations: {
+          "argocd.argoproj.io/sync-wave": "-1",
+          "argocd.argoproj.io/sync-options": "Prune=false",
+        },
+      },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: NVME_STORAGE_CLASS,
+        resources: { requests: { storage: Quantity.fromString(storage) } },
+      },
+    });
+  }
 
   // 1Password secret for S3 credentials
   new OnePasswordItem(chart, "seaweedfs-credentials-onepassword", {
@@ -153,19 +184,14 @@ export function createSeaweedfsApp(chart: Chart) {
         {
           name: "data",
           type: "persistentVolumeClaim",
-          // 512, up from 384: legitimate retained growth (PR assets carry a
-          // 365-day TTL that cannot expire anything until the bucket is a
-          // year old) put the volume on a ~43-day projection to full
-          // (2026-08-28). This renders into a StatefulSet volumeClaimTemplate
-          // — an immutable field — so the live PVC must be expanded first
-          // (kubectl patch pvc data-seaweedfs-volume-0 -n seaweedfs) and the
-          // StatefulSet recreated with --cascade=orphan if the apply is
-          // rejected.
+          // Keep the immutable template at its existing size while the explicit
+          // root-owned claim above expands. A separate reviewed GitOps release
+          // reconciles templates after verifying the unchanged PVC bindings.
           size: Size.gibibytes(512).asString(),
           storageClass: NVME_STORAGE_CLASS,
           // Volume-slot cap. With master.volumeSizeLimitMB at 30 GiB, 88 GiB of
           // data packs into a few dozen volumes, so this is generous headroom, not
-          // a disk-coupled limit — the real governor is now bytes on the 384 GiB
+          // a disk-coupled limit — the real governor is bytes on the data
           // PVC, and disk fill is caught by the PVCStorageHigh alert (>90%). The
           // pre-existing ~360 one-GiB volumes stay allocated but become writable
           // up to 30 GiB, so they absorb new data instead of spawning fresh slots;
@@ -196,6 +222,8 @@ export function createSeaweedfsApp(chart: Chart) {
       },
       data: {
         type: "persistentVolumeClaim",
+        // The root-owned existing claim expands first; template reconciliation
+        // belongs to the subsequent data-preserving GitOps release.
         size: Size.gibibytes(1).asString(),
         storageClass: NVME_STORAGE_CLASS,
       },

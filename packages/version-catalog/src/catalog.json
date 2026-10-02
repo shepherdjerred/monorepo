@@ -648,6 +648,18 @@
       "value": "1.12.1"
     },
     {
+      "name": "grafana/grafana-image-renderer",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v5.12.4@sha256:4c5574b3261ca7566fbca11d3fb3615bd8e753c69cb4fe9108f3ec8d1d3841d6"
+    },
+    {
       "name": "openebs",
       "category": "upstream",
       "artifactType": "helm-chart",

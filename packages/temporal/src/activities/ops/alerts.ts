@@ -46,11 +46,38 @@ export function alertSeverity(alert: AlertmanagerAlert): Severity {
     : (SEVERITY_BY_LABEL[label] ?? "warning");
 }
 
-/**
- * One signal per alert name and namespace. Alertmanager fires one alert per
- * label set (e.g. one per failed workflow execution), which would otherwise
- * flood the overview with near-identical rows.
- */
+/** Bounded workload identity; execution IDs deliberately do not group rows. */
+function alertIdentity(alert: AlertmanagerAlert) {
+  return {
+    alertname: alert.labels["alertname"] ?? "(unnamed alert)",
+    namespace: alert.labels["namespace"],
+    temporalNamespace:
+      alert.labels["temporalNamespace"] ??
+      alert.labels["exported_namespace"] ??
+      alert.labels["temporal_namespace"],
+    workflowType: alert.labels["workflowType"] ?? alert.labels["workflow_type"],
+    taskQueue:
+      alert.labels["taskQueue"] ??
+      alert.labels["task_queue"] ??
+      alert.labels["taskqueue"],
+    state: alert.status.state,
+  };
+}
+
+function alertGroupId(alert: AlertmanagerAlert): string {
+  const identity = alertIdentity(alert);
+  const qualifiers = [
+    identity.temporalNamespace,
+    identity.workflowType,
+    identity.taskQueue,
+  ];
+  const suffix = qualifiers.some((value) => value !== undefined)
+    ? `:${qualifiers.map((value) => encodeURIComponent(value ?? "-")).join(":")}`
+    : "";
+  return `alerts:${identity.alertname}:${identity.namespace ?? "-"}${suffix}${identity.state === "active" ? "" : `:${identity.state}`}`;
+}
+
+/** Repeated executions share a row only within one workload and alert state. */
 function alertGroupSignal(
   group: readonly AlertmanagerAlert[],
   context: OpsContext,
@@ -59,8 +86,14 @@ function alertGroupSignal(
   if (first === undefined) {
     throw new Error("alertGroupSignal requires at least one alert");
   }
-  const alertname = first.labels["alertname"] ?? "(unnamed alert)";
-  const namespace = first.labels["namespace"];
+  const {
+    alertname,
+    namespace,
+    temporalNamespace,
+    workflowType,
+    taskQueue,
+    state,
+  } = alertIdentity(first);
   const severity = worstSeverity(group.map((alert) => alertSeverity(alert)));
   const since = group
     .map((alert) => alert.startsAt)
@@ -68,17 +101,33 @@ function alertGroupSignal(
       Date.parse(startsAt) < Date.parse(earliest) ? startsAt : earliest,
     );
   const firingMinutes = minutesSince(since, context.now);
-  const summary = first.annotations["summary"];
-  const description = first.annotations["description"];
-  const title = summary ?? alertname;
+  const summaries = [
+    ...new Set(group.map((alert) => alert.annotations["summary"] ?? alertname)),
+  ].toSorted();
+  const descriptions = [
+    ...new Set(
+      group
+        .map((alert) => alert.annotations["description"])
+        .filter((value) => value !== undefined),
+    ),
+  ].toSorted();
+  const title =
+    summaries.length === 1
+      ? (summaries[0] ?? alertname)
+      : `${alertname}${workflowType === undefined ? "" : `: ${workflowType}`}`;
+  const description =
+    descriptions.length <= 1
+      ? descriptions[0]
+      : `${String(descriptions.length)} distinct causes. Examples: ${descriptions.slice(0, 3).join("; ")}`;
   return {
-    id: `alerts:${alertname}:${namespace ?? "-"}`,
+    id: alertGroupId(first),
     source: "alerts",
     section: "alerts",
     ...serviceForNamespace(context, namespace),
     kind: "alert",
     severity,
     needsMe:
+      state === "active" &&
       (severity === "error" || severity === "warning") &&
       firingMinutes >= OPS_POLICY.alertNeedsMeAfterMinutes,
     title: truncate(
@@ -94,6 +143,11 @@ function alertGroupSignal(
       count: group.length,
       firingMinutes: Math.round(firingMinutes),
       ...(namespace === undefined ? {} : { namespace }),
+      ...(temporalNamespace === undefined ? {} : { temporalNamespace }),
+      ...(workflowType === undefined ? {} : { workflowType }),
+      ...(taskQueue === undefined ? {} : { taskQueue }),
+      state,
+      distinctCauses: descriptions.length,
     },
     links: [
       alertmanagerLink(alertname),
@@ -108,7 +162,7 @@ function groupAlerts(
 ): AlertmanagerAlert[][] {
   const groups = new Map<string, AlertmanagerAlert[]>();
   for (const alert of alerts) {
-    const key = `${alert.labels["alertname"] ?? ""}\u{0}${alert.labels["namespace"] ?? ""}`;
+    const key = JSON.stringify(alertIdentity(alert));
     const group = groups.get(key);
     if (group === undefined) {
       groups.set(key, [alert]);

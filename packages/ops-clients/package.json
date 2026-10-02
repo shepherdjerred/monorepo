@@ -25,6 +25,7 @@
     "@vitest/coverage-istanbul": "5.0.1"
   },
   "dependencies": {
+    "@shepherdjerred/ops-model": "workspace:*",
     "zod": "^4.4.3"
   },
   "exports": {

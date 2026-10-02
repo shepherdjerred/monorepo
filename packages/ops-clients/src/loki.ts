@@ -14,12 +14,16 @@ const LokiVectorSchema = z.object({
   }),
 });
 
-/** Case-insensitive error markers counted as error log lines. */
-export const ERROR_LINE_PATTERN = String.raw`(?i)\b(error|fatal|panic|exception)\b`;
+/** Loki's structured/detected severity, never words embedded in a message. */
+export const ERROR_LEVEL_FILTER = 'detected_level=~"error|fatal|critical"';
+
+export function errorLogQuery(namespaceSelector: string): string {
+  return `{${namespaceSelector}} | ${ERROR_LEVEL_FILTER}`;
+}
 
 /** LogQL for error lines per namespace over a window such as `1h`. */
 export function errorVolumeQuery(window: string): string {
-  return `sum by (namespace) (count_over_time({namespace=~".+"} |~ \`${ERROR_LINE_PATTERN}\` [${window}]))`;
+  return `sum by (namespace) (count_over_time(${errorLogQuery('namespace=~".+"')} [${window}]))`;
 }
 
 export type NamespaceLogVolume = { namespace: string; lines: number };

@@ -1,4 +1,5 @@
 import { Context } from "@temporalio/activity";
+import { withBackupMaintenanceHeartbeat } from "./seaweedfs-backup-heartbeat.ts";
 import { runGcCycle } from "@shepherdjerred/seaweedfs-backup/gc";
 import { listCompletionMarkers } from "@shepherdjerred/seaweedfs-backup/manifest";
 import {
@@ -26,11 +27,13 @@ import {
   seaweedFsBackupGcRevalidationFailuresTotal,
   seaweedFsBackupLastSuccessTimestampSeconds,
   seaweedFsBackupObjects,
+  seaweedFsBackupObservationTimestampSeconds,
   seaweedFsBackupProtectedBytes,
   seaweedFsBackupRetainedPoints,
   seaweedFsBackupRetentionWarm,
   seaweedFsBackupSourceBytes,
   seaweedFsBackupStage,
+  seaweedFsBackupStageObservationTimestampSeconds,
   seaweedFsBackupVerificationTotal,
 } from "#observability/metrics-backup.ts";
 
@@ -46,6 +49,10 @@ function setStage(
   for (const stage of STAGES) {
     seaweedFsBackupStage.set({ cadence, stage }, stage === active ? 1 : 0);
   }
+  seaweedFsBackupStageObservationTimestampSeconds.set(
+    { cadence },
+    Date.now() / 1000,
+  );
 }
 
 export async function restoreSeaweedFsBackupMetrics(): Promise<void> {
@@ -85,6 +92,7 @@ export const seaweedFsBackupActivities = {
   }): Promise<{ snapshotId: string; buckets: number }> {
     const cadence = BackupCadenceSchema.parse(input.cadence);
     const runStartedAt = performance.now();
+    setStage(cadence, "inventory");
     let activeBucket = "run";
     const { source, destination, backupBucket } = storesFromEnvironment();
     const coverage = evaluateCoverage(
@@ -155,6 +163,10 @@ export const seaweedFsBackupActivities = {
           { bucket: bucket.bucket, cadence },
           bucket.copiedBytes,
         );
+        seaweedFsBackupObservationTimestampSeconds.set(
+          { bucket: bucket.bucket, cadence },
+          Date.parse(result.marker.completedAt) / 1000,
+        );
         seaweedFsBackupDurationSeconds.observe(
           { bucket: bucket.bucket, cadence, outcome: "success" },
           bucket.durationSeconds,
@@ -205,77 +217,84 @@ export const seaweedFsBackupActivities = {
     deletedObjects: number;
     candidateObjects: number;
   }> {
-    const { destination, backupBucket } = storesFromEnvironment();
-    try {
-      const pruned = await pruneExpiredSnapshots({
-        store: destination,
-        backupBucket,
-        policy: SEAWEEDFS_BACKUP_POLICY,
+    return withBackupMaintenanceHeartbeat(Context.current(), async (hooks) => {
+      const { destination, backupBucket } = storesFromEnvironment(Bun.env, {
+        signal: hooks.signal,
       });
-      const counts = retainedPointCounts(
-        pruned.markers,
-        SEAWEEDFS_BACKUP_POLICY,
-      );
-      for (const [tier, count] of Object.entries(counts)) {
-        seaweedFsBackupRetainedPoints.set({ tier }, count);
+      try {
+        const pruned = await pruneExpiredSnapshots({
+          store: destination,
+          backupBucket,
+          policy: SEAWEEDFS_BACKUP_POLICY,
+          hooks,
+        });
+        const counts = retainedPointCounts(
+          pruned.markers,
+          SEAWEEDFS_BACKUP_POLICY,
+        );
+        for (const [tier, count] of Object.entries(counts)) {
+          seaweedFsBackupRetainedPoints.set({ tier }, count);
+        }
+        const oldestSixHourly = pruned.markers
+          .filter((marker) => marker.cadence === "six-hourly")
+          .map((marker) => Date.parse(marker.completedAt))
+          .reduce<number | undefined>(
+            (oldest, value) =>
+              oldest === undefined || value < oldest ? value : oldest,
+            undefined,
+          );
+        const oldestDaily = pruned.markers
+          .filter((marker) => marker.cadence === "daily")
+          .map((marker) => Date.parse(marker.completedAt))
+          .reduce<number | undefined>(
+            (oldest, value) =>
+              oldest === undefined || value < oldest ? value : oldest,
+            undefined,
+          );
+        const ageDays = (value: number | undefined): number =>
+          value === undefined ? 0 : (Date.now() - value) / 86_400_000;
+        const warmAfterDays = {
+          sixHourly: 7,
+          daily: 30,
+          weekly: 56,
+          monthly: 366,
+        } as const;
+        for (const [tier, days] of Object.entries(warmAfterDays)) {
+          const oldest = tier === "sixHourly" ? oldestSixHourly : oldestDaily;
+          seaweedFsBackupRetentionWarm.set(
+            { tier },
+            ageDays(oldest) >= days ? 1 : 0,
+          );
+        }
+        const gc = await runGcCycle({
+          store: destination,
+          backupBucket,
+          policy: SEAWEEDFS_BACKUP_POLICY,
+          hooks,
+        });
+        seaweedFsBackupGcBacklog.set(gc.candidateBacklog);
+        seaweedFsBackupGcObjects.set(gc.candidateCount);
+        seaweedFsBackupGcOldestCandidateTimestampSeconds.set(
+          gc.oldestPendingTimestampSeconds,
+        );
+        log("info", "SeaweedFS backup retention and GC completed", {
+          deletedSnapshots: pruned.deletedSnapshots,
+          deletedObjects: gc.deleted,
+          retainedCandidates: gc.retained,
+          candidateObjects: gc.candidateCount,
+          candidateBacklog: gc.candidateBacklog,
+        });
+        return {
+          deletedSnapshots: pruned.deletedSnapshots,
+          deletedObjects: gc.deleted,
+          candidateObjects: gc.candidateCount,
+        };
+      } catch (error: unknown) {
+        if (!hooks.signal.aborted) {
+          seaweedFsBackupGcRevalidationFailuresTotal.inc();
+        }
+        throw error;
       }
-      const oldestSixHourly = pruned.markers
-        .filter((marker) => marker.cadence === "six-hourly")
-        .map((marker) => Date.parse(marker.completedAt))
-        .reduce<number | undefined>(
-          (oldest, value) =>
-            oldest === undefined || value < oldest ? value : oldest,
-          undefined,
-        );
-      const oldestDaily = pruned.markers
-        .filter((marker) => marker.cadence === "daily")
-        .map((marker) => Date.parse(marker.completedAt))
-        .reduce<number | undefined>(
-          (oldest, value) =>
-            oldest === undefined || value < oldest ? value : oldest,
-          undefined,
-        );
-      const ageDays = (value: number | undefined): number =>
-        value === undefined ? 0 : (Date.now() - value) / 86_400_000;
-      const warmAfterDays = {
-        sixHourly: 7,
-        daily: 30,
-        weekly: 56,
-        monthly: 366,
-      } as const;
-      for (const [tier, days] of Object.entries(warmAfterDays)) {
-        const oldest = tier === "sixHourly" ? oldestSixHourly : oldestDaily;
-        seaweedFsBackupRetentionWarm.set(
-          { tier },
-          ageDays(oldest) >= days ? 1 : 0,
-        );
-      }
-      Context.current().heartbeat({ stage: "gc-revalidate" });
-      const gc = await runGcCycle({
-        store: destination,
-        backupBucket,
-        policy: SEAWEEDFS_BACKUP_POLICY,
-      });
-      seaweedFsBackupGcBacklog.set(gc.candidateBacklog);
-      seaweedFsBackupGcObjects.set(gc.candidateCount);
-      seaweedFsBackupGcOldestCandidateTimestampSeconds.set(
-        gc.oldestPendingTimestampSeconds,
-      );
-      log("info", "SeaweedFS backup retention and GC completed", {
-        deletedSnapshots: pruned.deletedSnapshots,
-        deletedObjects: gc.deleted,
-        retainedCandidates: gc.retained,
-        candidateObjects: gc.candidateCount,
-        candidateBacklog: gc.candidateBacklog,
-      });
-      return {
-        deletedSnapshots: pruned.deletedSnapshots,
-        deletedObjects: gc.deleted,
-        candidateObjects: gc.candidateCount,
-      };
-    } catch (error: unknown) {
-      seaweedFsBackupGcRevalidationFailuresTotal.inc();
-      throw error;
-    }
+    });
   },
 };

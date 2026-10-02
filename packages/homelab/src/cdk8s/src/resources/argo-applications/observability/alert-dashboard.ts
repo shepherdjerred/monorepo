@@ -5,7 +5,11 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 // the activation branch so ArgoCD owns the complete service lifecycle.
 export function createAlertDashboardApp(chart: Chart) {
   return new Application(chart, "alert-dashboard-app", {
-    metadata: { name: "alert-dashboard" },
+    metadata: {
+      name: "alert-dashboard",
+      // Accept the ops snapshot contract before Temporal Activities emit it.
+      annotations: { "argocd.argoproj.io/sync-wave": "-2" },
+    },
     spec: {
       revisionHistoryLimit: 5,
       project: "default",

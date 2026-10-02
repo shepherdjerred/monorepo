@@ -115,12 +115,15 @@ export function addBackupOperationsPanels(
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Backup Deletion Success Rate")
-      .description("Rate of successful backup deletions (old backups cleanup)")
+      .description(
+        "Successful deletion percentage when attempts occurred. No deletions is normal between cleanup operations.",
+      )
+      .noValue("No deletions")
       .datasource(ds)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `(sum(rate(velero_backup_deletion_success_total[5m])) / sum(rate(velero_backup_deletion_attempt_total[5m]))) * 100`,
+            `(sum(rate(velero_backup_deletion_success_total[5m])) / (sum(rate(velero_backup_deletion_attempt_total[5m])) > 0)) * 100`,
           )
           .legendFormat("Success Rate"),
       )

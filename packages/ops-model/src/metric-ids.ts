@@ -38,6 +38,9 @@ export const METRIC_IDS = {
   diskMaxUsedRatio: "maintenance.disk.max_used_ratio",
   certificatesExpiringSoon: "maintenance.certificates.expiring_soon",
   backupsStale: "maintenance.backups.stale",
+  schedulesFailed: "temporal.schedules.failed",
+  schedulesUnknown: "temporal.schedules.unknown",
+  schedulesPaused: "temporal.schedules.paused",
 
   logErrors1h: "logs.errors_1h",
   traceErrors1h: "traces.errors_1h",

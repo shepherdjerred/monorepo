@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BACKUP_MONITORING_ANNOTATIONS } from "@shepherdjerred/ops-model/backup-policy.ts";
 import {
   bearer,
   fetchJson,
@@ -247,6 +248,39 @@ function toArgoApplication(
 
 const PAGE_SIZE = 500;
 
+const VeleroScheduleSchema = z.object({
+  metadata: z.object({
+    name: z.string(),
+    namespace: z.string(),
+    creationTimestamp: z.iso.datetime({ offset: true }),
+    annotations: z.record(z.string(), z.string()).default({}),
+  }),
+  spec: z.object({
+    schedule: z.string().min(1),
+    paused: z.boolean().default(false),
+  }),
+});
+
+const BackupMonitoringSchema = z.object({
+  maxAgeSeconds: z
+    .string()
+    .regex(/^\d+$/u)
+    .pipe(z.coerce.number<string>().positive()),
+  alertForSeconds: z
+    .string()
+    .regex(/^\d+$/u)
+    .pipe(z.coerce.number<string>().nonnegative()),
+  alertSeverity: z.enum(["critical", "warning", "info"]),
+});
+
+export type VeleroScheduleStatus = z.infer<typeof BackupMonitoringSchema> & {
+  name: string;
+  namespace: string;
+  createdAt: string;
+  cronSchedule: string;
+  paused: boolean;
+};
+
 /**
  * Read-only Kubernetes API client for nodes, pods, and ArgoCD Applications.
  * Callers inject the token provider and `fetch`, so the in-cluster CA and
@@ -336,5 +370,36 @@ export class KubernetesClient {
       ArgoApplicationSchema,
     );
     return apps.map((app) => toArgoApplication(app));
+  }
+
+  async listVeleroSchedules(
+    namespace = "velero",
+  ): Promise<VeleroScheduleStatus[]> {
+    const schedules = await this.#list(
+      `/apis/velero.io/v1/namespaces/${encodeURIComponent(namespace)}/schedules`,
+      VeleroScheduleSchema,
+    );
+    return schedules.map(({ metadata, spec }) => {
+      const monitoring = BackupMonitoringSchema.safeParse({
+        maxAgeSeconds:
+          metadata.annotations[BACKUP_MONITORING_ANNOTATIONS.maxAgeSeconds],
+        alertForSeconds:
+          metadata.annotations[BACKUP_MONITORING_ANNOTATIONS.alertForSeconds],
+        alertSeverity:
+          metadata.annotations[BACKUP_MONITORING_ANNOTATIONS.severity],
+      });
+      if (!monitoring.success)
+        throw new Error(
+          `Velero Schedule ${metadata.namespace}/${metadata.name} has invalid or missing backup monitoring annotations`,
+        );
+      return {
+        name: metadata.name,
+        namespace: metadata.namespace,
+        createdAt: metadata.creationTimestamp,
+        cronSchedule: spec.schedule,
+        paused: spec.paused,
+        ...monitoring.data,
+      };
+    });
   }
 }

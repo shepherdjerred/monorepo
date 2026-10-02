@@ -23,7 +23,8 @@ const COST_RATE_1H = "sum(rate(storm_brain_cost_micros_total[1h]))";
 const COST_RATE_24H = "sum(rate(storm_brain_cost_micros_total[24h]))";
 const LATENCY_P95 =
   "histogram_quantile(0.95, sum by (le) (rate(storm_brain_request_duration_seconds_bucket[5m])))";
-const SCRAPE_JOB = "storm-brain/storm-brain-service-monitor";
+const SCRAPE_SELECTOR =
+  'namespace="storm-brain",service="storm-brain-storm-brain-service",endpoint="metrics"';
 
 export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -88,7 +89,7 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "StormBrainTargetDown",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `absent(up{job="${SCRAPE_JOB}"}) or max(up{job="${SCRAPE_JOB}"}) == 0`,
+            `absent(up{${SCRAPE_SELECTOR}}) or max(up{${SCRAPE_SELECTOR}}) == 0`,
           ),
           for: "5m",
           labels: { severity: "critical", category: "llm" },

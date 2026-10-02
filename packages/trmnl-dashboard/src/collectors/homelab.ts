@@ -30,6 +30,7 @@ const HOMELAB_SOURCES: ReadonlySet<SourceId> = new Set([
   "kubernetes",
   "bugsink",
   "maintenance",
+  "temporal",
 ]);
 
 export type HomelabClients = {

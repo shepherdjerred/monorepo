@@ -52,6 +52,17 @@ function githubEnv(secret: ISecret): Record<string, EnvValue> {
   };
 }
 
+function veleroR2AuditEnv(secret: ISecret): Record<string, EnvValue> {
+  return Object.fromEntries(
+    [
+      "VELERO_R2_S3_ENDPOINT",
+      "VELERO_R2_S3_BUCKET",
+      "VELERO_R2_S3_ACCESS_KEY_ID",
+      "VELERO_R2_S3_SECRET_ACCESS_KEY",
+    ].map((key) => [key, EnvValue.fromSecretValue({ secret, key })]),
+  );
+}
+
 export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
@@ -62,6 +73,7 @@ export type TemporalOperationsWorkerProps = {
   freshRssManifestVolume: Volume;
   freshRssCredentialVolume: Volume;
   backupSecret: ISecret;
+  veleroR2AuditSecret: ISecret;
   billingSecret: ISecret;
 };
 
@@ -98,6 +110,9 @@ export function createTemporalOperationsWorkers(
       ...githubEnv(props.secret),
       ...props.homelabAuditEnvironment,
       ...opsSnapshotEnv(props.secret),
+      // Dedicated homelab-bucket Object Read identity. Never reuse Velero's
+      // write credential or expose it to credentialless workflow workers.
+      ...veleroR2AuditEnv(props.veleroR2AuditSecret),
     },
     volumeMounts: [
       {

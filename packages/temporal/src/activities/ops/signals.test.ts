@@ -176,9 +176,25 @@ describe("maintenance", () => {
           sample(0.3, { instance: "torvalds", mountpoint: "/var" }),
           sample(0.82, { instance: "liskov", mountpoint: "/var/mnt/ci" }),
         ],
-        seaweedfsBackups: [sample(40 * 3600, { cadence: "daily" })],
+        seaweedfsBackups: [
+          sample(40 * 3600, { cadence: "daily" }),
+          sample(3600, { cadence: "six-hourly" }),
+        ],
         veleroBackups: [sample(3600, { schedule: "nightly" })],
       }),
+      [
+        {
+          name: "nightly",
+          namespace: "velero",
+          createdAt: hoursAgo(240),
+          cronSchedule: "0 2 * * *",
+          paused: false,
+          maxAgeSeconds: 34 * 3600,
+          alertForSeconds: 300,
+          alertSeverity: "warning",
+        },
+      ],
+      now,
     );
     expect(result.signals.map((s) => [s.id, s.severity])).toEqual([
       ["maintenance:certificate:postal/smtp", "error"],
@@ -212,7 +228,7 @@ describe("maintenance", () => {
 
   test("a sample without its identifying label is a broken contract", () => {
     expect(() =>
-      mapMaintenance(maintenance({ zpools: [sample(0.5)] })),
+      mapMaintenance(maintenance({ zpools: [sample(0.5)] }), [], now),
     ).toThrow(/zpool_name/);
   });
 });

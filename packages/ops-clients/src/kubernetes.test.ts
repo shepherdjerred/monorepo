@@ -29,6 +29,78 @@ function pod(
   };
 }
 
+function veleroSchedule(annotations: Record<string, string> = {}) {
+  return {
+    metadata: {
+      name: "monthly",
+      namespace: "velero",
+      creationTimestamp: "2026-09-01T00:00:00Z",
+      annotations: {
+        "ops.sjer.red/backup-max-age-seconds": "3801600",
+        "ops.sjer.red/backup-alert-for-seconds": "300",
+        "ops.sjer.red/backup-alert-severity": "warning",
+        ...annotations,
+      },
+    },
+    spec: { schedule: "0 3 1 * *", paused: true },
+    status: { lastBackup: "2026-10-01T03:00:00Z" },
+  };
+}
+
+describe("KubernetesClient Velero schedules", () => {
+  test("reads annotated Velero cadence and rejects missing policy instead of assuming daily", async () => {
+    const schedule = veleroSchedule();
+    const { client: kube } = client({ metadata: {}, items: [schedule] });
+    await expect(kube.listVeleroSchedules()).resolves.toEqual([
+      {
+        name: "monthly",
+        namespace: "velero",
+        createdAt: "2026-09-01T00:00:00Z",
+        cronSchedule: "0 3 1 * *",
+        paused: true,
+        maxAgeSeconds: 3_801_600,
+        alertForSeconds: 300,
+        alertSeverity: "warning",
+      },
+    ]);
+    const broken = client({
+      metadata: {},
+      items: [
+        { ...schedule, metadata: { ...schedule.metadata, annotations: {} } },
+      ],
+    });
+    await expect(broken.client.listVeleroSchedules()).rejects.toThrow(
+      /missing backup monitoring annotations/,
+    );
+  });
+  test.each(["", " ", "\t\n"])(
+    "rejects blank backup timing annotations %j",
+    async (value) => {
+      for (const key of [
+        "ops.sjer.red/backup-max-age-seconds",
+        "ops.sjer.red/backup-alert-for-seconds",
+      ]) {
+        const { client: kube } = client({
+          metadata: {},
+          items: [veleroSchedule({ [key]: value })],
+        });
+        await expect(kube.listVeleroSchedules()).rejects.toThrow(
+          /invalid or missing backup monitoring annotations/,
+        );
+      }
+    },
+  );
+  test("allows an explicit zero alert delay", async () => {
+    const { client: kube } = client({
+      metadata: {},
+      items: [veleroSchedule({ "ops.sjer.red/backup-alert-for-seconds": "0" })],
+    });
+    await expect(kube.listVeleroSchedules()).resolves.toEqual([
+      expect.objectContaining({ alertForSeconds: 0 }),
+    ]);
+  });
+});
+
 describe("KubernetesClient", () => {
   test("lists nodes with their Ready condition and versions", async () => {
     const { client: kube, requests } = client({

@@ -135,6 +135,19 @@ export function createTemporalWorkerDeployment(
     "temporal-seaweedfs-backup-secret",
     backupCredentialItem.name,
   );
+  const veleroR2AuditItem = new OnePasswordItem(
+    chart,
+    "temporal-velero-r2-audit-1p",
+    {
+      metadata: { name: "temporal-velero-r2-audit" },
+      spec: { itemPath: vaultItemPath("vz3yuhrsci5hkm5yhkpi5ufpzi") },
+    },
+  );
+  const veleroR2AuditSecret = Secret.fromSecretName(
+    chart,
+    "temporal-velero-r2-audit-secret",
+    veleroR2AuditItem.name,
+  );
   const openAiUsageMonitorItem = new OnePasswordItem(
     chart,
     "temporal-openai-usage-monitor-1p",
@@ -340,6 +353,7 @@ export function createTemporalWorkerDeployment(
     freshRssManifestVolume,
     freshRssCredentialVolume,
     backupSecret,
+    veleroR2AuditSecret,
     billingSecret: openAiUsageMonitorSecret,
   });
 

@@ -134,9 +134,16 @@ credential exists (see `requiredEnvironment` in
    `packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts`,
    following the existing `EnvValue.fromSecretValue` entries. Refresh the
    committed vault snapshot (`check:1password`).
-4. The next schedule registration unpauses the schedule; trigger one manual
-   run and confirm `velero_r2_orphan_audit_runs_total{outcome="success"}`
-   increments.
+4. Verify the deployed infra worker references the dedicated secret and all
+   four required fields. Production's control worker does not carry Activity
+   credentials or validate them locally. Schedule registration preserves an
+   existing pause; credential provisioning does not unpause this schedule.
+5. After the credential is deployed and an operator authorizes acceptance,
+   trigger one read-only audit and confirm
+   `velero_r2_orphan_audit_runs_total{outcome="success"}` increments. Compare the
+   reported orphan inventory with an independent inspection, then explicitly
+   unpause the schedule. Do not remove its bootstrap pause as a deployment
+   shortcut or give the audit identity write access.
 
 ## History
 

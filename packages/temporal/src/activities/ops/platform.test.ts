@@ -41,6 +41,82 @@ function alert(
 }
 
 describe("alerts", () => {
+  test("groups only canonical workload identity and keeps active/suppressed distinct", () => {
+    const base = {
+      alertname: "WorkflowFailed",
+      namespace: "temporal",
+      severity: "warning",
+    };
+    const first = alert(
+      {
+        ...base,
+        exported_namespace: "prod",
+        workflowType: "runBackup",
+        task_queue: "infra",
+        workflow_id: "a",
+      },
+      60,
+    );
+    const second = {
+      ...alert(
+        {
+          ...base,
+          temporalNamespace: "prod",
+          workflowType: "runBackup",
+          taskQueue: "infra",
+          workflow_id: "b",
+        },
+        60,
+      ),
+      annotations: {
+        summary: "another execution",
+        description: "different failure",
+      },
+    };
+    const beta = alert(
+      {
+        ...base,
+        temporal_namespace: "beta",
+        workflow_type: "runBackup",
+        taskqueue: "infra",
+      },
+      60,
+    );
+    const vacuum = alert(
+      {
+        ...base,
+        temporal_namespace: "prod",
+        workflow_type: "runVacuum",
+        taskqueue: "home",
+      },
+      60,
+    );
+    const suppressed = {
+      ...first,
+      status: {
+        ...first.status,
+        state: "suppressed" as const,
+        silencedBy: ["s1"],
+      },
+    };
+    const result = mapAlerts(
+      [first, second, beta, vacuum, suppressed],
+      [],
+      context,
+    );
+    expect(result.signals).toHaveLength(4);
+    expect(result.signals[0]).toMatchObject({
+      title: "WorkflowFailed: runBackup (×2)",
+      attributes: { count: 2, temporalNamespace: "prod", taskQueue: "infra" },
+    });
+    expect(
+      result.signals.find(
+        (signal) => signal.attributes?.["state"] === "suppressed",
+      )?.needsMe,
+    ).toBe(false);
+    expect(result.metrics[0]?.value).toBe(5);
+    expect(new Set(result.signals.map((signal) => signal.id)).size).toBe(4);
+  });
   test.each([
     ["critical", "error"],
     ["warning", "warning"],

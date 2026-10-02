@@ -14,5 +14,7 @@ export function pvcProjectedFullExpression(days: number): string {
 ) < ${String(seconds)}
 and on (namespace, persistentvolumeclaim)
 deriv(kubelet_volume_stats_used_bytes[7d]) > 0
-and on (namespace, persistentvolumeclaim) kubelet_volume_stats_used_bytes offset 7d`;
+and on (namespace, persistentvolumeclaim) kubelet_volume_stats_used_bytes offset 7d
+unless on(namespace,persistentvolumeclaim)
+(homelab:prometheus_pvc_forecast_bytes:${String(days)}d <= on(namespace,persistentvolumeclaim) max by(namespace,persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes))`;
 }

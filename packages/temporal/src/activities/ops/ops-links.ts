@@ -1,4 +1,5 @@
 import type { Link } from "@shepherdjerred/ops-model/snapshot.ts";
+import { errorLogQuery } from "@shepherdjerred/ops-clients/loki.ts";
 
 /** Tailnet hosts of the drill-down tools (see the homelab TailscaleIngress hosts). */
 export const GRAFANA_URL = "https://grafana.tailnet-1a49.ts.net";
@@ -85,7 +86,7 @@ export function errorLogsLink(namespace: string): Link {
     label: `Error logs: ${namespace}`,
     url: grafanaExploreUrl({
       datasource: "loki",
-      expr: `{namespace="${namespace}"} |~ "(?i)(error|fatal|panic|exception)"`,
+      expr: errorLogQuery(`namespace=${JSON.stringify(namespace)}`),
     }),
   };
 }

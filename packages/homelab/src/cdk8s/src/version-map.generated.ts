@@ -56,6 +56,7 @@ export const VersionMapSchema = z
     tempo: z.string(),
     pyroscope: z.string(),
     alloy: z.string(),
+    "grafana/grafana-image-renderer": z.string(),
     openebs: z.string(),
     "shepherdjerred/scout-for-lol/beta": z.string(),
     "shepherdjerred/scout-for-lol/prod": z.string(),

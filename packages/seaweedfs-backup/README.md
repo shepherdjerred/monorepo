@@ -13,8 +13,15 @@ marker is published.
 
 Retention keeps 28 six-hourly, 30 Pacific daily, 8 Pacific weekly, and 12
 Pacific monthly recovery points. Garbage collection is two-phase: candidates
-must be unreferenced for 35 days, wait at least seven more days, and remain
-unreferenced after rebuilding the complete retained protection set.
+must be unreferenced for 35 days, belong to a candidate set at least seven days
+old, and remain unreferenced after rebuilding the complete retained protection
+set. The object-lock age and unchanged modification time are checked separately.
+
+Retention and GC accept `BackupMaintenanceHooks` with an `AbortSignal` and
+aggregate progress callback. Cancellation stops subsequent deletes and aborts
+maintenance S3 requests and streaming manifest reads. Buffered candidate-set
+uploads pass that signal to the HTTP request. Temporal sends a heartbeat every
+30 seconds during maintenance I/O and clears it when the Activity exits.
 
 The Temporal worker uses only the backup credentials. Restore credentials are
 separate and available only to the operator CLI.

@@ -6,6 +6,7 @@
   "exports": {
     "./gc": "./src/gc.ts",
     "./manifest": "./src/manifest.ts",
+    "./maintenance": "./src/maintenance.ts",
     "./policy": "./src/policy.ts",
     "./restore": "./src/restore.ts",
     "./retention": "./src/retention.ts",

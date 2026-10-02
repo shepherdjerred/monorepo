@@ -4,10 +4,11 @@ import {
   HeadObjectCommand,
   ListBucketsCommand,
   ListObjectsV2Command,
+  PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
-import { Readable } from "node:stream";
+import { addAbortSignal, Readable } from "node:stream";
 import {
   BackupEnvironmentSchema,
   RestoreEnvironmentSchema,
@@ -37,6 +38,11 @@ export type PutObjectInput = {
 export type GetObjectConditions = {
   etag?: string;
   unmodifiedSince?: Date;
+};
+
+export type ObjectStoreExecution = {
+  signal?: AbortSignal;
+  onProgress?: () => void;
 };
 
 export type ObjectStore = {
@@ -107,10 +113,25 @@ function headersFromOutput(output: {
 }
 
 export class S3ObjectStore implements ObjectStore {
-  public constructor(private readonly client: S3Client) {}
+  public constructor(
+    private readonly client: S3Client,
+    private readonly execution: ObjectStoreExecution = {},
+  ) {}
+
+  private requestOptions(): { abortSignal?: AbortSignal } {
+    this.execution.signal?.throwIfAborted();
+    this.execution.onProgress?.();
+    this.execution.signal?.throwIfAborted();
+    return this.execution.signal === undefined
+      ? {}
+      : { abortSignal: this.execution.signal };
+  }
 
   public async listBuckets(): Promise<string[]> {
-    const response = await this.client.send(new ListBucketsCommand({}));
+    const response = await this.client.send(
+      new ListBucketsCommand({}),
+      this.requestOptions(),
+    );
     return (response.Buckets ?? []).map((bucket) =>
       requiredString(bucket.Name, "bucket name"),
     );
@@ -131,6 +152,7 @@ export class S3ObjectStore implements ObjectStore {
             ? {}
             : { ContinuationToken: continuationToken }),
         }),
+        this.requestOptions(),
       );
       for (const object of response.Contents ?? []) {
         objects.push({
@@ -168,7 +190,9 @@ export class S3ObjectStore implements ObjectStore {
           ? {}
           : { IfUnmodifiedSince: conditions.unmodifiedSince }),
       }),
+      this.requestOptions(),
     );
+    const body = bodyAsReadable(response.Body, bucket, key);
     return {
       key,
       size: response.ContentLength ?? 0,
@@ -180,7 +204,10 @@ export class S3ObjectStore implements ObjectStore {
             `S3 object ${bucket}/${key} has no modification time`,
           );
         })(),
-      body: bodyAsReadable(response.Body, bucket, key),
+      body:
+        this.execution.signal === undefined
+          ? body
+          : addAbortSignal(this.execution.signal, body),
       headers: headersFromOutput(response),
     };
   }
@@ -192,6 +219,7 @@ export class S3ObjectStore implements ObjectStore {
     try {
       const response = await this.client.send(
         new HeadObjectCommand({ Bucket: bucket, Key: key }),
+        this.requestOptions(),
       );
       return {
         key,
@@ -217,44 +245,70 @@ export class S3ObjectStore implements ObjectStore {
   }
 
   public async putObject(input: PutObjectInput): Promise<void> {
+    this.requestOptions();
     const expires =
       input.headers.expires === undefined
         ? undefined
         : new Date(input.headers.expires);
-    await new Upload({
-      client: this.client,
-      leavePartsOnError: false,
-      params: {
-        Bucket: input.bucket,
-        Key: input.key,
-        Body: input.body,
-        ...(input.contentLength === undefined
-          ? {}
-          : { ContentLength: input.contentLength }),
-        ...(input.headers.cacheControl === undefined
-          ? {}
-          : { CacheControl: input.headers.cacheControl }),
-        ...(input.headers.contentDisposition === undefined
-          ? {}
-          : { ContentDisposition: input.headers.contentDisposition }),
-        ...(input.headers.contentEncoding === undefined
-          ? {}
-          : { ContentEncoding: input.headers.contentEncoding }),
-        ...(input.headers.contentLanguage === undefined
-          ? {}
-          : { ContentLanguage: input.headers.contentLanguage }),
-        ...(input.headers.contentType === undefined
-          ? {}
-          : { ContentType: input.headers.contentType }),
-        ...(expires === undefined ? {} : { Expires: expires }),
-        Metadata: input.headers.metadata,
-      },
-    }).done();
+    const params = {
+      Bucket: input.bucket,
+      Key: input.key,
+      Body: input.body,
+      ...(input.contentLength === undefined
+        ? {}
+        : { ContentLength: input.contentLength }),
+      ...(input.headers.cacheControl === undefined
+        ? {}
+        : { CacheControl: input.headers.cacheControl }),
+      ...(input.headers.contentDisposition === undefined
+        ? {}
+        : { ContentDisposition: input.headers.contentDisposition }),
+      ...(input.headers.contentEncoding === undefined
+        ? {}
+        : { ContentEncoding: input.headers.contentEncoding }),
+      ...(input.headers.contentLanguage === undefined
+        ? {}
+        : { ContentLanguage: input.headers.contentLanguage }),
+      ...(input.headers.contentType === undefined
+        ? {}
+        : { ContentType: input.headers.contentType }),
+      ...(expires === undefined ? {} : { Expires: expires }),
+      Metadata: input.headers.metadata,
+    };
+    // Maintenance publishes buffered manifests and candidate sets. Upload's
+    // abortController does not cancel its underlying PutObject HTTP request.
+    if (
+      this.execution.signal !== undefined &&
+      input.body instanceof Uint8Array
+    ) {
+      await this.client.send(
+        new PutObjectCommand(params),
+        this.requestOptions(),
+      );
+      return;
+    }
+    const controller = new AbortController();
+    const cancel = (): void => {
+      controller.abort(this.execution.signal?.reason);
+    };
+    this.execution.signal?.addEventListener("abort", cancel, { once: true });
+    if (this.execution.signal?.aborted === true) cancel();
+    try {
+      await new Upload({
+        client: this.client,
+        abortController: controller,
+        leavePartsOnError: false,
+        params,
+      }).done();
+    } finally {
+      this.execution.signal?.removeEventListener("abort", cancel);
+    }
   }
 
   public async deleteObject(bucket: string, key: string): Promise<void> {
     await this.client.send(
       new DeleteObjectCommand({ Bucket: bucket, Key: key }),
+      this.requestOptions(),
     );
   }
 }
@@ -289,12 +343,14 @@ export function createS3ObjectStore(input: {
   accessKeyId: string;
   secretAccessKey: string;
   region?: string;
+  execution?: ObjectStoreExecution;
 }): ObjectStore {
-  return new S3ObjectStore(createS3Client(input));
+  return new S3ObjectStore(createS3Client(input), input.execution);
 }
 
 export function storesFromEnvironment(
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
+  execution?: ObjectStoreExecution,
 ): { source: ObjectStore; destination: ObjectStore; backupBucket: string } {
   const parsed = BackupEnvironmentSchema.parse(environment);
   return {
@@ -302,12 +358,14 @@ export function storesFromEnvironment(
       endpoint: parsed.SEAWEEDFS_BACKUP_SOURCE_ENDPOINT,
       accessKeyId: parsed.SEAWEEDFS_BACKUP_SOURCE_ACCESS_KEY_ID,
       secretAccessKey: parsed.SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY,
+      ...(execution === undefined ? {} : { execution }),
     }),
     destination: createS3ObjectStore({
       endpoint: parsed.R2_BACKUP_ENDPOINT,
       accessKeyId: parsed.R2_BACKUP_ACCESS_KEY_ID,
       secretAccessKey: parsed.R2_BACKUP_SECRET_ACCESS_KEY,
       region: "auto",
+      ...(execution === undefined ? {} : { execution }),
     }),
     backupBucket: parsed.R2_BACKUP_BUCKET,
   };

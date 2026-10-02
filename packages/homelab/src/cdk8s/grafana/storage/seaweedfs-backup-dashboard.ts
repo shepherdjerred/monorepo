@@ -7,6 +7,18 @@ import { exportDashboardWithHelmEscaping } from "@shepherdjerred/homelab/cdk8s/g
 
 const PROMETHEUS = { type: "prometheus", uid: "Prometheus" };
 
+const SCHEDULE = 'schedule_id=~"seaweedfs-backup-(daily|six-hourly)"';
+const LATEST_OBSERVATION = `temporal_schedule_observation_timestamp_seconds{${SCHEDULE}} == on(temporal_namespace,schedule_id,workflow_type) group_left max by(temporal_namespace,schedule_id,workflow_type) (temporal_schedule_observation_timestamp_seconds{${SCHEDULE}})`;
+const FRESH_SCHEDULE = `(${LATEST_OBSERVATION}) > time() - 1800`;
+const RUNNING = `label_replace(max by(schedule_id) (temporal_schedule_running{${SCHEDULE}} and on(namespace,pod,temporal_namespace,schedule_id,workflow_type) (${FRESH_SCHEDULE}) and on(namespace,pod,temporal_namespace,schedule_id,workflow_type) (temporal_schedule_health_unknown{${SCHEDULE}} == 0)), "cadence", "$1", "schedule_id", "seaweedfs-backup-(daily|six-hourly)")`;
+const WORKER_UP =
+  'max(up{namespace="temporal",service=~".*temporal-infra-worker.*metrics.*"}) == 1';
+const LATEST_STAGE_OBSERVATION =
+  "seaweedfs_backup_stage_observation_timestamp_seconds == on(cadence) group_left max by(cadence) (seaweedfs_backup_stage_observation_timestamp_seconds)";
+const FRESH_STAGE_OWNER = `(${LATEST_STAGE_OBSERVATION}) > time() - 1800 and on(namespace,pod) (up{namespace="temporal",service=~".*temporal-infra-worker.*metrics.*"} == 1)`;
+
+export const SEAWEEDFS_STAGE_QUERY = `((seaweedfs_backup_stage{stage!="complete"} == 1 and on(namespace,pod,cadence) (${FRESH_STAGE_OWNER}) and on(cadence) (${RUNNING} == 1)) or label_replace((${RUNNING} == bool 0) == 1, "stage", "Idle", "cadence", ".*")) and on() (${WORKER_UP})`;
+
 function statPanel(input: {
   title: string;
   description: string;
@@ -80,8 +92,9 @@ export function createSeaweedFsBackupDashboard() {
   builder.withPanel(
     statPanel({
       title: "Current Stage",
-      description: "The active stage has value 1.",
-      expression: "seaweedfs_backup_stage == 1",
+      description:
+        "The newest stage from its live worker, observed within 30 minutes. Idle requires a recent known Temporal Schedule observation and a live infra worker. Missing telemetry remains unknown.",
+      expression: SEAWEEDFS_STAGE_QUERY,
       legend: "{{cadence}} / {{stage}}",
       x: 8,
       y: 0,
@@ -119,10 +132,10 @@ export function createSeaweedFsBackupDashboard() {
     timeSeriesPanel({
       title: "Source vs Protected Storage",
       description:
-        "Latest source inventory and protected manifest bytes by bucket.",
+        "Last observed source inventory and protected manifest bytes by bucket. These are run observations; see Inventory Observed At for freshness.",
       expression:
-        "seaweedfs_backup_source_bytes or seaweedfs_backup_protected_bytes",
-      legend: "{{bucket}} / {{__name__}}",
+        'label_replace(seaweedfs_backup_source_bytes,"measurement","source","bucket",".*") or label_replace(seaweedfs_backup_protected_bytes,"measurement","protected","bucket",".*")',
+      legend: "{{bucket}} / {{measurement}}",
       x: 8,
       y: 5,
       width: 8,
@@ -195,6 +208,19 @@ export function createSeaweedFsBackupDashboard() {
       y: 21,
       width: 12,
       unit: "bytes",
+    }),
+  );
+  builder.withPanel(
+    statPanel({
+      title: "Inventory Observed At",
+      description:
+        "Timestamp of the last successful inventory/manifest measurement. Missing or old measurements are unknown, including zero object/byte gauges.",
+      expression: "seaweedfs_backup_observation_timestamp_seconds * 1000",
+      legend: "{{bucket}} / {{cadence}}",
+      x: 0,
+      y: 29,
+      width: 24,
+      unit: "dateTimeAsIso",
     }),
   );
   return builder.build();

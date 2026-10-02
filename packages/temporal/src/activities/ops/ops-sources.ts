@@ -269,6 +269,8 @@ export async function collectTraces(
 
 export async function collectMaintenance(
   prometheus: PrometheusClient,
+  kubernetes: Pick<KubernetesClient, "listVeleroSchedules">,
+  now: Date,
 ): Promise<OpsCollection> {
   const run = (key: MaintenanceQuery) =>
     prometheus.query(MAINTENANCE_QUERIES[key]);
@@ -281,6 +283,7 @@ export async function collectMaintenance(
     veleroBackups,
     cpu,
     memory,
+    schedules,
   ] = await Promise.all([
     run("certificates"),
     run("probeCertificates"),
@@ -290,17 +293,22 @@ export async function collectMaintenance(
     run("veleroBackups"),
     run("cpu"),
     run("memory"),
+    kubernetes.listVeleroSchedules(),
   ]);
-  return mapMaintenance({
-    certificates,
-    probeCertificates,
-    filesystems,
-    zpools,
-    seaweedfsBackups,
-    veleroBackups,
-    cpu,
-    memory,
-  });
+  return mapMaintenance(
+    {
+      certificates,
+      probeCertificates,
+      filesystems,
+      zpools,
+      seaweedfsBackups,
+      veleroBackups,
+      cpu,
+      memory,
+    },
+    schedules,
+    now,
+  );
 }
 
 export async function collectAi(

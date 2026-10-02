@@ -37,6 +37,7 @@ export const OPS_COLLECTORS: readonly (readonly [SourceId, CollectorName])[] = [
   ["logs", "collectOpsLogs"],
   ["traces", "collectOpsTraces"],
   ["maintenance", "collectOpsMaintenance"],
+  ["temporal", "collectOpsTemporal"],
   ["ai", "collectOpsAi"],
 ];
 
@@ -89,13 +90,18 @@ function failureReason(error: unknown): string {
  * source as not collected, which keeps their replay deterministic.
  */
 export const OPS_TRACES_PATCH = "ops-traces-collector";
+export const OPS_TEMPORAL_PATCH = "ops-temporal-schedules-collector";
 
 export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
   const collectTraces = patched(OPS_TRACES_PATCH);
+  const collectTemporal = patched(OPS_TEMPORAL_PATCH);
   const outcomes = await Promise.all(
     OPS_COLLECTORS.map(
       async ([source, collector]): Promise<OpsCollectorOutcome> => {
-        if (source === "traces" && !collectTraces) {
+        if (
+          (source === "traces" && !collectTraces) ||
+          (source === "temporal" && !collectTemporal)
+        ) {
           return {
             source,
             ok: false,

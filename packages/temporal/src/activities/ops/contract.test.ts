@@ -19,6 +19,7 @@ import { mapLinear } from "./linear.ts";
 import { mapLogs } from "./logs.ts";
 import { mapTraces } from "./traces.ts";
 import { mapMaintenance } from "./maintenance.ts";
+import { mapTemporalSchedules } from "./temporal-schedules.ts";
 import { buildOpsIngest, type OpsCollectorOutcome } from "./ops-publish.ts";
 import type { OpsCollection } from "./ops-types.ts";
 import { mapPostHog, mapProbes } from "./product.ts";
@@ -278,16 +279,43 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
     },
     context,
   ),
-  maintenance: mapMaintenance({
-    certificates: [sample(86_400, { namespace: "postal", name: "smtp" })],
-    probeCertificates: [sample(5 * 86_400, { instance: "https://sjer.red" })],
-    filesystems: [sample(0.95, { instance: "torvalds", mountpoint: "/var" })],
-    zpools: [sample(0.85, { zpool_name: "tank" })],
-    seaweedfsBackups: [sample(48 * 3600, { cadence: "daily" })],
-    veleroBackups: [sample(40 * 3600, { schedule: "nightly" })],
-    cpu: [sample(0.4)],
-    memory: [sample(0.6)],
-  }),
+  maintenance: mapMaintenance(
+    {
+      certificates: [sample(86_400, { namespace: "postal", name: "smtp" })],
+      probeCertificates: [sample(5 * 86_400, { instance: "https://sjer.red" })],
+      filesystems: [sample(0.95, { instance: "torvalds", mountpoint: "/var" })],
+      zpools: [sample(0.85, { zpool_name: "tank" })],
+      seaweedfsBackups: [sample(48 * 3600, { cadence: "daily" })],
+      veleroBackups: [sample(40 * 3600, { schedule: "nightly" })],
+      cpu: [sample(0.4)],
+      memory: [sample(0.6)],
+    },
+    [],
+    now,
+  ),
+  temporal: mapTemporalSchedules(
+    [
+      {
+        namespace: "prod",
+        scheduleId: "nightly",
+        workflowType: "runBackup",
+        taskQueue: "infra",
+        paused: false,
+        observedAt: now.toISOString(),
+        running: false,
+        actions: [
+          {
+            scheduledAt: ago(2),
+            workflowId: "nightly-1",
+            firstExecutionRunId: "r1",
+            status: "FAILED",
+            closedAt: ago(1),
+          },
+        ],
+      },
+    ],
+    context,
+  ),
   ai: mapAi(
     {
       clusterMtd: [sample(200)],

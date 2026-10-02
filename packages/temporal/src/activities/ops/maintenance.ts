@@ -1,10 +1,12 @@
 import type { PrometheusSample } from "@shepherdjerred/ops-clients/prometheus.ts";
+import type { VeleroScheduleStatus } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import type { SignalInput } from "@shepherdjerred/ops-model/snapshot.ts";
 import { metricsLink } from "./ops-links.ts";
 import { metric, type OpsCollection } from "./ops-types.ts";
+import { backupFreshnessSignals } from "./backup-freshness.ts";
 
 const EXCLUDED_FS = 'fstype!~"tmpfs|fuse.lxcfs|squashfs|overlay"';
 
@@ -21,7 +23,7 @@ export const MAINTENANCE_QUERIES = {
     "max by (zpool_name) (1 - zfs_zpool_free_bytes / zfs_zpool_size_bytes)",
   /** Seconds since the last successful SeaweedFS backup per cadence. */
   seaweedfsBackups:
-    "time() - max by (cadence) (seaweedfs_backup_last_success_timestamp_seconds)",
+    "time() - max by (cadence) (max_over_time(seaweedfs_backup_last_success_timestamp_seconds[7d]))",
   /** Seconds since the last successful Velero backup per schedule. */
   veleroBackups:
     'time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})',
@@ -136,34 +138,6 @@ function capacitySignals(samples: MaintenanceSamples): SignalInput[] {
   });
 }
 
-function backupSignals(samples: MaintenanceSamples): SignalInput[] {
-  const backups = [
-    ...samples.seaweedfsBackups.map((sample) => ({
-      name: `SeaweedFS ${label(sample, "cadence")}`,
-      ageSeconds: sample.value,
-      query: "seaweedfs_backup_last_success_timestamp_seconds",
-    })),
-    ...samples.veleroBackups.map((sample) => ({
-      name: `Velero ${label(sample, "schedule")}`,
-      ageSeconds: sample.value,
-      query: 'velero_backup_last_successful_timestamp{schedule!=""}',
-    })),
-  ];
-  return backups
-    .filter((backup) => backup.ageSeconds / 3600 > OPS_POLICY.backupMaxAgeHours)
-    .map((backup) => ({
-      id: `maintenance:backup:${backup.name}`,
-      source: "maintenance",
-      section: "maintenance",
-      kind: "backup",
-      severity: "warning",
-      needsMe: false,
-      title: `${backup.name} backup is ${String(Math.round(backup.ageSeconds / 3600))}h old`,
-      attributes: { ageHours: Math.round(backup.ageSeconds / 3600) },
-      links: [metricsLink("Backup freshness", backup.query, "now-7d")],
-    }));
-}
-
 function scalar(samples: readonly PrometheusSample[]): number | null {
   if (samples.length > 1) {
     throw new Error(`Expected one sample, got ${String(samples.length)}`);
@@ -172,10 +146,25 @@ function scalar(samples: readonly PrometheusSample[]): number | null {
   return value === undefined || !Number.isFinite(value) ? null : value;
 }
 
-export function mapMaintenance(samples: MaintenanceSamples): OpsCollection {
+export function mapMaintenance(
+  samples: MaintenanceSamples,
+  schedules: readonly VeleroScheduleStatus[],
+  now: Date,
+): OpsCollection {
   const certificates = certificateSignals(samples);
   const capacity = capacitySignals(samples);
-  const backups = backupSignals(samples);
+  const backups = backupFreshnessSignals({
+    seaweedfs: samples.seaweedfsBackups,
+    velero: samples.veleroBackups,
+    schedules,
+    now,
+  });
+  const staleBackups = backups.filter(
+    (backup) => backup.severity === "warning" || backup.severity === "error",
+  );
+  const unknownBackups = backups.some(
+    (backup) => backup.severity === "unknown",
+  );
   const ratios = [...samples.filesystems, ...samples.zpools].map(
     (sample) => sample.value,
   );
@@ -205,9 +194,18 @@ export function mapMaintenance(samples: MaintenanceSamples): OpsCollection {
         source: "maintenance",
         id: METRIC_IDS.backupsStale,
         label: "Stale backups",
-        value: backups.length,
+        value:
+          unknownBackups && staleBackups.length === 0
+            ? null
+            : staleBackups.length,
         unit: "count",
-        severity: backups.length > 0 ? "warning" : "ok",
+        severity: staleBackups.some((backup) => backup.severity === "error")
+          ? "error"
+          : staleBackups.length > 0
+            ? "warning"
+            : unknownBackups
+              ? "unknown"
+              : "ok",
       }),
       metric({
         section: "platform",

@@ -10,6 +10,7 @@ import {
   pvcProjectedFullExpression,
 } from "./resource-monitoring-expressions.ts";
 import { getZfsPvcRuleGroup } from "./resource-monitoring-zfs.ts";
+import { getPrometheusStorageForecastRuleGroup } from "./prometheus-storage-forecast.ts";
 
 const NOT_CI_NODE = `node!="${CI_NODE_HOSTNAME}"`;
 const CI_NODE_ONLY = `node="${CI_NODE_HOSTNAME}"`;
@@ -102,6 +103,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
     ...getProductionResourceMonitoringRuleGroups(),
     ...getLiskovResourceMonitoringRuleGroups(),
     getZfsPvcRuleGroup(),
+    getPrometheusStorageForecastRuleGroup(),
 
     {
       name: "resource-network-monitoring",
