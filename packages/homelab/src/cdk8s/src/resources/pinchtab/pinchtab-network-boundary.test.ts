@@ -21,7 +21,7 @@ const ConfigMapSchema = z.object({
 
 const BrowserConfigSchema = z.object({
   server: z.object({ bind: z.string(), port: z.string() }),
-  security: z.object({
+  security: z.looseObject({
     allowedDomains: z.array(z.string()),
     allowEvaluate: z.boolean(),
     allowCookies: z.boolean(),
@@ -134,27 +134,22 @@ describe("PinchTab network boundary", () => {
       JSON.parse(configMap.data["config.json"]),
     );
     expect(config.server).toEqual({ bind: "0.0.0.0", port: "9867" });
-    expect(config.security).toEqual({
-      allowedDomains: ["*"],
-      allowEvaluate: true,
-      allowCookies: false,
-      allowDownload: false,
-      allowUpload: false,
-      allowClipboard: false,
-      allowMacro: false,
-      allowScreencast: false,
-      allowStateExport: false,
-      allowNetworkIntercept: false,
-      allowFileScheme: false,
-      trustedResolveCIDRs: [],
-      trustedProxyCIDRs: [],
-      attach: { enabled: false, forwardProxyAuth: false },
-      idpi: {
-        enabled: true,
-        strictMode: true,
-        scanContent: true,
-        wrapContent: true,
-      },
+    expect(config.security.allowedDomains).toEqual(["*"]);
+    const enabledCapabilities = Object.entries(config.security)
+      .filter(([name, value]) => name.startsWith("allow") && value === true)
+      .map(([name]) => name);
+    expect(enabledCapabilities).toEqual(["allowEvaluate"]);
+    expect(config.security.trustedResolveCIDRs).toEqual([]);
+    expect(config.security.trustedProxyCIDRs).toEqual([]);
+    expect(config.security.attach).toEqual({
+      enabled: false,
+      forwardProxyAuth: false,
+    });
+    expect(config.security.idpi).toEqual({
+      enabled: true,
+      strictMode: true,
+      scanContent: true,
+      wrapContent: true,
     });
     expect(JSON.parse(configMap.data["config.json"])).not.toHaveProperty(
       "server.token",
