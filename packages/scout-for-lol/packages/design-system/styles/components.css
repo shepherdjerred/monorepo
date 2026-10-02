@@ -544,6 +544,9 @@ button.scout-control > span:first-child {
 }
 
 .scout-table-wrap {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   overflow: auto;
 }
@@ -769,7 +772,7 @@ button.scout-control > span:first-child {
   gap: 0.35rem;
 }
 .scout-navbar__utility .scout-button {
-  flex: none;
+  flex: 0 1 auto;
   white-space: nowrap;
 }
 .scout-navbar a:not(.scout-button) {
@@ -824,6 +827,21 @@ button.scout-control > span:first-child {
 .scout-app-header .scout-container {
   max-width: none;
 }
+.scout-app-header .scout-navbar__utility {
+  min-width: 0;
+}
+@media (max-width: 479px) {
+  .scout-app-header__docs {
+    display: none;
+  }
+  .scout-app-header .scout-navbar__inner {
+    gap: 0.25rem;
+  }
+}
+.scout-app-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
 .scout-app-stage,
 .scout-app-content {
   min-width: 0;
@@ -858,9 +876,9 @@ button.scout-control > span:first-child {
 .scout-sidebar-resizer {
   position: absolute;
   top: 0;
-  right: -4px;
+  right: -12px;
   bottom: 0;
-  width: 8px;
+  width: 24px;
   cursor: col-resize;
   user-select: none;
   touch-action: none;
@@ -874,7 +892,7 @@ button.scout-control > span:first-child {
   position: absolute;
   top: 0;
   bottom: 0;
-  right: 3px;
+  right: 11px;
   width: 2px;
   background: transparent;
   transition: background-color 0.15s ease;

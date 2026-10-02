@@ -78,7 +78,7 @@ export function buildRoleMatchups(options: {
       blueParticipantId: blueParticipant.participant_id,
       redParticipantId: redParticipant.participant_id,
       at15: {
-        timestampMs: LANE_DELTA_TIMESTAMP_MS,
+        timestampMs: blueFrame.frame_timestamp_ms,
         goldDelta: blueFrame.total_gold - redFrame.total_gold,
         creepScoreDelta:
           blueFrame.minions_killed +

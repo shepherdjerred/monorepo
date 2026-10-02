@@ -323,6 +323,7 @@ export type TimelineFrameRead = Omit<
 
 const LaneDeltaFrameSchema = z.object({
   participant_id: LakeIntSchema,
+  frame_timestamp_ms: LakeIntSchema,
   total_gold: LakeIntSchema,
   minions_killed: LakeIntSchema,
   jungle_minions_killed: LakeIntSchema,
@@ -347,7 +348,7 @@ export async function fetchTimelineFramesAtIndex(options: {
       return await runSource({
         source,
         sql:
-          `SELECT participant_id, total_gold, minions_killed, jungle_minions_killed, xp ` +
+          `SELECT participant_id, frame_timestamp_ms, total_gold, minions_killed, jungle_minions_killed, xp ` +
           `FROM (${source.sql}) ORDER BY participant_id`,
         schema: LaneDeltaFrameSchema,
       });
@@ -358,6 +359,31 @@ export async function fetchTimelineFramesAtIndex(options: {
 const TIMELINE_FRAME_COLUMNS = Object.keys(TimelineFrameReadSchema.shape).join(
   ", ",
 );
+
+export async function fetchTimelineFramesAtTime(options: {
+  matchId: string;
+  timestampMs: number;
+  lakeDir?: string;
+}) {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildTimelineParticipantFramesSource(files, {
+        sql: "match_id = ? AND frame_timestamp_ms <= ?",
+        params: [
+          scalarParam(options.matchId),
+          scalarParam(options.timestampMs),
+        ],
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql: `SELECT ${Object.keys(LaneDeltaFrameSchema.shape).join(", ")} FROM (${source.sql}) QUALIFY frame_timestamp_ms = max(frame_timestamp_ms) OVER () ORDER BY participant_id`,
+        schema: LaneDeltaFrameSchema,
+      });
+    },
+  );
+}
 
 export async function fetchTimelineFramePage(options: {
   matchId: string;

@@ -25,6 +25,7 @@ interface Props {
   showGradient?: boolean;
   size?: "home" | "page";
   ctaButtons?: HeroCtaButton[];
+  imageSrc?: string;
 }
 
 const {
@@ -33,6 +34,7 @@ const {
   showGradient = true,
   size = "page",
   ctaButtons = [],
+  imageSrc,
 } = Astro.props;
 ---
 
@@ -58,12 +60,14 @@ const {
 
   <div
     class:list={[
-      "mx-auto max-w-2xl",
+      imageSrc === undefined
+        ? "mx-auto max-w-2xl"
+        : "mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-2",
       size === "home" ? "py-12 sm:py-16" : "py-16 sm:py-20",
     ]}
   >
-    <div class="text-center">
-      <h1 class="text-balance text-5xl font-semibold tracking-tight text-scout-ink sm:text-7xl">
+    <div class:list={["text-center", imageSrc !== undefined && "lg:text-left"]}>
+      <h1 class="text-balance text-4xl font-semibold tracking-tight text-scout-ink sm:text-6xl">
         {title}
       </h1>
       {subtitle && (
@@ -116,5 +120,15 @@ const {
         </div>
       )}
     </div>
+    {imageSrc !== undefined && (
+      <img
+        src={imageSrc}
+        alt="Scout match recap with player builds, ranks, and team stats"
+        width="1200"
+        height="800"
+        class="w-full rounded-xl border border-scout-border shadow-xl"
+        fetchpriority="high"
+      />
+    )}
   </div>
 </div>

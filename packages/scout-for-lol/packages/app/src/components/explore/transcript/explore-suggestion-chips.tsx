@@ -61,15 +61,16 @@ export function ExploreSuggestionChips(props: {
     pickDiverseSuggestions(
       EXPLORE_SUGGESTIONS,
       {},
-      { count: 4, exclude: [PERSISTENT_EXPLORE_SUGGESTION] },
+      { count: 4, exclude: [PERSISTENT_EXPLORE_SUGGESTION], random: () => 0 },
     ),
   );
 
   useEffect(() => {
-    setSuggestionChips((prev) =>
+    setSuggestionChips(
       pickDiverseSuggestions(EXPLORE_SUGGESTIONS, featureContext, {
         count: 4,
-        exclude: [PERSISTENT_EXPLORE_SUGGESTION, ...prev],
+        exclude: [PERSISTENT_EXPLORE_SUGGESTION],
+        random: () => 0,
       }),
     );
   }, [featureContext]);
@@ -84,11 +85,10 @@ export function ExploreSuggestionChips(props: {
   }, [featureContext]);
 
   return (
-    <div className="space-y-3 rounded-lg border border-dashed p-6">
+    <div className="space-y-3 py-4">
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm">
-          Ask about champions, queues, positions, patches, or players across
-          every match Scout has ingested.
+          Ask about your players, champions, or matches.
         </p>
         <Button
           type="button"

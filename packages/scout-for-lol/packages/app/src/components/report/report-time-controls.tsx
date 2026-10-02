@@ -332,7 +332,7 @@ export function ReportTimeControls(props: {
         </label>
 
         <label className="space-y-1 text-xs">
-          <span className="font-medium">Bucket</span>
+          <span className="font-medium">Group by</span>
           <select
             className={SELECT_CLASS}
             value={spec.bucket ?? "none"}
@@ -340,7 +340,7 @@ export function ReportTimeControls(props: {
               update(withBucket(spec, parseBucketChoice(event.target.value)));
             }}
           >
-            <option value="none">No bucket</option>
+            <option value="none">Entire period</option>
             <option value="day">Day</option>
             <option value="week">Week</option>
             <option value="month">Month</option>
@@ -402,7 +402,7 @@ export function ReportTimeControls(props: {
           </select>
           {!zoneEnabled && (
             <span className="block text-scout-subtle">
-              Applies to custom dates and day/week/month buckets.
+              Used for custom dates and daily, weekly, or monthly results.
             </span>
           )}
         </label>
@@ -423,14 +423,14 @@ export function ReportTimeControls(props: {
 
       {!compareAvailable(spec) && (
         <p className="text-xs text-scout-subtle">
-          Comparison needs a bounded period and a bucket (day, week, month, or
-          patch) to line the two periods up.
+          To compare periods, choose a date range and group by day, week, month,
+          or patch.
         </p>
       )}
 
       {spec.window.kind === "all-history" && (
         <p className="text-xs text-scout-subtle">
-          Every ingested game is included. Pick a period to bound the report.
+          All recorded games. Choose a period to narrow the report.
         </p>
       )}
     </fieldset>

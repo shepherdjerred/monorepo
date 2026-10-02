@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as echarts from "echarts";
+import { useScoutTheme } from "@scout-for-lol/design-system/runtime";
+import { scoutThemes } from "@scout-for-lol/design-system/themes";
 import {
   VISUALIZATION_BODY_FONT,
   VISUALIZATION_DISPLAY_FONT,
@@ -38,13 +40,34 @@ export function ProfileEchartsHost(props: {
   option: echarts.EChartsOption;
   revision: unknown;
 }) {
+  const theme = useScoutTheme();
+  const themeKey = `${theme.preference.skin}-${theme.resolvedMode}` as const;
   const container = useRef<HTMLDivElement | null>(null);
   const optionRef = useRef(props.option);
   optionRef.current = props.option;
 
   useEffect(() => {
     if (container.current === null) return;
-    const chart = echarts.init(container.current);
+    const colors = scoutThemes[themeKey].colors;
+    const axis = {
+      axisLabel: { color: colors.textMuted },
+      axisLine: { lineStyle: { color: colors.border } },
+      splitLine: { lineStyle: { color: colors.border } },
+      nameTextStyle: { color: colors.textMuted },
+    };
+    const chart = echarts.init(container.current, {
+      textStyle: { color: colors.text },
+      title: { textStyle: { color: colors.text } },
+      legend: { textStyle: { color: colors.text } },
+      categoryAxis: axis,
+      valueAxis: axis,
+      timeAxis: axis,
+      tooltip: {
+        backgroundColor: colors.surface,
+        textStyle: { color: colors.text },
+        borderColor: colors.border,
+      },
+    });
     chart.setOption(optionRef.current);
     const observer = new ResizeObserver(() => {
       chart.resize();
@@ -54,7 +77,7 @@ export function ProfileEchartsHost(props: {
       observer.disconnect();
       chart.dispose();
     };
-  }, [props.revision, props.title]);
+  }, [props.revision, props.title, themeKey]);
 
   return (
     <div

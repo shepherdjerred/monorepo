@@ -1,3 +1,4 @@
+import { matchQueueLabel } from "#src/lib/player/match-review.ts";
 import {
   computeKda,
   divisionToString,
@@ -39,13 +40,13 @@ function formatRelative(epochMs: number): string {
 export function RankCard(props: { label: string; rank: Rank | undefined }) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {props.label}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <RankValue rank={props.rank} />
+      <CardContent className="p-4 pt-0">
+        <RankValue rank={props.rank} compact />
       </CardContent>
     </Card>
   );
@@ -203,7 +204,7 @@ export function PlayerSummaryCards(props: {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {props.ranks.solo !== undefined && (
         <RankCard label="Ranked solo/duo" rank={props.ranks.solo} />
       )}
@@ -215,7 +216,7 @@ export function PlayerSummaryCards(props: {
       )}
       {props.recentForm !== null && (
         <RecentFormCard
-          className={rankCount <= 2 ? "sm:col-span-2" : undefined}
+          className={rankCount <= 2 ? "col-span-2" : "col-span-2 lg:col-span-1"}
           form={props.recentForm}
         />
       )}
@@ -264,7 +265,7 @@ function LeaguePointsBadge(props: { delta: number | null }) {
     <span
       className={
         positive
-          ? "text-xs font-medium text-emerald-600 dark:text-emerald-400"
+          ? "text-xs font-medium text-scout-success"
           : "text-xs font-medium text-red-600 dark:text-red-400"
       }
     >
@@ -311,7 +312,7 @@ export function MatchHistoryList(props: {
                 )
               ) : (
                 <Link
-                  className="underline-offset-4 hover:underline"
+                  className="underline underline-offset-4"
                   to={`/players/${props.playerId.toString()}/matches/${encodeURIComponent(entry.matchId)}${props.profileSearch}`}
                 >
                   {entry.placement !== undefined && entry.placement !== null
@@ -323,7 +324,7 @@ export function MatchHistoryList(props: {
               )}
             </p>
             <p className="text-xs text-scout-ink">
-              {entry.queue ?? "Unknown queue"} ·{" "}
+              {matchQueueLabel(entry.queue)} ·{" "}
               {Math.round(entry.gameDurationSeconds / 60).toString()}m ·{" "}
               {formatRelative(entry.gameCreationMs)}
             </p>
@@ -352,6 +353,15 @@ export function MatchHistoryList(props: {
               {formatPercent(entry.killParticipation)} KP
             </p>
           </div>
+          {props.playerId !== undefined && (
+            <Link
+              className="ml-auto rounded-md border border-current px-3 py-2 text-sm font-medium text-scout-ink hover:bg-muted"
+              aria-label={`View match: ${entry.championName} on ${new Date(entry.gameCreationMs).toLocaleDateString()}`}
+              to={`/players/${props.playerId.toString()}/matches/${encodeURIComponent(entry.matchId)}${props.profileSearch}`}
+            >
+              View match →
+            </Link>
+          )}
           {entry.loadout !== undefined && (
             <div className="overflow-x-auto py-1">
               <MatchLoadoutDisplay loadout={entry.loadout} />

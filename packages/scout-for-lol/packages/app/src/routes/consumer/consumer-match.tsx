@@ -2,7 +2,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { matchQueueLabel } from "#src/lib/player/match-review.ts";
 import { ArenaSubteams } from "#src/components/match/match-arena-subteams.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -12,17 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import {
-  MatchScoreboards,
-  RolePairedMatchScoreboard,
-} from "#src/components/match/match-scoreboard.tsx";
-import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
-import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
+import { MatchReview } from "#src/components/match/match-review.tsx";
 import { track } from "#src/lib/analytics.ts";
-import {
-  parsePlayerProfileFilters,
-  playerProfileSearch,
-} from "#src/lib/player/player-profile-filters.ts";
 import { useConsumerMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
@@ -33,12 +24,15 @@ function duration(seconds: number): string {
 export function ConsumerMatch() {
   const { playerId, matchId } = useConsumerMatchParams();
   const [searchParams] = useSearchParams();
-  const profileSearch = playerProfileSearch(
-    parsePlayerProfileFilters(searchParams),
-  );
+  const profileParams = new URLSearchParams(searchParams);
+  profileParams.delete("view");
+  const profileSearch = `?${profileParams.toString()}`;
   const trpc = useTRPC();
   const detail = useQuery(
-    trpc.consumerMatch.detail.queryOptions({ playerId, matchId }),
+    trpc.consumerMatch.detail.queryOptions(
+      { playerId, matchId },
+      { staleTime: 0, gcTime: 0, refetchOnMount: "always" },
+    ),
   );
   const tally = useQuery(trpc.mvpVotes.matchTally.queryOptions({ matchId }));
   const tallyValue = Loaded.strict(
@@ -81,8 +75,7 @@ export function ConsumerMatch() {
           <CardHeader>
             <CardTitle>Match unavailable</CardTitle>
             <CardDescription>
-              The selected accessible Scout player did not participate in this
-              match, or Scout could not reverify your current server access.
+              This match is unavailable. Check your server access and try again.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex gap-2">
@@ -99,16 +92,13 @@ export function ConsumerMatch() {
   }
 
   const match = detailValue.data.match;
-  const participantIds = match.teams.flatMap((team) =>
-    team.participants.map((participant) => participant.participantId),
-  );
   return (
     <PageShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-primary">Recorded match</p>
           <h1 className="text-3xl font-semibold tracking-tight">
-            {match.queue ?? `Queue ${match.queueId.toString()}`}
+            {matchQueueLabel(match.queue)}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-scout-subtle">
             <span>{new Date(match.gameCreationMs).toLocaleString()}</span>
@@ -116,7 +106,8 @@ export function ConsumerMatch() {
             <span>{duration(match.gameDurationSeconds)}</span>
             <span>·</span>
             <span>Patch {match.gameVersion}</span>
-            <Badge variant="outline">Map {match.mapId.toString()}</Badge>
+            {match.mapId === 11 && <span>Summoner’s Rift</span>}
+            {match.mapId === 12 && <span>Howling Abyss</span>}
           </div>
         </div>
         <Button asChild variant="outline">
@@ -126,36 +117,16 @@ export function ConsumerMatch() {
         </Button>
       </div>
 
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-2xl font-semibold">Team scoreboards</h2>
-          <p className="text-sm text-scout-subtle">
-            All public Riot match participants are shown. Scout aliases appear
-            only from your currently accessible guilds.
-          </p>
-        </div>
-        {match.arenaSubteams !== null && match.arenaSubteams.length > 0 ? (
-          <ArenaSubteams subteams={match.arenaSubteams} />
-        ) : match.roleMatchups === null ? (
-          <MatchScoreboards teams={match.teams} showLoadout />
-        ) : (
-          <RolePairedMatchScoreboard
-            teams={match.teams}
-            matchups={match.roleMatchups}
-          />
-        )}
-      </section>
-
-      {tallyValue.status === "done" && tallyValue.data !== null && (
-        <MatchMvpTally tally={tallyValue.data} />
-      )}
-
-      <MatchTimeline
+      <MatchReview
         source={{ kind: "consumer", playerId }}
         matchId={matchId}
-        coverage={detailValue.data.timeline.coverage}
-        keyEvents={detailValue.data.timeline.keyEvents}
-        participantIds={participantIds}
+        match={match}
+        tally={tallyValue.status === "done" ? tallyValue.data : null}
+        arena={
+          match.arenaSubteams !== null && match.arenaSubteams.length > 0 ? (
+            <ArenaSubteams subteams={match.arenaSubteams} />
+          ) : undefined
+        }
       />
     </PageShell>
   );

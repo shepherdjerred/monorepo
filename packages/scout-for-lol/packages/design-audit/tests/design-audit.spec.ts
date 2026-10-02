@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { signInForAudit } from "#src/auth.ts";
+import { isExpectedNavigationProbe } from "#src/browser-errors.ts";
 import { themes } from "#src/constants.ts";
 import { assertInteractiveStates } from "#src/interactive-checks.ts";
 import { assertKeyboardFocus } from "#src/keyboard-checks.ts";
@@ -79,6 +80,12 @@ for (const theme of themes) {
         });
         page.on("console", (message) => {
           if (message.type() === "error") {
+            const status = /\b(403|404)\b/.exec(message.text())?.[1];
+            if (
+              status !== undefined &&
+              isExpectedNavigationProbe(message.location().url, Number(status))
+            )
+              return;
             browserErrors.push(message.text());
           }
         });
@@ -97,6 +104,8 @@ for (const theme of themes) {
           }
         });
         page.on("response", (response) => {
+          if (isExpectedNavigationProbe(response.url(), response.status()))
+            return;
           if (
             response.status() >= 400 &&
             response.url().startsWith(new URL(routeUrl(route)).origin)

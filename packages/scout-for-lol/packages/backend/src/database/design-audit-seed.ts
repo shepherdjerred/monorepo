@@ -13,6 +13,10 @@ import {
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
+import {
+  designAuditMatchFixtures,
+  designAuditHistoryFixtures,
+} from "#src/database/design-audit-match-fixture.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 
 const DEFAULT_GUILD_ID = "1337623164146155593";
@@ -291,9 +295,20 @@ export async function seedDesignAuditDatabase(
     });
 
     await resetTestLake(lakeDir);
+    const review = designAuditMatchFixtures(player.id);
     await writeTestLake(lakeDir, {
       serverId: guildId,
+      timelineFrames: review.timelineFrames,
+      timelineEvents: review.timelineEvents,
+      timelineCoverage: review.timelineCoverage,
+      timelineEventParticipants: review.timelineEventParticipants,
       matchFacts: [
+        ...designAuditHistoryFixtures({
+          playerId: player.id,
+          playerAlias,
+          puuid,
+          discordId,
+        }),
         {
           playerId: player.id,
           playerAlias,
@@ -325,6 +340,7 @@ export async function seedDesignAuditDatabase(
           championId: 40,
           championName: "Janna",
           gameCreationAt: new Date("2025-12-30T18:00:00.000Z"),
+          gameDurationSeconds: 600,
         },
         {
           playerId: player.id,
@@ -360,6 +376,7 @@ export async function seedDesignAuditDatabase(
         },
       ],
       untrackedMatchFacts: [
+        ...review.extra,
         {
           playerId: 901,
           playerAlias: "Teammate One",
@@ -387,6 +404,7 @@ export async function seedDesignAuditDatabase(
           assists: 9,
           teamId: 200,
           gameCreationAt: new Date("2025-12-30T18:00:00.000Z"),
+          gameDurationSeconds: 600,
         },
         {
           playerId: 903,

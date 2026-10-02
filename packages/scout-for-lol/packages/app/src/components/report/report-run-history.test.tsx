@@ -30,7 +30,7 @@ describe("ReportRunHistory", () => {
       />,
     );
 
-    expect(markup).toContain("ScoutQL snapshot");
+    expect(markup).toContain("Query used");
     expect(markup).toContain(querySnapshot);
   });
 });

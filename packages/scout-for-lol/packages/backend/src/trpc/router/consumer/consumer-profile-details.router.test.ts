@@ -19,6 +19,7 @@ import {
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import { designAuditMatchFixtures } from "#src/database/design-audit-match-fixture.ts";
 
 const guildOne = DiscordGuildIdSchema.parse("100000000000000061");
 const guildTwo = DiscordGuildIdSchema.parse("100000000000000062");
@@ -120,6 +121,57 @@ registerConsumerProfileFeatureTestLifecycle({
   cleanup: async () => {
     await trpc.prisma.$disconnect();
   },
+});
+
+describe("consumerMatch.reviewTimeline", () => {
+  test("returns every key event and slim frames only after player authorization", async () => {
+    const puuid = testPuuid("review-timeline");
+    const launch = await player({
+      guildId: guildOne,
+      alias: "Reviewer",
+      puuid,
+    });
+    const review = designAuditMatchFixtures(launch.id);
+    await writeTestLake(lakeDir, {
+      serverId: guildOne,
+      matchFacts: [
+        fact({
+          playerId: launch.id,
+          alias: launch.alias,
+          puuid,
+          matchId: "design-audit-match-1",
+          win: true,
+        }),
+      ],
+      timelineFrames: review.timelineFrames,
+      timelineEvents: review.timelineEvents,
+      timelineCoverage: review.timelineCoverage,
+      timelineEventParticipants: review.timelineEventParticipants,
+    });
+    const caller = trpc.authedCaller();
+    const result = await caller.consumerMatch.reviewTimeline({
+      playerId: launch.id,
+      matchId: "design-audit-match-1",
+    });
+    expect(result.events).toHaveLength(60);
+    expect(result.frames).toHaveLength(310);
+    expect(result.events.at(-1)?.type).toBe("GAME_END");
+    expect(result.frames[0]).not.toHaveProperty("puuid");
+    expect(result.events[0]?.participantIds).toContain(launch.id);
+    await expect(
+      caller.consumerMatch.reviewTimeline({
+        playerId: launch.id,
+        matchId: "design-audit-match-2",
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    trpc.setMembership([]);
+    await expect(
+      caller.consumerMatch.reviewTimeline({
+        playerId: launch.id,
+        matchId: "design-audit-match-1",
+      }),
+    ).rejects.toBeDefined();
+  });
 });
 
 describe("consumerChampion.compare", () => {
@@ -462,6 +514,7 @@ function matchupFrame(
   xp: number,
 ): LaneDeltaFrame {
   return {
+    frame_timestamp_ms: 900_000,
     participant_id: participantId,
     total_gold: totalGold,
     minions_killed: creepScore,
