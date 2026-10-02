@@ -73,10 +73,20 @@ export function watchVault(
   let maxWaitTimer: ReturnType<typeof setTimeout> | null = null;
   let rearmTimer: ReturnType<typeof setTimeout> | null = null;
 
+  function isClosed(): boolean {
+    // User callbacks can close the watcher synchronously.
+    return closed;
+  }
+
   function scheduleRearm(): void {
+    if (closed) return;
     rearmTimer ??= setTimeout(() => {
       rearmTimer = null;
-      arm();
+      if (arm()) {
+        // Include changes after the error rescan, while no watch was armed.
+        needsFullRescan = true;
+        schedule();
+      }
     }, rearmDelayMs);
   }
 
@@ -98,8 +108,8 @@ export function watchVault(
     maxWaitTimer ??= setTimeout(flush, maxWaitMs);
   }
 
-  function arm(): void {
-    if (closed) return;
+  function arm(): boolean {
+    if (closed) return false;
     try {
       watcher = watchSource(
         vaultPath,
@@ -122,6 +132,7 @@ export function watchVault(
         (error) => {
           if (closed) return;
           events.onError?.(error);
+          if (isClosed()) return;
           watcher?.close();
           watcher = null;
           // The watch itself may have missed events while broken.
@@ -130,9 +141,12 @@ export function watchVault(
           scheduleRearm();
         },
       );
+      return true;
     } catch (error) {
       events.onError?.(error);
+      if (isClosed()) return false;
       scheduleRearm();
+      return false;
     }
   }
 

@@ -13,8 +13,11 @@ Vacuum start verification reads Home Assistant recorder history after each start
 request. Short cleaning transitions count as starts even when delayed state
 polling sees the vacuum docked again. A witnessed start followed by logbook
 `vacuum.return_to_base` context records `interrupted/commanded-return` in the
-Workflow memo and outcome metric. It never restarts the vacuum automatically or
-infers who sent the command. Missing starts and unexplained stops remain failures.
+Workflow memo and outcome metric. The interruption alert is informational:
+active, unsilenced and uninhibited alerts appear in the ops snapshot, while
+Alertmanager routes them to the null receiver without paging or webhook-ledger
+delivery. It never restarts the vacuum automatically or infers who sent the
+command. Missing starts and unexplained stops remain failures.
 Retained histories use the pre-history verification branch through a Temporal
 patch marker.
 
