@@ -4,6 +4,9 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+
+const MAX_TRACE_BYTES = 50_000_000;
 
 /**
  * Creates Grafana Tempo for distributed tracing.
@@ -13,6 +16,54 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 export function createTempoApp(chart: Chart) {
   // Tempo values - SingleBinary mode with OTLP receiver enabled
   const tempoValues: HelmValuesForChart<"tempo"> = {
+    // This chart exposes distributor settings through its configuration template.
+    // Keep attributes whole within the existing trace cap: Tempo's default 2KiB
+    // truncation cuts JSON messages and vectors into invalid, incomplete bodies.
+    config: escapeHelmGoTemplate(`
+memberlist:
+  cluster_label: "{{ .Release.Name }}.{{ .Release.Namespace }}"
+multitenancy_enabled: {{ .Values.tempo.multitenancyEnabled }}
+usage_report:
+  reporting_enabled: {{ .Values.tempo.reportingEnabled }}
+compactor:
+  compaction:
+    block_retention: {{ .Values.tempo.retention }}
+distributor:
+  max_attribute_bytes: ${MAX_TRACE_BYTES.toString()}
+  receivers:
+    {{- toYaml .Values.tempo.receivers | nindent 4 }}
+ingester:
+  {{- toYaml .Values.tempo.ingester | nindent 2 }}
+server:
+  {{- toYaml .Values.tempo.server | nindent 2 }}
+storage:
+  {{- toYaml .Values.tempo.storage | nindent 2 }}
+querier:
+  {{- toYaml .Values.tempo.querier | nindent 2 }}
+query_frontend:
+  {{- toYaml .Values.tempo.queryFrontend | nindent 2 }}
+overrides:
+  {{- toYaml .Values.tempo.overrides | nindent 2 }}
+{{- if .Values.tempo.metricsGenerator.enabled }}
+metrics_generator:
+  processor:
+    {{- toYaml .Values.tempo.metricsGenerator.processor | nindent 4 }}
+  {{- if .Values.tempo.metricsGenerator.registry }}
+  registry:
+    {{- toYaml .Values.tempo.metricsGenerator.registry | nindent 4 }}
+  {{- end }}
+  storage:
+    path: {{ .Values.tempo.metricsGenerator.storage.path | quote }}
+    remote_write:
+      {{- if .Values.tempo.metricsGenerator.storage.remote_write }}
+      {{- toYaml .Values.tempo.metricsGenerator.storage.remote_write | nindent 6 }}
+      {{- else }}
+      - url: {{ .Values.tempo.metricsGenerator.remoteWriteUrl }}
+      {{- end }}
+  traces_storage:
+    path: {{ .Values.tempo.metricsGenerator.traces_storage.path | quote }}
+{{- end }}
+`),
     tempo: {
       // Enable OTLP receivers for trace ingestion
       receivers: {
@@ -35,7 +86,7 @@ export function createTempoApp(chart: Chart) {
       overrides: {
         defaults: {
           global: {
-            max_bytes_per_trace: 50_000_000, // 50MB
+            max_bytes_per_trace: MAX_TRACE_BYTES, // 50MB
           },
           // Per-tenant list of metrics-generator processors to run. Without this
           // the generator pod runs but processes nothing — required for the
