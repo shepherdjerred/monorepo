@@ -2,14 +2,14 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "buildNumber": 1003842,
-      "version": "2.0.0-1003842",
-      "digest": "sha256:68e5b7d4dea78ccc19d874a3735358586697aaa58cb8948aeb19c75be6101ef6"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:43f1fc2c6be96e4ae6bef45dd1f5b49b08b823502aaba2958699ca0fae8408bd"
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 1003842,
-      "version": "2.0.0-1003842",
-      "digest": "sha256:97ef1cc01616e2d0204014489de4abc7d2c9fced1e06a70c21058872764960f0"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:24b0c0b905fd690b72baca1e698c214d1614ab0a4b8c85914f9beb9d3911c7fe"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-16936",
@@ -37,9 +37,9 @@
       "buildNumber": 16936
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 1003896,
-      "version": "2.0.0-1003896",
-      "digest": "sha256:1ba6300479d60f900745659e24f4709b62d337e2ffa45e5e0dfe71b1cb7a323d"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:62765f6d6b0a6df590daa0e06d5d531d05a0815061795a0f52455a680e8a0351"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "buildNumber": 1003787,
@@ -54,29 +54,35 @@
       "buildNumber": 1003507
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "buildNumber": 1003842,
-      "version": "2.0.0-1003842",
-      "digest": "sha256:1a136a1ae49e75ef1b13f5104978e446b0f448eb9e495d263942a01e4ac91412"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:a9c2c0b958668230ac7e22ce2740a1680261359e072c4e202b4f6363773b2b56"
     },
     "shepherdjerred/storm-brain": {
-      "buildNumber": 1003842,
-      "version": "2.0.0-1003842",
-      "digest": "sha256:d871d39e1b3b2801b585a872dd85526c51fe3020201c269906c4529836b39455"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:c7777e0e9c17a4ff0e73a22ed195038d52dc67d336c738b013111d28177323f0"
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 1003842,
-      "version": "2.0.0-1003842",
-      "digest": "sha256:b5f13d86136bb5661d4975745606344c3e0551461a87324fdc8e41661eb26562"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:1d28c203a2e59a4b93bf99cc295d1d218b86e3599a42f680f3be0539f4b68bc4"
     },
     "shepherdjerred/tasknotes-server": {
-      "version": "2.0.0-1003676",
-      "digest": "sha256:5b7837bcb66fc2306dde60b0029cdf0611b3fc6a03d73d01a1598144599c3486",
-      "buildNumber": 1003676
+      "version": "2.0.0-1003936",
+      "digest": "sha256:f86e698a92f301947a7fc92a4e5432c4e645c9b952a39981f0ddc301000bd336",
+      "buildNumber": 1003936
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1003896,
-      "version": "2.0.0-1003896",
-      "digest": "sha256:d40778b3a545d2e83e5aaaa0b96dfaba72d9121e115cfa42acb6dd6328c8fe61"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:af16329edd7eaf5d65bb7e09adf8b6dbf2bf00bc5813b900195d1eb0cbc6fb80"
+    },
+    "shepherdjerred/temporal-worker/workflows/candidate": {
+      "version": "2.0.0-1003936",
+      "digest": "sha256:af16329edd7eaf5d65bb7e09adf8b6dbf2bf00bc5813b900195d1eb0cbc6fb80",
+      "gitSha": "3a1af73ea4b5fe0df2a47f798c1844ced1fef418",
+      "buildNumber": 1003936
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
       "version": "2.0.0-1002817",
@@ -89,9 +95,9 @@
       "digest": "sha256:dbf27b3302394f9db52ac0f600f0d14cef103cb4a0098ae1e3f9193ce71fceef"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 1003842,
-      "version": "2.0.0-1003842",
-      "digest": "sha256:2a248284c0dcf665ee71d4f54888e072d04482d56ff31f6672ddb81be3369fed"
+      "buildNumber": 1003936,
+      "version": "2.0.0-1003936",
+      "digest": "sha256:4e32f170f51785a5f5761ba0e82833c83434f2c1f33d649db18ccff5a92d6be9"
     },
     "shepherdjerred/woodpecker-config-extension": {
       "version": "2.0.0-1003676",
