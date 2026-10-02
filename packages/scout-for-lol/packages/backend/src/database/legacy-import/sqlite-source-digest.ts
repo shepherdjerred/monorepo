@@ -56,6 +56,10 @@ function digestLegacySqlite(
   const db = new Database(sqlitePath, { readonly: true, safeIntegers: true });
   const hasher = new Bun.CryptoHasher("sha256");
   try {
+    // Split roles validate the same retained snapshot at boot. SQLite briefly
+    // locks it while recovering its WAL; wait for that reader to finish before
+    // reading the schema. A persistent lock or invalid snapshot still fails.
+    db.run("PRAGMA busy_timeout = 5000");
     const schemaRows: unknown = db
       .query(
         "SELECT name, sql FROM sqlite_master WHERE type = 'table' ORDER BY name",
