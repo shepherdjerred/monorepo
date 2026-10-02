@@ -1,4 +1,9 @@
-import { MatchIdSchema } from "@scout-for-lol/data";
+import {
+  MatchIdSchema,
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
+import { prepareNotificationPresentation } from "#src/temporal/v2/notification/notification-presentation.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   ScoutNotificationRenderV2ResultSchema,
@@ -158,13 +163,19 @@ async function attestNotificationArtifact(
   riotMatchId: RiotMatchId,
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
   evidence: ScoutV2NotificationRenderEvidence,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<ScoutDurableCommitV2> {
   return durableCommitV2(
     await recordReceipt(
       prisma,
       buildReceipt({
         matchId: riotMatchId,
-        kind: scoutV2NotificationRenderReceiptKind(kind),
+        kind: scoutV2NotificationRenderReceiptKind(kind, presentation),
+        ...(presentation === undefined
+          ? {}
+          : {
+              scope: { kind: "guild", guildId: presentation.guildId } as const,
+            }),
         recordedAt: new Date(),
         evidence: scoutV2NotificationRenderEvidenceCodec.serialize(evidence),
       }),
@@ -236,15 +247,25 @@ async function renderPostmatchArtifact(
 async function renderPrematchArtifact(
   riotMatchId: RiotMatchId,
   fence: ScoutEffectFenceV2,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<ScoutV2NotificationRenderEvidence> {
-  const rendered = await renderPrematchNotificationV2(riotMatchId);
+  const rendered = await renderPrematchNotificationV2(
+    riotMatchId,
+    presentation?.clashEnabled,
+  );
   if (rendered.artifact === "none") {
     return { artifact: "none", riotMatchId, reason: rendered.reason };
   }
   const stored = await commitNotificationImage(
     riotMatchId,
     rendered.image,
-    { assetType: "loading-screen", metadata: {} },
+    {
+      assetType:
+        presentation === undefined
+          ? "loading-screen"
+          : `loading-screen-guild-${presentation.guildId}-${presentation.clashEnabled ? "clash" : "ordinary"}`,
+      metadata: {},
+    },
     fence,
   );
   return imageEvidence(riotMatchId, stored);
@@ -265,13 +286,25 @@ async function renderByKind(
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
   riotMatchId: RiotMatchId,
   fence: ScoutEffectFenceV2,
-  postmatchMode: ScoutV2PostmatchRenderMode,
+  options: {
+    postmatchMode: ScoutV2PostmatchRenderMode;
+    presentation:
+      { guildId: DiscordGuildId; clashEnabled: boolean } | undefined;
+  },
 ): Promise<ScoutV2NotificationRenderEvidence> {
   switch (kind) {
     case "postmatch":
-      return await renderPostmatchArtifact(riotMatchId, fence, postmatchMode);
+      return await renderPostmatchArtifact(
+        riotMatchId,
+        fence,
+        options.postmatchMode,
+      );
     case "prematch":
-      return await renderPrematchArtifact(riotMatchId, fence);
+      return await renderPrematchArtifact(
+        riotMatchId,
+        fence,
+        options.presentation,
+      );
     case "settlement":
     case "dare-summary":
     case "hall-record-break":
@@ -283,8 +316,9 @@ async function renderByKind(
 export function notificationRenderEffectKey(
   riotMatchId: RiotMatchId,
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): string {
-  return `v2-notification-render:${kind}:${riotMatchId}`;
+  return `v2-notification-render:${kind}:${riotMatchId}${presentation === undefined ? "" : `:guild:${presentation.guildId}:${presentation.clashEnabled ? "clash" : "ordinary"}`}`;
 }
 
 const NOTIFICATION_RENDER_EFFECT_KIND = "v2-notification-render";
@@ -293,8 +327,13 @@ const NOTIFICATION_RENDER_EFFECT_KIND = "v2-notification-render";
 async function standingArtifact(
   riotMatchId: RiotMatchId,
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<{ fact: ScoutDurableCommitV2; effects: number } | null> {
-  const standing = await readNotificationArtifactV2(riotMatchId, kind);
+  const standing = await readNotificationArtifactV2(
+    riotMatchId,
+    kind,
+    presentation,
+  );
   return standing === null
     ? null
     : { fact: { outcome: "already-applied" }, effects: 0 };
@@ -317,11 +356,21 @@ export async function renderNotificationArtifactV2(
       `Intent ${input.intentKey}: ${record.intent.kind} requires its own subject`,
     );
   }
+  const presentation = await prepareNotificationPresentation(record);
   return ScoutNotificationRenderV2ResultSchema.parse({
     outcome: await renderMatchNotificationArtifactV2({
       riotMatchId: record.matchId,
       kind: record.intent.kind,
       postmatchMode: { kind: "live" },
+      ...(record.intent.kind === "prematch" &&
+      presentation?.guildPrematchArtifact === true
+        ? {
+            presentation: {
+              guildId: DiscordGuildIdSchema.parse(presentation.serverId),
+              clashEnabled: presentation.clashEnabled,
+            },
+          }
+        : {}),
     }),
   });
 }
@@ -340,22 +389,25 @@ export async function renderMatchNotificationArtifactV2(args: {
   riotMatchId: RiotMatchId;
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">;
   postmatchMode: ScoutV2PostmatchRenderMode;
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean };
 }): Promise<"rendered" | "reused"> {
   const { riotMatchId, kind } = args;
-  if ((await readNotificationArtifactV2(riotMatchId, kind)) !== null) {
+  if (
+    (await readNotificationArtifactV2(riotMatchId, kind, args.presentation)) !==
+    null
+  ) {
     return "reused";
   }
   const guarded = await runGuardedEffectV2({
-    key: notificationRenderEffectKey(riotMatchId, kind),
+    key: notificationRenderEffectKey(riotMatchId, kind, args.presentation),
     kind: NOTIFICATION_RENDER_EFFECT_KIND,
-    alreadyApplied: async () => await standingArtifact(riotMatchId, kind),
+    alreadyApplied: async () =>
+      await standingArtifact(riotMatchId, kind, args.presentation),
     apply: async (fence) => {
-      const evidence = await renderByKind(
-        kind,
-        riotMatchId,
-        fence,
-        args.postmatchMode,
-      );
+      const evidence = await renderByKind(kind, riotMatchId, fence, {
+        postmatchMode: args.postmatchMode,
+        presentation: args.presentation,
+      });
       // The receipt is the last write and lands before the fence releases; a
       // follower that acquires the fence after this sees the completed claim.
       await fence.assertHeld();
@@ -363,6 +415,7 @@ export async function renderMatchNotificationArtifactV2(args: {
         riotMatchId,
         kind,
         evidence,
+        args.presentation,
       );
       return { fact, effects: fact.outcome === "applied" ? 1 : 0 };
     },

@@ -11,7 +11,9 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import type { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import { runDurableDiscordExploreTurn } from "#src/explore/runs/discord/turn.ts";
+import { ExploreRunRateLimitedError } from "#src/explore/runs/run-manager.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import {
   exploreActionRow,
@@ -41,7 +43,7 @@ type ScoutCommandDependencies = {
 
 const defaultDependencies: ScoutCommandDependencies = {
   client: prisma,
-  runTurn: runPersistedExploreTurn,
+  runTurn: async (input) => await runDurableDiscordExploreTurn(input),
 };
 
 export async function executeScout(
@@ -159,6 +161,10 @@ export async function executeScout(
     );
   } catch (error) {
     ticket.finish();
+    if (error instanceof ExploreRunRateLimitedError) {
+      await interaction.editReply({ content: error.rejection.reason });
+      return;
+    }
     if (!runnerOwnsMetrics) {
       scoutExploreTurnsTotal.inc({ status: "error" });
     }

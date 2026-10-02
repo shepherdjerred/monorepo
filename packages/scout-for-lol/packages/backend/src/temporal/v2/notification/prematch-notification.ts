@@ -113,6 +113,7 @@ function regionOf(context: ScoutV2PrematchContext) {
  */
 export async function buildPrematchLoadingScreenDataV2(
   context: ScoutV2PrematchContext,
+  clashEnabled?: boolean,
 ): Promise<LoadingScreenData> {
   const region = regionOf(context);
   const trackedPuuids = new Set(
@@ -126,13 +127,14 @@ export async function buildPrematchLoadingScreenDataV2(
       region,
       ranks,
     ),
-    await clashSurfaceEnabledForPuuids([...trackedPuuids]),
+    clashEnabled ?? (await clashSurfaceEnabledForPuuids([...trackedPuuids])),
   );
 }
 
 /** The game-start line, before any Bryan Bucks digest is appended to it. */
 async function prematchBaseContentV2(
   context: ScoutV2PrematchContext,
+  clashEnabled?: boolean,
 ): Promise<string> {
   const gameInfo = context.gameInfo;
   return formatPrematchMessage(
@@ -143,9 +145,12 @@ async function prematchBaseContentV2(
       gameInfo.gameType,
     ),
     gameInfo.gameMode,
-    await clashSurfaceEnabledForPuuids(
-      context.trackedPlayers.map((player) => player.league.leagueAccount.puuid),
-    ),
+    clashEnabled ??
+      (await clashSurfaceEnabledForPuuids(
+        context.trackedPlayers.map(
+          (player) => player.league.leagueAccount.puuid,
+        ),
+      )),
   );
 }
 
@@ -160,18 +165,22 @@ async function prematchBaseContentV2(
 export async function prematchContentBaseV2(
   context: ScoutV2PrematchContext,
   artifact: ScoutV2AttestedPrematchArtifact["artifact"],
+  clashEnabled?: boolean,
 ): Promise<string> {
-  return artifact === "image" ? await prematchBaseContentV2(context) : "";
+  return artifact === "image"
+    ? await prematchBaseContentV2(context, clashEnabled)
+    : "";
 }
 
 export async function renderPrematchNotificationV2(
   riotMatchId: RiotMatchId,
+  clashEnabled?: boolean,
 ): Promise<ScoutV2PrematchRender> {
   const context = await requireArchivedPrematchContext(riotMatchId);
   let image: Uint8Array;
   try {
     image = await loadingScreenToImage(
-      await buildPrematchLoadingScreenDataV2(context),
+      await buildPrematchLoadingScreenDataV2(context, clashEnabled),
     );
   } catch (error) {
     if (error instanceof UnsupportedLoadingScreenQueueError) {
@@ -249,6 +258,7 @@ export async function buildPrematchNotificationMessageV2(
   riotMatchId: RiotMatchId,
   artifact: ScoutV2AttestedPrematchArtifact,
   target: NotificationTarget,
+  clashEnabled?: boolean,
 ): Promise<MessageCreateOptions> {
   const context = await requireArchivedPrematchContext(riotMatchId);
   const gameInfo = context.gameInfo;
@@ -260,7 +270,7 @@ export async function buildPrematchNotificationMessageV2(
   return buildPrematchPayload({
     betsOpen,
     bucks,
-    baseContent: await prematchBaseContentV2(context),
+    baseContent: await prematchBaseContentV2(context, clashEnabled),
     loadingScreenAttachment: attachment,
     loadingScreenEmbed: embed,
     fallbackEmbed: () =>

@@ -175,6 +175,8 @@ export const reportRouter = router({
         id: run.id,
         trigger: run.trigger,
         status: run.status,
+        deliveryState: run.deliveryState,
+        deliveryError: run.deliveryError,
         startedAt: run.startedAt,
         completedAt: run.completedAt,
         durationMs: run.durationMs,

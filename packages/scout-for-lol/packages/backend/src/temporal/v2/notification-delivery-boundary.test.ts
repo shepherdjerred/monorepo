@@ -1,6 +1,7 @@
 import { AttachmentBuilder } from "discord.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
+import { prisma } from "#src/database/index.ts";
 import type * as NotificationArtifactModule from "#src/temporal/v2/notification/notification-artifact.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { NOTIFICATION_PRE_SEND_BUDGET_MS } from "@scout-for-lol/temporal/activity-contracts-v2";
@@ -138,6 +139,10 @@ function attestedReport(review: Uint8Array | undefined): unknown {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // These legacy global-artifact fixtures predate guild presentations.
+  vi.spyOn(prisma.notificationPresentation, "findUnique").mockResolvedValue(
+    null,
+  );
   stubs.requireIntentRecordV2.mockResolvedValue(intentRecord("channel"));
   stubs.resolveNotificationGateV2.mockResolvedValue({
     kind: "postmatch",

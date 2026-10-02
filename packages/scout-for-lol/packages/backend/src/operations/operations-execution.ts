@@ -51,12 +51,19 @@ import {
 } from "#src/database/durable/recovery-repository.ts";
 import type { AuditDetail } from "#src/lib/audit/audited-mutation.ts";
 import type { OperationsWorkflowStart } from "#src/operations/workflow-dispatch.ts";
+import { settleNotificationTip } from "#src/temporal/v2/notification/notification-presentation.ts";
 
 /** What the target of an operations intent is, when it is missing. */
 export type OperationsTargetKind =
   "notification-intent" | "match" | "recovery-batch";
 
 export type OperationsOutcome =
+  | {
+      readonly kind: "report-delivery-resolved";
+      readonly runId: number;
+      readonly chunkIndex: number;
+      readonly state: "PENDING" | "DELIVERED";
+    }
   /**
    * The request was claimed and authorized. The Workflow start is dispatched
    * after this transaction commits; nothing is running yet.
@@ -180,6 +187,8 @@ async function executeSuppressStale(
     intentKey: payload.intentKey,
     transition: (intent) => suppressStale(intent, { at }),
   });
+  if (result.outcome === "applied")
+    await settleNotificationTip(result.next, tx);
   return fromTransition(result, {
     kind: "notification-suppressed",
     intentKey: payload.intentKey,
@@ -208,6 +217,8 @@ async function executeResolveUnknownDelivery(
     intentKey: payload.intentKey,
     transition: (intent) => operatorResolveUnknown(intent, resolution),
   });
+  if (result.outcome === "applied")
+    await settleNotificationTip(result.next, tx);
   return result.outcome === "applied"
     ? {
         kind: "delivery-resolved",
@@ -274,6 +285,7 @@ function auditFor(
 }
 
 const OPERATIONS_AUDIT_ACTIONS = {
+  ops_resolve_report_delivery: "OPS_DELIVERY_RESOLVE",
   ops_reconcile_pipeline: "OPS_PIPELINE_RECONCILE",
   ops_retry_notification: "OPS_NOTIFICATION_RETRY",
   ops_suppress_stale_notification: "OPS_NOTIFICATION_SUPPRESS",
@@ -302,6 +314,91 @@ export async function executeOperationsIntent(
   return { outcome, audit: auditFor(payload, outcome), postCommit };
 }
 
+async function executeResolveReportDelivery(
+  tx: Db,
+  payload: Extract<
+    OperationsIntentPayload,
+    { kind: "ops_resolve_report_delivery" }
+  >,
+  now: Date,
+): Promise<{
+  outcome: OperationsOutcome;
+  postCommit: OperationsWorkflowStart | null;
+}> {
+  // Serialize chunk resolutions before recomputing their shared run state.
+  await tx.$queryRaw`SELECT id FROM "ReportRun" WHERE id = ${payload.runId} FOR UPDATE`;
+  const key = {
+    reportRunId: payload.runId,
+    channelId: payload.channelId,
+    chunkIndex: payload.chunkIndex,
+  };
+  const state =
+    payload.answer.outcome === "delivered" ? "DELIVERED" : "PENDING";
+  const changed = await tx.reportDeliveryChunk.updateMany({
+    where: {
+      ...key,
+      nonce: payload.attemptNonce,
+      state: { in: ["UNKNOWN", "SENDING"] },
+      // Don't answer an Activity that may still be in flight. Report
+      // delivery Activities have a thirty minute start-to-close timeout.
+      OR: [
+        { state: "UNKNOWN" },
+        { sendStartedAt: null },
+        { sendStartedAt: { lt: new Date(now.getTime() - 35 * 60 * 1000) } },
+      ],
+    },
+    data:
+      payload.answer.outcome === "delivered"
+        ? {
+            state,
+            messageId: payload.answer.messageId,
+            deliveredAt: new Date(payload.answer.deliveredAt),
+            lastError: null,
+          }
+        : {
+            state,
+            nonce: crypto.randomUUID().replaceAll("-", "").slice(0, 24),
+            sendStartedAt: null,
+            lastError: null,
+          },
+  });
+  if (changed.count === 0)
+    return {
+      outcome: { kind: "machine-refused", reason: "stale-operator-view" },
+      postCommit: null,
+    };
+  const unresolved = await tx.reportDeliveryChunk.count({
+    where: {
+      reportRunId: payload.runId,
+      state: { in: ["SENDING", "UNKNOWN"] },
+    },
+  });
+  const pending = await tx.reportDeliveryChunk.count({
+    where: { reportRunId: payload.runId, state: "PENDING" },
+  });
+  await tx.reportRun.update({
+    where: { id: payload.runId },
+    data: {
+      deliveryState:
+        unresolved > 0 ? "UNKNOWN" : pending > 0 ? "PENDING" : "DELIVERED",
+      deliveryError:
+        unresolved > 0
+          ? "Other report chunks still need delivery resolution"
+          : null,
+      ...(unresolved === 0 && pending === 0 ? { deliveredAt: now } : {}),
+    },
+  });
+  return {
+    outcome: {
+      kind: "report-delivery-resolved",
+      runId: payload.runId,
+      chunkIndex: payload.chunkIndex,
+      state,
+    },
+    postCommit: null,
+  };
+}
+
 async function runArm(
   tx: Db,
   payload: OperationsIntentPayload,
@@ -311,6 +408,8 @@ async function runArm(
   postCommit: OperationsWorkflowStart | null;
 }> {
   switch (payload.kind) {
+    case "ops_resolve_report_delivery":
+      return await executeResolveReportDelivery(tx, payload, now);
     case "ops_reconcile_pipeline":
       return {
         outcome: { kind: "start-authorized", workflow: "reconcile-pipeline" },

@@ -9,6 +9,8 @@ type Run = {
   id: number;
   trigger: string;
   status: string;
+  deliveryState: string;
+  deliveryError: string | null;
   startedAt: Date | string;
   durationMs: number | null;
   rowsReturned: number;
@@ -42,6 +44,10 @@ export function ReportRunHistory(props: {
             >
               <div className="flex flex-wrap items-center gap-2 text-xs text-scout-subtle">
                 <ReportRunStatusBadge status={run.status} />
+                <span>
+                  Delivery:{" "}
+                  {run.deliveryState.toLowerCase().replaceAll("_", " ")}
+                </span>
                 <span>{run.trigger}</span>
                 <span>·</span>
                 <span>{formatDate(run.startedAt)}</span>
@@ -57,6 +63,9 @@ export function ReportRunHistory(props: {
 
               {run.errorMessage !== null && (
                 <p className="text-sm text-scout-danger">{run.errorMessage}</p>
+              )}
+              {run.deliveryError !== null && (
+                <p className="text-sm text-scout-danger">{run.deliveryError}</p>
               )}
 
               {run.querySnapshot !== null && (

@@ -133,6 +133,27 @@ function finalSplitRolesWith(
 }
 
 describe("scout runtime roles", () => {
+  test.each(SCOUT_RUNTIME_ROLES)(
+    "beta %s leaves Workflow tasks to its versioned deployment",
+    (role) => {
+      const beta = scoutRuntimeCapabilities(role, "beta");
+      expect([
+        ...beta.temporalWorkers,
+        ...beta.deferredTemporalWorkers,
+      ]).not.toContain("workflow");
+      expect(scoutRuntimeCapabilities(role, "prod")).toEqual(
+        scoutRuntimeCapabilities(role, "dev"),
+      );
+    },
+  );
+  test("beta gateway cannot read the lake while its interactive worker can", () => {
+    expect(scoutRuntimeCapabilities("gateway", "beta").reportLakeAccess).toBe(
+      false,
+    );
+    expect(
+      scoutRuntimeCapabilities("application-isolated", "beta").reportLakeAccess,
+    ).toBe(true);
+  });
   test.each(SCOUT_RUNTIME_ROLES)("%s declares its exact subsystems", (role) => {
     expect(scoutRuntimeCapabilities(role)).toEqual(EXPECTED[role]);
   });

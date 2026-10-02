@@ -1,6 +1,6 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
 import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
 import { FEATURE_TIPS, type FeatureTip } from "#src/tips/tip-catalog.ts";
 
@@ -13,7 +13,7 @@ import { FEATURE_TIPS, type FeatureTip } from "#src/tips/tip-catalog.ts";
  */
 const HAS_USED: Record<
   FeatureTipKey,
-  (serverId: DiscordGuildId, db: ExtendedPrismaClient) => Promise<boolean>
+  (serverId: DiscordGuildId, db: Db) => Promise<boolean>
 > = {
   competitions: async (serverId, db) =>
     (await db.competition.count({ where: { serverId }, take: 1 })) > 0,
@@ -77,7 +77,7 @@ async function isAvailable(
 export async function eligibleTips(input: {
   serverId: DiscordGuildId;
   alreadyShown: ReadonlySet<string>;
-  db?: ExtendedPrismaClient;
+  db?: Db;
 }): Promise<FeatureTip[]> {
   const db = input.db ?? prisma;
   const candidates = FEATURE_TIPS.filter(

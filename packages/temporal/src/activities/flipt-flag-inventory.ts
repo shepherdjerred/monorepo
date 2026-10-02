@@ -1,5 +1,6 @@
 import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
 import { applyMissingManagedFlags } from "@shepherdjerred/feature-flags/flipt-missing-flag-apply.ts";
+import { applyScoutBetaDurableOwnership } from "@shepherdjerred/feature-flags/scout-beta-durable-ownership.ts";
 import {
   compareManagedFlagInventory,
   fetchFliptSnapshot,
@@ -18,6 +19,7 @@ export type FliptFlagInventoryResult = FliptFlagDriftAlertInput & {
   readonly observedAt: string;
   readonly createdFlags: readonly string[];
   readonly createdSegments: readonly string[];
+  readonly migratedFlags: readonly string[];
 };
 
 function requiredEnvironment(name: string): string {
@@ -35,6 +37,7 @@ export const fliptFlagInventoryActivities = {
     const url = requiredEnvironment("FLIPT_URL");
     const observedAt = new Date().toISOString();
     const created = await applyMissingManagedFlags({ url });
+    const migratedFlags = await applyScoutBetaDurableOwnership({ url });
     const createdByPair = new Map(
       created.map((result) => [
         `${result.environment}/${result.namespace}`,
@@ -64,6 +67,10 @@ export const fliptFlagInventoryActivities = {
             contractMismatches: drift.contractMismatches,
             createdFlags: applied?.createdFlags ?? [],
             createdSegments: applied?.createdSegments ?? [],
+            migratedFlags:
+              namespace === "scout" && environment.key === "beta"
+                ? migratedFlags
+                : [],
             observedAt,
           };
         }),

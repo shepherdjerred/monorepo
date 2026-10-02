@@ -42,6 +42,18 @@ import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/not
 const testDatabase = createTestDatabase("temporal-v2-notification-render");
 Bun.env["DATABASE_URL"] = testDatabase.dbUrl;
 const { prisma } = testDatabase;
+vi.mock("#src/discord/utils/channel.ts", () => ({
+  fetchChannelForDelivery: (channelId: string) =>
+    Promise.resolve(
+      world.guilds.has(channelId)
+        ? { guildId: world.guilds.get(channelId) }
+        : null,
+    ),
+}));
+vi.mock("#src/league/clash/access.ts", () => ({
+  clashSurfaceEnabledForGuild: (guildId: string) =>
+    Promise.resolve(world.clashGuilds.has(guildId)),
+}));
 
 /** Everything a render touches outside the database, as one in-memory world. */
 const world = vi.hoisted(() => ({
@@ -49,6 +61,9 @@ const world = vi.hoisted(() => ({
   objects: new Map<string, Uint8Array>(),
   puts: new Array<string>(),
   renders: 0,
+  guilds: new Map<string, string>(),
+  clashGuilds: new Set<string>(),
+  renderedClash: new Array<boolean | undefined>(),
   renderDelayMs: 0,
   /** Each render produces different bytes, so a second PUT is observable. */
   nextImage: (): Uint8Array => new Uint8Array([137, 80, 78, 71, world.renders]),
@@ -87,8 +102,9 @@ vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
   },
 }));
 vi.mock("#src/temporal/v2/notification/prematch-notification.ts", () => ({
-  renderPrematchNotificationV2: () => {
+  renderPrematchNotificationV2: (_matchId: string, clashEnabled?: boolean) => {
     world.renders += 1;
+    world.renderedClash.push(clashEnabled);
     return Promise.resolve({ artifact: "image", image: world.nextImage() });
   },
 }));
@@ -160,11 +176,17 @@ function nextMatch(): string {
   return `NA1_${matchSequence.toString()}`;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await prisma.matchProcessingReceipt.deleteMany();
+  await prisma.scoutEffectClaim.deleteMany();
+  await prisma.notificationPresentation.deleteMany();
   world.objects.clear();
   world.puts.length = 0;
   world.renders = 0;
   world.renderDelayMs = 0;
+  world.guilds.clear();
+  world.clashGuilds.clear();
+  world.renderedClash.length = 0;
 });
 
 async function expectStatusWithoutMatchRender(
@@ -179,6 +201,35 @@ async function expectStatusWithoutMatchRender(
 }
 
 describe("render receipts are keyed by kind", () => {
+  test("mixed guilds receive separately attested Clash and ordinary screens with frozen decisions", async () => {
+    const matchId = nextMatch();
+    const first = await seedIntent(matchId, "prematch", "9451");
+    const second = await seedIntent(matchId, "prematch", "9452");
+    const firstGuild = DiscordGuildIdSchema.parse("100000000000009451");
+    const secondGuild = DiscordGuildIdSchema.parse("100000000000009452");
+    world.guilds.set(testChannelId("9451"), firstGuild);
+    world.guilds.set(testChannelId("9452"), secondGuild);
+    world.clashGuilds.add(firstGuild);
+    await renderNotificationArtifactV2({ stage: STAGE, intentKey: first });
+    await renderNotificationArtifactV2({ stage: STAGE, intentKey: second });
+    expect(world.renderedClash).toEqual([true, false]);
+    expect(world.puts).toHaveLength(2);
+    expect(new Set(world.puts).size).toBe(2);
+    const receipts = await listReceipts(prisma, {
+      matchId: RiotMatchIdSchema.parse(matchId),
+    });
+    expect(receipts.map((receipt) => receipt.receipt.scope)).toEqual(
+      expect.arrayContaining([
+        { kind: "guild", guildId: firstGuild },
+        { kind: "guild", guildId: secondGuild },
+      ]),
+    );
+    world.clashGuilds.clear();
+    expect(
+      await renderNotificationArtifactV2({ stage: STAGE, intentKey: first }),
+    ).toEqual({ outcome: "reused" });
+    expect(world.renderedClash).toEqual([true, false]);
+  });
   test("a Dare status has no match render receipt or object", async () => {
     const intentKey = NotificationIntentKeySchema.parse(
       "dare-status:test:recipient:200000000000000902",

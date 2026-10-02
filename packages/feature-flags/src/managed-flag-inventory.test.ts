@@ -477,12 +477,12 @@ describe("Scout V2 post-match ownership", () => {
 });
 
 describe("Scout V2 progression notifications", () => {
-  test("targets the beta canary and leaves production off", () => {
+  test("assigns all beta progression delivery to V2 and leaves production off", () => {
     const beta = scoutPolicyFlag(
       "beta",
       "scout_v2_progression_notifications_enabled",
     );
-    expect(beta.default).toBe(false);
+    expect(beta.default).toBe(true);
     expect(beta.rollouts).toEqual([
       expect.objectContaining({
         segmentKey: "scout-guild-1337623164146155593",

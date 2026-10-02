@@ -112,6 +112,9 @@ export const DELETED_SCHEDULE_IDS = [
  * beta-only schedule listed there would never actually be deleted.
  */
 const DELETED_BETA_SCHEDULE_IDS = [
+  // Hall and Duel delivery now have V2 intent owners. Domain reconciliation
+  // remains scheduled; only the drained legacy delivery job is retired.
+  "scout-beta-progression-outbox",
   // Beta twin of scout-prod-tournament-lobby-poll.
   "scout-beta-tournament-lobby-poll",
 ] as const;

@@ -12,6 +12,7 @@ import {
   type ReceiptKind,
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import { prisma } from "#src/database/index.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 
 /**
@@ -65,7 +66,15 @@ export const SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS = {
  */
 export function scoutV2NotificationRenderReceiptKind(
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): ReceiptKind {
+  if (kind === "prematch" && presentation !== undefined) {
+    return ReceiptKindSchema.parse(
+      presentation.clashEnabled
+        ? "v2-notification-render-prematch-guild-clash"
+        : "v2-notification-render-prematch-guild-ordinary",
+    );
+  }
   return SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS[kind];
 }
 
@@ -192,11 +201,17 @@ export const scoutV2NotificationRenderEvidenceCodec = defineVersionedCodec({
 export async function readNotificationArtifactV2(
   riotMatchId: RiotMatchId,
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<ScoutV2NotificationRenderEvidence | null> {
-  const receiptKind = scoutV2NotificationRenderReceiptKind(kind);
+  const receiptKind = scoutV2NotificationRenderReceiptKind(kind, presentation);
   const receipts = await listReceipts(prisma, { matchId: riotMatchId });
   const rendered = receipts.find(
-    (record) => record.receipt.kind === receiptKind,
+    (record) =>
+      record.receipt.kind === receiptKind &&
+      (presentation === undefined
+        ? record.receipt.scope.kind === "global"
+        : record.receipt.scope.kind === "guild" &&
+          record.receipt.scope.guildId === presentation.guildId),
   );
   return rendered?.evidence == null
     ? null

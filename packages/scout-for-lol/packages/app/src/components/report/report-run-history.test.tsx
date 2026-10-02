@@ -16,6 +16,8 @@ describe("ReportRunHistory", () => {
             id: 1,
             trigger: "MANUAL",
             status: "SUCCEEDED",
+            deliveryState: "DELIVERED",
+            deliveryError: null,
             startedAt: "2026-08-08T00:00:00.000Z",
             durationMs: 10,
             rowsReturned: 1,

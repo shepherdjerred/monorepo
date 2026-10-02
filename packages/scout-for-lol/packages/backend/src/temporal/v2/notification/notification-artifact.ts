@@ -1,4 +1,5 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
 import configuration from "#src/configuration.ts";
 import { readVerifiedRawObjectBytes } from "#src/report-store/s3-raw-source.ts";
@@ -147,8 +148,13 @@ export type ScoutV2AttestedPrematchArtifact =
 async function requireRenderEvidence(
   riotMatchId: RiotMatchId,
   kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<ScoutV2NotificationRenderEvidence> {
-  const evidence = await readNotificationArtifactV2(riotMatchId, kind);
+  const evidence = await readNotificationArtifactV2(
+    riotMatchId,
+    kind,
+    presentation,
+  );
   if (evidence === null) {
     throw new Error(
       `No ${kind} render receipt stands for ${riotMatchId}, so there is no attested artifact for this send to deliver; the Workflow renders before it sends`,
@@ -223,8 +229,13 @@ export async function readAttestedReportArtifactV2(
 export async function readAttestedPrematchArtifactV2(
   riotMatchId: RiotMatchId,
   abortSignal: AbortSignal,
+  presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<ScoutV2AttestedPrematchArtifact> {
-  const evidence = await requireRenderEvidence(riotMatchId, "prematch");
+  const evidence = await requireRenderEvidence(
+    riotMatchId,
+    "prematch",
+    presentation,
+  );
   if (evidence.artifact === "image") {
     const bytes = await readAttestedObject(riotMatchId, evidence, abortSignal);
     return { artifact: "image", bytes, evidence };

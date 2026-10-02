@@ -43,7 +43,10 @@ type CompetitionActivityWorker = {
 export function scoutRuntimeSubsystems(
   role: ScoutRuntimeRole,
 ): ScoutRuntimeDependencies {
-  const capabilities = scoutRuntimeCapabilities(role);
+  const capabilities = scoutRuntimeCapabilities(
+    role,
+    configuration.environment,
+  );
   let temporalSupervisor: ScoutTemporalSupervisor | undefined;
   let httpServer: HttpServerRuntime | undefined;
   let competitionWorker: CompetitionActivityWorker | undefined;

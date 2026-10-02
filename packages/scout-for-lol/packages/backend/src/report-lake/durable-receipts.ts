@@ -27,6 +27,7 @@ import {
 import {
   ReceiptKindSchema,
   type ReceiptKind,
+  type ReceiptScope,
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import { prematchObjectResourceId } from "#src/storage/s3-prematch.ts";
@@ -281,13 +282,14 @@ export function buildReceipt(args: {
   kind: ReceiptKind;
   evidence: unknown;
   recordedAt: Date;
+  scope?: ReceiptScope;
 }): MatchProcessingReceiptRecord {
   return {
     matchId: args.matchId,
     receipt: {
       kind: args.kind,
       version: RECEIPT_VERSION,
-      scope: { kind: "global" },
+      scope: args.scope ?? { kind: "global" },
       recordedAt: IsoInstantSchema.parse(args.recordedAt.toISOString()),
     },
     evidence: JSON.stringify(args.evidence),

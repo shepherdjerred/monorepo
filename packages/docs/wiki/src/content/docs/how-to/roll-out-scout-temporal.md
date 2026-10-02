@@ -85,7 +85,8 @@ path for each change.
    `application-isolated`, removing those three activity owners; the worker
    remains on the same image digest and continues polling. Confirm exactly one
    ready pod owns `realtime`, `background`, and competition activities, while
-   the application still owns `workflow`, `interactive`, and `lake`. Re-run the
+   the application still owns `interactive` and `lake`. Production also retains
+   its embedded `workflow` poller until its separate handoff. Re-run the
    canary and representative report, ingest, and competition flows.
 
 For rollback from `owning`, set the worker topology to `retiring` in a release.
@@ -124,6 +125,10 @@ activation defaults. `pipeline-reconciliation-v2` is created paused; new
    while rows remain and retain it until they are drained or dispositioned.
 
 ## Start the beta Workflow Deployment ramp
+
+For Activity-only changes, keep the accepted Workflow Deployment pins and
+routing. Check queue canaries and the changed effects after the backend release.
+A new Workflow ramp is needed when the Workflow bundle changes.
 
 For the first rollout, pin both beta Workflow tracks in the version catalog to
 the same accepted, workflow-capable beta backend image and release them before
@@ -219,6 +224,38 @@ TEMPORAL_NAMESPACE=beta bun run worker-deployment promote \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 ```
+
+## Complete beta ownership
+
+1. Before removing beta's embedded Workflow poller, inspect open executions
+   and their assigned Worker Deployment versions. Drain any unversioned work;
+   retain healthy versioned dispatchers, entity Workflows, and durable timers.
+2. Confirm the legacy Hall, Duel, and Dare delivery outboxes have no pending
+   rows. Keep domain reconciliation active. The declared beta Schedule registry
+   removes only the retired progression delivery Schedule.
+3. After the central Activity image deploys, trigger the owned flag-inventory
+   Schedule and verify its successful result. Its one-time beta migration
+   enables durable initial-history imports and V2 progression delivery while
+   preserving later operator pauses. Confirm each enabled product feature has
+   exactly one delivery owner.
+4. Exercise the changed beta effects and inspect their persisted receipts.
+   Use focused failure fixtures for infrequent features; record missing live
+   evidence explicitly. Acceptance depends on ownership and recovery evidence,
+   without an additional minimum game count or calendar soak.
+
+## Resolve an uncertain report delivery
+
+1. Open **Operations → Match operations** and inspect the report delivery row.
+   Check its channel, frozen content, chunk index, and attempt nonce against
+   Discord. Do not infer a non-send from a missing local response.
+2. Choose **Answer delivery**. Confirm the observed message ID and delivery
+   time, or confirm a verified non-send. A sending attempt is refused until
+   its Activity timeout and grace period have passed.
+3. Review and confirm the prepared operation. A stale nonce is refused.
+   A non-send answer releases only that chunk; the ingestion reconciler sends
+   the archived output with a fresh nonce. Completed chunks are never resent.
+4. Refresh the report's run history and verify the delivery result. Retain the
+   operation's audit record and Discord evidence for the investigated attempt.
 
 ## Repeat in production
 

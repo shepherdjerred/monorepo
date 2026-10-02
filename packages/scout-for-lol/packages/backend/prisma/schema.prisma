@@ -245,7 +245,7 @@ model ClashMembershipHistory {
 // One Clash lobby or finished match Scout saw a tracked player in.
 // source=prematch has no outcome; source=match may set win (pre-Feb leftover).
 model ClashGameSighting {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   platform   String
   gameId     String
   puuid      String
@@ -258,8 +258,8 @@ model ClashGameSighting {
   teamRiotId String?
   cupKey     String?
   cupDay     String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([platform, gameId, puuid])
   @@index([puuid, observedAt])
@@ -269,11 +269,11 @@ model ClashGameSighting {
 // Champion mastery is public, current account state rather than match history.
 // One PUUID snapshot is shared by every guild that tracks that Riot account.
 model ChampionMasterySnapshot {
-  puuid        String   @id
-  entriesJson  String
-  fetchedAt    DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  puuid       String   @id
+  entriesJson String
+  fetchedAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Report {
@@ -352,12 +352,52 @@ model ReportRun {
   temporalWorkflowRunId String?   @unique
   createdAt             DateTime  @default(now())
 
-  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  report         Report                @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  deliveryChunks ReportDeliveryChunk[]
 
   @@index([reportId, startedAt])
   @@index([serverId, startedAt])
   @@index([status, startedAt])
   @@index([deliveryState, createdAt])
+}
+
+/// One frozen Discord message and its observed send outcome. SENDING is never
+/// automatically retried: a process can die after Discord accepted the send.
+model ReportDeliveryChunk {
+  reportRunId      Int
+  channelId        String
+  chunkIndex       Int
+  serverId         String
+  content          String
+  attachmentKey    String?
+  attachmentName   String?
+  attachmentDigest String?
+  nonce            String
+  state            String    @default("PENDING")
+  messageId        String?
+  sendStartedAt    DateTime?
+  deliveredAt      DateTime?
+  lastError        String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  run              ReportRun @relation(fields: [reportRunId], references: [id], onDelete: Cascade)
+
+  @@id([reportRunId, channelId, chunkIndex])
+  @@index([state, updatedAt])
+}
+
+/// Target-specific presentation decisions. Kept independently of the subject
+/// tables because match, Duel and Dare intents use different subject rows.
+model NotificationPresentation {
+  intentKey             String   @id
+  serverId              String
+  clashEnabled          Boolean
+  guildPrematchArtifact Boolean  @default(false)
+  tipKey                String?
+  tipText               String?
+  messageJson           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 // Season metadata seeded from packages/data/src/seasons.ts on every bot startup.

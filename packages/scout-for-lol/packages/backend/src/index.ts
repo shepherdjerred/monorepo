@@ -99,6 +99,7 @@ const { runtimeRole } = configuration;
 const runtime = await startScoutRuntime(
   runtimeRole,
   scoutRuntimeSubsystems(runtimeRole),
+  configuration.environment,
 );
 
 logger.info("✅ Backend application startup complete");
