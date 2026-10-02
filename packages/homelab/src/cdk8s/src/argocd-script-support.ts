@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+/** Execute a real CLI test command while draining both output streams. */
+export async function runArgocdCommand(
+  command: string[],
+  options: { cwd: string; env?: Record<string, string | undefined> },
+) {
+  const child = Bun.spawn(command, {
+    ...options,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [exitCode, stdout, stderr] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+  ]);
+  return { exitCode, stdout, stderr };
+}
+
 export const SyncInfoEntrySchema = z.discriminatedUnion("name", [
   z.object({
     name: z.literal("ci.sjer.red/request-id"),

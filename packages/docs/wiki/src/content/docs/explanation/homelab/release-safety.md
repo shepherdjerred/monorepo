@@ -101,8 +101,12 @@ permanent mismatch; comparing only the source target would miss changed Helm
 values at the same chart version.
 
 Once that exact source has been deployed, ordinary same-source drift remains
-the external Application's responsibility after auto-sync is restored; it does
-not broaden the release-scoped gate. Repository-published children keep the
+the external Application's responsibility after auto-sync is restored. A child
+that declares pruning must also report `Synced` before reconciliation skips it:
+retired chart resources otherwise remain and block the final root operation.
+Prometheus declares pruning so replacing the renderer's generated Secret with
+the shared 1Password Secret retires the unused chart-owned Secret. This does not
+broaden the release-scoped health gate. Repository-published children keep the
 stricter boundary: sync status, exact resolved revision, latest deployment
 history, and terminal operation state must agree. This prevents the brief
 post-stage comparison window from skipping a changed external prerequisite.
