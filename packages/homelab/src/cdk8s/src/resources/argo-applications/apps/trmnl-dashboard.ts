@@ -5,6 +5,8 @@ export function createTrmnlDashboardApp(chart: Chart) {
   return new Application(chart, "trmnl-dashboard-app", {
     metadata: {
       name: "trmnl-dashboard",
+      // Accept the ops snapshot contract before Temporal Activities emit it.
+      annotations: { "argocd.argoproj.io/sync-wave": "-2" },
     },
     spec: {
       revisionHistoryLimit: 5,

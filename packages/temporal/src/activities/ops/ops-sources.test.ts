@@ -54,11 +54,18 @@ describe("ops source collectors", () => {
         );
       },
     });
-    const result = await collectMaintenance(prometheus);
+    const result = await collectMaintenance(
+      prometheus,
+      { listVeleroSchedules: () => Promise.resolve([]) },
+      new Date("2026-10-01T12:00:00Z"),
+    );
     expect(queries.toSorted()).toEqual(
       Object.values(MAINTENANCE_QUERIES).toSorted(),
     );
-    expect(result.signals).toEqual([]);
+    expect(result.signals).toHaveLength(3);
+    expect(
+      result.signals.every((signal) => signal.severity === "unknown"),
+    ).toBe(true);
   });
 
   test("renovate sets the pending-update gauge by state", async () => {

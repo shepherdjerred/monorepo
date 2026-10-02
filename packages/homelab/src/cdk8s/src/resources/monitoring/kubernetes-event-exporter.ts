@@ -50,6 +50,13 @@ export function createKubernetesEventExporter(chart: Chart) {
         resources: ["jobs", "cronjobs"],
         verbs: ["get", "watch", "list"],
       },
+      {
+        // Warning events reference ZFSVolume objects. Metadata enrichment only
+        // needs an individual read, not discovery or mutation of storage.
+        apiGroups: ["zfs.openebs.io"],
+        resources: ["zfsvolumes"],
+        verbs: ["get"],
+      },
     ],
   });
 

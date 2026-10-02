@@ -8,6 +8,7 @@ import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
+import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
 export function createVeleroApp(chart: Chart) {
   new Namespace(chart, `velero-namespace`, {
     metadata: {
@@ -45,6 +46,7 @@ export function createVeleroApp(chart: Chart) {
         // decisions/2026-05-05_velero-orphan-snapshot-prevention.md, Option 2).
         annotations: {
           "argocd.argoproj.io/sync-options": "Prune=false",
+          ...backupMonitoringAnnotations(scheduleConfig.monitoring),
         },
       },
       spec: {

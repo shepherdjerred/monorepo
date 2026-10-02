@@ -237,6 +237,21 @@ A floating tag means "whatever is newest when the sync happens", which makes a
 release non-reproducible and makes a partially published set indistinguishable
 from a complete one.
 
+## Why snapshot consumers precede Temporal
+
+The [ops dashboard](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts)
+and [TRMNL](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts)
+reconcile before Temporal so their validators accept new snapshot source values
+before the producer emits them. A rebuilt consumer also accepts snapshots from
+the previous producer, preserving collection during the transition.
+
+Workflow promotion alone cannot protect that boundary. The
+[publish Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/ops/ops-publish.ts)
+reports sources absent from an older Workflow as unknown using its own current
+contract. Updating the infra worker can therefore introduce a source before the
+Workflow deployment changes. Consumer readiness depends on local service
+initialization, allowing that order without a Temporal bootstrap dependency.
+
 ## Why a Synced-and-Healthy child still gets retried
 
 Repository-child reconciliation retries a failed operation recorded against

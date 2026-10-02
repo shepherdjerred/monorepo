@@ -99,7 +99,7 @@ export function createTemporalDashboard() {
         description: "Updater runs by mode, outcome, and reason",
         targets: [
           {
-            expr: "max by (mode, outcome, reason) (scout_data_dragon_runs) or on() vector(0)",
+            expr: "max by (mode, outcome, reason) (scout_data_dragon_runs_total)",
             legend: "{{mode}} {{outcome}} {{reason}}",
           },
         ],

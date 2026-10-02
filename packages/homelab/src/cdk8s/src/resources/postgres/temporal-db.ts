@@ -95,21 +95,16 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
         },
       },
       volume: {
-        // 128Gi for a ~2.5Gi database, because `zfs-ssd` provisions volumes with
+        // The quota includes both live database data and retained snapshots:
         // ZFS `quotaType: quota`, which counts snapshots against the same quota
-        // as live data. Velero retention (12 6hourly + 7 daily + 4 weekly +
-        // 3 monthly) holds ~26 snapshots, and this WAL-heavy cluster diverges
-        // ~500-700Mi of blocks per snapshot, so snapshots steady-state around
-        // 15Gi -- 6x the live dataset. The quota had again reduced the live
-        // filesystem to 3.9GiB and halted Temporal, so retain ample space for
-        // snapshot divergence and recovery WAL.
-        // 2026-08-27: Postgres could not create postmaster.pid ("Disk quota
-        // exceeded"), crash recovery looped, and the Temporal frontend never
-        // bound :7233, crashlooping every Temporal worker and Scout beta.
+        // as live data. Preserve Velero retention (12 6hourly + 7 daily +
+        // 4 weekly + 3 monthly) while allowing for WAL-heavy snapshot divergence.
+        // A ~20Gi live dataset and ~79Gi retained snapshots leave little room
+        // inside 128Gi; 256Gi preserves those recovery points and recovery WAL.
         // quotaType is immutable per-volume and StorageClass parameters are
         // immutable, so sizing around snapshot overhead is the available fix
         // without recreating the volume on a refquota class.
-        size: "128Gi",
+        size: "256Gi",
         storageClass: "zfs-ssd",
       },
       users: {

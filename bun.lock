@@ -1096,6 +1096,7 @@
       "name": "@shepherdjerred/ops-clients",
       "version": "0.1.0",
       "dependencies": {
+        "@shepherdjerred/ops-model": "workspace:*",
         "zod": "^4.4.3",
       },
       "devDependencies": {

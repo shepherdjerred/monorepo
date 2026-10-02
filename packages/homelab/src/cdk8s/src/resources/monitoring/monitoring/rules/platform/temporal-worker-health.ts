@@ -183,7 +183,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
     },
     {
       queue: "maintenance",
-      metricsNamespace: "woodpecker",
+      metricsNamespace: "woodpecker-ci",
       deploymentPattern: "temporal-maintenance-worker",
       servicePattern: ".*temporal-maintenance-worker.*metrics.*",
       activityPoller: true,

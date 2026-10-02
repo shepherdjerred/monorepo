@@ -23,6 +23,7 @@ export const SOURCE_IDS = [
   "logs",
   "traces",
   "maintenance",
+  "temporal",
   "ai",
 ] as const;
 

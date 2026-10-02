@@ -85,21 +85,19 @@ This usually means that Prometheus is not successfully scraping metrics from the
   );
 
   const overallStatusPanel = new stat.PanelBuilder()
-    .title("Overall Backup Status")
+    .title("Recorded Failures (24h)")
     .description(
-      "Overall backup status. 1 = Healthy (no failures in last 24h), 0 = Unhealthy.",
+      "Recorded failure events in the past 24 hours. Zero is an event count; schedule freshness and missing telemetry are evaluated in Ops maintenance and backup alerts.",
     )
     .datasource(prometheusDatasource)
     .withTarget(
       new prometheus.DataqueryBuilder()
-        .expr(
-          `absent(increase(velero_backup_failure_total{schedule!=""}[24h]) > 0) or on() vector(0)`,
-        )
-        .legendFormat("Status"),
+        .expr(`sum(increase(velero_backup_failure_total{schedule!=""}[24h]))`)
+        .legendFormat("Failures"),
     )
     .gridPos({ x: 0, y: 4, w: 24, h: 4 })
     .graphMode(common.BigValueGraphMode.None)
-    .colorMode(common.BigValueColorMode.Value);
+    .colorMode(common.BigValueColorMode.None);
 
   builder.withPanel(overallStatusPanel);
 
@@ -256,19 +254,13 @@ This usually means that Prometheus is not successfully scraping metrics from the
   // Backup Success Status (Current)
   builder.withPanel(
     createStatPanel({
-      title: "Current Backup Status",
-      description: "1 = Success in last hour, 0 = No success",
-      expr: `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[1h])) > bool 0) or on() vector(0)`,
+      title: "Completed Backups (1h)",
+      description:
+        "Completed backup events in the past hour. A zero count is normal between scheduled runs and does not determine backup health.",
+      expr: `sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[1h]))`,
       legend: "{{schedule}}",
       gridPos: { x: 18, y: 13, w: 6, h: 4 },
-    }).thresholds(
-      new dashboard.ThresholdsConfigBuilder()
-        .mode(dashboard.ThresholdsMode.Absolute)
-        .steps([
-          { value: 0, color: "red" },
-          { value: 1, color: "green" },
-        ]),
-    ),
+    }).colorMode(common.BigValueColorMode.None),
   );
 
   // Row 3: Backup Performance

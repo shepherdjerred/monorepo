@@ -110,11 +110,11 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
     annotations: {
       summary: "Scout Data Dragon Temporal update failed",
       description: escapePrometheusTemplate(
-        "The Scout Data Dragon updater failed {{ $value }} time(s) in the last 24 hours. Check the Temporal UI and worker logs for failure reason {{ $labels.reason }}.",
+        "The Scout Data Dragon updater recorded a failure in the last 24 hours. Check the Temporal UI and worker logs for failure reason {{ $labels.reason }}.",
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      'max_over_time(scout_data_dragon_runs{outcome="failed"}[24h]) > 0',
+      "time() - max_over_time(scout_data_dragon_last_failure_timestamp_s[24h]) < 86400",
     ),
     for: "15m",
     labels: {
@@ -135,7 +135,7 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      'max_over_time(scout_data_dragon_runs{outcome="failed",reason=~"git-push-failed|pr-create-failed"}[24h]) > 0',
+      'time() - max_over_time(scout_data_dragon_last_failure_timestamp_s{reason=~"git-push-failed|pr-create-failed"}[24h]) < 86400',
     ),
     for: "15m",
     labels: {
@@ -185,7 +185,7 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
         "The Scout Data Dragon Temporal schedule has not recorded any run, skip, or failure in the last 36 hours.",
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      "absent_over_time(scout_data_dragon_runs[36h])",
+      "absent_over_time(scout_data_dragon_last_run_timestamp_s[36h]) or time() - max(max_over_time(scout_data_dragon_last_run_timestamp_s[36h])) > 36 * 3600",
     ),
     for: "30m",
     labels: {
@@ -329,7 +329,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "The Temporal worker has not been able to keep the Home Assistant event bridge connected. Check worker logs and ha_event_bridge_start_failures_total for the reason.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "max(ha_event_bridge_connected) == 0",
+            'max(ha_event_bridge_connected{namespace="temporal",service=~".*temporal-home-worker.*metrics.*"}) == 0 or absent(ha_event_bridge_connected{namespace="temporal",service=~".*temporal-home-worker.*metrics.*"})',
           ),
           for: "30m",
           labels: {

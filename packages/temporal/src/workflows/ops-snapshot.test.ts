@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { Worker } from "@temporalio/worker";
 import { SOURCE_IDS } from "@shepherdjerred/ops-model/snapshot.ts";
 import type {
   OpsCollectorOutcome,
@@ -50,6 +51,48 @@ function collectorActivities(attempts: Map<string, number>) {
 }
 
 describe("ops snapshot workflow", () => {
+  test("replays histories created before the Temporal source without scheduling it", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const workflowId = `ops-before-temporal-${crypto.randomUUID()}`;
+    const attempts = new Map<string, number>();
+    try {
+      await runWorkflowWithActivityWorker(environment, {
+        activityTaskQueue: TASK_QUEUES.INFRA,
+        workflowPath: new URL(
+          "replay-fixtures/ops-before-temporal.ts",
+          import.meta.url,
+        ).pathname,
+        activities: {
+          ...collectorActivities(attempts),
+          collectOpsLinear: () =>
+            Promise.resolve({
+              status: {
+                source: "linear",
+                ok: true,
+                observedAt: summary.generatedAt,
+                durationMs: 1,
+              },
+              signals: [],
+              metrics: [],
+              changes: [],
+            }),
+          assembleAndPublishOpsSnapshot: () => Promise.resolve(summary),
+        },
+        execute: () =>
+          environment.client.workflow.execute("runOpsSnapshot", {
+            taskQueue: TASK_QUEUES.WORKFLOWS,
+            workflowId,
+          }),
+      });
+      expect(attempts.get("temporal")).toBeUndefined();
+      const history = await environment.client.workflow
+        .getHandle(workflowId)
+        .fetchHistory();
+      await Worker.runReplayHistory({ workflowsPath: workflowPath }, history);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
   test("the collector list covers every source exactly once", () => {
     expect(OPS_COLLECTORS.map(([source]) => source).toSorted()).toEqual(
       [...SOURCE_IDS].toSorted(),
@@ -90,6 +133,7 @@ describe("ops snapshot workflow", () => {
       expect(attempts.get("alerts")).toBe(1);
       // New runs take the patched branch and collect traces.
       expect(attempts.get("traces")).toBe(1);
+      expect(attempts.get("temporal")).toBe(1);
     } finally {
       await environment.teardown();
     }

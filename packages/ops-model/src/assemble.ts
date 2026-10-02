@@ -43,7 +43,11 @@ export const SECTION_DEFINITIONS: readonly SectionDefinition[] = [
   { id: "errors", title: "Errors", sources: ["bugsink"] },
   { id: "product", title: "Sites & product", sources: ["probes", "posthog"] },
   { id: "ai", title: "AI usage & spend", sources: ["ai"] },
-  { id: "maintenance", title: "Maintenance", sources: ["maintenance"] },
+  {
+    id: "maintenance",
+    title: "Maintenance",
+    sources: ["maintenance", "temporal"],
+  },
   {
     id: "observability",
     title: "Logs & traces",

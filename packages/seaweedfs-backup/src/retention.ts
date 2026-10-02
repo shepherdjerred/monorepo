@@ -1,6 +1,10 @@
 import type { BackupPolicy, CompletionMarker } from "./schemas.ts";
 import type { ObjectStore } from "./store.ts";
 import { completionKey, listCompletionMarkers } from "./manifest.ts";
+import {
+  maintenanceCheckpoint,
+  type BackupMaintenanceHooks,
+} from "./maintenance.ts";
 
 type PacificDate = { year: number; month: number; day: number };
 
@@ -107,14 +111,25 @@ export async function pruneExpiredSnapshots(input: {
   backupBucket: string;
   policy: BackupPolicy;
   now?: Date;
+  hooks?: BackupMaintenanceHooks;
 }): Promise<{ deletedSnapshots: number; markers: CompletionMarker[] }> {
   const now = input.now ?? new Date();
+  maintenanceCheckpoint(input.hooks, {
+    stage: "snapshot-inventory",
+    completed: 0,
+  });
   const markers = await listCompletionMarkers(input.store, input.backupBucket);
   const retained = selectRetainedSnapshotIds(markers, input.policy);
   const minimumAgeMilliseconds =
     input.policy.retention.objectLockDays * 86_400_000;
   let deletedSnapshots = 0;
+  let completed = 0;
   for (const marker of markers) {
+    maintenanceCheckpoint(input.hooks, {
+      stage: "snapshot-prune",
+      completed: completed++,
+      total: markers.length,
+    });
     if (
       retained.has(marker.snapshotId) ||
       now.getTime() - Date.parse(marker.completedAt) < minimumAgeMilliseconds
@@ -126,9 +141,15 @@ export async function pruneExpiredSnapshots(input: {
       completionKey(marker.snapshotId),
     );
     for (const manifest of marker.manifests) {
+      input.hooks?.signal?.throwIfAborted();
       await input.store.deleteObject(input.backupBucket, manifest.key);
     }
     deletedSnapshots += 1;
   }
+  maintenanceCheckpoint(input.hooks, {
+    stage: "snapshot-prune",
+    completed: markers.length,
+    total: markers.length,
+  });
   return { deletedSnapshots, markers };
 }

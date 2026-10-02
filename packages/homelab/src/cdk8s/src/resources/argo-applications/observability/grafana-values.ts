@@ -1,7 +1,6 @@
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-
-const GRAFANA_RENDERER_TOKEN_KEY = "GRAFANA_RENDERER_TOKEN";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 type KubePrometheusStackValues = HelmValuesForChart<"kube-prometheus-stack">;
 type GrafanaValues = NonNullable<KubePrometheusStackValues["grafana"]>;
@@ -112,20 +111,6 @@ export function createGrafanaValues(
         kubernetesDashboards: true,
         grafanaAdvisor: true,
       },
-      rendering: {
-        server_url:
-          "http://prometheus-grafana-image-renderer.prometheus:8081/render",
-        callback_url: "http://prometheus-grafana.prometheus:80/",
-        renderer_token: `$__env{${GRAFANA_RENDERER_TOKEN_KEY}}`,
-      },
-    },
-    envValueFrom: {
-      [GRAFANA_RENDERER_TOKEN_KEY]: {
-        secretKeyRef: {
-          name: rendererSecretName,
-          key: GRAFANA_RENDERER_TOKEN_KEY,
-        },
-      },
     },
     defaultDashboardsEnabled: true,
     // Baseline request (no limits) so dashboards aren't BestEffort.
@@ -138,6 +123,11 @@ export function createGrafanaValues(
     },
     imageRenderer: {
       enabled: true,
+      // The subchart supplies both GF_RENDERING_RENDERER_TOKEN and AUTH_TOKEN
+      // from this Secret's `token` key. One stable owner avoids random tokens
+      // changing on every render and conflicting with grafana.ini overrides.
+      existingSecret: rendererSecretName,
+      image: { tag: versions["grafana/grafana-image-renderer"] },
       resources: {
         requests: { cpu: "50m", memory: "512Mi" },
       },

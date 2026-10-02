@@ -20,12 +20,26 @@ function metrics(): {
   versionInfo: ReturnType<typeof metricMeter.createGauge>;
   autoMergeFailures: ReturnType<typeof metricMeter.createCounter>;
   autoMergeLastFailure: ReturnType<typeof metricMeter.createGauge>;
+  lastRun: ReturnType<typeof metricMeter.createGauge>;
+  lastFailure: ReturnType<typeof metricMeter.createGauge>;
 } {
   return {
     runs: metricMeter.createCounter(
       "scout_data_dragon_runs",
       "1",
       "Scout Data Dragon updater runs",
+    ),
+    lastRun: metricMeter.createGauge(
+      "scout_data_dragon_last_run_timestamp",
+      "int",
+      "s",
+      "Unix time of the last updater run, skip, or failure",
+    ),
+    lastFailure: metricMeter.createGauge(
+      "scout_data_dragon_last_failure_timestamp",
+      "int",
+      "s",
+      "Unix time of the last updater failure",
     ),
     prs: metricMeter.createCounter(
       "scout_data_dragon_prs",
@@ -72,6 +86,13 @@ export function recordRun(input: DataDragonRunMetrics): void {
     reason: input.reason,
   };
   meter.runs.add(1, baseTags);
+  const timestamp = Math.floor(Date.now() / 1000);
+  meter.lastRun.set(timestamp, { mode: input.mode });
+  if (input.outcome === "failed")
+    meter.lastFailure.set(timestamp, {
+      mode: input.mode,
+      reason: input.reason,
+    });
   meter.changedFiles.set(input.changedFiles ?? 0, {
     mode: input.mode,
     outcome: input.outcome,
