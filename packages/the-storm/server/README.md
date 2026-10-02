@@ -7,7 +7,7 @@ the version catalog control its GitOps release.
 
 CI updates the candidate pin `shepherdjerred/the-storm-server`. The live chart
 uses the separately accepted `shepherdjerred/the-storm-server/prod` pin. Publish
-the candidate first, complete the backup, restore, archive, and clone checks
+the candidate first, complete the selected stopped-server progression archive
 below, then promote its exact digest into the production pin through a PR.
 Candidate publication cannot restart production with an unprepared volume.
 
@@ -70,10 +70,9 @@ listing all modules alone does not prove these asynchronous checks succeeded.
 
 ## Preparing an existing volume
 
-Use a maintenance window and prevent mc-router from waking the server during
-storage work. Preserve the old image digest and relevant Flipt values for
-rollback. Do not change production until exact-head checks and publication
-have passed.
+Prevent admissions and mc-router wake-ups during the cutover. Preserve the old
+image digest and relevant Flipt values. Require exact-head checks and published
+image verification before activation.
 
 1. Check for players, active arena games, outstanding graves, pending inventory
    handoffs, and unfinished refunds or teleport charges. Recover player
@@ -82,11 +81,22 @@ have passed.
    `mining` with `normal` through Multiverse while the old image is running
    with Storm gameplay disabled. Confirm their NORMAL environment, presets,
    saved registration, and automatic loading.
-3. Stop the server cleanly. Take a consistent backup of the complete data
-   volume and restore it to an independent, isolated volume. A completed
-   backup job alone is insufficient.
-4. With both servers stopped, run the archive against the actual restored
-   data using the new image's script:
+3. Stop the server cleanly. For an archive-only cutover, run the reviewed
+   repository script against the stopped data volume:
+
+   ```bash
+   python3 archive-progression.py --data /data --archive-only
+   ```
+
+   This moves old progression aside on the same volume, records an
+   `archive-only` receipt with no backup ID, and preserves worlds and vanilla
+   player data. It requires free world session locks, a valid Storm database,
+   settled inventory/financial obligations, and unambiguous archive targets.
+   Repeating the completed command leaves new progression alone.
+
+   When independent recovery verification is required, take a consistent full
+   backup, restore to independent storage, and use verified-restore mode with
+   both servers stopped:
 
    ```bash
    python3 /opt/the-storm/archive-progression.py \
@@ -101,16 +111,12 @@ have passed.
    inventories, LuckPerms, and owned Storm content remain in place. Interrupted
    moves resume against the same backup; a completed archive never runs again.
 
-5. Boot an isolated clone with the release image. Verify startup and
-   representative player flows before reconciling production through the
-   repository release workflow. Never route the clone to production Discord
-   or Microsoft player authentication.
-6. Promote the verified candidate digest into the production catalog pin and
+4. Promote the verified candidate digest into the production catalog pin and
    remove the legacy `DISCORDSRV_TOKEN` and `CFG_DISCORD_CHANNEL_ID` chart refs.
    Reconcile the published image and chart revision through GitOps. Confirm
    the exact eleven-plugin runtime set, all 21 modules, successful asynchronous
    world checks, brain readiness, and the authenticated Discord bridge.
-7. Verify the windmill spawn and altar, mine entrance south of town, trainers
+5. Verify the windmill spawn and altar, mine entrance south of town, trainers
    and quest givers, arena join/class/leave and inventory restoration, shops,
    town protection, skills, graves, crier/digest, and trader barters. Bedrock
    and BlueMap have separate live acceptance checks.
@@ -126,9 +132,11 @@ Native border diameters preserve the old radii: 40000 in the main world,
 
 ## Rollback
 
-Stop admissions and the server. Restore the complete verified pre-cutover
-backup, previous image/chart revision, and captured Flipt settings, then
-reconcile through the release workflow and check legacy player state.
+Stop admissions and the server. An archive-only cutover retains old plugin
+state locally but creates no independently verified world recovery point.
+For verified-restore cutovers, restore the complete pre-cutover backup,
+previous image/chart revision, and captured Flipt settings, then reconcile
+through the release workflow and check legacy player state.
 Do not combine an old plugin database with newer player data: inventory
 handoff receipts must stay consistent. Keep the archived state and restore
 volume until live acceptance and the rollback retention window are complete.

@@ -108,16 +108,25 @@ def require_settled(database: Path) -> None:
                 raise ValueError("Restore outstanding arena inventories before archiving")
 
 
-def save_marker(path: Path, status: str, backup_id: str) -> None:
+def save_marker(path: Path, status: str, backup_id: str | None, mode: str = "verified-restore") -> None:
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps({"version": 1, "status": status, "backupId": backup_id}) + "\n", encoding="utf-8")
+    receipt = {"version": 1, "status": status, "mode": mode, "backupId": backup_id}
+    temporary.write_text(json.dumps(receipt) + "\n", encoding="utf-8")
     temporary.replace(path)
 
 
-def archive(data: Path, restored: Path, backup_id: str) -> None:
-    data, restored = data.resolve(strict=True), restored.resolve(strict=True)
-    if data == restored or data in restored.parents or restored in data.parents:
-        raise ValueError("The restore must be an independent directory outside the live data tree")
+def archive(data: Path, restored: Path | None, backup_id: str | None, *, archive_only: bool = False) -> None:
+    data = data.resolve(strict=True)
+    mode = "archive-only" if archive_only else "verified-restore"
+    if archive_only:
+        if restored is not None or backup_id is not None:
+            raise ValueError("Archive-only mode does not accept restore or backup arguments")
+    else:
+        if restored is None or backup_id is None or not backup_id.strip():
+            raise ValueError("Verified-restore mode requires a restore and backup ID")
+        restored = restored.resolve(strict=True)
+        if data == restored or data in restored.parents or restored in data.parents:
+            raise ValueError("The restore must be an independent directory outside the live data tree")
     marker = data / MARKER
     if marker.exists():
         receipt = json.loads(marker.read_text(encoding="utf-8"))
@@ -126,43 +135,51 @@ def archive(data: Path, restored: Path, backup_id: str) -> None:
         if receipt["status"] == "complete":
             print("Progression archive already complete; nothing changed")
             return
-        if receipt.get("backupId") != backup_id:
-            raise ValueError("Resume with the original backup ID")
+        if receipt.get("mode", "verified-restore") != mode or receipt.get("backupId") != backup_id:
+            raise ValueError("Resume with the original archive mode and backup ID")
     destination = data / "progression-archives/v1"
     with ExitStack() as stack:
         worlds = hold_world_locks(data, stack)
-        hold_world_locks(restored, stack)
-        for world in worlds:
-            if fingerprint(world) != fingerprint(restored / world.name):
-                raise ValueError(f"Restored world differs: {world.name}")
+        if restored is not None:
+            hold_world_locks(restored, stack)
+            for world in worlds:
+                if fingerprint(world) != fingerprint(restored / world.name):
+                    raise ValueError(f"Restored world differs: {world.name}")
         for target in TARGETS:
-            source, archived, backup = data / target, destination / target, restored / target
+            source, archived = data / target, destination / target
             if source.exists() and archived.exists():
                 raise ValueError(f"Both live and archived copies exist: {target}")
             actual = archived if archived.exists() else source
-            if fingerprint(actual) != fingerprint(backup):
+            actual_fingerprint = fingerprint(actual)
+            if restored is not None and actual_fingerprint != fingerprint(restored / target):
                 raise ValueError(f"Restored progression differs: {target}")
         database = data / "plugins/TheStorm/the-storm.db"
         require_settled(database if database.exists() else destination / "plugins/TheStorm/the-storm.db")
-        save_marker(marker, "preparing", backup_id)
+        save_marker(marker, "preparing", backup_id, mode)
         for target in TARGETS:
             source, archived = data / target, destination / target
             if source.exists():
                 archived.parent.mkdir(parents=True, exist_ok=True)
                 source.rename(archived)
-        save_marker(marker, "complete", backup_id)
-    print("Progression archived; verified worlds and vanilla player data preserved")
+        save_marker(marker, "complete", backup_id, mode)
+    print(f"Progression archived ({mode}); worlds and vanilla player data preserved")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True)
-    parser.add_argument("--restored-data", type=Path, required=True)
-    parser.add_argument("--backup-id", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--restored-data", type=Path)
+    mode.add_argument(
+        "--archive-only", action="store_true", help="Move progression aside without backup/restore verification"
+    )
+    parser.add_argument("--backup-id")
     args = parser.parse_args()
-    if not args.backup_id.strip():
-        parser.error("backup ID must not be empty")
-    archive(args.data, args.restored_data, args.backup_id)
+    if args.archive_only and args.backup_id is not None:
+        parser.error("archive-only mode does not accept a backup ID")
+    if not args.archive_only and (args.backup_id is None or not args.backup_id.strip()):
+        parser.error("verified-restore mode requires a nonempty backup ID")
+    archive(args.data, args.restored_data, args.backup_id, archive_only=args.archive_only)
 
 
 if __name__ == "__main__":
