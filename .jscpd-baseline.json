@@ -452,10 +452,6 @@
       "clones": 1,
       "tokens": 70
     },
-    "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 3,
       "tokens": 264
