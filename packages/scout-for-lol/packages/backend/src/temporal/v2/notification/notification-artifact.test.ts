@@ -90,6 +90,7 @@ describe("the post-match reader", () => {
     expect(stubs.readNotificationArtifactV2).toHaveBeenCalledWith(
       MATCH,
       "postmatch",
+      undefined,
     );
     expect(stubs.readVerifiedRawObjectBytes).toHaveBeenCalledTimes(2);
   });
@@ -169,6 +170,7 @@ describe("the prematch reader", () => {
     expect(stubs.readNotificationArtifactV2).toHaveBeenCalledWith(
       MATCH,
       "prematch",
+      undefined,
     );
   });
 

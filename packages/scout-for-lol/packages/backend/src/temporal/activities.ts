@@ -148,6 +148,9 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           const { runIngestionReconciliation } =
             await import("#src/league/tasks/recovery/ingestion-reconciliation.ts");
           await runIngestionReconciliation();
+          const { reconcileReportDeliveries } =
+            await import("#src/reports/discord-dispatcher.ts");
+          await reconcileReportDeliveries();
           const { prisma } = await import("#src/database/index.ts");
           const { findQueuedScoutTemporalWork } =
             await import("#src/temporal/work-store.ts");
@@ -282,6 +285,9 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             const { runNotificationIntentExpiry } =
               await import("#src/durable/match/intent-expiry.ts");
             await runNotificationIntentExpiry();
+            const { settleTerminalNotificationTips } =
+              await import("#src/temporal/v2/notification/notification-presentation.ts");
+            await settleTerminalNotificationTips();
             break;
           }
           case "progression-outbox": {

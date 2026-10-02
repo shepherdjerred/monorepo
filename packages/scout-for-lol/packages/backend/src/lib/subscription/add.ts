@@ -17,6 +17,7 @@ import type {
 import { resolveRiotIdToPuuid } from "#src/lib/riot/resolve-puuid.ts";
 import { checkSubscriptionAndAccountLimits } from "#src/lib/subscription/limits.ts";
 import { enqueueInitialMatchHistoryImport } from "#src/league/initial-history/enqueue.ts";
+import configuration from "#src/configuration.ts";
 
 const logger = createLogger("subscription-add");
 
@@ -238,6 +239,11 @@ export async function addSubscription(
   db: Db,
   initialHistoryImportEnabled: boolean,
 ): Promise<AddSubscriptionResult> {
+  if (!initialHistoryImportEnabled && configuration.environment === "beta") {
+    throw new Error(
+      "Beta subscriptions require the durable initial history import owner",
+    );
+  }
   try {
     return await commitSubscription({
       input,
@@ -263,6 +269,11 @@ export async function runBackfillAfterCommit(params: {
   region: Region;
   discordUserId: DiscordAccountId | undefined;
 }): Promise<void> {
+  if (configuration.environment === "beta") {
+    throw new Error(
+      "Detached legacy initial history backfill is retired in beta",
+    );
+  }
   try {
     await backfillLastMatchTime(
       {

@@ -19,6 +19,12 @@ const stubs = vi.hoisted(() => ({
   afterDareSummaryDeliveredV2: vi.fn(),
   afterPrematchDeliveredV2: vi.fn(),
   afterHallRecordBreakDeliveredV2: vi.fn(),
+  confirmNotificationTip: vi.fn(async () => {
+    /* The presentation suite verifies claims. */
+  }),
+}));
+vi.mock("#src/temporal/v2/notification/notification-presentation.ts", () => ({
+  confirmNotificationTip: stubs.confirmNotificationTip,
 }));
 
 vi.mock("#src/temporal/v2/notification-reads.ts", () => ({

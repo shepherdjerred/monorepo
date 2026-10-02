@@ -1,5 +1,5 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
 import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
 import { parseTipKey } from "#src/tips/tip-catalog.ts";
 
@@ -29,7 +29,7 @@ function audienceWhere(audience: TipAudience) {
  */
 export async function shownTipKeys(
   audience: TipAudience,
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<Set<FeatureTipKey>> {
   const rows = await db.featureTipImpression.findMany({
     where: audienceWhere(audience),
@@ -41,7 +41,7 @@ export async function shownTipKeys(
 /** When this audience last saw a tip, or undefined if it never has. */
 export async function lastTipShownAt(
   audience: TipAudience,
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<Date | undefined> {
   const rows = await db.featureTipImpression.findMany({
     where: audienceWhere(audience),
@@ -70,7 +70,7 @@ export async function lastTipShownAt(
  */
 export async function claimTip(
   input: TipAudience & { tipKey: FeatureTipKey; shownAt?: Date },
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<boolean> {
   const { count } = await db.featureTipImpression.createMany({
     data: [
@@ -89,7 +89,7 @@ export async function claimTip(
 /** Mark a claimed row as a delivered impression without changing its timestamp. */
 export async function confirmTipClaim(
   input: TipAudience & { tipKey: FeatureTipKey },
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<void> {
   await db.featureTipImpression.updateMany({
     where: {
@@ -109,7 +109,7 @@ export async function confirmTipClaim(
  */
 export async function releaseTipClaim(
   input: TipAudience & { tipKey: FeatureTipKey },
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<void> {
   await db.featureTipImpression.deleteMany({
     where: {

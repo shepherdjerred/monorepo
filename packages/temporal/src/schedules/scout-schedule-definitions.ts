@@ -198,13 +198,17 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage }],
       every: "1 minute",
     }),
-    intervalSchedule(stage, {
-      name: "progression-outbox",
-      workflowType: "scoutBackgroundJobWorkflow",
-      args: [{ stage, kind: "progression-outbox" }],
-      every: "1 minute",
-      catchupWindow: CATCHUP_TIGHT,
-    }),
+    ...(stage === "beta"
+      ? []
+      : [
+          intervalSchedule(stage, {
+            name: "progression-outbox",
+            workflowType: "scoutBackgroundJobWorkflow",
+            args: [{ stage, kind: "progression-outbox" }],
+            every: "1 minute",
+            catchupWindow: CATCHUP_TIGHT,
+          }),
+        ]),
     intervalSchedule(stage, {
       name: "progression-reconciliation",
       workflowType: "scoutBackgroundJobWorkflow",

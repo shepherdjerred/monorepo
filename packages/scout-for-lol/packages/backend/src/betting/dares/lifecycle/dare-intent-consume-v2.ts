@@ -59,6 +59,7 @@ function asDarePayload(
     case "ops_retry_notification":
     case "ops_suppress_stale_notification":
     case "ops_resolve_unknown_delivery":
+    case "ops_resolve_report_delivery":
     case "ops_repair_projection":
     case "ops_release_recovery_policy": {
       return null;

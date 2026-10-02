@@ -7,6 +7,8 @@ import {
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { ReportRunIdSchema } from "#src/model/reports/report.ts";
 
 /**
  * The confirmation-intent arms that operate the durable match pipeline.
@@ -72,6 +74,22 @@ export type OperatorDeliveryAnswer = z.infer<
  * through, exactly as the dare and creation arms are spread.
  */
 export const operationsIntentPayloadArms = [
+  z.strictObject({
+    kind: z.literal("ops_resolve_report_delivery"),
+    version: z.literal(1),
+    runId: ReportRunIdSchema,
+    channelId: DiscordChannelIdSchema,
+    chunkIndex: z.int().nonnegative(),
+    attemptNonce: z.string().regex(/^[a-f0-9]{24}$/),
+    answer: z.discriminatedUnion("outcome", [
+      z.strictObject({
+        outcome: z.literal("delivered"),
+        messageId: DiscordMessageIdSchema,
+        deliveredAt: IsoInstantSchema,
+      }),
+      z.strictObject({ outcome: z.literal("not-delivered") }),
+    ]),
+  }),
   /** Sweep the durable pipeline for work its owners dropped. */
   z.strictObject({
     kind: z.literal("ops_reconcile_pipeline"),
@@ -132,6 +150,7 @@ export const operationsIntentPayloadArms = [
 
 /** The kinds that operate the durable match pipeline. */
 export const OperationsIntentKindSchema = z.enum([
+  "ops_resolve_report_delivery",
   "ops_reconcile_pipeline",
   "ops_retry_notification",
   "ops_suppress_stale_notification",

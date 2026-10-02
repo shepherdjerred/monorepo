@@ -28,6 +28,7 @@ import {
 import { FilterSelect } from "#src/components/filter-select.tsx";
 import { OperationsMatchPanel } from "#src/components/operations/operations-match-panel.tsx";
 import { OperationsQueuePanel } from "#src/components/operations/operations-queue-panel.tsx";
+import { ReportDeliveriesPanel } from "#src/components/operations/report-deliveries-panel.tsx";
 import { OperationsRequestPanel } from "#src/components/operations/operations-request-panel.tsx";
 import {
   operationsStartsWorkflow,
@@ -167,6 +168,9 @@ export function OperationsMatches() {
   const queryClient = useQueryClient();
   const { temporal } = useOperationsAvailability();
   const queuesQuery = useQuery(trpc.operations.queues.queryOptions({}));
+  const reportDeliveries = useQuery(
+    trpc.operations.reportDeliveries.queryOptions(),
+  );
   /**
    * Pages fetched beyond the first, tied to the read they extend. A fresh base
    * result carries a new `dataUpdatedAt`, which retires the accumulation rather
@@ -251,9 +255,9 @@ export function OperationsMatches() {
       <header className="space-y-1">
         <h1 className="text-xl font-semibold">Match operations</h1>
         <p className="text-sm text-scout-subtle">
-          The durable match pipeline, and the six operations that move it. Every
-          one is prepared, reviewed and then confirmed; nothing here acts on a
-          single click.
+          The durable pipeline and report deliveries. Every operation one is
+          prepared, reviewed and then confirmed; nothing here acts on a single
+          click.
         </p>
       </header>
 
@@ -306,6 +310,14 @@ export function OperationsMatches() {
         onChange={setFilter}
         shown={operationsRowCount(queues)}
         moreAvailable={queues.some((queue) => queue.hasMore)}
+      />
+
+      <ReportDeliveriesPanel
+        chunks={reportDeliveries.data}
+        pending={reportDeliveries.isPending}
+        error={reportDeliveries.error}
+        canStart={canStart("ops_resolve_report_delivery")}
+        onStart={start}
       />
 
       {queuesQuery.isPending && <LoadingState label="Reading the queues…" />}

@@ -9,6 +9,12 @@ const PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
 
 describe("Scout progression and V2 pipeline reconciliation schedules", () => {
+  test("retires only beta's legacy delivery owner while retaining domain reconciliation", () => {
+    const ids = SCHEDULES.map((schedule) => schedule.id);
+    expect(ids).not.toContain("scout-beta-progression-outbox");
+    expect(ids).toContain("scout-beta-progression-reconciliation");
+    expect(ids).toContain("scout-prod-progression-outbox");
+  });
   test.each(["beta", "prod"] as const)(
     "activates progression reconciliation and keeps V2 pipeline paused for %s",
     (stage) => {

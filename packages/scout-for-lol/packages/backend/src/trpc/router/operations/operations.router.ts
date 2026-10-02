@@ -245,6 +245,18 @@ const availability = operationsProcedure.query(() => ({
 }));
 
 export const operationsRouter = router({
+  reportDeliveries: operationsProcedure.query(
+    async () =>
+      await prisma.reportDeliveryChunk.findMany({
+        where: { state: { in: ["UNKNOWN", "SENDING"] } },
+        orderBy: [
+          { updatedAt: "asc" },
+          { reportRunId: "asc" },
+          { chunkIndex: "asc" },
+        ],
+        take: OPERATIONS_QUEUE_MAX,
+      }),
+  ),
   availability,
   queues,
   matchPipeline,

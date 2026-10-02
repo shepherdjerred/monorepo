@@ -35,6 +35,7 @@ import {
 import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
+import { settleNotificationTip } from "#src/temporal/v2/notification/notification-presentation.ts";
 
 /**
  * The V2 notification lane's reads, and the two translations every one of its
@@ -195,6 +196,9 @@ export async function notificationTransitionV2(
     const stored = await requireIntentRecordV2(intentKey);
     intent = stored.intent;
   }
+  await prisma.$transaction(async (tx) => {
+    await settleNotificationTip(intent, tx);
+  });
   return ScoutNotificationTransitionV2ResultSchema.parse({
     commit: notificationCommitV2(result),
     state: intent.state,

@@ -135,7 +135,7 @@ delivery, workflow start — and then records what that operation did in the
 durable tables (`MatchObservation`, `MatchTrackedAccount`,
 `MatchProcessingReceipt`, `MatchNotificationIntent`, `ScoutWorkflowStart`).
 
-The pipeline remains authoritative for behaviour. Every durable write is
+The legacy v1 pipeline remains authoritative for its behaviour. Its durable writes are
 fail-open: it can never throw into the pipeline, so a recorder outage cannot
 stall ingestion or suppress a report. `ScoutEffectClaim` is still the
 at-most-once Discord delivery guard; a notification intent is a record of what
@@ -483,23 +483,19 @@ does what v1's `sendPrematchNotification` does, after its capture and plan:
    per match and counts the guild's core output. A failed ref write is
    retried, because the ref is the settlement announcement's only destination.
 
-V2 does not decorate prematch messages with feature tips, and it decides the
-Clash chrome once from the tracked players rather than per guild.
+Prematch and postmatch delivery freeze message content, embeds, buttons and
+feature-tip selection in `NotificationPresentation` before sending. A guild
+advisory lock serializes tip selection and claiming. Delivery confirms the
+claim; a definitive terminal non-send releases it. Ambiguous delivery keeps it.
+Retries reuse the saved presentation and never select another tip.
 
-The ramp procedure:
+New prematch presentations freeze the guild's Clash decision. Render receipts
+and S3 artifact keys include that guild and decision, so mixed-guild targeting
+cannot share the wrong chrome. Older global render receipts retain their
+original scope and remain readable.
 
-1. Confirm the running Scout worker image includes the
-   `scout-v2-prematch-delivery` patch.
-2. Switch `scout_v2_prematch_ownership_enabled` on for `beta` in Flipt. It
-   takes effect on the next 30-second pass. Commit a matching `beta`
-   `default: true` override in `managed-flag-inventory.json`, or the inventory
-   check reports drift.
-3. Soak in beta for at least a day of real games. Check that
-   `scout-beta-prematch-discovery-v2` runs each pass. Check that
-   `scout-beta-prematch-game-v2-*` captures complete. Check that one
-   announcement arrives per game and channel. Check that `prematch-poll` runs
-   return `completed`, not a steady `no-op`.
-4. Repeat steps 2 and 3 for `prod`.
+The release procedure is maintained in the
+[Scout Temporal rollout guide](https://wiki.sjer.red/how-to/roll-out-scout-temporal/).
 
 A rollback is the same two changes with the value `false`. The next pass runs
 v1 again, and v1 skips every game V2 already captured, even one whose
@@ -1219,19 +1215,13 @@ Notes that are easy to get wrong:
 - **Voice is gateway-coupled by design.** It reads an active voice connection's
   audio, so it cannot be moved off the shard. That makes `gateway` an explicitly
   stateful role.
-- **`gateway` needs the lake even though it runs no Temporal worker.** `/scout
-ask` and the Dare commands execute the Explore agent in the process that
-  received the interaction, which is a synchronous DuckDB read. It declared no
-  lake access while doing exactly that, and because the boot gate only runs for
-  roles that declare access, the pod that needed the check was the one that
-  skipped it — DuckDB scans zero parquet files rather than failing, so every
-  question came back "no games found", successfully. Wave 6 settles this either
-  by routing Discord-surface Explore turns through the `interactive` queue (the
-  same mechanism this role already owes customs voice) or by giving the gateway
-  Deployment the lake volume. Independently of the table, every in-process lake
-  read now asserts the capability at the read site in
-  `reports/duckdb/lake.ts`: a capability whose `false` skips a safety check
-  cannot protect the role that sets it false.
+- **Discord authoring uses persisted Explore runs.** `/scout ask` and Dare
+  authoring reserve the shared durable quota and hand off to the interactive
+  Activity queue through `explore/runs/discord/turn.ts`. The gateway waits for
+  the exact saved result; an ambiguous start remains pending for reconciliation.
+  Beta gateway declares no lake access. Dev and production retain their
+  compatibility capability until their topology migration. Every lake reader
+  asserts its capability in `reports/duckdb/lake.ts`.
 - **`application` publishes the report lake**, and owns the collectors that
   sweep the database on every `/metrics` scrape. Every role serves `/metrics`,
   but running those four collectors on all of them would turn one Prometheus

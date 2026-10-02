@@ -249,7 +249,7 @@ function computeConfiguration() {
     // Derived, not read from the environment: the role decides the subsystems,
     // so a consumer asking "may this process do X" asks the table rather than
     // re-deriving X from a role name at the call site.
-    runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole),
+    runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole, environment),
     skipReportLakeFold,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
     temporalNamespace,

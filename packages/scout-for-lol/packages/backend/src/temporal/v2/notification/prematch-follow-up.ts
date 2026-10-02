@@ -1,5 +1,6 @@
 import {
   resolveQueueTypeFromGame,
+  DiscordGuildIdSchema,
   type LoadingScreenData,
 } from "@scout-for-lol/data";
 import type { ScoutNotificationFollowUpV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
@@ -55,15 +56,9 @@ const logger = createLogger("scout-v2-prematch-follow-up");
  * fails does not undo a delivered announcement, and is logged rather than
  * retried into a second parlay request.
  *
- * ## What v1 did here that V2 does not
- *
- * v1 decorates the message with a feature tip before sending and confirms the
- * tip's claim after. The V2 message is rebuilt from durable state on every
- * send attempt, and a tip is a mutable claim rather than a fact of the game —
- * decorating would make the attested message depend on which attempt ran.
- * The V2 post-match send makes the same call. For a betting guild the
- * difference is also invisible for long: v1's own refresh rewrites the
- * content from `prematchContentBase`, which never contained the tip.
+ * Tip selection and furniture are frozen before sending. The shared delivery
+ * follow-up confirms the tip claim before reaching this function. Pool refresh
+ * rebuilds base content with the saved guild Clash choice and preserves embeds.
  */
 export async function afterPrematchDeliveredV2(
   record: MatchNotificationIntentRecord,
@@ -110,7 +105,19 @@ async function recordPoolMessage(
   guildId: DiscordGuildId,
   ref: { channelId: string; messageId: string },
 ): Promise<void> {
-  const rendered = await readNotificationArtifactV2(record.matchId, "prematch");
+  const presentation = await prisma.notificationPresentation.findUnique({
+    where: { intentKey: record.intent.key },
+  });
+  const rendered = await readNotificationArtifactV2(
+    record.matchId,
+    "prematch",
+    presentation?.guildPrematchArtifact === true
+      ? {
+          guildId: DiscordGuildIdSchema.parse(presentation.serverId),
+          clashEnabled: presentation.clashEnabled,
+        }
+      : undefined,
+  );
   if (rendered === null || rendered.artifact === "report") {
     throw new Error(
       `Prematch intent ${record.intent.key} was delivered, but no prematch render receipt stands for ${record.matchId} to say what its message carried`,
@@ -123,6 +130,9 @@ async function recordPoolMessage(
     prematchContentBase: await prematchContentBaseV2(
       context,
       rendered.artifact,
+      presentation?.guildPrematchArtifact === true
+        ? presentation.clashEnabled
+        : undefined,
     ),
   });
   const standing = await prisma.bucksMatchPool.findUnique({

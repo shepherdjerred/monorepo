@@ -1,4 +1,7 @@
 import type { MessageCreateOptions } from "discord.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { prisma } from "#src/database/index.ts";
+import { freezeNotificationMessage } from "#src/temporal/v2/notification/notification-presentation.ts";
 import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { buildDuelStatusNotificationMessageV2 } from "#src/temporal/v2/notification/duel-status-notification.ts";
 import { buildDareStatusNotificationMessageV2 } from "#src/temporal/v2/notification/dare-status-notification.ts";
@@ -65,15 +68,39 @@ export async function buildAttestedMessageV2(
     case "hall-record-break":
       return buildHallRecordBreakNotificationMessageV2(record);
     case "postmatch":
-      return buildPostmatchNotificationMessageV2(
-        riotMatchId,
-        await readAttestedReportArtifactV2(riotMatchId, abortSignal),
+      return await freezeNotificationMessage(
+        record,
+        buildPostmatchNotificationMessageV2(
+          riotMatchId,
+          await readAttestedReportArtifactV2(riotMatchId, abortSignal),
+        ),
+        deliveryGuildId,
       );
-    case "prematch":
-      return await buildPrematchNotificationMessageV2(
-        riotMatchId,
-        await readAttestedPrematchArtifactV2(riotMatchId, abortSignal),
-        record.intent.target,
+    case "prematch": {
+      const saved = await prisma.notificationPresentation.findUnique({
+        where: { intentKey: record.intent.key },
+      });
+      const presentation =
+        saved?.guildPrematchArtifact === true
+          ? {
+              guildId: DiscordGuildIdSchema.parse(saved.serverId),
+              clashEnabled: saved.clashEnabled,
+            }
+          : undefined;
+      return await freezeNotificationMessage(
+        record,
+        await buildPrematchNotificationMessageV2(
+          riotMatchId,
+          await readAttestedPrematchArtifactV2(
+            riotMatchId,
+            abortSignal,
+            presentation,
+          ),
+          record.intent.target,
+          presentation?.clashEnabled,
+        ),
+        deliveryGuildId,
       );
+    }
   }
 }

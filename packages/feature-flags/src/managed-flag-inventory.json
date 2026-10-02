@@ -1687,6 +1687,14 @@
       "key": "beta",
       "overrides": [
         {
+          "key": "initial_match_history_import_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "birmel-image-generation-enabled",
           "type": "boolean",
           "default": true,
@@ -1790,7 +1798,7 @@
         {
           "key": "scout_v2_progression_notifications_enabled",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "rollouts": [
             {
               "segmentKey": "scout-guild-1337623164146155593",

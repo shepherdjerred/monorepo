@@ -23,6 +23,16 @@ import type { ConfirmationCardState } from "#src/lib/explore/explore-intent-card
 export type OperationsDeliveryOutcome = "delivered" | "not-delivered";
 
 export type OperationsRequestDraft =
+  | {
+      readonly kind: "ops_resolve_report_delivery";
+      readonly runId: number;
+      readonly channelId: string;
+      readonly chunkIndex: number;
+      readonly attemptNonce: string;
+      readonly outcome: OperationsDeliveryOutcome;
+      readonly messageId: string;
+      readonly deliveredAt: string;
+    }
   | { readonly kind: "ops_reconcile_pipeline" }
   | { readonly kind: "ops_retry_notification"; readonly intentKey: string }
   | {
@@ -86,6 +96,7 @@ export function resolveDeliveryDraft(args: {
 }
 
 const ARM_LABEL: Record<OperationsIntentKind, string> = {
+  ops_resolve_report_delivery: "Answer this report delivery",
   ops_reconcile_pipeline: "Reconcile the pipeline",
   ops_retry_notification: "Re-drive this notification",
   ops_suppress_stale_notification: "Suppress this stale notification",
@@ -95,6 +106,7 @@ const ARM_LABEL: Record<OperationsIntentKind, string> = {
 };
 
 const ARM_FAILED_HEADING: Record<OperationsIntentKind, string> = {
+  ops_resolve_report_delivery: "The report delivery was not resolved",
   ops_reconcile_pipeline: "The pipeline was not reconciled",
   ops_retry_notification: "The notification was not re-driven",
   ops_suppress_stale_notification: "The notification was not suppressed",
@@ -105,6 +117,7 @@ const ARM_FAILED_HEADING: Record<OperationsIntentKind, string> = {
 
 /** Short verb for a control in a dense table. */
 const ARM_ACTION: Record<OperationsIntentKind, string> = {
+  ops_resolve_report_delivery: "Answer",
   ops_reconcile_pipeline: "Reconcile",
   ops_retry_notification: "Re-drive",
   ops_suppress_stale_notification: "Suppress",
@@ -166,6 +179,10 @@ export function operationsRequestSummary(
   draft: OperationsRequestDraft,
 ): string {
   switch (draft.kind) {
+    case "ops_resolve_report_delivery":
+      return draft.outcome === "delivered"
+        ? `Record report run ${draft.runId.toString()}, chunk ${draft.chunkIndex.toString()} as delivered with the message you found in channel ${draft.channelId}.`
+        : `Confirm that report run ${draft.runId.toString()}, chunk ${draft.chunkIndex.toString()} did not reach channel ${draft.channelId}. This releases only that chunk for delivery by reconciliation.`;
     case "ops_reconcile_pipeline":
       return "Confirming authorizes a reconciliation sweep over the durable pipeline and asks Temporal to start it. Nothing is running yet.";
     case "ops_retry_notification":
@@ -186,6 +203,23 @@ export function operationsRequestSummary(
 /** The shape the draft is asking the server to store, before validation. */
 function payloadCandidate(draft: OperationsRequestDraft): unknown {
   switch (draft.kind) {
+    case "ops_resolve_report_delivery":
+      return {
+        kind: draft.kind,
+        version: 1,
+        runId: draft.runId,
+        channelId: draft.channelId,
+        chunkIndex: draft.chunkIndex,
+        attemptNonce: draft.attemptNonce,
+        answer:
+          draft.outcome === "delivered"
+            ? {
+                outcome: draft.outcome,
+                messageId: draft.messageId,
+                deliveredAt: draft.deliveredAt,
+              }
+            : { outcome: draft.outcome },
+      };
     case "ops_reconcile_pipeline":
       return { kind: draft.kind, version: 1 };
     case "ops_retry_notification":

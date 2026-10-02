@@ -6,6 +6,7 @@ import { afterHallRecordBreakDeliveredV2 } from "#src/temporal/v2/notification/h
 import { afterPrematchDeliveredV2 } from "#src/temporal/v2/notification/prematch-follow-up.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
 import { createLogger } from "#src/logger.ts";
+import { confirmNotificationTip } from "#src/temporal/v2/notification/notification-presentation.ts";
 
 const logger = createLogger("scout-v2-notification-follow-up");
 
@@ -64,6 +65,8 @@ export async function afterNotificationDeliveredV2(
   if ("duelId" in record || "dareId" in record) {
     return { outcome: "skipped" };
   }
+  if (record.intent.kind === "prematch" || record.intent.kind === "postmatch")
+    await confirmNotificationTip(record);
   if (record.intent.kind === "prematch") {
     // Not caught here, unlike the Dare refresh: the pool's message ref is the
     // settlement announcement's only destination, so a failure to record it

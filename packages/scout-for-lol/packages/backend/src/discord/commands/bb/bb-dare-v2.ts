@@ -23,7 +23,9 @@ import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb/bb-interaction.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import type { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import { runDurableDiscordExploreTurn } from "#src/explore/runs/discord/turn.ts";
+import { ExploreRunRateLimitedError } from "#src/explore/runs/run-manager.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
@@ -200,6 +202,17 @@ async function replyWithoutDraft(
   });
 }
 
+async function replyExploreFailure(
+  error: unknown,
+  interaction: BbCommandInteraction,
+): Promise<void> {
+  if (error instanceof ExploreRunRateLimitedError) {
+    await interaction.editReply({ content: error.rejection.reason });
+    return;
+  }
+  throw error;
+}
+
 export async function replyBbDareV2(
   interaction: BbCommandInteraction,
   input: {
@@ -220,7 +233,7 @@ export async function replyBbDareV2(
     return;
   }
   const client = dependencies.client ?? prisma;
-  const runTurn = dependencies.runTurn ?? runPersistedExploreTurn;
+  const runTurn = dependencies.runTurn ?? runDurableDiscordExploreTurn;
   const identity = { userId: input.challengerDiscordId };
   const ticket = tryStartExploreTurn(identity, Date.now());
   if (!ticket.allowed) {
@@ -338,7 +351,7 @@ export async function replyBbDareV2(
     });
   } catch (error) {
     ticket.finish();
-    throw error;
+    await replyExploreFailure(error, interaction);
   } finally {
     if (!runnerOwnsTicket) ticket.finish();
   }

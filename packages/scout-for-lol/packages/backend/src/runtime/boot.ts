@@ -49,8 +49,9 @@ export type ScoutRuntime = {
 export async function startScoutRuntime(
   role: ScoutRuntimeRole,
   dependencies: ScoutRuntimeDependencies,
+  stage: "dev" | "beta" | "prod" = "dev",
 ): Promise<ScoutRuntime> {
-  const capabilities = scoutRuntimeCapabilities(role);
+  const capabilities = scoutRuntimeCapabilities(role, stage);
   const bootSteps = scoutBootSteps(capabilities);
   const shutdownSteps = scoutShutdownSteps(capabilities);
 
