@@ -1654,7 +1654,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003936@sha256:4e32f170f51785a5f5761ba0e82833c83434f2c1f33d649db18ccff5a92d6be9",
+      "value": "2.0.0-1003967@sha256:acd8d9ab3aa9d005a72cff195379123d25941013923214b06fba2d08ae51425f",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"

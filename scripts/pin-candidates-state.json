@@ -95,9 +95,9 @@
       "digest": "sha256:dbf27b3302394f9db52ac0f600f0d14cef103cb4a0098ae1e3f9193ce71fceef"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 1003936,
-      "version": "2.0.0-1003936",
-      "digest": "sha256:4e32f170f51785a5f5761ba0e82833c83434f2c1f33d649db18ccff5a92d6be9"
+      "buildNumber": 1003967,
+      "version": "2.0.0-1003967",
+      "digest": "sha256:acd8d9ab3aa9d005a72cff195379123d25941013923214b06fba2d08ae51425f"
     },
     "shepherdjerred/woodpecker-config-extension": {
       "version": "2.0.0-1003676",
