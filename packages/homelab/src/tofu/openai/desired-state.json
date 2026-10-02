@@ -132,16 +132,6 @@
         }
       ]
     },
-    "buildkite-release-2026-09": {
-      "project_key": "woodpecker",
-      "name": "buildkite release 2026-09",
-      "onepassword_targets": [
-        {
-          "vault_item_id": "2r6nqphyvaegtnbjgcg4avff3m",
-          "vault_field": "OPENAI_API_KEY"
-        }
-      ]
-    },
     "woodpecker-release-2026-09": {
       "project_key": "woodpecker",
       "name": "Woodpecker release 2026-09",
