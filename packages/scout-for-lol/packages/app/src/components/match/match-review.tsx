@@ -42,6 +42,7 @@ export function MatchReview(props: {
 }) {
   return (
     <MatchReviewContent
+      key={`${props.source.kind}:${props.source.kind === "consumer" ? props.source.playerId.toString() : ""}:${props.matchId}`}
       source={props.source}
       matchId={props.matchId}
       teams={props.match.teams}

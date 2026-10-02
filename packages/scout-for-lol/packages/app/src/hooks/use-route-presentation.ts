@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { NavigationType, useLocation, useNavigationType } from "react-router";
 
 const positions = new Map<string, number>();
@@ -15,7 +15,7 @@ export function useRoutePresentation() {
       history.scrollRestoration = prior;
     };
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const type = navigationType;
     const samePage =
       previous.current?.pathname === pathname && previous.current.key !== key;
