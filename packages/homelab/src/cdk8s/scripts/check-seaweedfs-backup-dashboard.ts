@@ -13,8 +13,29 @@ const rendered = z
   .object({
     panels: z.array(
       z.object({
+        type: z.string(),
         title: z.string(),
-        targets: z.array(z.object({ expr: z.string() })),
+        targets: z.array(
+          z.object({
+            expr: z.string(),
+            instant: z.boolean().optional(),
+            range: z.boolean().optional(),
+          }),
+        ),
+        options: z
+          .object({
+            colorMode: z.string().optional(),
+            textMode: z.string().optional(),
+            reduceOptions: z
+              .object({ calcs: z.array(z.string()), values: z.boolean() })
+              .optional(),
+          })
+          .optional(),
+        fieldConfig: z
+          .object({
+            defaults: z.object({ noValue: z.string().optional() }),
+          })
+          .optional(),
       }),
     ),
   })
@@ -24,6 +45,24 @@ if (
     ?.expr !== SEAWEEDFS_STAGE_QUERY
 )
   throw new Error("Rendered dashboard did not retain the current-stage query");
+for (const panel of rendered.panels.filter((entry) => entry.type === "stat")) {
+  if (
+    panel.targets.some(
+      (target) => target.instant !== true || target.range !== false,
+    ) ||
+    panel.options?.reduceOptions?.values !== false ||
+    JSON.stringify(panel.options.reduceOptions.calcs) !== '["lastNotNull"]' ||
+    panel.options.textMode !== "value_and_name" ||
+    panel.options.colorMode !== "none" ||
+    panel.fieldConfig?.defaults.noValue !== "Unknown"
+  )
+    throw new Error(`${panel.title} must show named current values or Unknown`);
+}
+const freshnessExpression = rendered.panels.find(
+  (panel) => panel.title === "Backup Freshness",
+)?.targets[0]?.expr;
+if (freshnessExpression === undefined)
+  throw new Error("Rendered dashboard is missing the backup freshness query");
 
 const series = (metric: string, labels: string, value: number) => ({
   series: `${metric}{${labels}}`,
@@ -71,7 +110,12 @@ const active = [
     value: 1,
   },
 ];
-const cases = [
+const cases: {
+  name: string;
+  input: ReturnType<typeof series>[];
+  expected: { labels: string; value: number }[];
+  expression?: string;
+}[] = [
   {
     name: "newest live owner wins while both workers are live",
     input: [
@@ -150,6 +194,37 @@ const cases = [
     input: [...schedule({ running: 0 }), worker("new", 0)],
     expected: [],
   },
+  {
+    name: "duplicate backup pods show the newest recovery point once per bucket and cadence",
+    expression: freshnessExpression,
+    input: [
+      series(
+        "seaweedfs_backup_last_success_timestamp_seconds",
+        'namespace="temporal",pod="old",bucket="state",cadence="daily"',
+        2700,
+      ),
+      series(
+        "seaweedfs_backup_last_success_timestamp_seconds",
+        'namespace="temporal",pod="new",bucket="state",cadence="daily"',
+        3300,
+      ),
+      series(
+        "seaweedfs_backup_last_success_timestamp_seconds",
+        'namespace="temporal",pod="new",bucket="state",cadence="six-hourly"',
+        3000,
+      ),
+    ],
+    expected: [
+      { labels: '{bucket="state",cadence="daily"}', value: 300 },
+      { labels: '{bucket="state",cadence="six-hourly"}', value: 600 },
+    ],
+  },
+  {
+    name: "missing recovery points remain unknown without a zero-age fallback",
+    expression: freshnessExpression,
+    input: [],
+    expected: [],
+  },
 ];
 
 const directory = await mkdtemp(
@@ -167,7 +242,7 @@ try {
         input_series: entry.input,
         promql_expr_test: [
           {
-            expr: SEAWEEDFS_STAGE_QUERY,
+            expr: entry.expression ?? SEAWEEDFS_STAGE_QUERY,
             eval_time: "1h",
             exp_samples: entry.expected,
           },

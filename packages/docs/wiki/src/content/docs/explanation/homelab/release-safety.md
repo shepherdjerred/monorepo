@@ -245,6 +245,11 @@ reconcile before Temporal so their validators accept new snapshot source values
 before the producer emits them. A rebuilt consumer also accepts snapshots from
 the previous producer, preserving collection during the transition.
 
+The final root application release policy assigns these consumers to wave -1
+and Temporal to wave 0. That policy is authoritative over annotations in
+individual constructors. Ordering verification applies the policy before
+synthesizing the root chart, matching the manifests the release planner uses.
+
 Workflow promotion alone cannot protect that boundary. The
 [publish Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/ops/ops-publish.ts)
 reports sources absent from an older Workflow as unknown using its own current

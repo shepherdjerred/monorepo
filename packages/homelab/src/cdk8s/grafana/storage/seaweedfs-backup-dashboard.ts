@@ -36,10 +36,19 @@ function statPanel(input: {
     .withTarget(
       new prometheus.DataqueryBuilder()
         .expr(input.expression)
-        .legendFormat(input.legend),
+        .legendFormat(input.legend)
+        .instant(),
     )
     .gridPos({ x: input.x, y: input.y, w: input.width, h: 5 })
-    .graphMode(common.BigValueGraphMode.Area);
+    .graphMode(common.BigValueGraphMode.None)
+    .colorMode(common.BigValueColorMode.None)
+    .textMode(common.BigValueTextMode.ValueAndName)
+    .reduceOptions(
+      new common.ReduceDataOptionsBuilder()
+        .calcs(["lastNotNull"])
+        .values(false),
+    )
+    .noValue("Unknown");
   if (input.unit !== undefined) panel.unit(input.unit);
   return panel;
 }
@@ -81,7 +90,8 @@ export function createSeaweedFsBackupDashboard() {
     statPanel({
       title: "Backup Freshness",
       description: "Seconds since the last completed recovery point.",
-      expression: "time() - seaweedfs_backup_last_success_timestamp_seconds",
+      expression:
+        "time() - max by(bucket,cadence) (seaweedfs_backup_last_success_timestamp_seconds)",
       legend: "{{bucket}} / {{cadence}}",
       x: 0,
       y: 0,
