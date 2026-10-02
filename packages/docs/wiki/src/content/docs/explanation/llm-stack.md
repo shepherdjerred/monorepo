@@ -89,6 +89,13 @@ eval or observability consumer needs the same content. An earlier design
 stripped bodies from spans and kept them only in the archive; it made every
 transcript read a two-store join and was reversed. The archive remains because
 Tempo's retention is 30 days: it is the durable body record, not the only one.
+Tempo's distributor attribute-size cap matches its 50 MB trace-size cap so
+serialized messages and embedding vectors stay complete within accepted traces.
+Raising the trace-size cap alone leaves Tempo's default 2 KiB attribute truncation
+in place, which can cut a JSON body into an invalid string. The single-binary
+Helm chart exposes that distributor setting through its configuration template.
+After changing it, inspect a fresh trace and parse the complete body: existing
+truncated records are not repaired by a configuration rollout.
 Content is never redacted, including Discord data. Only credentials are
 masked before export — secret-shaped keys, known secret env values, `Bearer`
 tokens, and Discord webhook and invite URLs — by
