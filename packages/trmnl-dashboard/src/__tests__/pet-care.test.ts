@@ -31,7 +31,7 @@ function readyRobot() {
       dfiLevelPercent: 33,
       litterLevelPercent: 90.7,
       hopperLitterLevel: 1,
-      hopperFault: null,
+      hopperFault: "HopperFaultClear",
       hopperStatusIndicator: { title: "Ready", value: "READY" },
       isHopperInstalled: true,
       hopperStateLastUpdated: "2026-08-30T08:22:06Z",
@@ -156,19 +156,68 @@ describe("LR5 Pro diagnostics", () => {
     expect(url).toContain("significant_changes_only=true");
     expect(url).not.toContain("minimal_response");
   });
+});
 
-  it("parses the healthy Ready payload and preserves the raw hopper indicator", () => {
-    const robot = parseRobot(readyRobot());
+describe("LR5 Pro hopper diagnostics", () => {
+  it.each([null, "HopperFaultClear"])(
+    "parses a Ready hopper with fault field %s without a false fault",
+    (hopperFault) => {
+      const base = readyRobot();
+      const robot = parseRobot({
+        ...base,
+        state: { ...base.state, hopperFault },
+      });
 
-    expect(robot).toMatchObject({
-      ready: true,
-      sourceFresh: true,
-      litterPercent: 90.7,
-      wastePercent: 33,
-      hopperHealth: "ready",
-      hopperLevelRaw: 1,
-      faulted: false,
+      expect(robot).toMatchObject({
+        ready: true,
+        sourceFresh: true,
+        litterPercent: 90.7,
+        wastePercent: 33,
+        hopperHealth: "ready",
+        hopperLevelRaw: 1,
+        faulted: false,
+      });
+    },
+  );
+
+  it.each(["MOTOR_FAULT_SHORT", "MOTOR_OT_AMPS", "MOTOR_DISCONNECTED"])(
+    "preserves provider motor fault indicator %s despite a clear fault field",
+    (value) => {
+      const base = readyRobot();
+      const robot = parseRobot({
+        ...base,
+        state: {
+          ...base.state,
+          hopperStatusIndicator: { value, title: value },
+        },
+      });
+
+      expect(robot.hopperHealth).toBe("motor-fault");
+    },
+  );
+
+  it.each(["HopperFaultUnrecognized", "HopperFaultClearUnknown"])(
+    "does not treat unsupported fault value %s as healthy",
+    (hopperFault) => {
+      const base = readyRobot();
+      const robot = parseRobot({
+        ...base,
+        state: { ...base.state, hopperFault },
+      });
+
+      expect(robot.hopperHealth).toBe("fault");
+    },
+  );
+
+  it("keeps an offline device offline when its hopper reports clear", () => {
+    const base = readyRobot();
+    const robot = parseRobot({
+      ...base,
+      state: { ...base.state, isOnline: false },
     });
+
+    expect(robot.online).toBe(false);
+    expect(robot.hopperHealth).toBe("ready");
   });
 
   it.each([
@@ -217,7 +266,9 @@ describe("LR5 Pro diagnostics", () => {
     expect(robot.hopperHealth).toBe("unknown");
     expect(robot.hopperLevelRaw).toBeNull();
   });
+});
 
+describe("LR5 Pro source health", () => {
   it("keeps old device-change timestamps informational after a validated fetch", () => {
     const base = readyRobot();
     const robot = parseRobot({
