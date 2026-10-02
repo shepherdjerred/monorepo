@@ -295,6 +295,64 @@ test("redacts secrets inside body attributes on the forwarded span", async () =>
   expect(body).toContain("[REDACTED]");
 });
 
+test("archives single and batched embeddings and masks credentials in batch bodies", async () => {
+  const collector = new CollectingProcessor();
+  const { uploader, uploads } = buildSuccessUploader();
+  const processor = new LlmArchiveSpanProcessor({
+    inner: collector,
+    archive: archiveConfig,
+    uploader,
+  });
+  const provider = buildProvider({ serviceName: "birmel", processor });
+  const tracer = provider.getTracer("test");
+  const vector = JSON.stringify([0.1, 0.2]);
+  const batchInput = JSON.stringify("send with Bearer aaa-bbb-ccc attached");
+  const safeBatchInput = JSON.stringify("send with Bearer [REDACTED] attached");
+
+  const single = tracer.startSpan("embeddings single", {
+    attributes: {
+      "gen_ai.provider.name": "openai",
+      "ai.value": JSON.stringify("hello"),
+      "ai.embedding": vector,
+    },
+  });
+  single.end();
+  const batch = tracer.startSpan("embeddings batch", {
+    attributes: {
+      "gen_ai.system": "openai",
+      "ai.values": [batchInput, JSON.stringify("second input")],
+      "ai.embeddings": [vector, vector],
+    },
+  });
+  batch.end();
+  await flushProcessor(processor);
+
+  expect(uploads).toHaveLength(2);
+  expect(collector.spans).toHaveLength(2);
+  const singleArchive = JSON.parse(uploads[0]!.payload);
+  expect(singleArchive.provider).toBe("openai");
+  expect(uploads[0]!.key).toMatch(/^llm\/birmel\/openai\//);
+  expect(singleArchive["ai.value"]).toBe("hello");
+  expect(singleArchive["ai.embedding"]).toEqual([0.1, 0.2]);
+  const batchArchive = JSON.parse(uploads[1]!.payload);
+  expect(batchArchive["ai.values"]).toEqual([
+    safeBatchInput,
+    JSON.stringify("second input"),
+  ]);
+  expect(batchArchive["ai.embeddings"]).toEqual([vector, vector]);
+  expect(collector.spans[0]!.attributes["ai.embedding"]).toBe(vector);
+  expect(collector.spans[1]!.attributes["ai.values"]).toEqual([
+    safeBatchInput,
+    JSON.stringify("second input"),
+  ]);
+  expect(collector.spans[1]!.attributes["ai.embeddings"]).toEqual([
+    vector,
+    vector,
+  ]);
+  expect(collector.spans[1]!.attributes["llm.archive.status"]).toBe("ok");
+  expect(uploads[1]!.payload).not.toContain("aaa-bbb-ccc");
+});
+
 test("registers as SimpleSpanProcessor compat (does not throw)", () => {
   const exporter: SpanProcessor = {
     onStart(): void {
