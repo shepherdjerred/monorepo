@@ -81,6 +81,8 @@ export type LitterRobotSnapshot = {
   hopperInstalled: boolean;
   hopperEnabled: boolean;
   lastSeenAt: string;
+  diagnosticsFetchedAt: string;
+  entityAvailable: boolean;
   filterDueAt: string | null;
   totalCycles: number;
   sourceFresh: boolean;
@@ -91,7 +93,7 @@ export class PetCareHomeAssistantClient {
   private readonly rest: HomeAssistantRestClient;
   private readonly baseUrl: string;
   private readonly token: string;
-  private configEntryId: string | undefined;
+  private association: { configEntryId: string; entityId: string } | undefined;
 
   public constructor(baseUrl: string, token: string) {
     this.baseUrl = baseUrl;
@@ -111,17 +113,33 @@ export class PetCareHomeAssistantClient {
   }
 
   public async getLitterRobot(now = new Date()): Promise<LitterRobotSnapshot> {
-    const configEntryId =
-      this.configEntryId ?? (await this.discoverLitterRobotConfigEntry());
-    this.configEntryId = configEntryId;
-    const diagnostics = await this.rest.getConfigEntryDiagnostics(
-      configEntryId,
-      WhiskerDiagnosticsSchema,
-    );
-    return parseLitterRobotDiagnostics(diagnostics, now);
+    const association =
+      this.association ?? (await this.discoverLitterRobotConfigEntry());
+    this.association = association;
+    try {
+      const [diagnostics, entity] = await Promise.all([
+        this.rest.getConfigEntryDiagnostics(
+          association.configEntryId,
+          WhiskerDiagnosticsSchema,
+        ),
+        this.rest.getState(association.entityId),
+      ]);
+      return parseLitterRobotDiagnostics(
+        diagnostics,
+        now,
+        entity.state !== "unavailable" && entity.state !== "unknown",
+      );
+    } catch (error) {
+      // Rediscover on the next collection if HA reloads or renames the entity.
+      this.association = undefined;
+      throw error;
+    }
   }
 
-  private async discoverLitterRobotConfigEntry(): Promise<string> {
+  private async discoverLitterRobotConfigEntry(): Promise<{
+    configEntryId: string;
+    entityId: string;
+  }> {
     const client = new HomeAssistantEventClient(
       { baseUrl: this.baseUrl, token: this.token },
       { reconnect: false },
@@ -129,24 +147,25 @@ export class PetCareHomeAssistantClient {
     try {
       await client.connect();
       const registry = await client.getEntityRegistry();
-      const ids = new Set(
-        registry
-          .filter((entry) => entry.platform === "litterrobot")
-          .filter((entry) => entry.entity_id.startsWith("vacuum."))
-          .flatMap((entry) =>
-            entry.config_entry_id == null ? [] : [entry.config_entry_id],
-          ),
+      const entries = registry.filter(
+        (entry) =>
+          entry.platform === "litterrobot" &&
+          entry.entity_id.startsWith("vacuum.") &&
+          entry.config_entry_id != null,
       );
-      if (ids.size !== 1) {
+      if (entries.length !== 1) {
         throw new Error(
-          `Expected one Whisker config entry for a litterrobot vacuum, found ${ids.size.toString()}`,
+          `Expected one Whisker litterrobot vacuum association, found ${entries.length.toString()}`,
         );
       }
-      const [id] = ids;
-      if (id === undefined) {
+      const entry = entries[0];
+      if (entry?.config_entry_id == null) {
         throw new Error("Whisker config entry discovery returned no ID");
       }
-      return id;
+      return {
+        configEntryId: entry.config_entry_id,
+        entityId: entry.entity_id,
+      };
     } finally {
       await client.close();
     }
@@ -156,6 +175,7 @@ export class PetCareHomeAssistantClient {
 export function parseLitterRobotDiagnostics(
   diagnostics: z.infer<typeof WhiskerDiagnosticsSchema>,
   now = new Date(),
+  entityAvailable = false,
 ): LitterRobotSnapshot {
   const robots = diagnostics.robots.flatMap((value) => {
     const parsed = LitterRobotSchema.safeParse(value);
@@ -201,10 +221,14 @@ export function parseLitterRobotDiagnostics(
     hopperInstalled: state.isHopperInstalled,
     hopperEnabled: robot.hopperSettings.mode.toLowerCase() === "enabled",
     lastSeenAt: state.lastSeen,
+    diagnosticsFetchedAt: now.toISOString(),
+    entityAvailable,
     filterDueAt: robot.nextFilterReplacementDate,
     totalCycles: state.odometerCleanCycles,
-    sourceFresh:
-      now.getTime() - new Date(state.lastSeen).getTime() <= 15 * 60 * 1000,
+    // lastSeen/updatedAt are device change timestamps, not poll heartbeats.
+    // A validated fetch and the associated HA entity's availability establish
+    // source health; Prometheus separately checks the fetch observation's age.
+    sourceFresh: entityAvailable,
     faulted,
   };
 }

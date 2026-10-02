@@ -96,6 +96,10 @@ const client = new HomeAssistantRestClient<MyHomeSchema>({
 - `HomeAssistantRestClient` reads state and calls REST services.
 - `HomeAssistantEventClient` connects to the WebSocket API and supports event
   subscriptions, triggers, service calls, and state reads.
+  `onConnectionChange` emits `authenticated` after login and `ready` after all
+  registered subscriptions have been restored. Use `ready` for subscription
+  health, including after reconnects. `handler-error` reports a consumer exception
+  while the connection and subscriptions remain active.
 - `HaApiError`, `HaAuthError`, and `HaWebSocketError` distinguish API,
   authentication, and socket failures.
 - `ha-codegen --help` lists the command's supported options.

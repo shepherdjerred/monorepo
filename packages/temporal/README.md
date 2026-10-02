@@ -9,6 +9,15 @@ homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 Closed PR cleanup matches Woodpecker pull-request refs or source-branch pushes
 at the exact head commit before cancelling active jobs.
 
+Vacuum start verification reads Home Assistant recorder history after each start
+request. Short cleaning transitions count as starts even when delayed state
+polling sees the vacuum docked again. A witnessed start followed by logbook
+`vacuum.return_to_base` context records `interrupted/commanded-return` in the
+Workflow memo and outcome metric. It never restarts the vacuum automatically or
+infers who sent the command. Missing starts and unexplained stops remain failures.
+Retained histories use the pre-history verification branch through a Temporal
+patch marker.
+
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 plus the `agent-chat-ingress` command queue and isolated
@@ -31,9 +40,12 @@ The shared cluster contains only the active `beta` and `prod` namespaces plus
 Temporal's internal `temporal-system` namespace. Unexpected workflow starts in
 any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 
-The central Scout worker also polls its unchanged `scout` queue in `beta` for
-the beta-owned Bryan Bucks analytics schedule; all other central queues are
-`prod` only.
+The Bryan Bucks analytics schedule runs in `prod`, where the central Workflow
+executor polls `monorepo-workflows`; its `scout` Activity calls the beta Scout
+data endpoint. The central Scout worker also polls the unchanged `scout` queue
+in `beta` to drain retained executions. All other central queues are `prod`
+only. Schedule registration retires the old beta schedule without cancelling
+existing executions.
 
 | Role              | Queue or surface                                                                         | Activity concurrency |
 | ----------------- | ---------------------------------------------------------------------------------------- | -------------------: |

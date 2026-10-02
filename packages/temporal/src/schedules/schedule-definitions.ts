@@ -194,7 +194,6 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   },
   {
     id: "scout-bryan-bucks-analytics",
-    namespace: "beta",
     workflowType: "runScoutBryanBucksAnalyticsWorkflow",
     args: [],
     timing: {

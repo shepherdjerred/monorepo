@@ -17,6 +17,8 @@ import {
 import { startSleepWebhook, type SleepWebhookHandle } from "./sleep-webhook.ts";
 import { type AgentChatDiscordHandle } from "./agent-chat-discord-bot.ts";
 import { startAgentChatDiscordSupervisor } from "./agent-chat-discord-supervisor.ts";
+import { trackEventBridgeConnection } from "./connection-health.ts";
+import { haEventBridgeConnected } from "#observability/metrics.ts";
 
 export type EventBridgeHandle = {
   close: () => Promise<void>;
@@ -87,8 +89,9 @@ export async function startEventBridge(
 
   const events = new HomeAssistantEventClient({ baseUrl, token });
   const rest = new HomeAssistantRestClient({ baseUrl, token });
+  const health = trackEventBridgeConnection(events, haEventBridgeConnected);
   events.onConnectionChange((state, detail) => {
-    if (state === "error") {
+    if (state === "error" || state === "handler-error") {
       const message =
         detail instanceof Error ? detail.message : JSON.stringify(detail);
       console.error(`HA event bridge error: ${message}`);
@@ -97,17 +100,26 @@ export async function startEventBridge(
     console.warn(`HA event bridge state: ${state}`);
   });
 
-  await events.connect();
-  await events.subscribeEvents("ios.action_fired", handleIosAction(client));
-  await events.subscribeEvents(
-    "state_changed",
-    handleStateChanged(client, rest),
-  );
+  try {
+    await events.connect();
+    await events.subscribeEvents("ios.action_fired", handleIosAction(client));
+    await events.subscribeEvents(
+      "state_changed",
+      handleStateChanged(client, rest),
+    );
+    health.subscriptionsStarted();
+  } catch (error: unknown) {
+    // A supervisor retry must not leave a partially subscribed client alive.
+    await events.close();
+    health.stop();
+    throw error;
+  }
   console.warn("HA event bridge subscriptions active");
 
   return {
     async close() {
       await events.close();
+      health.stop();
     },
   };
 }

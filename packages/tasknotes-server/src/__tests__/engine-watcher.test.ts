@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -15,9 +15,10 @@ function sleep(ms: number): Promise<void> {
 
 function createWatchSource(): {
   source: VaultWatchSource;
-  emitChange: (filename: string | null) => void;
+  emitChange: (filename: string | null | undefined) => void;
 } {
-  let changeListener: ((filename: string | null) => void) | null = null;
+  let changeListener: ((filename: string | null | undefined) => void) | null =
+    null;
   const source: VaultWatchSource = (_vaultPath, onChange) => {
     changeListener = onChange;
     return {
@@ -39,6 +40,71 @@ function createWatchSource(): {
 }
 
 describe("watchVault", () => {
+  test.each([null, undefined])(
+    "a missing filename (%s) requests a full rescan",
+    async (filename) => {
+      const source = createWatchSource();
+      const delivered = Promise.withResolvers<string[]>();
+      const watcher = watchVault(
+        "/deterministic-test-vault",
+        {
+          onChanges: delivered.resolve,
+        },
+        { debounceMs: 0, watchSource: source.source },
+      );
+      try {
+        source.emitChange("changed.md");
+        source.emitChange(filename);
+        expect(await delivered.promise).toEqual([]);
+      } finally {
+        watcher.close();
+      }
+    },
+  );
+
+  test("watch errors rescan and rearm, while close cancels pending callbacks", () => {
+    vi.useFakeTimers();
+    let reportError: ((error: unknown) => void) | undefined;
+    let change: ((filename: string | null | undefined) => void) | undefined;
+    const closed = vi.fn();
+    const source: VaultWatchSource = vi.fn((_path, onChange, onError) => {
+      change = onChange;
+      reportError = onError;
+      return { close: closed };
+    });
+    const onChanges = vi.fn();
+    const onError = vi.fn();
+    const watcher = watchVault(
+      "/deterministic-test-vault",
+      { onChanges, onError },
+      {
+        watchSource: source,
+        debounceMs: 10,
+        rearmDelayMs: 100,
+      },
+    );
+    try {
+      const error = new Error("watch disconnected");
+      reportError?.(error);
+      vi.advanceTimersByTime(10);
+      expect(onChanges).toHaveBeenCalledWith([]);
+      expect(onError).toHaveBeenCalledWith(error);
+      vi.advanceTimersByTime(90);
+      expect(source).toHaveBeenCalledTimes(2);
+      reportError?.(error);
+      watcher.close();
+      change?.(undefined);
+      reportError?.(error);
+      vi.advanceTimersByTime(60_000);
+      expect(source).toHaveBeenCalledTimes(2);
+      expect(onChanges).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledTimes(2);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      watcher.close();
+      vi.useRealTimers();
+    }
+  });
   test("delivers changed .md paths as a debounced batch", async () => {
     const watchSource = createWatchSource();
     const batches: string[][] = [];

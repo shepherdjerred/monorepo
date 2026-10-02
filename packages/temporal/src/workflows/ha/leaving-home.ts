@@ -1,4 +1,4 @@
-import { log, sleep } from "@temporalio/workflow";
+import { log, sleep, patched } from "@temporalio/workflow";
 import {
   callServiceUnchecked,
   everyoneAway,
@@ -8,6 +8,9 @@ import {
   startEligibleVacuums,
   verifyState,
   verifyStartedVacuums,
+  verifyVacuumStartHistory,
+  VACUUM_HISTORY_PATCH,
+  setOutcome,
 } from "./util.ts";
 import { PRESENCE_COOLDOWN_SECONDS } from "#shared/infra/presence.ts";
 
@@ -47,12 +50,23 @@ export async function leavingHome(): Promise<void> {
     });
   }
 
-  const { started } = await startEligibleVacuums();
+  const useHistory = patched(VACUUM_HISTORY_PATCH);
+  const { started, requestedAt } = await startEligibleVacuums();
   // Verify concurrently so the fleet's sleep budget stays ~one unit's worth
   // rather than summing sequentially across all floors.
-  await verifyStartedVacuums(started, {
+  const options = {
     delaySeconds: 5 * 60,
     retries: 3,
     retryDelaySeconds: 60,
-  });
+  };
+  if (useHistory) {
+    const interrupted = await verifyVacuumStartHistory(
+      started,
+      requestedAt,
+      options,
+    );
+    if (interrupted) await setOutcome("interrupted", "commanded-return");
+  } else {
+    await verifyStartedVacuums(started, options);
+  }
 }

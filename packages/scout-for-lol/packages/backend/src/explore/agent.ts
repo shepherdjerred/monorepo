@@ -1,4 +1,4 @@
-import { Output, stepCountIs, ToolLoopAgent } from "ai";
+import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
@@ -22,6 +22,10 @@ import {
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { drainExploreStreams } from "#src/explore/stream.ts";
+import {
+  ExploreCardSelectionSchema,
+  repairExploreCardSelection,
+} from "#src/explore/card-selection/repair.ts";
 import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
 import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
 import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
@@ -164,12 +168,74 @@ async function streamExploreAgentInternal(
   // drainExploreStreams owns that invariant and its regression test.
   const streamState = await drainExploreStreams(stream, params.emit);
 
-  const answer = ExploreAnswerSchema.parse(await stream.output);
+  // Charge generation even if output validation or artifact hydration fails.
+  const usage = await stream.usage;
+  const recordUsage = (tokens: {
+    inputTokens: number | undefined;
+    outputTokens: number | undefined;
+  }) => {
+    const inputTokens = tokens.inputTokens ?? 0;
+    const outputTokens = tokens.outputTokens ?? 0;
+    scoutExploreTokensUsedTotal.inc({ model, kind: "prompt" }, inputTokens);
+    scoutExploreTokensUsedTotal.inc(
+      { model, kind: "completion" },
+      outputTokens,
+    );
+    recordTokenUsage(inputTokens, outputTokens, model);
+  };
+  recordUsage(usage);
+  let answer = ExploreAnswerSchema.parse(await stream.output);
   if (
     params.surface === "voice" &&
     (answer.spokenAnswer === null || answer.spokenAnswer === undefined)
   ) {
     throw new Error("Voice Explore answers require spokenAnswer");
+  }
+  if (params.surface === "web" || params.surface === "voice") {
+    const steps = await stream.steps;
+    const cards = await repairExploreCardSelection({
+      selection: {
+        matchCards: answer.matchCards,
+        loadoutCards: answer.loadoutCards,
+      },
+      eligibleMatchIds: state.lastMatchIds,
+      eligibleLoadoutPairs: state.lastQueryLoadoutPairs,
+      stepsUsed: steps.length,
+      outputTokensUsed: usage.outputTokens ?? EXPLORE_MAX_OUTPUT_TOKENS,
+      abortSignal: params.abortSignal,
+      correct: async ({ selection, failure, maxOutputTokens, abortSignal }) => {
+        assertWithinBudget();
+        await params.emit({
+          type: "activity",
+          text: "Checking card selections…",
+          toolCallId: null,
+          ignorable: true,
+        });
+        const correction = await generateText({
+          model: runtime.languageModel(model),
+          output: Output.object({ schema: ExploreCardSelectionSchema }),
+          maxOutputTokens,
+          maxRetries: 0,
+          ...(abortSignal === undefined ? {} : { abortSignal }),
+          prompt: JSON.stringify({
+            instruction:
+              "Correct only the requested cards using the latest query's eligible choices. Keep valid requests. Never invent an id or reuse an earlier query. If no eligible choice supports a requested card, explicitly return no such card. No tools are available.",
+            failure: failure.message,
+            selection,
+            eligibleMatchIds: [...state.lastMatchIds],
+            eligibleLoadoutPairs: [...state.lastQueryLoadoutPairs],
+          }),
+          ...runtime.callOptions({
+            workload: "scout.explore",
+            model,
+            sessionId: params.runId,
+          }),
+        });
+        recordUsage(correction.usage);
+        return ExploreCardSelectionSchema.parse(correction.output);
+      },
+    });
+    answer = { ...answer, ...cards };
   }
   const matchCards =
     params.surface === "web" || params.surface === "voice"
@@ -198,13 +264,6 @@ async function streamExploreAgentInternal(
       { model, answerLength: answer.answer.length },
     );
   }
-
-  const usage = await stream.usage;
-  const inputTokens = usage.inputTokens ?? 0;
-  const outputTokens = usage.outputTokens ?? 0;
-  scoutExploreTokensUsedTotal.inc({ model, kind: "prompt" }, inputTokens);
-  scoutExploreTokensUsedTotal.inc({ model, kind: "completion" }, outputTokens);
-  recordTokenUsage(inputTokens, outputTokens, model);
 
   return {
     answer,

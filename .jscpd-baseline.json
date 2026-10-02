@@ -408,10 +408,6 @@
       "clones": 1,
       "tokens": 118
     },
-    "packages/home-assistant/test/ws.test.ts|packages/home-assistant/test/ws.test.ts": {
-      "clones": 1,
-      "tokens": 108
-    },
     "packages/homelab/scripts/check-suppressions.ts|packages/scout-for-lol/scripts/check-suppressions.ts": {
       "clones": 1,
       "tokens": 101

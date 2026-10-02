@@ -381,8 +381,15 @@ export const veleroOrphanBackupCrOldestAgeSeconds = new Gauge({
 
 export const workflowOutcomeTotal = new Counter({
   name: "temporal_workflow_outcome_total",
-  help: "Outcomes of check-and-skip workflows: executed (body ran) vs skipped (gate short-circuited)",
+  help: "Workflow outcomes: executed, skipped by a gate, or interrupted after an accepted start command",
   labelNames: ["workflow", "outcome", "reason"] as const,
+  registers: [register],
+});
+
+export const workflowOutcomeLastTimestampSeconds = new Gauge({
+  name: "temporal_workflow_outcome_last_timestamp_seconds",
+  help: "Timestamp of the last recorded workflow outcome, including interrupted starts",
+  labelNames: ["workflow", "outcome", "reason"],
   registers: [register],
 });
 

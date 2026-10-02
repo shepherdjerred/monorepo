@@ -1,3 +1,4 @@
+import { ExploreCardSelectionError } from "./card-selection-error.ts";
 import {
   EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS,
   ExploreLoadoutCardSchema,
@@ -93,7 +94,8 @@ export function assertEligibleExploreLoadoutCardRequests(input: {
         }),
       )
     ) {
-      throw new Error(
+      throw new ExploreCardSelectionError(
+        "loadout",
         `Explore loadout card ${request.matchId} was not returned for that participant by the latest query`,
       );
     }

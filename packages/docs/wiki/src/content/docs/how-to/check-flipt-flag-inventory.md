@@ -6,8 +6,8 @@ sidebar:
 ---
 
 Run the operator-only inventory check when you change Flipt state or need to
-diagnose runtime flag drift. A Temporal workflow creates missing declared keys
-every fifteen minutes, then publishes one independently labelled
+diagnose runtime flag drift. A Temporal workflow reconciles declared keys
+every two minutes, then publishes one independently labelled
 `FliptManagedFlagDrift` warning per environment and namespace; each alert
 resolves after that pair returns to an aligned snapshot.
 
@@ -30,8 +30,8 @@ bun run check-flipt-flag-inventory
 
 The command checks every environment and product namespace declared in the
 managed inventory: `beta` and `prod`, each containing `scout`, `birmel`,
-`streambot`, `starlight-karma-bot`, `trmnl-dashboard`, `temporal`, and
-`alert-dashboard`.
+`streambot`, `starlight-karma-bot`, `trmnl-dashboard`, `temporal`,
+`alert-dashboard`, `the-storm`, `the-storm-companion`, and `storm`.
 
 Filter either dimension independently:
 
@@ -42,7 +42,7 @@ bun run check-flipt-flag-inventory -- --environment beta --namespace scout
 ```
 
 `FLIPT_ENVIRONMENT` and `FLIPT_NAMESPACE` are also accepted as exact filters.
-Without filters, the command always checks the complete fourteen-pair matrix.
+Without filters, the command always checks the complete twenty-pair matrix.
 
 ## 3. Create missing declared keys
 
@@ -56,8 +56,15 @@ This creates absent namespaces, segments, and flags from the inventory
 contract. It does not change flags or segments that already exist, and it does
 not delete undeclared Flipt keys. Then it re-runs the complete check.
 
-The scheduled workflow performs the same create-if-missing apply. Use the
-operator flag when you need the keys before the next run.
+The scheduled workflow also creates missing keys. Use the operator flag when
+you need the keys before the next run.
+
+Scheduled reconciliation retires only the exact environment, namespace, and
+key tuples in
+`packages/feature-flags/src/retired-flag-declarations.ts`. Audit deployed and
+pinned consumers before declaring a retirement. Each deletion requires a
+current Flipt revision and a fresh read confirming absence. A retirement that
+is also present in the managed inventory fails before any mutation.
 
 ## 4. Interpret failures
 
@@ -81,8 +88,9 @@ segment rollouts, variant rules, and threshold rollouts together. Partial
 overrides are rejected so an environment cannot inherit an accidental mixture
 of old and new behavior.
 
-The scheduled workflow never deletes Flipt flags, never edits the inventory,
-and never overwrites existing targeting. A failed snapshot request does not
+Other undeclared keys remain in Flipt and continue to raise drift warnings.
+The scheduled workflow never edits the inventory or overwrites existing
+targeting. A failed retirement or snapshot request does not
 resolve an existing alert; the workflow fails so the Temporal failure watcher
 can report the unavailable check separately.
 

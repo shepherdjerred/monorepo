@@ -3,6 +3,7 @@ import type { EntityState } from "@shepherdjerred/home-assistant";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { OutcomeRecord } from "#activities/outcome.ts";
+import type { VacuumStartEvidence } from "#shared/infra/vacuum-evidence.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runVacuumIfNotHome } from "./run-vacuum-if-not-home.ts";
 import { VACUUMS } from "./util.ts";
@@ -21,6 +22,7 @@ afterAll(async () => {
 
 type Scenario = {
   makeStartedUnitsActive: boolean;
+  historyEvidence?: VacuumStartEvidence;
   outcomes: OutcomeRecord[];
   started: string[];
   states: Map<string, string>;
@@ -118,6 +120,22 @@ describe("runVacuumIfNotHome", () => {
           }
         },
         sendNotification: () => Promise.resolve(),
+        getVacuumStartEvidence: async (
+          entityId: string,
+          requestedAt: string,
+        ) => {
+          expect(Number.isFinite(Date.parse(requestedAt))).toBe(true);
+          if (scenario.historyEvidence !== undefined)
+            return scenario.historyEvidence;
+          const state = scenario.states.get(entityId);
+          if (state === undefined)
+            throw new Error(`Missing test state for ${entityId}`);
+          return {
+            started: scenario.makeStartedUnitsActive,
+            commandedReturn: false,
+            currentState: state,
+          };
+        },
         recordWorkflowOutcome: async (record: OutcomeRecord) => {
           scenario.outcomes.push(record);
         },
@@ -155,7 +173,7 @@ describe("runVacuumIfNotHome", () => {
           taskQueue: TASK_QUEUE,
           workflowId: `vacuum-verification-failed-${crypto.randomUUID()}`,
         }),
-        "Vacuum start verification failed: vacuum.1st_floor did not become active",
+        "Vacuum start verification failed: vacuum.1st_floor did not become active or was stopped without a return command",
       );
       expect(scenario.started).toEqual(["vacuum.1st_floor"]);
       expect(scenario.outcomes).toEqual([]);
@@ -173,6 +191,41 @@ describe("runVacuumIfNotHome", () => {
           reason: "started",
         },
       ]);
+
+      scenario = makeScenario(["docked", "cleaning", "returning"], false);
+      scenario.historyEvidence = {
+        started: true,
+        commandedReturn: true,
+        currentState: "docked",
+      };
+      await testEnv.client.workflow.execute(runVacuumIfNotHome, {
+        taskQueue: TASK_QUEUE,
+        workflowId: `vacuum-short-cleaning-returned-${crypto.randomUUID()}`,
+      });
+      expect(scenario.started).toEqual(["vacuum.1st_floor"]);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "runVacuumIfNotHome",
+          outcome: "interrupted",
+          reason: "commanded-return",
+        },
+      ]);
+
+      scenario = makeScenario(["docked", "cleaning", "returning"], false);
+      scenario.historyEvidence = {
+        started: true,
+        commandedReturn: false,
+        currentState: "docked",
+      };
+      await expectWorkflowFailure(
+        testEnv.client.workflow.execute(runVacuumIfNotHome, {
+          taskQueue: TASK_QUEUE,
+          workflowId: `vacuum-uncommanded-stop-${crypto.randomUUID()}`,
+        }),
+        "Vacuum start verification failed: vacuum.1st_floor did not become active or was stopped without a return command",
+      );
+      expect(scenario.started).toEqual(["vacuum.1st_floor"]);
+      expect(scenario.outcomes).toEqual([]);
     });
   }, 60_000);
 });

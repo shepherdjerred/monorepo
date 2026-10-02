@@ -52,7 +52,6 @@ async function runEventBridgeSupervisor(
           return;
         }
         state.currentHandle = handle;
-        haEventBridgeConnected.set(1);
         jsonLog("info", "Event bridge started");
         return;
       } catch (error: unknown) {

@@ -259,9 +259,9 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotDiagnosticsStale",
           expression:
-            'trmnl_petcare_source_up{source="whisker"} == 0 or trmnl_petcare_litter_source_fresh == 0 or absent(trmnl_petcare_litter_source_fresh)',
+            'trmnl_petcare_source_up{source="whisker"} == 0 or trmnl_petcare_litter_source_fresh == 0 or absent(trmnl_petcare_litter_source_fresh) or time() - trmnl_petcare_whisker_last_success_timestamp_seconds > 900 or absent(trmnl_petcare_whisker_last_success_timestamp_seconds)',
           description:
-            "Fresh Whisker diagnostics are unavailable or the LR5 has not been seen for 15 minutes.",
+            "Validated Whisker diagnostics are unavailable, their last successful fetch is older than 15 minutes, or the associated HA vacuum entity is unavailable. Device lastSeen is not a heartbeat.",
           summary: "Storage LR5 diagnostics stale",
           duration: "10m",
         }),
@@ -289,6 +289,19 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-availability",
       rules: [
+        {
+          alert: "VacuumRunInterrupted",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'max by (workflow, reason) (temporal_workflow_outcome_last_timestamp_seconds{workflow=~"runVacuumIfNotHome|leavingHome",outcome="interrupted",reason="commanded-return"}) > time() - 86400',
+          ),
+          for: "1m",
+          labels: { severity: "info" },
+          annotations: {
+            summary: "Vacuum cleaning interrupted by a return command",
+            description:
+              "Cleaning was witnessed in Home Assistant recorder history, followed by a vacuum.return_to_base command. No automatic restart was attempted. The command actor is not inferred.",
+          },
+        },
         {
           alert: "HomeAssistantMasterBathroomTemperatureUnavailable",
           annotations: {

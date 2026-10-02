@@ -78,11 +78,6 @@
       "version": "2.0.0-1003896",
       "digest": "sha256:d40778b3a545d2e83e5aaaa0b96dfaba72d9121e115cfa42acb6dd6328c8fe61"
     },
-    "shepherdjerred/temporal-worker/workflows/candidate": {
-      "version": "2.0.0-1002826",
-      "digest": "sha256:34825872a97c73cb1f463011eb8623296db89282f207912a3baca360b16c9beb",
-      "buildNumber": 1002826
-    },
     "shepherdjerred/temporal-worker/workflows/stable": {
       "version": "2.0.0-1002817",
       "digest": "sha256:b3479221851e3ccbbcf1bb2f1c279fdcb48dca602aae8dec1dcec1f32e0ac273",

@@ -1,6 +1,9 @@
-import { workflowOutcomeTotal } from "#observability/metrics.ts";
+import {
+  workflowOutcomeTotal,
+  workflowOutcomeLastTimestampSeconds,
+} from "#observability/metrics.ts";
 
-export type WorkflowOutcome = "executed" | "skipped";
+export type WorkflowOutcome = "executed" | "skipped" | "interrupted";
 
 export type OutcomeRecord = {
   workflow: string;
@@ -19,6 +22,14 @@ export const outcomeActivities = {
       outcome: record.outcome,
       reason: record.reason,
     });
+    workflowOutcomeLastTimestampSeconds.set(
+      {
+        workflow: record.workflow,
+        outcome: record.outcome,
+        reason: record.reason,
+      },
+      Date.now() / 1000,
+    );
     await Promise.resolve();
   },
 };

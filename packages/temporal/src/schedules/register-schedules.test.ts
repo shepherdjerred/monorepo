@@ -653,6 +653,7 @@ describe("Scout lane-prior schedule config", () => {
 describe("Scout Bryan Bucks analytics schedule config", () => {
   test("runs the committed-ledger sync every fifteen minutes", () => {
     expect(findScheduleById("scout-bryan-bucks-analytics")).toMatchObject({
+      namespace: "prod",
       workflowType: "runScoutBryanBucksAnalyticsWorkflow",
       args: [],
       timing: {
@@ -664,6 +665,11 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
       overlap: ScheduleOverlapPolicy.SKIP,
       workflowExecutionTimeout: "15 minutes",
     });
+    expect(
+      DELETED_SCHEDULES.filter(
+        (schedule) => schedule.id === "scout-bryan-bucks-analytics",
+      ),
+    ).toEqual([{ id: "scout-bryan-bucks-analytics", namespace: "beta" }]);
   });
 });
 

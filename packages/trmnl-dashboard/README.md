@@ -33,6 +33,13 @@ strictly validated Whisker diagnostics payload for LR5 and hopper data. It
 discovers the Whisker config entry through Home Assistant's entity registry;
 the internal ID and raw diagnostics are never returned or exported as labels.
 
+LR5 source health requires a validated diagnostics fetch and availability of the
+vacuum entity associated with that config entry. The exporter records the last
+successful fetch time across failures; alerts detect failed, missing, or expired
+observations. Whisker's `lastSeen` remains informational because it records device
+changes rather than a polling heartbeat. Offline and robot faults have separate
+metrics and alerts.
+
 `/api/pets` is controlled by the managed `pet-dashboard-enabled` flag and is
 absent (404) by default. The internal metrics endpoint remains available to the
 restricted Prometheus ServiceMonitor so alerts can be verified before the TRMNL
