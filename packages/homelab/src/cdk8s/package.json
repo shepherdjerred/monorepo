@@ -48,6 +48,7 @@
     "@shepherdjerred/helm-types": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
+    "@shepherdjerred/ops-model": "workspace:*",
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379"
   },
   "devDependencies": {
@@ -64,7 +65,6 @@
     "typescript": "^6.0.3",
     "yaml": "^2.8.3",
     "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1",
-    "@shepherdjerred/ops-model": "workspace:*"
+    "@vitest/coverage-istanbul": "5.0.1"
   }
 }

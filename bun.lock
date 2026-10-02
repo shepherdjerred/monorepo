@@ -862,6 +862,7 @@
         "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379",
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/helm-types": "workspace:*",
+        "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
         "cdk8s": "^2.70.58",
         "cdk8s-plus-31": "^2.6.43",
@@ -876,7 +877,6 @@
       },
       "devDependencies": {
         "@shepherdjerred/eslint-config": "workspace:*",
-        "@shepherdjerred/ops-model": "workspace:*",
         "@temporalio/testing": "1.24.0",
         "@types/bun": "1.4.2",
         "@types/lodash": "^4.17.24",
