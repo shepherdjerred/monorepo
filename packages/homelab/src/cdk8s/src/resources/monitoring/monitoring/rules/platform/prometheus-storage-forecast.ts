@@ -34,8 +34,11 @@ export function prometheusForecastExpression(days: number): string {
     `(${NON_BLOCKS}) + clamp_min(deriv((${NON_BLOCKS})[7d:1h]), 0) * ${horizon}`,
     `(${CAPACITY}) * 0.20`,
   ]);
+  // Retention can temporarily overshoot during compaction. Until current
+  // blocks return within the cap, retain the generic PVC growth forecast.
   return `((${blocks}) + (${nonBlocks}))
     and on(namespace,persistentvolumeclaim) ((${CAP}) > 0)
+    and on(namespace,persistentvolumeclaim) ((${BLOCKS}) <= (${CAP}))
     and on(namespace,persistentvolumeclaim) ((${CAP}) <= (${CAPACITY}) * 0.80)
     and on(namespace,persistentvolumeclaim) (${tsdb("timestamp(prometheus_tsdb_retention_limit_bytes)")} > time() - 600)
     and on(namespace,persistentvolumeclaim) (count_over_time((${BLOCKS})[7d:1h]) >= 160)

@@ -262,8 +262,14 @@ const VeleroScheduleSchema = z.object({
 });
 
 const BackupMonitoringSchema = z.object({
-  maxAgeSeconds: z.coerce.number().positive(),
-  alertForSeconds: z.coerce.number().nonnegative(),
+  maxAgeSeconds: z
+    .string()
+    .regex(/^\d+$/u)
+    .pipe(z.coerce.number<string>().positive()),
+  alertForSeconds: z
+    .string()
+    .regex(/^\d+$/u)
+    .pipe(z.coerce.number<string>().nonnegative()),
   alertSeverity: z.enum(["critical", "warning", "info"]),
 });
 

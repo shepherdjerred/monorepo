@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import YAML from "yaml";
 import { prometheusForecastExpression } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/platform/prometheus-storage-forecast.ts";
+import { pvcProjectedFullExpression } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring-expressions.ts";
 
 // Use the real generated PromQL, not a second arithmetic implementation.
 // 31 days of hourly samples exercise normalized history across exporter labels.
@@ -80,15 +81,58 @@ const cases = [
     ],
     expected: sample(536_800_000_000),
   },
+  {
+    name: "blocks over retention cap preserve generic growth alerts",
+    input: [
+      ...raw.map((series) => {
+        if (series.series.startsWith("prometheus_tsdb_storage_blocks_bytes"))
+          return { ...series, values: "155600000000+100000000x744" };
+        return series.series.startsWith("kubelet_volume_stats_used_bytes")
+          ? { ...series, values: "170600000000+100000000x744" }
+          : series;
+      }),
+      cap(200_000_000_000),
+      {
+        series: `kubelet_volume_stats_available_bytes{${namespace},${pvc},instance="node:10250"}`,
+        values: "85400000000-100000000x744",
+      },
+    ],
+    expected: [],
+    genericExpected: [
+      {
+        labels: `{${namespace},${pvc},instance="node:10250"}`,
+        value: 396_000,
+      },
+    ],
+  },
 ];
 
 const directory = await mkdtemp(path.join(tmpdir(), "homelab-forecast-"));
 const filename = path.join(directory, "tests.yaml");
+const rulesFilename = path.join(directory, "rules.yaml");
 try {
+  await Bun.write(
+    rulesFilename,
+    YAML.stringify({
+      groups: [
+        {
+          name: "forecast-regression",
+          // Only the assertion horizon needs a recording-rule evaluation;
+          // exporter samples remain hourly throughout the full history.
+          interval: "31d",
+          rules: [14, 60].map((days) => ({
+            record: `homelab:prometheus_pvc_forecast_bytes:${String(days)}d`,
+            expr: prometheusForecastExpression(days),
+          })),
+        },
+      ],
+    }),
+  );
   await Bun.write(
     filename,
     YAML.stringify({
-      evaluation_interval: "1h",
+      rule_files: [rulesFilename],
+      evaluation_interval: "31d",
       tests: cases.map((entry) => ({
         name: entry.name,
         interval: "1h",
@@ -99,6 +143,19 @@ try {
             eval_time: "31d",
             exp_samples: entry.expected,
           },
+          {
+            // Strip only the recording metric name to reuse the same labels.
+            expr: "homelab:prometheus_pvc_forecast_bytes:60d + 0",
+            eval_time: "31d",
+            exp_samples: entry.expected,
+          },
+          ...(entry.genericExpected === undefined
+            ? []
+            : [14, 60].map((days) => ({
+                expr: pvcProjectedFullExpression(days),
+                eval_time: "31d",
+                exp_samples: entry.genericExpected,
+              }))),
         ],
       })),
     }),
@@ -111,5 +168,6 @@ try {
     throw new Error("Prometheus storage forecast regression failed");
 } finally {
   await rm(filename);
+  await rm(rulesFilename);
   await rmdir(directory);
 }

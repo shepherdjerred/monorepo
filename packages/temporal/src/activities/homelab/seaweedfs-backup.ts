@@ -290,7 +290,9 @@ export const seaweedFsBackupActivities = {
           candidateObjects: gc.candidateCount,
         };
       } catch (error: unknown) {
-        seaweedFsBackupGcRevalidationFailuresTotal.inc();
+        if (!hooks.signal.aborted) {
+          seaweedFsBackupGcRevalidationFailuresTotal.inc();
+        }
         throw error;
       }
     });
