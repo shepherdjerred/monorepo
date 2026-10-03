@@ -123,6 +123,7 @@ function gameSnapshot(game: GameRow): CustomGameSnapshot {
       game.activeCaptain === null
         ? null
         : CustomTeamSchema.parse(game.activeCaptain),
+    tournamentLobby: null,
     winner: game.winner === null ? null : CustomWinnerSchema.parse(game.winner),
     voiceState: CustomVoiceStateSchema.parse(game.voiceState),
     voiceReady: game.voiceReady,

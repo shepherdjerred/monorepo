@@ -1,9 +1,10 @@
 -- Retire the one-shot SQLite importer, the Riot Tournament API lobby model,
--- and the legacy report-send claims adopted by report delivery receipts.
+-- the Hall and Duel outbox tables (unread since #3413), and the legacy
+-- report-send claims adopted by report delivery receipts.
 --
 -- Before merge, the operator confirms on beta and prod that no
 -- `report-discord:` claim lacks a ReportDeliveryChunk (or marks those runs
--- UNKNOWN); see the PR. The claims are then history only.
+-- UNKNOWN); see the PR.
 
 -- The importer's raw receipt table (not a Prisma model).
 DROP TABLE IF EXISTS "_legacy_sqlite_import";
@@ -31,6 +32,12 @@ ALTER TABLE "DuelGame" DROP COLUMN "tournamentLobbyId";
 
 -- AlterTable
 ALTER TABLE "GuildPermissionError" DROP COLUMN "ownerNotified";
+
+-- DropTable
+DROP TABLE "DuelStatusOutbox";
+
+-- DropTable
+DROP TABLE "HallRecordBreakOutbox";
 
 -- DropTable
 DROP TABLE "TournamentLobby";

@@ -2125,7 +2125,7 @@ model ScoutEffectClaim {
 //
 // Enum-shaped and JSON fields remain strings validated by @scout-for-lol/data
 // at every read/write boundary. This follows the provider-neutral persistence
-// convention used by Customs and tournament lobbies.
+// convention used by Customs.
 // =============================================================================
 
 model HallSettings {
@@ -2185,25 +2185,6 @@ model HallBaselineRun {
 
   @@unique([guildId, revision])
   @@index([baselineState, createdAt])
-}
-
-/// Retired: nothing reads or writes this table; the next release drops it
-/// once every role runs code that no longer references it.
-model HallRecordBreakOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  matchId        String
-  channelId      String
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@unique([guildId, matchId])
-  @@index([deliveryStatus, createdAt])
 }
 
 model ChallengeTemplate {
@@ -2600,24 +2581,6 @@ model DuelRecord {
 
   @@unique([guildId, scope, subjectKey, opponentKey])
   @@index([guildId, scope, wins])
-}
-
-/// Retired: nothing reads or writes this table; the next release drops it
-/// once every role runs code that no longer references it.
-model DuelStatusOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  channelId      String
-  dedupeKey      String    @unique
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@index([deliveryStatus, createdAt])
 }
 
 // =============================================================================

@@ -149,6 +149,10 @@ export const CustomGameSnapshotSchema = z.strictObject({
   pickMode: CustomPickModeSchema,
   participants: z.array(CustomGameParticipantSchema),
   activeCaptain: CustomTeamSchema.nullable(),
+  // Retired Tournament API lobby. Always null; kept on the wire for one
+  // release so Activity clients and backend pods on either side of the
+  // rollout still accept each other's strict snapshots.
+  tournamentLobby: z.null(),
   winner: CustomWinnerSchema.nullable(),
   voiceState: CustomVoiceStateSchema,
   voiceReady: z.boolean(),
