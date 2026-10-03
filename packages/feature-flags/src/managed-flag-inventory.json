@@ -1179,6 +1179,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-web-ui-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-web",
+      "purpose": "Enable the authenticated web media remote and shared voice-channel controls.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-assistant-v2-enabled",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1713,6 +1725,14 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "streambot-web-ui-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "initial_match_history_import_enabled",
           "type": "boolean",

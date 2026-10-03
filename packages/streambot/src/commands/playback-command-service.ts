@@ -1,4 +1,3 @@
-import { canControlItem } from "@shepherdjerred/streambot/discord/permissions.ts";
 import {
   classifyPlayError,
   isHttpUrl,
@@ -112,6 +111,9 @@ export function normalizeVoicePlayQuery(query: string): string {
 /** Permission-checked operations shared by slash commands and the voice agent. */
 export class PlaybackCommandService extends PlaybackControls {
   private clarificationGeneration = 0;
+  private assertCurrent(): void {
+    this.deps.assertCurrent?.();
+  }
 
   async isAssistantV2Enabled(userId: UserId): Promise<boolean> {
     const scope = this.scope(userId);
@@ -128,14 +130,7 @@ export class PlaybackCommandService extends PlaybackControls {
 
   assertCanPlayNow(userId: UserId): void {
     const current = this.deps.view().current;
-    if (
-      current !== null &&
-      !canControlItem(
-        userId,
-        current.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
+    if (current !== null && !this.canControl(userId, current.requesterId)) {
       throw new PlaybackCommandBoundaryError(
         "Only the requester or an admin can replace the current video.",
       );
@@ -213,6 +208,7 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     input.signal?.throwIfAborted();
     if (input.placement === "now") this.assertCanPlayNow(input.userId);
+    this.assertCurrent();
     const requestId = selected.sports
       ? undefined
       : await recordRequest({
@@ -222,6 +218,7 @@ export class PlaybackCommandService extends PlaybackControls {
           intent,
           media: toRecordMedia(source, preResolved, selected.candidate),
         });
+    this.assertCurrent();
     if (input.placement === "now") markReplacedRequest(this.deps);
     this.deps.dispatch({
       type:

@@ -73,6 +73,21 @@ export const VoiceConfigSchema = z
  * branded (parsed, not cast) at this boundary.
  */
 export const ConfigSchema = z.strictObject({
+  web: z
+    .strictObject({
+      publicOrigin: z.url().refine((value) => {
+        const url = new URL(value);
+        return (
+          url.origin === value &&
+          (url.protocol === "https:" ||
+            (url.protocol === "http:" &&
+              ["localhost", "127.0.0.1"].includes(url.hostname)))
+        );
+      }),
+      clientSecret: z.string().min(1),
+      port: z.number().int().min(1).max(65_535).default(8080),
+    })
+    .optional(),
   discord: z.strictObject({
     /** Bot token for the command bot (discord.js) — handles slash commands in every server. */
     botToken: BotTokenSchema,

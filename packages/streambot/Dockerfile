@@ -66,7 +66,9 @@ RUN bun install --frozen-lockfile --filter '@shepherdjerred/streambot'
 # entry to a gitignored `dist/`; streambot imports them, so compile both
 # (consumers crash at startup with `Cannot find module` otherwise).
 FROM deps AS build
-COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
+COPY --exclude=packages/streambot/test/fixtures/voice-corpus \
+  --exclude=packages/streambot/test/web \
+  --exclude=packages/streambot/e2e/web-local.ts --parents \
   tsconfig.base.json \
   packages/streambot \
   packages/discord-stream-lifecycle \
@@ -74,7 +76,8 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   packages/voice-assistant \
   ./
 RUN cd packages/discord-stream-lifecycle && bun run build \
- && cd /app/packages/discord-video-stream && bun run build
+ && cd /app/packages/discord-video-stream && bun run build \
+ && cd /app/packages/streambot && bun run build
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 # Inherits base-build: the native trustedDependencies postinstalls run here
@@ -183,7 +186,9 @@ COPY --from=prod-deps /app/ /app/
 # config/feature-flags export straight from `src/*.ts` and the isolated linker
 # installs them as symlinks into these directories, so their source has to be
 # present or the bot dies at boot with "Cannot find module".
-COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
+COPY --exclude=packages/streambot/test/fixtures/voice-corpus \
+  --exclude=packages/streambot/test/web \
+  --exclude=packages/streambot/e2e/web-local.ts --parents \
   tsconfig.base.json \
   packages/streambot \
   packages/discord-stream-lifecycle \
@@ -194,6 +199,7 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   ./
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/discord-video-stream/dist packages/discord-video-stream/dist
+COPY --from=build /app/packages/streambot/dist/web packages/streambot/dist/web
 COPY --from=voice-models /opt/streambot/voice /opt/streambot/voice
 
 ARG VERSION=dev
@@ -212,6 +218,7 @@ FROM runtime AS voice-smoke
 # sentinel, making this stage a required dependency of every production build.
 USER 1000:1000
 ENV HOME=/tmp
+RUN bun scripts/web-image-smoke.ts
 RUN VOICE_ASSISTANT_ENABLED=true \
     OPENAI_API_KEY=image-smoke-not-used \
     VOICE_ASSETS_DIR=/opt/streambot/voice \

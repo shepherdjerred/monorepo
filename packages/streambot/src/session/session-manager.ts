@@ -29,6 +29,7 @@ import type {
   GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { sessionRevision } from "@shepherdjerred/streambot/session/session-revision.ts";
 import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
 import { deleteSessionStateAfterFlush } from "@shepherdjerred/streambot/session/delete-session-state.ts";
 import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
@@ -154,6 +155,17 @@ export class SessionManager {
     return session === undefined
       ? null
       : buildSessionHandle(this.deps.config, session);
+  }
+
+  revision(
+    guildId: GuildId,
+    channelId: ChannelId,
+    playbackChannel?: PlaybackChannelNumber,
+  ): string | null {
+    const session = this.sessions.get(
+      keyOf(guildId, channelId, playbackChannel),
+    );
+    return session === undefined ? null : sessionRevision(session);
   }
 
   /** Release a session that was allocated for a command which produced no playback event. */

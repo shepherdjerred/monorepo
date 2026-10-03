@@ -7,6 +7,11 @@ value must match the current production value.
 
 ## Migrate now
 
+Streambot's `streambot-web-ui-enabled` gate is evaluated per server and user on
+every authenticated media request in `src/config/media-features.ts`. It defaults
+off in production and is enabled in the beta environment. Web credential and
+listener bootstrap stay outside Flipt.
+
 | Consumer  | Flipt keys                                                                                                                                                                                                                                                      | Type and targeting                                          | Current source                                |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- |
 | Streambot | `player-card-enabled`, `subtitles-enabled`                                                                                                                                                                                                                      | Boolean; process snapshot                                   | `src/config/dynamic.ts`                       |

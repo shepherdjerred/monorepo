@@ -11,12 +11,23 @@ import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 export type PlaybackCommandServiceDeps = {
   readonly playbackChannel?: PlaybackChannelNumber;
   readonly selectChannel?: (userId: string, number: number) => Promise<string>;
   readonly listChannels?: (userId: string) => Promise<string>;
   readonly leaveRoom?: () => void;
+  /** Supplied only by a transport that has independently verified channel authority. */
+  readonly authorization?: {
+    readonly controlItem: (
+      userId: UserId,
+      requesterId: UserId | null,
+    ) => boolean;
+    readonly manageQueue: (userId: UserId) => boolean;
+  };
+  /** Recheck an optimistic transport revision after asynchronous media resolution. */
+  readonly assertCurrent?: () => void;
   readonly config: Pick<Config, "discord">;
   readonly dispatch: (event: PlaybackEvent) => void;
   readonly view: () => PlaybackView;

@@ -22,6 +22,7 @@ export async function recordRequest(input: {
   if (scope === null || deps.history === undefined) return undefined;
   const enabled =
     deps.featureGate === undefined || (await deps.featureGate.history(scope));
+  deps.assertCurrent?.();
   return enabled
     ? deps.history.recordQueueRequest({ scope, rawQuery: query, intent, media })
     : undefined;

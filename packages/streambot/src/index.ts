@@ -1,4 +1,5 @@
 import path from "node:path";
+import { createPosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import {
   scanLibrary,
@@ -39,7 +40,12 @@ import {
 import { featureFlagMetrics } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
-import { mediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
+import {
+  mediaFeatureGate,
+  webUiEnabled,
+} from "@shepherdjerred/streambot/config/media-features.ts";
+import { WebCatalog } from "@shepherdjerred/streambot/web/server/catalog.ts";
+import { startWebServer } from "@shepherdjerred/streambot/web/server/start.ts";
 import { PinchtabSportsBrowser } from "@shepherdjerred/streambot/sports/pinchtab.ts";
 import { SportsService } from "@shepherdjerred/streambot/sports/sports-service.ts";
 import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
@@ -203,6 +209,38 @@ async function main(): Promise<void> {
   await Promise.all([commandBot.login(), commandBot.ready]);
   // Resume after login so the back-online announcements can be posted (and the pool is up).
   await sessions.resumeAll();
+  const web =
+    config.web === undefined
+      ? undefined
+      : await startWebServer({
+          bootstrap: config.web,
+          stateDir: config.state.dir,
+          applicationId: () => commandBot.web.webApplicationId(),
+          playback: {
+            sessions,
+            bot: commandBot.web,
+            featureGate: mediaFeatureGate,
+            webEnabled: webUiEnabled,
+            catalog: new WebCatalog(() => library, discovery, {
+              ...(config.tmdb === undefined
+                ? {}
+                : { fetchPoster: createPosterFetcher(config.tmdb.apiKey) }),
+              sports,
+            }),
+            announce: (channelId, message) =>
+              commandBot.announce(channelId, message),
+            commands: {
+              config,
+              library: () => library,
+              discovery,
+              history,
+              sports,
+              featureGate: mediaFeatureGate,
+              resolvePlaySource: (source, signal) =>
+                resolveSource(config, source, signal, { sportsResolver }),
+            },
+          },
+        });
   logger.info("streambot ready");
 
   let shuttingDown = false;
@@ -213,6 +251,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info("shutting down");
     clearInterval(refreshTimer);
+    await web?.stop();
     // Flush per-session resume state BEFORE stopping streams — getPosition() goes null once stopped.
     await sessions.destroyAll();
     await commandBot.destroy();

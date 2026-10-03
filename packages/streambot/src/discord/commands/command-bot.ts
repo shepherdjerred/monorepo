@@ -53,6 +53,7 @@ import {
   routeNumberedCommand,
   labelPlaybackInteraction,
 } from "@shepherdjerred/streambot/discord/commands/numbered-command-routing.ts";
+import { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-context.ts";
 
 const log = logger.child("command-bot");
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
@@ -115,6 +116,7 @@ export class CommandBot {
   private readonly deps: CommandBotDeps;
   /** Player-card Discord effects + the message → session routing table. Handed to SessionManager. */
   readonly cards: PlayerCardMessenger;
+  readonly web: WebDiscordContext;
   private readonly cardRouter: PlayerCardRouter;
   /** Streamer-move / empty-channel handling for `voiceStateUpdate`. */
   private readonly voiceTopology: VoiceTopologyWatcher;
@@ -134,6 +136,7 @@ export class CommandBot {
       ],
     });
     this.cards = new PlayerCardMessenger(this.client);
+    this.web = new WebDiscordContext(this.client);
     this.cardRouter = new PlayerCardRouter({
       config: deps.config,
       messenger: this.cards,
