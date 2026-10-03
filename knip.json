@@ -192,6 +192,14 @@
       "entry": ["src/**/*.test.ts", "architecture-fixtures/**/*.ts"],
       "project": ["src/**/*.ts", "architecture-fixtures/**/*.ts"]
     },
+    "packages/scout-for-lol/packages/temporal": {
+      "entry": ["scripts/**/*.ts", "architecture-fixtures/**/*.ts"],
+      "project": [
+        "src/**/*.ts",
+        "scripts/**/*.ts",
+        "architecture-fixtures/**/*.ts"
+      ]
+    },
     "packages/scout-for-lol/packages/report": {
       "project": ["src/**/*.{ts,tsx}"]
     },
