@@ -144,18 +144,19 @@ export async function fetch(
               sanitizeHtml(preview, {
                 parseStyleAttributes: false,
                 transformTags: {
-                  a: (tagName, attributes) => ({
-                    tagName,
-                    attribs: {
-                      ...attributes,
-                      ...(attributes["href"] === undefined
-                        ? {}
-                        : {
-                            href: new URL(attributes["href"], firstItem.link)
-                              .href,
-                          }),
-                    },
-                  }),
+                  a: (tagName, attributes) => {
+                    const attribs = { ...attributes };
+                    const href = attribs["href"];
+                    if (href !== undefined) {
+                      try {
+                        attribs["href"] = new URL(href, firstItem.link).href;
+                      } catch {
+                        // A malformed external link must not discard the post.
+                        delete attribs["href"];
+                      }
+                    }
+                    return { tagName, attribs };
+                  },
                 },
               }),
               length,

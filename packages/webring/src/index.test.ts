@@ -25,7 +25,8 @@ const server = Bun.serve({
           <pubDate>Fri, 02 Oct 2026 00:00:00 GMT</pubDate>
           <content:encoded><![CDATA[<p><a href="/asset.png">Root</a>
             <a href="details/">Path</a><a href="#part">Fragment</a>
-            <a href="javascript:alert(1)">Unsafe</a></p>]]></content:encoded>
+            <a href="javascript:alert(1)">Unsafe</a>
+            <a href="http://[">Malformed</a></p>]]></content:encoded>
           </item></channel></rss>`,
         { headers: { "Content-Type": "application/rss+xml" } },
       );
@@ -95,6 +96,7 @@ test("preview links resolve against the article and remain sanitized", async () 
   expect(preview).toContain(`href="${createUrl("posts/latest/details/")}"`);
   expect(preview).toContain(`href="${createUrl("posts/latest/#part")}"`);
   expect(preview).not.toContain("javascript:");
+  expect(preview).toContain("<a>Malformed</a>");
   for (const target of [
     "asset.png",
     "posts/latest/details/",
