@@ -98,4 +98,30 @@ describe("toolkit config", () => {
       "/home/test/.toolkit/config.toml",
     );
   });
+
+  test("forum settings resolve typed URLs and named 1Password references", async () => {
+    const config = await loadToolkitConfig({
+      environment: {},
+      configPath: await configFile(
+        '[forum]\nurl = "http://127.0.0.1:8765"\n[forum.profiles]\ncodex = "op://vault/item/codex_key"\n',
+      ),
+    });
+    await expect(config.value("forumUrl")).resolves.toBe(
+      "http://127.0.0.1:8765",
+    );
+    await expect(config.value("forumProfiles")).resolves.toEqual({
+      codex: "op://vault/item/codex_key",
+    });
+  });
+
+  test("forum configuration rejects embedded credentials and raw API keys", async () => {
+    const config = await loadToolkitConfig({
+      environment: {},
+      configPath: await configFile(
+        '[forum]\nurl = "http://user:password@localhost"\n[forum.profiles]\ncodex = "raw-key"\n',
+      ),
+    });
+    await expect(config.value("forumUrl")).rejects.toThrow();
+    await expect(config.value("forumProfiles")).rejects.toThrow();
+  });
 });

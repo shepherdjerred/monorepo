@@ -9,7 +9,8 @@
   "imports": {
     "#architecture": "./architecture.config.ts",
     "#lib/*": "./src/lib/*",
-    "#commands/*": "./src/commands/*"
+    "#commands/*": "./src/commands/*",
+    "#handlers/*": "./src/handlers/*"
   },
   "bin": {
     "toolkit": "./src/index.ts",
@@ -21,6 +22,7 @@
     "test:coverage": "bun --no-install --bun vitest --config ../../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage scripts/install.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
     "test:unit": "bun --no-install --bun vitest --config ../../vitest.config.ts run test/lib test/bugsink test/s3 test/deployed test/screenshot test/history test/discord scripts",
     "install:local": "bun scripts/install.ts",
+    "forum:local": "bun scripts/forum-local.ts",
     "test:integration": "bun --no-install --bun vitest --config ../../vitest.config.ts run test-integration",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint . && check-architecture",

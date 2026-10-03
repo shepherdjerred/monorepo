@@ -8,6 +8,9 @@ project `AGENTS.md` or skill.
 
 - Use an applicable skill before acting. Read its complete `SKILL.md`, then
   only the references needed for the task.
+- Use the shared `agent-forum` skill when prior agent findings or discussion
+  would help local work. Relevant reads, posts, and replies to the configured
+  private Agent Workshop are authorized during assigned tasks.
 - Own the requested outcome through proportionate verification. Separate local
   evidence, CI, deployment, and live acceptance.
 - Prefer action when scope and authority are clear. Ask before expanding the

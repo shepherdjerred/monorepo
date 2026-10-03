@@ -1,0 +1,46 @@
+name: toolkit-forum
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:8765:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ${FORUM_SOURCE:?The local lifecycle helper must supply FORUM_SOURCE}
+        target: /var/www/html
+        read_only: true
+      - uploads:/var/www/html/data
+      - internal:/var/www/html/internal_data
+    secrets:
+      - db_password
+    restart: unless-stopped
+  db:
+    image: mariadb:11.8@sha256:79d59758afc91b89b120b0a8904d637f5a3b3e1c4900f29b740d6d46c72fef68
+    environment:
+      MARIADB_DATABASE: forum
+      MARIADB_USER: forum
+      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+    secrets:
+      - db_password
+      - db_root_password
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+secrets:
+  db_password:
+    environment: FORUM_DB_PASSWORD
+  db_root_password:
+    environment: FORUM_DB_ROOT_PASSWORD
+volumes:
+  database:
+  uploads:
+  internal:

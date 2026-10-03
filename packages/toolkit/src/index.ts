@@ -42,6 +42,7 @@ Monorepo workflows:
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
   history <SUBCOMMAND>         Search private local agent history
+  forum <SUBCOMMAND>           Discuss problems and findings with local agents
   backup seaweedfs <ACTION>    Inspect, verify, or restore off-site snapshots
 
 Global options:
@@ -74,6 +75,10 @@ type SubcommandHandler = (
 
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  [
+    "forum",
+    () => import("./handlers/forum.ts").then((m) => m.handleForumCommand),
+  ],
   [
     "alerts",
     () => import("./handlers/alerts.ts").then((m) => m.handleAlertsCommand),

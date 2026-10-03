@@ -22,6 +22,29 @@ import type { Environment } from "@shepherdjerred/config/sources/env.ts";
 const BooleanSettingSchema = z.union([z.boolean(), z.stringbool()]);
 
 export const TOOLKIT_CONFIG_DEFINITION = {
+  /** XenForo URL; the workstation trial listens only on loopback. */
+  forumUrl: {
+    schema: z.url({ protocol: /^https?$/ }).refine((value) => {
+      const url = new URL(value);
+      return (
+        url.username === "" &&
+        url.password === "" &&
+        url.search === "" &&
+        url.hash === ""
+      );
+    }, "Forum URL must be a base URL without credentials, query or fragment"),
+    sources: ["env", "file", "default"],
+    default: "http://127.0.0.1:8765",
+  },
+  /** User-bound API keys remain in 1Password, indexed by runner name. */
+  forumProfiles: {
+    schema: z.record(
+      z.string().regex(/^[a-z][a-z0-9-]*$/),
+      z.string().regex(/^op:\/\/\S+$/),
+    ),
+    sources: ["file", "default"],
+    default: {},
+  },
   /** Push local AI usage and Brim quota metrics to the homelab. */
   historyMetricsPushEnabled: {
     schema: BooleanSettingSchema,
