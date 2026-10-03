@@ -125,6 +125,49 @@ describe("streambot deployment (media namespace)", () => {
     container = firstContainer;
   });
 
+  it("boots the public remote with a required OAuth credential and HTTP health probes", () => {
+    const oauthVariable = z
+      .object({
+        valueFrom: z.object({
+          secretKeyRef: z.object({
+            name: z.string(),
+            key: z.string(),
+            optional: z.boolean().optional(),
+          }),
+        }),
+      })
+      .parse(
+        container.env?.find((entry) => entry.name === "DISCORD_CLIENT_SECRET"),
+      );
+    expect(oauthVariable.valueFrom.secretKeyRef).toMatchObject({
+      name: "media-streambot-config",
+      key: "DISCORD_CLIENT_SECRET",
+    });
+    expect(oauthVariable.valueFrom.secretKeyRef.optional).not.toBe(true);
+    const HttpProbeSchema = z.object({
+      httpGet: z.object({ path: z.string(), port: z.number() }),
+    });
+    const probes = z
+      .object({
+        livenessProbe: HttpProbeSchema,
+        readinessProbe: HttpProbeSchema,
+        startupProbe: HttpProbeSchema,
+      })
+      .parse(container);
+    expect(probes.livenessProbe.httpGet).toEqual({
+      path: "/healthz",
+      port: 8080,
+    });
+    expect(probes.readinessProbe.httpGet).toEqual({
+      path: "/readyz",
+      port: 8080,
+    });
+    expect(probes.startupProbe.httpGet).toEqual({
+      path: "/readyz",
+      port: 8080,
+    });
+  });
+
   it("uses the first-party ghcr image", () => {
     const image = container.image;
     if (image === undefined) throw new Error("Expected a Streambot image");
