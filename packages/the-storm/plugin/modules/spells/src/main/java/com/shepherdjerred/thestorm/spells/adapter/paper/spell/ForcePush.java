@@ -25,7 +25,7 @@ final class ForcePush implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Aim.creaturesAround(tools, caster, settings.radius())
+    return Aim.creatureEffectsAround(tools, caster, settings.radius())
         .map(
             victims ->
                 () -> {

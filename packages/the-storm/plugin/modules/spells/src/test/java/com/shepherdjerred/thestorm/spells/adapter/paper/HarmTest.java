@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
@@ -91,6 +92,22 @@ final class HarmTest {
     assertThat(target.getActivePotionEffects()).isEmpty();
     assertThat(target.getFreezeTicks()).isZero();
     assertThat(extras).isEmpty();
+  }
+
+  @Test
+  void npcControlEffectsAreRefusedButAttributedDamageStillLands() {
+    standIn(-50);
+    var npc = harness.world.spawn(new Location(harness.world, -48, 64, 0), Mannequin.class);
+    npc.setInvulnerable(false);
+    var health = npc.getHealth();
+    for (var blow : everyRider()) {
+      if (blow.damage() == 0) {
+        assertThat(harm.strike(caster, npc, blow)).as("%s", blow).isFalse();
+      }
+    }
+    assertUntouched(npc, health);
+    assertThat(harm.strike(caster, npc, Harm.Blow.none().withDamage(4))).isTrue();
+    assertThat(npc.getHealth()).isEqualTo(health - 4);
   }
 
   @Test

@@ -38,6 +38,7 @@ final class GuardTest {
     var npc = harness.world.spawn(at(3), Mannequin.class);
     npc.setInvulnerable(false);
     assertThat(new Targets(Set.of()).affectable(caster, npc)).isTrue();
+    assertThat(new Targets(Set.of()).affectable(caster, npc, Targets.Mode.EFFECT)).isFalse();
     assertThat(guard.harmDenial(caster, npc)).isEmpty();
     assertThat(protection.harms).containsExactly(HarmTarget.NPC);
     npc.setInvulnerable(true);

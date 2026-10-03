@@ -205,3 +205,69 @@ describe("NPC combat on Paper with all modules", () => {
     await rcon.command("difficulty peaceful");
   });
 });
+
+describe("NPC spell targeting on Paper", () => {
+  test("control spells refuse NPCs while damaging spells retain attributed warnings", async ({
+    bot,
+    rcon,
+  }) => {
+    await nextDay(rcon);
+    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+    await rcon.command(`tp ${bot.username} -35.5 64 -2.5`);
+    await waitUntil(
+      "spellcaster arrival",
+      () => bot.entity.position.distanceTo(new Vec3(-35.5, 64, -2.5)) < 0.3,
+    );
+    await bot.lookAt(new Vec3(-35.5, 65.2, 0.5), true);
+    const before = await health(rcon, npc("stan"));
+    const frozenBefore = await rcon.command(
+      `data get entity ${npc("stan")} TicksFrozen`,
+    );
+    const messages: string[] = [];
+    const record = (message: string) => {
+      messages.push(message);
+    };
+    bot.on("messagestr", record);
+    try {
+      for (const spell of ["freeze", "entomb", "forcepush", "drainlife"]) {
+        await rcon.command(`clear ${bot.username} minecraft:paper`);
+        await waitUntil("previous scroll removed", () =>
+          bot.inventory.items().every((item) => item.name !== "paper"),
+        );
+        await rcon.command(`spells scroll ${spell} ${bot.username}`);
+        await waitUntil("spell scroll arrives", () =>
+          bot.inventory.items().some((item) => item.name === "paper"),
+        );
+        const scroll = bot.inventory
+          .items()
+          .find((item) => item.name === "paper");
+        if (scroll === undefined) throw new Error("Scroll disappeared");
+        await bot.equip(scroll, "hand");
+        const reply = waitForMessage(
+          bot,
+          spell === "drainlife"
+            ? /Stan.*Warning 1 of 2/u
+            : /No creature.*to target/u,
+        );
+        bot.activateItem();
+        await reply;
+        bot.deactivateItem();
+        if (spell !== "drainlife") {
+          expect(await health(rcon, npc("stan"))).toBe(before);
+          expect(
+            await rcon.command(`data get entity ${npc("stan")} TicksFrozen`),
+          ).toBe(frozenBefore);
+          expect(
+            bot.inventory.items().some((item) => item.name === "paper"),
+          ).toBe(true);
+        }
+      }
+      expect(await health(rcon, npc("stan"))).toBeLessThan(before);
+    } finally {
+      await Bun.write(".cache/e2e/npc-spells.txt", messages.join("\n"));
+      bot.deactivateItem();
+      bot.off("messagestr", record);
+      await nextDay(rcon);
+    }
+  });
+});

@@ -99,8 +99,10 @@ and combat settings from `npcs.yml`. Spawn has eight guards: the captain and
 east, west, market, tavern, windmill, north, and southeast watches. The captain
 stays at his post; the other guards patrol short local routes.
 
-All NPCs can take damage and die, including from projectiles, spells, and the
-environment. Civilians flee nearby hostile mobs and actual attackers; guards
+All NPCs can take damage and die, including from projectiles, damaging spells,
+and the environment. Non-damaging spells cannot freeze, push, trap, or otherwise
+impair NPCs because those effects produce no attributed attack for the Watch to
+respond to. Civilians flee nearby hostile mobs and actual attackers; guards
 fight them. Peaceful mobs are left alone. Detection uses each NPC's current
 position, including loaded areas without nearby players. Guards within 48
 blocks answer a call for help and pursue at most 64 blocks from the incident.
