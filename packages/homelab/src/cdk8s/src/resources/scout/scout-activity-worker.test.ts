@@ -2,9 +2,8 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   findResource,
-  scoutResourcesWithActivityWorkerTopology,
+  scoutResources,
 } from "@shepherdjerred/homelab/cdk8s/src/scout-test-resources.ts";
-import { SCOUT_ACTIVITY_WORKER_TOPOLOGY } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 const DeploymentSchema = z.looseObject({
   metadata: z.looseObject({
@@ -56,24 +55,12 @@ const DeploymentSchema = z.looseObject({
   }),
 });
 
-function resources(
-  stage: "beta" | "prod",
-  topology: "observing" | "owning" | "retiring",
-) {
-  return scoutResourcesWithActivityWorkerTopology(stage, "split", topology);
-}
-
 function deployment(
   stage: "beta" | "prod",
-  topology: "observing" | "owning" | "retiring",
   name: "scout-backend" | "scout-activity-worker",
 ) {
   return DeploymentSchema.parse(
-    findResource(
-      resources(stage, topology),
-      "Deployment",
-      `scout-${stage}-${name}`,
-    ),
+    findResource(scoutResources(stage), "Deployment", `scout-${stage}-${name}`),
   );
 }
 
@@ -86,41 +73,20 @@ function runtimeRole(
 }
 
 describe("Scout activity worker topology", () => {
-  test("both stages assign activity ownership to the worker", () => {
-    expect(SCOUT_ACTIVITY_WORKER_TOPOLOGY).toEqual({
-      beta: "owning",
-      prod: "owning",
-    });
-  });
-
-  test("observing keeps interim application queues while admitting a ready worker", () => {
-    const backend = deployment("beta", "observing", "scout-backend");
-    const worker = deployment("beta", "observing", "scout-activity-worker");
-    expect(runtimeRole(backend)).toBe("application");
-    expect(runtimeRole(worker)).toBe("activity-worker");
-    expect(worker.spec.replicas).toBe(1);
-    expect(worker.metadata.annotations?.["argocd.argoproj.io/sync-wave"]).toBe(
-      "1",
-    );
-    expect(worker.spec.template.spec.containers[0]?.image).toBe(
-      backend.spec.template.spec.containers[0]?.image,
-    );
-  });
-
   test("owning leaves the worker as the sole realtime and competition owner", () => {
     for (const stage of ["beta", "prod"] as const) {
-      expect(runtimeRole(deployment(stage, "owning", "scout-backend"))).toBe(
+      expect(runtimeRole(deployment(stage, "scout-backend"))).toBe(
         "application-isolated",
       );
-      expect(
-        runtimeRole(deployment(stage, "owning", "scout-activity-worker")),
-      ).toBe("activity-worker");
+      expect(runtimeRole(deployment(stage, "scout-activity-worker"))).toBe(
+        "activity-worker",
+      );
     }
   });
 
   test("worker has a same-node writable lake mount and matching SELinux level", () => {
-    const backend = deployment("beta", "observing", "scout-backend");
-    const worker = deployment("beta", "observing", "scout-activity-worker");
+    const backend = deployment("beta", "scout-backend");
+    const worker = deployment("beta", "scout-activity-worker");
     const workerSpec = worker.spec.template.spec;
     const backendSpec = backend.spec.template.spec;
     expect(
@@ -152,7 +118,7 @@ describe("Scout activity worker topology", () => {
   });
 
   test("worker is scraped and governed by its stage policy", () => {
-    const rendered = resources("beta", "observing");
+    const rendered = scoutResources("beta");
     const service = findResource(
       rendered,
       "Service",
@@ -205,7 +171,7 @@ describe("Scout activity worker topology", () => {
   });
 
   test("worker has bounded resources and admin health probes", () => {
-    const worker = deployment("beta", "observing", "scout-activity-worker");
+    const worker = deployment("beta", "scout-activity-worker");
     const container = worker.spec.template.spec.containers[0];
     expect(container?.["resources"]).toEqual({
       requests: { cpu: "50m", memory: "3072Mi" },
@@ -226,36 +192,5 @@ describe("Scout activity worker topology", () => {
         httpGet: { path: "/healthz", port: 3000, scheme: "HTTP" },
       }),
     );
-  });
-
-  test("retirement waits for pod exit before the backend reclaims queues", () => {
-    const rendered = resources("beta", "retiring");
-    const worker = deployment("beta", "retiring", "scout-activity-worker");
-    expect(runtimeRole(deployment("beta", "retiring", "scout-backend"))).toBe(
-      "application",
-    );
-    expect(worker.spec.replicas).toBe(0);
-    expect(worker.metadata.annotations?.["argocd.argoproj.io/sync-wave"]).toBe(
-      "-2",
-    );
-    const gate = z
-      .object({
-        metadata: z.object({ annotations: z.record(z.string(), z.string()) }),
-      })
-      .parse(
-        findResource(rendered, "Job", "scout-activity-worker-retirement-gate"),
-      );
-    expect(gate.metadata.annotations?.["argocd.argoproj.io/sync-wave"]).toBe(
-      "-1",
-    );
-    expect(gate.metadata.annotations?.["argocd.argoproj.io/hook"]).toBe("Sync");
-  });
-
-  test("an active worker requires a split gateway stage", () => {
-    for (const topology of ["observing", "owning"] as const) {
-      expect(() =>
-        scoutResourcesWithActivityWorkerTopology("prod", "absent", topology),
-      ).toThrow("requires a split gateway topology");
-    }
   });
 });

@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Entrypoint step: import the legacy SQLite database into Postgres, exactly
- * once. Runs between `prisma migrate deploy` and the app in the container
- * CMD; also the rehearsal/verification CLI.
+ * Explicit database preparation: import legacy SQLite into Postgres exactly
+ * once after `prisma migrate deploy`; also the rehearsal/verification CLI.
  *
  *   bun run scripts/import-legacy-sqlite.ts                     # cutover mode
  *   bun run scripts/import-legacy-sqlite.ts --allow-fresh-install
@@ -11,7 +10,7 @@
  *   bun run scripts/import-legacy-sqlite.ts --source <path> --verify-only
  *
  * DATABASE_URL selects the Postgres target. LEGACY_SQLITE_PATH (default
- * /data/db.sqlite) selects the source in entrypoint mode. --verify-only
+ * /data/db.sqlite) selects the preparation source. --verify-only
  * compares an already-imported database against the snapshot (counts +
  * PK-ordered content digests + ledger invariant) and exits nonzero on any
  * mismatch, writing nothing.
@@ -23,8 +22,8 @@ import { createLogger } from "#src/logger.ts";
 import {
   runImport,
   verifyImport,
-  verifyLedgerBalances,
 } from "#src/database/legacy-import/run-import.ts";
+import { verifyLedgerBalances } from "#src/database/startup-readiness.ts";
 
 const logger = createLogger("import-legacy-sqlite");
 

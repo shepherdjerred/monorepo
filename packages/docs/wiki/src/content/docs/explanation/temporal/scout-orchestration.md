@@ -102,9 +102,12 @@ report's persisted local due date and advances it; older buffered actions then
 become no-ops. This preserves one run after downtime without replaying every
 missed cron occurrence.
 
-Schedules begin paused when a legacy owner still exists. A feature-family
-cutover transfers ownership explicitly; a Temporal outage never activates the
-legacy owner automatically.
+Beta's declared fixed Schedules start active because their durable owners are
+established. Reconciliation clears the exact retired migration pauses while
+preserving operator and credential pauses. Production retains its own activation
+policy. A Temporal outage never activates a legacy owner automatically.
+The [Schedule reference](/reference/temporal-schedules/#pause-behaviour) defines
+the matching notes and precedence.
 
 ## Workflows match product lifecycles
 

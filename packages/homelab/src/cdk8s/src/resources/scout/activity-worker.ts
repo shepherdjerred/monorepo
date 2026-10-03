@@ -25,19 +25,13 @@ import {
   SCOUT_RUNTIME_ROLE_LABEL,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { scoutAdminRoleContainerBase } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
-import type { RenderedActivityWorkerTopology } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 export const SCOUT_ACTIVITY_WORKER_APP_LABEL = "scout-activity-worker";
 
 /** The worker is admitted only after the application pod and policy exist. */
-export const SCOUT_ACTIVITY_WORKER_SYNC_WAVE = {
-  observing: "1",
-  owning: "1",
-  retiring: "-2",
-} as const;
+export const SCOUT_ACTIVITY_WORKER_SYNC_WAVE = "1";
 
 export type ScoutActivityWorkerDeploymentOptions = {
-  readonly topology: RenderedActivityWorkerTopology;
   readonly imageVersion: string;
   readonly envVariables: Record<string, EnvValue>;
   readonly claim: IPersistentVolumeClaim;
@@ -47,9 +41,7 @@ export type ScoutActivityWorkerDeploymentOptions = {
 
 /**
  * Polls realtime, background and competition activities after the queue
- * handoff. In `observing` the application still polls them; promotion to
- * `owning` changes only the application role, keeping this pod ready. The
- * worker writes lake staging data, so its container mount is read-write.
+ * handoff. The worker writes lake staging data, so its mount is read-write.
  */
 export function createScoutActivityWorkerDeployment(
   chart: Chart,
@@ -57,7 +49,7 @@ export function createScoutActivityWorkerDeployment(
   options: ScoutActivityWorkerDeploymentOptions,
 ) {
   const deployment = new Deployment(chart, "scout-activity-worker", {
-    replicas: options.topology === "retiring" ? 0 : 1,
+    replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     progressDeadline: Duration.seconds(2400),
     terminationGracePeriod: Duration.seconds(45),
@@ -74,14 +66,13 @@ export function createScoutActivityWorkerDeployment(
           "Scout requires flexible user permissions",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
           "Scout requires a writable filesystem for report rendering",
-        [ARGOCD_SYNC_WAVE_ANNOTATION]:
-          SCOUT_ACTIVITY_WORKER_SYNC_WAVE[options.topology],
+        [ARGOCD_SYNC_WAVE_ANNOTATION]: SCOUT_ACTIVITY_WORKER_SYNC_WAVE,
       },
     },
   });
 
   // OpenEBS ZFS LocalPV mounts the claim on one node. The stage's ZFSVolume
-  // must have spec.shared=yes before observing; affinity makes co-location a
+  // must have spec.shared=yes; affinity makes co-location a
   // scheduling constraint rather than an accident of current node placement.
   deployment.scheduling.colocate(options.colocateWith);
 

@@ -311,11 +311,6 @@
       "count": 1
     }
   },
-  "packages/backend/src/league/tasks/pairing/calculate-pairings.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
   "packages/backend/src/league/tasks/postmatch/index.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

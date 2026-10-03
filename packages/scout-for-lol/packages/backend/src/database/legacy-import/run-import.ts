@@ -1,8 +1,8 @@
 /**
  * One-shot import of the legacy SQLite database into Postgres.
  *
- * Runs from the container entrypoint after `prisma migrate deploy`, before
- * the app starts. Fail-closed decision table:
+ * Run explicitly after `prisma migrate deploy` when preparing or restoring
+ * a database. Fail-closed decision table:
  *
  *   marker present, source unchanged → skip (idempotent restart)
  *   marker present, source changed   → hard error (rollback/recovery required)
@@ -475,33 +475,4 @@ export async function verifyImport(
     db.close();
   }
   return mismatches;
-}
-
-/**
- * Ledger invariant: every BucksAccount balance equals the sum of its ledger
- * deltas. Reported, never corrected — drift here is an importer bug.
- */
-export async function verifyLedgerBalances(
-  prisma: ImportClient,
-): Promise<string[]> {
-  const accounts = await prisma.bucksAccount.findMany({
-    select: { id: true, balance: true },
-  });
-  const sums = await prisma.bucksLedgerEntry.groupBy({
-    by: ["bucksAccountId"],
-    _sum: { delta: true },
-  });
-  const byAccount = new Map(
-    sums.map((entry) => [entry.bucksAccountId, entry._sum.delta ?? 0]),
-  );
-  const drift: string[] = [];
-  for (const account of accounts) {
-    const expected = byAccount.get(account.id) ?? 0;
-    if (expected !== account.balance) {
-      drift.push(
-        `BucksAccount ${account.id.toString()}: balance ${account.balance.toString()} != ledger sum ${expected.toString()}`,
-      );
-    }
-  }
-  return drift;
 }

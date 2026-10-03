@@ -101,6 +101,11 @@ export class ScoutTemporalSupervisor {
     ]);
   }
 
+  /** Read-only callers do not reject or count durable start attempts. */
+  readClient(): Client | undefined {
+    return this.#closed ? undefined : this.#active?.client;
+  }
+
   client(): Client {
     if (!this.#acceptingStarts) {
       scoutTemporalStartsRejected.inc({ reason: "shutdown" });

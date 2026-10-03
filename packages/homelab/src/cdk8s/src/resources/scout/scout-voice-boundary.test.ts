@@ -4,10 +4,6 @@ import {
   findResource,
   scoutResources,
 } from "@shepherdjerred/homelab/cdk8s/src/scout-test-resources.ts";
-import {
-  gatewayTopologyRunsRole,
-  SCOUT_GATEWAY_TOPOLOGY,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 const EnvEntrySchema = z
   .object({
@@ -62,33 +58,20 @@ const VOICE_RTP_EGRESS = {
   ports: [{ port: 50_000, endPort: 65_535, protocol: "UDP" }],
 };
 
-/**
- * The workload that owns voice for this stage.
- *
- * Voice is a gateway-role capability — the runtime capability table gives
- * voiceAssistant and voiceStateAccess to `combined` and `gateway` only — so it
- * lives in scout-gateway on a split stage and in the combined backend pod
- * everywhere else. These helpers resolve the owner rather than naming a pod, so
- * the assertions below stay about the invariant (voice is wired to whichever
- * pod holds the shard) instead of about the current topology.
- */
+/** Hosted voice belongs to the dedicated gateway. */
 function voiceWorkloadName(stage: "beta" | "prod"): string {
-  return gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[stage])
-    ? `scout-${stage}-scout-gateway`
-    : `scout-${stage}-scout-backend`;
+  return `scout-${stage}-scout-gateway`;
 }
 
-function voiceEgressPolicyName(stage: "beta" | "prod"): string {
-  return gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[stage])
-    ? "scout-gateway-netpol"
-    : "scout-egress-netpol";
+function voiceEgressPolicyName(): string {
+  return "scout-gateway-netpol";
 }
 
 function egressRules(stage: "beta" | "prod"): unknown[] {
   const policy = findResource(
     scoutResources(stage),
     "NetworkPolicy",
-    voiceEgressPolicyName(stage),
+    voiceEgressPolicyName(),
   );
   return z.object({ egress: z.array(z.unknown()) }).parse(policy.spec).egress;
 }
@@ -123,22 +106,12 @@ function voiceEnv(stage: "beta" | "prod") {
 }
 
 describe("Hey Scout voice deployment boundary", () => {
-  /**
-   * Pin the topology→owner mapping the rest of this file resolves through.
-   *
-   * Without this the helpers would faithfully follow a wrong
-   * SCOUT_GATEWAY_TOPOLOGY and every assertion below would keep passing while
-   * pointing at the wrong pod. Naming both expectations explicitly means a
-   * change to a stage's topology has to come here and be looked at.
-   */
   test("both stages place the shard on their gateway", () => {
-    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.beta)).toBe(true);
     expect(voiceWorkloadName("beta")).toBe("scout-beta-scout-gateway");
-    expect(voiceEgressPolicyName("beta")).toBe("scout-gateway-netpol");
+    expect(voiceEgressPolicyName()).toBe("scout-gateway-netpol");
 
-    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.prod)).toBe(true);
     expect(voiceWorkloadName("prod")).toBe("scout-prod-scout-gateway");
-    expect(voiceEgressPolicyName("prod")).toBe("scout-gateway-netpol");
+    expect(voiceEgressPolicyName()).toBe("scout-gateway-netpol");
   });
 
   test("beta carries the credential and bootstrap surface only", () => {
@@ -240,7 +213,6 @@ describe("Hey Scout voice deployment boundary", () => {
    */
   test("a split stage leaves no voice surface on the application pod", () => {
     for (const stage of ["beta", "prod"] as const) {
-      if (!gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[stage])) continue;
       const deployment = backendDeployment(stage);
       const container = containerOf(deployment, `scout-${stage}-scout-backend`);
       const names = new Set(container.env.map((entry) => entry.name));

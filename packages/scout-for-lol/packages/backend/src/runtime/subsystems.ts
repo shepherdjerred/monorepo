@@ -139,6 +139,16 @@ export function scoutRuntimeSubsystems(
         const { setScoutTemporalSupervisor } =
           await import("#src/temporal/runtime.ts");
         setScoutTemporalSupervisor(temporalSupervisor);
+        if (
+          configuration.environment === "beta" &&
+          capabilities.databaseMetricSweeps
+        ) {
+          const { registerWorkflowRoutingMetrics } =
+            await import("#src/temporal/workflow-routing-metrics.ts");
+          registerWorkflowRoutingMetrics(() =>
+            temporalSupervisor?.readClient(),
+          );
+        }
       },
 
       "discord-gateway": async () => {

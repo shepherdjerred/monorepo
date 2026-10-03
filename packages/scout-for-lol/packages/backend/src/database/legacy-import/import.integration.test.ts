@@ -9,8 +9,8 @@ import { LEGACY_PRE_BUCKS_TABLES } from "#src/database/legacy-import/legacy-opti
 import {
   runImport,
   verifyImport,
-  verifyLedgerBalances,
 } from "#src/database/legacy-import/run-import.ts";
+import { verifyLedgerBalances } from "#src/database/startup-readiness.ts";
 import {
   AccountIdSchema,
   DiscordAccountIdSchema,

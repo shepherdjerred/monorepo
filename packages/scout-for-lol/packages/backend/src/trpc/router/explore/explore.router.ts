@@ -81,14 +81,6 @@ const exploreProcedure = protectedProcedure;
 
 /**
  * The status of one confirmation intent the caller owns.
- *
- * Registered under two names. `dareIntentStatus` is what this procedure was
- * called before confirmation intents stopped being dare-only, and a tab loaded
- * before that deployment keeps polling the old name for a confirmation card it
- * is still showing. The intent migration deliberately preserved those ids so
- * the cards keep working, and dropping the procedure they poll would have
- * undone exactly that. Remove the alias one release after deploy, once stale
- * clients have aged out.
  */
 const intentStatusProcedure = exploreProcedure
   .input(z.strictObject({ intentId: z.uuid() }))
@@ -190,11 +182,7 @@ export const exploreRouter = router({
 
   intentStatus: intentStatusProcedure,
 
-  /** @deprecated Pre-rename alias; see {@link intentStatusProcedure}. */
-  dareIntentStatus: intentStatusProcedure,
-
-  // Confirming an entity an Explore agent prepared. Nothing mints these yet;
-  // see explore-creation-procedures.ts.
+  // Confirm entities prepared by the Explore agent.
   ...exploreCreationProcedures,
 
   confirmDareIntent: webMutationProcedure

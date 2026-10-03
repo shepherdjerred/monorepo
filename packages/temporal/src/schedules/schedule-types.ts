@@ -34,6 +34,8 @@ export type ScheduleDefinition = {
   requiredEnvironment?: readonly string[];
   requiredPresentEnvironment?: readonly string[];
   initialPauseNote?: string;
+  /** Exact retired automatic pauses this declaration may clear. */
+  retiredPauseNotes?: readonly string[];
 };
 
 export type ScheduleSourceDefinition = Omit<ScheduleDefinition, "namespace"> & {

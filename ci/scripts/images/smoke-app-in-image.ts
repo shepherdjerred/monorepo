@@ -346,14 +346,16 @@ const commands: Record<
       'postgres_bin="$(pg_config --bindir)"',
       '"$postgres_bin/initdb" -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null',
       'if ! "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-c listen_addresses= -c unix_socket_directories=/tmp" start; then cat /tmp/smoke-pg.log; exit 1; fi',
+      // Prepare this disposable database explicitly, then exercise the ordinary
+      // image startup path with no legacy SQLite file present.
+      "bun x --no-install prisma migrate deploy",
+      "bun run scripts/import-legacy-sqlite.ts --allow-fresh-install",
+      'bun run scripts/scoutql/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix',
       "set +e",
-      // Mirror the full image CMD: migrate → legacy import (which must take
-      // its fresh-install marker path here) → ScoutQL v2 boot-time migration
-      // → boot.
-      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/scoutql/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
+      'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/check-database-readiness.ts && bun run src/index.ts" 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
-      String.raw`printf '%s\n' "$output" | grep -q "Legacy import: fresh" || { echo "importer did not take the fresh-install path"; exit 1; }`,
+      String.raw`printf '%s\n' "$output" | grep -q "Database prepared: completed import receipt and ledger verified" || { echo "database readiness failed"; exit 1; }`,
       String.raw`printf '%s\n' "$output" | grep -Fq "HTTP server started" || { echo "backend did not reach HTTP startup"; exit 1; }`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +

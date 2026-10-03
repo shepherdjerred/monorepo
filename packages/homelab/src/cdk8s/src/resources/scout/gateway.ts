@@ -32,46 +32,12 @@ import {
 import { ARGOCD_SYNC_WAVE_ANNOTATION } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { scoutAdminRoleContainerBase } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
-import type { RenderedGatewayTopology } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 /** Pod label every gateway-role resource selects on. */
 export const SCOUT_GATEWAY_APP_LABEL = "scout-gateway";
 
-/**
- * Where the gateway Deployment sits in the sync, per topology.
- *
- * The backend Deployment deliberately carries no annotation, so it is in the
- * default wave 0. ArgoCD starts a wave only once every resource in the previous
- * one reports Healthy, which makes these numbers (plus the retirement gate
- * below) the ordering contract between the roles — and the contract runs in
- * OPPOSITE directions depending on which way the topology is moving.
- *
- * `split` is wave 1: the backend's wave-0 Recreate rollout terminates the
- * combined pod and brings up the `application` pod, so the shard handover is a
- * precondition of the gateway pod existing at all, on any full sync of the
- * Application — release-root's exact-revision child sync or a manual one.
- *
- * `retiring` is wave -2, BEFORE the backend, for the mirror image of the same
- * reason. On the retirement sync the backend returns to `combined` and its
- * Recreate rollout opens a Discord session. If the scale-to-zero were still in
- * wave 1 it would be applied *after* that, so the rolled-back backend would
- * connect while the gateway pod was still logged in — two sessions on one
- * token, caused by the rollback itself and on every rollback rather than only
- * when an operator forgot a step.
- *
- * Ordering the apply is not enough on its own. A Deployment at zero replicas
- * reports Healthy while its last pod is still terminating, because the
- * ReplicaSet's replica count excludes terminating pods. So the retiring render
- * also carries a Sync-hook Job in wave -1 that completes only once no gateway
- * pod exists (`gateway-retirement-gate.ts`), which makes "the token has been
- * released" — not merely "the scale-down was applied" — the precondition of
- * wave 0. Together they are the declarative spelling of the runbook's "scale
- * gateway to 0, wait for termination, revert the backend to combined".
- */
-export const SCOUT_GATEWAY_SYNC_WAVE = {
-  split: "1",
-  retiring: "-2",
-} as const;
+/** Dedicated gateway follows the application in the existing release order. */
+export const SCOUT_GATEWAY_SYNC_WAVE = "1";
 
 /**
  * The role label, so a metrics series or a NetworkPolicy can name the runtime
@@ -82,14 +48,6 @@ export const SCOUT_GATEWAY_SYNC_WAVE = {
 export const SCOUT_RUNTIME_ROLE_LABEL = "scout-runtime-role";
 
 export type ScoutGatewayDeploymentOptions = {
-  /**
-   * Whether this render runs the role or is retiring it.
-   *
-   * `absent` stages never reach here — the caller's `!== "absent"` check is
-   * what narrows to this type — so it excludes that case rather than leaving a
-   * third one to be handled defensively at every use.
-   */
-  readonly topology: RenderedGatewayTopology;
   readonly imageVersion: string;
   /**
    * The application role's environment, verbatim.
@@ -196,13 +154,8 @@ export function createScoutGatewayDeployment(
   stage: Stage,
   options: ScoutGatewayDeploymentOptions,
 ) {
-  const { topology } = options;
   const deployment = new Deployment(chart, "scout-gateway", {
-    // Zero while retiring, so the retirement sync itself scales the shard's
-    // pod away. The Deployment stays rendered rather than disappearing so the
-    // scale-down is ordered and gated ahead of the backend — see
-    // SCOUT_GATEWAY_TOPOLOGY.
-    replicas: topology === "split" ? 1 : 0,
+    replicas: 1,
     // One Discord identity per token. Recreate keeps the old shard fully
     // terminated before the replacement logs in; a rolling update would put
     // two sessions on one token.
@@ -244,7 +197,7 @@ export function createScoutGatewayDeployment(
         // Retiring inverts this to wave -2 so the scale-to-zero is applied,
         // and gated on termination, BEFORE the backend returns to combined.
         // See SCOUT_GATEWAY_SYNC_WAVE.
-        [ARGOCD_SYNC_WAVE_ANNOTATION]: SCOUT_GATEWAY_SYNC_WAVE[topology],
+        [ARGOCD_SYNC_WAVE_ANNOTATION]: SCOUT_GATEWAY_SYNC_WAVE,
       },
     },
   });

@@ -17,6 +17,11 @@ const CATCHUP_RELAXED = "1 hour";
 const INITIAL_PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
 
+const BETA_RETIRED_PAUSE_NOTES = [
+  INITIAL_PAUSE_NOTE,
+  "Paused until the matching Scout Temporal feature family is enabled",
+];
+
 type ScoutInterval =
   | "20 seconds"
   | "30 seconds"
@@ -66,7 +71,10 @@ function intervalSchedule(
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
     memo: `Scout ${stage} ${schedule.name}`,
-    ...(schedule.initiallyActive
+    ...(stage === "beta"
+      ? { retiredPauseNotes: BETA_RETIRED_PAUSE_NOTES }
+      : {}),
+    ...(stage === "beta" || schedule.initiallyActive
       ? {}
       : { initialPauseNote: INITIAL_PAUSE_NOTE }),
   };
@@ -90,7 +98,9 @@ function cronSchedule(
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
     memo: `Scout ${stage} ${schedule.name}`,
-    initialPauseNote: INITIAL_PAUSE_NOTE,
+    ...(stage === "beta"
+      ? { retiredPauseNotes: BETA_RETIRED_PAUSE_NOTES }
+      : { initialPauseNote: INITIAL_PAUSE_NOTE }),
   };
 }
 

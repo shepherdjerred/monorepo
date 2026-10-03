@@ -184,11 +184,7 @@ describe("openBettingPoolsForPrematch", () => {
     ]);
   });
 
-  // Regression: peekAvailableAt is nullable now (the peek feature is gone),
-  // but a rollback to the pre-removal image still reads it unconditionally.
-  // A pool this code creates must still carry a value or that rollback path
-  // breaks — see prisma/schema.prisma's comment on the column.
-  test("still writes a compatibility peekAvailableAt for rollback safety", async () => {
+  test("leaves the retired Peek timestamp unset", async () => {
     const detectedAt = new Date();
     await openBettingPoolsForPrematch(
       {
@@ -210,10 +206,7 @@ describe("openBettingPoolsForPrematch", () => {
         },
       },
     });
-    expect(pool.peekAvailableAt).not.toBeNull();
-    expect(pool.peekAvailableAt?.getTime()).toBeGreaterThan(
-      detectedAt.getTime(),
-    );
+    expect(pool.peekAvailableAt).toBeNull();
   });
 });
 

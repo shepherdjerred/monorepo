@@ -16,7 +16,7 @@ describe("Scout progression and V2 pipeline reconciliation schedules", () => {
     expect(ids).toContain("scout-prod-progression-outbox");
   });
   test.each(["beta", "prod"] as const)(
-    "activates progression reconciliation and keeps V2 pipeline paused for %s",
+    "declares progression and V2 pipeline reconciliation for %s",
     (stage) => {
       const progression = SCHEDULES.find(
         (candidate) =>
@@ -61,7 +61,9 @@ describe("Scout progression and V2 pipeline reconciliation schedules", () => {
         overlap: ScheduleOverlapPolicy.SKIP,
         catchupWindow: "5 minutes",
       });
-      expect(pipeline?.initialPauseNote).toBe(PAUSE_NOTE);
+      expect(pipeline?.initialPauseNote).toBe(
+        stage === "beta" ? undefined : PAUSE_NOTE,
+      );
       expect(
         scoutPipelineReconciliationV2InputCodec.parse(pipeline?.args[0]),
       ).toEqual({ stage, trigger: "schedule" });
