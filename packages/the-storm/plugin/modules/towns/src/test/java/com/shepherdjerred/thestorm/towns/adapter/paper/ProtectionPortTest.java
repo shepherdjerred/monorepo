@@ -69,6 +69,16 @@ final class ProtectionPortTest extends AegisServer {
   }
 
   @Test
+  void npcDamageRemainsAllowedInSpawnAndClaims() {
+    var port = port();
+    assertThat(port.checkHarm(bob.getUniqueId(), at(8, 8), HarmTarget.NPC, at(8, 8)).isAllowed())
+        .isTrue();
+    assertThat(
+            port.checkHarm(bob.getUniqueId(), at(500, 500), HarmTarget.NPC, at(170, Z)).isAllowed())
+        .isTrue();
+  }
+
+  @Test
   void sameLandMeansTheSameOwner() {
     var port = port();
 

@@ -57,6 +57,20 @@ places:
     z: 0.5
     yaw: 90.0
     pitch: 0.0
+  east-watch-turn:
+    world: minecraft:overworld
+    x: 37.5
+    y: 68
+    z: 9.5
+    yaw: 90.0
+    pitch: 0.0
+  west-watch-turn:
+    world: minecraft:overworld
+    x: -54.5
+    y: 69
+    z: -2.5
+    yaw: 180.0
+    pitch: 0.0
 
 # Signed skin textures, referred to by id from `skin:`. Copy `value` and
 # `signature` from
@@ -100,13 +114,13 @@ schedules:
     slots:
       - from: "00:00"
         to: "00:00"
-        activity: patrol east-watch smithy-door market
+        activity: patrol home east-watch-turn
   west-guard:
     shelter: none
     slots:
       - from: "00:00"
         to: "00:00"
-        activity: patrol west-watch tavern-door market
+        activity: patrol home west-watch-turn
 
 # Conversations. A node has either `next: <node>` (a Continue button) and no
 # options, or `next: none` and up to six options. An option's `then` is

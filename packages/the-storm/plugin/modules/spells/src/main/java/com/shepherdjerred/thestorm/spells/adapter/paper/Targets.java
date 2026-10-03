@@ -12,14 +12,13 @@ import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 
 /**
- * Finds what a spell acts on. Spells never affect their caster, armour stands, NPC mannequins,
- * invulnerable or dead creatures, spectators and creative players, or the configured immune bosses.
+ * Finds what a spell acts on. Spells never affect their caster, armour stands, invulnerable or dead
+ * creatures, spectators and creative players, or the configured immune bosses.
  */
 public final class Targets {
 
@@ -38,8 +37,7 @@ public final class Targets {
   public boolean affectable(Player caster, Entity entity) {
     if (!(entity instanceof LivingEntity living)
         || entity.equals(caster)
-        || entity instanceof ArmorStand
-        || entity instanceof Mannequin) {
+        || entity instanceof ArmorStand) {
       return false;
     }
     if (!living.isValid() || living.isDead() || living.isInvulnerable()) {

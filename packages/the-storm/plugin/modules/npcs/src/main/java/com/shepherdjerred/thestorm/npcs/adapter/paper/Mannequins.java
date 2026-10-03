@@ -83,7 +83,7 @@ final class Mannequins {
             ? Component.empty()
             : Component.text(npc.description(), NamedTextColor.GRAY));
     mannequin.setImmovable(true);
-    mannequin.setInvulnerable(true);
+    mannequin.setInvulnerable(false);
     mannequin.setSilent(true);
     mannequin.setPersistent(true);
     mannequin

@@ -50,6 +50,7 @@ final class ShippedContentTest {
     assertThat(config.markers().available()).isEqualTo("!");
     assertThat(config.markers().turnIn()).isEqualTo("?");
     assertThat(config.guard().attackReach()).isLessThan(config.guard().detectionRadius());
+    assertThat(config.warningPhrases()).hasSize(24).doesNotHaveDuplicates();
   }
 
   @Test
@@ -68,6 +69,8 @@ final class ShippedContentTest {
             "east-guard",
             "west-guard");
     assertThat(content.chunks()).isNotEmpty();
+    assertThat(content.npcs().values().stream().filter(npc -> npc.roles().contains("guard")))
+        .hasSize(8);
     for (var id : List.of("east-guard", "west-guard")) {
       var guard = content.npc(id).orElseThrow();
       assertThat(guard.roles()).contains("guard");

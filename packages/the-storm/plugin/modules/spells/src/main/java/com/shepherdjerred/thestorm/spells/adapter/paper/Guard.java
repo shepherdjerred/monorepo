@@ -14,6 +14,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 
 /**
@@ -24,7 +25,8 @@ import org.bukkit.entity.Player;
  * <p>Any effect on a creature (damage, fire, potions, knockback, freezing, trapping, silencing,
  * disarming, teleporting next to it) is harm. Harming a player asks {@link HarmTarget#PLAYER},
  * which needs PvP on both the caster's and the victim's land; harming a pet, animal, villager or
- * NPC asks {@link HarmTarget#PASSIVE}. Hostile monsters are not protected by the port, but a spell
+ * asks {@link HarmTarget#PASSIVE}. NPC mannequins ask {@link HarmTarget#NPC}, allowing damage
+ * consistently with melee attacks. Hostile monsters are not protected by the port, but a spell
  * still leaves alone monsters standing on land where its caster may not build, so mob farms and
  * curing cells inside claims are safe.
  */
@@ -56,7 +58,10 @@ public final class Guard {
     if (isHostile(target)) {
       return reason(protection.check(caster, ProtectedAction.BUILD, victimAt));
     }
-    var kind = target instanceof Player ? HarmTarget.PLAYER : HarmTarget.PASSIVE;
+    var kind =
+        target instanceof Player
+            ? HarmTarget.PLAYER
+            : target instanceof Mannequin ? HarmTarget.NPC : HarmTarget.PASSIVE;
     return reason(protection.checkHarm(caster, casterAt, kind, victimAt));
   }
 

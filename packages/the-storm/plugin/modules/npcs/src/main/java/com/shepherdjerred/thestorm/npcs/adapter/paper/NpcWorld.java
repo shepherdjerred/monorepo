@@ -25,20 +25,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Location;
 import org.bukkit.Server;
-import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.Nullable;
 
 /**
  * The live NPCs: one Mannequin per definition, kept in step with content and walked through the
- * day. Only NPCs in loaded chunks with a player nearby move; the rest stand still, so the per-tick
- * cost is bounded by what players can see. Main thread.
+ * day. Routines pause without nearby players; threat reactions continue in loaded chunks. Main
+ * thread.
  */
 final class NpcWorld {
 
@@ -92,6 +93,8 @@ final class NpcWorld {
   private @Nullable MarkerEntities displays;
   private @Nullable MarkerService markers;
   private Function<String, List<UUID>> listeners = npc -> List.of();
+  private Consumer<String> closeConversations = npc -> {};
+  private @Nullable NpcCombat combat;
   private long tick;
 
   NpcWorld(Parts parts, NpcCatalog catalog, NpcsConfig config, PathFollower follower) {
@@ -112,6 +115,45 @@ final class NpcWorld {
     listeners = talking;
   }
 
+  void attachCombat(NpcCombat reactions, Consumer<String> close) {
+    combat = reactions;
+    closeConversations = close;
+  }
+
+  NpcCombat combat() {
+    return Objects.requireNonNull(combat, "combat must be attached before NPC startup");
+  }
+
+  boolean ready() {
+    return combat().ready();
+  }
+
+  List<NpcDefinition> definitions() {
+    return catalog.content().sortedNpcs();
+  }
+
+  boolean isNavigator(Entity entity) {
+    return parts.navigators().isNavigator(entity);
+  }
+
+  void interrupt(String npc) {
+    var entry = live.get(npc);
+    if (entry != null) {
+      entry.walker = null;
+    }
+    parts.navigators().release(npc);
+    closeConversations.accept(npc);
+  }
+
+  boolean available(String npc) {
+    var entry = live.get(npc);
+    return ready()
+        && entry != null
+        && entry.entity.isValid()
+        && !entry.entity.isDead()
+        && !combat().reacting(npc);
+  }
+
   /** Where {@code npc}'s entity stands, if it is loaded. */
   Optional<Location> location(String npc) {
     var entry = live.get(npc);
@@ -122,6 +164,9 @@ final class NpcWorld {
 
   /** Whether a player is still close enough to use an open dialogue. */
   boolean near(Player player, String npc) {
+    if (!available(npc)) {
+      return false;
+    }
     var place = location(npc);
     if (place.isEmpty() || !player.getWorld().equals(place.get().getWorld())) {
       return false;
@@ -142,6 +187,9 @@ final class NpcWorld {
 
   /** Makes the world match the catalog: holds chunks, then spawns, updates and removes NPCs. */
   Report reconcile() {
+    if (!ready()) {
+      throw new IllegalStateException("cannot reconcile NPCs before state hydration");
+    }
     var content = catalog.content();
     parts.tickets().hold(content.chunks());
     var found = new HashMap<UUID, Mannequin>();
@@ -158,7 +206,9 @@ final class NpcWorld {
                 });
       }
     }
-    var plan = Reconciler.plan(content.npcs().values(), spawned);
+    var eligible =
+        content.npcs().values().stream().filter(npc -> !combat().awaitingDawn(npc.id())).toList();
+    var plan = Reconciler.plan(eligible, spawned);
     for (var removal : plan.remove()) {
       var entity = found.get(removal.entity());
       if (entity != null) {
@@ -169,7 +219,7 @@ final class NpcWorld {
           .info("Removed {} NPC entity {} ({})", removal.reason(), removal.npc(), removal.entity());
     }
     for (var npc : new HashSet<>(live.keySet())) {
-      if (!content.npcs().containsKey(npc)) {
+      if (!content.npcs().containsKey(npc) || combat().awaitingDawn(npc)) {
         forget(npc);
       }
     }
@@ -190,6 +240,10 @@ final class NpcWorld {
 
   /** Entities loaded with a chunk: adopt our NPCs, drop strays and leftovers. */
   void entitiesLoaded(List<Entity> entities) {
+    if (!ready()) {
+      // Startup reconciliation scans every loaded entity after the ledger is hydrated.
+      return;
+    }
     for (var entity : entities) {
       if (parts.navigators().isNavigator(entity)
           || (displays != null && displays.isMarker(entity))) {
@@ -202,10 +256,14 @@ final class NpcWorld {
 
   /** Advances every nearby NPC by one tick. */
   void tick() {
+    if (!ready()) {
+      return;
+    }
     tick++;
-    for (var entry : live.values()) {
+    combat().tick();
+    for (var entry : List.copyOf(live.values())) {
       if (!entry.entity.isValid()) {
-        respawnIfKilled(entry);
+        // Death events persist the absence. Chunk unloads are adopted when loaded again.
         continue;
       }
       animate(entry);
@@ -214,6 +272,7 @@ final class NpcWorld {
 
   /** Removes navigators and markers and releases chunks. The Mannequins stay: they are saved. */
   void shutdown() {
+    combat().shutdown();
     parts.navigators().releaseAll();
     if (displays != null) {
       displays.removeAll();
@@ -229,6 +288,10 @@ final class NpcWorld {
   }
 
   private void adopt(Mannequin entity, Spawned spawned) {
+    if (combat().awaitingDawn(spawned.npc())) {
+      entity.remove();
+      return;
+    }
     var definition = catalog.content().npc(spawned.npc());
     if (definition.isEmpty()) {
       entity.remove();
@@ -250,6 +313,8 @@ final class NpcWorld {
   }
 
   private void track(NpcDefinition npc, Mannequin entity) {
+    // Saved matching fingerprints still carry the old invulnerability flag.
+    entity.setInvulnerable(false);
     var entry = live.get(npc.id());
     var previousHome =
         entry == null
@@ -278,6 +343,8 @@ final class NpcWorld {
   }
 
   private void forget(String npc) {
+    interrupt(npc);
+    combat().forget(npc);
     live.remove(npc);
     parts.navigators().release(npc);
     if (displays != null) {
@@ -285,31 +352,30 @@ final class NpcWorld {
     }
   }
 
-  private void respawnIfKilled(Live entry) {
-    if (!entry.entity.isDead()) {
-      // Unloaded with its chunk; it comes back through entitiesLoaded.
-      return;
-    }
-    var home = entry.npc.home();
-    var chunk = home.chunk();
-    if (parts.mannequins().world(home.world()).isChunkLoaded(chunk.x(), chunk.z())) {
-      parts.navigators().release(entry.npc.id());
-      track(entry.npc, parts.mannequins().spawn(entry.npc));
-    }
+  void died(String npc) {
+    forget(npc);
   }
 
   private void animate(Live entry) {
     var feet = entry.entity.getLocation();
     var nearest = nearestPlayer(feet, config.animation().playerRadius());
-    if (nearest.isEmpty()) {
+    var threat = combat().threat(entry.npc, entry.entity);
+    if (nearest.isEmpty() && threat.isEmpty()) {
       // Frozen until someone comes back; don't keep a navigator waiting meanwhile.
       parts.navigators().release(entry.npc.id());
       return;
     }
     var position = Mannequins.position(feet);
     var facing = Mannequins.facing(feet);
-    var threat = nearestThreat(entry, feet);
-    threat.ifPresent(enemy -> repel(entry, feet, enemy));
+    if (entry.npc.roles().contains("guard")) {
+      threat.ifPresent(enemy -> repel(entry, feet, enemy));
+    }
+    if (!entry.entity.isValid()) {
+      return;
+    }
+    if (threat.isPresent()) {
+      closeConversations.accept(entry.npc.id());
+    }
     var listener = listener(entry.npc, feet);
     if (shouldAttend(listener, threat)) {
       attend(entry, new PathFollower.At(position, facing), listener.orElseThrow());
@@ -329,6 +395,7 @@ final class NpcWorld {
             .flatMap(target -> parts.navigators().find(npc.id(), feet, target));
     var watcher =
         nearest
+            .filter(player -> threat.isEmpty())
             .filter(player -> feetOf(player).distance(feet) <= config.animation().lookRadius())
             .map(player -> Mannequins.position(player.getEyeLocation()));
     var ticked =
@@ -337,14 +404,17 @@ final class NpcWorld {
     apply(entry, ticked.moves());
   }
 
-  static boolean shouldAttend(Optional<Player> listener, Optional<Enemy> threat) {
+  static boolean shouldAttend(Optional<Player> listener, Optional<? extends LivingEntity> threat) {
     return listener.isPresent() && threat.isEmpty();
   }
 
   static boolean shouldReconsider(@Nullable Walker walker, boolean scheduled, boolean threatened) {
-    return walker == null
-        || scheduled
-        || (threatened && !(walker.intent() instanceof Intent.Pursue));
+    if (walker == null || scheduled) {
+      return true;
+    }
+    var reacting =
+        walker.intent() instanceof Intent.Pursue || walker.intent() instanceof Intent.Flee;
+    return threatened != reacting;
   }
 
   /** The nearest player talking to {@code npc} who is still close enough to be waited for. */
@@ -376,7 +446,7 @@ final class NpcWorld {
   }
 
   private PathFollower.Tick decide(
-      NpcDefinition npc, @Nullable Walker walker, Location feet, Optional<Enemy> threat) {
+      NpcDefinition npc, @Nullable Walker walker, Location feet, Optional<LivingEntity> threat) {
     var world = feet.getWorld();
     var at = new PathFollower.At(Mannequins.position(feet), Mannequins.facing(feet));
     var content = catalog.content();
@@ -393,29 +463,21 @@ final class NpcWorld {
                         new Spot(
                             npc.home().world(),
                             Mannequins.position(enemy.getLocation()),
-                            Mannequins.facing(enemy.getLocation())))));
+                            Mannequins.facing(enemy.getLocation()))),
+                threat
+                    .filter(enemy -> !npc.roles().contains("guard"))
+                    .map(
+                        enemy ->
+                            EscapeRoutes.away(feet, enemy, config.guard().detectionRadius()))));
     return walker == null
         ? follower.start(intent, at, tick)
         : follower.retarget(walker, intent, at, tick);
   }
 
-  private Optional<Enemy> nearestThreat(Live entry, Location feet) {
-    if (!entry.npc.roles().contains("guard")) {
-      return Optional.empty();
-    }
+  private void repel(Live entry, Location feet, LivingEntity enemy) {
     var guard = config.guard();
-    var home = homeLocation(entry.npc);
-    return GuardThreats.nearest(
-        feet.getWorld()
-            .getNearbyEntities(
-                feet, guard.detectionRadius(), guard.detectionRadius(), guard.detectionRadius()),
-        new GuardThreats.Search(feet, home, guard),
-        entry.entity::hasLineOfSight);
-  }
-
-  private void repel(Live entry, Location feet, Enemy enemy) {
-    var guard = config.guard();
-    if (enemy.getLocation().distanceSquared(feet) > guard.attackReach() * guard.attackReach()
+    if (!entry.entity.hasLineOfSight(enemy)
+        || enemy.getLocation().distanceSquared(feet) > guard.attackReach() * guard.attackReach()
         || (entry.lastAttackTick != Long.MIN_VALUE
             && tick - entry.lastAttackTick < guard.cooldownTicks())) {
       return;
@@ -426,6 +488,7 @@ final class NpcWorld {
         PathFollower.face(
             new PathFollower.At(Mannequins.position(feet), Mannequins.facing(feet)),
             Mannequins.position(enemy.getEyeLocation())));
+    entry.entity.swingMainHand();
     enemy.damage(guard.damage(), entry.entity);
   }
 

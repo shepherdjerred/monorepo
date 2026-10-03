@@ -7,9 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import java.util.List;
+import java.util.Set;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Cow;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Zombie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,18 @@ final class GuardTest {
 
   private Location at(double x) {
     return new Location(harness.world, x, 64, 0);
+  }
+
+  @Test
+  void spellsCanTargetNpcsOnProtectedLand() {
+    var caster = harness.server.addPlayer();
+    var npc = harness.world.spawn(at(3), Mannequin.class);
+    npc.setInvulnerable(false);
+    assertThat(new Targets(Set.of()).affectable(caster, npc)).isTrue();
+    assertThat(guard.harmDenial(caster, npc)).isEmpty();
+    assertThat(protection.harms).containsExactly(HarmTarget.NPC);
+    npc.setInvulnerable(true);
+    assertThat(new Targets(Set.of()).affectable(caster, npc)).isFalse();
   }
 
   @Test

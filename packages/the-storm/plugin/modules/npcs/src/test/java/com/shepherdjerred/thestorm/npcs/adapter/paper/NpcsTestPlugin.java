@@ -12,8 +12,10 @@ import com.shepherdjerred.thestorm.npcs.app.ContentSource;
 import com.shepherdjerred.thestorm.npcs.app.DialogPresenter;
 import com.shepherdjerred.thestorm.npcs.app.DialogueRegistry;
 import com.shepherdjerred.thestorm.npcs.app.NpcCatalog;
+import com.shepherdjerred.thestorm.npcs.app.NpcStateStore;
 import com.shepherdjerred.thestorm.npcs.app.Trainer;
 import com.shepherdjerred.thestorm.npcs.app.TrainerWording;
+import com.shepherdjerred.thestorm.npcs.domain.combat.NpcLedger.Snapshot;
 import com.shepherdjerred.thestorm.npcs.domain.config.NpcsConfig;
 import com.shepherdjerred.thestorm.npcs.domain.content.Content;
 import com.shepherdjerred.thestorm.npcs.domain.content.ContentProblem;
@@ -106,8 +108,24 @@ public class NpcsTestPlugin extends JavaPlugin {
                 new ActionRegistry(),
                 trainer,
                 () -> source(data),
-                Runnable::run),
+                Runnable::run,
+                new MemoryState()),
             new NpcsPaper.Hooks(new Tickets(), new Presenter()));
+  }
+
+  private static final class MemoryState implements NpcStateStore {
+    private Snapshot snapshot = Snapshot.empty();
+
+    @Override
+    public CompletableFuture<Snapshot> load() {
+      return CompletableFuture.completedFuture(snapshot);
+    }
+
+    @Override
+    public CompletableFuture<Void> save(Snapshot state) {
+      snapshot = state;
+      return CompletableFuture.completedFuture(null);
+    }
   }
 
   @Override

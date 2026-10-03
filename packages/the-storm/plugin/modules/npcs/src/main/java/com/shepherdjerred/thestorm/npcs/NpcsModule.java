@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.npcs.adapter.content.ContentLoader;
+import com.shepherdjerred.thestorm.npcs.adapter.db.JooqNpcStateStore;
 import com.shepherdjerred.thestorm.npcs.adapter.paper.NpcsPaper;
 import com.shepherdjerred.thestorm.npcs.app.ActionRegistry;
 import com.shepherdjerred.thestorm.npcs.app.ContentSource;
@@ -50,6 +51,7 @@ public final class NpcsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context.database().migrate(id(), NpcsModule.class.getClassLoader());
     var config = context.loadConfig("npcs.yml", NpcsConfig.class);
     var server = context.plugin().getServer();
     var dataDirectory = context.dataDirectory();
@@ -74,7 +76,8 @@ public final class NpcsModule implements StormModule {
                 actions,
                 trainer,
                 () -> source(dataDirectory, rules(server)),
-                ForkJoinPool.commonPool()),
+                ForkJoinPool.commonPool(),
+                new JooqNpcStateStore(context.database())),
             NpcsPaper.Hooks.paper(context, config));
     running = installed.shutdown();
     context.services().provide(NpcDirectory.class, catalog);
