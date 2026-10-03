@@ -73,6 +73,23 @@ export const VoiceConfigSchema = z
  * branded (parsed, not cast) at this boundary.
  */
 export const ConfigSchema = z.strictObject({
+  /** Plex is an optional server/credential bootstrap; artwork rollout is controlled by Flipt. */
+  plex: z
+    .strictObject({
+      baseUrl: z.url().refine((value) => {
+        const url = new URL(value);
+        return (
+          ["http:", "https:"].includes(url.protocol) &&
+          url.username === "" &&
+          url.password === "" &&
+          url.pathname === "/" &&
+          url.search === "" &&
+          url.hash === ""
+        );
+      }),
+      token: z.string().min(1),
+    })
+    .optional(),
   web: z
     .strictObject({
       publicOrigin: z.url().refine((value) => {

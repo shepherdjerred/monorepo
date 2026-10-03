@@ -175,6 +175,7 @@ export type BirmelVariantFlagKey = (typeof BIRMEL_VARIANT_FLAG_KEYS)[number];
 
 export const STREAMBOT_FLAG_KEYS = [
   "player-card-enabled",
+  "streambot-plex-posters-enabled",
   "streambot-web-ui-enabled",
   "streambot-assistant-v2-enabled",
   "streambot-history-enabled",
@@ -197,6 +198,7 @@ export type StreambotFlagKey = (typeof STREAMBOT_FLAG_KEYS)[number];
 
 export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "player-card-enabled",
+  "streambot-plex-posters-enabled",
   "streambot-web-ui-enabled",
   "streambot-assistant-v2-enabled",
   "streambot-history-enabled",

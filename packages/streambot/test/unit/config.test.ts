@@ -13,6 +13,31 @@ const VALID: EnvLookup = {
 };
 
 describe("loadConfig", () => {
+  test("Plex bootstrap requires a credential and server origin together", () => {
+    expect(loadConfig(VALID).plex).toBeUndefined();
+    expect(
+      loadConfig({ ...VALID, PLEX_BASE_URL: "", PLEX_TOKEN: "" }).plex,
+    ).toBeUndefined();
+    expect(
+      loadConfig({
+        ...VALID,
+        PLEX_BASE_URL: "http://plex.test:32400",
+        PLEX_TOKEN: "fixture",
+      }).plex,
+    ).toEqual({ baseUrl: "http://plex.test:32400", token: "fixture" });
+    for (const extra of [
+      { PLEX_BASE_URL: "http://plex.test" },
+      { PLEX_TOKEN: "fixture" },
+      {
+        PLEX_BASE_URL: "http://username:password@plex.test",
+        PLEX_TOKEN: "fixture",
+      },
+    ]) {
+      expect(() => loadConfig({ ...VALID, ...extra })).toThrow(
+        "Invalid streambot configuration",
+      );
+    }
+  });
   test("parses a valid environment and applies defaults", () => {
     const config = loadConfig(VALID);
     // Branded ids/tokens are structurally strings — compare via String().

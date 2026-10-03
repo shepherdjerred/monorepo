@@ -1179,6 +1179,61 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-plex-posters-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-web",
+      "purpose": "Use Plex-only posters and grouped Library poster browsing.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-user-160509172704739328",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-web-ui-enabled",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1768,6 +1823,14 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "streambot-plex-posters-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "streambot-web-ui-enabled",
           "type": "boolean",

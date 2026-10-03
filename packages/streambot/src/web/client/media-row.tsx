@@ -22,7 +22,6 @@ export function MediaRow(
     badge?: "Live" | "Upcoming";
   },
 ) {
-  const disabled = !props.canPlay || props.busy || props.available === false;
   return (
     <article className="media-row">
       <Artwork
@@ -41,47 +40,60 @@ export function MediaRow(
         <h3>{props.title}</h3>
         <p>{props.detail}</p>
       </div>
-      <div className="row-actions">
-        <button
-          title={
-            props.available === false
-              ? "This event is not live yet"
-              : "Add to queue"
-          }
-          aria-label={"Queue " + props.title}
-          disabled={disabled}
-          onClick={() => {
-            props.play(props.selection, "queue");
-          }}
-        >
-          +<span className="button-label"> Queue</span>
-        </button>
-        <details className="play-options">
-          <summary aria-label={"More playback options for " + props.title}>
-            ···
-          </summary>
-          <div>
+      <MediaActions {...props} />
+    </article>
+  );
+}
+
+export function MediaActions(
+  props: MediaListProps & {
+    title: string;
+    selection: Selection;
+    available?: boolean;
+  },
+) {
+  const disabled = !props.canPlay || props.busy || props.available === false;
+  return (
+    <div className="row-actions">
+      <button
+        title={
+          props.available === false
+            ? "This event is not live yet"
+            : "Add to queue"
+        }
+        aria-label={"Queue " + props.title}
+        disabled={disabled}
+        onClick={() => {
+          props.play(props.selection, "queue");
+        }}
+      >
+        +<span className="button-label"> Queue</span>
+      </button>
+      <details className="play-options">
+        <summary aria-label={"More playback options for " + props.title}>
+          ···
+        </summary>
+        <div>
+          <button
+            disabled={disabled}
+            onClick={() => {
+              props.play(props.selection, "next");
+            }}
+          >
+            Play next
+          </button>
+          {props.advanced && (
             <button
               disabled={disabled}
               onClick={() => {
-                props.play(props.selection, "next");
+                props.play(props.selection, "now");
               }}
             >
-              Play next
+              Play now
             </button>
-            {props.advanced && (
-              <button
-                disabled={disabled}
-                onClick={() => {
-                  props.play(props.selection, "now");
-                }}
-              >
-                Play now
-              </button>
-            )}
-          </div>
-        </details>
-      </div>
-    </article>
+          )}
+        </div>
+      </details>
+    </div>
   );
 }

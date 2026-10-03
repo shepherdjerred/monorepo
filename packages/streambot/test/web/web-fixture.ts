@@ -24,6 +24,7 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { LibraryArtworkProvider } from "@shepherdjerred/streambot/metadata/plex.ts";
 import {
   sourceIdentity,
   sourceLabel,
@@ -114,7 +115,12 @@ export function webFixture(
   origin = "http://127.0.0.1:8080",
   assetsDir = "/nonexistent",
   extraGuild = false,
+  options: {
+    library?: LibraryEntry[];
+    plexArtwork?: LibraryArtworkProvider;
+  } = {},
 ) {
+  const library = options.library ?? LIBRARY;
   const guilds = [
     { id: GUILD, name: "The living room" },
     ...(extraGuild ? [{ id: SECOND_GUILD, name: "The studio" }] : []),
@@ -135,6 +141,7 @@ export function webFixture(
   let enabled = true;
   let advanced = true;
   let sportsEnabled = true;
+  let plexEnabled = false;
   let allocated = false;
   let numbered = false;
   let allocatedChannel: PlaybackChannelNumber | undefined;
@@ -213,7 +220,7 @@ export function webFixture(
       ]),
   };
   const discovery = new DiscoveryService({
-    library: () => LIBRARY,
+    library: () => library,
     searchYoutube: (query) =>
       Promise.resolve([
         {
@@ -225,9 +232,12 @@ export function webFixture(
         },
       ]),
   });
-  const catalog = new WebCatalog(() => LIBRARY, discovery, {
+  const catalog = new WebCatalog(() => library, discovery, {
     fetchPoster: fixturePoster,
     sports: fixtureSports,
+    ...(options.plexArtwork === undefined
+      ? {}
+      : { plexArtwork: options.plexArtwork }),
   });
   const featureGate: MediaFeatureGate = {
     assistantV2: () => Promise.resolve(advanced),
@@ -268,7 +278,7 @@ export function webFixture(
       config,
       featureGate,
       sports: fixtureSports,
-      library: () => LIBRARY,
+      library: () => library,
       resolvePlaySource: (source) => {
         beforeResolve?.();
         return Promise.resolve(resolved(source));
@@ -292,6 +302,7 @@ export function webFixture(
     playback,
     assetsDir,
     applicationId: () => "123456789",
+    plexPostersEnabled: () => Promise.resolve(plexEnabled),
     fetch: Object.assign(
       (_url: string | URL | Request) => {
         const url = _url instanceof Request ? _url.url : _url.toString();
@@ -387,6 +398,9 @@ export function webFixture(
     },
     setSportsEnabled: (value: boolean) => {
       sportsEnabled = value;
+    },
+    setPlexEnabled: (value: boolean) => {
+      plexEnabled = value;
     },
     setBeforeResolve: (value: typeof beforeResolve) => {
       beforeResolve = value;

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { z } from "zod";
 import {
-  LibraryPageSchema,
+  LibraryBrowsePageSchema,
   SearchResultsSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { api, elapsed } from "./api.ts";
 import { MediaRow, type MediaListProps, type Selection } from "./media-row.tsx";
 import { Sports } from "./sports.tsx";
+import { PosterCard } from "./poster-card.tsx";
 
 export function MediaList(props: MediaListProps) {
   const [tab, setTab] = useState<"library" | "search" | "sports">("library");
@@ -66,10 +67,11 @@ function Library(props: MediaListProps) {
   const [query, setQuery] = useState("");
   const [library, setLibrary] = useState("");
   const [series, setSeries] = useState("");
+  const [previousLibrary, setPreviousLibrary] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
-  const [page, setPage] = useState<z.infer<typeof LibraryPageSchema> | null>(
-    null,
-  );
+  const [page, setPage] = useState<z.infer<
+    typeof LibraryBrowsePageSchema
+  > | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -84,11 +86,12 @@ function Library(props: MediaListProps) {
         library,
         series,
         offset: String(offset),
+        view: series === "" ? "titles" : "entries",
       });
       try {
         const next = await api(
           "/api/library?" + params.toString(),
-          LibraryPageSchema,
+          LibraryBrowsePageSchema,
           {
             signal: controller.signal,
           },
@@ -148,6 +151,7 @@ function Library(props: MediaListProps) {
             value={series}
             onChange={(event) => {
               setSeries(event.target.value);
+              setPreviousLibrary(null);
               setOffset(0);
             }}
           >
@@ -162,10 +166,26 @@ function Library(props: MediaListProps) {
         <span>
           {loading
             ? "Finding your media…"
-            : String(page?.total ?? 0) + " titles"}
+            : String(page?.total ?? 0) +
+              (series === "" ? " titles" : " episodes")}
         </span>
         <span>YOUR COLLECTION</span>
       </div>
+      {series !== "" && (
+        <div className="series-navigation">
+          <button
+            onClick={() => {
+              setSeries("");
+              if (previousLibrary !== null) setLibrary(previousLibrary);
+              setPreviousLibrary(null);
+              setOffset(0);
+            }}
+          >
+            ← All titles
+          </button>
+          <span>{series}</span>
+        </div>
+      )}
       {error !== "" && (
         <p role="alert" className="inline-error">
           {error}
@@ -174,41 +194,61 @@ function Library(props: MediaListProps) {
       {page?.items.length === 0 && (
         <div className="empty">
           <span aria-hidden="true">♫</span>
-          <h3>No titles here yet</h3>
+          <h3>
+            {series === "" ? "No titles here yet" : "No episodes here yet"}
+          </h3>
           <p>Try another search or collection.</p>
         </div>
       )}
-      <div className="media-rows">
-        {page?.items.map((item, index) => (
-          <div key={item.id}>
-            {item.series !== undefined &&
-              (index === 0 ||
-                page.items[index - 1]?.series !== item.series ||
-                page.items[index - 1]?.season !== item.season) && (
-                <h3 className="series-heading">
-                  {item.series} <span>Season {item.season}</span>
-                </h3>
-              )}
-            <MediaRow
-              title={item.title}
-              detail={[
-                item.library,
-                item.year,
-                item.episode === undefined
-                  ? undefined
-                  : "Episode " + String(item.episode),
-              ]
-                .filter((value) => value !== undefined)
-                .join(" · ")}
-              selection={{ kind: "library", id: item.id }}
-              {...(item.artworkUrl === undefined
-                ? {}
-                : { artworkUrl: item.artworkUrl })}
+      {page !== null && "view" in page ? (
+        <div className="poster-grid">
+          {page.items.map((item) => (
+            <PosterCard
+              key={item.id}
+              item={item}
               {...props}
+              openSeries={(name, collection) => {
+                setPreviousLibrary(library);
+                setSeries(name);
+                setLibrary(collection);
+                setOffset(0);
+              }}
             />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="media-rows">
+          {page?.items.map((item, index) => (
+            <div key={item.id}>
+              {item.series !== undefined &&
+                (index === 0 ||
+                  page.items[index - 1]?.series !== item.series ||
+                  page.items[index - 1]?.season !== item.season) && (
+                  <h3 className="series-heading">
+                    {item.series} <span>Season {item.season}</span>
+                  </h3>
+                )}
+              <MediaRow
+                title={item.title}
+                detail={[
+                  item.library,
+                  item.year,
+                  item.episode === undefined
+                    ? undefined
+                    : "Episode " + String(item.episode),
+                ]
+                  .filter((value) => value !== undefined)
+                  .join(" · ")}
+                selection={{ kind: "library", id: item.id }}
+                {...(item.artworkUrl === undefined
+                  ? {}
+                  : { artworkUrl: item.artworkUrl })}
+                {...props}
+              />
+            </div>
+          ))}
+        </div>
+      )}
       {page !== null && page.total > 50 && (
         <div className="pagination">
           <button

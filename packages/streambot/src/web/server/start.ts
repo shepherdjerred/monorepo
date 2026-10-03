@@ -24,6 +24,7 @@ export async function startWebServer(deps: {
   stateDir: string;
   playback: WebPlaybackDeps;
   applicationId: () => string;
+  plexPostersEnabled?: (guildId: string, userId: string) => Promise<boolean>;
 }) {
   const assetsDir = path.resolve(import.meta.dirname, "../../..", "dist/web");
   if (!(await Bun.file(path.join(assetsDir, "index.html")).exists()))
@@ -37,6 +38,9 @@ export async function startWebServer(deps: {
     playback: new WebPlayback(deps.playback),
     applicationId: deps.applicationId,
     assetsDir,
+    ...(deps.plexPostersEnabled === undefined
+      ? {}
+      : { plexPostersEnabled: deps.plexPostersEnabled }),
   });
   const server = serveWebHandler(deps.bootstrap.port, handler);
   return {

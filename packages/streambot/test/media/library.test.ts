@@ -12,6 +12,7 @@ import {
 const ROOT = path.join(tmpdir(), "streambot-library-test");
 const MOVIES = path.join(ROOT, "movies");
 const TV = path.join(ROOT, "tv");
+const YEAR_TV = path.join(ROOT, "year-tv");
 
 beforeAll(async () => {
   await rm(ROOT, { recursive: true, force: true });
@@ -29,6 +30,15 @@ beforeAll(async () => {
     path.join(TV, "The Show", "Season 01", "The Show - S01E01.mkv"),
     "x",
   );
+  await Bun.write(
+    path.join(
+      YEAR_TV,
+      "The Show (2020)",
+      "Season 02",
+      "The_Show_(2020)_S02E03_1080p.mkv",
+    ),
+    "x",
+  );
 });
 
 afterAll(async () => {
@@ -36,6 +46,16 @@ afterAll(async () => {
 });
 
 describe("scanLibrary", () => {
+  test("retains episode metadata when display title cleanup removes a year and release suffix", async () => {
+    const entries = await scanLibrary([{ dir: YEAR_TV, label: "tv" }], ["mkv"]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      title: "The Show (2020)",
+      series: "The Show (2020)",
+      season: 2,
+      episode: 3,
+    });
+  });
   test("recursively finds video files and excludes other extensions", async () => {
     const entries = await scanLibrary(
       [

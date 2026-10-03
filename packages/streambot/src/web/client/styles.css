@@ -346,6 +346,78 @@ h3 {
   height: 50px;
   border-radius: 5px;
 }
+.poster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 24px 16px;
+  padding: 12px 0 24px;
+}
+.poster-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.poster-artwork {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  font-size: 48px;
+}
+.poster-card h3 {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.poster-card p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+.poster-card .row-actions {
+  margin-top: auto;
+}
+.poster-open {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  height: 100%;
+}
+.poster-open:hover {
+  background: transparent;
+}
+.poster-open:hover .poster-artwork {
+  border-color: var(--accent-strong);
+}
+.poster-browse {
+  font-size: 11px;
+  color: var(--accent-strong);
+  margin-top: auto;
+  padding-top: 4px;
+}
+.series-navigation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.series-navigation span {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .poster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+}
 .event-badge {
   display: inline-block;
   margin-bottom: 5px;
@@ -844,7 +916,7 @@ h3 {
     padding: 22px;
   }
   .filters {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .filters > .search-field {
     grid-column: 1 / -1;

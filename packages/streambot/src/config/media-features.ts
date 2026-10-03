@@ -56,3 +56,14 @@ export async function webUiEnabled(
     channelId: "web",
   });
 }
+
+export async function plexPostersEnabled(
+  guildId: string,
+  userId: string,
+): Promise<boolean> {
+  return await enabled("streambot-plex-posters-enabled", {
+    guildId,
+    userId,
+    channelId: "web",
+  });
+}

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { createPosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
+import { PlexArtwork } from "@shepherdjerred/streambot/metadata/plex.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import {
   scanLibrary,
@@ -43,6 +44,7 @@ import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-
 import {
   mediaFeatureGate,
   webUiEnabled,
+  plexPostersEnabled,
 } from "@shepherdjerred/streambot/config/media-features.ts";
 import { WebCatalog } from "@shepherdjerred/streambot/web/server/catalog.ts";
 import { startWebServer } from "@shepherdjerred/streambot/web/server/start.ts";
@@ -216,6 +218,7 @@ async function main(): Promise<void> {
           bootstrap: config.web,
           stateDir: config.state.dir,
           applicationId: () => commandBot.web.webApplicationId(),
+          plexPostersEnabled,
           playback: {
             sessions,
             bot: commandBot.web,
@@ -226,6 +229,9 @@ async function main(): Promise<void> {
                 ? {}
                 : { fetchPoster: createPosterFetcher(config.tmdb.apiKey) }),
               sports,
+              ...(config.plex === undefined
+                ? {}
+                : { plexArtwork: new PlexArtwork(config.plex) }),
             }),
             announce: (channelId, message) =>
               commandBot.announce(channelId, message),
