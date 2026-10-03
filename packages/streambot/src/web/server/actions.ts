@@ -5,7 +5,7 @@ import {
 } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import type { WebCommand } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { WebSession } from "./session-store.ts";
-import { Selections } from "./selections.ts";
+import { Selections, SELECTIONS_PER_OWNER } from "./selections.ts";
 import { WebError } from "./errors.ts";
 import type { WebPlayback } from "./playback.ts";
 
@@ -155,7 +155,8 @@ export class WebActions {
             }),
             label: "Off",
           },
-          ...candidates.map((candidate) => ({
+          // Reserve one selection for Off before allocating the visible tracks.
+          ...candidates.slice(0, SELECTIONS_PER_OWNER - 1).map((candidate) => ({
             token: this.tracks.add(owner, {
               sourceId,
               revision,

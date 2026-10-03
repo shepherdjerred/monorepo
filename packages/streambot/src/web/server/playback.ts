@@ -58,11 +58,7 @@ export type WebPlaybackDeps = {
 export class WebPlayback {
   constructor(readonly deps: WebPlaybackDeps) {}
 
-  async authorize(
-    session: WebSession,
-    guild: string,
-    fresh = false,
-  ): Promise<void> {
+  async authorize(session: WebSession, guild: string): Promise<void> {
     const guildId = requestInput(GuildIdSchema, guild);
     if (
       !session.identity.guildIds.includes(guildId) ||
@@ -81,11 +77,7 @@ export class WebPlayback {
         "The web remote is not enabled for this server yet.",
       );
     if (
-      !(await this.deps.bot.webVerifyMember(
-        guildId,
-        session.identity.userId,
-        fresh,
-      ))
+      !(await this.deps.bot.webVerifyMember(guildId, session.identity.userId))
     )
       throw new WebError(
         403,
@@ -188,7 +180,7 @@ export class WebPlayback {
   }
 
   private async target(session: WebSession, input: WebCommand) {
-    await this.authorize(session, input.guildId, true);
+    await this.authorize(session, input.guildId);
     const guildId = GuildIdSchema.parse(input.guildId);
     const channelId = ChannelIdSchema.parse(input.channelId);
     const userId = UserIdSchema.parse(session.identity.userId);
