@@ -224,25 +224,54 @@ function reportStalePoolError(
   });
 }
 
-/** Refund every matched stake whose game never produced a usable result. */
+export type StaleBettingPool = {
+  id: number;
+  matchId: string;
+  matchedAt: Date | null;
+};
+
+/**
+ * The pools {@link voidStaleBettingPools} would void at `now`, read without
+ * writing anything. A caller that has to prepare something before the void
+ * (the stale sweep's reply-target lookup) reads these, prepares, and hands the
+ * same list to the void. A failed preparation then aborts before any pool
+ * changes state.
+ */
+export async function listStaleBettingPools(
+  prismaClient: ExtendedPrismaClient = prisma,
+  now: Date = new Date(),
+): Promise<StaleBettingPool[]> {
+  const cutoff = new Date(now.getTime() - VOID_GRACE_MS);
+  return await prismaClient.bucksMatchPool.findMany({
+    where: {
+      poolState: { in: ["open", "closed"] },
+      closesAt: { lt: cutoff },
+    },
+    orderBy: { id: "asc" },
+    select: { id: true, matchId: true, matchedAt: true },
+  });
+}
+
+/**
+ * Refund every matched stake whose game never produced a usable result.
+ *
+ * `preselected` is a list the caller already read with
+ * {@link listStaleBettingPools}; without it the pools are read here. Each
+ * pool's close and refund are guarded on its state, so a pool that stopped
+ * being stale since the read is skipped.
+ */
 export async function voidStaleBettingPools(
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
+  preselected?: readonly StaleBettingPool[],
 ): Promise<StaleBettingResult> {
-  const cutoff = new Date(now.getTime() - VOID_GRACE_MS);
   let voided = 0;
   const closures: ClosedPool[] = [];
   const settlements: SettlementSummary[] = [];
 
   try {
-    const stale = await prismaClient.bucksMatchPool.findMany({
-      where: {
-        poolState: { in: ["open", "closed"] },
-        closesAt: { lt: cutoff },
-      },
-      orderBy: { id: "asc" },
-      select: { id: true, matchId: true, matchedAt: true },
-    });
+    const stale =
+      preselected ?? (await listStaleBettingPools(prismaClient, now));
 
     for (const pool of stale) {
       let closure: ClosedPool | undefined;
