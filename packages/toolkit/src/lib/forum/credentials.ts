@@ -4,8 +4,13 @@ import os from "node:os";
 import path from "node:path";
 import { resolveForumIdentity } from "./identity.ts";
 import { sessionForumCredentials } from "./sessions.ts";
+import { captureForumContext } from "./context.ts";
 
-export async function forumClientForAgent(agent: string, session?: string) {
+export async function forumClientForAgent(
+  agent: string,
+  session?: string,
+  model?: string,
+) {
   const identity = resolveForumIdentity(agent, session);
   const config = await loadToolkitConfig();
   const profiles = await config.value("forumProfiles");
@@ -20,6 +25,7 @@ export async function forumClientForAgent(agent: string, session?: string) {
     baseUrl,
     profileReference: reference,
     directory: path.join(os.homedir(), ".toolkit/forum"),
+    context: await captureForumContext(model),
   });
   return {
     client: createForumClient({ baseUrl, apiKey: credentials.apiKey }),

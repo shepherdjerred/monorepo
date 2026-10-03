@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdtemp, realpath, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { Database } from "bun:sqlite";
@@ -9,6 +9,10 @@ import {
   type ForumProcess,
 } from "#lib/forum/sessions.ts";
 import { parseForumArguments } from "#handlers/forum.ts";
+import {
+  EMPTY_FORUM_CONTEXT,
+  captureForumContext,
+} from "#lib/forum/context.ts";
 
 const directories: string[] = [];
 afterEach(async () => {
@@ -28,6 +32,7 @@ async function fixture(session = "session-a") {
   );
   const calls: { args: string[]; input: string | undefined }[] = [];
   const identity = resolveForumIdentity("codex", session, {});
+  let accountName = identity.username;
   const key = "k".repeat(30) + "-_";
   let itemExists = false;
   let failCreate = false;
@@ -35,7 +40,7 @@ async function fixture(session = "session-a") {
     id: "sessionitem",
     vault: { id: "vault" },
     fields: [
-      { id: "username", value: identity.username },
+      { id: "username", value: identity.legacyUsername },
       { id: "password", value: key },
     ],
   };
@@ -60,16 +65,22 @@ async function fixture(session = "session-a") {
           ],
         });
       return JSON.stringify({
-        username: identity.username,
+        username: accountName,
         user_id: 8,
         api_key: key,
+        digest: identity.digest,
       });
     }
     if (args[1] === "read") return key;
     if (args[2] === "list")
       return JSON.stringify(
         itemExists
-          ? [{ id: item.id, title: `Agent Forum Session ${identity.username}` }]
+          ? [
+              {
+                id: item.id,
+                title: `Agent Forum Session ${identity.legacyUsername}`,
+              },
+            ]
           : [],
       );
     if (args[2] === "create") {
@@ -84,6 +95,9 @@ async function fixture(session = "session-a") {
     calls,
     key,
     item,
+    setAccountName: (value: string) => {
+      accountName = value;
+    },
     setFailCreate: (value: boolean) => {
       failCreate = value;
     },
@@ -132,9 +146,16 @@ describe("forum session identity", () => {
         "claude",
         "--session",
         "abc",
+        "--model",
+        "test-model",
         "--json",
       ]),
-    ).toMatchObject({ subcommand: "identity", session: "abc", json: true });
+    ).toMatchObject({
+      subcommand: "identity",
+      session: "abc",
+      model: "test-model",
+      json: true,
+    });
   });
   test("creates once, resumes using only 1Password, and caches no key", async () => {
     const fixtureData = await fixture();
@@ -222,5 +243,102 @@ describe("forum session identity", () => {
         run: async () => fixtureData.key,
       }),
     ).rejects.toThrow("Invalid response");
+  });
+});
+
+describe("forum session profiles", () => {
+  test("updates profile context without changing the account or key, and remembers model", async () => {
+    const data = await fixture();
+    const original = await sessionForumCredentials({
+      ...data.options,
+      context: { ...EMPTY_FORUM_CONTEXT, model: "test-model", branch: "first" },
+    });
+    const updated = await sessionForumCredentials({
+      ...data.options,
+      context: { ...EMPTY_FORUM_CONTEXT, branch: "second" },
+    });
+    expect(updated.identity.userId).toBe(original.identity.userId);
+    expect(updated.apiKey).toBe(original.apiKey);
+    expect(updated.identity.context).toMatchObject({
+      model: "test-model",
+      branch: "second",
+    });
+    expect(data.calls.filter((call) => call.args[2] === "create")).toHaveLength(
+      1,
+    );
+    const request = data.calls.findLast(
+      (call) => call.args[1] === "exec",
+    )?.input;
+    expect(JSON.parse(request ?? "{}")).toMatchObject({
+      context: { model: "test-model", branch: "second" },
+    });
+  });
+  test("migrates the original cache while retaining user IDs and key references", async () => {
+    const data = await fixture();
+    const original = await sessionForumCredentials(data.options);
+    const db = new Database(
+      path.join(data.options.directory, "sessions.sqlite"),
+    );
+    db.run("DROP TABLE sessions");
+    db.run(
+      "CREATE TABLE sessions (digest TEXT PRIMARY KEY, username TEXT NOT NULL, user_id INTEGER NOT NULL, reference TEXT NOT NULL)",
+    );
+    db.query("INSERT INTO sessions VALUES (?, ?, ?, ?)").run(
+      data.options.identity.digest,
+      data.options.identity.legacyUsername,
+      original.identity.userId,
+      "op://vault/sessionitem/password",
+    );
+    db.close();
+    const migrated = await sessionForumCredentials(data.options);
+    expect(migrated.identity.username).toBe(data.options.identity.username);
+    expect(migrated.identity.userId).toBe(original.identity.userId);
+    expect(migrated.apiKey).toBe(original.apiKey);
+    expect(data.calls.filter((call) => call.args[2] === "create")).toHaveLength(
+      1,
+    );
+  });
+  test("a generated name collision keeps its chosen suffix when resumed", async () => {
+    const data = await fixture();
+    data.setAccountName(`${data.options.identity.username} 2`);
+    const first = await sessionForumCredentials(data.options);
+    const resumed = await sessionForumCredentials(data.options);
+    expect(first.identity.username).toBe(`${data.options.identity.username} 2`);
+    expect(resumed.identity.username).toBe(first.identity.username);
+    expect(resumed.identity.userId).toBe(first.identity.userId);
+  });
+  test("captures Git context even before the first commit and handles directories outside Git", async () => {
+    const data = await fixture();
+    const outside = await captureForumContext(
+      undefined,
+      data.options.directory,
+    );
+    expect(outside).toMatchObject({
+      branch: null,
+      worktree: null,
+      cwd: data.options.directory,
+    });
+    const git = Bun.spawn(
+      [
+        "git",
+        "init",
+        "--quiet",
+        "--initial-branch=profile-context",
+        data.options.directory,
+      ],
+      { stdout: "ignore", stderr: "ignore" },
+    );
+    expect(await git.exited).toBe(0);
+    const context = await captureForumContext(
+      "test-model",
+      data.options.directory,
+    );
+    const canonicalDirectory = await realpath(data.options.directory);
+    expect(context).toMatchObject({
+      model: "test-model",
+      branch: "profile-context",
+      worktree: canonicalDirectory,
+      repository: canonicalDirectory,
+    });
   });
 });

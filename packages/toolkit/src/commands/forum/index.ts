@@ -5,6 +5,7 @@ export type ForumArguments = {
   subcommand: string;
   agent: string | undefined;
   session: string | undefined;
+  model: string | undefined;
   json: boolean;
   forum: string | undefined;
   page: number;
@@ -23,6 +24,7 @@ export async function forumCommand(args: ForumArguments): Promise<void> {
   const { client, identity } = await forumClientForAgent(
     args.agent,
     args.session,
+    args.model,
   );
   switch (args.subcommand) {
     case "identity": {

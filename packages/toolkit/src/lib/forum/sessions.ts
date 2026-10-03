@@ -3,6 +3,11 @@ import { chmod } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { ForumIdentity } from "./identity.ts";
+import {
+  EMPTY_FORUM_CONTEXT,
+  ForumContextSchema,
+  type ForumContext,
+} from "./context.ts";
 
 const State = z.object({
   itemId: z.string().regex(/^[a-z0-9]+$/),
@@ -13,6 +18,7 @@ const Account = z.object({
   username: z.string(),
   user_id: z.number().int().positive(),
   api_key: z.string().regex(/^[\w-]{32}$/),
+  digest: z.string().regex(/^[a-f0-9]{64}$/),
 });
 const Item = z.object({
   id: z.string(),
@@ -24,6 +30,7 @@ const Cached = z.object({
   username: z.string(),
   user_id: z.number().int().positive(),
   reference: z.string().regex(/^op:\/\/\S+$/),
+  profile: z.string().nullable(),
 });
 
 export type ForumProcess = (args: string[], input?: string) => Promise<string>;
@@ -131,13 +138,16 @@ async function lock(db: Database) {
   }
 }
 
-export async function sessionForumCredentials(options: {
+type SessionOptions = {
   identity: ForumIdentity;
   directory: string;
   baseUrl: string;
   profileReference: string;
   run?: ForumProcess;
-}) {
+  context?: ForumContext;
+};
+
+export async function sessionForumCredentials(options: SessionOptions) {
   const { identity, directory, baseUrl, profileReference } = options;
   const run = options.run ?? runForumProcess;
   if (baseUrl.replace(/\/$/, "") !== "http://127.0.0.1:8765")
@@ -162,39 +172,17 @@ export async function sessionForumCredentials(options: {
     db.run("PRAGMA busy_timeout = 0");
     await lock(db);
     transaction = true;
-    db.run(
-      "CREATE TABLE IF NOT EXISTS sessions (digest TEXT PRIMARY KEY, username TEXT NOT NULL, user_id INTEGER NOT NULL, reference TEXT NOT NULL)",
+    const { existing, context, profile, synced } = await prepareProfile(
+      db,
+      options,
+      run,
     );
-    const existing = db
-      .query(
-        "SELECT username, user_id, reference FROM sessions WHERE digest = ?",
-      )
-      .get(identity.digest);
     let cached: z.infer<typeof Cached>;
     let apiKey: string;
     if (existing === null) {
-      await requireTrialContainer(run, path.join(directory, "source"));
-      const account = decoded(
-        Account,
-        await run(
-          [
-            "docker",
-            "exec",
-            "-i",
-            "toolkit-forum-web-1",
-            "php",
-            "/opt/forum/session.php",
-          ],
-          JSON.stringify({
-            agent: identity.agent,
-            sessionId: identity.sessionId,
-          }),
-        ),
-        "XenForo session provisioner",
-      );
-      if (account.username !== identity.username)
-        throw new Error("Unexpected session account name");
-      const title = `Agent Forum Session ${identity.username}`;
+      if (synced === null) throw new Error("Missing provisioned forum account");
+      const account = synced;
+      const title = `Agent Forum Session ${identity.legacyUsername}`;
       const matches = decoded(
         Items,
         await run([
@@ -232,7 +220,7 @@ export async function sessionForumCredentials(options: {
                       id: "username",
                       type: "STRING",
                       purpose: "USERNAME",
-                      value: account.username,
+                      value: identity.legacyUsername,
                     },
                     {
                       id: "password",
@@ -264,7 +252,7 @@ export async function sessionForumCredentials(options: {
         item.fields.find((field) => field.id === "password")?.value !==
           account.api_key ||
         item.fields.find((field) => field.id === "username")?.value !==
-          identity.username
+          identity.legacyUsername
       )
         throw new Error(
           "1Password session item does not match the forum account",
@@ -274,21 +262,30 @@ export async function sessionForumCredentials(options: {
         username: account.username,
         user_id: account.user_id,
         reference: `op://${state.vaultId}/${item.id}/password`,
+        profile,
       };
-      db.query("INSERT INTO sessions VALUES (?, ?, ?, ?)").run(
+      db.query(
+        "INSERT INTO sessions (digest, username, user_id, reference, profile) VALUES (?, ?, ?, ?, ?)",
+      ).run(
         identity.digest,
         cached.username,
         cached.user_id,
         cached.reference,
+        profile,
       );
     } else {
-      cached = Cached.parse(existing);
-      if (
-        cached.username !== identity.username ||
-        !cached.reference.startsWith(`op://${state.vaultId}/`)
-      )
-        throw new Error("Unexpected cached forum identity");
+      cached = {
+        ...existing,
+        username: synced?.username ?? existing.username,
+        profile,
+      };
+      validateCached(cached, identity, state.vaultId);
       apiKey = await run(["op", "read", cached.reference]);
+      if (synced !== null && synced.api_key !== apiKey)
+        throw new Error("Session key changed during profile update");
+      db.query(
+        "UPDATE sessions SET username = ?, profile = ? WHERE digest = ?",
+      ).run(cached.username, profile, identity.digest);
     }
     if (!/^[\w-]{32}$/.test(apiKey))
       throw new Error("Invalid session key from 1Password");
@@ -301,6 +298,7 @@ export async function sessionForumCredentials(options: {
         sessionId: identity.sessionId,
         username: cached.username,
         userId: cached.user_id,
+        context,
         url: `${baseUrl.replace(/\/$/, "")}/index.php?members/${String(cached.user_id)}/`,
       },
     };
@@ -313,4 +311,113 @@ export async function sessionForumCredentials(options: {
 function uniqueItem(items: z.infer<typeof Items>) {
   if (items.length > 1) throw new Error("Duplicate session items in 1Password");
   return items[0];
+}
+
+function mergedContext(
+  current: ForumContext,
+  previous: string | null,
+): ForumContext {
+  const context = ForumContextSchema.parse(current);
+  if (previous === null) return context;
+  const stored = decoded(
+    z.object({
+      version: z.union([z.literal(1), z.literal(2)]),
+      context: ForumContextSchema,
+    }),
+    previous,
+    "cached profile",
+  );
+  return { ...context, model: context.model ?? stored.context.model };
+}
+
+function validAccountName(name: string, base: string): boolean {
+  return (
+    name === base ||
+    (name.startsWith(`${base} `) &&
+      /^[2-9]\d*$|^1\d+$/.test(name.slice(base.length + 1)))
+  );
+}
+
+function validateCached(
+  cached: z.infer<typeof Cached>,
+  identity: ForumIdentity,
+  vaultId: string,
+) {
+  if (
+    !validAccountName(cached.username, identity.username) ||
+    !cached.reference.startsWith(`op://${vaultId}/`)
+  )
+    throw new Error("Unexpected cached forum identity");
+}
+
+async function provisionProfile(
+  run: ForumProcess,
+  directory: string,
+  identity: ForumIdentity,
+  details: { context: ForumContext; userId: number | undefined },
+) {
+  const { context, userId } = details;
+  await requireTrialContainer(run, path.join(directory, "source"));
+  const account = decoded(
+    Account,
+    await run(
+      [
+        "docker",
+        "exec",
+        "--user",
+        "www-data",
+        "-i",
+        "toolkit-forum-web-1",
+        "php",
+        "/opt/forum/session.php",
+      ],
+      JSON.stringify({
+        agent: identity.agent,
+        sessionId: identity.sessionId,
+        context,
+      }),
+    ),
+    "XenForo session provisioner",
+  );
+  if (
+    account.digest !== identity.digest ||
+    !validAccountName(account.username, identity.username) ||
+    (userId !== undefined && account.user_id !== userId)
+  )
+    throw new Error("Unexpected session account identity");
+  return account;
+}
+
+async function prepareProfile(
+  db: Database,
+  options: SessionOptions,
+  run: ForumProcess,
+) {
+  db.run(
+    "CREATE TABLE IF NOT EXISTS sessions (digest TEXT PRIMARY KEY, username TEXT NOT NULL, user_id INTEGER NOT NULL, reference TEXT NOT NULL)",
+  );
+  const columns = z
+    .array(z.object({ name: z.string() }))
+    .parse(db.query("PRAGMA table_info(sessions)").all());
+  if (!columns.some((column) => column.name === "profile"))
+    db.run("ALTER TABLE sessions ADD COLUMN profile TEXT");
+  const row = db
+    .query(
+      "SELECT username, user_id, reference, profile FROM sessions WHERE digest = ?",
+    )
+    .get(options.identity.digest);
+  const existing = row === null ? null : Cached.parse(row);
+  const context = mergedContext(
+    options.context ?? EMPTY_FORUM_CONTEXT,
+    existing?.profile ?? null,
+  );
+  const profile = JSON.stringify({ version: 2, context });
+  const synced =
+    existing?.profile === profile
+      ? null
+      : await provisionProfile(run, options.directory, options.identity, {
+          context,
+          userId: existing?.user_id,
+        });
+  return { existing, context, profile, synced };
 }

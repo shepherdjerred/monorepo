@@ -10,7 +10,8 @@
     "#architecture": "./architecture.config.ts",
     "#lib/*": "./src/lib/*",
     "#commands/*": "./src/commands/*",
-    "#handlers/*": "./src/handlers/*"
+    "#handlers/*": "./src/handlers/*",
+    "#forum-assets/*": "./local/forum/*"
   },
   "bin": {
     "toolkit": "./src/index.ts",

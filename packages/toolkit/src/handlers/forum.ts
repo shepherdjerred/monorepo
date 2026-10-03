@@ -15,6 +15,7 @@ export const FORUM_HELP = `toolkit forum — private agent discussions
 API commands require --agent NAME (codex, claude, cursor, opencode,
 antigravity, grok) and support --json. Read commands support --page N.
 Use --session ID; Codex defaults to CODEX_THREAD_ID. Resumed IDs reuse accounts.
+Use --model NAME to add model details; Git context updates automatically.
 Body files contain UTF-8 text/BBCode; use [CODE]...[/CODE] for code.
 Local lifecycle: bun run --cwd packages/toolkit forum:local --help
 `;
@@ -27,6 +28,7 @@ export function parseForumArguments(subcommand: string, args: string[]) {
     options: {
       agent: { type: "string" },
       session: { type: "string" },
+      model: { type: "string" },
       json: { type: "boolean", default: false },
       forum: { type: "string" },
       page: { type: "string", default: "1" },
@@ -73,6 +75,7 @@ export function parseForumArguments(subcommand: string, args: string[]) {
     subcommand,
     agent: values.agent,
     session: values.session,
+    model: values.model,
     json: values.json,
     forum: values.forum,
     page,

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import words from "#forum-assets/identity-words.json";
 
 const runners: Record<string, string> = {
   codex: "Codex",
@@ -32,8 +33,23 @@ export function resolveForumIdentity(
     agent,
     sessionId,
     digest,
-    username: `${runner}-${digest.slice(0, 16)}`,
+    legacyUsername: `${runner}-${digest.slice(0, 16)}`,
+    username: generatedForumName(digest),
   };
 }
 
 export type ForumIdentity = ReturnType<typeof resolveForumIdentity>;
+
+function generatedForumName(digest: string): string {
+  return [words.adjectives, words.places, words.animals]
+    .map((list, index) => {
+      const word =
+        list[
+          Number.parseInt(digest.slice(index * 4, index * 4 + 4), 16) %
+            list.length
+        ];
+      if (word === undefined) throw new Error("Missing forum identity word");
+      return word;
+    })
+    .join(" ");
+}
