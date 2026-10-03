@@ -5,6 +5,7 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  type ISecret,
   type PersistentVolumeClaim,
   Secret,
   Service,
@@ -38,7 +39,10 @@ const STREAMBOT_GID = 1000;
 export function createStreambotDeployment(
   chart: Chart,
   claims: { movies: PersistentVolumeClaim; tv: PersistentVolumeClaim },
-  web?: { publicOrigin: string },
+  web?: {
+    publicOrigin: string;
+    plex?: { service: Service; tokenSecret: ISecret };
+  },
 ) {
   const onePasswordItem = new OnePasswordItem(chart, "streambot-config", {
     spec: {
@@ -150,6 +154,17 @@ export function createStreambotDeployment(
       name: "streambot",
       image: `ghcr.io/shepherdjerred/streambot:${versions["shepherdjerred/streambot"]}`,
       envVariables: {
+        ...(web?.plex === undefined
+          ? {}
+          : {
+              PLEX_BASE_URL: EnvValue.fromValue(
+                `http://${web.plex.service.name}.media.svc.cluster.local:32400`,
+              ),
+              PLEX_TOKEN: EnvValue.fromSecretValue({
+                secret: web.plex.tokenSecret,
+                key: "password",
+              }),
+            }),
         BOT_TOKEN: fromSecret("BOT_TOKEN"),
         // Pool of userbot tokens (comma-separated, one per Discord account). The bot acquires a free
         // member-userbot per (guild, voice channel); guild/channel are now dynamic (the issuer's VC),

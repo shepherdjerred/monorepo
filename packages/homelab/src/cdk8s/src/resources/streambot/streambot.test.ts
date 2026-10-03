@@ -196,6 +196,32 @@ describe("streambot deployment (media namespace)", () => {
     expect(openAiKey.valueFrom.secretKeyRef.key).toBe("OPENAI_API_KEY");
   });
 
+  it("reuses Plex's required secret and in-cluster service for artwork", () => {
+    const env = new Map(
+      (container.env ?? []).map((variable) => [variable.name, variable]),
+    );
+    expect(env.get("PLEX_BASE_URL")?.value).toBe(
+      "http://media-plex-service.media.svc.cluster.local:32400",
+    );
+    const reference = z
+      .object({
+        valueFrom: z.object({
+          secretKeyRef: z.object({
+            name: z.string(),
+            key: z.string(),
+            optional: z.boolean().optional(),
+          }),
+        }),
+      })
+      .parse(env.get("PLEX_TOKEN"));
+    expect(reference.valueFrom.secretKeyRef).toMatchObject({
+      name: "media-plex-secrets",
+      key: "password",
+    });
+    expect(reference.valueFrom.secretKeyRef.optional).not.toBe(true);
+    expect(env.get("PLEX_TOKEN")?.value).toBeUndefined();
+  });
+
   it("exports voice telemetry and private captures to in-cluster backends", () => {
     const env = new Map(
       (container.env ?? []).map((variable) => [variable.name, variable]),

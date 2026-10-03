@@ -35,6 +35,30 @@ export const LibraryPageSchema = z.strictObject({
   libraries: z.array(z.string()),
   series: z.array(z.string()),
 });
+export const LibraryTitleSchema = z.discriminatedUnion("kind", [
+  LibraryItemSchema.extend({ kind: z.literal("file") }),
+  z.strictObject({
+    kind: z.literal("series"),
+    id: z.string(),
+    title: z.string(),
+    series: z.string(),
+    library: z.string(),
+    episodes: z.number().int().positive(),
+    seasons: z.number().int().nonnegative(),
+    artworkUrl: ArtworkUrlSchema.optional(),
+  }),
+]);
+export const LibraryTitlesPageSchema = z.strictObject({
+  view: z.literal("titles"),
+  items: z.array(LibraryTitleSchema),
+  total: z.number(),
+  libraries: z.array(z.string()),
+  series: z.array(z.string()),
+});
+export const LibraryBrowsePageSchema = z.union([
+  LibraryTitlesPageSchema,
+  LibraryPageSchema,
+]);
 export const CandidateSchema = z.strictObject({
   id: z.string(),
   title: z.string(),
@@ -145,6 +169,7 @@ export const ErrorSchema = z.strictObject({
   message: z.string(),
 });
 export const LibraryQuerySchema = z.object({
+  view: z.enum(["entries", "titles"]).default("entries"),
   query: z.string().max(300).default(""),
   library: z.string().default(""),
   series: z.string().default(""),

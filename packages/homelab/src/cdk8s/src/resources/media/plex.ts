@@ -273,4 +273,12 @@ export function createPlexDeployment(
 
   // Create ServiceMonitor for Prometheus to scrape Plex metrics
   createServiceMonitor(chart, { name: "plex", interval: "60s" });
+  return {
+    service,
+    tokenSecret: Secret.fromSecretName(
+      chart,
+      "plex-artwork-token",
+      plexSecrets.name,
+    ),
+  };
 }

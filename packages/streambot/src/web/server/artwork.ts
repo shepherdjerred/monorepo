@@ -7,6 +7,10 @@ import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts"
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { isRemoteArtworkUrl } from "@shepherdjerred/streambot/web/shared/artwork.ts";
 import { WebError } from "./errors.ts";
+import {
+  PlexArtworkUnavailableError,
+  type LibraryArtworkProvider,
+} from "@shepherdjerred/streambot/metadata/plex.ts";
 
 /** Poster lookup is lazy: browsing and playback never wait for image metadata. */
 export class WebArtwork {
@@ -16,10 +20,11 @@ export class WebArtwork {
   constructor(
     private readonly library: () => readonly LibraryEntry[],
     private readonly fetchPoster: PosterFetcher | undefined,
+    private readonly plex?: LibraryArtworkProvider,
   ) {}
 
   forEntry(entry: LibraryEntry, guildId: string): string | undefined {
-    return this.fetchPoster === undefined
+    return this.fetchPoster === undefined && this.plex === undefined
       ? undefined
       : "/api/artwork?" +
           new URLSearchParams({ guildId, id: this.id(entry.path) }).toString();
@@ -39,9 +44,20 @@ export class WebArtwork {
       : undefined;
   }
 
-  async resolve(id: string): Promise<Response> {
+  async resolve(
+    id: string,
+    plexEnabled = false,
+    signal?: AbortSignal,
+  ): Promise<Response> {
     const entry = this.library().find((item) => this.id(item.path) === id);
-    if (entry === undefined || this.fetchPoster === undefined)
+    if (entry === undefined)
+      throw new WebError(
+        404,
+        "artwork_unavailable",
+        "Artwork is unavailable for this title.",
+      );
+    if (plexEnabled) return await this.plexImage(entry, signal);
+    if (this.fetchPoster === undefined)
       throw new WebError(
         404,
         "artwork_unavailable",
@@ -68,6 +84,35 @@ export class WebArtwork {
     if (!isRemoteArtworkUrl(poster.posterUrl))
       throw new Error("Poster metadata returned an unsupported artwork URL");
     return Response.redirect(poster.posterUrl, 302);
+  }
+
+  private async plexImage(
+    entry: LibraryEntry,
+    signal?: AbortSignal,
+  ): Promise<Response> {
+    if (this.plex === undefined)
+      throw new Error("Plex posters are enabled without Plex bootstrap");
+    let image;
+    try {
+      image = await this.plex.image(entry.path, signal);
+    } catch (error) {
+      if (error instanceof PlexArtworkUnavailableError)
+        throw new WebError(502, "artwork_unavailable", error.message);
+      throw error;
+    }
+    if (image === null)
+      throw new WebError(
+        404,
+        "artwork_unavailable",
+        "Artwork is unavailable for this title.",
+      );
+    return new Response(image.bytes, {
+      headers: {
+        "content-type": image.contentType,
+        "cache-control": "private, max-age=300",
+        vary: "Cookie",
+      },
+    });
   }
 
   private id(path: string): string {

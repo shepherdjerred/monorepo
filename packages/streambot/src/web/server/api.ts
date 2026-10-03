@@ -33,6 +33,7 @@ export function createWebHandler(deps: {
   applicationId: () => string;
   assetsDir: string;
   fetch?: typeof fetch;
+  plexPostersEnabled?: (guildId: string, userId: string) => Promise<boolean>;
 }) {
   const auth = new WebAuth({
     bootstrap: deps.bootstrap,
@@ -88,9 +89,15 @@ export function createWebHandler(deps: {
     if (url.pathname === "/api/player")
       return Response.json(await deps.playback.snapshot(session, guildId));
     await deps.playback.authorize(session, guildId);
+    const plexEnabled =
+      (url.pathname === "/api/artwork" || url.pathname === "/api/library") &&
+      ((await deps.plexPostersEnabled?.(guildId, session.identity.userId)) ??
+        false);
     if (url.pathname === "/api/artwork")
       return await deps.playback.deps.catalog.artwork.resolve(
         url.searchParams.get("id") ?? "",
+        plexEnabled,
+        request.signal,
       );
     if (url.pathname === "/api/sports") {
       if (!(await deps.playback.sportsEnabled(session, guildId)))
@@ -108,7 +115,9 @@ export function createWebHandler(deps: {
       );
     }
     if (url.pathname === "/api/library")
-      return Response.json(deps.playback.deps.catalog.browse(url.searchParams));
+      return Response.json(
+        deps.playback.deps.catalog.browse(url.searchParams, plexEnabled),
+      );
     if (url.pathname === "/api/search") {
       const channel = deps.playback.deps.bot.webVoiceChannel(
         GuildIdSchema.parse(guildId),
@@ -211,7 +220,10 @@ export function createWebHandler(deps: {
         ARTWORK_HOSTS.map((host) => "https://" + host).join(" ") +
         "; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
     );
-    if (new URL(request.url).pathname.startsWith("/api/"))
+    if (
+      new URL(request.url).pathname.startsWith("/api/") &&
+      !response.headers.has("cache-control")
+    )
       response.headers.set("cache-control", "no-store");
     return response;
   };

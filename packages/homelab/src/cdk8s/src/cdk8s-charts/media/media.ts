@@ -46,7 +46,7 @@ export async function createMediaChart(app: App) {
     movies: moviesVolume.claim,
   });
   createTautulliDeployment(chart);
-  createPlexDeployment(chart, {
+  const plex = createPlexDeployment(chart, {
     tv: tvVolume.claim,
     movies: moviesVolume.claim,
   });
@@ -74,7 +74,7 @@ export async function createMediaChart(app: App) {
       movies: moviesVolume.claim,
       tv: tvVolume.claim,
     },
-    { publicOrigin: STREAMBOT_WEB_PUBLIC_ORIGIN },
+    { publicOrigin: STREAMBOT_WEB_PUBLIC_ORIGIN, plex },
   );
   createCloudflareTunnelBinding(chart, "streambot-web-cf-tunnel", {
     serviceName: "streambot-web",

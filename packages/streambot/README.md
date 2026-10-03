@@ -65,7 +65,16 @@ therefore splits identities:
   Its selector shares the viewer's personal numbered channel with Discord commands;
   each slot retains its own queue, and legacy sessions finish in their original mode.
   Media paths and subtitle references stay on the server behind opaque IDs.
-  Library, queue, and player artwork use the existing TMDB credential; YouTube
+  The Plex poster rollout gives Library a movie/show poster grid. A show opens
+  season-grouped episodes; queue, player, and search retain compact artwork.
+  Local media uses the selected Plex movie or series poster, matched by exact
+  media file path. Missing Plex artwork keeps a placeholder without a TMDB lookup.
+  `streambot-plex-posters-enabled` controls this per user/server; disabling it
+  restores the existing rows and TMDB artwork. Plex images are served through
+  the authenticated Streambot endpoint; its token and internal URLs stay on the server.
+  Metadata refreshes lazily after five minutes and never delays browsing or playback.
+  `PLEX_BASE_URL` and `PLEX_TOKEN` are optional bootstrap and must be supplied together.
+  Production reuses the existing Plex service and 1Password-backed token. YouTube
   discovery shows its real thumbnails. Poster lookup is lazy and does not hold
   up library browsing or playback. The Live sports tab searches today's
   StreamEast and TVSportsLive events and offers queue, play-next, and play-now.
