@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { createServer } from "node:net";
 import { z } from "zod";
+import { parseForumSeed } from "#lib/forum/bootstrap.ts";
 import {
   loadToolkitConfig,
   defaultToolkitConfigPath,
@@ -35,10 +36,6 @@ const Item = z
   })
   .loose();
 type Item = z.infer<typeof Item>;
-const Seed = z.object({
-  forums: z.record(z.string(), z.number()),
-  keys: z.record(z.string(), z.string().min(1)),
-});
 const agents = ["codex", "claude", "cursor", "opencode", "antigravity", "grok"];
 const secrets = new Set<string>();
 
@@ -340,17 +337,7 @@ async function start(item: Item, build: boolean): Promise<void> {
     undefined,
     env,
   );
-  let seedJson: unknown;
-  try {
-    seedJson = JSON.parse(seedOutput);
-  } catch {
-    let diagnostic = seedOutput.split("\n").slice(0, 8).join("\n");
-    for (const value of secrets)
-      diagnostic = diagnostic.replaceAll(value, "[redacted]");
-    diagnostic = diagnostic.replaceAll(/[a-z0-9]{32,}/gi, "[redacted]");
-    throw new Error(`XenForo bootstrap did not return JSON: ${diagnostic}`);
-  }
-  const seeded = Seed.parse(seedJson);
+  const seeded = parseForumSeed(seedOutput);
   let changed = false;
   for (const [id, value] of Object.entries(seeded.keys)) {
     secrets.add(value);
