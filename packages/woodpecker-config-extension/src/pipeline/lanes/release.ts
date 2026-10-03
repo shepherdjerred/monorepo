@@ -206,7 +206,8 @@ export function releaseChainSteps(
  * seaweedfs must follow helm-push so buckets exist before workloads reference
  * them; tailscale and arr then follow it in order because they share the
  * plugin cache lock. cloudflare waits for argocd-sync because its DNS records
- * point at services that must already be reconciled.
+ * point at services that must already be reconciled. Static-site content must
+ * also be published before a new hostname is exposed.
  */
 function chainedApplyCommands(stack: string): string[] {
   return [
@@ -254,7 +255,7 @@ function chainedTofuApplies(images: CiImages): CiStep[] {
     },
     {
       stack: "cloudflare",
-      dependsOn: ["homelab-release-admission", "argocd-sync"],
+      dependsOn: ["homelab-release-admission", "argocd-sync", "sites"],
       concurrency: { limit: 1, group: "tofu-cloudflare" },
       secrets: [
         grant("ci-cloudflare-credentials", "CLOUDFLARE_ACCOUNT_ID"),

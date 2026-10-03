@@ -151,6 +151,7 @@
     "packages/s3-signed-request",
     "packages/sjer.red",
     "packages/starlight-karma-bot",
+    "packages/statically-typed",
     "packages/stocks-sjer-red",
     "packages/storm-brain",
     "packages/streambot",

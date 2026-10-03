@@ -24,6 +24,7 @@ const SYNTHETIC_REQUEST_ID =
   'request_id="00000000-0000-4000-8000-$(printf \'%012d\' "$CI_PIPELINE_NUMBER")"';
 
 const DRY_RUN_SITES = [
+  "statically-typed",
   "sjer.red",
   "resume",
   "webring",

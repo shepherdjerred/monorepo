@@ -210,7 +210,11 @@ describe("release graph matches the pipeline it replaces", () => {
       "tofu-apply-arr",
     ],
     "tofu-apply-seaweedfs": ["homelab-release-admission", "helm-push"],
-    "tofu-apply-cloudflare": ["homelab-release-admission", "argocd-sync"],
+    "tofu-apply-cloudflare": [
+      "homelab-release-admission",
+      "argocd-sync",
+      "sites",
+    ],
     "version-commit-back": ["images", "argocd-sync"],
     "ci-base-refresh": ["verify"],
     "ci-playwright-refresh": ["verify"],
@@ -463,7 +467,7 @@ test("the sites lane installs and pre-builds the Storybook catalogs", () => {
   expect(commands).not.toContain("turbo run");
 });
 
-test("the sites lane deploys both Minecraft sites when their paths change", () => {
+test("the sites lane deploys new sites when their paths change", () => {
   const sites = step("sites");
   const dryRun = step("pr-dryrun");
   if (sites === undefined || dryRun === undefined) {
@@ -471,6 +475,11 @@ test("the sites lane deploys both Minecraft sites when their paths change", () =
   }
   const commands = sites.commands.join("\n");
   for (const [lane, site, workspace] of [
+    [
+      "site-statically-typed",
+      "statically-typed",
+      "@shepherdjerred/statically-typed",
+    ],
     ["site-ts-mc", "ts-mc", "@shepherdjerred/ts-mc"],
     ["site-ts-mc-docs", "ts-mc-docs", "@shepherdjerred/ts-mc-docs"],
   ] as const) {

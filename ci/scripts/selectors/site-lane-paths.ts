@@ -16,6 +16,15 @@ export const deployScripts = [
 ] as const;
 
 export const sitePaths = {
+  "site-statically-typed": [
+    ...workspacePaths,
+    "packages/statically-typed",
+    "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+    "packages/homelab/src/tofu/cloudflare/statically-typed-com.tf",
+    "packages/homelab/src/tofu/seaweedfs/buckets.tf",
+    "packages/scout-for-lol/packages/design-system/assets/fonts/BerkeleyMono/BerkeleyMono-Regular.woff2",
+    ...deployScripts,
+  ],
   "site-sjer-red": [
     ...workspacePaths,
     "packages/sjer.red",

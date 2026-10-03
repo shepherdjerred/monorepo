@@ -68,6 +68,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "statically-typed",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "ts-mc",
       "mode": "excluded",
       "cadences": [],

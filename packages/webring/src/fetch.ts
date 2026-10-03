@@ -141,7 +141,24 @@ export async function fetch(
       preview:
         preview !== undefined && preview !== ""
           ? truncate(
-              sanitizeHtml(preview, { parseStyleAttributes: false }),
+              sanitizeHtml(preview, {
+                parseStyleAttributes: false,
+                transformTags: {
+                  a: (tagName, attributes) => {
+                    const attribs = { ...attributes };
+                    const href = attribs["href"];
+                    if (href !== undefined) {
+                      try {
+                        attribs["href"] = new URL(href, firstItem.link).href;
+                      } catch {
+                        // A malformed external link must not discard the post.
+                        delete attribs["href"];
+                      }
+                    }
+                    return { tagName, attribs };
+                  },
+                },
+              }),
               length,
             )
           : undefined,

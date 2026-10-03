@@ -81,6 +81,16 @@ type DeploySite = DeploySiteBase & DeploySiteBuildEnv;
 // "r2", but the target is kept so the endpoint logic matches the old helper.
 const DEPLOY_SITES: readonly DeploySite[] = [
   {
+    bucket: "statically-typed",
+    name: "statically-typed",
+    url: "https://statically-typed.com",
+    buildDir: "packages/statically-typed",
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/statically-typed/dist",
+    target: "s3",
+    immutablePrefixes: [],
+  },
+  {
     bucket: "sjer-red",
     name: "sjer.red",
     url: "https://sjer.red",

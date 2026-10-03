@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["@types/bun"],
+    "noEmit": true
+  },
+  "include": ["scripts/**/*.ts", "test/**/*.ts", "eslint.config.ts"]
+}

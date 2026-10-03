@@ -18,6 +18,26 @@ const server = Bun.serve({
   port: 0,
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === "/relative.xml") {
+      return new Response(
+        `<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Relative links</title>
+          <item><title>Latest</title><link>${url.origin}/posts/latest/</link>
+          <pubDate>Fri, 02 Oct 2026 00:00:00 GMT</pubDate>
+          <content:encoded><![CDATA[<p><a href="/asset.png">Root</a>
+            <a href="details/">Path</a><a href="#part">Fragment</a>
+            <a href="javascript:alert(1)">Unsafe</a>
+            <a href="http://[">Malformed</a></p>]]></content:encoded>
+          </item></channel></rss>`,
+        { headers: { "Content-Type": "application/rss+xml" } },
+      );
+    }
+    if (
+      url.pathname === "/asset.png" ||
+      url.pathname === "/posts/latest/details/" ||
+      url.pathname === "/posts/latest/"
+    ) {
+      return new Response("Fixture destination");
+    }
     const file = Bun.file(path.join(testDataDir, path.basename(url.pathname)));
     if (!(await file.exists())) {
       return new Response("Not found", { status: 404 });
@@ -62,6 +82,29 @@ test("it should fetch an RSS feed without caching", async () => {
   const result = await run(config);
   const string = normalizeSnapshotPorts(result);
   expect(string).toMatchSnapshot();
+});
+
+test("preview links resolve against the article and remain sanitized", async () => {
+  const result = await run({
+    sources: [{ title: "Relative links", url: createUrl("relative.xml") }],
+    number: 1,
+    truncate: 300,
+  });
+  expect(result).toHaveLength(1);
+  const preview = result[0]?.preview;
+  expect(preview).toContain(`href="${createUrl("asset.png")}"`);
+  expect(preview).toContain(`href="${createUrl("posts/latest/details/")}"`);
+  expect(preview).toContain(`href="${createUrl("posts/latest/#part")}"`);
+  expect(preview).not.toContain("javascript:");
+  expect(preview).toContain("<a>Malformed</a>");
+  for (const target of [
+    "asset.png",
+    "posts/latest/details/",
+    "posts/latest/",
+  ]) {
+    const response = await fetch(createUrl(target));
+    expect(response.status).toBe(200);
+  }
 });
 
 test("it should fetch several RSS feeds", async () => {

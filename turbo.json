@@ -28,6 +28,23 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "@shepherdjerred/statically-typed#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/assets/fonts/BerkeleyMono/BerkeleyMono-Regular.woff2"
+      ]
+    },
+    "@shepherdjerred/statically-typed#test": {
+      "dependsOn": ["build"]
+    },
+    "@shepherdjerred/statically-typed#test:ci": {
+      "dependsOn": ["build"]
+    },
+    "@shepherdjerred/statically-typed#test:report": {
+      "dependsOn": ["build"]
+    },
     "@scout-for-lol/temporal#build": {
       "dependsOn": ["^build"],
       "outputs": []
