@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.domain.boss.AbilityClock;
+import com.shepherdjerred.thestorm.arena.domain.boss.BossTactics;
 import com.shepherdjerred.thestorm.arena.domain.boss.HeartState;
 import com.shepherdjerred.thestorm.arena.domain.boss.Push;
 import com.shepherdjerred.thestorm.arena.domain.boss.Targets;
@@ -11,6 +12,7 @@ import com.shepherdjerred.thestorm.arena.domain.wave.AbilityType;
 import com.shepherdjerred.thestorm.arena.domain.wave.BarColor;
 import com.shepherdjerred.thestorm.arena.domain.wave.BossOrder;
 import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,7 +22,9 @@ import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.data.BlockData;
@@ -49,6 +53,12 @@ final class BossFight {
   private int heartSpot;
   private @Nullable BlockData replaced;
 
+  private record Cast(AbilitySpec ability, Point origin, Instant resolvesAt) {}
+
+  private final ArrayDeque<AbilitySpec> queued = new ArrayDeque<>();
+  private Optional<Cast> cast = Optional.empty();
+  private boolean enraged;
+
   BossFight(LivingEntity entity, BossOrder order, ArenaWorld arena, Instant now) {
     this.entity = entity;
     this.order = order;
@@ -59,9 +69,10 @@ final class BossFight {
             1,
             color(order.boss().bar()),
             BossBar.Overlay.PROGRESS);
-    this.clock = AbilityClock.start(order.boss().abilities(), now);
+    var abilities = BossTactics.abilities(order.boss().abilities(), order.players(), false);
+    this.clock = AbilityClock.start(abilities, now);
     this.heart =
-        order.boss().abilities().stream()
+        abilities.stream()
             .filter(ability -> ability.type() == AbilityType.HEART)
             .findFirst()
             .map(HeartState::of);
@@ -94,10 +105,59 @@ final class BossFight {
     if (!alive()) {
       return;
     }
+    var maximum = entity.getAttribute(Attribute.MAX_HEALTH);
+    if (!enraged && maximum != null && entity.getHealth() <= maximum.getValue() * 0.4) {
+      enraged = true;
+      clock =
+          AbilityClock.start(
+              BossTactics.abilities(order.boss().abilities(), order.players(), true), now);
+      fighters.forEach(player -> Texts.info(player, name() + " is enraged! Spells come faster."));
+    }
     var fired = clock.fire(now);
     clock = fired.clock();
     for (var ability : fired.due()) {
-      use(ability, fighters);
+      if (!queued.contains(ability)
+          && cast.stream().noneMatch(pending -> pending.ability().equals(ability))) {
+        queued.addLast(ability);
+      }
+    }
+    if (cast.isPresent()) {
+      var pending = cast.orElseThrow();
+      mark(pending);
+      if (!now.isBefore(pending.resolvesAt())) {
+        use(pending.ability(), fighters, pending.origin());
+        cast = Optional.empty();
+      }
+    } else if (!queued.isEmpty()) {
+      var ability = queued.removeFirst();
+      cast = Optional.of(new Cast(ability, Places.point(entity.getLocation()), now.plusSeconds(2)));
+      fighters.forEach(
+          player -> Texts.info(player, name() + ": " + BossTactics.warning(ability.type())));
+      mark(cast.orElseThrow());
+    }
+  }
+
+  private void mark(Cast pending) {
+    if (pending.ability().radius() == 0) {
+      return;
+    }
+    var origin = pending.origin();
+    for (var i = 0; i < 32; i++) {
+      var angle = i * Math.PI * 2 / 32;
+      entity
+          .getWorld()
+          .spawnParticle(
+              Particle.FLAME,
+              new Location(
+                  entity.getWorld(),
+                  origin.x() + Math.cos(angle) * pending.ability().radius(),
+                  origin.y() + 0.2,
+                  origin.z() + Math.sin(angle) * pending.ability().radius()),
+              1,
+              0,
+              0,
+              0,
+              0);
     }
   }
 
@@ -112,8 +172,7 @@ final class BossFight {
     }
   }
 
-  private void use(AbilitySpec ability, Collection<Player> fighters) {
-    var origin = Places.point(entity.getLocation());
+  private void use(AbilitySpec ability, Collection<Player> fighters, Point origin) {
     var positions = positions(fighters);
     switch (ability.type()) {
       case LIGHTNING_AURA ->
@@ -157,22 +216,18 @@ final class BossFight {
 
   private void strike(Player target, double damage) {
     target.getWorld().strikeLightningEffect(Places.at(target));
-    target.damage(damage, entity);
+    target.damage(damage * order.damage() * (enraged ? 1.2 : 1), entity);
   }
 
   private static void disorient(Player target, double seconds) {
     var ticks = (int) Math.round(seconds * TICKS_PER_SECOND);
     target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, ticks, 0));
     target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, 1));
-    // Spin the fighter around; a teleport is the rotation players' clients always follow.
-    var turned = Places.at(target).clone();
-    turned.setYaw(turned.getYaw() + 180);
-    target.teleport(turned);
   }
 
   private void slam(Player target, Point origin, double strength) {
     var push = Push.away(origin, Places.point(Places.at(target)), strength);
-    target.damage(strength * 2, entity);
+    target.damage(strength * 2 * order.damage() * (enraged ? 1.2 : 1), entity);
     target.setVelocity(new Vector(push.x(), push.y(), push.z()));
   }
 

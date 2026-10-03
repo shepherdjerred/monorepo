@@ -501,7 +501,7 @@ bosses:
   parched-king:
     mob: parched-king
     name: The Parched King
-    health: 90
+    health: 130
     bar: YELLOW
     abilities:
       - type: SUMMON_ADDS
@@ -519,7 +519,7 @@ bosses:
   gale-sovereign:
     mob: gale-sovereign
     name: The Gale Sovereign
-    health: 110
+    health: 160
     bar: WHITE
     abilities:
       - type: KNOCKBACK_SLAM
@@ -537,7 +537,7 @@ bosses:
   hexmaster:
     mob: hexmaster
     name: The Hexmaster
-    health: 150
+    health: 210
     bar: PURPLE
     abilities:
       - type: LIGHTNING_AURA
@@ -561,7 +561,7 @@ bosses:
   heartwood:
     mob: heartwood
     name: Heartwood
-    health: 200
+    health: 260
     bar: GREEN
     abilities:
       # Four hearts of five hits each; an untouched heart moves every 25 s.
@@ -580,7 +580,7 @@ bosses:
   warlord:
     mob: warlord
     name: Warlord Gorrak
-    health: 230
+    health: 320
     bar: RED
     abilities:
       - type: LIGHTNING_AURA
@@ -610,7 +610,7 @@ bosses:
   ravager:
     mob: ravager
     name: The Ravager
-    health: 280
+    health: 380
     bar: RED
     abilities:
       - type: KNOCKBACK_SLAM
@@ -634,7 +634,7 @@ bosses:
   colossus:
     mob: colossus
     name: The Colossus
-    health: 340
+    health: 460
     bar: BLUE
     abilities:
       - type: KNOCKBACK_SLAM
@@ -658,7 +658,7 @@ bosses:
   warden:
     mob: warden
     name: The Warden
-    health: 450
+    health: 500
     bar: PURPLE
     abilities:
       - type: SHIELD_BREAK

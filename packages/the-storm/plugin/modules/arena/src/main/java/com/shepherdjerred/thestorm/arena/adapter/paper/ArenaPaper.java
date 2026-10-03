@@ -287,7 +287,8 @@ public final class ArenaPaper {
   private static List<ItemSpec> specs(ArenaBundle content) {
     var specs = new ArrayList<ItemSpec>();
     for (var arenaClass : content.classes().classes().values()) {
-      specs.addAll(arenaClass.items());
+      specs.addAll(
+          com.shepherdjerred.thestorm.arena.domain.kit.GearProgression.templates(arenaClass));
       specs.addAll(arenaClass.upgrade());
     }
     content.settings().lootChests().entries().stream().map(LootEntry::item).forEach(specs::add);

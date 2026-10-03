@@ -1,12 +1,15 @@
 # Mob Arena classes. Owned by the repository; the plugin never writes it.
 # Every key is required and unknown keys are errors.
+# The authored equipment below is the wave-16 tier. GearProgression derives
+# stone/leather starters, intermediate gear at wave 6 and veteran enchants at 31.
+# Every five cleared waves repairs equipment and replenishes consumables.
 #
 # The nine 2014-2015 kits (Archer, Madman, Guardian, Healer, Wolfmaster, Tank,
 # Knight, Oddjob, Chemist) are open to everyone; there are no paid classes.
 # Advanced classes (the 2017 idea) need thestorm.arena.class.<id>, which quests
-# grant. Each kit can clear every wave solo: there is no natural healing to
-# lean on, so every kit carries healing potions and golden apples, and upgrade
-# waves (the wave after each boss) refill the consumables.
+# grant. Every kit carries healing potions and golden apples. Five-wave
+# checkpoints replenish consumables; after bosses, the following upgrade wave
+# delivers that checkpoint's kit refill.
 #
 # Items: material, amount (1-64), name (plain text or null), enchantments
 # (key: level), potion (a potion type key such as strong_healing, for potions

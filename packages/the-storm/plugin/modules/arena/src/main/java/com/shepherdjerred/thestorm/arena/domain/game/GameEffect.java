@@ -49,12 +49,16 @@ public sealed interface GameEffect {
   record Equip(UUID player, String kit) implements GameEffect {}
 
   /**
-   * Give the player the class's upgrade items.
+   * Refill consumables, repair equipment and advance the player's class gear for this wave.
    *
    * @param player the player
    * @param kit the class id
+   * @param wave the upcoming wave
    */
-  record Upgrade(UUID player, String kit) implements GameEffect {}
+  record Upgrade(UUID player, String kit, int wave) implements GameEffect {}
+
+  /** Top up the shared caches without discarding items players left there. */
+  record RestockChests() implements GameEffect {}
 
   /**
    * Send a fighter to a player spawn, with the class's wolves.

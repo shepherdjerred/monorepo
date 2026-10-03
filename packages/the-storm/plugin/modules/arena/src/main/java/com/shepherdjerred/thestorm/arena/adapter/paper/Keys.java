@@ -17,11 +17,13 @@ final class Keys {
   private final NamespacedKey item;
   private final NamespacedKey entity;
   private final NamespacedKey run;
+  private final NamespacedKey gear;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "arena_item");
     this.entity = new NamespacedKey(plugin, "arena_entity");
     this.run = new NamespacedKey(plugin, "survival_run");
+    this.gear = new NamespacedKey(plugin, "arena_gear");
   }
 
   /** Marks {@code stack} as an arena item. */
@@ -34,6 +36,18 @@ final class Keys {
     return !stack.isEmpty()
         && stack.hasItemMeta()
         && stack.getItemMeta().getPersistentDataContainer().has(item, PersistentDataType.BOOLEAN);
+  }
+
+  void gear(ItemStack stack, String id) {
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(gear, PersistentDataType.STRING, id));
+  }
+
+  boolean isGear(ItemStack stack, String id) {
+    return !stack.isEmpty()
+        && stack.hasItemMeta()
+        && id.equals(
+            stack.getItemMeta().getPersistentDataContainer().get(gear, PersistentDataType.STRING));
   }
 
   void tag(ItemStack stack, java.util.UUID runId) {

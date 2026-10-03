@@ -388,6 +388,36 @@ that Paper saved the restored inventory and its matching persistent-data marker
 together. Players must reconnect before entering another arena after a restore;
 this avoids a synchronous player-data write on the server tick.
 
+### Colosseum
+
+`/arena join colosseum` keeps the original finite 72-wave format: pick a class,
+start with a kit, fight waves and bosses, and scavenge the three shared caches.
+Classes start with stone tools, leather armor and reduced enchantments while
+keeping their spells, consumables and companion identities. Wave 6 raises gear
+to the intermediate tier, wave 16 grants the authored class equipment, and wave
+31 improves offensive/protection enchantments. Specialist weapons that have no
+stone or iron counterpart retain their material.
+
+Every five **cleared** waves, caches receive another loot roll without clearing
+unclaimed items. Kits are repaired and consumables refilled at that checkpoint;
+after a boss, the following upgrade wave delivers the kit refill. Looted gear
+is repaired and preserved rather than replaced by class upgrades. Equipment can
+wear out between checkpoints. Full caches and inventories keep their contents;
+supplies that do not fit are not dropped into the world.
+
+Hostiles acquire fighters across the arena and explicitly start navigation.
+Stalled mobs retry after five seconds; after twenty seconds without progress,
+they return to a floor entrance. Mobs already in combat keep their native attack
+behavior. Boss waves require a clear and cannot time out into the next wave.
+
+Boss spells are announced and mark a fixed danger circle two seconds before
+resolving, with simultaneous spells queued rather than stacked. At 40% health,
+bosses enter an enraged phase with faster spells and stronger damaging casts.
+Party size is captured at the start of each encounter: boss health gains 80%
+per extra fighter (capped at 1,024), summoned reinforcements scale with the
+party, and Heartwood's objective requires more hits. Difficulty tiers and wave
+damage scaling still apply. Food and healing consumables remain available.
+
 ### Settlement survival
 
 The Colosseum retains its finite 72-wave game. Settlement is a separate,

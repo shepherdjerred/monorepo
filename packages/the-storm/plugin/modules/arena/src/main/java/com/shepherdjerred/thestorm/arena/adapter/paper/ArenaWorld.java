@@ -240,6 +240,10 @@ final class ArenaWorld {
     parts.chests().fill(parts.context().random());
   }
 
+  void restock() {
+    parts.chests().restock(parts.context().random());
+  }
+
   /** Spawns the units; false if any spawn was refused (the rest are still tracked). */
   boolean spawn(List<SpawnUnit> units) {
     var allSpawned = true;
@@ -255,7 +259,13 @@ final class ArenaWorld {
       if (spawned.isEmpty()) {
         allSpawned = false;
       } else {
-        track(unit.mob(), spawned.orElseThrow());
+        var entities = spawned.orElseThrow();
+        if (ArenaPlacement.ensure(entities.getFirst(), definition)) {
+          track(unit.mob(), entities);
+        } else {
+          entities.forEach(Entity::remove);
+          allSpawned = false;
+        }
       }
     }
     return allSpawned;
@@ -308,6 +318,10 @@ final class ArenaWorld {
       return false;
     }
     var spawned = result.orElseThrow();
+    if (!ArenaPlacement.ensure(spawned.getFirst(), definition)) {
+      spawned.forEach(Entity::remove);
+      return false;
+    }
     track(order.boss().mob(), spawned);
     var entity = spawned.getFirst();
     entity.customName(Component.text(order.boss().name()));
@@ -425,10 +439,7 @@ final class ArenaWorld {
       }
       case HUNT -> {
         if (mob instanceof Mob hunter) {
-          var target = nearest.orElseThrow();
-          if (!target.equals(hunter.getTarget())) {
-            hunter.setTarget(target);
-          }
+          hunt(hunter, nearest.orElseThrow(), distance.orElseThrow());
         }
       }
       case APPROACH -> {
@@ -442,6 +453,18 @@ final class ArenaWorld {
         }
         detonate(mob, archetype);
       }
+    }
+  }
+
+  private static void hunt(Mob hunter, Player target, double distance) {
+    if (!target.equals(hunter.getTarget())) {
+      hunter.setTarget(target);
+    }
+    // A target alone does not start navigation for every native goal, especially at range.
+    // Let close-range ranged combat keep its native strafing and attack behavior.
+    var navigator = hunter.getVehicle() instanceof Mob mount ? mount : hunter;
+    if (distance > 16 || (distance > 4 && !navigator.getPathfinder().hasPath())) {
+      navigator.getPathfinder().moveTo(target, 1.0);
     }
   }
 

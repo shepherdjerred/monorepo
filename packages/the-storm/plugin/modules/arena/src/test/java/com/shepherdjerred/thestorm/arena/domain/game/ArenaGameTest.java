@@ -495,6 +495,14 @@ final class ArenaGameTest {
     }
 
     @Test
+    void anActiveBossMustBeDefeatedBeforeTheNextWave() {
+      reachWave(2);
+      assertThat(play.tick(600, 1)).isEmpty();
+      assertThat(((Fighting) play.game.phase()).wave()).isEqualTo(2);
+      assertThat(notices(play.tick(1, 0))).containsExactly(NoticeKind.WAVE_CLEARED);
+    }
+
+    @Test
     void bossWavesNameTheBoss() {
       play.start(ALICE);
       play.tick(5, 0);
@@ -521,7 +529,7 @@ final class ArenaGameTest {
       var effects = play.tick(5, 0);
 
       assertThat(only(effects, Upgrade.class))
-          .containsExactly(new Upgrade(ALICE, "knight"), new Upgrade(BOB, "knight"));
+          .containsExactly(new Upgrade(ALICE, "knight", 3), new Upgrade(BOB, "knight", 3));
       assertThat(notices(effects)).containsExactly(NoticeKind.UPGRADE_WAVE);
     }
 
