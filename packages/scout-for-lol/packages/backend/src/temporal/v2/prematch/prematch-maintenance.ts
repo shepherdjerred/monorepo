@@ -1,11 +1,5 @@
-import {
-  abandonExpiredDareProposals,
-  expireDareAcceptWindows,
-} from "#src/betting/dares/settlement/dare-sweep.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
-import { expireDareV2AcceptWindows } from "#src/betting/dares/settlement/dare-sweep-v2.ts";
-import { refreshPendingDareV2Callouts } from "#src/betting/dares/presentation/dare-callout-v2.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
+import { expireDareAcceptWindows } from "#src/betting/dares/settlement/dare-sweep.ts";
+import { refreshPendingDareCallouts } from "#src/betting/dares/presentation/dare-callout.ts";
 import { closeExpiredBettingWindows } from "#src/betting/settlement/sweep.ts";
 import { closeExpiredParlayWindows } from "#src/betting/parlays/runtime/parlay-sweep.ts";
 import { activatePendingParlayMarkets } from "#src/betting/parlays/runtime/parlay-publish.ts";
@@ -28,21 +22,17 @@ import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
  * `checkPreMatch` builds its pass from the same list until v1 goes, so the
  * two paths cannot drift.
  *
- * Dare v2 recovery sits outside every feature flag so a rollout revocation
+ * Dare recovery sits outside every feature flag so a rollout revocation
  * cannot strand funded contracts; the rest is betting and skipped while
- * betting is hard-disabled. `dareSummaries` collects what the Dare sweeps
- * resolved, for the summary delivery step at the end and for a caller that
- * reports them.
+ * betting is hard-disabled.
  */
-export function prematchMaintenanceSteps(
-  dareSummaries: DareSettlementSummary[],
-): MaintenanceStep[] {
+export function prematchMaintenanceSteps(): MaintenanceStep[] {
   const steps: MaintenanceStep[] = [
     {
-      name: "dare v2 accept-window expiry",
+      name: "dare accept-window expiry",
       run: async () => {
-        await expireDareV2AcceptWindows();
-        await refreshPendingDareV2Callouts();
+        await expireDareAcceptWindows();
+        await refreshPendingDareCallouts();
       },
     },
   ];
@@ -72,29 +62,6 @@ export function prematchMaintenanceSteps(
         await refreshClosedParlayMessages(await closeExpiredParlayWindows());
       },
     },
-    {
-      // Unconfirmed proposals past their TTL. Swallows per-record errors.
-      name: "dare proposal TTL",
-      run: async () => {
-        dareSummaries.push(...(await abandonExpiredDareProposals()));
-      },
-    },
-    {
-      // Accept windows nobody answered — a refund path, kept in its own step
-      // so the proposal sweep above can never starve it.
-      name: "dare accept-window expiry",
-      run: async () => {
-        dareSummaries.push(...(await expireDareAcceptWindows()));
-      },
-    },
-    {
-      // Delivery runs after the refunds committed and swallows per-summary,
-      // so a dead channel can never re-run or block a refund.
-      name: "dare summary delivery",
-      run: async () => {
-        await deliverDareSummaries(dareSummaries);
-      },
-    },
   );
   return steps;
 }
@@ -109,6 +76,6 @@ export function prematchMaintenanceSteps(
 export async function runPrematchMaintenance(): Promise<void> {
   await runMaintenanceSteps(
     "prematch maintenance",
-    prematchMaintenanceSteps([]),
+    prematchMaintenanceSteps(),
   );
 }

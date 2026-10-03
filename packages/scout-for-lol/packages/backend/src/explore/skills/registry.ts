@@ -1,4 +1,3 @@
-import { DARE_V2_PROMPT_VERSION } from "@scout-for-lol/data";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   loadExploreSkillFiles,
@@ -17,9 +16,7 @@ import {
 
 /** Turn-independent providers, resolved lazily at load time. */
 const STATIC_PLACEHOLDER_PROVIDERS: Record<string, (() => string) | undefined> =
-  {
-    dareV2PromptVersion: () => DARE_V2_PROMPT_VERSION,
-  };
+  {};
 
 /** Per-turn providers, resolved from the skill context on every load. */
 const TURN_PLACEHOLDER_NAMES = new Set(["currentTime"]);

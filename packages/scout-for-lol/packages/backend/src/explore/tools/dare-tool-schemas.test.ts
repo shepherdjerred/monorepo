@@ -1,69 +1,35 @@
 import { describe, expect, test } from "vitest";
-import { prepareDareDraftV2 } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
-import { DareDefinitionV2ToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
+import { prepareDareDraft } from "#src/betting/dares/lifecycle/dare-draft.ts";
+import { DareDefinitionToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
 
 /** A contract whose lane spelling Riot never emits. */
 const INVALID_LANE_DEFINITION = {
   originalText: "Play mid lane",
   displayTitle: "Virmel plays mid",
-  statusPhrases: { games: "mid lane games" },
+  statusPhrases: {},
   targetKeys: ["T1"],
-  plan: {
-    version: 2,
-    maxEligibleGames: 1,
-    gameSets: [
-      {
-        name: "games",
-        targetKeys: ["T1"],
-        relationship: "independent",
-        queues: ["solo"],
-        predicate: {
-          kind: "comparison",
-          value: { kind: "participant", target: "T1", field: "team_position" },
-          operator: "eq",
-          threshold: "MID",
-        },
-        projections: [],
-        orderBy: "game_end_at_asc_match_id_asc",
-        limit: 1,
-      },
-    ],
-    result: {
-      kind: "matching_games",
-      gameSet: "games",
-      operator: "gte",
-      threshold: 1,
-    },
-  },
+  queryText:
+    "SELECT COUNT(*) >= 1 AS achieved FROM T1 p WHERE p.team_position = 'MID'",
+  plainLanguage: "Virmel plays at least one game in the middle lane.",
   deadlineSpec: { kind: "relative", days: 7 },
   openingStake: 5,
 };
 
-describe("Dare v2 tool input schema", () => {
+describe("Dare tool input schema", () => {
   // The AI SDK validates tool input against this schema before the executor
-  // runs. If the value-domain refinement lived here, the SDK would reject the
-  // call itself and the model would see a generic invalid-tool-input error
-  // instead of the issue text naming MIDDLE — so the domain check has to be
-  // reachable, not pre-empted.
-  test("accepts an out-of-domain plan so the executor can answer it", () => {
+  // runs. If the value-domain check lived here, the SDK would reject the call
+  // itself and the model would see a generic invalid-tool-input error instead
+  // of the issue text naming MIDDLE — so the domain check has to be reachable,
+  // not pre-empted.
+  test("accepts an out-of-domain contract so the executor can answer it", () => {
     expect(
-      DareDefinitionV2ToolInputSchema.safeParse(INVALID_LANE_DEFINITION)
-        .success,
+      DareDefinitionToolInputSchema.safeParse(INVALID_LANE_DEFINITION).success,
     ).toBe(true);
-  });
-
-  test("still rejects a structurally invalid plan at the tool boundary", () => {
-    expect(
-      DareDefinitionV2ToolInputSchema.safeParse({
-        ...INVALID_LANE_DEFINITION,
-        plan: { ...INVALID_LANE_DEFINITION.plan, gameSets: [] },
-      }).success,
-    ).toBe(false);
   });
 
   test("requires English list copy at the tool boundary", () => {
     expect(
-      DareDefinitionV2ToolInputSchema.safeParse({
+      DareDefinitionToolInputSchema.safeParse({
         ...INVALID_LANE_DEFINITION,
         displayTitle: undefined,
         statusPhrases: undefined,
@@ -71,13 +37,12 @@ describe("Dare v2 tool input schema", () => {
     ).toBe(false);
   });
 
-  test("the executor returns the actionable domain issue", () => {
-    const parsed = DareDefinitionV2ToolInputSchema.parse(
-      INVALID_LANE_DEFINITION,
-    );
-    const prepared = prepareDareDraftV2({
+  test("the executor returns the actionable domain issue", async () => {
+    const parsed = DareDefinitionToolInputSchema.parse(INVALID_LANE_DEFINITION);
+    const prepared = await prepareDareDraft({
       originalText: parsed.originalText,
-      plan: parsed.plan,
+      queryText: parsed.queryText,
+      plainLanguage: parsed.plainLanguage,
       targets: [
         {
           key: "T1",

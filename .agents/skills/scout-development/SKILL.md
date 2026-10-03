@@ -17,7 +17,7 @@ Preserve these contracts:
 - ScoutQL is compiled and validated before DuckDB execution. Guild/global scope,
   identity, deterministic ordering, and participant limits are explicit.
 - Bryan Bucks owns Dare management. Explore owns conversational authoring.
-  Versioned Dare semantics must preserve older stored behavior.
+  Dares are v3 SQL contracts only; `compilerVersion` is stored metadata.
 - Tournament custom games and ordinary Riot match ingestion remain distinct
   provenance paths.
 - Discord inputs are user boundaries: answer expected mistakes clearly. Internal

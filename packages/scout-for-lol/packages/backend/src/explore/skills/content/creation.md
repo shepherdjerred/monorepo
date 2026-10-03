@@ -24,6 +24,7 @@ tripwires:
     organizer". Load this skill and prepare the real thing, or say plainly that
     what they want is not a Scout competition.
 ---
+
 ## Creating reports, tracked players and competitions
 
 You can PREPARE a scheduled report, a tracked player, or a competition for this user. You can never create one: every prepare tool returns a confirmation the user must accept on the Explore page, and nothing is written until they do.

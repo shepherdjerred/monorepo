@@ -2,8 +2,8 @@ import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import {
-  DareDeadlineSpecV2Schema,
-  type DareDeadlineSpecV2,
+  DareDeadlineSpecSchema,
+  type DareDeadlineSpec,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -35,11 +35,10 @@ type EditorDare = {
   id: number;
   currentRevision: number;
   originalText: string;
-  deadlineSpec: DareDeadlineSpecV2;
+  deadlineSpec: DareDeadlineSpec;
   openingStake: number;
   canonicalScoutQl: string;
   plainLanguage: string;
-  compilerVersion: string;
 };
 
 function ReadableSummaryField(props: {
@@ -108,7 +107,6 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
   });
   const fieldId = (name: string) =>
     `dare-${props.dare.id.toString()}-editor-${name}`;
-  const sqlV3 = props.dare.compilerVersion === "dare-scoutql-3";
 
   function changed(): void {
     inputVersion.current += 1;
@@ -128,7 +126,7 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
       setError("The deadline must be valid JSON.");
       return null;
     }
-    const deadlineSpec = DareDeadlineSpecV2Schema.safeParse(rawDeadline);
+    const deadlineSpec = DareDeadlineSpecSchema.safeParse(rawDeadline);
     const openingStake = Number(stakeText);
     if (!deadlineSpec.success) {
       setError("The deadline does not match the Dare contract schema.");
@@ -284,10 +282,9 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
         <DialogHeader>
           <DialogTitle>Edit Dare #{props.dare.id.toString()}</DialogTitle>
           <DialogDescription>
-            Edit the authoritative {sqlV3 ? "standard SQL" : "ScoutQL"}{" "}
-            contract; Scout validates, formats, explains, and backtests it
-            before replacing this private draft. No funded contract can enter
-            this editor.
+            Edit the authoritative standard SQL contract; Scout validates,
+            formats, explains, and backtests it before replacing this private
+            draft. No funded contract can enter this editor.
           </DialogDescription>
         </DialogHeader>
         <summaryForm.AppForm>
@@ -315,28 +312,24 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
                     }}
                   />
                 </label>
-                {sqlV3 && (
-                  <summaryForm.Field name="plainLanguage">
-                    {(field) => (
-                      <ReadableSummaryField
-                        id={fieldId("summary")}
-                        name={field.name}
-                        value={field.state.value}
-                        onValueChange={(value) => {
-                          changed();
-                          field.handleChange(value);
-                        }}
-                      />
-                    )}
-                  </summaryForm.Field>
-                )}
+                <summaryForm.Field name="plainLanguage">
+                  {(field) => (
+                    <ReadableSummaryField
+                      id={fieldId("summary")}
+                      name={field.name}
+                      value={field.state.value}
+                      onValueChange={(value) => {
+                        changed();
+                        field.handleChange(value);
+                      }}
+                    />
+                  )}
+                </summaryForm.Field>
                 <label
                   htmlFor={fieldId("scoutql")}
                   className="space-y-1 text-sm"
                 >
-                  <span className="font-medium">
-                    {sqlV3 ? "Binding SQL contract" : "ScoutQL contract"}
-                  </span>
+                  <span className="font-medium">Binding SQL contract</span>
                   <Textarea
                     id={fieldId("scoutql")}
                     name="queryText"
@@ -437,7 +430,6 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
               <DareEditorReview
                 validated={validated}
                 reviewing={reviewing}
-                sqlV3={sqlV3}
                 currentRevision={props.dare.currentRevision}
                 previous={props.dare}
                 next={{ originalText, deadlineText, stakeText }}

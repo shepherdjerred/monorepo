@@ -682,8 +682,8 @@ load-bearing for anyone extending it.
 The row's `subjectKind` and `subjectId` name the event being announced.
 Existing match intents use `match` and the Riot match id; `riotMatchId` remains
 indexed for match fan-out. Duel status uses `duel` and the series id, while
-Dare lifecycle and progress DMs use `dare` and the numeric Dare id. Neither
-has a Riot match id. During
+Dare notifications use `dare` and the numeric Dare id. Neither has a Riot
+match id. During
 the schema rollout, a match row with a NULL `subjectId` is read from its
 required `riotMatchId` because older application pods still write that shape.
 New writers populate both match columns, and the database rejects a mismatch.
@@ -704,7 +704,16 @@ Dare lifecycle and progress transitions mint one `dare-status` intent and
 Workflow start request per frozen recipient in the same transaction. The
 versioned announcement keeps the event category, summary, and guild used by
 the legacy DM. Delivery checks the current guild flag and recipient preference
-before sending through the audited DM path with mentions suppressed. The
+before sending through the audited DM path with mentions suppressed.
+
+A Dare that resolves (achieved, unachieved, or voided with money moved) also
+mints one channel-targeted `dare-status` intent for its own channel, keyed
+`dare-result:<dareId>:revision:<revision>`, in the settling transaction. Its
+announcement carries the payouts and refunds the ledger recorded, so the post
+names exactly who was paid or refunded and allowlists only those mentions. It
+answers to `dare_notifications_enabled` alone (DM preferences do not apply),
+and once Discord accepts it the follow-up edits the Dare callout to its final
+state. A match owed no public delivery writes neither the DMs nor the post. The
 intent expires thirty days after the event, and an ambiguous DM failure stays
 `unknown-delivery` for operator resolution. The legacy Dare event/delivery
 tables continue draining pre-cutover rows; a standing legacy event owns its
@@ -713,7 +722,7 @@ deduplication key and prevents V2 from announcing the same event again.
 ### An intent says what it announces and where it came from
 
 Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
-`dare-summary` | `dare-status` | `hall-record-break` | `duel-status`) and an `origin`
+`dare-status` | `hall-record-break` | `duel-status`) and an `origin`
 (`live`, or `recovery` naming the batch that minted it). Both are fixed at
 mint, mirrored into columns, and versioned in the payload envelope
 (`notificationIntentCodec` version 3; a version-1 payload derives its kind from
@@ -730,23 +739,21 @@ sweep and the settlement announcement can find it (see
 
 ### The announcement kinds carry their message on the intent
 
-A `settlement` intent is one guild channel's Bryan Bucks recap for one match
-and a `dare-summary` intent is one Dare's resolution. Neither has an image —
-their render attests `none` (`text-only`) — and their message is built at the
-send from an `announcement` envelope on the intent, parsed by the codecs in
-`notification/announcement-codecs.ts`: the settlement summary, parlay result
-and this guild's earnings exactly as settlement produced them, or v1's
-`DareSettlementSummary`. The intent carries those presentation inputs rather
-than the receipt's identities on purpose — the receipt names no amounts, and
-rebuilding pool totals and payouts from ledger rows would be a second
-implementation of settlement arithmetic. The arms compose v1's own builders
-(`prepareSettlementAnnouncement`, `dareResultMessage`) so budgets and mention
-safety exist once. A settlement recap replies to the delivered POSTMATCH
-intent's `messageId` for the same channel (`failIfNotExists: false`), with
-one plain send when the reply itself is refused; a delivered Dare result is
-followed by v1's best-effort callout refresh. Both kinds refuse a DM target as
-terminal: v1's private settlement receipts are a separate, budgeted fan-out
-that is not ported, and is an explicit gap.
+A `settlement` intent is one guild channel's Bryan Bucks recap for one match.
+It has no image — its render attests `none` (`text-only`) — and its message is
+built at the send from an `announcement` envelope on the intent, parsed by the
+codecs in `notification/announcement-codecs.ts`: the settlement summary,
+parlay result and this guild's earnings exactly as settlement produced them.
+The intent carries those presentation inputs rather than the receipt's
+identities on purpose — the receipt names no amounts, and rebuilding pool
+totals and payouts from ledger rows would be a second implementation of
+settlement arithmetic. The arm composes v1's own builder
+(`prepareSettlementAnnouncement`) so budgets and mention safety exist once. A
+settlement recap replies to the delivered POSTMATCH intent's `messageId` for
+the same channel (`failIfNotExists: false`), with one plain send when the
+reply itself is refused. It refuses a DM target as terminal: v1's private
+settlement receipts are a separate, budgeted fan-out that is not ported, and
+is an explicit gap.
 
 A `hall-record-break` intent is one guild's Hall of Fame announcement for one
 match, keyed `hall-record-break:<riotMatchId>:<guildId>` — by guild, not

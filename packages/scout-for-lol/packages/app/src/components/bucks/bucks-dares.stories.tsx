@@ -3,7 +3,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import {
   DarePollHealthSchema,
   DareProgressSchema,
-  type DareDeadlineSpecV2,
+  type DareDeadlineSpec,
 } from "@scout-for-lol/data";
 import { BucksDareActions } from "./bucks-dare-actions.tsx";
 import {
@@ -174,7 +174,7 @@ const POLL_HEALTH = DarePollHealthSchema.parse({
   ],
 });
 
-const DEADLINE_SPEC: DareDeadlineSpecV2 = { kind: "relative", days: 30 };
+const DEADLINE_SPEC: DareDeadlineSpec = { kind: "relative", days: 30 };
 
 const VALIDATED_DRAFT: ValidatedDareDraft = {
   canonicalScoutQl:
@@ -283,7 +283,6 @@ export const EditorReviewDiff: Story = {
     <DareEditorReview
       validated={VALIDATED_DRAFT}
       reviewing={true}
-      sqlV3={true}
       currentRevision={4}
       previous={{
         plainLanguage:
@@ -315,7 +314,6 @@ export const AdvancedEditorTrigger: Story = {
         openingStake: 500,
         canonicalScoutQl: VALIDATED_DRAFT.canonicalScoutQl,
         plainLanguage: VALIDATED_DRAFT.plainLanguage,
-        compilerVersion: "dare-scoutql-3",
       }}
     />
   ),

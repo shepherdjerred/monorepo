@@ -1,175 +1,151 @@
 import {
   BucksDareStateSchema,
+  DareContractSchema,
+  DARE_MAX_HORIZON_DAYS,
+  DareDeadlineSpecSchema,
+  DareTargetBindingSchema,
   type BucksDareState,
+  type DareContract,
+  type DareDeadlineSpec,
+  type DareTargetBinding,
+  type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import {
-  DareConditionsSchema,
-  renderDareConditions,
-} from "#src/betting/dares/evaluation/dare-criteria.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { createLogger } from "#src/logger.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 
-const logger = createLogger("betting-dare-common");
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-/**
- * Plumbing shared by the dare command-surface domain modules (create,
- * accept, contribute). Deliberately free of money movement — that lives in
- * `dare-ledger.ts`.
- */
-
-export type DareDomainDependencies = {
+export type DareDependencies = {
   prismaClient: ExtendedPrismaClient;
   isPolicyEnabled: typeof isPolicyEnabled;
 };
 
-export const defaultDareDependencies: DareDomainDependencies = {
+export const defaultDareDependencies: DareDependencies = {
   prismaClient: prisma,
   isPolicyEnabled,
 };
 
-/**
- * Both flags gate taking money for a dare: the betting economy itself plus
- * the narrower dares rollout. Refund and settlement paths never call this —
- * flags gate taking Bucks, never returning them.
- */
-export async function daresFeatureEnabled(
-  serverId: DiscordGuildId,
-  dependencies: DareDomainDependencies,
-): Promise<boolean> {
-  const [bettingEnabled, daresEnabled] = await Promise.all([
-    dependencies.isPolicyEnabled("betting_enabled", { server: serverId }),
-    dependencies.isPolicyEnabled("bucks_dares_enabled", { server: serverId }),
-  ]);
-  return bettingEnabled && daresEnabled;
-}
-
-export type LoadedDare = NonNullable<
-  Awaited<ReturnType<typeof loadDareWithTargets>>
->;
-
-/** One dare plus its frozen target rows, scoped to the guild. */
-export async function loadDareWithTargets(
-  prismaClient: ExtendedPrismaClient,
-  dareId: number,
-  serverId: DiscordGuildId,
-) {
-  const dare = await prismaClient.bucksDare.findUnique({
-    where: { id: dareId },
-    include: { targets: { orderBy: { id: "asc" } } },
-  });
-  if (dare?.serverId !== serverId) {
-    return;
+export function dareDraftDeadlineIssues(
+  spec: DareDeadlineSpec,
+  now: Date,
+): string[] {
+  if (spec.kind === "relative") return [];
+  const deadline = new Date(spec.deadlineAt);
+  const issues: string[] = [];
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: spec.timezone }).format();
+  } catch {
+    issues.push(`${spec.timezone} is not an IANA timezone.`);
   }
-  return dare;
+  if (deadline.getTime() <= now.getTime()) {
+    issues.push("An absolute dare deadline must be in the future.");
+  }
+  if (deadline.getTime() > now.getTime() + DARE_MAX_HORIZON_DAYS * DAY_MS) {
+    issues.push(
+      `A dare deadline may be at most ${DARE_MAX_HORIZON_DAYS.toString()} days away.`,
+    );
+  }
+  return issues;
 }
 
-/**
- * The challenger-only entry points (confirm, abandon) share one lookup: the
- * dare must exist in this guild and belong to this challenger.
- */
-export async function loadChallengerDare(
-  prismaClient: ExtendedPrismaClient,
+export async function claimDareDraftRevision(
+  tx: Db,
   input: {
     dareId: number;
     serverId: DiscordGuildId;
-    challengerDiscordId: string;
+    challengerDiscordId: DiscordAccountId;
+    expectedRevision: number;
+    openingStake: number;
   },
-): Promise<
-  | { kind: "ok"; dare: LoadedDare }
-  | { kind: "not_found" }
-  | { kind: "not_challenger" }
-> {
-  const dare = await loadDareWithTargets(
-    prismaClient,
-    input.dareId,
-    input.serverId,
-  );
-  if (dare === undefined) {
-    return { kind: "not_found" };
-  }
-  return dare.challengerDiscordId === input.challengerDiscordId
-    ? { kind: "ok", dare }
-    : { kind: "not_challenger" };
+): Promise<number | undefined> {
+  const updated = await tx.bucksDare.updateManyAndReturn({
+    where: {
+      id: input.dareId,
+      serverId: input.serverId,
+      challengerDiscordId: input.challengerDiscordId,
+      dareState: "draft",
+      currentRevision: input.expectedRevision,
+    },
+    data: {
+      currentRevision: { increment: 1 },
+      openingStake: input.openingStake,
+    },
+    select: { currentRevision: true },
+  });
+  return updated.length === 1 ? updated[0]?.currentRevision : undefined;
+}
+
+/** Whether new Dares may be drafted in this guild. */
+export async function dareSqlDraftsEnabled(
+  serverId: DiscordGuildId,
+  dependencies: DareDependencies,
+): Promise<boolean> {
+  return await dependencies.isPolicyEnabled("bucks_dares_enabled", {
+    server: serverId,
+  });
+}
+
+export async function dareSqlFundingEnabled(
+  serverId: DiscordGuildId,
+  dependencies: DareDependencies,
+): Promise<boolean> {
+  const [betting, authoring] = await Promise.all([
+    dependencies.isPolicyEnabled("betting_enabled", { server: serverId }),
+    dareSqlDraftsEnabled(serverId, dependencies),
+  ]);
+  return betting && authoring;
 }
 
 /**
- * The target-only entry points (accept, chicken) share one lookup: the dare
- * must exist in this guild, list this target, and that target must not have
- * accepted already — consent is irrevocable.
+ * Whether a funding action may run: the first funding needs the full rollout,
+ * while every later action on an already-funded Dare needs only betting, so
+ * revoking the Dare rollout never strands money already escrowed.
  */
-export async function loadTargetDare(
-  prismaClient: ExtendedPrismaClient,
-  input: { dareId: number; serverId: DiscordGuildId; targetDiscordId: string },
-): Promise<
-  | { kind: "ok"; dare: LoadedDare; target: LoadedDare["targets"][number] }
-  | { kind: "not_found" }
-  | { kind: "not_a_target" }
-  | { kind: "already_accepted" }
-> {
-  const dare = await loadDareWithTargets(
-    prismaClient,
-    input.dareId,
-    input.serverId,
-  );
-  if (dare === undefined) {
-    return { kind: "not_found" };
+export async function relationalDareActionEnabled(
+  serverId: DiscordGuildId,
+  initialFunding: boolean,
+  dependencies: DareDependencies,
+): Promise<boolean> {
+  if (initialFunding) {
+    return await dareSqlFundingEnabled(serverId, dependencies);
   }
-  const target = dare.targets.find(
-    (row) => row.discordId === input.targetDiscordId,
-  );
-  if (target === undefined) {
-    return { kind: "not_a_target" };
-  }
-  return target.acceptedAt === null
-    ? { kind: "ok", dare, target }
-    : { kind: "already_accepted" };
+  return await dependencies.isPolicyEnabled("betting_enabled", {
+    server: serverId,
+  });
 }
 
-/** The code-rendered condition summary for a stored dare row — the one
- * human description, frozen into every ledger context. */
-export function summarizeDare(dare: {
-  conditions: string;
-  targets: readonly { alias: string }[];
-}): string {
-  return renderDareConditions(
-    DareConditionsSchema.parse(JSON.parse(dare.conditions)),
-    dare.targets.map((target) => target.alias),
-  );
+export function parseDareTargets(raw: string): DareTargetBinding[] {
+  return DareTargetBindingSchema.array().parse(JSON.parse(raw));
 }
 
-/** Display placeholder when a stored conditions blob cannot be parsed on a
- * refund path. See `summarizeDareBestEffort`. */
-export const DARE_CONDITIONS_UNREADABLE = "(dare conditions unreadable)";
+export function parseDareDeadline(raw: string): DareDeadlineSpec {
+  return DareDeadlineSpecSchema.parse(JSON.parse(raw));
+}
+
+export function parseRelationalDareContract(raw: string): DareContract {
+  return DareContractSchema.parse(JSON.parse(raw));
+}
 
 /**
- * Best-effort condition summary for refund, void, abandon, and expire paths.
- *
- * Those paths run REGARDLESS of whether the stored conditions blob still
- * parses — that is the documented refunds-are-never-blocked invariant: money
- * movement must not depend on a display string, so a blob the current schema
- * cannot read gets a fixed placeholder instead of an exception. This is
- * display-only, NOT a data-quality fallback — the achieved/settlement path
- * still parses strictly through `parseDare` and fails loudly.
+ * The stored contract, or `null` when it does not parse. Settlement voids a
+ * `null` with a full refund (`invalid_contract`) rather than guessing.
  */
-export function summarizeDareBestEffort(dare: {
-  conditions: string;
-  targets: readonly { alias: string }[];
-}): string {
+export function readableRelationalDareContract(
+  raw: string | null,
+): DareContract | null {
+  if (raw === null) return null;
   try {
-    return summarizeDare(dare);
-  } catch (error) {
-    logger.warn(
-      "⚠️ Dare conditions could not be rendered for a refund-path summary:",
-      error,
-    );
-    return DARE_CONDITIONS_UNREADABLE;
+    return DareContractSchema.safeParse(JSON.parse(raw)).data ?? null;
+  } catch {
+    return null;
   }
 }
 
-/** Fresh state read for a miss-path answer — the pre-transaction row is
- * stale by definition once a guarded claim has missed. */
 export async function currentDareState(
   reader: {
     bucksDare: {
@@ -181,22 +157,18 @@ export async function currentDareState(
   },
   dareId: number,
 ): Promise<BucksDareState> {
-  const current = await reader.bucksDare.findUniqueOrThrow({
+  const row = await reader.bucksDare.findUniqueOrThrow({
     where: { id: dareId },
     select: { dareState: true },
   });
-  return BucksDareStateSchema.parse(current.dareState);
+  return BucksDareStateSchema.parse(row.dareState);
 }
 
-/** The precise-copy re-read after an `InsufficientBucksError` rollback. */
-export async function insufficientDareFunds(
-  prismaClient: ExtendedPrismaClient,
-  bucksAccountId: number,
-  needed: number,
-): Promise<{ kind: "insufficient"; balance: number; needed: number }> {
-  const current = await prismaClient.bucksAccount.findUniqueOrThrow({
-    where: { id: bucksAccountId },
-    select: { balance: true },
-  });
-  return { kind: "insufficient", balance: current.balance, needed };
+export function bindDareDeadline(
+  spec: DareDeadlineSpec,
+  activationAt: Date,
+): Date {
+  return spec.kind === "relative"
+    ? new Date(activationAt.getTime() + spec.days * 24 * 60 * 60 * 1000)
+    : new Date(spec.deadlineAt);
 }

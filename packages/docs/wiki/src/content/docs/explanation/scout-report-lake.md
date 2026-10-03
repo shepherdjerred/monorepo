@@ -333,14 +333,14 @@ A participant row also carries its loadout: the final inventory as seven
 slot columns (`item0` through `item6`), both summoner spells, and the rune
 page. A match read selects those columns only when a query names one, and the
 Dare catalog leaves them out
-([dare-sql-v3-catalog.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/dares/sql/dare-sql-v3-catalog.ts)).
+([dare-sql-catalog.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/dares/sql/dare-sql-catalog.ts)).
 That is deliberate. Reads name their columns, so
 a build published before a column existed fails any read that names it until
 the schema fingerprint's rebuild publishes. Leaving the loadout out of ordinary
 reads keeps reports working through that window
 ([lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts)).
 
-Version-three Bryan Bucks Dares expose those relations, the four timeline
+Bryan Bucks Dares expose those relations, the four timeline
 relations, and `T1` through `T5`. Each target relation is an ordinary filtered
 view of `match_participants`, bound to the contract's frozen Riot accounts and
 tracking dates. The canonical SQL is the contract; generated prose only explains
@@ -356,8 +356,9 @@ Likewise, a zero denominator stays `NULL` through `NULLIF`; it is never silently
 turned into zero or false. Evidence retains game-set results and numeric
 projections, target dependencies, coverage, ordered source match IDs, and the
 contract hash. Only a structurally proven monotone count can settle before the
-deadline or game cap. Existing funded Dare contract versions remain on their
-original evaluators rather than being migrated to the new SQL meaning.
+deadline or game cap. Dares have one contract dialect: the earlier
+typed-plan contracts were retired with full refunds rather than reinterpreted
+under SQL meaning, and `compilerVersion` on a revision is stored metadata.
 
 ### Why rank and improvement Dares activate in two phases
 

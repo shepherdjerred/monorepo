@@ -50,7 +50,7 @@ function caller() {
 
 async function clearAll(): Promise<void> {
   await db.confirmationIntent.deleteMany();
-  await db.bucksDareV2.deleteMany();
+  await db.bucksDare.deleteMany();
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksOpenPosition.deleteMany();
   await db.bucksParlayBet.deleteMany();
@@ -163,8 +163,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   resetFlagOverrides("betting_enabled");
-  resetFlagOverrides("dare_v2");
-  resetFlagOverrides("scoutql_relational_enabled");
+  resetFlagOverrides("bucks_dares_enabled");
   addFlagOverride("betting_enabled", true, { server: guildId });
   trpc.setMembership([{ guildId, asAdmin: false }]);
   await clearAll();
@@ -172,8 +171,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   resetFlagOverrides("betting_enabled");
-  resetFlagOverrides("dare_v2");
-  resetFlagOverrides("scoutql_relational_enabled");
+  resetFlagOverrides("bucks_dares_enabled");
   await shutdownFeatureFlags();
   await db.$disconnect();
   if (originalEnvironment === undefined) {
@@ -198,9 +196,8 @@ describe("bucks.status", () => {
     });
   });
 
-  test("shows Dares when the v2 and relational flags are enabled", async () => {
-    addFlagOverride("dare_v2", true, { server: guildId });
-    addFlagOverride("scoutql_relational_enabled", true, { server: guildId });
+  test("shows Dares when the Dares flag is enabled", async () => {
+    addFlagOverride("bucks_dares_enabled", true, { server: guildId });
 
     const status = await caller().bucks.status();
     expect(status).toMatchObject({
@@ -209,7 +206,7 @@ describe("bucks.status", () => {
   });
 
   test("keeps Dares available to the owner of an existing private draft", async () => {
-    await db.bucksDareV2.create({
+    await db.bucksDare.create({
       data: {
         serverId: guildId,
         channelId: DARE_CHANNEL_ID,
@@ -223,7 +220,7 @@ describe("bucks.status", () => {
   });
 
   test("does not expose another member's private draft", async () => {
-    await db.bucksDareV2.create({
+    await db.bucksDare.create({
       data: {
         serverId: guildId,
         channelId: DARE_CHANNEL_ID,

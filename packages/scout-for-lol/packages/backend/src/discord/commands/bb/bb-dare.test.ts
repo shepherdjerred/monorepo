@@ -1,22 +1,11 @@
 import { describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  PlayerIdSchema,
 } from "@scout-for-lol/data";
-import type { DareConditions } from "#src/betting/dares/evaluation/dare-criteria.ts";
-import type {
-  DareTranslationRecord,
-  DareTranslationResult,
-} from "#src/betting/dares/evaluation/dare-translate.ts";
 import { bbCommand } from "#src/discord/commands/bb/bb-definition.ts";
 import { isPublicBbSubcommand } from "#src/discord/commands/bb/bb.ts";
-import {
-  describeDareTranslationFailure,
-  replyBbDare,
-} from "#src/discord/commands/bb/bb-dare.ts";
-import { replyBbDareV2 } from "#src/discord/commands/bb/bb-dare-v2.ts";
+import { replyBbDare } from "#src/discord/commands/bb/bb-dare.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb/bb-interaction.ts";
 import { bbInteractionAckMocks } from "#src/testing/bb-interaction-mocks.ts";
 
@@ -24,103 +13,7 @@ const SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
 const CHALLENGER = DiscordAccountIdSchema.parse("160509172704739328");
 const TARGET = DiscordAccountIdSchema.parse("160509172704739329");
 const CHANNEL = "1337623164146155594";
-
-const CONDITIONS: DareConditions = {
-  version: 1,
-  root: {
-    kind: "all",
-    clauses: [
-      {
-        kind: "all",
-        children: [
-          {
-            kind: "condition",
-            requiredGames: 7,
-            predicate: {
-              kind: "participant_boolean",
-              field: "win",
-              expected: true,
-            },
-            champion: "Warwick",
-          },
-        ],
-      },
-    ],
-  },
-};
-
-const RECORD: DareTranslationRecord = {
-  promptVersion: "test-prompt-1",
-  model: "test-model",
-  usage: {
-    tokens: {
-      input: 10,
-      output: 20,
-      cachedInput: 0,
-      cacheWrite: 0,
-      reasoning: 0,
-      total: 30,
-    },
-    catalogCostUsd: 0,
-  },
-  shortlistKeys: ["T1"],
-  rawOutput: {
-    unmappable: false,
-    unmappableReason: null,
-    targets: ["T1"],
-    horizonKind: "window",
-    windowDays: 7,
-    rootCombinator: "all",
-    clauseCombinators: ["all"],
-    leaves: [
-      {
-        clauseIndex: 0,
-        requiredGames: 7,
-        kind: "participant_boolean",
-        numericField: null,
-        booleanField: "win",
-        rateField: null,
-        operator: null,
-        threshold: null,
-        thresholdScaled: null,
-        expected: true,
-        champion: "Warwick",
-      },
-    ],
-  },
-};
-
-const TRANSLATED: DareTranslationResult = {
-  kind: "translated",
-  targets: [
-    {
-      key: "T1",
-      discordId: TARGET,
-      playerId: PlayerIdSchema.parse(1),
-      alias: "Virmel",
-      accounts: [
-        { puuid: "puuid-1", trackingStartedAt: "2026-01-01T00:00:00.000Z" },
-      ],
-    },
-  ],
-  horizonKind: "window",
-  windowDays: 7,
-  conditions: CONDITIONS,
-  record: RECORD,
-};
-
-const PROPOSAL_EXPIRES = new Date("2026-09-01T12:00:00.000Z");
-
-function makeCreateDare() {
-  return vi.fn(() =>
-    Promise.resolve({
-      kind: "created" as const,
-      dareId: 7,
-      conditionSummary: "at least 7 games where Virmel wins on Warwick",
-      proposalExpiresAt: PROPOSAL_EXPIRES,
-    }),
-  );
-}
+const EXPLORE_REFUSAL = "Scout Explore is not enabled in this server.";
 
 function fakeInteraction(input?: {
   amount?: number;
@@ -140,6 +33,15 @@ function fakeInteraction(input?: {
     ...bbInteractionAckMocks(true),
     followUp: vi.fn(() => Promise.resolve(undefined)),
   };
+}
+
+/**
+ * Explore stands in for authoring here: refusing the guild is the first thing
+ * the Explore flow does, so reaching that refusal proves the command handed
+ * the request on, and never starting a turn keeps the test off the model.
+ */
+function exploreRefused() {
+  return vi.fn(() => false);
 }
 
 describe("/bb dare", () => {
@@ -168,220 +70,78 @@ describe("/bb dare", () => {
     expect(isPublicBbSubcommand("dare")).toBe(false);
   });
 
-  test("refuses when the dares flag is off, before any translation", async () => {
+  test("refuses when the Dares flag is off, before any authoring", async () => {
     const interaction = fakeInteraction();
-    const translate = vi.fn();
+    const isExploreGuildAllowed = exploreRefused();
+    const isDaresPolicyEnabled = vi.fn(() => Promise.resolve(false));
     await replyBbDare(interaction, SERVER, CHALLENGER, {
-      isDaresPolicyEnabled: () => Promise.resolve(false),
-      translate,
+      isDaresPolicyEnabled,
+      dareExplore: { isExploreGuildAllowed },
+    });
+    expect(isDaresPolicyEnabled).toHaveBeenCalledWith("bucks_dares_enabled", {
+      server: SERVER,
     });
     expect(interaction.editReply).toHaveBeenCalledWith({
       content: "🚫 Bryan Bucks dares aren't enabled in this server.",
     });
-    expect(translate).not.toHaveBeenCalled();
+    expect(isExploreGuildAllowed).not.toHaveBeenCalled();
   });
 
-  test("answers the friendlier insufficient error before translating", async () => {
+  test("answers the friendlier insufficient error before authoring", async () => {
     const interaction = fakeInteraction({ amount: 10 });
-    const translate = vi.fn();
+    const isExploreGuildAllowed = exploreRefused();
     await replyBbDare(interaction, SERVER, CHALLENGER, {
       isDaresPolicyEnabled: () => Promise.resolve(true),
       loadDareBalance: () => Promise.resolve(3),
-      translate,
+      dareExplore: { isExploreGuildAllowed },
     });
     expect(interaction.editReply).toHaveBeenCalledWith({
       content: "💸 You have **3 BB** but need **10 BB**.",
     });
-    expect(translate).not.toHaveBeenCalled();
+    expect(isExploreGuildAllowed).not.toHaveBeenCalled();
   });
 
   test("a broken balance read never blocks the dare", async () => {
     const interaction = fakeInteraction();
-    const createDare = makeCreateDare();
+    const isExploreGuildAllowed = exploreRefused();
     await replyBbDare(interaction, SERVER, CHALLENGER, {
       isDaresPolicyEnabled: () => Promise.resolve(true),
-      loadDareBalance: () => Promise.reject(new Error("database down")),
-      translate: () => Promise.resolve(TRANSLATED),
-      createDare,
+      loadDareBalance: () => Promise.reject(new Error("database unavailable")),
+      dareExplore: { isExploreGuildAllowed },
     });
-    expect(createDare).toHaveBeenCalledTimes(1);
-  });
-
-  test("maps every translation failure to friendly ephemeral copy", () => {
-    expect(
-      describeDareTranslationFailure({
-        kind: "unmappable",
-        reason: "Nobody named Steve is tracked here.",
-      }),
-    ).toBe(
-      "🤔 I can't turn that into a dare: Nobody named Steve is tracked here.",
-    );
-    expect(describeDareTranslationFailure({ kind: "timeout" })).toBe(
-      "⏳ The dare translator took too long. Try again in a moment.",
-    );
-    expect(describeDareTranslationFailure({ kind: "budget_refused" })).toBe(
-      "🧯 The dare translator is out of budget right now. Try again later.",
-    );
-    expect(describeDareTranslationFailure({ kind: "invalid_output" })).toBe(
-      "🤖 The translator couldn't produce a usable dare from that. Try rewording it.",
-    );
-    expect(describeDareTranslationFailure({ kind: "provider_quota" })).toBe(
-      "🧯 The dare translator's provider quota is exhausted. Try again later.",
-    );
-    expect(describeDareTranslationFailure({ kind: "provider_error" })).toBe(
-      "😵 The dare translator failed. Try again shortly.",
-    );
-  });
-
-  test("shows the unmappable reason through the handler", async () => {
-    const interaction = fakeInteraction();
-    await replyBbDare(interaction, SERVER, CHALLENGER, {
-      isDaresPolicyEnabled: () => Promise.resolve(true),
-      loadDareBalance: () => Promise.resolve(undefined),
-      translate: () =>
-        Promise.resolve({
-          kind: "unmappable" as const,
-          reason: "Maintain-every-game claims are not supported.",
-        }),
-    });
+    expect(isExploreGuildAllowed).toHaveBeenCalledWith(SERVER);
     expect(interaction.editReply).toHaveBeenCalledWith({
-      content:
-        "🤔 I can't turn that into a dare: Maintain-every-game claims are not supported.",
+      content: EXPLORE_REFUSAL,
     });
   });
 
-  test("lists domain issues when the proposal is invalid", async () => {
-    const interaction = fakeInteraction();
-    await replyBbDare(interaction, SERVER, CHALLENGER, {
-      isDaresPolicyEnabled: () => Promise.resolve(true),
-      loadDareBalance: () => Promise.resolve(undefined),
-      translate: () => Promise.resolve(TRANSLATED),
-      createDare: () =>
-        Promise.resolve({
-          kind: "invalid" as const,
-          issues: ["A dare names between 1 and 5 targets"],
-        }),
-    });
-    expect(interaction.editReply).toHaveBeenCalledWith({
-      content: [
-        "🚫 That dare can't be created:",
-        "• A dare names between 1 and 5 targets",
-      ].join("\n"),
-    });
-  });
-
-  test("creates the proposal and shows the confirmation with bbd buttons", async () => {
-    const interaction = fakeInteraction({ amount: 10 });
-    const createDare = makeCreateDare();
+  test("needs a server channel to post the eventual callout in", async () => {
+    const interaction = fakeInteraction({ channelId: null });
     await replyBbDare(interaction, SERVER, CHALLENGER, {
       isDaresPolicyEnabled: () => Promise.resolve(true),
       loadDareBalance: () => Promise.resolve(100),
-      translate: () => Promise.resolve(TRANSLATED),
-      createDare,
+      dareExplore: { isExploreGuildAllowed: exploreRefused() },
     });
-
-    expect(createDare).toHaveBeenCalledWith({
-      serverId: SERVER,
-      channelId: CHANNEL,
-      challengerDiscordId: CHALLENGER,
-      originalText: "I bet Virmel can't win 7 games on Warwick",
-      translation: JSON.stringify(RECORD),
-      conditions: CONDITIONS,
-      horizonKind: "window",
-      windowDays: 7,
-      amount: 10,
-      targets: [
-        {
-          discordId: TARGET,
-          playerId: PlayerIdSchema.parse(1),
-          alias: "Virmel",
-          accounts: [
-            { puuid: "puuid-1", trackingStartedAt: "2026-01-01T00:00:00.000Z" },
-          ],
-        },
-      ],
-    });
-
-    const editReply = vi.mocked(interaction.editReply);
-    const lastCall = editReply.mock.calls.at(-1)?.[0];
-    if (
-      lastCall === undefined ||
-      typeof lastCall === "string" ||
-      !("components" in lastCall)
-    ) {
-      throw new Error("The confirmation should carry components");
-    }
-    const serialized = JSON.stringify(lastCall);
-    expect(serialized).toContain("bbd:1:c:7");
-    expect(serialized).toContain("bbd:1:n:7");
-    expect(serialized).toContain(
-      "at least 7 games where Virmel wins on Warwick",
-    );
-    expect(serialized).toContain("Confirm before");
-  });
-});
-
-describe("/bb dare v2 routing", () => {
-  test("routes the command through the persisted Explore Dare v2 flow", async () => {
-    const interaction = fakeInteraction({ amount: 20 });
-    const replyDareV2 = vi.fn(() => Promise.resolve());
-    const translate = vi.fn();
-    await replyBbDare(interaction, SERVER, CHALLENGER, {
-      isDareV2PolicyEnabled: () => Promise.resolve(true),
-      isDaresPolicyEnabled: () => Promise.resolve(false),
-      loadDareBalance: () => Promise.resolve(100),
-      replyDareV2,
-      translate,
-    });
-
-    expect(replyDareV2).toHaveBeenCalledWith(
-      interaction,
-      {
-        serverId: SERVER,
-        channelId: DiscordChannelIdSchema.parse(CHANNEL),
-        challengerDiscordId: CHALLENGER,
-        text: "I bet Virmel can't win 7 games on Warwick",
-        amount: 20,
-      },
-      undefined,
-    );
-    expect(translate).not.toHaveBeenCalled();
-  });
-
-  test("does not route to Dare v2 without relational ScoutQL", async () => {
-    const interaction = fakeInteraction({ amount: 20 });
-    const replyDareV2 = vi.fn(() => Promise.resolve());
-    await replyBbDare(interaction, SERVER, CHALLENGER, {
-      isDareV2PolicyEnabled: (flag) => Promise.resolve(flag === "dare_v2"),
-      isDaresPolicyEnabled: () => Promise.resolve(false),
-      replyDareV2,
-    });
-
-    expect(replyDareV2).not.toHaveBeenCalled();
     expect(interaction.editReply).toHaveBeenCalledWith({
-      content: "🚫 Bryan Bucks dares aren't enabled in this server.",
+      content: "🏠 Run `/bb dare` in a server channel.",
     });
   });
 });
 
 describe("/bb dare Explore access", () => {
-  test("refuses Dare v2 before creating a turn in an ineligible guild", async () => {
+  test("refuses before creating a turn in an ineligible guild", async () => {
     const interaction = fakeInteraction({ amount: 20 });
+    const runTurn = vi.fn();
 
-    await replyBbDareV2(
-      interaction,
-      {
-        serverId: SERVER,
-        channelId: DiscordChannelIdSchema.parse(CHANNEL),
-        challengerDiscordId: CHALLENGER,
-        text: "I bet Virmel can't win 7 games on Warwick",
-        amount: 20,
-      },
-      { isExploreGuildAllowed: () => false },
-    );
+    await replyBbDare(interaction, SERVER, CHALLENGER, {
+      isDaresPolicyEnabled: () => Promise.resolve(true),
+      loadDareBalance: () => Promise.resolve(100),
+      dareExplore: { isExploreGuildAllowed: () => false, runTurn },
+    });
 
     expect(interaction.editReply).toHaveBeenCalledWith({
-      content: "Scout Explore is not enabled in this server.",
+      content: EXPLORE_REFUSAL,
     });
+    expect(runTurn).not.toHaveBeenCalled();
   });
 });

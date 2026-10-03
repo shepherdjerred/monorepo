@@ -5,7 +5,7 @@ import {
   refreshSettledPoolMessages,
 } from "#src/betting/markets/postmatch-hook.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
-import { defaultDareV2CalloutDependencies } from "#src/betting/dares/presentation/dare-callout-v2.ts";
+import { defaultDareCalloutDependencies } from "#src/betting/dares/presentation/dare-callout.ts";
 
 describe("refreshSettledPoolMessages", () => {
   test("removes straight-bet controls once even when no outcome is announced", async () => {
@@ -46,7 +46,7 @@ describe("refreshPendingDareV2CalloutsWithoutBlocking", () => {
 
     await expect(
       refreshPendingDareV2CalloutsWithoutBlocking(
-        defaultDareV2CalloutDependencies,
+        defaultDareCalloutDependencies,
         refresh,
       ),
     ).resolves.toBeUndefined();

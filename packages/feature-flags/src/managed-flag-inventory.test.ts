@@ -55,17 +55,6 @@ function exploreModel(environment: string) {
   ).find((flag) => flag.key === "scout-explore-model")?.default;
 }
 
-function dareExtendedContractsFlag(environment: string) {
-  const flag = materializeManagedNamespaceEnvironment(
-    managedFlagInventory,
-    environment,
-    "scout",
-  ).find((candidate) => candidate.key === "dare_extended_contracts_enabled");
-  if (flag === undefined)
-    throw new Error("Dare extended contracts flag missing");
-  return flag;
-}
-
 function scoutPolicyFlag(environment: string, key: string) {
   const flag = materializeManagedNamespaceEnvironment(
     managedFlagInventory,
@@ -136,8 +125,8 @@ describe("ManagedFlagInventorySchema", () => {
     ).toContain("temporal-call-graph-tracing");
   });
 
-  test("enables extended Dare contracts only for the beta guild", () => {
-    const betaFlag = dareExtendedContractsFlag("beta");
+  test("enables Dares only for the beta guild", () => {
+    const betaFlag = scoutPolicyFlag("beta", "bucks_dares_enabled");
     expect(betaFlag.default).toBe(false);
     expect(betaFlag.rollouts).toEqual([
       expect.objectContaining({
@@ -146,7 +135,7 @@ describe("ManagedFlagInventorySchema", () => {
       }),
     ]);
 
-    const prodFlag = dareExtendedContractsFlag("prod");
+    const prodFlag = scoutPolicyFlag("prod", "bucks_dares_enabled");
     expect(prodFlag.default).toBe(false);
     expect(prodFlag.rollouts).toEqual([]);
   });

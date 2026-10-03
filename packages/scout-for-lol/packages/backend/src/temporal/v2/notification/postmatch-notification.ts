@@ -21,7 +21,7 @@ import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-conte
 import type { ScoutV2AttestedReportArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
 import type { ScoutV2ReportComponentsSchema } from "#src/temporal/v2/notification-receipts.ts";
 import type { z } from "zod";
-import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
+import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture.ts";
 
 /**
  * The post-match report: what a `postmatch` intent renders and delivers.

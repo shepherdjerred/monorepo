@@ -67,7 +67,7 @@ describe("storable schemas", () => {
   });
 
   test("storability is a check, not a refinement, so it survives JSON Schema", () => {
-    // The dare contract and paraphrase-corpus JSON Schemas are generated from
+    // The Explore tool JSON Schemas for Dare drafts are generated from
     // schemas built on these types. A `.refine` would validate identically
     // and emit nothing, silently dropping the Int32 ceiling from the
     // published contract.

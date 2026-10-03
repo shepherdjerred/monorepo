@@ -17,8 +17,9 @@ reference. Load `scout-development` for its working procedure.
   same services the web forms call. Confirmation intents are one shared table
   and protocol with Dares: single-use, expiring, claimed by a guarded write
   before any effect.
-- Version stored betting and Dare semantics. Existing records keep their
-  original cross-game or same-game interpretation.
+- Version stored betting semantics; existing bets keep their original
+  cross-game or same-game interpretation. Dares are v3 SQL contracts only;
+  `compilerVersion` is stored metadata, not a dialect switch.
 - Challenger stake, pile-ons, pot total, settlement, and Discord presentation
   are different values. Do not collapse them.
 - What a Bucks quantity means and whether a column can hold it are separate.

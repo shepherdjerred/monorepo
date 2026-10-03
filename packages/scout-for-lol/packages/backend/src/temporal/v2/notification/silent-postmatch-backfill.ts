@@ -19,7 +19,7 @@ import { createLogger } from "#src/logger.ts";
 import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-context.ts";
 import { renderMatchNotificationArtifactV2 } from "#src/temporal/v2/notification-render.ts";
 import { scoutV2NotificationRenderReceiptKind } from "#src/temporal/v2/notification-receipts.ts";
-import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
+import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture.ts";
 
 const logger = createLogger("scout-v2-silent-postmatch-backfill");
 

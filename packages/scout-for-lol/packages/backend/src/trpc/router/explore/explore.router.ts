@@ -15,8 +15,8 @@ import {
   ExploreMentionCandidateSchema,
   ExploreMentionSearchSchema,
 } from "@scout-for-lol/data";
-import { consumeDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume-v2.ts";
-import { tryEnsureDareV2Callout } from "#src/betting/dares/presentation/dare-callout-v2.ts";
+import { consumeDareConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume.ts";
+import { tryEnsureDareCallout } from "#src/betting/dares/presentation/dare-callout.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
@@ -193,7 +193,7 @@ export const exploreRouter = router({
       if (intent.dareId === null) {
         throw confirmationNotFound();
       }
-      const outcome = await consumeDareV2ConfirmationIntent({
+      const outcome = await consumeDareConfirmationIntent({
         intentId: input.intentId,
         serverId: DiscordGuildIdSchema.parse(intent.serverId),
         actorDiscordId: userId,
@@ -206,7 +206,7 @@ export const exploreRouter = router({
         "insufficient",
       ].includes(outcome.kind)
         ? null
-        : await tryEnsureDareV2Callout(intent.dareId);
+        : await tryEnsureDareCallout(intent.dareId);
       return { ...outcome, callout };
     }),
 

@@ -6,6 +6,7 @@ surfaces: [web, discord, voice]
 tripwires:
   - A tendency requires repeated evidence; label small or mixed samples instead of turning them into a rule.
 ---
+
 ## Player tendencies
 
 Resolve the player, inspect coverage, and acquire ranked history when the requested recent sample is missing. Use ScoutQL to bound exactly the newest requested games and report the actual number returned.

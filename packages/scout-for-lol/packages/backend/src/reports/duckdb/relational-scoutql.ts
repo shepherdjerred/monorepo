@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DARE_V2_MAX_QUERY_LENGTH } from "@scout-for-lol/data";
+import { DARE_MAX_QUERY_LENGTH } from "@scout-for-lol/data";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import {
   relationalScoutQlArrayValue as arrayValue,
@@ -16,8 +16,8 @@ import { relationalScoutQlOutputIssues } from "#src/reports/duckdb/relational-sc
 import {
   appendDareSqlV3DeterminismIssues,
   DARE_SQL_V3_FUNCTIONS,
-  DARE_SQL_V3_SOURCES,
-} from "#src/reports/duckdb/dare-sql-v3-profile.ts";
+  DARE_SQL_SOURCES,
+} from "#src/reports/duckdb/dare-sql-profile.ts";
 import {
   appendRelationalScoutQlCatalogIssues,
   appendRelationalScoutQlLimitIssues,
@@ -311,9 +311,7 @@ function semanticIssues(
     targetKeys,
     allowedTargetKeys,
     allowedSources:
-      profile === "dare-sql-v3"
-        ? DARE_SQL_V3_SOURCES
-        : RELATIONAL_SCOUTQL_SOURCES,
+      profile === "dare-sql-v3" ? DARE_SQL_SOURCES : RELATIONAL_SCOUTQL_SOURCES,
     allowedFunctions:
       profile === "dare-sql-v3"
         ? DARE_SQL_V3_FUNCTIONS
@@ -400,11 +398,11 @@ async function validateRelationalScoutQlWithLimits(
   limits: RelationalScoutQlComplexityLimits,
   profile: "relational-v2" | "dare-sql-v3" = "relational-v2",
 ): Promise<RelationalScoutQlValidation> {
-  if (input.queryText.length > DARE_V2_MAX_QUERY_LENGTH) {
+  if (input.queryText.length > DARE_MAX_QUERY_LENGTH) {
     return {
       kind: "invalid",
       issues: [
-        `ScoutQL may be at most ${DARE_V2_MAX_QUERY_LENGTH.toString()} characters.`,
+        `ScoutQL may be at most ${DARE_MAX_QUERY_LENGTH.toString()} characters.`,
       ],
     };
   }
@@ -480,7 +478,7 @@ export async function validateCanonicalDareScoutQl(input: {
   );
 }
 
-export async function validateDareSqlV3(input: {
+export async function validateDareSql(input: {
   queryText: string;
   allowedTargetKeys: readonly string[];
 }): Promise<RelationalScoutQlValidation> {

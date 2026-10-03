@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { DareNotificationIntentRecordSchema } from "#src/database/durable/intent-row.ts";
 import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 
@@ -7,10 +10,11 @@ const stubs = vi.hoisted(() => ({
   findUnique: vi.fn(),
   isPolicyEnabled: vi.fn(),
   getPreferences: vi.fn(),
+  refreshCallout: vi.fn(),
 }));
 
 vi.mock("#src/database/index.ts", () => ({
-  prisma: { bucksDareV2: { findUnique: stubs.findUnique } },
+  prisma: { bucksDare: { findUnique: stubs.findUnique } },
 }));
 vi.mock("#src/configuration/flags.ts", () => ({
   isPolicyEnabled: stubs.isPolicyEnabled,
@@ -18,9 +22,15 @@ vi.mock("#src/configuration/flags.ts", () => ({
 vi.mock("#src/betting/notify/notification-preferences.ts", () => ({
   getBucksNotificationPreferences: stubs.getPreferences,
 }));
+vi.mock("#src/betting/dares/presentation/dare-callout.ts", () => ({
+  refreshDareCallout: stubs.refreshCallout,
+}));
 
-const { buildDareStatusNotificationMessageV2, dareStatusSuppressionV2 } =
-  await import("#src/temporal/v2/notification/dare-status-notification.ts");
+const {
+  afterDareStatusDeliveredV2,
+  buildDareStatusNotificationMessageV2,
+  dareStatusSuppressionV2,
+} = await import("#src/temporal/v2/notification/dare-status-notification.ts");
 
 const GUILD_ID = "100000000000000902";
 const ACCOUNT_ID = "200000000000000902";
@@ -43,6 +53,46 @@ function record(category: "lifecycle" | "progress" = "progress") {
         category,
         kind: "advanced",
         summary: "One win remains.",
+      }),
+      state: { kind: "ready" },
+    },
+  });
+}
+
+const CHANNEL_ID = "300000000000000902";
+const CHALLENGER_ID = DiscordAccountIdSchema.parse("200000000000000903");
+const PAYEE_ID = DiscordAccountIdSchema.parse("200000000000000904");
+
+function resultRecord(target: "channel" | "dm" = "channel") {
+  return DareNotificationIntentRecordSchema.parse({
+    dareId: 902,
+    intent: {
+      key: "dare-result:902:revision:1",
+      kind: "dare-status",
+      origin: { kind: "live" },
+      target:
+        target === "channel"
+          ? { kind: "channel", channelId: CHANNEL_ID }
+          : { kind: "dm", accountId: ACCOUNT_ID },
+      freshnessDeadline: "2026-10-07T00:00:00.000Z",
+      createdAt: "2026-09-30T00:00:00.000Z",
+      attemptCount: 0,
+      announcement: dareStatusAnnouncementCodec.serialize({
+        dareId: 902,
+        revision: 1,
+        guildId: DiscordGuildIdSchema.parse(GUILD_ID),
+        category: "lifecycle",
+        kind: "achieved",
+        summary: "Virmel wins on Twisted Fate",
+        result: {
+          resolution: "achieved",
+          challengerDiscordId: CHALLENGER_ID,
+          plainLanguage: "Virmel wins on Twisted Fate",
+          potTotal: 30,
+          payouts: [{ discordId: PAYEE_ID, alias: "Virmel", net: 28, fee: 2 }],
+          refunds: [],
+          voidReason: null,
+        },
       }),
       state: { kind: "ready" },
     },
@@ -89,5 +139,49 @@ describe("Dare V2 notification", () => {
     await expect(dareStatusSuppressionV2(record())).rejects.toThrow(
       "no longer agree",
     );
+  });
+});
+
+describe("the Dare result post", () => {
+  test("renders the result and pings exactly the people it names", () => {
+    expect(buildDareStatusNotificationMessageV2(resultRecord())).toEqual({
+      content: [
+        "✅ **Scout Dare #902: ACHIEVED**",
+        "Virmel wins on Twisted Fate",
+        `Funded by <@${CHALLENGER_ID}>. The **30 BB** pot pays out:`,
+        `• **Virmel** <@${PAYEE_ID}> — +**28 BB** · **2 BB** fee`,
+      ].join("\n"),
+      allowedMentions: { parse: [], users: [CHALLENGER_ID, PAYEE_ID] },
+    });
+  });
+
+  test("answers to the guild flag, not to a participant's DM preferences", async () => {
+    stubs.getPreferences.mockResolvedValue({
+      dareLifecycleDms: false,
+      dareProgressDms: false,
+    });
+    expect(await dareStatusSuppressionV2(resultRecord())).toBeUndefined();
+    expect(stubs.getPreferences).not.toHaveBeenCalled();
+
+    stubs.isPolicyEnabled.mockResolvedValue(false);
+    expect(await dareStatusSuppressionV2(resultRecord())).toBe(
+      "feature-disabled",
+    );
+  });
+
+  test("refuses a result payload aimed at a DM", () => {
+    expect(() =>
+      buildDareStatusNotificationMessageV2(resultRecord("dm")),
+    ).toThrow("disagrees with its announcement");
+  });
+
+  test("refreshes the callout after the channel post, and only then", async () => {
+    stubs.refreshCallout.mockResolvedValue(undefined);
+    expect(await afterDareStatusDeliveredV2(resultRecord())).toBe("refreshed");
+    expect(stubs.refreshCallout).toHaveBeenCalledWith(902);
+
+    stubs.refreshCallout.mockClear();
+    expect(await afterDareStatusDeliveredV2(record())).toBe("skipped");
+    expect(stubs.refreshCallout).not.toHaveBeenCalled();
   });
 });
