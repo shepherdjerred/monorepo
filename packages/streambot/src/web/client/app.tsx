@@ -166,6 +166,28 @@ function ContextBar({ remote }: { remote: Remote }) {
           ))}
         </select>
       </label>
+      {remote.snapshot?.playbackChannel != null && (
+        <label>
+          Streambot channel
+          <select
+            aria-label="Streambot channel"
+            value={remote.snapshot.playbackChannel}
+            disabled={remote.busy}
+            onChange={(event) => {
+              void remote.send({
+                action: "select",
+                number: Number(event.target.value),
+              });
+            }}
+          >
+            {remote.snapshot.playbackChannels.map((slot) => (
+              <option key={slot.number} value={slot.number}>
+                {slot.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <div className="channel-status">
         <span
           className={

@@ -10,6 +10,11 @@ import {
   type SessionHandle,
 } from "@shepherdjerred/streambot/session/session-types.ts";
 import { sessionRevision } from "@shepherdjerred/streambot/session/session-revision.ts";
+import { ChannelSelection } from "@shepherdjerred/streambot/session/channel-selection.ts";
+import {
+  PlaybackChannelNumberSchema,
+  type PlaybackChannelNumber,
+} from "@shepherdjerred/streambot/types/playback-channel.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -125,6 +130,13 @@ export function webFixture(
   let advanced = true;
   let sportsEnabled = true;
   let allocated = false;
+  let numbered = false;
+  let allocatedChannel: PlaybackChannelNumber | undefined;
+  const selection = new ChannelSelection();
+  const selected = () =>
+    numbered
+      ? selection.get({ guildId: GUILD, channelId: CHANNEL, userId: USER })
+      : undefined;
   let allocations = 0;
   let position = 120;
   let subtitleBusy = false;
@@ -217,17 +229,26 @@ export function webFixture(
     musicOverVoice: () => Promise.resolve(true),
     sportsStreaming: () => Promise.resolve(sportsEnabled),
   };
-  const revision = () => (allocated ? sessionRevision(owner) : null);
+  const revision = (_guild = GUILD, _channel = CHANNEL, slot = selected()) =>
+    allocated && slot === allocatedChannel ? sessionRevision(owner) : null;
   const playback = new WebPlayback({
     sessions: {
-      getExisting: () => (allocated ? handle : null),
-      ensureForPlay: () => {
+      numbered: {
+        selected: () => Promise.resolve(selected()),
+        selection,
+        maximum: () => 3,
+      },
+      getExisting: (_guild, _channel, slot) =>
+        allocated && slot === allocatedChannel ? handle : null,
+      ensureForPlay: (params) => {
         allocated = true;
+        allocatedChannel = params.playbackChannel;
         allocations += 1;
         return handle;
       },
-      releaseUnused: () => {
-        if (actor.getSnapshot().matches("idle")) allocated = false;
+      releaseUnused: (_guild, _channel, slot) => {
+        if (slot === allocatedChannel && actor.getSnapshot().matches("idle"))
+          allocated = false;
       },
       revision,
     },
@@ -317,11 +338,13 @@ export function webFixture(
           guildId: GUILD,
           channelId: CHANNEL,
           revision: revision(),
+          playbackChannel: selected() ?? null,
           ...action,
         }),
       }),
     seed: async () => {
       allocated = true;
+      allocatedChannel = selected();
       actor.send({
         type: "ADD",
         source: {
@@ -337,6 +360,14 @@ export function webFixture(
     },
     setChannel: (value: typeof channel) => {
       channel = value;
+    },
+    enableNumbered: (slot = 2) => {
+      numbered = true;
+      selection.select(
+        { guildId: GUILD, channelId: CHANNEL, userId: USER },
+        PlaybackChannelNumberSchema.parse(slot),
+        3,
+      );
     },
     setMember: (value: boolean) => {
       member = value;

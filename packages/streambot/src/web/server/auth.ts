@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { WebError } from "./errors.ts";
 import {
@@ -34,7 +34,8 @@ export function cookieValue(request: Request, name: string): string | null {
 }
 
 export class WebAuth {
-  private readonly states = new Map<string, number>();
+  private readonly stateSecret = nonce();
+  private readonly usedStates = new Map<string, number>();
   constructor(
     private readonly deps: {
       bootstrap: WebBootstrap;
@@ -71,17 +72,8 @@ export class WebAuth {
   }
 
   start(): Response {
-    const now = Date.now();
-    for (const [key, expires] of this.states)
-      if (expires <= now) this.states.delete(key);
-    if (this.states.size >= 1000)
-      throw new WebError(
-        429,
-        "auth_busy",
-        "Sign-in is busy. Try again shortly.",
-      );
-    const state = nonce();
-    this.states.set(digest(state), now + 5 * 60 * 1000);
+    const payload = String(Date.now() + 5 * 60 * 1000) + "." + nonce();
+    const state = payload + "." + this.signState(payload);
     const target = new URL("https://discord.com/oauth2/authorize");
     target.search = new URLSearchParams({
       client_id: this.deps.applicationId(),
@@ -99,13 +91,13 @@ export class WebAuth {
     const params = new URL(request.url).searchParams;
     const state = params.get("state");
     const saved = cookieValue(request, STATE_COOKIE);
-    const expires = state === null ? undefined : this.states.get(digest(state));
-    if (state !== null) this.states.delete(digest(state));
+    const expires = state === null ? null : this.stateExpiry(state);
     if (
       state === null ||
       saved === null ||
-      expires === undefined ||
+      expires === null ||
       expires <= Date.now() ||
+      this.usedStates.has(digest(state)) ||
       !timingSafeEqual(
         Buffer.from(digest(state), "hex"),
         Buffer.from(digest(saved), "hex"),
@@ -113,6 +105,15 @@ export class WebAuth {
     ) {
       throw new WebError(400, "oauth_state", "Sign-in expired. Start again.");
     }
+    // Only callbacks consume memory. The authorization code is independently single-use
+    // at Discord; this bounded cache also rejects immediate replay before any external I/O.
+    for (const [key, deadline] of this.usedStates)
+      if (deadline <= Date.now()) this.usedStates.delete(key);
+    if (this.usedStates.size >= 1000) {
+      const oldest = this.usedStates.keys().next().value;
+      if (oldest !== undefined) this.usedStates.delete(oldest);
+    }
+    this.usedStates.set(digest(state), expires);
     const code = params.get("code");
     if (code === null || params.has("error"))
       return this.redirect("/?login=cancelled", [
@@ -170,6 +171,29 @@ export class WebAuth {
 
   private callbackUrl(): string {
     return this.deps.bootstrap.publicOrigin + "/api/auth/discord/callback";
+  }
+  private signState(payload: string): string {
+    return createHmac("sha256", this.stateSecret).update(payload).digest("hex");
+  }
+  private stateExpiry(state: string): number | null {
+    const parts = state.split(".");
+    if (parts.length !== 3) return null;
+    const [expiry, random, signature] = parts;
+    if (
+      expiry === undefined ||
+      random === undefined ||
+      signature === undefined ||
+      !/^\d+$/u.test(expiry) ||
+      !/^[a-f0-9]{64}$/u.test(signature)
+    )
+      return null;
+    const expected = this.signState(expiry + "." + random);
+    return timingSafeEqual(
+      Buffer.from(signature, "hex"),
+      Buffer.from(expected, "hex"),
+    )
+      ? Number(expiry)
+      : null;
   }
   private cookie(
     name: string,

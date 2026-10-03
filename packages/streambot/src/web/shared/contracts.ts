@@ -61,6 +61,10 @@ export const PlayerItemSchema = z.strictObject({
 });
 export const SnapshotSchema = z.strictObject({
   channel: GuildSchema.nullable(),
+  playbackChannel: z.number().int().positive().nullable(),
+  playbackChannels: z.array(
+    z.strictObject({ number: z.number().int().positive(), label: z.string() }),
+  ),
   revision: z.string().nullable(),
   state: z.string(),
   current: PlayerItemSchema.nullable(),
@@ -79,6 +83,7 @@ const commandBase = {
   guildId: z.string().regex(/^\d+$/u),
   channelId: z.string().regex(/^\d+$/u),
   revision: z.string().nullable(),
+  playbackChannel: z.number().int().positive().nullable().default(null),
 };
 const SimpleCommandSchema = z.strictObject({
   ...commandBase,
@@ -86,6 +91,11 @@ const SimpleCommandSchema = z.strictObject({
 });
 export const CommandSchema = z.union([
   SimpleCommandSchema,
+  z.strictObject({
+    ...commandBase,
+    action: z.literal("select"),
+    number: z.number().int().positive(),
+  }),
   z.strictObject({
     ...commandBase,
     action: z.literal("play"),

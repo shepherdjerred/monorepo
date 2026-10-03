@@ -8,6 +8,7 @@ const fixture = webFixture(
   origin,
   path.resolve(import.meta.dirname, "../dist/web"),
 );
+fixture.enableNumbered();
 await fixture.seed();
 const server = Bun.serve({
   hostname: "127.0.0.1",

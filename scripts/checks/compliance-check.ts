@@ -318,7 +318,6 @@ packages/glitter:typecheck
 packages/resume:test
 packages/resume:lint
 packages/resume:typecheck
-packages/streambot:build
 packages/monarch:build
 packages/llm-observability:build
 packages/discord-plays-core:build

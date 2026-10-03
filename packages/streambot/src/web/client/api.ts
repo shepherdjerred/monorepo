@@ -35,7 +35,7 @@ export function commandRequest(
 }
 export type RemoteAction = WebCommand extends infer Command
   ? Command extends WebCommand
-    ? Omit<Command, "guildId" | "channelId" | "revision">
+    ? Omit<Command, "guildId" | "channelId" | "revision" | "playbackChannel">
     : never
   : never;
 export function elapsed(seconds: number | null): string {

@@ -41,14 +41,17 @@ export function createWebHandler(deps: {
     ...(deps.fetch === undefined ? {} : { fetch: deps.fetch }),
   });
   const actions = new WebActions(deps.playback);
-  const requests = new Map<string, { count: number; resets: number }>();
+  const requests = new Map<
+    string,
+    { count: number; artwork: number; resets: number }
+  >();
 
   async function authenticated(
     request: Request,
     url: URL,
     session: WebSession,
   ): Promise<Response> {
-    limitRequests(session.key);
+    limitRequests(session.key, url.pathname === "/api/artwork");
     if (request.method === "POST") auth.mutation(request, session);
     if (url.pathname === "/api/auth/logout" && request.method === "POST")
       return auth.logout(request);
@@ -128,16 +131,21 @@ export function createWebHandler(deps: {
     throw new WebError(404, "not_found", "This endpoint does not exist.");
   }
 
-  function limitRequests(key: string): void {
+  function limitRequests(key: string, artwork: boolean): void {
     const now = Date.now();
     for (const [entryKey, entry] of requests)
       if (entry.resets <= now) requests.delete(entryKey);
-    const entry = requests.get(key) ?? { count: 0, resets: now + 60_000 };
-    entry.count += 1;
+    const entry = requests.get(key) ?? {
+      count: 0,
+      artwork: 0,
+      resets: now + 60_000,
+    };
+    if (artwork) entry.artwork += 1;
+    else entry.count += 1;
     if (requests.size >= 2000 && !requests.has(key))
       throw new WebError(429, "busy", "The remote is busy. Try again shortly.");
     requests.set(key, entry);
-    if (entry.count > 120)
+    if (artwork ? entry.artwork > 600 : entry.count > 120)
       throw new WebError(
         429,
         "rate_limit",

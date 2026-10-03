@@ -16,21 +16,26 @@ Browsing alone does not consume one.
 ## Identity follows the viewer
 
 Discord OAuth establishes the viewer's identity and shared servers.
-Every media request checks current membership again.
+Media requests share a five-second successful membership cache and coalesce concurrent Discord lookups.
+Gateway removals invalidate it immediately; playback actions force a fresh check.
 Every playback action uses the viewer's current voice channel from the bot's gateway state.
 Client-supplied user identities cannot authorize an action.
 
 The web remote gives everyone currently in that voice channel shared control.
 Its authorization adapter retains the real requester when adding media.
+In numbered rooms, the selector shares the viewer's personal channel with Discord commands.
+Channel 1 plays mic audio; channel 2 and higher play Go Live video.
+Each slot keeps its own player and queue. Selecting one does not acquire a userbot.
+Legacy mixed queues keep their existing behavior until they finish.
 Existing slash, card, and voice permissions retain their defaults in
 the [shared controls](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/commands/playback-controls.ts).
 
 ## A page can become stale
 
 A queue position has meaning only within the session revision the viewer saw.
-Actions include that revision and the voice-channel identity.
-The server rechecks both after asynchronous media resolution and before dispatch.
-A changed queue or voice channel produces a refreshable conflict instead of controlling a different item.
+Actions include that revision, the voice-channel identity, and the selected playback slot.
+The server rechecks them after asynchronous media resolution and before dispatch.
+A changed queue, voice channel, or personal selection produces a refreshable conflict instead of controlling a different item.
 
 Subtitle choices refer to tracks actually enumerated from the current source.
 They expire and are bound to the viewer, source, and revision.

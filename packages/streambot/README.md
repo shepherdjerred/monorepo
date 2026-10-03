@@ -62,6 +62,8 @@ therefore splits identities:
   establishes identity; live guild membership and voice state authorize each
   media request. Everyone currently in the channel can control playback through
   the web remote. Slash, voice, and card permissions keep their existing policy.
+  Its selector shares the viewer's personal numbered channel with Discord commands;
+  each slot retains its own queue, and legacy sessions finish in their original mode.
   Media paths and subtitle references stay on the server behind opaque IDs.
   Library, queue, and player artwork use the existing TMDB credential; YouTube
   discovery shows its real thumbnails. Poster lookup is lazy and does not hold

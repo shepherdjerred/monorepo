@@ -9,7 +9,8 @@
   },
   "imports": {
     "#architecture": "./architecture.config.ts",
-    "#web-fixture": "./test/web/web-fixture.ts"
+    "#web-fixture": "./test/web/web-fixture.ts",
+    "#numbered-fixture": "./test/session/numbered-fixture.ts"
   },
   "files": [
     "src"

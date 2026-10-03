@@ -17,7 +17,8 @@ Activate the remote only after its Discord OAuth credential and redirect are pro
    `createStreambotDeployment` in the owning media chart. This adds the required
    secret reference, web listener, health probes, Service, and shared tunnel binding.
    The [deployment source](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/streambot/streambot.ts)
-   owns this wiring. The Cloudflare OpenTofu stack owns its DNS record.
+   owns this wiring. Add the matching `streambot` CNAME to the Cloudflare OpenTofu
+   stack in the same activation change, after the web origin is ready.
 4. Enable the web remote gate for the intended beta server or users.
    Consult the package README and feature-flag inventory for the exact keys and defaults.
    Keep the existing assistant gate enabled when testing pause, resume, or play-now.
