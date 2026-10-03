@@ -65,7 +65,7 @@ export function createPlexDeployment(
     withCommonProps({
       resources: {
         // Reserve the baseline; share spare RAM for transcoding bursts.
-        memory: { request: Size.gibibytes(4), limit: Size.gibibytes(12) },
+        memory: { request: Size.gibibytes(4), limit: Size.gibibytes(16) },
       },
       image: `plexinc/pms-docker:${versions["plexinc/pms-docker"]}`,
       envVariables: {
