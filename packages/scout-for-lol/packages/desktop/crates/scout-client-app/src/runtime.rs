@@ -18,7 +18,7 @@ use scout_client_core::diagnostics::{
 use scout_client_core::lcu::{
     LcuClient, LcuEndpoint, LcuError, LeagueLockfile, LiveClient, discover_lockfile,
 };
-use scout_client_core::outbox::ObservationOutbox;
+use scout_client_core::outbox::{LobbyBinding, ObservationOutbox};
 use scout_client_core::protocol::{
     CreatePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationEnvelope,
     ObservationKind, ObservationOutcome, ObservationQuarantineReason, ObservationReceipt,
@@ -1421,6 +1421,7 @@ async fn collect_once(
     .await?;
 
     collect_live_frame(live_client, outbox, payloads, Some(&local_puuid)).await?;
+    bind_observed_lobby(outbox, payloads, diagnostics)?;
     remember_game_start(outbox, payloads)?;
 
     if tick_number % 15 == 1 {
@@ -1546,6 +1547,80 @@ fn remember_end_of_game(outbox: &ObservationOutbox, payload: &Value) -> Result<(
     outbox
         .remember_end_of_game(&game_id, &body)
         .map_err(|error| error.to_string())
+}
+
+/// Record the lobby-to-game join that only this client is in a position to see.
+///
+/// LCU answers `partyId` on the lobby and a real `gameId` only once the game is
+/// in progress, and the in-progress session carries no lobby identity at all —
+/// a live capture across all four phases found no field shared between them.
+/// So nothing downstream can reconstruct which lobby a game came from, and the
+/// lobby is where the full roster lives: bots, custom teams, everyone Riot's
+/// spectator API will not report. Remembering the lobby while it is visible and
+/// claiming it when a game starts is what lets the server attach that roster to
+/// a real match.
+///
+/// Both sides are durable, so this survives a client restart between champion
+/// select and the game.
+fn bind_observed_lobby(
+    outbox: &ObservationOutbox,
+    payloads: &HashMap<String, Vec<u8>>,
+    diagnostics: &Diagnostics,
+) -> Result<(), String> {
+    let observed_at_millis = chrono::Utc::now().timestamp_millis();
+    if let Some(lobby) = payloads.get("lobby") {
+        let lobby = serde_json::from_slice::<Value>(lobby).map_err(|error| error.to_string())?;
+        if let Some(lobby_id) = find_string(&lobby, &["partyId", "lobbyId"]) {
+            outbox
+                .remember_observed_lobby(&lobby_id, observed_at_millis)
+                .map_err(|error| error.to_string())?;
+        }
+    }
+    let Some(session) = payloads.get("gameflow_session") else {
+        return Ok(());
+    };
+    let session = serde_json::from_slice::<Value>(session).map_err(|error| error.to_string())?;
+    if find_string(&session, &["phase"]).as_deref() != Some("InProgress") {
+        return Ok(());
+    }
+    let Some(game_id) = find_string(&session, &["gameId"]) else {
+        return Ok(());
+    };
+    // League reports `gameId: 0` for "no game", and the phase can flip before
+    // `gameData` is filled in. Binding that would spend this game's one
+    // recorded outcome on a placeholder.
+    if game_id == "0" {
+        return Ok(());
+    }
+    // `InProgress` is read on every tick for the length of a match. The outbox
+    // records one outcome per game so this reports the decision exactly once,
+    // rather than repeating it a few hundred times and burying the rest.
+    let (outcome, detail) = match outbox
+        .bind_game_to_lobby(&game_id, observed_at_millis)
+        .map_err(|error| error.to_string())?
+    {
+        LobbyBinding::AlreadyRecorded => return Ok(()),
+        LobbyBinding::Bound(_) => {
+            diagnostics.counters().lobby_bound();
+            (DiagnosticOutcome::Succeeded, "bound to the observed lobby")
+        }
+        LobbyBinding::Unwitnessed => (
+            DiagnosticOutcome::Skipped,
+            "no lobby was observed for this game",
+        ),
+    };
+    diagnostics.record(
+        DiagnosticEvent::new(
+            DiagnosticLevel::Info,
+            DiagnosticCategory::Protocol,
+            "bind_lobby",
+            outcome,
+        )
+        // The lobby and game ids are deliberately absent: a diagnostic carries
+        // the shape of what happened, never an identity.
+        .with_detail(detail),
+    );
+    Ok(())
 }
 
 fn remember_game_start(
@@ -2017,7 +2092,19 @@ fn create_observation(
     .map_err(|error| error.to_string())?;
     observation.local_puuid = local_puuid.map(str::to_owned);
     observation.game_id = find_string(&observation.payload, &["gameId"]);
-    observation.lobby_id = find_string(&observation.payload, &["lobbyId", "partyId"]);
+    observation.lobby_id = match find_string(&observation.payload, &["lobbyId", "partyId"]) {
+        // The lobby says which party it is; nothing else does. An in-game
+        // observation names a game whose lobby only this device witnessed, so
+        // fall back to the join recorded when that game started — otherwise the
+        // roster and the match it belongs to never meet.
+        None => match observation.game_id.as_deref() {
+            Some(game_id) => outbox
+                .lobby_for_game(game_id)
+                .map_err(|error| error.to_string())?,
+            None => None,
+        },
+        found => found,
+    };
     observation.platform_id = find_string(&observation.payload, &["platformId"]);
     observation.league_patch = find_string(&observation.payload, &["gameVersion"]);
     observation.validate().map_err(|error| error.to_string())?;
