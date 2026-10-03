@@ -48,8 +48,7 @@ import { fetchHistoryRosters } from "#src/reports/duckdb/community/history-roste
 
 /**
  * Below this many games a rate is noise, so the UI labels it rather than
- * printing a confident number. Matches the pairing job's existing threshold
- * (`league/tasks/pairing/weekly-update.ts`).
+ * printing a confident number. The domain owns the shared threshold.
  */
 const MIN_GAMES_FOR_RATE = LOW_SAMPLE_GAME_THRESHOLD;
 

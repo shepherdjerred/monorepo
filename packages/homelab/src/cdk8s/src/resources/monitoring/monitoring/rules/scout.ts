@@ -318,16 +318,14 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            SCOUT_GATEWAY_OWNER_BY_STAGE.flatMap(
-              ({ environment, topology }) => {
-                const roleMatcher = scoutGatewayAlertRoleMatcher(topology);
-                const selector = `discord_connection_status{environment="${environment}",${roleMatcher}}`;
-                return [
-                  `(max by (environment) (${selector}) == 0)`,
-                  `absent(${selector})`,
-                ];
-              },
-            ).join(" or "),
+            SCOUT_GATEWAY_OWNER_BY_STAGE.flatMap(({ environment }) => {
+              const roleMatcher = scoutGatewayAlertRoleMatcher();
+              const selector = `discord_connection_status{environment="${environment}",${roleMatcher}}`;
+              return [
+                `(max by (environment) (${selector}) == 0)`,
+                `absent(${selector})`,
+              ];
+            }).join(" or "),
           ),
           for: "5m",
           labels: {

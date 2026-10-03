@@ -3,14 +3,9 @@ import { z } from "zod";
 import {
   findResource,
   scoutResources,
-  scoutResourcesWithGatewayTopology,
   temporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/scout-test-resources.ts";
-import {
-  gatewayTopologyRunsRole,
-  SCOUT_GATEWAY_TOPOLOGY,
-  SCOUT_STAGES,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 import { SCOUT_GATEWAY_OWNER_BY_STAGE } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
 import { scoutGatewayClientIngress } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 
@@ -113,12 +108,14 @@ describe("Scout runtime role assignment", () => {
   test("a split stage's backend Deployment owns the application role", () => {
     const backend = RoleDeploymentSchema.parse(
       findResource(
-        scoutResourcesWithGatewayTopology("beta", "split"),
+        scoutResources("beta"),
         "Deployment",
         "scout-beta-scout-backend",
       ).spec,
     );
-    expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBe("application");
+    expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBe(
+      "application-isolated",
+    );
   });
 
   test("beta renders a gateway Deployment carrying the gateway role", () => {
@@ -169,15 +166,6 @@ describe("Scout runtime role assignment", () => {
         ),
       ).toBe(true);
     }
-  });
-});
-
-describe("Scout split-topology opt-in", () => {
-  test("both stages run a split gateway", () => {
-    expect(SCOUT_GATEWAY_TOPOLOGY).toEqual({
-      beta: "split",
-      prod: "split",
-    });
   });
 });
 
@@ -414,11 +402,8 @@ describe("Scout gateway network boundary", () => {
     );
   });
 
-  test("Temporal admits split and retiring gateways until their pods exit", () => {
-    const rules = scoutGatewayClientIngress({
-      beta: "retiring",
-      prod: "split",
-    });
+  test("Temporal admits both hosted gateways", () => {
+    const rules = scoutGatewayClientIngress();
     expect(rules).toHaveLength(1);
     expect(rules[0]?.from).toEqual([
       {
@@ -434,9 +419,6 @@ describe("Scout gateway network boundary", () => {
         podSelector: { matchLabels: { app: "scout-gateway" } },
       },
     ]);
-    expect(
-      scoutGatewayClientIngress({ beta: "absent", prod: "absent" }),
-    ).toEqual([]);
   });
 
   /**
@@ -587,217 +569,34 @@ describe("Scout gateway observability", () => {
   });
 });
 
-/**
- * The rollback the `retiring` topology exists for.
- *
- * The gateway pod holds the Discord token, and a rolled-back backend returning
- * to `combined` would open a second session on the same token if that pod were
- * still running. Simply un-rendering the gateway would leave its deletion (by
- * a pruning release sync) ordered after the wave-0 backend, or not happen at
- * all (a sync without prune). Retirement therefore has to be a rendered,
- * ordered state, and these assertions are what keep it one. The termination
- * gate between the two waves is covered in
- * `scout-gateway-retirement-gate.test.ts`.
- *
- * Every case renders the real chart through the documented topology override
- * rather than mocking the module that decides the topology: a mocked decision
- * would only prove the mock.
- */
-const AnnotatedDeploymentSchema = z.object({
-  metadata: z.looseObject({
-    annotations: z.record(z.string(), z.string()).optional(),
-  }),
-  spec: z.looseObject({ replicas: z.number().optional() }),
-});
-
-function retiringBeta() {
-  return scoutResourcesWithGatewayTopology("beta", "retiring");
-}
-
-function annotatedDeployment(
-  resources: ReturnType<typeof retiringBeta>,
-  name: string,
-) {
-  return AnnotatedDeploymentSchema.parse(
-    findResource(resources, "Deployment", name),
+describe("Hosted Scout roles", () => {
+  test.each(SCOUT_STAGES)(
+    "runs one gateway and activity worker in %s",
+    (stage) => {
+      const resources = scoutResources(stage);
+      for (const name of ["scout-gateway", "scout-activity-worker"]) {
+        const resource = findResource(
+          resources,
+          "Deployment",
+          `scout-${stage}-${name}`,
+        );
+        expect(
+          z.object({ replicas: z.number() }).parse(resource.spec).replicas,
+        ).toBe(1);
+        expect(resource.metadata["annotations"]).toEqual(
+          expect.objectContaining({ "argocd.argoproj.io/sync-wave": "1" }),
+        );
+      }
+      expect(
+        resources.some((resource) =>
+          resource.metadata.name.includes("retirement"),
+        ),
+      ).toBe(false);
+    },
   );
-}
-
-function syncWave(
-  deployment: z.infer<typeof AnnotatedDeploymentSchema>,
-): number {
-  // An unannotated resource is in ArgoCD's default wave 0 — which is exactly
-  // where the backend sits, and the reason the gateway's wave is meaningful.
-  return Number(
-    deployment.metadata.annotations?.["argocd.argoproj.io/sync-wave"] ?? "0",
-  );
-}
-
-describe("Scout gateway retirement", () => {
-  /**
-   * The whole point: the retirement sync scales the shard's pod away by
-   * itself. If this Deployment ever stops being rendered instead, the pod is
-   * deleted too late or not at all and keeps holding the token.
-   */
-  test("retiring renders the gateway Deployment at zero replicas", () => {
-    const gateway = annotatedDeployment(
-      retiringBeta(),
-      "scout-beta-scout-gateway",
+  test("monitoring names the deployed gateway owner", () => {
+    expect(SCOUT_GATEWAY_OWNER_BY_STAGE).toEqual(
+      SCOUT_STAGES.map((environment) => ({ environment, role: "gateway" })),
     );
-    expect(gateway.spec.replicas).toBe(0);
-  });
-
-  /**
-   * The ordering, and the reason this is not simply "render it at zero".
-   *
-   * The backend carries no sync-wave annotation, so it is in the default wave
-   * 0, and its Recreate rollout back to `combined` is what re-opens a Discord
-   * session. The gateway's scale-to-zero has to be applied BEFORE that.
-   * Asserting the relation rather than the literal annotation so the claim is
-   * the ordering itself: an edit that moved the backend into a wave would have
-   * to come back here.
-   */
-  test("retiring orders the scale-to-zero strictly before the backend", () => {
-    const resources = retiringBeta();
-    expect(
-      syncWave(annotatedDeployment(resources, "scout-beta-scout-gateway")),
-    ).toBeLessThan(
-      syncWave(annotatedDeployment(resources, "scout-beta-scout-backend")),
-    );
-  });
-
-  /**
-   * The forward direction must not be "fixed" to match. Splitting requires the
-   * opposite order — the backend's wave-0 handover is a precondition of the
-   * gateway pod existing at all — so one wave cannot serve both directions.
-   */
-  test("splitting still orders the gateway strictly after the backend", () => {
-    const resources = scoutResourcesWithGatewayTopology("beta", "split");
-    const gateway = annotatedDeployment(resources, "scout-beta-scout-gateway");
-    expect(gateway.spec.replicas).toBe(1);
-    expect(syncWave(gateway)).toBeGreaterThan(
-      syncWave(annotatedDeployment(resources, "scout-beta-scout-backend")),
-    );
-  });
-
-  /**
-   * The other half of the rollback: the shard comes home. An unset
-   * SCOUT_RUNTIME_ROLE is what the backend resolves to `combined`, so the
-   * absence asserted here is the behaviour rather than an omission.
-   */
-  test("retiring returns the backend to the combined role", () => {
-    const backend = RoleDeploymentSchema.parse(
-      findResource(retiringBeta(), "Deployment", "scout-beta-scout-backend")
-        .spec,
-    );
-    expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBeUndefined();
-  });
-
-  /**
-   * Voice follows the shard in both directions. A rollback that took the shard
-   * back but left voice on the retired pod would leave `/scout join` wired to a
-   * pod that no longer exists.
-   */
-  test("retiring brings voice back to the combined pod", () => {
-    const resources = retiringBeta();
-    const backend = RoleDeploymentSchema.parse(
-      findResource(resources, "Deployment", "scout-beta-scout-backend").spec,
-    );
-    expect(envValue(backend, "VOICE_OPENAI_API_KEY_FILE")).toBe(
-      "/run/secrets/scout-openai/OPENAI_API_KEY",
-    );
-    expect(
-      backend.template.spec.containers[0]?.volumeMounts?.some(
-        (mount) => mount.mountPath === "/run/secrets/scout-openai",
-      ),
-    ).toBe(true);
-
-    // A blocked media path is invisible — the voice websocket rides TCP/443 and
-    // connects fine — so assert the UDP rule came back with the credential
-    // rather than only the credential.
-    const policy = findResource(
-      resources,
-      "NetworkPolicy",
-      "scout-egress-netpol",
-    );
-    expect(
-      z.object({ egress: z.array(z.unknown()) }).parse(policy.spec).egress,
-    ).toEqual(
-      expect.arrayContaining([
-        {
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: 50_000, endPort: 65_535, protocol: "UDP" }],
-        },
-      ]),
-    );
-  });
-
-  /**
-   * The stage stays fully managed while retiring. These select nothing once the
-   * pod is gone, but a resource that stops being rendered under a non-pruning
-   * Application is exactly the half-orphaned state this change exists to stop
-   * creating. They are deleted with the Deployment when the stage goes absent.
-   */
-  test("retiring keeps the gateway's Service, monitor and policy rendered", () => {
-    const resources = retiringBeta();
-    for (const [kind, name] of [
-      ["Service", "scout-gateway-service-beta"],
-      ["ServiceMonitor", "scout-gateway-beta-service-monitor"],
-      ["NetworkPolicy", "scout-gateway-netpol"],
-    ] as const) {
-      expect(findResource(resources, kind, name).metadata.name).toBe(name);
-    }
-  });
-
-  /**
-   * The third arm of the tri-state, asserted for beta rather than inferred from
-   * prod. `absent` is the later cleanup change, and it has to remove the whole
-   * set rather than only the Deployment.
-   */
-  test("absent renders no gateway resource of any kind", () => {
-    expect(
-      scoutResourcesWithGatewayTopology("beta", "absent").filter((resource) =>
-        resource.metadata.name.includes("gateway"),
-      ),
-    ).toEqual([]);
-  });
-});
-
-/**
- * The disconnect alert has to follow the topology, not shadow it.
- *
- * `ScoutDiscordDisconnected` guards its gauge with `absent()`, so a stage whose
- * owner table names a role that has no pod does not degrade — it pages
- * critical, continuously, while perfectly healthy, and does not clear. Before
- * this became a derivation the owner table and the topology table were two
- * hand-maintained lists of the same fact with nothing coupling them, so
- * retiring beta's gateway while the alert still said `gateway` was one edit
- * away in the rollback direction.
- */
-describe("Scout gateway owner table", () => {
-  test("names gateway for exactly the stages running the split", () => {
-    expect(SCOUT_GATEWAY_OWNER_BY_STAGE).not.toEqual([]);
-    for (const { environment, role } of SCOUT_GATEWAY_OWNER_BY_STAGE) {
-      expect(role === "gateway").toBe(
-        gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[environment]),
-      );
-    }
-  });
-
-  test("covers every stage exactly once", () => {
-    expect(
-      SCOUT_GATEWAY_OWNER_BY_STAGE.map((entry) => entry.environment).toSorted(),
-    ).toEqual([...SCOUT_STAGES].toSorted());
-  });
-
-  /**
-   * A retiring stage has already handed the shard back, so its gateway series
-   * is the one that stops existing. `combined` is the only answer that keeps
-   * the alert pointed at a pod that exists.
-   */
-  test("a stage that does not run the split is owned by combined", () => {
-    expect(gatewayTopologyRunsRole("retiring")).toBe(false);
-    expect(gatewayTopologyRunsRole("absent")).toBe(false);
-    expect(gatewayTopologyRunsRole("split")).toBe(true);
   });
 });

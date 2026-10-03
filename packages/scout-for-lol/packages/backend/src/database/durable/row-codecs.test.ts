@@ -30,7 +30,6 @@ import {
   scoutWorkflowStartRecordToRow,
   scoutWorkflowStartRowToRecord,
 } from "#src/database/durable/workflow-start-row.ts";
-import { scoutOperatorAuditEventRowToRecord } from "#src/database/durable/audit-event-row.ts";
 import {
   matchTrackedAccountRecordToRow,
   matchTrackedAccountRowToRecord,
@@ -713,43 +712,6 @@ describe("MatchTrackedAccount codec", () => {
   test("rejects a non-positive player id", () => {
     expect(() =>
       matchTrackedAccountRowToRecord({ ...baseRow, playerId: 0 }),
-    ).toThrow();
-  });
-});
-
-describe("ScoutOperatorAuditEvent codec", () => {
-  test("parses a stored event", () => {
-    const record = scoutOperatorAuditEventRowToRecord({
-      id: 1n,
-      actorDiscordId: ACCOUNT_DISCORD_ID,
-      action: "recovery-policy-released",
-      subjectKind: "recovery-batch",
-      subjectId: "recovery-2026-09-07",
-      detail: JSON.stringify({ from: "no-external", to: "stale-private-only" }),
-      idempotencyKey: "release-1",
-      createdAt: AT,
-    });
-    expect(record.actorDiscordId).toBe(ACCOUNT_DISCORD_ID);
-    expect(record.detail).toEqual({
-      from: "no-external",
-      to: "stale-private-only",
-    });
-    expect(record.idempotencyKey).toBe("release-1");
-    expect(record.createdAt).toBe(AT_ISO);
-  });
-
-  test("rejects a detail column that is not JSON", () => {
-    expect(() =>
-      scoutOperatorAuditEventRowToRecord({
-        id: 2n,
-        actorDiscordId: ACCOUNT_DISCORD_ID,
-        action: "x",
-        subjectKind: "y",
-        subjectId: "z",
-        detail: "not json",
-        idempotencyKey: null,
-        createdAt: AT,
-      }),
     ).toThrow();
   });
 });

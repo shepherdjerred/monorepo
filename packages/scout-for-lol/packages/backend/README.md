@@ -1235,16 +1235,12 @@ Notes that are easy to get wrong:
   with write access, on the same node and SELinux level. The volume must have
   `ZFSVolume.spec.shared=yes`; generation bundles keep independent staging
   writes separate from the application's fold and publish operation.
-- **The queue handoff takes two releases.** `application` carries `realtime`,
-  `background` and the competition activity worker in the interim — marked
-  `(interim)` in the table above. Moving the shard out without them would not
-  redistribute that work, it would stop it: Riot polling, prematch, match
-  ingest, report delivery and scheduled competition updates all live on those
-  queues. The `observing` topology deploys `activity-worker` alongside this
-  interim owner to prove readiness and polling. After that observation, the
-  `owning` topology switches the backend to `application-isolated`, leaving
-  exactly one owner for those queues. Rollback uses `retiring` to scale the
-  worker down and wait for pod exit before the application reclaims them.
+- **Hosted activity ownership is fixed.** Both stages run `application-isolated`,
+  a separate gateway, and an activity worker. The worker owns realtime,
+  background, and competition Activities. The application owns interactive and
+  lake Activities; production retains its embedded Workflow poller. Beta's
+  dedicated Workflow Deployment owns Workflow routing. Rollback uses an
+  accepted image with the same split roles.
 - **A lake-reading role that does not publish verifies instead.** An empty or
   unmounted lake is not an error for DuckDB — it scans zero parquet files and
   returns zero rows — so a worker would record every report run and dare
@@ -1266,12 +1262,13 @@ Notes that are easy to get wrong:
   lock used by web starts, so the two surfaces cannot advance one transcript
   concurrently. Once the durable row becomes terminal, the gateway releases
   its non-executing copy and local rate-limit ticket.
-- **`scout_temporal_workers`** reports 0 rather than going absent for a queue
-  class this role does not run, and `/healthz` reports the running queue classes
-  by name. `ScoutTemporalWorkerMissing` is built on that zero-fill, and asks
-  whether a queue class that WAS being polled has stopped being polled — not
-  whether every class has a poller, which would make a role nobody deploys a
-  permanent firing condition.
+- **`scout_temporal_workers`** reports the embedded queue classes, including
+  zero for classes a role does not run. `ScoutTemporalWorkerMissing` compares
+  fresh same-pod scrapes against declared hosted owners. Beta Workflow health
+  instead matches fresh normal SDK pollers to the current and nonzero ramp
+  Worker Deployment builds. The application reads routing at metrics scrape
+  time through a bounded Temporal call; unavailable evidence raises
+  `ScoutTemporalWorkflowRoutingUnknown`.
 - **Every metric carries a `role` label**, set as a registry default from this
   role's name. An alert reading a gauge only some roles produce must scope to
   those roles or it fires on a correct deployment; `ScoutDiscordDisconnected` is
@@ -1279,6 +1276,31 @@ Notes that are easy to get wrong:
   by stage.
 - The externally deployed stable/candidate Workflow Workers
   (`temporal/workflow-worker.ts`) are unaffected by any of this.
+
+## Database preparation and startup
+
+Ordinary image startup runs Prisma migrations, validates the completed import
+receipt and Bucks ledger using Postgres only, then boots the selected role.
+It does not open the retained SQLite snapshot or convert stored reports.
+
+Prepare a fresh or restored database explicitly before starting the image:
+
+```bash
+bun x --no-install prisma migrate deploy
+bun run scripts/import-legacy-sqlite.ts --source /path/to/retained.sqlite
+bun run scripts/scoutql/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix
+bun run scripts/check-database-readiness.ts
+```
+
+For an intentionally empty deployment, replace the import command with
+`bun run scripts/import-legacy-sqlite.ts --allow-fresh-install --source /path/to/absent.sqlite`.
+The importer refuses an unmarked populated database. After restoring Postgres,
+retain its `_legacy_sqlite_import` receipt; use the explicit import verification
+CLI when comparing to an original snapshot. Keep snapshots for recovery.
+
+The readiness check rejects missing or malformed import receipts and ledger
+drift. Local fixture databases use their existing bootstrap path rather than
+this hosted-image entrypoint.
 
 ## Configuration
 

@@ -194,17 +194,10 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 
 # Run from source (the backend build bundles with `--external '@duckdb/*'`,
 # but the old CI image ran source directly). Boot order is load-bearing:
-# migrations create the (empty, on first boot) Postgres schema; the legacy
-# importer then copies /data/db.sqlite exactly once (marker-guarded,
-# fail-closed — see src/database/legacy-import/run-import.ts); the
-# parser-aware ScoutQL migration runs after it because the Report rows it
-# rewrites arrive with the import. It rewrites every stored report into v2
-# syntax: a SQL migration cannot safely distinguish clause keywords from
-# quoted text, and legacy syntax stops running the moment this release lands,
-# so it must finish — or fail loudly — before the application accepts
-# traffic. `prisma` is a runtime dependency of the backend, so `bun x`
-# resolves it from the installed tree without a network fetch.
-CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/scoutql/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
+# migrations update Postgres; SQL-only readiness validates the completed import
+# receipt and accounting before traffic. Fresh installs and restores run the
+# explicit import and ScoutQL conversion tools before ordinary startup.
+CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/check-database-readiness.ts && bun run src/index.ts"]
 
 FROM runtime AS voice-smoke
 # Model loading runs as the non-root deploy uid, never root: the published image

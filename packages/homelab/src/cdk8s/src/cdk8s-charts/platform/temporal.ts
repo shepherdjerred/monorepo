@@ -18,13 +18,7 @@ import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
-import {
-  SCOUT_ACTIVITY_WORKER_TOPOLOGY,
-  SCOUT_GATEWAY_TOPOLOGY,
-  SCOUT_STAGES,
-  type ScoutGatewayTopology,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
-import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
+import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 // Every Temporal-namespace workload egresses to cluster DNS the same way;
 // shared here so it is declared once instead of drifting per-policy.
@@ -69,50 +63,34 @@ function scoutBackendIngress(): NetworkPolicyIngressRule {
  * unconditionally, because Discord commands start Workflows they do not execute,
  * so a blocked client here is every slash command failing to dispatch rather
  * than a worker going idle.
- *
- * Keep a retiring gateway admitted until Scout has scaled its pod down.
- * Temporal syncs before the Scout leaf, so a split-to-retiring release must
- * retain this ingress while the old gateway can still handle commands.
  */
-export function scoutGatewayClientIngress(
-  topology: Readonly<Record<Stage, ScoutGatewayTopology>>,
-): NetworkPolicyIngressRule[] {
-  const renderedStages = SCOUT_STAGES.filter(
-    (stage) => topology[stage] !== "absent",
-  );
-  return renderedStages.length === 0
-    ? []
-    : [
-        {
-          from: renderedStages.map((stage) => ({
-            namespaceSelector: {
-              matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
-            },
-            podSelector: { matchLabels: { app: "scout-gateway" } },
-          })),
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+export function scoutGatewayClientIngress(): NetworkPolicyIngressRule[] {
+  return [
+    {
+      from: SCOUT_STAGES.map((stage) => ({
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
         },
-      ];
+        podSelector: { matchLabels: { app: "scout-gateway" } },
+      })),
+      ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+    },
+  ];
 }
 
 /** The split activity worker polls stage-local realtime and background queues. */
 function scoutActivityWorkerIngress(): NetworkPolicyIngressRule[] {
-  const activeStages = SCOUT_STAGES.filter(
-    (stage) => SCOUT_ACTIVITY_WORKER_TOPOLOGY[stage] !== "absent",
-  );
-  return activeStages.length === 0
-    ? []
-    : [
-        {
-          from: activeStages.map((stage) => ({
-            namespaceSelector: {
-              matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
-            },
-            podSelector: { matchLabels: { app: "scout-activity-worker" } },
-          })),
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+  return [
+    {
+      from: SCOUT_STAGES.map((stage) => ({
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
         },
-      ];
+        podSelector: { matchLabels: { app: "scout-activity-worker" } },
+      })),
+      ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+    },
+  ];
 }
 
 function scoutWorkflowWorkerIngress(): NetworkPolicyIngressRule {
@@ -281,7 +259,7 @@ export function createTemporalChart(app: App) {
         },
         scoutBackendIngress(),
         scoutWorkflowWorkerIngress(),
-        ...scoutGatewayClientIngress(SCOUT_GATEWAY_TOPOLOGY),
+        ...scoutGatewayClientIngress(),
         ...scoutActivityWorkerIngress(),
         {
           // Allow Prometheus scraping metrics

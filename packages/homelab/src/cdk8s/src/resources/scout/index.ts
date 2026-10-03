@@ -37,16 +37,8 @@ import {
   createScoutGatewayDeployment,
   SCOUT_DUCKDB_SCRATCH,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
-import { createScoutGatewayRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway-retirement-gate.ts";
 import { createScoutActivityWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
-import { createScoutActivityWorkerRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker-retirement-gate.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
-import {
-  gatewayTopologyRunsRole,
-  scoutSplitApplicationRole,
-  type ScoutActivityWorkerTopology,
-  type ScoutGatewayTopology,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -62,28 +54,7 @@ function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
-function assertActivityWorkerTopology(
-  stage: Stage,
-  gatewayTopology: ScoutGatewayTopology,
-  activityWorkerTopology: ScoutActivityWorkerTopology,
-): void {
-  if (
-    !gatewayTopologyRunsRole(gatewayTopology) &&
-    (activityWorkerTopology === "observing" ||
-      activityWorkerTopology === "owning")
-  ) {
-    throw new Error(
-      `${stage} activity-worker ${activityWorkerTopology} requires a split gateway topology`,
-    );
-  }
-}
-
-export function createScoutDeployment(
-  chart: Chart,
-  stage: Stage,
-  gatewayTopology: ScoutGatewayTopology,
-  activityWorkerTopology: ScoutActivityWorkerTopology = "absent",
-) {
+export function createScoutDeployment(chart: Chart, stage: Stage) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
@@ -219,13 +190,7 @@ export function createScoutDeployment(
       localPathVolume.claim,
     ),
   };
-  // Voice is a gateway-role capability: the table gives voiceAssistant and
-  // voiceStateAccess to `combined` and `gateway`, never to `application`. So on
-  // a split stage the credential follows the shard into scout-gateway, and this
-  // pod — which runs `application` — neither mounts nor needs it. On an unsplit
-  // stage the combined pod keeps it exactly as #2870 wired it.
-  const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
-  assertActivityWorkerTopology(stage, gatewayTopology, activityWorkerTopology);
+  // Voice credentials belong to the dedicated gateway.
   const voiceSecretMount =
     stage === "beta"
       ? {
@@ -261,10 +226,7 @@ export function createScoutDeployment(
       },
     ),
   };
-  const volumeMounts =
-    voiceSecretMount !== undefined && !splitTopology
-      ? [dataVolumeMount, scratchMount, voiceSecretMount]
-      : [dataVolumeMount, scratchMount];
+  const volumeMounts = [dataVolumeMount, scratchMount];
 
   const baseEnvVariables = {
     ...dbEnv,
@@ -447,18 +409,10 @@ export function createScoutDeployment(
         }
       : {};
 
-  // A split stage runs this Deployment as an application role, with the
-  // Discord shard — and therefore voice — moved to scout-gateway. Every other
-  // stage stays on the combined role, which is what an unset SCOUT_RUNTIME_ROLE
-  // resolves to, so an unsplit stage's manifest is unchanged by the split.
-  const roleEnvVariables: Record<string, EnvValue> = splitTopology
-    ? {
-        ...envVariables,
-        SCOUT_RUNTIME_ROLE: EnvValue.fromValue(
-          scoutSplitApplicationRole(activityWorkerTopology),
-        ),
-      }
-    : { ...envVariables, ...voiceEnvVariables };
+  const roleEnvVariables: Record<string, EnvValue> = {
+    ...envVariables,
+    SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application-isolated"),
+  };
 
   deployment.addContainer(
     withCommonProps({
@@ -515,42 +469,20 @@ export function createScoutDeployment(
     matchLabels: { app: "scout", stage },
   });
 
-  // The gateway role shares this stage's claim and SELinux level by design.
-  // Its container mount is read-only; the activity worker below needs write
-  // access to report-lake staging data.
-  //
-  // Rendered while retiring as well as while split — at zero replicas, which is
-  // how the rollback retires the pod without an operator scaling it by hand.
-  // Retiring also renders the gate that holds the backend's return to
-  // `combined` until that pod has actually exited.
-  // The claim is still declared on a retiring Deployment; with no pod it is
-  // never mounted, so the read-only co-mount argument above is unaffected.
-  if (gatewayTopology !== "absent") {
-    createScoutGatewayDeployment(chart, stage, {
-      topology: gatewayTopology,
-      imageVersion,
-      envVariables: { ...envVariables, ...voiceEnvVariables },
-      claim: localPathVolume.claim,
-      selinuxLevel,
-      colocateWith: deployment,
-      voiceSecretMount,
-    });
-  }
-  if (gatewayTopology === "retiring") {
-    createScoutGatewayRetirementGate(chart, stage);
-  }
-
-  if (activityWorkerTopology !== "absent") {
-    createScoutActivityWorkerDeployment(chart, stage, {
-      topology: activityWorkerTopology,
-      imageVersion,
-      envVariables,
-      claim: localPathVolume.claim,
-      selinuxLevel,
-      colocateWith: deployment,
-    });
-  }
-  if (activityWorkerTopology === "retiring") {
-    createScoutActivityWorkerRetirementGate(chart, stage);
-  }
+  // Hosted roles share the stage claim and SELinux level.
+  createScoutGatewayDeployment(chart, stage, {
+    imageVersion,
+    envVariables: { ...envVariables, ...voiceEnvVariables },
+    claim: localPathVolume.claim,
+    selinuxLevel,
+    colocateWith: deployment,
+    voiceSecretMount,
+  });
+  createScoutActivityWorkerDeployment(chart, stage, {
+    imageVersion,
+    envVariables,
+    claim: localPathVolume.claim,
+    selinuxLevel,
+    colocateWith: deployment,
+  });
 }

@@ -53,76 +53,41 @@ The result must name `scout-beta-realtime`, `scout-beta-interactive`,
 `scout-beta-background`, and `scout-beta-lake`. A missing result means that
 Activity Worker is not polling its declared queue; stop the rollout.
 
-## Hand off the embedded activity queues
+## Verify hosted queue ownership
 
-The activity-worker split is a separate, stage-scoped rollout. Its source
-switches are `SCOUT_GATEWAY_TOPOLOGY` and `SCOUT_ACTIVITY_WORKER_TOPOLOGY` in
-[Scout topology](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/scout/topology.ts).
-Read the configured stage values first and start at the first unverified
-transition. Use the normal PR, exact-head CI, image publish, and `release-root`
-path for each change.
+1. Confirm the application runs `application-isolated`, and the dedicated
+   gateway and activity worker each have one ready pod. Read the exact
+   deployed image digests and chart revision.
+2. Confirm the application owns `interactive` and `lake`, and the activity
+   worker owns `realtime`, `background`, and competition Activities.
+   Production retains its embedded Workflow poller. Beta Workflow tasks
+   follow the current Worker Deployment build and any nonzero ramp.
+3. Run the queue canary and inspect representative persisted effects.
+   `ScoutTemporalWorkerMissing` requires fresh evidence from each declared
+   owner. `ScoutTemporalWorkflowRoutingUnknown` means the beta routing lookup
+   is unavailable; a healthy candidate alone cannot establish current routing.
+4. For rollback, release the previous accepted image that retains these split
+   roles. Keep the stage claim shared and the existing sync order. Use
+   `release-root` for the exact chart revision; do not return to combined
+   hosted ownership or scale workloads manually.
 
-1. Confirm the stage runs `split` gateway topology. Read the bound
-   `scout-storage-claim` PV and its `ZFSVolume.spec.shared` field using the
-   **Share a ZFS volume between pods** how-to. It must be `yes` before the
-   worker pod starts. The worker and application both mount the claim
-   read-write on the same node with the same SELinux level. Before the first
-   production split, confirm the accepted image digest has already reached the
-   healthy combined backend in its own release; do not couple the image change
-   to the topology handoff.
-2. If the worker is `absent`, set its topology to `observing` in a release.
-   If it is already `observing`, verify that state before proceeding. This
-   runs one activity-worker pod while the application keeps polling
-   `realtime`, `background`, and competition activities. Confirm the worker
-   Deployment is ready, its `/healthz` and `/metrics` expose the expected role
-   and queue classes, and the queue canary above completes. Watch for
-   schedule-to-start delays, duplicate-effect claims, report delivery, and
-   report-lake generation or staging errors. Keep this overlap bounded to the
-   observation release. If the gateway also moves from `combined` to `split`,
-   confirm Discord stays connected during the switch and the gateway alone is
-   connected afterward.
-3. In a second release, set the topology to `owning`. The application becomes
-   `application-isolated`, removing those three activity owners; the worker
-   remains on the same image digest and continues polling. Confirm exactly one
-   ready pod owns `realtime`, `background`, and competition activities, while
-   the application still owns `interactive` and `lake`. Production also retains
-   its embedded `workflow` poller until its separate handoff. Re-run the
-   canary and representative report, ingest, and competition flows.
+The [hosted chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts)
+and [worker ownership rules](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/scout-temporal-rules.ts)
+define these roles and monitoring requirements.
 
-For rollback from `owning`, set the worker topology to `retiring` in a release.
-The worker scales to zero in sync wave -2; a wave -1 hook waits for its pod to
-exit before the wave-0 application reclaims the queues. Confirm the hook and
-queue canary, then use a later release to set `absent` after no worker pod
-remains. If the gateway split must also roll back, use its `retiring` topology
-in the same release as worker retirement so neither gateway nor activity
-ownership overlaps with the returning `combined` pod.
+## Verify durable Schedules
 
-Soak beta and review its live effects before repeating the sequence in prod.
-Prod has a separate image pin and lake volume; repeat the pin and
-`ZFSVolume.spec.shared` preflight there. A green PR or Argo `Healthy` status
-alone does not establish queue ownership or product behavior.
-
-## Enable the durable reconciliation schedules
-
-Check the [Scout schedule inventory](/reference/temporal-workflows/#scout) for
-activation defaults. `pipeline-reconciliation-v2` is created paused; new
-`progression-reconciliation` registrations start active after the outbox cutover.
-
-1. Before activation, replay the matching Scout Workflow bundle and confirm
-   healthy Workflow and background Activity pollers in the stage. Ensure these
-   preconditions are met before registering Schedules in a new namespace.
-2. Unpause `pipeline-reconciliation-v2` in beta. Confirm it drives a pending
-   intent before enabling new V2 notification kinds. Repeat after production's
-   own rollout checks.
-3. Before deploying the bundle that removes reconciliation from
-   `progression-outbox`, confirm the Hall and Duel legacy outboxes have no open
-   rows, unpause `progression-reconciliation`, and observe one successful run
-   in that stage. After the bundle deploys, the
-   [`progression-outbox` Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/activities.ts)
-   only delivers legacy Hall and Duel rows; the dedicated Schedule owns
-   reconciliation. New registrations start the dedicated Schedule active;
-   existing operator pauses are preserved. Keep the old outbox Schedule enabled
-   while rows remain and retain it until they are drained or dispositioned.
+1. After the central Schedule owner reconciles, inspect every declared beta
+   fixed Schedule. Confirm it is active unless an explicit operator or
+   credential pause applies. The
+   [pause reference](/reference/temporal-schedules/#pause-behaviour) identifies
+   the two retired migration notes reconciliation clears.
+2. Confirm `clash-snapshot` and `custom-nights-expiry` complete through their
+   background Activity owner. An empty upstream snapshot or no eligible nights
+   is a valid result; inspect the result and Activity history.
+3. Inspect report Schedule ownership, outbox drain, and drift. Keep production's
+   legacy progression delivery Schedule while its producers remain active.
+   Reconciliation never backfills every missed occurrence.
 
 ## Start the beta Workflow Deployment ramp
 
@@ -130,13 +95,9 @@ For Activity-only changes, keep the accepted Workflow Deployment pins and
 routing. Check queue canaries and the changed effects after the backend release.
 A new Workflow ramp is needed when the Workflow bundle changes.
 
-For the first rollout, pin both beta Workflow tracks in the version catalog to
-the same accepted, workflow-capable beta backend image and release them before
-starting a ramp. Both pods register the same build ID; the embedded backend
-continues polling until routing changes. Confirm both Workflow Worker pods are
-ready and the deployment has no current or ramping version. A later Scout image
-release supplies a distinct candidate build for the ramp. Keep the candidate
-pin state in sync with the catalog.
+Pin a workflow-capable candidate image through the catalog and release path.
+Retain the accepted stable image and inspect current routing before starting
+another ramp.
 
 Configure the private Temporal endpoint for every rollout command in this
 shell:
@@ -225,23 +186,17 @@ TEMPORAL_NAMESPACE=beta bun run worker-deployment promote \
   --build-id <candidate-image-git-sha>
 ```
 
-## Complete beta ownership
+## Accept the beta application release
 
-1. Before removing beta's embedded Workflow poller, inspect open executions
-   and their assigned Worker Deployment versions. Drain any unversioned work;
-   retain healthy versioned dispatchers, entity Workflows, and durable timers.
-2. Confirm the legacy Hall, Duel, and Dare delivery outboxes have no pending
-   rows. Keep domain reconciliation active. The declared beta Schedule registry
-   removes only the retired progression delivery Schedule.
-3. After the central Activity image deploys, trigger the owned flag-inventory
-   Schedule and verify its successful result. Its one-time beta migration
-   enables durable initial-history imports and V2 progression delivery while
-   preserving later operator pauses. Confirm each enabled product feature has
-   exactly one delivery owner.
-4. Exercise the changed beta effects and inspect their persisted receipts.
-   Use focused failure fixtures for infrequent features; record missing live
-   evidence explicitly. Acceptance depends on ownership and recovery evidence,
-   without an additional minimum game count or calendar soak.
+1. Confirm ArgoCD reconciled the intended revision and all ordinary roles run
+   the published image digest. Preserve the accepted Workflow pins and routing
+   when the Workflow bundle did not change.
+2. Verify fixed Schedules and queue ownership using the checks above. Inspect
+   match, prematch, progression, Explore, report, and competition receipts for
+   one external-effect owner each.
+3. Exercise changed effects and inspect their persisted results. Use focused
+   fixtures for infrequent features and record unavailable live evidence.
+   Keep healthy dispatchers and entity Workflows running.
 
 ## Resolve an uncertain report delivery
 

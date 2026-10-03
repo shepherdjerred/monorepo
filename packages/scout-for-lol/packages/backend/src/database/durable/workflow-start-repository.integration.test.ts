@@ -7,7 +7,6 @@ import {
   type IsoInstant,
   type WorkflowRunId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import type {
   ScoutWorkflowStartRecord,
@@ -19,10 +18,6 @@ import {
   requestWorkflowStart,
   type RequestWorkflowStartResult,
 } from "#src/database/durable/workflow-start-repository.ts";
-import {
-  appendAuditEvent,
-  listAuditEvents,
-} from "#src/database/durable/audit-repository.ts";
 import { scoutDurableWorkflowStartAcceptances } from "#src/metrics/durable-pipeline.ts";
 import { matchTrackedAccountRowToRecord } from "#src/database/durable/tracked-account-row.ts";
 import {
@@ -40,7 +35,6 @@ afterAll(async () => {
 const REQUESTED_AT = IsoInstantSchema.parse("2026-09-07T10:00:00.000Z");
 const ACCEPTED_AT = IsoInstantSchema.parse("2026-09-07T10:01:00.000Z");
 const RUN_ID = WorkflowRunIdSchema.parse("run-1");
-const OPERATOR = DiscordAccountIdSchema.parse("200000000000000001");
 
 function request(
   id: string,
@@ -486,73 +480,6 @@ describe("getWorkflowStart", () => {
     });
     expect(inFlight?.requestId).toBe(third.requestId);
     expect(inFlight?.acceptance).toBeNull();
-  });
-});
-
-describe("appendAuditEvent", () => {
-  test("appends and lists events in insertion order", async () => {
-    const first = await appendAuditEvent(prisma, {
-      actorDiscordId: OPERATOR,
-      action: "recovery-policy-released",
-      subjectKind: "recovery-batch",
-      subjectId: "rb-1",
-      detail: { from: "no-external", to: "stale-private-only" },
-    });
-    const second = await appendAuditEvent(prisma, {
-      actorDiscordId: OPERATOR,
-      action: "unknown-delivery-resolved",
-      subjectKind: "recovery-batch",
-      subjectId: "rb-1",
-      detail: { outcome: "confirmed-unsent" },
-    });
-    expect(second.id).toBeGreaterThan(first.id);
-
-    const listed = await listAuditEvents(prisma, {
-      subjectKind: "recovery-batch",
-      subjectId: "rb-1",
-    });
-    expect(listed.map((event) => event.action)).toEqual([
-      "recovery-policy-released",
-      "unknown-delivery-resolved",
-    ]);
-    expect(listed[0]?.detail).toEqual({
-      from: "no-external",
-      to: "stale-private-only",
-    });
-  });
-
-  test("a replayed idempotency key returns the original event", async () => {
-    const input = {
-      actorDiscordId: OPERATOR,
-      action: "batch-created",
-      subjectKind: "recovery-batch",
-      subjectId: "rb-idem",
-      detail: { policy: "no-external" },
-      idempotencyKey: "rb-idem-create",
-    };
-    const first = await appendAuditEvent(prisma, input);
-    const replay = await appendAuditEvent(prisma, input);
-    expect(replay).toEqual(first);
-
-    const listed = await listAuditEvents(prisma, {
-      subjectKind: "recovery-batch",
-      subjectId: "rb-idem",
-    });
-    expect(listed).toHaveLength(1);
-  });
-
-  test("the Zod guard rejects a detail JSON.stringify would silently corrupt", async () => {
-    // NaN survives JSON.stringify (it becomes null), so a rejection here can
-    // only come from the z.json() guard — not from serialization failing.
-    await expect(
-      appendAuditEvent(prisma, {
-        actorDiscordId: OPERATOR,
-        action: "x",
-        subjectKind: "y",
-        subjectId: "z",
-        detail: { value: Number.NaN },
-      }),
-    ).rejects.toThrow();
   });
 });
 
