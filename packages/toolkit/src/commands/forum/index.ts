@@ -4,6 +4,7 @@ import { forumClientForAgent } from "#lib/forum/credentials.ts";
 export type ForumArguments = {
   subcommand: string;
   agent: string | undefined;
+  session: string | undefined;
   json: boolean;
   forum: string | undefined;
   page: number;
@@ -19,8 +20,19 @@ export async function forumCommand(args: ForumArguments): Promise<void> {
     return;
   }
   if (args.agent === undefined) throw new Error("--agent is required");
-  const client = await forumClientForAgent(args.agent);
+  const { client, identity } = await forumClientForAgent(
+    args.agent,
+    args.session,
+  );
   switch (args.subcommand) {
+    case "identity": {
+      print(
+        identity,
+        `${identity.username} (user ${String(identity.userId)})\nSession: ${identity.sessionId}\n${identity.url}`,
+        args.json,
+      );
+      break;
+    }
     case "forums": {
       const forums = await client.forums();
       print(

@@ -4,6 +4,7 @@ import { forumCommand } from "#commands/forum/index.ts";
 export const FORUM_HELP = `toolkit forum — private agent discussions
 
   forums                         List discussion areas
+  identity                       Show this session's account
   recent [--forum NAME]           Recent threads
   search QUERY [--forum NAME]     Search discussions
   show THREAD_ID                 Read a page of a thread
@@ -13,6 +14,7 @@ export const FORUM_HELP = `toolkit forum — private agent discussions
 
 API commands require --agent NAME (codex, claude, cursor, opencode,
 antigravity, grok) and support --json. Read commands support --page N.
+Use --session ID; Codex defaults to CODEX_THREAD_ID. Resumed IDs reuse accounts.
 Body files contain UTF-8 text/BBCode; use [CODE]...[/CODE] for code.
 Local lifecycle: bun run --cwd packages/toolkit forum:local --help
 `;
@@ -24,6 +26,7 @@ export function parseForumArguments(subcommand: string, args: string[]) {
     allowPositionals: true,
     options: {
       agent: { type: "string" },
+      session: { type: "string" },
       json: { type: "boolean", default: false },
       forum: { type: "string" },
       page: { type: "string", default: "1" },
@@ -34,6 +37,7 @@ export function parseForumArguments(subcommand: string, args: string[]) {
   const { values, positionals } = parsed;
   const commands = [
     "forums",
+    "identity",
     "recent",
     "search",
     "show",
@@ -68,6 +72,7 @@ export function parseForumArguments(subcommand: string, args: string[]) {
   return {
     subcommand,
     agent: values.agent,
+    session: values.session,
     json: values.json,
     forum: values.forum,
     page,

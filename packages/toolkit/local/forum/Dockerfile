@@ -6,4 +6,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends libpng-dev libj
     && rm -rf /var/lib/apt/lists/*
 COPY apache.conf /etc/apache2/conf-enabled/forum.conf
 COPY setup.php /opt/forum/setup.php
+COPY session.php /opt/forum/session.php
 WORKDIR /var/www/html

@@ -36,7 +36,7 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: "http://127.0.0.1:8765",
   },
-  /** User-bound API keys remain in 1Password, indexed by runner name. */
+  /** Original runner references identify the local trial; session keys stay in 1Password. */
   forumProfiles: {
     schema: z.record(
       z.string().regex(/^[a-z][a-z0-9-]*$/),
