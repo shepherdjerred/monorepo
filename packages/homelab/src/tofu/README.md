@@ -2,6 +2,11 @@
 
 Manages external resources with [OpenTofu](https://opentofu.org/), including infrastructure, platform organization settings, and replaceable application credentials for services such as Discord, OpenAI, Anthropic, and Google.
 
+Local application credential generation is prepared in
+[`application-secrets`](application-secrets/README.md). Its wrapper permits
+validation only. The read-only vault audit and handoff previews prepare
+operator review without adding CI vault-write access or changing live values.
+
 ## Structure
 
 ```text

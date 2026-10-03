@@ -33,6 +33,7 @@ async function temporaryDirectory(): Promise<string> {
 }
 
 const STACKS: readonly TofuStack[] = [
+  "application-secrets",
   "anthropic",
   "anthropic-federation",
   "argocd",

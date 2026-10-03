@@ -33,7 +33,8 @@
     "check:backup-dashboard": "bun run scripts/check-seaweedfs-backup-dashboard.ts",
     "check:scout-worker-ownership": "bun run scripts/check-scout-worker-ownership.ts",
     "argocd:contract": "bun run scripts/snapshot-argocd-api-contract.ts",
-    "check:caddyfile": "bun run scripts/check-caddyfile.ts"
+    "check:caddyfile": "bun run scripts/check-caddyfile.ts",
+    "audit:1password": "bun run scripts/audit-1password-vault.ts"
   },
   "dependencies": {
     "cdk8s": "^2.70.58",

@@ -35,6 +35,7 @@ import {
   type Snapshot,
   type SnapshotItem,
 } from "./onepassword-lib.ts";
+import { applicationTargets } from "homelab/scripts/tofu/application-secrets.ts";
 
 const ITEM_PATH_RE = /^vaults\/([^/]+)\/items\/(.+)$/;
 /**
@@ -146,7 +147,7 @@ export function collectConsumption(
   for (const value of Object.values(object)) collectConsumption(value, into);
 }
 
-async function synthManifests(): Promise<unknown[]> {
+export async function synthManifests(): Promise<unknown[]> {
   const app = new App();
   await setupCharts(app);
   const manifests: unknown[] = [];
@@ -198,7 +199,7 @@ async function loadSnapshot(): Promise<Snapshot> {
   return parsed.data;
 }
 
-function collectReferences(manifests: unknown[]): {
+export function collectReferences(manifests: unknown[]): {
   opItems: OpItemRef[];
   consumption: Consumption;
 } {
@@ -311,11 +312,11 @@ function validateFields(
 }
 
 type DesiredStateTarget = {
-  platform: PlatformStack;
+  platform: PlatformStack | "application-secrets";
   target: OnePasswordTarget;
 };
 
-async function collectDesiredStateTargets(): Promise<
+export async function collectDesiredStateTargets(): Promise<
   readonly DesiredStateTarget[]
 > {
   const targets: DesiredStateTarget[] = [];
@@ -327,6 +328,8 @@ async function collectDesiredStateTargets(): Promise<
       targets.push({ platform, target });
     }
   }
+  for (const target of applicationTargets)
+    targets.push({ platform: "application-secrets", target });
   return targets;
 }
 
