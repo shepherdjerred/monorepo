@@ -38,9 +38,9 @@ def response(payload: object = None, content: bytes = b"") -> Response:
     return result
 
 
-def legacy_zip(name: str, content: bytes) -> bytes:
-    """Fixture for Windows ZIPs with GBK names and no UTF-8 flag."""
-    encoded = name.encode("gbk")
+def legacy_zip(name: str, content: bytes, encoding: str = "gbk") -> bytes:
+    """Fixture for ZIPs with legacy names and no UTF-8 flag."""
+    encoded = name.encode(encoding)
     placeholder = b"x" * len(encoded)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
@@ -194,6 +194,36 @@ class ArchiveTests(unittest.TestCase):
         with zipfile.ZipFile(buffer, "w") as archive:
             archive.writestr("简体.Example.S01E03.ass", ASS)
         self.assertEqual(subhd.extract_subtitle(buffer.getvalue(), 1, 3, "", False), ASS)
+
+    def test_standard_cp437_zip_names_are_preserved(self) -> None:
+        name = "é.Example.S01E03.chs.srt"
+        archive = legacy_zip(name, SRT, "cp437")
+        with zipfile.ZipFile(io.BytesIO(archive)) as reader:
+            self.assertEqual(subhd.zip_member_name(reader.infolist()[0]), name)
+        self.assertEqual(subhd.extract_subtitle(archive, 1, 3, "", False), subhd.validate_content(SRT))
+
+    def test_valid_gb18030_bytes_do_not_override_cp437_without_chinese_markers(self) -> None:
+        name = "éé.Example.S01E03.chs.srt"
+        archive = legacy_zip(name, SRT, "cp437")
+        with zipfile.ZipFile(io.BytesIO(archive)) as reader:
+            self.assertEqual(subhd.zip_member_name(reader.infolist()[0]), name)
+        self.assertEqual(subhd.extract_subtitle(archive, 1, 3, "", False), subhd.validate_content(SRT))
+
+    def test_gbk_machine_filename_is_rejected(self) -> None:
+        archive = legacy_zip("机器翻译.Example.S01E03.chs.srt", SRT)
+        with self.assertRaises(subhd.APIThrottled):
+            subhd.extract_subtitle(archive, 1, 3, "", False)
+
+    def test_mixed_utf8_and_gbk_zip_members_keep_their_own_encoding(self) -> None:
+        legacy_name = "简体双语.Example.S01E03.ass".encode("gbk")
+        placeholder = b"x" * len(legacy_name)
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr(placeholder.decode(), ASS)
+            archive.writestr("简体.Example.S01E04.ass", ASS)
+        content = buffer.getvalue().replace(placeholder, legacy_name)
+        self.assertEqual(subhd.extract_subtitle(content, 1, 3, "", False), ASS)
+        self.assertEqual(subhd.extract_subtitle(content, 1, 4, "", False), ASS)
 
     def test_invalid_zip_is_a_provider_error(self) -> None:
         with self.assertRaisesRegex(subhd.APIThrottled, "invalid ZIP"):

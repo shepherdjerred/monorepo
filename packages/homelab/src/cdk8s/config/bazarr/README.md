@@ -57,8 +57,9 @@ information when pack metadata contains only a season name. Per-episode ZIPs
 need no script marker on their outer name when ASSRT explicitly labels the pack
 Simplified; the subtitle inside still needs an explicit filename script marker
 and must pass content validation. Ambiguous choices remain wanted. ZIP readers
-honor UTF-8 flags and decode unflagged Chinese filenames as GB18030, preserving
-the script markers and fansub attribution. Downloads are bounded while streaming,
+honor UTF-8 flags and retain CP437 for unflagged names. GB18030 is selected per
+member when it reveals a Chinese script or machine-translation marker, preserving
+legacy script labels without rejecting standard ZIP filenames. Downloads are bounded while streaming,
 and archive expansion retains the shared size and member limits.
 
 Fixture verification uses the exact catalog-pinned Bazarr image and its vendor
