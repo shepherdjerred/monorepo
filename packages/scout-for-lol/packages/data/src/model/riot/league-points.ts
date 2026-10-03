@@ -5,9 +5,21 @@ import {
   numberOfDivisions,
   type Division,
 } from "#src/model/riot/division.ts";
-import type { Rank } from "#src/model/riot/rank.ts";
 import { TierSchema, type Tier } from "#src/model/riot/tier.ts";
 import { startCase } from "#src/util.ts";
+
+/**
+ * The part of a `Rank` the ladder maths reads. Declared here, not imported from
+ * `rank.ts`, because `rank.ts` imports this module.
+ */
+type RankLike = {
+  division: Division;
+  tier: Tier;
+  lp: number;
+  // Present on a full `Rank`; accepted so rank literals still type-check here.
+  wins?: number;
+  losses?: number;
+};
 
 export type LeaguePoints = z.infer<typeof LeaguePointsSchema>;
 export const LeaguePointsSchema = z.number().brand("League Points");
@@ -15,15 +27,15 @@ export const LeaguePointsSchema = z.number().brand("League Points");
 export const leaguePointsPerDivision = 100;
 
 export function leaguePointsDelta(
-  oldRank: Rank | undefined,
-  newRank: Rank,
+  oldRank: RankLike | undefined,
+  newRank: RankLike,
 ): LeaguePoints {
   return LeaguePointsSchema.parse(
     rankToLeaguePoints(newRank) - rankToLeaguePoints(oldRank),
   );
 }
 
-export function rankToLeaguePoints(rank: Rank | undefined): LeaguePoints {
+export function rankToLeaguePoints(rank: RankLike | undefined): LeaguePoints {
   if (rank === undefined) {
     return LeaguePointsSchema.parse(0);
   }
@@ -73,8 +85,8 @@ const DIVISION_FLOORS: readonly Division[] = [4, 3, 2, 1];
  */
 export const masterPlusChartStride = 10_000;
 
-function floorRank(tier: Tier, division: Division): Rank {
-  return { tier, division, lp: 0, wins: 0, losses: 0 };
+function floorRank(tier: Tier, division: Division): RankLike {
+  return { tier, division, lp: 0 };
 }
 
 /**
@@ -82,7 +94,7 @@ function floorRank(tier: Tier, division: Division): Rank {
  * competition ladder. Master+ uses {@link masterPlusChartStride} so a high
  * Master LP cannot be drawn or labeled as Grandmaster or Challenger.
  */
-export function rankToChartPoints(rank: Rank): number {
+export function rankToChartPoints(rank: RankLike): number {
   if (!MASTER_PLUS.has(rank.tier)) {
     return rankToLeaguePoints(rank);
   }

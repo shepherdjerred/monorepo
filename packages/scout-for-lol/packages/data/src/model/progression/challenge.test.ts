@@ -18,7 +18,7 @@ import {
 import {
   ChallengeEvidenceMatchSchema,
   type ChallengeEvidenceMatch,
-} from "./challenge-public.ts";
+} from "./challenge-evidence.ts";
 
 function evidence(input: {
   id: string;
