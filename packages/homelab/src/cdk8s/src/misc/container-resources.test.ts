@@ -323,7 +323,7 @@ describe("Container resource requests backstop", () => {
       ],
       [
         "media-plex/main",
-        { requests: { memory: "4096Mi" }, limits: { memory: "12288Mi" } },
+        { requests: { memory: "4096Mi" }, limits: { memory: "16384Mi" } },
       ],
       [
         "media-plex/plex-exporter",
