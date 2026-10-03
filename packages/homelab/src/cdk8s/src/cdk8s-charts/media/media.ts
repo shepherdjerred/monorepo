@@ -13,6 +13,8 @@ import { createMaintainerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/r
 import { createRecyclarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/recyclarr.ts";
 import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/whisperbridge.ts";
 import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/streambot.ts";
+import { STREAMBOT_WEB_PUBLIC_ORIGIN } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/web.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
   IntOrString,
   KubeNetworkPolicy,
@@ -66,9 +68,20 @@ export async function createMediaChart(app: App) {
   createWhisperbridgeDeployment(chart);
 
   // streambot (packages/streambot) lives here so it can read-only mount the movies/tv libraries.
-  createStreambotDeployment(chart, {
-    movies: moviesVolume.claim,
-    tv: tvVolume.claim,
+  createStreambotDeployment(
+    chart,
+    {
+      movies: moviesVolume.claim,
+      tv: tvVolume.claim,
+    },
+    { publicOrigin: STREAMBOT_WEB_PUBLIC_ORIGIN },
+  );
+  createCloudflareTunnelBinding(chart, "streambot-web-cf-tunnel", {
+    serviceName: "streambot-web",
+    subdomain: "streambot",
+    port: 8080,
+    probePath: "/readyz",
+    publicProbePath: "/readyz",
   });
 
   // NetworkPolicy: Default deny ingress from outside namespace
@@ -89,7 +102,7 @@ export async function createMediaChart(app: App) {
             },
           ],
         },
-        // Allow from Cloudflare tunnel (public access for Plex, Seerr)
+        // Allow from Cloudflare tunnel (public access for Plex, Seerr, Streambot)
         {
           from: [
             {

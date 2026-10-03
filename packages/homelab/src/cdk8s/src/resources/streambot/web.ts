@@ -9,6 +9,8 @@ import {
   type ISecret,
 } from "cdk8s-plus-31";
 
+export const STREAMBOT_WEB_PUBLIC_ORIGIN = "https://streambot.sjer.red";
+
 /** Credential bootstrap is deliberate so an unprovisioned OAuth secret cannot break the bot. */
 export function streambotWebProbes(): Pick<
   ContainerProps,
@@ -40,7 +42,7 @@ export function createStreambotWeb(
   bootstrap: { secret: ISecret; publicOrigin: string },
 ) {
   const { secret, publicOrigin } = bootstrap;
-  if (publicOrigin !== "https://streambot.sjer.red")
+  if (publicOrigin !== STREAMBOT_WEB_PUBLIC_ORIGIN)
     throw new Error(
       "Streambot web bootstrap must use its declared public origin",
     );
