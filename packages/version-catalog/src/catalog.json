@@ -795,7 +795,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004044@sha256:76cc9b8190adc2c2b1ce8d14f946ecd5a550748d42c60df0e9cdfe66c59ab131",
+      "value": "2.0.0-1004164@sha256:b04e42bfd74f87cc240fe6b5a377f19f32ae9bc06652883e4d143fe17bfb5c67",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -834,7 +834,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003787@sha256:55d256ca6185ac36a1db8cc2767b23b18971377ba7473935987cdae52cd1ab57",
+      "value": "2.0.0-1004164@sha256:e025607cdedb9fcf8b19de5f59f048b31c30303e31315e6c506b1c918a87bfbb",
       "notes": ["not managed by renovate"]
     },
     {
@@ -844,7 +844,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003676@sha256:74a27461ade3167fc4cd18734d9f8f51ca7df1f86aba4bd9aa2ada0840273e37",
+      "value": "2.0.0-1004164@sha256:14d375fc4141b61223e3eaebbcfd2169b1885b4e8a4c52b44d634ab45094eff5",
       "notes": [
         "not managed by renovate — CI version commit-back updates the image digest."
       ]
@@ -1553,7 +1553,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003936@sha256:f86e698a92f301947a7fc92a4e5432c4e645c9b952a39981f0ddc301000bd336",
+      "value": "2.0.0-1004164@sha256:3b6ec74bb736cd421ea475d2bf96f0218f717577ba83b4b0f19dd4640e18c850",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
