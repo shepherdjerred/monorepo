@@ -327,9 +327,17 @@ function refineSideSizes(
  * this, a full 5v5 that lost its lanes would render as a laneless column and
  * nothing would object. Short sides are exempt because Riot reports no
  * `teamPosition` for them at all.
+ *
+ * So is a side with a bot on it. Lanes for real players come from inference
+ * over summoner spells, and a bot has none — {@link validateSpellVisibility}
+ * permits that absence only for a participant with no PUUID — so the model
+ * cannot read that side. Each bot carries the slot the League client assigned
+ * it when there is one; a human beside it has no lane anybody can know.
  */
 function refineFullSidesHaveLanes(
-  data: { participants: { team: unknown; lane?: unknown }[] },
+  data: {
+    participants: { team: unknown; lane?: unknown; spell1Id?: unknown }[];
+  },
   context: z.RefinementCtx,
 ): void {
   for (const team of ["blue", "red"] as const) {
@@ -337,6 +345,9 @@ function refineFullSidesHaveLanes(
       (participant) => participant.team === team,
     );
     if (side.length !== 5) continue;
+    if (side.some((participant) => participant.spell1Id === undefined)) {
+      continue;
+    }
     if (side.some((participant) => participant.lane === undefined)) {
       context.addIssue({
         code: "custom",

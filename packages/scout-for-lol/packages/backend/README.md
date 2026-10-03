@@ -458,6 +458,33 @@ redriven. Betting pools are unique per match and guild, so a second open is a
 no-op. Neither pipeline therefore announces a game twice or opens its markets
 twice across a flip.
 
+### Games against bots
+
+Both pipelines wait out a spectator roster shorter than ten, because that is
+nearly always a lobby still loading in. A game against bots looks the same and
+never fills: Riot omits bots from the spectator roster entirely, so a custom
+against nine of them reports one participant for its whole length. Only the
+local Scout Client sees the rest, in the LCU lobby's `customTeam100` and
+`customTeam200`.
+
+`clientRosterCompletion` (`league/tasks/prematch/client-bot-roster.ts`) is the
+one rule both pipelines ask — v1's `shouldDeferRoster`, and V2's discovery and
+capture through `isPrematchRosterReady`, which must agree for the reason given
+above. It answers only once the game has started (`gameLength >= 0`), so a
+loading lobby still waits, and only when the client's bots leave somebody on
+both sides. The bots come from the tracked player's own accepted observations
+in two hops, because LCU never names the lobby and the game in one payload: the
+client stamps the lobby it saw onto its in-game observation, and the roster is
+read from that lobby as it stood when the game began. The desktop README
+documents the client half.
+
+Bots then render as ordinary participants with no PUUID, no summoner spells, a
+hidden rank, and the lane the client assigned them. The lane-prior model reads
+spells, so it does not infer lanes on a side bots share, and the full-side lane
+rule in `LoadingScreenDataSchema` exempts that side for the same reason. A
+completed roster is counted as
+`prematch_detections_total{status="client_completed_roster"}`.
+
 ### V2 prematch delivery and markets
 
 Behind the `scout-v2-prematch-delivery` patch, `scoutPrematchGameV2Workflow`

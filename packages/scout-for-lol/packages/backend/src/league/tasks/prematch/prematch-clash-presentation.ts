@@ -13,6 +13,7 @@ import {
   buildLoadingScreenData,
   type ParticipantRanks,
 } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import type { ObservedLobbyBot } from "#src/scout-client/lobby-payload.ts";
 import { recordLoadingScreenFailure } from "#src/league/tasks/prematch/loading-screen-failure.ts";
 import { formatPrematchMessage } from "#src/league/tasks/prematch/prematch-copy.ts";
 import {
@@ -74,6 +75,8 @@ export async function renderPrematchPresentation(input: {
   aliases: string[];
   region: PlayerConfigEntry["league"]["leagueAccount"]["region"];
   ranksByPuuid: ParticipantRanks;
+  /** Bots the local client saw in the lobby; Riot's roster omits them. */
+  observedBots: readonly ObservedLobbyBot[];
   queueType: QueueType | undefined;
 }): Promise<PrematchPresentation> {
   const loadingScreenStartTime = Date.now();
@@ -87,7 +90,10 @@ export async function renderPrematchPresentation(input: {
         input.gameInfo,
         trackedPuuidSet,
         input.region,
-        input.ranksByPuuid,
+        {
+          prefetchedRanks: input.ranksByPuuid,
+          observedBots: input.observedBots,
+        },
       ),
       input.clashSurfaceEnabled,
     );

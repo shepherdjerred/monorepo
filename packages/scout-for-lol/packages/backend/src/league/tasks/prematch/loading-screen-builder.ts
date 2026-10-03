@@ -56,6 +56,11 @@ import {
   withSelectedChampionMastery,
   type ParticipantMasteries,
 } from "./loading-screen-mastery.ts";
+import type { ObservedLobbyBot } from "#src/scout-client/lobby-payload.ts";
+import {
+  buildBotParticipant,
+  buildStandardBotParticipant,
+} from "./loading-screen-bots.ts";
 
 const logger = createLogger("prematch-loading-screen-builder");
 
@@ -74,6 +79,17 @@ type BaseBuiltParticipant = Omit<
 >;
 type RankedBuiltParticipant = NonStandardLoadingScreenParticipant;
 export type ParticipantRanks = ReadonlyMap<string, RankLookupResult>;
+
+/** Inputs to {@link buildLoadingScreenData} that most callers do not have. */
+export type BuildLoadingScreenOptions = {
+  /** A rank snapshot already fetched for this roster, to avoid a second one. */
+  readonly prefetchedRanks?: ParticipantRanks | undefined;
+  /**
+   * Bots the local client saw in this game's lobby, which Riot's Spectator
+   * roster leaves out entirely. Empty for every matchmade game.
+   */
+  readonly observedBots?: readonly ObservedLobbyBot[] | undefined;
+};
 
 /** Fetch the lobby rank snapshot used by the loading-screen presentation. */
 export async function fetchParticipantRanks(
@@ -245,8 +261,17 @@ function buildStandardParticipant(
   };
 }
 
+/**
+ * Assign lanes to a standard roster, keeping its shape honest.
+ *
+ * `bots` are already final — they carry the lane the client assigned — so they
+ * are never handed to the inference. They still count as occupying their side:
+ * in a game against bots, Riot's roster can leave a whole side empty, and that
+ * side is not empty at all.
+ */
 function inferStandardParticipants(
   participants: readonly RankedBuiltParticipant[],
+  bots: readonly StandardLoadingScreenParticipant[],
   gameInfo: RawCurrentGameInfo,
   queueType: QueueType | undefined,
 ): StandardLoadingScreenParticipant[] {
@@ -254,10 +279,11 @@ function inferStandardParticipants(
   // a teamSize of 1-5. Every other queue arriving short is the partial
   // pre-start-lobby snapshot the poller defers on, so it must keep raising.
   const isCustomLobby = queueType === "custom";
+  const rosterSize = participants.length + bots.length;
 
-  if (!isCustomLobby && participants.length !== 10) {
+  if (!isCustomLobby && rosterSize !== 10) {
     throw new RecoverableLoadingScreenDataError(
-      buildIncompleteLobbyMessage(participants.length, gameInfo),
+      buildIncompleteLobbyMessage(rosterSize, gameInfo),
     );
   }
 
@@ -267,19 +293,40 @@ function inferStandardParticipants(
     const indexedTeam = participants
       .map((participant, index) => ({ participant, index }))
       .filter((entry) => entry.participant.team === team);
+    const sideBots = bots.filter((bot) => bot.team === team).length;
+    const sideSize = indexedTeam.length + sideBots;
     // Nobody on a side is broken in every mode, custom included.
-    if (
-      indexedTeam.length === 0 ||
-      (!isCustomLobby && indexedTeam.length !== 5)
-    ) {
+    if (sideSize === 0 || (!isCustomLobby && sideSize !== 5)) {
       throw new RecoverableLoadingScreenDataError(
-        buildLopsidedTeamMessage(team, indexedTeam.length, gameInfo),
+        buildLopsidedTeamMessage(team, sideSize, gameInfo),
       );
     }
 
-    if (indexedTeam.length !== 5) {
+    // The lane-prior model reads summoner spells, so it can only speak for a
+    // participant who has them. Riot reports them for every real player; a
+    // participant without them is one no lane can be inferred for.
+    const inferable = indexedTeam.flatMap((entry) =>
+      entry.participant.spell1Id === undefined ||
+      entry.participant.spell2Id === undefined
+        ? []
+        : [
+            {
+              participantKey: laneInferenceKey(entry.index),
+              championId: entry.participant.championId,
+              spell1Id: entry.participant.spell1Id,
+              spell2Id: entry.participant.spell2Id,
+            },
+          ],
+    );
+
+    if (
+      indexedTeam.length !== 5 ||
+      sideBots > 0 ||
+      inferable.length !== indexedTeam.length
+    ) {
       // The lane-prior model assigns one player per role across a full five.
-      // On a shorter side its answer would be invented, so omit the lane.
+      // On a shorter side, one shared with bots, or one it cannot read in
+      // full, its answer would be invented, so omit the lane.
       for (const entry of indexedTeam) {
         result.set(
           entry.index,
@@ -289,14 +336,7 @@ function inferStandardParticipants(
       continue;
     }
 
-    const inference = inferStandardLanesWithCurrentPriors(
-      indexedTeam.map((entry) => ({
-        participantKey: laneInferenceKey(entry.index),
-        championId: entry.participant.championId,
-        spell1Id: entry.participant.spell1Id,
-        spell2Id: entry.participant.spell2Id,
-      })),
-    );
+    const inference = inferStandardLanesWithCurrentPriors(inferable);
 
     for (const assignment of inference.assignments) {
       const parsedIndex = Number(
@@ -323,7 +363,7 @@ function inferStandardParticipants(
     return participant;
   });
 
-  return inferred;
+  return [...inferred, ...bots];
 }
 
 /**
@@ -363,8 +403,9 @@ export async function buildLoadingScreenData(
   gameInfo: RawCurrentGameInfo,
   trackedPuuids: ReadonlySet<string>,
   region: Region,
-  prefetchedRanks?: ParticipantRanks,
+  options: BuildLoadingScreenOptions = {},
 ): Promise<LoadingScreenData> {
+  const { prefetchedRanks, observedBots = [] } = options;
   const queueType = resolveQueueTypeFromGame(
     gameInfo.gameQueueConfigId,
     gameInfo.gameMode,
@@ -481,10 +522,20 @@ export async function buildLoadingScreenData(
     },
   );
 
+  // Bots skip the rank and mastery lookups — there is no PUUID to look either
+  // up by — and arrive already carrying their lane.
   const participants: LoadingScreenParticipant[] =
     layout === "standard"
-      ? inferStandardParticipants(rankedParticipants, gameInfo, queueType)
-      : rankedParticipants;
+      ? inferStandardParticipants(
+          rankedParticipants,
+          observedBots.map((bot) => buildStandardBotParticipant(bot)),
+          gameInfo,
+          queueType,
+        )
+      : [
+          ...rankedParticipants,
+          ...observedBots.map((bot) => buildBotParticipant(bot)),
+        ];
 
   // Build bans (skip for ARAM/Arena which don't have bans)
   const bans = layout === "standard" ? buildBans(gameInfo) : [];
