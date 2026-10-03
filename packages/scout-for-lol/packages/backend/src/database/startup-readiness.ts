@@ -25,10 +25,7 @@ const ImportReceiptSchema = z
     "Incomplete legacy import receipt",
   );
 
-type ReadinessClient = Pick<
-  Prisma.TransactionClient,
-  "$queryRawUnsafe" | "bucksAccount" | "bucksLedgerEntry"
->;
+type ReadinessClient = Pick<Prisma.TransactionClient, "$queryRawUnsafe">;
 
 /** SQL-only startup check. Retained SQLite snapshots are recovery inputs. */
 export async function assertDatabasePrepared(
@@ -58,26 +55,25 @@ export async function assertDatabasePrepared(
   }
 }
 
-/** Every persisted account balance must equal its ledger deltas. */
+/** One statement compares balances and deltas from the same database snapshot. */
 export async function verifyLedgerBalances(
   db: ReadinessClient,
 ): Promise<string[]> {
-  const accounts = await db.bucksAccount.findMany({
-    select: { id: true, balance: true },
-  });
-  const sums = await db.bucksLedgerEntry.groupBy({
-    by: ["bucksAccountId"],
-    _sum: { delta: true },
-  });
-  const byAccount = new Map(
-    sums.map((entry) => [entry.bucksAccountId, entry._sum.delta ?? 0]),
+  const drift = await db.$queryRawUnsafe<
+    { id: number; balance: number; expected: bigint }[]
+  >(`
+    SELECT account.id, account.balance, COALESCE(ledger.total, 0)::bigint AS expected
+    FROM "BucksAccount" AS account
+    LEFT JOIN (
+      SELECT "bucksAccountId", SUM(delta) AS total
+      FROM "BucksLedgerEntry"
+      GROUP BY "bucksAccountId"
+    ) AS ledger ON ledger."bucksAccountId" = account.id
+    WHERE account.balance <> COALESCE(ledger.total, 0)
+    ORDER BY account.id
+  `);
+  return drift.map(
+    (account) =>
+      `BucksAccount ${account.id.toString()}: balance ${account.balance.toString()} != ledger sum ${account.expected.toString()}`,
   );
-  return accounts.flatMap((account) => {
-    const expected = byAccount.get(account.id) ?? 0;
-    return expected === account.balance
-      ? []
-      : [
-          `BucksAccount ${account.id.toString()}: balance ${account.balance.toString()} != ledger sum ${expected.toString()}`,
-        ];
-  });
 }
