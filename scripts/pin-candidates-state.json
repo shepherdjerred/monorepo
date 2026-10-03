@@ -85,9 +85,10 @@
       "buildNumber": 1003936
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
-      "version": "2.0.0-1002817",
-      "digest": "sha256:b3479221851e3ccbbcf1bb2f1c279fdcb48dca602aae8dec1dcec1f32e0ac273",
-      "buildNumber": 1002817
+      "version": "2.0.0-1003936",
+      "digest": "sha256:af16329edd7eaf5d65bb7e09adf8b6dbf2bf00bc5813b900195d1eb0cbc6fb80",
+      "buildNumber": 1003936,
+      "gitSha": "3a1af73ea4b5fe0df2a47f798c1844ced1fef418"
     },
     "shepherdjerred/the-storm-server": {
       "buildNumber": 1003787,
