@@ -28,6 +28,11 @@ crate-type = ["staticlib", "cdylib", "lib"]
 cli = ["uniffi/cli"]
 
 [[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["cli"]
+
+[[bin]]
 name = "uniffi-bindgen-swift"
 path = "src/bin/uniffi-bindgen-swift.rs"
 required-features = ["cli"]
@@ -39,6 +44,7 @@ required-features = ["cli"]
 chrono = { workspace = true }
 serde_json = { workspace = true }
 tasknotes-core = { path = "../tasknotes-core" }
+tasknotes-vault = { path = "../tasknotes-vault" }
 thiserror = { workspace = true }
 uniffi = { workspace = true }
 

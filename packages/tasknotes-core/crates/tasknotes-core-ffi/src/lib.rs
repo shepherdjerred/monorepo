@@ -69,6 +69,7 @@ pub mod nlp;
 pub mod recurrence;
 pub mod types;
 pub mod update;
+pub mod vault;
 
 pub use api::core_version;
 pub use command::{Command, CommandInput, DeadLetterEntry};

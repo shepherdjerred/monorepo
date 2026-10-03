@@ -1214,6 +1214,28 @@ static class _UniFFILib {
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     static _UniFFILib() {
         _UniFFILib.uniffiCheckContractApiVersion();
@@ -2084,6 +2106,149 @@ static class _UniFFILib {
     public static extern
 #endif
      RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(ulong @ptr,RustBuffer @period,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffivaultconfiguration(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_ffivaultconfiguration(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_constructor_ffivaultconfiguration_new(RustBuffer @plugin,RustBuffer @portable,sbyte @approveStandard,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_configuration_json(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     sbyte uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_is_completed(ulong @ptr,RustBuffer @status,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_next_status(ulong @ptr,RustBuffer @status,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffivaultdocument(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_ffivaultdocument(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_constructor_ffivaultdocument_new(RustBuffer @path,RustBuffer @bytes,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_body(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_plan(ulong @ptr,RustBuffer @editsJson,RustBuffer @body,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_properties_json(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_revision(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -4877,6 +5042,83 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_next_status(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_body(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_plan(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_properties_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_revision(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
      ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new(
     );
 
@@ -4889,6 +5131,28 @@ static class _UniFFILib {
     public static extern
 #endif
      ushort uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultdocument_new(
     );
 
     #if NET8_0_OR_GREATER
@@ -5668,6 +5932,48 @@ static class _UniFFILib {
             }
         }
         {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json();
+            if (checksum != 54722) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json` checksum `54722`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed();
+            if (checksum != 49549) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed` checksum `49549`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_next_status();
+            if (checksum != 58547) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_next_status` checksum `58547`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_body();
+            if (checksum != 13793) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_body` checksum `13793`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_plan();
+            if (checksum != 9460) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_plan` checksum `9460`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_properties_json();
+            if (checksum != 27226) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_properties_json` checksum `27226`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_revision();
+            if (checksum != 59888) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_revision` checksum `59888`, library returned `{checksum}`");
+            }
+        }
+        {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new();
             if (checksum != 55747) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new` checksum `55747`, library returned `{checksum}`");
@@ -5677,6 +5983,18 @@ static class _UniFFILib {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new();
             if (checksum != 55934) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new` checksum `55934`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new();
+            if (checksum != 16189) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new` checksum `16189`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultdocument_new();
+            if (checksum != 14230) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultdocument_new` checksum `14230`, library returned `{checksum}`");
             }
         }
     }
@@ -6832,6 +7150,429 @@ class FfiConverterTypeFfiSyncEngine: FfiConverter<FfiSyncEngine, ulong> {
     }
 
     public override void Write(FfiSyncEngine value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// Immutable Rust-owned configuration for a selected vault profile.
+/// </summary>
+internal interface IFfiVaultConfiguration {
+    /// <summary>
+    /// Validated effective settings as JSON, including mapped field names.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    string ConfigurationJson();
+    /// <summary>
+    /// Resolve completion using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects status values absent from the workflow.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    bool IsCompleted(string @status);
+    /// <summary>
+    /// Resolve the next status using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects unknown values and workflows with no cycling participants.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    string NextStatus(string @status);
+}
+/// <summary>
+/// Immutable Rust-owned configuration for a selected vault profile.
+/// </summary>
+internal class FfiVaultConfiguration : IFfiVaultConfiguration, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiVaultConfiguration(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiVaultConfiguration() {
+        Destroy();
+    }
+    /// <summary>
+    /// Resolve the selected vault's settings using the documented precedence.
+    ///
+    /// # Errors
+    /// Rejects invalid configuration and unapproved configuration-free vaults.
+    /// </summary>
+    public FfiVaultConfiguration(byte[]? @plugin, byte[]? @portable, bool @approveStandard) :
+        this(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_constructor_ffivaultconfiguration_new(FfiConverterOptionalByteArray.INSTANCE.Lower(@plugin), FfiConverterOptionalByteArray.INSTANCE.Lower(@portable), FfiConverterBoolean.INSTANCE.Lower(@approveStandard), ref _status)
+)) {}
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffivaultconfiguration(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffivaultconfiguration(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Validated effective settings as JSON, including mapped field names.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public string ConfigurationJson() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_configuration_json(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Resolve completion using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects status values absent from the workflow.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public bool IsCompleted(string @status) {
+        return CallWithPointer(thisPtr => FfiConverterBoolean.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_is_completed(thisPtr, FfiConverterString.INSTANCE.Lower(@status), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Resolve the next status using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects unknown values and workflows with no cycling participants.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public string NextStatus(string @status) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_next_status(thisPtr, FfiConverterString.INSTANCE.Lower(@status), ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiVaultConfiguration: FfiConverter<FfiVaultConfiguration, ulong> {
+    public static FfiConverterTypeFfiVaultConfiguration INSTANCE = new FfiConverterTypeFfiVaultConfiguration();
+
+
+    public override ulong Lower(FfiVaultConfiguration value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiVaultConfiguration Lift(ulong value) {
+        return new FfiVaultConfiguration(value);
+    }
+
+    public override FfiVaultConfiguration Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiVaultConfiguration value) {
+        return 8;
+    }
+
+    public override void Write(FfiVaultConfiguration value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// Immutable Rust-owned parsed document, with no filesystem access.
+/// </summary>
+internal interface IFfiVaultDocument {
+    /// <summary>
+    /// Exact original Markdown body.
+    /// </summary>
+    string Body();
+    /// <summary>
+    /// Plan physical property edits and an optional body replacement.
+    /// `edits_json` is a list of tagged `set`/`remove` property edits.
+    ///
+    /// # Errors
+    /// Rejects malformed edits and changes affecting properties outside the plan.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    VaultDocumentWrite Plan(string @editsJson, string? @body);
+    /// <summary>
+    /// Properties as an ordered JSON object, including unknown keys.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    string PropertiesJson();
+    /// <summary>
+    /// Exact content hash to use as a concurrency precondition.
+    /// </summary>
+    string Revision();
+}
+/// <summary>
+/// Immutable Rust-owned parsed document, with no filesystem access.
+/// </summary>
+internal class FfiVaultDocument : IFfiVaultDocument, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiVaultDocument(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiVaultDocument() {
+        Destroy();
+    }
+    /// <summary>
+    /// Parse a logical path and complete document bytes.
+    ///
+    /// # Errors
+    /// Rejects unsafe paths and malformed Markdown/frontmatter.
+    /// </summary>
+    public FfiVaultDocument(string @path, byte[] @bytes) :
+        this(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_constructor_ffivaultdocument_new(FfiConverterString.INSTANCE.Lower(@path), FfiConverterByteArray.INSTANCE.Lower(@bytes), ref _status)
+)) {}
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffivaultdocument(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffivaultdocument(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Exact original Markdown body.
+    /// </summary>
+    public string Body() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_body(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Plan physical property edits and an optional body replacement.
+    /// `edits_json` is a list of tagged `set`/`remove` property edits.
+    ///
+    /// # Errors
+    /// Rejects malformed edits and changes affecting properties outside the plan.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public VaultDocumentWrite Plan(string @editsJson, string? @body) {
+        return CallWithPointer(thisPtr => FfiConverterTypeVaultDocumentWrite.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_plan(thisPtr, FfiConverterString.INSTANCE.Lower(@editsJson), FfiConverterOptionalString.INSTANCE.Lower(@body), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Properties as an ordered JSON object, including unknown keys.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public string PropertiesJson() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_properties_json(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Exact content hash to use as a concurrency precondition.
+    /// </summary>
+    public string Revision() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_revision(thisPtr,  ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiVaultDocument: FfiConverter<FfiVaultDocument, ulong> {
+    public static FfiConverterTypeFfiVaultDocument INSTANCE = new FfiConverterTypeFfiVaultDocument();
+
+
+    public override ulong Lower(FfiVaultDocument value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiVaultDocument Lift(ulong value) {
+        return new FfiVaultDocument(value);
+    }
+
+    public override FfiVaultDocument Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiVaultDocument value) {
+        return 8;
+    }
+
+    public override void Write(FfiVaultDocument value, BigEndianStream stream) {
         stream.WriteULong(Lower(value));
     }
 }
@@ -12572,6 +13313,71 @@ class FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTaskReques
 
 
 /// <summary>
+/// A complete conditional write; hosts supply journaling and atomic file I/O.
+/// </summary>
+/// <param name="Path">
+/// Logical vault-relative target, validated by Rust.
+/// </param>
+/// <param name="ExpectedRevision">
+/// SHA-256 of the exact prior bytes.
+/// </param>
+/// <param name="Bytes">
+/// Complete replacement document bytes.
+/// </param>
+/// <param name="Revision">
+/// SHA-256 of the replacement bytes.
+/// </param>
+internal record VaultDocumentWrite (
+    /// <summary>
+    /// Logical vault-relative target, validated by Rust.
+    /// </summary>
+    string Path, 
+    /// <summary>
+    /// SHA-256 of the exact prior bytes.
+    /// </summary>
+    string ExpectedRevision, 
+    /// <summary>
+    /// Complete replacement document bytes.
+    /// </summary>
+    byte[] Bytes, 
+    /// <summary>
+    /// SHA-256 of the replacement bytes.
+    /// </summary>
+    string Revision
+) {
+}
+
+class FfiConverterTypeVaultDocumentWrite: FfiConverterRustBuffer<VaultDocumentWrite> {
+    public static FfiConverterTypeVaultDocumentWrite INSTANCE = new FfiConverterTypeVaultDocumentWrite();
+
+    public override VaultDocumentWrite Read(BigEndianStream stream) {
+        return new VaultDocumentWrite(
+            Path: FfiConverterString.INSTANCE.Read(stream),
+            ExpectedRevision: FfiConverterString.INSTANCE.Read(stream),
+            Bytes: FfiConverterByteArray.INSTANCE.Read(stream),
+            Revision: FfiConverterString.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(VaultDocumentWrite value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Path)
+            + FfiConverterString.INSTANCE.AllocationSize(value.ExpectedRevision)
+            + FfiConverterByteArray.INSTANCE.AllocationSize(value.Bytes)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Revision);
+    }
+
+    public override void Write(VaultDocumentWrite value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Path, stream);
+            FfiConverterString.INSTANCE.Write(value.ExpectedRevision, stream);
+            FfiConverterByteArray.INSTANCE.Write(value.Bytes, stream);
+            FfiConverterString.INSTANCE.Write(value.Revision, stream);
+    }
+}
+
+
+
+/// <summary>
 /// See [`tasknotes_core::domain::VaultInfo`].
 /// </summary>
 /// <param name="Name">
@@ -14807,6 +15613,137 @@ class FfiConverterTypeUpcomingHorizon : FfiConverterRustBuffer<UpcomingHorizon>{
 }
 
 
+
+
+
+
+
+/// <summary>
+/// Sanitized vault failures, distinct from the legacy server API errors.
+/// </summary>
+internal class VaultBoundaryException: UniffiException {
+    VaultBoundaryException() : base() {}
+    VaultBoundaryException(String @Message) : base(@Message) {}
+
+    // Each variant is a nested class
+    
+    /// <summary>
+    /// The selected configuration is invalid or needs explicit approval.
+    /// </summary>
+    
+    public class Configuration : VaultBoundaryException {
+        // Members
+        public string @message;
+
+        // Constructor
+        public Configuration(
+                string @message) : base(
+                "@message" + "=" + @message) {
+
+            this.@message = @message;
+        }
+    }
+    
+    /// <summary>
+    /// A document or requested edit is invalid.
+    /// </summary>
+    
+    public class Document : VaultBoundaryException {
+        // Members
+        public string @message;
+
+        // Constructor
+        public Document(
+                string @message) : base(
+                "@message" + "=" + @message) {
+
+            this.@message = @message;
+        }
+    }
+    
+    /// <summary>
+    /// A path is not a safe vault-relative identity.
+    /// </summary>
+    public class Path : VaultBoundaryException {
+        public Path() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// The current file differs from the version used to plan its edit.
+    /// </summary>
+    public class Conflict : VaultBoundaryException {
+        public Conflict() : base() {}
+    }
+    
+    
+
+    
+}
+
+class FfiConverterTypeVaultBoundaryError : FfiConverterRustBuffer<VaultBoundaryException>, CallStatusErrorHandler<VaultBoundaryException> {
+    public static FfiConverterTypeVaultBoundaryError INSTANCE = new FfiConverterTypeVaultBoundaryError();
+
+    public override VaultBoundaryException Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new VaultBoundaryException.Configuration(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 2:
+                return new VaultBoundaryException.Document(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 3:
+                return new VaultBoundaryException.Path();
+            case 4:
+                return new VaultBoundaryException.Conflict();
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeVaultBoundaryError.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(VaultBoundaryException value) {
+        switch (value) {
+
+            case VaultBoundaryException.Configuration variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+
+            case VaultBoundaryException.Document variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+
+            case VaultBoundaryException.Path variant_value:
+                return 4;
+
+            case VaultBoundaryException.Conflict variant_value:
+                return 4;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeVaultBoundaryError.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(VaultBoundaryException value, BigEndianStream stream) {
+        switch (value) {
+            case VaultBoundaryException.Configuration variant_value:
+                stream.WriteInt(1);
+                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                break;
+            case VaultBoundaryException.Document variant_value:
+                stream.WriteInt(2);
+                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                break;
+            case VaultBoundaryException.Path variant_value:
+                stream.WriteInt(3);
+                break;
+            case VaultBoundaryException.Conflict variant_value:
+                stream.WriteInt(4);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeVaultBoundaryError.Write()", value));
+        }
+    }
+}
 
 
 
