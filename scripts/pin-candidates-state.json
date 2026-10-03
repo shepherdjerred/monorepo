@@ -17,14 +17,16 @@
       "buildNumber": 16936
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "version": "2.0.0-1003676",
-      "digest": "sha256:74a27461ade3167fc4cd18734d9f8f51ca7df1f86aba4bd9aa2ada0840273e37",
-      "buildNumber": 1003676
+      "version": "2.0.0-1004164",
+      "digest": "sha256:14d375fc4141b61223e3eaebbcfd2169b1885b4e8a4c52b44d634ab45094eff5",
+      "gitSha": "16fa08e78899c9cb28a06c3661b97f61e59dede1",
+      "buildNumber": 1004164
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "buildNumber": 1003787,
-      "version": "2.0.0-1003787",
-      "digest": "sha256:55d256ca6185ac36a1db8cc2767b23b18971377ba7473935987cdae52cd1ab57"
+      "version": "2.0.0-1004164",
+      "digest": "sha256:e025607cdedb9fcf8b19de5f59f048b31c30303e31315e6c506b1c918a87bfbb",
+      "gitSha": "16fa08e78899c9cb28a06c3661b97f61e59dede1",
+      "buildNumber": 1004164
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-16936",
@@ -70,9 +72,10 @@
       "gitSha": "16fa08e78899c9cb28a06c3661b97f61e59dede1"
     },
     "shepherdjerred/tasknotes-server": {
-      "version": "2.0.0-1003936",
-      "digest": "sha256:f86e698a92f301947a7fc92a4e5432c4e645c9b952a39981f0ddc301000bd336",
-      "buildNumber": 1003936
+      "version": "2.0.0-1004164",
+      "digest": "sha256:3b6ec74bb736cd421ea475d2bf96f0218f717577ba83b4b0f19dd4640e18c850",
+      "gitSha": "16fa08e78899c9cb28a06c3661b97f61e59dede1",
+      "buildNumber": 1004164
     },
     "shepherdjerred/temporal-worker": {
       "buildNumber": 1003936,
@@ -102,10 +105,10 @@
       "digest": "sha256:acd8d9ab3aa9d005a72cff195379123d25941013923214b06fba2d08ae51425f"
     },
     "shepherdjerred/woodpecker-config-extension": {
-      "version": "2.0.0-1004044",
-      "digest": "sha256:76cc9b8190adc2c2b1ce8d14f946ecd5a550748d42c60df0e9cdfe66c59ab131",
-      "buildNumber": 1004044,
-      "gitSha": "734b7a77e13abffa1effd57baaa01dd174dcb6a9"
+      "version": "2.0.0-1004164",
+      "digest": "sha256:b04e42bfd74f87cc240fe6b5a377f19f32ae9bc06652883e4d143fe17bfb5c67",
+      "gitSha": "16fa08e78899c9cb28a06c3661b97f61e59dede1",
+      "buildNumber": 1004164
     }
   }
 }
