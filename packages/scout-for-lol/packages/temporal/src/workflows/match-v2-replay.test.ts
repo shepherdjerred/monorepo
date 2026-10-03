@@ -11,10 +11,12 @@ import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account
 import {
   scoutMatchProcessingV2InputCodec,
   scoutPostMatchDiscoveryV2InputCodec,
+  scoutPrematchDiscoveryV2InputCodec,
 } from "#src/workflow-contracts-v2.ts";
 import {
   scoutMatchProcessingV2Workflow,
   scoutPostMatchDiscoveryV2Workflow,
+  scoutPrematchDiscoveryV2Workflow,
 } from "./index.ts";
 import { SCOUT_V2_MATCH_MINT_INTENTS_PATCH } from "./match-v2.ts";
 import {
@@ -28,6 +30,11 @@ import {
   MATCH_ID,
 } from "./match-v2.test-fixtures.ts";
 import { useScoutV2WorkflowHarness } from "./workflow-harness.test-fixtures.ts";
+import { SCOUT_V2_PREMATCH_MAINTENANCE_PATCH } from "./prematch-v2.ts";
+import {
+  createScoutV2PrematchStore,
+  scoutV2PrematchActivityStubs,
+} from "./prematch-v2.test-fixtures.ts";
 
 /**
  * This Workflow family, replayed against histories older than the code.
@@ -512,5 +519,43 @@ test("a discovery recorded now names the retirement and never asks", async () =>
   await Worker.runReplayHistory(
     { workflowsPath: new URL("index.ts", import.meta.url).pathname },
     recorded,
+  );
+}, 120_000);
+
+// ─── A prematch poll whose history predates the maintenance tail ──────────
+
+test("a prematch discovery recorded before the maintenance tail still replays", async () => {
+  await harness.startWorkers(
+    scoutV2PrematchActivityStubs(createScoutV2PrematchStore(), []),
+  );
+  const handle = await harness
+    .client()
+    .workflow.start(scoutPrematchDiscoveryV2Workflow, {
+      taskQueue: "scout-dev",
+      workflowId: "prematch-discovery-pre-maintenance-history",
+      args: [scoutPrematchDiscoveryV2InputCodec.serialize({ stage })],
+    });
+  await handle.result();
+  const recorded = await handle.fetchHistory();
+  const maintenance: PatchedActivity = {
+    patchId: SCOUT_V2_PREMATCH_MAINTENANCE_PATCH,
+    activityType: "runPrematchMaintenance",
+  };
+  // A closed history from before the tail: it completed straight after
+  // discovery, which is what a retained beta history replayed against the
+  // candidate bundle looks like.
+  const preChange = historyWithoutPatchedActivity(recorded, maintenance);
+
+  expect(markersFor(recorded, maintenance.patchId)).toBe(1);
+  expect((recorded.events ?? []).length - (preChange.events ?? []).length).toBe(
+    5,
+  );
+  expect(SCOUT_V2_PREMATCH_MAINTENANCE_PATCH).toBe(
+    "scout-v2-prematch-maintenance",
+  );
+
+  await Worker.runReplayHistory(
+    { workflowsPath: new URL("index.ts", import.meta.url).pathname },
+    preChange,
   );
 }, 120_000);

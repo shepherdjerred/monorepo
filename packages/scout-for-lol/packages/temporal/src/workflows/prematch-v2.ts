@@ -82,17 +82,19 @@ export async function scoutPrematchDiscoveryV2Workflow(
     }
   }
 
-  // Appended without a `patched` gate, and deliberately. An execution that is
-  // still open when this code deploys has not yet recorded its completion, so
-  // replaying it emits every command it recorded and then this Activity as a
-  // NEW command past the end of its history — which is not a conflict, just
-  // the run continuing. A closed execution recorded its completion and is
-  // never replayed to make progress. A gate would only matter for a command
-  // inserted before something a history already recorded.
-  setWorkflowPhase("**Phase:** running prematch maintenance");
-  await realtimeV2Activities(input.stage).runPrematchMaintenance({
-    stage: input.stage,
-  });
+  // Gated, although it is appended at the end. An open execution would replay
+  // it harmlessly as a new command past its history, but closed discovery
+  // histories ARE replayed: operators run retained beta histories against a
+  // candidate bundle before promotion (`replay:histories`). A closed history
+  // recorded its completion right after the last child start, so an
+  // unconditional Activity there would fail that replay. Retire with
+  // `deprecatePatch` once no history predating it is retained.
+  if (patched(SCOUT_V2_PREMATCH_MAINTENANCE_PATCH)) {
+    setWorkflowPhase("**Phase:** running prematch maintenance");
+    await realtimeV2Activities(input.stage).runPrematchMaintenance({
+      stage: input.stage,
+    });
+  }
 
   return scoutPrematchDiscoveryV2ResultCodec.serialize({
     status: "completed",
@@ -238,6 +240,13 @@ export async function scoutPrematchGameV2Workflow(
  * children. Recorded histories name this id; never rename it.
  */
 export const SCOUT_V2_PREMATCH_DELIVERY_PATCH = "scout-v2-prematch-delivery";
+
+/**
+ * The patch that gives discovery its maintenance tail. Recorded histories
+ * name this id; never rename it.
+ */
+export const SCOUT_V2_PREMATCH_MAINTENANCE_PATCH =
+  "scout-v2-prematch-maintenance";
 
 /**
  * Open this game's Bryan Bucks markets before any announcement is sent.

@@ -55,6 +55,8 @@ export const SCOUT_FLAG_KEYS = [
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
   "scout_operations_console_enabled",
+  "scout_v2_postmatch_ownership_enabled",
+  "scout_v2_prematch_ownership_enabled",
   "scout_v2_progression_notifications_enabled",
   "scoutql_relational_enabled",
   "voice_assistant_enabled",
@@ -90,6 +92,8 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
   "scout_operations_console_enabled",
+  "scout_v2_postmatch_ownership_enabled",
+  "scout_v2_prematch_ownership_enabled",
   "scout_v2_progression_notifications_enabled",
   "scoutql_relational_enabled",
   "voice_assistant_enabled",
@@ -171,6 +175,7 @@ export type BirmelVariantFlagKey = (typeof BIRMEL_VARIANT_FLAG_KEYS)[number];
 
 export const STREAMBOT_FLAG_KEYS = [
   "player-card-enabled",
+  "streambot-plex-posters-enabled",
   "streambot-web-ui-enabled",
   "streambot-assistant-v2-enabled",
   "streambot-history-enabled",
@@ -193,6 +198,7 @@ export type StreambotFlagKey = (typeof STREAMBOT_FLAG_KEYS)[number];
 
 export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "player-card-enabled",
+  "streambot-plex-posters-enabled",
   "streambot-web-ui-enabled",
   "streambot-assistant-v2-enabled",
   "streambot-history-enabled",

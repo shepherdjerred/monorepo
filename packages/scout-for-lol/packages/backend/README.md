@@ -346,8 +346,8 @@ awaiting a child.
 
 ### Post-match discovery ownership
 
-V2 owns post-match discovery unconditionally; the
-`scout_v2_postmatch_ownership_enabled` rollback switch is gone. Discoveries
+V2 owns post-match discovery unconditionally; no code reads the
+`scout_v2_postmatch_ownership_enabled` rollback switch any more. Discoveries
 recorded while it existed asked `resolvePostMatchDiscoveryOwnerV2` first,
 behind the `scout-v2-postmatch-ownership` patch, and can still be open when
 this deploys. `ownership/postmatch-ownership-v2.ts` in the Scout Temporal
@@ -404,10 +404,15 @@ expiry, and Dare summary delivery. Discovery records one
 v1's `scoutRealtimePollWorkflow` stays registered until its open executions
 drain. Its prematch router (`ownership/prematch-ownership-v2.ts`, behind the
 `scout-v2-prematch-ownership` patch) is kept only so those histories replay.
-The `scout_v2_prematch_ownership_enabled` flag and the `BotState` pass claim
-it read are gone: `resolvePrematchPassOwnerV2` now answers `run-v2` with no
-claim, the renewal and release answer `not-held`, and v1's `pollRealtime`
-runs its maintenance only, never detection.
+No code reads the `scout_v2_prematch_ownership_enabled` flag, and the
+`BotState` pass claim is gone: `resolvePrematchPassOwnerV2` now answers
+`run-v2` with no claim, the renewal and release answer `not-held`, and v1's
+`pollRealtime` runs its maintenance only, never detection.
+
+Both ownership flags stay declared in `managed-flag-inventory.json` until v1
+is removed, so the inventory check does not alert while a worker that still
+evaluates them can be running. They are deleted from the inventory and
+declared retired in the same change that removes v1.
 
 V2 discovery still drops any game with a live `ActiveGame` row, so a game v1
 announced shortly before the switch is not announced again. Notification
