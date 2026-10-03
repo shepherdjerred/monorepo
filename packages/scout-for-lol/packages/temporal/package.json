@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"
   },
   "exports": {
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@scout-for-lol/data": "workspace:*",
+    "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
     "@temporalio/activity": "1.24.0",
     "@temporalio/client": "1.24.0",

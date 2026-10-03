@@ -16,7 +16,7 @@
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "lint": "bun x eslint src --max-warnings=0",
+    "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -36,6 +36,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "ajv": "^8.20.0",
     "bun-types": "1.4.2",
     "eslint": "^10.7.0",
@@ -49,6 +50,7 @@
     "#competitive-progression-catalog": "./competitive-progression-catalog.json",
     "#competitive-progression-catalog-schema": "./competitive-progression-catalog.schema.json",
     "#generated/*": "./generated/*",
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"
   }
 }

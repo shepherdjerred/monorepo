@@ -1427,6 +1427,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@typescript/native": "npm:typescript@7.0.2",
         "@vitest/coverage-istanbul": "5.0.1",
         "ajv": "^8.20.0",
@@ -1623,6 +1624,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
         "@types/chroma-js": "^3.1.2",
         "@types/react": "^19.3.0",
         "@typescript/native": "npm:typescript@7.0.2",
@@ -1644,6 +1646,7 @@
       },
       "devDependencies": {
         "@scout-for-lol/data": "workspace:*",
+        "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/root-scripts": "workspace:*",
         "@temporalio/activity": "1.24.0",
         "@temporalio/client": "1.24.0",

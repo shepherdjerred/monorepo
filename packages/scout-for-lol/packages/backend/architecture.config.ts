@@ -46,17 +46,24 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * dependent on nothing.
  */
 
-/** Every directory directly under `src/`. Adding one here covers every rule below. */
-const layers = [
+/**
+ * Every directory directly under `src/`. `architecture-boundaries.test.ts` asserts this list
+ * equals the directories on disk, so a new directory fails the suite until it is named here;
+ * naming it covers every rule below.
+ */
+export const layers = [
   "alerts",
   "analytics",
   "betting",
   "config",
   "configuration",
+  "consumer",
+  "customs",
   "database",
   "discord",
   "durable",
   "explore",
+  "explore-match",
   "http",
   "league",
   "lib",
@@ -64,13 +71,15 @@ const layers = [
   "mvp-votes",
   "observability",
   "operations",
+  "progression",
   "report-lake",
   "report-store",
   "reports",
   "runtime",
+  "scout-client",
   "showcase",
-  "sound-engine",
   "storage",
+  "temporal",
   "testing",
   "tips",
   "trpc",
@@ -210,8 +219,8 @@ export default defineArchitecture({
     {
       name: "http-is-limited-to-its-endpoint-adapters",
       comment:
-        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI and Bryan " +
-        "Bucks analytics endpoints. Those adapters are its complete direct application surface; " +
+        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI, Bryan " +
+        "Bucks analytics, customs, Scout client and Temporal health endpoints. Those adapters are its complete direct application surface; " +
         "a new feature or repository must join tRPC or be introduced explicitly as an HTTP endpoint.",
       from: "http",
       to: everythingExcept(
@@ -223,6 +232,9 @@ export default defineArchitecture({
         "explore",
         "reports",
         "betting",
+        "customs",
+        "scout-client",
+        "temporal",
       ),
     },
   ],

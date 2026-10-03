@@ -152,6 +152,74 @@ const config = [
       ],
     },
   },
+  // `app` and `activity` consume the backend's tRPC router *type* only. A value
+  // import would pull the server into a browser bundle. dependency-cruiser cannot
+  // see type-only edges here, so ESLint owns this one. The options object
+  // replaces the base rule's wholesale, so the node/twisted patterns are
+  // restated and the base rule is turned off for these files to avoid double
+  // reports.
+  {
+    files: [
+      "packages/app/**/*.ts",
+      "packages/app/**/*.tsx",
+      "packages/activity/**/*.ts",
+      "packages/activity/**/*.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": "off",
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: restrictedNodeBuiltins.map((entry) => ({
+            ...entry,
+            allowTypeImports: false,
+          })),
+          patterns: [
+            restrictedTwistedPattern,
+            restrictedLegacyScoutQlPattern,
+            {
+              group: ["@scout-for-lol/backend", "@scout-for-lol/backend/**"],
+              allowTypeImports: true,
+              message:
+                "Only `import type` may cross from the browser apps into the backend. A value import would bundle the server.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // The shared libraries sit below the backend. dependency-cruiser cannot see a
+  // cross-package edge (its cruise is scoped to one package's tree), so ESLint
+  // owns "Temporal Workflows, report rendering and the data package must not
+  // import the backend". The options object replaces the base rule's
+  // wholesale, so the shared patterns are restated and the legacy-ScoutQL
+  // sites, which have their own block above, are excluded.
+  {
+    files: [
+      "packages/temporal/**/*.ts",
+      "packages/report/**/*.ts",
+      "packages/report/**/*.tsx",
+      "packages/data/**/*.ts",
+    ],
+    ignores: legacyScoutQlImportSites,
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: restrictedNodeBuiltins,
+          patterns: [
+            restrictedTwistedPattern,
+            restrictedLegacyScoutQlPattern,
+            {
+              group: ["@scout-for-lol/backend", "@scout-for-lol/backend/**"],
+              message:
+                "This package sits below the backend and must not import it. Move the shared piece into @scout-for-lol/domain or @scout-for-lol/data.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Satori best practices for report components
   {
     files: ["packages/report/**/*.tsx", "packages/report/**/*.ts"],

@@ -19,7 +19,7 @@
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "lint": "bun x eslint src --max-warnings=0",
+    "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -39,6 +39,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "@types/chroma-js": "^3.1.2",
     "@types/react": "^19.3.0",
     "bun-types": "1.4.2",
@@ -63,6 +64,7 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"
   }
 }
