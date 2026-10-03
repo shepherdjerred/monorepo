@@ -102,9 +102,10 @@
       "digest": "sha256:acd8d9ab3aa9d005a72cff195379123d25941013923214b06fba2d08ae51425f"
     },
     "shepherdjerred/woodpecker-config-extension": {
-      "version": "2.0.0-1003676",
-      "digest": "sha256:ca57e0b40facb769977a9155738762024ae6bc809e71a1c5f05289a6cebaf5fc",
-      "buildNumber": 1003676
+      "version": "2.0.0-1004044",
+      "digest": "sha256:76cc9b8190adc2c2b1ce8d14f946ecd5a550748d42c60df0e9cdfe66c59ab131",
+      "buildNumber": 1004044,
+      "gitSha": "734b7a77e13abffa1effd57baaa01dd174dcb6a9"
     }
   }
 }
