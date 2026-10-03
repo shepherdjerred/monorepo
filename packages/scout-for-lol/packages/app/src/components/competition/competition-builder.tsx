@@ -49,7 +49,7 @@ import { browserTimezone } from "#src/lib/bucks/competition-time.ts";
 import { CompetitionBuilderFormValueSchema } from "#src/lib/form-schemas.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
-export function CompetitionBuilderV2(props: {
+export function CompetitionBuilder(props: {
   guildId: string;
   channels: { id: string; name: string }[];
   initialScenarioId?: string;

@@ -4,15 +4,11 @@ import { applyScoutBetaDurableOwnership } from "./scout-beta-durable-ownership.t
 import type { FliptFetcher } from "./managed-flag-drift.ts";
 import { managedFlagInventory } from "./managed-flag-inventory.ts";
 
-const keys = [
-  "initial_match_history_import_enabled",
-  "scout_v2_progression_notifications_enabled",
-];
+const keys = ["initial_match_history_import_enabled"];
 function world(
   options: {
     applied?: boolean;
     rules?: unknown[];
-    progressionRollouts?: unknown[];
     namespace?: string;
     rejectUpdate?: boolean;
   } = {},
@@ -59,7 +55,7 @@ function world(
             ? { scout_beta_durable_ownership_v1: "applied" }
             : { source: "managed" },
           rules: options.rules ?? [],
-          rollouts: key === keys[1] ? (options.progressionRollouts ?? []) : [],
+          rollouts: [],
         },
       },
     });
@@ -67,7 +63,7 @@ function world(
   return { requests, fetcher };
 }
 
-test("applies only the two declared beta ownership changes with revision checks", async () => {
+test("applies only the declared beta ownership change with revision checks", async () => {
   const fixture = world();
   expect(
     await applyScoutBetaDurableOwnership({
@@ -78,7 +74,7 @@ test("applies only the two declared beta ownership changes with revision checks"
   const updates = fixture.requests.filter(
     (request) => request.method === "PUT",
   );
-  expect(updates).toHaveLength(2);
+  expect(updates).toHaveLength(1);
   expect(updates[0]?.body).toMatchObject({
     environmentKey: "beta",
     namespaceKey: "scout",
@@ -102,27 +98,6 @@ test("applies only the two declared beta ownership changes with revision checks"
       managedFlagInventory.flags.find((flag) => flag.key === key)?.namespace,
     ).toBe("scout");
   }
-});
-test("preserves the declared guild canary rollout when enabling progression", async () => {
-  const rollouts = [
-    {
-      type: "SEGMENT_ROLLOUT_TYPE",
-      description: "Managed guild canary",
-      segment: {
-        value: true,
-        segments: ["scout-guild-1337623164146155593"],
-        segmentOperator: "OR_SEGMENT_OPERATOR",
-      },
-    },
-  ];
-  const fixture = world({ progressionRollouts: rollouts });
-  await applyScoutBetaDurableOwnership({
-    url: "http://flipt",
-    fetcher: fixture.fetcher,
-  });
-  expect(
-    fixture.requests.filter((request) => request.method === "PUT")[1]?.body,
-  ).toMatchObject({ payload: { enabled: true, rollouts } });
 });
 test("refuses a resource returned from another namespace", async () => {
   const fixture = world({ namespace: "default" });

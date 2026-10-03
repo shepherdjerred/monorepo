@@ -290,20 +290,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await settleTerminalNotificationTips();
             break;
           }
-          case "progression-outbox": {
-            const [
-              { deliverHallRecordBreakOutbox },
-              { deliverDuelStatusOutbox },
-            ] = await Promise.all([
-              import("#src/progression/hall/outbox.ts"),
-              import("#src/progression/duels/outbox.ts"),
-            ]);
-            await Promise.all([
-              deliverHallRecordBreakOutbox(),
-              deliverDuelStatusOutbox(),
-            ]);
-            break;
-          }
           case "progression-reconciliation": {
             const { reconcileCompetitiveProgression } =
               await import("#src/progression/reconcile.ts");

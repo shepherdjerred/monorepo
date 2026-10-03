@@ -12,7 +12,7 @@ export const hallGuildId = DiscordGuildIdSchema.parse("100000000000000001");
 export const hallRiotMatchId = RiotMatchIdSchema.parse("NA1_9301");
 
 /**
- * Broken records as v1's evaluator writes them to the outbox: one per record
+ * Broken records as the evaluator writes them to the intent: one per record
  * in the catalog's first queue family, with a tie on the last one so the
  * holders list is exercised beyond a single name.
  */

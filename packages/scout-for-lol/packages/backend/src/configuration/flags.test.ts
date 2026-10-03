@@ -48,7 +48,6 @@ const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reviews_enabled",
   "challenge_runs_enabled",
   "clash_surface",
-  "competition_builder_v2_enabled",
   "explore_on_demand_riot_enabled",
   "hall_of_fame_enabled",
   "mvp_votes_enabled",
@@ -162,7 +161,6 @@ describe("production hard-disable policy", () => {
         ai_reviews_enabled: true,
         challenge_runs_enabled: true,
         clash_surface: true,
-        competition_builder_v2_enabled: true,
         explore_on_demand_riot_enabled: true,
         hall_of_fame_enabled: true,
         mvp_votes_enabled: true,
@@ -235,17 +233,6 @@ describe("initial history import flag", () => {
       }),
     ).toBe(true);
     resetFlagOverrides("initial_match_history_import_enabled");
-  });
-});
-
-describe("competition builder V2 rollout", () => {
-  test("is off by default and enabled for the beta guild", () => {
-    expect(
-      getFlag("competition_builder_v2_enabled", { server: OTHER_GUILD }),
-    ).toBe(false);
-    expect(
-      getFlag("competition_builder_v2_enabled", { server: MY_SERVER }),
-    ).toBe(true);
   });
 });
 

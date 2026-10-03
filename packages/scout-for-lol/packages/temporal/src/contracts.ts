@@ -201,7 +201,6 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "notification-intent-expiry",
     "prediction-ingest",
     "legacy-backfill",
-    "progression-outbox",
     "progression-reconciliation",
     "mvp-tally-refresh",
     "clash-snapshot",

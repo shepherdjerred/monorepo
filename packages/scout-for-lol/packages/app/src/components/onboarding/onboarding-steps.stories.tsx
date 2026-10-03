@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { P } from "@scout-for-lol/data";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 import { OnboardingConceptsStep } from "./onboarding-concepts-step.tsx";
@@ -47,15 +48,28 @@ function noop(): void {
 }
 
 /**
- * The competition step gates its body on the builder-capabilities flag, so a
- * story that never seeds it renders "Loading builder…" forever.
+ * The competition builder waits on `usePermissions`, which reads the cached
+ * `guild.listManageable` entry, so a story that never seeds it renders
+ * "Loading builder…" forever.
  */
-const seedBuilderV1: StorySeed = (trpc, queryClient) => {
-  queryClient.setQueryData(
-    trpc.competition.builderCapabilities.queryOptions({ guildId: GUILD_ID })
-      .queryKey,
-    { builderV2Enabled: false },
-  );
+const seedCompetitionPermissions: StorySeed = (trpc, queryClient) => {
+  queryClient.setQueryData(trpc.guild.listManageable.queryOptions().queryKey, [
+    {
+      id: GUILD_ID,
+      name: "Baron Steal Enjoyers",
+      icon: null,
+      isOwner: true,
+      isDiscordAdmin: true,
+      customNightsEnabled: false,
+      hallOfFameEnabled: false,
+      mvpVotesEnabled: false,
+      permissions: [
+        P("competitions", "create"),
+        P("competitions", "invite"),
+        P("competitions", "schedule"),
+      ],
+    },
+  ]);
 };
 
 const meta = {
@@ -240,7 +254,7 @@ export const ReportStep: Story = {
 
 export const CompetitionStep: Story = {
   args: stepArgs,
-  parameters: { seedQueries: [seedBuilderV1] },
+  parameters: { seedQueries: [seedCompetitionPermissions] },
   render: () => (
     <OnboardingCompetitionStep
       guildId={GUILD_ID}

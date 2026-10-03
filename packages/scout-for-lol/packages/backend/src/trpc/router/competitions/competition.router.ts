@@ -62,7 +62,6 @@ import {
   asCompetitionBadRequest,
   loadGuildCompetitionOr404,
 } from "#src/trpc/router/competitions/competition-router-helpers.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const CompetitionIdInput = GuildInput.extend({
@@ -70,18 +69,6 @@ const CompetitionIdInput = GuildInput.extend({
 });
 
 export const competitionRouter = router({
-  builderCapabilities: guildProcedure("competitions", "create")
-    .input(GuildInput)
-    .query(async ({ ctx, input }) => ({
-      builderV2Enabled: await isPolicyEnabled(
-        "competition_builder_v2_enabled",
-        {
-          server: input.guildId,
-          user: ctx.user.discordId,
-        },
-      ),
-    })),
-
   list: guildProcedure("competitions", "read")
     .input(
       GuildInput.extend({

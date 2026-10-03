@@ -2325,23 +2325,6 @@ model HallBaselineRun {
   @@index([baselineState, createdAt])
 }
 
-model HallRecordBreakOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  matchId        String
-  channelId      String
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@unique([guildId, matchId])
-  @@index([deliveryStatus, createdAt])
-}
-
 model ChallengeTemplate {
   id              String   @id @default(uuid())
   slug            String?  @unique
@@ -2738,22 +2721,6 @@ model DuelRecord {
 
   @@unique([guildId, scope, subjectKey, opponentKey])
   @@index([guildId, scope, wins])
-}
-
-model DuelStatusOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  channelId      String
-  dedupeKey      String    @unique
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@index([deliveryStatus, createdAt])
 }
 
 // =============================================================================
