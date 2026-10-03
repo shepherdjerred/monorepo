@@ -196,15 +196,25 @@ export default {
     maxWorkers: 4,
     exclude: [
       ...defaultTestExclude,
+      // Globs, so forward slashes: `path.join` gives backslashes on Windows,
+      // which a glob reads as escapes, and the file is then collected anyway.
       ...(workspace === "packages/scout-for-lol"
         ? [
-            path.join(
-              workspaceRoot,
-              "packages/backend/scripts/branded-types.test.ts",
-            ),
+            path
+              .join(
+                workspaceRoot,
+                "packages/backend/scripts/branded-types.test.ts",
+              )
+              .split(path.sep)
+              .join("/"),
           ]
         : workspace === "packages/scout-for-lol/packages/backend"
-          ? [path.join(workspaceRoot, "scripts/branded-types.test.ts")]
+          ? [
+              path
+                .join(workspaceRoot, "scripts/branded-types.test.ts")
+                .split(path.sep)
+                .join("/"),
+            ]
           : []),
     ],
     setupFiles,

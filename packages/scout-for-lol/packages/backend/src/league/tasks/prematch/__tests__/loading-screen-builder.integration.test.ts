@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   RawCurrentGameInfoSchema,
@@ -6,6 +7,7 @@ import {
   SummonerSpellIdSchema,
   type Lane,
 } from "@scout-for-lol/data/index.ts";
+import type { ObservedLobbyBot } from "#src/scout-client/lobby-payload.ts";
 let rankFetchCount = 0;
 let rejectRankFetch = false;
 
@@ -41,7 +43,7 @@ vi.doMock("#src/league/tasks/prematch/loading-screen-mastery.ts", () => ({
 const { buildLoadingScreenData, fetchParticipantRanks } =
   await import("#src/league/tasks/prematch/loading-screen-builder.ts");
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 const realS3ClassicAramMayhemFixture = `${currentDir}testdata/spectator-classic-aram-mayhem-s3.json`;
 const realS3ClashFixture = `${currentDir}testdata/spectator-clash-s3.json`;
 const realS3AramClashFixture = `${currentDir}testdata/spectator-aram-clash-s3.json`;
@@ -174,7 +176,7 @@ describe("buildLoadingScreenData with real spectator payload", () => {
       gameInfo,
       new Set(),
       "AMERICA_NORTH",
-      prefetchedRanks,
+      { prefetchedRanks },
     );
 
     expect(result.layout).toBe("standard");
@@ -187,7 +189,9 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     );
 
     await expect(
-      buildLoadingScreenData(gameInfo, new Set(), "AMERICA_NORTH", new Map()),
+      buildLoadingScreenData(gameInfo, new Set(), "AMERICA_NORTH", {
+        prefetchedRanks: new Map(),
+      }),
     ).rejects.toThrow("Missing rank lookup result");
   });
 
@@ -244,7 +248,7 @@ describe("buildLoadingScreenData layout variants", () => {
       gameInfo,
       new Set([trackedPuuid]),
       "AMERICA_NORTH",
-      ranksByPuuid,
+      { prefetchedRanks: ranksByPuuid },
     );
 
     expect(ranksByPuuid.size).toBe(0);
@@ -503,6 +507,84 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
       (p) => p.summonerName === "DarkinBunnygirl#Aatr",
     );
     expect(untracked?.isTrackedPlayer).toBe(false);
+  });
+
+  test("a custom against bots renders the bots the local client observed", async () => {
+    // Riot's Spectator roster omits bots entirely, so a 1-human, 9-bot custom
+    // reports one participant. Cut the real custom down to that one human and
+    // supply the rest the way the client's lobby observation would.
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-custom-classic.json`,
+    );
+    const human = baseGameInfo.participants.find(
+      (participant) => participant.riotId === "sjerred#sjerr",
+    );
+    if (human === undefined) throw new Error("fixture lost its human");
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 3100,
+      gameType: "CUSTOM_GAME",
+      bannedChampions: [],
+      participants: [{ ...human, teamId: 100 }],
+    });
+    const observedBots: readonly ObservedLobbyBot[] = [
+      { side: "blue", championId: 875, lane: "top" },
+      { side: "blue", championId: 131, lane: "jungle" },
+      { side: "blue", championId: 84, lane: "middle" },
+      { side: "blue", championId: 201, lane: "support" },
+      { side: "red", championId: 42, lane: "top" },
+      { side: "red", championId: 96, lane: "adc" },
+      { side: "red", championId: 22, lane: "support" },
+      { side: "red", championId: 1, lane: "middle" },
+      // `botPosition: "NONE"` maps to no lane at all.
+      { side: "red", championId: 11, lane: undefined },
+    ];
+    const before = rankFetchCount;
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set([human.puuid ?? ""]),
+      "AMERICA_NORTH",
+      { observedBots },
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    if (parsed.layout !== "standard") {
+      throw new Error("Expected standard loading screen data");
+    }
+    expect(parsed.participants).toHaveLength(10);
+    expect(parsed.participants.filter((p) => p.team === "blue")).toHaveLength(
+      5,
+    );
+    expect(parsed.participants.filter((p) => p.team === "red")).toHaveLength(5);
+    // Only the human has a PUUID to look a rank up by.
+    expect(rankFetchCount - before).toBe(1);
+
+    const kogMaw = parsed.participants.find((p) => p.championId === 96);
+    expect(kogMaw).toEqual({
+      puuid: null,
+      summonerName: "Kog'Maw Bot",
+      championId: 96,
+      championName: "KogMaw",
+      championDisplayName: "Kog'Maw",
+      team: "red",
+      rankState: { status: "hidden" },
+      isTrackedPlayer: false,
+      lane: "adc",
+    });
+    // A bot's lane is the slot the client assigned, never an inference.
+    expect(parsed.participants.find((p) => p.championId === 11)?.lane).toBe(
+      undefined,
+    );
+
+    const self = parsed.participants.find(
+      (p) => p.summonerName === "sjerred#sjerr",
+    );
+    expect(self?.isTrackedPlayer).toBe(true);
+    expect(self?.spell1Id).toBeDefined();
+    // The lane-prior model reads spells, which bots lack, so it cannot speak
+    // for a side they are on. The human's lane is omitted rather than guessed.
+    expect(self?.lane).toBeUndefined();
   });
 
   test("queue 3100 (Custom) resolves to standard layout", async () => {

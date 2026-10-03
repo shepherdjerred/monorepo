@@ -29,7 +29,7 @@ import { createLogger } from "#src/logger.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 import { DRIVABLE_INTENT_STATES } from "#src/temporal/v2/match-reads.ts";
-import { isPrematchRosterComplete } from "#src/temporal/v2/prematch/prematch-context.ts";
+import { isPrematchRosterReady } from "#src/temporal/v2/prematch/prematch-context.ts";
 
 /**
  * The V2 prematch path's reads: which live games exist, and what one game's
@@ -60,7 +60,9 @@ const spectatorCircuit = new CircuitBreaker("spectator-api-v2");
  * What one account's spectator read found.
  *
  * `idle` covers both "not in a game" and "in a game whose roster has not
- * filled yet", and folding them is deliberate: a pre-game countdown is a game
+ * filled yet" — a game against bots counts as filled once a tracked player's
+ * client has reported the bots Riot leaves out — and folding the two is
+ * deliberate: a pre-game countdown is a game
  * that has not started rather than one this scan failed to see. Surfacing it
  * would be worse than waiting — the per-game Workflow ID would be claimed by a
  * run holding a half-filled roster, and every later poll would deduplicate
@@ -97,7 +99,7 @@ async function probeAccountV2(
     spectatorCircuit.recordSuccess();
     if (
       spectator.kind === "not-in-game" ||
-      !isPrematchRosterComplete(spectator.game)
+      !(await isPrematchRosterReady(spectator.game, puuid))
     ) {
       return { kind: "idle" };
     }

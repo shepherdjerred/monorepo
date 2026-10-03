@@ -1,3 +1,4 @@
+import path from "node:path";
 import {
   getStyleCard,
   PersonalityMetadataSchema,
@@ -23,15 +24,17 @@ const logger = createLogger("review-prompts");
  */
 const reviewerUsageCount = new Map<string, number>();
 
-// Resolve the prompts directory from the data package
-// import.meta.resolve returns a file:// URL, so we extract the pathname
+/**
+ * The data package's prompts directory, as a filesystem path.
+ *
+ * Resolved with Bun's own resolver from the package entry (`src/index.ts`).
+ * `import.meta.resolve` threw under vitest on Windows, failing every suite
+ * whose imports reach this module, and the URL `pathname` it was turned into
+ * is `/C:/...` there, which no file API accepts.
+ */
 function getPromptsDir(): string {
-  // In a Bun workspace, we can resolve the data package and navigate to prompts
-  // This will be resolved at runtime when the function is called
-  const dataPackageUrl = import.meta.resolve("@scout-for-lol/data");
-  const url = new URL(dataPackageUrl);
-  // Navigate from data/src/index.ts to data/src/review/prompts
-  return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts");
+  const entry = Bun.resolveSync("@scout-for-lol/data", import.meta.dir);
+  return path.join(path.dirname(entry), "review", "prompts");
 }
 
 const PROMPTS_DIR = getPromptsDir();

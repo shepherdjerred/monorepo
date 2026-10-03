@@ -137,6 +137,33 @@ describe("LoadingScreenParticipantSchema", () => {
     expect(result.puuid).toBeNull();
   });
 
+  test("accepts a bot with no summoner spells", () => {
+    // The League client exposes a bot championId and position and nothing
+    // else, so a bot genuinely has no spells to report.
+    const {
+      spell1Id: _spell1Id,
+      spell2Id: _spell2Id,
+      ...withoutSpells
+    } = validParticipant;
+    const bot = {
+      ...withoutSpells,
+      puuid: null,
+      rankState: { status: "hidden" },
+    };
+    const result = LoadingScreenParticipantSchema.parse(bot);
+    expect(result.spell1Id).toBeUndefined();
+    expect(result.spell2Id).toBeUndefined();
+  });
+
+  test("requires summoner spells from anyone identifiable", () => {
+    // Absence is allowed only where it is true. A real player always has them,
+    // so omitting them would hide a mapping failure behind a blank icon.
+    const { spell1Id: _spell1Id, ...missingOne } = validParticipant;
+    expect(() => LoadingScreenParticipantSchema.parse(missingOne)).toThrow(
+      "must carry their summoner spells",
+    );
+  });
+
   test("rejects rank visibility states that disagree with PUUID availability", () => {
     expect(() =>
       LoadingScreenParticipantSchema.parse({
@@ -300,6 +327,21 @@ function makeParticipant(
   };
 }
 
+/** A red-side bot: no PUUID, no spells, hidden rank, and its lane if known. */
+function makeRedBot(championId: number, lane?: "top" | "middle" | "support") {
+  return {
+    puuid: null,
+    summonerName: "Bot",
+    championId: LoadingScreenChampionIdSchema.parse(championId),
+    championName: "Annie",
+    championDisplayName: "Annie",
+    team: "red" as const,
+    rankState: { status: "hidden" },
+    isTrackedPlayer: false,
+    ...(lane === undefined ? {} : { lane }),
+  };
+}
+
 const validData = {
   gameId: GameIdSchema.parse(12_345),
   queueType: "solo",
@@ -425,6 +467,28 @@ describe("LoadingScreenDataSchema", () => {
         participants: [withoutLane, ...rest],
       }),
     ).toThrow();
+  });
+
+  test("accepts a full five shared with bots whose lanes are not all known", () => {
+    // A custom against bots: the human's lane cannot be inferred because the
+    // model reads summoner spells and bots have none. Each bot keeps the slot
+    // the client assigned, or none when it was given `NONE`.
+    const human = makeNonStandardParticipant(makePuuid("06"), "red");
+    const result = LoadingScreenDataSchema.parse({
+      ...validData,
+      queueType: "custom",
+      queueDisplayName: makeQueueDisplayName("custom"),
+      isRanked: false,
+      participants: [
+        ...validData.participants.filter((p) => p.team === "blue"),
+        human,
+        makeRedBot(1, "top"),
+        makeRedBot(2, "middle"),
+        makeRedBot(3, "support"),
+        makeRedBot(4),
+      ],
+    });
+    expect(result.participants).toHaveLength(10);
   });
 
   test("accepts ARAM game with no bans", () => {

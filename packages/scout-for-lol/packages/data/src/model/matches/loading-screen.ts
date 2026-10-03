@@ -120,6 +120,41 @@ export const LoadingScreenMasterySchema = z.strictObject({
 });
 export type LoadingScreenMastery = z.infer<typeof LoadingScreenMasterySchema>;
 
+/**
+ * Summoner spells are known for a player and unknowable for a bot.
+ *
+ * The League client exposes a bot's champion and position but no spells at
+ * all — `/lol-lobby/v2/lobby` gives `botChampionId` and `botPosition` and
+ * nothing else — so a bot cannot carry them honestly. Inventing an id would
+ * send the renderer looking for an asset that does not exist, which is a
+ * crash rather than a gap.
+ *
+ * Absence is therefore allowed exactly where it is true. A participant with a
+ * PUUID is a real player whose spells Riot always reports, and omitting them
+ * there would hide a genuine mapping failure behind a blank icon. Same shape
+ * as {@link validateRankVisibility}: what is unknowable for an unidentifiable
+ * participant is mandatory for an identifiable one.
+ */
+function validateSpellVisibility(
+  participant: {
+    puuid: string | null;
+    spell1Id?: number | undefined;
+    spell2Id?: number | undefined;
+  },
+  context: z.RefinementCtx,
+): void {
+  if (participant.puuid === null) return;
+  for (const spell of ["spell1Id", "spell2Id"] as const) {
+    if (participant[spell] === undefined) {
+      context.addIssue({
+        code: "custom",
+        message: "Identifiable participants must carry their summoner spells",
+        path: [spell],
+      });
+    }
+  }
+}
+
 function validateRankVisibility(
   participant: {
     puuid: string | null;
@@ -156,10 +191,10 @@ export const BaseLoadingScreenParticipantSchema = z.strictObject({
   championDisplayName: z.string().min(1),
   /** Team assignment (discriminated by layout) */
   team: LoadingScreenTeamSchema,
-  /** Summoner spell 1 ID (e.g., 4=Flash) */
-  spell1Id: SummonerSpellIdSchema,
-  /** Summoner spell 2 ID (e.g., 14=Ignite) */
-  spell2Id: SummonerSpellIdSchema,
+  /** Summoner spell 1 ID (e.g., 4=Flash). Absent only for bots. */
+  spell1Id: SummonerSpellIdSchema.optional(),
+  /** Summoner spell 2 ID (e.g., 14=Ignite). Absent only for bots. */
+  spell2Id: SummonerSpellIdSchema.optional(),
   /** Keystone rune ID (first perk in primary tree) */
   keystoneRuneId: RuneIdSchema.optional(),
   /** Secondary rune tree ID */
@@ -185,7 +220,9 @@ export const StandardLoadingScreenParticipantSchema =
      * A full 5v5 still always carries one — see `inferStandardParticipants`.
      */
     lane: LaneSchema.optional(),
-  }).superRefine(validateRankVisibility);
+  })
+    .superRefine(validateRankVisibility)
+    .superRefine(validateSpellVisibility);
 
 export type StandardLoadingScreenParticipant = z.infer<
   typeof StandardLoadingScreenParticipantSchema
@@ -195,7 +232,9 @@ export const NonStandardLoadingScreenParticipantSchema =
   BaseLoadingScreenParticipantSchema.extend({
     /** Team assignment for ARAM or Arena */
     team: LoadingScreenTeamSchema,
-  }).superRefine(validateRankVisibility);
+  })
+    .superRefine(validateRankVisibility)
+    .superRefine(validateSpellVisibility);
 
 export type NonStandardLoadingScreenParticipant = z.infer<
   typeof NonStandardLoadingScreenParticipantSchema
@@ -288,9 +327,17 @@ function refineSideSizes(
  * this, a full 5v5 that lost its lanes would render as a laneless column and
  * nothing would object. Short sides are exempt because Riot reports no
  * `teamPosition` for them at all.
+ *
+ * So is a side with a bot on it. Lanes for real players come from inference
+ * over summoner spells, and a bot has none — {@link validateSpellVisibility}
+ * permits that absence only for a participant with no PUUID — so the model
+ * cannot read that side. Each bot carries the slot the League client assigned
+ * it when there is one; a human beside it has no lane anybody can know.
  */
 function refineFullSidesHaveLanes(
-  data: { participants: { team: unknown; lane?: unknown }[] },
+  data: {
+    participants: { team: unknown; lane?: unknown; spell1Id?: unknown }[];
+  },
   context: z.RefinementCtx,
 ): void {
   for (const team of ["blue", "red"] as const) {
@@ -298,6 +345,9 @@ function refineFullSidesHaveLanes(
       (participant) => participant.team === team,
     );
     if (side.length !== 5) continue;
+    if (side.some((participant) => participant.spell1Id === undefined)) {
+      continue;
+    }
     if (side.some((participant) => participant.lane === undefined)) {
       context.addIssue({
         code: "custom",
