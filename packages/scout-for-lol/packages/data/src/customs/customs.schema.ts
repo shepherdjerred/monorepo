@@ -140,22 +140,6 @@ export const CustomGameParticipantSchema = z.strictObject({
 });
 export type CustomGameParticipant = z.infer<typeof CustomGameParticipantSchema>;
 
-export const CustomTournamentLobbySnapshotSchema = z.strictObject({
-  state: z.enum([
-    "created",
-    "lobby_open",
-    "champ_select",
-    "allocating",
-    "in_game",
-    "resolved",
-    "reported",
-    "cancelled",
-    "abandoned",
-    "expired",
-  ]),
-  code: z.string().min(1).nullable(),
-});
-
 export const CustomGameSnapshotSchema = z.strictObject({
   id: z.uuid(),
   sequence: z.number().int().positive(),
@@ -165,7 +149,6 @@ export const CustomGameSnapshotSchema = z.strictObject({
   pickMode: CustomPickModeSchema,
   participants: z.array(CustomGameParticipantSchema),
   activeCaptain: CustomTeamSchema.nullable(),
-  tournamentLobby: CustomTournamentLobbySnapshotSchema.nullable(),
   winner: CustomWinnerSchema.nullable(),
   voiceState: CustomVoiceStateSchema,
   voiceReady: z.boolean(),

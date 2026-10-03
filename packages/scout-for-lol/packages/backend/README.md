@@ -1233,27 +1233,19 @@ Notes that are easy to get wrong:
 
 ## Database preparation and startup
 
-Ordinary image startup runs Prisma migrations, validates the completed import
-receipt and Bucks ledger using Postgres only, then boots the selected role.
-It does not open the retained SQLite snapshot or convert stored reports.
-
-Prepare a fresh or restored database explicitly before starting the image:
+Ordinary image startup runs Prisma migrations, verifies the Bucks ledger using
+Postgres only, then boots the selected role:
 
 ```bash
 bun x --no-install prisma migrate deploy
-bun run scripts/import-legacy-sqlite.ts --source /path/to/retained.sqlite
 bun run scripts/check-database-readiness.ts
 ```
 
-For an intentionally empty deployment, replace the import command with
-`bun run scripts/import-legacy-sqlite.ts --allow-fresh-install --source /path/to/absent.sqlite`.
-The importer refuses an unmarked populated database. After restoring Postgres,
-retain its `_legacy_sqlite_import` receipt; use the explicit import verification
-CLI when comparing to an original snapshot. Keep snapshots for recovery.
-
-The readiness check rejects missing or malformed import receipts and ledger
-drift. Local fixture databases use their existing bootstrap path rather than
-this hosted-image entrypoint.
+A fresh database needs nothing else: once its migrations are applied it boots
+with no import step. A restored database boots the same way. The readiness
+check refuses only ledger drift (a `BucksAccount` balance that disagrees with
+its ledger sum). Local fixture databases use their existing bootstrap path
+rather than this hosted-image entrypoint.
 
 ## Configuration
 

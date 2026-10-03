@@ -138,7 +138,6 @@ the public event store.
 Report output is frozen into per-chunk delivery receipts before the first send.
 Each receipt keeps its destination, content, attachment digest, nonce, and
 returned Discord message ID. A resumed run skips completed chunks.
-Unfinished legacy send claims become unknown deliveries instead of new sends.
 The [report delivery implementation](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/reports)
 parks uncertain attempts for an operator's answer.
 

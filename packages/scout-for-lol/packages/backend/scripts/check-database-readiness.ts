@@ -12,9 +12,7 @@ const prisma = new PrismaClient({
 });
 try {
   await assertDatabasePrepared(prisma);
-  console.log(
-    "Database prepared: completed import receipt and ledger verified",
-  );
+  console.log("Database prepared: ledger verified");
 } finally {
   await prisma.$disconnect();
 }

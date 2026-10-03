@@ -5,9 +5,8 @@ Scout for LoL uses PostgreSQL 16 with Prisma ORM (via `@prisma/adapter-pg`;
 and relationships.
 
 The 67 SQLite-era migrations were squashed into a single baseline migration
-(`prisma/migrations/20260820000000_postgresql_baseline/`). Deployments run a
-boot-time importer (`scripts/import-legacy-sqlite.ts`) that reads the legacy
-SQLite file exactly once, tracked by the `_legacy_sqlite_import` marker table.
+(`prisma/migrations/20260820000000_postgresql_baseline/`). A new database is
+ready to boot once `prisma migrate deploy` has run; there is no import step.
 
 ## Entity Relationship Diagram
 
@@ -315,7 +314,6 @@ Tracks Discord permission errors for guild health monitoring.
 | `lastOccurrence`        | DateTime  | Most recent error          |
 | `consecutiveErrorCount` | Int       | Error streak count         |
 | `lastSuccessfulSend`    | DateTime? | Last successful message    |
-| `ownerNotified`         | Boolean   | If owner was notified      |
 
 **Unique constraint**: `[serverId, channelId]`
 

@@ -137,6 +137,8 @@ export const customsRouter = router({
   lockTeams: activityProcedure
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => lockCustomTeams(ctx.activitySession, input)),
+  // The procedure name is the Activity client's wire contract and predates
+  // observed lobbies; it re-opens an observed custom lobby, not a Riot code.
   retryTournamentCode: activityProcedure
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => retryCustomCode(ctx.activitySession, input)),
