@@ -157,8 +157,14 @@ export class SessionManager {
       : buildSessionHandle(this.deps.config, session);
   }
 
-  revision(guildId: GuildId, channelId: ChannelId, playbackChannel?: PlaybackChannelNumber): string | null {
-    const session = this.sessions.get(keyOf(guildId, channelId, playbackChannel));
+  revision(
+    guildId: GuildId,
+    channelId: ChannelId,
+    playbackChannel?: PlaybackChannelNumber,
+  ): string | null {
+    const session = this.sessions.get(
+      keyOf(guildId, channelId, playbackChannel),
+    );
     return session === undefined ? null : sessionRevision(session);
   }
 

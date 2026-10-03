@@ -60,7 +60,8 @@ Live sports retain their existing playback control restrictions.
 ## The edge serves the remote
 
 The frontend is built into the Streambot image.
-The media namespace exposes a separate web Service through the shared Cloudflare tunnel.
+When activated, the media namespace exposes a separate web Service through the shared Cloudflare tunnel.
+The tunnel binding and DNS record arrive together with OAuth activation.
 Metrics remain on their own internal Service in the
 [Streambot deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/streambot/streambot.ts).
 Credential bootstrap is deliberate so missing OAuth credentials cannot break an existing Discord-only deployment.

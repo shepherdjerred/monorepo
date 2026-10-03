@@ -7,7 +7,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/web.ts";
 
 describe("Streambot web credential bootstrap", () => {
-  it("exposes only the web port through the shared tunnel and requires OAuth credentials", () => {
+  it("requires OAuth credentials and prepares an internal web service without publishing a tunnel", () => {
     const app = new App();
     const chart = new Chart(app, "streambot-web-test", { namespace: "media" });
     const deployment = new Deployment(chart, "streambot", { replicas: 1 });
@@ -27,7 +27,7 @@ describe("Streambot web credential bootstrap", () => {
     });
     const yaml = app.synthYaml();
     expect(yaml).toContain("streambot.sjer.red");
-    expect(yaml).toContain("disableDNSUpdates: true");
+    expect(yaml).not.toContain("kind: TunnelBinding");
     expect(yaml).toContain("name: streambot-web");
     expect(yaml).toContain("port: 8080");
     expect(yaml).toContain("key: DISCORD_CLIENT_SECRET");

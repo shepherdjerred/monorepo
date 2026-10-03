@@ -8,7 +8,6 @@ import {
   type ContainerProps,
   type ISecret,
 } from "cdk8s-plus-31";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 /** Credential bootstrap is deliberate so an unprovisioned OAuth secret cannot break the bot. */
 export function streambotWebProbes(): Pick<
@@ -55,16 +54,9 @@ export function createStreambotWeb(
     EnvValue.fromSecretValue({ secret, key: "DISCORD_CLIENT_SECRET" }),
   );
   container.addPort({ number: 8080, name: "web" });
-  const service = new Service(chart, "streambot-web-service", {
+  new Service(chart, "streambot-web-service", {
     selector: deployment,
     metadata: { name: "streambot-web" },
     ports: [{ name: "web", port: 8080, targetPort: 8080 }],
-  });
-  createCloudflareTunnelBinding(chart, "streambot-web-cf-tunnel", {
-    serviceName: service.name,
-    subdomain: "streambot",
-    port: 8080,
-    probePath: "/readyz",
-    publicProbePath: "/readyz",
   });
 }
