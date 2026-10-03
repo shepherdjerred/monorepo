@@ -57,6 +57,48 @@ final class JooqStoresTest {
   }
 
   @Test
+  void survivalCreditsAreIdempotentAndPersistAcrossRuns() {
+    var store = new JooqSurvivalProgress(database);
+    var first =
+        new com.shepherdjerred.thestorm.arena.app.store.SurvivalProgress.Credit(
+            ALICE, BOB, "round:1", 10);
+    assertThat(store.xp(ALICE).join()).isZero();
+    assertThat(store.credit(first).join()).isEqualTo(10);
+    assertThat(store.credit(first).join()).isEqualTo(10);
+    assertThat(
+            store
+                .credit(
+                    new com.shepherdjerred.thestorm.arena.app.store.SurvivalProgress.Credit(
+                        ALICE, CAROL, "round:1", 10))
+                .join())
+        .isEqualTo(20);
+    assertThat(store.xp(BOB).join()).isZero();
+  }
+
+  @Test
+  void settlementBackupsRoundTripWithoutOverwritingTheirRecoveryPoint() {
+    var store = new JooqSettlementStore(database);
+    var backup =
+        new com.shepherdjerred.thestorm.arena.app.store.SettlementStore.Backup(
+            "abc",
+            "world",
+            List.of(
+                new com.shepherdjerred.thestorm.arena.app.store.SettlementStore.Change(
+                    new com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos(512, 72, 512),
+                    "minecraft:dirt",
+                    "minecraft:stone_bricks")),
+            com.shepherdjerred.thestorm.arena.app.store.SettlementStore.Status.APPLYING);
+    store.save(backup).join();
+    assertThat(store.load("abc").join()).contains(backup);
+    store
+        .status("abc", com.shepherdjerred.thestorm.arena.app.store.SettlementStore.Status.APPLIED)
+        .join();
+    assertThat(store.load("abc").join().orElseThrow().status())
+        .isEqualTo(com.shepherdjerred.thestorm.arena.app.store.SettlementStore.Status.APPLIED);
+    assertThat(store.load("missing").join()).isEmpty();
+  }
+
+  @Test
   void snapshotsRoundTripExactly() {
     var store = new JooqSnapshotStore(database);
     var alice =

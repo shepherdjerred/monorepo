@@ -16,10 +16,12 @@ final class Keys {
 
   private final NamespacedKey item;
   private final NamespacedKey entity;
+  private final NamespacedKey run;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "arena_item");
     this.entity = new NamespacedKey(plugin, "arena_entity");
+    this.run = new NamespacedKey(plugin, "survival_run");
   }
 
   /** Marks {@code stack} as an arena item. */
@@ -32,6 +34,25 @@ final class Keys {
     return !stack.isEmpty()
         && stack.hasItemMeta()
         && stack.getItemMeta().getPersistentDataContainer().has(item, PersistentDataType.BOOLEAN);
+  }
+
+  void tag(ItemStack stack, java.util.UUID runId) {
+    tag(stack);
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer()
+                .set(run, PersistentDataType.STRING, runId.toString()));
+  }
+
+  boolean belongsTo(ItemStack stack, java.util.UUID runId) {
+    return isArenaItem(stack)
+        && runId
+            .toString()
+            .equals(
+                stack
+                    .getItemMeta()
+                    .getPersistentDataContainer()
+                    .get(run, PersistentDataType.STRING));
   }
 
   /** Marks {@code target} as belonging to arena {@code arena}. */

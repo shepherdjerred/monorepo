@@ -60,6 +60,7 @@ export async function gameplayFixtures(
     | "mechanicsConfig"
     | "companionsE2eJar"
     | "rwf"
+    | "survivalConfig"
   >
 > {
   return {
@@ -82,10 +83,14 @@ async function profileFixtures(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "rwf"
+    | "survivalConfig"
   >
 > {
   const content = path.join(packageRoot, "server/owned/plugins/TheStorm");
   const owned = await Bun.file(path.join(content, "config.yml")).text();
+  const survival = await Bun.file(
+    path.join(content, "arena/survival.yml"),
+  ).text();
   // The fixtures plugin builds synthetic worlds and stands for whichever
   // modules the staged config switches on (every one in the full suite; the
   // rwf world alone here) before TheStorm enables.
@@ -99,6 +104,7 @@ async function profileFixtures(
       // fill each countdown to the owned targetCombatants (8).
       return {
         stormConfig: withBots(owned),
+        survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
         rwf: rwfTestSettings,
       };
@@ -107,6 +113,7 @@ async function profileFixtures(
       // One human plus up to 100 load-test bots.
       return {
         stormConfig: withBots(owned),
+        survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
         rwf: { ...rwfTestSettings, maxCombatants: 101, loadtest: true },
       };

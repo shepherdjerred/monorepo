@@ -59,7 +59,7 @@ final class WorldListener implements Listener {
   }
 
   /** The running arena containing {@code location}. */
-  private Optional<GameRunner> running(Location location) {
+  private Optional<ArenaRunner> running(Location location) {
     return arenas.runningAt(location);
   }
 
@@ -68,7 +68,21 @@ final class WorldListener implements Listener {
    * blocks anywhere, and nobody changes blocks in an arena while a game runs there.
    */
   private boolean guarded(Location location, UUID player) {
-    return arenas.of(player).isPresent() || running(location).isPresent();
+    return arenas.of(player).isPresent() || protectedMap(location);
+  }
+
+  private boolean protectedMap(Location location) {
+    return arenas.at(location).filter(r -> r.running() || r instanceof SurvivalRunner).isPresent();
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  void onFlow(org.bukkit.event.block.BlockFromToEvent event) {
+    if (arenas
+        .at(event.getToBlock().getLocation())
+        .filter(SurvivalRunner.class::isInstance)
+        .isPresent()) {
+      event.setCancelled(true);
+    }
   }
 
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -166,7 +180,7 @@ final class WorldListener implements Listener {
   @EventHandler(ignoreCancelled = true)
   void onIgnite(BlockIgniteEvent event) {
     var player = event.getPlayer();
-    if (running(event.getBlock().getLocation()).isPresent()
+    if (protectedMap(event.getBlock().getLocation())
         || (player != null && arenas.of(player.getUniqueId()).isPresent())) {
       event.setCancelled(true);
     }
@@ -191,6 +205,11 @@ final class WorldListener implements Listener {
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onOffspring(CreatureSpawnEvent event) {
     switch (event.getSpawnReason()) {
+      case NATURAL, CHUNK_GEN, PATROL, VILLAGE_INVASION -> {
+        if (arenas.at(event.getLocation()).filter(SurvivalRunner.class::isInstance).isPresent()) {
+          event.setCancelled(true);
+        }
+      }
       case SLIME_SPLIT, SPELL, REINFORCEMENTS ->
           running(event.getLocation())
               .ifPresent(
@@ -217,7 +236,7 @@ final class WorldListener implements Listener {
     var location = event.getLocation();
     var near =
         arenas.all().stream()
-            .filter(runner -> runner.game().phase().running())
+            .filter(runner -> runner.running())
             .filter(runner -> !runner.world().contains(location))
             .anyMatch(runner -> runner.world().near(location, REINFORCEMENT_REACH));
     if (near) {
@@ -242,7 +261,7 @@ final class WorldListener implements Listener {
 
   @EventHandler(ignoreCancelled = true)
   void onChangeBlock(EntityChangeBlockEvent event) {
-    if (running(event.getBlock().getLocation()).isPresent()
+    if (protectedMap(event.getBlock().getLocation())
         || keys.arenaOf(event.getEntity()).isPresent()) {
       event.setCancelled(true);
     }
@@ -377,10 +396,7 @@ final class WorldListener implements Listener {
     for (var entity : event.getEntities()) {
       var arena = keys.arenaOf(entity);
       if (arena.isPresent()
-          && arenas
-              .byId(arena.orElseThrow())
-              .filter(runner -> runner.game().phase().running())
-              .isEmpty()) {
+          && arenas.byId(arena.orElseThrow()).filter(runner -> runner.running()).isEmpty()) {
         entity.remove();
       }
     }

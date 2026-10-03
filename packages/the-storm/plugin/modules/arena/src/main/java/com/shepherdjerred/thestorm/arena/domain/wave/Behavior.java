@@ -2,7 +2,7 @@ package com.shepherdjerred.thestorm.arena.domain.wave;
 
 /** How an arena mob behaves beyond its vanilla AI. */
 public enum Behavior {
-  /** Vanilla AI only. */
+  /** Vanilla combat AI, with the arena supplying the nearest fighter as its target. */
   VANILLA,
   /** Always hunts the nearest fighter, even ones it cannot see. */
   CHASE,

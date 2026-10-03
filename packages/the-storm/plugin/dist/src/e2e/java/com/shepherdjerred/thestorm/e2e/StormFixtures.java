@@ -48,6 +48,7 @@ public final class StormFixtures extends JavaPlugin {
     }
     if (enabled(modules, "arena", prepared)) {
       arenaFixtures();
+      prepareSettlement();
     }
     if (enabled(modules, "shards", prepared)) {
       shardFixtures();
@@ -135,6 +136,16 @@ public final class StormFixtures extends JavaPlugin {
     }
     var ready = section(arena, "readyBlock");
     block(ready.getInt("x"), ready.getInt("y"), ready.getInt("z"), Material.IRON_BLOCK);
+  }
+
+  private void prepareSettlement() {
+    var survival =
+        com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+            content.toPath().resolve("arena/survival.yml"),
+            com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent.class);
+    new com.shepherdjerred.thestorm.arena.domain.survival.SettlementBlueprint(survival)
+        .blocks()
+        .forEach((pos, material) -> block(pos.x(), pos.y(), pos.z(), Material.valueOf(material)));
   }
 
   private void shardFixtures() {

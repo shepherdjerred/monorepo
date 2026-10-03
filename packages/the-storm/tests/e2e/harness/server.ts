@@ -27,6 +27,7 @@ import {
 } from "./config-overlays.ts";
 import { thirdPartyPlugins } from "./pins.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
+import { stageWorld } from "./world-copy.ts";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -76,6 +77,11 @@ export type StartServerOptions = {
   companionsE2eJar?: string;
   /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
   rwf?: RwfOverlay;
+  survivalConfig?: string;
+  /** Optional local world copy for terrain acceptance; copied into the disposable server. */
+  worldDir?: string;
+  /** Save the stopped disposable world's files for local inspection or map provisioning. */
+  exportWorldDir?: string;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
   /**
@@ -131,6 +137,9 @@ export async function stagePlugins(
     | "fixturesJar"
     | "companionsE2eJar"
     | "rwf"
+    | "survivalConfig"
+    | "worldDir"
+    | "exportWorldDir"
     | "warmCache"
   > &
     Partial<
@@ -167,6 +176,12 @@ export async function stagePlugins(
   }
   if (options.companionsE2eJar !== undefined) {
     await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);
+  }
+  if (options.survivalConfig !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStorm", "arena", "survival.yml"),
+      options.survivalConfig,
+    );
   }
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),
@@ -332,10 +347,18 @@ export async function startServer(
   ]);
   const id = containerId.trim();
   const stop = async () => {
+    if (options.exportWorldDir !== undefined) {
+      await docker(["stop", "--time", "30", id]);
+      await mkdir(options.exportWorldDir, { recursive: true });
+      await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
+    }
     await docker(["rm", "-f", "-v", id]);
     await rm(stagingDir, { recursive: true, force: true });
   };
   try {
+    if (options.worldDir !== undefined) {
+      await stageWorld(options.worldDir, stagingDir, id);
+    }
     await docker(["cp", bukkitYml, `${id}:/data/bukkit.yml`]);
     if (options.warmCache) {
       await docker(["cp", paperJar, `${id}:/data/${path.basename(paperJar)}`]);

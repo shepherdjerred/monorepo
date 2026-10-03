@@ -39,7 +39,7 @@ import org.bukkit.potion.PotionEffect;
  * Runs one arena: feeds events to its {@link ArenaGame} and carries out the effects, in order.
  * Events raised while effects are being carried out wait their turn. Main thread only.
  */
-final class GameRunner {
+final class GameRunner implements ArenaRunner {
 
   private final ArenaWorld world;
   private final Services services;
@@ -86,11 +86,13 @@ final class GameRunner {
     this.game = game;
   }
 
-  String id() {
+  @Override
+  public String id() {
     return world.definition().id();
   }
 
-  ArenaWorld world() {
+  @Override
+  public ArenaWorld world() {
     return world;
   }
 
@@ -98,16 +100,29 @@ final class GameRunner {
     return game;
   }
 
-  Optional<Member> member(UUID player) {
+  @Override
+  public java.util.Collection<Member> members() {
+    return game.members();
+  }
+
+  @Override
+  public boolean running() {
+    return game.phase().running();
+  }
+
+  @Override
+  public Optional<Member> member(UUID player) {
     return game.member(player);
   }
 
-  boolean isFighter(UUID player) {
+  @Override
+  public boolean isFighter(UUID player) {
     return member(player).filter(Member.Fighter.class::isInstance).isPresent();
   }
 
   /** Applies {@code event}, or returns why it was refused. */
-  Optional<GameError> handle(GameEvent event) {
+  @Override
+  public Optional<GameError> handle(GameEvent event) {
     if (applying) {
       waiting.add(event);
       return Optional.empty();
@@ -177,7 +192,8 @@ final class GameRunner {
   }
 
   /** One second of the arena: containment, custom AI, the boss, then the game's clock. */
-  void tick() {
+  @Override
+  public void tick() {
     if (world.preloadFailed()) {
       handle(new GameEvent.Stop());
       return;
@@ -244,29 +260,34 @@ final class GameRunner {
   }
 
   /** Whether {@code player} died in this arena and is waiting to respawn and be restored. */
-  boolean awaitsRespawn(UUID player) {
+  @Override
+  public boolean awaitsRespawn(UUID player) {
     return awaitingRespawn.contains(player);
   }
 
   /** Where a player who died here respawns: the exit, outside the region. */
-  Location exit() {
+  @Override
+  public Location exit() {
     return Places.location(world.world(), world.definition().exit());
   }
 
   /** The player respawned after dying here: restore them. */
-  void respawned(Player player) {
+  @Override
+  public void respawned(Player player) {
     if (awaitingRespawn.remove(player.getUniqueId())) {
       services.snapshots().restore(player);
     }
   }
 
   /** The player quit while waiting to respawn: their snapshot is restored when they return. */
-  void quitWhileDead(UUID player) {
+  @Override
+  public void quitWhileDead(UUID player) {
     awaitingRespawn.remove(player);
   }
 
   /** Tells everyone in the arena something. */
-  void announce(Notice notice) {
+  @Override
+  public void announce(Notice notice) {
     online(audience()).forEach(player -> services.texts().notice(player, notice));
   }
 

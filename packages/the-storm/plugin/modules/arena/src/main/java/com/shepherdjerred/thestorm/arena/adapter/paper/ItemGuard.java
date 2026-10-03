@@ -79,7 +79,11 @@ final class ItemGuard implements Listener {
     if (arenas.joining(id)) {
       event.setCancelled(true);
     } else if (member(id)) {
-      event.setCancelled(!arenaItem);
+      var runner = arenas.of(id).orElseThrow();
+      event.setCancelled(
+          !arenaItem
+              || (runner instanceof SurvivalRunner survival
+                  && !survival.items().owns(event.getItem().getItemStack())));
     } else if (arenaItem) {
       event.setCancelled(true);
       event.getItem().remove();
@@ -117,7 +121,10 @@ final class ItemGuard implements Listener {
   }
 
   /** A member's own inventory, or (for a fighter) one of their arena's loot chests. */
-  private boolean mayOpen(GameRunner runner, UUID player, Inventory inventory) {
+  private boolean mayOpen(ArenaRunner runner, UUID player, Inventory inventory) {
+    if (runner.menu(player, inventory)) {
+      return true;
+    }
     var type = inventory.getType();
     if (type == InventoryType.PLAYER || type == InventoryType.CRAFTING) {
       return true;
@@ -189,7 +196,7 @@ final class ItemGuard implements Listener {
     }
   }
 
-  private boolean ownWolf(GameRunner runner, UUID player, Entity entity) {
+  private boolean ownWolf(ArenaRunner runner, UUID player, Entity entity) {
     return !arenas.joining(player) && entity instanceof Wolf && runner.world().owns(entity);
   }
 

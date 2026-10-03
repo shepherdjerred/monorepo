@@ -116,6 +116,19 @@ export default async function setup(project: TestProject) {
       slaAfterMinutes: 10_080,
     },
     agent: { mode: full ? "active" : "shadow", reviewSamplePercent: 100 },
+    ...(Bun.env["STORM_E2E_WORLD_DIR"] === undefined
+      ? {}
+      : {
+          worldDir: z.string().min(1).parse(Bun.env["STORM_E2E_WORLD_DIR"]),
+        }),
+    ...(Bun.env["STORM_E2E_EXPORT_WORLD_DIR"] === undefined
+      ? {}
+      : {
+          exportWorldDir: z
+            .string()
+            .min(1)
+            .parse(Bun.env["STORM_E2E_EXPORT_WORLD_DIR"]),
+        }),
   });
   if (server.info.kind === "container") {
     console.warn(

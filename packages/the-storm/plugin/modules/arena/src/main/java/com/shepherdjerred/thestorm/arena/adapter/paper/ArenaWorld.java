@@ -26,6 +26,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -260,6 +261,39 @@ final class ArenaWorld {
     return allSpawned;
   }
 
+  /** Imported or wandering hostile mobs cannot bypass survival's encounter and credit rules. */
+  void clearAmbientHostiles() {
+    world.getEntities().stream()
+        .filter(org.bukkit.entity.Enemy.class::isInstance)
+        .filter(entity -> contains(entity.getLocation()))
+        .filter(entity -> parts.keys().arenaOf(entity).isEmpty())
+        .forEach(Entity::remove);
+  }
+
+  /** Survival's authored entrances and encounter controller share the same tracked entity cap. */
+  Optional<List<LivingEntity>> spawnAt(SpawnUnit unit, Location at, boolean bossHealth) {
+    if (alive() + unit.entities() > parts.entityCap() || !contains(at)) {
+      return Optional.empty();
+    }
+    var result =
+        parts
+            .factory()
+            .spawn(
+                at,
+                unit.mob(),
+                bossHealth
+                    ? MobFactory.Tuning.boss(unit.health(), unit.damage())
+                    : MobFactory.Tuning.relative(unit.health(), unit.damage()),
+                definition.id());
+    result.ifPresent(spawned -> track(unit.mob(), spawned));
+    return result;
+  }
+
+  List<LivingEntity> enemies() {
+    alive();
+    return List.copyOf(mobs);
+  }
+
   /** Spawns the boss; false if its spawn was refused. */
   boolean spawnBoss(BossOrder order, Instant now) {
     var result =
@@ -305,6 +339,7 @@ final class ArenaWorld {
     }
     parts.keys().tag(offspring, definition.id());
     offspring.setPersistent(false);
+    pursuitRange(offspring);
     mobs.add(offspring);
     return true;
   }
@@ -312,8 +347,28 @@ final class ArenaWorld {
   private void track(String mob, List<LivingEntity> spawned) {
     mobs.addAll(spawned);
     var archetype = parts.table().mob(mob);
-    if (archetype.behavior() != Behavior.VANILLA) {
-      brains.put(spawned.getFirst().getUniqueId(), archetype);
+    for (var entity : spawned) {
+      pursuitRange(entity);
+      if (archetype.behavior() != Behavior.VANILLA) {
+        brains.put(entity.getUniqueId(), archetype);
+      }
+      if (archetype.rider().isPresent()) {
+        archetype = parts.table().mob(archetype.rider().orElseThrow());
+      }
+    }
+  }
+
+  /**
+   * Vanilla navigation must be able to plan a path across the whole arena, including for riders.
+   */
+  private void pursuitRange(LivingEntity mob) {
+    var range = mob.getAttribute(Attribute.FOLLOW_RANGE);
+    if (range != null) {
+      var region = definition.region();
+      var x = (double) region.max().x() - region.min().x() + 1;
+      var y = (double) region.max().y() - region.min().y() + 1;
+      var z = (double) region.max().z() - region.min().z() + 1;
+      range.setBaseValue(Math.max(range.getBaseValue(), Math.sqrt(x * x + y * y + z * z)));
     }
   }
 
@@ -342,33 +397,50 @@ final class ArenaWorld {
     }
   }
 
-  /** One second of custom AI for mobs with a behavior. */
+  /** Every hostile wave mob hunts a fighter; special behaviors add to its native combat AI. */
   void think(Collection<Player> fighters) {
     for (var mob : List.copyOf(mobs)) {
-      var archetype = brains.get(mob.getUniqueId());
-      if (archetype == null || !mob.isValid()) {
+      if (!mob.isValid() || mob.isDead()) {
         continue;
       }
-      var nearest = nearest(mob, fighters);
-      var distance =
-          nearest
-              .map(player -> OptionalDouble.of(Places.at(player).distance(mob.getLocation())))
-              .orElseGet(OptionalDouble::empty);
-      switch (MobBrain.decide(archetype.behavior(), distance)) {
-        case NOTHING -> {
-          // Vanilla AI carries on.
-        }
-        case HUNT -> {
-          if (mob instanceof Mob hunter) {
-            hunter.setTarget(nearest.orElseThrow());
+      think(mob, fighters);
+    }
+  }
+
+  private void think(LivingEntity mob, Collection<Player> fighters) {
+    var archetype = brains.get(mob.getUniqueId());
+    var nearest = nearest(mob, fighters);
+    var distance =
+        nearest
+            .map(player -> OptionalDouble.of(Places.at(player).distance(mob.getLocation())))
+            .orElseGet(OptionalDouble::empty);
+    // Only special behaviors have a brain entry; vanilla mobs and adopted offspring still hunt.
+    var behavior = archetype == null ? Behavior.VANILLA : archetype.behavior();
+    if (nearest.isEmpty() && mob instanceof Mob hunter) {
+      hunter.setTarget(null);
+    }
+    switch (MobBrain.decide(behavior, distance)) {
+      case NOTHING -> {
+        // No fighter, or a harmless follower already within its following distance.
+      }
+      case HUNT -> {
+        if (mob instanceof Mob hunter) {
+          var target = nearest.orElseThrow();
+          if (!target.equals(hunter.getTarget())) {
+            hunter.setTarget(target);
           }
         }
-        case APPROACH -> {
-          if (mob instanceof Mob follower) {
-            follower.getPathfinder().moveTo(Places.at(nearest.orElseThrow()));
-          }
+      }
+      case APPROACH -> {
+        if (mob instanceof Mob follower) {
+          follower.getPathfinder().moveTo(Places.at(nearest.orElseThrow()));
         }
-        case DETONATE -> detonate(mob, archetype);
+      }
+      case DETONATE -> {
+        if (archetype == null) {
+          throw new IllegalStateException("kamikaze mob has no archetype");
+        }
+        detonate(mob, archetype);
       }
     }
   }
@@ -384,6 +456,7 @@ final class ArenaWorld {
 
   private static Optional<Player> nearest(LivingEntity mob, Collection<Player> fighters) {
     return fighters.stream()
+        .filter(player -> player.isValid() && !player.isDead())
         .filter(player -> player.getWorld().equals(mob.getWorld()))
         .min(
             Comparator.comparingDouble(

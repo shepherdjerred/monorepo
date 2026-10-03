@@ -161,6 +161,13 @@ public final class TownsModule implements StormModule {
     context.services().provide(SettledLand.class, installed.settled());
     context.services().provide(TownRead.class, new TownListings(state));
     context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.towns.app.LandRead.class,
+            (world, x, y, z) ->
+                state.landAt(world, x, y, z)
+                    instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.Wilderness);
+    context
         .logger()
         .info(
             "{} towns, {} locks and {} admin regions loaded",

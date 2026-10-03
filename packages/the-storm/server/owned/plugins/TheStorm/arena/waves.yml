@@ -16,8 +16,9 @@ finalWave: 72
 # Mob archetypes. type: the entity type. health, damage, speed: multipliers on
 # vanilla values. scale: the scale attribute (1 is vanilla size). name: shown
 # above the mob, or null. equipment: slot to material; never dropped. rider:
-# another archetype riding this one, or null. behavior: VANILLA, CHASE (always
-# hunts the nearest fighter), KAMIKAZE (hunts and explodes with power blast)
+# another archetype riding this one, or null. Every hostile arena mob targets
+# the nearest fighter across the arena. behavior: VANILLA (native combat),
+# CHASE (always hunts the nearest fighter), KAMIKAZE (hunts and explodes with power blast)
 # or FOLLOW (harmless, trails a fighter). blast: explosion power for KAMIKAZE,
 # 0 otherwise.
 mobs:

@@ -388,6 +388,52 @@ that Paper saved the restored inventory and its matching persistent-data marker
 together. Players must reconnect before entering another arena after a restore;
 this avoids a synchronous player-data write on the server tick.
 
+### Settlement survival
+
+The Colosseum retains its finite 72-wave game. Settlement is a separate,
+endless, one-to-four-player crafting survival game. Its eight connected
+districts span 160 × 160 blocks. Permanent buildings are protected; purchased
+routes, barricades, charged traps, and personal gathering budgets reset each run.
+
+| Command or interaction                          | Result                                                          |
+| ----------------------------------------------- | --------------------------------------------------------------- |
+| `/arena join settlement`                        | Saves belongings and enters the survival lobby                  |
+| `/arena class fighter\|ranger\|medic`           | Selects an initial class                                        |
+| `/arena class engineer\|alchemist\|beastmaster` | Selects an unlocked class at 500, 1,500, or 3,000 persistent XP |
+| `/arena ready`                                  | Starts the countdown when participants are ready                |
+| `/survival ability`                             | Uses the class ability, with a 40-second cooldown               |
+| `/survival status`                              | Shows round, XP, emerald items, and opened districts            |
+| `/survival give <player> <material> <amount>`   | Donates run items to a nearby standing teammate                 |
+| Right-click a resource node                     | Gathers from a personal, finite per-round budget                |
+| Right-click a station                           | Opens curated crafting, personal perks, and donation choices    |
+| Right-click a locked gate                       | Pays physical emeralds to open a shared route                   |
+| Right-click a defense                           | Repairs a barricade or charges a trap with materials            |
+| Sneak within three blocks of a downed teammate  | Revives after five uninterrupted seconds                        |
+| `/arena leave`                                  | Restores pre-run belongings                                     |
+
+Fighter has an area knockback attack; Ranger supplies arrows and a speed burst;
+Medic heals nearby teammates. Engineer repairs, Alchemist weakens the horde,
+and Beastmaster recalls a companion wolf. Kills, assists, bosses, and completed
+rounds award persistent XP through idempotent database credits. Currency and
+gathered materials are physical items tagged to the current run.
+
+A downed player has 30 seconds before becoming a spectator. Bleedouts return
+next round with a weaker kit. Solo players get one self-revive per run; losing
+every standing player ends the run. Monsters pursue players across the map,
+including riders and offspring, with bounded spawning and stuck-mob recovery.
+
+Every fifth round has a phased boss with marked casts and recovery windows.
+The Evoker's glowing ritual node interrupts casts; the Creaking's node opens
+a damage window after three interactions. The Ravager breaks nearby barricades
+after a charge. Special encounters use illager, trial, mounted, pale, and Nether
+rosters as their required districts become available.
+
+Placement is controlled by strict `arena/survival.yml`; admission also requires
+the managed `the-storm-survival-enabled` flag for the player. Missing Flipt
+bootstrap or failed evaluations keep admission closed. Startup validates the
+authored blueprint and resets gates and defenses before opening admission.
+See the wiki's **How to provision The Storm settlement** for placement and recovery.
+
 Arena startup loads its configured region chunks asynchronously before checking
 loot chest blocks or clearing remnants of an interrupted game. Admission stays
 closed if any chunk or chest is unavailable. Vault rewards stay in the database

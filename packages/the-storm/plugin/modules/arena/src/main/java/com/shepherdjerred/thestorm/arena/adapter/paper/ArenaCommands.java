@@ -67,7 +67,16 @@ final class ArenaCommands {
                 .requires(permission(ArenaPermissions.PLAY))
                 .then(
                     Commands.argument("class", StringArgumentType.word())
-                        .suggests(suggest(() -> classes.classes().keySet()))
+                        .suggests(
+                            suggest(
+                                () ->
+                                    java.util.stream.Stream.concat(
+                                            classes.classes().keySet().stream(),
+                                            java.util.Arrays.stream(
+                                                    com.shepherdjerred.thestorm.arena.domain
+                                                        .survival.SurvivalClass.values())
+                                                .map(c -> c.name().toLowerCase(Locale.ROOT)))
+                                        .toList()))
                         .executes(
                             context ->
                                 asPlayer(
@@ -111,7 +120,7 @@ final class ArenaCommands {
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> arenaArgument(
-      BiConsumer<Player, GameRunner> action) {
+      BiConsumer<Player, ArenaRunner> action) {
     return Commands.argument("arena", StringArgumentType.word())
         .suggests(suggest(arenas::ids))
         .executes(
@@ -129,7 +138,7 @@ final class ArenaCommands {
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> adminArenaArgument(
-      BiConsumer<CommandSender, GameRunner> action) {
+      BiConsumer<CommandSender, ArenaRunner> action) {
     return Commands.argument("arena", StringArgumentType.word())
         .suggests(suggest(arenas::ids))
         .executes(
@@ -145,11 +154,11 @@ final class ArenaCommands {
             });
   }
 
-  private void join(Player player, GameRunner runner) {
+  private void join(Player player, ArenaRunner runner) {
     arenas.join(player, runner);
   }
 
-  private void spectate(Player player, GameRunner runner) {
+  private void spectate(Player player, ArenaRunner runner) {
     arenas.spectate(player, runner);
   }
 
@@ -204,8 +213,8 @@ final class ArenaCommands {
   private int list(CommandSender sender) {
     for (var runner : arenas.all()) {
       var definition = runner.world().definition();
-      var game = runner.game();
-      var state = game.phase().running() ? "fighting" : game.isEmpty() ? "open" : "gathering";
+      var members = runner.members();
+      var state = runner.running() ? "fighting" : members.isEmpty() ? "open" : "gathering";
       Texts.info(
           sender,
           definition.id()
@@ -214,7 +223,7 @@ final class ArenaCommands {
               + "): "
               + state
               + ", "
-              + game.members().size()
+              + members.size()
               + " inside");
     }
     return OK;
@@ -275,7 +284,7 @@ final class ArenaCommands {
                 .clickEvent(ClickEvent.copyToClipboard(yaml)));
   }
 
-  private void start(CommandSender sender, GameRunner runner) {
+  private void start(CommandSender sender, ArenaRunner runner) {
     runner
         .handle(new GameEvent.ForceStart(context.time().instant()))
         .ifPresentOrElse(
@@ -283,7 +292,7 @@ final class ArenaCommands {
             () -> Texts.info(sender, "Started " + runner.id() + "."));
   }
 
-  private void stop(CommandSender sender, GameRunner runner) {
+  private void stop(CommandSender sender, ArenaRunner runner) {
     runner.handle(new GameEvent.Stop());
     Texts.info(sender, "Stopped " + runner.id() + "; everyone inside was restored.");
   }
