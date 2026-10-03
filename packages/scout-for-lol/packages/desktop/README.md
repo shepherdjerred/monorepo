@@ -44,7 +44,12 @@ A process watching the transition is therefore the only party that can tie the
 two together. The client remembers the current lobby, claims it for the next
 game that starts, and stamps the result onto the envelope's `lobbyId` for
 observations whose own payload has none. Both halves live in the SQLite outbox,
-so the join survives a restart between champion select and the game.
+so the join survives a restart between champion select and the game. When the
+join is recorded the client sends the in-game session once more, stamped: the
+first copy left before the join existed, and an unchanged session is not
+otherwise resent, so without it the server would not learn the game's lobby
+until post-game — after prematch needed it. The backend README describes how
+prematch uses it.
 
 Each game records one outcome, which the first attempt decides: a game's roster
 cannot change identity partway through. "No lobby was observed" is recorded as
