@@ -141,7 +141,23 @@ export async function fetch(
       preview:
         preview !== undefined && preview !== ""
           ? truncate(
-              sanitizeHtml(preview, { parseStyleAttributes: false }),
+              sanitizeHtml(preview, {
+                parseStyleAttributes: false,
+                transformTags: {
+                  a: (tagName, attributes) => ({
+                    tagName,
+                    attribs: {
+                      ...attributes,
+                      ...(attributes["href"] === undefined
+                        ? {}
+                        : {
+                            href: new URL(attributes["href"], firstItem.link)
+                              .href,
+                          }),
+                    },
+                  }),
+                },
+              }),
               length,
             )
           : undefined,
