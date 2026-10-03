@@ -1480,6 +1480,418 @@ public func FfiConverterTypeFfiSyncEngine_lower(_ value: FfiSyncEngine) -> UInt6
 
 
 /**
+ * Immutable Rust-owned configuration for a selected vault profile.
+ */
+public protocol FfiVaultConfigurationProtocol: AnyObject, Sendable {
+    
+    /**
+     * Validated effective settings as JSON, including mapped field names.
+     *
+     * # Errors
+     * Returns a typed boundary error if serialization fails.
+     */
+    func configurationJson() throws  -> String
+    
+    /**
+     * Resolve completion using the configured workflow.
+     *
+     * # Errors
+     * Rejects status values absent from the workflow.
+     */
+    func isCompleted(status: String) throws  -> Bool
+    
+    /**
+     * Resolve the next status using the configured workflow.
+     *
+     * # Errors
+     * Rejects unknown values and workflows with no cycling participants.
+     */
+    func nextStatus(status: String) throws  -> String
+    
+}
+/**
+ * Immutable Rust-owned configuration for a selected vault profile.
+ */
+open class FfiVaultConfiguration: FfiVaultConfigurationProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_tasknotes_core_ffi_fn_clone_ffivaultconfiguration(self.handle, $0) }
+    }
+    /**
+     * Resolve the selected vault's settings using the documented precedence.
+     *
+     * # Errors
+     * Rejects invalid configuration and unapproved configuration-free vaults.
+     */
+public convenience init(plugin: Data?, portable: Data?, approveStandard: Bool)throws  {
+    let handle =
+        try rustCallWithError(FfiConverterTypeVaultBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_constructor_ffivaultconfiguration_new(
+        FfiConverterOptionData.lower(plugin),
+        FfiConverterOptionData.lower(portable),
+        FfiConverterBool.lower(approveStandard),uniffiCallStatus
+    )
+}
+    self.init(unsafeFromHandle: handle)
+}
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_tasknotes_core_ffi_fn_free_ffivaultconfiguration(handle, $0) }
+    }
+
+    
+
+    
+    /**
+     * Validated effective settings as JSON, including mapped field names.
+     *
+     * # Errors
+     * Returns a typed boundary error if serialization fails.
+     */
+open func configurationJson()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeVaultBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_configuration_json(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Resolve completion using the configured workflow.
+     *
+     * # Errors
+     * Rejects status values absent from the workflow.
+     */
+open func isCompleted(status: String)throws  -> Bool  {
+    return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeVaultBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_is_completed(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(status),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Resolve the next status using the configured workflow.
+     *
+     * # Errors
+     * Rejects unknown values and workflows with no cycling participants.
+     */
+open func nextStatus(status: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeVaultBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_next_status(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(status),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFfiVaultConfiguration: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = FfiVaultConfiguration
+
+    public static func lift(_ handle: UInt64) throws -> FfiVaultConfiguration {
+        return FfiVaultConfiguration(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: FfiVaultConfiguration) -> UInt64 {
+        return value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FfiVaultConfiguration {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: FfiVaultConfiguration, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiVaultConfiguration_lift(_ handle: UInt64) throws -> FfiVaultConfiguration {
+    return try FfiConverterTypeFfiVaultConfiguration.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiVaultConfiguration_lower(_ value: FfiVaultConfiguration) -> UInt64 {
+    return FfiConverterTypeFfiVaultConfiguration.lower(value)
+}
+
+
+
+
+
+
+/**
+ * Immutable Rust-owned parsed document, with no filesystem access.
+ */
+public protocol FfiVaultDocumentProtocol: AnyObject, Sendable {
+    
+    /**
+     * Exact original Markdown body.
+     */
+    func body()  -> String
+    
+    /**
+     * Plan physical property edits and an optional body replacement.
+     * `edits_json` is a list of tagged `set`/`remove` property edits.
+     *
+     * # Errors
+     * Rejects malformed edits and changes affecting properties outside the plan.
+     */
+    func plan(editsJson: String, body: String?) throws  -> VaultDocumentWrite
+    
+    /**
+     * Properties as an ordered JSON object, including unknown keys.
+     *
+     * # Errors
+     * Returns a typed boundary error if serialization fails.
+     */
+    func propertiesJson() throws  -> String
+    
+    /**
+     * Exact content hash to use as a concurrency precondition.
+     */
+    func revision()  -> String
+    
+}
+/**
+ * Immutable Rust-owned parsed document, with no filesystem access.
+ */
+open class FfiVaultDocument: FfiVaultDocumentProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_tasknotes_core_ffi_fn_clone_ffivaultdocument(self.handle, $0) }
+    }
+    /**
+     * Parse a logical path and complete document bytes.
+     *
+     * # Errors
+     * Rejects unsafe paths and malformed Markdown/frontmatter.
+     */
+public convenience init(path: String, bytes: Data)throws  {
+    let handle =
+        try rustCallWithError(FfiConverterTypeVaultBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_constructor_ffivaultdocument_new(
+        FfiConverterString.lower(path),
+        FfiConverterData.lower(bytes),uniffiCallStatus
+    )
+}
+    self.init(unsafeFromHandle: handle)
+}
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_tasknotes_core_ffi_fn_free_ffivaultdocument(handle, $0) }
+    }
+
+    
+
+    
+    /**
+     * Exact original Markdown body.
+     */
+open func body() -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_body(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Plan physical property edits and an optional body replacement.
+     * `edits_json` is a list of tagged `set`/`remove` property edits.
+     *
+     * # Errors
+     * Rejects malformed edits and changes affecting properties outside the plan.
+     */
+open func plan(editsJson: String, body: String?)throws  -> VaultDocumentWrite  {
+    return try  FfiConverterTypeVaultDocumentWrite_lift(try rustCallWithError(FfiConverterTypeVaultBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_plan(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(editsJson),
+        FfiConverterOptionString.lower(body),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Properties as an ordered JSON object, including unknown keys.
+     *
+     * # Errors
+     * Returns a typed boundary error if serialization fails.
+     */
+open func propertiesJson()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeVaultBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_properties_json(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Exact content hash to use as a concurrency precondition.
+     */
+open func revision() -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_revision(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFfiVaultDocument: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = FfiVaultDocument
+
+    public static func lift(_ handle: UInt64) throws -> FfiVaultDocument {
+        return FfiVaultDocument(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: FfiVaultDocument) -> UInt64 {
+        return value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FfiVaultDocument {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: FfiVaultDocument, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiVaultDocument_lift(_ handle: UInt64) throws -> FfiVaultDocument {
+    return try FfiConverterTypeFfiVaultDocument.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiVaultDocument_lower(_ value: FfiVaultDocument) -> UInt64 {
+    return FfiConverterTypeFfiVaultDocument.lower(value)
+}
+
+
+
+
+
+
+/**
  * The host's HTTP stack.
  *
  * See [`tasknotes_core::net::HttpClient`]. This is the whole network surface,
@@ -7805,6 +8217,95 @@ public func FfiConverterTypeUpdateTaskRequest_lower(_ value: UpdateTaskRequest) 
 
 
 /**
+ * A complete conditional write; hosts supply journaling and atomic file I/O.
+ */
+public struct VaultDocumentWrite: Equatable, Hashable {
+    /**
+     * Logical vault-relative target, validated by Rust.
+     */
+    public var path: String
+    /**
+     * SHA-256 of the exact prior bytes.
+     */
+    public var expectedRevision: String
+    /**
+     * Complete replacement document bytes.
+     */
+    public var bytes: Data
+    /**
+     * SHA-256 of the replacement bytes.
+     */
+    public var revision: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Logical vault-relative target, validated by Rust.
+         */path: String, 
+        /**
+         * SHA-256 of the exact prior bytes.
+         */expectedRevision: String, 
+        /**
+         * Complete replacement document bytes.
+         */bytes: Data, 
+        /**
+         * SHA-256 of the replacement bytes.
+         */revision: String) {
+        self.path = path
+        self.expectedRevision = expectedRevision
+        self.bytes = bytes
+        self.revision = revision
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension VaultDocumentWrite: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeVaultDocumentWrite: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> VaultDocumentWrite {
+        return
+            try VaultDocumentWrite(
+                path: FfiConverterString.read(from: &buf), 
+                expectedRevision: FfiConverterString.read(from: &buf), 
+                bytes: FfiConverterData.read(from: &buf), 
+                revision: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: VaultDocumentWrite, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterString.write(value.expectedRevision, into: &buf)
+        FfiConverterData.write(value.bytes, into: &buf)
+        FfiConverterString.write(value.revision, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeVaultDocumentWrite_lift(_ buf: RustBuffer) throws -> VaultDocumentWrite {
+    return try FfiConverterTypeVaultDocumentWrite.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeVaultDocumentWrite_lower(_ value: VaultDocumentWrite) -> RustBuffer {
+    return FfiConverterTypeVaultDocumentWrite.lower(value)
+}
+
+
+/**
  * See [`tasknotes_core::domain::VaultInfo`].
  */
 public struct VaultInfo: Equatable, Hashable {
@@ -10580,6 +11081,124 @@ public func FfiConverterTypeUpcomingHorizon_lower(_ value: UpcomingHorizon) -> R
     return FfiConverterTypeUpcomingHorizon.lower(value)
 }
 
+
+
+/**
+ * Sanitized vault failures, distinct from the legacy server API errors.
+ */
+public 
+enum VaultBoundaryError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+
+    
+    
+    /**
+     * The selected configuration is invalid or needs explicit approval.
+     */
+    case Configuration(
+        /**
+         * Safe configuration diagnostic, without vault contents.
+         */message: String
+    )
+    /**
+     * A document or requested edit is invalid.
+     */
+    case Document(
+        /**
+         * Safe document diagnostic, without document contents.
+         */message: String
+    )
+    /**
+     * A path is not a safe vault-relative identity.
+     */
+    case Path
+    /**
+     * The current file differs from the version used to plan its edit.
+     */
+    case Conflict
+
+    
+
+    
+
+    
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+    
+}
+
+#if compiler(>=6)
+extension VaultBoundaryError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeVaultBoundaryError: FfiConverterRustBuffer {
+    typealias SwiftType = VaultBoundaryError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> VaultBoundaryError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .Configuration(
+            message: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .Document(
+            message: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .Path
+        case 4: return .Conflict
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: VaultBoundaryError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .Configuration(message):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(message, into: &buf)
+            
+        
+        case let .Document(message):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(message, into: &buf)
+            
+        
+        case .Path:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .Conflict:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeVaultBoundaryError_lift(_ buf: RustBuffer) throws -> VaultBoundaryError {
+    return try FfiConverterTypeVaultBoundaryError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeVaultBoundaryError_lower(_ value: VaultBoundaryError) -> RustBuffer {
+    return FfiConverterTypeVaultBoundaryError.lower(value)
+}
 
 
 /**
@@ -13845,10 +14464,37 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() != 8961) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json() != 54722) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed() != 49549) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_next_status() != 58547) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_body() != 13793) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_plan() != 9460) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_properties_json() != 27226) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_revision() != 59888) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new() != 55747) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new() != 55934) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new() != 16189) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultdocument_new() != 14230) {
         return InitializationResult.apiChecksumMismatch
     }
 

@@ -41,6 +41,8 @@ packages/homelab/src/cdk8s/patches/** -text
 packages/tasknotes-core/bindings/Sources/** linguist-generated=true whitespace=-trailing-space
 packages/tasknotes-core/bindings/ffi/**     linguist-generated=true whitespace=-trailing-space
 packages/tasknotes-core/bindings/csharp/**  linguist-generated=true whitespace=-trailing-space
+# Kotlin templates also emit a final blank line; retain exact generator output.
+packages/tasknotes-core/bindings/kotlin/uniffi/** linguist-generated=true whitespace=-trailing-space,-blank-at-eof
 
 # --- Binary files (carried over from previous .gitattributes) ---
 *.data    binary
