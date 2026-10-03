@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { z } from "zod";
 import {
   LibraryPageSchema,
@@ -52,11 +52,11 @@ export function MediaList(props: MediaListProps) {
         </button>
       </div>
       {tab === "library" ? (
-        <Library {...props} />
+        <Library key={props.guildId} {...props} />
       ) : tab === "search" ? (
-        <Search {...props} />
+        <Search key={props.guildId} {...props} />
       ) : (
-        <Sports {...props} />
+        <Sports key={props.guildId} {...props} />
       )}
     </section>
   );
@@ -245,31 +245,43 @@ function Search(props: MediaListProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState<Selection | null>(null);
+  const pending = useRef<AbortController | null>(null);
+  useEffect(
+    () => () => {
+      pending.current?.abort();
+    },
+    [],
+  );
   async function search() {
+    pending.current?.abort();
     setError("");
     setResults(null);
     setLink(null);
     if (/^https?:\/\//u.test(query.trim())) {
       setLink({ kind: "url", url: query.trim() });
+      setLoading(false);
       return;
     }
+    const controller = new AbortController();
+    pending.current = controller;
     setLoading(true);
     try {
-      setResults(
-        await api(
-          "/api/search?" +
-            new URLSearchParams({
-              guildId: props.guildId,
-              query,
-              source,
-            }).toString(),
-          SearchResultsSchema,
-        ),
+      const next = await api(
+        "/api/search?" +
+          new URLSearchParams({
+            guildId: props.guildId,
+            query,
+            source,
+          }).toString(),
+        SearchResultsSchema,
+        { signal: controller.signal },
       );
+      if (!controller.signal.aborted) setResults(next);
     } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : "Search failed.");
+      if (!controller.signal.aborted)
+        setError(error_ instanceof Error ? error_.message : "Search failed.");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }
   return (

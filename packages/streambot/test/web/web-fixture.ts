@@ -40,6 +40,7 @@ import {
 } from "./web-fixture-media.ts";
 
 export const GUILD = GuildIdSchema.parse("100000000000000010");
+export const SECOND_GUILD = GuildIdSchema.parse("100000000000000011");
 export const CHANNEL = ChannelIdSchema.parse("100000000000000020");
 export const USER = UserIdSchema.parse("100000000000000001");
 export const OTHER = UserIdSchema.parse("100000000000000002");
@@ -112,7 +113,12 @@ function resolved(source: Source): ResolvedSource {
 export function webFixture(
   origin = "http://127.0.0.1:8080",
   assetsDir = "/nonexistent",
+  extraGuild = false,
 ) {
+  const guilds = [
+    { id: GUILD, name: "The living room" },
+    ...(extraGuild ? [{ id: SECOND_GUILD, name: "The studio" }] : []),
+  ];
   const store = new WebSessionStore(":memory:");
   const config = loadConfig({
     BOT_TOKEN: "fixture",
@@ -253,10 +259,9 @@ export function webFixture(
       revision,
     },
     bot: {
-      webGuilds: (ids) =>
-        ids.includes(GUILD) ? [{ id: GUILD, name: "The living room" }] : [],
+      webGuilds: (ids) => guilds.filter((guild) => ids.includes(guild.id)),
       webVerifyMember: () => Promise.resolve(member),
-      webVoiceChannel: () => channel,
+      webVoiceChannel: (guildId) => (guildId === GUILD ? channel : null),
       webReady: () => true,
     },
     commands: {
@@ -295,7 +300,9 @@ export function webFixture(
             Response.json({ access_token: "fixture-only" }),
           );
         return url.endsWith("/users/@me/guilds")
-          ? Promise.resolve(Response.json([{ id: GUILD }]))
+          ? Promise.resolve(
+              Response.json(guilds.map((guild) => ({ id: guild.id }))),
+            )
           : Promise.resolve(Response.json({ id: USER, username: "jerred" }));
       },
       { preconnect: fetch.preconnect },
@@ -304,7 +311,7 @@ export function webFixture(
   const created = store.create({
     userId: USER,
     username: "jerred",
-    guildIds: [GUILD],
+    guildIds: guilds.map((guild) => guild.id),
   });
   const session = store.read(created.token);
   if (session === null) throw new Error("Fixture session was not persisted");

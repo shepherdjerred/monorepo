@@ -7,6 +7,7 @@ const origin = "http://127.0.0.1:8080";
 const fixture = webFixture(
   origin,
   path.resolve(import.meta.dirname, "../dist/web"),
+  true,
 );
 fixture.enableNumbered();
 await fixture.seed();
