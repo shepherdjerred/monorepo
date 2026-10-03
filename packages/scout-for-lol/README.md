@@ -119,6 +119,48 @@ describe the report lake, custom games, and Temporal analysis boundaries.
 [AGENTS.md](AGENTS.md) contains only the package invariants agents must always
 apply.
 
+**Architecture boundaries:**
+
+Each Scout package that declares layers has an `architecture.config.ts` checked
+by dependency-cruiser through `@shepherdjerred/architecture`. The cruise sees
+only a package's own tree; see
+[Architecture enforcement](../docs/wiki/src/content/docs/explanation/architecture-enforcement.md)
+for the mechanism.
+
+- `backend`: `configuration/`, `observability/`, `utils/` and `metrics/` sit
+  underneath everything; `database/`, `storage/`, `report-store/`, `durable/`
+  and `analytics/` do not reach into features or transports; `http/` reaches
+  only its endpoint adapters (tRPC, Explore, reports, betting, customs, Scout
+  client, Temporal health). The `layers` list must equal the directories under
+  `src/`, so a new directory is forbidden by every rule until it is named.
+- `domain`: identity is a leaf, and the codec, artifacts, match-processing and
+  notification slices keep their one-way order.
+- `temporal`: `contracts` is a leaf, and the V2 activity, workflow, receipt and
+  backfill contract modules may import only contract modules.
+- `data`: `model/scoutql` depends only on `model/core` and `model/reports`, and
+  `league/` and `data-dragon/` must not import `review/`. `model/legacy` is
+  deliberately not a layer because it is being deleted.
+- `report`: `html/shared` must not import a layout, and `assets` is a leaf.
+- Type-only edge: `app` and `activity` may `import type` from
+  `@scout-for-lol/backend` (the tRPC router type) but not import values.
+  dependency-cruiser cannot see type-only edges here, so
+  `@typescript-eslint/no-restricted-imports` with `allowTypeImports` enforces
+  it. The same ESLint config forbids `temporal`, `report` and `data` from
+  importing the backend at all.
+
+Every boundary has a negative fixture in the package's
+`architecture-fixtures/` directory named `<from-layer>-<what>.ts`.
+`architecture-boundaries.test.ts` cruises the fixtures with the derived rules
+and fails if any boundary lacks one that violates it; `bun run lint` runs
+`check-architecture` against the real source.
+
+Temporal exception: `check-architecture` is not yet part of the `temporal`
+lint script, because the ownership workflows (`realtime.ts` and
+`workflows/ownership/*`) form an eager import cycle that the always-on
+`no-circular` rule rejects. Those files are deleted by the ownership removal;
+wire the check into the lint script in that change. Until then the Temporal
+boundaries are proven by their fixtures only.
+
 **Domain boundaries:**
 
 - Explore owns saved conversational queries, including `/scout ask`.

@@ -82,6 +82,12 @@ const legacyScoutQlImportSites = [
   "packages/backend/scripts/scoutql/scoutql-legacy-bridge.test.ts",
 ];
 
+const restrictedBackendFromBelowPattern = {
+  group: ["@scout-for-lol/backend", "@scout-for-lol/backend/**"],
+  message:
+    "This package sits below the backend and must not import it. Move the shared piece into @scout-for-lol/domain or @scout-for-lol/data.",
+};
+
 const config = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
@@ -210,11 +216,24 @@ const config = [
           patterns: [
             restrictedTwistedPattern,
             restrictedLegacyScoutQlPattern,
-            {
-              group: ["@scout-for-lol/backend", "@scout-for-lol/backend/**"],
-              message:
-                "This package sits below the backend and must not import it. Move the shared piece into @scout-for-lol/domain or @scout-for-lol/data.",
-            },
+            restrictedBackendFromBelowPattern,
+          ],
+        },
+      ],
+    },
+  },
+  // The legacy ScoutQL language is exempt from the legacy pattern only. It
+  // still sits below the backend, so the backend ban is restated for it.
+  {
+    files: ["packages/data/src/model/legacy/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: restrictedNodeBuiltins,
+          patterns: [
+            restrictedTwistedPattern,
+            restrictedBackendFromBelowPattern,
           ],
         },
       ],

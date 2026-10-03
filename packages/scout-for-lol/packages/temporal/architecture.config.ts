@@ -42,9 +42,13 @@ export const layers = [
   "workflows",
 ];
 
-/** Everything a layer may not depend on, written as what it *may*. */
+/**
+ * Everything a layer may not depend on, written as what it *may*. The package
+ * barrel is a target too: it is not a layer, but importing it reaches every
+ * layer at once.
+ */
 function everythingExcept(...allowed: string[]): string[] {
-  return layers.filter((layer) => !allowed.includes(layer));
+  return [...layers, "index"].filter((layer) => !allowed.includes(layer));
 }
 
 export default defineArchitecture({
