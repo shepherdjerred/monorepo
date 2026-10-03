@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { z } from "zod";
 import {
   CommandResultSchema,
@@ -12,7 +12,8 @@ import { api, ApiError, commandRequest, type RemoteAction } from "./api.ts";
 export function useRemote() {
   const [me, setMe] = useState<z.infer<typeof MeSchema> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [guildId, setGuildId] = useState("");
+  const [guildId, setGuild] = useState("");
+  const pendingAction = useRef<AbortController | null>(null);
   const [snapshot, setSnapshot] = useState<WebSnapshot | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -20,6 +21,13 @@ export function useRemote() {
   const [tracks, setTracks] = useState<z.infer<
     typeof SubtitleMenuSchema
   > | null>(null);
+
+  const setGuildId = useCallback((id: string) => {
+    pendingAction.current?.abort();
+    pendingAction.current = null;
+    setBusy(false);
+    setGuild(id);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -48,8 +56,9 @@ export function useRemote() {
     void loadIdentity();
     return () => {
       controller.abort();
+      pendingAction.current?.abort();
     };
-  }, []);
+  }, [setGuildId]);
 
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
@@ -104,16 +113,31 @@ export function useRemote() {
     };
   }, [me, guildId, refresh]);
 
+  function finishAction(controller: AbortController) {
+    if (pendingAction.current !== controller) return;
+    pendingAction.current = null;
+    setBusy(false);
+  }
+
+  function actionIsCurrent(controller: AbortController) {
+    return pendingAction.current === controller && !controller.signal.aborted;
+  }
+
   async function send(action: RemoteAction): Promise<void> {
-    if (busy || me === null || snapshot?.channel == null) return;
+    if (
+      me === null ||
+      pendingAction.current !== null ||
+      snapshot?.channel == null
+    )
+      return;
+    const controller = new AbortController();
+    pendingAction.current = controller;
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      const result = await api(
-        "/api/commands",
-        CommandResultSchema,
-        commandRequest(
+      const result = await api("/api/commands", CommandResultSchema, {
+        ...commandRequest(
           {
             ...action,
             guildId,
@@ -123,52 +147,61 @@ export function useRemote() {
           },
           me.csrfToken,
         ),
-      );
+        signal: controller.signal,
+      });
+      if (!actionIsCurrent(controller)) return;
       setNotice(result.message);
       setTracks(null);
-      await refresh();
+      await refresh(controller.signal);
     } catch (error_) {
+      if (!actionIsCurrent(controller)) return;
       setError(error_ instanceof Error ? error_.message : "The action failed.");
       try {
-        await refresh();
+        await refresh(controller.signal);
       } catch {
-        setSnapshot(null);
+        if (actionIsCurrent(controller)) setSnapshot(null);
       }
     } finally {
-      setBusy(false);
+      finishAction(controller);
     }
   }
 
   async function openSubtitles(): Promise<void> {
-    if (busy || me === null || snapshot?.channel == null) return;
+    if (
+      me === null ||
+      pendingAction.current !== null ||
+      snapshot?.channel == null
+    )
+      return;
+    const controller = new AbortController();
+    pendingAction.current = controller;
     setBusy(true);
     setError("");
     try {
-      setTracks(
-        await api(
-          "/api/subtitles",
-          SubtitleMenuSchema,
-          commandRequest(
-            {
-              action: "subtitles",
-              token: "enumerate",
-              guildId,
-              channelId: snapshot.channel.id,
-              revision: snapshot.revision,
-              playbackChannel: snapshot.playbackChannel,
-            },
-            me.csrfToken,
-          ),
+      const menu = await api("/api/subtitles", SubtitleMenuSchema, {
+        ...commandRequest(
+          {
+            action: "subtitles",
+            token: "enumerate",
+            guildId,
+            channelId: snapshot.channel.id,
+            revision: snapshot.revision,
+            playbackChannel: snapshot.playbackChannel,
+          },
+          me.csrfToken,
         ),
-      );
+        signal: controller.signal,
+      });
+      if (actionIsCurrent(controller)) setTracks(menu);
     } catch (error_) {
+      if (!actionIsCurrent(controller)) return;
       setError(
         error_ instanceof Error
           ? error_.message
           : "Subtitles could not be loaded.",
       );
     } finally {
-      setBusy(false);
+      finishAction(controller);
     }
   }
 

@@ -30,23 +30,12 @@ export type WebDiscordClient = {
       }
     >;
   };
-  on: (
-    event: "guildMemberRemove",
-    listener: (member: { guild: { id: string }; id: string }) => void,
-  ) => unknown;
 };
 
 /** Discord identity and live voice membership for the authenticated web transport. */
 export class WebDiscordContext {
-  private readonly memberships = new Map<
-    string,
-    { promise: Promise<boolean>; expires: number; pending: boolean }
-  >();
-  constructor(private readonly client: WebDiscordClient) {
-    client.on("guildMemberRemove", (member) => {
-      this.memberships.delete(`${member.guild.id}:${member.id}`);
-    });
-  }
+  private readonly memberships = new Map<string, Promise<boolean>>();
+  constructor(private readonly client: WebDiscordClient) {}
 
   webApplicationId(): string {
     if (!this.client.isReady() || this.client.application === null)
@@ -61,50 +50,33 @@ export class WebDiscordContext {
     });
   }
 
-  async webVerifyMember(
-    guildId: GuildId,
-    userId: string,
-    fresh = false,
-  ): Promise<boolean> {
+  async webVerifyMember(guildId: GuildId, userId: string): Promise<boolean> {
     if (!this.client.isReady()) throw new Error("Discord gateway is not ready");
     const guild = this.client.guilds.cache.get(guildId);
     if (guild === undefined) return false;
     const key = `${guildId}:${userId}`;
     const existing = this.memberships.get(key);
-    if (
-      existing !== undefined &&
-      (existing.pending || (!fresh && existing.expires > Date.now()))
-    )
-      return await existing.promise;
-    for (const [cachedKey, entry] of this.memberships)
-      if (!entry.pending && entry.expires <= Date.now())
-        this.memberships.delete(cachedKey);
+    if (existing !== undefined) return await existing;
     if (this.memberships.size >= 2000 && !this.memberships.has(key)) {
       const oldest = this.memberships.keys().next().value;
       if (oldest !== undefined) this.memberships.delete(oldest);
     }
-    const entry = {
-      promise: Promise.resolve(false),
-      expires: 0,
-      pending: true,
-    };
-    this.memberships.set(key, entry);
-    entry.promise = (async () => {
+    const pending = (async () => {
       try {
         await guild.members.fetch({ user: userId, force: true, cache: false });
-        // A gateway removal during the REST request invalidates its result too.
-        if (this.memberships.get(key) !== entry) return false;
-        entry.pending = false;
-        entry.expires = Date.now() + 5000;
         return true;
       } catch (error) {
-        if (this.memberships.get(key) === entry) this.memberships.delete(key);
         if (error instanceof Error && "code" in error && error.code === 10_007)
           return false;
         throw error;
       }
     })();
-    return await entry.promise;
+    this.memberships.set(key, pending);
+    try {
+      return await pending;
+    } finally {
+      if (this.memberships.get(key) === pending) this.memberships.delete(key);
+    }
   }
 
   webVoiceChannel(

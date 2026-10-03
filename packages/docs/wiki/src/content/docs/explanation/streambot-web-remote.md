@@ -16,8 +16,8 @@ Browsing alone does not consume one.
 ## Identity follows the viewer
 
 Discord OAuth establishes the viewer's identity and shared servers.
-Media requests share a five-second successful membership cache and coalesce concurrent Discord lookups.
-Gateway removals invalidate it immediately; playback actions force a fresh check.
+Concurrent media requests share an in-flight Discord membership lookup.
+Later requests check membership again, without relying on privileged gateway events to revoke cached access.
 Every playback action uses the viewer's current voice channel from the bot's gateway state.
 Client-supplied user identities cannot authorize an action.
 

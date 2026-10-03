@@ -111,8 +111,6 @@ test("a snapshot captures the queue and revision after asynchronous feature chec
 
 function membershipFixture() {
   const fetchMember = vi.fn(() => Promise.resolve({}));
-  let listener:
-    ((member: { guild: { id: string }; id: string }) => void) | undefined;
   const context = new WebDiscordContext({
     isReady: () => true,
     application: { id: "fixture" },
@@ -130,18 +128,12 @@ function membershipFixture() {
         ],
       ]),
     },
-    on: (_event, callback) => {
-      listener = callback;
-    },
   });
-  const remove = () => {
-    listener?.({ guild: { id: GUILD }, id: USER });
-  };
-  return { context, fetchMember, remove };
+  return { context, fetchMember };
 }
 
-test("membership checks coalesce, briefly cache success, refresh commands and evict gateway removals", async () => {
-  const { context, fetchMember, remove } = membershipFixture();
+test("concurrent membership checks coalesce but subsequent reads fetch current membership", async () => {
+  const { context, fetchMember } = membershipFixture();
   expect(
     await Promise.all(
       Array.from({ length: 50 }, () => context.webVerifyMember(GUILD, USER)),
@@ -149,37 +141,26 @@ test("membership checks coalesce, briefly cache success, refresh commands and ev
   ).toEqual(Array.from({ length: 50 }, () => true));
   expect(fetchMember).toHaveBeenCalledTimes(1);
   expect(await context.webVerifyMember(GUILD, USER)).toBe(true);
-  expect(fetchMember).toHaveBeenCalledTimes(1);
-  expect(await context.webVerifyMember(GUILD, USER, true)).toBe(true);
   expect(fetchMember).toHaveBeenCalledTimes(2);
-  remove();
-  expect(await context.webVerifyMember(GUILD, USER)).toBe(true);
-  expect(fetchMember).toHaveBeenCalledTimes(3);
-  const later = Date.now() + 5001;
-  vi.spyOn(Date, "now").mockReturnValue(later);
-  expect(await context.webVerifyMember(GUILD, USER)).toBe(true);
-  expect(fetchMember).toHaveBeenCalledTimes(4);
 });
 
-test("membership removal invalidates an in-flight success and unknown-member results are not cached", async () => {
-  const { context, fetchMember, remove } = membershipFixture();
-  let finish: (() => void) | undefined;
-  fetchMember.mockImplementationOnce(
-    () =>
-      new Promise((resolve) => {
-        finish = () => {
-          resolve({});
-        };
-      }),
-  );
-  const pending = context.webVerifyMember(GUILD, USER);
-  remove();
-  finish?.();
-  expect(await pending).toBe(false);
+test("membership loss is checked without a privileged gateway event and unknown members are not cached", async () => {
+  const { context, fetchMember } = membershipFixture();
+  expect(await context.webVerifyMember(GUILD, USER)).toBe(true);
   fetchMember.mockRejectedValueOnce(
     Object.assign(new Error("Unknown member"), { code: 10_007 }),
   );
   expect(await context.webVerifyMember(GUILD, USER)).toBe(false);
   expect(await context.webVerifyMember(GUILD, USER)).toBe(true);
   expect(fetchMember).toHaveBeenCalledTimes(3);
+});
+
+test("Discord membership errors propagate and the next request retries", async () => {
+  const { context, fetchMember } = membershipFixture();
+  fetchMember.mockRejectedValueOnce(new Error("Discord unavailable"));
+  await expect(context.webVerifyMember(GUILD, USER)).rejects.toThrow(
+    "Discord unavailable",
+  );
+  expect(await context.webVerifyMember(GUILD, USER)).toBe(true);
+  expect(fetchMember).toHaveBeenCalledTimes(2);
 });
