@@ -234,7 +234,7 @@ export class NumberedSessions {
         voiceChannelId: channelId,
         statusChannelId: slot.state.statusChannelId,
         playbackChannel: slot.number,
-        instanceId: crypto.randomUUID(),
+        instanceId: slot.instanceId,
         entry,
         input: {
           ...decision.input,

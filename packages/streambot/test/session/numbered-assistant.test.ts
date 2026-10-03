@@ -12,29 +12,17 @@ import {
 const models: LocalVoiceModels = {
   runtime: "native",
   createKeywordDetector: () => ({
-    accept: () => null,
-    reset: () => {
-      /* stateless */
-    },
-    close: () => {
-      /* no native handle */
-    },
+    accept: vi.fn(() => null),
+    reset: vi.fn(),
+    close: vi.fn(),
   }),
   createVad: () => ({
-    accept: () => {
-      /* no input */
-    },
+    accept: vi.fn(),
     isSpeechActive: () => false,
     hasCompletedSpeech: () => false,
-    flush: () => {
-      /* no input */
-    },
-    reset: () => {
-      /* stateless */
-    },
-    close: () => {
-      /* no native handle */
-    },
+    flush: vi.fn(),
+    reset: vi.fn(),
+    close: vi.fn(),
   }),
   verifyWakePhrase: async () => ({ accepted: false, score: 0 }),
   close: async () => {

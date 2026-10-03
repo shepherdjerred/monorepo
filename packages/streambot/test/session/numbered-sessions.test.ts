@@ -11,11 +11,24 @@ import {
   number,
 } from "./numbered-fixture.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
+import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 
 function account(handle: SessionHandle): string {
   const id = handle.assistantUserId();
   if (id === null) throw new Error("Missing fixture identity");
   return id;
+}
+
+async function expectPrimarySlotsStopped(
+  manager: SessionManager,
+): Promise<void> {
+  await vi.waitFor(() => {
+    for (const slot of [1, 2]) {
+      expect(
+        manager.getExisting(guildId, voiceChannelId, number(slot)),
+      ).toBeNull();
+    }
+  });
 }
 
 describe("numbered playback ownership", () => {
@@ -132,6 +145,43 @@ describe("numbered playback ownership", () => {
       ).toBe(true),
     );
   });
+
+  test.each([1, 2])(
+    "stopping resumed channel %i before its first checkpoint retires its persisted slot",
+    async (stopped) => {
+      const h = await harness(1);
+      h.play(1);
+      const video = h.play(2);
+      await vi.waitFor(() => expect(video.view().state).toBe("streaming"));
+      await h.manager.destroyAll();
+      const restarted = h.restart();
+      await restarted.resumeAll();
+      const resumed = restarted.getExisting(
+        guildId,
+        voiceChannelId,
+        number(stopped),
+      );
+      if (resumed === null) throw new Error("Missing resumed fixture slot");
+      resumed.dispatch({ type: "STOP" });
+      const survivor = stopped === 1 ? 2 : 1;
+      await vi.waitFor(async () => {
+        const room = await loadRoomState(
+          stateFilePath(h.dir, guildId, voiceChannelId),
+          3600,
+        );
+        expect(room?.slots.map((slot) => slot.number)).toEqual([survivor]);
+      });
+      await restarted.destroyAll();
+      const nextRestart = h.restart();
+      await nextRestart.resumeAll();
+      expect(
+        nextRestart.getExisting(guildId, voiceChannelId, number(stopped)),
+      ).toBeNull();
+      expect(
+        nextRestart.getExisting(guildId, voiceChannelId, number(survivor)),
+      ).not.toBeNull();
+    },
+  );
 });
 
 describe("numbered capacity, moves, and connection loss", () => {
@@ -263,14 +313,7 @@ describe("numbered capacity, moves, and connection loss", () => {
     const close = h.closeListeners.get(account(mic));
     if (close == null) throw new Error("Missing physical close listener");
     close({ code: 4014, deliberate: true, atMs: Date.now(), source: "voice" });
-    await vi.waitFor(() =>
-      expect(
-        h.manager.getExisting(guildId, voiceChannelId, number(1)),
-      ).toBeNull(),
-    );
-    expect(
-      h.manager.getExisting(guildId, voiceChannelId, number(2)),
-    ).toBeNull();
+    await expectPrimarySlotsStopped(h.manager);
     expect(helper.view().state).toBe("streaming");
     expect(h.disconnects).toHaveBeenCalledTimes(1);
   });
@@ -305,14 +348,7 @@ describe("numbered capacity, moves, and connection loss", () => {
     expect(mic.view().state).toBe("streaming");
     expect(h.disconnects).not.toHaveBeenCalled();
     close({ code: 4014, deliberate: true, atMs: Date.now(), source: "voice" });
-    await vi.waitFor(() =>
-      expect(
-        h.manager.getExisting(guildId, voiceChannelId, number(1)),
-      ).toBeNull(),
-    );
-    expect(
-      h.manager.getExisting(guildId, voiceChannelId, number(2)),
-    ).toBeNull();
+    await expectPrimarySlotsStopped(h.manager);
     expect(video.view().queue).toHaveLength(0);
   });
 });
