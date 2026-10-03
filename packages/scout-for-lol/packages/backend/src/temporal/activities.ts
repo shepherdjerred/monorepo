@@ -290,6 +290,10 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await settleTerminalNotificationTips();
             break;
           }
+          case "progression-outbox": {
+            // Retired with the Hall and Duel outbox tables; see the contract.
+            break;
+          }
           case "progression-reconciliation": {
             const { reconcileCompetitiveProgression } =
               await import("#src/progression/reconcile.ts");

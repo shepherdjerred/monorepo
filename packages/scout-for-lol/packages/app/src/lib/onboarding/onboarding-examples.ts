@@ -1,17 +1,19 @@
-import { getCurrentSeason, getSeasonChoices } from "@scout-for-lol/data";
+import { getAllSeasons } from "@scout-for-lol/data";
 import {
   EMPTY_REPORT_STATE,
   type ReportFormState,
 } from "#src/components/report/report-form-fields.tsx";
 import {
-  EMPTY_STATE,
-  type FormState,
-} from "#src/components/competition/competition-form-fields.tsx";
+  buildCompetitionScenarios,
+  type CompetitionScenarioContext,
+} from "#src/lib/bucks/competition-scenarios.ts";
+import { browserTimezone } from "#src/lib/bucks/competition-time.ts";
 
 /**
- * Concrete starter presets shown on the "Report or competition?" page (and
- * used to seed the build form). Each `build` returns a fully-valid form
- * state for the given channel; the user tweaks and creates.
+ * Concrete starter presets shown on the "Report or competition?" page. A
+ * report example's `build` returns a fully-valid form state for the given
+ * channel; a competition example names a competition builder scenario, which
+ * seeds the builder.
  */
 export type ReportExample = {
   id: string;
@@ -22,8 +24,6 @@ export type ReportExample = {
 export type CompetitionExample = {
   id: string;
   label: string;
-  description: string;
-  build: (channelId: string) => FormState;
 };
 
 // The three starter reports, in canonically formatted ScoutQL v2. Aggregates
@@ -89,127 +89,35 @@ export const REPORT_EXAMPLES: ReportExample[] = [
   },
 ];
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-// Fixed-date competitions are capped at 90 calendar days
-// (MAX_COMPETITION_DURATION_DAYS), so a "year-long" fixed preset can't validate;
-// a 60-day sprint stays comfortably inside the limit.
-const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
-// The season active right now; falls back to the nearest joinable one between
-// seasons (getSeasonChoices filters out ended seasons but includes future
-// ones and is newest-start-first, so `.at(-1)` is the nearest upcoming one, not
-// the furthest-future `[0]`). `undefined` when the catalog has no current-or-
-// future season — the season-based "rank" preset is then omitted rather than
-// seeding an empty seasonId that submits into a "Pick a season." error.
-const CURRENT_SEASON_ID: string | undefined =
-  getCurrentSeason()?.id ?? getSeasonChoices().at(-1)?.value;
-
-function buildRankPreset(seasonId: string): CompetitionExample {
-  return {
-    id: "rank",
-    label: "Highest rank this season",
-    description:
-      "Rank everyone by their peak Solo Queue rank before the season ends.",
-    build: (channelId) => ({
-      ...EMPTY_STATE,
-      title: "Highest Solo Queue rank this season",
-      description: "Who can climb the highest before the season ends?",
-      channelId,
-      criteria: {
-        criteriaType: "HIGHEST_RANK",
-        queues: ["solo"],
-        aggregation: "MAX",
-        championId: "",
-        minGames: "10",
-      },
-      dates: {
-        mode: "SEASON",
-        startDate: "",
-        endDate: "",
-        seasonId,
-      },
-    }),
-  };
-}
-
-function toIsoDate(date: Date): string {
-  // Use the browser-local calendar day, not the UTC slice of the ISO string:
-  // `toISOString().slice(0,10)` shifts to the previous/next day for viewers far
-  // from UTC, so a rolling "starts today" preset would seed the wrong date.
-  const year = date.getFullYear().toString();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const day = date.getDate().toString().padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+/** The builder scenarios the onboarding choice page offers, in order. */
+const ONBOARDING_COMPETITION_SCENARIO_IDS = [
+  "rank",
+  "games-sprint",
+  "yuumi",
+] as const;
 
 /**
- * Competition starters for an explicit season. The season-based "rank"
- * preset is omitted when no season can be selected; the module-level
- * COMPETITION_EXAMPLES passes the real current season while tests pass a
- * fixed id so they don't flip with the calendar.
+ * Competition starters for the choice page, labelled with the title of the
+ * builder scenario each one opens, so the choice and the seeded builder can
+ * never describe different competitions. A season-based scenario with no
+ * current or upcoming season is omitted.
  */
 export function buildCompetitionExamples(
-  seasonId: string | undefined,
+  context: CompetitionScenarioContext,
 ): CompetitionExample[] {
-  return [
-    ...(seasonId === undefined ? [] : [buildRankPreset(seasonId)]),
-    {
-      id: "games-sprint",
-      label: "Most games — 2-month sprint",
-      description:
-        "A two-month race to see who grinds the most games across every queue.",
-      build: (channelId) => {
-        const now = new Date();
-        return {
-          ...EMPTY_STATE,
-          title: "Most games — 2-month sprint",
-          description: "Rack up the most games over the next two months.",
-          channelId,
-          criteria: {
-            criteriaType: "MOST_GAMES_PLAYED",
-            queues: ["ALL"],
-            aggregation: "MAX",
-            championId: "",
-            minGames: "10",
-          },
-          dates: {
-            mode: "FIXED_DATES",
-            startDate: toIsoDate(now),
-            endDate: toIsoDate(new Date(now.getTime() + SIXTY_DAYS_MS)),
-            seasonId: "",
-          },
-        };
-      },
-    },
-    {
-      id: "yuumi",
-      label: "Most wins on Yuumi",
-      description:
-        "A one-month sprint for the most wins on a single champion (Yuumi).",
-      build: (channelId) => {
-        const now = new Date();
-        return {
-          ...EMPTY_STATE,
-          title: "Most wins on Yuumi",
-          description: "Most Yuumi wins over the next month.",
-          channelId,
-          criteria: {
-            criteriaType: "MOST_WINS_CHAMPION",
-            queues: ["ALL"],
-            aggregation: "MAX",
-            championId: "350",
-            minGames: "10",
-          },
-          dates: {
-            mode: "FIXED_DATES",
-            startDate: toIsoDate(now),
-            endDate: toIsoDate(new Date(now.getTime() + THIRTY_DAYS_MS)),
-            seasonId: "",
-          },
-        };
-      },
-    },
-  ];
+  const scenarios = buildCompetitionScenarios(context);
+  return ONBOARDING_COMPETITION_SCENARIO_IDS.flatMap((id) => {
+    const scenario = scenarios.find((candidate) => candidate.id === id);
+    if (scenario === undefined) {
+      throw new Error(`Onboarding names unknown competition scenario ${id}`);
+    }
+    return scenario.value === null ? [] : [{ id, label: scenario.value.title }];
+  });
 }
 
 export const COMPETITION_EXAMPLES: CompetitionExample[] =
-  buildCompetitionExamples(CURRENT_SEASON_ID);
+  buildCompetitionExamples({
+    now: new Date(),
+    timezone: browserTimezone(),
+    seasons: getAllSeasons(),
+  });

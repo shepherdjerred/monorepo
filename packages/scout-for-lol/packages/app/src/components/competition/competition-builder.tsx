@@ -55,6 +55,7 @@ export function CompetitionBuilder(props: {
   initialScenarioId?: string;
   onCreated: (competitionId: number) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onPendingChange?: (pending: boolean) => void;
   isNavigationAllowed?: () => boolean;
 }) {
   const permissions = usePermissions(props.guildId);
@@ -76,6 +77,7 @@ function CompetitionBuilderReady(props: {
   initialScenarioId?: string;
   onCreated: (competitionId: number) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onPendingChange?: (pending: boolean) => void;
   isNavigationAllowed?: () => boolean;
   canInvite: boolean;
   canSchedule: boolean;
@@ -179,7 +181,7 @@ function CompetitionBuilderReady(props: {
       formState.fieldMeta["criteria.minGames"]?.errors ?? [],
     ),
   }));
-  const { onDirtyChange } = props;
+  const { onDirtyChange, onPendingChange } = props;
   const blocker = useUnsavedForm(isDirty, mutation.isPending, () => {
     return allowNavigation.current || props.isNavigationAllowed?.() === true;
   });
@@ -187,6 +189,9 @@ function CompetitionBuilderReady(props: {
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
+  useEffect(() => {
+    onPendingChange?.(mutation.isPending);
+  }, [mutation.isPending, onPendingChange]);
 
   const scenarios = useMemo(
     () =>

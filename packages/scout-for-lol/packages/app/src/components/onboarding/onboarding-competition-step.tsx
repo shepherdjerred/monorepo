@@ -17,7 +17,10 @@ export function OnboardingCompetitionStep(props: {
   onSkip: () => void;
 }) {
   const [builderDirty, setBuilderDirty] = useState(false);
-  const transition = useUnsavedFormTransition(builderDirty, false);
+  const [creating, setCreating] = useState(false);
+  // While the create request is in flight, step navigation is refused: the
+  // competition may already exist, and leaving now would orphan it.
+  const transition = useUnsavedFormTransition(builderDirty, creating);
 
   return (
     <OnboardingStepFrame
@@ -41,11 +44,13 @@ export function OnboardingCompetitionStep(props: {
             : { initialScenarioId: props.exampleId })}
           onCreated={props.onCreated}
           onDirtyChange={setBuilderDirty}
+          onPendingChange={setCreating}
           isNavigationAllowed={transition.isNavigationAllowed}
         />
         <Button
           variant="ghost"
           type="button"
+          disabled={creating}
           onClick={() => {
             transition.request(props.onBack);
           }}
