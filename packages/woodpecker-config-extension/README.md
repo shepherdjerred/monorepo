@@ -34,6 +34,20 @@ guarantee a dependency-closed set, which the emitter then relies on.
   by the image lane, so baking them into this service would pin every build to
   whatever was current at deploy time.
 
+## Pipeline authorization
+
+`src/authorization.ts` admits only the owner's named accounts and bots. Justin
+publishes owner-requested Linear work as `justin-principal-engineer[bot]`; both
+the PR author and the event sender must be trusted, and fork PRs are refused.
+Signed requests from other actors receive HTTP 403 before any forge reads or
+workflow generation.
+
+Woodpecker also keeps an independent `approval_allowed_users` list in the
+repository's server-side settings. Add the exact bot login there when admitting
+it in the extension; retain `require_approval: all_events`. The deployed
+extension image must include the authorization change before retrying a parked
+bot pipeline. The image delivery path below promotes that reviewed policy.
+
 ## Image delivery
 
 The Paper E2E service copies the staged workspace plugins through

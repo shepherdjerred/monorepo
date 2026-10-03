@@ -29,6 +29,7 @@ describe("pipeline authorization", () => {
     for (const login of [
       "derrej",
       "long-summer-intern[bot]",
+      "justin-principal-engineer[bot]",
       "renovate[bot]",
     ]) {
       const result = authorizePipeline(
@@ -45,6 +46,34 @@ describe("pipeline authorization", () => {
       pipeline({ author: "mallory", sender: "mallory" }),
     );
     expect(result.allowed).toBe(false);
+  });
+
+  test("Justin still requires a trusted sender and a non-fork PR", () => {
+    expect(
+      authorizePipeline(
+        pipeline({
+          author: "justin-principal-engineer[bot]",
+          sender: "mallory",
+        }),
+      ).allowed,
+    ).toBe(false);
+    expect(
+      authorizePipeline(
+        pipeline({
+          author: "justin-principal-engineer[bot]",
+          sender: "justin-principal-engineer[bot]",
+          from_fork: true,
+        }),
+      ).allowed,
+    ).toBe(false);
+    expect(
+      authorizePipeline(
+        pipeline({
+          author: "app/justin-principal-engineer",
+          sender: "app/justin-principal-engineer",
+        }),
+      ).allowed,
+    ).toBe(false);
   });
 
   /**
@@ -150,6 +179,7 @@ describe("pipeline authorization", () => {
   test("allowlists exactly the owner's accounts", () => {
     expect([...TRUSTED_ACTORS].sort()).toEqual([
       "derrej",
+      "justin-principal-engineer[bot]",
       "long-summer-intern[bot]",
       "renovate[bot]",
       "shepherdjerred",
