@@ -14,6 +14,7 @@ import {
   isLikelyPreStartLobby,
   rosterIsAsCompleteAsItWillGet,
 } from "#src/league/tasks/prematch/spectator-roster.ts";
+import { clientRosterCompletion } from "#src/league/tasks/prematch/client-bot-roster.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
@@ -169,6 +170,34 @@ function recordDeferredRoster(
   prematchDetectionsTotal.inc({
     status: settled ? "deferred_undersized_roster" : "deferred_custom_prestart",
   });
+}
+
+/**
+ * Whether this tick should wait for a fuller roster instead of acting.
+ *
+ * A short Spectator roster is nearly always a lobby still loading in, and
+ * waiting is right. A game against bots is the exception: Riot never lists
+ * them, so every later tick sees the same short payload, and only the local
+ * client's view of the lobby can finish it. That case proceeds and is counted
+ * on its own, so a bot game that renders is distinguishable from one that
+ * merely stopped being deferred.
+ */
+async function shouldDeferRoster(
+  alias: string,
+  gameInfo: RawCurrentGameInfo,
+  puuid: string,
+): Promise<boolean> {
+  if (!isLikelyPreStartLobby(gameInfo)) return false;
+  const bots = await clientRosterCompletion(gameInfo, new Set([puuid]));
+  if (bots === null) {
+    recordDeferredRoster(alias, gameInfo);
+    return true;
+  }
+  logger.info(
+    `[${alias}] 🤖 Completing gameId=${gameInfo.gameId.toString()} — ${gameInfo.participants.length.toString()} listed by Riot plus ${bots.length.toString()} bots seen by the local client`,
+  );
+  prematchDetectionsTotal.inc({ status: "client_completed_roster" });
+  return false;
 }
 
 async function processPrematchWithRetryCleanup(input: {
@@ -379,8 +408,7 @@ export async function checkActiveGames(options: {
             )
           : initial;
 
-        if (isLikelyPreStartLobby(gameInfo)) {
-          recordDeferredRoster(player.alias, gameInfo);
+        if (await shouldDeferRoster(player.alias, gameInfo, puuid)) {
           continue;
         }
 

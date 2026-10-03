@@ -218,11 +218,12 @@ export const prematchDetectionsTotal = new Counter({
   name: "prematch_detections_total",
   help: "Total pre-match game detections",
   // Status values from the V2 discovery probe, one per polled account:
-  // "game" (in a live game whose roster has filled), "idle" (not in a game,
-  // or in one still filling its roster) and "unreadable" (the spectator read
-  // could not answer). v1's detection loop, retired, also wrote "detected",
-  // "already_tracked", "deferred_custom_prestart",
-  // "deferred_undersized_roster" and "owned_by_v2".
+  // "game" (in a live game whose roster has filled, including one a tracked
+  // player's local client completed with the bots Riot never lists), "idle"
+  // (not in a game, or in one still filling its roster) and "unreadable" (the
+  // spectator read could not answer). v1's detection loop, retired, also wrote
+  // "detected", "already_tracked", "deferred_custom_prestart",
+  // "deferred_undersized_roster", "client_completed_roster" and "owned_by_v2".
   labelNames: ["status"] as const,
   registers: [registry],
 });
