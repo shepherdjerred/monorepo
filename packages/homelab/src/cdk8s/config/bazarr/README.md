@@ -95,7 +95,5 @@ Use the dedicated `subtitle-provider-smoke` profile for this validation. Add
 Interactive challenges and source failures make the command fail; a passing
 search alone does not count as a successful smoke test.
 
-`typings/` declares the consumed Bazarr 1.6.0 vendor interfaces for the repository
-Python checker; `utils.pyi` describes the neighboring vendor utility module.
-These files are type-only contracts and are not mounted into Bazarr. Runtime
-fixtures use the native implementations, not substitute classes.
+The repository Python type checker excludes this vendor overlay directory.
+Use the pinned Bazarr runtime fixtures to verify the consumed vendor APIs.
