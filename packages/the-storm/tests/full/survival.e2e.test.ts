@@ -5,6 +5,93 @@ import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
 const at = (x: number, y: number, z: number) => new Vec3(x + 1200, y, z + 1616);
 
+describe("settlement opening on real Paper", () => {
+  test(
+    "a solo starter kit clears round one without a baby swarm or self revive",
+    { timeout: 120_000 },
+    async ({ bot, rcon }) => {
+      const joined = waitForMessage(bot, /Survival: Fighter/u);
+      bot.chat("/arena join settlement");
+      await joined;
+      await rcon.command("difficulty hard");
+      const messages: string[] = [];
+      const listen = (message: string) => {
+        messages.push(message);
+      };
+      bot.on("messagestr", listen);
+      try {
+        const round = waitForMessage(bot, /Round 1:/u);
+        await rcon.command("arena start settlement");
+        await round;
+        // Use the open market route also exercised by the pursuit test.
+        await rcon.command(`tp ${bot.username} 1774.5 73 2166.5`);
+        await Bun.sleep(8000);
+        const enemies =
+          '@e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}]';
+        const adults = await rcon.command(
+          `execute as ${enemies} run data get entity @s IsBaby`,
+        );
+        expect(adults.match(/0b/gu)).toHaveLength(3);
+        expect(adults).not.toContain("1b");
+        const health = await rcon.command(
+          `execute as ${enemies} run data get entity @s Health`,
+        );
+        expect(health.match(/12\.0f/gu)).toHaveLength(3);
+        const reinforcements = await rcon.command(
+          `execute as ${enemies} run attribute @s minecraft:spawn_reinforcements base get`,
+        );
+        expect(reinforcements.match(/is 0\.0/gu)).toHaveLength(3);
+        const sword = bot.inventory
+          .items()
+          .find((item) => item.name === "stone_sword");
+        if (sword === undefined) throw new Error("Starter sword is missing");
+        await bot.equip(sword, "hand");
+        const deadline = Date.now() + 80_000;
+        while (
+          !messages.some((message) => message.includes("Round 1 cleared"))
+        ) {
+          expect(
+            messages.some((message) => /self-revive|Downed!/u.test(message)),
+          ).toBe(false);
+          if (Date.now() > deadline)
+            throw new Error("Starter melee did not clear round one");
+          const enemy = Object.values(bot.entities)
+            .filter(
+              (entity) =>
+                entity.name === "zombie" &&
+                entity.position.distanceTo(bot.entity.position) < 3,
+            )
+            .sort(
+              (a, b) =>
+                a.position.distanceTo(bot.entity.position) -
+                b.position.distanceTo(bot.entity.position),
+            )[0];
+          if (enemy !== undefined) {
+            await bot.lookAt(enemy.position.offset(0, 1.4, 0));
+            bot.deactivateItem();
+            bot.attack(enemy);
+          }
+          // Use the Fighter's actual starter shield between sword swings.
+          bot.activateItem(true);
+          await Bun.sleep(700);
+        }
+        expect(
+          messages.some((message) => /self-revive|Downed!/u.test(message)),
+        ).toBe(false);
+        expect(bot.health).toBeGreaterThan(0);
+        expect(
+          bot.inventory.items().find((item) => item.name === "emerald")?.count,
+        ).toBe(12);
+      } finally {
+        bot.deactivateItem();
+        bot.off("messagestr", listen);
+        await rcon.command("arena stop settlement");
+        await rcon.command("difficulty peaceful");
+      }
+    },
+  );
+});
+
 describe("settlement survival on real Paper", () => {
   test("classes, finite gathering, crafting, emerald credit and restoration", async ({
     bot,
@@ -204,7 +291,7 @@ describe("cooperative survival and bosses on real Paper", () => {
 
   test(
     "fifth-round bosses display a cast warning before their spell lands",
-    { timeout: 120_000 },
+    { timeout: 180_000 },
     async ({ bot, rcon }) => {
       const joined = waitForMessage(bot, /Survival: Fighter/u);
       bot.chat("/arena join settlement");
@@ -226,9 +313,10 @@ describe("cooperative survival and bosses on real Paper", () => {
           const next = waitForMessage(
             bot,
             new RegExp(`Round ${(round + 1).toString()}:`, "u"),
-            25_000,
+            55_000,
           );
-          const deadline = Date.now() + 20_000;
+          // Opening rounds now deliberately spread their spawns out.
+          const deadline = Date.now() + 45_000;
           while (
             !messages.some((m) =>
               m.includes(`Round ${round.toString()} cleared`),

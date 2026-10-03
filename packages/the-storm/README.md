@@ -422,6 +422,15 @@ next round with a weaker kit. Solo players get one self-revive per run; losing
 every standing player ends the run. Monsters pursue players across the map,
 including riders and offspring, with bounded spawning and stuck-mob recovery.
 
+The first three rounds introduce the horde gradually. A solo opening has six
+adult, unarmed zombies at 60% health and 50% attack damage, arriving one every
+three seconds with at most three alive. Rounds two and three add husks and
+increase the count, health, damage, and concurrent limit. Baby zombies and
+other enemy types appear from round four onward. Opening zombies cannot summon
+Hard-difficulty reinforcements beyond the planned wave.
+Every starting class receives a full leather armor set; returning after a
+bleedout retains the weaker chestplate-only kit.
+
 Every fifth round has a phased boss with marked casts and recovery windows.
 The Evoker's glowing ritual node interrupts casts; the Creaking's node opens
 a damage window after three interactions. The Ravager breaks nearby barricades

@@ -119,6 +119,9 @@ final class SurvivalItems {
     if (returning) {
       return;
     }
+    player.getInventory().setHelmet(stack(Material.LEATHER_HELMET, 1));
+    player.getInventory().setLeggings(stack(Material.LEATHER_LEGGINGS, 1));
+    player.getInventory().setBoots(stack(Material.LEATHER_BOOTS, 1));
     switch (role) {
       case FIGHTER -> player.getInventory().setItemInOffHand(stack(Material.SHIELD, 1));
       case RANGER -> {

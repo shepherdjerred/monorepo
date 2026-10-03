@@ -15,7 +15,15 @@ public final class EncounterDirector {
   }
 
   public record Encounter(
-      Event event, int count, double health, double damage, List<String> roster, String boss) {}
+      Event event,
+      int count,
+      double health,
+      double damage,
+      List<String> roster,
+      String boss,
+      int concurrentLimit,
+      int spawnBatch,
+      int spawnIntervalSeconds) {}
 
   private EncounterDirector() {}
 
@@ -24,16 +32,23 @@ public final class EncounterDirector {
       throw new IllegalArgumentException("Invalid encounter");
     }
     var event = event(round, open);
-    var count = (int) Math.min(160, 8L + round * 3L + (players - 1) * 5L);
-    var health = Math.min(8, 1 + (round - 1) * 0.08);
-    var damage = Math.min(3, 1 + (round - 1) * 0.025);
+    var opening = round <= 3;
+    var count =
+        opening
+            ? 4 + round * 2 + (players - 1) * 3
+            : (int) Math.min(160, 8L + round * 3L + (players - 1) * 5L);
+    var health = opening ? 0.45 + round * 0.15 : Math.min(8, 1 + (round - 1) * 0.08);
+    var damage = opening ? 0.35 + round * 0.15 : Math.min(3, 1 + (round - 1) * 0.025);
     return new Encounter(
         event,
         count,
         health,
         damage,
         roster(event, round),
-        round % 5 == 0 ? boss(round, open) : "");
+        round % 5 == 0 ? boss(round, open) : "",
+        opening ? 2 + round + (players - 1) * 2 : 32,
+        opening ? 1 : 4,
+        opening ? 3 : 1);
   }
 
   private static Event event(int round, Set<String> open) {
@@ -53,8 +68,8 @@ public final class EncounterDirector {
   private static List<String> roster(Event event, int round) {
     return switch (event) {
       case HORDE ->
-          round < 3
-              ? List.of("zombie", "husk", "spider")
+          round <= 3
+              ? round == 1 ? List.of("zombie") : List.of("zombie", "husk")
               : List.of("zombie", "husk", "spider", "bogged", "parched", "sulfur-cube");
       case ILLAGER_SIEGE -> List.of("pillager", "vindicator", "witch");
       case OMINOUS_TRIAL -> List.of("bogged", "cave-spider", "sulfur-cube", "gale-sovereign");

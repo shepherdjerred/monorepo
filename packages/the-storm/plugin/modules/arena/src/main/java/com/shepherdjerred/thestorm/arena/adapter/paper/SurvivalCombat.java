@@ -45,6 +45,7 @@ final class SurvivalCombat {
   private @Nullable SurvivalBoss boss;
   private EncounterDirector.@Nullable Encounter encounter;
   private int round;
+  private Instant nextSpawn = Instant.MIN;
 
   SurvivalCombat(ArenaWorld world, SettlementMap map, Services services) {
     this.world = world;
@@ -63,6 +64,7 @@ final class SurvivalCombat {
   void begin(int number, int players, List<Player> audience) {
     world.clearAmbientHostiles();
     round = number;
+    nextSpawn = services.context().time().instant();
     encounter = EncounterDirector.plan(number, players, map.state().open());
     var plan = encounter;
     for (var i = 0; i < plan.count(); i++) {
@@ -102,18 +104,7 @@ final class SurvivalCombat {
   }
 
   void tick(List<Player> fighters, List<Player> audience) {
-    var cap = map.content().entityCap();
-    var spawnedThisTick = 0;
-    while (!queue.isEmpty()
-        && world.alive() + queue.getFirst().entities() <= cap
-        && spawnedThisTick < 4) {
-      var spawned = world.spawnAt(queue.removeFirst(), entrance(), false);
-      if (spawned.isEmpty()) {
-        throw new IllegalStateException("Survival mob spawn refused");
-      }
-      spawned.orElseThrow().forEach(e -> bounties.add(e.getUniqueId()));
-      spawnedThisTick++;
-    }
+    spawnQueued();
     world.think(fighters);
     world.contain();
     if (!fighters.isEmpty()) {
@@ -134,6 +125,41 @@ final class SurvivalCombat {
             hit(enemy, player);
           }
         });
+  }
+
+  private void spawnQueued() {
+    var plan = java.util.Objects.requireNonNull(encounter);
+    var cap = Math.min(map.content().entityCap(), plan.concurrentLimit());
+    var now = services.context().time().instant();
+    var spawnedThisTick = 0;
+    while (!queue.isEmpty()
+        && !now.isBefore(nextSpawn)
+        && world.alive() + queue.getFirst().entities() <= cap
+        && spawnedThisTick < plan.spawnBatch()) {
+      var spawned = world.spawnAt(queue.removeFirst(), entrance(), false);
+      if (spawned.isEmpty()) {
+        throw new IllegalStateException("Survival mob spawn refused");
+      }
+      spawned.orElseThrow().forEach(this::prepareEnemy);
+      spawnedThisTick++;
+    }
+    if (spawnedThisTick > 0) {
+      nextSpawn = now.plusSeconds(plan.spawnIntervalSeconds());
+    }
+  }
+
+  private void prepareEnemy(LivingEntity enemy) {
+    if (round <= 3 && enemy instanceof org.bukkit.entity.Zombie zombie) {
+      zombie.setAdult();
+      java.util.Objects.requireNonNull(
+              zombie.getAttribute(org.bukkit.attribute.Attribute.SPAWN_REINFORCEMENTS))
+          .setBaseValue(0);
+      var equipment = zombie.getEquipment();
+      if (equipment != null) {
+        equipment.clear();
+      }
+    }
+    bounties.add(enemy.getUniqueId());
   }
 
   private void recover(LivingEntity enemy, List<Player> fighters) {
@@ -205,6 +231,7 @@ final class SurvivalCombat {
     boss().ifPresent(SurvivalBoss::end);
     boss = null;
     encounter = null;
+    nextSpawn = Instant.MIN;
     queue.clear();
     bounties.clear();
     hits.clear();
