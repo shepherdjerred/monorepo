@@ -57,6 +57,27 @@ export function createKubernetesEventExporter(chart: Chart) {
         resources: ["zfsvolumes"],
         verbs: ["get"],
       },
+      {
+        // Referenced Warning event objects need individual reads for enrichment.
+        apiGroups: [""],
+        resources: ["persistentvolumeclaims"],
+        verbs: ["get"],
+      },
+      {
+        apiGroups: ["argoproj.io"],
+        resources: ["applications"],
+        verbs: ["get"],
+      },
+      {
+        apiGroups: ["zfs.openebs.io"],
+        resources: ["zfsbackups"],
+        verbs: ["get"],
+      },
+      {
+        apiGroups: ["kueue.x-k8s.io"],
+        resources: ["workloads"],
+        verbs: ["get"],
+      },
     ],
   });
 
