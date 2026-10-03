@@ -1,14 +1,8 @@
-import {
-  proxyActivities,
-  setHandler,
-  workflowInfo,
-} from "@temporalio/workflow";
+import { proxyActivities, setHandler } from "@temporalio/workflow";
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
-  AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
-  AgentChatTurnResultSchema,
 } from "#shared/agent/agent-chat.ts";
 import { PreparedImessageCommandSchema } from "#shared/agent/agent-chat-imessage.ts";
 import type { HttpAgentChatActivities } from "#shared/agent/agent-chat-http.ts";
@@ -19,6 +13,7 @@ import {
   type PhotonActivities,
 } from "#shared/agent/agent-chat-photon.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { imessageReplyContent } from "#workflows/imessage/reply-content.ts";
 
 const preparation = proxyActivities<
   Pick<PhotonActivities, "preparePhotonCommand">
@@ -50,26 +45,7 @@ export async function photonAgentChatWorkflow(
   const prepared = PreparedImessageCommandSchema.parse(
     await preparation.preparePhotonCommand(command),
   );
-  let content: string;
-  if (prepared.kind === "message") content = prepared.content;
-  else {
-    try {
-      const providerStartDeadline = new Date(
-        workflowInfo().startTime.getTime() +
-          AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
-      ).toISOString();
-      const result = AgentChatTurnResultSchema.parse(
-        await execution.executeHttpAgentChatCommand({
-          command: prepared.command,
-          providerStartDeadline,
-        }),
-      );
-      content = result.finalText;
-    } catch {
-      content =
-        "The durable agent chat request failed. Check its Temporal execution; it will not automatically repeat provider effects.";
-    }
-  }
+  const content = await imessageReplyContent(prepared, execution);
   await delivery.deliverPhotonResponse({
     messageId: command.messageId,
     spaceId: command.spaceId,
