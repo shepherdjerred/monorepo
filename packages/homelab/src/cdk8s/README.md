@@ -40,12 +40,15 @@ without dispensing; the food-status signal combines low and empty food.
 The water check reads the volume sensor's `mL` attribute, not its fluid-ounce
 state or percentage sensor.
 
-`automation.yaml` sends one persistent HA notification and one push to
+`automation.yaml` creates a persistent HA notification and sends one push to
 `notify.mobile_app_jerred_iphone` when a qualified problem turns on. Confirmed
 recovery dismisses the persistent notification. Missing water or litter status
 telemetry cancels pending timers and marks the signal unknown, without dismissing
 an existing incident. Restored input booleans suppress repeat pushes across
-reconnects and restarts. Prometheus rules consume the same qualified
+reconnects and restarts. Attribute changes refresh the persistent notification's
+details, and HA startup recreates notifications for active problems. Notification
+actions run in a queue so overlapping updates cannot send duplicate pushes.
+Prometheus rules consume the same qualified
 sensors without a second hold time. Battery, desiccant, filter, and cleaning
 maintenance rules remain separate. The config hash rolls HA when GitOps changes
 these mounted files; no manual automation reload is needed.

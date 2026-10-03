@@ -1,10 +1,16 @@
 - id: pet_care_problem_notifications
   alias: "Pet care problem notifications"
   description: "Show settled pet-care problems in HA, push to Jerred's iPhone, and dismiss on recovery."
-  mode: parallel
-  max: 10
+  mode: queued
+  max: 20
   variables:
-    notification_latch: '{{ "{{" }} trigger.entity_id | replace("binary_sensor.", "input_boolean.") ~ "_notified" {{ "}}" }}'
+    pet_care_sensors:
+      - binary_sensor.litter_robot_problem
+      - binary_sensor.litter_robot_stalled
+      - binary_sensor.petlibro_living_room_feeder_problem
+      - binary_sensor.petlibro_guest_room_feeder_problem
+      - binary_sensor.petlibro_fountain_water_low
+      - binary_sensor.petlibro_fountain_operation_problem
   triggers:
     - trigger: state
       entity_id:
@@ -14,40 +20,39 @@
         - binary_sensor.petlibro_guest_room_feeder_problem
         - binary_sensor.petlibro_fountain_water_low
         - binary_sensor.petlibro_fountain_operation_problem
-      to: "on"
-    - trigger: state
-      entity_id:
-        - binary_sensor.litter_robot_problem
-        - binary_sensor.litter_robot_stalled
-        - binary_sensor.petlibro_living_room_feeder_problem
-        - binary_sensor.petlibro_guest_room_feeder_problem
-        - binary_sensor.petlibro_fountain_water_low
-        - binary_sensor.petlibro_fountain_operation_problem
-      to: "off"
+    - trigger: homeassistant
+      event: start
   actions:
-    - choose:
-        - conditions: '{{ "{{" }} trigger.to_state.state == "on" {{ "}}" }}'
-          sequence:
-            - action: persistent_notification.create
-              data:
-                notification_id: '{{ "{{" }} trigger.entity_id {{ "}}" }}'
-                title: '{{ "{{" }} trigger.to_state.attributes.friendly_name {{ "}}" }}'
-                message: '{{ "{{" }} trigger.to_state.attributes.problem_detail {{ "}}" }}'
-            - if: '{{ "{{" }} is_state(notification_latch, "off") {{ "}}" }}'
-              then:
-                - action: notify.mobile_app_jerred_iphone
-                  data:
-                    title: '{{ "{{" }} trigger.to_state.attributes.friendly_name {{ "}}" }}'
-                    message: '{{ "{{" }} trigger.to_state.attributes.problem_detail {{ "}}" }}'
+    - repeat:
+        for_each: '{{ "{{" }} pet_care_sensors if trigger.platform == "homeassistant" else [trigger.entity_id] {{ "}}" }}'
+        sequence:
+          - variables:
+              notification_entity: '{{ "{{" }} repeat.item {{ "}}" }}'
+              notification_latch: '{{ "{{" }} repeat.item | replace("binary_sensor.", "input_boolean.") ~ "_notified" {{ "}}" }}'
+          - choose:
+              - conditions: '{{ "{{" }} is_state(notification_entity, "on") {{ "}}" }}'
+                sequence:
+                  - action: persistent_notification.create
                     data:
-                      tag: '{{ "{{" }} trigger.entity_id {{ "}}" }}'
-                - action: input_boolean.turn_on
-                  target:
-                    entity_id: '{{ "{{" }} notification_latch {{ "}}" }}'
-      default:
-        - action: persistent_notification.dismiss
-          data:
-            notification_id: '{{ "{{" }} trigger.entity_id {{ "}}" }}'
-        - action: input_boolean.turn_off
-          target:
-            entity_id: '{{ "{{" }} notification_latch {{ "}}" }}'
+                      notification_id: '{{ "{{" }} notification_entity {{ "}}" }}'
+                      title: '{{ "{{" }} state_attr(notification_entity, "friendly_name") {{ "}}" }}'
+                      message: '{{ "{{" }} state_attr(notification_entity, "problem_detail") {{ "}}" }}'
+                  - if: '{{ "{{" }} is_state(notification_latch, "off") {{ "}}" }}'
+                    then:
+                      - action: notify.mobile_app_jerred_iphone
+                        data:
+                          title: '{{ "{{" }} state_attr(notification_entity, "friendly_name") {{ "}}" }}'
+                          message: '{{ "{{" }} state_attr(notification_entity, "problem_detail") {{ "}}" }}'
+                          data:
+                            tag: '{{ "{{" }} notification_entity {{ "}}" }}'
+                      - action: input_boolean.turn_on
+                        target:
+                          entity_id: '{{ "{{" }} notification_latch {{ "}}" }}'
+              - conditions: '{{ "{{" }} is_state(notification_entity, "off") {{ "}}" }}'
+                sequence:
+                  - action: persistent_notification.dismiss
+                    data:
+                      notification_id: '{{ "{{" }} notification_entity {{ "}}" }}'
+                  - action: input_boolean.turn_off
+                    target:
+                      entity_id: '{{ "{{" }} notification_latch {{ "}}" }}'
