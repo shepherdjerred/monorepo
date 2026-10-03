@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import {
   logBucksTransition,
@@ -95,7 +96,7 @@ describe("BucksTransitionEvent coverage", () => {
     // Recursive: the emitters live in sub-domains (`dares/`, `markets/`, …),
     // so a `*.ts` scan would silently stop covering most of them.
     const glob = new Bun.Glob("**/*.ts");
-    const bettingDir = new URL("./", import.meta.url).pathname;
+    const bettingDir = fileURLToPath(new URL("./", import.meta.url));
     const missing: string[] = [];
     for (const event of declared) {
       let found = false;

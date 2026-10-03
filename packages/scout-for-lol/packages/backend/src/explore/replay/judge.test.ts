@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { challengeFacts, hallOfFameFacts } from "#src/explore/product-facts.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -516,7 +517,7 @@ describe("the judge stays offline", () => {
   // one helper they share out of the runner.
   test("imports nothing that pulls in backend configuration", async () => {
     const source = await Bun.file(
-      new URL("judge.ts", import.meta.url).pathname,
+      fileURLToPath(new URL("judge.ts", import.meta.url)),
     ).text();
     const imports = [...source.matchAll(/from "([^"]+)"/g)].map(
       (entry) => entry[1] ?? "",
