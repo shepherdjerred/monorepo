@@ -123,7 +123,17 @@ export function resolveParticipantRankDisplay(
     : { text: `Ranked 5s ${ranked5sRank}`, color: palette.gold[3] };
 }
 
-function resolveSpellImage(spellId: number): string | undefined {
+/**
+ * The spell icon, when there is a spell to show.
+ *
+ * A bot carries no summoner spells — the League client exposes its champion
+ * and position and nothing else — so absence here is a fact about the
+ * participant rather than a lookup that failed.
+ */
+function resolveSpellImage(spellId: number | undefined): string | undefined {
+  if (spellId === undefined) {
+    return undefined;
+  }
   const name = first(
     keys(pickBy(summoner.data, (spell) => spell.key === spellId.toString())),
   );
@@ -141,8 +151,8 @@ function SummonerSpells({
   spell2Id,
   iconSize,
 }: {
-  spell1Id: number;
-  spell2Id: number;
+  spell1Id: number | undefined;
+  spell2Id: number | undefined;
   iconSize: number;
 }) {
   const spell1Img = resolveSpellImage(spell1Id);
