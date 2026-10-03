@@ -14,7 +14,7 @@ export class VoiceConnection extends BaseMediaConnection {
   private readonly relayStreamClose = (
     info: MediaConnectionCloseInfo,
   ): void => {
-    this.emit("close", info);
+    this.emit("close", { ...info, source: "go-live" });
   };
 
   public get streamConnection(): StreamConnection | undefined {

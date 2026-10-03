@@ -14,6 +14,7 @@ export type MediaFeatureGate = {
    */
   readonly musicOverVoice: (scope: DiscoveryScope) => Promise<boolean>;
   readonly sportsStreaming?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly numberedChannels?: (scope: DiscoveryScope) => Promise<boolean>;
 };
 
 async function enabled(
@@ -29,6 +30,14 @@ async function enabled(
 }
 
 export const mediaFeatureGate: MediaFeatureGate = {
+  numberedChannels: async (scope) => {
+    const result = await isEnabled("streambot-numbered-channels-enabled", {
+      default: false,
+      targetingKey: scope.guildId,
+      attributes: { server: scope.guildId },
+    });
+    return result.value;
+  },
   assistantV2: (scope) => enabled("streambot-assistant-v2-enabled", scope),
   history: (scope) => enabled("streambot-history-enabled", scope),
   musicOverVoice: (scope) =>

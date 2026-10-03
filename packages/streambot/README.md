@@ -2,7 +2,7 @@
 
 Discord media orchestrator: streams local media files and yt-dlp/URL sources
 into Discord voice channels, controlled entirely through a `/stream` slash
-command (`/stream play`, `skip`, `queue`, `seek`, `volume`, `chapters`, `help`,
+command (`/stream play`, `select`, `channels`, `skip`, `queue`, `seek`, `volume`, `help`,
 `sources`, …). Music plays as audio over the voice connection; video plays as a
 Go Live stream. One Bun process serves many servers — and many voice channels
 per server — concurrently.
@@ -10,9 +10,34 @@ per server — concurrently.
 Media requests default to a federated history, local-library, and YouTube
 search. Character renditions such as “Beggin by Plankton” also search explicit
 AI-cover spellings. Ambiguous results become numbered follow-ups instead of
-silently playing a weak match. `/stream join` starts an idle listening session;
+silently playing a weak match. `/stream playback join` starts an idle listening session;
 the same speaker may answer a clarification twice without repeating the wake
 phrase.
+
+## Numbered playback channels
+
+When the guild's numbered-channel beta is enabled, `/stream select channel:1`
+selects mic audio (the default). `/stream select channel:2` selects Go Live
+video on the **same userbot**. Channels 3 and higher use additional userbots.
+These numbers are playback slots inside your current Discord voice channel.
+Selection allocates no account and is personal to you; it resets when you
+leave the voice channel or Streambot restarts. `/stream channels` lists the
+slots, your selection, current items, and queue lengths.
+
+For music alongside a movie, queue music on 1, select 2, then queue the movie.
+For another movie in that voice channel, select 3. A YouTube video queued on
+1 plays audio only. Sports and subtitles require selecting 2 or higher.
+Playback, queue, volume, and seek commands target your selected slot; player
+card buttons target the exact playback instance shown on that card.
+`/stream stop` stops one slot. `/stream playback leave` stops the entire room
+and requires an admin. `/stream playback chapters` lists chapter markers.
+
+The default-off `streambot-numbered-channels-enabled` flag targets guilds and
+is latched for an active room. It overrides the older music transport gate.
+Existing mixed queues finish under the legacy model before numbered playback
+can start. Account availability is shared globally, so an idle slot does not
+guarantee a free account. Each video retains its own soundtrack; only channel
+1 writes media to the mic. StreamEast remains a video source in this model.
 
 ## How it works
 
@@ -24,26 +49,26 @@ therefore splits identities:
   session, renders the status/queue player card.
 - **Userbot pool** (`discord.js-selfbot-v13`, `USER_TOKENS`) — N streaming
   accounts. A play acquires a free userbot that is a member of the requesting
-  guild; pool size bounds concurrent streams.
-- **Sessions** — one playback session per `(guild, voice channel)`, each an
-  isolated XState v5 actor with its own queue/loop/volume. Playback state is
-  persisted per session and resumed across restarts, including voice-loss
-  recovery with close-code classification.
+  guild; account leases remain exclusive across voice channels and guilds.
+- **Rooms and sessions** — a room coordinator owns one XState v5 actor per
+  numbered playback slot, each with its own queue, loop, volume, and clock.
+  Slots 1+2 share a connection lease, and only one assistant listens per room.
+  A versioned atomic room snapshot restores every slot across restarts.
 - **Media history** — `/state/streambot.sqlite` records queue requests and
   playback starts for one year. Discovery combines the requesting user's
   cross-server history with the current guild's history. Favorites and saved
   queues remain until explicitly removed. Raw audio and transcripts never
   enter this database.
-- **Transports** — the userbot emits media two ways, chosen per item. Music
+- **Transports** — the userbot emits media two ways. Numbered slots fix the
+  transport; legacy queues choose per item. Music
   plays as microphone audio over the ordinary voice connection (`speaking: 1`,
   a green ring); video plays as a Go Live stream. Both share the one voice
-  connection the session already joined, so a queue alternates between them
-  without rejoining. A single mixer owns every outbound audio frame, because
+  connection, allowing mic audio and Go Live concurrently. A single mixer owns every outbound audio frame, because
   the assistant speaks over that same connection and two Opus writers on one
   RTP timestamp interleave into noise rather than mixing. Which one an item is
-  comes from yt-dlp metadata plus an ffprobe of the chosen input, overridable
-  with `/stream play mode:`, and gated by a typed Flipt flag that forces video
-  when off. See the
+  is forced by selection in numbered rooms. Legacy requests use metadata,
+  ffprobe, and `mode:`. ffprobe still rejects video requests without a picture.
+  See the
   [transports explanation](../docs/wiki/src/content/docs/explanation/streambot-transports.md).
 - **Streamer** — ffmpeg-driven voice streaming via
   [`@shepherdjerred/discord-video-stream`](../discord-video-stream/), the

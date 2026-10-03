@@ -1,4 +1,3 @@
-import { rm } from "node:fs/promises";
 import { Client } from "discord.js-selfbot-v13";
 import {
   Streamer,
@@ -12,7 +11,6 @@ import type {
   JoinVoiceInput,
   LeaveVoiceInput,
   PipelineMode,
-  ResolvedSubtitle,
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
@@ -34,7 +32,6 @@ import {
   STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
-  hwFallbackTotal,
   streamActive,
   streamCrashesTotal,
   streamHardware,
@@ -45,12 +42,10 @@ import type { AssistantAudioPort } from "@shepherdjerred/streambot/streamer/audi
 import { AssistantTransport } from "@shepherdjerred/streambot/streamer/assistant-transport.ts";
 import { buildStallReport } from "@shepherdjerred/streambot/streamer/stall-report.ts";
 import { VoiceAudioMixer } from "@shepherdjerred/streambot/streamer/voice-audio-mixer.ts";
-import {
-  buildMusicPrepareOptions,
-  buildVideoPrepareOptions,
-} from "@shepherdjerred/streambot/streamer/prepare-options.ts";
+import { buildPlaybackPrepareOptions } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
 import {
   EMPTY_VOICE_CLOSE_SOURCE,
+  ordinaryVoiceCloseSource,
   type VoiceCloseInfo,
   type VoiceCloseSource,
   type VoiceCloseTracker,
@@ -63,6 +58,8 @@ import type {
 } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import { joinStreamerVoice } from "@shepherdjerred/streambot/streamer/join-voice.ts";
 import { observeUserbotGateway } from "@shepherdjerred/streambot/streamer/gateway-observability.ts";
+import { runStreamWithFallback } from "@shepherdjerred/streambot/streamer/run-stream.ts";
+import { seekPlayer } from "@shepherdjerred/streambot/streamer/seek-player.ts";
 const log = logger.child("streamer");
 /**
  * Owns the selfbot voice connection and ffmpeg streaming via `@shepherdjerred/discord-video-stream`
@@ -94,6 +91,7 @@ export class StreambotStreamer implements StreamerLike {
   private readonly clock: SegmentClock;
   /** Close state for the current connection; retained recovery leases outlive pool reuse. */
   private voiceCloseTracker: VoiceCloseTracker | null = null;
+  private voiceGeneration = 0;
   /** Session-layer callback for Discord-side voice closes; cleared between sessions. */
   private voiceCloseListener: ((info: VoiceCloseInfo) => void) | null = null;
   /** Session-layer callback for mid-stream ffmpeg stalls; cleared between sessions. */
@@ -109,38 +107,57 @@ export class StreambotStreamer implements StreamerLike {
   private readonly mixer: VoiceAudioMixer;
   /** Adapts the shared voice pipeline's transport shape onto one long-lived mixer port. */
   private readonly assistantTransport: AssistantTransport;
+  private readonly sharedOwner: StreambotStreamer | undefined;
+  private readonly transport: "music" | "video" | undefined;
+  private readonly children = new Set<StreambotStreamer>();
   constructor(
     userToken: UserToken,
     config: Pick<Config, "stream" | "voice">,
     now: () => number = Date.now,
-    dependencies: PlayerFactory | StreamerDependencies = {},
+    dependencies:
+      | PlayerFactory
+      | (StreamerDependencies & {
+          shared?: { owner: StreambotStreamer; transport: "music" | "video" };
+        }) = {},
   ) {
+    const lifecycleDeps =
+      typeof dependencies === "function"
+        ? { createPlayer: dependencies }
+        : dependencies;
+    const shared = lifecycleDeps.shared;
+    this.sharedOwner = shared?.owner;
+    this.transport = shared?.transport;
     this.userToken = userToken;
     this.config = config;
     this.now = now;
-    this.createPlayer =
-      typeof dependencies === "function"
-        ? dependencies
-        : (dependencies.createPlayer ?? createSeekablePlayer);
-    this.createObserver =
-      typeof dependencies === "function"
-        ? createStreamObserver
-        : (dependencies.createObserver ?? createStreamObserver);
+    this.createPlayer = lifecycleDeps.createPlayer ?? createSeekablePlayer;
+    this.createObserver = lifecycleDeps.createObserver ?? createStreamObserver;
     this.joinStreamerVoice =
-      typeof dependencies === "function"
-        ? joinStreamerVoice
-        : (dependencies.joinStreamerVoice ?? joinStreamerVoice);
+      lifecycleDeps.joinStreamerVoice ?? joinStreamerVoice;
     this.clock = new SegmentClock(this.now);
-    this.client = new Client();
-    this.streamer = new Streamer(this.client);
-    this.mixer = new VoiceAudioMixer({
-      connection: () => this.streamer.voiceConnection,
-      musicBitrateBps: config.stream.bitrateAudioKbps * 1000,
+    this.client = shared?.owner.client ?? new Client();
+    this.streamer = shared?.owner.streamer ?? new Streamer(this.client);
+    this.mixer =
+      shared?.owner.mixer ??
+      new VoiceAudioMixer({
+        connection: () => this.streamer.voiceConnection,
+        musicBitrateBps: config.stream.bitrateAudioKbps * 1000,
+      });
+    this.assistantTransport =
+      shared?.owner.assistantTransport ??
+      new AssistantTransport(() => this.mixer.openAssistantAudio());
+    if (shared === undefined) observeUserbotGateway(this.client);
+  }
+
+  createPlaybackHandle(transport: "music" | "video"): StreamerLike {
+    const child = new StreambotStreamer(this.userToken, this.config, this.now, {
+      createPlayer: this.createPlayer,
+      createObserver: this.createObserver,
+      joinStreamerVoice: this.joinStreamerVoice,
+      shared: { owner: this, transport },
     });
-    this.assistantTransport = new AssistantTransport(() =>
-      this.mixer.openAssistantAudio(),
-    );
-    observeUserbotGateway(this.client);
+    this.children.add(child);
+    return child;
   }
   /**
    * Log in and wait for the gateway to finish hydrating — `client.guilds.cache` is empty until the
@@ -181,6 +198,7 @@ export class StreambotStreamer implements StreamerLike {
 
   async destroy(): Promise<void> {
     this.safeStop();
+    if (this.sharedOwner !== undefined) return;
     try {
       this.client.destroy();
     } catch (error) {
@@ -197,7 +215,9 @@ export class StreambotStreamer implements StreamerLike {
    * the next item rather than this one.
    */
   setVolume(percent: number): Promise<boolean> {
-    return Promise.resolve(this.mixer.setVolume(percent));
+    return this.transport === "video"
+      ? Promise.resolve(false)
+      : Promise.resolve(this.mixer.setVolume(percent));
   }
   openAssistantAudio(): AssistantAudioPort {
     return this.mixer.openAssistantAudio();
@@ -217,47 +237,39 @@ export class StreambotStreamer implements StreamerLike {
   setVoiceAudioListener(
     listener: ((audio: ReceivedVoiceAudio) => void) | null,
   ): void {
+    if (this.sharedOwner !== undefined) {
+      this.sharedOwner.setVoiceAudioListener(listener);
+      return;
+    }
     this.voiceAudioListener = listener;
   }
   setVoiceReceiveObserver(observer: VoiceReceiveObserver | null): void {
+    if (this.sharedOwner !== undefined) {
+      this.sharedOwner.setVoiceReceiveObserver(observer);
+      return;
+    }
     this.voiceReceiveObserver = observer;
     this.streamer.voiceConnection?.setReceiveObserver(observer ?? undefined);
   }
   /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
-  async seek(seconds: number): Promise<boolean> {
-    if (this.player === null) {
-      return false;
-    }
-    const player = this.player;
-    const target = Math.max(0, seconds);
-    const previousPositionSeconds = this.getPosition();
-    // The replacement observer can begin synchronously inside player.seek(), so expose the target
-    // to stall accounting immediately. Do not commit the public position anchor until the real
-    // player confirms its replacement pipeline attached successfully.
-    const generation = this.clock.beginSeek(target, previousPositionSeconds);
-    try {
-      await player.seek(target);
-    } catch (error) {
-      if (this.clock.owns(generation) && this.player === player) {
-        this.clock.abortSeek(previousPositionSeconds);
-      }
-      throw error;
-    }
-    if (this.clock.owns(generation) && this.player === player) {
-      this.clock.commitSeek(target);
-    }
-    return true;
+  seek(seconds: number): Promise<boolean> {
+    return seekPlayer(seconds, this.clock, () => this.player);
   }
   /** Current playback position in seconds, or null when nothing is playing. */
   getPosition(): number | null {
     return this.clock.position();
   }
   lastVoiceCloseInfo(): VoiceCloseInfo | null {
-    return this.voiceCloseTracker?.lastVoiceCloseInfo() ?? null;
+    return this.sharedOwner === undefined
+      ? (this.voiceCloseTracker?.lastVoiceCloseInfo() ?? null)
+      : this.sharedOwner.lastVoiceCloseInfo();
   }
 
   captureVoiceCloseSource(): VoiceCloseSource {
-    return this.voiceCloseTracker?.retain() ?? EMPTY_VOICE_CLOSE_SOURCE;
+    if (this.sharedOwner === undefined)
+      return this.voiceCloseTracker?.retain() ?? EMPTY_VOICE_CLOSE_SOURCE;
+    const retained = this.sharedOwner.captureVoiceCloseSource();
+    return ordinaryVoiceCloseSource(retained);
   }
   setVoiceCloseListener(
     listener: ((info: VoiceCloseInfo) => void) | null,
@@ -276,6 +288,12 @@ export class StreambotStreamer implements StreamerLike {
     }
     this.player = null;
     this.clock.stopClock();
+    if (this.sharedOwner !== undefined) {
+      this.sharedOwner.children.delete(this);
+      return;
+    }
+    for (const child of this.children) child.safeStop();
+    this.voiceGeneration += 1;
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
     this.voiceAudioListener = null;
@@ -297,6 +315,7 @@ export class StreambotStreamer implements StreamerLike {
   }
 
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
+    const generation = ++this.voiceGeneration;
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
     this.voiceCloseTracker = await this.joinStreamerVoice({
@@ -304,8 +323,11 @@ export class StreambotStreamer implements StreamerLike {
       input,
       receiveAudio: this.config.voice.enabled,
       now: this.now,
-      onClose: this.voiceCloseListener,
-      onAudio: this.voiceAudioListener,
+      onClose: (info) => {
+        if (generation === this.voiceGeneration)
+          this.voiceCloseListener?.(info);
+      },
+      onAudio: (audio) => this.voiceAudioListener?.(audio),
       receiveObserver: this.voiceReceiveObserver,
     });
     log.info("joined voice", {
@@ -319,63 +341,21 @@ export class StreambotStreamer implements StreamerLike {
     input: RunStreamInput,
     signal: AbortSignal,
   ): Promise<void> => {
-    // Subtitles no longer disqualify VAAPI: prepareStream composes them as a GPU overlay branch
-    // (libass alpha canvas → hwupload → overlay_vaapi), so decode, scale, tonemap, and encode all
-    // stay on the GPU even with burned-in subs. The startup fallback below remains the safety net
-    // for graph features the device lacks (tonemap_vaapi/overlay_vaapi on older iGPUs).
-    // `PipelineMode` is a *video encoder* ladder — hw → hw-upload → sw. A music segment has no
-    // encoder at all, so it is pinned to "sw" here rather than inside streamOnce: doing it here is
-    // what stops the startup-failure branch below from announcing a pointless "retrying in
-    // software" attempt for a song, which would reach users through CrashNotice and operators
-    // through streamCrashesTotal{pipeline}.
-    const pipelineMode: PipelineMode =
-      input.resolved.mediaKind === "music" ||
-      !this.config.stream.hardwareAcceleration
-        ? "sw"
-        : input.pipelineMode;
-    try {
-      try {
-        // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
-        await this.streamOnce(input, signal, pipelineMode, input.seekSeconds);
-      } catch (error) {
-        // Mid-stream deaths (crash / ended-short) carry position + pipeline context; the playback
-        // machine owns that recovery ladder (bounded retry at position, hw → hw-upload → sw).
-        if (error instanceof StreamCrashError) throw error;
-        if (pipelineMode !== "sw" && !signal.aborted) {
-          // Startup failure on a hardware pipeline (device/driver/graph init): retry immediately
-          // in software, resuming at wherever playback (incl. any live seek) had reached.
-          const resumeAt = this.lastPlaybackPositionSeconds;
-          hwFallbackTotal.inc();
-          log.warn("hardware (VAAPI) encode failed; retrying with software", {
-            error: getErrorMessage(error),
-            resumeAt,
-          });
-          await this.streamOnce(input, signal, "sw", resumeAt);
-          return;
-        }
-        throw error;
-      }
-    } finally {
-      // Drop the staged subtitle temp file once the whole track is done (covers both encode attempts
-      // and every in-segment seek, which reuse the same file).
-      await this.cleanupSubtitle(input.resolved.subtitle);
+    if (
+      this.transport !== undefined &&
+      input.resolved.mediaKind !== this.transport
+    ) {
+      throw new Error(
+        `Playback transport mismatch: expected ${this.transport}`,
+      );
     }
+    await runStreamWithFallback(input, signal, {
+      hardwareAcceleration: this.config.stream.hardwareAcceleration,
+      lastPosition: () => this.lastPlaybackPositionSeconds,
+      streamOnce: (request, abort, mode, position) =>
+        this.streamOnce(request, abort, mode, position),
+    });
   };
-
-  private async cleanupSubtitle(
-    subtitle: ResolvedSubtitle | undefined,
-  ): Promise<void> {
-    // No cleanupPath → a persistent subtitle-cache entry shared across plays; never unlink it.
-    if (subtitle?.cleanupPath === undefined) return;
-    try {
-      await rm(subtitle.cleanupPath, { force: true });
-    } catch (error) {
-      log.warn("failed to remove subtitle temp file", {
-        path: subtitle.cleanupPath,
-        error: getErrorMessage(error),
-      });
-    }
-  }
 
   /**
    * Turn a detected stall into the machine's stall recovery.
@@ -407,21 +387,14 @@ export class StreambotStreamer implements StreamerLike {
     // its very first frame through the mixer, and a video segment bakes it into the ffmpeg command
     // line as `audioVolume`. Either way the first sample the viewer hears is already at the
     // requested level, rather than at 100% until some later apply() lands.
-    this.mixer.setDesiredVolume(input.volume);
-    const prepareOpts = isMusic
-      ? buildMusicPrepareOptions({
-          stream,
-          resolved: input.resolved,
-          startSeconds,
-          volumePercent: input.volume,
-        })
-      : buildVideoPrepareOptions({
-          stream,
-          resolved: input.resolved,
-          startSeconds,
-          volumePercent: input.volume,
-          pipelineMode,
-        });
+    this.applyMusicVolume(isMusic, input.volume);
+    const prepareOpts = buildPlaybackPrepareOptions({
+      stream,
+      resolved: input.resolved,
+      startSeconds,
+      volumePercent: input.volume,
+      pipelineMode,
+    });
     log.info("starting stream", {
       title: input.resolved.title,
       hardware: useHardware,
@@ -533,7 +506,7 @@ export class StreambotStreamer implements StreamerLike {
 
     const segmentHardware = useHardware ? "true" : "false";
     const segmentStartedMs = this.now();
-    streamActive.set(1);
+    streamActive.inc();
     // Suppressed, not zeroed, for music: there is no encoder on this path at all, and a 0 here is
     // read on the dashboard as "the hardware path failed and we fell back".
     if (!isMusic) streamHardware.set(useHardware ? 1 : 0);
@@ -611,7 +584,7 @@ export class StreambotStreamer implements StreamerLike {
       // Release the outbound track before the next segment (or the next session's userbot) claims
       // it. Closing is what makes the port inert, so a late frame from this pipeline is dropped.
       musicPort?.close();
-      streamActive.set(0);
+      streamActive.dec();
       const durationSeconds = (this.now() - segmentStartedMs) / 1000;
       streamSegmentsTotal.inc({
         transport,
@@ -631,4 +604,7 @@ export class StreambotStreamer implements StreamerLike {
     log.info("left voice");
     await Promise.resolve();
   };
+  private applyMusicVolume(isMusic: boolean, volume: number): void {
+    if (isMusic) this.mixer.setDesiredVolume(volume);
+  }
 }

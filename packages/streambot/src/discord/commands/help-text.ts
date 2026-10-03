@@ -31,9 +31,10 @@ export type PaginatedPages = {
 export function helpText(voiceEnabled: boolean): string {
   return [
     "🎬 **Streambot** — `/stream` commands",
+    "• Numbered-channel beta: `/stream select channel:1` = mic audio (default); `channel:2` = Go Live on the same userbot; 3+ = more videos. `/stream channels` shows slots within your Discord voice channel; controls target your selection.",
     "",
     "**Playback**",
-    "• `/stream play <query>` · `playnext <query>` · `join` · `skip` · `seek <time>`",
+    "• `/stream play <query>` · `playnext <query>` · `skip` · `seek <time>`",
     "• `/stream stop` — stop and clear _(admin)_",
     "",
     ...(voiceEnabled
@@ -50,12 +51,12 @@ export function helpText(voiceEnabled: boolean): string {
     "**Queue**",
     "• `/stream queue` · `nowplaying` · `remove` · `move` · `shuffle` · `loop` · `volume`",
     "• `/stream clear` _(admin)_",
-    "• `/stream playback pause|resume|restart|previous|leave`",
+    "• `/stream playback join|pause|resume|restart|previous|leave|chapters`",
     "• `/stream history list|replay` · `/stream personal favorites|usual|continue`",
     "• Personal queues: `favorite-add`, `favorite-remove`, `save-queue`, `saved-queues`, `load-queue`, `delete-queue`",
     "",
     "**Discovery**",
-    "• `/stream list` · `search` · `sources` · `/stream playback sports` · `chapters` · `chapter` · `subtitles`",
+    "• `/stream list` · `search` · `sources` · `/stream playback sports` · `chapter` · `subtitles`",
     "",
     "**Player card** — pause, restart, seek, skip, volume, shuffle, queue, subtitles, stop, loop, and chapters are available as controls.",
     "",

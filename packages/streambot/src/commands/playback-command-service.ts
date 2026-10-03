@@ -50,6 +50,9 @@ import {
   toRecordMedia,
 } from "@shepherdjerred/streambot/commands/playback-recording.ts";
 import { searchMediaText } from "@shepherdjerred/streambot/discovery/search-media-text.ts";
+import { playbackTransport } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import { assertNumberedPlayback } from "@shepherdjerred/streambot/commands/numbered-playback.ts";
+import { requestedPlayMode } from "@shepherdjerred/streambot/commands/play-mode.ts";
 
 const RESOLVE_TIMEOUT_MS = 30_000;
 
@@ -105,22 +108,6 @@ export function normalizeVoicePlayQuery(query: string): string {
  * A spoken listen/watch verb wins over a conflicting model mode. A spoken model
  * `mode: video` is ignored unless the utterance asked to watch.
  */
-function requestedPlayMode(
-  input: PlayInput,
-  intent: MediaIntent,
-  query: string,
-): MediaMode | undefined {
-  const spokenVerbMode =
-    input.spoken === true
-      ? inferMediaIntent({ query: input.utterance ?? query }).mode
-      : undefined;
-  if (spokenVerbMode !== undefined) {
-    return spokenVerbMode;
-  }
-  const unspecified = input.mode === undefined || input.mode === "auto";
-  const modelVideo = input.spoken === true && input.mode === "video";
-  return unspecified || modelVideo ? intent.mode : input.mode;
-}
 
 /** Permission-checked operations shared by slash commands and the voice agent. */
 export class PlaybackCommandService extends PlaybackControls {
@@ -171,6 +158,8 @@ export class PlaybackCommandService extends PlaybackControls {
     userId: UserId,
     requested: MediaMode | undefined,
   ): Promise<MediaMode | undefined> {
+    if (this.deps.playbackChannel !== undefined)
+      return playbackTransport(this.deps.playbackChannel);
     if (requested === "video") return "video";
     // `"auto"` is the slash command's default, not a choice: normalize it away so an untouched
     // option does not write a redundant `"mode":"auto"` into every persisted source and history
@@ -193,6 +182,11 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     const scope = this.scope(input.userId);
     const selected = await this.selectMedia(input, query, intent, scope);
+    assertNumberedPlayback(
+      this.deps.playbackChannel,
+      input.spoken === true ? undefined : input.mode,
+      selected.sports,
+    );
     assertSportsSubtitleOptions(selected.sports, input.subtitles);
     const source = withSpoken(
       withMode(

@@ -24,6 +24,24 @@ import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 /** Permission-checked playback controls shared by slash and voice transports. */
 export class PlaybackControls {
   constructor(protected readonly deps: PlaybackCommandServiceDeps) {}
+  hasNumberedChannels(): boolean {
+    return this.deps.playbackChannel !== undefined;
+  }
+
+  selectChannel(userId: UserId, number: number): Promise<string> {
+    if (this.deps.selectChannel === undefined)
+      throw new PlaybackCommandBoundaryError(
+        "Numbered channels are not enabled here.",
+      );
+    return this.deps.selectChannel(userId, number);
+  }
+  listChannels(userId: UserId): Promise<string> {
+    if (this.deps.listChannels === undefined)
+      throw new PlaybackCommandBoundaryError(
+        "Numbered channels are not enabled here.",
+      );
+    return this.deps.listChannels(userId);
+  }
 
   join(): PlaybackCommandResult {
     this.deps.dispatch({ type: "JOIN" });

@@ -30,6 +30,15 @@ export type VideoPrepareOptionsInput = PrepareOptionsInput & {
   readonly pipelineMode: PipelineMode;
 };
 
+/** Transport is fixed by the resolved source before either player is constructed. */
+export function buildPlaybackPrepareOptions(
+  input: VideoPrepareOptionsInput,
+): Partial<PrepareStreamOptions> {
+  return input.resolved.mediaKind === "music"
+    ? buildMusicPrepareOptions(input)
+    : buildVideoPrepareOptions(input);
+}
+
 function startTimeOption(startSeconds: number): { startTime?: number } {
   return startSeconds > 0 ? { startTime: startSeconds } : {};
 }

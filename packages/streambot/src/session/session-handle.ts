@@ -11,13 +11,24 @@ import type {
   Session,
   SessionHandle,
 } from "@shepherdjerred/streambot/session/session-types.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 
 export function buildSessionHandle(
   config: Config,
   session: Session,
 ): SessionHandle {
   return {
+    ...(session.playbackChannel === undefined
+      ? {}
+      : { playbackChannel: session.playbackChannel }),
+    ...(session.instanceId === undefined
+      ? {}
+      : { instanceId: session.instanceId }),
     dispatch: (event) => {
+      if (session.torndown)
+        throw new PlaybackCommandBoundaryError(
+          "That playback ended while the command was loading. Try again.",
+        );
       session.actor.send(event);
     },
     view: () =>

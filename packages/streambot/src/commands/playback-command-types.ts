@@ -10,8 +10,13 @@ import type {
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 
 export type PlaybackCommandServiceDeps = {
+  readonly playbackChannel?: PlaybackChannelNumber;
+  readonly selectChannel?: (userId: string, number: number) => Promise<string>;
+  readonly listChannels?: (userId: string) => Promise<string>;
+  readonly leaveRoom?: () => void;
   readonly config: Pick<Config, "discord">;
   readonly dispatch: (event: PlaybackEvent) => void;
   readonly view: () => PlaybackView;

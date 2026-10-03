@@ -16,6 +16,7 @@ import type {
   GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 
 const log = logger.child("voice-recovery");
 
@@ -89,6 +90,7 @@ export function buildReconnectExhaustedAnnouncement(attempts: number): string {
  * structurally; the coordinator stays generic so it never needs the full (private) shape.
  */
 export type RecoverableSession = {
+  readonly playbackChannel?: PlaybackChannelNumber;
   readonly key: string;
   readonly guildId: GuildId;
   readonly voiceChannelId: ChannelId;
@@ -120,17 +122,26 @@ export type VoiceRecoveryCoordinatorDeps<TSession extends RecoverableSession> =
     ) => Promise<void>;
     /** Persist the session's live position (before the machine clears the queue). */
     readonly saveSnapshot: (session: TSession) => Promise<void>;
+    readonly discardState?: (
+      guildId: GuildId,
+      channelId: ChannelId,
+      playbackChannel?: PlaybackChannelNumber,
+    ) => Promise<void>;
     readonly hasActiveSession: (key: string) => boolean;
     /** Respawn a `(guild, channel)` from its preserved state file (the reconnect-flavored resume). */
     readonly resumeOne: (
       guildId: GuildId,
       channelId: ChannelId,
-      opts: { reconnectAttempts: number },
+      opts: {
+        reconnectAttempts: number;
+        playbackChannel?: PlaybackChannelNumber;
+      },
     ) => Promise<ResumeOutcome>;
   };
 
 /** A scheduled reconnect attempt for a `(guild, channel)` whose session was lost to a voice drop. */
 type PendingRecovery = {
+  playbackChannel?: PlaybackChannelNumber;
   timer: ReturnType<typeof setTimeout>;
   /** Attempts already consumed before this scheduled one. */
   attempts: number;
@@ -202,6 +213,9 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
       return;
     }
     this.scheduleReconnect({
+      ...(session.playbackChannel === undefined
+        ? {}
+        : { playbackChannel: session.playbackChannel }),
       key: session.key,
       guildId: session.guildId,
       channelId: session.voiceChannelId,
@@ -218,6 +232,9 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
   rearmAfterFailedRecovery(session: TSession): void {
     voiceReconnectsTotal.inc({ outcome: "failed" });
     this.scheduleReconnect({
+      ...(session.playbackChannel === undefined
+        ? {}
+        : { playbackChannel: session.playbackChannel }),
       key: session.key,
       guildId: session.guildId,
       channelId: session.voiceChannelId,
@@ -238,6 +255,7 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
 
   /** Arm one delayed reconnect attempt, or give up (announcing) when attempts are exhausted. */
   private scheduleReconnect(params: {
+    playbackChannel?: PlaybackChannelNumber;
     key: string;
     guildId: GuildId;
     channelId: ChannelId;
@@ -270,6 +288,9 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
     // Don't let a pending reconnect keep the process alive at shutdown.
     timer.unref();
     this.pending.set(params.key, {
+      ...(params.playbackChannel === undefined
+        ? {}
+        : { playbackChannel: params.playbackChannel }),
       timer,
       attempts: params.attempts,
       guildId: params.guildId,
@@ -311,9 +332,21 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
         detail: late.detail,
       });
       voiceReconnectsTotal.inc({ outcome: "skipped" });
-      await deleteState(
-        stateFilePath(this.deps.stateDir, recovery.guildId, recovery.channelId),
-      );
+      if (this.deps.discardState === undefined) {
+        await deleteState(
+          stateFilePath(
+            this.deps.stateDir,
+            recovery.guildId,
+            recovery.channelId,
+          ),
+        );
+      } else {
+        await this.deps.discardState(
+          recovery.guildId,
+          recovery.channelId,
+          recovery.playbackChannel,
+        );
+      }
       await this.deps.announce(
         recovery.statusChannelId,
         `⏹️ ${late.detail} — staying disconnected.`,
@@ -325,6 +358,9 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
     try {
       result = await this.deps.resumeOne(recovery.guildId, recovery.channelId, {
         reconnectAttempts: attempt,
+        ...(recovery.playbackChannel === undefined
+          ? {}
+          : { playbackChannel: recovery.playbackChannel }),
       });
     } catch (error) {
       recovery.closeSource.release();
@@ -359,6 +395,9 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
         // via resumeMaxAgeSeconds, so this backs off on its own rather than looping forever.
         voiceReconnectsTotal.inc({ outcome: "no-userbot" });
         this.scheduleReconnect({
+          ...(recovery.playbackChannel === undefined
+            ? {}
+            : { playbackChannel: recovery.playbackChannel }),
           key,
           guildId: recovery.guildId,
           channelId: recovery.channelId,

@@ -142,6 +142,14 @@ export class UserbotPool<TUserbot extends PooledUserbot> {
     return this.entries.length;
   }
 
+  capacityFor(guildId: string): number {
+    return this.entries.filter((entry) => entry.guildIds.has(guildId)).length;
+  }
+
+  userIds(): ReadonlySet<string> {
+    return new Set(this.entries.map((entry) => entry.userbot.userId()));
+  }
+
   /** Log every userbot out. Idempotent — safe to call on shutdown. */
   async destroy(): Promise<void> {
     await Promise.all(this.entries.map((entry) => entry.userbot.destroy()));

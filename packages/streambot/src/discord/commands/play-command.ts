@@ -40,6 +40,11 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
+  playbackTransport,
+  NUMBERED_CHANNEL_HINT,
+} from "@shepherdjerred/streambot/types/playback-channel.ts";
+import { numberedPlaybackError } from "@shepherdjerred/streambot/commands/numbered-playback.ts";
+import {
   SportsProviderPreferenceSchema,
   type SportsProviderPreference,
 } from "@shepherdjerred/streambot/sports/types.ts";
@@ -74,8 +79,9 @@ function ackMessage(
   label: string,
   next: boolean,
   subtitles: SubtitlePref | undefined,
+  playbackChannel?: number,
 ): string {
-  return `${next ? "Up next" : "Queued"}: **${label}**${subtitlesSuffix(subtitles)}\n\nTip: ${randomTip()}`;
+  return `${next ? "Up next" : "Queued"}: **${label}**${subtitlesSuffix(subtitles)}\n\nTip: ${randomTip(playbackChannel)}`;
 }
 
 function requestedSportsProvider(
@@ -107,6 +113,11 @@ export async function runPlayCommand(
     interaction.getString("mode") ?? "auto",
   );
   const provider = requestedSportsProvider(interaction);
+  const modeError = numberedPlaybackError(deps.playbackChannel, requestedMode);
+  if (modeError !== null) {
+    await interaction.reply(modeError);
+    return;
+  }
 
   // Subtitles only exist on a picture. `mode:music` plays audio only, `prepareStream` throws if a
   // burn is passed with it, and the music branch drops one silently — so an explicit subtitle
@@ -114,9 +125,11 @@ export async function runPlayCommand(
   const wantsSubtitles =
     interaction.getString("subtitles") !== null ||
     interaction.getString("sublang") !== null;
-  if (requestedMode === "music" && wantsSubtitles) {
+  if (wantsSubtitles && isAudioRequest(deps, requestedMode)) {
     await interaction.reply(
-      "`mode:music` plays audio only, so subtitles can't be burned in. Drop the subtitle options, or use `mode:video`.",
+      deps.playbackChannel === undefined
+        ? "`mode:music` plays audio only, so subtitles can't be burned in. Drop the subtitle options, or use `mode:video`."
+        : `Channel 1 plays audio only. Select channel 2 or higher for subtitles. ${NUMBERED_CHANNEL_HINT}`,
     );
     return;
   }
@@ -127,17 +140,7 @@ export async function runPlayCommand(
   const effectiveMode =
     requestedMode === "auto" && wantsSubtitles ? "video" : requestedMode;
 
-  if (
-    selectedPlacement === "now" &&
-    deps.featureGate !== undefined &&
-    deps.guildId !== undefined &&
-    deps.channelId !== undefined &&
-    !(await deps.featureGate.assistantV2({
-      guildId: deps.guildId,
-      channelId: deps.channelId,
-      userId: interaction.userId,
-    }))
-  ) {
+  if (await denyPlayNow(deps, selectedPlacement, interaction.userId)) {
     await interaction.reply("Playing now is not enabled here yet.");
     return;
   }
@@ -179,6 +182,35 @@ export async function runPlayCommand(
     next,
     mode: effectiveMode,
   });
+}
+
+function isAudioRequest(
+  deps: CommandHandlerDeps,
+  requested: MediaMode,
+): boolean {
+  return (
+    (deps.playbackChannel === undefined
+      ? requested
+      : playbackTransport(deps.playbackChannel)) === "music"
+  );
+}
+
+async function denyPlayNow(
+  deps: CommandHandlerDeps,
+  placement: MediaPlacement,
+  userId: UserId,
+): Promise<boolean> {
+  return (
+    placement === "now" &&
+    deps.featureGate !== undefined &&
+    deps.guildId !== undefined &&
+    deps.channelId !== undefined &&
+    !(await deps.featureGate.assistantV2({
+      guildId: deps.guildId,
+      channelId: deps.channelId,
+      userId,
+    }))
+  );
 }
 
 async function runPlaylistRequest(input: DiscoveredPlayInput): Promise<void> {
@@ -323,7 +355,7 @@ async function runPlaylist(
     });
   }
   await interaction.editReply(
-    `Queued ${String(items.length)} item(s) from the playlist.${subtitlesSuffix(subtitles)}\n\nTip: ${randomTip()}`,
+    `Queued ${String(items.length)} item(s) from the playlist.${subtitlesSuffix(subtitles)}\n\nTip: ${randomTip(deps.playbackChannel)}`,
   );
 }
 
@@ -342,7 +374,9 @@ async function runDiscoveredPlay(input: DiscoveredPlayInput): Promise<void> {
       ...(mode === undefined ? {} : { mode }),
       ...(input.provider === undefined ? {} : { provider: input.provider }),
     });
-    await interaction.editReply(`${result.message}\n\nTip: ${randomTip()}`);
+    await interaction.editReply(
+      `${result.message}\n\nTip: ${randomTip(deps.playbackChannel)}`,
+    );
   } catch (error) {
     if (error instanceof PlaybackCommandBoundaryError) {
       await interaction.editReply(error.message);
@@ -376,7 +410,9 @@ async function runLegacyPlay(input: PlayCommandInput): Promise<void> {
       source,
       requesterId: userId,
     });
-    await interaction.reply(ackMessage(sourceLabel(source), next, subtitles));
+    await interaction.reply(
+      ackMessage(sourceLabel(source), next, subtitles, deps.playbackChannel),
+    );
     return;
   }
 
@@ -405,5 +441,7 @@ async function runLegacyPlay(input: PlayCommandInput): Promise<void> {
     requesterId: userId,
     preResolved: resolved,
   });
-  await interaction.editReply(ackMessage(sourceLabel(source), next, subtitles));
+  await interaction.editReply(
+    ackMessage(sourceLabel(source), next, subtitles, deps.playbackChannel),
+  );
 }

@@ -3,13 +3,48 @@ title: Streambot playback transports
 description: Why Streambot sends music over the userbot's ordinary voice connection and keeps video on Go Live, and what that split costs.
 ---
 
-Streambot plays a song as microphone audio and a film as a Go Live stream, from the same userbot
-account. The transport is chosen per item, not per session.
+Streambot shares one userbot between microphone audio and Go Live video, with independent playback
+slots inside each Discord voice channel.
 
-Both paths share one Discord voice connection that the userbot already joined. Only the media
-connection carrying the item differs, so a queue can alternate between them without rejoining. The
-choice is made per segment in
-[`streamer/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/streamer), from the kind the resolver settled on.
+A Discord account joins one voice channel at a time. Its ordinary voice connection can carry
+microphone audio while a separate Go Live connection carries a film and its soundtrack. Sharing
+that account saves scarce pool capacity without combining the two playback clocks or queues.
+The ownership boundary lives in
+[`SessionManager`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/session-manager.ts).
+
+## Why channels are numbered
+
+The number identifies a playback slot, rather than a Discord voice channel. Channel 1 carries mic
+audio, channel 2 carries Go Live on the same account, and higher numbers lease additional accounts.
+Several films can therefore coexist in one voice channel, while only one media queue writes to
+the mic. Every film keeps its own soundtrack.
+
+Selection belongs to the speaker and their current voice channel. Changing focus consumes no
+account and never starts playback. Explicit selection makes an ordinary YouTube request predictable:
+channel 1 extracts audio; a video channel requires a picture. Transport follows the selected slot,
+so a spoken “watch” cannot silently create a stream on another account. The command boundary is
+[`PlaybackCommandService`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/commands/playback-command-service.ts).
+
+A slot number remains stable while neighboring streams start or stop. Player cards also carry an
+instance identity, preventing an old card from controlling a replacement playback in the same slot.
+Each room has one assistant, which follows the primary account when available and otherwise an
+active video account. Ownership transfers after the current reply drains.
+
+## Why a room owns the account lease
+
+Independent players own their clocks, seeking, volume, producer failures, and queues. The room owns
+shared connections and account allocation. Stopping a film must leave concurrent mic audio connected;
+a Go Live failure must not disconnect the ordinary voice connection.
+
+An account remains unavailable to other voice channels until its final playback and assistant turn
+release the lease. Manual moves transfer the account's slots together. Conflicting destination slots
+stop the moved playback, preserving the playback already there. These rules are enforced by
+[`SessionManager`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/session-manager.ts).
+
+Recovery stores all room slots in one atomic snapshot. Original sources are resolved again on
+restart, since signed media URLs expire. Audio and video restore independently while reacquiring a
+shared primary account. Existing mixed queues retain their transport behavior until they finish,
+which prevents a rollout change from reinterpreting queued requests.
 
 ## The problem with one transport
 
@@ -41,16 +76,23 @@ overrides it to `2`, so routing through the voice connection is already what a p
 sounds like to every client in the channel.
 
 ```mermaid
-flowchart LR
+flowchart TB
   accTitle: Streambot playback transports
-  accDescr: One userbot joins one voice channel. Music resolves to an audio-only ffmpeg pipeline sent over the ordinary voice connection. Video resolves to a Go Live connection carrying an encoded H.264 stream.
-  R[Resolved item] -->|music| A[Audio-only ffmpeg]
-  R -->|video| V[H.264 + VAAPI]
-  A --> M[Voice audio mixer]
-  M --> VC[Voice connection]
-  V --> GL[Go Live connection]
+  accDescr: Channels 1 and 2 share one userbot. Channel 1 sends microphone audio through its voice mixer while channel 2 sends video and its soundtrack over Go Live. Higher channels use additional userbots in the same voice channel.
+  subgraph P[Primary userbot]
+    S1[Channel 1] --> A[Audio-only ffmpeg]
+    S2[Channel 2] --> V[Video ffmpeg]
+    A --> M[Voice audio mixer]
+    M --> VC[Voice connection]
+    V --> GL[Go Live connection]
+  end
+  subgraph H[Additional userbots]
+    SN[Channels 3+] --> VH[Video ffmpeg]
+    VH --> GH[Go Live connections]
+  end
   VC --> C((Voice channel))
   GL --> C
+  GH --> C
 ```
 
 ## Why one component owns the outbound audio
@@ -81,47 +123,17 @@ plays to complete silence and every layer above calls it a success.
 Two things guard against it. The send path now reports whether a frame reached the transport, and a
 watchdog fails the segment when frames stop landing while ffmpeg is still producing.
 
-## Deciding which an item is
+## Why probing still matters
 
-Classification happens at resolve time, from
-[yt-dlp metadata](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/ytdlp.ts) and an
-[ffprobe](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/probe.ts) of the chosen input. A `mode` option on
-`/stream play` overrides it.
+Selection settles transport, but cannot create a video track that the source lacks.
+[ffprobe](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/probe.ts)
+validates the actual media. A video slot rejects audio-only media rather than quietly writing it to
+the mic, and sports require a video slot. This preserves both the speaker's selection and the room's
+single mic writer.
 
-[ffprobe](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/probe.ts) is authoritative. yt-dlp reports a missing
-video codec three different ways across extractors — the string `none`, `null`, or the field absent entirely — so metadata alone cannot
-decide. A container with no video stream is a fact; an extractor's opinion is a hint.
-
-The probe also settles a request that asks for the impossible, and the two cases are treated
-differently on purpose. An **inferred** video guess loses to the probe and becomes music — that is
-what keeps an MP3 whose metadata says nothing about its codecs playable at all.
-
-An **explicit** `mode:video` does not. It is an instruction, either from a user or from the rollout
-flag forcing the pre-split transport, so [`resolveSource`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/resolve.ts)
-rejects the item by name rather than switching it to audio. Silently switching would ignore the
-user, and would make the flag a switch that turns nothing off.
-
-Spoken play is a weaker hint. Slash `/stream play` is unchanged.
-[`requestedPlayMode`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/commands/playback-command-service.ts)
-ignores a model `mode: video` unless the utterance said “watch”. On YouTube,
-[`classifyMediaKind`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/media-kind.ts)
-treats Entertainment, People & Blogs, and Comedy as a music tie instead of forcing Go Live. That is
-the AI-cover case: those categories are typical of lyric and character-cover uploads. Film &
-Animation, TV, Gaming, Sports, and News stay video. The streamer logs `mediaKind`, `decidedBy`,
-`spoken`, and `transport` on
-[`starting stream`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/streamer/streamer.ts).
-
-## What this rules out
-
-**One transport with audio-only encoding.** Go Live with no picture still costs a second connection
-and shows a stream tile nobody can watch. The saving is the connection, not just the encoder.
-
-**Choosing per session rather than per item.** A queue mixing a song and a film is ordinary. Binding
-the transport at session start would force one of them onto the wrong path.
-
-**A second bot account for music.** A Discord bot cannot Go Live, so the split would become two
-identities with two failure modes, two token sets and two voice states to reconcile. The
-[userbot pool](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/pool) already bounds how many accounts exist.
+Legacy mixed queues still classify each item using metadata and probing. Their explicit video
+requests also require a picture. The authoritative boundary remains
+[`resolveSource`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/resolve.ts).
 
 ## Related
 

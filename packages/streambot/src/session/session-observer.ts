@@ -16,6 +16,7 @@ type SessionObserverOptions = {
   readonly session: Session;
   readonly history: MediaHistoryStore | undefined;
   readonly totalQueueLength: () => number;
+  readonly updateStates?: () => void;
 };
 
 const HISTORY_END_STATES = new Set([
@@ -37,7 +38,8 @@ export class SessionObserver {
     this.finishInactiveRequest(stateName, snapshot.context);
     this.options.session.reporter.handle(snap);
     this.options.session.card.refresh();
-    setPlaybackState(stateName);
+    if (this.options.updateStates === undefined) setPlaybackState(stateName);
+    else this.options.updateStates();
     queueLength.set(this.options.totalQueueLength());
     this.updateLifecycle(stateName, snapshot.context.queue.length);
     this.updatePlaybackHistory(stateName, snapshot.context);

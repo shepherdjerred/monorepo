@@ -6,7 +6,7 @@
 
 export const TIPS: readonly string[] = [
   "Jump to a timestamp with `/stream seek 1:30` (also accepts `90` or `1:02:03`).",
-  "See a video's chapter markers with `/stream chapters`, then jump to one with `/stream chapter <n>`.",
+  "See a video's chapter markers with `/stream playback chapters`, then jump to one with `/stream chapter <n>`.",
   "`/stream list [filter]` browses your library; `/stream search <query>` does the same fuzzy match.",
   "`/stream playnext <query>` jumps a video to the front of the queue instead of the back.",
   "Turn subtitles on/off or set a language with `subtitles:on|off` and `sublang:<lang>` on `play`/`playnext`.",
@@ -23,9 +23,17 @@ export const TIPS: readonly string[] = [
 ];
 
 /** Pick one tip at random for a play/playnext reply footer. */
-export function randomTip(): string {
-  const index = Math.floor(Math.random() * TIPS.length);
-  const tip = TIPS[index];
+export function randomTip(playbackChannel?: number): string {
+  const tips =
+    playbackChannel === undefined
+      ? TIPS
+      : [
+          "Channel 1 is mic audio; select channel 2 or higher for Go Live video. Channels 1 and 2 share one userbot.",
+          "Use `/stream channels` to see playback in your current voice channel. Controls target your personal selection.",
+          "Select channel 3 or higher for another video. Only channel 1 writes to the mic.",
+        ];
+  const index = Math.floor(Math.random() * tips.length);
+  const tip = tips[index];
   if (tip === undefined) {
     throw new Error("TIPS pool is empty");
   }
