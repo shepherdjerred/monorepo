@@ -1944,6 +1944,20 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "streambot-numbered-channels-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": [
+            {
+              "rank": 1,
+              "percentage": 100,
+              "result": true
+            }
+          ]
+        },
+        {
           "key": "storm-brain-classify-enabled",
           "type": "boolean",
           "default": true,
