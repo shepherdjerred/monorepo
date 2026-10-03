@@ -1,16 +1,12 @@
 import type { z } from "zod";
-import type { DareTargetBindingV2 } from "@scout-for-lol/data";
-import type { DareDraftV2Definition } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
-import type { DareDraftV3Definition } from "#src/betting/dares/lifecycle/dare-draft-v3.ts";
-import type {
-  DareDefinitionV2ToolInputSchema,
-  DareDefinitionV3ToolInputSchema,
-} from "#src/explore/tools/dare-tool-schemas.ts";
+import type { DareTargetBinding } from "@scout-for-lol/data";
+import type { DareDraftDefinition } from "#src/betting/dares/lifecycle/dare-draft.ts";
+import type { DareDefinitionToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
 
 function resolveTargets(
   requestedKeys: readonly string[],
-  targets: readonly DareTargetBindingV2[],
-): DareTargetBindingV2[] {
+  targets: readonly DareTargetBinding[],
+): DareTargetBinding[] {
   if (new Set(requestedKeys).size !== requestedKeys.length) {
     throw new Error("A dare target key may appear only once.");
   }
@@ -24,24 +20,9 @@ function resolveTargets(
 }
 
 export function definitionFromTool(
-  input: z.infer<typeof DareDefinitionV2ToolInputSchema>,
-  targets: readonly DareTargetBindingV2[],
-): DareDraftV2Definition {
-  return {
-    originalText: input.originalText,
-    displayTitle: input.displayTitle,
-    statusPhrases: input.statusPhrases,
-    targets: resolveTargets(input.targetKeys, targets),
-    plan: input.plan,
-    deadlineSpec: input.deadlineSpec,
-    openingStake: input.openingStake,
-  };
-}
-
-export function definitionV3FromTool(
-  input: z.infer<typeof DareDefinitionV3ToolInputSchema>,
-  targets: readonly DareTargetBindingV2[],
-): DareDraftV3Definition {
+  input: z.infer<typeof DareDefinitionToolInputSchema>,
+  targets: readonly DareTargetBinding[],
+): DareDraftDefinition {
   return {
     originalText: input.originalText,
     displayTitle: input.displayTitle,

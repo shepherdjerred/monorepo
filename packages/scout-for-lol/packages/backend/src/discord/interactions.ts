@@ -18,19 +18,12 @@ import {
   parseParlayCustomId,
 } from "#src/betting/parlays/parlay-custom-id.ts";
 import { handleParlayBetButton } from "#src/betting/parlays/runtime/parlay-bet-button.ts";
+import type { DareButtonInteraction } from "#src/betting/dares/presentation/dare-button-interaction.ts";
+import { handleDareButton } from "#src/betting/dares/presentation/dare-discord.ts";
 import {
   isDareCustomId,
   parseDareCustomId,
 } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
-import {
-  handleDareButton,
-  type DareButtonInteraction,
-} from "#src/betting/dares/presentation/dare-discord.ts";
-import { handleDareV2Button } from "#src/betting/dares/presentation/dare-discord-v2.ts";
-import {
-  isDareV2CustomId,
-  parseDareV2CustomId,
-} from "#src/betting/dares/lifecycle/dare-custom-id-v2.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {
@@ -150,50 +143,16 @@ export type RoutableModalInteraction = VoteModalInteraction & {
   replied: boolean;
 };
 
-async function routeDareButton(
-  interaction: RoutableButtonInteraction,
-): Promise<void> {
-  try {
-    if (parseDareCustomId(interaction.customId) === undefined) {
-      discordComponentsTotal.inc({ namespace: "bbd", status: "malformed" });
-      await interaction.deferUpdate();
-      return;
-    }
-    await handleDareButton(interaction);
-    await captureButtonActivity(interaction, "dare", "success");
-    discordComponentsTotal.inc({ namespace: "bbd", status: "success" });
-  } catch (error) {
-    await captureButtonActivity(interaction, "dare", "error");
-    logger.error("❌ Error handling a Bryan Bucks dare button:", error);
-    discordComponentsTotal.inc({ namespace: "bbd", status: "error" });
-    // The authorized path acknowledged with deferUpdate on the message the
-    // button lives on, so editReply would clobber the public callout; a fresh
-    // ephemeral message is the only safe apology.
-    if (interaction.deferred || interaction.replied) {
-      await interaction.followUp({
-        content: "😵 Something went wrong with that dare. Try again shortly.",
-        flags: MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
-      });
-      return;
-    }
-    await interaction.deferReply({ ephemeral: true });
-    await interaction.editReply({
-      content: "😵 Something went wrong with that dare. Try again shortly.",
-    });
-  }
-}
-
 async function routeDareV2Button(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
   try {
-    if (parseDareV2CustomId(interaction.customId) === undefined) {
+    if (parseDareCustomId(interaction.customId) === undefined) {
       discordComponentsTotal.inc({ namespace: "bbd2", status: "malformed" });
       await interaction.deferUpdate();
       return;
     }
-    await handleDareV2Button(interaction);
+    await handleDareButton(interaction);
     await captureButtonActivity(interaction, "dare", "success");
     discordComponentsTotal.inc({ namespace: "bbd2", status: "success" });
   } catch (error) {
@@ -218,12 +177,8 @@ async function routeDareV2Button(
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
-  if (isDareV2CustomId(interaction.customId)) {
-    await routeDareV2Button(interaction);
-    return;
-  }
   if (isDareCustomId(interaction.customId)) {
-    await routeDareButton(interaction);
+    await routeDareV2Button(interaction);
     return;
   }
   if (isParlayCustomId(interaction.customId)) {

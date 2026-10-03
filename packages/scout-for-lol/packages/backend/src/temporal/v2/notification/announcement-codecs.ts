@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   BucksAmountSchema,
-  BucksDareHorizonKindSchema,
   BucksParlaySideSchema,
   BucksParlayVoidReasonSchema,
   BucksPoolTotalSchema,
@@ -28,11 +27,6 @@ import type {
   EarnedAward,
   EarnedAwardReason,
 } from "#src/betting/accounts/earnings.ts";
-import type {
-  DareContributorRefund,
-  DareTargetPayout,
-} from "#src/betting/dares/settlement/dare-ledger.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementAnnouncementInput } from "#src/betting/notify/announce-prepare.ts";
 import { ParlayLegResultSchema } from "#src/betting/parlays/parlay-evaluator.ts";
 import type {
@@ -43,8 +37,8 @@ import type { SettlementSummary } from "#src/betting/settlement/settlement-types
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 
 /**
- * The wire shape of what a `settlement`, `dare-summary` or
- * `hall-record-break` intent announces.
+ * The wire shape of what a `settlement` or `hall-record-break` intent
+ * announces.
  *
  * The intent row carries these as an opaque versioned envelope (the domain
  * must not mirror the betting slice's types), and this module is the one
@@ -56,9 +50,9 @@ import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts"
  *
  * The settlement receipt names what settlement moved — bet ids, Dare ids,
  * parlay guilds, earners — and deliberately no amount. v1's announcement
- * (`buildSettlementMessage`, `dareResultMessage`) is built from the summaries
- * settlement PRODUCED: per-bet payouts, pool totals, the void reason, each
- * parlay leg's rendered condition, each Dare payout and refund. Rebuilding
+ * (`buildSettlementMessage`) is built from the summaries settlement PRODUCED:
+ * per-bet payouts, pool totals, the void reason, each parlay leg's rendered
+ * condition. Rebuilding
  * those from ledger rows by id would be a second implementation of settlement
  * arithmetic, which is exactly the thing that must exist once. So the intent
  * carries the summaries themselves, as settlement handed them to v1, and the
@@ -239,109 +233,6 @@ export function settlementAnnouncementEnvelope(
           },
         }),
     earnings: [...input.earnings],
-  });
-}
-
-const DareTargetPayoutSchema = z.strictObject({
-  bucksAccountId: z.number().int(),
-  discordId: z.string().min(1),
-  alias: z.string(),
-  grossShare: BucksAmountSchema,
-  fee: BucksAmountSchema,
-  net: BucksAmountSchema,
-}) satisfies z.ZodType<DareTargetPayout>;
-
-const DareContributorRefundSchema = z.strictObject({
-  bucksAccountId: z.number().int(),
-  discordId: z.string().min(1),
-  contributed: BucksAmountSchema,
-  fee: BucksAmountSchema,
-  refunded: BucksAmountSchema,
-}) satisfies z.ZodType<DareContributorRefund>;
-
-const DareResolutionSchema = z.enum([
-  "captured",
-  "achieved",
-  "unachieved",
-  "voided",
-  "expired",
-  "abandoned",
-]) satisfies z.ZodType<DareSettlementSummary["resolution"]>;
-
-export type DareSummaryAnnouncement = z.infer<
-  typeof DareSummaryAnnouncementSchema
->;
-export const DareSummaryAnnouncementSchema = z.strictObject({
-  dareId: z.number().int(),
-  serverId: z.string().min(1),
-  channelId: z.string().min(1),
-  messageRef: z.string().nullable(),
-  matchId: z.string().optional(),
-  resolution: DareResolutionSchema,
-  horizonKind: BucksDareHorizonKindSchema,
-  challengerDiscordId: z.string().min(1),
-  targetAliases: z.array(z.string()),
-  conditionSummary: z.string(),
-  potTotal: z.number().int(),
-  payouts: z.array(DareTargetPayoutSchema),
-  refunds: z.array(DareContributorRefundSchema),
-  voidReason: z.string().optional(),
-  leafCounts: z.array(z.number().int()).optional(),
-});
-
-export const dareSummaryAnnouncementCodec = defineVersionedCodec({
-  kind: "scout-dare-summary-announcement",
-  version: 1,
-  schema: DareSummaryAnnouncementSchema,
-});
-
-/** The parsed announcement in the shape v1's copy builder takes. */
-export function dareSettlementSummaryOf(
-  parsed: DareSummaryAnnouncement,
-): DareSettlementSummary {
-  return {
-    dareId: parsed.dareId,
-    serverId: parsed.serverId,
-    channelId: parsed.channelId,
-    messageRef: parsed.messageRef,
-    matchId: parsed.matchId,
-    resolution: parsed.resolution,
-    horizonKind: parsed.horizonKind,
-    challengerDiscordId: parsed.challengerDiscordId,
-    targetAliases: parsed.targetAliases,
-    conditionSummary: parsed.conditionSummary,
-    potTotal: parsed.potTotal,
-    payouts: parsed.payouts,
-    refunds: parsed.refunds,
-    voidReason: parsed.voidReason,
-    leafCounts: parsed.leafCounts,
-  };
-}
-
-/** What a minter puts on a `dare-summary` intent: the summary, serialized. */
-export function dareSummaryAnnouncementEnvelope(
-  summary: DareSettlementSummary,
-) {
-  return dareSummaryAnnouncementCodec.serialize({
-    dareId: summary.dareId,
-    serverId: summary.serverId,
-    channelId: summary.channelId,
-    messageRef: summary.messageRef,
-    ...(summary.matchId === undefined ? {} : { matchId: summary.matchId }),
-    resolution: summary.resolution,
-    horizonKind: summary.horizonKind,
-    challengerDiscordId: summary.challengerDiscordId,
-    targetAliases: summary.targetAliases,
-    conditionSummary: summary.conditionSummary,
-    potTotal: summary.potTotal,
-    payouts: summary.payouts,
-    refunds: summary.refunds,
-    ...(summary.voidReason === undefined
-      ? {}
-      : { voidReason: summary.voidReason }),
-    ...(summary.leafCounts === undefined
-      ? {}
-      : { leafCounts: summary.leafCounts }),
   });
 }
 

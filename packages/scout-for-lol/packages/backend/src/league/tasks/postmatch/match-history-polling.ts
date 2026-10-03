@@ -11,13 +11,12 @@ import {
 } from "#src/league/tasks/postmatch/match-processing.ts";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/notify/announce.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
 import {
-  voidDareV2WithFullRefund,
-  type RefundableDareV2Row,
-} from "#src/betting/dares/settlement/dare-void-v2.ts";
+  voidDareWithFullRefund,
+  type RefundableDareRow,
+} from "#src/betting/dares/settlement/dare-void.ts";
 import type { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
-import { settleBucksWithDareTimelineV2 } from "#src/betting/dares/evaluation/dare-postmatch-timeline-v2.ts";
+import { settleBucksWithDareTimeline } from "#src/betting/dares/evaluation/dare-postmatch-timeline.ts";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import {
   markPostMatchPollCompleted,
@@ -129,7 +128,7 @@ export async function processMatchAndUpdatePlayers(
     facts,
     matchId,
     settle: async () =>
-      await settleBucksWithDareTimelineV2({
+      await settleBucksWithDareTimeline({
         matchData,
         matchDataSource: "RIOT",
         trackedPlayers: allTrackedPlayers,
@@ -176,13 +175,6 @@ export async function processMatchAndUpdatePlayers(
       postmatchMessageIds,
     });
   }
-
-  // Dare results are one-shot like the settlement summary: a later pass
-  // returns nothing for an already-settled dare, so this delivery must not
-  // share an error boundary with anything else. It swallows per-summary and
-  // never blocks the cursor; a silent match still announces, because a dare
-  // resolution moved real balances regardless of report suppression.
-  await deliverDareSummaries(bucks.dareSettlements);
 
   // This is the last transactional extension point before player cursors move
   // past the match. Tournament lobbies — and linked Customs games — finalize
@@ -235,7 +227,7 @@ export async function processMatchAndUpdatePlayers(
 }
 
 async function recoverUnavailableActiveDares(input: {
-  activeDares: readonly RefundableDareV2Row[];
+  activeDares: readonly RefundableDareRow[];
   accounts: readonly MatchPollAccount[];
   currentTime: Date;
 }): Promise<Set<string>> {
@@ -250,7 +242,7 @@ async function recoverUnavailableActiveDares(input: {
       logger.warn(
         `Voiding Dare ${dare.id.toString()} because frozen target account(s) are unavailable: ${unavailable.join(", ")}`,
       );
-      await voidDareV2WithFullRefund(dare, "target_unavailable", prisma, {
+      await voidDareWithFullRefund(dare, "target_unavailable", prisma, {
         now: input.currentTime,
       });
       continue;
@@ -268,7 +260,7 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
         await Promise.all([
           getAccountsWithState(tx, getActiveServerIds()),
           getPuuidsBlockedFromLivePolling(tx),
-          tx.bucksDareV2.findMany({
+          tx.bucksDare.findMany({
             where: { dareState: "active" },
             include: { targets: { orderBy: { id: "asc" } } },
           }),

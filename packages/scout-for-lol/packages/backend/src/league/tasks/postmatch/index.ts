@@ -1,12 +1,9 @@
 import { retryPendingBucksEarnings } from "#src/betting/accounts/earnings-retry.ts";
 import { settleEndedDareWindows } from "#src/betting/dares/settlement/dare-sweep.ts";
-import { settleEndedDareV2Windows } from "#src/betting/dares/settlement/dare-sweep-v2.ts";
-import { settleMatureDareSqlV3Races } from "#src/betting/dares/settlement/dare-settle-v3.ts";
-import { activatePendingDaresV3 } from "#src/betting/dares/lifecycle/dare-activation-v3.ts";
-import { refreshPendingDareV2Callouts } from "#src/betting/dares/presentation/dare-callout-v2.ts";
-import { DareV2PartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types-v2.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
+import { settleMatureDareSqlRaces } from "#src/betting/dares/settlement/dare-settle-contract.ts";
+import { activatePendingDares } from "#src/betting/dares/lifecycle/dare-activation.ts";
+import { refreshPendingDareCallouts } from "#src/betting/dares/presentation/dare-callout.ts";
+import { DarePartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import { voidStaleAndAnnounce } from "#src/league/tasks/postmatch/void-stale-announce.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlays/runtime/parlay-sweep.ts";
@@ -27,9 +24,7 @@ function asError(error: unknown, message: string): Error {
   return error instanceof Error ? error : new Error(message, { cause: error });
 }
 
-export async function checkPostMatch(): Promise<{
-  dareSummaries: DareSettlementSummary[];
-}> {
+export async function checkPostMatch(): Promise<void> {
   logger.info("🏁 Starting post-match check task");
   const startTime = Date.now();
   const bettingHardDisabled = isFeatureHardDisabled("betting_enabled");
@@ -50,12 +45,11 @@ export async function checkPostMatch(): Promise<{
       );
     }
     let maintenanceError: unknown;
-    let dareSummaries: DareSettlementSummary[] = [];
     try {
-      ({ dareSummaries } = await runPostMatchMaintenance({
+      await runPostMatchMaintenance({
         settleDareV2Deadlines: evidenceComplete,
         dareEvidenceWatermark: evidenceWatermark,
-      }));
+      });
     } catch (error) {
       maintenanceError = error;
     }
@@ -77,7 +71,6 @@ export async function checkPostMatch(): Promise<{
     logger.info(
       `✅ Post-match check completed successfully in ${executionTime.toString()}ms`,
     );
-    return { dareSummaries };
   } catch (error) {
     const executionTime = Date.now() - startTime;
     logger.error(
@@ -102,13 +95,10 @@ export async function runPostMatchMaintenance(options?: {
   settleDareV2Deadlines: boolean;
   dareEvidenceWatermark?: Date | undefined;
   pollOwner?: PostMatchPollOwner | undefined;
-}): Promise<{
-  dareSummaries: DareSettlementSummary[];
-}> {
+}): Promise<void> {
   const bettingHardDisabled = isFeatureHardDisabled("betting_enabled");
-  let dareSummaries: DareSettlementSummary[] = [];
   const settleDareV2Deadlines = options?.settleDareV2Deadlines ?? true;
-  // Dare v2 recovery is never feature-gated. Once a contract is funded its
+  // Dare recovery is never feature-gated. Once a contract is funded its
   // settlement and refund paths must survive both rollout revocation and the
   // broader Bryan Bucks hard-disable. Other betting maintenance remains
   // behind the hard-disable policy.
@@ -116,7 +106,7 @@ export async function runPostMatchMaintenance(options?: {
     {
       name: "dare activation",
       run: async () => {
-        await activatePendingDaresV3();
+        await activatePendingDares();
       },
     },
     {
@@ -126,27 +116,24 @@ export async function runPostMatchMaintenance(options?: {
           settleDareV2Deadlines &&
           options?.dareEvidenceWatermark !== undefined
         ) {
-          await settleMatureDareSqlV3Races(
-            prisma,
-            options.dareEvidenceWatermark,
-          );
+          await settleMatureDareSqlRaces(prisma, options.dareEvidenceWatermark);
         }
       },
     },
     {
-      name: "dare v2 deadline settle",
+      name: "dare deadline settle",
       run: async () => {
         try {
           if (settleDareV2Deadlines) {
-            await settleEndedDareV2Windows(
+            await settleEndedDareWindows(
               undefined,
               options?.dareEvidenceWatermark,
             );
           }
-          await refreshPendingDareV2Callouts();
+          await refreshPendingDareCallouts();
         } catch (error) {
-          if (error instanceof DareV2PartialSettlementError) {
-            await refreshPendingDareV2Callouts();
+          if (error instanceof DarePartialSettlementError) {
+            await refreshPendingDareCallouts();
           }
           throw error;
         }
@@ -172,22 +159,6 @@ export async function runPostMatchMaintenance(options?: {
         name: "stale parlay market void",
         run: async () => {
           await voidStaleParlayMarkets();
-        },
-      },
-      {
-        // Ended dare windows settle unachieved here, beside the other post-match
-        // clocks.
-        name: "dare window settle",
-        run: async () => {
-          dareSummaries = await settleEndedDareWindows();
-        },
-      },
-      {
-        // Delivery runs after the refunds committed and swallows per-summary, so
-        // a dead channel never blocks or re-runs a settlement.
-        name: "dare summary delivery",
-        run: async () => {
-          await deliverDareSummaries(dareSummaries);
         },
       },
     );
@@ -220,5 +191,4 @@ export async function runPostMatchMaintenance(options?: {
     }
     throw error;
   }
-  return { dareSummaries };
 }

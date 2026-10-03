@@ -21,7 +21,7 @@ import {
  * Activity then does with it: no settlement receipt, and a conflict surfaced
  * as non-retryable so it pages instead of looping.
  *
- * The two meet at `settleBucksWithDareTimelineV2`, which is replaced here — a
+ * The two meet at `settleBucksWithDareTimeline`, which is replaced here — a
  * collaborator of the code under test, not the code under test. It is handed
  * the REAL sink the Activity built and drives it exactly as settlement does,
  * so the failure under test is the one the real sink raises. Every durable
@@ -86,8 +86,8 @@ vi.mock("#src/temporal/v2/notification/match-intents.ts", async () => {
   };
 });
 
-vi.mock("#src/betting/dares/evaluation/dare-postmatch-timeline-v2.ts", () => ({
-  settleBucksWithDareTimelineV2: async (input: {
+vi.mock("#src/betting/dares/evaluation/dare-postmatch-timeline.ts", () => ({
+  settleBucksWithDareTimeline: async (input: {
     announcementSink: SettlementAnnouncementSink;
   }) => {
     settlement.entered += 1;
@@ -125,7 +125,7 @@ const { MATCH_RECEIPT_KINDS } =
 const { recordSettlementAnnouncementItem } =
   await import("#src/database/durable/settlement-announcement-repository.ts");
 const { DarePartialSettlementError } =
-  await import("#src/betting/dares/settlement/dare-settle-shared.ts");
+  await import("#src/betting/dares/settlement/dare-settle-types.ts");
 const { settlementEvidenceCodec } =
   await import("#src/durable/match/receipt-evidence.ts");
 
@@ -390,11 +390,11 @@ describe("a settlement whose checkpoint cannot be written", () => {
     settlement.drive = async (sink) => {
       await recordSettlementAnnouncementItem(prisma, {
         matchId: CONFLICTS_INSIDE_A_DARE_BATCH,
-        item: { family: "dare-summary", itemKey: "7", payload: { won: true } },
+        item: { family: "settlement", itemKey: "7", payload: { won: true } },
       });
       try {
         await sink.recordAnnouncementItem(prisma, {
-          family: "dare-summary",
+          family: "settlement",
           itemKey: "7",
           payload: { won: false },
         });

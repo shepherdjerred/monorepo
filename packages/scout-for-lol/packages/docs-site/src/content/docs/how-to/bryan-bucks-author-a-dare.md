@@ -17,8 +17,8 @@ use the advanced editor, then return to Explore for another conversational
 revision.
 
 Before replacing the draft, inspect the card's explicit scope, targets,
-participation relationship, queues, first-N or game cap, deadline, stake, plain
-meaning, and canonical ScoutQL. Historical preview uses only matches and
+queues, game cap, deadline, stake, plain meaning, and canonical SQL — the SQL
+is the binding contract. Historical preview uses only matches and
 timelines already present in Scout's lake; missing timeline coverage is shown as
 unknown rather than as a failed condition. Save the revision only when the diff
 matches the intended dare, then prepare and confirm funding. The confirmation
@@ -27,5 +27,4 @@ is single-use and expires after ten minutes.
 ## Related
 
 - [Bryan Bucks Dares on the dashboard](/docs/reference/bryan-bucks-dares/)
-- [Dare contract ScoutQL](/docs/reference/bryan-bucks-dare-scoutql/)
 - [Bryan Bucks rules and limits](/docs/reference/bryan-bucks-rules/)

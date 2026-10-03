@@ -6,6 +6,7 @@ surfaces: [web, discord, voice]
 tripwires:
   - Never claim a turning point from timeline events unless every analyzed match has complete timeline coverage.
 ---
+
 ## Game review
 
 Use the ScoutQL field guide and language reference in the core instructions to identify the requested player and matches before interpreting them. Start with outcome, role, champion, matchup, kills/deaths/assists, farm, gold, vision, damage, objectives, duration, and game count. Separate direct evidence from interpretation. When analysis tools are available, load `data-analysis` to inspect full raw documents and compute joins, ordered sequences, or nested damage.

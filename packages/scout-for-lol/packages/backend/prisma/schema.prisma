@@ -1329,12 +1329,11 @@ model BucksAccount {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  ledgerEntries       BucksLedgerEntry[]
-  bets                BucksBet[]
-  parlayBets          BucksParlayBet[]
-  openPositions       BucksOpenPosition[]
-  dareContributions   BucksDareContribution[]
-  dareV2Contributions BucksDareV2Contribution[]
+  ledgerEntries     BucksLedgerEntry[]
+  bets              BucksBet[]
+  parlayBets        BucksParlayBet[]
+  openPositions     BucksOpenPosition[]
+  dareContributions BucksDareContribution[]
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
@@ -1695,142 +1694,9 @@ model BucksParlayBet {
   @@index([marketId, side])
 }
 
-// One free-text dare bounty: a one-sided pot contributors fund and targets can
-// win by achieving a translated, code-evaluated condition off ingested match
-// data. Targets never stake; achieved splits the pot among them, unachieved
-// refunds the contributors, and both resolved outcomes pay the house cut.
+// A SQL-contract Dare. Draft revisions are private and unfunded; funding
+// freezes one revision into contractJson.
 model BucksDare {
-  id                  Int    @id @default(autoincrement())
-  serverId            String
-  channelId           String
-  challengerDiscordId String
-
-  // BucksDareHorizonKind: next_game | window.
-  horizonKind  String
-  // 1..31, set only for horizonKind "window".
-  windowDays   Int?
-  // Set at activation for "window" dares; the sweep deadline for unachieved.
-  windowEndsAt DateTime?
-
-  // JSON combinator tree with canonical leaf order (DareConditionsSchema).
-  // Settlement evaluates only this; it never touches model output.
-  conditions       String
-  conditionVersion Int
-  evaluatorVersion String
-
-  // The challenger's exact free text, kept for audit alongside the frozen
-  // model translation record. The confirmation the challenger approved is
-  // rendered by code from `conditions`, never from these.
-  originalText String
-  translation  String?
-
-  // Denormalized pot; the contribution rows remain authoritative. Settlement
-  // asserts equality and throws on drift rather than trusting this column.
-  potTotal Int @default(0)
-
-  // BucksDareState: proposed | pending_accept | active | achieved |
-  // unachieved | declined | expired | voided | abandoned.
-  // Deliberately not named `status` — brand-prisma-types would type it
-  // ParticipantStatus.
-  dareState String @default("proposed")
-
-  proposalExpiresAt DateTime
-  acceptDeadline    DateTime?
-  activatedAt       DateTime?
-  settledAt         DateTime?
-  voidReason        String?
-
-  // JSON BucksMessageRef for the public callout message, so serialized pot
-  // and progress edits land on exactly the right message.
-  messageRef String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  targets       BucksDareTarget[]
-  contributions BucksDareContribution[]
-  games         BucksDareGame[]
-
-  @@index([dareState, proposalExpiresAt])
-  @@index([dareState, acceptDeadline])
-  @@index([dareState, windowEndsAt])
-}
-
-// Consent and payee record for one dared player. Identity (alias, accounts) is
-// frozen at creation because Player rows are renameable and prunable; the
-// wallet is bound at accept time so a dare can name someone without a wallet.
-model BucksDareTarget {
-  id        Int       @id @default(autoincrement())
-  dareId    Int
-  dare      BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  discordId String
-  playerId  Int
-  alias     String
-
-  // JSON [{puuid, trackingStartedAt}] — the union across the user's Player
-  // rows, frozen at creation. Qualifying-game candidacy reads only these.
-  accounts String
-
-  // Set when the target accepts; targets risk nothing before then.
-  bucksAccountId Int?
-  acceptedAt     DateTime?
-  declinedAt     DateTime?
-
-  // Net payout and house fee recorded at achieved settlement.
-  payout Int?
-  fee    Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([dareId, discordId])
-}
-
-// Append-only pot funding. Contributions are never retracted: the void and
-// decline paths refund every row in full, and unachieved refunds each
-// contributor's total minus the house cut.
-model BucksDareContribution {
-  id             Int          @id @default(autoincrement())
-  dareId         Int
-  dare           BucksDare    @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  bucksAccountId Int
-  bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-  discordId      String
-  amount         Int
-  createdAt      DateTime     @default(now())
-
-  @@index([dareId])
-  // Serves refundable-headroom queries: open dare escrow counts against the
-  // contributor's Int32 credit headroom until the dare resolves.
-  @@index([bucksAccountId])
-}
-
-// Idempotent capture of one qualifying game against one active dare. The
-// unique key makes ingest replays P2002 no-ops, and `leafHits` aligns to the
-// conditions tree's canonical leaf order forever.
-model BucksDareGame {
-  id          Int       @id @default(autoincrement())
-  dareId      Int
-  dare        BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  matchId     String
-  gameStartAt DateTime
-  gameEndAt   DateTime
-  queueType   String
-
-  // JSON boolean[] aligned to dareLeavesInCanonicalOrder(conditions).
-  leafHits String
-  // Frozen per-target facts for audit; settlement re-reads leafHits only.
-  snapshot String
-
-  createdAt DateTime @default(now())
-
-  @@unique([dareId, matchId])
-}
-
-// ScoutQL-backed Dare v2. Draft revisions are private and unfunded; funding
-// freezes one revision into contractJson. V1 rows remain in BucksDare and are
-// never migrated or reinterpreted by this model.
-model BucksDareV2 {
   id                    Int       @id @default(autoincrement())
   serverId              String
   channelId             String
@@ -1858,13 +1724,13 @@ model BucksDareV2 {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  revisions          BucksDareV2Revision[]
-  targets            BucksDareV2Target[]
-  contributions      BucksDareV2Contribution[]
-  evidence           BucksDareV2Evidence[]
+  revisions          BucksDareRevision[]
+  targets            BucksDareTarget[]
+  contributions      BucksDareContribution[]
+  evidence           BucksDareEvidence[]
   intents            ConfirmationIntent[]
   notificationEvents BucksDareNotificationEvent[]
-  activation         BucksDareV2Activation?
+  activation         BucksDareActivation?
 
   @@index([challengerDiscordId, dareState, updatedAt])
   @@index([serverId, dareState, updatedAt])
@@ -1875,29 +1741,29 @@ model BucksDareV2 {
 
 // Durable activation queue for rank and historical-baseline contracts. The
 // frozen snapshot is copied into contractJson before the Dare becomes active.
-model BucksDareV2Activation {
-  dareId        Int         @id
-  dare          BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+model BucksDareActivation {
+  dareId        Int       @id
+  dare          BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision      Int
   requestedAt   DateTime
   nextAttemptAt DateTime
-  attemptCount  Int         @default(0)
+  attemptCount  Int       @default(0)
   lastAttemptAt DateTime?
   errorCode     String?
   snapshotJson  String?
   completedAt   DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([completedAt, nextAttemptAt, requestedAt])
 }
 
 // Immutable history of draft iterations. Replacing a draft appends a revision;
 // it never mutates the ScoutQL/plan the challenger previously reviewed.
-model BucksDareV2Revision {
-  id                  Int         @id @default(autoincrement())
+model BucksDareRevision {
+  id                  Int       @id @default(autoincrement())
   dareId              Int
-  dare                BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare                BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision            Int
   originalText        String
   canonicalScoutQl    String
@@ -1917,15 +1783,15 @@ model BucksDareV2Revision {
   displayTitle        String?
   statusPhrasesJson   String?
   translationJson     String?
-  createdAt           DateTime    @default(now())
+  createdAt           DateTime  @default(now())
 
   @@unique([dareId, revision])
 }
 
-model BucksDareV2Target {
-  id             Int         @id @default(autoincrement())
+model BucksDareTarget {
+  id             Int       @id @default(autoincrement())
   dareId         Int
-  dare           BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare           BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   targetKey      String
   discordId      String
   playerId       Int
@@ -1936,17 +1802,17 @@ model BucksDareV2Target {
   declinedAt     DateTime?
   payout         Int?
   fee            Int?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@unique([dareId, targetKey])
   @@unique([dareId, discordId])
 }
 
-model BucksDareV2Contribution {
+model BucksDareContribution {
   id             Int          @id @default(autoincrement())
   dareId         Int
-  dare           BucksDareV2  @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare           BucksDare    @relation(fields: [dareId], references: [id], onDelete: Cascade)
   bucksAccountId Int
   bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
   discordId      String
@@ -1959,10 +1825,10 @@ model BucksDareV2Contribution {
 
 // Immutable one-row-per-match evidence. The plan is re-evaluated from these
 // rows transactionally; ingestion order cannot change the chronological proof.
-model BucksDareV2Evidence {
-  id                  Int         @id @default(autoincrement())
+model BucksDareEvidence {
+  id                  Int       @id @default(autoincrement())
   dareId              Int
-  dare                BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare                BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   matchId             String
   gameStartAt         DateTime
   gameEndAt           DateTime
@@ -1974,7 +1840,7 @@ model BucksDareV2Evidence {
   targetDependencies  String
   evaluationTrace     String
   planVersion         String
-  createdAt           DateTime    @default(now())
+  createdAt           DateTime  @default(now())
 
   @@unique([dareId, matchId])
   @@index([dareId, gameEndAt, matchId])
@@ -1993,18 +1859,18 @@ model BucksDareV2Evidence {
 // `dareId`/`expectedRevision` are nullable because an intent need not have an
 // existing target; a dare intent always sets both, keeping its cascade delete.
 model ConfirmationIntent {
-  id               String       @id @default(uuid())
+  id               String     @id @default(uuid())
   kind             String
   serverId         String
   actorDiscordId   String
   payload          String
-  idempotencyKey   String       @unique
+  idempotencyKey   String     @unique
   expiresAt        DateTime
   consumedAt       DateTime?
   resultJson       String?
-  createdAt        DateTime     @default(now())
+  createdAt        DateTime   @default(now())
   dareId           Int?
-  dare             BucksDareV2? @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare             BucksDare? @relation(fields: [dareId], references: [id], onDelete: Cascade)
   expectedRevision Int?
 
   @@index([dareId, expiresAt])
@@ -2014,18 +1880,18 @@ model ConfirmationIntent {
 // freezes the recipients at occurrence time; delivery checks each recipient's
 // current preference so suppression remains an operator-controlled decision.
 model BucksDareNotificationEvent {
-  id               String      @id @default(uuid())
+  id               String    @id @default(uuid())
   dareId           Int
-  dare             BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare             BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision         Int
   category         String
   kind             String
   actorDiscordId   String?
   matchId          String?
   payload          String
-  deduplicationKey String      @unique
+  deduplicationKey String    @unique
   occurredAt       DateTime
-  createdAt        DateTime    @default(now())
+  createdAt        DateTime  @default(now())
 
   deliveries BucksDareNotificationDelivery[]
 
@@ -3012,7 +2878,7 @@ model MatchNotificationIntent {
   subjectKind     String  @default("match") // match | duel | dare
   subjectId       String?
   riotMatchId     String? // match subjects only; retained for match fan-out lookup
-  kind            String // NotificationIntentKind: postmatch | prematch | settlement | dare-summary | hall-record-break
+  kind            String // NotificationIntentKind: postmatch | prematch | settlement | hall-record-break | duel-status | dare-status
   originKind      String // NotificationIntentOrigin kind: live | recovery
   recoveryBatchId String? // recovery origin only: the batch whose policy governs delivery
   targetKind      String // NotificationTarget kind: channel | dm
@@ -3083,7 +2949,7 @@ model MatchNotificationIntent {
 /// had its announcements minted and its rows are sweepable; see SJ-203.
 model MatchSettlementAnnouncement {
   riotMatchId String
-  /// closure | settlement | parlay | earnings | late-earnings | dare-summary
+  /// closure | settlement | parlay | earnings | late-earnings
   family      String
   /// The item's identity within its family: a guild id, or a Dare id.
   itemKey     String

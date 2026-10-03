@@ -43,7 +43,6 @@ const HAS_USED: Record<
   duels: async (serverId, db) =>
     (await db.duelSeries.count({ where: { guildId: serverId }, take: 1 })) > 0,
   dares: async (serverId, db) =>
-    (await db.bucksDareV2.count({ where: { serverId }, take: 1 })) > 0 ||
     (await db.bucksDare.count({ where: { serverId }, take: 1 })) > 0,
   transfers: async (serverId, db) =>
     (await db.bucksLedgerEntry.count({

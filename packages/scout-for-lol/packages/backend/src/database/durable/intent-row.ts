@@ -52,18 +52,18 @@ export const DuelNotificationIntentRecordSchema = z.strictObject({
   ),
 });
 
-/** One lifecycle or progress DM has a numeric Dare subject. */
+/**
+ * A Dare notification has a numeric Dare subject: a lifecycle or progress DM
+ * to one participant, or the public result post in the Dare's own channel.
+ */
 export type DareNotificationIntentRecord = z.infer<
   typeof DareNotificationIntentRecordSchema
 >;
 export const DareNotificationIntentRecordSchema = z.strictObject({
   dareId: z.number().int().positive(),
   intent: NotificationIntentSchema.refine(
-    (intent) =>
-      intent.kind === "dare-status" &&
-      intent.origin.kind === "live" &&
-      intent.target.kind === "dm",
-    { message: "Dare intents must be live dare-status DMs" },
+    (intent) => intent.kind === "dare-status" && intent.origin.kind === "live",
+    { message: "Dare intents must be live dare-status notifications" },
   ),
 });
 

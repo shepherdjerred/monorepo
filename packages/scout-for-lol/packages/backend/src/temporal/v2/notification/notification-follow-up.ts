@@ -1,7 +1,7 @@
 import type { ScoutIntentAttemptRefV2 } from "@scout-for-lol/temporal/contracts-v2";
 import type { ScoutNotificationFollowUpV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
-import { afterDareSummaryDeliveredV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
+import { afterDareStatusDeliveredV2 } from "#src/temporal/v2/notification/dare-status-notification.ts";
 import { afterHallRecordBreakDeliveredV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 import { afterPostmatchDeliveredV2 } from "#src/temporal/v2/notification/postmatch-follow-up.ts";
 import { afterPrematchDeliveredV2 } from "#src/temporal/v2/notification/prematch-follow-up.ts";
@@ -20,8 +20,8 @@ const logger = createLogger("scout-v2-notification-follow-up");
  * (see `postmatch-follow-up.ts`). A delivered prematch records its Bryan Bucks message
  * ref, refreshes the pool's messages, enqueues the game's parlay and counts
  * the guild's core output — v1's `recordPrematchOutputs`, per channel (see
- * `prematch-follow-up.ts`). A Dare summary refreshes the Dare callout once the
- * result has been posted. The Dare refresh used to run inside
+ * `prematch-follow-up.ts`). A Dare result post refreshes the Dare callout once
+ * the result has been posted. The Dare refresh used to run inside
  * `deliverNotificationV2`, at the end,
  * guarded by a try/catch — which looks safe and is not. The refresh waits
  * behind its own serialized queue and then edits a Discord message, and either
@@ -48,8 +48,6 @@ function bestEffortFollowUpOf(
   kind: MatchNotificationIntentRecord["intent"]["kind"],
 ): ((record: MatchNotificationIntentRecord) => Promise<void>) | undefined {
   switch (kind) {
-    case "dare-summary":
-      return afterDareSummaryDeliveredV2;
     case "hall-record-break":
       return afterHallRecordBreakDeliveredV2;
     case "postmatch":
@@ -66,8 +64,19 @@ export async function afterNotificationDeliveredV2(
   input: ScoutIntentAttemptRefV2,
 ): Promise<ScoutNotificationFollowUpV2Result> {
   const record = await requireIntentRecordV2(input.intentKey);
-  if ("duelId" in record || "dareId" in record) {
-    return { outcome: "skipped" };
+  if ("duelId" in record) return { outcome: "skipped" };
+  if ("dareId" in record) {
+    try {
+      return (await afterDareStatusDeliveredV2(record)) === "refreshed"
+        ? { outcome: "completed" }
+        : { outcome: "skipped" };
+    } catch (error) {
+      logger.error(
+        `The Dare callout refresh after ${input.intentKey} failed after a delivered send; the delivery itself stands`,
+        error,
+      );
+      return { outcome: "failed" };
+    }
   }
   if (record.intent.kind === "prematch" || record.intent.kind === "postmatch")
     await confirmNotificationTip(record);

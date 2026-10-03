@@ -66,7 +66,6 @@ async function kindSuppressionOfV2(
     case "postmatch":
     case "prematch":
     case "settlement":
-    case "dare-summary":
       return undefined;
   }
 }

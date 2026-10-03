@@ -152,8 +152,6 @@ export type FlagName =
   | "ai_reviews_enabled"
   | "betting_enabled"
   | "bucks_dares_enabled"
-  | "dare_v2"
-  | "dare_extended_contracts_enabled"
   | "dare_notifications_enabled"
   | "bucks_transfers_enabled"
   | "betting_player_bet_outcome_dm_enabled"
@@ -172,7 +170,6 @@ export type FlagName =
   | "scout_client_ingestion"
   | "scout_operations_console_enabled"
   | `scout_support_${"conversations" | "report_action"}_enabled`
-  | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
   | "voice_assistant_enabled";
 
@@ -205,8 +202,6 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "betting_settlement_dm_enabled",
     "bucks_transfers_enabled",
     "bucks_dares_enabled",
-    "dare_v2",
-    "dare_extended_contracts_enabled",
     "dare_notifications_enabled",
     "custom_nights_enabled",
     "duels_enabled",
@@ -316,37 +311,19 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       },
     ],
   },
-  // Free-text Bryan Bucks dare bounties. Gates creating a dare, contributing
-  // to a pot, and accepting only; chicken-out (decline), refunds, sweeps, and
-  // settlement stay ungated so escrowed contributions can always be resolved
-  // after a revocation. Narrower than the betting economy itself, so the
-  // domain requires both flags. Production's hard-disable policy wins before
-  // this registry or Flipt is evaluated.
+  // SQL-contract Bryan Bucks Dares: drafting, the first funding, the Explore
+  // Dare tools, and the web Dares page. Every later action on a funded Dare
+  // needs only `betting_enabled`, and settlement, refunds, and sweeps are
+  // ungated, so escrowed contributions always resolve after a revocation.
+  // Production's hard-disable policy wins before this registry or Flipt is
+  // evaluated.
   bucks_dares_enabled: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
-  // ScoutQL-backed Dare v2 creation. Settlement and refunds never consult
-  // this flag; revoking it only stops new drafts from being funded.
-  dare_v2: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
-  },
-  dare_extended_contracts_enabled: {
-    default: false,
-    overrides: [],
-  },
   dare_notifications_enabled: {
     default: false,
     overrides: [],
-  },
-  // Relational/timeline ScoutQL access is an independently ramped capability
-  // because it exposes a wider query surface than Dare v2 creation itself.
-  scoutql_relational_enabled: {
-    default: false,
-    overrides: [
-      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
-    ],
   },
   // Fee-bearing Bryan Bucks wallet transfers. This is narrower than the
   // betting economy itself, so the domain requires both flags. Production's

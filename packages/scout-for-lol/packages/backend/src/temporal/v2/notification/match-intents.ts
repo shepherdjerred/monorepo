@@ -15,14 +15,12 @@ import {
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getObservation } from "#src/database/durable/observation-repository.ts";
 import {
-  dareSummaryDeliveryKeyPrefix,
   deliveryIntentKey,
   lateBindingEarningsDeliveryKeyPrefix,
   postmatchDeliveryKeyPrefix,
   settlementDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
 import {
   prepareSettlementAnnouncement,
@@ -43,14 +41,11 @@ import type {
   ClosedPosition,
 } from "#src/betting/settlement/sweep-types.ts";
 import {
-  DareSummaryAnnouncementSchema,
   EarnedAwardSchema,
   ParlaySettlementSummarySchema,
   SettlementSummarySchema,
-  dareSettlementSummaryOf,
   parlaySummaryOf,
   settlementSummaryOf,
-  dareSummaryAnnouncementEnvelope,
   settlementAnnouncementEnvelope,
 } from "#src/temporal/v2/notification/announcement-codecs.ts";
 import type {
@@ -65,13 +60,15 @@ const EMPTY_POOL_TOTAL = sumToPoolTotal([]);
  * The post-match lane's notification intents: one durable row per decision to
  * tell someone something about a finished match.
  *
- * Three kinds are minted here — the visible report, one guild's settlement
- * recap, one Dare's resolution — and they are minted in two different places
- * for one reason: an announcement may only be minted where the facts it
- * announces were produced. The report needs only the match, so the Workflow
- * mints it after the observation stands. The settlement recap and the Dare
- * summary carry the summaries settlement itself produced, which exist only
- * inside the fenced settlement effect, so they are minted there.
+ * Two kinds are minted here — the visible report and one guild's settlement
+ * recap — and they are minted in two different places for one reason: an
+ * announcement may only be minted where the facts it announces were produced.
+ * The report needs only the match, so the Workflow mints it after the
+ * observation stands. The settlement recap carries the summaries settlement
+ * itself produced, which exist only inside the fenced settlement effect, so it
+ * is minted there. A Dare's resolution is announced by the Dare itself: its
+ * settling transaction writes the channel result post and the DMs (see
+ * `dare-notification-outbox.ts`).
  *
  * ## Silence is enforced here, and nowhere else
  *
@@ -379,7 +376,6 @@ export function recoveredSettlementRecordsOf(
   readonly settlements: readonly SettlementSummary[];
   readonly parlaySettlements: readonly ParlaySettlementSummary[];
   readonly earnings: readonly EarnedAward[];
-  readonly dareSettlements: readonly DareSettlementSummary[];
 } {
   return {
     closures: payloadsOfFamily(items, "closure").map((payload): ClosedPool =>
@@ -395,9 +391,6 @@ export function recoveredSettlementRecordsOf(
     ),
     earnings: payloadsOfFamily(items, "earnings").flatMap((payload) =>
       z.array(EarnedAwardSchema).parse(payload),
-    ),
-    dareSettlements: payloadsOfFamily(items, "dare-summary").map((payload) =>
-      dareSettlementSummaryOf(DareSummaryAnnouncementSchema.parse(payload)),
     ),
   };
 }
@@ -452,7 +445,6 @@ export function recoveredAnnouncementsOf(
   items: readonly SettlementAnnouncementItem[],
 ): {
   readonly settlements: readonly SettlementAnnouncementInput[];
-  readonly dareSummaries: readonly DareSettlementSummary[];
 } {
   // A FOLD of the same records, not a second parse of the same rows. Both
   // readers want every family back in the shapes settlement returned; only
@@ -470,7 +462,6 @@ export function recoveredAnnouncementsOf(
       parlaySettlements: records.parlaySettlements,
       earnings: records.earnings,
     }),
-    dareSummaries: records.dareSettlements,
   };
 }
 
@@ -619,59 +610,4 @@ export async function mintLateBindingEarningIntentsV2(
     createdAt: args.createdAt,
     keyPrefix: lateBindingEarningsDeliveryKeyPrefix(args.matchId),
   });
-}
-
-/** Resolutions that announce nothing: nothing was staked, or nothing settled. */
-const UNANNOUNCED_DARE_RESOLUTIONS: ReadonlySet<string> = new Set([
-  "captured",
-  "abandoned",
-]);
-
-/**
- * Mint one intent per Dare this match resolved.
- *
- * `captured` and `abandoned` announce nothing — the first is a Dare still in
- * flight whose evidence was merely recorded, the second one that never became
- * a contract — so they mint no row rather than a row the arm would refuse.
- * Only match-bound summaries are minted here: a Dare that resolved on a
- * deadline rather than on this match belongs to maintenance, which is a
- * different decision with a different clock.
- */
-export async function mintDareSummaryIntentsV2(
-  db: Db,
-  args: {
-    matchId: RiotMatchId;
-    dareSettlements: readonly DareSettlementSummary[];
-    gameCreation: number;
-    createdAt: Date;
-  },
-): Promise<MatchIntentsV2Summary> {
-  const summary = emptySummary();
-  const freshnessDeadline = monetaryAnnouncementFreshnessDeadline(
-    args.gameCreation,
-  );
-  for (const dare of args.dareSettlements) {
-    if (UNANNOUNCED_DARE_RESOLUTIONS.has(dare.resolution)) continue;
-    // A summary with no match id was resolved by a DEADLINE sweep, not by
-    // this match, and announcing it under this match's id would tell people
-    // a game decided something it had nothing to do with. Every resolution a
-    // match produces carries its id; one that does not is the sweep's.
-    if (dare.matchId === undefined) continue;
-    countMint(
-      summary,
-      await mintMatchIntent(db, {
-        matchId: args.matchId,
-        key: deliveryIntentKey(
-          dareSummaryDeliveryKeyPrefix(String(dare.dareId)),
-          dare.channelId,
-        ),
-        kind: "dare-summary",
-        channelId: dare.channelId,
-        createdAt: args.createdAt,
-        freshnessDeadline,
-        announcement: dareSummaryAnnouncementEnvelope(dare),
-      }),
-    );
-  }
-  return summary;
 }

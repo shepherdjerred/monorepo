@@ -4,7 +4,7 @@ import type {
   ScoutGuardedEffectV2Result,
   ScoutMintedIntentsV2Result,
 } from "@scout-for-lol/temporal/activity-contracts-v2";
-import { settleBucksWithDareTimelineV2 } from "#src/betting/dares/evaluation/dare-postmatch-timeline-v2.ts";
+import { settleBucksWithDareTimeline } from "#src/betting/dares/evaluation/dare-postmatch-timeline.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   MATCH_RECEIPT_KINDS,
@@ -32,7 +32,6 @@ import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-conte
 import {
   matchMayAnnounce,
   mintLateBindingEarningIntentsV2,
-  mintDareSummaryIntentsV2,
   recoveredSettlementRecordsOf,
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
@@ -128,8 +127,8 @@ function checkpointingSettlementSink(
     ...silentSettlementSink,
     // Announcement ELIGIBILITY varies; recovery evidence does not. A live V2
     // match may still post a callout for a Dare that has none and still owes
-    // its Dare DMs, both being v1 surfaces the gate's promise permits for a
-    // match a live discovery surfaced. A backfill owes neither.
+    // its Dare DMs and channel result post, surfaces the gate's promise
+    // permits for a match a live discovery surfaced. A backfill owes none.
     ...(mayAnnounce
       ? {
           mayPostDareCallout: announcingSettlementSink.mayPostDareCallout,
@@ -227,24 +226,17 @@ async function mintFromInstructions(
 ): Promise<void> {
   const recovered = recoveredAnnouncementsOf(items);
   const createdAt = new Date();
-  const { announced, dareSummaries } = await prisma.$transaction(
-    async (tx) => ({
-      announced: await mintSettlementIntentsV2(tx, {
+  const announced = await prisma.$transaction(
+    async (tx) =>
+      await mintSettlementIntentsV2(tx, {
         matchId: riotMatchId,
         announcements: recovered.settlements,
         gameCreation,
         createdAt,
       }),
-      dareSummaries: await mintDareSummaryIntentsV2(tx, {
-        matchId: riotMatchId,
-        dareSettlements: recovered.dareSummaries,
-        gameCreation,
-        createdAt,
-      }),
-    }),
   );
   logger.info(
-    `🔔 Settlement notifications for ${riotMatchId}: ${String(announced.minted)} recap(s) and ${String(dareSummaries.minted)} Dare summary(ies) minted, ${String(announced.silent + dareSummaries.silent)} withheld as silent-backfill, ${String(announced.undeliverable)} undeliverable`,
+    `🔔 Settlement notifications for ${riotMatchId}: ${String(announced.minted)} recap(s) minted, ${String(announced.silent)} withheld as silent-backfill, ${String(announced.undeliverable)} undeliverable`,
   );
 }
 
@@ -307,9 +299,9 @@ async function settledWithCheckpointFailuresSurfaced<T>(
  * identity set, so a pool present in both appears once.
  */
 function settledRecordsAcrossAttempts(
-  bucks: Awaited<ReturnType<typeof settleBucksWithDareTimelineV2>>["bucks"],
+  bucks: Awaited<ReturnType<typeof settleBucksWithDareTimeline>>["bucks"],
   standing: readonly SettlementAnnouncementItem[],
-): Awaited<ReturnType<typeof settleBucksWithDareTimelineV2>>["bucks"] {
+): Awaited<ReturnType<typeof settleBucksWithDareTimeline>>["bucks"] {
   const recorded = recoveredSettlementRecordsOf(standing);
   return {
     ...bucks,
@@ -320,7 +312,6 @@ function settledRecordsAcrossAttempts(
       ...recorded.parlaySettlements,
     ],
     earnings: [...bucks.earnings, ...recorded.earnings],
-    dareSettlements: [...bucks.dareSettlements, ...recorded.dareSettlements],
   };
 }
 
@@ -388,7 +379,7 @@ export async function settleMatchMarketsV2(input: {
       const settled = await settledWithCheckpointFailuresSurfaced(
         input.riotMatchId,
         async () =>
-          await settleBucksWithDareTimelineV2({
+          await settleBucksWithDareTimeline({
             matchData: context.matchData,
             matchDataSource: context.matchDataSource,
             trackedPlayers: context.trackedPlayers,

@@ -44,7 +44,7 @@ export async function fetchTimelineIfStandardMatch(
 }
 
 /** Timeline capture required by a funded contract; persistence failure retries the match. */
-export async function fetchTimelineForDareV2(
+export async function fetchTimelineForDare(
   matchData: RawMatch,
   matchId: MatchId,
   playersInMatch: PlayerConfigEntry[],
