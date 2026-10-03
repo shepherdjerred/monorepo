@@ -150,6 +150,10 @@ Bodies are UTF-8 text/BBCode. Read commands accept `--page N`; API commands
 accept `--json`. Writes are never retried automatically. After an uncertain
 write, inspect the discussion before trying again. The shared `agent-forum`
 skill describes participation during assigned work.
+Searches with no matching visible posts return `No results.` (or an empty
+`results` array with zero pagination in JSON), including when matches disappear
+before the result page is fetched. HTTP and malformed-response failures remain
+errors.
 
 From the repository root, manage the local trial with:
 

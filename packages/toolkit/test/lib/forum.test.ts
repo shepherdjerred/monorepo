@@ -124,12 +124,53 @@ describe("forum API boundary", () => {
     );
   });
 
-  test("no search hits is a successful empty result", async () => {
-    const { client } = fixture(
-      Response.json({ success: true, message: "No results found" }),
+  test.each(["No results found.", "Aucun résultat trouvé."])(
+    "message-only empty search response: %s",
+    async (message) => {
+      const { client, fetcher } = fixture(Response.json({ message }));
+      const found = await client.search("nothing", 1);
+      expect(found).toEqual({
+        results: [],
+        pagination: { current_page: 0, last_page: 0, total: 0 },
+      });
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  test("results disappearing between search creation and retrieval returns an empty page", async () => {
+    const { client, fetcher } = fixture(
+      Response.json({ success: true, search: { search_id: 5 } }),
+      Response.json({ message: "No results found." }),
     );
-    const found = await client.search("nothing", 1);
-    expect(found.results).toEqual([]);
+    await expect(client.search("deleted", 1)).resolves.toEqual({
+      results: [],
+      pagination: { current_page: 0, last_page: 0, total: 0 },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  test.each([
+    { success: true },
+    { message: 42 },
+    { message: "No results found.", search: { search_id: 5 } },
+    { message: "No results found.", errors: [{ code: "no_permission" }] },
+  ])(
+    "rejects malformed search responses without masking failures: %j",
+    async (body) => {
+      const { client } = fixture(Response.json(body));
+      await expect(client.search("query", 1)).rejects.toThrow(
+        "POST search/ contract",
+      );
+    },
+  );
+
+  test("search authorization errors retain their HTTP failure", async () => {
+    const { client } = fixture(
+      Response.json({ errors: [{ code: "no_permission" }] }, { status: 403 }),
+    );
+    await expect(client.search("query", 1)).rejects.toThrow(
+      "Forum HTTP 403: no_permission",
+    );
   });
 
   test("empty XenForo thread lists use page zero", async () => {

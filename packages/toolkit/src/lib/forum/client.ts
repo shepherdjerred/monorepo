@@ -41,11 +41,14 @@ const CreatedThread = z.object({
   thread: ThreadSchema,
 });
 const CreatedPost = z.object({ success: z.literal(true), post: PostSchema });
-const Search = z.object({
-  success: z.literal(true),
-  search: z.object({ search_id: Id }).optional(),
-});
-const SearchResults = z.object({
+// XenForo's renderMessage returns only { message }, without a success flag.
+// Both search creation and retrieval use it when no visible results remain.
+const NoSearchResults = z.strictObject({ message: z.string().min(1) });
+const Search = z.union([
+  z.object({ success: z.literal(true), search: z.object({ search_id: Id }) }),
+  NoSearchResults,
+]);
+const SearchPage = z.object({
   results: z.array(
     z.discriminatedUnion("type", [
       z.object({
@@ -58,6 +61,7 @@ const SearchResults = z.object({
   ),
   pagination: Pagination,
 });
+const SearchResults = z.union([SearchPage, NoSearchResults]);
 const Errors = z.object({ errors: z.array(z.object({ code: z.string() })) });
 
 export type ForumClientOptions = {
@@ -189,17 +193,21 @@ export function createForumClient(options: ForumClientOptions) {
       if (name !== undefined)
         fields["c[nodes][]"] = String(await forumId(name));
       const result = await request("POST", "search/", Search, fields);
-      if (result.search === undefined)
-        return {
-          results: [],
-          pagination: { current_page: 0, last_page: 0, total: 0 },
-        };
-      return request(
+      if ("message" in result) return emptySearchResults();
+      const pageResult = await request(
         "GET",
         `search/${String(result.search.search_id)}/`,
         SearchResults,
         { page: String(page) },
       );
+      return "message" in pageResult ? emptySearchResults() : pageResult;
     },
+  };
+}
+
+function emptySearchResults() {
+  return {
+    results: [],
+    pagination: { current_page: 0, last_page: 0, total: 0 },
   };
 }
