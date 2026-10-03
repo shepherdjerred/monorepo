@@ -1,3 +1,4 @@
+import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { ConfirmationIntentPayloadSchema } from "@scout-for-lol/data";
@@ -101,8 +102,9 @@ function applyMigration(name: string): void {
 /** Every migration directory, in the order Prisma applies them. */
 function migrationNames(): string[] {
   const glob = new Bun.Glob("*/migration.sql");
+  // `dirname`, not a split on "/": Bun.Glob yields the platform separator.
   return [...glob.scanSync({ cwd: MIGRATIONS_DIR })]
-    .map((file) => file.slice(0, file.indexOf("/")))
+    .map((file) => path.dirname(file))
     .sort();
 }
 
