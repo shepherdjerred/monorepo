@@ -252,6 +252,37 @@ describe("LR5 Pro hopper diagnostics", () => {
     expect(robot.hopperHealth).toBe("motor-fault");
   });
 
+  it.each(["CYCLING", "CAT_DETECTED", "LITTER_LOW"])(
+    "does not classify normal %s activity as a robot fault",
+    (type) => {
+      const base = readyRobot();
+      expect(
+        parseRobot({
+          ...base,
+          state: { ...base.state, statusIndicator: { title: type, type } },
+        }).faulted,
+      ).toBe(false);
+    },
+  );
+
+  it.each([
+    "globeMotorFaultStatus",
+    "globeMotorRetractFaultStatus",
+    "pinchStatus",
+  ])("still reports an explicit %s fault during normal activity", (field) => {
+    const base = readyRobot();
+    expect(
+      parseRobot({
+        ...base,
+        state: {
+          ...base.state,
+          statusIndicator: { title: "Cycling", type: "CYCLING" },
+          [field]: "Fault",
+        },
+      }).faulted,
+    ).toBe(true);
+  });
+
   it("keeps an unavailable hopper payload explicit", () => {
     const base = readyRobot();
     const robot = parseRobot({
