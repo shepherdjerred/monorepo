@@ -11,6 +11,7 @@ import type {
   SportsCatalog,
   SportsEvent,
   SportsProvider,
+  SportsProviderPreference,
   SportsSearchResult,
 } from "@shepherdjerred/streambot/sports/types.ts";
 import type { SportsPageRenderer } from "@shepherdjerred/streambot/sports/pinchtab.ts";
@@ -19,6 +20,11 @@ const PROVIDER_ORDER: readonly SportsProvider[] = [
   "streameast",
   "tvsportslive",
 ];
+
+const PROVIDERS = {
+  streameast: { url: STREAMEAST_HOME, parse: parseStreamEastEvents },
+  tvsportslive: { url: TVSPORTSLIVE_HOME, parse: parseTVSportsLiveEvents },
+};
 
 function providerRank(provider: SportsProvider): number {
   return PROVIDER_ORDER.indexOf(provider);
@@ -105,36 +111,34 @@ export function matchSportsEvents(
 export class SportsService implements SportsCatalog {
   constructor(private readonly browser: SportsPageRenderer) {}
 
-  async listToday(signal: AbortSignal): Promise<readonly SportsEvent[]> {
+  async listToday(
+    signal: AbortSignal,
+    provider: SportsProviderPreference = "auto",
+  ): Promise<readonly SportsEvent[]> {
     throwIfSportsRequestAborted(signal);
-    const results = await Promise.allSettled([
-      this.browser.html(STREAMEAST_HOME, signal),
-      this.browser.html(TVSPORTSLIVE_HOME, signal),
-    ]);
+    const selected = provider === "auto" ? PROVIDER_ORDER : [provider];
+    const results = await Promise.allSettled(
+      selected.map(async (name) => {
+        const current = PROVIDERS[name];
+        return current.parse(await this.browser.html(current.url, signal));
+      }),
+    );
     // A slow provider must not discard games already returned by the other.
     // Explicit cancellation still stops the request, even with partial results.
     if (!sportsRequestTimedOut(signal)) throwIfSportsRequestAborted(signal);
-    const streamEast = results[0];
-    const tvSportsLive = results[1];
-    const events = sortSportsEvents([
-      ...(streamEast.status === "fulfilled"
-        ? parseStreamEastEvents(streamEast.value)
-        : []),
-      ...(tvSportsLive.status === "fulfilled"
-        ? parseTVSportsLiveEvents(tvSportsLive.value)
-        : []),
-    ]);
+    const events = sortSportsEvents(
+      results.flatMap((result) =>
+        result.status === "fulfilled" ? result.value : [],
+      ),
+    );
     if (events.length === 0) throwIfSportsRequestAborted(signal);
-    if (
-      streamEast.status === "rejected" &&
-      tvSportsLive.status === "rejected"
-    ) {
+    if (results.every((result) => result.status === "rejected")) {
       throw new PlaybackCommandBoundaryError(
         "Sports listings are temporarily unavailable. Please try again later.",
         {
           cause: new AggregateError(
-            [streamEast.reason, tvSportsLive.reason],
-            "Both sports providers failed",
+            results.map((result): unknown => result.reason),
+            "Selected sports providers failed",
           ),
         },
       );
@@ -147,7 +151,7 @@ export class SportsService implements SportsCatalog {
     provider: SportsProvider | "auto",
     signal: AbortSignal,
   ): Promise<SportsSearchResult> {
-    const events = await this.listToday(signal);
+    const events = await this.listToday(signal, provider);
     return matchSportsEvents(query, events, provider);
   }
 }

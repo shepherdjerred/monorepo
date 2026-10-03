@@ -4,6 +4,21 @@ import { WebSessionStore } from "./session-store.ts";
 import { WebPlayback, type WebPlaybackDeps } from "./playback.ts";
 import { createWebHandler } from "./api.ts";
 
+export function serveWebHandler(
+  port: number,
+  handler: (request: Request) => Promise<Response>,
+) {
+  return Bun.serve({
+    hostname: "0.0.0.0",
+    port,
+    maxRequestBodySize: 16 * 1024,
+    // Catalog requests have a 30-second deadline plus browser-tab cleanup.
+    // Bun's default 10-second idle timeout otherwise resets them mid-request.
+    idleTimeout: 40,
+    fetch: handler,
+  });
+}
+
 export async function startWebServer(deps: {
   bootstrap: WebBootstrap;
   stateDir: string;
@@ -23,12 +38,7 @@ export async function startWebServer(deps: {
     applicationId: deps.applicationId,
     assetsDir,
   });
-  const server = Bun.serve({
-    hostname: "0.0.0.0",
-    port: deps.bootstrap.port,
-    maxRequestBodySize: 16 * 1024,
-    fetch: handler,
-  });
+  const server = serveWebHandler(deps.bootstrap.port, handler);
   return {
     stop: async () => {
       await server.stop(true);
