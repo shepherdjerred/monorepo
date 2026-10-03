@@ -50,19 +50,19 @@ in `beta` to drain retained executions. All other central queues are `prod`
 only. Schedule registration retires the old beta schedule without cancelling
 existing executions.
 
-| Role              | Queue or surface                                                                         | Activity concurrency |
-| ----------------- | ---------------------------------------------------------------------------------------- | -------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage` |          4 per queue |
-| `home`            | `home`                                                                                   |                    4 |
-| `reports`         | `reports`                                                                                |                    4 |
-| `infra`           | `infra`                                                                                  |                    1 |
-| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                          |          1 per queue |
-| `scout`           | `scout`                                                                                  |                    1 |
-| `agent`           | `agent-task`                                                                             |                    1 |
-| `glitter-corpus`  | `glitter-corpus`                                                                         |                    1 |
-| `glitter-context` | `glitter-context`                                                                        |                    1 |
-| `maintenance`     | `maintenance`                                                                            |                    1 |
-| `workflows`       | `monorepo-workflows`                                                                     |                 none |
+| Role              | Queue or surface                                                                                              | Activity concurrency |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- | -------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage`, `agent-chat-photon` |          4 per queue |
+| `home`            | `home`                                                                                                        |                    4 |
+| `reports`         | `reports`                                                                                                     |                    4 |
+| `infra`           | `infra`                                                                                                       |                    1 |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                                               |          1 per queue |
+| `scout`           | `scout`                                                                                                       |                    1 |
+| `agent`           | `agent-task`                                                                                                  |                    1 |
+| `glitter-corpus`  | `glitter-corpus`                                                                                              |                    1 |
+| `glitter-context` | `glitter-context`                                                                                             |                    1 |
+| `maintenance`     | `maintenance`                                                                                                 |                    1 |
+| `workflows`       | `monorepo-workflows`                                                                                          |                 none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
@@ -145,6 +145,47 @@ credentialless stable poller. A later distinct candidate pin creates the ramp
 target, and `start --stable-build-id` establishes stable before sending 10% to
 candidate. The embedded poller remains only to drain old unversioned histories.
 Production remains embedded until beta acceptance completes.
+
+## Photon iMessage ingress
+
+The control gateway mounts signed `POST /webhooks/photon` on the existing agent
+task API server. Bootstrap requires `SPECTRUM_PROJECT_ID`,
+`SPECTRUM_PROJECT_SECRET`, and `SPECTRUM_WEBHOOK_SECRET`. Missing all three
+leaves the route unavailable; a partial set fails startup. Behavior uses the
+typed `temporal-agent-chat-photon-enabled` and `temporal-agent-chat-photon-owners`
+flags. Both default to closed admission: disabled and no permitted senders.
+
+Native Spectrum HMAC verification covers the original body bytes and permits
+five minutes of timestamp skew. The route awaits a completed Temporal Update
+before acknowledging receipt. It accepts only allowlisted inbound text direct
+messages. Conversation and command identities hash the project, space, and
+message IDs; webhook registration changes do not alter deduplication.
+
+Each conversation serializes commands behind its current selection and retains
+up to 50 pending commands, 100 recent fingerprints, and 500,000 bytes of state.
+Continue-As-New carries ordering and admission state after 100 settled commands.
+Late timestamps receive a resend response without running inference. Commands
+use the same syntax below; initial ordinary text requires an explicit `/new`.
+New chats snapshot the existing iMessage provider/model flags.
+
+Preparation and one-attempt reply delivery use `agent-chat-photon`; long
+provider and duplicate-command waits use `agent-chat-ingress`. A failed or
+ambiguous send leaves the checkpointed response in the command execution and
+never automatically repeats inference or delivery. The SDK uses server-marked
+retryable RPCs with its transport idempotency; the Workflow makes one send call.
+Durability begins after gateway receipt. Photon can exhaust its finite webhook
+retry window during an ingress outage, requiring the sender to resend.
+
+Inspect `photonConversationState` for pending commands and ordering. Gateway
+metrics `photon_webhook_total` and `photon_delivery_total` expose bounded outcome
+labels without message bodies. Disabling admission lets accepted work settle.
+BlueBubbles remains independently configurable; its definitions support retained
+history replay.
+
+The pinned Spectrum 12.10.1 packages have declaration-only Bun patches. Core's
+optional generic fields admit `undefined` with `exactOptionalPropertyTypes`;
+iMessage derives its definition from its config return type instead of an
+incompatible overloaded conditional type. Runtime SDK code is unchanged.
 
 ## BlueBubbles iMessage ingress
 

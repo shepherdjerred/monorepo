@@ -12,6 +12,7 @@ export function createTemporalIngressWorkers(
     serverServiceName: string;
     secret: ISecret;
     blueBubblesSecret: ISecret;
+    photonSecret: ISecret;
   },
 ) {
   const gatewayDeployment = createTemporalDomainWorker(chart, {
@@ -52,6 +53,18 @@ export function createTemporalIngressWorkers(
         key: "AGENT_TASK_API_TOKEN",
       }),
       BLUEBUBBLES_URL: EnvValue.fromValue("https://jobs.tailnet-1a49.ts.net"),
+      SPECTRUM_PROJECT_ID: EnvValue.fromSecretValue({
+        secret: props.photonSecret,
+        key: "SPECTRUM_PROJECT_ID",
+      }),
+      SPECTRUM_PROJECT_SECRET: EnvValue.fromSecretValue({
+        secret: props.photonSecret,
+        key: "SPECTRUM_PROJECT_SECRET",
+      }),
+      SPECTRUM_WEBHOOK_SECRET: EnvValue.fromSecretValue({
+        secret: props.photonSecret,
+        key: "SPECTRUM_WEBHOOK_SECRET",
+      }),
       BLUEBUBBLES_PASSWORD: EnvValue.fromSecretValue({
         secret: props.blueBubblesSecret,
         key: "password",

@@ -99,6 +99,7 @@ describe("Temporal worker role contracts", () => {
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS }),
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY }),
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE }),
+        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_PHOTON }),
       ],
     });
     expect(getWorkerRoleContract("home")).toMatchObject({

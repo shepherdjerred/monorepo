@@ -1664,6 +1664,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "temporal-agent-chat-photon-enabled",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "temporal-agent-chat",
+      "purpose": "Enable signed Photon webhook admission to durable owner-only iMessage chats.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "temporal-agent-chat-photon-owners",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "temporal-agent-chat",
+      "purpose": "Select exact comma-separated Photon sender handles permitted to use durable iMessage chats.",
+      "type": "variant",
+      "default": "[]",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "temporal-agent-chat-imessage-enabled",
       "owner": "platform",
       "namespace": "temporal",
@@ -1903,6 +1927,14 @@
         },
         {
           "key": "birmel-image-generation-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "temporal-agent-chat-photon-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

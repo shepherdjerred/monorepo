@@ -17,6 +17,18 @@ const DEFAULT_METRICS_PORT = 9465;
 export const register = new Registry();
 
 register.setDefaultLabels({ component: "temporal-worker" });
+export const photonWebhookTotal = new Counter({
+  name: "photon_webhook_total",
+  help: "Photon webhook outcomes after signature verification and durable admission",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+export const photonDeliveryTotal = new Counter({
+  name: "photon_delivery_total",
+  help: "Single-attempt Photon reply delivery outcomes",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
 collectDefaultMetrics({ register, prefix: "temporal_worker_app_" });
 
 // Billed spend straight from each provider's cost report, per project or
