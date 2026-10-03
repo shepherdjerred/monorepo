@@ -10,7 +10,13 @@ import type { FliptFetcher } from "./managed-flag-drift.ts";
 const retiredKeys = retiredFlagDeclarations.map(
   (declaration) => declaration.key,
 );
-const firstRetired = retiredKeys[0];
+const retiredKeysIn = (environment: string) =>
+  retiredFlagDeclarations
+    .filter((declaration) => declaration.environment === environment)
+    .map((declaration) => declaration.key);
+const betaRetiredKeys = retiredKeysIn("beta");
+const prodRetiredKeys = retiredKeysIn("prod");
+const firstRetired = betaRetiredKeys[0];
 if (firstRetired === undefined) throw new Error("No retired flag declared");
 
 const wrongNamespace: FliptFetcher = async () =>
@@ -28,16 +34,39 @@ function fakeServer(
     keepDeleted?: boolean;
   } = {},
 ) {
-  const flags = new Map<string, unknown>([
+  // One flag set per Flipt environment, as the real server keeps them.
+  const environments = new Map<string, Map<string, unknown>>([
     [
-      "dare_notifications_enabled",
-      { enabled: false, rollouts: [{ guild: "test", result: true }] },
+      "beta",
+      new Map<string, unknown>([
+        [
+          "dare_notifications_enabled",
+          { enabled: false, rollouts: [{ guild: "test", result: true }] },
+        ],
+        ["unrelated-unknown", { enabled: true }],
+      ]),
     ],
-    ["unrelated-unknown", { enabled: true }],
-    ...(options.absent
-      ? []
-      : retiredKeys.map((key): [string, unknown] => [key, { enabled: true }])),
+    ["prod", new Map<string, unknown>()],
   ]);
+  if (!options.absent) {
+    for (const declaration of retiredFlagDeclarations) {
+      environments
+        .get(declaration.environment)
+        ?.set(declaration.key, { enabled: true });
+    }
+  }
+  const flagsIn = (url: URL): Map<string, unknown> => {
+    const match =
+      /^\/api\/v2\/environments\/(beta|prod)\/namespaces\/scout\/resources\/flipt\.core\.Flag/u.exec(
+        url.pathname,
+      );
+    const environment = match?.[1];
+    const flags =
+      environment === undefined ? undefined : environments.get(environment);
+    if (flags === undefined) throw new Error(`Unexpected path ${url.pathname}`);
+    return flags;
+  };
+  const flags = environments.get("beta") ?? new Map<string, unknown>();
   let revision = 0;
   let conflicts = options.conflicts ?? 0;
   const requests: { method: string; url: URL }[] = [];
@@ -47,14 +76,10 @@ function fakeServer(
     );
     const method = init?.method ?? "GET";
     requests.push({ method, url });
-    expect(
-      url.pathname.startsWith(
-        "/api/v2/environments/beta/namespaces/scout/resources/flipt.core.Flag",
-      ),
-    ).toBe(true);
+    const environmentFlags = flagsIn(url);
     if (method === "GET") {
       return Response.json({
-        resources: [...flags].map(([key, payload]) => ({
+        resources: [...environmentFlags].map(([key, payload]) => ({
           namespaceKey: "scout",
           key,
           payload,
@@ -80,7 +105,7 @@ function fakeServer(
     }
     const key = url.pathname.split("/").at(-1);
     if (key === undefined) throw new Error("DELETE key is missing");
-    if (!options.keepDeleted) flags.delete(key);
+    if (!options.keepDeleted) environmentFlags.delete(key);
     revision += 1;
     return key === firstRetired && options.concurrentRemoval
       ? Response.json(
@@ -89,28 +114,30 @@ function fakeServer(
         )
       : Response.json({ revision: `rev-${String(revision)}` });
   };
-  return { flags, requests, fetcher };
+  return { flags, environments, requests, fetcher };
 }
 
-test("only the four audited beta/scout keys are retired, preserving managed targeting and other unknowns", async () => {
-  expect(retiredFlagDeclarations).toEqual([
-    {
-      environment: "beta",
-      namespace: "scout",
-      key: "scout-tournament-api-mode",
-    },
-    {
-      environment: "beta",
-      namespace: "scout",
-      key: "scout-tournament-max-open-lobbies",
-    },
-    {
-      environment: "beta",
-      namespace: "scout",
-      key: "tournament_lobbies_enabled",
-    },
-    { environment: "beta", namespace: "scout", key: "weekly_parlays_enabled" },
+test("only the declared keys are retired, per environment, preserving managed targeting and other unknowns", async () => {
+  // The declarations are the source of truth; this pins only their shape:
+  // Scout keys, each retired at most once per environment, and the two V2
+  // ownership switches retired everywhere the inventory declared them.
+  expect(
+    retiredFlagDeclarations.every(
+      (declaration) => declaration.namespace === "scout",
+    ),
+  ).toBe(true);
+  expect(
+    new Set(
+      retiredFlagDeclarations.map(
+        (declaration) => `${declaration.environment}/${declaration.key}`,
+      ),
+    ).size,
+  ).toBe(retiredFlagDeclarations.length);
+  expect(prodRetiredKeys.toSorted()).toEqual([
+    "scout_v2_postmatch_ownership_enabled",
+    "scout_v2_prematch_ownership_enabled",
   ]);
+  expect(betaRetiredKeys).toEqual(expect.arrayContaining(prodRetiredKeys));
   const server = fakeServer();
   const managedBefore = structuredClone(
     server.flags.get("dare_notifications_enabled"),
@@ -121,13 +148,15 @@ test("only the four audited beta/scout keys are retired, preserving managed targ
       fetcher: server.fetcher,
     }),
   ).toEqual([
-    { environment: "beta", namespace: "scout", retiredFlags: retiredKeys },
+    { environment: "beta", namespace: "scout", retiredFlags: betaRetiredKeys },
+    { environment: "prod", namespace: "scout", retiredFlags: prodRetiredKeys },
   ]);
   expect([...server.flags.keys()]).toEqual([
     "dare_notifications_enabled",
     "unrelated-unknown",
   ]);
   expect(server.flags.get("dare_notifications_enabled")).toEqual(managedBefore);
+  expect([...(server.environments.get("prod")?.keys() ?? [])]).toEqual([]);
   expect(
     server.requests
       .filter((request) => request.method === "DELETE")
@@ -138,10 +167,13 @@ test("only the four audited beta/scout keys are retired, preserving managed targ
       url: "https://flipt.example",
       fetcher: server.fetcher,
     }),
-  ).toEqual([{ environment: "beta", namespace: "scout", retiredFlags: [] }]);
+  ).toEqual([
+    { environment: "beta", namespace: "scout", retiredFlags: [] },
+    { environment: "prod", namespace: "scout", retiredFlags: [] },
+  ]);
   expect(
     server.requests.filter((request) => request.method === "DELETE"),
-  ).toHaveLength(4);
+  ).toHaveLength(retiredFlagDeclarations.length);
 });
 
 test("absence is already settled and never creates an environment, namespace, or flag", async () => {
@@ -151,7 +183,10 @@ test("absence is already settled and never creates an environment, namespace, or
       url: "https://flipt.example",
       fetcher: server.fetcher,
     }),
-  ).toEqual([{ environment: "beta", namespace: "scout", retiredFlags: [] }]);
+  ).toEqual([
+    { environment: "beta", namespace: "scout", retiredFlags: [] },
+    { environment: "prod", namespace: "scout", retiredFlags: [] },
+  ]);
   expect(server.requests.every((request) => request.method === "GET")).toBe(
     true,
   );
@@ -187,7 +222,7 @@ test("a revision conflict refreshes the list before one bounded retry", async ()
   const deletes = server.requests.filter(
     (request) => request.method === "DELETE",
   );
-  expect(deletes).toHaveLength(5);
+  expect(deletes).toHaveLength(retiredFlagDeclarations.length + 1);
   expect(deletes[0]?.url.searchParams.get("revision")).toBe("rev-0");
   expect(deletes[1]?.url.searchParams.get("revision")).toBe("rev-1");
 });
@@ -228,7 +263,7 @@ test("a concurrent removal is verified before reporting settlement", async () =>
     url: "https://flipt.example",
     fetcher: server.fetcher,
   });
-  expect(result[0]?.retiredFlags).toEqual(retiredKeys.slice(1));
+  expect(result[0]?.retiredFlags).toEqual(betaRetiredKeys.slice(1));
   expect(server.flags.has(firstRetired)).toBe(false);
 });
 
