@@ -66,17 +66,38 @@ export async function loadRoomState(
 export class RoomPersistence {
   private readonly rooms = new Map<string, PersistedRoom>();
   private readonly tails = new Map<string, Promise<void>>();
+  private readonly discarded = new Map<string, Set<PlaybackChannelNumber>>();
   constructor(private readonly dir: string) {}
 
-  restore(room: PersistedRoom): void {
+  restore(room: PersistedRoom): Promise<void> {
     const file = stateFilePath(this.dir, room.guildId, room.channelId);
     // Concurrent sibling reconnects may read an older disk envelope while a checkpoint is
     // pending. The room coordinator's current memory remains authoritative once loaded.
-    if (!this.rooms.has(file)) this.rooms.set(file, room);
+    if (this.rooms.has(file)) return Promise.resolve();
+    const discarded = this.discarded.get(file);
+    const slots = room.slots.filter(
+      (slot) => discarded?.has(slot.number) !== true,
+    );
+    this.rooms.set(file, { ...room, slots });
+    return slots.length === room.slots.length
+      ? Promise.resolve()
+      : this.flush(file);
   }
 
   current(guildId: GuildId, channelId: ChannelId): PersistedRoom | undefined {
     return this.rooms.get(stateFilePath(this.dir, guildId, channelId));
+  }
+
+  isCurrent(
+    room: PersistedRoom,
+    slot: PersistedRoom["slots"][number],
+  ): boolean {
+    return (
+      this.current(room.guildId, room.channelId)?.slots.some(
+        (item) =>
+          item.number === slot.number && item.instanceId === slot.instanceId,
+      ) === true
+    );
   }
 
   update(
@@ -85,6 +106,7 @@ export class RoomPersistence {
     state: PersistedState,
   ): Promise<void> {
     const file = stateFilePath(this.dir, state.guildId, state.channelId);
+    this.discarded.get(file)?.delete(number);
     const previous = this.rooms.get(file);
     const slots =
       previous?.slots.filter((slot) => slot.number !== number) ?? [];
@@ -125,8 +147,15 @@ export class RoomPersistence {
     channelId: ChannelId,
     number: PlaybackChannelNumber,
   ): Promise<void> {
+    const file = stateFilePath(this.dir, guildId, channelId);
+    // A manual replacement can precede boot's disk read. Remember its retirement so
+    // that a late restore cannot bring the previous instance back after an early stop.
+    const discarded =
+      this.discarded.get(file) ?? new Set<PlaybackChannelNumber>();
+    discarded.add(number);
+    this.discarded.set(file, discarded);
     const slot = this.rooms
-      .get(stateFilePath(this.dir, guildId, channelId))
+      .get(file)
       ?.slots.find((item) => item.number === number);
     return slot === undefined
       ? Promise.resolve()

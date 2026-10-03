@@ -138,6 +138,11 @@ export class NumberedSessions {
     );
     if (entry === null) return null;
     try {
+      void this.persistence.discard(
+        params.guildId,
+        params.voiceChannelId,
+        params.playbackChannel,
+      );
       const session = this.spawn({
         ...params,
         entry,
@@ -166,7 +171,7 @@ export class NumberedSessions {
       this.deps.config.state.resumeMaxAgeSeconds,
     );
     if (loaded === null) return null;
-    this.persistence.restore(loaded);
+    await this.persistence.restore(loaded);
     const room = this.persistence.current(guildId, channelId);
     if (room === undefined) throw new Error("Missing restored room state");
     let result: ResumeOutcome = "nothing";
@@ -188,8 +193,23 @@ export class NumberedSessions {
     opts: NumberedResumeOptions,
   ): Promise<ResumeOutcome> {
     const { guildId, channelId } = room;
-    if (this.sessions.has(keyOf(guildId, channelId, slot.number)))
+    if (
+      this.sessions.has(keyOf(guildId, channelId, slot.number)) ||
+      !this.persistence.isCurrent(room, slot)
+    )
       return "nothing";
+    if (
+      Date.now() - slot.state.savedAt >
+      this.deps.config.state.resumeMaxAgeSeconds * 1000
+    ) {
+      await this.persistence.remove(
+        guildId,
+        channelId,
+        slot.number,
+        slot.instanceId,
+      );
+      return "nothing";
+    }
     if (
       !this.deps.pool.canServe(guildId) ||
       slot.number > this.maximum(guildId)

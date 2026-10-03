@@ -184,6 +184,58 @@ describe("numbered playback ownership", () => {
   );
 });
 
+describe("numbered replacement and expiry persistence", () => {
+  test.each([false, true])(
+    "a manual replacement stopped before its checkpoint retires preserved state (already restored: %s)",
+    async (restored) => {
+      const h = await harness(1);
+      const old = h.play(2);
+      await vi.waitFor(() => expect(old.view().state).toBe("streaming"));
+      await h.manager.destroyAll();
+      const file = stateFilePath(h.dir, guildId, voiceChannelId);
+      const snapshot = await loadRoomState(file, 3600);
+      if (snapshot === null) throw new Error("Missing fixture snapshot");
+      const restarted = h.restart();
+      if (restored) await restarted.numbered.persistence.restore(snapshot);
+      const manual = h.play(2, voiceChannelId, restarted);
+      expect(manual.instanceId).not.toBe(old.instanceId);
+      await vi.waitFor(() => expect(manual.view().state).toBe("streaming"));
+      manual.dispatch({ type: "STOP" });
+      await vi.waitFor(() => expect(h.entries[0]?.busy).toBe(false));
+      await restarted.resumeAll();
+      expect(
+        restarted.getExisting(guildId, voiceChannelId, number(2)),
+      ).toBeNull();
+      expect(await Bun.file(file).exists()).toBe(false);
+    },
+  );
+
+  test("a fresh sibling snapshot cannot revive an individually expired slot", async () => {
+    const h = await harness(2);
+    h.play(1);
+    const helper = h.play(3);
+    await vi.waitFor(() => expect(helper.view().state).toBe("streaming"));
+    await h.manager.destroyAll();
+    const file = stateFilePath(h.dir, guildId, voiceChannelId);
+    const snapshot = await loadRoomState(file, 3600);
+    const expired = snapshot?.slots.find((slot) => slot.number === 3);
+    if (snapshot === null || expired === undefined)
+      throw new Error("Missing fixture snapshot");
+    expired.state.savedAt = Date.now() - 3601 * 1000;
+    await Bun.write(file, JSON.stringify(snapshot));
+    const restarted = h.restart();
+    await restarted.resumeAll();
+    expect(
+      restarted.getExisting(guildId, voiceChannelId, number(1)),
+    ).not.toBeNull();
+    expect(
+      restarted.getExisting(guildId, voiceChannelId, number(3)),
+    ).toBeNull();
+    const remaining = await loadRoomState(file, 3600);
+    expect(remaining?.slots.map((slot) => slot.number)).toEqual([1]);
+  });
+});
+
 describe("numbered capacity, moves, and connection loss", () => {
   test("shutdown waits for a stopped slot's physical disconnect before releasing its account", async () => {
     const h = await harness(1);

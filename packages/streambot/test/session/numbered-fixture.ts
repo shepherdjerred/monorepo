@@ -44,7 +44,11 @@ export async function harness(
   joins: Mock;
   disconnects: Mock;
   plays: { identity: string; transport: string }[];
-  play: (value: number, channel?: typeof voiceChannelId) => SessionHandle;
+  play: (
+    value: number,
+    channel?: typeof voiceChannelId,
+    manager?: SessionManager,
+  ) => SessionHandle;
   dir: string;
   closeListeners: Map<string, ((info: VoiceCloseInfo) => void) | null>;
   restart: () => SessionManager;
@@ -192,8 +196,8 @@ export async function harness(
     for (const active of managers) await active.destroyAll();
     await rm(dir, { recursive: true });
   });
-  const play = (value: number, channel = voiceChannelId) => {
-    const handle = manager.ensureForPlay({
+  const play = (value: number, channel = voiceChannelId, target = manager) => {
+    const handle = target.ensureForPlay({
       guildId,
       voiceChannelId: channel,
       statusChannelId,

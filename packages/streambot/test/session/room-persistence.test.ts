@@ -95,10 +95,29 @@ describe("atomic numbered room state", () => {
     const older = await loadRoomState(h.file, 3600);
     if (older === null) throw new Error("Missing fixture snapshot");
     const pending = h.rooms.update(number(2), "video", state());
-    h.rooms.restore(older);
+    await h.rooms.restore(older);
     await pending;
     const current = await loadRoomState(h.file, 3600);
     expect(current?.slots.map((slot) => slot.number)).toEqual([1, 2]);
+  });
+  test("a retirement before boot restores only untouched siblings and accepts a later replacement checkpoint", async () => {
+    const h = await fixture();
+    await h.rooms.update(number(1), "audio", state());
+    await h.rooms.update(number(2), "old-video", state());
+    const saved = await loadRoomState(h.file, 3600);
+    if (saved === null) throw new Error("Missing fixture snapshot");
+    const restarted = new RoomPersistence(h.dir);
+    await restarted.discard(guildId, channelId, number(2));
+    await restarted.restore(saved);
+    const retired = await loadRoomState(h.file, 3600);
+    expect(retired?.slots.map((slot) => slot.instanceId)).toEqual(["audio"]);
+    await restarted.update(number(2), "replacement-video", state());
+    await restarted.restore(saved);
+    const replaced = await loadRoomState(h.file, 3600);
+    expect(replaced?.slots.map((slot) => slot.instanceId)).toEqual([
+      "audio",
+      "replacement-video",
+    ]);
   });
   test("legacy v2 snapshots remain available to the legacy resume path", async () => {
     const h = await fixture();
