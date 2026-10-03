@@ -30,12 +30,7 @@ import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
 import { createLogger } from "#src/logger.ts";
-import {
-  prematchDetectionsTotal,
-  prematchActiveGamesGauge,
-  prematchPollingSkipsTotal,
-  prematchSubsequentMatchDetectedTotal,
-} from "#src/metrics/index.ts";
+import { prematchDetectionsTotal } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 import { recordPrematchForReportStore } from "#src/report-store/live-ingest.ts";
 import { recordClashPrematchSightings } from "#src/league/clash/sighting.ts";
@@ -215,7 +210,6 @@ function shouldSkipCheck(): boolean {
     logger.error(
       `⚠️  Pre-match check lock timeout after ${Math.round(elapsed / 1000).toString()}s, force-resetting`,
     );
-    prematchPollingSkipsTotal.inc({ reason: "timeout_reset" });
     Sentry.captureMessage("Pre-match check lock timeout - force reset", {
       level: "warning",
       tags: { source: "prematch-detection" },
@@ -229,7 +223,6 @@ function shouldSkipCheck(): boolean {
   logger.info(
     `⏸️  Pre-match check already in progress (${Math.round(elapsed / 1000).toString()}s elapsed), skipping`,
   );
-  prematchPollingSkipsTotal.inc({ reason: "concurrent_run" });
   return true;
 }
 
@@ -364,7 +357,6 @@ export async function checkActiveGames(options: {
       // Circuit breaker: skip remaining players when the spectator API is down
       if (spectatorCircuit.shouldSkip()) {
         playersSkippedByCircuit++;
-        prematchPollingSkipsTotal.inc({ reason: "circuit_open" });
         continue;
       }
 
@@ -470,7 +462,6 @@ export async function checkActiveGames(options: {
           logger.info(
             `🔁 Subsequent game detected for player(s) [${subsequentAliases.join(", ")}] — prior gameId(s) [${priorGameIds.join(", ")}], new gameId ${gameInfo.gameId.toString()}`,
           );
-          prematchSubsequentMatchDetectedTotal.inc(subsequentForPuuids.length);
         }
 
         // Persist to DB (the platform-qualified match ID is unique; upsert is
@@ -517,9 +508,7 @@ export async function checkActiveGames(options: {
     // Cleanup expired entries
     await deleteExpiredActiveGames();
 
-    // Update gauge
     const currentCount = await getActiveGameCount();
-    prematchActiveGamesGauge.set(currentCount);
 
     const totalTime = Date.now() - startTime;
     logger.info(

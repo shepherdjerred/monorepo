@@ -9,6 +9,7 @@ import type { MatchNotificationIntentRecord } from "#src/database/durable/intent
 const stubs = vi.hoisted(() => ({
   prepareSettlementAnnouncement: vi.fn(),
   getIntent: vi.fn(),
+  listIntentsForMatch: vi.fn(),
 }));
 
 vi.mock("#src/betting/notify/announce-prepare.ts", () => ({
@@ -16,11 +17,15 @@ vi.mock("#src/betting/notify/announce-prepare.ts", () => ({
 }));
 vi.mock("#src/database/durable/intent-repository.ts", () => ({
   getIntent: stubs.getIntent,
+  listIntentsForMatch: stubs.listIntentsForMatch,
 }));
 vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
 
-const { buildSettlementNotificationMessageV2, postmatchReplyTargetV2 } =
-  await import("#src/temporal/v2/notification/settlement-notification.ts");
+const {
+  buildSettlementNotificationMessageV2,
+  postmatchReplyTargetV2,
+  postmatchReplyTargets,
+} = await import("#src/temporal/v2/notification/settlement-notification.ts");
 
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_9301");
 const CHANNEL_ID = "300000000000000001";
@@ -153,4 +158,79 @@ describe("the settlement arm", () => {
       ).rejects.toThrow("has nothing to announce");
     },
   );
+});
+
+/** A stored intent as the reply-target read sees it. */
+function intentFor(
+  key: string,
+  channelId: string,
+  state: Record<string, unknown>,
+): unknown {
+  return {
+    matchId: MATCH_ID,
+    intent: {
+      key,
+      target: { kind: "channel", channelId },
+      state,
+    },
+  };
+}
+
+describe("postmatchReplyTargets", () => {
+  test("maps each channel to its delivered post-match report", async () => {
+    // What v1 read from ActiveGame.postmatchMessageIds, now from the
+    // delivered POSTMATCH intents every pipeline records.
+    stubs.listIntentsForMatch.mockResolvedValue([
+      intentFor(`postmatch-discord:${MATCH_ID}:${CHANNEL_ID}`, CHANNEL_ID, {
+        kind: "delivered",
+        deliveredAt: "2026-09-17T00:05:00.000Z",
+        messageId: "400000000000000777",
+      }),
+      intentFor(
+        `postmatch-discord:${MATCH_ID}:300000000000000002`,
+        "300000000000000002",
+        {
+          kind: "delivered",
+          deliveredAt: "2026-09-17T00:05:00.000Z",
+          messageId: "400000000000000778",
+        },
+      ),
+    ]);
+
+    const targets = await postmatchReplyTargets(MATCH_ID);
+
+    expect(stubs.listIntentsForMatch.mock.calls[0]?.[1]).toEqual({
+      matchId: MATCH_ID,
+    });
+    expect(Object.fromEntries(targets)).toEqual({
+      [CHANNEL_ID]: "400000000000000777",
+      "300000000000000002": "400000000000000778",
+    });
+  });
+
+  test("skips reports never delivered, delivered without an id, and other kinds", async () => {
+    stubs.listIntentsForMatch.mockResolvedValue([
+      intentFor(`postmatch-discord:${MATCH_ID}:${CHANNEL_ID}`, CHANNEL_ID, {
+        kind: "ready",
+      }),
+      intentFor(
+        `postmatch-discord:${MATCH_ID}:300000000000000002`,
+        "300000000000000002",
+        { kind: "delivered", deliveredAt: "2026-09-17T00:05:00.000Z" },
+      ),
+      // The prematch announcement in the same channel is not the report.
+      intentFor(
+        `prematch-discord:${MATCH_ID}:300000000000000003`,
+        "300000000000000003",
+        {
+          kind: "delivered",
+          deliveredAt: "2026-09-17T00:00:05.000Z",
+          messageId: "400000000000000779",
+        },
+      ),
+    ]);
+
+    const targets = await postmatchReplyTargets(MATCH_ID);
+    expect(targets.size).toBe(0);
+  });
 });

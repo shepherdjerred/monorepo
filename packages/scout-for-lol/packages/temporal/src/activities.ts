@@ -229,6 +229,13 @@ export type ScoutTemporalV2Activities = {
   openPrematchMarketsV2: (
     input: ScoutMatchRefV2,
   ) => Promise<ScoutGuardedEffectV2Result>;
+  /**
+   * The prematch maintenance sweeps, once per discovery poll. They are
+   * environment-wide, so the poll's own input (the stage) is the whole input.
+   */
+  runPrematchMaintenance: (
+    input: ScoutPrematchDiscoveryV2Input,
+  ) => Promise<void>;
 
   // Notification — rendering on background, the intent machine on realtime.
   markNotificationReadyV2: (

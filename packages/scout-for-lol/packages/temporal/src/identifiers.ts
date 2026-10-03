@@ -302,7 +302,10 @@ export function scoutClientMatchDispatchV2WorkflowId(
   return `scout-${stage}-client-match-dispatch-v2`;
 }
 
-/** One prematch poller per stage; the poll itself carries no identity. */
+/**
+ * The stage-singleton ID v1's retired prematch router started V2 discovery
+ * under. Scheduled polls take the Schedule's own per-action IDs instead.
+ */
 export function scoutPrematchDiscoveryV2WorkflowId(stage: ScoutStage): string {
   return `scout-${stage}-prematch-discovery-v2`;
 }
@@ -442,6 +445,7 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   archivePrematchSnapshotV2: "realtime",
   planPrematchFanOutV2: "realtime",
   openPrematchMarketsV2: "realtime",
+  runPrematchMaintenance: "realtime",
   markNotificationReadyV2: "realtime",
   renderNotificationArtifactV2: "background",
   beginNotificationSendV2: "realtime",

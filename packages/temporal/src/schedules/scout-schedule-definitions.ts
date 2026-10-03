@@ -7,12 +7,16 @@ import {
 import {
   scoutPipelineReconciliationV2InputCodec,
   scoutPostMatchDiscoveryV2InputCodec,
+  scoutPrematchDiscoveryV2InputCodec,
 } from "@scout-for-lol/temporal/workflow-contracts-v2";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
 
 const CATCHUP_TIGHT = "5 minutes";
 const CATCHUP_RELAXED = "1 hour";
+// A game-start announcement is worth nothing late, so a prematch poll the
+// server missed by more than a minute is skipped rather than replayed.
+const CATCHUP_LIVE = "1 minute";
 
 const INITIAL_PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
@@ -38,7 +42,7 @@ type ScoutSchedule = {
 
 type ScoutIntervalSchedule = ScoutSchedule & {
   readonly every: ScoutInterval;
-  readonly catchupWindow?: "5 minutes" | "1 hour";
+  readonly catchupWindow?: "1 minute" | "5 minutes" | "1 hour";
   readonly offset?: "5 minutes";
   readonly initiallyActive?: true;
 };
@@ -108,10 +112,14 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
   return [
     intervalSchedule(stage, {
       name: "prematch-poll",
-      workflowType: "scoutRealtimePollWorkflow",
-      args: [{ stage, kind: "prematch", maximumAgeSeconds: 90 }],
+      // V2 owns live-game detection and runs the prematch maintenance sweeps
+      // at the end of each poll. v1's `scoutRealtimePollWorkflow` stays
+      // registered until its open executions drain; pointing this line back
+      // at it is the rollback.
+      workflowType: SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
+      args: [scoutPrematchDiscoveryV2InputCodec.serialize({ stage })],
       every: "30 seconds",
-      catchupWindow: CATCHUP_TIGHT,
+      catchupWindow: CATCHUP_LIVE,
     }),
     intervalSchedule(stage, {
       name: "postmatch-discovery",

@@ -12,8 +12,8 @@ import { createScoutV2PrematchActivities } from "#src/temporal/v2/prematch/prema
  *
  * This group lives apart from the other three because it is the one that now
  * carries two pipelines: v1's poll, discovery, maintenance and ingest, plus
- * the nine Activities of the V2 per-match core, the three of its prematch
- * path, and the five that drive one notification intent to Discord.
+ * the nine Activities of the V2 per-match core, those of its prematch path,
+ * and the five that drive one notification intent to Discord.
  * `SCOUT_V2_ACTIVITY_QUEUE_CLASSES` assigns every one of them to this same
  * queue so one worker registration serves an open v1 execution and a V2 one
  * alike.
@@ -44,20 +44,13 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
         const { checkPreMatch } =
           await import("#src/league/tasks/prematch/index.ts");
-        // The prematch ownership router sets this only when V2 discovery
-        // already detected this pass's games; v1 then runs its maintenance
-        // alone.
-        if (input.activeGameDetectionOwner === "v2") {
-          await checkPreMatch({ activeGameDetection: "v2" });
-          return;
-        }
-        const { isPrematchGameCapturedByV2 } =
-          await import("#src/temporal/v2/ownership/prematch-ownership.ts");
-        await checkPreMatch({
-          activeGameDetection: "v1",
-          capturedByV2: async (game) =>
-            await isPrematchGameCapturedByV2(input.stage, game),
-        });
+        // V2 owns live-game detection unconditionally. A v1 poll still
+        // running this Activity (one open when that changed, or one the
+        // not-yet-updated Schedule started) runs v1's maintenance only, so it
+        // can never announce a game the V2 path also captures. That holds for
+        // a recorded `pollRealtime` without `activeGameDetectionOwner` that
+        // retries after the change, too.
+        await checkPreMatch({ activeGameDetection: "v2" });
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },

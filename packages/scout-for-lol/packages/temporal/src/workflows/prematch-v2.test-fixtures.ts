@@ -135,6 +135,8 @@ export type ScoutV2PrematchStore = {
   marketsFail: boolean;
   /** Intent keys a started notification child read, in arrival order. */
   childReads: NotificationIntentKey[];
+  /** The stage of each maintenance pass a discovery ran, in order. */
+  maintenanceStages: string[];
 };
 
 /** Every test channel sits in one guild, which is the case pools dedupe on. */
@@ -157,6 +159,7 @@ export function createScoutV2PrematchStore(
     pools: [],
     marketsFail: false,
     childReads: [],
+    maintenanceStages: [],
     ...overrides,
   };
 }
@@ -178,7 +181,7 @@ export function captured(
 }
 
 /**
- * The three prematch Activities, backed by {@link ScoutV2PrematchStore}.
+ * The prematch Activities, backed by {@link ScoutV2PrematchStore}.
  *
  * The capture is written as the real one is: it reads the receipts it already
  * stands behind before writing either, and mints an intent only for a channel
@@ -205,6 +208,15 @@ export function scoutV2PrematchActivityStubs(
     discoverPrematchGamesV2: (): ScoutPrematchScanV2Result => {
       record("discoverPrematchGamesV2");
       return { games: [...games], complete: true };
+    },
+    /**
+     * The stage's maintenance sweeps. Nothing here models what they sweep:
+     * the discovery tests assert only that the poll runs them, once, after
+     * its children were started. A `failAt` naming it fails the poll.
+     */
+    runPrematchMaintenance: (input: { stage: string }): void => {
+      record("runPrematchMaintenance");
+      store.maintenanceStages.push(input.stage);
     },
     archivePrematchSnapshotV2: (
       input: ScoutGameRefV2,

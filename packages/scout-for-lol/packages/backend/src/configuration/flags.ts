@@ -178,8 +178,6 @@ export type FlagName =
   | "scout_operations_console_enabled"
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
-  | "scout_v2_postmatch_ownership_enabled"
-  | "scout_v2_prematch_ownership_enabled"
   | "scout_v2_progression_notifications_enabled"
   | "voice_assistant_enabled";
 
@@ -431,41 +429,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * prepared.
    */
   scout_operations_console_enabled: {
-    default: false,
-    overrides: [],
-  },
-  /**
-   * Whether V2 owns scheduled post-match discovery.
-   *
-   * The rollback switch for the V2 cutover. The Schedule always starts
-   * `scoutPostMatchDiscoveryV2Workflow`; each run reads this first and, when
-   * it is off, hands the pass to v1's `scoutPostMatchDiscoveryWorkflow`
-   * instead. On here and in Flipt, because V2 is what runs today and an
-   * unreachable provider must not flip discovery to the other pipeline.
-   * Deliberately absent from `PRODUCTION_HARD_DISABLED_FLAGS`: production is
-   * the environment the switch exists for. A rollback flips it in Flipt and
-   * records the same value as an environment override in
-   * `managed-flag-inventory.json`, or the inventory check reports drift.
-   */
-  scout_v2_postmatch_ownership_enabled: {
-    default: true,
-    overrides: [],
-  },
-  /**
-   * Whether V2 owns scheduled prematch detection.
-   *
-   * The cutover switch for prematch. The `prematch-poll` Schedule always
-   * starts `scoutRealtimePollWorkflow`; each prematch run reads this first
-   * and, when it is on, runs `scoutPrematchDiscoveryV2Workflow` as a child
-   * for live-game detection and keeps only v1's prematch maintenance. Off
-   * here and in Flipt, because v1 is what runs today and an unreachable
-   * provider must not move detection to the other pipeline. Deliberately
-   * absent from `PRODUCTION_HARD_DISABLED_FLAGS`: it ramps per stage, beta
-   * first. Every ramp or rollback flips it in Flipt and records the same
-   * value as an environment override in `managed-flag-inventory.json`, or the
-   * inventory check reports drift.
-   */
-  scout_v2_prematch_ownership_enabled: {
     default: false,
     overrides: [],
   },

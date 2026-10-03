@@ -39,16 +39,29 @@ import { startMatchFanOutChildrenV2 } from "./match-v2.ts";
  * Post-match discovery awaits each child in turn because bounded Dare plans
  * are ordered by match end time, so a later match must not settle while an
  * earlier one is still being processed. Live games have no such chronology —
- * two games starting a second apart are independent — and this poller is a
- * SINGLETON: `scoutPrematchDiscoveryV2WorkflowId` takes only the stage, so one
- * execution exists per stage at a time. Waiting would make the next poll wait
- * on the slowest game, and a game-start notification that arrives after the
- * game is worth nothing. Children are therefore started and abandoned.
+ * two games starting a second apart are independent — and only one poll runs
+ * per stage at a time. Waiting would make the next poll wait on the slowest
+ * game, and a game-start notification that arrives after the game is worth
+ * nothing. Children are therefore started and abandoned.
  *
- * That singleton ID is also why this Workflow's Schedule needs an explicit
- * overlap policy when it is created: without one, a poll that outlives its
- * interval and the poll behind it are the same Workflow ID, and Temporal's
- * default would buffer rather than skip.
+ * ## One poll at a time
+ *
+ * The `prematch-poll` Schedule starts this Workflow directly, every 30
+ * seconds, and each action takes the Schedule's own per-action Workflow ID.
+ * What keeps two polls from overlapping is the Schedule's `SKIP` overlap
+ * policy, not the ID: a poll that outlives its interval makes the Schedule
+ * drop the tick behind it. A missed tick is not caught up later than a
+ * minute, because a late poll is worth nothing to a game-start notification.
+ * The stage-singleton `scoutPrematchDiscoveryV2WorkflowId` is used only by
+ * v1's retired prematch router, which ran this Workflow as its child.
+ *
+ * ## Maintenance runs last
+ *
+ * After the children are started, the poll runs the stage's prematch
+ * maintenance sweeps in one realtime Activity. They used to ride v1's
+ * `pollRealtime`; this poll is now the only thing that runs every 30 seconds
+ * per stage, so it carries them. They come after detection so a slow sweep
+ * never delays a game-start announcement.
  */
 export async function scoutPrematchDiscoveryV2Workflow(
   rawInput: ScoutPrematchDiscoveryV2InputEnvelope,
@@ -68,6 +81,18 @@ export async function scoutPrematchDiscoveryV2Workflow(
       childrenStarted += 1;
     }
   }
+
+  // Appended without a `patched` gate, and deliberately. An execution that is
+  // still open when this code deploys has not yet recorded its completion, so
+  // replaying it emits every command it recorded and then this Activity as a
+  // NEW command past the end of its history — which is not a conflict, just
+  // the run continuing. A closed execution recorded its completion and is
+  // never replayed to make progress. A gate would only matter for a command
+  // inserted before something a history already recorded.
+  setWorkflowPhase("**Phase:** running prematch maintenance");
+  await realtimeV2Activities(input.stage).runPrematchMaintenance({
+    stage: input.stage,
+  });
 
   return scoutPrematchDiscoveryV2ResultCodec.serialize({
     status: "completed",

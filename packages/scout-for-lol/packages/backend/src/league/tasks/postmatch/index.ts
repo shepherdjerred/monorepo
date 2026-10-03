@@ -12,8 +12,8 @@ import { announceSettlements } from "#src/betting/notify/announce.ts";
 import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlays/runtime/parlay-sweep.ts";
-import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { postmatchReplyTargets } from "#src/temporal/v2/notification/settlement-notification.ts";
 import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
@@ -240,9 +240,12 @@ async function voidStaleAndAnnounce(): Promise<void> {
     ...staleBucks.settlements,
   ]);
   for (const matchId of staleMatchIds) {
-    const parsedMatchId = MatchIdSchema.safeParse(matchId);
+    // A pool keyed by something other than a Riot match id has no post-match
+    // report to reply to, so its recap stands alone. The reply targets are
+    // the delivered post-match intents, which every pipeline records.
+    const parsedMatchId = RiotMatchIdSchema.safeParse(matchId);
     const postmatchMessageIds = parsedMatchId.success
-      ? await getPostmatchMessageIdsForMatchIdOrEmpty(parsedMatchId.data)
+      ? await postmatchReplyTargets(parsedMatchId.data)
       : new Map<string, string>();
     await announceSettlements({
       matchId,

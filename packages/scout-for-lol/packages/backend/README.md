@@ -344,48 +344,24 @@ claim and the guarded close against a real Postgres; `match-v2.test.ts` proves
 the overlap end to end, with the second discovery starting while the first is
 awaiting a child.
 
-### Which pipeline owns post-match discovery
+### Post-match discovery ownership
 
-The `postmatch-discovery` Schedule always starts
-`scoutPostMatchDiscoveryV2Workflow`. That Workflow's first Activity,
-`resolvePostMatchDiscoveryOwnerV2` (`src/temporal/v2/ownership/postmatch-ownership.ts`),
-reads the `scout_v2_postmatch_ownership_enabled` Flipt flag for the stage. The
-flag is on by default, and V2 then discovers as described above. When an
-operator turns it off, the run starts v1's `scoutPostMatchDiscoveryWorkflow`
-as a child and returns its outcome. Turning the flag back on returns the next
-pass to V2, and no deploy is needed in either direction.
+V2 owns post-match discovery unconditionally; the
+`scout_v2_postmatch_ownership_enabled` rollback switch is gone. Discoveries
+recorded while it existed asked `resolvePostMatchDiscoveryOwnerV2` first,
+behind the `scout-v2-postmatch-ownership` patch, and can still be open when
+this deploys. `ownership/postmatch-ownership-v2.ts` in the Scout Temporal
+package replays that read for them and nothing else: every new run records the
+`scout-v2-retired-postmatch-ownership` marker and skips it, and the backend
+answers a retried read with `run-v2`. A bare `deprecatePatch` would not do,
+because it schedules discovery where those histories recorded the read
+(`match-v2-replay.test.ts` replays a committed fixture of that generation).
+Once no discovery started before the retirement is still running, the gate
+becomes `deprecatePatch` of the retirement marker.
 
-Only one pipeline discovers at a time, because both take the same durable
-poll claim (`claimPostMatchPoll`) before discovering. V2 takes it in its scan.
-The v1 handoff takes it in the ownership Activity, before the v1 child starts,
-and passes it to the child as `pollOwner`. v1's discovery then re-presents the
-claim instead of opening the poll unconditionally, and its maintenance closes
-exactly that claim. A run that finds the claim held does nothing: V2 reports
-`skipped`, the handoff reports `defer-v1`, and both return `no-op`. So two
-overlapping handoffs (the scheduled run and an operator's), or a handoff and a
-V2 run, cannot both own a pass. If the v1 child fails, the Workflow closes the
-claim as failed (`releasePostMatchPollClaimV2`) rather than leaving it until
-the staleness bound. While the child runs, the Workflow renews the claim
-every 5 minutes (`renewPostMatchPollClaimV2`, stored in
-`BotState.pollClaimRenewedAt`). A claim goes stale only when both its start
-and its last renewal are past the 30-minute bound, so a pass that ingests a
-long backlog keeps its claim and a terminated one still frees it. A delegated
-discovery that cannot run throws instead of returning `skipped`, so v1's
-maintenance never closes a claim nothing used. This can happen even while the
-claim is held, because the worker-local polling flag is taken before the
-claim is checked. v1 runs the gate did not start carry no `pollOwner` and
-keep v1's original open and close. Match children V2 started keep running
-under `ABANDON`, and their observation owner still decides who applies each
-match. The gate is behind the `scout-v2-postmatch-ownership` patch, so a
-discovery recorded before it replays straight into V2 discovery.
-
-The recurring Flipt inventory check compares each live flag with
-`managed-flag-inventory.json`, and the inventory has no class of flag whose
-live value may differ. A rollback is therefore two changes: switch the flag off
-for the stage in Flipt, which takes effect on the next pass, and commit a
-matching `default: false` override for that environment in the inventory,
-the same way `explore_creation_enabled` records its production value. Until
-that commit lands, the check reports the flag as drift.
+The delegated-v1 Activities (`releasePostMatchPollClaimV2`,
+`renewPostMatchPollClaimV2`, `discoverDelegatedPostMatchIntents`) stay
+registered until v1's Workflow types are removed.
 
 `ScoutEffectClaim` keeps taking the top-level Prisma client, and
 `src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
@@ -410,53 +386,41 @@ are also no V2 stage receipts here: those exist so a resumed run can gate a
 phase whose evidence it cannot reconstruct, and the two evidence-bearing
 receipts this path writes already answer exactly the question it asks.
 
-### Which pipeline owns prematch detection
+### Prematch detection and maintenance
 
-The `prematch-poll` Schedule always starts `scoutRealtimePollWorkflow`, every
-30 seconds, in every stage. Schedules deploy separately from each stage's
-image, so the cutover never changes the Schedule's Workflow Type. The prematch
-arm of that Workflow, behind the `scout-v2-prematch-ownership` patch, first
-runs `resolvePrematchPassOwnerV2`
-(`src/temporal/v2/ownership/prematch-ownership.ts`). It reads the
-`scout_v2_prematch_ownership_enabled` Flipt flag for the stage and claims the
-pass. The flag is off by default. With it off, the run calls v1's
-`pollRealtime` with its own input, unchanged. With it on, the run starts
-`scoutPrematchDiscoveryV2Workflow` as a child under the stage's singleton ID
-and waits for it. It then calls `pollRealtime` with
-`activeGameDetectionOwner: "v2"`, so v1's prematch maintenance still runs
-(betting and parlay windows, Dare expiry, parlay activation, `ActiveGame`
-expiry) without v1 detecting games. Tournament-lobby polls are not routed and
-record no marker. A poll recorded before the patch replays straight into
-`pollRealtime`.
+The `prematch-poll` Schedule starts `scoutPrematchDiscoveryV2Workflow` every
+30 seconds in every stage, with a `SKIP` overlap policy and a one-minute
+catch-up window: a poll that outlives its interval drops the tick behind it,
+and a tick the server missed by more than a minute is not replayed. Each poll
+detects live games, starts one `scoutPrematchGameV2Workflow` per game, and
+then runs `runPrematchMaintenance`
+(`src/temporal/v2/prematch/prematch-maintenance.ts`): Dare v2 accept-window
+expiry and callout refresh, and, unless betting is hard-disabled, parlay
+activation, betting and parlay window closes, Dare proposal TTL, Dare accept
+expiry, and Dare summary delivery. Discovery records one
+`prematch_detections_total{status}` sample per probed account (`game`,
+`idle`, `unreadable`).
 
-Only one pipeline detects at a time, because every pass takes the same durable
-claim on `BotState` (`prematchPassHolder`, `prematchPassClaimedAt`,
-`prematchPassRenewedAt`) before it does anything. The holder is the router's
-Temporal run ID. The claim is one guarded statement, so of two overlapping
-passes (the scheduled run and an operator's, or the last v1 pass and the
-first V2 pass after a flip), one proceeds and the other returns `no-op`. The
-router renews the claim every minute while the pass runs and releases it when
-the pass ends, whether it succeeded or failed. A claim whose start and last
-renewal are both older than 5 minutes may be taken over, so a terminated
-router blocks detection for at most that long.
+v1's `scoutRealtimePollWorkflow` stays registered until its open executions
+drain. Its prematch router (`ownership/prematch-ownership-v2.ts`, behind the
+`scout-v2-prematch-ownership` patch) is kept only so those histories replay.
+The `scout_v2_prematch_ownership_enabled` flag and the `BotState` pass claim
+it read are gone: `resolvePrematchPassOwnerV2` now answers `run-v2` with no
+claim, the renewal and release answer `not-held`, and v1's `pollRealtime`
+runs its maintenance only, never detection.
 
-The two pipelines also refuse each other's games, because their dedup records
-differ. v1 deduplicates on its `ActiveGame` row. V2 deduplicates on the
-per-game Workflow ID `scout-<stage>-prematch-game-v2-<platform>_<gameId>`.
+V2 discovery still drops any game with a live `ActiveGame` row, so a game v1
+announced shortly before the switch is not announced again. Notification
+intents share one key, `prematch-discord:<matchId>:<channelId>`, in both
+pipelines, a delivered or `unknown-delivery` intent is never redriven, and
+betting pools are unique per match and guild.
 
-- Before v1 announces a game it has not tracked, it describes that V2
-  Workflow ID. A running or completed capture means V2 took the game, and v1
-  skips it (`prematch_detections_total{status="owned_by_v2"}`). A failed,
-  cancelled, terminated or timed-out capture does not count. Those are the
-  statuses V2 itself would replace.
-- V2 discovery drops any game with a live `ActiveGame` row, because v1 writes
-  that row before it announces. The game stays v1's for the rest of its life.
-
-Notification intents share one key, `prematch-discord:<matchId>:<channelId>`,
-in both pipelines, and a delivered or `unknown-delivery` intent is never
-redriven. Betting pools are unique per match and guild, so a second open is a
-no-op. Neither pipeline therefore announces a game twice or opens its markets
-twice across a flip.
+Nothing writes `ActiveGame` now. The consumer live view reads
+`listLivePrematchGames` (`src/temporal/v2/prematch/prematch-reads.ts`): V2
+`raw-archive-prematch` receipts younger than the three-hour tracked lifetime,
+minus games the report lake already holds, with each roster read from the
+archived spectator snapshot. The stale-pool void sweep replies to the
+delivered post-match intents (`postmatchReplyTargets`).
 
 ### V2 prematch delivery and markets
 

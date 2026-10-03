@@ -50,7 +50,7 @@ import {
   installMatchDispatchCompletionHandler,
   processDiscoveredMatchesThroughDispatcher,
 } from "./shared-match-dispatch-v2.ts";
-import { delegateWhenV1OwnsDiscovery } from "./ownership/postmatch-ownership-v2.ts";
+import { replayRetiredPostmatchOwnershipRead } from "./ownership/postmatch-ownership-v2.ts";
 
 /**
  * One discovered match as the loop consumes it: the id always, and the fields
@@ -227,11 +227,12 @@ export async function scoutPostMatchDiscoveryV2Workflow(
   rawInput: ScoutPostMatchDiscoveryV2InputEnvelope,
 ): Promise<ScoutPostMatchDiscoveryV2ResultEnvelope> {
   const input = scoutPostMatchDiscoveryV2InputCodec.parse(rawInput);
-  // Ownership is decided before anything else this run does, and a run v1
-  // owns ends here. See `ownership/postmatch-ownership-v2.ts` for why only one pipeline
-  // can discover at a time.
-  const delegated = await delegateWhenV1OwnsDiscovery(input);
-  if (delegated !== null) return delegated;
+  // V2 owns post-match discovery unconditionally. Executions recorded while
+  // the v1 rollback switch existed asked first; this replays that read for
+  // them and does nothing for any other run. See
+  // `ownership/postmatch-ownership-v2.ts` for why it is not a bare
+  // `deprecatePatch`.
+  await replayRetiredPostmatchOwnershipRead(input);
   const dispatchResults = installMatchDispatchCompletionHandler();
   setWorkflowPhase("**Phase:** discovering completed matches");
   const scan = await realtimeV2Activities(input.stage).discoverPostMatchIdsV2(

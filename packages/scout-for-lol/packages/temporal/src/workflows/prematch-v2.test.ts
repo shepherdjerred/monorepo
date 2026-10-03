@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { WorkflowNotFoundError } from "@temporalio/client";
+import { WorkflowFailedError, WorkflowNotFoundError } from "@temporalio/client";
 import type { NotificationIntentKey } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutPrematchGameRef } from "#src/contracts-v2.ts";
 import {
@@ -288,6 +288,80 @@ describe("V2 prematch discovery", () => {
     expect(
       store.calls.filter((call) => call === "archivePrematchSnapshotV2"),
     ).toHaveLength(2);
+  }, 90_000);
+});
+
+describe("V2 prematch discovery maintenance", () => {
+  test("runs the stage's maintenance once, after starting its children", async () => {
+    const store = createScoutV2PrematchStore();
+    await harness.startWorkers(
+      scoutV2PrematchActivityStubs(store, [GAME_REF, OTHER_GAME_REF]),
+    );
+
+    const handle = await harness
+      .client()
+      .workflow.start(scoutPrematchDiscoveryV2Workflow, {
+        taskQueue: "scout-dev",
+        workflowId: "prematch-discovery-maintenance",
+        args: [scoutPrematchDiscoveryV2InputCodec.serialize({ stage })],
+      });
+    await handle.result();
+    await awaitGameChild(GAME_REF);
+    await awaitGameChild(OTHER_GAME_REF);
+    const history = await handle.fetchHistory();
+    const events = history.events ?? [];
+
+    // v1's `pollRealtime` used to carry these sweeps; this poll is now the
+    // only thing that runs every 30 seconds, so it must run them every time.
+    expect(store.maintenanceStages).toEqual([stage]);
+    const maintenanceAt = events.findIndex(
+      (event) =>
+        event.activityTaskScheduledEventAttributes?.activityType?.name ===
+        "runPrematchMaintenance",
+    );
+    const lastChildAt = events.findLastIndex(
+      (event) =>
+        event.startChildWorkflowExecutionInitiatedEventAttributes != null,
+    );
+    // After detection, so a slow sweep never delays a game-start announcement.
+    expect(lastChildAt).toBeGreaterThan(-1);
+    expect(maintenanceAt).toBeGreaterThan(lastChildAt);
+  }, 90_000);
+
+  test("runs the maintenance on a poll that found no live game", async () => {
+    const store = createScoutV2PrematchStore();
+    await harness.startWorkers(scoutV2PrematchActivityStubs(store, []));
+
+    const result = await discover("prematch-discovery-maintenance-idle");
+
+    expect(store.maintenanceStages).toEqual([stage]);
+    expect(store.calls).toEqual([
+      "discoverPrematchGamesV2",
+      "runPrematchMaintenance",
+    ]);
+    expect(result).toMatchObject({
+      data: { discovered: 0, childrenStarted: 0, complete: true },
+    });
+  }, 60_000);
+
+  test("fails the poll when the maintenance fails, leaving its captures running", async () => {
+    const store = createScoutV2PrematchStore({
+      failAt: "runPrematchMaintenance",
+    });
+    await harness.startWorkers(scoutV2PrematchActivityStubs(store));
+
+    const settled = await settleWorkflow(
+      discover("prematch-discovery-maintenance-fails"),
+    );
+    // The captures were started under ABANDON before the sweeps ran, so a
+    // failed sweep is visible on the poll without costing the game its
+    // announcement.
+    await awaitGameChild(GAME_REF);
+
+    expect(settled).toBeInstanceOf(WorkflowFailedError);
+    expect(store.calls).toContain("runPrematchMaintenance");
+    expect(store.maintenanceStages).toEqual([]);
+    expect(store.applied).toEqual(FIRST_CAPTURE_EFFECTS);
   }, 90_000);
 });
 

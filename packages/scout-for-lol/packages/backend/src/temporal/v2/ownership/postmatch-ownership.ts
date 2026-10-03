@@ -4,53 +4,24 @@ import type {
   ScoutPostMatchPollRenewalV2Result,
 } from "@scout-for-lol/temporal/activity-contracts-v2";
 import type { PostMatchDiscoveryResult } from "@scout-for-lol/temporal/contracts";
-import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { discoverPostMatchIntents } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import {
-  claimPostMatchPoll,
   markPostMatchPollFailed,
   PostMatchPollOwnershipError,
   renewPostMatchPollClaim,
 } from "#src/league/tasks/recovery/app-state.ts";
 
 /**
- * Decide which pipeline owns one post-match discovery pass.
+ * Answer a retired post-match ownership read.
  *
- * `scout_v2_postmatch_ownership_enabled` answers first, per environment, and
- * is on by default: V2 keeps discovery unless an operator turns it off.
- *
- * When it is off, the handoff to v1 takes the same durable poll claim V2
- * discovery takes, before any v1 work starts. The claim is one guarded
- * statement, so of two overlapping handoffs (a scheduled run and an
- * operator's, say), or a handoff and a V2 run, exactly one owns the pass and
- * the other is told the poll is held. The v1 child then runs under the claim
- * and its maintenance closes it. The staleness bound still frees a claim that
- * a terminated run left behind.
- *
- * `claimAt` must be stable across this Activity's retries, so a retried
- * attempt re-acquires the claim its predecessor took.
+ * V2 owns post-match discovery unconditionally; no new discovery asks. A
+ * discovery recorded while the rollback switch existed replays its read and,
+ * if the read was still pending when the switch went, executes it here. The
+ * switch was on in every environment, so `run-v2` is the answer that run
+ * would have had, and it takes no claim: V2 discovery takes its own.
  */
-export async function resolvePostMatchDiscoveryOwnerV2(input: {
-  claimAt: Date;
-}): Promise<ScoutPostMatchDiscoveryOwnerV2Result> {
-  if (await isPolicyEnabled("scout_v2_postmatch_ownership_enabled")) {
-    return { decision: "run-v2" };
-  }
-  const claim = await claimPostMatchPoll({ startedAt: input.claimAt });
-  if (claim.outcome === "claimed") {
-    return {
-      decision: "delegate-v1",
-      pollOwner: IsoInstantSchema.parse(claim.owner.startedAt.toISOString()),
-    };
-  }
-  return {
-    decision: "defer-v1",
-    pollHeldSince:
-      claim.since === null
-        ? null
-        : IsoInstantSchema.parse(claim.since.toISOString()),
-  };
+export function resolvePostMatchDiscoveryOwnerV2(): Promise<ScoutPostMatchDiscoveryOwnerV2Result> {
+  return Promise.resolve({ decision: "run-v2" });
 }
 
 /**

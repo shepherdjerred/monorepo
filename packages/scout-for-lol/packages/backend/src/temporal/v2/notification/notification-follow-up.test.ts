@@ -18,6 +18,7 @@ const stubs = vi.hoisted(() => ({
   requireIntentRecordV2: vi.fn(),
   afterDareSummaryDeliveredV2: vi.fn(),
   afterPrematchDeliveredV2: vi.fn(),
+  afterPostmatchDeliveredV2: vi.fn(),
   afterHallRecordBreakDeliveredV2: vi.fn(),
   confirmNotificationTip: vi.fn(async () => {
     /* The presentation suite verifies claims. */
@@ -35,6 +36,9 @@ vi.mock("#src/temporal/v2/notification/dare-summary-notification.ts", () => ({
 }));
 vi.mock("#src/temporal/v2/notification/prematch-follow-up.ts", () => ({
   afterPrematchDeliveredV2: stubs.afterPrematchDeliveredV2,
+}));
+vi.mock("#src/temporal/v2/notification/postmatch-follow-up.ts", () => ({
+  afterPostmatchDeliveredV2: stubs.afterPostmatchDeliveredV2,
 }));
 vi.mock(
   "#src/temporal/v2/notification/hall-record-break-notification.ts",
@@ -93,7 +97,30 @@ describe("the post-delivery follow-up", () => {
     expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
   });
 
-  test.each(["postmatch", "settlement"] as const)(
+  test("counts a delivered post-match report's core output, and reports its failure", async () => {
+    // v1 counted the guilds its report reached; V2 delivers per channel, so
+    // the follow-up is where that analytics event is recorded now.
+    stubs.requireIntentRecordV2.mockResolvedValue(
+      intentRecord("channel", "postmatch"),
+    );
+    stubs.afterPostmatchDeliveredV2.mockResolvedValueOnce(undefined);
+    expect(await afterNotificationDeliveredV2(ATTEMPT)).toEqual({
+      outcome: "completed",
+    });
+    expect(stubs.afterPostmatchDeliveredV2).toHaveBeenCalledTimes(1);
+    expect(stubs.confirmNotificationTip).toHaveBeenCalledTimes(1);
+
+    // Analytics are not a reason to fail an answered send.
+    stubs.afterPostmatchDeliveredV2.mockRejectedValueOnce(
+      new Error("posthog was unreachable"),
+    );
+    expect(await afterNotificationDeliveredV2(ATTEMPT)).toEqual({
+      outcome: "failed",
+    });
+    expect(stubs.afterPrematchDeliveredV2).not.toHaveBeenCalled();
+  });
+
+  test.each(["settlement"] as const)(
     "has nothing to do for a %s intent",
     async (kind) => {
       stubs.requireIntentRecordV2.mockResolvedValue(

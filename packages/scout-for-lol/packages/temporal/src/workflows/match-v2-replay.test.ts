@@ -1,5 +1,7 @@
 import { expect, test } from "vitest";
+import { historyFromJSON } from "@temporalio/common/lib/proto-utils.js";
 import { Worker } from "@temporalio/worker";
+import { DeterminismViolationError } from "@temporalio/workflow";
 import type { WorkflowHandle } from "@temporalio/client";
 import {
   IsoInstantSchema,
@@ -15,7 +17,11 @@ import {
   scoutPostMatchDiscoveryV2Workflow,
 } from "./index.ts";
 import { SCOUT_V2_MATCH_MINT_INTENTS_PATCH } from "./match-v2.ts";
-import { SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH } from "./ownership/postmatch-ownership-v2.ts";
+import {
+  SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH,
+  SCOUT_V2_POSTMATCH_OWNERSHIP_RETIRED_PATCH,
+} from "./ownership/postmatch-ownership-v2.ts";
+import recordedOwnershipGate from "./ownership/fixtures/dev-postmatch-discovery.ownership-gate.json" with { type: "json" };
 import {
   createScoutV2MatchStore,
   scoutV2MatchActivityStubs,
@@ -40,6 +46,11 @@ import { useScoutV2WorkflowHarness } from "./workflow-harness.test-fixtures.ts";
  * Which technique a future change needs follows from which axis it moved. A
  * required field added to a recorded result is the first; an inserted,
  * removed or reordered Activity is the second.
+ *
+ * A generation the current code can no longer PRODUCE needs a third: a
+ * committed fixture recorded from the older source. The retired ownership
+ * read is that case, and its pre-ownership history is then derived from the
+ * fixture with the second technique.
  */
 
 const harness = useScoutV2WorkflowHarness();
@@ -395,37 +406,111 @@ test("a history recorded before the mint existed still replays", async () => {
   );
 }, 120_000);
 
-// ─── A discovery whose history predates the ownership gate ─────────────────
+// ─── Discoveries recorded around the retired ownership read ────────────────
 
-test("a discovery recorded before the ownership gate still replays", async () => {
-  const recorded = await recordOneMatchDiscovery(
-    "discovery-pre-ownership-history",
-  );
-  const preChange = historyWithoutPatchedActivity(recorded, OWNERSHIP);
-  const ownershipReads = (history: History): number =>
-    (history.events ?? []).filter(
-      (event) =>
-        event.activityTaskScheduledEventAttributes?.activityType?.name ===
-        OWNERSHIP.activityType,
-    ).length;
-  const ownershipMarkers = (history: History): number =>
-    (history.events ?? []).filter((event) =>
-      namesPatch(event, OWNERSHIP.patchId),
-    ).length;
+/**
+ * A discovery recorded while the ownership read existed.
+ *
+ * The time-skipping environment can only record what the CURRENT code does,
+ * and the current code no longer asks, so this generation is a committed
+ * fixture: one discovery of one match, recorded by running the Workflow
+ * source from before the retirement against `scoutV2MatchActivityStubs`, with
+ * the ownership read answering `run-v2` as the flag did in every environment.
+ * It is the shape of every discovery that can still be open when the
+ * retirement deploys.
+ */
+function ownershipGateHistory(): History {
+  return historyFromJSON(structuredClone(recordedOwnershipGate));
+}
 
-  // The gate recorded exactly one marker and one ownership read, and the
-  // fixture removed both; a strip that matched neither would pass for the
-  // wrong reason.
-  expect(ownershipMarkers(recorded)).toBe(1);
+function ownershipReads(history: History): number {
+  return (history.events ?? []).filter(
+    (event) =>
+      event.activityTaskScheduledEventAttributes?.activityType?.name ===
+      OWNERSHIP.activityType,
+  ).length;
+}
+
+function markersFor(history: History, patchId: string): number {
+  return (history.events ?? []).filter((event) => namesPatch(event, patchId))
+    .length;
+}
+
+test("a discovery recorded while the ownership read existed still replays", async () => {
+  const recorded = ownershipGateHistory();
+
+  // The fixture is that generation only if it asked exactly once and never
+  // named the retirement.
+  expect(markersFor(recorded, OWNERSHIP.patchId)).toBe(1);
   expect(ownershipReads(recorded)).toBe(1);
-  expect(ownershipMarkers(preChange)).toBe(0);
+  expect(markersFor(recorded, SCOUT_V2_POSTMATCH_OWNERSHIP_RETIRED_PATCH)).toBe(
+    0,
+  );
+
+  await Worker.runReplayHistory(
+    { workflowsPath: new URL("index.ts", import.meta.url).pathname },
+    recorded,
+  );
+}, 120_000);
+
+test("the ownership fixture fails replay once its recorded read is changed", async () => {
+  // The negative control: a replay that accepted any command where the
+  // ownership read was recorded would pass the test above for the wrong
+  // reason. A bare `deprecatePatch` of the ownership patch is exactly such a
+  // change, and fails here the same way.
+  const tampered = historyFromJSON(
+    JSON.parse(
+      JSON.stringify(recordedOwnershipGate).replace(
+        `"name":"${OWNERSHIP.activityType}"`,
+        '"name":"tamperedActivity"',
+      ),
+    ),
+  );
+  expect(ownershipReads(tampered)).toBe(0);
+
+  await expect(
+    Worker.runReplayHistory(
+      { workflowsPath: new URL("index.ts", import.meta.url).pathname },
+      tampered,
+    ),
+  ).rejects.toBeInstanceOf(DeterminismViolationError);
+}, 120_000);
+
+test("a discovery recorded before the ownership read still replays", async () => {
+  const recorded = ownershipGateHistory();
+  const preChange = historyWithoutPatchedActivity(recorded, OWNERSHIP);
+
+  // The strip removed both the marker and the read; one that matched neither
+  // would pass for the wrong reason.
+  expect(markersFor(preChange, OWNERSHIP.patchId)).toBe(0);
   expect(ownershipReads(preChange)).toBe(0);
-  expect(SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH).toBe(
-    "scout-v2-postmatch-ownership",
+  expect((recorded.events ?? []).length - (preChange.events ?? []).length).toBe(
+    5,
   );
 
   await Worker.runReplayHistory(
     { workflowsPath: new URL("index.ts", import.meta.url).pathname },
     preChange,
+  );
+}, 120_000);
+
+test("a discovery recorded now names the retirement and never asks", async () => {
+  const recorded = await recordOneMatchDiscovery("discovery-retired-ownership");
+
+  expect(markersFor(recorded, SCOUT_V2_POSTMATCH_OWNERSHIP_RETIRED_PATCH)).toBe(
+    1,
+  );
+  expect(markersFor(recorded, OWNERSHIP.patchId)).toBe(0);
+  expect(ownershipReads(recorded)).toBe(0);
+  expect(SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH).toBe(
+    "scout-v2-postmatch-ownership",
+  );
+  expect(SCOUT_V2_POSTMATCH_OWNERSHIP_RETIRED_PATCH).toBe(
+    "scout-v2-retired-postmatch-ownership",
+  );
+
+  await Worker.runReplayHistory(
+    { workflowsPath: new URL("index.ts", import.meta.url).pathname },
+    recorded,
   );
 }, 120_000);
