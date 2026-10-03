@@ -3,7 +3,8 @@
 `subhd.py` is discovered by Bazarr's vendor provider registry. `zimuku.py` is
 the Bazarr 1.6.0 provider with a local archive-selection correction. Its original
 SHA256 is recorded in the header. `assrt.py` is the matching Bazarr provider
-with strict content validation. `chinese_script.py` verifies subtitle text
+with search-response normalization, exact episode archives, and strict content
+validation. `chinese_script.py` verifies subtitle text
 against OpenCC's Apache-2.0 character tables. The overlays mount as individual
 read-only files; built-in providers remain visible. Source hashes restart Bazarr
 when an overlay or the startup policy changes.
@@ -42,6 +43,23 @@ configuration errors fail startup instead of being replaced.
 OpenCC is used only to classify subtitle text. The policy does not convert
 Traditional Chinese or generate a translation. Text without enough unambiguous
 Simplified evidence remains wanted for a later source.
+
+ASSRT accepts both the documented `id`/`lang` search response and the raw
+`fileid` response. Raw entries are hydrated through subtitle details; unknown
+response shapes fail with a sanitized provider error. The bilingual `langdou`
+label supplies no language or script evidence. API requests honor the configured
+token's reported quota, and detail metadata is reused within the candidate's
+search/download operation.
+
+Chinese episode candidates select an exact season/episode file from the detail
+list before matching. Its release filename supplies the series and release
+information when pack metadata contains only a season name. Per-episode ZIPs
+need no script marker on their outer name when ASSRT explicitly labels the pack
+Simplified; the subtitle inside still needs an explicit filename script marker
+and must pass content validation. Ambiguous choices remain wanted. ZIP readers
+honor UTF-8 flags and decode unflagged Chinese filenames as GB18030, preserving
+the script markers and fansub attribution. Downloads are bounded while streaming,
+and archive expansion retains the shared size and member limits.
 
 Fixture verification uses the exact catalog-pinned Bazarr image and its vendor
 libraries, with no network access:

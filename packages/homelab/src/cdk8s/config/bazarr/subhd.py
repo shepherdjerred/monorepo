@@ -160,7 +160,12 @@ def extract_subtitle(content: bytes, season: int, episode: int, release: str, ex
     if len(content) > MAX_DOWNLOAD:
         raise APIThrottled("subhd: download exceeds size limit")
     if content.startswith(b"PK"):
-        archive = zipfile.ZipFile(io.BytesIO(content))
+        # Windows Chinese fansub archives use GBK names without the UTF-8 flag.
+        # ZipFile still honors UTF-8 flags; ASCII names are unchanged.
+        try:
+            archive = zipfile.ZipFile(io.BytesIO(content), metadata_encoding="gb18030")
+        except (zipfile.BadZipFile, UnicodeError):
+            raise APIThrottled("subhd: invalid ZIP archive or filename encoding") from None
     elif content.startswith(b"Rar!"):
         archive = rarfile.RarFile(io.BytesIO(content))
     else:

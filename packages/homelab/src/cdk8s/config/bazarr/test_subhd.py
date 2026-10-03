@@ -1,6 +1,7 @@
 """Run in the pinned Bazarr image so fixtures exercise its real vendor APIs."""
 
 import io
+import json
 import sqlite3
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import configure as policy
+from requests import Response
 from requests.exceptions import HTTPError
 from subliminal.video import Episode
 from subliminal_patch.subtitle import Subtitle
@@ -21,6 +23,29 @@ if TYPE_CHECKING:
 else:
     from subliminal_patch.providers import assrt, chinese_script, subhd, zimuku
 SRT = "1\n00:00:01,000 --> 00:00:03,000\n这是简体中文学习汉语。\n".encode()
+ASS = (
+    "[Script Info]\nScriptType: v4.00+\n[Events]\n"
+    "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    "Dialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,这是简体中文学习汉语。\\NEnglish text.\n"
+).encode()
+
+
+def response(payload: object = None, content: bytes = b"") -> Response:
+    result = Response()
+    result.status_code = 200
+    result._content = json.dumps(payload).encode() if payload is not None else content
+    result._content_consumed = True
+    return result
+
+
+def legacy_zip(name: str, content: bytes) -> bytes:
+    """Fixture for Windows ZIPs with GBK names and no UTF-8 flag."""
+    encoded = name.encode("gbk")
+    placeholder = b"x" * len(encoded)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr(placeholder.decode(), content)
+    return buffer.getvalue().replace(placeholder, encoded)
 
 
 def card(
@@ -156,6 +181,23 @@ class ArchiveTests(unittest.TestCase):
             archive.writestr("show.S01E03.chs.srt", b"x" * (subhd.MAX_SUBTITLE + 1))
         with self.assertRaises(subhd.APIThrottled):
             subhd.extract_subtitle(buffer.getvalue(), 1, 3, "", False)
+
+    def test_gbk_zip_names_preserve_script_and_episode_selection(self) -> None:
+        name = "简体双语.Example.S01E03-SiGMA.电波字幕组.ass"
+        archive = legacy_zip(name, ASS)
+        self.assertEqual(subhd.extract_subtitle(archive, 1, 3, "Example-SiGMA", False), ASS)
+        with self.assertRaises(subhd.APIThrottled):
+            subhd.extract_subtitle(archive, 1, 4, "", False)
+
+    def test_utf8_zip_names_are_not_reinterpreted(self) -> None:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr("简体.Example.S01E03.ass", ASS)
+        self.assertEqual(subhd.extract_subtitle(buffer.getvalue(), 1, 3, "", False), ASS)
+
+    def test_invalid_zip_is_a_provider_error(self) -> None:
+        with self.assertRaisesRegex(subhd.APIThrottled, "invalid ZIP"):
+            subhd.extract_subtitle(b"PKinvalid", 1, 3, "", False)
 
     def test_content_must_be_chinese_timed_and_non_machine(self) -> None:
         for content in (
@@ -470,12 +512,27 @@ class ZimukuTests(unittest.TestCase):
 
 
 class AssrtTests(unittest.TestCase):
+    def test_initialize_uses_the_reported_quota(self) -> None:
+        provider = assrt.AssrtProvider("fixture")
+        provider.session.get = lambda *args, **kwargs: response({"user": {"quota": 4}})
+        provider.initialize()
+        self.assertEqual(provider.max_request_per_minute, 4)
+        self.assertEqual(assrt.get_request_delay(provider.max_request_per_minute), 15)
+
+    def test_invalid_quota_does_not_echo_the_response(self) -> None:
+        provider = assrt.AssrtProvider("fixture")
+        provider.session.get = lambda *args, **kwargs: response({"secret": "secret-value"})
+        with self.assertRaisesRegex(assrt.ProviderError, "invalid request quota") as raised:
+            provider.initialize()
+        self.assertNotIn("secret-value", str(raised.exception))
+
     def test_season_pack_requires_an_exact_episode_file(self) -> None:
         response = SimpleNamespace(
             json=lambda: {
                 "sub": {
                     "subs": [
                         {
+                            "id": "subtitle",
                             "filelist": [{"f": "Example.S01E04.chs.srt", "url": "https://example.test/wrong.srt"}]
                         }
                     ]
@@ -502,6 +559,7 @@ class AssrtTests(unittest.TestCase):
                 "sub": {
                     "subs": [
                         {
+                            "id": "subtitle",
                             "filelist": [{"f": "Example.S02E03.chs.srt", "url": "https://example.test/wrong.srt"}]
                         }
                     ]
@@ -552,7 +610,7 @@ class AssrtTests(unittest.TestCase):
 
     def test_detail_excludes_machine_labeled_files(self) -> None:
         response = SimpleNamespace(
-            json=lambda: {"sub": {"subs": [{"filelist": [
+            json=lambda: {"sub": {"subs": [{"id": "subtitle", "filelist": [
                 {"f": "Example.S01E03.AI翻译.chs.srt", "url": "https://example.test/machine.srt"},
             ]}]}},
             raise_for_status=lambda: None,
@@ -588,8 +646,8 @@ class AssrtTests(unittest.TestCase):
             Language("zho"), "subtitle", "Example.S01E03", provider.session, "fixture", 1000
         )
         subtitle._detail = {"url": "https://example.test/subtitle.srt"}
-        response = SimpleNamespace(content=SRT, json=lambda: {}, raise_for_status=lambda: None)
-        provider.session.get = lambda *args, **kwargs: response
+        result = response(content=SRT)
+        provider.session.get = lambda *args, **kwargs: result
         with patch.object(assrt, "sleep"):
             provider.download_subtitle(subtitle)
         self.assertEqual(subtitle.content, subhd.validate_content(SRT))
@@ -601,14 +659,107 @@ class AssrtTests(unittest.TestCase):
             Language("zho"), "subtitle", "Example.S01E03", provider.session, "fixture", 1000
         )
         subtitle._detail = {"url": "https://example.test/subtitle.srt"}
-        response = SimpleNamespace(
-            content="1\n00:00:01,000 --> 00:00:03,000\n這是繁體中文學習漢語。\n".encode(),
-            json=lambda: {},
-            raise_for_status=lambda: None,
-        )
-        provider.session.get = lambda *args, **kwargs: response
+        result = response(content="1\n00:00:01,000 --> 00:00:03,000\n這是繁體中文學習漢語。\n".encode())
+        provider.session.get = lambda *args, **kwargs: result
         with patch.object(assrt, "sleep"), self.assertRaises(subhd.APIThrottled):
             provider.download_subtitle(subtitle)
+
+    def test_raw_search_hydrates_short_pack_name_and_downloads_exact_episode_zip(self) -> None:
+        provider = assrt.AssrtProvider("fixture")
+        provider.max_request_per_minute = 1000
+        release = "Nathan.for.You.S02E01.Mechanic.Realtor.1080p.AMZN.WEB-DL.DD+2.0.x264-SiGMA"
+        search = {"fileid": 677682, "videoname": "S02", "m_title": "救援高手 第二季 Nathan For You Season 2"}
+        detail = {"id": 677682, "videoname": "S02", "native_name": search["m_title"],
+                  "lang": {"langlist": {"langchs": True, "langdou": True}}, "filelist": [
+                      {"f": release + ".@DBfansub.zip", "url": "https://example.test/episode.zip"},
+                      {"f": "Nathan.for.You.S02E02.1080p.AMZN.WEB-DL-SiGMA.zip", "url": "https://example.test/wrong.zip"},
+                  ]}
+        archive = legacy_zip("简体双语." + release + ".电波字幕组.ass", ASS)
+        calls = []
+        replies = iter([response({"sub": {"subs": [search]}}),
+                        response({"sub": {"subs": [detail]}}), response(content=archive)])
+
+        def get(url: str, **kwargs: object) -> Response:
+            calls.append(url)
+            return next(replies)
+
+        provider.session.get = get
+        video = Episode.fromname(release + ".mkv")
+        with patch.object(assrt, "sleep"):
+            subtitles = provider.list_subtitles(video, {Language("zho")})
+            self.assertEqual(len(subtitles), 1)
+            self.assertTrue({"series", "season", "episode", "release_group"}.issubset(subtitles[0].get_matches(video)))
+            provider.download_subtitle(subtitles[0])
+        self.assertEqual(subtitles[0].content, ASS)
+        self.assertEqual(calls, [assrt.server_url + "/sub/search", assrt.server_url + "/sub/detail",
+                                 "https://example.test/episode.zip"])
+
+    def test_raw_machine_label_is_rejected_before_detail_lookup(self) -> None:
+        provider = assrt.AssrtProvider("fixture")
+        provider.max_request_per_minute = 1000
+        provider.session.get = lambda *args, **kwargs: response({"sub": {"subs": [
+            {"fileid": 677682, "m_title": "Example.S01E03.AI翻译"},
+        ]}})
+        with patch.object(assrt, "sleep"):
+            self.assertEqual(provider.query({Language("zho")}, Episode("Example.S01E03.mkv", "Example", 1, 3)), [])
+
+    def test_unknown_search_shape_fails_without_exposing_response(self) -> None:
+        provider = assrt.AssrtProvider("fixture")
+        provider.max_request_per_minute = 1000
+        provider.session.get = lambda *args, **kwargs: response({"sub": {"subs": [{"secret": "secret-value"}]}})
+        with (
+            patch.object(assrt, "sleep"),
+            self.assertRaisesRegex(assrt.ProviderError, "unsupported search result") as raised,
+        ):
+            provider.query({Language("zho")}, Episode("Example.S01E03.mkv", "Example", 1, 3))
+        self.assertNotIn("secret-value", str(raised.exception))
+
+    def test_malformed_search_results_fail_with_a_provider_error(self) -> None:
+        provider = assrt.AssrtProvider("fixture")
+        provider.max_request_per_minute = 1000
+        for payload in ([], {"sub": {"subs": None}}, {"sub": {"subs": ["invalid"]}}):
+            with self.subTest(payload=payload), patch.object(assrt, "sleep"):
+                provider.session.get = lambda *args, payload=payload, **kwargs: response(payload)
+                with self.assertRaisesRegex(assrt.ProviderError, "invalid subtitle results"):
+                    provider.query({Language("zho")}, Episode("Example.S01E03.mkv", "Example", 1, 3))
+
+    def test_ambiguous_episode_archives_do_not_choose_first(self) -> None:
+        subtitle = assrt.AssrtSubtitle(Language("zho"), 1, "Example.S01", None, "fixture", 1000)
+        subtitle._target_season, subtitle._target_episode = 1, 3
+        subtitle._metadata = {"lang": {"langlist": {"langchs": True}}, "filelist": [
+            {"f": "Example.S01E03-one.zip", "url": "https://example.test/one.zip"},
+            {"f": "Example.S01E03-two.zip", "url": "https://example.test/two.zip"},
+        ]}
+        with self.assertRaisesRegex(assrt.ProviderError, "ambiguous"):
+            subtitle._get_detail()
+
+    def test_pack_does_not_claim_matches_for_another_series_or_episode_range(self) -> None:
+        for name in ("Other.S01E03.chs.srt", "Example.S01E03E04.chs.srt"):
+            with self.subTest(name=name):
+                subtitle = assrt.AssrtSubtitle(Language("zho"), 1, "Example.S01", None, "fixture", 1000)
+                subtitle._metadata = {"lang": {"langlist": {"langchs": True}}, "filelist": [
+                    {"f": name, "url": "https://example.test/wrong.srt"},
+                ]}
+                self.assertEqual(subtitle.get_matches(Episode("Example.S01E03.mkv", "Example", 1, 3)), set())
+
+    def test_details_must_belong_to_requested_subtitle(self) -> None:
+        session = SimpleNamespace(get=lambda *args, **kwargs: response({"sub": {"subs": [{"id": 2}]}}))
+        with patch.object(assrt, "sleep"), self.assertRaisesRegex(assrt.ProviderError, "different subtitle"):
+            assrt.fetch_detail(session, "fixture", 1000, 1)
+
+    def test_download_is_bounded_and_closes_stream(self) -> None:
+        provider = assrt.AssrtProvider("fixture")
+        provider.max_request_per_minute = 1000
+        subtitle = assrt.AssrtSubtitle(Language("zho"), 1, "Example.S01E03", provider.session, "fixture", 1000)
+        subtitle._detail = {"url": "https://example.test/subtitle.srt"}
+        closed = []
+        stream = SimpleNamespace(json=lambda: {}, raise_for_status=lambda: None,
+                                 iter_content=lambda **kwargs: iter([b"too large"]), close=lambda: closed.append(True))
+        provider.session.get = lambda *args, **kwargs: stream
+        with patch.object(assrt, "sleep"), patch.object(assrt, "MAX_DOWNLOAD", 2), \
+                self.assertRaisesRegex(assrt.ProviderError, "size limit"):
+            provider.download_subtitle(subtitle)
+        self.assertEqual(closed, [True])
 
 if __name__ == "__main__":
     unittest.main()
