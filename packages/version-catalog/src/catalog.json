@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003936@sha256:1d28c203a2e59a4b93bf99cc295d1d218b86e3599a42f680f3be0539f4b68bc4",
+      "value": "2.0.0-1004044@sha256:6257e9c82d3a96299702302edf5c484ff788b31dea1f94ebb0b38547096e5f85",
       "notes": [
         "not managed by renovate — built from packages/streambot and updated by CI version commit-back."
       ]

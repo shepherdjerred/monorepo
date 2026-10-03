@@ -64,9 +64,10 @@
       "digest": "sha256:c7777e0e9c17a4ff0e73a22ed195038d52dc67d336c738b013111d28177323f0"
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 1003936,
-      "version": "2.0.0-1003936",
-      "digest": "sha256:1d28c203a2e59a4b93bf99cc295d1d218b86e3599a42f680f3be0539f4b68bc4"
+      "buildNumber": 1004044,
+      "version": "2.0.0-1004044",
+      "digest": "sha256:6257e9c82d3a96299702302edf5c484ff788b31dea1f94ebb0b38547096e5f85",
+      "gitSha": "734b7a77e13abffa1effd57baaa01dd174dcb6a9"
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-1003936",
