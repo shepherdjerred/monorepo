@@ -138,7 +138,6 @@ const scoutDocsProbes = [
 
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
 export const staticSites: StaticSiteConfig[] = [
-  { hostname: "statically-typed.com", bucket: "statically-typed" },
   {
     hostname: "sjer.red",
     bucket: "sjer-red",
