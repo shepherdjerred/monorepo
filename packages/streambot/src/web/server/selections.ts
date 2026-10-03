@@ -1,6 +1,8 @@
 import { nonce } from "./session-store.ts";
 import { WebError } from "./errors.ts";
 
+export const SELECTIONS_PER_OWNER = 200;
+
 /** Bounded, short-lived server-owned references; clients cannot submit paths or track refs. */
 export class Selections<T> {
   private readonly owners = new Map<
@@ -27,7 +29,7 @@ export class Selections<T> {
     for (const [key, item] of bucket.items) {
       if (item.expires <= now) bucket.items.delete(key);
     }
-    if (bucket.items.size >= 200) {
+    if (bucket.items.size >= SELECTIONS_PER_OWNER) {
       const first = bucket.items.keys().next().value;
       if (first !== undefined) bucket.items.delete(first);
     }
