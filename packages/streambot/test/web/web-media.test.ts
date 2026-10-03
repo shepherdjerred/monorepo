@@ -7,6 +7,7 @@ import {
   CommandResultSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { CHANNEL, GUILD, LIBRARY, USER, webFixture } from "./web-fixture.ts";
+import { fixtureSports } from "./web-fixture-media.ts";
 
 let fixture: ReturnType<typeof webFixture>;
 afterEach(() => {
@@ -133,6 +134,23 @@ describe("web media artwork", () => {
 });
 
 describe("web live sports", () => {
+  test("the web provider choice reaches the catalog before fetching listings", async () => {
+    fixture = webFixture();
+    const listing = vi.spyOn(fixtureSports, "listToday");
+    await sports();
+    expect(listing).toHaveBeenLastCalledWith(
+      expect.any(AbortSignal),
+      "streameast",
+    );
+    const response = await fixture.handler(
+      get("/api/sports?guildId=" + GUILD + "&provider=tvsportslive"),
+    );
+    expect(response.status).toBe(200);
+    expect(listing).toHaveBeenLastCalledWith(
+      expect.any(AbortSignal),
+      "tvsportslive",
+    );
+  });
   test("sports listings require the gate and current membership before provider access", async () => {
     fixture = webFixture();
     const browse = vi.spyOn(fixture.catalog.sports, "browse");

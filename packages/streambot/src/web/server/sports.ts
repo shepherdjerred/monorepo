@@ -21,7 +21,7 @@ export class WebSports {
         "sports_unavailable",
         "Live sports listings are temporarily unavailable.",
       );
-    const today = await this.catalog.listToday(signal);
+    const today = await this.catalog.listToday(signal, query.provider);
     const filtered = today.filter(
       (event) => query.provider === "auto" || event.provider === query.provider,
     );

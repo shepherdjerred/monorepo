@@ -28,7 +28,10 @@ export type SportsSearchResult =
   | { readonly kind: "not-found" };
 
 export type SportsCatalog = {
-  readonly listToday: (signal: AbortSignal) => Promise<readonly SportsEvent[]>;
+  readonly listToday: (
+    signal: AbortSignal,
+    provider?: SportsProviderPreference,
+  ) => Promise<readonly SportsEvent[]>;
   readonly search: (
     query: string,
     provider: SportsProvider | "auto",

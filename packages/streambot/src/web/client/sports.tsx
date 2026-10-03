@@ -16,6 +16,7 @@ export function Sports(props: MediaListProps) {
   useEffect(() => {
     if (!props.sportsEnabled) return;
     const controller = new AbortController();
+    const deadline = AbortSignal.timeout(40_000);
     async function load() {
       setLoading(true);
       setError("");
@@ -29,15 +30,17 @@ export function Sports(props: MediaListProps) {
               provider,
             }).toString(),
           SportsResultsSchema,
-          { signal: controller.signal },
+          { signal: AbortSignal.any([controller.signal, deadline]) },
         );
         if (!controller.signal.aborted) setEvents(next);
       } catch (error_) {
         if (!controller.signal.aborted)
           setError(
-            error_ instanceof Error
-              ? error_.message
-              : "Live sports listings are unavailable.",
+            deadline.aborted
+              ? "Live sports took too long to load. Please refresh and try again."
+              : error_ instanceof Error
+                ? error_.message
+                : "Live sports listings are unavailable.",
           );
       } finally {
         if (!controller.signal.aborted) setLoading(false);

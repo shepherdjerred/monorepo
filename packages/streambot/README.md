@@ -69,6 +69,9 @@ therefore splits identities:
   discovery shows its real thumbnails. Poster lookup is lazy and does not hold
   up library browsing or playback. The Live sports tab searches today's
   StreamEast and TVSportsLive events and offers queue, play-next, and play-now.
+  Selecting one provider fetches only that provider; All sports providers combines
+  available listings. Slow requests stop with a retry message rather than leaving
+  the tab loading indefinitely.
   Upcoming events cannot be queued; the existing sports gate and control
   restrictions apply.
 - **Transports** — the userbot emits media two ways. Numbered slots fix the
