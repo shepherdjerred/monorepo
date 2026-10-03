@@ -195,7 +195,7 @@ const APP_VERSION_MAX_BYTES: usize = {};
 const LEAGUE_PATCH_MAX_BYTES: usize = {};
 const PLATFORM_ID_MAX_BYTES: usize = {};
 const LOCAL_PUUID_MAX_BYTES: usize = {};
-const LOBBY_ID_MAX_BYTES: usize = {};
+pub(crate) const LOBBY_ID_MAX_BYTES: usize = {};
 const GAME_ID_MAX_BYTES: usize = {};
 
 /// A curated, gameplay-only observation family.

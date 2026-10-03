@@ -243,6 +243,7 @@ pub struct Counters {
     http_5xx: AtomicU64,
     http_transport_errors: AtomicU64,
     lcu_errors: AtomicU64,
+    lobby_bindings: AtomicU64,
 }
 
 /// A counter name paired with its current value.
@@ -302,6 +303,11 @@ impl Counters {
         self.lcu_errors.fetch_add(1, Ordering::Relaxed);
     }
 
+    /// Count a game this client tied back to the lobby that assembled it.
+    pub fn lobby_bound(&self) {
+        self.lobby_bindings.fetch_add(1, Ordering::Relaxed);
+    }
+
     /// Every counter and its value, for the Diagnostics page and the bundle.
     #[must_use]
     pub fn readings(&self) -> Vec<CounterReading> {
@@ -342,6 +348,10 @@ impl Counters {
                 self.http_transport_errors.load(Ordering::Relaxed),
             ),
             ("lcu_errors", self.lcu_errors.load(Ordering::Relaxed)),
+            (
+                "lobby_bindings",
+                self.lobby_bindings.load(Ordering::Relaxed),
+            ),
         ]
     }
 }

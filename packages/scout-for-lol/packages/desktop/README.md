@@ -32,6 +32,27 @@ observations survive transient network failures in the local SQLite outbox.
 Clash capture includes check-in, invitations, tournament state, rewards, and
 history; mastery capture preserves the client's season-milestone fields.
 
+## Lobby and game identity
+
+LCU exposes a lobby's `partyId` while the lobby exists and a real `gameId` only
+once the game is in progress, and the in-progress session carries no lobby
+identity — the two facts never appear in the same payload, and no field is
+shared between them. The lobby is also the only place the complete roster
+appears, including bots and custom teams that Riot's spectator API omits.
+
+A process watching the transition is therefore the only party that can tie the
+two together. The client remembers the current lobby, claims it for the next
+game that starts, and stamps the result onto the envelope's `lobbyId` for
+observations whose own payload has none. Both halves live in the SQLite outbox,
+so the join survives a restart between champion select and the game.
+
+Each game records one outcome, which the first attempt decides: a game's roster
+cannot change identity partway through. "No lobby was observed" is recorded as
+such rather than retried, since a client that started mid-game will never see
+the lobby that is already gone. A remembered lobby stops being eligible after
+fifteen minutes, because a stale key would attach one game's roster to another,
+which is worse than having no key at all.
+
 ## Diagnostics
 
 The release binary is a GUI-subsystem process with no console, so it writes
