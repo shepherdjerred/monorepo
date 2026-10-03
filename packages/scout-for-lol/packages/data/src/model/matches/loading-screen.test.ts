@@ -137,6 +137,30 @@ describe("LoadingScreenParticipantSchema", () => {
     expect(result.puuid).toBeNull();
   });
 
+  test("accepts a bot with no summoner spells", () => {
+    // The League client exposes a bot championId and position and nothing
+    // else, so a bot genuinely has no spells to report.
+    const { spell1Id: _spell1Id, spell2Id: _spell2Id, ...withoutSpells } =
+      validParticipant;
+    const bot = {
+      ...withoutSpells,
+      puuid: null,
+      rankState: { status: "hidden" },
+    };
+    const result = LoadingScreenParticipantSchema.parse(bot);
+    expect(result.spell1Id).toBeUndefined();
+    expect(result.spell2Id).toBeUndefined();
+  });
+
+  test("requires summoner spells from anyone identifiable", () => {
+    // Absence is allowed only where it is true. A real player always has them,
+    // so omitting them would hide a mapping failure behind a blank icon.
+    const { spell1Id: _spell1Id, ...missingOne } = validParticipant;
+    expect(() => LoadingScreenParticipantSchema.parse(missingOne)).toThrow(
+      "must carry their summoner spells",
+    );
+  });
+
   test("rejects rank visibility states that disagree with PUUID availability", () => {
     expect(() =>
       LoadingScreenParticipantSchema.parse({
