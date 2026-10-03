@@ -15,7 +15,7 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * and inventing an ordering for them here would describe an architecture the
  * code does not have.
  */
-const transports = ["commands", "discord", "session", "voice"];
+const transports = ["commands", "discord", "session", "voice", "web"];
 
 const everythingElse = [
   "commands",
@@ -31,10 +31,27 @@ const everythingElse = [
   "state",
   "streamer",
   "voice",
+  "web",
 ];
 
 export default defineArchitecture({
   boundaries: [
+    {
+      name: "web-client-does-not-depend-on-server",
+      comment:
+        "The browser uses sanitized contracts; server credentials and media paths cannot enter its bundle.",
+      from: "web/client",
+      to: [
+        "commands",
+        "config",
+        "discord",
+        "machine",
+        "pool",
+        "session",
+        "sources",
+        "web/server",
+      ],
+    },
     {
       name: "machine-does-not-depend-on-transports",
       comment:

@@ -1,0 +1,159 @@
+import { useEffect, useState } from "react";
+import type { z } from "zod";
+import { SportsResultsSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { api } from "./api.ts";
+import { MediaRow, type MediaListProps } from "./media-row.tsx";
+
+export function Sports(props: MediaListProps) {
+  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [provider, setProvider] = useState("streameast");
+  const [refresh, setRefresh] = useState(0);
+  const [events, setEvents] = useState<z.infer<typeof SportsResultsSchema>>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!props.sportsEnabled) return;
+    const controller = new AbortController();
+    async function load() {
+      setLoading(true);
+      setError("");
+      setEvents([]);
+      try {
+        const next = await api(
+          "/api/sports?" +
+            new URLSearchParams({
+              guildId: props.guildId,
+              query: search,
+              provider,
+            }).toString(),
+          SportsResultsSchema,
+          { signal: controller.signal },
+        );
+        if (!controller.signal.aborted) setEvents(next);
+      } catch (error_) {
+        if (!controller.signal.aborted)
+          setError(
+            error_ instanceof Error
+              ? error_.message
+              : "Live sports listings are unavailable.",
+          );
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      controller.abort();
+    };
+  }, [props.guildId, props.sportsEnabled, search, provider, refresh]);
+
+  if (!props.sportsEnabled)
+    return (
+      <div className="empty">
+        <h3>Live sports are not enabled here yet</h3>
+        <p>Choose a server with sports streaming enabled to browse events.</p>
+      </div>
+    );
+
+  return (
+    <>
+      <form
+        className="search-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSearch(query.trim());
+          setRefresh((value) => value + 1);
+        }}
+      >
+        <label className="search-field">
+          <span aria-hidden="true">⌕</span>
+          <input
+            aria-label="Search live sports"
+            placeholder="A team, league, or matchup…"
+            value={query}
+            maxLength={300}
+            onChange={(event) => {
+              setQuery(event.target.value);
+            }}
+          />
+        </label>
+        <select
+          aria-label="Sports provider"
+          value={provider}
+          onChange={(event) => {
+            setProvider(event.target.value);
+          }}
+        >
+          <option value="streameast">StreamEast</option>
+          <option value="tvsportslive">TVSportsLive</option>
+          <option value="auto">All sports providers</option>
+        </select>
+        <button className="primary" disabled={loading}>
+          {loading ? "Finding games…" : "Search"}
+        </button>
+      </form>
+      <div className="result-heading">
+        <span>
+          {loading
+            ? "Loading today’s events…"
+            : String(events.length) +
+              (events.length === 1 ? " event today" : " events today")}
+        </span>
+        <button
+          disabled={loading}
+          onClick={() => {
+            setRefresh((value) => value + 1);
+          }}
+        >
+          Refresh
+        </button>
+      </div>
+      <p className="sports-note">
+        Queue live events for your voice channel. Upcoming games become playable
+        when they start.
+      </p>
+      {error !== "" && (
+        <p role="alert" className="inline-error">
+          {error}
+        </p>
+      )}
+      <div className="media-rows">
+        {events.map((event) => (
+          <MediaRow
+            key={event.id}
+            {...props}
+            title={event.title}
+            detail={event.provider + " · " + eventTime(event)}
+            selection={{ kind: "sports", id: event.id }}
+            available={event.status !== "scheduled"}
+            {...(event.status === "unknown"
+              ? {}
+              : {
+                  badge:
+                    event.status === "live"
+                      ? ("Live" as const)
+                      : ("Upcoming" as const),
+                })}
+          />
+        ))}
+      </div>
+      {!loading && error === "" && events.length === 0 && (
+        <div className="empty">
+          <h3>No games found</h3>
+          <p>Try another team or provider, or refresh closer to game time.</p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function eventTime(event: z.infer<typeof SportsResultsSchema>[number]): string {
+  if (event.startsAt === null)
+    return event.status === "live" ? "Live now" : "Start time unavailable";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(event.startsAt));
+}

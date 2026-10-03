@@ -13,7 +13,6 @@ import {
   listPages,
   sourcesPages,
 } from "@shepherdjerred/streambot/discord/commands/help-text.ts";
-import type { SubtitlePref } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   chaptersText,
   nowPlayingText,
@@ -464,14 +463,7 @@ export class CommandHandler {
         );
         return;
       }
-      const nowView = this.deps.view();
-
-      const subtitles: SubtitlePref = { trackRef };
-      this.deps.dispatch({
-        type: "CHANGE_SUBTITLES",
-        subtitles,
-        positionSeconds: nowView.positionSeconds ?? 0,
-      });
+      this.playback.applySubtitleTrack(interaction.userId, trackRef);
       await interaction.editReply(
         "🔄 Restarting with the selected subtitle track…",
       );

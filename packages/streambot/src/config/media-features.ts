@@ -45,3 +45,14 @@ export const mediaFeatureGate: MediaFeatureGate = {
   sportsStreaming: (scope) =>
     enabled("streambot-sports-streaming-enabled", scope),
 };
+
+export async function webUiEnabled(
+  guildId: string,
+  userId: string,
+): Promise<boolean> {
+  return await enabled("streambot-web-ui-enabled", {
+    guildId,
+    userId,
+    channelId: "web",
+  });
+}

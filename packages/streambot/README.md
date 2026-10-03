@@ -1,9 +1,8 @@
 # streambot
 
 Discord media orchestrator: streams local media files and yt-dlp/URL sources
-into Discord voice channels, controlled entirely through a `/stream` slash
-command (`/stream play`, `select`, `channels`, `skip`, `queue`, `seek`, `volume`, `help`,
-`sources`, …). Music plays as audio over the voice connection; video plays as a
+into Discord voice channels, controlled through `/stream` commands, the voice
+assistant, player cards, or an authenticated web remote. Music plays as audio over the voice connection; video plays as a
 Go Live stream. One Bun process serves many servers — and many voice channels
 per server — concurrently.
 
@@ -59,6 +58,17 @@ therefore splits identities:
   cross-server history with the current guild's history. Favorites and saved
   queues remain until explicitly removed. Raw audio and transcripts never
   enter this database.
+- **Web remote** — a React client served by the same Bun process. Discord OAuth
+  establishes identity; live guild membership and voice state authorize each
+  media request. Everyone currently in the channel can control playback through
+  the web remote. Slash, voice, and card permissions keep their existing policy.
+  Media paths and subtitle references stay on the server behind opaque IDs.
+  Library, queue, and player artwork use the existing TMDB credential; YouTube
+  discovery shows its real thumbnails. Poster lookup is lazy and does not hold
+  up library browsing or playback. The Live sports tab searches today's
+  StreamEast and TVSportsLive events and offers queue, play-next, and play-now.
+  Upcoming events cannot be queued; the existing sports gate and control
+  restrictions apply.
 - **Transports** — the userbot emits media two ways. Numbered slots fix the
   transport; legacy queues choose per item. Music
   plays as microphone audio over the ordinary voice connection (`speaking: 1`,
@@ -79,6 +89,33 @@ The playback lifecycle is a pure, unit-tested XState machine; all I/O lives in
 invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the
 Docker image. Prometheus metrics are served on `/metrics` (default port 9466);
 the headline signal is `streambot_ffmpeg_speed_ratio`.
+
+## Web development
+
+Run `bun run build` before starting a process with web credentials. The production
+server serves `dist/web` on the credential bootstrap port, separate from metrics.
+For frontend iteration, `bun run web:dev` proxies API requests to that server.
+
+`bun run e2e/web-local.ts` serves a credential-free acceptance fixture on
+`http://127.0.0.1:8080`. Its sign-in simulates Discord and its media I/O is simulated;
+the routes, session storage, command service, and playback actor are real. This
+fixture is absent from the production image. Use it after `bun run build` to inspect
+the library, queue, controls, subtitle picker, and system light/dark themes.
+
+| Bootstrap               | Purpose                                               |
+| ----------------------- | ----------------------------------------------------- |
+| `WEB_PUBLIC_ORIGIN`     | Exact HTTPS origin, or HTTP localhost for development |
+| `DISCORD_CLIENT_SECRET` | Existing command application's OAuth client secret    |
+| `WEB_PORT`              | Optional listen port; defaults to `8080`              |
+
+Omitting both origin and secret leaves the web listener absent. Supplying only one
+fails startup. OAuth uses `identify guilds` with a callback at
+`<WEB_PUBLIC_ORIGIN>/api/auth/discord/callback`. Hashed sessions persist for seven
+days in `/state/streambot-web.sqlite`; OAuth access tokens are not persisted.
+Media API access uses the default-off `streambot-web-ui-enabled` per-server/user
+gate. Pause, resume, and play-now also respect the existing assistant gate.
+See the [web remote explanation](../docs/wiki/src/content/docs/explanation/streambot-web-remote.md)
+and [activation guide](../docs/wiki/src/content/docs/how-to/enable-streambot-web-remote.md).
 
 The assistant adds pause, resume, restart, previous, play-now, richer subtitle
 selection, favorites, saved queues, “my usual,” and local-series continuation.

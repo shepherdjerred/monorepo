@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "types": ["@types/bun"],
     "paths": {
       "@shepherdjerred/streambot/*": ["./src/*"]
@@ -8,6 +9,7 @@
   },
   "include": [
     "architecture.config.ts",
+    "vite.config.ts",
     "src/**/*",
     "test/**/*",
     "integration/**/*",
@@ -15,5 +17,5 @@
     "eslint.config.ts",
     "scripts/**/*"
   ],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/web/client/**/*"]
 }
