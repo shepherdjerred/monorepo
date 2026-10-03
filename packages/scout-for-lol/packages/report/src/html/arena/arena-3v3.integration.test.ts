@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 import {
   ArenaMatchSchema,
@@ -8,7 +9,7 @@ import { getCachedArenaAugmentById } from "@scout-for-lol/data/data-dragon/arena
 import { arenaMatchToImage, arenaMatchToSvg } from "#src/html/arena/index.tsx";
 import { getDamageSharePercent } from "#src/html/arena/player-column.tsx";
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 const sixAugmentFillerIds = [1, 2, 3, 4, 5, 6];
 
 test("Arena report renders a tracked 3-player team", async () => {

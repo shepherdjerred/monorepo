@@ -55,7 +55,10 @@ function sha256(bytes: Uint8Array): string {
 const paths: string[] = [];
 for (const extension of ["png", "jpg"]) {
   const glob = new Bun.Glob(`**/*.${extension}`);
-  for await (const path of glob.scan({ cwd: imageRoot })) paths.push(path);
+  // Bun.Glob yields the platform separator, but the manifest is a committed
+  // artifact that `--check` compares byte for byte, so its paths stay POSIX.
+  for await (const path of glob.scan({ cwd: imageRoot }))
+    paths.push(path.replaceAll("\\", "/"));
 }
 
 const assets = await Promise.all(
