@@ -3,25 +3,41 @@ import type {
   BackupMaintenanceProgress,
 } from "@shepherdjerred/seaweedfs-backup/maintenance";
 
-type ActivityHeartbeatContext = {
+type ActivityHeartbeatContext<Progress> = {
   cancellationSignal: AbortSignal;
-  heartbeat: (details: BackupMaintenanceProgress) => void;
+  heartbeat: (details: Progress) => void;
 };
 
 /** Keep long maintenance I/O alive and stop writes when its Activity expires. */
 export async function withBackupMaintenanceHeartbeat<Result>(
-  context: ActivityHeartbeatContext,
+  context: ActivityHeartbeatContext<BackupMaintenanceProgress>,
   operation: (hooks: Required<BackupMaintenanceHooks>) => Promise<Result>,
+): Promise<Result> {
+  return withBackupActivityHeartbeat(context, operation, {
+    stage: "snapshot-inventory",
+    completed: 0,
+  });
+}
+
+/** Cover inventory and publication waits as well as per-object copy progress. */
+export async function withBackupActivityHeartbeat<
+  Result,
+  Progress extends { stage: string },
+>(
+  context: ActivityHeartbeatContext<Progress>,
+  operation: (hooks: {
+    signal: AbortSignal;
+    onProgress: (progress: Progress) => void;
+  }) => Promise<Result>,
+  initialProgress: Progress,
+  heartbeatEveryProgress = false,
 ): Promise<Result> {
   const heartbeatFailure = new AbortController();
   const signal = AbortSignal.any([
     context.cancellationSignal,
     heartbeatFailure.signal,
   ]);
-  let progress: BackupMaintenanceProgress = {
-    stage: "snapshot-inventory",
-    completed: 0,
-  };
+  let progress = initialProgress;
   const heartbeat = (): void => {
     if (signal.aborted) return;
     try {
@@ -30,11 +46,11 @@ export async function withBackupMaintenanceHeartbeat<Result>(
       heartbeatFailure.abort(error);
     }
   };
-  const onProgress = (next: BackupMaintenanceProgress): void => {
+  const onProgress = (next: Progress): void => {
     signal.throwIfAborted();
     const changedStage = next.stage !== progress.stage;
     progress = next;
-    if (changedStage) heartbeat();
+    if (changedStage || heartbeatEveryProgress) heartbeat();
     signal.throwIfAborted();
   };
   signal.throwIfAborted();

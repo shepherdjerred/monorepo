@@ -1,5 +1,8 @@
 import { Context } from "@temporalio/activity";
-import { withBackupMaintenanceHeartbeat } from "./seaweedfs-backup-heartbeat.ts";
+import {
+  withBackupActivityHeartbeat,
+  withBackupMaintenanceHeartbeat,
+} from "./seaweedfs-backup-heartbeat.ts";
 import { runGcCycle } from "@shepherdjerred/seaweedfs-backup/gc";
 import { listCompletionMarkers } from "@shepherdjerred/seaweedfs-backup/manifest";
 import {
@@ -14,7 +17,11 @@ import {
   BackupCadenceSchema,
   type BackupCadence,
 } from "@shepherdjerred/seaweedfs-backup/schemas";
-import { runBackup } from "@shepherdjerred/seaweedfs-backup/snapshot";
+import {
+  runBackup,
+  type BackupByteProgress,
+  type BackupProgress,
+} from "@shepherdjerred/seaweedfs-backup/snapshot";
 import { storesFromEnvironment } from "@shepherdjerred/seaweedfs-backup/store";
 import { createStructuredLogger } from "#observability/logging.ts";
 import {
@@ -90,126 +97,131 @@ export const seaweedFsBackupActivities = {
   async runSeaweedFsBackup(input: {
     cadence: BackupCadence;
   }): Promise<{ snapshotId: string; buckets: number }> {
-    const cadence = BackupCadenceSchema.parse(input.cadence);
-    const runStartedAt = performance.now();
-    setStage(cadence, "inventory");
-    let activeBucket = "run";
-    const { source, destination, backupBucket } = storesFromEnvironment();
-    const coverage = evaluateCoverage(
-      await source.listBuckets(),
-      SEAWEEDFS_BACKUP_POLICY,
-    );
-    seaweedFsBackupCoverageBuckets.set(
-      { problem: "unclassified" },
-      coverage.unclassified.length,
-    );
-    seaweedFsBackupCoverageBuckets.set(
-      { problem: "protected-missing" },
-      coverage.missingProtected.length,
-    );
-    let lastByteHeartbeatAt = 0;
-    try {
-      const result = await runBackup({
-        source,
-        destination,
-        backupBucket,
-        policy: SEAWEEDFS_BACKUP_POLICY,
-        cadence,
-        onProgress(progress) {
-          if ("bucket" in progress) activeBucket = progress.bucket;
-          setStage(cadence, progress.stage);
-          Context.current().heartbeat({
-            stage: progress.stage,
-            ...("bucket" in progress ? { bucket: progress.bucket } : {}),
-            ...(progress.stage === "complete"
-              ? { snapshotId: progress.snapshotId }
-              : {}),
-            ...(progress.stage === "copy" || progress.stage === "verify"
-              ? { completed: progress.completed, total: progress.total }
-              : {}),
+    return withBackupActivityHeartbeat<
+      { snapshotId: string; buckets: number },
+      BackupProgress | BackupByteProgress
+    >(
+      Context.current(),
+      async (hooks) => {
+        const cadence = BackupCadenceSchema.parse(input.cadence);
+        const runStartedAt = performance.now();
+        setStage(cadence, "inventory");
+        let activeBucket = "run";
+        const { source, destination, backupBucket } = storesFromEnvironment(
+          Bun.env,
+          {
+            signal: hooks.signal,
+          },
+        );
+        const coverage = evaluateCoverage(
+          await source.listBuckets(),
+          SEAWEEDFS_BACKUP_POLICY,
+        );
+        seaweedFsBackupCoverageBuckets.set(
+          { problem: "unclassified" },
+          coverage.unclassified.length,
+        );
+        seaweedFsBackupCoverageBuckets.set(
+          { problem: "protected-missing" },
+          coverage.missingProtected.length,
+        );
+        let lastByteHeartbeatAt = 0;
+        try {
+          const result = await runBackup({
+            source,
+            destination,
+            backupBucket,
+            policy: SEAWEEDFS_BACKUP_POLICY,
+            cadence,
+            onProgress(progress) {
+              if ("bucket" in progress) activeBucket = progress.bucket;
+              setStage(cadence, progress.stage);
+              hooks.onProgress(progress);
+            },
+            onBytes(progress) {
+              // Retry timers also invoke this callback outside a promise.
+              // Cancellation is enforced by the store and Activity owner.
+              if (hooks.signal.aborted) return;
+              const now = Date.now();
+              if (now - lastByteHeartbeatAt < 30_000) return;
+              lastByteHeartbeatAt = now;
+              activeBucket = progress.bucket;
+              setStage(cadence, progress.stage);
+              hooks.onProgress(progress);
+            },
           });
-        },
-        onBytes(progress) {
-          const now = Date.now();
-          if (now - lastByteHeartbeatAt < 30_000) return;
-          lastByteHeartbeatAt = now;
-          activeBucket = progress.bucket;
-          setStage(cadence, progress.stage);
-          Context.current().heartbeat({
-            stage: progress.stage,
-            bucket: progress.bucket,
-            bytes: progress.bytes,
+          for (const bucket of result.buckets) {
+            seaweedFsBackupSourceBytes.set(
+              { bucket: bucket.bucket, cadence },
+              bucket.sourceBytes,
+            );
+            seaweedFsBackupProtectedBytes.set(
+              { bucket: bucket.bucket, cadence },
+              bucket.protectedBytes,
+            );
+            seaweedFsBackupObjects.set(
+              { bucket: bucket.bucket, cadence, result: "copied" },
+              bucket.copiedObjects,
+            );
+            seaweedFsBackupObjects.set(
+              { bucket: bucket.bucket, cadence, result: "reused" },
+              bucket.reusedObjects,
+            );
+            seaweedFsBackupCopiedBytes.set(
+              { bucket: bucket.bucket, cadence },
+              bucket.copiedBytes,
+            );
+            seaweedFsBackupObservationTimestampSeconds.set(
+              { bucket: bucket.bucket, cadence },
+              Date.parse(result.marker.completedAt) / 1000,
+            );
+            seaweedFsBackupDurationSeconds.observe(
+              { bucket: bucket.bucket, cadence, outcome: "success" },
+              bucket.durationSeconds,
+            );
+            seaweedFsBackupLastSuccessTimestampSeconds.set(
+              { bucket: bucket.bucket, cadence },
+              Date.parse(result.marker.completedAt) / 1000,
+            );
+            seaweedFsBackupVerificationTotal.inc({
+              bucket: bucket.bucket,
+              cadence,
+              outcome: "success",
+            });
+          }
+          log("info", "SeaweedFS backup completed", {
+            snapshotId: result.marker.snapshotId,
+            cadence,
+            bucketCount: result.buckets.length,
+            objectCount: result.buckets.reduce(
+              (total, bucket) => total + bucket.objectCount,
+              0,
+            ),
+            copiedBytes: result.buckets.reduce(
+              (total, bucket) => total + bucket.copiedBytes,
+              0,
+            ),
           });
-        },
-      });
-      for (const bucket of result.buckets) {
-        seaweedFsBackupSourceBytes.set(
-          { bucket: bucket.bucket, cadence },
-          bucket.sourceBytes,
-        );
-        seaweedFsBackupProtectedBytes.set(
-          { bucket: bucket.bucket, cadence },
-          bucket.protectedBytes,
-        );
-        seaweedFsBackupObjects.set(
-          { bucket: bucket.bucket, cadence, result: "copied" },
-          bucket.copiedObjects,
-        );
-        seaweedFsBackupObjects.set(
-          { bucket: bucket.bucket, cadence, result: "reused" },
-          bucket.reusedObjects,
-        );
-        seaweedFsBackupCopiedBytes.set(
-          { bucket: bucket.bucket, cadence },
-          bucket.copiedBytes,
-        );
-        seaweedFsBackupObservationTimestampSeconds.set(
-          { bucket: bucket.bucket, cadence },
-          Date.parse(result.marker.completedAt) / 1000,
-        );
-        seaweedFsBackupDurationSeconds.observe(
-          { bucket: bucket.bucket, cadence, outcome: "success" },
-          bucket.durationSeconds,
-        );
-        seaweedFsBackupLastSuccessTimestampSeconds.set(
-          { bucket: bucket.bucket, cadence },
-          Date.parse(result.marker.completedAt) / 1000,
-        );
-        seaweedFsBackupVerificationTotal.inc({
-          bucket: bucket.bucket,
-          cadence,
-          outcome: "success",
-        });
-      }
-      log("info", "SeaweedFS backup completed", {
-        snapshotId: result.marker.snapshotId,
-        cadence,
-        bucketCount: result.buckets.length,
-        objectCount: result.buckets.reduce(
-          (total, bucket) => total + bucket.objectCount,
-          0,
-        ),
-        copiedBytes: result.buckets.reduce(
-          (total, bucket) => total + bucket.copiedBytes,
-          0,
-        ),
-      });
-      return {
-        snapshotId: result.marker.snapshotId,
-        buckets: result.buckets.length,
-      };
-    } catch (error: unknown) {
-      seaweedFsBackupVerificationTotal.inc({
-        bucket: activeBucket,
-        cadence,
-        outcome: "failure",
-      });
-      seaweedFsBackupDurationSeconds.observe(
-        { bucket: activeBucket, cadence, outcome: "failure" },
-        (performance.now() - runStartedAt) / 1000,
-      );
-      throw error;
-    }
+          return {
+            snapshotId: result.marker.snapshotId,
+            buckets: result.buckets.length,
+          };
+        } catch (error: unknown) {
+          seaweedFsBackupVerificationTotal.inc({
+            bucket: activeBucket,
+            cadence,
+            outcome: "failure",
+          });
+          seaweedFsBackupDurationSeconds.observe(
+            { bucket: activeBucket, cadence, outcome: "failure" },
+            (performance.now() - runStartedAt) / 1000,
+          );
+          throw error;
+        }
+      },
+      { stage: "inventory" },
+      true,
+    );
   },
 
   async runSeaweedFsBackupRetentionAndGc(): Promise<{
