@@ -1,38 +1,8 @@
-import { readdir } from "node:fs/promises";
-import { describe, expect, it } from "vitest";
-import {
-  cruiseArchitectureFixtures,
-  expectedFixtureRuleNames,
-} from "@shepherdjerred/architecture";
+import { describeArchitectureBoundaries } from "@shepherdjerred/architecture/testing";
 import architecture, { layers } from "#architecture";
 
-const packageRoot = import.meta.dir.replace(/\/src$/u, "");
-
-async function directories(directory: string): Promise<string[]> {
-  const found = await readdir(`${packageRoot}/${directory}`, {
-    withFileTypes: true,
-  });
-  return found
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
-}
-
-describe("dependency-cruiser layer boundaries", () => {
-  it("declares exactly the directories under src/ as layers", async () => {
-    const onDisk = await directories("src");
-
-    expect([...layers].sort()).toEqual(onDisk.sort());
-  });
-
-  it("rejects a committed negative fixture for every declared boundary", async () => {
-    const result = await cruiseArchitectureFixtures({
-      packageRoot,
-      definition: architecture,
-    });
-
-    expect(result.violatedRuleNames).toEqual(
-      expectedFixtureRuleNames(architecture),
-    );
-    expect(result.errorCount).toBe(result.fixtureFiles.length);
-  });
+describeArchitectureBoundaries({
+  packageRoot: import.meta.dir.replace(/\/src$/u, ""),
+  architecture,
+  layers,
 });
