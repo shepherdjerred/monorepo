@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
 import { clashPalette } from "@scout-for-lol/design-system/satori/clash-style";
@@ -7,7 +8,7 @@ import {
   loadingScreenToSvg,
 } from "#src/html/loading-screen/index.tsx";
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 
 async function clashLoadingScreen() {

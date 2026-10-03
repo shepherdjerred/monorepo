@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { test, expect, vi } from "vitest";
 import { arenaMatchToSvg } from "#src/html/arena/index.tsx";
 import { ArenaMatchSchema } from "@scout-for-lol/data";
@@ -15,7 +16,7 @@ function hashSvg(svg: string): string {
   return hasher.digest("hex");
 }
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
 const RAW_FILE_PATHS = [
   `${currentDir}testdata/1.json`,
