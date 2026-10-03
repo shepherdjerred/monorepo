@@ -915,6 +915,35 @@ func titleOnlyCreate(_ title: TaskTitle) -> CreateTaskRequest {
 /// that must fail with a typed error, and — in [`smokeSync`] — a full engine
 /// driven entirely through Swift implementations of the exported host traits.
 const SMOKE_SOURCE: &str = r##"import TaskNotesCore
+import Foundation
+
+/// Real native calls into the standalone document and configuration boundary.
+func smokeVault() throws {
+    let configuration = try FfiVaultConfiguration(plugin: nil, portable: nil, approveStandard: true)
+    guard try configuration.isCompleted(status: "done"),
+          try configuration.nextStatus(status: "open") == "in-progress" else {
+        throw Failure("vault workflow did not cross the native boundary")
+    }
+    let original = "---\n# retain\nstatus: open\ncustom: '001'\n---\nbody"
+    let document = try FfiVaultDocument(path: "Tasks/a.md", bytes: Data(original.utf8))
+    let write = try document.plan(editsJson: #"[{"kind":"set","key":"status","value":"done"}]"#, body: nil)
+    guard write.path == "Tasks/a.md", write.expectedRevision == document.revision(),
+          write.revision != write.expectedRevision else {
+        throw Failure("conditional vault write fields did not cross in ABI order")
+    }
+    let updated = try FfiVaultDocument(path: write.path, bytes: write.bytes)
+    let text = String(decoding: write.bytes, as: UTF8.self)
+    guard updated.body() == "body", updated.revision() == write.revision,
+          text.contains("# retain\n"), text.contains("custom: '001'\n") else {
+        throw Failure("vault write lost unrelated source content")
+    }
+    do {
+        _ = try FfiVaultDocument(path: "../escape", bytes: Data())
+        throw Failure("unsafe vault path was accepted")
+    } catch let error as VaultBoundaryError {
+        guard case .Path = error else { throw Failure("unexpected vault error: \(error)") }
+    }
+}
 
 /// Exercises one call of each shape that can break independently.
 func smoke() throws -> String {
@@ -1379,6 +1408,7 @@ struct Failure: Error, CustomStringConvertible {
 
 do {
     let version = try smoke()
+    try smokeVault()
     try smokePureHelpers()
     try smokeListSurface()
     let snapshot = try smokeSync()
@@ -1423,7 +1453,11 @@ fn build_bindgen(root: &Path, profile: &str) -> Result<PathBuf, String> {
 /// feature set the app actually ships. The metadata is identical either way,
 /// but leaving a `clap`-carrying archive lying around named as the shipping one
 /// invites someone to link it.
-fn build_library(root: &Path, profile: &str, target: Option<&str>) -> Result<PathBuf, String> {
+pub(crate) fn build_library(
+    root: &Path,
+    profile: &str,
+    target: Option<&str>,
+) -> Result<PathBuf, String> {
     let mut arguments = vec![
         "build".to_owned(),
         "--package".to_owned(),
@@ -1486,7 +1520,7 @@ fn build_library_for_platform(
 /// `xtask/` sits directly under the workspace root, so the parent is the root.
 /// Derived rather than read from the current directory because `cargo xtask`
 /// can be invoked from anywhere in the tree.
-fn workspace_root() -> Result<PathBuf, String> {
+pub(crate) fn workspace_root() -> Result<PathBuf, String> {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     manifest
         .parent()

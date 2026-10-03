@@ -2012,6 +2012,9 @@
     },
     "packages/tasknotes-core": {
       "name": "tasknotes-core",
+      "devDependencies": {
+        "@tasknotes/model-reference": "npm:@tasknotes/model@0.3.0-rc.9",
+      },
     },
     "packages/tasknotes-e2e": {
       "name": "@tasknotes/e2e",
@@ -4652,6 +4655,8 @@
     "@tasknotes/fixtures": ["@tasknotes/fixtures@workspace:packages/tasknotes-fixtures"],
 
     "@tasknotes/model": ["@tasknotes/model@0.2.2", "", { "dependencies": { "rrule": "^2.8.1", "yaml": "^2.3.1", "zod": "^3.24.0" } }, "sha512-RANR6c5iKlLaSOHPVrHwqThO9XcGDp/1UodcraxZVaZpV0vJhfej6cTTFxpqdsrNQXdBDEVnBazsjjMfzr8gzQ=="],
+
+    "@tasknotes/model-reference": ["@tasknotes/model@0.3.0-rc.9", "", { "dependencies": { "rrule": "^2.8.1", "yaml": "^2.3.1", "zod": "^3.24.0" } }, "sha512-wC0zwIhOnaxEJ3VuVnIoZqiKkQtY1YZqzGYDK8KONZf/aqegpy2cglyago0dlkkYttcm2yoHHHx7oca90HwxtA=="],
 
     "@temporalio/activity": ["@temporalio/activity@1.24.0", "", { "dependencies": { "@temporalio/client": "1.24.0", "@temporalio/common": "1.24.0" } }, "sha512-eBBho/r9XHe2KczYGzmaSp6e9+6c9ta/GGOBldIBr00D/cV34kJ76iAY3Ue1pQTaP7YaX3phMuOz07uUg/IKyA=="],
 
@@ -9172,6 +9177,8 @@
     "@tasknotes/e2e/vitest": ["vitest@5.0.1", "", { "dependencies": { "@types/chai": "^5.2.2", "@vitest/mocker": "5.0.1", "chai": "^6.2.2", "es-module-lexer": "^2.3.2", "expect-type": "^1.4.0", "magic-string": "^1.2.3", "obug": "^2.1.4", "picomatch": "^4.0.7", "std-env": "^4.2.0", "tinybench": "6.1.4", "tinyexec": "1.3.0", "tinyglobby": "^0.2.17", "why-is-node-running": "^2.3.0" }, "peerDependencies": { "@edge-runtime/vm": "*", "@opentelemetry/api": "^1.9.0", "@types/node": "^22.0.0 || >=24.0.0", "@vitest/browser-playwright": "5.0.1", "@vitest/browser-preview": "5.0.1", "@vitest/browser-webdriverio": "^5.0.0-beta.5 || >=5.0.0", "@vitest/coverage-istanbul": "5.0.1", "@vitest/coverage-v8": "5.0.1", "@vitest/ui": "5.0.1", "happy-dom": "*", "jsdom": "*", "vite": "^6.4.0 || ^7.0.0 || ^8.0.0" }, "optionalPeers": ["@edge-runtime/vm", "@opentelemetry/api", "@types/node", "@vitest/browser-playwright", "@vitest/browser-preview", "@vitest/browser-webdriverio", "@vitest/coverage-istanbul", "@vitest/coverage-v8", "@vitest/ui", "happy-dom", "jsdom"], "bin": { "vitest": "./vitest.mjs" } }, "sha512-iA95lQbKEkvrtTkdAgnWbXfbipWiiWe/hDl2P5tMi6WFwD76G0NxXAGp/M9EOcYupeGJRr6wppMc7CoA41TQjg=="],
 
     "@tasknotes/model/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@tasknotes/model-reference/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "@temporalio/client/uuid": ["uuid@11.1.1", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ=="],
 

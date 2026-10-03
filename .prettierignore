@@ -118,6 +118,8 @@ packages/sjer.red/src/content/blog/drafts/homelab-2.mdx
 packages/webring/README.md
 
 # Test fixtures are content under test, not code to format.
+# Unmodified pinned upstream corpus; its source SHA-256 is part of provenance.
+packages/tasknotes-fixtures/vault/upstream/field-mapping.json
 **/__tests__/fixtures/**
 **/e2e/fixtures/**
 

@@ -5,7 +5,7 @@
 
 [graph]
 all-features = true
-# The core is Linux-testable and ships to macOS and Windows. Anything outside
+# The core is Linux-testable and targets Apple, Android, and Windows. Anything outside
 # these targets is not part of the shipped graph and should not be audited.
 targets = [
   "aarch64-apple-darwin",
@@ -14,6 +14,11 @@ targets = [
   "x86_64-pc-windows-msvc",
   "aarch64-unknown-linux-gnu",
   "x86_64-unknown-linux-gnu",
+  "aarch64-apple-ios",
+  "aarch64-apple-ios-sim",
+  "x86_64-apple-ios",
+  "aarch64-linux-android",
+  "x86_64-linux-android",
 ]
 
 [advisories]
@@ -39,7 +44,11 @@ allow = [
   "Unlicense",
 ]
 confidence-threshold = 0.93
-exceptions = []
+exceptions = [
+  # serde-saphyr's byte decoder includes WHATWG tables under BSD-3-Clause.
+  # Reviewed license terms retain attribution; no copyleft or runtime code loading.
+  { name = "encoding_rs", version = "=0.8.42", allow = ["BSD-3-Clause"] },
+]
 
 [bans]
 multiple-versions = "warn"
@@ -64,6 +73,8 @@ skip-tree = []
 allow-build-scripts = [
   { name = "anyhow" },
   { name = "camino" },
+  # Version-specific SIMD cfg selection; reviewed build.rs has no I/O.
+  { name = "encoding_rs", version = "=0.8.42" },
   { name = "fs-err" },
   { name = "getrandom" },
   { name = "iana-time-zone-haiku" },
