@@ -431,6 +431,12 @@ Hard-difficulty reinforcements beyond the planned wave.
 Every starting class receives a full leather armor set; returning after a
 bleedout retains the weaker chestplate-only kit.
 
+Standing survivors recover half a heart every five seconds after eight seconds
+without damage, up to one-third of their current maximum health. Passive
+recovery works during combat and resupply, without consuming food or applying
+a potion effect. Food regeneration, potions, and class healing can heal above
+that ceiling. Downed players and spectators do not receive passive recovery.
+
 Every fifth round has a phased boss with marked casts and recovery windows.
 The Evoker's glowing ritual node interrupts casts; the Creaking's node opens
 a damage window after three interactions. The Ravager breaks nearby barricades

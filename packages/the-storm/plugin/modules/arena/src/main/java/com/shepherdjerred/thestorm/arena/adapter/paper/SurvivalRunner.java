@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.arena.app.store.SurvivalProgress;
 import com.shepherdjerred.thestorm.arena.domain.game.GameError;
 import com.shepherdjerred.thestorm.arena.domain.game.GameEvent;
 import com.shepherdjerred.thestorm.arena.domain.game.Member;
+import com.shepherdjerred.thestorm.arena.domain.survival.PassiveRecovery;
 import com.shepherdjerred.thestorm.arena.domain.survival.Revival;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
@@ -44,6 +45,7 @@ final class SurvivalRunner implements ArenaRunner {
   private final SettlementMap map;
   private final Set<com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos> volatilePositions;
   private final Revival revival = new Revival();
+  private final PassiveRecovery recovery = new PassiveRecovery();
   private final Map<UUID, Long> xp = new HashMap<>();
   private final Set<UUID> spectators = new HashSet<>();
   private final Set<UUID> respawning = new HashSet<>();
@@ -360,6 +362,7 @@ final class SurvivalRunner implements ArenaRunner {
     if (running()) {
       outsiders();
       revive();
+      fighters().forEach(this::recover);
     }
     if (game.phase() == SurvivalGame.Phase.FIGHTING) {
       combat.tick(fighters(), online());
@@ -557,8 +560,24 @@ final class SurvivalRunner implements ArenaRunner {
     }
   }
 
+  private void recover(Player player) {
+    var health = player.getHealth();
+    var maxHealth =
+        java.util.Objects.requireNonNull(
+                player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH))
+            .getValue();
+    var next =
+        recovery.recover(player.getUniqueId(), context().time().instant(), health, maxHealth);
+    if (next > health) {
+      player.setHealth(next);
+    }
+  }
+
   void hurt(Player player, double finalDamage) {
     revival.interrupt(player.getUniqueId());
+    if (finalDamage > 0 && isFighter(player.getUniqueId())) {
+      recovery.hurt(player.getUniqueId(), context().time().instant());
+    }
     if (finalDamage < player.getHealth() || !isFighter(player.getUniqueId())) {
       return;
     }
@@ -635,6 +654,7 @@ final class SurvivalRunner implements ArenaRunner {
     game.leave(id);
     spectators.remove(id);
     revival.interrupt(id);
+    recovery.remove(id);
     world.removeWolves(id);
     var player = context().server().getPlayer(id);
     if (player != null) {
@@ -662,6 +682,7 @@ final class SurvivalRunner implements ArenaRunner {
       game.reset();
       world.reset();
       revival.reset();
+      recovery.reset();
       spectators.clear();
       prepared = false;
       run = runId();
