@@ -90,12 +90,10 @@ export const EXTRA_JSON_COLUMNS: readonly {
   table: string;
   column: string;
 }[] = [
-  { table: "BucksDareGame", column: "snapshot" },
   { table: "BucksDareTarget", column: "accounts" },
-  { table: "BucksDareV2Target", column: "accounts" },
-  { table: "BucksDareV2Activation", column: "snapshotJson" },
-  { table: "BucksDareV2Revision", column: "targetsJson" },
-  { table: "BucksDareV2", column: "contractJson" },
+  { table: "BucksDareActivation", column: "snapshotJson" },
+  { table: "BucksDareRevision", column: "targetsJson" },
+  { table: "BucksDare", column: "contractJson" },
   { table: "BucksLedgerEntry", column: "context" },
   { table: "BucksMatchEarning", column: "targetSnapshotJson" },
   { table: "BucksMatchPool", column: "roster" },
@@ -186,10 +184,6 @@ const objectJson = (
 export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // Full match rosters: ten participants per game, mostly strangers.
   { table: "BucksMatchPool", column: "roster" },
-  // A captured game's frozen per-target facts, kept for audit — settlement
-  // re-reads `leafHits` alone. Its subjects come from the Dare's own target
-  // list, which is a tracked source and cascades with it.
-  { table: "BucksDareGame", column: "snapshot" },
   // A duel game's evidence carries the match's whole participant list, so it is
   // the same ten-strangers shape as a match pool roster. The competitors that
   // matter are tracked through DuelCompetitorMember.
@@ -242,16 +236,15 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   bareArrayJson("TournamentLobby", "redPuuids", "updatedAt"),
   bareArrayJson("TournamentLobby", "joinedPuuids", "updatedAt"),
   objectJson("BucksDareTarget", "accounts", "createdAt"),
-  objectJson("BucksDareV2Target", "accounts", "createdAt"),
-  objectJson("BucksDareV2Revision", "targetsJson", "createdAt"),
+  objectJson("BucksDareRevision", "targetsJson", "createdAt"),
   // A rank Dare's activation snapshot freezes the account whose rank is the
   // baseline, under `sourcePuuid`. Settlement compares live results against it
   // for the life of the contract, so it stays load-bearing long after the
   // snapshot was taken.
   // `updatedAt` because the row is created when activation is requested and the
   // snapshot is written only once activation succeeds, which can be much later.
-  objectJson("BucksDareV2Activation", "snapshotJson", "updatedAt"),
-  objectJson("BucksDareV2", "contractJson", "createdAt"),
+  objectJson("BucksDareActivation", "snapshotJson", "updatedAt"),
+  objectJson("BucksDare", "contractJson", "createdAt"),
   objectJson("ChallengeRunRevision", "selectedAccountsJson", "createdAt"),
   // An unconsumed intent is an instruction that has not run yet, and its
   // identity is frozen at prepare time and deliberately never re-resolved at

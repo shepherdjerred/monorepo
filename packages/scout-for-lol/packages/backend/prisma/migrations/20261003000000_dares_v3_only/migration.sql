@@ -21,10 +21,22 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Open pre-v3 Dares remain; retire them before migrating';
   END IF;
+  -- A dare-summary result still owed to its channel is a committed public
+  -- result that has not been posted. Its Dare is already terminal and will
+  -- not settle again, so deleting the intent would lose the result for good;
+  -- the operator drains delivery before migrating.
+  IF EXISTS (
+    SELECT 1 FROM "MatchNotificationIntent"
+    WHERE "kind" = 'dare-summary'
+      AND "state" IN ('pending', 'ready', 'sending')
+  ) THEN
+    RAISE EXCEPTION 'Undelivered dare-summary results remain; drain them before migrating';
+  END IF;
 END $$;
 
 -- The v1 Dare result post is gone; a resolved Dare now posts its result as a
--- channel-targeted dare-status intent.
+-- channel-targeted dare-status intent. Every dare-summary row left is
+-- terminal (the guard above refuses owed ones).
 DELETE FROM "MatchNotificationIntent" WHERE "kind" = 'dare-summary';
 DELETE FROM "MatchSettlementAnnouncement" WHERE "family" = 'dare-summary';
 
