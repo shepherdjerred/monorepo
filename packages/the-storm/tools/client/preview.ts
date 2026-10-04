@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
-import { serverLogs } from "#e2e/harness/docker.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startServer, stormTestConfig } from "#e2e/harness/server.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
 import { startControl, ViewpointsSchema } from "./control.ts";

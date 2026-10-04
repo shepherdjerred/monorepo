@@ -1,6 +1,6 @@
 import { chmod, cp, readdir } from "node:fs/promises";
 import path from "node:path";
-import { docker } from "./docker.ts";
+import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 
 /** Docker copies as root; Paper needs a writable disposable copy of the supplied world. */
 async function writableWorld(directory: string): Promise<void> {

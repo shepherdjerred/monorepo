@@ -2,7 +2,7 @@ import { describe, expect } from "vitest";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
-import { serverLogs } from "#e2e/harness/docker.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 
 function npc(id: string): string {

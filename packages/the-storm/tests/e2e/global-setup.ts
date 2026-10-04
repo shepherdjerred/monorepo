@@ -9,7 +9,7 @@ import {
   loadResources,
 } from "./gameplay-fixtures.ts";
 import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
-import { serverLogs } from "./harness/docker.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startServer, type ServerInfo } from "./harness/server.ts";
 
 declare module "vitest" {

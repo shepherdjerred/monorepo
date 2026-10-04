@@ -16,7 +16,7 @@ import {
   ExecuteTestOutputSchema,
   ListOutputSchema,
 } from "./harness/rcon-output.ts";
-import { serverLogs } from "./harness/docker.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 
 const TimelineArgsSchema = z.tuple([z.literal("minecraft:day"), z.bigint()]);
 
