@@ -69,8 +69,8 @@ public final class TownsModule implements StormModule {
       throw new IllegalStateException("towns and tracks disagree on the highest Governor level");
     }
     var config = context.loadConfig("towns.yml", TownsConfig.class);
-    TownsPaper.requireWorlds(context.plugin().getServer(), config);
     var parcelsConfig = context.loadConfig("parcels.yml", ParcelsConfig.class);
+    TownsPaper.requireWorlds(context.plugin().getServer(), config, parcelsConfig);
     context.database().migrate(id(), TownsModule.class.getClassLoader());
     var store = new JooqTownsStore(context.database());
     var lockStore = new JooqLocksStore(context.database());

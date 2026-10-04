@@ -17,6 +17,7 @@ import com.shepherdjerred.thestorm.towns.app.Settling;
 import com.shepherdjerred.thestorm.towns.app.TownService;
 import com.shepherdjerred.thestorm.towns.app.Treasury;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
+import com.shepherdjerred.thestorm.towns.domain.parcel.ParcelsConfig;
 import com.shepherdjerred.thestorm.towns.domain.claiming.Claiming;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockAccess;
 import com.shepherdjerred.thestorm.towns.domain.parcel.PlotRecovery;
@@ -259,16 +260,22 @@ public final class TownsPaper {
    * Every world {@code towns.yml} names must be loaded: a misspelt world would leave its claims or
    * regions silently unprotected.
    */
-  public static void requireWorlds(Server server, TownsConfig config) {
+  public static void requireWorlds(Server server, TownsConfig config, ParcelsConfig parcels) {
     var named = new TreeSet<String>(config.claims().worlds());
     config
         .regions()
         .forEach(region -> region.areas().all().forEach(area -> named.add(area.world())));
+    parcels.parcels().forEach(parcel -> named.add(parcel.area().world()));
     var missing = named.stream().filter(world -> server.getWorld(world) == null).toList();
     if (!missing.isEmpty()) {
       throw new IllegalStateException(
-          "towns.yml names worlds the server has not loaded: " + String.join(", ", missing));
+          "towns.yml or parcels.yml names worlds the server has not loaded: "
+              + String.join(", ", missing));
     }
+  }
+
+  public static void requireWorlds(Server server, TownsConfig config) {
+    requireWorlds(server, config, new ParcelsConfig(List.of()));
   }
 
   private static void reservePlacements(Plots plots, PackedShops packed) {

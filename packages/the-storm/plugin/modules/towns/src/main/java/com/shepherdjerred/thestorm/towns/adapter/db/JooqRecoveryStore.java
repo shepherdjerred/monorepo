@@ -299,6 +299,20 @@ public final class JooqRecoveryStore implements RecoveryStore {
     return database
         .write(
             dsl -> {
+              var current =
+                  dsl.select(TOWNS_PLOT_RECOVERIES.TOKEN_ID)
+                      .from(TOWNS_PLOT_RECOVERIES)
+                      .where(TOWNS_PLOT_RECOVERIES.RECOVERY_ID.eq(id.toString()))
+                      .and(TOWNS_PLOT_RECOVERIES.OWNER_ID.eq(owner.toString()))
+                      .and(TOWNS_PLOT_RECOVERIES.STATE.eq("AVAILABLE"))
+                      .and(TOWNS_PLOT_RECOVERIES.MAILED.eq(1))
+                      .fetchOne(TOWNS_PLOT_RECOVERIES.TOKEN_ID);
+              if (token.toString().equals(current)) {
+                return false;
+              }
+              if (!previousToken.toString().equals(current)) {
+                throw new IllegalStateException("packed shop changed before replacement");
+              }
               var changed =
                   dsl.update(TOWNS_PLOT_RECOVERIES)
                       .set(TOWNS_PLOT_RECOVERIES.TOKEN_ID, token.toString())

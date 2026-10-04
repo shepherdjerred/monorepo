@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.shepherdjerred.thestorm.mail.app.Mail;
 import com.shepherdjerred.thestorm.mail.app.MailItem;
 import com.shepherdjerred.thestorm.shops.app.ShopRelocation;
@@ -462,10 +464,7 @@ final class PackedShops implements Listener {
               return selected(recovery)
                   .thenComposeAsync(
                       ignored -> {
-                        var next =
-                            new UUID(
-                                parts.context().random().nextLong(),
-                                parts.context().random().nextLong());
+                        var next = replacementToken(recovery.id(), recovery.token());
                         var replacement =
                             new PlotRecovery(
                                 recovery.id(),
@@ -493,6 +492,12 @@ final class PackedShops implements Listener {
                       main());
             },
             main());
+  }
+
+  static UUID replacementToken(UUID recoveryId, UUID previousToken) {
+    return UUID.nameUUIDFromBytes(
+        ("the-storm:packed-shop-reissue:" + recoveryId + ":" + previousToken)
+            .getBytes(UTF_8));
   }
 
   private CompletableFuture<Void> restoreLocks(
