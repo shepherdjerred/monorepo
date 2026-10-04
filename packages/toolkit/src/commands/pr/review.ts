@@ -24,6 +24,8 @@ import { listReviewFeedback } from "#lib/review/feedback.ts";
 import { describeFeedback } from "#lib/review/feedback-sources.ts";
 import { resolvePrNumber } from "#lib/ci/github.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
+import { buildPassthroughInvocation } from "#lib/passthrough.ts";
 
 /**
  * Repository the CLI addresses when restarting a pipeline.
@@ -280,7 +282,7 @@ export async function reviewHarvestCommand(
         );
         continue;
       }
-      restartCiPipeline(verdict.pipelineNumber);
+      await restartCiPipeline(verdict.pipelineNumber);
       console.log(
         `#${String(number)} ${provider.displayName}: restarted pipeline ${verdict.pipelineNumber}`,
       );
@@ -296,14 +298,26 @@ export async function reviewHarvestCommand(
  * Woodpecker links a status at the pipeline and restarts at that granularity,
  * so this re-runs the gate rather than one step inside it.
  */
-function restartCiPipeline(pipelineNumber: string): void {
-  const result = Bun.spawnSync([
-    "woodpecker-cli",
-    "pipeline",
-    "start",
-    WOODPECKER_REPO,
-    pipelineNumber,
-  ]);
+async function restartCiPipeline(pipelineNumber: string): Promise<void> {
+  // Same token chain as `toolkit woodpecker` dispatch (env, config, Keychain);
+  // the invocation also supplies the WOODPECKER_SERVER default. Stderr stays
+  // piped (not spawnPassthroughInvocation's inherit) so the failure below
+  // keeps its exact text.
+  await resolveCredentials(["WOODPECKER_TOKEN"]);
+  const invocation = buildPassthroughInvocation(
+    "woodpecker",
+    ["pipeline", "start", WOODPECKER_REPO, pipelineNumber],
+    { ...Bun.env },
+  );
+  if (invocation === null) {
+    throw new Error("toolkit: unknown passthrough command: woodpecker");
+  }
+  const result = Bun.spawnSync([invocation.executable, ...invocation.args], {
+    env: invocation.env,
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
   if (result.exitCode !== 0) {
     throw new Error(
       `woodpecker-cli pipeline start ${pipelineNumber} failed: ${result.stderr.toString().trim()}`,

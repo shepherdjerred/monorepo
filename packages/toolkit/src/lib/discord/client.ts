@@ -3,14 +3,14 @@ import { pathExists } from "@shepherdjerred/unix-socket-daemon";
 import { ErrorResponseSchema, SOCKET_PATH } from "#lib/discord/ipc.ts";
 
 const START_HINT = [
-  "Discord daemon is not running. Start it with tokens in env (one batched op call):",
+  "Discord daemon is not running. toolkit resolves DISCORD_BOT_TOKEN / DISCORD_USER_TOKEN itself",
+  "(env, ~/.toolkit/config.toml [credentials], macOS Keychain), so just start it:",
   "",
-  '  bash -c \'J=$(op item get <ITEM> --vault "<VAULT>" --format json --reveal) \\',
-  '    && export DISCORD_BOT_TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\\"<BOT_FIELD>\\").value") \\',
-  '    && export DISCORD_USER_TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\\"<USER_FIELD>\\").value") \\',
-  "    && toolkit discord daemon start'",
+  "  toolkit discord daemon start",
   "",
-  "Ask the user which 1Password item/fields hold the right tokens.",
+  "If resolution fails, enroll each token in the Keychain (one Touch ID each):",
+  "  swift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-bot-token --ref op://Personal/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN",
+  "  swift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-user-token --ref op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN",
 ].join("\n");
 
 export async function daemonRequest<Schema extends z.ZodType>(

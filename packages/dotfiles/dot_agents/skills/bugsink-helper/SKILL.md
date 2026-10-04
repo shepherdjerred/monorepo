@@ -13,6 +13,17 @@ Bugsink is a self-hosted error tracking service compatible with Sentry SDKs. It 
 
 ## Authentication
 
+Prefer `toolkit bugsink` — it resolves `BUGSINK_TOKEN` itself (env, then
+`~/.toolkit/config.toml` `[credentials]`, then macOS Keychain, then the
+1Password service account), so no token handling is needed:
+
+```bash
+# Verify authentication by listing issues
+toolkit bugsink issues --limit 1
+```
+
+For endpoints toolkit does not cover yet, fall back to raw `curl`:
+
 ```bash
 # Set environment variables
 export BUGSINK_URL="https://your-bugsink-instance.example.com"
