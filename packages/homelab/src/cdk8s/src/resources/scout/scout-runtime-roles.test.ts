@@ -105,6 +105,21 @@ function envValue(
 }
 
 describe("Scout runtime role assignment", () => {
+  test.each(SCOUT_STAGES)(
+    "shares the private support bucket across %s roles",
+    (stage) => {
+      for (const role of [
+        "scout-backend",
+        "scout-gateway",
+        "scout-activity-worker",
+      ]) {
+        const deployment = roleDeployment(stage, `scout-${stage}-${role}`);
+        expect(envValue(deployment, "SUPPORT_BUCKET_NAME")).toBe(
+          `scout-support-${stage}`,
+        );
+      }
+    },
+  );
   test("a split stage's backend Deployment owns the application role", () => {
     const backend = RoleDeploymentSchema.parse(
       findResource(

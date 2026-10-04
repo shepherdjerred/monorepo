@@ -35,6 +35,10 @@ const EXACT_ROUTES = new Set<string>([
 /** Paths with dynamic segments, mapped to a templated label. */
 const PATTERN_ROUTES: readonly { pattern: RegExp; label: string }[] = [
   {
+    pattern: /^\/api\/support\/screenshots\/[^/]+$/,
+    label: "/api/support/screenshots/:id",
+  },
+  {
     pattern: /^\/api\/scout-client\/v1\/pairings\/[0-9a-f-]+\/exchange$/,
     label: "/api/scout-client/v1/pairings/:id/exchange",
   },

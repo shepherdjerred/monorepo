@@ -180,6 +180,14 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       initiallyActive: true,
     }),
     intervalSchedule(stage, {
+      name: "support-inbox",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "support-inbox" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+      initiallyActive: true,
+    }),
+    intervalSchedule(stage, {
       name: "competition-refresh",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-refresh" }],

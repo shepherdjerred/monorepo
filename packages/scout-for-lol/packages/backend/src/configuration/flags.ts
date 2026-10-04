@@ -142,17 +142,13 @@ type FlagOverride = {
   betaOnly?: true;
 };
 
-/**
- * Flag configuration
- */
 type FlagConfig = {
   default: boolean;
   overrides: FlagOverride[];
 };
 
 export type FlagName =
-  | "ai_reports_enabled"
-  | "ai_reports_unlimited"
+  | `ai_reports_${"enabled" | "unlimited"}`
   | "ai_reviews_enabled"
   | "betting_enabled"
   | "bucks_dares_enabled"
@@ -175,6 +171,7 @@ export type FlagName =
   | "initial_match_history_import_enabled"
   | "scout_client_ingestion"
   | "scout_operations_console_enabled"
+  | `scout_support_${"conversations" | "report_action"}_enabled`
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
   | "voice_assistant_enabled";
@@ -424,6 +421,8 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
+  scout_support_conversations_enabled: { default: false, overrides: [] },
+  scout_support_report_action_enabled: { default: false, overrides: [] },
   initial_match_history_import_enabled: {
     default: false,
     overrides: [],

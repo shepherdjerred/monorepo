@@ -14,6 +14,69 @@ Application state (subscriptions, competitions, guilds) is PostgreSQL 16
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.
 
+## Support messages
+
+`SupportConversation` joins web feedback, private Discord forms, and bot DMs by
+Discord identity within each environment. `Feedback` holds inbound and human
+outbound messages. Bot DMs do not require a web account; signing in later with
+the same Discord identity exposes that history. The gateway subscribes only to
+direct-message events, with partial channels enabled, not guild message content.
+Gateway message/interaction IDs and web UUIDs deduplicate retries. Intake uses
+a per-sender transaction lock, ten-message-per-minute limit, and five-upload-
+per-minute limit backed by minimal sender throttle and alert-grouping state that
+survives conversation deletion, plus operator mute. Discord DM and web screenshot
+uploads share the same sender quota. A database trigger adopts feedback inserted
+by older pods during a rolling deployment, so the one-time data migration does
+not leave late legacy submissions detached from the inbox.
+
+`/app/feedback` is the permanent composer and reply history. Operations' inbox
+uses the structural operator allowlist independently of the pipeline console
+flag; ordinary server admins cannot read it. Read, waiting-on-user, and resolved
+are separate states; an inbound follow-up reopens the conversation. Replies are
+committed to web history before notification work, so blocked Discord DMs never
+hide an answer. Notification delivery, mute changes, and deletion serialize on
+the same sender lock, so no notification can arrive after deletion commits.
+Reply request IDs prevent duplicate replies.
+
+`SupportJob` is the durable outbox. Intake groups operator alerts and DM receipts
+in five-minute windows. A prompt Temporal start drains work; the one-minute
+`support-inbox` Schedule recovers missed starts and stale claims. Discord sends
+are at-most-once attempts: interrupted/ambiguous outcomes become `UNKNOWN`, never
+automatic resends. Storage work uses deterministic keys and bounded retries.
+Operations shows delivery failures and detached file-deletion failures, with
+retry controls only for repeatable storage work. DM audit content is redacted.
+
+Screenshots accept PNG/JPEG/WebP up to 10 MiB, five per message. Web uploads
+reserve a private object key before I/O; bot attachments archive only allowlisted
+Discord CDN URLs, with no redirects and bounded byte counts. Successful copies
+clear the expiring source URL. Private `scout-support-beta`/`scout-support-prod`
+buckets are backed up separately from disposable report images. The bootstrap
+`SUPPORT_BUCKET_NAME` selects the bucket; image reads authenticate ownership or
+the operator allowlist, validate stored bytes, and return private/no-store headers.
+Accepted content remains until confirmed manual deletion. Deletion fences
+archive work, removes active records, and durably queues file cleanup. Unsubmitted
+uploads expire after 24 hours. Backups follow existing rotation; conversation
+deletion removes message and attachment content but retains the sender ID,
+recent inbound/upload timestamps, and five-minute alert/receipt grouping
+timestamps needed to preserve abuse controls. Failure notices to a sender are
+coalesced to one per minute, with only the latest notice timestamp retained.
+Muted senders also retain their minimal restriction state.
+
+`scout_support_conversations_enabled` gates new Discord controls, screenshots,
+operator alerts, and reply DMs; stored web messages remain readable and bot DM
+intake still gets receipts. `scout_support_report_action_enabled` additionally
+controls the passive report feedback button. V2 freezes that button with the
+notification presentation before delivery. These controls create no additional
+outreach messages and do not change existing outreach budgets. Fourteen-day
+Operations measurements exclude operator conversations and count report actions
+delivered/opened/submitted; delivery is not an impression. Analytics never carry
+support text, attachment URLs, or screenshot bytes.
+
+Feedback links derive from the application origin. `/help`, website support,
+the permanent form, and existing occasional outreach route to this conversation;
+GitHub issues and personal developer DMs are not support entrypoints. The
+community Discord is optional and is not mirrored into private support.
+
 ## Commands
 
 ```bash

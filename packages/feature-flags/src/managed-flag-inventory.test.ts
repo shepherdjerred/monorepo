@@ -93,6 +93,20 @@ function verifySportsGuildRollout(): void {
 }
 
 describe("ManagedFlagInventorySchema", () => {
+  test("Scout report support action is enabled in beta only", () => {
+    const flag = managedFlagInventory.flags.find(
+      ({ key }) => key === "scout_support_report_action_enabled",
+    );
+    const betaOverride = managedFlagInventory.environments
+      .find(({ key }) => key === "beta")
+      ?.overrides.find(
+        ({ key }) => key === "scout_support_report_action_enabled",
+      );
+
+    expect(flag?.default).toBe(false);
+    expect(betaOverride?.default).toBe(true);
+  });
+
   test(
     "limits Streambot sports rollout to named guilds",
     verifySportsGuildRollout,

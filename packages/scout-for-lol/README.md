@@ -206,7 +206,7 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 - **What's New**: [scout-for-lol.com/whatsnew](https://scout-for-lol.com/whatsnew)
 - **Add to Discord**: [Install Scout](https://discord.com/oauth2/authorize?client_id=1182800769188110366&scope=bot%20applications.commands&permissions=2148352)
 - **GitHub**: [monorepo package](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
-- **Support**: [GitHub Issues](https://github.com/shepherdjerred/monorepo/issues)
+- **Support**: [Help and feedback](https://scout-for-lol.com/support)
 
 ## Privacy & Terms
 

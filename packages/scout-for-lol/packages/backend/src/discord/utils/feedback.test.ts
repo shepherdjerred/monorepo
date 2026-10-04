@@ -7,5 +7,7 @@ describe("buildFeedbackRequestMessage", () => {
     expect(message).toContain("Cool Server");
     expect(message).toMatch(/https?:\/\//);
     expect(message.toLowerCase()).toContain("feedback");
+    expect(message).toContain("/app/feedback");
+    expect(message).not.toContain("aren't monitored");
   });
 });

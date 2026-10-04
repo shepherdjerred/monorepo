@@ -23,6 +23,7 @@ import {
 } from "#src/tips/tip-state.ts";
 import { parseTipKey } from "#src/tips/tip-catalog.ts";
 import { withFeatureTip } from "#src/tips/tip-render.ts";
+import { withSupportAction } from "#src/support/discord.ts";
 import { getSubjectIntent } from "#src/database/durable/intent-repository.ts";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 
@@ -194,15 +195,19 @@ export async function freezeNotificationMessage(
       if (current.serverId !== guildId)
         throw new Error("Notification presentation destination changed");
       if (current.messageJson !== null) return current.messageJson;
-      let decorated = message;
+      let decorated =
+        record.intent.kind === "postmatch"
+          ? await withSupportAction(message, record.matchId, guildId)
+          : message;
       let chosen: Awaited<ReturnType<typeof selectTip>>;
+      const supported = decorated;
       const tip = await selectTip({ serverId: guildId }, { db: tx });
       if (
         tip !== undefined &&
-        withFeatureTip(message, tip) !== message &&
+        withFeatureTip(supported, tip) !== supported &&
         (await claimTip({ serverId: guildId, tipKey: tip.key }, tx))
       ) {
-        decorated = withFeatureTip(message, tip);
+        decorated = withFeatureTip(supported, tip);
         chosen = tip;
       }
       // Discord builders serialize through toJSON; structuredClone would lose
@@ -239,7 +244,26 @@ export async function confirmNotificationTip(
   database: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   if (record.intent.state.kind !== "delivered") return;
+  const messageId = record.intent.state.messageId;
   await database.$transaction(async (tx) => {
+    if (messageId !== undefined && record.intent.kind === "postmatch") {
+      const presentation = await tx.notificationPresentation.findUnique({
+        where: { intentKey: record.intent.key },
+      });
+      if (
+        presentation?.messageJson?.includes('"custom_id":"support:contact:') ===
+        true
+      ) {
+        await tx.supportTouchpoint.createMany({
+          data: {
+            id: `delivered:${messageId}`,
+            surface: "REPORT",
+            action: "DELIVERED",
+          },
+          skipDuplicates: true,
+        });
+      }
+    }
     await settleNotificationTip(record.intent, tx);
   });
 }
