@@ -8,6 +8,7 @@ import {
   appendFile,
   chmod,
   mkdir,
+  readFile,
   rm,
   stat,
   writeFile,
@@ -58,8 +59,23 @@ export function pidAlive(pid: number): boolean {
   }
 }
 
-/** The process's full command line, or null when no such process exists. */
+/**
+ * The process's full command line, or null when no such process exists.
+ * Linux reads `/proc/<pid>/cmdline` (slim containers ship no `ps`); other
+ * platforms ask `ps`.
+ */
 export async function processCommand(pid: number): Promise<string | null> {
+  if (process.platform === "linux") {
+    // /proc reports size 0, so read to EOF rather than trusting stat.
+    let raw: string;
+    try {
+      raw = await readFile(`/proc/${String(pid)}/cmdline`, "utf8");
+    } catch {
+      return null;
+    }
+    const command = raw.replaceAll("\0", " ").trim();
+    return command.length > 0 ? command : null;
+  }
   const ps = Bun.spawn(["ps", "-o", "command=", "-p", String(pid)], {
     stdout: "pipe",
     stderr: "ignore",
