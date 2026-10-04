@@ -991,7 +991,11 @@
         },
         {
           "path": "tests/full",
-          "reason": "All 22 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
+          "reason": "All 25 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
+        },
+        {
+          "path": "tests/load",
+          "reason": "The 20/50/100-bot rwf load profile runs manually through test:load on a 4-CPU, 8G-heap Paper container; it measures tick time rather than asserting per-change behaviour, so no CI lane runs it."
         }
       ]
     }
