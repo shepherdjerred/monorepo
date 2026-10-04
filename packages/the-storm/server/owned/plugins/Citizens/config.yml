@@ -1,0 +1,21 @@
+# Repository-owned Citizens configuration. itzg's /plugins sync overwrites this
+# file on every boot (SYNC_SKIP_NEWER_IN_DESTINATION=false), so the copy
+# Citizens rewrites with its defaults never sticks. Every key below exists in
+# Citizens 2.0.44 (net.citizensnpcs.Settings); anything not listed keeps the
+# Citizens default. Do not add keys Citizens does not define.
+#
+# Citizens hosts the story NPC and companion bodies (persisted in saves.yml)
+# and the rwfbots combatants (an in-memory registry that never reaches
+# saves.yml). saves.yml and lib/ under plugins/Citizens are runtime state, so
+# this directory is deliberately not an owned root. Pathfinding keeps the
+# Citizens default (MINECRAFT), which the story NPCs and companions use. No
+# /npc permissions are granted.
+npc:
+  tablist:
+    # NPCs stay out of the Java tab list unless an NPC opts in through its
+    # REMOVE_FROM_TABLIST metadata (companions do).
+    disable: true
+  player:
+    # NPCs stay out of Bukkit's online-player list unless an NPC's
+    # REMOVE_FROM_PLAYERLIST metadata says otherwise.
+    remove-from-list: true
