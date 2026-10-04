@@ -192,7 +192,7 @@ async function readyGameForObservedLobby(options: {
         gameNumber: options.gameNumber,
         gameState: "code_ready",
       },
-      update: { gameState: "code_ready", tournamentLobbyId: null },
+      update: { gameState: "code_ready" },
     });
     const now = new Date();
     await mintDuelStatusIntent(tx, {

@@ -69,13 +69,6 @@ export async function expireCustomNightsInDatabase(
             voiceError: null,
           },
         });
-        await transaction.tournamentLobby.updateMany({
-          where: {
-            customGame: { id: game.id },
-            state: { notIn: ["reported", "cancelled", "abandoned", "expired"] },
-          },
-          data: { state: "cancelled" },
-        });
         await transaction.customAuditEvent.create({
           data: {
             nightId: candidate.id,

@@ -33,7 +33,7 @@ import {
   EXCLUDED_TABLE_DATA,
   redactedCopyOutStatement,
   redactionCheckStatement,
-  REDACTED_COLUMNS,
+  redactionsForSource,
   RESTORE_SECTIONS,
   type ColumnRedaction,
   dumpArgv,
@@ -284,20 +284,30 @@ async function main(): Promise<void> {
     `Dumped ${(written / 1_000_000).toFixed(1)} MB to ${options.dumpPath}`,
   );
 
+  const sourceTables = parseRowList(
+    await queryPod(target, pod.name, PUBLIC_TABLES),
+  );
+  const redactions = redactionsForSource(sourceTables);
+  if (redactions.absent.length > 0) {
+    console.log(
+      `No source rows to redact for tables absent from its schema: ${redactions.absent.join(", ")}`,
+    );
+  }
+
   await recreateLocalDatabase(options);
   for (const section of RESTORE_SECTIONS) {
     if (section === "post-data") {
       // Between `data` and `post-data`: the rows the dump withheld have to be
       // present before the foreign keys referencing them are created.
-      for (const [table, redactions] of Object.entries(REDACTED_COLUMNS)) {
+      for (const [table, columnRedactions] of redactions.apply) {
         const loaded = await copyRedactedTable(
           options,
           pod.name,
           table,
-          redactions,
+          columnRedactions,
         );
         console.log(
-          `Loaded ${String(loaded)} ${table} rows with ${redactions
+          `Loaded ${String(loaded)} ${table} rows with ${columnRedactions
             .map((redaction) => redaction.column)
             .join(", ")} redacted`,
         );
@@ -316,9 +326,6 @@ async function main(): Promise<void> {
     `Restored no rows for credential-only tables: ${EXCLUDED_TABLE_DATA.join(", ")}`,
   );
 
-  const sourceTables = parseRowList(
-    await queryPod(target, pod.name, PUBLIC_TABLES),
-  );
   const restoredTables = parseRowList(
     await queryLocal(options.databaseUrl, PUBLIC_TABLES),
   );

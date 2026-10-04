@@ -528,7 +528,6 @@ model GuildPermissionError {
   lastOccurrence        DateTime // Most recent occurrence
   consecutiveErrorCount Int       @default(1) // Number of consecutive errors
   lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
-  ownerNotified         Boolean   @default(false) // DEPRECATED (was the abandoned-guild latch); unused since notificationStage replaced it
   // Backed-off owner notification escalation for the current failure streak.
   // notificationStage: 0 = none sent, 1 = immediate sent, 2 = +1w sent, 3 = +1mo sent (terminal).
   // lastNotifiedAt anchors the next stage's delay (NOT firstOccurrence) so existing
@@ -1918,141 +1917,6 @@ model BucksWeeklyLeaderboardSnapshot {
 }
 
 // =============================================================================
-// Legacy Tournament-code custom lobbies
-//
-// Scout no longer creates Riot Tournament API lobbies. These models remain so
-// existing games retain provenance and historical results can still project.
-//
-// Deliberately provider-agnostic: only Int/String/BigInt/DateTime/Boolean, no
-// Prisma enum (SQLite has none) and no @db.* native types. Enum-shaped columns
-// are TEXT validated by Zod on read and write, matching how `AuditLog.action`
-// and `DmAuditLog.kind` already work. That keeps the migration portable across
-// the pending Postgres cutover.
-// =============================================================================
-
-/// A registered tournament provider and tournament.
-///
-/// Historical registration rows retained for database compatibility.
-///
-/// Keyed by (apiMode, region) because stub and live IDs are different
-/// namespaces: a code minted under the stub is meaningless under the live API.
-model TournamentRegistration {
-  id               Int      @id @default(autoincrement())
-  apiMode          String // TournamentApiMode: "stub" | "live"
-  /// Riot tournament region code, e.g. "NA". Deliberately NOT named `region`:
-  /// that field name is branded as Scout's own Region enum, and these are a
-  /// different naming scheme entirely.
-  tournamentRegion String
-  providerId       Int
-  tournamentId     Int
-  callbackUrl      String
-  name             String
-  createdAt        DateTime @default(now())
-
-  @@unique([apiMode, tournamentRegion])
-}
-
-/// One historical Scout-created custom lobby, from minted code to report.
-///
-/// Not folded into ActiveGame: that row is keyed by prematchMatchId, which does
-/// not exist until a game starts, and it is hard-deleted every 30 seconds once
-/// past its 3-hour TTL. A lobby exists before any game, may never produce one,
-/// and has to survive for /lobby status and for audit.
-///
-/// The link to ActiveGame is by value — TournamentLobby.matchId equals
-/// ActiveGame.prematchMatchId — so the post-match reply path needs no change.
-model TournamentLobby {
-  id           Int    @id @default(autoincrement())
-  /// The Riot tournament code. This is the join credential, so it is never
-  /// posted to a public channel.
-  code         String @unique
-  apiMode      String // TournamentApiMode
-  providerId   Int
-  tournamentId Int
-  /// Scout Region enum value, e.g. "AMERICA_NORTH".
-  region       String
-  /// Platform id, e.g. "NA1". games/by-code answers with a bare numeric gameId
-  /// and Match-V5 wants {PLATFORM}_{gameId}; this is the missing half.
-  platformId   String
-
-  serverId         String
-  channelId        String
-  creatorDiscordId String
-
-  /// JSON string arrays retained for compatibility with old declared-roster
-  /// lobbies. New lobbies are open, so these arrays are empty: lobby events
-  /// reveal who joined but never which side they chose.
-  bluePuuids    String
-  redPuuids     String
-  blueAliases   String
-  redAliases    String
-  teamSize      Int
-  pickType      String // TournamentPickType
-  mapType       String // TournamentMapType
-  spectatorType String // TournamentSpectatorType
-  lobbyName     String?
-  password      String?
-
-  /// TournamentLobbyState. Advances monotonically; see lifecycle.ts.
-  state String
-
-  /// Observability only. Correctness must NOT depend on these: lobby-events
-  /// replays its whole list every call, multiple events can share a
-  /// millisecond, and `timestamp` is a string. The monotonic state recompute
-  /// is what makes a replay idempotent.
-  processedEventCount Int     @default(0)
-  lastEventTimestamp  String?
-
-  /// JSON object: Discord channel ID -> prematch message ID. Copied onto the
-  /// ActiveGame row once the match ID is known, so the post-match report
-  /// replies to the right message.
-  prematchMessageIds String?
-
-  /// JSON string array of PUUIDs seen in a PlayerJoinedGameEvent.
-  joinedPuuids String @default("[]")
-
-  gameId  BigInt?
-  /// Platform-qualified Riot match ID; joins to ActiveGame.prematchMatchId.
-  matchId String?
-
-  lastPolledAt DateTime?
-  createdAt    DateTime  @default(now())
-  expiresAt    DateTime
-  updatedAt    DateTime  @updatedAt
-
-  /// The historical durable request claim that minted this credential.
-  provision  TournamentLobbyProvision?
-  customGame CustomGame?
-  duelGame   DuelGame?
-
-  @@index([state, expiresAt])
-  @@index([serverId, state])
-  @@index([matchId])
-}
-
-/// Historical claim for one Tournament-V5 code-creation request.
-///
-/// A timeout after the POST may mean Riot minted a credential, so any request
-/// that did not durably reach COMPLETED is intentionally not retried. The
-/// request hash also prevents an idempotency key from being reused for a
-/// different roster or lobby policy.
-model TournamentLobbyProvision {
-  id          String           @id
-  requestHash String
-  state       String           @default("PENDING")
-  lobbyId     Int?             @unique
-  lobby       TournamentLobby? @relation(fields: [lobbyId], references: [id], onDelete: Restrict)
-  lastError   String?
-  claimedAt   DateTime         @default(now())
-  completedAt DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  @@index([state, claimedAt])
-  @@index([requestHash, state])
-}
-
-// =============================================================================
 // Scout Customs — beta-only, guild-scoped custom-game nights
 // =============================================================================
 
@@ -2150,7 +2014,6 @@ model CustomGame {
   map                String
   pickMode           String
   activeCaptain      String?
-  tournamentLobbyId  Int?      @unique
   matchId            String?   @unique
   observedLobbyId    String?
   lobbyObservationId String?   @unique
@@ -2164,10 +2027,9 @@ model CustomGame {
   completedAt        DateTime?
   updatedAt          DateTime  @updatedAt
 
-  night           CustomNight             @relation(fields: [nightId], references: [id], onDelete: Cascade)
-  tournamentLobby TournamentLobby?        @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
-  participants    CustomGameParticipant[]
-  auditEvents     CustomAuditEvent[]
+  night        CustomNight             @relation(fields: [nightId], references: [id], onDelete: Cascade)
+  participants CustomGameParticipant[]
+  auditEvents  CustomAuditEvent[]
 
   @@unique([nightId, sequence])
   @@index([observedLobbyId])
@@ -2305,7 +2167,7 @@ model ScoutEffectClaim {
 //
 // Enum-shaped and JSON fields remain strings validated by @scout-for-lol/data
 // at every read/write boundary. This follows the provider-neutral persistence
-// convention used by Customs and tournament lobbies.
+// convention used by Customs.
 // =============================================================================
 
 model HallSettings {
@@ -2365,25 +2227,6 @@ model HallBaselineRun {
 
   @@unique([guildId, revision])
   @@index([baselineState, createdAt])
-}
-
-/// Retired: nothing reads or writes this table; the next release drops it
-/// once every role runs code that no longer references it.
-model HallRecordBreakOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  matchId        String
-  channelId      String
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@unique([guildId, matchId])
-  @@index([deliveryStatus, createdAt])
 }
 
 model ChallengeTemplate {
@@ -2726,7 +2569,6 @@ model DuelGame {
   id                   String    @id @default(uuid())
   seriesId             String
   gameNumber           Int
-  tournamentLobbyId    Int?      @unique
   observedLobbyId      String?
   lobbyObservationId   String?   @unique
   matchId              String?   @unique
@@ -2741,8 +2583,7 @@ model DuelGame {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  series          DuelSeries       @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  tournamentLobby TournamentLobby? @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
+  series DuelSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@unique([seriesId, gameNumber])
   @@index([observedLobbyId])
@@ -2782,24 +2623,6 @@ model DuelRecord {
 
   @@unique([guildId, scope, subjectKey, opponentKey])
   @@index([guildId, scope, wins])
-}
-
-/// Retired: nothing reads or writes this table; the next release drops it
-/// once every role runs code that no longer references it.
-model DuelStatusOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  channelId      String
-  dedupeKey      String    @unique
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@index([deliveryStatus, createdAt])
 }
 
 // =============================================================================

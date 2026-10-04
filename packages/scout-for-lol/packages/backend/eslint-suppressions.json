@@ -206,11 +206,6 @@
       "count": 1
     }
   },
-  "src/database/legacy-import/run-import.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/discord/interactions.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

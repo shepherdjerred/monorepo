@@ -158,29 +158,39 @@ describe("durable report chunk delivery", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  test.each(["COMPLETED", "CLAIMED", "AMBIGUOUS_OR_FAILED"])(
-    "adopts a %s legacy claim without another send",
-    async (state) => {
-      const input = await dispatch();
-      await prisma.scoutEffectClaim.create({
-        data: {
-          key: `report-discord:${input.result.runId.toString()}:0`,
-          kind: "report-discord",
-          state,
-        },
-      });
-      const [chunk] = await freezeReportDelivery(input, prisma);
-      if (chunk === undefined) throw new Error("Missing chunk");
-      expect(chunk.state).toBe(state === "COMPLETED" ? "DELIVERED" : "UNKNOWN");
-      const send = vi.fn(async () => ({ id: "100000000000000001" }));
-      if (state === "COMPLETED") await deliverReportChunk(chunk, send, prisma);
-      else
-        await expect(
-          deliverReportChunk(chunk, send, prisma),
-        ).rejects.toBeInstanceOf(ReportDeliveryUnknownError);
-      expect(send).not.toHaveBeenCalled();
-    },
-  );
+  test("starts every chunk pending and ignores legacy send claims", async () => {
+    const input = await dispatch();
+    await prisma.scoutEffectClaim.create({
+      data: {
+        key: `report-discord:${input.result.runId.toString()}:0`,
+        kind: "report-discord",
+        state: "COMPLETED",
+      },
+    });
+    const [chunk] = await freezeReportDelivery(input, prisma);
+    if (chunk === undefined) throw new Error("Missing chunk");
+    expect(chunk).toMatchObject({
+      state: "PENDING",
+      messageId: null,
+      deliveredAt: null,
+      lastError: null,
+    });
+  });
+
+  test("freezes a run already recorded as delivered without another send", async () => {
+    const input = await dispatch();
+    const deliveredAt = new Date("2026-10-01T12:00:00.000Z");
+    await prisma.reportRun.update({
+      where: { id: input.result.runId },
+      data: { deliveryState: "DELIVERED", deliveredAt },
+    });
+    const [chunk] = await freezeReportDelivery(input, prisma);
+    if (chunk === undefined) throw new Error("Missing chunk");
+    expect(chunk).toMatchObject({ state: "DELIVERED", deliveredAt });
+    const send = vi.fn(async () => ({ id: "100000000000000001" }));
+    await deliverReportChunk(chunk, send, prisma);
+    expect(send).not.toHaveBeenCalled();
+  });
 
   test("an operator releases only the investigated nonce and chunk", async () => {
     const input = await dispatch();
