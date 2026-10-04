@@ -74,8 +74,5 @@ export function prematchMaintenanceSteps(): MaintenanceStep[] {
  * broken sweep starves the refunds behind it.
  */
 export async function runPrematchMaintenance(): Promise<void> {
-  await runMaintenanceSteps(
-    "prematch maintenance",
-    prematchMaintenanceSteps(),
-  );
+  await runMaintenanceSteps("prematch maintenance", prematchMaintenanceSteps());
 }
