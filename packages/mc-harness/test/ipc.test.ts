@@ -1,19 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   parseBlockPos,
-  parseTtl,
   SandboxCreateRequestSchema,
   SandboxSummarySchema,
 } from "#protocol/ipc.ts";
 
 describe("ipc helpers", () => {
-  it("parses TTLs", () => {
-    expect(parseTtl("90m")).toBe(5400);
-    expect(parseTtl("2h")).toBe(7200);
-    expect(parseTtl("45")).toBe(45);
-    expect(() => parseTtl("2d")).toThrow(/Invalid TTL/u);
-  });
-
   it("parses block positions", () => {
     expect(parseBlockPos("1,-60,3")).toEqual({ x: 1, y: -60, z: 3 });
     expect(() => parseBlockPos("1,2")).toThrow(/x,y,z/u);

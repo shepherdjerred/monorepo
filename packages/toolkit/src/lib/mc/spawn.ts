@@ -14,8 +14,13 @@ import {
   STATE_PATH,
 } from "@shepherdjerred/mc-harness/protocol/paths.ts";
 import { PROTOCOL_VERSION } from "@shepherdjerred/mc-harness/protocol/version.ts";
+import {
+  daemonRunning,
+  pathExists,
+  stopDaemonPid,
+} from "@shepherdjerred/unix-socket-daemon";
 import { repoRoot } from "#lib/deployed/git.ts";
-import { daemonRequest, pathExists } from "#lib/mc/client.ts";
+import { daemonRequest } from "#lib/mc/client.ts";
 
 export async function readDaemonState(): Promise<DaemonState | null> {
   if (!(await pathExists(STATE_PATH))) {
@@ -23,15 +28,6 @@ export async function readDaemonState(): Promise<DaemonState | null> {
   }
   const raw: unknown = JSON.parse(await Bun.file(STATE_PATH).text());
   return DaemonStateSchema.parse(raw);
-}
-
-export function pidAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function daemonLogPath(): string {
@@ -56,7 +52,7 @@ export async function startMcDaemon(
   ttlSeconds: number,
 ): Promise<StatusResponse> {
   const existing = await readDaemonState();
-  if (existing !== null && pidAlive(existing.pid)) {
+  if (existing !== null && (await daemonRunning(existing.pid, DAEMON_ENTRY))) {
     throw new Error(
       `mc daemon is already running (pid ${String(existing.pid)}). Use 'toolkit mc daemon stop' first.`,
     );
@@ -118,8 +114,15 @@ async function awaitDaemonReady(
 
 export async function stopMcDaemon(): Promise<void> {
   const state = await readDaemonState();
+  let statusPid: number | undefined;
   if (await pathExists(SOCKET_PATH)) {
     try {
+      const status = await daemonRequest(
+        StatusResponseSchema,
+        "GET",
+        "/status",
+      );
+      statusPid = status.pid;
       await daemonRequest(
         StatusResponseSchema.partial(),
         "POST",
@@ -127,19 +130,15 @@ export async function stopMcDaemon(): Promise<void> {
         {},
       );
     } catch {
-      // fall through to the pid kill
+      // A dead socket: fall through to the identity-checked PID stop.
     }
   }
-  if (state !== null && pidAlive(state.pid)) {
-    // Shutdown removes non-kept sandboxes first, which takes a few seconds.
-    const deadline = Date.now() + 30_000;
-    while (Date.now() < deadline && pidAlive(state.pid)) {
-      await Bun.sleep(200);
-    }
-    if (pidAlive(state.pid)) {
-      process.kill(state.pid, "SIGTERM");
-    }
-  }
+  // Shutdown removes non-kept sandboxes first, which takes a few seconds.
+  await stopDaemonPid(state?.pid ?? null, {
+    statusPid,
+    marker: DAEMON_ENTRY,
+    waitMs: 30_000,
+  });
   await rm(SOCKET_PATH, { force: true });
   await rm(STATE_PATH, { force: true });
 }

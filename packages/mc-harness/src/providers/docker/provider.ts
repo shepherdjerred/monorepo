@@ -26,6 +26,7 @@ import {
   envArgs,
   paperJarName,
   publishedPort,
+  stagePinnedPlugins,
   startAndAwaitDone,
   warmMountArgs,
   warmMounts,
@@ -185,19 +186,12 @@ export class DockerSandboxProvider implements SandboxProvider {
     const profile = resolveProfile(request, secrets);
     const dir = this.options.store.dir(id);
     const pluginsDir = path.join(dir, "plugins");
-    await mkdir(pluginsDir, { recursive: true, mode: 0o700 });
-    const downloads = path.join(this.cacheDir, "plugins");
-    await mkdir(downloads, { recursive: true });
-
     progress("staging plugins");
-    for (const pin of profile.plugins) {
-      const jar = `${pin.name}-${pin.version}.jar`;
-      await ensureArtifact(path.join(downloads, jar), pin);
-      await Bun.write(
-        path.join(pluginsDir, jar),
-        Bun.file(path.join(downloads, jar)),
-      );
-    }
+    await stagePinnedPlugins(
+      path.join(this.cacheDir, "plugins"),
+      pluginsDir,
+      profile.plugins,
+    );
     await Bun.write(path.join(pluginsDir, "MCBridge.jar"), Bun.file(bridgeJar));
     const paperJar = path.join(this.cacheDir, paperJarName);
     await ensureArtifact(paperJar, paper);

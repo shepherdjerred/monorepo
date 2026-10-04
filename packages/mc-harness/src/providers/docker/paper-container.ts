@@ -4,7 +4,7 @@
  * about a specific plugin's staging stays with its caller.
  */
 import { createHash } from "node:crypto";
-import { chmod, readdir, rm } from "node:fs/promises";
+import { chmod, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { paper, type PluginPin } from "#src/pins.ts";
@@ -106,6 +106,24 @@ export async function ensureArtifact(
   }
   if (!exists) {
     await Bun.write(file, bytes);
+  }
+}
+
+/** Copies each pinned jar (downloaded once into `downloadsDir`) into `pluginsDir`. */
+export async function stagePinnedPlugins(
+  downloadsDir: string,
+  pluginsDir: string,
+  pins: readonly Pick<PluginPin, "name" | "version" | "url" | "sha256">[],
+): Promise<void> {
+  await mkdir(downloadsDir, { recursive: true });
+  await mkdir(pluginsDir, { recursive: true, mode: 0o700 });
+  for (const pin of pins) {
+    const jar = `${pin.name}-${pin.version}.jar`;
+    await ensureArtifact(path.join(downloadsDir, jar), pin);
+    await Bun.write(
+      path.join(pluginsDir, jar),
+      Bun.file(path.join(downloadsDir, jar)),
+    );
   }
 }
 

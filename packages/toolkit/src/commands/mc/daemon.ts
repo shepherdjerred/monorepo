@@ -1,11 +1,11 @@
 import { StatusResponseSchema } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
 import { SOCKET_PATH } from "@shepherdjerred/mc-harness/protocol/paths.ts";
-import { daemonRequest, pathExists } from "#lib/mc/client.ts";
+import { pathExists, pidAlive } from "@shepherdjerred/unix-socket-daemon";
+import { daemonRequest } from "#lib/mc/client.ts";
 import { renderStatus } from "#lib/mc/render.ts";
 import {
   assertProtocol,
   daemonLogPath,
-  pidAlive,
   readDaemonState,
   startMcDaemon,
   stopMcDaemon,

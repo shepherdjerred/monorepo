@@ -45,6 +45,7 @@
     "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/llm-models": "workspace:*",
     "@shepherdjerred/seaweedfs-backup": "workspace:*",
+    "@shepherdjerred/unix-socket-daemon": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
     "asciinema-player": "^3.15.1",
     "debug": "^4.4.3",

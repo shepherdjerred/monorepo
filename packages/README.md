@@ -87,6 +87,7 @@ hold only scoped invariants that agents must keep in context.
 | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                             |
 | [mc-harness](mc-harness/)                                 | Minecraft sandboxes, MCBridge client, and the daemon behind `toolkit mc`       |
+| [unix-socket-daemon](unix-socket-daemon/)                 | Shared unix-socket HTTP daemon scaffolding (serve, idle TTL, PID identity)     |
 | [hkctl](hkctl/)                                           | Development-signed Apple HomeKit command-line app (Mac Catalyst)               |
 | [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                         |
 | [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …)       |

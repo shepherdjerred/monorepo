@@ -146,6 +146,12 @@ sandbox; without it the command uses the only running one and fails when there
 are none or several. A sandbox is removed when its TTL expires or the daemon
 stops, unless it was created with `--keep`. There is no live-server target yet.
 
+Coordinates may be negative anywhere (`--pos1 -3,-60,-3`, `region read
+-6,-61,-6 6,-44,6`, `cmd tp agent -60 0`); no `--opt=` or `--` is needed.
+`toolkit mc <command> --help` prints that command's usage. Each `we` op reports
+`changed N`, the blocks whose state really changed; WorldEdit's own "blocks
+affected" message counts attempted sets and can be higher.
+
 | Command                                                   | Purpose                                        |
 | --------------------------------------------------------- | ---------------------------------------------- |
 | `mc cmd <command…>`                                       | Console command with captured feedback         |

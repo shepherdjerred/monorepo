@@ -87,20 +87,6 @@ export const SnapshotBytesResponseSchema = z.strictObject({
   base64: z.string(),
 });
 
-/** Parses `90m`, `4h`, `30s` or bare seconds into seconds. */
-export function parseTtl(raw: string): number {
-  const match = /^(\d+)([hms]?)$/u.exec(raw.trim());
-  if (match === null) {
-    throw new Error(
-      `Invalid TTL "${raw}" — use a number with optional s/m/h suffix, e.g. 90m or 4h`,
-    );
-  }
-  const value = Number.parseInt(match[1] ?? "", 10);
-  const unit = match[2] ?? "";
-  const multiplier = unit === "h" ? 3600 : unit === "m" ? 60 : 1;
-  return value * multiplier;
-}
-
 /** Parses `x,y,z` into a block position. */
 export function parseBlockPos(raw: string): BlockPos {
   const parts = raw.split(",").map((part) => part.trim());

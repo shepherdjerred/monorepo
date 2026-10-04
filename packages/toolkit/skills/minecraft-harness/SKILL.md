@@ -50,7 +50,9 @@ toolkit mc we-undo --steps 1
 ```
 
 Use `--session <name>` to keep separate undo histories. A failed op exits 1 and
-prints the WorldEdit error.
+prints the WorldEdit error. Trust `changed N` on each op (blocks that really
+changed), not WorldEdit's "blocks affected" text. Negative coordinates work as
+plain arguments; `toolkit mc <command> --help` shows a command's usage.
 
 ## Look and verify
 

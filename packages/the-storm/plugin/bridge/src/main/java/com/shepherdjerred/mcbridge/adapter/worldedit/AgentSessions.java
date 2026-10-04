@@ -38,12 +38,16 @@ public final class AgentSessions {
     return WorldEdit.getInstance().getSessionManager().get(actor);
   }
 
-  /** Counts one history entry per edit session an agent actor opens. */
+  /**
+   * Counts one history entry per edit session an agent actor opens, and wraps the world-facing end
+   * of the extent chain to count blocks that really change.
+   */
   @Subscribe
   public void onEditSession(EditSessionEvent event) {
     if (event.getStage() == EditSession.Stage.BEFORE_CHANGE
         && event.getActor() instanceof AgentActor actor) {
       actor.recordEdit(LocalSession.MAX_HISTORY_SIZE);
+      event.setExtent(new CountingExtent(event.getExtent(), actor::recordChanged));
     }
   }
 }

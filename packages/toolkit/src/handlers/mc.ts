@@ -33,11 +33,15 @@ import {
 } from "@shepherdjerred/mc-harness/protocol/bridge.ts";
 import {
   parseBlockPos,
-  parseTtl,
   ProfileSchema,
   SandboxCreateRequestSchema,
   WorldKindSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
+import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
+import {
+  normalizeArgv,
+  wantsHelp,
+} from "@shepherdjerred/mc-harness/protocol/argv.ts";
 import {
   DEFAULT_DAEMON_TTL_SECONDS,
   DEFAULT_SANDBOX_TTL_SECONDS,
@@ -72,6 +76,20 @@ Target commands (--target <sandbox-id>; defaults to the only running sandbox):
 Common options: --target <id>, --session <name> (WorldEdit session, default "agent"), --json
 `;
 
+/** The usage lines for one subcommand, e.g. `toolkit mc we --help`. */
+export function subcommandUsage(subcommand: string): string {
+  const lines = MC_USAGE.split("\n").filter((line) =>
+    line.trimStart().startsWith(`toolkit mc ${subcommand}`),
+  );
+  if (lines.length === 0) {
+    return MC_USAGE;
+  }
+  const common = MC_USAGE.split("\n").find((line) =>
+    line.startsWith("Common options:"),
+  );
+  return [...lines, "", common ?? ""].join("\n");
+}
+
 const COMMON = {
   target: { type: "string" },
   json: { type: "boolean", default: false },
@@ -90,7 +108,8 @@ function parse<const Options extends ParseArgsOptionsConfig>(
 ) {
   const merged: typeof COMMON & Options = { ...COMMON, ...options };
   return parseArgs({
-    args,
+    // Negative coordinates (-6,-61,-6) would otherwise parse as options.
+    args: normalizeArgv(args, merged),
     options: merged,
     allowPositionals: true,
     strict: true,
@@ -101,6 +120,9 @@ function targetOptions(values: {
   target?: string | undefined;
   json?: boolean | undefined;
 }): TargetOptions {
+  if (values.target === "") {
+    fail("--target needs a sandbox id");
+  }
   return { target: values.target, json: values.json === true };
 }
 
@@ -187,6 +209,9 @@ async function handleSandbox(args: string[]): Promise<void> {
     case "down": {
       if (!values.all && positionals.length === 0) {
         fail("sandbox down needs <id…> or --all");
+      }
+      if (positionals.includes("")) {
+        fail("sandbox down got an empty sandbox id");
       }
       await mcSandboxDownCommand(positionals, values.all);
       return;
@@ -377,6 +402,10 @@ export async function handleMcCommand(
   args: string[],
 ): Promise<void> {
   try {
+    if (subcommand !== undefined && wantsHelp(args)) {
+      console.log(subcommandUsage(subcommand));
+      return;
+    }
     switch (subcommand) {
       case undefined:
       case "help":

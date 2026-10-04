@@ -40,8 +40,12 @@ are generated at create time and stored only in
 without them.
 
 Containers carry `mc-harness.*` labels (sandbox id, profile, expiry, owner,
-keep). The daemon reaps expired and exited sandboxes on start and before each
-create, and removes non-kept sandboxes when it shuts down. Creates are
+keep). The daemon reaps expired and exited sandboxes on start, before each
+create, and every 30 seconds while it runs, and removes non-kept sandboxes when
+it shuts down. The socket server, idle TTL, state file and the PID identity
+check behind `toolkit mc daemon stop` come from `@shepherdjerred/unix-socket-daemon`:
+a stale state file whose PID now belongs to another process is cleaned up
+without signalling it. Creates are
 serialized because boots share the Paperclip warm cache under
 `~/.toolkit/mc/cache`.
 

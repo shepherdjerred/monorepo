@@ -420,6 +420,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/unix-socket-daemon",
+      "directory": "packages/unix-socket-daemon",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/mc-harness",
       "directory": "packages/mc-harness",
       "steps": [

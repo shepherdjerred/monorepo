@@ -170,6 +170,7 @@
     "packages/terraform-provider-asuswrt",
     "packages/the-storm",
     "packages/toolkit",
+    "packages/unix-socket-daemon",
     "packages/trmnl-dashboard",
     "packages/ts-mc",
     "packages/ts-mc-docs",

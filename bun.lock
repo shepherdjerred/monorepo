@@ -1069,6 +1069,7 @@
       "name": "@shepherdjerred/mc-harness",
       "version": "0.1.0",
       "dependencies": {
+        "@shepherdjerred/unix-socket-daemon": "workspace:*",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -2210,6 +2211,7 @@
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/seaweedfs-backup": "workspace:*",
+        "@shepherdjerred/unix-socket-daemon": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
         "asciinema-player": "^3.15.1",
         "debug": "^4.4.3",
@@ -2287,6 +2289,19 @@
         "@types/bun": "1.4.2",
         "@typescript/native": "npm:typescript@7.0.2",
         "typescript": "^6.0.3",
+      },
+    },
+    "packages/unix-socket-daemon": {
+      "name": "@shepherdjerred/unix-socket-daemon",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
       },
     },
     "packages/version-catalog": {
@@ -4277,6 +4292,8 @@
     "@shepherdjerred/ts-mc": ["@shepherdjerred/ts-mc@workspace:packages/ts-mc"],
 
     "@shepherdjerred/ts-mc-docs": ["@shepherdjerred/ts-mc-docs@workspace:packages/ts-mc-docs"],
+
+    "@shepherdjerred/unix-socket-daemon": ["@shepherdjerred/unix-socket-daemon@workspace:packages/unix-socket-daemon"],
 
     "@shepherdjerred/version-catalog": ["@shepherdjerred/version-catalog@workspace:packages/version-catalog"],
 

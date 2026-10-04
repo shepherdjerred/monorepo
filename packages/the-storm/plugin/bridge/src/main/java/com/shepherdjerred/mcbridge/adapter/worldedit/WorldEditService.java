@@ -93,6 +93,7 @@ public final class WorldEditService {
     World world = BukkitAdapter.adapt(server.world(worldName));
     LocalSession session = sessions.session(actor);
     actor.log().clear();
+    actor.resetChanged();
     boolean threw = false;
     try {
       session.setWorldOverride(world);
@@ -112,6 +113,7 @@ public final class WorldEditService {
     JsonObject result = new JsonObject();
     result.addProperty("command", op.command());
     result.addProperty("ok", !threw && errors.isEmpty());
+    result.addProperty("changed", actor.changed());
     result.add("messages", Json.strings(actor.log().messages()));
     result.add("errors", Json.strings(errors));
     return result;
@@ -183,6 +185,7 @@ public final class WorldEditService {
     LocalSession session = sessions.session(actor);
     AffineTransform transform = new AffineTransform().rotateY(-placement.rotation().degrees());
     BlockVector3 at = vector(placement.at());
+    actor.resetChanged();
     EditSession editSession =
         WorldEdit.getInstance().newEditSessionBuilder().world(world).actor(actor).build();
     try (editSession) {
@@ -195,8 +198,7 @@ public final class WorldEditService {
       session.remember(editSession);
     }
     BlockPos[] bounds = bounds(clipboard, transform, at);
-    return new PasteResult(
-        editSession.getBlockChangeCount(), bounds[0], bounds[1], actor.historySize());
+    return new PasteResult(actor.changed(), bounds[0], bounds[1], actor.historySize());
   }
 
   private static BlockPos[] bounds(

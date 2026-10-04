@@ -42,19 +42,21 @@ describe("WorldEdit rendering", () => {
         {
           command: "//set stone",
           ok: true,
-          messages: ["8 blocks changed"],
+          changed: 8,
+          messages: ["Operation completed (8 blocks affected)."],
           errors: [],
         },
         {
           command: "//bogus",
           ok: false,
+          changed: 0,
           messages: [],
           errors: ["Unknown command"],
         },
       ],
       historySize: 1,
     });
-    expect(text).toContain("ok  //set stone");
+    expect(text).toContain("ok  //set stone  (changed 8)");
     expect(text).toContain("ERR //bogus");
     expect(text).toContain("! Unknown command");
     expect(text).toContain("history: 1");

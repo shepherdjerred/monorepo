@@ -10,6 +10,7 @@ import {
   paperJarName,
   publishedPort,
   reapPidOwnedContainers,
+  stagePinnedPlugins,
   startAndAwaitDone,
   warmMountArgs,
   warmMounts,
@@ -129,18 +130,12 @@ export async function stagePlugins(
       Pick<StartServerOptions, "ownedConfigDir" | "brain" | "sweep" | "agent">
     >,
 ): Promise<string> {
-  const downloads = path.join(cacheDir, "plugins");
   const pluginsDir = path.join(stagingDir, "plugins");
-  await mkdir(downloads, { recursive: true });
-  await mkdir(pluginsDir, { recursive: true });
-  for (const pin of thirdPartyPlugins) {
-    const jar = `${pin.name}-${pin.version}.jar`;
-    await ensureArtifact(path.join(downloads, jar), pin);
-    await Bun.write(
-      path.join(pluginsDir, jar),
-      Bun.file(path.join(downloads, jar)),
-    );
-  }
+  await stagePinnedPlugins(
+    path.join(cacheDir, "plugins"),
+    pluginsDir,
+    thirdPartyPlugins,
+  );
   await Bun.write(
     path.join(pluginsDir, "TheStorm.jar"),
     Bun.file(options.stormJar),

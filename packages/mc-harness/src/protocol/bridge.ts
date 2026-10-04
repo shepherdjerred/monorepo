@@ -161,6 +161,11 @@ export const WeRunRequestSchema = z.strictObject({
 export const WeOpResultSchema = z.strictObject({
   command: z.string(),
   ok: z.boolean(),
+  /**
+   * Blocks whose state actually changed, counted where edits reach the world.
+   * WorldEdit's own "N blocks affected" messages count attempted sets instead.
+   */
+  changed: z.number().int(),
   messages: z.array(z.string()),
   errors: z.array(z.string()),
 });

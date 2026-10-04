@@ -43,7 +43,7 @@ export function renderCommand(result: CommandResponse): string {
 
 export function renderWe(result: WeRunResponse): string {
   const lines = result.results.flatMap((op) => [
-    `${op.ok ? "ok " : "ERR"} ${op.command}`,
+    `${op.ok ? "ok " : "ERR"} ${op.command}  (changed ${String(op.changed)})`,
     ...op.messages.map((message) => `    ${message}`),
     ...op.errors.map((message) => `  ! ${message}`),
   ]);

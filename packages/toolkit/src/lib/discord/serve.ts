@@ -1,5 +1,8 @@
-import { appendFile, chmod, mkdir, rm, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { mkdir } from "node:fs/promises";
+import {
+  jsonlLogger,
+  serveUnixDaemon,
+} from "@shepherdjerred/unix-socket-daemon";
 import { Client as BotClient, Events, GatewayIntentBits } from "discord.js";
 import { Client as UserClient } from "discord.js-selfbot-v13";
 import {
@@ -11,7 +14,6 @@ import {
 import {
   type DaemonState,
   DEFAULT_TTL_SECONDS,
-  DISCORD_DIR,
   LOGS_DIR,
   SOCKET_PATH,
   STATE_PATH,
@@ -21,11 +23,7 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function logLine(msg: string, extra: Record<string, unknown> = {}): void {
-  const day = new Date().toISOString().slice(0, 10);
-  const line = `${JSON.stringify({ ts: new Date().toISOString(), msg, ...extra })}\n`;
-  void appendFile(path.join(LOGS_DIR, `daemon-${day}.log`), line);
-}
+const logLine = jsonlLogger(LOGS_DIR);
 
 function waitForReady(
   client: { once: (event: string, fn: () => void) => unknown },
@@ -116,71 +114,33 @@ async function startDaemon(opts: {
     lastActivity: Date.now(),
   };
 
-  await rm(SOCKET_PATH, { force: true });
-
-  let shuttingDown = false;
-  let idleTimer: ReturnType<typeof setInterval> | null = null;
-  const shutdown = async (reason: string): Promise<void> => {
-    if (shuttingDown) {
-      return;
-    }
-    shuttingDown = true;
-    logLine("shutting down", { reason });
-    leaveVoice(ctx);
-    if (ctx.user !== null) {
-      try {
-        ctx.user.destroy();
-      } catch (error) {
-        logLine("user destroy failed", { error: getErrorMessage(error) });
-      }
-    }
-    if (ctx.bot !== null) {
-      await ctx.bot.destroy();
-    }
-    await server.stop(true);
-    if (idleTimer !== null) {
-      clearInterval(idleTimer);
-    }
-    await rm(SOCKET_PATH, { force: true });
-    await rm(STATE_PATH, { force: true });
-    process.exit(0);
-  };
-
-  const server = Bun.serve({
-    unix: SOCKET_PATH,
-    fetch(request): Promise<Response> | Response {
-      const url = new URL(request.url);
-      if (url.pathname === "/shutdown") {
-        setTimeout(() => {
-          void shutdown("shutdown requested");
-        }, 50);
-        return Response.json({ ok: true });
-      }
-      return routeRequest(ctx, url, request);
-    },
-  });
-  await chmod(SOCKET_PATH, 0o600);
-
-  idleTimer = setInterval(() => {
-    if (Date.now() - ctx.lastActivity > ttlSeconds * 1000) {
-      void shutdown(`idle TTL of ${String(ttlSeconds)}s reached`);
-    }
-  }, 30_000);
-
   const state: DaemonState = {
     pid: process.pid,
     startedAt: ctx.startedAt,
     ttlSeconds,
     identities: identities(ctx),
   };
-  await mkdir(DISCORD_DIR, { recursive: true });
-  await writeFile(STATE_PATH, JSON.stringify(state, null, 2), { mode: 0o600 });
-
-  process.on("SIGINT", () => {
-    void shutdown("SIGINT");
-  });
-  process.on("SIGTERM", () => {
-    void shutdown("SIGTERM");
+  await serveUnixDaemon({
+    socketPath: SOCKET_PATH,
+    statePath: STATE_PATH,
+    state,
+    ttlSeconds,
+    lastActivity: () => ctx.lastActivity,
+    handle: (url, request) => routeRequest(ctx, url, request),
+    onShutdown: async () => {
+      leaveVoice(ctx);
+      if (ctx.user !== null) {
+        try {
+          ctx.user.destroy();
+        } catch (error) {
+          logLine("user destroy failed", { error: getErrorMessage(error) });
+        }
+      }
+      if (ctx.bot !== null) {
+        await ctx.bot.destroy();
+      }
+    },
+    log: logLine,
   });
 
   logLine("daemon listening", {

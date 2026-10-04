@@ -25,6 +25,7 @@ public final class AgentActor extends AbstractNonPlayerActor {
   private final MessageLog log = new MessageLog();
   private final AtomicInteger history = new AtomicInteger();
   private final AtomicBoolean undoing = new AtomicBoolean();
+  private final AtomicInteger changed = new AtomicInteger();
 
   public AgentActor(SessionName session) {
     this.session = session;
@@ -45,6 +46,20 @@ public final class AgentActor extends AbstractNonPlayerActor {
     if (!undoing.get()) {
       history.updateAndGet(size -> Math.min(cap, size + 1));
     }
+  }
+
+  /** Starts counting changed blocks for one operation. */
+  void resetChanged() {
+    changed.set(0);
+  }
+
+  /** Blocks whose state changed since {@link #resetChanged()}. */
+  int changed() {
+    return changed.get();
+  }
+
+  void recordChanged(int blocks) {
+    changed.addAndGet(blocks);
   }
 
   /** Marks an undo in progress: its own edit sessions are not new history entries. */

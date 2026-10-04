@@ -1,9 +1,6 @@
 import type { z } from "zod";
-import {
-  ErrorResponseSchema,
-  pathExists,
-  SOCKET_PATH,
-} from "#lib/discord/ipc.ts";
+import { pathExists } from "@shepherdjerred/unix-socket-daemon";
+import { ErrorResponseSchema, SOCKET_PATH } from "#lib/discord/ipc.ts";
 
 const START_HINT = [
   "Discord daemon is not running. Start it with tokens in env (one batched op call):",

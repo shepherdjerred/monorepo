@@ -1,20 +1,10 @@
-import { stat } from "node:fs/promises";
 import type { z } from "zod";
 import { ErrorResponseSchema } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
 import { SOCKET_PATH } from "@shepherdjerred/mc-harness/protocol/paths.ts";
+import { pathExists } from "@shepherdjerred/unix-socket-daemon";
 
 export const START_HINT =
   "The mc daemon is not running. Start it with: toolkit mc daemon start";
-
-// Bun.file(path).exists() returns false for a unix socket, so use stat.
-export async function pathExists(target: string): Promise<boolean> {
-  try {
-    await stat(target);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export type DaemonMethod = "GET" | "POST" | "DELETE";
 
