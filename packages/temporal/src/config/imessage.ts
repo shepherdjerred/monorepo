@@ -16,18 +16,6 @@ export const ImessageOwnersSchema = z
 function createResolver(onSourceError: () => void) {
   return defineConfig({
     definition: {
-      enabled: {
-        schema: z.boolean(),
-        sources: ["flag", "default"],
-        default: false,
-        names: { flag: "temporal-agent-chat-imessage-enabled" },
-      },
-      owners: {
-        schema: ImessageOwnersSchema,
-        sources: ["flag", "default"],
-        default: "[]",
-        names: { flag: "temporal-agent-chat-imessage-owners" },
-      },
       claudeModel: {
         schema: z.string().min(1).max(200),
         sources: ["flag", "default"],
@@ -45,8 +33,6 @@ function createResolver(onSourceError: () => void) {
       flag: createFlagConfigSource({
         targetingKey: "temporal-agent-chat-imessage",
         kinds: {
-          enabled: "boolean",
-          owners: "string",
           claudeModel: "string",
           codexModel: "string",
         },
@@ -69,21 +55,17 @@ function createResolver(onSourceError: () => void) {
   });
 }
 
-export async function imessageIngressConfig() {
+export async function imessageChatModels() {
   let sourceAvailable = true;
   const resolver = createResolver(() => {
     sourceAvailable = false;
   });
-  const [enabled, owners, claudeModel, codexModel] = await Promise.all([
-    resolver.value("enabled"),
-    resolver.value("owners"),
+  const [claudeModel, codexModel] = await Promise.all([
     resolver.value("claudeModel"),
     resolver.value("codexModel"),
   ]);
   return {
     sourceAvailable,
-    enabled,
-    owners,
     claudeModel,
     codexModel,
   };

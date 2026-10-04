@@ -32,4 +32,24 @@ export const retiredFlagDeclarations = [
     namespace: "scout",
     key: "competition_builder_v2_enabled",
   },
+  {
+    environment: "beta",
+    namespace: "temporal",
+    key: "temporal-agent-chat-imessage-enabled",
+  },
+  {
+    environment: "beta",
+    namespace: "temporal",
+    key: "temporal-agent-chat-imessage-owners",
+  },
+  {
+    environment: "prod",
+    namespace: "temporal",
+    key: "temporal-agent-chat-imessage-enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "temporal",
+    key: "temporal-agent-chat-imessage-owners",
+  },
 ] as const;

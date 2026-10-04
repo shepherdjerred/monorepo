@@ -265,8 +265,6 @@ export const TEMPORAL_FLAG_KEYS = [
   "temporal-agent-chat-discord-codex-default-model",
   "temporal-agent-chat-photon-enabled",
   "temporal-agent-chat-photon-owners",
-  "temporal-agent-chat-imessage-enabled",
-  "temporal-agent-chat-imessage-owners",
   "temporal-agent-chat-imessage-claude-model",
   "temporal-agent-chat-imessage-codex-model",
 ] as const;
@@ -276,7 +274,6 @@ export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "temporal-call-graph-tracing",
   "temporal-agent-chat-photon-enabled",
-  "temporal-agent-chat-imessage-enabled",
 ] as const;
 
 export type TemporalBooleanFlagKey =
@@ -286,7 +283,6 @@ export const TEMPORAL_VARIANT_FLAG_KEYS = [
   "temporal-agent-chat-discord-claude-default-model",
   "temporal-agent-chat-discord-codex-default-model",
   "temporal-agent-chat-photon-owners",
-  "temporal-agent-chat-imessage-owners",
   "temporal-agent-chat-imessage-claude-model",
   "temporal-agent-chat-imessage-codex-model",
 ] as const;

@@ -1649,30 +1649,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "temporal-agent-chat-imessage-enabled",
-      "owner": "platform",
-      "namespace": "temporal",
-      "source": "temporal-agent-chat",
-      "purpose": "Enable durable owner-only iMessage ingestion from BlueBubbles.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "temporal-agent-chat-imessage-owners",
-      "owner": "platform",
-      "namespace": "temporal",
-      "source": "temporal-agent-chat",
-      "purpose": "Select exact comma-separated sender handles permitted to use durable iMessage chats.",
-      "type": "variant",
-      "default": "[]",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "temporal-agent-chat-imessage-claude-model",
       "owner": "platform",
       "namespace": "temporal",
@@ -1896,14 +1872,6 @@
         },
         {
           "key": "temporal-agent-chat-photon-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "temporal-agent-chat-imessage-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

@@ -9,31 +9,33 @@ import type { FliptFetcher } from "./managed-flag-drift.ts";
 
 const environments = ["beta", "prod"] as const;
 type Environment = (typeof environments)[number];
-
+const retirementScopes = [
+  { environment: "beta", namespace: "scout" },
+  { environment: "prod", namespace: "scout" },
+  { environment: "beta", namespace: "temporal" },
+  { environment: "prod", namespace: "temporal" },
+] as const;
 const retiredKeys = retiredFlagDeclarations.map(
   (declaration) => declaration.key,
 );
-function retiredKeysIn(environment: Environment): string[] {
+function retiredKeysIn(
+  environment: Environment,
+  namespace = "scout",
+): string[] {
   return retiredFlagDeclarations
-    .filter((declaration) => declaration.environment === environment)
+    .filter(
+      (declaration) =>
+        declaration.environment === environment &&
+        declaration.namespace === namespace,
+    )
     .map((declaration) => declaration.key);
 }
+const emptyResults = retirementScopes.map((scope) => ({
+  ...scope,
+  retiredFlags: [],
+}));
 const firstRetired = retiredKeys[0];
 if (firstRetired === undefined) throw new Error("No retired flag declared");
-
-const FLAG_RESOURCES_PATH =
-  /^\/api\/v2\/environments\/(beta|prod)\/namespaces\/scout\/resources\/flipt\.core\.Flag/u;
-
-function environmentOf(url: URL): Environment {
-  const match = FLAG_RESOURCES_PATH.exec(url.pathname);
-  const environment = environments.find(
-    (candidate) => candidate === match?.[1],
-  );
-  if (environment === undefined) {
-    throw new Error(`Unexpected Flipt path ${url.pathname}`);
-  }
-  return environment;
-}
 
 const wrongNamespace: FliptFetcher = async () =>
   Response.json({
@@ -50,27 +52,41 @@ function fakeServer(
     keepDeleted?: boolean;
   } = {},
 ) {
-  const byEnvironment = new Map(
-    environments.map((environment) => [
-      environment,
+  const preservedScoutFlags: [string, unknown][] = [
+    [
+      "dare_notifications_enabled",
+      { enabled: false, rollouts: [{ guild: "test", result: true }] },
+    ],
+    ["unrelated-unknown", { enabled: true }],
+  ];
+  const preservedTemporalFlags: [string, unknown][] = [
+    ["temporal-agent-chat-photon-enabled", { enabled: true }],
+    ["temporal-agent-chat-photon-owners", { value: "[]" }],
+    ["temporal-agent-chat-imessage-claude-model", { value: "claude-opus-5" }],
+    ["temporal-agent-chat-imessage-codex-model", { value: "gpt-5.6-luna" }],
+  ];
+  const scopes = new Map(
+    retirementScopes.map(({ environment, namespace }) => [
+      `${environment}/${namespace}`,
       new Map<string, unknown>([
-        [
-          "dare_notifications_enabled",
-          { enabled: false, rollouts: [{ guild: "test", result: true }] },
-        ],
-        ["unrelated-unknown", { enabled: true }],
+        ...(namespace === "scout"
+          ? preservedScoutFlags
+          : preservedTemporalFlags),
         ...(options.absent
           ? []
-          : retiredKeysIn(environment).map((key): [string, unknown] => [
-              key,
-              { enabled: true },
-            ])),
+          : retiredKeysIn(environment, namespace).map(
+              (key): [string, unknown] => [key, { enabled: true }],
+            )),
       ]),
     ]),
   );
-  function flagsIn(environment: Environment): Map<string, unknown> {
-    const flags = byEnvironment.get(environment);
-    if (flags === undefined) throw new Error(`No ${environment} flags`);
+  function flagsIn(
+    environment: Environment,
+    namespace = "scout",
+  ): Map<string, unknown> {
+    const flags = scopes.get(`${environment}/${namespace}`);
+    if (flags === undefined)
+      throw new Error(`No ${environment}/${namespace} flags`);
     return flags;
   }
   const flags = flagsIn("beta");
@@ -83,11 +99,21 @@ function fakeServer(
     );
     const method = init?.method ?? "GET";
     requests.push({ method, url });
-    const environmentFlags = flagsIn(environmentOf(url));
+    const match =
+      /^\/api\/v2\/environments\/(beta|prod)\/namespaces\/(scout|temporal)\/resources\/flipt\.core\.Flag(?:\/|$)/u.exec(
+        url.pathname,
+      );
+    const environment = environments.find(
+      (candidate) => candidate === match?.[1],
+    );
+    const namespace = match?.[2];
+    if (environment === undefined || namespace === undefined)
+      throw new Error(`Unexpected Flipt path ${url.pathname}`);
+    const selectedFlags = flagsIn(environment, namespace);
     if (method === "GET") {
       return Response.json({
-        resources: [...environmentFlags].map(([key, payload]) => ({
-          namespaceKey: "scout",
+        resources: [...selectedFlags].map(([key, payload]) => ({
+          namespaceKey: namespace,
           key,
           payload,
         })),
@@ -112,7 +138,7 @@ function fakeServer(
     }
     const key = url.pathname.split("/").at(-1);
     if (key === undefined) throw new Error("DELETE key is missing");
-    if (!options.keepDeleted) environmentFlags.delete(key);
+    if (!options.keepDeleted) selectedFlags.delete(key);
     revision += 1;
     return key === firstRetired && options.concurrentRemoval
       ? Response.json(
@@ -121,14 +147,13 @@ function fakeServer(
         )
       : Response.json({ revision: `rev-${String(revision)}` });
   };
-  return { flags, flagsIn, requests, fetcher };
+  return { flags, flagsIn, scopes, requests, fetcher };
 }
 
-test("only the audited scout keys are retired, preserving managed targeting and other unknowns", async () => {
+test("only audited Scout and BlueBubbles keys are retired, preserving managed targeting and other unknowns", async () => {
   expect(
     retiredFlagDeclarations.map(
-      (declaration) =>
-        `${declaration.environment}/${declaration.namespace}/${declaration.key}`,
+      ({ environment, namespace, key }) => `${environment}/${namespace}/${key}`,
     ),
   ).toEqual([
     "beta/scout/scout-tournament-api-mode",
@@ -139,6 +164,10 @@ test("only the audited scout keys are retired, preserving managed targeting and 
     "beta/scout/competition_builder_v2_enabled",
     "prod/scout/scout_v2_progression_notifications_enabled",
     "prod/scout/competition_builder_v2_enabled",
+    "beta/temporal/temporal-agent-chat-imessage-enabled",
+    "beta/temporal/temporal-agent-chat-imessage-owners",
+    "prod/temporal/temporal-agent-chat-imessage-enabled",
+    "prod/temporal/temporal-agent-chat-imessage-owners",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(
@@ -149,18 +178,12 @@ test("only the audited scout keys are retired, preserving managed targeting and 
       url: "https://flipt.example/",
       fetcher: server.fetcher,
     }),
-  ).toEqual([
-    {
-      environment: "beta",
-      namespace: "scout",
-      retiredFlags: retiredKeysIn("beta"),
-    },
-    {
-      environment: "prod",
-      namespace: "scout",
-      retiredFlags: retiredKeysIn("prod"),
-    },
-  ]);
+  ).toEqual(
+    retirementScopes.map((scope) => ({
+      ...scope,
+      retiredFlags: retiredKeysIn(scope.environment, scope.namespace),
+    })),
+  );
   for (const environment of environments) {
     expect([...server.flagsIn(environment).keys()]).toEqual([
       "dare_notifications_enabled",
@@ -173,15 +196,23 @@ test("only the audited scout keys are retired, preserving managed targeting and 
       .filter((request) => request.method === "DELETE")
       .map((request) => request.url.pathname.split("/").at(-1)),
   ).toEqual(retiredKeys);
+  for (const scope of ["beta/temporal", "prod/temporal"]) {
+    const temporalFlags = server.scopes.get(scope);
+    if (temporalFlags === undefined)
+      throw new Error(`Missing test scope ${scope}`);
+    expect([...temporalFlags.keys()]).toEqual([
+      "temporal-agent-chat-photon-enabled",
+      "temporal-agent-chat-photon-owners",
+      "temporal-agent-chat-imessage-claude-model",
+      "temporal-agent-chat-imessage-codex-model",
+    ]);
+  }
   expect(
     await applyRetiredManagedFlags({
       url: "https://flipt.example",
       fetcher: server.fetcher,
     }),
-  ).toEqual([
-    { environment: "beta", namespace: "scout", retiredFlags: [] },
-    { environment: "prod", namespace: "scout", retiredFlags: [] },
-  ]);
+  ).toEqual(emptyResults);
   expect(
     server.requests.filter((request) => request.method === "DELETE"),
   ).toHaveLength(retiredKeys.length);
@@ -194,10 +225,7 @@ test("absence is already settled and never creates an environment, namespace, or
       url: "https://flipt.example",
       fetcher: server.fetcher,
     }),
-  ).toEqual([
-    { environment: "beta", namespace: "scout", retiredFlags: [] },
-    { environment: "prod", namespace: "scout", retiredFlags: [] },
-  ]);
+  ).toEqual(emptyResults);
   expect(server.requests.every((request) => request.method === "GET")).toBe(
     true,
   );

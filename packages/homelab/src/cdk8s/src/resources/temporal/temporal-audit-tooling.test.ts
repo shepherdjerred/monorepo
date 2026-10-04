@@ -485,13 +485,16 @@ describe("Temporal domain worker isolation", () => {
       "SLEEP_WEBHOOK_TOKEN",
       "AGENT_CHAT_DISCORD_TOKEN",
       "XCODE_CLOUD_WEBHOOK_TOKEN",
-      "BLUEBUBBLES_URL",
-      "BLUEBUBBLES_PASSWORD",
+      "SPECTRUM_PROJECT_ID",
+      "SPECTRUM_PROJECT_SECRET",
+      "SPECTRUM_WEBHOOK_SECRET",
     ]) {
       expect(gatewayEnv).toContain(required);
       expect(homeEnv).not.toContain(required);
       expect(reportsEnv).not.toContain(required);
     }
+    expect(gatewayEnv).not.toContain("BLUEBUBBLES_URL");
+    expect(gatewayEnv).not.toContain("BLUEBUBBLES_PASSWORD");
     const discordToken = gateway.spec.template.spec.containers[0]?.env.find(
       (entry) => entry.name === "AGENT_CHAT_DISCORD_TOKEN",
     );
