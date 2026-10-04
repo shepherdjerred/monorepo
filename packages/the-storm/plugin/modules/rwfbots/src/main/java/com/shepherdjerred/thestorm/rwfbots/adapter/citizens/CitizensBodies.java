@@ -84,9 +84,12 @@ public final class CitizensBodies implements Bodies, Listener {
     npc.data().set(NPC.Metadata.NAMEPLATE_VISIBLE, true);
     npc.getOrAddTrait(SkinTrait.class)
         .setSkinPersistent(personality.id(), personality.skinSignature(), personality.skinValue());
-    npcs.put(npc.getUniqueId(), npc);
-    known.add(npc.getUniqueId());
-    return npc.getUniqueId();
+    // A player NPC's entity carries Citizens' version-2 "Minecraft" UUID, not the NPC's own: rwf
+    // matches every Bukkit event by the entity's UUID, so that is the bot's identity.
+    var id = bodyId(npc);
+    npcs.put(id, npc);
+    known.add(id);
+    return id;
   }
 
   @Override
@@ -210,7 +213,7 @@ public final class CitizensBodies implements Bodies, Listener {
   @EventHandler
   void onSpawn(NPCSpawnEvent event) {
     var npc = event.getNPC();
-    if (!npcs.containsKey(npc.getUniqueId())) {
+    if (!npcs.containsKey(bodyId(npc))) {
       return;
     }
     if (npc.getEntity() instanceof Player player) {
@@ -218,7 +221,7 @@ public final class CitizensBodies implements Bodies, Listener {
     }
     if (event.getReason() == SpawnReason.RESPAWN) {
       respawns++;
-      respawned.accept(npc.getUniqueId());
+      respawned.accept(bodyId(npc));
     }
   }
 
@@ -228,7 +231,7 @@ public final class CitizensBodies implements Bodies, Listener {
     // every tick. Any other despawn of a living body is Citizens' doing and worth knowing about.
     if (event.getReason() != DespawnReason.PENDING_RESPAWN
         && event.getReason() != DespawnReason.PLUGIN
-        && npcs.containsKey(event.getNPC().getUniqueId())) {
+        && npcs.containsKey(bodyId(event.getNPC()))) {
       event
           .getNPC()
           .getEntity()
@@ -249,6 +252,11 @@ public final class CitizensBodies implements Bodies, Listener {
           "attack speed could not be registered on " + player.getName());
     }
     attribute.setBaseValue(ATTACK_SPEED);
+  }
+
+  /** The UUID the bot's Player entity carries, which every rwf event is keyed by. */
+  static UUID bodyId(NPC npc) {
+    return npc.getMinecraftUniqueId();
   }
 
   private NPC require(UUID bot) {
