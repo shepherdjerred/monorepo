@@ -763,10 +763,10 @@ test("collect maps the account a rank Dare froze as its baseline", async () => {
   // identifier nothing had collected.
   const db = await seed({ accounts: [] });
   await db.exec(
-    `CREATE TABLE "BucksDareV2Activation" ("dareId" INTEGER PRIMARY KEY, "snapshotJson" TEXT, "createdAt" INTEGER)`,
+    `CREATE TABLE "BucksDareActivation" ("dareId" INTEGER PRIMARY KEY, "snapshotJson" TEXT, "createdAt" INTEGER)`,
   );
   await db.exec(
-    `INSERT INTO "BucksDareV2Activation" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    `INSERT INTO "BucksDareActivation" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
     [
       JSON.stringify({ kind: "rank", targetKey: "T1", sourcePuuid: OLD_A }),
       Date.now(),
@@ -776,6 +776,39 @@ test("collect maps the account a rank Dare froze as its baseline", async () => {
   await collect(db);
   const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
   expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A]);
+  await db.close();
+});
+
+test("collect maps the identities a Dare contract and revision freeze", async () => {
+  // The renamed Dare tables keep their frozen targets as JSON under names that
+  // say nothing about PUUIDs. Registered under a stale table name, the audit
+  // would refuse these as unregistered and apply would never rewrite them.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `CREATE TABLE "BucksDare" ("id" INTEGER PRIMARY KEY, "contractJson" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `CREATE TABLE "BucksDareRevision" ("id" INTEGER PRIMARY KEY, "targetsJson" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `INSERT INTO "BucksDare" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [
+      JSON.stringify({
+        targets: [{ key: "T1", accounts: [{ puuid: OLD_A }] }],
+      }),
+      Date.now(),
+    ],
+  );
+  await db.exec(
+    `INSERT INTO "BucksDareRevision" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [JSON.stringify([{ key: "T1", accounts: [{ puuid: OLD_B }] }]), Date.now()],
+  );
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid" FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+  );
+  expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A, OLD_B].toSorted());
   await db.close();
 });
 
