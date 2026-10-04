@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { WorkflowClient } from "@temporalio/client";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
@@ -91,22 +92,15 @@ async function processMatch(
 }
 
 async function discover(workflowId: string): Promise<unknown> {
-  return await harness
-    .client()
-    .workflow.execute(scoutPostMatchDiscoveryV2Workflow, {
-      taskQueue: "scout-dev",
-      workflowId,
-      args: [
-        scoutPostMatchDiscoveryV2InputCodec.serialize({
-          stage,
-          trigger: "schedule",
-        }),
-      ],
-    });
+  const handle = await startDiscovery(workflowId);
+  return await handle.result();
 }
 
-function startDiscovery(workflowId: string) {
-  return harness.client().workflow.start(scoutPostMatchDiscoveryV2Workflow, {
+function startDiscovery(
+  workflowId: string,
+  client: WorkflowClient = harness.client().workflow,
+) {
+  return client.start(scoutPostMatchDiscoveryV2Workflow, {
     taskQueue: "scout-dev",
     workflowId,
     args: [
@@ -846,16 +840,20 @@ describe("the V2 post-match poll's ownership", () => {
       },
     });
 
-    // Starting the second execution without awaiting its result keeps the test
-    // environment's time-skipping clock locked while the first child is held
-    // inside an Activity. Awaiting `execute` here unlocks virtual time, which
-    // lets that Activity time out before this test releases it.
+    // Concurrent result waits must not each unlock the test server's global
+    // clock. Keep this overlap on real time while the child Activity is held.
+    const client = new WorkflowClient({
+      connection: harness.client().connection,
+      namespace: harness.client().options.namespace,
+    });
     const scheduled = await startDiscovery(
       "post-match-discovery-overlap-scheduled",
+      client,
     );
     await childReached.promise;
     const operator = await startDiscovery(
       "post-match-discovery-overlap-operator",
+      client,
     );
     const operatorOutcome = await operatorClaim.promise;
     releaseChild.resolve(true);
