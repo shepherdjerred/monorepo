@@ -21,6 +21,7 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchError;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import com.shepherdjerred.thestorm.rwf.domain.match.Notice;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
 import com.shepherdjerred.thestorm.rwf.domain.match.Phase;
 import com.shepherdjerred.thestorm.rwf.domain.match.RwfMatch;
@@ -338,7 +339,9 @@ final class MatchRunner implements MatchView, MatchEvents {
   }
 
   private void wentLive() {
-    liveAt = now();
+    // The domain stamped the start with the event's instant; a fresh clock read here would land
+    // after an end decided in the same step and the match row would reject it.
+    liveAt = match.phase() instanceof Phase.Live live ? live.startedAt() : now();
     humansGoneSince = null;
     tallies.clear();
     pendingPay.clear();
@@ -492,8 +495,12 @@ final class MatchRunner implements MatchView, MatchEvents {
   }
 
   private Instant liveAtOr(Instant fallback) {
-    var live = liveAt;
-    return live == null ? fallback : live;
+    return startedAtFor(liveAt, fallback);
+  }
+
+  /** The row's start: the live instant, or {@code endedAt} when the match never (quite) started. */
+  static Instant startedAtFor(@Nullable Instant liveAt, Instant endedAt) {
+    return liveAt == null || liveAt.isAfter(endedAt) ? endedAt : liveAt;
   }
 
   /** The load test: {@code count} bots join the lobby now. Returns how many did. */
@@ -914,7 +921,27 @@ final class MatchRunner implements MatchView, MatchEvents {
               now(),
               "notice",
               announce.notice().kind().name().toLowerCase(Locale.ROOT),
-              Texts.render(announce.notice()));
+              Texts.render(pseudonymous(announce.notice())));
+    }
+
+    /** The notice with every player name swapped for the player's recording pseudonym. */
+    private Notice pseudonymous(Notice notice) {
+      var values = new HashMap<String, String>();
+      for (var entry : notice.values().entrySet()) {
+        values.put(entry.getKey(), pseudonymous(entry.getValue()));
+      }
+      return Notice.of(notice.kind(), values);
+    }
+
+    private String pseudonymous(String value) {
+      for (var list : List.of(match.members(), match.departed())) {
+        for (var combatant : list) {
+          if (combatant.name().equals(value)) {
+            return parts.recordings().pseudonym(combatant.id()).orElse("-");
+          }
+        }
+      }
+      return value;
     }
 
     private void sound(MatchEffect.Sound sound) {
