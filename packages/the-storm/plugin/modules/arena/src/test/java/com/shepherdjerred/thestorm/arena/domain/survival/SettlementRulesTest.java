@@ -55,11 +55,24 @@ final class SettlementRulesTest {
   }
 
   @Test
-  void blueprintHasEightReachableDistrictsAndFitsItsDeclaredBudget() {
+  void blueprintHasTenReachableDistrictsAndFitsItsDeclaredBudget() {
     var content = shipped();
     var blueprint = new SettlementBlueprint(content).blocks();
-    assertThat(content.zones()).hasSize(8);
-    assertThat(blueprint.size()).isBetween(300_000, 500_000);
+    assertThat(content.zones()).hasSize(10);
+    assertThat(blueprint.size())
+        .isEqualTo(532_765)
+        .isLessThanOrEqualTo(SettlementBlueprint.BLOCK_BUDGET);
+    var exit = content.arena().exit().point().block();
+    assertThat(blueprint.keySet())
+        .allSatisfy(
+            pos ->
+                assertThat(
+                        content.arena().region().contains(pos)
+                            || (pos.x() == exit.x()
+                                && pos.z() == exit.z()
+                                && Math.abs(pos.y() - exit.y()) <= 1))
+                    .as("Reviewed footprint at %s", pos)
+                    .isTrue());
     for (var zone : content.zones()) {
       var spawn = zone.entrance().block();
       assertThat(blueprint.get(spawn)).isEqualTo("AIR");
@@ -81,6 +94,18 @@ final class SettlementRulesTest {
     var reachable = reachable(blocks, content.arena().playerSpawns().getFirst().point().block());
     for (var zone : content.zones()) {
       assertThat(reachable).contains(zone.entrance().block());
+      assertThat(zone.spawns())
+          .allSatisfy(
+              point ->
+                  assertThat(reachable)
+                      .as("Spawn in %s at %s", zone.id(), point)
+                      .contains(point.block()));
+      assertThat(zone.safePoints())
+          .allSatisfy(
+              point ->
+                  assertThat(reachable)
+                      .as("Rescue in %s at %s", zone.id(), point)
+                      .contains(point.block()));
       for (var station : zone.stations()) {
         assertThat(neighbors(station.block()).stream().anyMatch(reachable::contains))
             .as("Reach station in %s", zone.id())
@@ -88,6 +113,13 @@ final class SettlementRulesTest {
       }
     }
     assertThat(reachable).contains(new BlockPos(1834, 67, 2165));
+    assertThat(reachable).contains(new BlockPos(1800, 88, 2244));
+    assertThat(content.boxSites())
+        .allSatisfy(
+            site ->
+                assertThat(neighbors(site.block()).stream().anyMatch(reachable::contains))
+                    .as("Reach box %s", site.id())
+                    .isTrue());
   }
 
   private static Set<BlockPos> reachable(Map<BlockPos, String> blocks, BlockPos start) {

@@ -277,7 +277,7 @@ describe("cooperative survival and bosses on real Paper", () => {
     // The imported world also contains ordinary mobs. Credit only an entity
     // tagged by the arena, rather than the first zombie the client can see.
     const damage = await rcon.command(
-      `damage @e[nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},x=1712,y=62,z=2128,dx=159,dy=48,dz=159,limit=1] 100 minecraft:player_attack by ${bot.username}`,
+      `damage @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},x=1712,y=62,z=2128,dx=159,dy=48,dz=159,limit=1] 100 minecraft:player_attack by ${bot.username}`,
     );
     expect(damage).toMatch(/Applied .* damage/u);
     await waitUntil("credited emerald currency", () =>

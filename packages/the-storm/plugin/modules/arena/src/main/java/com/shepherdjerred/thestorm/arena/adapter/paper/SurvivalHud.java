@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 /** Round information stays visible while short interaction messages take action-bar priority. */
 final class SurvivalHud {
   private final SurvivalRunner runner;
+  private final SurvivalSidebar sidebar;
   private final BossBar rounds =
       BossBar.bossBar(
           Component.text("Settlement"), 0, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
@@ -22,6 +23,7 @@ final class SurvivalHud {
 
   SurvivalHud(SurvivalRunner runner) {
     this.runner = runner;
+    sidebar = new SurvivalSidebar(runner);
   }
 
   void hint(Player player, String message, int seconds) {
@@ -53,6 +55,7 @@ final class SurvivalHud {
                 : Math.clamp(1.0 - (double) remaining / combat.total(), 0, 1)));
     for (var player : runner.online()) {
       var id = player.getUniqueId();
+      sidebar.tick(player);
       if (viewers.add(id)) player.showBossBar(rounds);
       if (runner.downed(id)) {
         var survivor = runner.game().player(id).orElseThrow();
@@ -90,11 +93,7 @@ final class SurvivalHud {
         if (!runner.context().time().instant().isBefore(hints.getOrDefault(id, Instant.MIN)))
           player.sendActionBar(
               Component.text(
-                  runner.items().count(player, org.bukkit.Material.EMERALD)
-                      + " emeralds · "
-                      + runner.actions().perks(player)
-                      + " · "
-                      + runner.machines().status(id)));
+                  runner.talents().status(player) + " · " + runner.machines().status(id)));
       }
     }
   }
@@ -105,6 +104,7 @@ final class SurvivalHud {
   }
 
   void leave(Player player) {
+    sidebar.leave(player);
     player.hideBossBar(rounds);
     viewers.remove(player.getUniqueId());
     hints.remove(player.getUniqueId());

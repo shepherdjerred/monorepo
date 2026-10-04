@@ -9,6 +9,7 @@ import java.util.Map;
  * Authored ruined harbor: asymmetric streets, eight landmarks, interiors, caves and an airstrip.
  */
 public final class SettlementBlueprint {
+  public static final int BLOCK_BUDGET = 550_000;
   private static final int X = 1750;
   private static final int Z = 2140;
   private static final int FLOOR = 72;
@@ -38,7 +39,8 @@ public final class SettlementBlueprint {
     chapel();
     stagingDock();
     offshoreForge();
-    fixtures();
+    blocks.putAll(new SettlementLandscape(content).blocks());
+    new SettlementFixtures(content, blocks).apply();
     var exit = content.arena().exit().point().block();
     absolute(exit.x(), exit.y() - 1, exit.z(), "STONE_BRICKS");
     absolute(exit.x(), exit.y(), exit.z(), "AIR");
@@ -321,86 +323,6 @@ public final class SettlementBlueprint {
         absolute(x, FLOOR, z, floor);
         if ((x + z) % 7 == 0)
           for (var y = FLOOR - 5; y < FLOOR; y++) absolute(x, y, z, "SPRUCE_LOG");
-      }
-  }
-
-  private void fixtures() {
-    content.zones().forEach(this::zoneFixtures);
-    content.arena().classSigns().values().forEach(p -> fixture(p, "OAK_SIGN"));
-    fixture(content.arena().readyBlock(), "IRON_BLOCK");
-    content.machines().forEach(m -> fixture(m.block(), "OAK_SIGN"));
-    content.planeParts().forEach(p -> fixture(p.block(), "OAK_SIGN"));
-    fixture(content.planeWorkbench(), "OAK_SIGN");
-    fixture(content.bossObjective(), "AMETHYST_BLOCK");
-    fixture(content.expedition().returnSign(), "OAK_SIGN");
-    content.arena().playerSpawns().forEach(p -> landing(p.point().block()));
-    content.expedition().spawns().forEach(p -> landing(p.block()));
-    content.expedition().safePoints().forEach(p -> landing(p.block()));
-    landing(content.arena().lobby().point().block());
-    landing(content.arena().spectator().point().block());
-    landing(content.expedition().arrival().block());
-    landing(content.expedition().returnTo().block());
-  }
-
-  private void zoneFixtures(SurvivalContent.Zone zone) {
-    landing(zone.entrance().block());
-    zone.gate()
-        .forEach(p -> absolute(p.x(), p.y(), p.z(), zone.emeralds() == 0 ? "AIR" : "IRON_BARS"));
-    zone.purchaseSigns().forEach(p -> fixture(p, "OAK_SIGN"));
-    zone.stations()
-        .forEach(
-            s ->
-                fixture(
-                    s.block(),
-                    switch (s.type()) {
-                      case WORKBENCH -> "CRAFTING_TABLE";
-                      case FORGE -> "SMITHING_TABLE";
-                      case INFIRMARY -> "CAULDRON";
-                      case ALCHEMY -> "ENCHANTING_TABLE";
-                    }));
-    zone.resources()
-        .forEach(
-            r ->
-                fixture(
-                    r.block(),
-                    switch (r.material()) {
-                      case "OAK_PLANKS" -> "OAK_LOG";
-                      case "IRON_INGOT" -> "IRON_ORE";
-                      case "REDSTONE" -> "REDSTONE_ORE";
-                      case "GLOWSTONE_DUST" -> "GLOWSTONE";
-                      case "BONE" -> "BONE_BLOCK";
-                      case "WHEAT" -> "HAY_BLOCK";
-                      case "FLINT" -> "GRAVEL";
-                      case "COBBLESTONE" -> "MOSSY_COBBLESTONE";
-                      default ->
-                          throw new IllegalArgumentException("Unknown resource " + r.material());
-                    }));
-    zone.defenses()
-        .forEach(
-            d ->
-                fixture(
-                    d.block(),
-                    d.type() == SurvivalContent.DefenseType.BARRICADE
-                        ? "OAK_FENCE"
-                        : "STONE_PRESSURE_PLATE"));
-    for (var spawn : zone.spawns()) landing(spawn.block());
-    for (var safe : zone.safePoints()) landing(safe.block());
-  }
-
-  private void fixture(BlockPos pos, String type) {
-    for (var dx = -1; dx <= 1; dx++)
-      for (var dz = -1; dz <= 1; dz++) {
-        absolute(pos.x() + dx, pos.y() - 1, pos.z() + dz, "STONE_BRICKS");
-        for (var dy = 0; dy <= 2; dy++) absolute(pos.x() + dx, pos.y() + dy, pos.z() + dz, "AIR");
-      }
-    absolute(pos.x(), pos.y(), pos.z(), type);
-  }
-
-  private void landing(BlockPos pos) {
-    for (var dx = -1; dx <= 1; dx++)
-      for (var dz = -1; dz <= 1; dz++) {
-        absolute(pos.x() + dx, pos.y() - 1, pos.z() + dz, "STONE_BRICKS");
-        for (var dy = 0; dy <= 2; dy++) absolute(pos.x() + dx, pos.y() + dy, pos.z() + dz, "AIR");
       }
   }
 

@@ -20,17 +20,32 @@ final class ZombiesMachines {
 
   private final SurvivalRunner runner;
   private final PlaneQuest quest;
+  private final ZombiesBox box;
   private final Map<UUID, Boarding> boarding = new HashMap<>();
   private Instant boardingWindow = Instant.MIN;
   private boolean departed;
 
   ZombiesMachines(SurvivalRunner runner) {
     this.runner = runner;
+    box = new ZombiesBox(runner);
     quest =
         new PlaneQuest(
             runner.map().content().planeParts().stream()
                 .map(SurvivalContent.PlanePart::id)
                 .collect(Collectors.toUnmodifiableSet()));
+  }
+
+  ZombiesBox box() {
+    return box;
+  }
+
+  void prepare() {
+    box.beams();
+  }
+
+  void reset() {
+    box.reset();
+    boarding.clear();
   }
 
   boolean powered() {
@@ -44,8 +59,11 @@ final class ZombiesMachines {
   String status(UUID id) {
     return "Plane "
         + quest.installed()
-        + "/5"
-        + (quest.flown() ? " fuel " + quest.fuel() + "/5" : "")
+        + "/"
+        + runner.map().content().planeParts().size()
+        + (quest.flown()
+            ? " fuel " + quest.fuel() + "/" + runner.map().content().planeParts().size()
+            : "")
         + quest.carried(id).map(part -> " · Carrying " + part).orElse("")
         + (powered() ? " · Power ON" : " · Power OFF");
   }
@@ -58,6 +76,7 @@ final class ZombiesMachines {
 
   boolean interact(Player player, BlockPos pos) {
     var content = runner.map().content();
+    if (box.interact(player, pos)) return true;
     var part = content.planeParts().stream().filter(p -> p.block().equals(pos)).findFirst();
     if (part.isPresent()) {
       if (quest.take(player.getUniqueId(), part.orElseThrow().id()))
@@ -95,6 +114,7 @@ final class ZombiesMachines {
       }
       if (runner.items().spend(player, Map.of("IRON_INGOT", 4, "REDSTONE", 4))) {
         quest.power();
+        runner.feedback().play(player, SurvivalFeedback.Cue.POWER);
         runner
             .online()
             .forEach(
@@ -111,7 +131,8 @@ final class ZombiesMachines {
     switch (type) {
       case JUGGERNOG, STAMIN_UP, DOUBLE_TAP, QUICK_REVIVE ->
           runner.actions().perk(player, SurvivalPerk.valueOf(type.name()));
-      case MYSTERY_BOX -> mystery(player);
+      case MYSTERY_BOX ->
+          throw new IllegalStateException("Mystery site interaction was not handled");
       case PACK_A_PUNCH -> punch(player);
       case FOOD, POWER -> throw new IllegalStateException("Machine already handled");
     }
@@ -122,36 +143,8 @@ final class ZombiesMachines {
         && runner.items().spend(player, Map.of("EMERALD", 2))) {
       runner.items().give(player, Material.BREAD, 3);
       Texts.info(player, "Bought three bread for two emeralds.");
+      runner.feedback().play(player, SurvivalFeedback.Cue.PURCHASE);
     }
-  }
-
-  private void mystery(Player player) {
-    var material = mysteryWeapon(runner.context().random().nextInt(100));
-    var ranged = material == Material.BOW || material == Material.CROSSBOW;
-    var inventory = player.getInventory();
-    var free =
-        java.util.Arrays.stream(inventory.getStorageContents())
-            .filter(i -> i == null || i.isEmpty())
-            .count();
-    if (free < (ranged ? 2 : 1)) {
-      Texts.error(player, "Make room for a weapon and its ammunition.");
-      return;
-    }
-    if (!runner.items().spend(player, Map.of("EMERALD", 16))) return;
-    var weapon = runner.items().stack(material, 1);
-    if (material == Material.BOW)
-      weapon.addEnchantment(org.bukkit.enchantments.Enchantment.POWER, 1);
-    inventory.addItem(weapon);
-    if (ranged) runner.items().give(player, Material.ARROW, 32);
-    Texts.info(player, "Mystery box: " + material + ".");
-  }
-
-  private static Material mysteryWeapon(int roll) {
-    if (roll < 40) return Material.IRON_SWORD;
-    if (roll < 65) return Material.BOW;
-    if (roll < 85) return Material.CROSSBOW;
-    if (roll < 95) return Material.DIAMOND_SWORD;
-    return Material.TRIDENT;
   }
 
   private void punch(Player player) {
@@ -163,6 +156,7 @@ final class ZombiesMachines {
     }
     if (runner.items().spend(player, Map.of("EMERALD", 36 * (tier + 1)))) {
       runner.items().upgrade(weapon, tier + 1);
+      runner.feedback().play(player, SurvivalFeedback.Cue.UPGRADE);
       player.getInventory().setItemInMainHand(weapon);
       Texts.info(player, "Weapon upgraded and repaired to Pack-a-Punch " + (tier + 1) + ".");
     }
@@ -182,7 +176,7 @@ final class ZombiesMachines {
       if (!quest.ready(runner.game().round())) {
         Texts.info(
             player,
-            "Plane needs power, five installed parts, then five fuel pickups and one cleared round between trips.");
+            "Plane needs power, three installed parts, then three fuel pickups and one cleared round between trips.");
         return;
       }
       boardingWindow = now.plusSeconds(5);
@@ -193,6 +187,7 @@ final class ZombiesMachines {
   }
 
   void tick() {
+    box.tick();
     var now = runner.context().time().instant();
     for (var entry : java.util.List.copyOf(boarding.entrySet())) {
       var player = runner.context().server().getPlayer(entry.getKey());
@@ -247,6 +242,7 @@ final class ZombiesMachines {
   }
 
   void leave(UUID id) {
+    box.leave(id);
     boarding.remove(id);
     quest.leave(id);
     runner.map().visit(id, false);

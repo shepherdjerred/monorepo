@@ -10,13 +10,13 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class ZombiesRulesTest {
-  private static final Set<String> PARTS = Set.of("fuel", "controls", "engine", "frame", "wings");
+  private static final Set<String> PARTS = Set.of("controls", "engine", "wings");
 
   @Test
   void planeCargoIsExclusiveAndReturnsWhenACarrierLeaves() {
     var quest = new PlaneQuest(PARTS);
     assertThat(quest.take(ALICE, "engine")).isTrue();
-    assertThat(quest.take(ALICE, "frame")).isFalse();
+    assertThat(quest.take(ALICE, "wings")).isFalse();
     assertThat(quest.take(BOB, "engine")).isFalse();
     quest.leave(ALICE);
     assertThat(quest.take(BOB, "engine")).isTrue();
@@ -25,7 +25,7 @@ final class ZombiesRulesTest {
   }
 
   @Test
-  void repeatFlightsRequireAllFiveFuelPickupsAndAClearedRound() {
+  void repeatFlightsRequireAllThreeFuelPickupsAndAClearedRound() {
     var quest = new PlaneQuest(PARTS);
     for (var part : PARTS) {
       assertThat(quest.take(ALICE, part)).isTrue();

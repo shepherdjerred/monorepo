@@ -18,7 +18,7 @@ public final class PlaneQuest {
   private int lastDeparture = -1;
 
   public PlaneQuest(Set<String> parts) {
-    if (parts.size() != 5) throw new IllegalArgumentException("Plane needs five parts");
+    if (parts.isEmpty()) throw new IllegalArgumentException("Plane needs authored parts");
     this.parts = Set.copyOf(parts);
   }
 
@@ -67,8 +67,8 @@ public final class PlaneQuest {
 
   public boolean ready(int round) {
     return power
-        && installed.size() == 5
-        && (!flown || (fuel.size() == 5 && round > lastDeparture));
+        && installed.size() == parts.size()
+        && (!flown || (fuel.size() == parts.size() && round > lastDeparture));
   }
 
   public boolean depart(int round) {

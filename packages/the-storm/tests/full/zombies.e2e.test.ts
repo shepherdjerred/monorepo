@@ -224,10 +224,8 @@ describe("settlement expeditions on real Paper", () => {
       await protect(bot, rcon);
       await protect(secondBot, rcon);
       for (const [part, approach] of [
-        [new Vec3(1802, 73, 2168), new Vec3(1802.5, 73, 2169.5)],
         [new Vec3(1853, 73, 2152), new Vec3(1853.5, 73, 2153.5)],
         [new Vec3(1837, 73, 2203), new Vec3(1837.5, 73, 2204.5)],
-        [new Vec3(1799, 73, 2207), new Vec3(1799.5, 73, 2208.5)],
         [new Vec3(1799, 73, 2243), new Vec3(1799.5, 73, 2244.5)],
       ]) {
         if (part === undefined || approach === undefined)

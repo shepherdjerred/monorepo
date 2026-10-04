@@ -19,6 +19,7 @@ final class Keys {
   private final NamespacedKey run;
   private final NamespacedKey gear;
   private final NamespacedKey upgrade;
+  private final NamespacedKey legendary;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "arena_item");
@@ -26,6 +27,25 @@ final class Keys {
     this.run = new NamespacedKey(plugin, "survival_run");
     this.gear = new NamespacedKey(plugin, "arena_gear");
     this.upgrade = new NamespacedKey(plugin, "survival_upgrade");
+    this.legendary = new NamespacedKey(plugin, "survival_legendary");
+  }
+
+  void legendary(
+      ItemStack stack, com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon id) {
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer().set(legendary, PersistentDataType.STRING, id.name()));
+  }
+
+  Optional<com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon> legendary(
+      ItemStack stack) {
+    if (stack.isEmpty() || !stack.hasItemMeta()) return Optional.empty();
+    return Optional.ofNullable(
+            stack
+                .getItemMeta()
+                .getPersistentDataContainer()
+                .get(legendary, PersistentDataType.STRING))
+        .map(com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon::valueOf);
   }
 
   int upgrade(ItemStack stack) {

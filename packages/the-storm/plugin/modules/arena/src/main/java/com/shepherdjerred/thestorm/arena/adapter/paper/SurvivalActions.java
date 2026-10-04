@@ -4,7 +4,6 @@ import com.shepherdjerred.thestorm.arena.domain.survival.PurchaseConfirmation;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,7 +20,6 @@ final class SurvivalActions {
   private final SurvivalRunner runner;
   private final PurchaseConfirmation purchases = new PurchaseConfirmation();
   private final Map<UUID, Integer> selfPurchases = new HashMap<>();
-  private final Map<UUID, Instant> cooldowns = new HashMap<>();
   private final Map<UUID, Set<SurvivalPerk>> perks = new HashMap<>();
 
   SurvivalActions(SurvivalRunner runner) {
@@ -35,6 +33,7 @@ final class SurvivalActions {
         && items.spend(player, recipe.ingredients())) {
       items.give(player, material, recipe.amount());
       Texts.info(player, "Crafted " + recipe.name() + ".");
+      runner.feedback().play(player, SurvivalFeedback.Cue.CRAFT);
     }
   }
 
@@ -48,6 +47,7 @@ final class SurvivalActions {
     }
     if (!purchases.confirm(
         player.getUniqueId(), sign.toString(), runner.context().time().instant())) {
+      runner.feedback().play(player, SurvivalFeedback.Cue.CONFIRM);
       Texts.info(
           player,
           zone.name()
@@ -58,6 +58,7 @@ final class SurvivalActions {
     }
     if (runner.items().spend(player, Map.of("EMERALD", zone.emeralds()))) {
       runner.map().unlock(zone);
+      runner.feedback().play(player, SurvivalFeedback.Cue.UNLOCK);
       runner
           .online()
           .forEach(
@@ -91,6 +92,7 @@ final class SurvivalActions {
     } else {
       runner.map().arm(defense, player.getUniqueId());
     }
+    runner.feedback().play(player, SurvivalFeedback.Cue.CRAFT);
     Texts.info(player, barricade ? "Barricade repaired." : "Trap charged for one activation.");
   }
 
@@ -103,9 +105,11 @@ final class SurvivalActions {
     }
     if (!runner.map().state().harvest(player.getUniqueId(), resource)) {
       Texts.info(player, "Depleted for you this round.");
+      runner.feedback().play(player, SurvivalFeedback.Cue.FAILURE);
       return;
     }
     items.give(player, material, resource.amount());
+    runner.feedback().play(player, SurvivalFeedback.Cue.GATHER);
     Texts.info(player, "Gathered " + resource.amount() + " " + resource.material() + ".");
   }
 
@@ -140,6 +144,7 @@ final class SurvivalActions {
       selfPurchases.merge(id, 1, Integer::sum);
     }
     applyPerks(player);
+    runner.feedback().perk(player, perk);
     Texts.info(player, "Purchased " + perk + ". Perks are lost when downed.");
   }
 
@@ -161,7 +166,6 @@ final class SurvivalActions {
 
   void leave(UUID id) {
     perks.remove(id);
-    cooldowns.remove(id);
     purchases.remove(id);
     selfPurchases.remove(id);
   }
@@ -188,72 +192,6 @@ final class SurvivalActions {
   }
 
   void ability(Player player) {
-    if (!runner.isFighter(player.getUniqueId())) {
-      Texts.error(player, "Use your ability while standing in a run.");
-      return;
-    }
-    var now = runner.context().time().instant();
-    if (now.isBefore(cooldowns.getOrDefault(player.getUniqueId(), Instant.MIN))) {
-      Texts.error(player, "Your ability is recharging.");
-      return;
-    }
-    var role = runner.game().player(player.getUniqueId()).orElseThrow().role();
-    switch (role) {
-      case FIGHTER -> sweep(player);
-      case RANGER -> {
-        runner.items().give(player, Material.ARROW, 8);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1));
-      }
-      case MEDIC ->
-          runner.fighters().stream()
-              .filter(p -> Places.at(p).distanceSquared(Places.at(player)) < 64)
-              .forEach(p -> SurvivalItems.heal(p, 6));
-      case ENGINEER ->
-          runner.map().open().stream()
-              .flatMap(z -> z.defenses().stream())
-              .filter(d -> d.type() == SurvivalContent.DefenseType.BARRICADE)
-              .filter(
-                  d ->
-                      runner
-                              .world()
-                              .block(d.block())
-                              .getLocation()
-                              .distanceSquared(Places.at(player))
-                          < 64)
-              .findFirst()
-              .ifPresent(
-                  d -> {
-                    runner.map().state().repair(d.id());
-                    runner.map().barricade(d, Material.OAK_FENCE);
-                  });
-      case ALCHEMIST ->
-          runner.world().enemies().stream()
-              .filter(e -> e.getLocation().distanceSquared(Places.at(player)) < 100)
-              .forEach(
-                  e -> {
-                    e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 120, 1));
-                    e.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 120, 0));
-                  });
-      case BEASTMASTER -> {
-        runner.world().removeWolves(player.getUniqueId());
-        runner.world().spawnWolves(player, 1);
-      }
-    }
-    cooldowns.put(player.getUniqueId(), now.plusSeconds(40));
-    Texts.info(player, role + " ability used. Recharges in 40 seconds.");
-  }
-
-  private void sweep(Player player) {
-    runner.world().enemies().stream()
-        .filter(e -> e.getLocation().distanceSquared(Places.at(player)) < 25)
-        .forEach(
-            e -> {
-              runner.combat().hit(e, player);
-              e.damage(4, player);
-              var push = e.getLocation().toVector().subtract(Places.at(player).toVector());
-              if (push.lengthSquared() > 0.01) {
-                e.setVelocity(push.normalize().multiply(0.8).setY(0.3));
-              }
-            });
+    runner.talents().ability(player);
   }
 }

@@ -124,6 +124,10 @@ public final class StormFixtures extends JavaPlugin {
       }
     }
     for (var point : arena.getMapList("lootChests")) {
+      stand(
+          ((Number) point.get("x")).doubleValue() + .5,
+          ((Number) point.get("y")).doubleValue() + 1,
+          ((Number) point.get("z")).doubleValue() + .5);
       block(
           ((Number) point.get("x")).intValue(),
           ((Number) point.get("y")).intValue(),

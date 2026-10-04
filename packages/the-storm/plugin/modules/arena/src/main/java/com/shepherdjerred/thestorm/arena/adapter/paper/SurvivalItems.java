@@ -14,10 +14,14 @@ import org.bukkit.potion.PotionEffectType;
 final class SurvivalItems {
   private final Keys keys;
   private final UUID run;
+  private final SurvivalFeedback feedback;
+  private final SurvivalContent content;
 
-  SurvivalItems(Keys keys, UUID run) {
+  SurvivalItems(Keys keys, UUID run, SurvivalFeedback feedback, SurvivalContent content) {
     this.keys = keys;
     this.run = run;
+    this.feedback = feedback;
+    this.content = content;
   }
 
   static Material material(String id) {
@@ -39,6 +43,77 @@ final class SurvivalItems {
     content.zones().stream()
         .flatMap(z -> z.resources().stream())
         .forEach(resource -> material(resource.material()));
+    content.legendaries().forEach(reward -> material(reward.material()));
+  }
+
+  ItemStack legendary(com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon id) {
+    var reward = content.legendaries().stream().filter(r -> r.id() == id).findFirst().orElseThrow();
+    var weapon = stack(material(reward.material()), 1);
+    keys.legendary(weapon, id);
+    weapon.editMeta(
+        meta -> {
+          meta.displayName(
+              net.kyori.adventure.text.Component.text(
+                  "Legendary · " + reward.name(),
+                  net.kyori.adventure.text.format.NamedTextColor.GOLD));
+          meta.lore(
+              java.util.List.of(net.kyori.adventure.text.Component.text(reward.description())));
+        });
+    return weapon;
+  }
+
+  java.util.Optional<com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon> legendary(
+      ItemStack item) {
+    return owns(item) ? keys.legendary(item) : java.util.Optional.empty();
+  }
+
+  boolean ability(ItemStack item) {
+    return owns(item) && keys.isGear(item, "survival_ability");
+  }
+
+  void ability(Player player) {
+    var compass = stack(Material.COMPASS, 1);
+    keys.gear(compass, "survival_ability");
+    compass.editMeta(
+        meta -> {
+          meta.setEnchantmentGlintOverride(true);
+          meta.displayName(net.kyori.adventure.text.Component.text("Class ability · Right-click"));
+          meta.lore(
+              java.util.List.of(
+                  net.kyori.adventure.text.Component.text("Sneak + right-click: class upgrades")));
+        });
+    player.getInventory().setItem(8, compass);
+  }
+
+  /** Simulate the entire bundle before committing a single storage replacement. */
+  boolean deliver(Player player, java.util.List<ItemStack> bundle) {
+    var storage = java.util.Objects.requireNonNull(player.getInventory().getStorageContents());
+    for (var slot = 0; slot < storage.length; slot++) {
+      var existing = storage[slot];
+      if (existing != null) storage[slot] = existing.clone();
+    }
+    for (var item : bundle) {
+      if (!insert(storage, item)) return false;
+    }
+    player.getInventory().setStorageContents(storage);
+    return true;
+  }
+
+  private static boolean insert(
+      @org.jspecify.annotations.Nullable ItemStack[] storage, ItemStack item) {
+    var left = item.getAmount();
+    for (var slot = 0; slot < storage.length && left > 0; slot++) {
+      var existing = storage[slot];
+      if (existing != null && !existing.isEmpty() && !existing.isSimilar(item)) continue;
+      var count = existing == null || existing.isEmpty() ? 0 : existing.getAmount();
+      var added = Math.min(left, item.getMaxStackSize() - count);
+      if (added <= 0) continue;
+      var merged = item.clone();
+      merged.setAmount(count + added);
+      storage[slot] = merged;
+      left -= added;
+    }
+    return left == 0;
   }
 
   ItemStack stack(Material material, int amount) {
@@ -76,6 +151,7 @@ final class SurvivalItems {
   boolean give(Player player, Material material, int amount) {
     if (!fits(player, material, amount)) {
       Texts.error(player, "Make room in your inventory first.");
+      feedback.play(player, SurvivalFeedback.Cue.FAILURE);
       return false;
     }
     var remaining = amount;
@@ -91,6 +167,7 @@ final class SurvivalItems {
     if (price.entrySet().stream()
         .anyMatch(e -> count(player, material(e.getKey())) < e.getValue())) {
       Texts.error(player, "You need " + price + ".");
+      feedback.play(player, SurvivalFeedback.Cue.FAILURE);
       return false;
     }
     price.forEach((id, amount) -> remove(player, material(id), amount));
@@ -138,6 +215,7 @@ final class SurvivalItems {
       }
       case BEASTMASTER -> give(player, Material.BONE, 8);
     }
+    ability(player);
   }
 
   boolean weapon(ItemStack stack) {
@@ -146,7 +224,8 @@ final class SurvivalItems {
             || stack.getType().name().endsWith("_AXE")
             || stack.getType() == Material.BOW
             || stack.getType() == Material.CROSSBOW
-            || stack.getType() == Material.TRIDENT);
+            || stack.getType() == Material.TRIDENT
+            || legendary(stack).isPresent());
   }
 
   int tier(ItemStack stack) {
@@ -172,7 +251,18 @@ final class SurvivalItems {
         meta -> {
           meta.displayName(
               net.kyori.adventure.text.Component.text(
-                  "Pack-a-Punch " + tier + " · " + stack.getType()));
+                  "Pack-a-Punch "
+                      + tier
+                      + " · "
+                      + legendary(stack)
+                          .map(
+                              id ->
+                                  content.legendaries().stream()
+                                      .filter(r -> r.id() == id)
+                                      .findFirst()
+                                      .orElseThrow()
+                                      .name())
+                          .orElseGet(() -> stack.getType().name())));
           if (meta instanceof org.bukkit.inventory.meta.Damageable damageable)
             damageable.setDamage(0);
         });

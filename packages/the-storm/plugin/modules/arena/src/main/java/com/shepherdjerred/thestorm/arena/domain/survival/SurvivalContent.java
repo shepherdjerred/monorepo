@@ -21,7 +21,11 @@ public record SurvivalContent(
     List<Machine> machines,
     List<PlanePart> planeParts,
     BlockPos planeWorkbench,
-    BlockPos bossObjective) {
+    BlockPos bossObjective,
+    List<Route> routes,
+    List<BoxSite> boxSites,
+    List<ClassProfile> classes,
+    List<LegendaryReward> legendaries) {
   public enum StationType {
     WORKBENCH,
     FORGE,
@@ -48,7 +52,49 @@ public record SurvivalContent(
 
   public record Station(BlockPos block, StationType type) {}
 
-  public record Machine(BlockPos block, MachineType type) {}
+  public record Machine(BlockPos block, MachineType type, List<BlockPos> interactions) {
+    public Machine {
+      interactions = List.copyOf(interactions);
+    }
+
+    public boolean contains(BlockPos pos) {
+      return block.equals(pos) || interactions.contains(pos);
+    }
+  }
+
+  /** A physical gate collection opens only when every adjoining district is accessible. */
+  public record Route(String id, String gateZone, Set<String> districts) {
+    public Route {
+      districts = Set.copyOf(districts);
+      if (id.isBlank() || !districts.contains(gateZone))
+        throw new IllegalArgumentException("Invalid gate connection " + id);
+    }
+  }
+
+  public record BoxSite(String id, String zone, BlockPos block, BlockPos beacon) {}
+
+  public record Specialty(Specialization id, String name, String description) {}
+
+  public record ClassProfile(
+      SurvivalClass role, String passive, String ability, List<Specialty> specializations) {
+    public ClassProfile {
+      specializations = List.copyOf(specializations);
+      if (passive.isBlank()
+          || ability.isBlank()
+          || specializations.size() != 2
+          || specializations.stream().map(Specialty::id).distinct().count() != 2
+          || specializations.stream().anyMatch(s -> s.id().role() != role))
+        throw new IllegalArgumentException("Invalid class profile " + role);
+    }
+  }
+
+  public record LegendaryReward(
+      LegendaryWeapon id, String name, String material, String description, int weight) {
+    public LegendaryReward {
+      if (name.isBlank() || description.isBlank() || weight < 1)
+        throw new IllegalArgumentException("Invalid legendary reward " + id);
+    }
+  }
 
   public record PlanePart(String id, String name, BlockPos block) {}
 
@@ -144,9 +190,13 @@ public record SurvivalContent(
     recipes = List.copyOf(recipes);
     machines = List.copyOf(machines);
     planeParts = List.copyOf(planeParts);
-    if (entityCap < 8 || entityCap > 40 || arena.maxPlayers() != 4 || zones.size() != 8)
+    routes = List.copyOf(routes);
+    boxSites = List.copyOf(boxSites);
+    classes = List.copyOf(classes);
+    legendaries = List.copyOf(legendaries);
+    if (entityCap < 8 || entityCap > 40 || arena.maxPlayers() != 4 || zones.isEmpty())
       throw new IllegalArgumentException(
-          "Survival needs eight districts, four slots and an entity cap of 8..40");
+          "Survival needs authored districts, four slots and an entity cap of 8..40");
     var ids = new HashSet<String>();
     var fixtures = new HashSet<BlockPos>();
     for (var zone : zones) {
@@ -196,19 +246,72 @@ public record SurvivalContent(
         }
       }
     }
-    machines.forEach(m -> add(fixtures, arena.region(), m.block()));
+    machines.forEach(
+        m -> {
+          add(fixtures, arena.region(), m.block());
+          m.interactions().forEach(p -> add(fixtures, arena.region(), p));
+        });
     planeParts.forEach(p -> add(fixtures, arena.region(), p.block()));
     add(fixtures, arena.region(), planeWorkbench);
     add(fixtures, arena.region(), bossObjective);
     add(fixtures, arena.region(), expedition.returnSign());
-    if (planeParts.size() != 5
-        || planeParts.stream().map(PlanePart::id).distinct().count() != 5
+    if (planeParts.isEmpty()
+        || planeParts.stream().map(PlanePart::id).distinct().count() != planeParts.size()
         || machines.size() != MachineType.values().length
         || machines.stream().map(Machine::type).distinct().count() != MachineType.values().length)
-      throw new IllegalArgumentException("Author five plane parts and every machine");
+      throw new IllegalArgumentException("Author distinct plane parts and every machine");
     validateRoutes(zones, ids);
+    validateConnections(routes, zones, ids);
+    validateProfiles(classes, legendaries);
+    if (boxSites.size() < 2
+        || boxSites.stream().map(BoxSite::id).distinct().count() != boxSites.size())
+      throw new IllegalArgumentException("Author distinct mystery box sites");
+    for (var site : boxSites) {
+      var zone = zones.stream().filter(z -> z.id().equals(site.zone())).findFirst().orElseThrow();
+      if (!zone.contains(site.block())
+          || !arena.region().contains(site.beacon())
+          || site.block().x() != site.beacon().x()
+          || site.block().z() != site.beacon().z()
+          || site.beacon().y() <= site.block().y())
+        throw new IllegalArgumentException("Misplaced mystery box " + site.id());
+      if (machines.stream()
+          .noneMatch(m -> m.type() == MachineType.MYSTERY_BOX && m.block().equals(site.block())))
+        add(fixtures, arena.region(), site.block());
+      add(fixtures, arena.region(), site.beacon());
+    }
     if (recipes.stream().map(Recipe::id).distinct().count() != recipes.size())
       throw new IllegalArgumentException("Duplicate recipe");
+  }
+
+  private static void validateConnections(List<Route> routes, List<Zone> zones, Set<String> ids) {
+    var paid =
+        zones.stream()
+            .filter(z -> z.emeralds() > 0)
+            .map(Zone::id)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    var connected =
+        routes.stream()
+            .map(Route::gateZone)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    if (!connected.equals(paid)
+        || connected.size() != routes.size()
+        || routes.stream().map(Route::id).distinct().count() != routes.size())
+      throw new IllegalArgumentException("Every paid district needs one physical route connection");
+    for (var route : routes) {
+      var zone =
+          zones.stream().filter(z -> z.id().equals(route.gateZone())).findFirst().orElseThrow();
+      if (!ids.containsAll(route.districts()) || !route.districts().containsAll(zone.requires()))
+        throw new IllegalArgumentException("Unknown or incomplete route " + route.id());
+    }
+  }
+
+  private static void validateProfiles(
+      List<ClassProfile> classes, List<LegendaryReward> legendaries) {
+    if (classes.size() != SurvivalClass.values().length
+        || classes.stream().map(ClassProfile::role).distinct().count() != classes.size()
+        || legendaries.size() != LegendaryWeapon.values().length
+        || legendaries.stream().map(LegendaryReward::id).distinct().count() != legendaries.size())
+      throw new IllegalArgumentException("Author every class and legendary exactly once");
   }
 
   private static void add(Set<BlockPos> fixtures, Cuboid region, BlockPos pos) {

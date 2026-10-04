@@ -162,13 +162,6 @@ final class SettlementMap {
     lastSafe.clear();
     visitors.clear();
     for (var zone : content.zones()) {
-      zone.gate()
-          .forEach(
-              block ->
-                  world
-                      .block(block)
-                      .setType(
-                          state.accessible(zone.id()) ? Material.AIR : Material.IRON_BARS, false));
       zone.defenses()
           .forEach(
               d -> {
@@ -177,6 +170,7 @@ final class SettlementMap {
                 else world.block(d.block()).setType(Material.STONE_PRESSURE_PLATE, false);
               });
     }
+    gates();
     labels();
   }
 
@@ -192,31 +186,6 @@ final class SettlementMap {
                       state.accessible(zone.id()) ? "Route open" : zone.emeralds() + " emeralds",
                       state.accessible(zone.id()) ? "Explore / gather" : "Click twice",
                       "within 3 seconds"));
-    }
-    for (var machine : content.machines()) {
-      var name =
-          switch (machine.type()) {
-            case FOOD -> "Food counter";
-            case POWER -> "Power generator";
-            case MYSTERY_BOX -> "Mystery box";
-            case JUGGERNOG -> "Juggernog";
-            case STAMIN_UP -> "Stamin-Up";
-            case DOUBLE_TAP -> "Double Tap";
-            case QUICK_REVIVE -> "Quick Revive";
-            case PACK_A_PUNCH -> "Pack-a-Punch";
-          };
-      var price =
-          switch (machine.type()) {
-            case FOOD -> "3 bread / 2 emeralds";
-            case POWER -> "4 iron + 4 redstone";
-            case MYSTERY_BOX -> "16 emeralds";
-            case JUGGERNOG -> "24 emeralds";
-            case STAMIN_UP -> "20 emeralds";
-            case DOUBLE_TAP -> "32 emeralds";
-            case QUICK_REVIVE -> "16 emeralds";
-            case PACK_A_PUNCH -> "36 / 72 / 108";
-          };
-      label(machine.block(), name, price, "Click for details", "");
     }
     content
         .planeParts()
@@ -243,8 +212,21 @@ final class SettlementMap {
 
   void unlock(SurvivalContent.Zone zone) {
     state.unlock(zone);
-    zone.gate().forEach(p -> world.block(p).setType(Material.AIR, false));
+    gates();
     labels();
+  }
+
+  private void gates() {
+    for (var route : content.routes()) {
+      var open = route.districts().stream().allMatch(state::accessible);
+      var zone =
+          content.zones().stream()
+              .filter(z -> z.id().equals(route.gateZone()))
+              .findFirst()
+              .orElseThrow();
+      zone.gate()
+          .forEach(p -> world.block(p).setType(open ? Material.AIR : Material.IRON_BARS, false));
+    }
   }
 
   Optional<SurvivalContent.Zone> gate(BlockPos pos) {
@@ -273,7 +255,7 @@ final class SettlementMap {
   }
 
   Optional<SurvivalContent.Machine> machine(BlockPos pos) {
-    return content.machines().stream().filter(m -> m.block().equals(pos)).findFirst();
+    return content.machines().stream().filter(m -> m.contains(pos)).findFirst();
   }
 
   BlockPos objective() {

@@ -51,6 +51,7 @@ final class SurvivalCombat {
   private EncounterDirector.@Nullable Encounter encounter;
   private int round;
   private Instant nextSpawn = Instant.MIN;
+  private boolean scriptedDamage;
 
   SurvivalCombat(ArenaWorld world, SettlementMap map, Services services) {
     this.world = world;
@@ -96,6 +97,20 @@ final class SurvivalCombat {
 
   boolean bossEntity(org.bukkit.entity.Entity entity) {
     return boss().filter(b -> b.entity().equals(entity)).isPresent();
+  }
+
+  boolean scriptedDamage() {
+    return scriptedDamage;
+  }
+
+  void damage(LivingEntity target, Player player, double amount) {
+    hit(target, player);
+    scriptedDamage = true;
+    try {
+      target.damage(amount, player);
+    } finally {
+      scriptedDamage = false;
+    }
   }
 
   void projectile(org.bukkit.entity.Projectile projectile, double multiplier) {
@@ -211,7 +226,8 @@ final class SurvivalCombat {
     while (!queue.isEmpty()
         && !now.isBefore(nextSpawn)
         && active() < activeLimit(plan)
-        && world.alive() + queue.getFirst().entities() <= map.content().entityCap()
+        && world.alive() + world.companions() + queue.getFirst().entities()
+            <= map.content().entityCap()
         && (!EncounterDirector.ranged(queue.getFirst().mob())
             || types.entrySet().stream()
                     .filter(e -> EncounterDirector.ranged(e.getValue()))

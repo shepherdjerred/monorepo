@@ -401,6 +401,14 @@ final class ArenaWorld {
     return wolves.values().stream().anyMatch(pack -> pack.contains(entity));
   }
 
+  int companions() {
+    return (int)
+        wolves.values().stream()
+            .flatMap(List::stream)
+            .filter(w -> w.isValid() && !w.isDead())
+            .count();
+  }
+
   /** Arena mobs alive now, riders and boss included. */
   int alive() {
     mobs.removeIf(mob -> !mob.isValid() || mob.isDead());

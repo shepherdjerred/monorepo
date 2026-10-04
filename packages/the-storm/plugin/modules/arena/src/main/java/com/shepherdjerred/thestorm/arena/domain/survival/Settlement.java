@@ -50,6 +50,10 @@ public final class Settlement {
     return true;
   }
 
+  public boolean available(UUID player, SurvivalContent.Resource resource) {
+    return harvested.getOrDefault(new Harvest(player, resource.block()), 0) < resource.perRound();
+  }
+
   public int strength(String defense) {
     return defenses.getOrDefault(defense, 0);
   }

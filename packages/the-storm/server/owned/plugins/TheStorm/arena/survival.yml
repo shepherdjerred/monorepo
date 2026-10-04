@@ -2924,54 +2924,270 @@ zones:
           "y": 73
           z: 2243
         type: SPIKE_TRAP
+  - id: wharf
+    name: Smugglers' Wharf
+    areas:
+      - min: { x: 1750, "y": 62, z: 2252 }
+        max: { x: 1781, "y": 105, z: 2283 }
+    emeralds: 20
+    requires: [ramparts]
+    entrance: { x: 1756.5, "y": 73, z: 2255.5 }
+    spawns:
+      - { x: 1756.5, "y": 73, z: 2255.5 }
+      - { x: 1766.5, "y": 66, z: 2278.5 }
+    safePoints:
+      - { x: 1758.5, "y": 73, z: 2256.5 }
+      - { x: 1767.5, "y": 66, z: 2275.5 }
+      - { x: 1773.5, "y": 63, z: 2277.5 }
+    purchaseSigns:
+      - { x: 1755, "y": 73, z: 2250 }
+      - { x: 1773, "y": 73, z: 2250 }
+    gate:
+      - { x: 1755, "y": 73, z: 2251 }
+      - { x: 1755, "y": 74, z: 2251 }
+      - { x: 1755, "y": 75, z: 2251 }
+      - { x: 1755, "y": 76, z: 2251 }
+      - { x: 1755, "y": 77, z: 2251 }
+      - { x: 1755, "y": 78, z: 2251 }
+      - { x: 1756, "y": 73, z: 2251 }
+      - { x: 1756, "y": 74, z: 2251 }
+      - { x: 1756, "y": 75, z: 2251 }
+      - { x: 1756, "y": 76, z: 2251 }
+      - { x: 1756, "y": 77, z: 2251 }
+      - { x: 1756, "y": 78, z: 2251 }
+      - { x: 1757, "y": 73, z: 2251 }
+      - { x: 1757, "y": 74, z: 2251 }
+      - { x: 1757, "y": 75, z: 2251 }
+      - { x: 1757, "y": 76, z: 2251 }
+      - { x: 1757, "y": 77, z: 2251 }
+      - { x: 1757, "y": 78, z: 2251 }
+      - { x: 1755, "y": 73, z: 2252 }
+      - { x: 1755, "y": 74, z: 2252 }
+      - { x: 1755, "y": 75, z: 2252 }
+      - { x: 1755, "y": 76, z: 2252 }
+      - { x: 1755, "y": 77, z: 2252 }
+      - { x: 1755, "y": 78, z: 2252 }
+      - { x: 1756, "y": 73, z: 2252 }
+      - { x: 1756, "y": 74, z: 2252 }
+      - { x: 1756, "y": 75, z: 2252 }
+      - { x: 1756, "y": 76, z: 2252 }
+      - { x: 1756, "y": 77, z: 2252 }
+      - { x: 1756, "y": 78, z: 2252 }
+      - { x: 1757, "y": 73, z: 2252 }
+      - { x: 1757, "y": 74, z: 2252 }
+      - { x: 1757, "y": 75, z: 2252 }
+      - { x: 1757, "y": 76, z: 2252 }
+      - { x: 1757, "y": 77, z: 2252 }
+      - { x: 1757, "y": 78, z: 2252 }
+      - { x: 1774, "y": 73, z: 2251 }
+      - { x: 1774, "y": 74, z: 2251 }
+      - { x: 1774, "y": 75, z: 2251 }
+      - { x: 1774, "y": 76, z: 2251 }
+      - { x: 1774, "y": 77, z: 2251 }
+      - { x: 1774, "y": 78, z: 2251 }
+      - { x: 1775, "y": 73, z: 2251 }
+      - { x: 1775, "y": 74, z: 2251 }
+      - { x: 1775, "y": 75, z: 2251 }
+      - { x: 1775, "y": 76, z: 2251 }
+      - { x: 1775, "y": 77, z: 2251 }
+      - { x: 1775, "y": 78, z: 2251 }
+      - { x: 1776, "y": 73, z: 2251 }
+      - { x: 1776, "y": 74, z: 2251 }
+      - { x: 1776, "y": 75, z: 2251 }
+      - { x: 1776, "y": 76, z: 2251 }
+      - { x: 1776, "y": 77, z: 2251 }
+      - { x: 1776, "y": 78, z: 2251 }
+      - { x: 1774, "y": 73, z: 2252 }
+      - { x: 1774, "y": 74, z: 2252 }
+      - { x: 1774, "y": 75, z: 2252 }
+      - { x: 1774, "y": 76, z: 2252 }
+      - { x: 1774, "y": 77, z: 2252 }
+      - { x: 1774, "y": 78, z: 2252 }
+      - { x: 1775, "y": 73, z: 2252 }
+      - { x: 1775, "y": 74, z: 2252 }
+      - { x: 1775, "y": 75, z: 2252 }
+      - { x: 1775, "y": 76, z: 2252 }
+      - { x: 1775, "y": 77, z: 2252 }
+      - { x: 1775, "y": 78, z: 2252 }
+      - { x: 1776, "y": 73, z: 2252 }
+      - { x: 1776, "y": 74, z: 2252 }
+      - { x: 1776, "y": 75, z: 2252 }
+      - { x: 1776, "y": 76, z: 2252 }
+      - { x: 1776, "y": 77, z: 2252 }
+      - { x: 1776, "y": 78, z: 2252 }
+    stations:
+      - block: { x: 1762, "y": 66, z: 2275 }
+        type: WORKBENCH
+    resources:
+      - block: { x: 1760, "y": 66, z: 2272 }
+        material: WHEAT
+        amount: 9
+        perRound: 2
+      - block: { x: 1762, "y": 66, z: 2272 }
+        material: OAK_PLANKS
+        amount: 4
+        perRound: 2
+    defenses:
+      - id: wharf-barricade
+        block: { x: 1755, "y": 73, z: 2257 }
+        type: BARRICADE
+  - id: bluff
+    name: Signal Bluff
+    areas:
+      - min: { x: 1782, "y": 62, z: 2252 }
+        max: { x: 1813, "y": 105, z: 2283 }
+    emeralds: 20
+    requires: [ramparts]
+    entrance: { x: 1788.5, "y": 73, z: 2254.5 }
+    spawns:
+      - { x: 1788.5, "y": 73, z: 2254.5 }
+      - { x: 1808.5, "y": 85, z: 2278.5 }
+    safePoints:
+      - { x: 1792.5, "y": 73, z: 2254.5 }
+      - { x: 1799.5, "y": 85, z: 2275.5 }
+      - { x: 1798.5, "y": 88, z: 2280.5 }
+    purchaseSigns:
+      - { x: 1787, "y": 73, z: 2250 }
+      - { x: 1805, "y": 73, z: 2250 }
+    gate:
+      - { x: 1787, "y": 73, z: 2251 }
+      - { x: 1787, "y": 74, z: 2251 }
+      - { x: 1787, "y": 75, z: 2251 }
+      - { x: 1787, "y": 76, z: 2251 }
+      - { x: 1787, "y": 77, z: 2251 }
+      - { x: 1787, "y": 78, z: 2251 }
+      - { x: 1788, "y": 73, z: 2251 }
+      - { x: 1788, "y": 74, z: 2251 }
+      - { x: 1788, "y": 75, z: 2251 }
+      - { x: 1788, "y": 76, z: 2251 }
+      - { x: 1788, "y": 77, z: 2251 }
+      - { x: 1788, "y": 78, z: 2251 }
+      - { x: 1789, "y": 73, z: 2251 }
+      - { x: 1789, "y": 74, z: 2251 }
+      - { x: 1789, "y": 75, z: 2251 }
+      - { x: 1789, "y": 76, z: 2251 }
+      - { x: 1789, "y": 77, z: 2251 }
+      - { x: 1789, "y": 78, z: 2251 }
+      - { x: 1787, "y": 73, z: 2252 }
+      - { x: 1787, "y": 74, z: 2252 }
+      - { x: 1787, "y": 75, z: 2252 }
+      - { x: 1787, "y": 76, z: 2252 }
+      - { x: 1787, "y": 77, z: 2252 }
+      - { x: 1787, "y": 78, z: 2252 }
+      - { x: 1788, "y": 73, z: 2252 }
+      - { x: 1788, "y": 74, z: 2252 }
+      - { x: 1788, "y": 75, z: 2252 }
+      - { x: 1788, "y": 76, z: 2252 }
+      - { x: 1788, "y": 77, z: 2252 }
+      - { x: 1788, "y": 78, z: 2252 }
+      - { x: 1789, "y": 73, z: 2252 }
+      - { x: 1789, "y": 74, z: 2252 }
+      - { x: 1789, "y": 75, z: 2252 }
+      - { x: 1789, "y": 76, z: 2252 }
+      - { x: 1789, "y": 77, z: 2252 }
+      - { x: 1789, "y": 78, z: 2252 }
+      - { x: 1806, "y": 73, z: 2251 }
+      - { x: 1806, "y": 74, z: 2251 }
+      - { x: 1806, "y": 75, z: 2251 }
+      - { x: 1806, "y": 76, z: 2251 }
+      - { x: 1806, "y": 77, z: 2251 }
+      - { x: 1806, "y": 78, z: 2251 }
+      - { x: 1807, "y": 73, z: 2251 }
+      - { x: 1807, "y": 74, z: 2251 }
+      - { x: 1807, "y": 75, z: 2251 }
+      - { x: 1807, "y": 76, z: 2251 }
+      - { x: 1807, "y": 77, z: 2251 }
+      - { x: 1807, "y": 78, z: 2251 }
+      - { x: 1808, "y": 73, z: 2251 }
+      - { x: 1808, "y": 74, z: 2251 }
+      - { x: 1808, "y": 75, z: 2251 }
+      - { x: 1808, "y": 76, z: 2251 }
+      - { x: 1808, "y": 77, z: 2251 }
+      - { x: 1808, "y": 78, z: 2251 }
+      - { x: 1806, "y": 73, z: 2252 }
+      - { x: 1806, "y": 74, z: 2252 }
+      - { x: 1806, "y": 75, z: 2252 }
+      - { x: 1806, "y": 76, z: 2252 }
+      - { x: 1806, "y": 77, z: 2252 }
+      - { x: 1806, "y": 78, z: 2252 }
+      - { x: 1807, "y": 73, z: 2252 }
+      - { x: 1807, "y": 74, z: 2252 }
+      - { x: 1807, "y": 75, z: 2252 }
+      - { x: 1807, "y": 76, z: 2252 }
+      - { x: 1807, "y": 77, z: 2252 }
+      - { x: 1807, "y": 78, z: 2252 }
+      - { x: 1808, "y": 73, z: 2252 }
+      - { x: 1808, "y": 74, z: 2252 }
+      - { x: 1808, "y": 75, z: 2252 }
+      - { x: 1808, "y": 76, z: 2252 }
+      - { x: 1808, "y": 77, z: 2252 }
+      - { x: 1808, "y": 78, z: 2252 }
+    stations:
+      - block: { x: 1794, "y": 85, z: 2275 }
+        type: ALCHEMY
+    resources:
+      - block: { x: 1792, "y": 85, z: 2272 }
+        material: REDSTONE
+        amount: 4
+        perRound: 2
+      - block: { x: 1794, "y": 85, z: 2272 }
+        material: GLOWSTONE_DUST
+        amount: 4
+        perRound: 2
+    defenses:
+      - id: bluff-barricade
+        block: { x: 1787, "y": 73, z: 2257 }
+        type: BARRICADE
 machines:
   - block:
       x: 1783
       "y": 73
       z: 2163
     type: FOOD
+    interactions: [{ x: 1784, "y": 73, z: 2163 }]
   - block:
       x: 1834
       "y": 73
       z: 2189
     type: POWER
+    interactions: [{ x: 1835, "y": 73, z: 2189 }]
   - block:
       x: 1789
       "y": 73
       z: 2213
     type: MYSTERY_BOX
+    interactions: []
   - block:
       x: 1765
       "y": 73
       z: 2185
     type: JUGGERNOG
+    interactions: [{ x: 1766, "y": 73, z: 2185 }]
   - block:
       x: 1787
       "y": 73
       z: 2163
     type: STAMIN_UP
+    interactions: [{ x: 1788, "y": 73, z: 2163 }]
   - block:
       x: 1829
       "y": 73
       z: 2187
     type: DOUBLE_TAP
+    interactions: [{ x: 1830, "y": 73, z: 2187 }]
   - block:
       x: 1765
       "y": 73
       z: 2148
     type: QUICK_REVIVE
+    interactions: [{ x: 1766, "y": 73, z: 2148 }]
   - block:
       x: 1727
       "y": 73
       z: 2209
     type: PACK_A_PUNCH
+    interactions: [{ x: 1728, "y": 73, z: 2209 }]
 planeParts:
-  - id: fuel
-    name: Fuel tank
-    block:
-      x: 1802
-      "y": 73
-      z: 2168
   - id: controls
     name: Flight controls
     block:
@@ -2984,12 +3200,6 @@ planeParts:
       x: 1837
       "y": 73
       z: 2203
-  - id: frame
-    name: Airframe
-    block:
-      x: 1799
-      "y": 73
-      z: 2207
   - id: wings
     name: Wing spars
     block:
@@ -3117,3 +3327,127 @@ recipes:
       WHEAT: 8
       GLOWSTONE_DUST: 8
       REDSTONE: 4
+
+routes:
+  - id: quarry-routes
+    gateZone: quarry
+    districts: [market, quarry]
+  - id: foundry-routes
+    gateZone: foundry
+    districts: [quarry, foundry]
+  - id: infirmary-routes
+    gateZone: infirmary
+    districts: [market, infirmary]
+  - id: barracks-routes
+    gateZone: barracks
+    districts: [market, barracks]
+  - id: ramparts-routes
+    gateZone: ramparts
+    districts: [barracks, ramparts]
+  - id: crypt-routes
+    gateZone: crypt
+    districts: [ramparts, foundry, crypt]
+  - id: wharf-routes
+    gateZone: wharf
+    districts: [ramparts, wharf]
+  - id: bluff-routes
+    gateZone: bluff
+    districts: [ramparts, bluff]
+boxSites:
+  - id: market
+    zone: market
+    block: { x: 1793, "y": 73, z: 2173 }
+    beacon: { x: 1793, "y": 98, z: 2173 }
+  - id: quarry
+    zone: quarry
+    block: { x: 1847, "y": 67, z: 2165 }
+    beacon: { x: 1847, "y": 98, z: 2165 }
+  - id: barracks
+    zone: barracks
+    block: { x: 1789, "y": 73, z: 2213 }
+    beacon: { x: 1789, "y": 98, z: 2213 }
+  - id: wharf
+    zone: wharf
+    block: { x: 1764, "y": 66, z: 2269 }
+    beacon: { x: 1764, "y": 99, z: 2269 }
+  - id: bluff
+    zone: bluff
+    block: { x: 1798, "y": 85, z: 2269 }
+    beacon: { x: 1798, "y": 100, z: 2269 }
+classes:
+  - role: FIGHTER
+    passive: "10% less melee damage received."
+    ability: "Sweep nearby enemies for damage and knockback."
+    specializations:
+      - id: GUARDIAN
+        name: "Guardian"
+        description: "Gain 8 absorption HP for 8 seconds."
+      - id: VANGUARD
+        name: "Vanguard"
+        description: "Sweep for 8 damage within 5 blocks, with knockback."
+  - role: RANGER
+    passive: "10% more projectile damage; native deflection still applies."
+    ability: "Receive 8 arrows and a five-second speed burst."
+    specializations:
+      - id: MARKSMAN
+        name: "Marksman"
+        description: "Next 3 shots deal 50% extra damage; expires in 12 seconds."
+      - id: PIERCER
+        name: "Piercer"
+        description: "Next 3 arrows pierce up to 3 enemies; expires in 12 seconds."
+  - role: MEDIC
+    passive: "Normal revive takes 4 seconds; Quick Revive takes 3."
+    ability: "Heal nearby standing teammates for 6 HP."
+    specializations:
+      - id: FIELD_SURGEON
+        name: "Field Surgeon"
+        description: "Heal standing allies within 8 blocks for 8 HP."
+      - id: RESCUER
+        name: "Rescuer"
+        description: "Revive one downed ally within 5 blocks and line of sight for 4 HP."
+  - role: ENGINEER
+    passive: "Repair barricades for 2 planks instead of 4."
+    ability: "Restore a nearby barricade."
+    specializations:
+      - id: FORTIFIER
+        name: "Fortifier"
+        description: "Repair nearby barricades; grant allies within 6 blocks 4 absorption HP."
+      - id: SAPPER
+        name: "Sapper"
+        description: "Place a 15-second shock trap: 6 damage and Slowness II in 5 blocks."
+  - role: ALCHEMIST
+    passive: "Class debuffs last 20% longer."
+    ability: "Weaken and slow the nearby horde."
+    specializations:
+      - id: CRYOMANCER
+        name: "Cryomancer"
+        description: "Slow enemies within 6 blocks with Slowness II for 6 seconds."
+      - id: PLAGUE_BREWER
+        name: "Plague Brewer"
+        description: "Weaken enemies and deal 6 total damage over 6 seconds within 6 blocks."
+  - role: BEASTMASTER
+    passive: "Companions deal 20% extra damage."
+    ability: "Summon or recall one companion wolf."
+    specializations:
+      - id: PACKLEADER
+        name: "Packleader"
+        description: "Summon or recall two wolves."
+      - id: WARDEN
+        name: "Warden"
+        description: "Summon or recall one wolf; gain 8 absorption HP for 8 seconds."
+legendaries:
+  - id: STORMCALLER
+    name: Stormcaller
+    material: BOW
+    description: "Successful hits arc for 4 damage to two enemies within 4 blocks."
+    weight: 1
+  - id: FROSTBITE
+    name: Frostbite
+    material: CROSSBOW
+    description: "Successful hits slow four enemies within 4 blocks for 3 seconds."
+    weight: 1
+  - id: GRAVITON
+    name: Graviton Staff
+    material: BLAZE_ROD
+    description: "Pull five ordinary enemies: one redstone per cast, five-second recharge."
+    weight: 1

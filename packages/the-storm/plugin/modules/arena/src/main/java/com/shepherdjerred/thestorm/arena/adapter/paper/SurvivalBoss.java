@@ -96,12 +96,10 @@ final class SurvivalBoss {
     }
     var fraction = alive() ? entity.getHealth() / max.getValue() : 0;
     bar.progress((float) Math.clamp(fraction, 0, 1));
-    audience.forEach(
-        player -> {
-          if (viewers.add(player.getUniqueId())) {
-            player.showBossBar(bar);
-          }
-        });
+    var immunity = id.equals("gale-sovereign") ? " · Deflects ranged shots; use melee" : "";
+    var recovery = now.isBefore(vulnerableUntil) ? " · Recovery window" : "";
+    bar.name(Component.text(name() + immunity + recovery));
+    audience.forEach(this::show);
     if (!alive() || fighters.isEmpty()) {
       return;
     }
@@ -143,26 +141,44 @@ final class SurvivalBoss {
     }
   }
 
+  private void show(Player player) {
+    if (!viewers.add(player.getUniqueId())) return;
+    player.showBossBar(bar);
+    if (id.equals("gale-sovereign"))
+      Texts.info(
+          player,
+          "Breeze Sovereign deflects arrows and tridents. Dodge the wind lanes, then attack in melee during recovery.");
+  }
+
   private void telegraph(BossMechanics.Cast cast) {
     for (var x = -24; x <= 24; x += 2) {
       for (var z = -24; z <= 24; z += 2) {
         var point =
             new com.shepherdjerred.thestorm.arena.domain.geometry.Point(
                 cast.origin().x() + x, cast.aim().y(), cast.origin().z() + z);
-        if (cast.hits(point)) {
+        var surface = surface(point);
+        if (surface.isPresent() && cast.hits(Places.point(surface.orElseThrow()))) {
           world
               .world()
-              .spawnParticle(
-                  Particle.FLAME,
-                  Places.location(world.world(), point).add(0, 0.1, 0),
-                  1,
-                  0,
-                  0,
-                  0,
-                  0);
+              .spawnParticle(Particle.FLAME, surface.orElseThrow().add(0, 0.1, 0), 1, 0, 0, 0, 0);
         }
       }
     }
+  }
+
+  private java.util.Optional<org.bukkit.Location> surface(
+      com.shepherdjerred.thestorm.arena.domain.geometry.Point point) {
+    var at = Places.location(world.world(), point);
+    for (var offset = 2; offset >= -2; offset--) {
+      var floor =
+          world.world().getBlockAt(at.getBlockX(), at.getBlockY() + offset - 1, at.getBlockZ());
+      var feet = floor.getRelative(org.bukkit.block.BlockFace.UP);
+      if (floor.isCollidable()
+          && feet.isPassable()
+          && feet.getRelative(org.bukkit.block.BlockFace.UP).isPassable())
+        return java.util.Optional.of(feet.getLocation().add(.5, 0, .5));
+    }
+    return java.util.Optional.empty();
   }
 
   private void impact(BossMechanics.Cast cast, Collection<Player> fighters, Instant now) {

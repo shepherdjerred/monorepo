@@ -437,6 +437,8 @@ routes, barricades, charged traps, and personal gathering budgets reset each run
 | `/arena ready`                                  | Starts the countdown when participants are ready                      |
 | `/survival ability`                             | Uses the class ability, with a 40-second cooldown                     |
 | `/survival status`                              | Shows round, XP, emerald items, and opened districts                  |
+| `/survival classes` / `/survival upgrades`      | Explains roles and unlocks / chooses an earned run upgrade            |
+| Right-click the ninth-slot compass              | Uses the class ability; sneak-right-click opens upgrades              |
 | `/survival give <player> <material> <amount>`   | Donates run items to a nearby standing teammate                       |
 | Right-click a resource node                     | Gathers from a personal, finite per-round budget                      |
 | Right-click a station                           | Opens curated crafting and donation choices                           |
@@ -450,6 +452,22 @@ Medic heals nearby teammates. Engineer repairs, Alchemist weakens the horde,
 and Beastmaster recalls a companion wolf. Kills, assists, bosses, and completed
 rounds award persistent XP through idempotent database credits. Currency and
 gathered materials are physical items tagged to the current run.
+
+Clearing rounds 4, 9 and 14 earns three choices per run. Choose one specialization first,
+then Potency (+25% of the base effect, or two seconds of utility duration) or Tempo
+(six seconds off the 40-second recharge). Choices survive downing and reset when the run ends.
+Persistent XP still unlocks Engineer at 500, Alchemist at 1,500 and Beastmaster at 3,000.
+A personal sidebar shows teammates' carried emeralds, class, specialization, upgrades,
+perks and the next persistent XP unlock. The compass stays in its reserved slot.
+
+| Class       | Passive                              | Specialization abilities                                                         |
+| ----------- | ------------------------------------ | -------------------------------------------------------------------------------- |
+| Fighter     | 10% less ordinary enemy melee damage | Guardian: temporary absorption; Vanguard: damaging sweep                         |
+| Ranger      | 10% more projectile damage           | Marksman: three strengthened shots; Piercer: three piercing arrows               |
+| Medic       | Four-second revive channels          | Field Surgeon: team healing; Rescuer: revive one nearby downed ally              |
+| Engineer    | Barricade repairs cost two planks    | Fortifier: repairs and team absorption; Sapper: shock trap                       |
+| Alchemist   | Class debuffs last 20% longer        | Cryomancer: slowing field; Plague Brewer: weakness and credited damage over time |
+| Beastmaster | Wolves deal 20% more damage          | Packleader: two wolves; Warden: one wolf and temporary absorption                |
 
 A downed player has 30 seconds before becoming a spectator. Bleedouts return
 next round with a weaker kit that retains the selected class's signature tools.
@@ -503,6 +521,12 @@ the food counter sells three bread for two emeralds. Shared routes cost quarry
 12, foundry 20, infirmary 12, barracks 16, ramparts 20 and crypt 24 emeralds.
 Click the same sign twice, 200 milliseconds to three seconds apart, to confirm.
 
+Smugglers' Wharf and Signal Bluff each cost 20 emeralds after unlocking ramparts.
+Both have two connections back to ramparts. Wharf docks and tunnels descend to Y 66/63;
+bluff terraces and a rampart gallery rise to Y 85/88. The protected footprint remains unchanged.
+Machines use barrels, jukeboxes, a generator and an anvil with floating labels.
+Resource glints disappear for a player who has depleted that node. Interactions play local sounds.
+
 Restore power at the foundry with four iron and four redstone. Physical machines
 sell Juggernog (24 emeralds, eight extra max HP), Stamin-Up (20, Speed I), Double
 Tap (32, 25% extra weapon damage), and Quick Revive (16, three-second channels).
@@ -510,18 +534,28 @@ Quick Revive works before power and can grant a solo replacement self-revive,
 after the current charge is used, at most twice per run. All perks disappear
 immediately when downed, including a self-revive.
 
-The powered mystery box costs 16 emeralds: iron sword 40%, Power I bow 25%,
-crossbow 20%, diamond sword 10%, trident 5%; ranged rewards include arrows.
+The powered mystery box costs 16 emeralds: iron sword 30%, Power I bow 20%,
+crossbow 20%, diamond sword 15%, trident 10%, legendary 5%. It starts in the market,
+animates for three seconds, and reserves the revealed reward for its buyer for 15 seconds.
+Unclaimed purchases refund their emeralds when inventory space is available in the same run.
+After six claims it moves to another authored site, including unopened districts.
+Follow the magenta beacon to market, quarry, barracks, wharf or bluff. The beacon grants no buffs.
+Ranged rewards include arrows; the Graviton includes redstone ammunition.
+
+Legendary choices are equally weighted: Stormcaller chains damage to two nearby enemies;
+Frostbite slows up to four ordinary enemies; Graviton spends one redstone to pull up to
+five ordinary enemies every five seconds. Pack-a-Punch increases legendary strength.
+Effects require line of sight and respect boss protections; native Breeze ranged deflection remains.
 Pack-a-Punch upgrades the held run weapon for 36/72/108 emeralds, fully repairs
 it and preserves its enchantments. Damage multipliers are 1.35/1.70/2.10;
 projectiles retain the upgrade and Double Tap strength at firing time.
 
-Five plane parts are scattered through market, quarry, foundry, barracks and
-ramparts. Each player carries one part and installs it at the airstrip. Leaving
-returns undelivered cargo. Power plus all five parts permits a flight to the
+Three plane parts are scattered through quarry, foundry and ramparts.
+Each player carries one part and installs it at the airstrip. Leaving
+returns undelivered cargo. Power plus all three parts permits a flight to the
 offshore forge. Players board individually over five seconds; rounds continue
 and enemies redeploy toward occupied areas with their health and counts intact.
-A return station operates independently. Later departures require five fuel
+A return station operates independently. Later departures require three fuel
 pickups and at least one cleared round since the previous departure.
 
 Defeated enemies can drop Max Ammo, Double Emeralds (30 seconds), Insta-Kill

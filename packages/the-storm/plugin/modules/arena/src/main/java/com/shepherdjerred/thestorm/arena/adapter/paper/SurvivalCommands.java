@@ -19,6 +19,20 @@ final class SurvivalCommands {
         Commands.literal("survival")
             .requires(source -> source.getSender().hasPermission(ArenaPermissions.PLAY))
             .then(
+                Commands.literal("classes")
+                    .executes(
+                        c ->
+                            player(
+                                c.getSource().getSender(),
+                                p -> runner(p, r -> r.classMenus().classes(p)))))
+            .then(
+                Commands.literal("upgrades")
+                    .executes(
+                        c ->
+                            player(
+                                c.getSource().getSender(),
+                                p -> runner(p, r -> r.classMenus().upgrades(p)))))
+            .then(
                 Commands.literal("ability")
                     .executes(
                         c ->
@@ -98,7 +112,7 @@ final class SurvivalCommands {
                                                                                   c, "amount"));
                                                                 })))))))
             .build(),
-        "Settlement survival: ability, status, give <player> <item> <amount>");
+        "Settlement survival: classes, upgrades, ability, status, give <player> <item> <amount>");
   }
 
   private static int player(org.bukkit.command.CommandSender sender, Consumer<Player> action) {

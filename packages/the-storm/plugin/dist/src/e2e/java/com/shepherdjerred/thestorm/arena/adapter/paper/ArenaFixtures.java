@@ -42,6 +42,7 @@ public final class ArenaFixtures implements Listener {
   public static void install(JavaPlugin plugin, Path content) {
     var fixtures = new ArenaFixtures(plugin, content);
     plugin.getServer().getPluginManager().registerEvents(fixtures, plugin);
+    fixtures.survivalCommand();
     plugin
         .getLifecycleManager()
         .registerEventHandler(
@@ -74,6 +75,54 @@ public final class ArenaFixtures implements Listener {
                                                       .sendMessage("Spawned native cube.");
                                                   return 1;
                                                 })))
+                            .build()));
+  }
+
+  private void survivalCommand() {
+    plugin
+        .getLifecycleManager()
+        .registerEventHandler(
+            LifecycleEvents.COMMANDS,
+            event ->
+                event
+                    .registrar()
+                    .register(
+                        Commands.literal("storm-fixture-survival")
+                            .requires(
+                                source ->
+                                    source.getSender()
+                                        instanceof org.bukkit.command.RemoteConsoleCommandSender)
+                            .then(
+                                Commands.argument("action", StringArgumentType.word())
+                                    .then(
+                                        Commands.argument("player", StringArgumentType.word())
+                                            .then(
+                                                Commands.argument(
+                                                        "value", StringArgumentType.word())
+                                                    .executes(
+                                                        command -> {
+                                                          var player =
+                                                              java.util.Objects.requireNonNull(
+                                                                  plugin
+                                                                      .getServer()
+                                                                      .getPlayerExact(
+                                                                          StringArgumentType
+                                                                              .getString(
+                                                                                  command,
+                                                                                  "player")));
+                                                          command
+                                                              .getSource()
+                                                              .getSender()
+                                                              .sendMessage(
+                                                                  ArenaNativeProbe.survival(
+                                                                      storm,
+                                                                      player,
+                                                                      StringArgumentType.getString(
+                                                                          command, "action"),
+                                                                      StringArgumentType.getString(
+                                                                          command, "value")));
+                                                          return 1;
+                                                        }))))
                             .build()));
   }
 

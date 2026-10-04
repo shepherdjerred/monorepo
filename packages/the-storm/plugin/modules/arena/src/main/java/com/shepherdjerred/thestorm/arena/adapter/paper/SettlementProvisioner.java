@@ -169,7 +169,7 @@ final class SettlementProvisioner {
 
   private void inspect(CommandSender sender, Map<BlockPos, String> blueprint) {
     var land = services.require(LandRead.class);
-    if (blueprint.size() > 500_000) {
+    if (blueprint.size() > SettlementBlueprint.BLOCK_BUDGET) {
       throw new IllegalStateException("Blueprint exceeds its block budget");
     }
     var changes = new ArrayList<SettlementStore.Change>();
