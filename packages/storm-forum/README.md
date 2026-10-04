@@ -12,6 +12,12 @@ artwork. It contains no XenForo distribution or commercial theme/add-on code.
 contains a fresh licensed XenForo `upload/` tree, add-on distributions extracted
 into their native paths, and the two vendor style archives under `vendor/`.
 
+The licensed parents are UI.X 2 and UI.X 2 Dark, pinned in the manifest. Package
+their supported standalone style archives as `vendor/uix-2.zip` and
+`vendor/uix-2-dark.zip`. The optional variations-ready beta XML is not the parent
+contract. The Storm's normal, Halloween, and Christmas styles inherit from each
+parent and contain independently authored branding.
+
 Private bundles live in the protected `storm-forum-releases` bucket. Each release
 references an immutable object key and SHA-256. Init downloads and verifies the
 bundle into an ephemeral application volume. It does not install or migrate the

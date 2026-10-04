@@ -11,7 +11,7 @@ final class Styles extends \XF\Cli\Command\AbstractCommand
     {
         $app = \XF::app();
         $map = $app->registry()->get('stormForumStyles') ?: [];
-        foreach (['light' => 'uix-classic.zip', 'dark' => 'uix-classic-dark.zip'] as $mode => $archive) {
+        foreach (['light' => 'uix-2.zip', 'dark' => 'uix-2-dark.zip'] as $mode => $archive) {
             $file = '/app/forum/vendor/' . $archive;
             $archiveImporter = $app->service('XF:Style\ArchiveImport', $file);
             if (!$archiveImporter->validateArchive($errors)) { throw new \RuntimeException('Invalid vendor style archive'); }

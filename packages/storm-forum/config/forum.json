@@ -106,13 +106,13 @@
       "key": "uix-light",
       "version": "2.3.11.0.0",
       "kind": "style",
-      "path": "vendor/uix-classic.zip"
+      "path": "vendor/uix-2.zip"
     },
     {
       "key": "uix-dark",
       "version": "2.3.11.0.0",
       "kind": "style",
-      "path": "vendor/uix-classic-dark.zip"
+      "path": "vendor/uix-2-dark.zip"
     },
     {
       "key": "xon-library",
