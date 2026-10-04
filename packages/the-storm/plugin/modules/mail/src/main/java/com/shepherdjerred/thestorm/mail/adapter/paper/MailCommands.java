@@ -97,10 +97,6 @@ public final class MailCommands implements Listener {
       player.sendMessage(Component.text("Use the message id shown by /mail."));
       return Command.SINGLE_SUCCESS;
     }
-    if (!busy.add(player.getUniqueId())) {
-      player.sendMessage(Component.text("Your delivery is still settling."));
-      return Command.SINGLE_SUCCESS;
-    }
     if (receipt(player).isPresent()) {
       var _ =
           mail.selection(message, player.getUniqueId())
@@ -121,12 +117,15 @@ public final class MailCommands implements Listener {
                   context.scheduler().mainThread())
               .whenCompleteAsync(
                   (ignored, failure) -> {
-                    busy.remove(player.getUniqueId());
                     if (failure != null) {
                       failed(player, failure);
                     }
                   },
                   context.scheduler().mainThread());
+      return Command.SINGLE_SUCCESS;
+    }
+    if (!busy.add(player.getUniqueId())) {
+      player.sendMessage(Component.text("Your delivery is still settling."));
       return Command.SINGLE_SUCCESS;
     }
     var _ =
@@ -191,11 +190,15 @@ public final class MailCommands implements Listener {
     // idempotent on reconnect.
     player.saveData();
     player.sendMessage(
-        Component.text(
-            "Collected "
-                + batch.items().size()
-                + " stacks. Reconnect before collecting more mail to finish saving this delivery."));
-    return CompletableFuture.completedFuture(null);
+        Component.text("Collected " + batch.items().size() + " stacks. Your delivery is saved."));
+    return mail.acknowledge(player.getUniqueId(), batch.token())
+        .thenRunAsync(
+            () -> {
+              if (player.isOnline()) {
+                player.getPersistentDataContainer().remove(RECEIPT);
+              }
+            },
+            context.scheduler().mainThread());
   }
 
   @EventHandler

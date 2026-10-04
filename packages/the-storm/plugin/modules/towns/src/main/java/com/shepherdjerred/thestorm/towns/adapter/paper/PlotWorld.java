@@ -245,8 +245,8 @@ final class PlotWorld {
 
   void checkpoint(String worldName) {
     // Recovery journals may become terminal only after Paper's chunk writer has finished.
-    // This runs on the main thread; Paper's public API requires it there and flush=true waits
-    // for queued chunk writes before returning.
+    // Call once after a complete reset, placement, or rollback; Paper requires this on the main
+    // thread and flush=true waits for queued chunk writes before returning.
     world(worldName).save(true);
   }
 
@@ -280,9 +280,6 @@ final class PlotWorld {
         context.scheduler().runOnMainThreadLater(Duration.ofMillis(50), () -> pasteBatch(work));
       } else {
         pasteDecor(work);
-        // Do not complete this paste until its chunks are durable; callers may now advance their
-        // recovery journal to a terminal state.
-        checkpoint(work.world().getName());
         work.completion().complete(null);
       }
     } catch (RuntimeException | WorldEditException e) {

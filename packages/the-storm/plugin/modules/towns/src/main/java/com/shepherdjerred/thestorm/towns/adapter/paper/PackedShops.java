@@ -403,6 +403,7 @@ final class PackedShops implements Listener {
                   .thenComposeAsync(
                       ignored -> parts.world().verify(saved.before(), destination.world(), origin),
                       main())
+                  .thenRunAsync(() -> parts.world().checkpoint(destination.world()), main())
                   .thenCompose(ignored -> parts.recoveries().rolledBack(recovery.id()))
                   .thenRunAsync(() -> parts.state().endWork(workId(recovery.id())), main());
             },

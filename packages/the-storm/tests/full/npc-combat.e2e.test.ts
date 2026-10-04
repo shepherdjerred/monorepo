@@ -174,7 +174,7 @@ describe("NPC combat on Paper with all modules", () => {
   }) => {
     try {
       // Keep the wilderness fixture ticking while the spectator watches from afar.
-      await rcon.command("forceload add 25 0");
+      await rcon.command("forceload add 400 6");
       await rcon.command("difficulty normal");
       await rcon.command("time set midnight");
       // Move the guard far from its original home: this reproduces the old home-radius bug.
@@ -222,7 +222,7 @@ describe("NPC combat on Paper with all modules", () => {
       await rcon.command(`tp ${npc("guard-captain")} 41.5 67 9.5`);
       await rcon.command(`gamemode survival ${bot.username}`);
       await rcon.command("difficulty peaceful");
-      await rcon.command("forceload remove 25 0");
+      await rcon.command("forceload remove 400 6");
     }
   });
 });

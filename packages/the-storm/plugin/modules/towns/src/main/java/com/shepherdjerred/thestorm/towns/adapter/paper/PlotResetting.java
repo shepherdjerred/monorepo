@@ -233,6 +233,7 @@ final class PlotResetting {
                               .verify(
                                   data.baseline(), def.area().world(), data.baseline().getOrigin()),
                       main())
+                  .thenRunAsync(() -> parts.world().checkpoint(def.area().world()), main())
                   .thenCompose(ignored -> parts.recoveries().resetComplete(recovery.id()))
                   .thenComposeAsync(
                       ignored -> {
