@@ -1,0 +1,13 @@
+name: MCBridge
+version: "${version}"
+main: com.shepherdjerred.mcbridge.McBridgePlugin
+api-version: "26.2"
+description: HTTP bridge for the mc-harness agent tooling
+authors: [ShepherdJerred]
+dependencies:
+  server:
+    # Every /v1/we route and snapshots run through the WorldEdit API.
+    WorldEdit:
+      load: BEFORE
+      required: true
+      join-classpath: true

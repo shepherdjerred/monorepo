@@ -420,6 +420,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/mc-harness",
+      "directory": "packages/mc-harness",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/monarch",
       "directory": "packages/monarch",
       "steps": [
@@ -855,6 +865,7 @@
             "test/screenshot",
             "test/history",
             "test/discord",
+            "test/mc",
             "scripts",
             "test-integration/catalog.integration.test.ts"
           ]

@@ -61,6 +61,9 @@ val modules =
 
 include("core", "architecture", "dist")
 
+// MCBridge: the agent bridge plugin (its own MCBridge.jar, never part of TheStorm.jar).
+include("bridge")
+
 modules.forEach { name ->
   include(name)
   project(":$name").projectDir = file("modules/$name")

@@ -1065,6 +1065,23 @@
       "name": "@shepherdjerred/macos-cross-compiler",
       "version": "0.1.0",
     },
+    "packages/mc-harness": {
+      "name": "@shepherdjerred/mc-harness",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/monarch": {
       "name": "@shepherdjerred/monarch",
       "version": "0.1.0",
@@ -2162,6 +2179,7 @@
       "name": "@shepherdjerred/the-storm",
       "devDependencies": {
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/mc-harness": "workspace:*",
         "@types/bun": "1.4.2",
         "@typescript/native": "npm:typescript@7.0.2",
         "eslint": "^10.7.0",
@@ -2204,6 +2222,7 @@
       "devDependencies": {
         "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/mc-harness": "workspace:*",
         "@types/bun": "1.4.2",
         "@types/react": "19.3.0",
         "@typescript/native": "npm:typescript@7.0.2",
@@ -4210,6 +4229,8 @@
     "@shepherdjerred/loaded": ["@shepherdjerred/loaded@workspace:packages/loaded"],
 
     "@shepherdjerred/macos-cross-compiler": ["@shepherdjerred/macos-cross-compiler@workspace:packages/macos-cross-compiler"],
+
+    "@shepherdjerred/mc-harness": ["@shepherdjerred/mc-harness@workspace:packages/mc-harness"],
 
     "@shepherdjerred/monarch": ["@shepherdjerred/monarch@workspace:packages/monarch"],
 
