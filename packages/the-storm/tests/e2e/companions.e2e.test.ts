@@ -66,6 +66,7 @@ describe("Citizens survival companions on Paper", () => {
             entity.type === "player" && entity.username?.includes("[NPC]"),
         ).length === 3,
     );
+    await rcon.command("companiontest spread");
     const mined = await untilStatus(
       rcon,
       (status) => /OAK_LOG:\d+/u.test(status),

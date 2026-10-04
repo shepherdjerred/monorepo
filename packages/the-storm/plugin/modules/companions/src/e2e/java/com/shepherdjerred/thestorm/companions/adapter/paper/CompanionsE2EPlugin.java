@@ -155,6 +155,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
       case "off" -> gate = false;
       case "on" -> gate = true;
       case "visit" -> visit(args[1]);
+      case "spread" -> spread();
       case "kill" -> kill(args[1]);
       case "status" -> {
         status(source);
@@ -193,6 +194,14 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     if (player == null || world == null) throw new IllegalStateException("missing fixture visitor");
     var worksite = new Location(world, 32.5, -60, 34.5);
     player.teleport(worksite.clone());
+    for (var npc : CitizensAPI.getNPCRegistry())
+      if (npc.data().has("thestorm-companion-id") && npc.isSpawned())
+        npc.teleport(worksite.clone(), TeleportCause.PLUGIN);
+  }
+
+  private void spread() {
+    var world = getServer().getWorld("storm_companions_test");
+    if (world == null) throw new IllegalStateException("missing fixture world");
     for (var npc : CitizensAPI.getNPCRegistry()) {
       if (!npc.data().has("thestorm-companion-id") || !npc.isSpawned()) continue;
       var id = npc.data().get("thestorm-companion-id", "");
