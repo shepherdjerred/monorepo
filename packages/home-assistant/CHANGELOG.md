@@ -2,6 +2,13 @@
 
 All notable changes to this package are documented in this file.
 
+## [0.1.1](https://github.com/shepherdjerred/monorepo/compare/home-assistant-v0.1.0...home-assistant-v0.1.1) (2026-10-04)
+
+Adds logbook reads and makes WebSocket connection health clearer and more resilient.
+
+- `HomeAssistantRestClient.getLogbook()` now fetches and validates bounded, entity-filtered logbook entries, with the public `LogbookEntry` type and schema exported ([3a1af73](https://github.com/shepherdjerred/monorepo/commit/3a1af73ea4b5fe0df2a47f798c1844ced1fef418))
+- `HomeAssistantEventClient` now reports `ready` after subscriptions are restored, distinguishes subscription handler failures as `handler-error`, and serializes reconnect retries when restoration fails ([3a1af73](https://github.com/shepherdjerred/monorepo/commit/3a1af73ea4b5fe0df2a47f798c1844ced1fef418))
+
 ## 0.1.0 (2026-09-07)
 
 
