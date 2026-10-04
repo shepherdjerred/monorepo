@@ -227,9 +227,14 @@ that key with one or more existing 1Password rotation units for the
 operator-controlled handoff. Existing projects carry their permanent import IDs;
 every inference workload and environment has its own project and service
 account, with a hard spend limit, a spend alert, and a model allowlist. The
-`openrouter` project and its BYOK service account remain only until the
-OpenRouter keys are revoked after live acceptance. OpenAI subscription/Codex authentication is a separate
-boundary.
+retired OpenRouter project is archived in OpenAI and no longer managed here.
+OpenAI subscription/Codex authentication is a separate boundary.
+
+OpenAI rejects reads of a service account in an archived project, and OpenTofu
+refreshes every resource in state, including one a `removed` block forgets.
+Before archiving a project in the dashboard, remove its service accounts from
+desired state and apply that change; otherwise every later plan fails until the
+unreadable service account is removed from state.
 
 Spend controls denominate their thresholds inconsistently upstream, and the
 committed values rely on it: `openai_project_spend_limit` /
