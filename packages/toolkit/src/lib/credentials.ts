@@ -153,14 +153,16 @@ function credentialError(
 
 async function readKeychainValue(
   service: string,
-  run: CredentialRun,
+  ctx: ResolutionContext,
 ): Promise<string | null> {
-  if (process.platform !== "darwin") {
+  // Injected subprocess stubs stand in for `security` (hermetic tests on any
+  // host); only the live runner needs a real macOS Keychain.
+  if (ctx.liveSubprocesses && process.platform !== "darwin") {
     throw new Error(
       `toolkit: Keychain credential ${service} requires macOS; on other hosts set the variable or use a config op:// override.`,
     );
   }
-  const result = await run([
+  const result = await ctx.run([
     "security",
     "find-generic-password",
     "-a",
@@ -176,7 +178,7 @@ async function readKeychainValue(
   return value.length > 0 ? value : null;
 }
 
-async function serviceAccountToken(run: CredentialRun): Promise<string> {
+async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
   const ambient = Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
   if (ambient !== undefined && ambient.length > 0) {
     return ambient;
@@ -184,12 +186,12 @@ async function serviceAccountToken(run: CredentialRun): Promise<string> {
   if (cachedServiceAccountToken !== undefined) {
     return cachedServiceAccountToken;
   }
-  if (process.platform !== "darwin") {
+  if (ctx.liveSubprocesses && process.platform !== "darwin") {
     throw new Error(
       "toolkit: OP_SERVICE_ACCOUNT_TOKEN is required outside macOS; export it before running this command.",
     );
   }
-  const token = await readKeychainValue(SERVICE_ACCOUNT_KEYCHAIN_SERVICE, run);
+  const token = await readKeychainValue(SERVICE_ACCOUNT_KEYCHAIN_SERVICE, ctx);
   if (token === null || token.length <= 128 || !token.startsWith("ops_")) {
     throw new Error(
       "toolkit: no homelab 1Password service account token is available in Keychain. Enroll it with: swift scripts/onepassword/enroll-service-account.swift",
@@ -203,10 +205,10 @@ async function serviceAccountToken(run: CredentialRun): Promise<string> {
 
 async function readServiceAccountRef(
   ref: string,
-  run: CredentialRun,
+  ctx: ResolutionContext,
 ): Promise<string | null> {
-  await serviceAccountToken(run);
-  const result = await run(["op", "read", ref]);
+  await serviceAccountToken(ctx);
+  const result = await ctx.run(["op", "read", ref]);
   if (result.exit !== 0) {
     return null;
   }
@@ -248,6 +250,8 @@ async function loadCredentialOverrides(
 
 type ResolutionContext = {
   readonly run: CredentialRun;
+  /** False when tests inject a subprocess stub; skips host capability gates. */
+  readonly liveSubprocesses: boolean;
   readonly configPath: string;
   readonly overrides: Record<string, string>;
 };
@@ -259,7 +263,7 @@ async function resolveOverrideValue(
 ): Promise<string> {
   const description = CREDENTIAL_REGISTRY[name]?.description ?? "credential";
   if (override.startsWith("op://")) {
-    const value = await readServiceAccountRef(override, ctx.run);
+    const value = await readServiceAccountRef(override, ctx);
     if (value === null) {
       throw credentialError(
         name,
@@ -272,7 +276,7 @@ async function resolveOverrideValue(
   const prefix = "keychain:";
   if (override.startsWith(prefix) && override.length > prefix.length) {
     const service = override.slice(prefix.length);
-    const value = await readKeychainValue(service, ctx.run);
+    const value = await readKeychainValue(service, ctx);
     if (value === null) {
       throw credentialError(
         name,
@@ -290,10 +294,10 @@ async function resolveOverrideValue(
 async function resolveRegistryValue(
   name: string,
   spec: CredentialSpec,
-  run: CredentialRun,
+  ctx: ResolutionContext,
 ): Promise<{ value: string; backend: string }> {
   if (spec.source.kind === "keychain") {
-    const value = await readKeychainValue(spec.source.service, run);
+    const value = await readKeychainValue(spec.source.service, ctx);
     if (value === null) {
       throw credentialError(
         name,
@@ -303,7 +307,7 @@ async function resolveRegistryValue(
     }
     return { value, backend: "keychain" };
   }
-  const value = await readServiceAccountRef(spec.source.ref, run);
+  const value = await readServiceAccountRef(spec.source.ref, ctx);
   if (value === null) {
     throw credentialError(
       name,
@@ -336,7 +340,7 @@ async function resolveOneCredential(
       `toolkit: unknown credential ${name}; no registry entry and no [credentials] override in ${ctx.configPath}.`,
     );
   }
-  return resolveRegistryValue(name, spec, ctx.run);
+  return resolveRegistryValue(name, spec, ctx);
 }
 
 export async function resolveCredentials(
@@ -349,6 +353,7 @@ export async function resolveCredentials(
   const configPath = deps?.configPath ?? defaultToolkitConfigPath();
   const ctx: ResolutionContext = {
     run: deps?.run ?? defaultRun,
+    liveSubprocesses: deps?.run === undefined,
     configPath,
     overrides: await loadCredentialOverrides(configPath),
   };
