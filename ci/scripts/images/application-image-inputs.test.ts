@@ -87,6 +87,7 @@ describe("application image inputs", () => {
     const smoke = await read("ci/scripts/images/smoke-app-in-image.ts");
     expect(dockerfile).toContain('"--nodaemonize", "--force-stderr"');
     expect(fpmConfig).not.toContain("/proc/self/fd/2");
+    expect(fpmConfig).toContain("error_log = /tmp/php-fpm.log");
     expect(smoke).toContain(
       "php-fpm --test --nodaemonize --force-stderr --fpm-config",
     );
