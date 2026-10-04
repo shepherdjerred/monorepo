@@ -16,7 +16,8 @@ use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics, FileSink,
 };
 use scout_client_core::lcu::{
-    LcuClient, LcuEndpoint, LcuError, LeagueLockfile, LiveClient, discover_lockfile,
+    GameId, LcuClient, LcuEndpoint, LcuError, LcuResource, LeagueLockfile, LiveClient,
+    discover_lockfile,
 };
 use scout_client_core::outbox::{LobbyBinding, ObservationOutbox};
 use scout_client_core::protocol::{
@@ -1875,8 +1876,27 @@ async fn collect_recent_matches(
                 .pending_game_timing(&game_id)
                 .map_err(|error| error.to_string())?
         {
+            let Some(parsed_id) = GameId::parse(&game_id) else {
+                continue;
+            };
+            // Wait for the full game rather than send the one-player list row:
+            // the end-of-game bundle stays pending and the next pass retries.
+            let Some(full) = read_full_post_game(client, parsed_id, diagnostics).await else {
+                continue;
+            };
             let end_of_game =
                 serde_json::from_slice::<Value>(&end_of_game).map_err(|error| error.to_string())?;
+            let mut bundle = serde_json::json!({
+                "matchHistory": full.game,
+                "endOfGame": end_of_game,
+                "timing": {
+                    "gameStartTimestamp": timing.started_at_millis,
+                    "gameEndTimestamp": timing.ended_at_millis,
+                },
+            });
+            if let (Some(timeline), Some(fields)) = (full.timeline, bundle.as_object_mut()) {
+                fields.insert("timeline".to_owned(), timeline);
+            }
             enqueue_resource_if_changed(
                 outbox,
                 payloads,
@@ -1885,14 +1905,7 @@ async fn collect_recent_matches(
                     resource: "post_game",
                     kind: ObservationKind::PostGame,
                 },
-                &serde_json::json!({
-                    "matchHistory": game,
-                    "endOfGame": end_of_game,
-                    "timing": {
-                        "gameStartTimestamp": timing.started_at_millis,
-                        "gameEndTimestamp": timing.ended_at_millis,
-                    },
-                }),
+                &bundle,
                 local_puuid,
                 diagnostics,
             )?;
@@ -1905,6 +1918,72 @@ async fn collect_recent_matches(
         }
     }
     Ok(())
+}
+
+/// One finished game as the League client's own match history holds it.
+struct FullPostGame {
+    /// `games/{id}`: every participant, where the history list holds only the
+    /// local player.
+    game: Value,
+    /// `game-timelines/{id}`, when the League client has one.
+    timeline: Option<Value>,
+}
+
+/// Read a finished game's full roster and timeline by ID.
+///
+/// `None` while the full game is unavailable, so the caller retries on its
+/// next pass. A missing or failed timeline read never holds the game back: a
+/// game without a timeline still has a result.
+async fn read_full_post_game(
+    client: &LcuClient,
+    game_id: GameId,
+    diagnostics: &Diagnostics,
+) -> Option<FullPostGame> {
+    let game = client
+        .get_resource(LcuResource::MatchHistoryGame(game_id))
+        .await;
+    let Ok(Some(game)) = game else {
+        record_post_game_read(
+            diagnostics,
+            match game {
+                Err(_) => DiagnosticOutcome::Failed,
+                Ok(_) => DiagnosticOutcome::Skipped,
+            },
+            "full game not available yet; retrying next pass",
+        );
+        return None;
+    };
+    let timeline = client
+        .get_resource(LcuResource::MatchTimeline(game_id))
+        .await;
+    let (outcome, detail) = match &timeline {
+        Ok(Some(_)) => (DiagnosticOutcome::Succeeded, "full game and timeline"),
+        Ok(None) => (DiagnosticOutcome::Succeeded, "full game; no timeline"),
+        Err(_) => (DiagnosticOutcome::Failed, "full game; timeline read failed"),
+    };
+    // Shape only: the game id and payloads stay out of diagnostics.
+    record_post_game_read(diagnostics, outcome, detail);
+    Some(FullPostGame {
+        game,
+        timeline: timeline.ok().flatten(),
+    })
+}
+
+fn record_post_game_read(diagnostics: &Diagnostics, outcome: DiagnosticOutcome, detail: &str) {
+    let level = if outcome == DiagnosticOutcome::Failed {
+        DiagnosticLevel::Warn
+    } else {
+        DiagnosticLevel::Info
+    };
+    diagnostics.record(
+        DiagnosticEvent::new(
+            level,
+            DiagnosticCategory::Protocol,
+            "read_post_game",
+            outcome,
+        )
+        .with_detail(detail),
+    );
 }
 
 /// What a collected payload is filed as.

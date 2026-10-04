@@ -513,6 +513,30 @@ own is `ownerVerified` and replaces an unverified one, so a player's own
 client corrects anything another client's payload taught. Outcomes are counted
 in `scout_client_identity_aliases_total{outcome}`.
 
+### Client-sourced matches and their timelines
+
+A post-game bundle carries the League client's full `games/{id}` — every
+participant — beside the end-of-game block, and its `game-timelines/{id}`.
+`canonical/lcu-match.ts` converts the first two into a Match-V5 match and
+`canonical/lcu-timeline.ts` the timeline into a Match-V5 timeline, both tagged
+`dataVersion: "local-1"`. What the League client doesn't report stays absent
+rather than appearing as a zero: `gameName`; item, skill and ward events; per-frame
+champion and damage stats; gold per second; and crowd-control time. The League
+client stamps every timeline event with every field, so each event type keeps
+only the fields Match-V5 gives it. A "first" objective the payload doesn't state
+is derived only when provable — from kill counts, or the timeline's first kill
+when both teams took one — and a match whose required "first" can't be proven
+is refused.
+
+Once a client payload is a match's canonical one, its timeline comes from that
+client too. `fetchAndRecordTimeline` (`match-report-standard.ts`) checks
+`readTimelineSelection` before asking Riot, so the report render, Dares,
+challenges, duels, and late binding all read the client's timeline without
+knowing its source, and it is staged into the lake as `timeline_scout_client`.
+A client that sent no timeline is a final miss rather than a retry, because Riot
+can't see the game and none is ever coming: Dares record missing coverage and
+duels go to organizer review.
+
 ## The V2 prematch path
 
 The `prematch-*` modules beside them serve `scoutPrematchDiscoveryV2Workflow`

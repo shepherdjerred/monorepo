@@ -144,7 +144,7 @@ describe("competitive progression post-match ordering", () => {
     );
   });
 
-  test("queues local challenge gaps and sends local duel evidence to review", async () => {
+  test("reads a local match's timeline once and sends a miss to review", async () => {
     mocks.duelMatchNeedsTimeline.mockResolvedValue(true);
 
     await processCompetitiveProgressionMatch({
@@ -155,8 +155,11 @@ describe("competitive progression post-match ordering", () => {
       delivery: { kind: "temporal-v2" },
     });
 
+    // The fetch reads the client's own timeline; this client sent none, which
+    // is final, so no later pass asks again.
     expect(mocks.calls).toEqual([
       "prepare",
+      "fetch-duel-timeline",
       "prepare",
       "duel",
       "hall",
@@ -165,7 +168,7 @@ describe("competitive progression post-match ordering", () => {
       "launch",
     ]);
     expect(mocks.fetchTimelineForProgression).not.toHaveBeenCalled();
-    expect(mocks.fetchTimelineForDuelProgression).not.toHaveBeenCalled();
+    expect(mocks.fetchTimelineForDuelProgression).toHaveBeenCalledTimes(1);
     expect(mocks.processDuelResult).toHaveBeenCalledWith(
       expect.any(Object),
       undefined,

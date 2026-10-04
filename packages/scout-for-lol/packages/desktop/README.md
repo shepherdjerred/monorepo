@@ -40,6 +40,23 @@ translates it; the backend README ("Scout Client player identity") describes
 how. The client only has to keep reporting the account profile, whose
 `gameName#tagLine` is what lets the server resolve its own player.
 
+## Finished games
+
+The match-history list holds only the local player for each game, so a
+finished game's post-game bundle carries the full game instead:
+`/lol-match-history/v1/games/{gameId}`, with every participant and their stats,
+plus `/game-timelines/{gameId}`, its per-minute frames and objective events.
+Both exist for games Riot's API never returns — customs of any size, Arena,
+ARAM Mayhem — which is what lets the server treat such a game as it would a
+Riot one. The game ID in each path is parsed from a League-client payload as a
+positive integer (`GameId`); `LcuResource` is the only way a path takes a
+variable segment.
+
+The bundle waits, still pending in the outbox, until the League client serves
+the full game; the one-player list row is never sent in its place. A missing
+timeline doesn't hold the game back. Each read records a `read_post_game`
+diagnostic with its outcome and no identifiers.
+
 ## Lobby and game identity
 
 LCU exposes a lobby's `partyId` while the lobby exists and a real `gameId` only

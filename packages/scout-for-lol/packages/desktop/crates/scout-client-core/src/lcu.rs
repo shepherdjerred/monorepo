@@ -226,9 +226,23 @@ impl LcuClient {
     /// Returns a typed request or HTTP status failure. Caller-controlled URLs
     /// are not accepted.
     pub async fn get(&self, endpoint: LcuEndpoint) -> Result<Option<Value>, LcuError> {
+        self.get_path(endpoint.path()).await
+    }
+
+    /// Read one LCU resource addressed by an ID from another LCU payload. A 404
+    /// means the League client has no such resource (yet).
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed request or HTTP status failure.
+    pub async fn get_resource(&self, resource: LcuResource) -> Result<Option<Value>, LcuError> {
+        self.get_path(&resource.path()).await
+    }
+
+    async fn get_path(&self, path: &str) -> Result<Option<Value>, LcuError> {
         let response = self
             .http
-            .get(format!("{}{}", self.base_url, endpoint.path()))
+            .get(format!("{}{path}", self.base_url))
             .header("Authorization", &self.authorization)
             .header("Accept", "application/json")
             .send()
@@ -337,6 +351,52 @@ impl LcuEndpoint {
     }
 }
 
+/// A League game ID, as an LCU payload states it.
+///
+/// Only a positive integer parses, so an ID can never smuggle its own path
+/// segment or query into a [`LcuResource`] URL.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GameId(u64);
+
+impl GameId {
+    /// Parse the decimal game ID an LCU payload carries.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
+            return None;
+        }
+        value.parse::<u64>().ok().filter(|id| *id > 0).map(Self)
+    }
+}
+
+impl std::fmt::Display for GameId {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+
+/// Read-only LCU resources addressed by an ID from another LCU payload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LcuResource {
+    /// One finished game with its full roster and every player's stats.
+    MatchHistoryGame(GameId),
+    /// One finished game's per-minute frames and objective events.
+    MatchTimeline(GameId),
+}
+
+impl LcuResource {
+    /// Resource path; the only variable segment is a parsed [`GameId`].
+    #[must_use]
+    pub fn path(self) -> String {
+        match self {
+            Self::MatchHistoryGame(game_id) => format!("/lol-match-history/v1/games/{game_id}"),
+            Self::MatchTimeline(game_id) => {
+                format!("/lol-match-history/v1/game-timelines/{game_id}")
+            }
+        }
+    }
+}
+
 /// LCU discovery or request failure.
 #[derive(Debug, Error)]
 pub enum LcuError {
@@ -372,7 +432,29 @@ mod tests {
 
     use uuid::Uuid;
 
-    use super::{LeagueLockfile, install_path_from_metadata};
+    use super::{GameId, LcuResource, LeagueLockfile, install_path_from_metadata};
+
+    #[test]
+    fn game_ids_are_only_positive_integers() {
+        assert!(GameId::parse("5653272000").is_some());
+        for invalid in ["", "0", "-1", "12/../34", "12?x=1", " 12", "1e3"] {
+            assert_eq!(GameId::parse(invalid), None, "{invalid:?}");
+        }
+    }
+
+    #[test]
+    fn resources_address_one_game() -> Result<(), Box<dyn std::error::Error>> {
+        let game_id = GameId::parse("5653272000").ok_or("valid game id")?;
+        assert_eq!(
+            LcuResource::MatchHistoryGame(game_id).path(),
+            "/lol-match-history/v1/games/5653272000"
+        );
+        assert_eq!(
+            LcuResource::MatchTimeline(game_id).path(),
+            "/lol-match-history/v1/game-timelines/5653272000"
+        );
+        Ok(())
+    }
 
     #[test]
     fn parses_lockfile_without_exposing_password() -> Result<(), Box<dyn std::error::Error>> {

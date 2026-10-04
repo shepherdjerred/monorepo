@@ -78,13 +78,18 @@ export const RawTimelineParticipantFrameSchema = z
     championStats: RawTimelineChampionStatsSchema.optional(),
     currentGold: z.number(),
     damageStats: RawTimelineDamageStatsSchema.optional(),
-    goldPerSecond: z.number(),
+    /**
+     * Absent from a timeline the Scout Client built from the League client's
+     * own match history, which does not report it. Never filled in.
+     */
+    goldPerSecond: z.number().optional(),
     jungleMinionsKilled: z.number(),
     level: z.number(),
     minionsKilled: z.number(),
     participantId: z.number(),
     position: RawTimelinePositionSchema,
-    timeEnemySpentControlled: z.number(),
+    /** Absent from a client-built timeline, like `goldPerSecond`. */
+    timeEnemySpentControlled: z.number().optional(),
     totalGold: z.number(),
     xp: z.number(),
   })
