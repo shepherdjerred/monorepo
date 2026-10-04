@@ -157,7 +157,7 @@ ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps util-linux; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps socat tini util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---
@@ -469,6 +469,8 @@ ENV BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache
 # Run from the package dir so Bun resolves this package's tsconfig + imports map
 # (the `#generated/*`, `#activities/*`, … subpath imports).
 WORKDIR /app/packages/temporal
+# Reap orphaned provider/tool descendants before the dedicated UID is reused.
+ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 CMD ["bun", "src/worker.ts"]
 
 FROM runtime AS smoke
