@@ -1772,6 +1772,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-rwf-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf",
+      "purpose": "Gates /rwf join for Red Warfare Search and Destroy",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "voice_assistant_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -2090,6 +2102,14 @@
         },
         {
           "key": "the-storm-merchant-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],
