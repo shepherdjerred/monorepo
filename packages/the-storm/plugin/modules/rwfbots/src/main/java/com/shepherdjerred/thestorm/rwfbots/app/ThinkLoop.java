@@ -500,7 +500,7 @@ public final class ThinkLoop {
   }
 
   /** A well-mixed seed from the match seed, the bot and the tick. */
-  static long seed(long matchSeed, int bot, long tick) {
+  public static long seed(long matchSeed, int bot, long tick) {
     var mixed = matchSeed ^ (bot * 0x9E3779B97F4A7C15L) ^ (tick * 0xC2B2AE3D27D4EB4FL);
     mixed ^= mixed >>> 31;
     mixed *= 0x7FB5D329728EA185L;
