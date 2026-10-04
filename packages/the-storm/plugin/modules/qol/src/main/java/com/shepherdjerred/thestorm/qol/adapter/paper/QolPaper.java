@@ -94,7 +94,7 @@ public final class QolPaper {
     var deaths = new GraveDeaths(runtime, parts, safe, context.random());
     var opening = new GraveOpening(runtime, parts, upkeep, context.random());
     var sorting = new ContainerSorting(app.protection());
-    var combat = new CombatListener(runtime, app.combat(), config.combat());
+    var combat = new CombatListener(runtime, app.combat(), config.combat(), app.sealed());
     var sleep = new SleepListener(runtime, app.afk(), config.sleep().percent());
     var paper = new QolPaper(permissions, app.combat(), sleep, context.logger());
 
