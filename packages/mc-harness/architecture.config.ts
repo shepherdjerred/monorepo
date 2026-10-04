@@ -14,7 +14,7 @@ export default defineArchitecture({
         "provider or the bridge client from it would drag Docker and server code into every " +
         "toolkit invocation.",
       from: "protocol",
-      to: ["daemon", "providers", "bridge", "sandbox"],
+      to: ["daemon", "providers", "bridge", "sandbox", "build"],
     },
   ],
 });

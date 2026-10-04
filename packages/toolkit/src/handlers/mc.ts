@@ -1,4 +1,5 @@
 import { type ParseArgsOptionsConfig, parseArgs } from "node:util";
+import { mcBuildCommand } from "#commands/mc/build.ts";
 import {
   mcDaemonStartCommand,
   mcDaemonStatusCommand,
@@ -17,6 +18,7 @@ import {
   mcPasteCommand,
   mcPlayersCommand,
   mcRegionReadCommand,
+  mcRegistryCommand,
   mcSnapshotCreateCommand,
   mcSnapshotGetCommand,
   mcSnapshotListCommand,
@@ -70,10 +72,16 @@ Target commands (--target <sandbox-id>; defaults to the only running sandbox):
   toolkit mc snapshot create --world <w> <x1,y1,z1> <x2,y2,z2> [--label s]
   toolkit mc snapshot ls | get <id> --out f.schem | restore <id>
   toolkit mc players
+  toolkit mc registry --out f.json       Block registry (feeds mc-build's gen-registry)
   toolkit mc events [--since 0] [--limit 200]
   toolkit mc logs [-n 200]
 
 Common options: --target <id>, --session <name> (WorldEdit session, default "agent"), --json
+--record <buildDir> on cmd, we and paste appends the op to that build's op log on success.
+Use "cmd -- <command>" for negative coordinates, and --pos1=x,y,z when a value starts with "-".
+
+Build workflow (capture → canvas → author → run/render/lint → replay → promote → undo):
+  toolkit mc build help
 `;
 
 /** The usage lines for one subcommand, e.g. `toolkit mc we --help`. */
@@ -226,6 +234,7 @@ async function handleWe(args: string[]): Promise<void> {
     pos1: { type: "string" },
     pos2: { type: "string" },
     at: { type: "string" },
+    record: { type: "string" },
   });
   const command = positionals.join(" ");
   const op = WeOpSchema.parse({
@@ -239,6 +248,7 @@ async function handleWe(args: string[]): Promise<void> {
       ...targetOptions(values),
       session: SessionNameSchema.parse(values.session),
       world: requireString(values.world, "--world"),
+      record: values.record,
     },
     op,
   );
@@ -251,6 +261,7 @@ async function handlePaste(args: string[]): Promise<void> {
     at: { type: "string" },
     rotate: { type: "string", default: "0" },
     "ignore-air": { type: "boolean", default: false },
+    record: { type: "string" },
   });
   const rotate = Number(values.rotate);
   if (rotate !== 0 && rotate !== 90 && rotate !== 180 && rotate !== 270) {
@@ -261,6 +272,7 @@ async function handlePaste(args: string[]): Promise<void> {
       ...targetOptions(values),
       session: SessionNameSchema.parse(values.session),
       world: requireString(values.world, "--world"),
+      record: values.record,
     },
     {
       file: requireString(values.file, "--file"),
@@ -326,12 +338,25 @@ async function handleTargetCommand(
       await mcPlayersCommand(targetOptions(values));
       return true;
     }
+    case "registry": {
+      const { values } = parse(args, { out: { type: "string" } });
+      await mcRegistryCommand(
+        targetOptions(values),
+        requireString(values.out, "--out"),
+      );
+      return true;
+    }
     case "cmd": {
-      const { values, positionals } = parse(args, {});
+      const { values, positionals } = parse(args, {
+        record: { type: "string" },
+      });
       if (positionals.length === 0) {
         fail("cmd needs a console command");
       }
-      await mcCmdCommand(targetOptions(values), positionals.join(" "));
+      await mcCmdCommand(
+        { ...targetOptions(values), record: values.record },
+        positionals.join(" "),
+      );
       return true;
     }
     case "we": {
@@ -420,6 +445,10 @@ export async function handleMcCommand(
       }
       case "sandbox": {
         await handleSandbox(args);
+        return;
+      }
+      case "build": {
+        await mcBuildCommand(args);
         return;
       }
     }

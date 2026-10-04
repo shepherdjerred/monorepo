@@ -10,7 +10,8 @@
     "./providers/*": "./src/providers/*",
     "./sandbox/*": "./src/sandbox/*",
     "./pins.ts": "./src/pins.ts",
-    "./target.ts": "./src/target.ts"
+    "./target.ts": "./src/target.ts",
+    "./build/*": "./src/build/*"
   },
   "imports": {
     "#architecture": "./architecture.config.ts",
@@ -19,10 +20,11 @@
     "#providers/*": "./src/providers/*",
     "#sandbox/*": "./src/sandbox/*",
     "#daemon/*": "./src/daemon/*",
-    "#src/*": "./src/*"
+    "#src/*": "./src/*",
+    "#build/*": "./src/build/*"
   },
   "scripts": {
-    "build": "bun build src/daemon/main.ts --target=bun --outdir=dist",
+    "build": "bun build src/daemon/main.ts src/build/cli.ts --target=bun --outdir=dist --external=sharp",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
     "lint": "bunx eslint --cache . && check-architecture",
@@ -31,6 +33,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/mc-build": "workspace:*",
     "@shepherdjerred/unix-socket-daemon": "workspace:*",
     "zod": "^4.4.3"
   },

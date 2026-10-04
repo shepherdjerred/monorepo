@@ -1,0 +1,17 @@
+{
+  "world": "world",
+  "min": { "x": 0, "y": -60, "z": 0 },
+  "max": { "x": 2, "y": -59, "z": 1 },
+  "size": { "x": 3, "y": 2, "z": 2 },
+  "palette": [
+    "minecraft:stone_bricks",
+    "minecraft:oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]",
+    "minecraft:chest[facing=south,type=single,waterlogged=false]",
+    "minecraft:air",
+    "minecraft:oak_planks"
+  ],
+  "blocks": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAIAAAADAAAAAwAAAAMAAAAEAAAA",
+  "blockEntities": [
+    { "pos": { "x": 1, "y": -59, "z": 0 }, "id": "minecraft:chest" }
+  ]
+}
