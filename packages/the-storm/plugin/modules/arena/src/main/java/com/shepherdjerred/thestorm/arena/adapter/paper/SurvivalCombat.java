@@ -114,6 +114,7 @@ final class SurvivalCombat {
   }
 
   void projectile(org.bukkit.entity.Projectile projectile, double multiplier) {
+    world.tag(projectile);
     projectiles.put(projectile.getUniqueId(), multiplier);
   }
 
@@ -286,6 +287,13 @@ final class SurvivalCombat {
       if (equipment != null) {
         equipment.clear();
       }
+      java.util.Objects.requireNonNull(
+              zombie.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH))
+          .setBaseValue(6 + round * 2);
+      zombie.setHealth(6 + round * 2);
+      java.util.Objects.requireNonNull(
+              zombie.getAttribute(org.bukkit.attribute.Attribute.ATTACK_DAMAGE))
+          .setBaseValue(.5 + round * .5);
     }
     bounties.add(enemy.getUniqueId());
   }
@@ -396,6 +404,34 @@ final class SurvivalCombat {
     }
   }
 
+  void leave(UUID owner) {
+    for (var id : List.copyOf(projectiles.keySet())) {
+      var entity = services.context().server().getEntity(id);
+      if (entity instanceof org.bukkit.entity.Projectile projectile
+          && projectile.getShooter() instanceof Player player
+          && player.getUniqueId().equals(owner)) {
+        projectile.remove();
+        projectiles.remove(id);
+      }
+    }
+  }
+
+  private void clearArrows() {
+    for (var id : List.copyOf(projectiles.keySet())) {
+      var entity = services.context().server().getEntity(id);
+      if (entity instanceof org.bukkit.entity.Trident trident) {
+        if (trident.getShooter() instanceof Player owner
+            && services.items().deliver(owner, List.of(trident.getItemStack()))) {
+          trident.remove();
+          projectiles.remove(id);
+        }
+      } else {
+        if (entity != null) entity.remove();
+        projectiles.remove(id);
+      }
+    }
+  }
+
   void reset() {
     boss().ifPresent(SurvivalBoss::end);
     boss = null;
@@ -408,7 +444,7 @@ final class SurvivalCombat {
     units.clear();
     types.clear();
     nextShot.clear();
-    projectiles.clear();
+    clearArrows();
     total = 0;
   }
 }

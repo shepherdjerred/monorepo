@@ -113,7 +113,7 @@ public final class EncounterDirector {
   public static double bossHealth(int round, int players) {
     if (round < 5 || round % 5 != 0 || players < 1 || players > 4)
       throw new IllegalArgumentException("Invalid boss");
-    return Math.min(1000, (40 + 12.0 * round) * (1 + (players - 1) * 0.55));
+    return Math.min(1000, (100 + 20.0 * round) * (100 + (players - 1) * 65) / 100);
   }
 
   public static boolean ranged(String id) {

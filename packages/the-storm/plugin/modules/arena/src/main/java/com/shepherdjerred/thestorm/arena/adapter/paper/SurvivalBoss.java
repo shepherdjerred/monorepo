@@ -65,6 +65,11 @@ final class SurvivalBoss {
     return now.isBefore(vulnerableUntil) ? 1.5 : 1;
   }
 
+  double damageLimit() {
+    var maximum = java.util.Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH));
+    return mechanics.damageLimit(entity.getHealth(), maximum.getValue());
+  }
+
   boolean charged() {
     return charged;
   }
@@ -84,6 +89,7 @@ final class SurvivalBoss {
       case "ravager" -> "Ravager Siege Beast";
       case "heartwood" -> "Creaking Guardian";
       case "warden" -> "The Listening Warden";
+      case "furnace-colossus" -> "Furnace Colossus";
       default -> throw new IllegalStateException("Unchecked boss " + id);
     };
   }
@@ -98,7 +104,8 @@ final class SurvivalBoss {
     bar.progress((float) Math.clamp(fraction, 0, 1));
     var immunity = id.equals("gale-sovereign") ? " · Deflects ranged shots; use melee" : "";
     var recovery = now.isBefore(vulnerableUntil) ? " · Recovery window" : "";
-    bar.name(Component.text(name() + immunity + recovery));
+    var phase = mechanics.phase(fraction);
+    bar.name(Component.text(name() + " · Phase " + phase + immunity + recovery));
     audience.forEach(this::show);
     if (!alive() || fighters.isEmpty()) {
       return;
@@ -109,7 +116,6 @@ final class SurvivalBoss {
                 java.util.Comparator.comparingDouble(
                     p -> Places.at(p).distanceSquared(entity.getLocation())))
             .orElseThrow();
-    var phase = mechanics.phase(fraction);
     if (phases.add(phase)) adds.accept(phase);
     if (mechanics.begin(
         now, Places.point(entity.getLocation()), Places.point(Places.at(target)), fraction)) {
@@ -119,7 +125,7 @@ final class SurvivalBoss {
                 player,
                 name()
                     + " casts "
-                    + mechanics.cast().orElseThrow().shape()
+                    + mechanics.cast().orElseThrow().shape().label()
                     + " — leave the marked ground! Phase "
                     + mechanics.phase(fraction));
             player.playSound(entity.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1, 0.6f);
@@ -151,13 +157,25 @@ final class SurvivalBoss {
   }
 
   private void telegraph(BossMechanics.Cast cast) {
-    for (var x = -24; x <= 24; x += 2) {
-      for (var z = -24; z <= 24; z += 2) {
+    var marked = new HashSet<BlockPos>();
+    telegraphAt(cast, cast.origin(), 28, marked);
+    telegraphAt(cast, cast.aim(), 12, marked);
+  }
+
+  private void telegraphAt(
+      BossMechanics.Cast cast,
+      com.shepherdjerred.thestorm.arena.domain.geometry.Point center,
+      int radius,
+      Set<BlockPos> marked) {
+    for (var x = -radius; x <= radius; x += 2) {
+      for (var z = -radius; z <= radius; z += 2) {
         var point =
             new com.shepherdjerred.thestorm.arena.domain.geometry.Point(
-                cast.origin().x() + x, cast.aim().y(), cast.origin().z() + z);
+                center.x() + x, cast.aim().y(), center.z() + z);
         var surface = surface(point);
-        if (surface.isPresent() && cast.hits(Places.point(surface.orElseThrow()))) {
+        if (surface.isPresent()
+            && cast.hits(Places.point(surface.orElseThrow()))
+            && marked.add(Places.pos(surface.orElseThrow().getBlock()))) {
           world
               .world()
               .spawnParticle(Particle.FLAME, surface.orElseThrow().add(0, 0.1, 0), 1, 0, 0, 0, 0);
@@ -169,7 +187,8 @@ final class SurvivalBoss {
   private java.util.Optional<org.bukkit.Location> surface(
       com.shepherdjerred.thestorm.arena.domain.geometry.Point point) {
     var at = Places.location(world.world(), point);
-    for (var offset = 2; offset >= -2; offset--) {
+    for (var step = 0; step <= 16; step++) {
+      var offset = step % 2 == 0 ? step / 2 : -(step + 1) / 2;
       var floor =
           world.world().getBlockAt(at.getBlockX(), at.getBlockY() + offset - 1, at.getBlockZ());
       var feet = floor.getRelative(org.bukkit.block.BlockFace.UP);
@@ -185,6 +204,11 @@ final class SurvivalBoss {
     for (var player : fighters) {
       strike(cast, player);
     }
+    world
+        .world()
+        .playSound(
+            Places.location(world.world(), cast.aim()), Sound.ENTITY_GENERIC_EXPLODE, .8f, .7f);
+    if (cast.shape() == BossMechanics.Shape.WARDED_ADDS) adds.accept(2);
     if (cast.shape() == BossMechanics.Shape.CHARGE) {
       var location = Places.location(world.world(), cast.aim());
       if (world.contains(location) && location.getBlock().isPassable()) {
@@ -203,17 +227,39 @@ final class SurvivalBoss {
     }
     striking = true;
     try {
-      player.damage(
-          round == 5 ? 3 + cast.phase() : Math.min(10, 4 + cast.phase() + round / 15), entity);
+      player.damage(BossMechanics.damage(round, cast.phase()), entity);
     } finally {
       striking = false;
     }
-    if (cast.shape() == BossMechanics.Shape.WIND_LANES) {
-      var push = Places.at(player).toVector().subtract(entity.getLocation().toVector());
+    effects(cast, player);
+  }
+
+  private void effects(BossMechanics.Cast cast, Player player) {
+    if (cast.shape() == BossMechanics.Shape.WIND_LANES
+        || cast.shape() == BossMechanics.Shape.WIND_BARRAGE
+        || cast.shape() == BossMechanics.Shape.SLAM
+        || cast.shape() == BossMechanics.Shape.VORTEX) {
+      var push =
+          cast.shape() == BossMechanics.Shape.VORTEX
+              ? Places.location(world.world(), cast.aim())
+                  .toVector()
+                  .subtract(Places.at(player).toVector())
+              : Places.at(player).toVector().subtract(entity.getLocation().toVector());
       if (push.lengthSquared() > 0.01) {
         player.setVelocity(push.normalize().multiply(1.2).setY(0.5));
       }
     }
+    var slow =
+        switch (cast.shape()) {
+          case ROOTS, ENTANGLE, RITUAL, SILENCE -> true;
+          default -> false;
+        };
+    if (slow)
+      player.addPotionEffect(
+          new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 60, 1));
+    if (cast.shape() == BossMechanics.Shape.RITUAL || cast.shape() == BossMechanics.Shape.SILENCE)
+      player.addPotionEffect(
+          new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS, 80, 0));
   }
 
   boolean objective(Player player, BlockPos block, Instant now, Runnable credit) {
@@ -241,9 +287,11 @@ final class SurvivalBoss {
             Math.max(
                 0,
                 entity.getHealth()
-                    - java.util.Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH))
-                            .getValue()
-                        * 0.2));
+                    - Math.min(
+                        java.util.Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH))
+                                .getValue()
+                            * .2,
+                        damageLimit())));
         Texts.info(player, "Heart broken. The guardian is exposed for eight seconds!");
       }
       return true;

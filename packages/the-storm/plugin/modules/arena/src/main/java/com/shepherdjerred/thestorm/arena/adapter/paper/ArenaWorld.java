@@ -131,6 +131,11 @@ final class ArenaWorld {
     return parts.keys().arenaOf(entity).filter(definition.id()::equals).isPresent();
   }
 
+  void tag(Entity entity) {
+    parts.keys().tag(entity, definition.id());
+    entity.setPersistent(false);
+  }
+
   /** At enable: removes what a crash may have left behind (mobs, hearts, loot). */
   void cleanUp() {
     for (var entity : world.getEntities()) {

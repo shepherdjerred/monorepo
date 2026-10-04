@@ -206,6 +206,7 @@ public final class ArenaPaper {
             new PlayerListener(context, arenas, commands, guard),
             guard,
             new WorldListener(arenas, keys),
+            new CompassNavigation(arenas, module.plugin()),
             new SurvivalListener(arenas));
     listeners.forEach(
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
@@ -310,6 +311,10 @@ public final class ArenaPaper {
     runners.forEach(runner -> runner.world().cancelPreload());
     arenas.stopAll();
     clock.cancel();
+    listeners.stream()
+        .filter(CompassNavigation.class::isInstance)
+        .map(CompassNavigation.class::cast)
+        .forEach(CompassNavigation::stop);
     listeners.forEach(HandlerList::unregisterAll);
     permissions.unregister();
   }

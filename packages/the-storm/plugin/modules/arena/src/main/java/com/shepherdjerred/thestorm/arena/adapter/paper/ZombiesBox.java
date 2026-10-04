@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon;
 import com.shepherdjerred.thestorm.arena.domain.survival.MysteryBox;
+import com.shepherdjerred.thestorm.arena.domain.survival.MysteryLoot;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import java.time.Duration;
@@ -21,7 +22,7 @@ import org.jspecify.annotations.Nullable;
 final class ZombiesBox {
   private final SurvivalRunner runner;
   private final MysteryBox box;
-  private final Map<UUID, Integer> refunds = new HashMap<>();
+  private final Map<UUID, SurvivalItems.Payment> payments = new HashMap<>();
   private @Nullable ItemDisplay display;
   private @Nullable Cancellable animation;
   private int frame;
@@ -78,16 +79,9 @@ final class ZombiesBox {
       } else claim(player, roll.orElseThrow());
       return true;
     }
-    var free =
-        java.util.Arrays.stream(
-                java.util.Objects.requireNonNull(player.getInventory().getStorageContents()))
-            .filter(i -> i == null || i.isEmpty())
-            .count();
-    if (free < 2) {
-      Texts.error(player, "Make two inventory slots free for the reward and ammunition.");
-      return true;
-    }
-    if (!runner.items().spend(player, Map.of("EMERALD", 16))) return true;
+    var payment = runner.items().reserve(player, Map.of("EMERALD", 16));
+    if (payment.isEmpty()) return true;
+    payments.put(player.getUniqueId(), payment.orElseThrow());
     if (!box.start(player.getUniqueId(), reward(), runner.context().time().instant()))
       throw new IllegalStateException("Charged a busy mystery box");
     revealed = false;
@@ -115,13 +109,27 @@ final class ZombiesBox {
   }
 
   private String reward() {
-    var roll = runner.context().random().nextInt(100);
-    if (roll < 30) return "IRON_SWORD";
-    if (roll < 50) return "BOW";
-    if (roll < 70) return "CROSSBOW";
-    if (roll < 85) return "DIAMOND_SWORD";
-    if (roll < 95) return "TRIDENT";
-    var rewards = runner.map().content().legendaries();
+    var pool = MysteryLoot.pool(runner.context().random().nextInt(100));
+    return switch (pool) {
+      case BASIC -> equipment(false);
+      case ENCHANTED -> "enchanted:" + equipment(true);
+      case SPECIAL, LEGENDARY -> signature(pool == MysteryLoot.Pool.SPECIAL);
+    };
+  }
+
+  private String equipment(boolean enchanted) {
+    var materials =
+        enchanted
+            ? List.of("DIAMOND_SWORD", "DIAMOND_AXE", "BOW", "CROSSBOW", "TRIDENT", "IRON_SPEAR")
+            : List.of("IRON_SWORD", "IRON_AXE", "BOW", "CROSSBOW", "COPPER_SPEAR");
+    return materials.get(runner.context().random().nextInt(materials.size()));
+  }
+
+  private String signature(boolean special) {
+    var rewards =
+        runner.map().content().legendaries().stream()
+            .filter(reward -> reward.id().special() == special)
+            .toList();
     var pick =
         runner
             .context()
@@ -140,8 +148,16 @@ final class ZombiesBox {
             ? runner
                 .items()
                 .legendary(LegendaryWeapon.valueOf(reward.substring("legendary:".length())))
-            : runner.items().stack(SurvivalItems.material(reward), 1);
-    if (weapon.getType() == Material.BOW)
+            : runner.items().stack(SurvivalItems.material(reward.replace("enchanted:", "")), 1);
+    if (reward.startsWith("enchanted:")) {
+      var primary = SurvivalEquipment.primary(weapon);
+      if (!primary.canEnchantItem(weapon))
+        throw new IllegalStateException("Incompatible box enchantment");
+      weapon.addEnchantment(primary, Math.min(2, primary.getMaxLevel()));
+      weapon.addEnchantment(org.bukkit.enchantments.Enchantment.UNBREAKING, 2);
+    }
+    if (weapon.getType() == Material.BOW
+        && !weapon.containsEnchantment(org.bukkit.enchantments.Enchantment.POWER))
       weapon.addEnchantment(org.bukkit.enchantments.Enchantment.POWER, 1);
     if (weapon.getType() == Material.BOW || weapon.getType() == Material.CROSSBOW)
       return List.of(weapon, runner.items().stack(Material.ARROW, 32));
@@ -166,10 +182,10 @@ final class ZombiesBox {
     }
     if (!box.claim(player.getUniqueId(), now))
       throw new IllegalStateException("Delivered an unclaimable box reward");
+    runner.items().commit(java.util.Objects.requireNonNull(payments.remove(player.getUniqueId())));
     clearDisplay();
     runner.feedback().play(player, SurvivalFeedback.Cue.PURCHASE);
-    Texts.info(
-        player, "Mystery box reward: " + roll.reward().replace("legendary:", "Legendary · "));
+    Texts.info(player, "Mystery box reward: " + rewardName(roll.reward()));
     if (box.relocate(
         runner.context().random().nextInt(1, runner.map().content().boxSites().size()))) {
       beams();
@@ -183,6 +199,19 @@ final class ZombiesBox {
                           + site().zone()
                           + ". Follow the magenta beacon; open its route if needed."));
     }
+  }
+
+  private String rewardName(String reward) {
+    if (reward.startsWith("legendary:")) {
+      var id = LegendaryWeapon.valueOf(reward.substring("legendary:".length()));
+      return runner.map().content().legendaries().stream()
+          .filter(r -> r.id() == id)
+          .findFirst()
+          .orElseThrow()
+          .name();
+    }
+    return (reward.startsWith("enchanted:") ? "Enchanted " : "")
+        + SurvivalItems.name(SurvivalItems.material(reward.replace("enchanted:", "")));
   }
 
   private void animate() {
@@ -229,20 +258,16 @@ final class ZombiesBox {
     box.expire(runner.context().time().instant())
         .ifPresent(
             roll -> {
-              refunds.merge(roll.owner(), 16, Integer::sum);
+              refund(roll.owner());
               clearDisplay();
             });
-    for (var entry : List.copyOf(refunds.entrySet())) {
-      var player = runner.context().server().getPlayer(entry.getKey());
-      if (player != null
-          && runner.isFighter(entry.getKey())
-          && runner
-              .items()
-              .deliver(player, List.of(runner.items().stack(Material.EMERALD, entry.getValue())))) {
-        refunds.remove(entry.getKey());
-        Texts.info(player, "Unclaimed mystery box refunded " + entry.getValue() + " emeralds.");
-      }
-    }
+  }
+
+  private void refund(UUID id) {
+    var payment = java.util.Objects.requireNonNull(payments.remove(id));
+    var player = runner.context().server().getPlayer(id);
+    runner.items().refund(runner.game().player(id).isPresent() ? player : null, payment);
+    if (player != null) Texts.info(player, "Unclaimed box · 16 emeralds refunded.");
   }
 
   void beams() {
@@ -280,16 +305,15 @@ final class ZombiesBox {
     box.cancel(id)
         .ifPresent(
             roll -> {
-              refunds.merge(id, 16, Integer::sum);
+              refund(id);
               clearDisplay();
             });
-    refunds.remove(id);
   }
 
   void reset() {
     clearDisplay();
     box.reset();
     if (runner.world().chunksReady()) beams();
-    refunds.clear();
+    List.copyOf(payments.keySet()).forEach(this::refund);
   }
 }

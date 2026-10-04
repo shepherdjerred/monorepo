@@ -17,6 +17,7 @@ final class SettlementFixtures {
     content.zones().forEach(this::zoneFixtures);
     content.arena().classSigns().values().forEach(p -> fixture(p, "OAK_SIGN"));
     fixture(content.arena().readyBlock(), "IRON_BLOCK");
+    fixture(content.lobbyGuide(), "LECTERN");
     content.machines().forEach(this::machine);
     content.boxSites().forEach(this::mysterySite);
     content.planeParts().forEach(p -> fixture(p.block(), "OAK_SIGN"));
@@ -83,24 +84,9 @@ final class SettlementFixtures {
                       case FORGE -> "SMITHING_TABLE";
                       case INFIRMARY -> "CAULDRON";
                       case ALCHEMY -> "ENCHANTING_TABLE";
+                      case BANK -> "ENDER_CHEST";
                     }));
-    zone.resources()
-        .forEach(
-            r ->
-                fixture(
-                    r.block(),
-                    switch (r.material()) {
-                      case "OAK_PLANKS" -> "OAK_LOG";
-                      case "IRON_INGOT" -> "IRON_ORE";
-                      case "REDSTONE" -> "REDSTONE_ORE";
-                      case "GLOWSTONE_DUST" -> "GLOWSTONE";
-                      case "BONE" -> "BONE_BLOCK";
-                      case "WHEAT" -> "HAY_BLOCK";
-                      case "FLINT" -> "GRAVEL";
-                      case "COBBLESTONE" -> "MOSSY_COBBLESTONE";
-                      default ->
-                          throw new IllegalArgumentException("Unknown resource " + r.material());
-                    }));
+    zone.resources().forEach(r -> fixture(r.block(), ResourceKind.valueOf(r.material()).fixture()));
     zone.defenses()
         .forEach(
             d ->

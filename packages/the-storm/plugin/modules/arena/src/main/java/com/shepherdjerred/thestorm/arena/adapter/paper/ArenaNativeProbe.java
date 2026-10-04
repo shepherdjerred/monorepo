@@ -78,6 +78,24 @@ public final class ArenaNativeProbe {
             + " "
             + runner.talents().status(player);
       }
+      case "bank" -> {
+        var bank = runner.items().bank();
+        var privateItems =
+            java.util.Arrays.stream(bank.contents(player.getUniqueId()))
+                .filter(java.util.Objects::nonNull)
+                .count();
+        yield "{\"emeralds\":"
+            + bank.supplies().count("EMERALD")
+            + ",\"iron\":"
+            + bank.supplies().count("IRON_INGOT")
+            + ",\"wood\":"
+            + bank.supplies().count("OAK_PLANKS")
+            + ",\"stone\":"
+            + bank.supplies().count("COBBLESTONE")
+            + ",\"locker\":"
+            + privateItems
+            + "}";
+      }
       default -> throw new IllegalArgumentException("Unknown native probe action " + action);
     };
   }

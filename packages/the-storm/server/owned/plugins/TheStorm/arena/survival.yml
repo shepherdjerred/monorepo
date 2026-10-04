@@ -1,4 +1,5 @@
 enabled: true
+lobbyGuide: { x: 1734, "y": 73, z: 2145 }
 entityCap: 32
 arena:
   id: settlement
@@ -271,6 +272,8 @@ zones:
           "y": 73
           z: 2148
         type: WORKBENCH
+      - block: { x: 1760, "y": 73, z: 2148 }
+        type: BANK
     resources:
       - block:
           x: 1757
@@ -881,13 +884,6 @@ zones:
         amount: 4
         perRound: 2
       - block:
-          x: 1851
-          "y": 73
-          z: 2168
-        material: COBBLESTONE
-        amount: 4
-        perRound: 2
-      - block:
           x: 1822
           "y": 73
           z: 2150
@@ -1313,12 +1309,14 @@ zones:
           "y": 73
           z: 2187
         type: FORGE
+      - block: { x: 1818, "y": 73, z: 2197 }
+        type: BANK
     resources:
       - block:
           x: 1821
           "y": 73
           z: 2192
-        material: IRON_INGOT
+        material: COPPER_INGOT
         amount: 4
         perRound: 2
       - block:
@@ -1326,13 +1324,6 @@ zones:
           "y": 73
           z: 2192
         material: REDSTONE
-        amount: 4
-        perRound: 2
-      - block:
-          x: 1825
-          "y": 73
-          z: 2192
-        material: COBBLESTONE
         amount: 4
         perRound: 2
     defenses:
@@ -2010,21 +2001,7 @@ zones:
           x: 1781
           "y": 73
           z: 2215
-        material: IRON_INGOT
-        amount: 4
-        perRound: 2
-      - block:
-          x: 1783
-          "y": 73
-          z: 2215
-        material: FLINT
-        amount: 4
-        perRound: 2
-      - block:
-          x: 1785
-          "y": 73
-          z: 2215
-        material: OAK_PLANKS
+        material: STRING
         amount: 4
         perRound: 2
     defenses:
@@ -2459,14 +2436,7 @@ zones:
           x: 1782
           "y": 73
           z: 2245
-        material: REDSTONE
-        amount: 4
-        perRound: 2
-      - block:
-          x: 1784
-          "y": 73
-          z: 2245
-        material: OAK_PLANKS
+        material: BLAZE_POWDER
         amount: 4
         perRound: 2
     defenses:
@@ -2889,6 +2859,8 @@ zones:
           "y": 73
           z: 2231
         type: ALCHEMY
+      - block: { x: 1817, "y": 73, z: 2240 }
+        type: BANK
     resources:
       - block:
           x: 1820
@@ -2901,14 +2873,7 @@ zones:
           x: 1822
           "y": 73
           z: 2233
-        material: BONE
-        amount: 4
-        perRound: 2
-      - block:
-          x: 1824
-          "y": 73
-          z: 2233
-        material: REDSTONE
+        material: NETHER_WART
         amount: 4
         perRound: 2
     defenses:
@@ -3018,15 +2983,7 @@ zones:
     stations:
       - block: { x: 1762, "y": 66, z: 2275 }
         type: WORKBENCH
-    resources:
-      - block: { x: 1760, "y": 66, z: 2272 }
-        material: WHEAT
-        amount: 9
-        perRound: 2
-      - block: { x: 1762, "y": 66, z: 2272 }
-        material: OAK_PLANKS
-        amount: 4
-        perRound: 2
+    resources: []
     defenses:
       - id: wharf-barricade
         block: { x: 1755, "y": 73, z: 2257 }
@@ -3125,15 +3082,7 @@ zones:
     stations:
       - block: { x: 1794, "y": 85, z: 2275 }
         type: ALCHEMY
-    resources:
-      - block: { x: 1792, "y": 85, z: 2272 }
-        material: REDSTONE
-        amount: 4
-        perRound: 2
-      - block: { x: 1794, "y": 85, z: 2272 }
-        material: GLOWSTONE_DUST
-        amount: 4
-        perRound: 2
+    resources: []
     defenses:
       - id: bluff-barricade
         block: { x: 1787, "y": 73, z: 2257 }
@@ -3220,6 +3169,8 @@ recipes:
     station: WORKBENCH
     material: STONE_SWORD
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
       COBBLESTONE: 4
       OAK_PLANKS: 2
@@ -3228,14 +3179,18 @@ recipes:
     station: WORKBENCH
     material: BOW
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
       OAK_PLANKS: 8
-      BONE: 2
+      STRING: 2
   - id: arrows
     name: Arrows
     station: WORKBENCH
     material: ARROW
     amount: 16
+    potion: NONE
+    enchantments: {}
     ingredients:
       OAK_PLANKS: 2
       COBBLESTONE: 2
@@ -3244,13 +3199,17 @@ recipes:
     station: WORKBENCH
     material: BREAD
     amount: 3
+    potion: NONE
+    enchantments: {}
     ingredients:
-      WHEAT: 4
+      WHEAT: 2
   - id: shield
     name: Shield
     station: WORKBENCH
     material: SHIELD
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
       OAK_PLANKS: 6
       IRON_INGOT: 1
@@ -3259,21 +3218,29 @@ recipes:
     station: FORGE
     material: IRON_SWORD
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
-      IRON_INGOT: 6
+      IRON_INGOT: 4
       OAK_PLANKS: 2
+      EMERALD: 4
   - id: iron-chest
     name: Iron chestplate
     station: FORGE
     material: IRON_CHESTPLATE
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
-      IRON_INGOT: 12
+      IRON_INGOT: 8
+      EMERALD: 6
   - id: crossbow
     name: Crossbow
     station: FORGE
     material: CROSSBOW
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
       IRON_INGOT: 6
       OAK_PLANKS: 6
@@ -3282,6 +3249,8 @@ recipes:
     station: FORGE
     material: ARROW
     amount: 24
+    potion: NONE
+    enchantments: {}
     ingredients:
       OAK_PLANKS: 2
       FLINT: 2
@@ -3290,6 +3259,8 @@ recipes:
     station: INFIRMARY
     material: GOLDEN_APPLE
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
       WHEAT: 4
       IRON_INGOT: 2
@@ -3298,6 +3269,8 @@ recipes:
     station: INFIRMARY
     material: COOKED_BEEF
     amount: 4
+    potion: NONE
+    enchantments: {}
     ingredients:
       WHEAT: 4
       BONE: 2
@@ -3306,6 +3279,8 @@ recipes:
     station: ALCHEMY
     material: DIAMOND_SWORD
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
       IRON_INGOT: 16
       GLOWSTONE_DUST: 8
@@ -3315,18 +3290,377 @@ recipes:
     station: ALCHEMY
     material: DIAMOND_CHESTPLATE
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
-      IRON_INGOT: 24
-      GLOWSTONE_DUST: 12
+      IRON_INGOT: 10
+      GLOWSTONE_DUST: 6
+      EMERALD: 16
   - id: enchanted-apple
     name: Greater healing
     station: ALCHEMY
     material: ENCHANTED_GOLDEN_APPLE
     amount: 1
+    potion: NONE
+    enchantments: {}
     ingredients:
       WHEAT: 8
       GLOWSTONE_DUST: 8
       REDSTONE: 4
+  - id: leather-helmet
+    name: Leather helmet
+    station: WORKBENCH
+    material: LEATHER_HELMET
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      WHEAT: 2
+      OAK_PLANKS: 2
+      EMERALD: 1
+  - id: leather-chestplate
+    name: Leather chestplate
+    station: WORKBENCH
+    material: LEATHER_CHESTPLATE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      WHEAT: 2
+      OAK_PLANKS: 2
+      EMERALD: 1
+  - id: leather-leggings
+    name: Leather leggings
+    station: WORKBENCH
+    material: LEATHER_LEGGINGS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      WHEAT: 2
+      OAK_PLANKS: 2
+      EMERALD: 1
+  - id: leather-boots
+    name: Leather boots
+    station: WORKBENCH
+    material: LEATHER_BOOTS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      WHEAT: 2
+      OAK_PLANKS: 2
+      EMERALD: 1
+  - id: chainmail-helmet
+    name: Chainmail helmet
+    station: FORGE
+    material: CHAINMAIL_HELMET
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      COPPER_INGOT: 2
+      EMERALD: 3
+  - id: chainmail-chestplate
+    name: Chainmail chestplate
+    station: FORGE
+    material: CHAINMAIL_CHESTPLATE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      COPPER_INGOT: 2
+      EMERALD: 3
+  - id: chainmail-leggings
+    name: Chainmail leggings
+    station: FORGE
+    material: CHAINMAIL_LEGGINGS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      COPPER_INGOT: 2
+      EMERALD: 3
+  - id: chainmail-boots
+    name: Chainmail boots
+    station: FORGE
+    material: CHAINMAIL_BOOTS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      COPPER_INGOT: 2
+      EMERALD: 3
+  - id: iron-helmet
+    name: Iron helmet
+    station: FORGE
+    material: IRON_HELMET
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      EMERALD: 4
+  - id: iron-leggings
+    name: Iron leggings
+    station: FORGE
+    material: IRON_LEGGINGS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      EMERALD: 4
+  - id: iron-boots
+    name: Iron boots
+    station: FORGE
+    material: IRON_BOOTS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      EMERALD: 4
+  - id: diamond-helmet
+    name: Diamond helmet
+    station: ALCHEMY
+    material: DIAMOND_HELMET
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 8
+      GLOWSTONE_DUST: 4
+      EMERALD: 12
+  - id: diamond-leggings
+    name: Diamond leggings
+    station: ALCHEMY
+    material: DIAMOND_LEGGINGS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 8
+      GLOWSTONE_DUST: 4
+      EMERALD: 12
+  - id: diamond-boots
+    name: Diamond boots
+    station: ALCHEMY
+    material: DIAMOND_BOOTS
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 8
+      GLOWSTONE_DUST: 4
+      EMERALD: 12
+  - id: wooden-axe
+    name: Wooden axe
+    station: WORKBENCH
+    material: WOODEN_AXE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      OAK_PLANKS: 4
+  - id: wooden-spear
+    name: Wooden spear
+    station: WORKBENCH
+    material: WOODEN_SPEAR
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      OAK_PLANKS: 4
+  - id: stone-axe
+    name: Stone axe
+    station: WORKBENCH
+    material: STONE_AXE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      COBBLESTONE: 4
+      OAK_PLANKS: 2
+      EMERALD: 1
+  - id: stone-spear
+    name: Stone spear
+    station: WORKBENCH
+    material: STONE_SPEAR
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      COBBLESTONE: 4
+      OAK_PLANKS: 2
+      EMERALD: 1
+  - id: copper-axe
+    name: Copper axe
+    station: FORGE
+    material: COPPER_AXE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      COPPER_INGOT: 4
+      OAK_PLANKS: 2
+      EMERALD: 3
+  - id: copper-spear
+    name: Copper spear
+    station: FORGE
+    material: COPPER_SPEAR
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      COPPER_INGOT: 4
+      OAK_PLANKS: 2
+      EMERALD: 3
+  - id: iron-axe
+    name: Iron axe
+    station: FORGE
+    material: IRON_AXE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      OAK_PLANKS: 2
+      EMERALD: 4
+  - id: iron-spear
+    name: Iron spear
+    station: FORGE
+    material: IRON_SPEAR
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 4
+      OAK_PLANKS: 2
+      EMERALD: 4
+  - id: diamond-axe
+    name: Diamond axe
+    station: ALCHEMY
+    material: DIAMOND_AXE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 8
+      GLOWSTONE_DUST: 4
+      EMERALD: 12
+  - id: diamond-spear
+    name: Diamond spear
+    station: ALCHEMY
+    material: DIAMOND_SPEAR
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 8
+      GLOWSTONE_DUST: 4
+      EMERALD: 12
+  - id: trident
+    name: Returning trident
+    station: FORGE
+    material: TRIDENT
+    amount: 1
+    potion: NONE
+    enchantments: { LOYALTY: 1 }
+    ingredients:
+      IRON_INGOT: 6
+      COPPER_INGOT: 4
+      EMERALD: 8
+  - id: mace
+    name: Mace
+    station: ALCHEMY
+    material: MACE
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      IRON_INGOT: 10
+      GLOWSTONE_DUST: 6
+      BLAZE_POWDER: 4
+      EMERALD: 18
+  - id: potatoes
+    name: Baked potatoes
+    station: WORKBENCH
+    material: BAKED_POTATO
+    amount: 3
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      WHEAT: 2
+  - id: stew
+    name: Mushroom stew
+    station: INFIRMARY
+    material: MUSHROOM_STEW
+    amount: 1
+    potion: NONE
+    enchantments: {}
+    ingredients:
+      WHEAT: 2
+      OAK_PLANKS: 1
+  - id: healing-potion
+    name: Healing potion
+    station: INFIRMARY
+    material: POTION
+    amount: 1
+    potion: HEALING
+    enchantments: {}
+    ingredients:
+      WHEAT: 2
+      REDSTONE: 2
+      EMERALD: 2
+  - id: regeneration-potion
+    name: Regeneration potion
+    station: ALCHEMY
+    material: POTION
+    amount: 1
+    potion: REGENERATION
+    enchantments: {}
+    ingredients:
+      NETHER_WART: 2
+      GLOWSTONE_DUST: 2
+      EMERALD: 4
+  - id: speed-potion
+    name: Speed potion
+    station: ALCHEMY
+    material: POTION
+    amount: 1
+    potion: SWIFTNESS
+    enchantments: {}
+    ingredients:
+      NETHER_WART: 2
+      REDSTONE: 2
+      EMERALD: 3
+  - id: strength-potion
+    name: Strength potion
+    station: ALCHEMY
+    material: POTION
+    amount: 1
+    potion: STRENGTH
+    enchantments: {}
+    ingredients:
+      NETHER_WART: 2
+      BLAZE_POWDER: 2
+      EMERALD: 4
+  - id: fire-potion
+    name: Fire resistance potion
+    station: ALCHEMY
+    material: POTION
+    amount: 1
+    potion: FIRE_RESISTANCE
+    enchantments: {}
+    ingredients:
+      NETHER_WART: 2
+      BLAZE_POWDER: 1
+      EMERALD: 3
 
 routes:
   - id: quarry-routes
@@ -3450,4 +3784,24 @@ legendaries:
     name: Graviton Staff
     material: BLAZE_ROD
     description: "Pull five ordinary enemies: one redstone per cast, five-second recharge."
+    weight: 1
+  - id: REPEATER
+    name: Repeater
+    material: BOW
+    description: "Hold use to fire four arrows per second. Each shot consumes one carried arrow."
+    weight: 1
+  - id: WHIRLWIND
+    name: Whirlwind
+    material: IRON_AXE
+    description: "Melee hits sweep two nearby foes for four damage; two-second recovery."
+    weight: 1
+  - id: TIDEBREAKER
+    name: Tidebreaker
+    material: TRIDENT
+    description: "Returning throws send a shockwave through two nearby foes."
+    weight: 1
+  - id: RIFTBLADE
+    name: Riftblade
+    material: DIAMOND_SWORD
+    description: "Right-click to dash up to four blocks through open ground; six-second recovery."
     weight: 1

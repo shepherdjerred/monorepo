@@ -89,11 +89,11 @@ final class ZombiesRulesTest {
       assertThat(team.concurrentLimit()).isEqualTo(solo.concurrentLimit() + 6);
       assertThat(team.damage()).isEqualTo(solo.damage());
     }
-    assertThat(EncounterDirector.bossHealth(5, 1)).isEqualTo(100);
-    assertThat(EncounterDirector.bossHealth(5, 2)).isEqualTo(155);
-    assertThat(EncounterDirector.bossHealth(5, 3)).isEqualTo(210);
+    assertThat(EncounterDirector.bossHealth(5, 1)).isEqualTo(200);
+    assertThat(EncounterDirector.bossHealth(5, 2)).isEqualTo(330);
+    assertThat(EncounterDirector.bossHealth(5, 3)).isEqualTo(460);
     assertThat(EncounterDirector.bossHealth(5, 4))
-        .isCloseTo(265, org.assertj.core.data.Offset.offset(.000001));
+        .isCloseTo(590, org.assertj.core.data.Offset.offset(.000001));
   }
 
   @Test

@@ -34,6 +34,26 @@ final class SurvivalRulesTest {
   }
 
   @Test
+  void joiningOrUnreadyingCancelsTheCountdown() {
+    var game = new SurvivalGame();
+    game.join(ALICE, "Alice", false);
+    game.admitted(ALICE, false);
+    game.ready(ALICE, T0);
+    assertThat(game.phase()).isEqualTo(SurvivalGame.Phase.COUNTDOWN);
+    game.ready(ALICE, T0.plusSeconds(1));
+    assertThat(game.player(ALICE).orElseThrow().ready()).isFalse();
+    assertThat(game.advance(T0.plusSeconds(11))).isFalse();
+    game.ready(ALICE, T0.plusSeconds(12));
+    game.join(BOB, "Bob", false);
+    assertThat(game.phase()).isEqualTo(SurvivalGame.Phase.LOBBY);
+    assertThat(game.advance(T0.plusSeconds(25))).isFalse();
+    game.admitted(BOB, false);
+    game.ready(BOB, T0.plusSeconds(26));
+    assertThat(game.advance(T0.plusSeconds(35))).isFalse();
+    assertThat(game.advance(T0.plusSeconds(36))).isTrue();
+  }
+
+  @Test
   void bleedoutReturnsOnlyAtTheNextRoundWithTheSameClass() {
     var game = started(true);
     game.down(ALICE, T0);
@@ -113,7 +133,7 @@ final class SurvivalRulesTest {
         .isTrue();
     var cast = boss.cast().orElseThrow();
     assertThat(cast.hits(new Point(10, 73, 0))).isTrue();
-    assertThat(cast.hits(new Point(15, 73, 0))).isFalse();
+    assertThat(cast.hits(new Point(15, 73, 5))).isFalse();
     assertThat(boss.impact(T0.plusSeconds(7))).isEmpty();
     assertThat(boss.interrupt(T0.plusSeconds(7))).isTrue();
     assertThat(boss.impact(T0.plusSeconds(8))).isEmpty();

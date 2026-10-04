@@ -68,4 +68,35 @@ final class SurvivalFeedback {
   void leave(UUID id) {
     next.remove(id);
   }
+
+  void animate(
+      Player player, com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos pos, Cue cue) {
+    var items = runner.items();
+    var origin = Places.location(runner.world().world(), pos.center());
+    var particle =
+        switch (cue) {
+          case UNLOCK -> org.bukkit.Particle.WAX_OFF;
+          case POWER -> org.bukkit.Particle.ELECTRIC_SPARK;
+          case UPGRADE -> org.bukkit.Particle.END_ROD;
+          case CRAFT -> org.bukkit.Particle.ENCHANT;
+          default -> org.bukkit.Particle.HAPPY_VILLAGER;
+        };
+    for (var frame = 0; frame < 16; frame++) {
+      var angle = frame * Math.PI / 4;
+      var radius = .3 + frame / 16.0;
+      var at =
+          origin
+              .clone()
+              .add(Math.cos(angle) * radius, .15 + frame / 12.0, Math.sin(angle) * radius);
+      runner
+          .context()
+          .scheduler()
+          .runOnMainThreadLater(
+              java.time.Duration.ofMillis(frame * 75L),
+              () -> {
+                if (runner.items() == items && runner.isFighter(player.getUniqueId()))
+                  runner.world().world().spawnParticle(particle, at, 3, .1, .1, .1, 0);
+              });
+    }
+  }
 }

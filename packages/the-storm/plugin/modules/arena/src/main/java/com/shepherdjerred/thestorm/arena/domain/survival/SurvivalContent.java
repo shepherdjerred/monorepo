@@ -25,12 +25,14 @@ public record SurvivalContent(
     List<Route> routes,
     List<BoxSite> boxSites,
     List<ClassProfile> classes,
-    List<LegendaryReward> legendaries) {
+    List<LegendaryReward> legendaries,
+    BlockPos lobbyGuide) {
   public enum StationType {
     WORKBENCH,
     FORGE,
     INFIRMARY,
-    ALCHEMY
+    ALCHEMY,
+    BANK
   }
 
   public enum DefenseType {
@@ -91,7 +93,7 @@ public record SurvivalContent(
   public record LegendaryReward(
       LegendaryWeapon id, String name, String material, String description, int weight) {
     public LegendaryReward {
-      if (name.isBlank() || description.isBlank() || weight < 1)
+      if (name.isBlank() || description.isBlank() || weight < 1 || !material.equals(id.material()))
         throw new IllegalArgumentException("Invalid legendary reward " + id);
     }
   }
@@ -120,11 +122,33 @@ public record SurvivalContent(
 
   public record Resource(BlockPos block, String material, int amount, int perRound) {
     public Resource {
-      if (amount < 1 || perRound < 1) throw new IllegalArgumentException("Invalid resource budget");
+      ResourceKind.valueOf(material);
+      if (amount < 1 || perRound != 2)
+        throw new IllegalArgumentException("Harvest budgets must be two per material per round");
     }
   }
 
   public record Defense(String id, BlockPos block, DefenseType type) {}
+
+  public enum PotionKind {
+    NONE,
+    HEALING,
+    REGENERATION,
+    SWIFTNESS,
+    STRENGTH,
+    FIRE_RESISTANCE
+  }
+
+  public enum EquipmentEnchantment {
+    SHARPNESS,
+    SMITE,
+    POWER,
+    PROTECTION,
+    UNBREAKING,
+    PIERCING,
+    QUICK_CHARGE,
+    LOYALTY
+  }
 
   public record Zone(
       String id,
@@ -174,14 +198,19 @@ public record SurvivalContent(
       StationType station,
       String material,
       int amount,
-      Map<String, Integer> ingredients) {
+      Map<String, Integer> ingredients,
+      PotionKind potion,
+      Map<EquipmentEnchantment, Integer> enchantments) {
     public Recipe {
       ingredients = Map.copyOf(ingredients);
+      enchantments = Map.copyOf(enchantments);
       if (amount < 1
           || amount > 64
           || ingredients.isEmpty()
           || ingredients.values().stream().anyMatch(n -> n < 1))
         throw new IllegalArgumentException("Invalid recipe " + id);
+      if (enchantments.values().stream().anyMatch(level -> level < 1))
+        throw new IllegalArgumentException("Invalid recipe enchantment " + id);
     }
   }
 
@@ -202,9 +231,8 @@ public record SurvivalContent(
     for (var zone : zones) {
       if (!ids.add(zone.id())) throw new IllegalArgumentException("Duplicate zone " + zone.id());
       zone.areas().forEach(a -> inside(arena.region(), a));
-      if (zone.stations().isEmpty() || zone.resources().isEmpty() || zone.gate().isEmpty())
-        throw new IllegalArgumentException(
-            "District needs stations, resources and gates: " + zone.id());
+      if (zone.emeralds() > 0 && zone.gate().isEmpty())
+        throw new IllegalArgumentException("Paid district needs a gate: " + zone.id());
       zone.spawns()
           .forEach(
               p -> {
@@ -227,6 +255,9 @@ public record SurvivalContent(
       zone.defenses().forEach(d -> add(fixtures, arena.region(), d.block()));
     }
     inside(arena.region(), lobbyArea);
+    add(fixtures, arena.region(), lobbyGuide);
+    if (!lobbyArea.contains(lobbyGuide))
+      throw new IllegalArgumentException("Guide must be in lobby");
     inside(arena.region(), expedition.area());
     if (!lobbyArea.contains(arena.lobby().point())
         || !arena.region().contains(expedition.returnTo()))

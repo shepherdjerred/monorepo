@@ -116,6 +116,16 @@ final class ZombiesMachines {
         quest.power();
         runner.feedback().play(player, SurvivalFeedback.Cue.POWER);
         runner
+            .feedback()
+            .animate(
+                player,
+                runner.map().content().machines().stream()
+                    .filter(m -> m.type() == SurvivalContent.MachineType.POWER)
+                    .findFirst()
+                    .orElseThrow()
+                    .block(),
+                SurvivalFeedback.Cue.POWER);
+        runner
             .online()
             .forEach(
                 p ->
@@ -154,9 +164,19 @@ final class ZombiesMachines {
       Texts.error(player, "Hold a run weapon with fewer than three upgrades.");
       return;
     }
-    if (runner.items().spend(player, Map.of("EMERALD", 36 * (tier + 1)))) {
+    if (runner.items().spend(player, Map.of("EMERALD", 12 * (tier + 1)))) {
       runner.items().upgrade(weapon, tier + 1);
       runner.feedback().play(player, SurvivalFeedback.Cue.UPGRADE);
+      runner
+          .feedback()
+          .animate(
+              player,
+              runner.map().content().machines().stream()
+                  .filter(m -> m.type() == SurvivalContent.MachineType.PACK_A_PUNCH)
+                  .findFirst()
+                  .orElseThrow()
+                  .block(),
+              SurvivalFeedback.Cue.UPGRADE);
       player.getInventory().setItemInMainHand(weapon);
       Texts.info(player, "Weapon upgraded and repaired to Pack-a-Punch " + (tier + 1) + ".");
     }

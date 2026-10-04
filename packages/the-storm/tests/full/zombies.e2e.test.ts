@@ -75,10 +75,10 @@ describe("classic Zombies systems on real Paper", () => {
         await rcon.command(
           `attribute @e[type=minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},limit=1] minecraft:max_health get`,
         ),
-      ).toContain("155");
+      ).toContain("330");
       const warning = await waitForMessage(
         bot,
-        /Breeze Sovereign casts WIND_LANES.*marked ground.*Phase 1/u,
+        /Breeze Sovereign casts Wind lanes.*marked ground.*Phase 1/u,
         15_000,
       );
       expect(warning.join("\n")).toContain("marked ground");

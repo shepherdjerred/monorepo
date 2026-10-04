@@ -79,6 +79,10 @@ public final class SurvivalGame {
     return phase == Phase.FIGHTING || phase == Phase.INTERMISSION;
   }
 
+  public long secondsLeft(Instant now) {
+    return Math.max(0, java.time.Duration.between(now, deadline).toSeconds());
+  }
+
   public Optional<GameError> join(UUID id, String name, boolean spectator) {
     if (players.containsKey(id)) {
       return Optional.of(GameError.ALREADY_JOINED);
@@ -99,6 +103,7 @@ public final class SurvivalGame {
             false,
             !spectator,
             Optional.empty()));
+    if (!spectator && phase == Phase.COUNTDOWN) phase = Phase.LOBBY;
     return Optional.empty();
   }
 
@@ -133,7 +138,8 @@ public final class SurvivalGame {
     if (player.status() != Survivor.Status.LOBBY) {
       return Optional.of(GameError.NOT_IN_LOBBY);
     }
-    players.put(id, player.markReady());
+    players.put(id, player.ready() ? player.select(player.role()) : player.markReady());
+    phase = Phase.LOBBY;
     if (participants().stream().allMatch(Survivor::ready)) {
       countdown(now);
     }

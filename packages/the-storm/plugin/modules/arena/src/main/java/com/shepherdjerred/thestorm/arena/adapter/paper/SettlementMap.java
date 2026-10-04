@@ -179,13 +179,18 @@ final class SettlementMap {
     for (var zone : content.zones()) {
       zone.purchaseSigns()
           .forEach(
-              p ->
+              p -> {
+                if (state.accessible(zone.id())) world.block(p).setType(Material.AIR, false);
+                else {
+                  world.block(p).setType(Material.OAK_SIGN, false);
                   label(
                       p,
                       zone.name(),
-                      state.accessible(zone.id()) ? "Route open" : zone.emeralds() + " emeralds",
-                      state.accessible(zone.id()) ? "Explore / gather" : "Click twice",
-                      "within 3 seconds"));
+                      zone.emeralds() + " emeralds",
+                      "Click twice",
+                      "within 3 seconds");
+                }
+              });
     }
     content
         .planeParts()
@@ -230,7 +235,10 @@ final class SettlementMap {
   }
 
   Optional<SurvivalContent.Zone> gate(BlockPos pos) {
-    return content.zones().stream().filter(z -> z.purchaseSigns().contains(pos)).findFirst();
+    return content.zones().stream()
+        .filter(z -> !state.accessible(z.id()))
+        .filter(z -> z.purchaseSigns().contains(pos))
+        .findFirst();
   }
 
   Optional<SurvivalContent.Station> station(BlockPos pos) {

@@ -62,6 +62,8 @@ final class SurvivalRunner implements ArenaRunner {
   private final SurvivalClassMenus classMenus;
   private final SurvivalPresentation presentation;
   private final LegendaryCombat legendary;
+  private final SurvivalGuide guide;
+  private final SurvivalAnnouncements announcements;
   private boolean prepared;
   private boolean stopping;
   private @Nullable Cancellable startupTask;
@@ -80,6 +82,8 @@ final class SurvivalRunner implements ArenaRunner {
     classMenus = new SurvivalClassMenus(this);
     presentation = new SurvivalPresentation(this);
     legendary = new LegendaryCombat(this);
+    guide = new SurvivalGuide(this);
+    announcements = new SurvivalAnnouncements(this);
     items = new SurvivalItems(services.keys(), run, feedback, content);
     combat = newCombat();
     actions = new SurvivalActions(this);
@@ -157,6 +161,10 @@ final class SurvivalRunner implements ArenaRunner {
     return legendary;
   }
 
+  SurvivalGuide guide() {
+    return guide;
+  }
+
   void tag(org.bukkit.entity.Entity entity) {
     services.keys().tag(entity, id());
   }
@@ -230,7 +238,12 @@ final class SurvivalRunner implements ArenaRunner {
         yield Optional.empty();
       }
       case GameEvent.PickClass pick -> select(pick.player(), pick.kit());
-      case GameEvent.Ready ready -> game.ready(ready.player(), context().time().instant());
+      case GameEvent.Ready ready -> {
+        var failure = game.ready(ready.player(), context().time().instant());
+        var player = context().server().getPlayer(ready.player());
+        if (failure.isEmpty() && player != null) announcements.ready(player);
+        yield failure;
+      }
       case GameEvent.ForceStart start ->
           game.forceStart(start.now()) ? Optional.empty() : Optional.of(GameError.NOTHING_TO_START);
       case GameEvent.Leave leave -> {
@@ -352,10 +365,8 @@ final class SurvivalRunner implements ArenaRunner {
                 + ". Teammates may join normally; no persistent progression.");
       Texts.info(
           player,
-          "Survival: Fighter, Ranger or Medic. /survival classes shows kits, passives and unlocks. /arena ready to begin."
-              + " XP "
-              + xp(id)
-              + ". Earn emeralds, open routes, craft gear; /survival ability.");
+          "Survival: Fighter selected. Use your compass to choose a class; click the iron block to ready up. The lobby book explains the rules.");
+      announcements.joined(player);
     }
   }
 
@@ -491,6 +502,7 @@ final class SurvivalRunner implements ArenaRunner {
                       cancelStartup();
                       map.reset();
                       machines.prepare();
+                      guide.prepare();
                       startup.complete(null);
                     }
                   } catch (RuntimeException failure) {
@@ -508,6 +520,7 @@ final class SurvivalRunner implements ArenaRunner {
     var positions = new HashSet<com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos>();
     for (var zone : map.content().zones()) {
       positions.addAll(zone.gate());
+      positions.addAll(zone.purchaseSigns());
       for (var defense : zone.defenses()) {
         var spread = defense.type() == SurvivalContent.DefenseType.BARRICADE ? 1 : 0;
         for (var dx = -spread; dx <= spread; dx++) {
@@ -553,6 +566,7 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   private void beginRound(Collection<Survivor> before) {
+    if (before.stream().anyMatch(p -> p.status() == Survivor.Status.LOBBY)) announcements.started();
     map.state().nextRound();
     var spawnIndex = 0;
     prepareDebug(before);
@@ -703,6 +717,7 @@ final class SurvivalRunner implements ArenaRunner {
     }
     var self = game.down(player.getUniqueId(), context().time().instant());
     actions.losePerks(player);
+    legendary.repeater().stop(player.getUniqueId());
     talents.interrupt(player.getUniqueId());
     machines.interrupt(player.getUniqueId());
     player.setHealth(self ? 10 : 1);
@@ -758,6 +773,7 @@ final class SurvivalRunner implements ArenaRunner {
     }
     combat.reset();
     game.cleared(now);
+    announcements.cleared();
     online()
         .forEach(
             p -> Texts.info(p, "Round " + game.round() + " cleared. Eight seconds to resupply."));
@@ -781,6 +797,7 @@ final class SurvivalRunner implements ArenaRunner {
     machines.leave(id);
     talents.leave(id);
     legendary.leave(id);
+    combat.leave(id);
     feedback.leave(id);
     game.leave(id);
     spectators.remove(id);
@@ -795,12 +812,14 @@ final class SurvivalRunner implements ArenaRunner {
       services.snapshots().restore(player);
     }
     actions.leave(id);
+    items.bank().leave(id);
     if (!stopping && (game.participants().isEmpty() || game.wiped())) {
       stop();
     }
   }
 
   private void stop() {
+    if (game.running()) announcements.ended();
     cancelStartup();
     if (!startup.isDone()) {
       startup.completeExceptionally(new IllegalStateException("Survival stopped during startup"));
@@ -818,6 +837,7 @@ final class SurvivalRunner implements ArenaRunner {
       var ids = game.players().stream().map(Survivor::id).toList();
       ids.forEach(this::leave);
       game.reset();
+      announcements.reset();
       world.reset();
       revival.reset();
       recovery.reset();

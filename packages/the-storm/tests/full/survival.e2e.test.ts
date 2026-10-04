@@ -36,14 +36,14 @@ describe("settlement opening on real Paper", () => {
         const health = await rcon.command(
           `execute as ${enemies} run data get entity @s Health`,
         );
-        expect(health.match(/12\.0f/gu)).toHaveLength(3);
+        expect(health.match(/8\.0f/gu)).toHaveLength(3);
         const reinforcements = await rcon.command(
           `execute as ${enemies} run attribute @s minecraft:spawn_reinforcements base get`,
         );
         expect(reinforcements.match(/is 0\.0/gu)).toHaveLength(3);
         const sword = bot.inventory
           .items()
-          .find((item) => item.name === "stone_sword");
+          .find((item) => item.name === "wooden_sword");
         if (sword === undefined) throw new Error("Starter sword is missing");
         await bot.equip(sword, "hand");
         const deadline = Date.now() + 80_000;
@@ -82,10 +82,8 @@ describe("settlement opening on real Paper", () => {
         const emeralds = bot.inventory
           .items()
           .find((item) => item.name === "emerald")?.count;
-        const nuke = messages.some((m) => m.includes("Team power-up: NUKE"));
-        const double = messages.some((m) =>
-          m.includes("Team power-up: DOUBLE_EMERALDS"),
-        );
+        const nuke = messages.some((m) => m.includes("Nuke ·"));
+        const double = messages.some((m) => m.includes("Double Emeralds ·"));
         if (!nuke && !double) expect(emeralds).toBe(12);
         else {
           expect(emeralds).toBeGreaterThanOrEqual(nuke ? 2 : 12);
@@ -168,7 +166,14 @@ describe("settlement survival on real Paper", () => {
     if (station === null) throw new Error("Workbench is missing");
     await bot.activateBlock(station);
     await waitUntil("crafting menu", () => bot.currentWindow !== null);
+    const weaponsWindow = bot.currentWindow?.id;
     await bot.clickWindow(2, 0, 0);
+    await waitUntil(
+      "supplies tab",
+      () =>
+        bot.currentWindow !== null && bot.currentWindow.id !== weaponsWindow,
+    );
+    await bot.clickWindow(3, 0, 0);
     await waitUntil("crafted arrows", () =>
       bot.inventory.items().some((i) => i.name === "arrow" && i.count === 40),
     );
@@ -341,7 +346,7 @@ describe("cooperative survival and bosses on real Paper", () => {
         }
         const cast = await waitForMessage(
           bot,
-          /Breeze Sovereign casts WIND_LANES.*Phase 1/u,
+          /Breeze Sovereign casts Wind lanes.*Phase 1/u,
           15_000,
         );
         expect(cast.join("\n")).toContain("marked ground");

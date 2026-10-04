@@ -428,24 +428,27 @@ districts occupy a compact 112 × 112 ruined coastal fortress, inside the origin
 offshore forge is reached by plane. Permanent buildings are protected; purchased
 routes, barricades, charged traps, and personal gathering budgets reset each run.
 
-| Command or interaction                          | Result                                                                |
-| ----------------------------------------------- | --------------------------------------------------------------------- |
-| `/arena join settlement`                        | Saves belongings and enters the separate staging dock                 |
-| `/arena join settlement <round>`                | Creates a shared practice lobby; requires `thestorm.arena.debug` (OP) |
-| `/arena class fighter\|ranger\|medic`           | Selects an initial class                                              |
-| `/arena class engineer\|alchemist\|beastmaster` | Selects an unlocked class at 500, 1,500, or 3,000 persistent XP       |
-| `/arena ready`                                  | Starts the countdown when participants are ready                      |
-| `/survival ability`                             | Uses the class ability, with a 40-second cooldown                     |
-| `/survival status`                              | Shows round, XP, emerald items, and opened districts                  |
-| `/survival classes` / `/survival upgrades`      | Explains roles and unlocks / chooses an earned run upgrade            |
-| Right-click the ninth-slot compass              | Uses the class ability; sneak-right-click opens upgrades              |
-| `/survival give <player> <material> <amount>`   | Donates run items to a nearby standing teammate                       |
-| Right-click a resource node                     | Gathers from a personal, finite per-round budget                      |
-| Right-click a station                           | Opens curated crafting and donation choices                           |
-| Click a route sign twice within three seconds   | Confirms its displayed emerald price and opens a shared route         |
-| Right-click a defense                           | Repairs a barricade or charges a trap with materials                  |
-| Sneak within three blocks with line of sight    | Revives after five uninterrupted seconds, or three with Quick Revive  |
-| `/arena leave`                                  | Restores pre-run belongings                                           |
+| Command or interaction                          | Result                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| `/arena join settlement`                        | Saves belongings and enters the separate staging dock                     |
+| `/arena join settlement <round>`                | Creates a shared practice lobby; requires `thestorm.arena.debug` (OP)     |
+| `/arena class fighter\|ranger\|medic`           | Selects an initial class                                                  |
+| `/arena class engineer\|alchemist\|beastmaster` | Selects an unlocked class at 500, 1,500, or 3,000 persistent XP           |
+| `/arena ready`                                  | Toggles readiness; all admitted participants start a ten-second countdown |
+| `/survival ability`                             | Uses the class ability, with a 40-second cooldown                         |
+| `/survival status`                              | Shows round, XP, emerald items, and opened districts                      |
+| `/survival classes` / `/survival upgrades`      | Explains roles and unlocks / chooses an earned run upgrade                |
+| Right-click the ninth-slot compass              | Uses the class ability; sneak-right-click opens upgrades                  |
+| `/survival give <player> <material> <amount>`   | Donates run items to a nearby standing teammate                           |
+| Right-click a resource node                     | Gathers from a personal, finite per-round budget                          |
+| Right-click a station                           | Opens weapons, armor, and supplies tabs                                   |
+| Right-click a bank terminal                     | Deposits team supplies or stores and withdraws private equipment          |
+| Sneak-right-click a gathering node              | Opens harvest and team yield upgrades                                     |
+| Lobby lectern / `/survival guide`               | Reads public rules without taking a book or exposing secrets              |
+| Click a route sign twice within three seconds   | Confirms its displayed emerald price and opens a shared route             |
+| Right-click a defense                           | Repairs a barricade or charges a trap with materials                      |
+| Sneak within three blocks with line of sight    | Revives after five uninterrupted seconds, or three with Quick Revive      |
+| `/arena leave`                                  | Restores pre-run belongings                                               |
 
 Fighter has an area knockback attack; Ranger supplies arrows and a speed burst;
 Medic heals nearby teammates. Engineer repairs, Alchemist weakens the horde,
@@ -457,8 +460,14 @@ Clearing rounds 4, 9 and 14 earns three choices per run. Choose one specializati
 then Potency (+25% of the base effect, or two seconds of utility duration) or Tempo
 (six seconds off the 40-second recharge). Choices survive downing and reset when the run ends.
 Persistent XP still unlocks Engineer at 500, Alchemist at 1,500 and Beastmaster at 3,000.
-A personal sidebar shows teammates' carried emeralds, class, specialization, upgrades,
-perks and the next persistent XP unlock. The compass stays in its reserved slot.
+A compact sidebar shows the round, teammates' carried emeralds, and the shared bank balance.
+Lobby rows show readiness. Class details and upgrade progress remain in the optional menus.
+Joining, changing class, leaving, or becoming unready cancels a countdown. Public lobby,
+start, boss-clear, and end announcements include clickable join or watch actions, limited
+to one of each kind per minute. Practice runs do not generate public invitations.
+The compass stays in its reserved slot. WorldEdit compass navigation permissions are
+temporarily denied inside every protected arena footprint, including for operators;
+leaving the footprint restores the previous permission state.
 
 | Class       | Passive                              | Specialization abilities                                                         |
 | ----------- | ------------------------------------ | -------------------------------------------------------------------------------- |
@@ -479,17 +488,18 @@ every standing player ends the run. Monsters pursue players across the map,
 including riders and size-two hostile cubes, with bounded spawning and stuck-mob
 recovery. Native offspring are suppressed; authored adds use the encounter queue.
 Mounted enemies count as one encounter unit, and orphan mounts are removed.
-A round bar shows active and queued units separately from boss health. Crossing
+A round bar shows the total remaining enemies separately from boss health; lobby,
+countdown, and resupply phases show the relevant next action or time. Crossing
 bounds returns the player to the nearest accessible collision-free, hazard-free
 anchor, avoiding enemies and marked casts when possible, without healing.
 
 The first three rounds introduce the horde gradually. A solo opening has six
-adult, unarmed zombies at 60% health and 50% attack damage, arriving one every
+adult, unarmed zombies with eight HP and one HP native attack damage, arriving one every
 three seconds with at most three alive. Rounds two and three add husks and
-increase the count, health, damage, and concurrent limit. Baby zombies and
+increase the count, health (10/12 HP), attack damage (1.5/2 HP), and concurrent limit. Baby zombies and
 special enemy types arrive from round six onward. Opening zombies cannot summon
 Hard-difficulty reinforcements beyond the planned wave.
-Every starting class receives a full leather armor set; returning after a
+Every starting class receives a wooden sword and full leather armor set; returning after a
 bleedout retains the weaker chestplate-only kit and class tools. Round four has
 12 enemies with six active solo; round five has four supports, at most two active,
 and the first boss. Rounds six and seven have 16 and 18 enemies with caps seven
@@ -506,11 +516,16 @@ that ceiling. Downed players and spectators do not receive passive recovery.
 
 Every fifth round has a phased boss with three-second marked casts, line-of-sight
 checks and recovery windows. Native boss attacks are replaced by authored spells.
-Boss health is `(40 + 12 × round) × (1 + 0.55 × extra players)`, capped at 1,000;
-round five therefore has 100/155/210/265 HP for one through four players, with
-four-to-six-HP spells before armor. Party size increases health and support
+Boss health is `(100 + 20 × round) × (1 + 0.65 × extra players)`, capped at 1,000;
+round five therefore has 200/330/460/590 HP for one through four players, with
+six/eight/ten-HP spells before armor across its three phases. Party size increases health and support
 pressure without multiplying damage per hit. Later bosses add enemies once
 at phase thresholds through the normal spawn budget.
+Each boss rotates three attacks, including directional lanes, rings with safe
+centers, and separate impact areas. Damage stops at 66% and 33% health until
+the preceding phase resolves a cast; the final phase must also resolve a cast
+before lethal damage. Interrupting a cast counts as resolving it. Boss spell
+damage caps at 14 HP in late rounds, and cover blocks spells.
 The Evoker's glowing ritual node interrupts casts; the Creaking's node opens
 a damage window after three interactions. The Ravager breaks nearby barricades
 after a charge. Special encounters use illager, trial, mounted, pale, and Nether
@@ -524,8 +539,40 @@ Click the same sign twice, 200 milliseconds to three seconds apart, to confirm.
 Smugglers' Wharf and Signal Bluff each cost 20 emeralds after unlocking ramparts.
 Both have two connections back to ramparts. Wharf docks and tunnels descend to Y 66/63;
 bluff terraces and a rampart gallery rise to Y 85/88. The protected footprint remains unchanged.
-Machines use barrels, jukeboxes, a generator and an anvil with floating labels.
-Resource glints disappear for a player who has depleted that node. Interactions play local sounds.
+Machines use barrels, jukeboxes, a generator and an anvil. Permanent interaction
+holograms are absent. A single contextual action appears when looking at a fixture
+within four blocks; unrelated class and plane status stays off the action bar.
+Personal gathering glints appear only within six blocks while that material's
+harvest budget remains. Purchased route signs disappear and return when the run resets.
+Crafting, route unlocks, generator activation, and Pack-a-Punch play sounds and short
+particle animations. Pickup cues name the team effect and its duration.
+
+Fifteen gathering nodes cover twelve materials: wood, stone, wheat, iron, flint,
+redstone, bone, glowstone, copper, string, nether wart, and blaze powder. Wood, stone,
+and wheat each have two nodes; duplicates share two harvests per player per round.
+Opening foundry permits an eight-emerald upgrade to 1.5× yield, and opening crypt
+permits a sixteen-emerald upgrade to 2×. Upgrades affect everyone and reset per run.
+
+The starting district and two later workshops have bank terminals. Materials and
+emeralds use a shared run-local ledger; exact gear stacks use a private 54-slot locker.
+Station crafting, machines, perks, and route purchases spend carried supplies first,
+then shared supplies. The complete price is checked before any withdrawal. Reserved
+box payments track their sources and refund at most once. Full-inventory material
+rewards go to the shared bank; equipment bundles go to the private locker. A full
+locker and inventory refuse equipment delivery without charging. Crafted armor
+equips automatically and preserves the previous piece in the private locker.
+Lockers preserve damage, enchantments, potion data, and run upgrade tags. Ability
+compasses and written books cannot be deposited. Downs and bleedouts retain bank
+contents; leaving discards that player's private locker while team deposits remain.
+The whole bank resets at run end. Ordinary donations spend carried items only.
+
+Curated recipes provide all four armor slots at leather, chainmail, iron, and diamond
+tiers, plus axes, spears, bows, crossbows, tridents, and a mace. Food includes bread,
+baked potatoes, stew, steak, and healing apples. Typed potion outputs provide healing,
+regeneration, speed, strength, and fire resistance. Station menus also repair a held
+weapon or equipped armor and offer compatible held-weapon enchantments. Recipes use
+at most three material kinds plus emeralds; their outputs use the same tagged item
+and payment paths as box rewards.
 
 Restore power at the foundry with four iron and four redstone. Physical machines
 sell Juggernog (24 emeralds, eight extra max HP), Stamin-Up (20, Speed I), Double
@@ -534,10 +581,12 @@ Quick Revive works before power and can grant a solo replacement self-revive,
 after the current charge is used, at most twice per run. All perks disappear
 immediately when downed, including a self-revive.
 
-The powered mystery box costs 16 emeralds: iron sword 30%, Power I bow 20%,
-crossbow 20%, diamond sword 15%, trident 10%, legendary 5%. It starts in the market,
+Plain arrows are shared bank supplies and can be withdrawn before using a bow.
+The powered mystery box costs 16 emeralds: basic equipment 35%, enchanted
+equipment 40%, special weapons 17%, and legendaries 8%. It starts in the market,
 animates for three seconds, and reserves the revealed reward for its buyer for 15 seconds.
-Unclaimed purchases refund their emeralds when inventory space is available in the same run.
+Unclaimed purchases refund to the original carried and banked sources; carried refunds
+that cannot fit return to shared supplies. Rewards can be delivered to the private locker.
 After six claims it moves to another authored site, including unopened districts.
 Follow the magenta beacon to market, quarry, barracks, wharf or bluff. The beacon grants no buffs.
 Ranged rewards include arrows; the Graviton includes redstone ammunition.
@@ -546,9 +595,18 @@ Legendary choices are equally weighted: Stormcaller chains damage to two nearby 
 Frostbite slows up to four ordinary enemies; Graviton spends one redstone to pull up to
 five ordinary enemies every five seconds. Pack-a-Punch increases legendary strength.
 Effects require line of sight and respect boss protections; native Breeze ranged deflection remains.
-Pack-a-Punch upgrades the held run weapon for 36/72/108 emeralds, fully repairs
-it and preserves its enchantments. Damage multipliers are 1.35/1.70/2.10;
+Special weapons are the Repeater (four carried arrows per second while holding
+use), Whirlwind (two-target melee cleave with a two-second recovery), Tidebreaker
+(Loyalty III trident with a two-target impact wave), and Riftblade (a four-block
+dash through open ground with a six-second recovery). Release, weapon switching,
+downing, and leaving stop Repeater fire. Releasing does not also fire a vanilla shot.
+Pack-a-Punch upgrades the held run weapon for 12/24/36 emeralds, fully repairs
+it, adds compatible damage and durability enchantments, and preserves stronger
+existing enchantments. Damage multipliers are 1.15/1.35/1.55;
 projectiles retain the upgrade and Double Tap strength at firing time.
+Tier two adds a short cleave to melee weapons, piercing to arrows, and an impact
+wave to thrown tridents. Returning tridents are delivered back to their owner
+when the round clears; run projectiles are removed when their owner leaves.
 
 Three plane parts are scattered through quarry, foundry and ramparts.
 Each player carries one part and installs it at the airstrip. Leaving

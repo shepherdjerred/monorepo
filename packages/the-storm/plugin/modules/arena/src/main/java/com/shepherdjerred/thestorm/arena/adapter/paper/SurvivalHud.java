@@ -31,6 +31,15 @@ final class SurvivalHud {
     player.sendActionBar(Component.text(message));
   }
 
+  void context(Player player, String message) {
+    if (!runner
+        .context()
+        .time()
+        .instant()
+        .isBefore(hints.getOrDefault(player.getUniqueId(), Instant.MIN)))
+      player.sendActionBar(Component.text(message));
+  }
+
   void tick() {
     var combat = runner.combat();
     var remaining = combat.remaining();
@@ -40,14 +49,7 @@ final class SurvivalHud {
                 + "Round "
                 + runner.game().round()
                 + " · "
-                + runner.game().phase()
-                + " · "
-                + remaining
-                + " remaining ("
-                + combat.active()
-                + " active, "
-                + combat.queued()
-                + " queued)"));
+                + phase(remaining)));
     rounds.progress(
         (float)
             (combat.total() == 0
@@ -91,11 +93,20 @@ final class SurvivalHud {
       } else {
         removeLabel(id);
         if (!runner.context().time().instant().isBefore(hints.getOrDefault(id, Instant.MIN)))
-          player.sendActionBar(
-              Component.text(
-                  runner.talents().status(player) + " · " + runner.machines().status(id)));
+          player.sendActionBar(Component.empty());
       }
     }
+  }
+
+  private String phase(int remaining) {
+    return switch (runner.game().phase()) {
+      case LOBBY -> "Choose a class · click the ready block";
+      case COUNTDOWN ->
+          "Starting in " + runner.game().secondsLeft(runner.context().time().instant()) + "s";
+      case INTERMISSION ->
+          "Resupply · " + runner.game().secondsLeft(runner.context().time().instant()) + "s";
+      case FIGHTING -> remaining + " enemies left";
+    };
   }
 
   private void removeLabel(UUID id) {

@@ -27,13 +27,12 @@ final class SurvivalActions {
   }
 
   void craft(Player player, SurvivalContent.Recipe recipe) {
-    var items = runner.items();
-    var material = SurvivalItems.material(recipe.material());
-    if (items.fits(player, material, recipe.amount())
-        && items.spend(player, recipe.ingredients())) {
-      items.give(player, material, recipe.amount());
+    if (runner.items().craft(player, recipe)) {
       Texts.info(player, "Crafted " + recipe.name() + ".");
       runner.feedback().play(player, SurvivalFeedback.Cue.CRAFT);
+      runner
+          .feedback()
+          .animate(player, Places.point(Places.at(player)).block(), SurvivalFeedback.Cue.CRAFT);
     }
   }
 
@@ -59,6 +58,7 @@ final class SurvivalActions {
     if (runner.items().spend(player, Map.of("EMERALD", zone.emeralds()))) {
       runner.map().unlock(zone);
       runner.feedback().play(player, SurvivalFeedback.Cue.UNLOCK);
+      runner.feedback().animate(player, sign, SurvivalFeedback.Cue.UNLOCK);
       runner
           .online()
           .forEach(
@@ -99,7 +99,8 @@ final class SurvivalActions {
   void gather(Player player, SurvivalContent.Resource resource) {
     var items = runner.items();
     var material = SurvivalItems.material(resource.material());
-    if (!items.fits(player, material, resource.amount())) {
+    var amount = runner.map().state().harvestAmount(resource);
+    if (!items.fits(player, material, amount)) {
       Texts.error(player, "Make room first.");
       return;
     }
@@ -108,9 +109,29 @@ final class SurvivalActions {
       runner.feedback().play(player, SurvivalFeedback.Cue.FAILURE);
       return;
     }
-    items.give(player, material, resource.amount());
+    items.give(player, material, amount);
     runner.feedback().play(player, SurvivalFeedback.Cue.GATHER);
-    Texts.info(player, "Gathered " + resource.amount() + " " + resource.material() + ".");
+    runner.hud().hint(player, "+" + amount + " " + SurvivalItems.name(material), 2);
+  }
+
+  void upgradeNode(Player player, SurvivalContent.Resource resource) {
+    var state = runner.map().state();
+    if (!state.canUpgrade(resource)) {
+      Texts.error(
+          player,
+          state.resourceTier(resource) == 3
+              ? "Fully upgraded."
+              : "Open the next workshop district first.");
+      return;
+    }
+    if (!runner.items().spend(player, Map.of("EMERALD", state.resourceTier(resource) * 8))) return;
+    state.upgrade(resource);
+    runner.feedback().play(player, SurvivalFeedback.Cue.UPGRADE);
+    runner.feedback().animate(player, resource.block(), SurvivalFeedback.Cue.UPGRADE);
+    runner
+        .hud()
+        .hint(
+            player, "Gathering improved for the team · yields " + state.harvestAmount(resource), 3);
   }
 
   boolean has(Player player, SurvivalPerk perk) {
@@ -182,6 +203,10 @@ final class SurvivalActions {
     }
     if (!runner.items().fits(target, material, amount)) {
       Texts.error(source, "Your teammate's inventory is full.");
+      return;
+    }
+    if (runner.items().count(source, material) < amount) {
+      Texts.error(source, "Carry these items to donate them.");
       return;
     }
     if (runner.items().spend(source, Map.of(material.name(), amount))) {

@@ -51,7 +51,7 @@ final class ZombiesDrops {
     display.setPersistent(false);
     runner.tag(display);
     label = enemy.getWorld().spawn(location.clone().add(0, .6, 0), TextDisplay.class);
-    label.text(Component.text(kind.name()));
+    label.text(Component.text(name(kind)));
     label.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
     label.setPersistent(false);
     runner.tag(label);
@@ -66,6 +66,26 @@ final class ZombiesDrops {
       case INSTA_KILL -> Material.DIAMOND_SWORD;
       case NUKE -> Material.TNT;
       case CARPENTER -> Material.OAK_PLANKS;
+    };
+  }
+
+  private static String name(Kind kind) {
+    return switch (kind) {
+      case MAX_AMMO -> "Max Ammo";
+      case DOUBLE_EMERALDS -> "Double Emeralds";
+      case INSTA_KILL -> "Insta-Kill";
+      case NUKE -> "Nuke";
+      case CARPENTER -> "Carpenter";
+    };
+  }
+
+  private static String effect(Kind kind) {
+    return switch (kind) {
+      case MAX_AMMO -> "32 arrows for each ranged survivor";
+      case DOUBLE_EMERALDS -> "Double kill rewards · 30 seconds";
+      case INSTA_KILL -> "One-hit ordinary enemies · 15 seconds";
+      case NUKE -> "Ordinary enemies cleared";
+      case CARPENTER -> "Barricades restored + 2 hearts healed";
     };
   }
 
@@ -106,7 +126,22 @@ final class ZombiesDrops {
         runner.fighters().forEach(p -> SurvivalItems.heal(p, 4));
       }
     }
-    runner.online().forEach(p -> Texts.info(p, "Team power-up: " + drop));
+    runner
+        .online()
+        .forEach(
+            p -> {
+              var sound =
+                  switch (drop) {
+                    case MAX_AMMO -> org.bukkit.Sound.ITEM_ARMOR_EQUIP_IRON;
+                    case DOUBLE_EMERALDS -> org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+                    case INSTA_KILL -> org.bukkit.Sound.ENTITY_WITHER_SPAWN;
+                    case NUKE -> org.bukkit.Sound.ENTITY_GENERIC_EXPLODE;
+                    case CARPENTER -> org.bukkit.Sound.BLOCK_ANVIL_USE;
+                  };
+              p.playSound(Places.at(p), sound, .65f, 1.2f);
+              Texts.info(p, name(drop) + " · " + effect(drop));
+              runner.hud().hint(p, name(drop) + " · " + effect(drop), 4);
+            });
     clear();
   }
 

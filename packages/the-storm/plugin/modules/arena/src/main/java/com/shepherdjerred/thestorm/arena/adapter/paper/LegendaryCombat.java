@@ -17,13 +17,27 @@ final class LegendaryCombat {
 
   private final SurvivalRunner runner;
   private final Map<UUID, Shot> shots = new HashMap<>();
+  private final Map<UUID, Integer> packedThrows = new HashMap<>();
   private final Map<UUID, Instant> staffReady = new HashMap<>();
+  private final Map<UUID, Instant> meleeReady = new HashMap<>();
+  private final Map<UUID, Instant> dashReady = new HashMap<>();
+  private final RepeaterCombat repeater;
 
   LegendaryCombat(SurvivalRunner runner) {
     this.runner = runner;
+    repeater = new RepeaterCombat(runner);
+  }
+
+  RepeaterCombat repeater() {
+    return repeater;
   }
 
   void launched(Projectile projectile, ItemStack weapon) {
+    if (projectile instanceof org.bukkit.entity.Trident && runner.items().tier(weapon) >= 2)
+      packedThrows.put(projectile.getUniqueId(), runner.items().tier(weapon));
+    if (runner.items().tier(weapon) >= 2
+        && projectile instanceof org.bukkit.entity.AbstractArrow arrow)
+      arrow.setPierceLevel(Math.max(1, arrow.getPierceLevel()));
     runner
         .items()
         .legendary(weapon)
@@ -33,8 +47,12 @@ final class LegendaryCombat {
 
   void hit(Player player, LivingEntity target, Projectile projectile) {
     var shot = shots.get(projectile.getUniqueId());
-    if (shot == null || runner.combat().scriptedDamage() || !runner.world().isWaveMob(target))
+    if (runner.combat().scriptedDamage() || !runner.world().isWaveMob(target)) return;
+    var packed = packedThrows.get(projectile.getUniqueId());
+    if (shot == null) {
+      if (packed != null) shock(player, target, 2 * multiplier(packed));
       return;
+    }
     var nearby =
         runner.world().enemies().stream()
             .filter(
@@ -46,14 +64,22 @@ final class LegendaryCombat {
             .sorted(
                 java.util.Comparator.comparingDouble(
                     e -> e.getLocation().distanceSquared(target.getLocation())));
-    if (shot.type() == LegendaryWeapon.STORMCALLER) {
+    if (shot.type() == LegendaryWeapon.STORMCALLER || shot.type() == LegendaryWeapon.TIDEBREAKER) {
       nearby
           .limit(2)
           .forEach(
               e -> {
                 e.getWorld()
                     .spawnParticle(
-                        Particle.ELECTRIC_SPARK, e.getLocation().add(0, 1, 0), 12, .3, .4, .3, .02);
+                        shot.type() == LegendaryWeapon.TIDEBREAKER
+                            ? Particle.BUBBLE_POP
+                            : Particle.ELECTRIC_SPARK,
+                        e.getLocation().add(0, 1, 0),
+                        12,
+                        .3,
+                        .4,
+                        .3,
+                        .02);
                 runner.combat().damage(e, player, 4 * multiplier(shot.tier()));
               });
     } else if (shot.type() == LegendaryWeapon.FROSTBITE) {
@@ -72,6 +98,106 @@ final class LegendaryCombat {
                         Particle.SNOWFLAKE, e.getLocation().add(0, 1, 0), 10, .3, .4, .3, .01);
               });
     }
+  }
+
+  void melee(Player player, LivingEntity target) {
+    if (runner.combat().scriptedDamage()
+        || !runner.world().isWaveMob(target)
+        || !runner.isFighter(player.getUniqueId())) return;
+    var weapon = player.getInventory().getItemInMainHand();
+    var whirlwind =
+        runner.items().legendary(weapon).filter(id -> id == LegendaryWeapon.WHIRLWIND).isPresent();
+    var material = weapon.getType().name();
+    var packed =
+        runner.items().tier(weapon) >= 2
+            && runner.items().weapon(weapon)
+            && (material.endsWith("_AXE")
+                || material.endsWith("_SWORD")
+                || material.endsWith("_SPEAR")
+                || material.equals("MACE"));
+    if (!whirlwind && !packed) return;
+    var now = runner.context().time().instant();
+    if (now.isBefore(meleeReady.getOrDefault(player.getUniqueId(), Instant.MIN))) return;
+    meleeReady.put(player.getUniqueId(), now.plusSeconds(2));
+    runner.world().enemies().stream()
+        .filter(
+            enemy ->
+                !enemy.equals(target)
+                    && enemy.getLocation().distanceSquared(target.getLocation()) <= 9
+                    && player.hasLineOfSight(enemy)
+                    && target.hasLineOfSight(enemy))
+        .sorted(
+            java.util.Comparator.comparingDouble(
+                enemy -> enemy.getLocation().distanceSquared(target.getLocation())))
+        .limit(2)
+        .forEach(
+            enemy ->
+                runner
+                    .combat()
+                    .damage(
+                        enemy, player, (whirlwind ? 4 : 2) * runner.items().multiplier(weapon)));
+    player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 1, 0), 1);
+  }
+
+  private void shock(Player player, LivingEntity target, double damage) {
+    runner.world().enemies().stream()
+        .filter(
+            enemy ->
+                !enemy.equals(target)
+                    && enemy.getLocation().distanceSquared(target.getLocation()) <= 16
+                    && player.hasLineOfSight(enemy)
+                    && target.hasLineOfSight(enemy))
+        .sorted(
+            java.util.Comparator.comparingDouble(
+                enemy -> enemy.getLocation().distanceSquared(target.getLocation())))
+        .limit(2)
+        .forEach(enemy -> runner.combat().damage(enemy, player, damage));
+    target
+        .getWorld()
+        .spawnParticle(Particle.BUBBLE_POP, target.getLocation().add(0, 1, 0), 20, .5, .5, .5, .02);
+  }
+
+  boolean dash(Player player) {
+    var weapon = player.getInventory().getItemInMainHand();
+    if (runner.items().legendary(weapon).filter(id -> id == LegendaryWeapon.RIFTBLADE).isEmpty())
+      return false;
+    var now = runner.context().time().instant();
+    if (!runner.isFighter(player.getUniqueId())
+        || now.isBefore(dashReady.getOrDefault(player.getUniqueId(), Instant.MIN))) {
+      runner.feedback().play(player, SurvivalFeedback.Cue.FAILURE);
+      return true;
+    }
+    var step = player.getEyeLocation().getDirection().setY(0);
+    if (step.lengthSquared() < .01) return true;
+    step.normalize().multiply(.5);
+    var start = Places.at(player);
+    var destination = start.clone();
+    for (var distance = 0; distance < 8; distance++) {
+      var candidate = destination.clone().add(step);
+      if (!safe(candidate)) break;
+      destination = candidate;
+    }
+    if (destination.distanceSquared(start) < .25 || !player.teleport(destination)) {
+      Texts.info(player, "Find open ground for your dash.");
+      return true;
+    }
+    dashReady.put(player.getUniqueId(), now.plusSeconds(6));
+    player.getWorld().spawnParticle(Particle.PORTAL, start.add(0, 1, 0), 24, .4, .5, .4, .03);
+    runner.feedback().play(player, SurvivalFeedback.Cue.ABILITY);
+    return true;
+  }
+
+  private boolean safe(org.bukkit.Location candidate) {
+    for (var x : new double[] {-.3, .3}) {
+      for (var z : new double[] {-.3, .3}) {
+        var at = candidate.clone().add(x, 0, z);
+        if (!runner.map().combat(at)
+            || !at.getBlock().isPassable()
+            || !at.clone().add(0, 1, 0).getBlock().isPassable()
+            || !at.clone().subtract(0, .1, 0).getBlock().isCollidable()) return false;
+      }
+    }
+    return true;
   }
 
   boolean staff(Player player) {
@@ -129,14 +255,22 @@ final class LegendaryCombat {
 
   void tick() {
     shots.keySet().removeIf(id -> runner.context().server().getEntity(id) == null);
+    packedThrows.keySet().removeIf(id -> runner.context().server().getEntity(id) == null);
   }
 
   void leave(UUID id) {
     staffReady.remove(id);
+    meleeReady.remove(id);
+    dashReady.remove(id);
+    repeater.stop(id);
   }
 
   void reset() {
     shots.clear();
+    packedThrows.clear();
     staffReady.clear();
+    meleeReady.clear();
+    dashReady.clear();
+    repeater.reset();
   }
 }

@@ -55,6 +55,57 @@ final class SettlementRulesTest {
   }
 
   @Test
+  void duplicateNodesShareABudgetAndUpgradesRequireWorkshopAccess() {
+    var content = shipped();
+    var settlement = new Settlement(content);
+    var wood =
+        content.zones().stream()
+            .flatMap(z -> z.resources().stream())
+            .filter(r -> r.material().equals("OAK_PLANKS"))
+            .toList();
+    assertThat(wood).hasSize(2);
+    assertThat(settlement.harvest(ALICE, wood.getFirst())).isTrue();
+    assertThat(settlement.harvest(ALICE, wood.getLast())).isTrue();
+    assertThat(settlement.available(ALICE, wood.getFirst())).isFalse();
+    assertThat(settlement.canUpgrade(wood.getFirst())).isFalse();
+    settlement.openAll();
+    settlement.upgrade(wood.getFirst());
+    assertThat(settlement.harvestAmount(wood.getFirst())).isEqualTo(6);
+    assertThat(settlement.harvestAmount(wood.getLast())).isEqualTo(4);
+    settlement.upgrade(wood.getFirst());
+    assertThat(settlement.harvestAmount(wood.getFirst())).isEqualTo(8);
+    assertThat(settlement.canUpgrade(wood.getFirst())).isFalse();
+    settlement.reset();
+    assertThat(settlement.resourceTier(wood.getFirst())).isEqualTo(1);
+  }
+
+  @Test
+  void suppliesAndRecipesOfferProgressionWithoutMultiplyingHarvestSites() {
+    var content = shipped();
+    var nodes = content.zones().stream().flatMap(z -> z.resources().stream()).toList();
+    assertThat(nodes).hasSize(15);
+    assertThat(nodes.stream().map(SurvivalContent.Resource::material).distinct()).hasSize(12);
+    assertThat(
+            content.zones().stream()
+                .flatMap(z -> z.stations().stream())
+                .filter(s -> s.type() == SurvivalContent.StationType.BANK))
+        .hasSize(3);
+    for (var tier : java.util.List.of("LEATHER", "CHAINMAIL", "IRON", "DIAMOND")) {
+      for (var slot : java.util.List.of("HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"))
+        assertThat(content.recipes()).anyMatch(r -> r.material().equals(tier + "_" + slot));
+    }
+    assertThat(content.recipes())
+        .allSatisfy(
+            r ->
+                assertThat(
+                        r.ingredients().keySet().stream()
+                            .filter(material -> !material.equals("EMERALD")))
+                    .hasSizeLessThanOrEqualTo(3));
+    assertThat(content.recipes().stream().map(SurvivalContent.Recipe::potion).distinct())
+        .containsExactlyInAnyOrder(SurvivalContent.PotionKind.values());
+  }
+
+  @Test
   void blueprintHasTenReachableDistrictsAndFitsItsDeclaredBudget() {
     var content = shipped();
     var blueprint = new SettlementBlueprint(content).blocks();

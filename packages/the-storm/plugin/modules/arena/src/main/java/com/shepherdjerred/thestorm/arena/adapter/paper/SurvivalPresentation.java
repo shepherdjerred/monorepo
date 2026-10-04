@@ -3,17 +3,12 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 
-/** World-facing labels and personal resource glints make authored interactions recognizable. */
+/** Nearby personal glints and a single look-at prompt keep the environment readable. */
 final class SurvivalPresentation {
   private final SurvivalRunner runner;
-  private final Map<String, TextDisplay> labels = new HashMap<>();
   private Instant next = Instant.MIN;
 
   SurvivalPresentation(SurvivalRunner runner) {
@@ -24,127 +19,87 @@ final class SurvivalPresentation {
     var now = runner.context().time().instant();
     if (now.isBefore(next)) return;
     next = now.plusSeconds(1);
-    for (var machine : runner.map().content().machines()) {
-      if (machine.type() == SurvivalContent.MachineType.MYSTERY_BOX) continue;
-      label(
-          "machine:" + machine.type(),
-          machine.block(),
-          machineName(machine.type())
-              + "\n"
-              + price(machine.type())
-              + "\n"
-              + powerHint(machine.type()));
-    }
-    for (var site : runner.map().content().boxSites())
-      label("box:" + site.id(), site.block(), runner.machines().box().status(site));
-    runner.map().content().zones().forEach(this::district);
-    for (var player : runner.fighters()) hint(player);
-  }
-
-  private void district(SurvivalContent.Zone zone) {
-    var open = runner.map().state().accessible(zone.id());
-    var routeStatus = open ? "Route open" : zone.emeralds() + " emeralds · double-click sign";
-    for (var sign : zone.purchaseSigns())
-      label("route:" + sign, sign, String.join("\n", zone.name(), routeStatus));
-    for (var station : zone.stations())
-      label(
-          "station:" + station.block(),
-          station.block(),
-          station.type().name().replace('_', ' ') + "\nRight-click · crafting and supplies");
-    zone.resources().forEach(resource -> resource(resource, open));
-    if (open)
-      runner
-          .fighters()
-          .forEach(
-              player ->
-                  zone.stations()
-                      .forEach(station -> particle(player, station.block(), Particle.ENCHANT)));
-  }
-
-  private void resource(SurvivalContent.Resource resource, boolean open) {
-    label(
-        "resource:" + resource.block(),
-        resource.block(),
-        "Gather "
-            + resource.material().toLowerCase(java.util.Locale.ROOT).replace('_', ' ')
-            + "\nRight-click · refills each round");
-    if (!open) return;
     for (var player : runner.fighters()) {
-      if (runner.map().state().available(player.getUniqueId(), resource))
-        particle(player, resource.block(), Particle.HAPPY_VILLAGER);
+      for (var zone : runner.map().open()) {
+        for (var resource : zone.resources()) {
+          if (runner.map().state().available(player.getUniqueId(), resource))
+            particle(player, resource.block(), Particle.HAPPY_VILLAGER);
+        }
+        for (var station : zone.stations()) particle(player, station.block(), Particle.ENCHANT);
+      }
+      hint(player);
     }
   }
 
-  private void label(String id, BlockPos pos, String text) {
-    var display = labels.get(id);
-    if (display == null || !display.isValid()) {
-      display =
-          runner
-              .world()
-              .world()
-              .spawn(
-                  Places.location(runner.world().world(), pos.center()).add(0, 1.2, 0),
-                  TextDisplay.class,
-                  entity -> {
-                    entity.setPersistent(false);
-                    entity.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
-                    entity.setViewRange(.15f);
-                    entity.setShadowed(true);
-                    runner.tag(entity);
-                  });
-      labels.put(id, display);
-    }
-    display.text(Component.text(text));
-  }
-
-  private void particle(Player player, BlockPos pos, Particle particle) {
+  private static void particle(Player player, BlockPos pos, Particle particle) {
     var at = Places.location(player.getWorld(), pos.center()).add(0, .7, 0);
-    if (at.distanceSquared(Places.at(player)) <= 576)
-      player.spawnParticle(particle, at, 2, .3, .2, .3, 0);
+    if (at.distanceSquared(Places.at(player)) <= 36)
+      player.spawnParticle(particle, at, 1, .2, .15, .2, 0);
   }
 
   private void hint(Player player) {
-    var block = player.getTargetBlockExact(5);
+    var block = player.getTargetBlockExact(4);
     if (block == null) return;
     var pos = Places.pos(block);
-    runner
-        .map()
-        .resource(pos)
-        .ifPresent(
-            resource ->
-                runner
-                    .hud()
-                    .hint(
-                        player,
-                        runner.map().state().available(player.getUniqueId(), resource)
-                            ? "Right-click · gather "
-                                + resource.amount()
-                                + " "
-                                + resource
-                                    .material()
-                                    .toLowerCase(java.util.Locale.ROOT)
-                                    .replace('_', ' ')
-                            : "Depleted for you · refills next round",
-                        1));
-    runner
-        .map()
-        .station(pos)
-        .ifPresent(_ -> runner.hud().hint(player, "Right-click · crafting and team donations", 1));
+    var resource = runner.map().resource(pos);
+    if (resource.isPresent()) {
+      var node = resource.orElseThrow();
+      runner.hud().context(player, resourceHint(player, node));
+      return;
+    }
+    var station = runner.map().station(pos);
+    if (station.isPresent()) {
+      runner.hud().context(player, stationName(station.orElseThrow().type()) + " · right-click");
+      return;
+    }
+    var route = runner.map().gate(pos).filter(runner.map().state()::unlockable);
+    if (route.isPresent()) {
+      runner
+          .hud()
+          .context(
+              player,
+              route.orElseThrow().name()
+                  + " · "
+                  + route.orElseThrow().emeralds()
+                  + " emeralds · click twice");
+      return;
+    }
+    var site =
+        runner.map().content().boxSites().stream()
+            .filter(s -> s.block().equals(pos))
+            .filter(s -> s.id().equals(runner.machines().box().active()))
+            .findFirst();
+    if (site.isPresent()) {
+      runner
+          .hud()
+          .context(
+              player,
+              runner.machines().powered()
+                  ? runner.machines().box().status(site.orElseThrow())
+                  : "Mystery box · needs power");
+      return;
+    }
     runner
         .map()
         .machine(pos)
-        .ifPresent(
-            machine ->
-                runner
-                    .hud()
-                    .hint(
-                        player,
-                        machineName(machine.type())
-                            + " · "
-                            + price(machine.type())
-                            + " · "
-                            + powerHint(machine.type()),
-                        1));
+        .filter(m -> m.type() != SurvivalContent.MachineType.MYSTERY_BOX)
+        .ifPresent(m -> runner.hud().context(player, machineHint(player, m.type())));
+  }
+
+  private String resourceHint(Player player, SurvivalContent.Resource node) {
+    if (!runner.map().state().available(player.getUniqueId(), node)) return "Refills next round";
+    var action = player.isSneaking() ? "right-click for upgrades" : "right-click";
+    return "Gather " + SurvivalItems.name(SurvivalItems.material(node.material())) + " · " + action;
+  }
+
+  static String stationName(SurvivalContent.StationType type) {
+    return switch (type) {
+      case WORKBENCH -> "Workbench";
+      case FORGE -> "Forge";
+      case INFIRMARY -> "Food and healing";
+      case ALCHEMY -> "Alchemy";
+      case BANK -> "Bank · team supplies and private locker";
+    };
   }
 
   static String machineName(SurvivalContent.MachineType type) {
@@ -160,31 +115,34 @@ final class SurvivalPresentation {
     };
   }
 
-  private static String price(SurvivalContent.MachineType type) {
-    return switch (type) {
-      case FOOD -> "3 bread · 2 emeralds";
-      case POWER -> "4 iron + 4 redstone";
-      case MYSTERY_BOX -> "16 emeralds";
-      case JUGGERNOG -> "24 emeralds";
-      case STAMIN_UP -> "20 emeralds";
-      case DOUBLE_TAP -> "32 emeralds";
-      case QUICK_REVIVE -> "16 emeralds";
-      case PACK_A_PUNCH -> "Hold weapon · 36 / 72 / 108 emeralds";
-    };
-  }
-
-  private String powerHint(SurvivalContent.MachineType type) {
+  private String machineHint(Player player, SurvivalContent.MachineType type) {
+    var name = machineName(type);
     if (type == SurvivalContent.MachineType.POWER)
-      return runner.machines().powered() ? "Power ON" : "Right-click to restore power";
-    if (type == SurvivalContent.MachineType.FOOD
-        || type == SurvivalContent.MachineType.QUICK_REVIVE
-        || runner.machines().powered()) return "Right-click to use";
-    return "Requires power at the foundry";
+      return runner.machines().powered() ? "Power on" : name + " · 4 iron + 4 redstone";
+    if (type != SurvivalContent.MachineType.FOOD
+        && type != SurvivalContent.MachineType.QUICK_REVIVE
+        && !runner.machines().powered()) return name + " · needs power";
+    return name
+        + " · "
+        + switch (type) {
+          case FOOD -> "3 bread for 2 emeralds";
+          case PACK_A_PUNCH -> {
+            var weapon = player.getInventory().getItemInMainHand();
+            var tier = runner.items().tier(weapon);
+            yield !runner.items().weapon(weapon)
+                ? "hold a weapon"
+                : tier == 3 ? "fully upgraded" : 12 * (tier + 1) + " emeralds";
+          }
+          case JUGGERNOG, STAMIN_UP, DOUBLE_TAP, QUICK_REVIVE -> {
+            var perk =
+                com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.valueOf(type.name());
+            yield runner.actions().has(player, perk) ? "owned" : perk.price() + " emeralds";
+          }
+          case MYSTERY_BOX, POWER -> throw new IllegalStateException("Already handled machine");
+        };
   }
 
   void reset() {
-    labels.values().forEach(TextDisplay::remove);
-    labels.clear();
     next = Instant.MIN;
   }
 }

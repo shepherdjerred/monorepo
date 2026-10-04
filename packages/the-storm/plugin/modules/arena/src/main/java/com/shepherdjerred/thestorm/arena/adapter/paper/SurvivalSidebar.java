@@ -13,7 +13,7 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
-/** Personal build details beside the team's actual physical emerald balances. */
+/** Round and currency remain visible; class details belong in the optional class menu. */
 final class SurvivalSidebar {
   private record Board(Scoreboard original, Scoreboard owned, Objective objective) {}
 
@@ -30,7 +30,7 @@ final class SurvivalSidebar {
     if (runner.game().player(player.getUniqueId()).orElseThrow().status()
         == com.shepherdjerred.thestorm.arena.domain.survival.Survivor.Status.JOINING) return;
     var board = boards.computeIfAbsent(player.getUniqueId(), _ -> create(player));
-    var rows = rows(player);
+    var rows = rows();
     for (var i = 0; i < 15; i++) {
       var score = board.objective().getScore("row:" + i);
       if (i >= rows.size()) {
@@ -55,7 +55,7 @@ final class SurvivalSidebar {
     return new Board(original, board, objective);
   }
 
-  private List<Row> rows(Player player) {
+  private List<Row> rows() {
     var rows = new ArrayList<Row>();
     rows.add(text("Round " + runner.game().round() + " · Team emeralds"));
     for (var teammate : runner.game().participants()) {
@@ -63,49 +63,21 @@ final class SurvivalSidebar {
       if (online == null) continue;
       var balance = runner.items().count(online, org.bukkit.Material.EMERALD);
       rows.add(
-          new Row(
-              teammate.name()
-                  + (runner.downed(teammate.id())
-                      ? " · DOWN"
-                      : runner.isFighter(teammate.id()) ? "" : " · WAIT"),
-              NumberFormat.fixed(Component.text(balance))));
+          new Row(teammate.name() + status(teammate), NumberFormat.fixed(Component.text(balance))));
     }
-    var build = runner.talents().build(player.getUniqueId());
-    rows.add(text(" "));
-    rows.add(text("Class · " + build.role()));
     rows.add(
-        text(
-            build
-                .specialization()
-                .map(
-                    s ->
-                        runner.map().content().classes().stream()
-                            .flatMap(c -> c.specializations().stream())
-                            .filter(p -> p.id() == s)
-                            .findFirst()
-                            .orElseThrow()
-                            .name())
-                .orElse("Choose a path after round 4")));
-    rows.add(text("Potency " + build.potency() + " · Tempo " + build.tempo()));
-    rows.add(
-        text(
-            build.pending() > 0
-                ? build.pending() + " upgrade choices ready"
-                : build.nextMilestone() == 0
-                    ? "Class build complete"
-                    : "Upgrade after round " + build.nextMilestone()));
-    var next =
-        java.util.Arrays.stream(
-                com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass.values())
-            .filter(c -> !c.unlocked(runner.xp(player.getUniqueId())))
-            .findFirst();
-    rows.add(
-        text(
-            next.map(
-                    c -> "XP " + runner.xp(player.getUniqueId()) + "/" + c.requiredXp() + " · " + c)
-                .orElseGet(() -> "All classes unlocked · XP " + runner.xp(player.getUniqueId()))));
-    rows.add(text("Perks " + runner.actions().perks(player)));
+        new Row(
+            "Team bank",
+            NumberFormat.fixed(Component.text(runner.items().bank().supplies().count("EMERALD")))));
     return rows;
+  }
+
+  private String status(com.shepherdjerred.thestorm.arena.domain.survival.Survivor teammate) {
+    if (teammate.status()
+        == com.shepherdjerred.thestorm.arena.domain.survival.Survivor.Status.LOBBY)
+      return teammate.ready() ? " · READY" : " · NOT READY";
+    if (runner.downed(teammate.id())) return " · DOWN";
+    return runner.isFighter(teammate.id()) ? "" : " · WAIT";
   }
 
   private static Row text(String value) {

@@ -9,12 +9,13 @@ import java.util.UUID;
 
 /** Shared routes and defenses, personal finite gathering budgets. All reset each run. */
 public final class Settlement {
-  private record Harvest(UUID player, BlockPos block) {}
+  private record Harvest(UUID player, String material) {}
 
   private final SurvivalContent content;
   private final Set<String> open = new HashSet<>();
   private final Map<Harvest, Integer> harvested = new HashMap<>();
   private final Map<String, Integer> defenses = new HashMap<>();
+  private final Map<BlockPos, Integer> resourceTiers = new HashMap<>();
 
   public Settlement(SurvivalContent content) {
     this.content = content;
@@ -41,9 +42,9 @@ public final class Settlement {
   }
 
   public boolean harvest(UUID player, SurvivalContent.Resource resource) {
-    var key = new Harvest(player, resource.block());
+    var key = new Harvest(player, resource.material());
     var used = harvested.getOrDefault(key, 0);
-    if (used >= resource.perRound()) {
+    if (used >= 2) {
       return false;
     }
     harvested.put(key, used + 1);
@@ -51,7 +52,25 @@ public final class Settlement {
   }
 
   public boolean available(UUID player, SurvivalContent.Resource resource) {
-    return harvested.getOrDefault(new Harvest(player, resource.block()), 0) < resource.perRound();
+    return harvested.getOrDefault(new Harvest(player, resource.material()), 0) < 2;
+  }
+
+  public int resourceTier(SurvivalContent.Resource resource) {
+    return resourceTiers.getOrDefault(resource.block(), 1);
+  }
+
+  public int harvestAmount(SurvivalContent.Resource resource) {
+    return (int) Math.floor(resource.amount() * (1 + .5 * (resourceTier(resource) - 1)));
+  }
+
+  public boolean canUpgrade(SurvivalContent.Resource resource) {
+    var tier = resourceTier(resource);
+    return tier < 3 && accessible(tier == 1 ? "foundry" : "crypt");
+  }
+
+  public void upgrade(SurvivalContent.Resource resource) {
+    if (!canUpgrade(resource)) throw new IllegalStateException("Resource upgrade unavailable");
+    resourceTiers.put(resource.block(), resourceTier(resource) + 1);
   }
 
   public int strength(String defense) {
@@ -88,6 +107,7 @@ public final class Settlement {
         .forEach(open::add);
     harvested.clear();
     defenses.clear();
+    resourceTiers.clear();
     content.zones().stream()
         .flatMap(z -> z.defenses().stream())
         .filter(d -> d.type() == SurvivalContent.DefenseType.BARRICADE)
