@@ -1,5 +1,5 @@
 import { isAir, parseBlockState } from "#src/core/block-state.ts";
-import type { BlockGrid, Vec3 } from "#src/core/grid.ts";
+import { type BlockGrid, FACE_NEIGHBORS, type Vec3 } from "#src/core/grid.ts";
 import {
   BlockRegistryError,
   type BlockRegistry,
@@ -43,15 +43,6 @@ export type LintOptions = {
   /** Added to reported positions (e.g. the region's world min). */
   origin?: Vec3;
 };
-
-const NEIGHBOURS: readonly Vec3[] = [
-  { x: 1, y: 0, z: 0 },
-  { x: -1, y: 0, z: 0 },
-  { x: 0, y: 1, z: 0 },
-  { x: 0, y: -1, z: 0 },
-  { x: 0, y: 0, z: 1 },
-  { x: 0, y: 0, z: -1 },
-];
 
 const FACING_VECTOR: Record<string, Vec3> = {
   north: { x: 0, y: 0, z: -1 },
@@ -141,7 +132,7 @@ class LintGrid {
     }
     // Iterating while pushing visits newly queued cells too (array for-of is live).
     for (const p of queue) {
-      for (const n of NEIGHBOURS) {
+      for (const n of FACE_NEIGHBORS) {
         const q = { x: p.x + n.x, y: p.y + n.y, z: p.z + n.z };
         if (
           this.grid.inBounds(q.x, q.y, q.z) &&
@@ -275,7 +266,7 @@ function checkLeaves(lint: LintGrid): Finding[] {
   }
   for (const p of queue) {
     const d = distance[lint.grid.index(p.x, p.y, p.z)] ?? 6;
-    for (const n of d >= 6 ? [] : NEIGHBOURS) {
+    for (const n of d >= 6 ? [] : FACE_NEIGHBORS) {
       const q = { x: p.x + n.x, y: p.y + n.y, z: p.z + n.z };
       const cell = lint.at(q.x, q.y, q.z);
       if (
@@ -378,7 +369,7 @@ function checkMonotone(lint: LintGrid): Finding[] {
   const exposed = new Map<string, number>();
   let total = 0;
   for (const p of lint.where((cell) => !cell.air)) {
-    const faces = NEIGHBOURS.filter(
+    const faces = FACE_NEIGHBORS.filter(
       (n) => lint.solid(p.x + n.x, p.y + n.y, p.z + n.z) !== true,
     ).length;
     const id = lint.at(p.x, p.y, p.z)?.id ?? "";
@@ -413,7 +404,7 @@ function blockLight(lint: LintGrid): Int8Array {
   }
   for (const p of queue) {
     const level = light[lint.grid.index(p.x, p.y, p.z)] ?? 0;
-    for (const n of NEIGHBOURS) {
+    for (const n of FACE_NEIGHBORS) {
       const q = { x: p.x + n.x, y: p.y + n.y, z: p.z + n.z };
       if (
         lint.open(q.x, q.y, q.z) &&

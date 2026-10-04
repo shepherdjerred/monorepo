@@ -7,15 +7,16 @@ daemon.
 
 ## Layout
 
-| Path            | What it is                                                                                                                                                                                         |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/registry/` | Committed `generated/blocks-26.2.json` (ids, property enums, defaults) and `BlockRegistry` validation with suggestions                                                                             |
-| `src/core/`     | Block-state parsing, `BlockGrid` (palette + YZX `Uint32Array`), Sponge v3 `.schem` read/write, region-read decoding, site analysis (heightmap, masks, `siteHash`)                                  |
-| `src/dsl/`      | Build DSL: sparse canvas (KEEP vs explicit AIR), `geo`, `mat`, connection pass for panes/fences/walls; `craft.ts` merges the primitive modules in `dsl/craft/` (walls, roofs, structures, furnish) |
-| `src/library/`  | Catalog loader for `library/<slug>/{build.ts, meta.json}`: curated, lint-clean programs agents copy and adapt                                                                                      |
-| `src/compile/`  | Runs a `build.ts` program in a child Bun process (empty env, timeout, import scan)                                                                                                                 |
-| `src/lint/`     | Findings for invalid states, floating parts, gravity, attachments, leaf decay, flat facades, monotone surfaces, dark interiors                                                                     |
-| `src/render/`   | Software rasterizer: blockstates/models → quads → z-buffer → contact sheet PNG                                                                                                                     |
+| Path            | What it is                                                                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/registry/` | Committed `generated/blocks-26.2.json` (ids, property enums, defaults) and `BlockRegistry` validation with suggestions                                                                                                          |
+| `src/core/`     | Block-state parsing, `BlockGrid` (palette + YZX `Uint32Array`), Sponge v3 `.schem` read/write, Litematica `.litematic` reading (multi-region, signed sizes), region-read decoding, site analysis (heightmap, masks, `siteHash`) |
+| `src/dsl/`      | Build DSL: sparse canvas (KEEP vs explicit AIR), `geo`, `mat`, connection pass for panes/fences/walls; `craft.ts` merges the primitive modules in `dsl/craft/` (walls, roofs, structures, furnish)                              |
+| `src/import/`   | Mesh import: OBJ/MTL parsing (colors, textures), triangle/box voxelization with optional solid fill, OKLab nearest-block palettes from the cached textures                                                                      |
+| `src/library/`  | Catalog loader for `library/<slug>/{build.ts, meta.json}`: curated, lint-clean programs agents copy and adapt                                                                                                                   |
+| `src/compile/`  | Runs a `build.ts` program in a child Bun process (empty env, timeout, import scan)                                                                                                                                              |
+| `src/lint/`     | Findings for invalid states, floating parts, gravity, attachments, leaf decay, flat facades, monotone surfaces, dark interiors                                                                                                  |
+| `src/render/`   | Software rasterizer: blockstates/models → quads → z-buffer → contact sheet PNG                                                                                                                                                  |
 
 ## DSL frame
 
@@ -24,6 +25,19 @@ daemon.
 BuildProgram` with type-only imports from `dsl/context.ts`. Compiled grids
 carry their local min corner; pasting the schematic (Offset 0) at
 `anchor + min` places it.
+
+## Imports
+
+`core/litematic.ts` reads Litematica files: regions merge into one grid
+(negative `Size` extends toward smaller coordinates), and block states unpack
+from longs packed without padding at `max(2, ceil(log2(palette)))` bits, as
+Litematica's `LitematicaBitArray` writes them. `import/` turns an OBJ into a
+grid `height` blocks tall: every voxel a triangle touches takes the color
+the mesh shows at its closest point (MTL `Kd` or `map_Kd` texture), `solid`
+fills space a flood fill from outside cannot reach, and colors map to the
+perceptually nearest block of a curated palette (`default`, `wool`,
+`concrete`, `terracotta`). Palette colors are texture averages computed from
+the cached client jar and cached under `~/.cache/toolkit/mc/palettes`.
 
 ## Registry
 
