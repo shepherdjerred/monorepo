@@ -1,7 +1,7 @@
 import { describe, expect } from "vitest";
 import { Vec3 } from "vec3";
 import type { Bot } from "mineflayer";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import {
@@ -124,6 +124,13 @@ describe("run class builds on real Paper", () => {
           );
           bot.activateItem();
           await used;
+          if (path === "RESCUER") {
+            expect(
+              await rcon.command(
+                `execute positioned 1758.5 73 2156.5 if entity ${bot.username}[distance=..3]`,
+              ),
+            ).toBe("Test passed");
+          }
           const active = await rcon.command(
             `storm-fixture-survival inspect ${bot.username} none`,
           );
@@ -189,7 +196,7 @@ describe("animated mystery box on real Paper", () => {
           'execute if entity @e[type=minecraft:item_display,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}]',
         ),
       ).toBe("Test passed. Count: 1");
-      const refund = waitForMessage(bot, /refunded 16 emeralds/u, 25_000);
+      const refund = waitForMessage(bot, /16 emeralds refunded/u, 25_000);
       await refund;
       expect(await count()).toBe(before);
       for (let claim = 0; claim < 6; claim++) {

@@ -3,7 +3,7 @@ import { describe, expect } from "vitest";
 import { z } from "zod";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
-import { serverLogs } from "#e2e/harness/server.ts";
+import { serverLogs } from "#e2e/harness/docker.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
 /** The 23 modules the shipped config enables, of the 25 it registers. */

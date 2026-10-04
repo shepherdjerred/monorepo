@@ -9,7 +9,8 @@ import {
   loadResources,
 } from "./gameplay-fixtures.ts";
 import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
-import { serverLogs, startServer, type ServerInfo } from "./harness/server.ts";
+import { serverLogs } from "./harness/docker.ts";
+import { startServer, type ServerInfo } from "./harness/server.ts";
 
 declare module "vitest" {
   // Declaration merging with Vitest's ProvidedContext requires an interface.

@@ -41,7 +41,15 @@ final class CompassNavigation implements Listener {
 
   @EventHandler(priority = EventPriority.LOWEST)
   void interact(PlayerInteractEvent event) {
-    update(event.getPlayer(), Places.at(event.getPlayer()));
+    var player = event.getPlayer();
+    update(player, Places.at(player));
+    if (denied.containsKey(player.getUniqueId())
+        && player.getInventory().getItemInMainHand().getType() == org.bukkit.Material.COMPASS) {
+      // WorldEdit grants operators permission before consulting Bukkit attachments.
+      // Its interaction listener respects this item denial; arena handlers still run.
+      event.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
+      event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
+    }
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

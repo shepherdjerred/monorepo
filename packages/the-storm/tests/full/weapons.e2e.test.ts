@@ -2,7 +2,7 @@ import { describe, expect } from "vitest";
 import { Vec3 } from "vec3";
 import { z } from "zod";
 import type { Bot } from "mineflayer";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 

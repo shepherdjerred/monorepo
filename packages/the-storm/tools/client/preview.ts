@@ -2,13 +2,10 @@ import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
-import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import { RconClient } from "#e2e/harness/rcon.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
-import {
-  startServer,
-  serverLogs,
-  stormTestConfig,
-} from "#e2e/harness/server.ts";
+import { serverLogs } from "#e2e/harness/docker.ts";
+import { startServer, stormTestConfig } from "#e2e/harness/server.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
 import { startControl, ViewpointsSchema } from "./control.ts";
 import {

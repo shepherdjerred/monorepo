@@ -2240,14 +2240,6 @@
           "thresholdRollouts": []
         },
         {
-          "key": "the-storm-survival-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "the-storm-shop-rentals-enabled",
           "type": "boolean",
           "default": true,
@@ -2496,6 +2488,14 @@
         },
         {
           "key": "the-storm-merchant-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-survival-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

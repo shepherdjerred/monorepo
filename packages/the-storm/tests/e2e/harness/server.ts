@@ -39,8 +39,7 @@ const ConnectionShape = {
   rconPassword: z.string().min(16),
 };
 
-// A server this run started in Docker, or one CI runs as a sidecar and whose
-// log file it shares with the test container.
+// A run started by us in Docker, or a CI sidecar with a shared log file.
 export const ServerInfoSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("container"),
@@ -388,18 +387,5 @@ export async function startServer(
     );
     await stop();
     throw error;
-  }
-}
-
-/** The server's console log so far, from Docker or the shared sidecar log file. */
-export async function serverLogs(info: ServerInfo): Promise<string> {
-  switch (info.kind) {
-    case "container": {
-      const { stdout } = await docker(["logs", info.containerId]);
-      return stdout;
-    }
-    case "external": {
-      return Bun.file(info.logFile).text();
-    }
   }
 }
