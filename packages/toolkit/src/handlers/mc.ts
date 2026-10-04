@@ -1,4 +1,4 @@
-import { type ParseArgsOptionsConfig, parseArgs } from "node:util";
+import type { ParseArgsOptionsConfig } from "node:util";
 import { mcBuildCommand } from "#commands/mc/build.ts";
 import {
   mcDaemonStartCommand,
@@ -27,6 +27,7 @@ import {
   mcWeUndoCommand,
   type TargetOptions,
 } from "#commands/mc/world.ts";
+import { parseMcArgs } from "./mc-args.ts";
 import { handleMcActor, handleMcPlaytest } from "./mc-play.ts";
 import {
   BoxSchema,
@@ -41,10 +42,7 @@ import {
   WorldKindSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
 import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
-import {
-  normalizeArgv,
-  wantsHelp,
-} from "@shepherdjerred/mc-harness/protocol/argv.ts";
+import { wantsHelp } from "@shepherdjerred/mc-harness/protocol/argv.ts";
 import {
   DEFAULT_DAEMON_TTL_SECONDS,
   DEFAULT_SANDBOX_TTL_SECONDS,
@@ -129,14 +127,7 @@ function parse<const Options extends ParseArgsOptionsConfig>(
   args: string[],
   options: Options,
 ) {
-  const merged: typeof COMMON & Options = { ...COMMON, ...options };
-  return parseArgs({
-    // Negative coordinates (-6,-61,-6) would otherwise parse as options.
-    args: normalizeArgv(args, merged),
-    options: merged,
-    allowPositionals: true,
-    strict: true,
-  });
+  return parseMcArgs(COMMON, args, options);
 }
 
 function targetOptions(values: {

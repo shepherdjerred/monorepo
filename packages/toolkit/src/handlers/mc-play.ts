@@ -1,4 +1,4 @@
-import { type ParseArgsOptionsConfig, parseArgs } from "node:util";
+import type { ParseArgsOptionsConfig } from "node:util";
 import {
   mcActorActCommand,
   mcActorListCommand,
@@ -14,6 +14,7 @@ import {
   mcPlaytestShowCommand,
 } from "#commands/mc/playtest.ts";
 import { actorActionBody } from "#lib/mc/play.ts";
+import { parseMcArgs } from "./mc-args.ts";
 import {
   ACTOR_ACTIONS,
   ActorSpawnRequestSchema,
@@ -42,13 +43,7 @@ function parse<const Options extends ParseArgsOptionsConfig>(
   args: string[],
   options: Options,
 ) {
-  const merged: typeof COMMON & Options = { ...COMMON, ...options };
-  return parseArgs({
-    args,
-    options: merged,
-    allowPositionals: true,
-    strict: true,
-  });
+  return parseMcArgs(COMMON, args, options);
 }
 
 function targetOptions(values: {
