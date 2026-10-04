@@ -445,7 +445,7 @@
       "steps": [
         {
           "runner": "vitest",
-          "args": ["test"]
+          "args": ["test", "evals/test"]
         }
       ]
     },

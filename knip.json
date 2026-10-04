@@ -72,13 +72,15 @@
       "entry": [
         "architecture-fixtures/**/*.ts",
         "scripts/**/*.ts",
-        "playtests/**/*.ts"
+        "playtests/**/*.ts",
+        "evals/test/**/*.ts"
       ],
       "project": [
         "src/**/*.ts",
         "test/**/*.ts",
         "scripts/**/*.ts",
         "playtests/**/*.ts",
+        "evals/**/*.ts",
         "architecture-fixtures/**/*.ts"
       ]
     },
