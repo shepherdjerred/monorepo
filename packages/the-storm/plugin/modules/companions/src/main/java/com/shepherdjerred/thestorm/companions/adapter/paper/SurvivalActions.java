@@ -37,13 +37,8 @@ public final class SurvivalActions {
     var distance = player.getEyeLocation().distance(center);
     if (!player.getWorld().equals(block.getWorld())
         || player.getEyeLocation().distanceSquared(center) > 20.25) return false;
-    var ray =
-        player
-            .getWorld()
-            .rayTraceBlocks(
-                player.getEyeLocation(),
-                center.subtract(player.getEyeLocation()).toVector(),
-                distance);
+    var direction = center.subtract(player.getEyeLocation()).toVector().normalize();
+    var ray = player.getWorld().rayTraceBlocks(player.getEyeLocation(), direction, distance);
     return ray == null || block.equals(ray.getHitBlock());
   }
 
@@ -222,7 +217,8 @@ public final class SurvivalActions {
     var aim = target.getLocation().add(0.5, 0.5, 0.5);
     var distance = eye.distance(aim);
     if (eye.distanceSquared(aim) > 20.25) return false;
-    var ray = player.getWorld().rayTraceBlocks(eye, aim.subtract(eye).toVector(), distance);
+    var direction = aim.subtract(eye).toVector().normalize();
+    var ray = player.getWorld().rayTraceBlocks(eye, direction, distance);
     return ray == null || target.equals(ray.getHitBlock());
   }
 }

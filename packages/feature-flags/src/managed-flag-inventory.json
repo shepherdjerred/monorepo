@@ -1915,11 +1915,7 @@
     },
     {
       "category": "observability",
-      "controls": [
-        "telemetry",
-        "Sentry",
-        "LLM archive"
-      ],
+      "controls": ["telemetry", "Sentry", "LLM archive"],
       "reason": "Observability initialization is boot-scoped and must not disappear behind an unauthenticated runtime toggle."
     },
     {
