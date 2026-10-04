@@ -1,12 +1,32 @@
 import type { z } from "zod";
 import { ErrorResponseSchema } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
-import { SOCKET_PATH } from "@shepherdjerred/mc-harness/protocol/paths.ts";
+import {
+  DEFAULT_DAEMON_TTL_SECONDS,
+  SOCKET_PATH,
+} from "@shepherdjerred/mc-harness/protocol/paths.ts";
 import { pathExists } from "@shepherdjerred/unix-socket-daemon";
 
 export const START_HINT =
   "The mc daemon is not running. Start it with: toolkit mc daemon start";
 
 export type DaemonMethod = "GET" | "POST" | "DELETE";
+
+/**
+ * Starts the daemon (default TTL) on the first request that finds none, so
+ * agents never need a separate `daemon start`. The note goes to stderr to keep
+ * stdout and `--json` clean. TOOLKIT_MC_NO_AUTOSTART=1 restores the hint.
+ */
+async function autoStartDaemon(): Promise<void> {
+  if (Bun.env["TOOLKIT_MC_NO_AUTOSTART"] === "1") {
+    throw new Error(START_HINT);
+  }
+  // Dynamic: spawn.ts imports this module for its readiness probe.
+  const { startMcDaemon } = await import("#lib/mc/spawn.ts");
+  const status = await startMcDaemon(DEFAULT_DAEMON_TTL_SECONDS);
+  console.error(
+    `Started the mc daemon (pid ${String(status.pid)}); stop it with 'toolkit mc daemon stop'.`,
+  );
+}
 
 /** One request to the mc-harness daemon over its unix socket. */
 export async function daemonRequest<Schema extends z.ZodType>(
@@ -16,7 +36,7 @@ export async function daemonRequest<Schema extends z.ZodType>(
   body?: unknown,
 ): Promise<z.infer<Schema>> {
   if (!(await pathExists(SOCKET_PATH))) {
-    throw new Error(START_HINT);
+    await autoStartDaemon();
   }
   let response: Response;
   try {

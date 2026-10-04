@@ -50,7 +50,7 @@ import {
 export const MC_USAGE = `
 toolkit mc — drive Minecraft sandboxes through the mc-harness daemon
 
-Daemon (runs from the monorepo checkout; needs Docker):
+Daemon (runs from the monorepo checkout; needs Docker; other commands start it):
   toolkit mc daemon start [--ttl 4h]
   toolkit mc daemon status [--json]
   toolkit mc daemon stop                 Also removes sandboxes not started with --keep

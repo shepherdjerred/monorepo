@@ -7,7 +7,11 @@ async function run(args: string[]) {
   const child = Bun.spawn([process.execPath, "run", entry, "mc", ...args], {
     stdout: "pipe",
     stderr: "pipe",
-    env: { ...Bun.env, HOME: "/nonexistent-toolkit-mc-test" },
+    env: {
+      ...Bun.env,
+      HOME: "/nonexistent-toolkit-mc-test",
+      TOOLKIT_MC_NO_AUTOSTART: "1",
+    },
   });
   const [stdout, stderr, exitCode] = await Promise.all([
     new Response(child.stdout).text(),

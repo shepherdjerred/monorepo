@@ -26,7 +26,7 @@ history.
 
 ```bash
 mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble   # build MCBridge.jar
-toolkit mc daemon start                                             # from the monorepo checkout
+toolkit mc daemon start                                             # optional: any mc command auto-starts it
 toolkit mc sandbox up --world void      # or --world flat; first boot downloads Paper
 toolkit mc info                          # versions, worlds, plugins, capabilities
 ```
