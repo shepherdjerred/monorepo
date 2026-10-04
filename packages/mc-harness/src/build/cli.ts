@@ -24,6 +24,7 @@ import {
   verifyApply,
   type Env,
 } from "./commands.ts";
+import { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } from "./judge.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
 
@@ -42,6 +43,7 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   verify <applyId>
   undo <applyId>                        Restore the pre-apply snapshot (last-in-first-out)
   status <dir>
+  judge <a> <b> [--model id]            Pairwise vision judge of two renders (PNG or build dir), order-swapped
 
 Live tsmc: promote/undo with --target live also need --reason "<why>" (journaled), and
 --allow-players when a human is near the box. See toolkit mc live --help.
@@ -64,7 +66,15 @@ const OPTIONS = {
   reason: { type: "string" },
   "allow-players": { type: "boolean", default: false },
   "confirm-dangerous": { type: "boolean", default: false },
+  model: { type: "string" },
 } as const;
+
+/** Usage label for the first positional when it is not a build directory. */
+const FIRST_POSITIONAL: Record<string, string> = {
+  verify: "<applyId>",
+  undo: "<applyId>",
+  judge: "<a>",
+};
 
 type Values = ReturnType<typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>>["values"];
 
@@ -208,6 +218,26 @@ const HANDLERS: Record<string, Handler> = {
     );
     return 0;
   },
+  judge: async (_env, a, values, rest) => {
+    const verdict = await judgeRenders(a, required(rest[0], "<b>"), {
+      model: values.model ?? DEFAULT_JUDGE_MODEL,
+    });
+    const row = (who: "a" | "b") =>
+      `  ${who} ${verdict.totals[who].toString().padStart(2)}/16  ${RUBRIC_DIMENSIONS.map((d) => `${d} ${verdict.scores[who][d].toString()}`).join(", ")}`;
+    print(
+      values.json,
+      verdict,
+      [
+        `judge (${verdict.model}): ${verdict.winner === "tie" ? "tie" : `${verdict.winner} wins`} — confidence ${verdict.confidence.toFixed(2)}${verdict.agreed ? "" : " (orderings disagreed)"}`,
+        `  a = ${verdict.renders.a}`,
+        `  b = ${verdict.renders.b}`,
+        row("a"),
+        row("b"),
+        ...verdict.critique.map((line) => `  - ${line}`),
+      ].join("\n"),
+    );
+    return 0;
+  },
   status: async (env, dir, values) => {
     const result = await buildStatus(env, dir);
     const site = result.manifest.site;
@@ -250,7 +280,7 @@ async function main(): Promise<number> {
       console.error(message);
     },
   };
-  return handler(env, required(dir, action === "verify" || action === "undo" ? "<applyId>" : "<dir>"), values, rest);
+  return handler(env, required(dir, FIRST_POSITIONAL[action] ?? "<dir>"), values, rest);
 }
 
 try {

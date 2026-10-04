@@ -152,6 +152,11 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   run's `planHash`, snapshots the box for undo, pastes `expected.schem`, and
   verifies it cell by cell. The journal (`~/.toolkit/mc/journal/<target>/`)
   records the snapshot id; **undo** restores it last-in-first-out.
+- **Judge** (`judge <a> <b> [--model id]`) asks a vision model to compare two
+  renders on the eight rubric aspects, once in each order; when the orderings
+  disagree the verdict is a tie. It defaults to a non-OpenAI model so it does
+  not share the build agent's biases, and needs that provider's credential in
+  the environment.
 
 The CLI reaches servers only through the daemon socket, so the daemon remains
 the sole owner of sandboxes and bridge tokens.

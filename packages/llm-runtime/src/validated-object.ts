@@ -11,7 +11,7 @@ import {
   serializeBodyAttribute,
 } from "@shepherdjerred/llm-observability/span-helpers";
 import { z } from "zod";
-import { requireNativeRoute } from "@shepherdjerred/llm-models";
+import { getModel, requireNativeRoute } from "@shepherdjerred/llm-models";
 import {
   mergeProviderOptions as mergeOptionBuckets,
   reasoningProviderOptions,
@@ -32,6 +32,7 @@ import {
   type GenerateValidatedObjectInput,
   type GenerateValidatedObjectResult,
   type LlmCallMetadata,
+  type LlmImageInput,
   type StructuredOutputAttempt,
 } from "./types.ts";
 
@@ -120,6 +121,38 @@ function correctivePrompt(
     : `${originalPrompt}${CORRECTIVE_PROMPT_PREAMBLE}${priorIssueSummary}`;
 }
 
+/** Fails before any billable call when the model cannot read images. */
+export function assertImageInput(modelId: string): void {
+  const model = getModel(modelId);
+  if (model === undefined) throw new Error(`Unknown model id: ${modelId}`);
+  if (!model.capabilities.inputModalities.includes("image")) {
+    throw new Error(`Model ${modelId} does not accept image input`);
+  }
+}
+
+/** The prompt as `prompt`, or as one user message carrying the images. */
+function promptOrMessages(
+  text: string,
+  images: readonly LlmImageInput[] | undefined,
+) {
+  if (images === undefined || images.length === 0) return { prompt: text };
+  return {
+    messages: [
+      {
+        role: "user" as const,
+        content: [
+          { type: "text" as const, text },
+          ...images.map((image) => ({
+            type: "image" as const,
+            image: image.data,
+            mediaType: image.mediaType,
+          })),
+        ],
+      },
+    ],
+  };
+}
+
 function outputTokenLimit(input: {
   initial: number | undefined;
   retry: number | undefined;
@@ -204,7 +237,10 @@ async function generateStructuredAttempt<SCHEMA extends z.ZodType>(input: {
     ...(input.request.system === undefined
       ? {}
       : { system: input.request.system }),
-    prompt: correctivePrompt(input.request.prompt, input.priorIssueSummary),
+    ...promptOrMessages(
+      correctivePrompt(input.request.prompt, input.priorIssueSummary),
+      input.request.images,
+    ),
     output,
     ...(maxOutputTokens === undefined ? {} : { maxOutputTokens }),
     ...(input.request.seed === undefined ? {} : { seed: input.request.seed }),
@@ -230,6 +266,9 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
   input: GenerateValidatedObjectInput<SCHEMA>,
 ): Promise<GenerateValidatedObjectResult<SCHEMA>> {
   const { provider } = requireNativeRoute(input.model, "language");
+  if (input.images !== undefined && input.images.length > 0) {
+    assertImageInput(input.model);
+  }
   const attempts: StructuredOutputAttempt[] = [];
   const metadata: LlmCallMetadata[] = [];
   let priorIssueSummary: string | undefined;
@@ -251,7 +290,19 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
     async (span) => {
       span.setAttribute(
         "gen_ai.input.messages",
-        serializeBodyAttribute({ system: input.system, prompt: input.prompt }),
+        serializeBodyAttribute({
+          system: input.system,
+          prompt: input.prompt,
+          // Sizes only: raw image bytes would swamp the span.
+          ...(input.images === undefined
+            ? {}
+            : {
+                images: input.images.map((image) => ({
+                  mediaType: image.mediaType,
+                  bytes: image.data.byteLength,
+                })),
+              }),
+        }),
       );
 
       for (
