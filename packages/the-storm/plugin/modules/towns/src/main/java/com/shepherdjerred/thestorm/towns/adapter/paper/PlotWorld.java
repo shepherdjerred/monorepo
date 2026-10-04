@@ -244,8 +244,10 @@ final class PlotWorld {
   }
 
   void checkpoint(String worldName) {
-    // Paper queues chunk writes and returns without waiting for disk I/O when flush is false.
-    world(worldName).save(false);
+    // Recovery journals may become terminal only after Paper's chunk writer has finished.
+    // This runs on the main thread; Paper's public API requires it there and flush=true waits
+    // for queued chunk writes before returning.
+    world(worldName).save(true);
   }
 
   private record PasteWork(
@@ -278,7 +280,8 @@ final class PlotWorld {
         context.scheduler().runOnMainThreadLater(Duration.ofMillis(50), () -> pasteBatch(work));
       } else {
         pasteDecor(work);
-        // Queue chunk persistence without waiting for Paper's chunk writer on the tick thread.
+        // Do not complete this paste until its chunks are durable; callers may now advance their
+        // recovery journal to a terminal state.
         checkpoint(work.world().getName());
         work.completion().complete(null);
       }

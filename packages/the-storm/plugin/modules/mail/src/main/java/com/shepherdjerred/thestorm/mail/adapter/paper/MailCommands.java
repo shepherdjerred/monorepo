@@ -102,10 +102,31 @@ public final class MailCommands implements Listener {
       return Command.SINGLE_SUCCESS;
     }
     if (receipt(player).isPresent()) {
-      busy.remove(player.getUniqueId());
-      player.sendMessage(
-          Component.text(
-              "Reconnect before collecting more mail so your last delivery can be saved safely."));
+      var _ =
+          mail.selection(message, player.getUniqueId())
+              .thenAcceptAsync(
+                  selected -> {
+                    var response =
+                        selected
+                            .filter(value -> !value.equals(option))
+                            .map(
+                                value ->
+                                    "You already chose "
+                                        + value
+                                        + ". The other option is no longer available.")
+                            .orElse(
+                                "Reconnect before collecting more mail so your last delivery can be saved safely.");
+                    player.sendMessage(Component.text(response));
+                  },
+                  context.scheduler().mainThread())
+              .whenCompleteAsync(
+                  (ignored, failure) -> {
+                    busy.remove(player.getUniqueId());
+                    if (failure != null) {
+                      failed(player, failure);
+                    }
+                  },
+                  context.scheduler().mainThread());
       return Command.SINGLE_SUCCESS;
     }
     var _ =
@@ -165,6 +186,10 @@ public final class MailCommands implements Listener {
     player
         .getPersistentDataContainer()
         .set(RECEIPT, PersistentDataType.STRING, batch.token().toString());
+    // Persist the receipt with the delivered inventory before players can move the items out of
+    // player data. If a crash interrupts the later mailbox acknowledgement, the receipt makes it
+    // idempotent on reconnect.
+    player.saveData();
     player.sendMessage(
         Component.text(
             "Collected "

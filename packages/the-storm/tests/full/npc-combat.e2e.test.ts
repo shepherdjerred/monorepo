@@ -172,51 +172,58 @@ describe("NPC combat on Paper with all modules", () => {
     bot,
     rcon,
   }) => {
-    await rcon.command("difficulty normal");
-    await rcon.command("time set midnight");
-    // Move the guard far from its original home: this reproduces the old home-radius bug.
-    await rcon.command(`gamemode spectator ${bot.username}`);
-    await rcon.command(`tp ${bot.username} 500 70 500`);
-    await rcon.command(`tp ${npc("guard-captain")} 400.5 64 6.5`);
-    await rcon.command(`tp ${npc("stan")} 400.5 64 0.5`);
-    await rcon.command(
-      'summon minecraft:cow 401.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
-    );
-    await Bun.sleep(1500);
-    expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
-    await rcon.command(
-      'summon minecraft:zombie 400.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
-    );
-    const original = await rcon.command(`data get entity ${npc("stan")} Pos`);
-    await eventually(
-      "Stan flees",
-      async () =>
-        (await rcon.command(`data get entity ${npc("stan")} Pos`)) !== original,
-    );
-    await eventually("Watch fights the zombie", async () => {
-      const exists = await rcon.command(
+    try {
+      // Keep the wilderness fixture ticking while the spectator watches from afar.
+      await rcon.command("forceload add 25 0");
+      await rcon.command("difficulty normal");
+      await rcon.command("time set midnight");
+      // Move the guard far from its original home: this reproduces the old home-radius bug.
+      await rcon.command(`gamemode spectator ${bot.username}`);
+      await rcon.command(`tp ${bot.username} 500 70 500`);
+      await rcon.command(`tp ${npc("guard-captain")} 400.5 64 6.5`);
+      await rcon.command(`tp ${npc("stan")} 400.5 64 0.5`);
+      await rcon.command(
+        'summon minecraft:cow 404.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
+      );
+      await Bun.sleep(1500);
+      expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
+      await rcon.command(
+        'summon minecraft:zombie 400.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
+      );
+      const original = await rcon.command(`data get entity ${npc("stan")} Pos`);
+      await eventually(
+        "Stan flees",
+        async () =>
+          (await rcon.command(`data get entity ${npc("stan")} Pos`)) !==
+          original,
+      );
+      await eventually("Watch fights the zombie", async () => {
+        const exists = await rcon.command(
+          "execute if entity @e[tag=npc-hostile]",
+        );
+        return (
+          !exists.includes("Test passed") ||
+          (await health(rcon, "@e[tag=npc-hostile,limit=1]")) < 20
+        );
+      });
+      expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
+      const zombieStillPresent = await rcon.command(
         "execute if entity @e[tag=npc-hostile]",
       );
-      return (
-        !exists.includes("Test passed") ||
-        (await health(rcon, "@e[tag=npc-hostile,limit=1]")) < 20
-      );
-    });
-    expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
-    const zombieStillPresent = await rcon.command(
-      "execute if entity @e[tag=npc-hostile]",
-    );
-    if (zombieStillPresent.includes("Test passed")) {
-      expect(await health(rcon, "@e[tag=npc-hostile,limit=1]")).toBeLessThan(
-        20,
-      );
+      if (zombieStillPresent.includes("Test passed")) {
+        expect(await health(rcon, "@e[tag=npc-hostile,limit=1]")).toBeLessThan(
+          20,
+        );
+      }
+    } finally {
+      await rcon.command("kill @e[tag=npc-hostile]");
+      await rcon.command("kill @e[tag=npc-peaceful]");
+      await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+      await rcon.command(`tp ${npc("guard-captain")} 41.5 67 9.5`);
+      await rcon.command(`gamemode survival ${bot.username}`);
+      await rcon.command("difficulty peaceful");
+      await rcon.command("forceload remove 25 0");
     }
-    await rcon.command("kill @e[tag=npc-hostile]");
-    await rcon.command("kill @e[tag=npc-peaceful]");
-    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
-    await rcon.command(`tp ${npc("guard-captain")} 41.5 67 9.5`);
-    await rcon.command(`gamemode survival ${bot.username}`);
-    await rcon.command("difficulty peaceful");
   });
 });
 
