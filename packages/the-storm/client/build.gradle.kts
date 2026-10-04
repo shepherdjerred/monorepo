@@ -20,6 +20,11 @@ dependencies {
 
 pmd { ruleSetFiles = files("../plugin/config/pmd/ruleset.xml") }
 
+// Minecraft's version manifest adds java-objc-bridge only on macOS, so a lock
+// written on a Mac names a module Linux CI never resolves. Every other
+// OS-specific library differs only by classifier, which locks ignore.
+dependencyLocking { ignoredDependencies.add("ca.weblite:java-objc-bridge") }
+
 loom {
   runs {
     named("client") {
