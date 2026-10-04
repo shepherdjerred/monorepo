@@ -9,6 +9,7 @@ import {
 } from "#numbered-fixture";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
+import { markReplacedRequest } from "@shepherdjerred/streambot/commands/playback-recording.ts";
 
 test("natural track loops create individual history runs while pause, seek, and recovery reuse the open run", async () => {
   const history = new MediaHistoryStore(":memory:");
@@ -62,8 +63,33 @@ test("natural track loops create individual history runs while pause, seek, and 
   handle.dispatch({ type: "RESTART" });
   await vi.waitFor(() => expect(room.plays).toHaveLength(5));
   expect(runs().total).toBe(2);
+  markReplacedRequest({
+    history,
+    view: () => handle.view(),
+  });
+  const replacementId = history.recordQueueRequest({
+    scope,
+    rawQuery: "Replacement",
+    intent: inferMediaIntent({ query: "Replacement" }),
+  });
+  handle.dispatch({
+    type: "PLAY_NOW",
+    source: { kind: "search", query: "Replacement", mode: "video" },
+    requesterId: userId,
+    requestId: replacementId,
+  });
+  await vi.waitFor(() => expect(runs().total).toBe(3));
+  expect(
+    runs().items.filter((run) => run.outcome === "completed"),
+  ).toHaveLength(1);
+  expect(runs().items.filter((run) => run.outcome === "skipped")).toHaveLength(
+    1,
+  );
   handle.dispatch({ type: "STOP" });
   await vi.waitFor(() =>
     expect(runs().items.every((run) => run.ended_at !== null)).toBe(true),
+  );
+  expect(runs().items.filter((run) => run.outcome === "skipped")).toHaveLength(
+    2,
   );
 });

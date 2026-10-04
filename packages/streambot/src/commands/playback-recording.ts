@@ -52,7 +52,9 @@ export async function recordFailed(input: {
   });
 }
 
-export function markReplacedRequest(deps: PlaybackCommandServiceDeps): void {
+export function markReplacedRequest(
+  deps: Pick<PlaybackCommandServiceDeps, "view" | "history">,
+): void {
   const requestId = deps.view().current?.requestId;
   if (requestId !== undefined)
     deps.history?.updateRequest(requestId, "skipped");

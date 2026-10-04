@@ -1,6 +1,7 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { webUiEnabled } from "@shepherdjerred/streambot/config/media-features.ts";
 import { randomTip } from "./tips.ts";
+import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 
 export async function webRemoteUrl(
   config: Pick<Config, "web">,
@@ -22,11 +23,21 @@ export async function webRemoteUrl(
 }
 
 export async function playTip(
-  deps: { config: Config; guildId?: string; playbackChannel?: number },
+  deps: {
+    config: Config;
+    guildId?: string;
+    playbackChannel?: number;
+    routePlayback?: PlaybackCommandServiceDeps["routePlayback"];
+  },
   userId: string,
 ) {
   return randomTip(
     deps.playbackChannel,
-    await webRemoteUrl(deps.config, deps.guildId, userId, deps.playbackChannel),
+    await webRemoteUrl(
+      deps.config,
+      deps.guildId,
+      userId,
+      deps.routePlayback === undefined ? deps.playbackChannel : undefined,
+    ),
   );
 }

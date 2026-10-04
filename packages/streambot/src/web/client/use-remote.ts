@@ -8,7 +8,12 @@ import {
   SubtitleMenuSchema,
   type WebSnapshot,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import { api, ApiError, commandRequest, type RemoteAction } from "./api.ts";
+import {
+  api,
+  ApiError,
+  playerCommandRequest,
+  type RemoteAction,
+} from "./api.ts";
 import { selectedGuildId } from "./route-state.ts";
 
 export function useRemote() {
@@ -195,23 +200,7 @@ export function useRemote() {
     setNotice("");
     try {
       const result = await api("/api/commands", CommandResultSchema, {
-        ...commandRequest(
-          {
-            ...action,
-            guildId,
-            channelId: snapshot.channel.id,
-            revision: snapshot.revision,
-            playbackChannel: snapshot.playbackChannel,
-            selectionVersion: snapshot.selectionVersion,
-            slotRevisions: Object.fromEntries(
-              snapshot.playbackChannels.map((slot) => [
-                String(slot.number),
-                slot.revision,
-              ]),
-            ),
-          },
-          me.csrfToken,
-        ),
+        ...playerCommandRequest(action, guildId, snapshot, me.csrfToken),
         signal: controller.signal,
       });
       if (!actionIsCurrent(controller)) return;
@@ -244,22 +233,10 @@ export function useRemote() {
     setError("");
     try {
       const menu = await api("/api/subtitles", SubtitleMenuSchema, {
-        ...commandRequest(
-          {
-            action: "subtitles",
-            token: "enumerate",
-            guildId,
-            channelId: snapshot.channel.id,
-            revision: snapshot.revision,
-            playbackChannel: snapshot.playbackChannel,
-            selectionVersion: snapshot.selectionVersion,
-            slotRevisions: Object.fromEntries(
-              snapshot.playbackChannels.map((slot) => [
-                String(slot.number),
-                slot.revision,
-              ]),
-            ),
-          },
+        ...playerCommandRequest(
+          { action: "subtitles", token: "enumerate" },
+          guildId,
+          snapshot,
           me.csrfToken,
         ),
         signal: controller.signal,

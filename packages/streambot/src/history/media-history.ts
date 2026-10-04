@@ -105,6 +105,8 @@ export class MediaHistoryStore {
     this.database
       .query("UPDATE queue_requests SET status = ?1 WHERE id = ?2")
       .run(status, requestId);
+    if (status !== "queued" && status !== "started")
+      this.finishPlaybackRuns(requestId, status);
   }
 
   finishStartedRequest(
@@ -116,11 +118,18 @@ export class MediaHistoryStore {
         "UPDATE queue_requests SET status = ?1 WHERE id = ?2 AND status IN ('queued', 'started')",
       )
       .run(status, requestId);
+    this.finishPlaybackRuns(requestId, status);
+  }
+
+  private finishPlaybackRuns(
+    requestId: string,
+    outcome: QueueRequestStatus,
+  ): void {
     this.database
       .query(
         "UPDATE playback_runs SET ended_at = ?1, outcome = ?2 WHERE queue_request_id = ?3 AND ended_at IS NULL",
       )
-      .run(Date.now(), status, requestId);
+      .run(Date.now(), outcome, requestId);
   }
 
   recordPlaybackStart(input: PlaybackStart): string {

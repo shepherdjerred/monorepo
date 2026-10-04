@@ -4,6 +4,7 @@
  * focused on states/transitions and each updater is unit-testable through the machine tests.
  */
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import { unresolvedQueuedSource } from "@shepherdjerred/streambot/machine/queued-source.ts";
 import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import {
   ChannelIdSchema,
@@ -180,11 +181,7 @@ export function queuedItem(event: PlaybackEvent): QueuedSource {
     throw new Error(`Cannot build a queued item from ${event.type}`);
   }
   return {
-    source: event.source,
-    requesterId: event.requesterId,
-    ...(event.display === undefined ? {} : { display: event.display }),
-    ...(event.queuedAt === undefined ? {} : { queuedAt: event.queuedAt }),
-    ...(event.requestId === undefined ? {} : { requestId: event.requestId }),
+    ...unresolvedQueuedSource(event),
     ...(event.preResolved === undefined
       ? {}
       : { preResolved: event.preResolved }),
@@ -217,20 +214,7 @@ export function queueCrashRetryUpdates(
   const current = mustCurrent(context);
   const attempt = context.crashRetries + 1;
   return {
-    queue: [
-      {
-        source: current.source,
-        requesterId: current.requesterId,
-        ...(current.display === undefined ? {} : { display: current.display }),
-        ...(current.queuedAt === undefined
-          ? {}
-          : { queuedAt: current.queuedAt }),
-        ...(current.requestId === undefined
-          ? {}
-          : { requestId: current.requestId }),
-      },
-      ...context.queue,
-    ],
+    queue: [unresolvedQueuedSource(current), ...context.queue],
     resumeSeekSeconds: Math.max(0, Math.floor(info.positionSeconds)),
     crashRetries: attempt,
     crashNotice: {
