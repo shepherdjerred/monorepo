@@ -5,6 +5,7 @@ import type {
   ScoutMintedIntentsV2Result,
 } from "@scout-for-lol/temporal/activity-contracts-v2";
 import { settleBucksWithDareTimeline } from "#src/betting/dares/evaluation/dare-postmatch-timeline.ts";
+import { listDareIdsSettledByMatch } from "#src/betting/dares/settlement/dare-settle.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   MATCH_RECEIPT_KINDS,
@@ -437,9 +438,11 @@ export async function settleMatchMarketsV2(input: {
       // A resumption settles only what was left, so evidence built from its
       // own return value alone would record an empty settlement for a match
       // whose bets are all resolved — a durable record saying the opposite of
-      // what happened.
+      // what happened. Dares carry no checkpoint; each settling transaction
+      // stamps the Dare with this match, so they are read back from there.
       const attested = settlementEvidenceOf(
         settledRecordsAcrossAttempts(settled.bucks, standing),
+        await listDareIdsSettledByMatch(input.riotMatchId, prisma),
       );
       return {
         fact: await recordMatchReceiptV2({

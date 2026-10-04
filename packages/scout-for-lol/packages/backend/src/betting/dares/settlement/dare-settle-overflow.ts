@@ -26,7 +26,7 @@ export async function settleDareOrVoidOnStorageOverflow(
       input.dare,
       "storage_overflow",
       input.prismaClient,
-      { now: input.now, notify: input.notify },
+      { now: input.now, notify: input.notify, matchId: input.matchId },
     );
     return voided
       ? {

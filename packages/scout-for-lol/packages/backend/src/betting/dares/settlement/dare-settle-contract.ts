@@ -140,6 +140,7 @@ async function resolveDare(
     value,
     proof: input.proof,
     now: input.now,
+    matchId: input.matchId,
   });
   const facts = await dareMoneyFactsInTransaction(tx, {
     dareId: input.dare.id,

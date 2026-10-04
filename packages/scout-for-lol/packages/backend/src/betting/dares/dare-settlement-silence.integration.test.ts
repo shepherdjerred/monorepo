@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   DareContractSchema,
-  DareSqlEvidenceSchema,
-  RawMatchSchema,
   type DareContract,
-  type DareSqlEvidence,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { DiscordAccountIdSchema, PlayerIdSchema } from "@scout-for-lol/data";
@@ -12,7 +9,8 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
 import {
   dareSqlContractCore,
-  makeTwistedFateMatch,
+  loadRiftFixture,
+  targetMatchAt,
 } from "#src/betting/dares/dare-test-fixtures.ts";
 
 /**
@@ -39,22 +37,13 @@ const TARGET_PUUID = "virmel-puuid";
 const T0 = new Date("2026-09-01T12:00:00.000Z");
 const MATCH_ID = "NA1_7100000001";
 
-const evidence: DareSqlEvidence = DareSqlEvidenceSchema.parse({
-  // Unachieved AND final: the game cap is reached, so the contract resolves
-  // on this match rather than waiting for its deadline.
-  achieved: false,
-  results: [],
-  targetDependencies: ["T1"],
-  coverage: "complete",
-  sourceMatchIds: [MATCH_ID],
-  queryHash: HASH,
-  timelineEvents: [],
+// Every execution resolves the Dare unachieved on this match: the one-game
+// cap is reached.
+vi.mock("#src/betting/dares/sql/dare-sql.ts", async () => {
+  const { finalUnachievedDareSqlModule } =
+    await import("#src/betting/dares/dare-test-fixtures.ts");
+  return finalUnachievedDareSqlModule({ matchId: MATCH_ID, queryHash: HASH });
 });
-
-vi.mock("#src/betting/dares/sql/dare-sql.ts", () => ({
-  executeDareSql: () => Promise.resolve(evidence),
-  decisiveTargetDependencies: () => Promise.resolve(["T1"]),
-}));
 
 const { captureDareSqlForMatch } =
   await import("#src/betting/dares/settlement/dare-settle-contract.ts");
@@ -132,17 +121,12 @@ async function activeDare() {
 }
 
 async function qualifyingMatch(): Promise<RawMatch> {
-  const fixture = RawMatchSchema.parse(
-    await Bun.file(
-      new URL("../../../../../testdata/rift.json", import.meta.url),
-    ).json(),
+  return targetMatchAt(
+    await loadRiftFixture(),
+    MATCH_ID,
+    new Date(T0.getTime() + 60 * 60 * 1000),
+    10,
   );
-  return makeTwistedFateMatch(fixture, {
-    matchId: MATCH_ID,
-    timePlayed: 25 * 60,
-    creepScore: 10,
-    gameStartTimestamp: T0.getTime() + 60 * 60 * 1000,
-  });
 }
 
 describe("the Dare settlement notification gate", () => {

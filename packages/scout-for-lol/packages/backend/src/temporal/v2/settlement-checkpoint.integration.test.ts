@@ -11,6 +11,11 @@ import {
   createTestDatabase,
   testDatabaseModule,
 } from "#src/testing/test-database.ts";
+import {
+  testAccountId,
+  testChannelId,
+  testGuildId,
+} from "#src/testing/test-ids.ts";
 
 /**
  * What the settlement Activity does when its checkpoint cannot be written.
@@ -36,6 +41,7 @@ const WRITE_CONFLICTS = RiotMatchIdSchema.parse("NA1_9502");
 const CONFLICTS_INSIDE_A_DARE_BATCH = RiotMatchIdSchema.parse("NA1_9503");
 const PARTLY_SETTLED = RiotMatchIdSchema.parse("NA1_9504");
 const BACKFILLED = RiotMatchIdSchema.parse("NA1_9505");
+const DARE_RESOLVED_EARLIER = RiotMatchIdSchema.parse("NA1_9506");
 
 type DriveSettlement = (sink: SettlementAnnouncementSink) => Promise<void>;
 
@@ -136,6 +142,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await prisma.matchSettlementAnnouncement.deleteMany({});
   await prisma.matchObservation.deleteMany({});
+  await prisma.bucksDare.deleteMany({});
   await observeMatch(prisma, {
     matchId: BACKFILLED,
     platformRoute: "NA1",
@@ -153,6 +160,7 @@ beforeEach(async () => {
     WRITE_CONFLICTS,
     CONFLICTS_INSIDE_A_DARE_BATCH,
     PARTLY_SETTLED,
+    DARE_RESOLVED_EARLIER,
   ]) {
     // A live match, so the Activity builds the CHECKPOINTING sink rather than
     // the silent one. A backfill records nothing and has nothing to lose.
@@ -277,6 +285,45 @@ describe("a settlement resuming a match another attempt settled part of", () => 
     const parsed = settlementEvidenceCodec.parse(evidence);
     expect(parsed.settledBetIds.toSorted((a, b) => a - b)).toEqual([101, 202]);
   });
+});
+
+test("names a Dare an earlier attempt resolved after that attempt died", async () => {
+  // The attempt that resolved the Dare committed its transaction and died
+  // before the receipt. Settlement returns a Dare summary only for the
+  // transition that committed it, so the retry gets nothing back for it; the
+  // receipt must still name it, from the stamp the settling transaction left.
+  settlement.drive = async () => {
+    await prisma.bucksDare.create({
+      data: {
+        serverId: testGuildId("9506"),
+        channelId: testChannelId("9506"),
+        challengerDiscordId: testAccountId("9506"),
+        openingStake: 20,
+        potTotal: 20,
+        dareState: "achieved",
+        settledAt: new Date("2026-09-18T09:45:00.000Z"),
+        settledMatchId: DARE_RESOLVED_EARLIER,
+      },
+    });
+    throw new Error("the worker died after the Dare settled");
+  };
+  await expect(
+    settleMatchMarketsV2({ riotMatchId: DARE_RESOLVED_EARLIER }),
+  ).rejects.toThrow("the worker died");
+  expect(await standingSettlementReceipt(DARE_RESOLVED_EARLIER)).toBeNull();
+
+  // The retry finds the Dare already terminal and settles nothing.
+  settlement.drive = () => Promise.resolve();
+  await settleMatchMarketsV2({ riotMatchId: DARE_RESOLVED_EARLIER });
+
+  const dare = await prisma.bucksDare.findFirstOrThrow({
+    where: { settledMatchId: DARE_RESOLVED_EARLIER },
+    select: { id: true },
+  });
+  const evidence = settlementEvidenceCodec.parse(
+    await standingSettlementReceipt(DARE_RESOLVED_EARLIER),
+  );
+  expect(evidence.resolvedDareIds).toEqual([dare.id]);
 });
 
 test("a backfilled match still records what its settlement produced", async () => {

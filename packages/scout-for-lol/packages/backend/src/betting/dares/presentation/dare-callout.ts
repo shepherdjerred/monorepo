@@ -15,6 +15,7 @@ import { renderDareCallout } from "#src/betting/dares/presentation/dare-callout-
 import { deriveDareProgress } from "#src/betting/dares/presentation/dare-progress.ts";
 import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { send } from "#src/league/discord/channel.ts";
@@ -62,6 +63,13 @@ export type DareCalloutDependencies = {
    * entitled to post it.
    */
   mayPost?: (() => boolean) | undefined;
+  /**
+   * Reads `dare_notifications_enabled` to decide whether a resolved Dare's
+   * result post will actually go out, and so whether the scan must leave its
+   * terminal callout edit to the post's follow-up. Defaults to the real
+   * policy.
+   */
+  isPolicyEnabled?: typeof isPolicyEnabled | undefined;
 };
 
 export const defaultDareCalloutDependencies: DareCalloutDependencies = {
@@ -381,15 +389,65 @@ export async function refreshDareCallouts(
   );
 }
 
+/** Result-post states that may still reach Discord and run the follow-up. */
+const OWED_RESULT_POST_STATES = ["pending", "ready", "sending"];
+
+/**
+ * The pending Dares whose channel result post has not gone out yet and will.
+ *
+ * A resolved Dare's callout is edited to its final state by the result post's
+ * follow-up, once Discord accepted the post, so the channel reads result first
+ * and resolved callout second. A scan that edited it beforehand would invert
+ * that. A post the guild's flag will suppress never runs the follow-up, so its
+ * Dare keeps the scan's immediate edit; so does one already delivered,
+ * suppressed, expired, or left ambiguous for an operator.
+ */
+async function daresAwaitingResultPost(
+  pending: readonly { id: number; serverId: DiscordGuildId }[],
+  dependencies: DareCalloutDependencies,
+): Promise<Set<number>> {
+  if (pending.length === 0) return new Set();
+  const owed = await dependencies.prismaClient.matchNotificationIntent.findMany(
+    {
+      where: {
+        kind: "dare-status",
+        subjectKind: "dare",
+        subjectId: { in: pending.map((dare) => dare.id.toString()) },
+        targetKind: "channel",
+        state: { in: OWED_RESULT_POST_STATES },
+      },
+      select: { subjectId: true },
+    },
+  );
+  const owedIds = new Set(owed.map((row) => Number(row.subjectId)));
+  const policy = dependencies.isPolicyEnabled ?? isPolicyEnabled;
+  const awaiting = new Set<number>();
+  for (const dare of pending) {
+    if (
+      owedIds.has(dare.id) &&
+      (await policy("dare_notifications_enabled", { server: dare.serverId }))
+    ) {
+      awaiting.add(dare.id);
+    }
+  }
+  return awaiting;
+}
+
 export async function refreshPendingDareCallouts(
   dependencies: DareCalloutDependencies = defaultDareCalloutDependencies,
 ): Promise<number[]> {
   const pending = await dependencies.prismaClient.bucksDare.findMany({
     where: { calloutRefreshPending: true },
     orderBy: { id: "asc" },
-    select: { id: true },
+    select: { id: true, serverId: true },
   });
-  const dareIds = pending.map((dare) => dare.id);
+  const awaitingResultPost = await daresAwaitingResultPost(
+    pending,
+    dependencies,
+  );
+  const dareIds = pending
+    .map((dare) => dare.id)
+    .filter((dareId) => !awaitingResultPost.has(dareId));
   await Promise.all(
     dareIds.map(async (dareId) => {
       await ensureDareCallout(dareId, dependencies);

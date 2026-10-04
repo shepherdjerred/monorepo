@@ -120,3 +120,8 @@ ALTER SEQUENCE "BucksDareV2Evidence_id_seq" RENAME TO "BucksDareEvidence_id_seq"
 ALTER SEQUENCE "BucksDareV2Revision_id_seq" RENAME TO "BucksDareRevision_id_seq";
 ALTER SEQUENCE "BucksDareV2Target_id_seq" RENAME TO "BucksDareTarget_id_seq";
 ALTER SEQUENCE "BucksDareV2_id_seq" RENAME TO "BucksDare_id_seq";
+
+-- The match whose settlement made a Dare terminal, so a retried settlement
+-- receipt can name every Dare the match resolved.
+ALTER TABLE "BucksDare" ADD COLUMN "settledMatchId" TEXT;
+CREATE INDEX "BucksDare_settledMatchId_idx" ON "BucksDare"("settledMatchId");

@@ -1713,6 +1713,10 @@ model BucksDare {
   activatedAt           DateTime?
   deadlineAt            DateTime?
   settledAt             DateTime?
+  // The match whose settlement made this Dare terminal, when one did. Written
+  // in the settling transaction so a retried settlement can still name every
+  // Dare the match resolved after its in-memory result is gone.
+  settledMatchId        String?
   finalValue            Boolean?
   proofJson             String?
   voidReason            String?
@@ -1737,6 +1741,7 @@ model BucksDare {
   @@index([dareState, acceptDeadline])
   @@index([dareState, deadlineAt])
   @@index([calloutRefreshPending, updatedAt])
+  @@index([settledMatchId])
 }
 
 // Durable activation queue for rank and historical-baseline contracts. The

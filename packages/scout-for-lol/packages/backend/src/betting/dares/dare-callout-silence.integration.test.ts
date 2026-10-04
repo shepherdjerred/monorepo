@@ -1,14 +1,15 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  DareContractSchema,
-  DareSqlEvidenceSchema,
-  RawMatchSchema,
-  type DareSqlEvidence,
-  type DareTargetBinding,
-  type RawMatch,
-} from "@scout-for-lol/data";
+import { type DareTargetBinding, type RawMatch } from "@scout-for-lol/data";
 import { silentSettlementSink } from "#src/betting/notify/announcement-sink.ts";
-import { makeTwistedFateMatch } from "#src/betting/dares/dare-test-fixtures.ts";
+import {
+  loadRiftFixture,
+  targetMatchAt,
+  type StubbedLake,
+} from "#src/betting/dares/dare-test-fixtures.ts";
+import {
+  clearDareTables,
+  freezeDareAsMonotone,
+} from "#src/betting/dares/dare-integration.test-fixtures.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -37,33 +38,15 @@ import {
  * whether its match resolves the Dare.
  */
 
-type LakeEvidence = { achieved: boolean | null };
-const lake = vi.hoisted((): LakeEvidence => ({ achieved: false }));
+const lake = vi.hoisted((): StubbedLake => ({
+  achieved: false,
+  sourceMatchIds: [],
+}));
 
 vi.mock("#src/betting/dares/sql/dare-sql.ts", async () => {
-  const actual = await vi.importActual<Record<string, unknown>>(
-    "#src/betting/dares/sql/dare-sql.ts",
-  );
-  return {
-    ...actual,
-    executeDareSql: (input: {
-      compilation: { queryHash: string };
-      targets: readonly { key: string }[];
-    }): Promise<DareSqlEvidence> =>
-      Promise.resolve(
-        DareSqlEvidenceSchema.parse({
-          achieved: lake.achieved,
-          results: [],
-          targetDependencies: input.targets.map((target) => target.key),
-          coverage: "complete",
-          sourceMatchIds: [],
-          queryHash: input.compilation.queryHash,
-        }),
-      ),
-    decisiveTargetDependencies: (input: {
-      targets: readonly { key: string }[];
-    }) => Promise.resolve(input.targets.map((target) => target.key)),
-  };
+  const { stubbedDareSqlModule } =
+    await import("#src/betting/dares/dare-test-fixtures.ts");
+  return await stubbedDareSqlModule(lake);
 });
 
 const { createDareDraft } =
@@ -116,15 +99,7 @@ beforeEach(async () => {
     addFlagOverride(flag, true, { server: SERVER });
   }
   lake.achieved = false;
-  await db.matchNotificationIntent.deleteMany();
-  await db.confirmationIntent.deleteMany();
-  await db.bucksDareEvidence.deleteMany();
-  await db.bucksDareContribution.deleteMany();
-  await db.bucksDareTarget.deleteMany();
-  await db.bucksDareRevision.deleteMany();
-  await db.bucksDare.deleteMany();
-  await db.bucksLedgerEntry.deleteMany();
-  await db.bucksAccount.deleteMany();
+  await clearDareTables(db);
 });
 
 /**
@@ -248,18 +223,7 @@ async function activeDare(key: string): Promise<number> {
     throw new Error("Expected an active Dare.");
   }
   // Frozen as monotone, so a satisfied match resolves it on the spot.
-  const active = await db.bucksDare.findUniqueOrThrow({
-    where: { id: dareId },
-    select: { contractJson: true },
-  });
-  if (active.contractJson === null) throw new Error("Dare is not active.");
-  const contract = DareContractSchema.parse(JSON.parse(active.contractJson));
-  await db.bucksDare.update({
-    where: { id: dareId },
-    data: {
-      contractJson: JSON.stringify({ ...contract, finality: "monotone_true" }),
-    },
-  });
+  await freezeDareAsMonotone(db, dareId);
   return dareId;
 }
 
@@ -282,32 +246,23 @@ async function outboxKinds(dareId: number): Promise<string[]> {
 }
 
 function matchFor(matchId: string, fixture: RawMatch): RawMatch {
-  return makeTwistedFateMatch(fixture, {
+  return targetMatchAt(
+    fixture,
     matchId,
-    timePlayed: 25 * 60,
-    creepScore: 200,
-    gameStartTimestamp: T0.getTime() + 60 * 60 * 1000,
-  });
-}
-
-async function riftFixture(): Promise<RawMatch> {
-  return RawMatchSchema.parse(
-    await Bun.file(
-      new URL("../../../../../testdata/rift.json", import.meta.url),
-    ).json(),
+    new Date(T0.getTime() + 60 * 60 * 1000),
   );
 }
 
 /** A match that does NOT resolve the Dare, so its capture stays open. */
 async function nonResolvingMatch(matchId: string): Promise<RawMatch> {
   lake.achieved = false;
-  return matchFor(matchId, await riftFixture());
+  return matchFor(matchId, await loadRiftFixture());
 }
 
 /** A match the active Dare's contract resolves against. */
 async function qualifyingMatch(matchId: string): Promise<RawMatch> {
   lake.achieved = true;
-  return matchFor(matchId, await riftFixture());
+  return matchFor(matchId, await loadRiftFixture());
 }
 
 describe("withholding a Dare notification", () => {

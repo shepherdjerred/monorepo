@@ -38,6 +38,8 @@ export async function voidDareWithFullRefund(
      * and defaults to announcing, as it always did.
      */
     notify?: DareNotificationDisposition;
+    /** The match whose settlement voided it, if a match's did. */
+    matchId?: string | undefined;
   } = {},
 ): Promise<boolean> {
   const now = options.now ?? new Date();
@@ -48,6 +50,7 @@ export async function voidDareWithFullRefund(
       data: {
         dareState: "voided",
         settledAt: now,
+        settledMatchId: options.matchId ?? null,
         finalValue: null,
         voidReason: reason,
         ...pendingDareCalloutRefresh(),

@@ -52,7 +52,11 @@ function reportDareBatchFailure(
 async function inspectStoredContract(
   row: ActiveDareRow,
   prismaClient: ExtendedPrismaClient,
-  now: Date,
+  options: {
+    now: Date;
+    matchId: string;
+    notify: DareNotificationDisposition;
+  },
 ): Promise<
   | { kind: "valid"; contract: DareContract }
   | { kind: "invalid"; summary: DareSettlementSummary | null }
@@ -63,7 +67,7 @@ async function inspectStoredContract(
     row,
     "invalid_contract",
     prismaClient,
-    { now },
+    options,
   );
   return {
     kind: "invalid",
@@ -112,7 +116,11 @@ export async function settleDaresForMatch(
     rows,
     async (row) => ({
       row,
-      outcome: await inspectStoredContract(row, prismaClient, now),
+      outcome: await inspectStoredContract(row, prismaClient, {
+        now,
+        matchId: matchData.metadata.matchId,
+        notify,
+      }),
     }),
     (row, error) => {
       reportDareBatchFailure("inspect", row, matchData.metadata.matchId, error);
@@ -187,4 +195,25 @@ export async function settleActiveDareAtBound(
     async () =>
       await settleDareSqlAtDeadline(dare, contract, prismaClient, now),
   );
+}
+
+/**
+ * Every Dare a match's settlement made terminal, read from the Dares
+ * themselves.
+ *
+ * Settlement returns a summary only for the transition that committed it, so
+ * an attempt that resumes after an earlier one resolved a Dare gets nothing
+ * back for it. The settling transaction stamps `settledMatchId`, which is what
+ * lets the receipt still name that Dare.
+ */
+export async function listDareIdsSettledByMatch(
+  matchId: string,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<number[]> {
+  const rows = await prismaClient.bucksDare.findMany({
+    where: { settledMatchId: matchId },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+  return rows.map((row) => row.id);
 }
