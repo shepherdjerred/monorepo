@@ -194,9 +194,12 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     if (player == null || world == null) throw new IllegalStateException("missing fixture visitor");
     var worksite = new Location(world, 32.5, -60, 34.5);
     player.teleport(worksite.clone());
-    for (var npc : CitizensAPI.getNPCRegistry())
-      if (npc.data().has("thestorm-companion-id") && npc.isSpawned())
-        npc.teleport(worksite.clone(), TeleportCause.PLUGIN);
+    for (var npc : CitizensAPI.getNPCRegistry()) {
+      if (!npc.data().has("thestorm-companion-id") || !npc.isSpawned()) continue;
+      npc.despawn();
+      if (!npc.spawn(worksite.clone()))
+        throw new IllegalStateException("companion fixture respawn failed");
+    }
   }
 
   private void spread() {
