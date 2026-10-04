@@ -8,7 +8,10 @@ import {
 import type { OpaqueVersionedEnvelope } from "@scout-for-lol/domain/codec/versioned.ts";
 import { prepareSettlementAnnouncement } from "#src/betting/notify/announce-prepare.ts";
 import { prisma } from "#src/database/index.ts";
-import { getIntent } from "#src/database/durable/intent-repository.ts";
+import {
+  getIntent,
+  listIntentsForMatch,
+} from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import {
   deliveryIntentKey,
@@ -87,6 +90,41 @@ export async function postmatchReplyTargetV2(
   return state?.kind !== "delivered" || state.messageId === undefined
     ? undefined
     : DiscordMessageIdSchema.parse(state.messageId);
+}
+
+/**
+ * Every delivered post-match report for one match, by channel: what a recap
+ * of this match replies to, in each channel it can.
+ *
+ * The match-wide form of {@link postmatchReplyTargetV2}, for the caller that
+ * announces a whole match at once rather than one intent: the stale-pool void
+ * sweep, which used to read v1's `ActiveGame.postmatchMessageIds`. Built from
+ * the same rows by the same rule — a delivered POSTMATCH intent with a
+ * message id — so the two forms cannot disagree about a channel.
+ */
+export async function postmatchReplyTargets(
+  riotMatchId: RiotMatchId,
+): Promise<Map<string, DiscordMessageId>> {
+  const prefix = `${postmatchDeliveryKeyPrefix(riotMatchId)}:`;
+  const targets = new Map<string, DiscordMessageId>();
+  for (const record of await listIntentsForMatch(prisma, {
+    matchId: riotMatchId,
+  })) {
+    const { key, state, target } = record.intent;
+    if (
+      !key.startsWith(prefix) ||
+      target.kind !== "channel" ||
+      state.kind !== "delivered" ||
+      state.messageId === undefined
+    ) {
+      continue;
+    }
+    targets.set(
+      target.channelId,
+      DiscordMessageIdSchema.parse(state.messageId),
+    );
+  }
+  return targets;
 }
 
 export async function buildSettlementNotificationMessageV2(

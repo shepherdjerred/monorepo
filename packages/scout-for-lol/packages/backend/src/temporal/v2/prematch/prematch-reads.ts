@@ -17,15 +17,24 @@ import {
   SCOUT_V2_PAGE_MAX,
   type ScoutPrematchGameRef,
 } from "@scout-for-lol/temporal/contracts-v2";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { prematchDeliveryKeyPrefix } from "#src/durable/match/delivery-intents.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
-import { listLiveActiveGameMatchIds } from "#src/league/tasks/prematch/active-game-queries.ts";
+import {
+  ACTIVE_GAME_TTL_MS,
+  listLiveActiveGameMatchIds,
+} from "#src/league/tasks/prematch/active-game-queries.ts";
 import { createLogger } from "#src/logger.ts";
+import { prematchDetectionsTotal } from "#src/metrics/index.ts";
+import {
+  rawArchiveReceiptKind,
+  storedRawArchiveDescriptor,
+} from "#src/report-lake/durable-receipts.ts";
+import { readArchivedPrematchSnapshot } from "#src/report-lake/receipted-archive.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 import { DRIVABLE_INTENT_STATES } from "#src/temporal/v2/match-reads.ts";
@@ -202,6 +211,7 @@ export async function discoverPrematchGamesV2(): Promise<ScoutPrematchScanV2Resu
       continue;
     }
     const probe = await probeAccountV2(config);
+    prematchDetectionsTotal.inc({ status: probe.kind });
     if (probe.kind === "unreadable") {
       sawEveryPolledAccount = false;
       continue;
@@ -302,5 +312,129 @@ export function withoutStaleUnsentIntents(
       (record.intent.state.kind !== "pending" &&
         record.intent.state.kind !== "ready") ||
       new Date(record.intent.freshnessDeadline).getTime() > now.getTime(),
+  );
+}
+
+/**
+ * One game the V2 prematch path captured that may still be live: when it was
+ * first archived, how long it counts as tracked, and who was in it.
+ *
+ * `participantPuuids` is every player the archived spectator snapshot lists,
+ * tracked or not. The snapshot does not mark which of them Scout tracks (see
+ * `prematch-resume.ts`), and a caller narrowing to one guild intersects with
+ * that guild's accounts anyway.
+ */
+export type LivePrematchGame = {
+  readonly riotMatchId: RiotMatchId;
+  readonly gameId: string;
+  readonly detectedAt: Date;
+  readonly expiresAt: Date;
+  readonly participantPuuids: readonly string[];
+};
+
+export type LivePrematchCapture = Pick<
+  LivePrematchGame,
+  "riotMatchId" | "detectedAt" | "expiresAt"
+>;
+
+/**
+ * The captures still inside their tracked lifetime, newest first.
+ *
+ * A capture is a `raw-archive-prematch` receipt: the durable fact that V2
+ * archived a live game's snapshot, recorded when it did. Its lifetime is
+ * `ACTIVE_GAME_TTL_MS` from that instant, the same horizon v1's `ActiveGame`
+ * row expired at and a prematch intent's freshness deadline uses. One match
+ * holding several receipts counts once, from the earliest.
+ */
+export function livePrematchCapturesOf(
+  receipts: readonly { riotMatchId: string; recordedAt: Date }[],
+  now: Date,
+): LivePrematchCapture[] {
+  const earliest = new Map<string, Date>();
+  for (const receipt of receipts) {
+    const standing = earliest.get(receipt.riotMatchId);
+    if (standing === undefined || receipt.recordedAt < standing) {
+      earliest.set(receipt.riotMatchId, receipt.recordedAt);
+    }
+  }
+  return [...earliest]
+    .flatMap(([riotMatchId, detectedAt]) => {
+      const expiresAt = new Date(detectedAt.getTime() + ACTIVE_GAME_TTL_MS);
+      return expiresAt.getTime() > now.getTime()
+        ? [
+            {
+              riotMatchId: RiotMatchIdSchema.parse(riotMatchId),
+              detectedAt,
+              expiresAt,
+            },
+          ]
+        : [];
+    })
+    .toSorted(
+      (left, right) => right.detectedAt.getTime() - left.detectedAt.getTime(),
+    );
+}
+
+/**
+ * The games V2 captured that are still live, read from the durable record V2
+ * writes rather than from `ActiveGame`, which only v1 wrote.
+ *
+ * The capture receipts give identity and timing; the archived snapshot each
+ * one attests to gives the roster. `MatchTrackedAccount` cannot: the
+ * post-match core writes it once the game is over. A game the caller already
+ * knows completed is dropped before its snapshot is read, so a three-hour
+ * window of finished games costs one query rather than an object read each.
+ *
+ * A receipt whose snapshot cannot be named or read is a broken archive
+ * contract, so it throws rather than leaving the game out.
+ */
+export async function listLivePrematchGames(
+  args: {
+    now: Date;
+    /** Which of these match ids already completed, per the caller's source. */
+    completedMatchIds: (
+      riotMatchIds: readonly RiotMatchId[],
+    ) => Promise<ReadonlySet<string>>;
+  },
+  database: ExtendedPrismaClient = prisma,
+): Promise<LivePrematchGame[]> {
+  const receipts = await database.matchProcessingReceipt.findMany({
+    where: {
+      kind: rawArchiveReceiptKind("prematch"),
+      recordedAt: { gt: new Date(args.now.getTime() - ACTIVE_GAME_TTL_MS) },
+    },
+    select: { riotMatchId: true, recordedAt: true },
+  });
+  const captures = livePrematchCapturesOf(receipts, args.now);
+  if (captures.length === 0) return [];
+  const completed = await args.completedMatchIds(
+    captures.map((capture) => capture.riotMatchId),
+  );
+  return await Promise.all(
+    captures
+      .filter((capture) => !completed.has(capture.riotMatchId))
+      .map(async (capture) => {
+        const descriptor = await storedRawArchiveDescriptor(
+          database,
+          capture.riotMatchId,
+          "prematch",
+        );
+        if (descriptor === null) {
+          throw new Error(
+            `A raw-archive-prematch receipt stands for ${capture.riotMatchId}, but no archived snapshot descriptor could be read from it`,
+          );
+        }
+        const snapshot = await readArchivedPrematchSnapshot(
+          descriptor,
+          capture.riotMatchId,
+        );
+        return {
+          ...capture,
+          gameId: snapshot.gameId.toString(),
+          participantPuuids: snapshot.participants.flatMap((participant) =>
+            participant.puuid === null ? [] : [participant.puuid],
+          ),
+        };
+      }),
   );
 }

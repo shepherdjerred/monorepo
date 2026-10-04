@@ -411,6 +411,10 @@ export type ScoutLegacyMatchCompletionV2Result = z.infer<
  * overlapping handoffs, or a handoff and a V2 run, cannot both own the pass.
  * `defer-v1` means v1 owns discovery but another run holds the claim. The
  * pass stops and the next tick decides again.
+ *
+ * Retired: no new discovery asks any more, and the backend answers `run-v2`
+ * for a retried read. The union stays whole because recorded histories carry
+ * results of every arm.
  */
 export const ScoutPostMatchDiscoveryOwnerV2ResultSchema = z.discriminatedUnion(
   "decision",
@@ -482,13 +486,16 @@ export const ScoutPrematchPassHolderSchema = z.string().min(1).max(128);
 /**
  * Which pipeline owns this prematch pass.
  *
- * `run-v1` and `run-v2` are only returned once the router's run holds the
- * durable prematch pass claim, and `holder` names that claim for the renewal
- * and the release. `run-v2` means `scout_v2_prematch_ownership_enabled` is on
- * for the stage: V2 prematch discovery detects live games and v1 runs only
- * its maintenance. `run-v1` is v1's whole pass, exactly as before the
- * router existed. `defer` means another run holds the claim; the pass does
- * nothing and the next tick decides again.
+ * `run-v1` is v1's whole pass, exactly as before the router existed.
+ * `run-v2` means V2 prematch discovery detects live games and v1 runs only
+ * its maintenance. `defer` means another run held the pass; the pass did
+ * nothing and the next tick decided again. `holder` named the run's durable
+ * pass claim for the renewal and the release.
+ *
+ * Retired with the claim itself: the `prematch-poll` Schedule starts
+ * `scoutPrematchDiscoveryV2Workflow` directly, and the backend answers
+ * `run-v2` with no claim behind it for any v1 poll still asking. The union
+ * stays whole because recorded histories carry results of every arm.
  */
 export const ScoutPrematchPassOwnerV2ResultSchema = z.discriminatedUnion(
   "decision",
@@ -528,6 +535,7 @@ export type ScoutPrematchPassClaimV2Input = z.infer<
  *
  * `not-held` is an answer, not a fault: the claim went stale and another run
  * took it over, so there is nothing of this run's left to renew or release.
+ * With the claim retired it is the only answer the backend still gives.
  */
 export const ScoutPrematchPassClaimV2ResultSchema = z.strictObject({
   outcome: z.enum(["renewed", "released", "not-held"]),

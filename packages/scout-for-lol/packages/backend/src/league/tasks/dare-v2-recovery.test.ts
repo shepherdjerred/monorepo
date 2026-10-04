@@ -109,6 +109,7 @@ vi.mock("#src/logger.ts", () => ({
 
 import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
 import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
+import { runPrematchMaintenance } from "#src/temporal/v2/prematch/prematch-maintenance.ts";
 
 describe("Dare v2 recovery", () => {
   beforeEach(() => {
@@ -142,6 +143,19 @@ describe("Dare v2 recovery", () => {
     expect(mocks.deleteExpiredActiveGames).toHaveBeenCalledOnce();
     expect(mocks.expireDareV2AcceptWindows).toHaveBeenCalledOnce();
     expect(mocks.refreshPendingDareV2Callouts).toHaveBeenCalledOnce();
+  });
+
+  test("runs the V2 poll's prematch maintenance with no active-game step", async () => {
+    // The sweeps v1's poll carried, now run by the V2 discovery poll. V2
+    // detects games itself and never writes ActiveGame, so neither v1
+    // detection nor its row expiry belongs here.
+    await runPrematchMaintenance();
+
+    expect(mocks.checkActiveGames).not.toHaveBeenCalled();
+    expect(mocks.deleteExpiredActiveGames).not.toHaveBeenCalled();
+    expect(mocks.expireDareV2AcceptWindows).toHaveBeenCalledOnce();
+    expect(mocks.refreshPendingDareV2Callouts).toHaveBeenCalledOnce();
+    expect(mocks.closeExpiredBettingWindows).not.toHaveBeenCalled();
   });
 
   test("settles funded contracts while betting is hard-disabled", async () => {

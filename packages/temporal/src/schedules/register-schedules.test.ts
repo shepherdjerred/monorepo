@@ -549,7 +549,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Scout's schedule entrypoints delegate immediately to queue-specific
   // activities or child workflows. Their activity retry budgets are bounded
   // independently; none sleeps inside Workflow code.
-  "scoutRealtimePollWorkflow",
+  "scoutPrematchDiscoveryV2Workflow",
   "scoutPostMatchDiscoveryV2Workflow",
   "scoutIngestionReconciliationWorkflow",
   "scoutPipelineReconciliationV2Workflow",

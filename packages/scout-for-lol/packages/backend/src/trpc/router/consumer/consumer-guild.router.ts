@@ -14,6 +14,7 @@ import {
   buildCommunityInsights,
   squadChemistry,
 } from "#src/trpc/router/consumer/community-insights.ts";
+import { listLivePrematchGames } from "#src/temporal/v2/prematch/prematch-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -222,35 +223,20 @@ export const consumerGuildRouter = router({
         ),
       ),
     );
-    const active = await prisma.activeGame.findMany({
-      where: { expiresAt: { gt: new Date() } },
-      select: {
-        gameId: true,
-        trackedPuuids: true,
-        prematchMatchId: true,
-        detectedAt: true,
-        expiresAt: true,
+    // The V2 prematch captures, not `ActiveGame`: only v1 wrote that table.
+    // A game the report lake already holds is over, whatever its TTL says.
+    const live = await listLivePrematchGames({
+      now: new Date(),
+      completedMatchIds: async (matchIds) => {
+        const completed = await fetchMatchSupport({ matchIds: [...matchIds] });
+        return new Set(completed.map((match) => match.match_id));
       },
     });
-    const completedMatches = await fetchMatchSupport({
-      matchIds: active.flatMap((game) =>
-        game.prematchMatchId === null ? [] : [game.prematchMatchId],
-      ),
-    });
-    const completed = new Set(completedMatches.map((match) => match.match_id));
-    return active
+    return live
       .flatMap((game) => {
-        if (
-          game.prematchMatchId !== null &&
-          completed.has(game.prematchMatchId)
-        )
-          return [];
-        const tracked = z
-          .array(z.string())
-          .parse(JSON.parse(game.trackedPuuids));
         const guildPlayers = [
           ...new Map(
-            tracked.flatMap((puuid) => {
+            game.participantPuuids.flatMap((puuid) => {
               const player = byPuuid.get(puuid);
               return player === undefined
                 ? []
@@ -262,7 +248,7 @@ export const consumerGuildRouter = router({
           ? []
           : [
               {
-                gameId: game.gameId.toString(),
+                gameId: game.gameId,
                 detectedAt: game.detectedAt,
                 expiresAt: game.expiresAt,
                 players: guildPlayers,

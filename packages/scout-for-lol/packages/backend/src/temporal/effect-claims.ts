@@ -141,6 +141,49 @@ export async function claimScoutEffect(
   }
 }
 
+/**
+ * Claim an effect that must happen at most once, even against a concurrent
+ * claimant.
+ *
+ * {@link claimScoutEffect} answers `execute` for a key someone else holds in
+ * CLAIMED, because it reads that as a previous attempt that died mid-effect
+ * and owes a retry. That is right for a send whose loss is worse than a
+ * repeat, and wrong when two live callers race for one effect: both would
+ * execute. This answers `claimed` only to the caller whose insert created the
+ * row, and `taken` to everyone else, whatever state the row is in. The price
+ * is that a claimant which dies before the effect leaves it undone, which is
+ * the right trade for bookkeeping such as an analytics event.
+ */
+export async function claimScoutEffectOnce(
+  input: {
+    key: string;
+    kind: string;
+  },
+  database: ExtendedPrismaClient = prisma,
+): Promise<"claimed" | "taken"> {
+  try {
+    await database.scoutEffectClaim.create({ data: input });
+    return "claimed";
+  } catch (error) {
+    if (!UniqueViolationSchema.safeParse(error).success) throw error;
+    const existing = await database.scoutEffectClaim.findUniqueOrThrow({
+      where: { key: input.key },
+      select: { kind: true },
+    });
+    if (existing.kind !== input.kind) {
+      scoutTemporalDuplicateEffectClaims.inc({
+        kind: input.kind,
+        outcome: "kind_mismatch",
+      });
+      throw new Error(
+        `Effect key ${input.key} belongs to ${existing.kind}, not ${input.kind}`,
+        { cause: error },
+      );
+    }
+    return "taken";
+  }
+}
+
 async function persistCompletedScoutEffect(
   key: string,
   resultId: string | undefined,

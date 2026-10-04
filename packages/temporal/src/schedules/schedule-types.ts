@@ -3,7 +3,7 @@ import type { Duration } from "@temporalio/common";
 import type { TaskQueue } from "#shared/task-queues.ts";
 import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
-export type CatchupWindow = "5 minutes" | "1 hour" | "12 hours";
+export type CatchupWindow = "1 minute" | "5 minutes" | "1 hour" | "12 hours";
 
 export type ScheduleTiming =
   | {

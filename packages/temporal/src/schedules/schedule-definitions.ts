@@ -30,6 +30,8 @@ import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 //     that needs a staleness guard inside the workflow.)
 //   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
 //     is "ran this cycle," so running late after a server outage is acceptable.
+//   * "1 minute" — Scout's prematch poll, whose game-start announcements are
+//     worthless late; declared locally in scout-schedule-definitions.ts.
 //
 // Inferred string-literal types, NOT `: Duration`. `Duration` is
 // `StringValue | number`, and under the old CI's per-package Node16 install the canary

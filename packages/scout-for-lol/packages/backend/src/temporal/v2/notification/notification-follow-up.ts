@@ -3,6 +3,7 @@ import type { ScoutNotificationFollowUpV2Result } from "@scout-for-lol/temporal/
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { afterDareSummaryDeliveredV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
 import { afterHallRecordBreakDeliveredV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
+import { afterPostmatchDeliveredV2 } from "#src/temporal/v2/notification/postmatch-follow-up.ts";
 import { afterPrematchDeliveredV2 } from "#src/temporal/v2/notification/prematch-follow-up.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
 import { createLogger } from "#src/logger.ts";
@@ -14,8 +15,9 @@ const logger = createLogger("scout-v2-notification-follow-up");
  * The best-effort work that follows a delivered notification, in its own
  * Activity and after the outcome is durably recorded.
  *
- * Three kinds have any. A delivered Hall record break captures its analytics
- * event. A delivered prematch records its Bryan Bucks message
+ * Four kinds have any. A delivered Hall record break captures its analytics
+ * event, and a delivered post-match report counts its guild's core output
+ * (see `postmatch-follow-up.ts`). A delivered prematch records its Bryan Bucks message
  * ref, refreshes the pool's messages, enqueues the game's parlay and counts
  * the guild's core output — v1's `recordPrematchOutputs`, per channel (see
  * `prematch-follow-up.ts`). A Dare summary refreshes the Dare callout once the
@@ -36,10 +38,11 @@ const logger = createLogger("scout-v2-notification-follow-up");
  */
 /**
  * The kinds whose follow-up is genuinely best-effort, and what it is. A Hall
- * record break captures v1's `hall_record_broken` analytics event —
- * bookkeeping that must describe a send Discord accepted,
- * which is why it runs here and not before the send, and which must never
- * turn a delivered announcement into a failed Activity.
+ * record break captures v1's `hall_record_broken` analytics event, and a
+ * post-match report its guild's core-output event — bookkeeping that must
+ * describe a send Discord accepted, which is why it runs here and not before
+ * the send, and which must never turn a delivered announcement into a failed
+ * Activity.
  */
 function bestEffortFollowUpOf(
   kind: MatchNotificationIntentRecord["intent"]["kind"],
@@ -50,6 +53,7 @@ function bestEffortFollowUpOf(
     case "hall-record-break":
       return afterHallRecordBreakDeliveredV2;
     case "postmatch":
+      return afterPostmatchDeliveredV2;
     case "prematch":
     case "settlement":
     case "duel-status":

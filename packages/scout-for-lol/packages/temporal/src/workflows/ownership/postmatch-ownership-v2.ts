@@ -1,150 +1,78 @@
-import { patched, startChild, workflowInfo } from "@temporalio/workflow";
-import type { IsoInstant } from "@scout-for-lol/domain/identity/brands.ts";
-import {
-  scoutPostMatchDiscoveryV2ResultCodec,
-  type ScoutPostMatchDiscoveryV2Input,
-  type ScoutPostMatchDiscoveryV2ResultEnvelope,
-} from "#src/workflow-contracts-v2.ts";
-import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "#src/identifiers.ts";
+import { ApplicationFailure } from "@temporalio/common";
+import { patched } from "@temporalio/workflow";
+import type { ScoutPostMatchDiscoveryV2Input } from "#src/workflow-contracts-v2.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 import { realtimeV2Activities } from "#src/workflows/activity-options.ts";
-import { scoutPostMatchDiscoveryWorkflow } from "#src/workflows/realtime.ts";
-import { awaitWhileRenewing } from "./claim-renewal.ts";
 
 /**
  * The marker for histories whose discovery asked who owns the pass.
  *
- * The ownership read is an inserted command at the head of the Workflow, so
- * an execution recorded before it replays through the gate as `false` and
- * goes straight to V2 discovery, which is exactly what that generation did.
- * Never rename it: a patch id names one change to this Workflow's command
- * sequence for as long as an execution that recorded it can replay.
+ * The ownership read was an inserted command at the head of
+ * `scoutPostMatchDiscoveryV2Workflow`, so an execution recorded before it
+ * replays through the gate as `false`. Never rename it: a patch id names one
+ * change to this Workflow's command sequence for as long as an execution that
+ * recorded it can replay.
  */
 export const SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH =
   "scout-v2-postmatch-ownership";
 
 /**
- * How often the router renews its claim while the v1 child runs.
+ * The marker for histories recorded after the ownership read was retired.
  *
- * Well inside the 30-minute staleness bound (`POST_MATCH_POLL_STALE_AFTER_MS`
- * in the backend), so a few failed or delayed renewals still leave the claim
- * live.
+ * Removing the read is the reverse of the usual patch lifecycle: the code
+ * goes BACK to the shape pre-ownership histories recorded, while executions
+ * that did record the read can still be open. A bare `deprecatePatch` of the
+ * ownership patch would tolerate its marker but schedule discovery where such
+ * a history recorded the ownership read, and fail every one of them on
+ * replay. Postmatch discovery runs every minute under a `SKIP` overlap policy
+ * and awaits its match children, so one wedged that way would stop the
+ * Schedule. This second marker tells the generations apart instead.
+ *
+ * Its id deliberately does not contain the ownership patch's id, so a
+ * substring search of a history for one never matches the other.
+ *
+ * Never rename it. Once no discovery started before it shipped can still be
+ * open, the gate below becomes `deprecatePatch` of this id, and a release
+ * after that removes it.
  */
-export const POSTMATCH_CLAIM_RENEWAL_INTERVAL = "5 minutes";
-
-/** The v1 child's ID, derived from this run so two runs can never collide. */
-export function legacyPostMatchDiscoveryWorkflowId(parentId: string): string {
-  return `${parentId}-legacy-v1`;
-}
+export const SCOUT_V2_POSTMATCH_OWNERSHIP_RETIRED_PATCH =
+  "scout-v2-retired-postmatch-ownership";
 
 /**
- * Decide who owns this post-match discovery pass, and run v1 when it does.
+ * Replay the retired post-match ownership read, for the histories that made
+ * it, and do nothing for every other run.
  *
- * Returns `null` when V2 owns the pass and the caller continues into V2
- * discovery. Otherwise returns this run's finished result.
+ * Three generations reach here:
  *
- * The Schedule always starts the V2 Workflow Type, so the ownership switch
- * lives here, in the Scout worker's own bundle, rather than in the Schedule
- * definition. The backend answers from the
- * `scout_v2_postmatch_ownership_enabled` flag (see
- * `resolvePostMatchDiscoveryOwnerV2`), which is on by default.
+ * - A run started after the retirement records the retired marker and skips
+ *   the read. V2 owns post-match discovery unconditionally.
+ * - A run recorded while the ownership read existed replays it. The flag that
+ *   answered it was on in every environment, so the recorded answer is
+ *   `run-v2` and the run continues into V2 discovery as it did then. If the
+ *   read is still pending when this deploys, the backend now answers `run-v2`
+ *   too.
+ * - A run recorded before the read existed records neither marker and goes
+ *   straight to discovery.
  *
- * Only one pipeline discovers at a time, because both take the same durable
- * poll claim on `BotState` before discovering:
- *
- * - V2 discovery claims the poll in its discovery Activity and holds the
- *   claim until its maintenance closes it.
- * - The v1 handoff claims the poll in the ownership Activity, before the v1
- *   child starts. The child re-presents that claim instead of opening the
- *   poll unconditionally, and its maintenance closes it.
- *
- * A run that finds the claim held does nothing: V2 discovery reports
- * `skipped`, and the handoff reports `defer-v1`. Both return `no-op`.
- *
- * Match-processing children already started by V2 are left alone. They run
- * under `ABANDON` from the dispatcher, keep their per-match observation
- * ownership, and finish whatever the flag says.
+ * A recorded `delegate-v1` or `defer-v1` answer means the rollback switch was
+ * thrown while this execution ran. Nothing here can replay the v1 handoff
+ * that followed, so it fails loudly rather than pretending the pass was V2's.
  */
-export async function delegateWhenV1OwnsDiscovery(
+export async function replayRetiredPostmatchOwnershipRead(
   input: ScoutPostMatchDiscoveryV2Input,
-): Promise<ScoutPostMatchDiscoveryV2ResultEnvelope | null> {
-  if (!patched(SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH)) return null;
+): Promise<void> {
+  if (patched(SCOUT_V2_POSTMATCH_OWNERSHIP_RETIRED_PATCH)) return;
+  if (!patched(SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH)) return;
+  // Part of the recorded sequence, not decoration: this was the run's first
+  // phase update, so it is where the UI interceptor's own patch marker sits
+  // in these histories, ahead of the ownership read.
   setWorkflowPhase("**Phase:** resolving post-match discovery ownership");
   const owner = await realtimeV2Activities(
     input.stage,
   ).resolvePostMatchDiscoveryOwnerV2(input);
-  if (owner.decision === "run-v2") return null;
-  if (owner.decision === "defer-v1") {
-    setWorkflowPhase(
-      `**Phase:** v1 owns discovery; deferring while another run holds the poll claimed at ${owner.pollHeldSince ?? "an unknown time"}`,
-    );
-    return scoutPostMatchDiscoveryV2ResultCodec.serialize({
-      status: "no-op",
-      discovered: 0,
-      childrenStarted: 0,
-      complete: false,
-    });
-  }
-  return await runDelegatedV1Pass(input, owner.pollOwner);
-}
-
-/**
- * Run v1 discovery as a child under the claim the handoff took.
- *
- * On success, v1's maintenance has closed the claim. If the child fails, the
- * claim is closed here as failed, so the next pass need not wait out the
- * staleness bound, and the failure then propagates.
- */
-async function runDelegatedV1Pass(
-  input: ScoutPostMatchDiscoveryV2Input,
-  pollOwner: IsoInstant,
-): Promise<ScoutPostMatchDiscoveryV2ResultEnvelope> {
-  setWorkflowPhase(
-    "**Phase:** v1 owns discovery; running v1 post-match discovery",
+  if (owner.decision === "run-v2") return;
+  throw ApplicationFailure.nonRetryable(
+    `This post-match discovery recorded a ${owner.decision} ownership answer, and the v1 handoff it led to has been removed`,
+    "RetiredPostMatchOwnership",
   );
-  const workflowId = legacyPostMatchDiscoveryWorkflowId(
-    workflowInfo().workflowId,
-  );
-  let legacy: Awaited<ReturnType<typeof scoutPostMatchDiscoveryWorkflow>>;
-  try {
-    const child = await startChild(scoutPostMatchDiscoveryWorkflow, {
-      workflowId,
-      workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
-      taskQueue: scoutTaskQueues(input.stage).workflow,
-      // v1's own match-ingestion children run under ABANDON, so ending this
-      // run early never cancels a match in flight; it only ends the pass.
-      parentClosePolicy: "TERMINATE",
-      args: [{ stage: input.stage, pollOwner }],
-    });
-    legacy = await awaitWhileRenewing(
-      child.result(),
-      POSTMATCH_CLAIM_RENEWAL_INTERVAL,
-      async () => {
-        await realtimeV2Activities(input.stage).renewPostMatchPollClaimV2({
-          stage: input.stage,
-          pollOwner,
-        });
-      },
-    );
-  } catch (error) {
-    setWorkflowPhase(
-      "**Phase:** v1 post-match discovery failed; releasing its poll claim",
-    );
-    await realtimeV2Activities(input.stage).releasePostMatchPollClaimV2({
-      stage: input.stage,
-      pollOwner,
-    });
-    throw error;
-  }
-  return scoutPostMatchDiscoveryV2ResultCodec.serialize({
-    status: legacy.status,
-    discovered: 0,
-    childrenStarted: 0,
-    complete: false,
-    delegatedTo: {
-      workflowType: SCOUT_WORKFLOW_NAMES.postMatchDiscovery,
-      workflowId,
-      childrenStarted: legacy.childrenStarted,
-    },
-  });
 }

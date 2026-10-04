@@ -31,12 +31,7 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
         async () => {
           const { resolvePostMatchDiscoveryOwnerV2 } =
             await import("#src/temporal/v2/ownership/postmatch-ownership.ts");
-          // The first-scheduled timestamp is the one instant every attempt
-          // agrees on, so a retried attempt re-acquires the claim its
-          // predecessor took instead of deferring behind it.
-          return await resolvePostMatchDiscoveryOwnerV2({
-            claimAt: new Date(Context.current().info.scheduledTimestampMs),
-          });
+          return await resolvePostMatchDiscoveryOwnerV2();
         },
       ),
     renewPostMatchPollClaimV2: async (input) =>

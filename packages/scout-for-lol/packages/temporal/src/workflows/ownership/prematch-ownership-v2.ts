@@ -46,13 +46,16 @@ export const PREMATCH_CLAIM_RENEWAL_INTERVAL = "1 minute";
 /**
  * Run one prematch pass under the pipeline that owns it.
  *
- * The `prematch-poll` Schedule always starts `scoutRealtimePollWorkflow`, in
- * every stage, so the V2 cutover cannot be a Schedule change: Schedules
- * deploy separately from each stage's image, and a Schedule naming a
- * Workflow Type an image lacks strands that stage. The switch lives here, in
- * the Scout worker's own bundle, and the backend answers it from the
- * `scout_v2_prematch_ownership_enabled` flag (see
- * `resolvePrematchPassOwnerV2`), which is off by default.
+ * Retired, and kept only so `scoutRealtimePollWorkflow` executions that
+ * recorded this router replay exactly. The `prematch-poll` Schedule now
+ * starts `scoutPrematchDiscoveryV2Workflow` directly, which runs the
+ * maintenance sweeps itself. A v1 poll that still reaches here — one already
+ * open when the change deployed, or one the not-yet-updated Schedule started
+ * — is answered `run-v2` by the backend with no durable claim behind it, and
+ * the renewal and release answer `not-held`. This file goes with
+ * `realtime.ts` once no v1 poll can still be open.
+ *
+ * What follows describes the router as it ran while the switch existed.
  *
  * Only one pipeline detects live games at a time, because every pass takes
  * the same durable prematch pass claim on `BotState` before doing anything.

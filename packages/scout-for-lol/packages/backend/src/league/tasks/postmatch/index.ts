@@ -8,12 +8,8 @@ import { DareV2PartialSettlementError } from "#src/betting/dares/settlement/dare
 import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
 import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
-import { announceSettlements } from "#src/betting/notify/announce.ts";
-import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
-import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
+import { voidStaleAndAnnounce } from "#src/league/tasks/postmatch/void-stale-announce.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlays/runtime/parlay-sweep.ts";
-import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
@@ -225,36 +221,4 @@ export async function runPostMatchMaintenance(options?: {
     throw error;
   }
   return { dareSummaries };
-}
-
-/** Void pools whose match never resolved, then refresh and announce them —
- * one step because the announce consumes the void's own result. */
-async function voidStaleAndAnnounce(): Promise<void> {
-  const staleBucks = await voidStaleBettingPools();
-  const staleMatchIds = new Set([
-    ...staleBucks.closures.map((closure) => closure.matchId),
-    ...staleBucks.settlements.map((settlement) => settlement.matchId),
-  ]);
-  await refreshClosedBucksMessages([
-    ...staleBucks.closures,
-    ...staleBucks.settlements,
-  ]);
-  for (const matchId of staleMatchIds) {
-    const parsedMatchId = MatchIdSchema.safeParse(matchId);
-    const postmatchMessageIds = parsedMatchId.success
-      ? await getPostmatchMessageIdsForMatchIdOrEmpty(parsedMatchId.data)
-      : new Map<string, string>();
-    await announceSettlements({
-      matchId,
-      closures: staleBucks.closures.filter(
-        (closure) => closure.matchId === matchId,
-      ),
-      settlements: staleBucks.settlements.filter(
-        (settlement) => settlement.matchId === matchId,
-      ),
-      parlaySettlements: [],
-      earnings: [],
-      postmatchMessageIds,
-    });
-  }
 }

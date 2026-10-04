@@ -1,4 +1,8 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
+import { rawArchiveReceiptRecord } from "#src/report-lake/durable-receipts.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -17,6 +21,25 @@ import {
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/test-report-lake.ts";
+
+// The live view reads each captured game's roster from its archived spectator
+// snapshot; the object store is not part of this suite.
+const archivedSnapshots = vi.hoisted(() => new Map<string, object>());
+vi.mock("#src/report-lake/receipted-archive.ts", async () => {
+  const actual: object = await vi.importActual(
+    "#src/report-lake/receipted-archive.ts",
+  );
+  return {
+    ...actual,
+    readArchivedPrematchSnapshot: (_descriptor: unknown, matchId: string) => {
+      const snapshot = archivedSnapshots.get(matchId);
+      if (snapshot === undefined) {
+        throw new Error(`No archived snapshot stubbed for ${matchId}`);
+      }
+      return Promise.resolve(snapshot);
+    },
+  };
+});
 
 const guildId = DiscordGuildIdSchema.parse("100000000000000041");
 const otherGuildId = DiscordGuildIdSchema.parse("100000000000000042");
@@ -115,7 +138,7 @@ registerConsumerProfileFeatureTestLifecycle({
     trpc.setMembership([{ guildId, asAdmin: false }]);
     await testPrisma.currentRankSnapshot.deleteMany();
     await testPrisma.matchRankHistory.deleteMany();
-    await testPrisma.activeGame.deleteMany();
+    await testPrisma.matchProcessingReceipt.deleteMany();
     await testPrisma.account.deleteMany();
     await testPrisma.player.deleteMany();
     await profileFeature.resetLake();
@@ -152,16 +175,29 @@ describe("consumer guild community authorization", () => {
     await expect(
       trpc.authedCaller().consumerGuild.overview({ guildId: otherGuildId }),
     ).rejects.toThrow("Guild was not found");
-    await testPrisma.activeGame.create({
-      data: {
-        gameId: 123n,
-        trackedPuuids: JSON.stringify([MAIN, OTHER]),
-        detectedAt: new Date(Date.now() - 60_000),
-        expiresAt: new Date(Date.now() + 60_000),
-      },
+    // A game V2 captured a minute ago, with one player from each guild in it.
+    const liveMatchId = RiotMatchIdSchema.parse("NA1_123");
+    await recordReceipt(
+      testPrisma,
+      rawArchiveReceiptRecord({
+        matchId: liveMatchId,
+        artifact: ArtifactDescriptorSchema.parse({
+          kind: "prematch",
+          key: "prematch/2026/09/20/123/spectator-data.json",
+          digest: "f".repeat(64),
+          bytes: 4096,
+          contentType: "application/json",
+          capturedAt: new Date(Date.now() - 60_000).toISOString(),
+        }),
+      }),
+    );
+    archivedSnapshots.set(liveMatchId, {
+      gameId: 123,
+      participants: [{ puuid: MAIN }, { puuid: OTHER }, { puuid: null }],
     });
     const live = await trpc.authedCaller().consumerGuild.live({ guildId });
     expect(live).toHaveLength(1);
+    expect(live[0]?.gameId).toBe("123");
     expect(live[0]?.players).toEqual([
       { playerId: visible.id, alias: "Guild Player" },
     ]);
