@@ -26,6 +26,8 @@ import {
   fetchParticipantRanks,
   type ParticipantRanks,
 } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { readClientObservedBots } from "#src/league/tasks/prematch/client-bot-roster.ts";
+import type { ObservedLobbyBot } from "#src/scout-client/lobby-payload.ts";
 import { formatPlayerList } from "#src/league/tasks/prematch/prematch-copy.ts";
 import {
   clashSurfaceByGuild,
@@ -354,10 +356,18 @@ export async function sendPrematchNotification(
     throw new Error(`No tracked players provided for game ${gameId}`);
   }
   const region = firstPlayer.league.leagueAccount.region;
-  const ranksByPuuid: ParticipantRanks = await fetchParticipantRanks(
-    gameInfo,
-    region,
-  );
+  const [ranksByPuuid, observedBots]: [
+    ParticipantRanks,
+    readonly ObservedLobbyBot[],
+  ] = await Promise.all([
+    fetchParticipantRanks(gameInfo, region),
+    // Riot omits bots from the Spectator roster, so a bot custom renders as a
+    // near-empty lobby unless the local client's view of it is folded in.
+    readClientObservedBots(
+      gameInfo.gameId.toString(),
+      new Set(trackedPlayers.map((p) => p.league.leagueAccount.puuid)),
+    ),
+  ]);
 
   const targetGuildIds: DiscordGuildId[] = uniqueBy(
     deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
@@ -377,6 +387,7 @@ export async function sendPrematchNotification(
     aliases,
     region,
     ranksByPuuid,
+    observedBots,
     queueType,
   };
   const clashPresentation =

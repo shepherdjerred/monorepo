@@ -19,6 +19,7 @@ import {
   buildLoadingScreenData,
   fetchParticipantRanks,
 } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { readClientObservedBots } from "#src/league/tasks/prematch/client-bot-roster.ts";
 import { UnsupportedLoadingScreenQueueError } from "#src/league/tasks/prematch/loading-screen-errors.ts";
 import {
   buildFallbackPrematchEmbed,
@@ -119,14 +120,17 @@ export async function buildPrematchLoadingScreenDataV2(
   const trackedPuuids = new Set(
     context.trackedPlayers.map((player) => player.league.leagueAccount.puuid),
   );
-  const ranks = await fetchParticipantRanks(context.gameInfo, region);
+  const [ranks, observedBots] = await Promise.all([
+    fetchParticipantRanks(context.gameInfo, region),
+    // Riot omits bots from the Spectator roster, so a bot custom renders as a
+    // near-empty lobby unless the local client's own view of it is folded in.
+    readClientObservedBots(context.gameInfo.gameId.toString(), trackedPuuids),
+  ]);
   return await attachClashChrome(
-    await buildLoadingScreenData(
-      context.gameInfo,
-      trackedPuuids,
-      region,
-      ranks,
-    ),
+    await buildLoadingScreenData(context.gameInfo, trackedPuuids, region, {
+      prefetchedRanks: ranks,
+      observedBots,
+    }),
     clashEnabled ?? (await clashSurfaceEnabledForPuuids([...trackedPuuids])),
   );
 }
