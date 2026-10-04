@@ -29,6 +29,7 @@ public final class RefusalText {
       case Refusal.NotYourFocus() -> "This focus is bound to someone else.";
       case Refusal.StaleFocus() -> "This focus has faded; bind the spell again.";
       case Refusal.InventoryFull() -> "Make room in your inventory first.";
+      case Refusal.SealedWorld() -> "Magic does not work in this world.";
     };
   }
 

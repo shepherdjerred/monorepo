@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.tracks.app.Track;
@@ -278,6 +279,36 @@ final class ProtectionListenersTest extends AegisServer {
     alice.teleport(new Location(world, 5, Y, 5));
     bob.teleport(new Location(world, 6, Y, 5));
     assertThat(hitAllowed(bob, alice)).isFalse();
+  }
+
+  @Test
+  void aSealedWorldHasNoPvpSwitchesClaimsOrLocks() throws InterruptedException {
+    plugin.sealed.seal("arena");
+    var arena = server.addSimpleWorld("arena");
+    server.dispatchCommand(bob, "pvp off");
+    awaitLine(bob, "Your PvP is off");
+    alice.teleport(new Location(world, WILD_X - 5, Y, Z));
+    bob.teleport(new Location(world, WILD_X - 6, Y, Z));
+    assertThat(hitAllowed(alice, bob)).isFalse();
+
+    alice.teleport(new Location(arena, 5, Y, 5));
+    bob.teleport(new Location(arena, 6, Y, 5));
+
+    assertThat(hitAllowed(alice, bob)).isTrue();
+    assertThat(hitAllowed(bob, alice)).isTrue();
+    var protection = plugin.services.require(Protection.class);
+    assertThat(
+            protection
+                .checkHarm(
+                    alice.getUniqueId(), alice.getLocation(), HarmTarget.PLAYER, bob.getLocation())
+                .isAllowed())
+        .isTrue();
+    assertThat(
+            protection
+                .check(bob.getUniqueId(), ProtectedAction.SET_HOME, new Location(arena, 8, Y, 8))
+                .isAllowed())
+        .isTrue();
+    assertThat(breakAllowed(bob, arena.getBlockAt(170, Y, Z))).isTrue();
   }
 
   @Test

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.UUID;
 import org.bukkit.ExplosionResult;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
@@ -139,6 +140,25 @@ final class GravesPaperTest {
     var spy = spyOnDrops();
     aliceDies();
     assertThat(spy.drops).isEmpty();
+  }
+
+  @Test
+  void aDeathInASealedWorldLeavesNoGraveAndKeepsVanillaDrops() {
+    var spy = spyOnDrops();
+    harness.sealed.seal("arena");
+    var arena = harness.server.addSimpleWorld("arena");
+    arena.loadChunk(0, 0);
+    var bob = harness.server.addPlayer("Bob");
+    bob.teleport(new Location(arena, 0.5, 5, 0.5));
+    bob.getInventory().setItem(0, new ItemStack(Material.DIAMOND_SWORD));
+
+    bob.setHealth(0);
+    harness.server.getScheduler().performTicks(5);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(spy.drops)
+        .singleElement()
+        .satisfies(stack -> assertThat(stack.getType()).isEqualTo(Material.DIAMOND_SWORD));
   }
 
   @Test

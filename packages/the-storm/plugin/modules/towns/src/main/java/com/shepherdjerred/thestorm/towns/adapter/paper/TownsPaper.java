@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.app.LockService;
@@ -98,12 +99,13 @@ public final class TownsPaper {
                 new NamespacedKey(plugin, "cloud_thrower"),
                 new NamespacedKey(plugin, "cloud_origin")),
             config.grief().thrownItemMemoryTicks());
-    var guard = new Guard(state, engine, notices, culprits);
+    var sealed = services.require(SealedWorlds.class);
+    var guard = new Guard(new Guard.Parts(state, engine, notices, culprits, sealed));
     var kinds = new BlockKinds();
     var locks =
         new LockGuard(
             new LockGuard.Parts(
-                loaded.locks().book(), new LockAccess(state), kinds, notices, state));
+                loaded.locks().book(), new LockAccess(state), kinds, notices, state, sealed));
     var placers = new Placers(new NamespacedKey(plugin, "placed_by"));
     var runtime = new TownCommands.Services(context.scheduler(), context.logger());
     var memberCommands = new MemberCommands(members, towns, names, runtime);

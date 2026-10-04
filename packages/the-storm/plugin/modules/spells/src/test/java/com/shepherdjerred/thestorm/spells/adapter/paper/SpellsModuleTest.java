@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
@@ -190,6 +191,25 @@ final class SpellsModuleTest {
     // The same click reported twice is silent; the cooldown still holds.
     rightClick(player, focus);
     assertThat(player.getInventory().getItem(20)).isEqualTo(ItemStack.of(Material.REDSTONE, 5));
+  }
+
+  @Test
+  void nothingIsCastInASealedWorld() {
+    var player = spellcaster(1);
+    bind(player, "haste");
+    var focus = focusIn(player);
+    player.getInventory().setItem(20, ItemStack.of(Material.REDSTONE, 20));
+    plugin.sealed.seal("arena");
+    var arena = server.addSimpleWorld("arena");
+    player.teleport(new Location(arena, 0.5, 5, 0.5));
+    said(player);
+
+    rightClick(player, focus);
+
+    assertThat(player.hasPotionEffect(PotionEffectType.SPEED)).isFalse();
+    assertThat(player.getInventory().getItem(20)).isEqualTo(ItemStack.of(Material.REDSTONE, 20));
+    assertThat(player.getCooldown(focus)).isZero();
+    assertThat(said(player)).anyMatch(line -> line.contains("Magic does not work in this world."));
   }
 
   @Test

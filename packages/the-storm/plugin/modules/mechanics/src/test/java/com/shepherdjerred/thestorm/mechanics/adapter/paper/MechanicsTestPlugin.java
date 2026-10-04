@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -39,6 +40,10 @@ public class MechanicsTestPlugin extends JavaPlugin {
   static @Nullable Path directory;
 
   final Services services = new Services();
+
+  /** Worlds the test seals; mechanisms must ignore them. */
+  final SealedWorlds sealed = new SealedWorlds();
+
   private @Nullable StormDatabase database;
 
   @Override
@@ -70,6 +75,7 @@ public class MechanicsTestPlugin extends JavaPlugin {
           }
         };
     services.provide(Protection.class, protection);
+    services.provide(SealedWorlds.class, sealed);
     var context =
         new ModuleContext(
             this,

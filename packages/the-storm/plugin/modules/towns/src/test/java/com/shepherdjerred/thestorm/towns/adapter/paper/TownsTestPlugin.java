@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.players.KnownPlayer;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -48,6 +49,9 @@ public class TownsTestPlugin extends JavaPlugin {
 
   final Services services = new Services();
   final FakeWallets wallets = new FakeWallets();
+
+  /** Worlds the test seals; towns must protect nothing there. */
+  final SealedWorlds sealed = new SealedWorlds();
 
   /** Governor levels by player, as the tracks module would report them. */
   final Map<UUID, Integer> governor = new HashMap<>();
@@ -95,6 +99,7 @@ public class TownsTestPlugin extends JavaPlugin {
           }
         });
     services.provide(PlayerDirectory.class, new Directory());
+    services.provide(SealedWorlds.class, sealed);
     var context =
         new ModuleContext(
             this,

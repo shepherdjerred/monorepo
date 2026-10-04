@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.qol;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
 import com.shepherdjerred.thestorm.qol.adapter.db.JooqGraveStore;
@@ -41,7 +42,8 @@ public final class QolModule implements StormModule {
             combat,
             services.require(Protection.class),
             services.require(TeleportGuards.class),
-            services.require(AfkStatus.class));
+            services.require(AfkStatus.class),
+            services.require(SealedWorlds.class));
     paper = QolPaper.start(context, config, app);
     RtpPaper.install(
         context,

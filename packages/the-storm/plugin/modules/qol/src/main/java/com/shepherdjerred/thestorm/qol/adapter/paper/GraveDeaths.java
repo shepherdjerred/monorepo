@@ -51,10 +51,10 @@ final class GraveDeaths {
   }
 
   void died(PlayerDeathEvent event) {
-    if (event.getKeepInventory()) {
+    var player = event.getEntity();
+    if (event.getKeepInventory() || parts.sealed().isSealed(player.getWorld())) {
       return;
     }
-    var player = event.getEntity();
     // Paper never lists nulls here, but some servers and test doubles do.
     var buried =
         event.getDrops().stream()

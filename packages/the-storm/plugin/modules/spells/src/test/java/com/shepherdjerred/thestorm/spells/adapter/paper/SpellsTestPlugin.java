@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.spells.SpellsModule;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -36,6 +37,10 @@ public class SpellsTestPlugin extends JavaPlugin {
   static @Nullable Path directory;
 
   final Services services = new Services();
+
+  /** Worlds the test seals; no spell may go off there. */
+  final SealedWorlds sealed = new SealedWorlds();
+
   final SpellsModule module = new SpellsModule();
   private @Nullable StormDatabase database;
 
@@ -52,6 +57,7 @@ public class SpellsTestPlugin extends JavaPlugin {
     var database = StormDatabase.open(directory.resolve("t.db"));
     this.database = database;
     services.provide(Protection.class, new FarClaim());
+    services.provide(SealedWorlds.class, sealed);
     var context =
         new ModuleContext(
             this,

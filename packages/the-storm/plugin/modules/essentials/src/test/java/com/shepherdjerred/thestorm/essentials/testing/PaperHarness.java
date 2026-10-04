@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.EssentialsModule;
 import com.shepherdjerred.thestorm.essentials.app.ModerationService;
@@ -49,6 +50,10 @@ public final class PaperHarness implements AutoCloseable {
   public final ServerMock server;
   public final StormDatabase database;
   public final Services services = new Services();
+
+  /** Worlds the test seals; no teleport may leave or enter them. */
+  public final SealedWorlds sealed = new SealedWorlds();
+
   public final FakeClock clock = FakeClock.at("2026-09-25T12:00:00Z");
 
   private PaperHarness(ServerMock server, StormDatabase database) {
@@ -66,6 +71,7 @@ public final class PaperHarness implements AutoCloseable {
     var services = harness.services;
     services.provide(Wallets.class, wallets);
     services.provide(Protection.class, new AllowAllProtection());
+    services.provide(SealedWorlds.class, harness.sealed);
     enabling =
         plugin ->
             new EssentialsModule()

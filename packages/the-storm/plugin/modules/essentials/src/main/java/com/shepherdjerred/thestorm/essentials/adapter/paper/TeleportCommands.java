@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.WarpDirectory;
 import com.shepherdjerred.thestorm.essentials.app.store.BackStore;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
@@ -48,7 +49,12 @@ final class TeleportCommands {
    * @param back {@code /back} history
    * @param protection land protection, asked before a home is set
    */
-  record Places(HomeStore homes, WarpDirectory warps, BackStore back, Protection protection) {}
+  record Places(
+      HomeStore homes,
+      WarpDirectory warps,
+      BackStore back,
+      Protection protection,
+      SealedWorlds sealed) {}
 
   TeleportCommands(
       PaperRuntime runtime, TeleportFlow flow, Places places, EssentialsConfig config) {
@@ -214,6 +220,10 @@ final class TeleportCommands {
   }
 
   private void setHome(Player player, PlaceName name) {
+    if (places.sealed().isSealed(player.getWorld())) {
+      Say.error(player, Say.HOMES, "You can't set a home in this world.");
+      return;
+    }
     var decision =
         places
             .protection()

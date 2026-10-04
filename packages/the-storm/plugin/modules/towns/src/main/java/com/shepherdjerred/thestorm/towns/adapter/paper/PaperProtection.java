@@ -55,6 +55,9 @@ final class PaperProtection implements Protection {
   @Override
   public Decision check(UUID player, ProtectedAction action, Location location) {
     requireMainThread();
+    if (guard.isSealed(Guard.world(location))) {
+      return Decision.allowed();
+    }
     var actor = actor(player);
     var act = new Act(actionOf(action), subjectOf(action, location));
     var land = guard.land(location);
@@ -89,6 +92,9 @@ final class PaperProtection implements Protection {
   public Decision checkHarm(
       UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
     requireMainThread();
+    if (guard.isSealed(Guard.world(attackerAt)) || guard.isSealed(Guard.world(victimAt))) {
+      return Decision.allowed();
+    }
     var actor = actor(attacker);
     return decision(
         switch (target) {
