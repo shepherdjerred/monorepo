@@ -319,6 +319,121 @@ async function autonomousFixture() {
   };
 }
 
+describe("autonomous promotion review", () => {
+  test("promotion reviews current acceptance criteria and findings without resetting the budget", async () => {
+    const f = await autonomousFixture();
+    const finding = { provider: "codex" as const, key: "fixture-finding" };
+    vi.spyOn(GitWorkspace.prototype, "restack").mockResolvedValue(null);
+    vi.spyOn(GitHubClient.prototype, "reviewDiagnostics").mockResolvedValue({
+      text: "Existing review finding",
+      findings: [finding],
+      blockedReasons: [],
+    });
+    vi.spyOn(LinearClient.prototype, "agentContext").mockResolvedValue(
+      "Current private acceptance criteria",
+    );
+    vi.spyOn(GitWorkspace.prototype, "changedPaths").mockResolvedValue([
+      "packages/toolkit/src/handlers/pr.test.ts",
+    ]);
+    const agent = vi
+      .spyOn(DockerAgentRunner.prototype, "runTurn")
+      .mockImplementation(async (input) => {
+        expect(input.prompt).toContain("Current private acceptance criteria");
+        expect(input.prompt).toContain("Existing review finding");
+        await input.onStart?.();
+        return AgentOutputSchema.parse({
+          status: "changed",
+          commitTitle: "test(toolkit): cover nested help",
+          summary: "Adds required regressions",
+          verification: [],
+          resolvedFindings: [finding],
+        });
+      });
+    try {
+      await f.store.save({
+        ...f.state,
+        deliveryMode: "owner_approved",
+        phase: "needs_human",
+        resumePhase: "awaiting_ci",
+        prNumber: f.pr.number,
+        prUrl: f.pr.url,
+        repairTurnsUsed: 1,
+        implementationStarted: true,
+      });
+      const reconciler = new Reconciler(f.config, f.paths, f.run);
+      await reconciler.reconcile();
+      const claimedStates = await f.store.list();
+      const claimed = claimedStates[0];
+      expect(claimed?.autonomyReviewPending).toBe(true);
+      expect(claimed?.repairTurnsUsed).toBe(1);
+      expect(claimed?.phase).toBe("awaiting_ci");
+      if (claimed === undefined) throw new Error("Claimed fixture missing");
+      expect(await reconciler.mergeReady(claimed)).toBe(false);
+      await reconciler.reconcile();
+      const reviewStates = await f.store.list();
+      const review = reviewStates[0];
+      expect(review?.phase).toBe("implementing");
+      expect(review?.pendingReviewFindings).toEqual([finding]);
+      expect(review?.repairTurnsUsed).toBe(1);
+      expect(agent).not.toHaveBeenCalled();
+      expect(f.merge).not.toHaveBeenCalled();
+      await reconciler.reconcile();
+      const publishingStates = await f.store.list();
+      const publishing = publishingStates[0];
+      expect(publishing?.phase).toBe("publishing");
+      expect(publishing?.autonomyReviewPending).toBe(false);
+      expect(publishing?.repairTurnsUsed).toBe(2);
+      expect(agent).toHaveBeenCalledOnce();
+      expect(f.merge).not.toHaveBeenCalled();
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test.each(["awaiting_ci", "publishing", "merging"] as const)(
+    "legacy autonomous state in %s cannot skip the fresh review after restart",
+    async (phase) => {
+      const f = await autonomousFixture();
+      const restack = vi
+        .spyOn(GitWorkspace.prototype, "restack")
+        .mockResolvedValue(null);
+      vi.spyOn(GitHubClient.prototype, "reviewDiagnostics").mockResolvedValue({
+        text: "Existing review",
+        findings: [],
+        blockedReasons: [],
+      });
+      const agent = vi.spyOn(DockerAgentRunner.prototype, "runTurn");
+      try {
+        const legacy = {
+          ...f.state,
+          phase,
+          prNumber: f.pr.number,
+          prUrl: f.pr.url,
+          repairTurnsUsed: 2,
+          implementationStarted: true,
+        };
+        Reflect.deleteProperty(legacy, "autonomyReviewPending");
+        await Bun.write(
+          path.join(f.paths.state, "ai-104.json"),
+          JSON.stringify(legacy),
+        );
+        await new Reconciler(f.config, f.paths, f.run).reconcile();
+        const savedStates = await f.store.list();
+        const saved = savedStates[0];
+        expect(saved?.phase).toBe("implementing");
+        expect(saved?.autonomyReviewPending).toBe(true);
+        expect(saved?.repairTurnsUsed).toBe(2);
+        expect(restack).toHaveBeenCalledTimes(phase === "publishing" ? 0 : 1);
+        expect(agent).not.toHaveBeenCalled();
+        expect(f.merge).not.toHaveBeenCalled();
+        expect(f.calls.some((args) => args.includes("Done"))).toBe(false);
+      } finally {
+        await f.cleanup();
+      }
+    },
+  );
+});
+
 describe("autonomous merge acceptance", () => {
   test("a due blocked claim retries Linear claim and preserves its continuation", async () => {
     const f = await autonomousFixture();
@@ -342,6 +457,39 @@ describe("autonomous merge acceptance", () => {
     }
   });
 
+  test("an already merged legacy PR confirms ancestry without another coding turn", async () => {
+    const f = await autonomousFixture();
+    vi.spyOn(GitHubClient.prototype, "pullRequest").mockResolvedValue({
+      ...f.pr,
+      mergedAt: "2026-01-01T00:00:00Z",
+      mergeCommit: { oid: "b".repeat(40) },
+    });
+    const restack = vi.spyOn(GitWorkspace.prototype, "restack");
+    const agent = vi.spyOn(DockerAgentRunner.prototype, "runTurn");
+    try {
+      await f.store.save({
+        ...f.state,
+        phase: "merging",
+        prNumber: f.pr.number,
+        prUrl: f.pr.url,
+        autonomyReviewPending: true,
+      });
+      const reconciler = new Reconciler(f.config, f.paths, f.run);
+      await reconciler.reconcile();
+      await reconciler.reconcile();
+      const states = await f.store.list();
+      expect(states[0]?.phase).toBe("done");
+      expect(f.confirmation).toHaveBeenCalledOnce();
+      expect(restack).not.toHaveBeenCalled();
+      expect(agent).not.toHaveBeenCalled();
+      expect(f.merge).not.toHaveBeenCalled();
+    } finally {
+      await f.cleanup();
+    }
+  });
+});
+
+describe("autonomous publication and completion", () => {
   test.each([false, true])(
     "publishes only after verification and finding resolution (verification failure: %s)",
     async (verificationFails) => {

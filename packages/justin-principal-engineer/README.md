@@ -123,6 +123,9 @@ review controls, or Justin itself. Scope violations block publication and merge.
 The delivery mode is persisted when a task is claimed. Legacy state defaults
 to `owner_approved`; labeling an already active task does not silently change
 its authority. Requeue a parked task with the autonomous label to opt it in.
+An existing PR receives a fresh coding turn against the current ticket,
+comments, and review findings before autonomous publication or merge. This
+uses a remaining repair turn and preserves the existing repair budget.
 
 One initial coding turn and three follow-up repair turns are allowed. A repair
 counts when the coding process starts, before its output is available. CI logs

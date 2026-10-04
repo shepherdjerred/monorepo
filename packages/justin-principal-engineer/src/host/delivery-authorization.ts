@@ -46,6 +46,7 @@ export class DeliveryAuthorization {
 
   public async mergeReady(state: TaskState): Promise<boolean> {
     if (state.deliveryMode === "autonomous") {
+      if (state.autonomyReviewPending) return false;
       // This readiness hook is read-only; do not change task or Linear state.
       const issue = await this.input.linear.refreshIssue(
         state.issue.identifier,

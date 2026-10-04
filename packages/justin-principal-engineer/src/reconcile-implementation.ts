@@ -52,6 +52,7 @@ async function completeUnchangedTurn(
     return;
   }
   await input.save(state, "awaiting_ci", {
+    autonomyReviewPending: false,
     lastAgentOutput: persistedOutput,
     pendingFeedback: [],
     pendingHealth: null,
@@ -118,6 +119,7 @@ export async function implementTask(input: {
     return;
   }
   await input.save(state, "publishing", {
+    autonomyReviewPending: false,
     lastAgentOutput: persistedOutput,
     pendingFeedback: [],
     pendingHealth: null,

@@ -105,6 +105,8 @@ Choose a small code, CLI, test, or documentation change within the
 Enable that issue through the managed flag or local file targeting described
 in the same reference. Add both `agent:codex` and `agent:autonomous` to enqueue
 it. For a parked legacy task, also remove `agent:needs-human` once to opt it in.
+Justin reviews the current ticket, comments, and existing PR in a fresh coding
+turn before it publishes or merges. That turn uses the existing repair budget.
 No further human approval is needed for that delivery mode.
 
 The [Linear integration](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/integrations/linear.ts)

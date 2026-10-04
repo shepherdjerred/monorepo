@@ -180,6 +180,7 @@ export const TaskStateSchema = z.object({
     .default("owner_approved"),
   repairTurnsUsed: z.number().int().nonnegative().default(0),
   implementationStarted: z.boolean().default(false),
+  autonomyReviewPending: z.boolean().default(true),
   blockedReason: z.string().nullable().default(null),
   blockedFromPhase: TaskPhaseSchema.nullable().default(null),
   nextAttemptAt: z.iso.datetime().nullable().default(null),

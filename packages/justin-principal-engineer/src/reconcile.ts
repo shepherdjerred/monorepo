@@ -24,6 +24,10 @@ import {
 import { autonomyEnabled } from "#src/host/autonomy-policy.ts";
 import { DeliveryAuthorization } from "#src/host/delivery-authorization.ts";
 import { handleAutonomousFailure } from "#src/reconcile-autonomy.ts";
+import {
+  needsAutonomyReview,
+  queueAutonomyReview,
+} from "#src/reconcile-promotion.ts";
 export class Reconciler {
   private readonly store: StateStore;
   private readonly linear: LinearClient;
@@ -143,6 +147,9 @@ export class Reconciler {
           : existing.deliveryMode,
         implementationStarted:
           existing.implementationStarted || existing.prNumber !== null,
+        autonomyReviewPending:
+          (isAutonomousIssue(issue) && existing.prNumber !== null) ||
+          existing.autonomyReviewPending,
         phase: "claiming",
         resumePhase: existing.resumePhase ?? "implementing",
         failureCount: 0,
@@ -209,6 +216,16 @@ export class Reconciler {
   private async advance(state: TaskState): Promise<void> {
     if (state.deliveryMode === "autonomous" && state.phase !== "completing")
       state = await this.authorization.authorizeAutonomous(state);
+    if (needsAutonomyReview(state)) {
+      await queueAutonomyReview({
+        state,
+        baseBranch: this.config.repository.baseBranch,
+        git: this.git,
+        withGitHub: this.withGitHub.bind(this),
+        save: this.save.bind(this),
+      });
+      return;
+    }
     switch (state.phase) {
       case "claiming": {
         await this.linear.claim(state.issue);

@@ -18,6 +18,7 @@ export function createTaskState(input: {
     deliveryMode: input.deliveryMode ?? "owner_approved",
     repairTurnsUsed: 0,
     implementationStarted: false,
+    autonomyReviewPending: false,
     blockedReason: null,
     blockedFromPhase: null,
     nextAttemptAt: null,
