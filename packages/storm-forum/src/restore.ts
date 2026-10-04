@@ -4,6 +4,8 @@ import { S3Client } from "bun";
 import { z } from "zod";
 import { forumManifest } from "./config.ts";
 import { beginStormForumBackup, endStormForumBackup } from "./backup.ts";
+import { SnapshotEnvironmentSchema } from "./storage.ts";
+import { runPhp } from "./process.ts";
 
 export const SnapshotSchema = z
   .object({
@@ -54,17 +56,8 @@ export function validateSnapshot(
   return snapshot;
 }
 
-const EnvironmentSchema = z.object({
+const EnvironmentSchema = SnapshotEnvironmentSchema.extend({
   STORM_FORUM_STAGE: z.literal("beta"),
-  DB_HOST: z.string().min(1),
-  DB_USER: z.string().min(1),
-  DB_NAME: z.string().regex(/^\w+$/),
-  DB_PASSWORD: z.string().min(1),
-  BACKUP_ENDPOINT: z.url(),
-  BACKUP_BUCKET: z.string().min(1),
-  BACKUP_ACCESS_KEY: z.string().min(1),
-  BACKUP_SECRET_KEY: z.string().min(1),
-  BUNDLE_SHA256: z.string().regex(/^[a-f0-9]{64}$/),
   RESTORE_MANIFEST_KEY: z
     .string()
     .regex(/^snapshots\/(?:beta|prod)\/[a-f0-9-]+\/manifest\.json$/),
@@ -183,6 +176,16 @@ export async function restoreForum(): Promise<void> {
       "-C",
       "/var/lib/storm-forum",
     ]);
+    await runPhp(["cmd.php", "storm:configure", "--stage", "beta"]);
+    await runPhp([
+      "cmd.php",
+      "storm:policy",
+      "--registration",
+      "disabled",
+      "--season",
+      "normal",
+    ]);
+    await runPhp(["cmd.php", "xf:run-jobs", "--max-execution-time", "50"]);
     completed = true;
   } finally {
     await rm(temporary, { recursive: true, force: true });

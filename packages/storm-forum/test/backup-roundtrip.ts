@@ -1,10 +1,21 @@
 import assert from "node:assert/strict";
+import { runPhp } from "#src/process.ts";
 import {
   beginStormForumBackup,
   endStormForumBackup,
   snapshotForum,
 } from "#src/backup.ts";
 const owner = "2bcd3a5e-992f-49f4-bb34-901ca3dd32b2";
+// Emulate the unsafe production settings that recovery must replace.
+await runPhp(["cmd.php", "storm:configure", "--stage", "prod"]);
+await runPhp([
+  "cmd.php",
+  "storm:policy",
+  "--registration",
+  "enabled",
+  "--season",
+  "normal",
+]);
 const other = "e7a45671-bb02-4e36-8a55-74519c4fc2cc";
 const phases: unknown[] = [];
 const heartbeat = (detail: unknown) => {

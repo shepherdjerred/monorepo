@@ -624,6 +624,11 @@
       ]
     },
     {
+      "package": "@shepherdjerred/storm-forum",
+      "directory": "packages/storm-forum",
+      "steps": [{ "runner": "vitest", "args": ["test/"] }]
+    },
+    {
       "package": "@shepherdjerred/storm-brain",
       "directory": "packages/storm-brain",
       "steps": [

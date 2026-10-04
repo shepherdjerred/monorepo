@@ -111,13 +111,17 @@ export async function releaseForum(stage: Stage): Promise<void> {
   const handle = await open(lock, "wx", 0o600);
   const owner = crypto.randomUUID();
   let completed = false;
+  let ownsMaintenance = false;
+  let mutating = false;
   try {
     await handle.writeFile(
       JSON.stringify({ stage, owner, startedAt: new Date().toISOString() }),
     );
     await validateVendorBundle();
     await beginStormForumBackup(owner);
+    ownsMaintenance = true;
     await Bun.sleep(65_000);
+    mutating = true;
     await runPhp(
       ["/opt/storm-forum/runtime/install.php"],
       "/app/forum",
@@ -136,8 +140,10 @@ export async function releaseForum(stage: Stage): Promise<void> {
   } finally {
     await handle.close();
     // A failed migration requires inspection before another release can run.
-    if (completed) {
-      await endStormForumBackup(owner);
+    if (completed || !mutating) {
+      if (ownsMaintenance) {
+        await endStormForumBackup(owner);
+      }
       await unlink(lock);
     }
   }

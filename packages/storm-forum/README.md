@@ -58,6 +58,7 @@ The dedicated stage-specific 1Password item supplies these required fields:
 | `DB_PASSWORD`, `MARIADB_ROOT_PASSWORD`            | Forum and database bootstrap                        |
 | `BUNDLE_ACCESS_KEY`, `BUNDLE_SECRET_KEY`          | Private bundle reader, scoped to the release bucket |
 | `BACKUP_ACCESS_KEY`, `BACKUP_SECRET_KEY`          | Snapshot writer, scoped to the backup bucket        |
+| `RESTORE_ACCESS_KEY`, `RESTORE_SECRET_KEY`        | Beta restore Job only, read-only snapshot access    |
 | `POSTAL_SMTP_USERNAME`, `POSTAL_SMTP_PASSWORD`    | Postal STARTTLS authentication                      |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`      | Required registration challenge                     |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Fresh-install administrator, release job only       |
@@ -78,9 +79,19 @@ SeaweedFS-to-R2 backup policy. Only a tested pair establishes restore confidence
 Recovery requires `STORM_FORUM_STAGE=beta`, the backup reader credentials,
 `RESTORE_MANIFEST_KEY`, and the exact `BUNDLE_SHA256` recorded in the snapshot.
 The restore command rejects occupied databases, occupied attachment directories,
-mixed releases, invalid archive paths, links, and checksum mismatches. Failed
-recovery leaves maintenance enabled. Production promotion follows the homelab's
-normal reviewed release path after acceptance.
+mixed releases, invalid archive paths, links, and checksum mismatches. Before
+clearing maintenance it reapplies the beta URL, closes registration, selects the
+normal season, and rebuilds jobs. Failed recovery leaves maintenance enabled.
+
+Declare a beta release with `storageSlot: "recovery"` and
+`restore: { "manifestKey": "snapshots/prod/<snapshot-uuid>/manifest.json" }` in
+the release inventory. Its wave-zero Job restores instead of installing a new
+forum, using dedicated read-only credentials. Beta declares both primary and
+recovery PVC pairs so changing the selected pair cannot prune the original data.
+Subsequent releases retain `storageSlot: "recovery"` and omit `restore`.
+The recovery pair must be empty; repeated drills require reviewed storage
+replacement through the homelab's existing destructive-operation workflow.
+Production releases cannot select the recovery pair or request restore.
 
 ## Development
 

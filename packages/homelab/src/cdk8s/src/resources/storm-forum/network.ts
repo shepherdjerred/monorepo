@@ -59,7 +59,7 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
           ports: [port(8080)],
         },
         { from: [namespace("tailscale")], ports: [port(8081)] },
-        { from: [namespace("prometheus")], ports: [port(8080)] },
+        { from: [namespace("prometheus")], ports: [port(8080), port(8081)] },
       ],
       egress: forumEgress(),
     },

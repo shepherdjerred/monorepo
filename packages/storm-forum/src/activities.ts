@@ -10,24 +10,23 @@ const config = createForumConfig(
   }),
 );
 export async function maintainStormForum(): Promise<void> {
-  if (await Bun.file("/var/lib/storm-forum/.maintenance").exists()) {
-    return;
+  if (!(await Bun.file("/var/lib/storm-forum/.maintenance").exists())) {
+    heartbeat("policy");
+    await runPhp(
+      [
+        "cmd.php",
+        "storm:policy",
+        "--registration",
+        (await config.value("registrationEnabled")) ? "enabled" : "disabled",
+        "--season",
+        await config.value("season"),
+      ],
+      "/app/forum",
+      30_000,
+    );
+    heartbeat("jobs");
+    await runPhp(["cmd.php", "xf:run-jobs", "--max-execution-time", "50"]);
   }
-  heartbeat("policy");
-  await runPhp(
-    [
-      "cmd.php",
-      "storm:policy",
-      "--registration",
-      (await config.value("registrationEnabled")) ? "enabled" : "disabled",
-      "--season",
-      await config.value("season"),
-    ],
-    "/app/forum",
-    30_000,
-  );
-  heartbeat("jobs");
-  await runPhp(["cmd.php", "xf:run-jobs", "--max-execution-time", "50"]);
   heartbeat("minecraft");
   await writeMinecraftStatus(await refreshMinecraftStatus());
 }

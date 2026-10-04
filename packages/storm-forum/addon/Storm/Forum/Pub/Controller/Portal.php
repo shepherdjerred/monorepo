@@ -9,11 +9,16 @@ final class Portal extends \XF\Pub\Controller\AbstractController
         if (!is_array($map) || !isset($map['node:news'])) {
             throw new \RuntimeException('The Storm forum configuration has not been applied.');
         }
-        $news = $this->app()->finder('XF:Thread')
+        $forum = $this->app()->find('XF:Forum', $map['node:news']);
+        if (!$forum) { throw new \RuntimeException('Managed news forum is missing.'); }
+        $news = new \XF\Mvc\Entity\ArrayCollection([]);
+        if ($forum->canView()) {
+            $news = $this->app()->finder('XF:Thread')
             ->where('node_id', $map['node:news'])
             ->where('discussion_state', 'visible')
             ->order('post_date', 'DESC')->limit(12)->with(['FirstPost', 'User'])->fetch();
         $news = $news->filter(fn($thread) => $thread->canView());
+        }
         // Filter permissions before exposing anything to a public portal.
         // Recent activity uses XF's native widget, which applies visitor permissions.
         $status = null;

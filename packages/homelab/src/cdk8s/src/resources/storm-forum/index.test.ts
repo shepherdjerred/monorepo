@@ -72,6 +72,64 @@ describe("forum isolation and release resources", () => {
       }),
     ).toThrow();
   });
+  it("restores a production snapshot into the separate beta pair without installing or pruning primary storage", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(
+      createStormForumChart(new App(), {
+        ...fixture,
+        storageSlot: "recovery",
+        restore: {
+          manifestKey:
+            "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
+        },
+      }),
+    );
+    const job = rendered.find((resource) => resource.kind === "Job");
+    const jobJson = JSON.stringify(job);
+    expect(jobJson).toContain('"restore"]');
+    expect(jobJson).not.toContain('"release"]');
+    expect(jobJson).toContain('"key":"RESTORE_SECRET_KEY"');
+    expect(jobJson).not.toContain('"key":"BACKUP_SECRET_KEY"');
+    expect(jobJson).not.toContain("ADMIN_PASSWORD");
+    expect(jobJson).toContain('"claimName":"storm-forum-recovery-files"');
+    expect(
+      JSON.stringify(
+        rendered.find(
+          (resource) =>
+            resource.kind === "Deployment" &&
+            JSON.stringify(resource.metadata).includes("storm-forum-database"),
+        ),
+      ),
+    ).toContain('"claimName":"storm-forum-recovery-database"');
+    expect(
+      rendered
+        .filter((resource) => resource.kind === "PersistentVolumeClaim")
+        .map((resource) => resource.metadata.name)
+        .sort((left, right) => left.localeCompare(right)),
+    ).toEqual([
+      "storm-forum-database",
+      "storm-forum-files",
+      "storm-forum-recovery-database",
+      "storm-forum-recovery-files",
+    ]);
+  });
+  it("rejects restoring over the primary pair or into production", () => {
+    const restore = {
+      manifestKey:
+        "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
+    };
+    expect(() =>
+      createStormForumChart(new App(), { ...fixture, restore }),
+    ).toThrow();
+    expect(() =>
+      createStormForumChart(new App(), {
+        ...fixture,
+        stage: "prod",
+        storageSlot: "recovery",
+        restore,
+      }),
+    ).toThrow();
+  });
   it("refuses the catalog's unpublished bootstrap marker for an active release", () => {
     expect(() =>
       createStormForumChart(new App(), {

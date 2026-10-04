@@ -4,23 +4,15 @@ import { S3Client } from "bun";
 import { Context } from "@temporalio/activity";
 import { z } from "zod";
 import { StageSchema, forumManifest } from "./config.ts";
+import { SnapshotEnvironmentSchema } from "./storage.ts";
 
 const MARKER = "/var/lib/storm-forum/.maintenance";
 const OwnerSchema = z.uuid();
 const MarkerSchema = z
   .object({ owner: OwnerSchema, startedAt: z.number() })
   .strict();
-const BackupEnvironmentSchema = z.object({
+const BackupEnvironmentSchema = SnapshotEnvironmentSchema.extend({
   STORM_FORUM_STAGE: StageSchema,
-  DB_HOST: z.string().min(1),
-  DB_USER: z.string().min(1),
-  DB_NAME: z.string().regex(/^\w+$/),
-  DB_PASSWORD: z.string().min(1),
-  BACKUP_ENDPOINT: z.url(),
-  BACKUP_BUCKET: z.string().min(1),
-  BACKUP_ACCESS_KEY: z.string().min(1),
-  BACKUP_SECRET_KEY: z.string().min(1),
-  BUNDLE_SHA256: z.string().regex(/^[a-f0-9]{64}$/),
 });
 
 export async function beginStormForumBackup(owner: string): Promise<void> {

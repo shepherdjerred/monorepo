@@ -13,6 +13,7 @@ $parent = $app->em()->find('XF:Style', 1);
 // Exercise the owned child layer on core for local visual proof. Production
 // imports its licensed parents; this fixture does not simulate their behavior.
 foreach (['light', 'dark'] as $mode) { $app->service('Storm\Forum:OwnedStyles')->apply($parent, $mode, $styles, $mode === 'dark' ? 'alternate' : 'default'); }
+$app->registry()->set('stormForumStyles', $styles);
 $mode = ($argv[1] ?? 'light') === 'dark' ? 'dark' : 'light';
 $app->repository('XF:Option')->updateOption('defaultStyleId', $styles[$mode . ':normal']);
 $app->repository('XF:Style')->triggerStyleDataRebuild();

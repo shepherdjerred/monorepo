@@ -19,7 +19,31 @@ for ($i = 0; $i < $zip->numFiles; $i++) {
 foreach (['src/XF.php', 'src/XF/App.php', 'index.php', 'cmd.php'] as $required) {
     if (!isset($paths[$required])) { throw new RuntimeException("Incomplete XenForo bundle: {$required}"); }
 }
-if (file_exists('/app/forum/src/XF.php')) { throw new RuntimeException('Application directory must be empty'); }
+$marker = '/app/forum/.storm-assembly';
+if (is_file($marker) && hash_equals($argv[2], trim(file_get_contents($marker)))) {
+    foreach (['src/XF.php', 'src/XF/App.php', 'src/config.php', 'src/addons/Storm/Forum/addon.json', 'index.php', 'cmd.php'] as $required) {
+        if (!is_file('/app/forum/' . $required)) { throw new RuntimeException('Completed assembly is damaged'); }
+    }
+    if (!is_link('/app/forum/data') || readlink('/app/forum/data') !== '/var/lib/storm-forum/data') { throw new RuntimeException('Attachment storage link is damaged'); }
+    $zip->close();
+    echo "Private application already assembled.\n";
+    exit(0);
+}
+// Only clean the application EmptyDir. Check links before directories so retries
+// never follow the data symlink into persistent attachment storage.
+$remove = static function (string $target) use (&$remove): void {
+    if (is_link($target) || !is_dir($target)) {
+        if (!unlink($target)) { throw new RuntimeException('Cannot remove partial application file'); }
+        return;
+    }
+    foreach (new DirectoryIterator($target) as $file) {
+        if (!$file->isDot()) { $remove($file->getPathname()); }
+    }
+    if (!rmdir($target)) { throw new RuntimeException('Cannot remove partial application directory'); }
+};
+foreach (new DirectoryIterator('/app/forum') as $file) {
+    if (!$file->isDot()) { $remove($file->getPathname()); }
+}
 if (!$zip->extractTo('/app/forum')) { throw new RuntimeException('Private archive extraction failed'); }
 $zip->close();
 $copy = static function (string $source, string $target) use (&$copy): void {
@@ -39,10 +63,9 @@ foreach (['data', 'internal_data'] as $directory) {
 }
 // XenForo distributes data/.htaccess; copy its safe contents before replacing the directory.
 $copy('/app/forum/data', '/var/lib/storm-forum/data');
-foreach (new DirectoryIterator('/app/forum/data') as $file) {
-    if (!$file->isDot() && $file->isFile()) { unlink($file->getPathname()); }
-}
-if (!rmdir('/app/forum/data') || !symlink('/var/lib/storm-forum/data', '/app/forum/data')) {
+$remove('/app/forum/data');
+if (!symlink('/var/lib/storm-forum/data', '/app/forum/data')) {
     throw new RuntimeException('Cannot link attachment storage');
 }
+if (file_put_contents($marker . '.tmp', $argv[2] . "\n", LOCK_EX) === false || !rename($marker . '.tmp', $marker)) { throw new RuntimeException('Cannot commit assembly marker'); }
 echo "Private application assembled.\n";

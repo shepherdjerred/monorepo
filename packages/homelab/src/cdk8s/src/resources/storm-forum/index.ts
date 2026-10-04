@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ApiObject, Chart, Size, type App } from "cdk8s";
+import { ApiObject, Chart, type App } from "cdk8s";
 import { Pods, Service } from "cdk8s-plus-31";
 import { z } from "zod";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -16,7 +16,6 @@ import {
   type EnvVar,
   type PodSpec,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -24,27 +23,46 @@ import { createHomelabIssuedCertificate } from "@shepherdjerred/homelab/cdk8s/sr
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createForumDatabase } from "./database.ts";
 import { createForumNetwork } from "./network.ts";
+import { createForumStorage } from "./storage.ts";
 
-export const ReleaseSchema = z.object({
-  stage: z.enum(["beta", "prod"]),
-  image: z
-    .string()
-    .regex(/^ghcr\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/)
-    .refine(
-      (value) => !value.endsWith("0".repeat(64)),
-      "An active release requires a published image",
-    ),
-  secretItemId: z.string().regex(/^[a-z0-9]{26}$/),
-  bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
-  bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
-  releaseId: z.string().regex(/^[a-f0-9]{12}$/),
-  trustedConnectorCidr: z
-    .cidrv4()
-    .refine(
-      (value) => value !== "0.0.0.0/0",
-      "Trust only the connector's network",
-    ),
-});
+export const ReleaseSchema = z
+  .object({
+    stage: z.enum(["beta", "prod"]),
+    image: z
+      .string()
+      .regex(/^ghcr\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/)
+      .refine(
+        (value) => !value.endsWith("0".repeat(64)),
+        "An active release requires a published image",
+      ),
+    secretItemId: z.string().regex(/^[a-z0-9]{26}$/),
+    bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
+    bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
+    releaseId: z.string().regex(/^[a-f0-9]{12}$/),
+    storageSlot: z.enum(["primary", "recovery"]).optional(),
+    restore: z
+      .object({
+        manifestKey: z
+          .string()
+          .regex(/^snapshots\/(?:beta|prod)\/[a-f0-9-]{36}\/manifest\.json$/),
+      })
+      .strict()
+      .optional(),
+    trustedConnectorCidr: z
+      .cidrv4()
+      .refine(
+        (value) => value !== "0.0.0.0/0",
+        "Trust only the connector's network",
+      ),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      (value.storageSlot !== "recovery" || value.stage === "beta") &&
+      (!value.restore ||
+        (value.stage === "beta" && value.storageSlot === "recovery")),
+    "Recovery uses only the dedicated private beta storage pair",
+  );
 export type ForumRelease = z.infer<typeof ReleaseSchema>;
 
 // The caller supplies verified published artifacts and provisioned secret IDs.
@@ -67,10 +85,12 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
     metadata: { name: "storm-forum-secrets" },
     spec: { itemPath: vaultItemPath(release.secretItemId) },
   });
-  const data = new ZfsNvmeVolume(chart, "storm-forum-files", {
-    storage: Size.gibibytes(32),
-  });
-  createForumDatabase(chart, secret.name);
+  const storage = createForumStorage(
+    chart,
+    release.stage,
+    release.storageSlot ?? "primary",
+  );
+  createForumDatabase(chart, secret.name, storage.database.claim.name);
   createHomelabIssuedCertificate(chart, "smtp-ca", {
     name: "storm-forum-smtp-ca",
     namespace,
@@ -168,7 +188,10 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
     volumes: [
       { name: "application", emptyDir: {} },
       { name: "tmp", emptyDir: {} },
-      { name: "files", persistentVolumeClaim: { claimName: data.claim.name } },
+      {
+        name: "files",
+        persistentVolumeClaim: { claimName: storage.files.claim.name },
+      },
       { name: "configuration", configMap: { name: configuration.name } },
       {
         name: "smtp-ca",
@@ -343,7 +366,9 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
     });
   }
   new KubeJob(chart, "release", {
-    metadata: { name: `storm-forum-release-${release.releaseId}` },
+    metadata: {
+      name: `storm-forum-${release.restore ? "restore" : "release"}-${release.releaseId}`,
+    },
     spec: {
       backoffLimit: 0,
       activeDeadlineSeconds: 3600,
@@ -356,14 +381,40 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
             {
               ...base,
               name: "release",
-              command: ["bun", "/opt/storm-forum/src/cli.ts", "release"],
+              command: [
+                "bun",
+                "/opt/storm-forum/src/cli.ts",
+                release.restore ? "restore" : "release",
+              ],
               env: [
                 ...(base.env ?? []),
-                ...credentials([
-                  "ADMIN_USERNAME",
-                  "ADMIN_PASSWORD",
-                  "ADMIN_EMAIL",
-                ]),
+                ...(release.restore
+                  ? [
+                      ...["ACCESS_KEY", "SECRET_KEY"].map((suffix) => ({
+                        name: `BACKUP_${suffix}`,
+                        valueFrom: {
+                          secretKeyRef: {
+                            name: secret.name,
+                            key: `RESTORE_${suffix}`,
+                          },
+                        },
+                      })),
+                      {
+                        name: "BACKUP_ENDPOINT",
+                        value:
+                          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+                      },
+                      { name: "BACKUP_BUCKET", value: "storm-forum-backups" },
+                      {
+                        name: "RESTORE_MANIFEST_KEY",
+                        value: release.restore.manifestKey,
+                      },
+                    ]
+                  : credentials([
+                      "ADMIN_USERNAME",
+                      "ADMIN_PASSWORD",
+                      "ADMIN_EMAIL",
+                    ])),
                 {
                   name: "FORUM_URL",
                   value:

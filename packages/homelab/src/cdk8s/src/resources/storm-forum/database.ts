@@ -1,18 +1,17 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
 import {
   IntOrString,
   KubeDeployment,
   KubeService,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
-export function createForumDatabase(chart: Chart, secretName: string): void {
-  const data = new ZfsNvmeVolume(chart, "storm-forum-database", {
-    storage: Size.gibibytes(32),
-  });
+export function createForumDatabase(
+  chart: Chart,
+  secretName: string,
+  claimName: string,
+): void {
   const labels = { app: "storm-forum", component: "database" };
   new KubeDeployment(chart, "database", {
     metadata: { name: "storm-forum-database" },
@@ -102,7 +101,7 @@ export function createForumDatabase(chart: Chart, secretName: string): void {
           volumes: [
             {
               name: "database",
-              persistentVolumeClaim: { claimName: data.claim.name },
+              persistentVolumeClaim: { claimName },
             },
             { name: "database-run", emptyDir: {} },
             { name: "database-tmp", emptyDir: {} },

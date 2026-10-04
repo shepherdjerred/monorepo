@@ -67,6 +67,27 @@ const run = async (args: string[]) => {
 };
 await run(["network", "create", network]);
 try {
+  process.stdout.write(
+    await run([
+      "run",
+      "--rm",
+      "--read-only",
+      "--tmpfs",
+      "/app/forum:uid=1000,gid=1000",
+      "--tmpfs",
+      "/var/lib/storm-forum:uid=1000,gid=1000",
+      "--tmpfs",
+      "/tmp:uid=1000,gid=1000",
+      ...["runtime", "test"].flatMap((name) => [
+        "-v",
+        `${path.resolve(import.meta.dirname, "..", name)}:/opt/storm-forum/${name}:ro`,
+      ]),
+      "--entrypoint",
+      "php",
+      "storm-forum:dev",
+      "/opt/storm-forum/test/assembly.php",
+    ]),
+  );
   // Pass environment names only, never credential values in process argv.
   const dbEnv = {
     ...env,
@@ -210,6 +231,24 @@ try {
       app,
       "php",
       "/opt/storm-forum/test/integration.php",
+    ]),
+  );
+  process.stdout.write(
+    await run([
+      "exec",
+      app,
+      "bun",
+      "/opt/storm-forum/test/release-preflight.ts",
+    ]),
+  );
+  process.stdout.write(
+    await run([
+      "exec",
+      "-w",
+      "/app/forum",
+      app,
+      "php",
+      "/opt/storm-forum/test/portal.php",
     ]),
   );
   await run([

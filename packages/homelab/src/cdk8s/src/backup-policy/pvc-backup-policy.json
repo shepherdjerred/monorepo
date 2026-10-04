@@ -24,6 +24,18 @@
     "reason": "Disposable protected test files restored from coordinated production exports"
   },
   {
+    "namespace": "storm-forum-beta",
+    "name": "storm-forum-recovery-database",
+    "backup": "disabled",
+    "reason": "Dedicated private beta restore target; source snapshots remain protected"
+  },
+  {
+    "namespace": "storm-forum-beta",
+    "name": "storm-forum-recovery-files",
+    "backup": "disabled",
+    "reason": "Dedicated private beta restore target; source snapshots remain protected"
+  },
+  {
     "namespace": "birmel",
     "name": "birmel-pvc",
     "backup": "enabled",

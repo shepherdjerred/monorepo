@@ -207,11 +207,10 @@ try {
       "sh",
       "storm-forum:dev",
       "-c",
-      "mkdir -p /var/lib/storm-forum/data /var/lib/storm-forum/internal_data && sleep infinity",
+      "mkdir -p /var/lib/storm-forum/data /var/lib/storm-forum/internal_data /tmp/storm-forum && sleep infinity",
     ],
     { DB_HOST: database, RESTORE_MANIFEST_KEY: manifestKey },
   );
-  await run(["exec", target, "bun", "/opt/storm-forum/src/cli.ts", "restore"]);
   // Reuse the licensed application only inside the disposable container filesystem.
   const archive = Bun.spawn(
     ["docker", "exec", source, "tar", "-cf", "-", "-C", "/app/forum", "."],
@@ -225,6 +224,7 @@ try {
   if (copyCodes.some((code) => code !== 0)) {
     throw new Error("Private application fixture copy failed");
   }
+  await run(["exec", target, "bun", "/opt/storm-forum/src/cli.ts", "restore"]);
   process.stdout.write(
     await run([
       "exec",
