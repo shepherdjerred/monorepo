@@ -902,8 +902,12 @@ final class MatchRunner implements MatchView, MatchEvents {
       withEntity(
           effect.id(),
           player -> {
-            // During the death event the player may still read as alive with no health left.
-            if (player.isDead() || player.getHealth() <= 0) {
+            // During the death event the player may still read as alive with no health left, and
+            // a bomb's Spectate arrives before the Kill that fells the same player: spectating
+            // first would then kill a spectator and vanilla would respawn them at the overworld
+            // spawn. Anyone the rules already count as dead spectates from their respawn.
+            var fallen = match.member(effect.id()).map(member -> !member.alive()).orElse(false);
+            if (fallen || player.isDead() || player.getHealth() <= 0) {
               awaitingSpectate.add(player.getUniqueId());
             } else {
               MatchRunner.this.spectate(player, effect.at());

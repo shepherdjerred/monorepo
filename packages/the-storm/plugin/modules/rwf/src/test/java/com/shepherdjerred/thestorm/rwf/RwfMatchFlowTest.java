@@ -266,6 +266,41 @@ final class RwfMatchFlowTest {
   }
 
   @Test
+  void aBombVictimSpectatesFromTheSpectatorPointAfterRespawning() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.goLive(alice);
+    var enemy = enemyOf(teamOf(alice));
+    var victim = botOn(enemy);
+    var bombId = bombOf(enemy);
+    var block = bombBlock(bombId);
+    alice.teleport(block.clone().add(1.5, 0, 0.5));
+    alice.getInventory().setHeldItemSlot(0);
+    var fuse = requireNonNull(alice.getInventory().getItem(0));
+    for (var i = 0; i < 24 && !armed(bombId); i++) {
+      harness
+          .server
+          .getPluginManager()
+          .callEvent(
+              new PlayerInteractEvent(
+                  alice, Action.RIGHT_CLICK_BLOCK, fuse, block.getBlock(), BlockFace.UP));
+      harness.tick(Duration.ofMillis(500));
+    }
+    assertThat(armed(bombId)).isTrue();
+
+    // The bomb's Spectate reaches the runner before its Kill: the victim must still die once and
+    // only then watch from the spectator point, never be killed as a spectator.
+    harness.tick(Duration.ofSeconds(61));
+    harness.until(() -> !harness.snapshot().combatant(victim.id()).orElseThrow().alive());
+    assertThat(victim.entity().isDead()).isTrue();
+    victim.entity().respawn();
+    harness.until(() -> victim.entity().getGameMode() == GameMode.SPECTATOR);
+
+    assertThat(victim.entity().getWorld()).isEqualTo(harness.rwf);
+    assertThat(victim.entity().getLocation().getY()).isEqualTo(76);
+  }
+
+  @Test
   void aLiveMatchWithNoHumansLeftIsStoppedUnpaidAndBotsLeave() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");
