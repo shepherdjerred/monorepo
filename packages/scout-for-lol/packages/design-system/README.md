@@ -86,6 +86,8 @@ Playwright runs on Bun. The preview launcher resolves the installed Node pin
 with `mise where node` and runs Vite using that absolute executable. This keeps
 Bun's temporary `node` shim out of Vite's HTTP server runtime. Run `mise install`
 before previewing locally; the CI browser lane installs the same Node pin.
+The Turbo E2E task passes through `MISE_DATA_DIR` so the launcher finds that
+installation when CI stores its runtimes outside mise's default directory.
 
 `e2e/catalog.spec.ts` walks every story in `storybook-static/index.json` and
 asserts it mounts, logs no page error, loads every image, and reports no axe

@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, expect, test } from "vitest";
+import { z } from "zod/v4";
 import { resolvePreviewNodeExecutable } from "./preview-runtime.ts";
 
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -33,6 +34,57 @@ async function fakeMise(root: string, contents: string): Promise<void> {
   await writeFile(executable, `#!/bin/sh\n${contents}\n`);
   await chmod(executable, 0o755);
 }
+
+test("preserves the CI Node installation root through Turbo's strict E2E environment", async () => {
+  const root = await runtimeFixture();
+  const dryRun = Bun.spawnSync(
+    [
+      process.execPath,
+      "x",
+      "--no-install",
+      "turbo",
+      "run",
+      "test:e2e",
+      "--filter=@scout-for-lol/design-system",
+      "--env-mode=strict",
+      "--dry=json",
+    ],
+    {
+      cwd: path.resolve(packageRoot, "../../../.."),
+      env: {
+        ...inheritedEnvironment,
+        MISE_DATA_DIR: path.join(root, "mise-data"),
+        PLAYWRIGHT_BROWSERS_PATH: path.join(root, "browser-cache"),
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  expect(dryRun.exitCode).toBe(0);
+  const rawReport: unknown = JSON.parse(
+    new TextDecoder().decode(dryRun.stdout),
+  );
+  const report = z
+    .object({
+      envMode: z.literal("strict"),
+      tasks: z.array(
+        z.object({
+          taskId: z.string(),
+          environmentVariables: z.unknown(),
+        }),
+      ),
+    })
+    .parse(rawReport);
+  const task = report.tasks.find(
+    (entry) => entry.taskId === "@scout-for-lol/design-system#test:e2e",
+  );
+  const environment = z
+    .object({ passthrough: z.array(z.string()) })
+    .parse(task?.environmentVariables);
+  const names = environment.passthrough.map((entry) => entry.split("=")[0]);
+  expect(names).toContain("MISE_DATA_DIR");
+  expect(names).toContain("PLAYWRIGHT_BROWSERS_PATH");
+});
 
 test("bypasses a Bun node shim and executes the installed Node runtime", async () => {
   const root = await runtimeFixture();
