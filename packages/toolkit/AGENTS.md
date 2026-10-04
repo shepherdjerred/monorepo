@@ -16,6 +16,9 @@ reference.
 
 ## Repository workflows
 
+- `ci wait` owns one foreground wait pinned to a PR head. Recheck merge inputs
+  before reporting ready; never turn queue latency or a requested timeout into
+  a CI failure. Red main requires reporting and awaiting instructions.
 - `pr health` compares local merge-tree, the exact-head Woodpecker pipeline,
   and GitHub metadata. The exact-head pipeline wins over lagging summaries.
 - `deployed` keeps merge, image publication, catalog pin, ArgoCD state, running

@@ -63,6 +63,71 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 
 ## Monorepo workflows
 
+### Wait for CI and merge readiness
+
+```bash
+toolkit ci wait                         # Infer the PR for this branch
+toolkit ci wait 3447 --json             # One final report; progress on stderr
+toolkit ci wait 3447 --until settled    # Collect all blocking check results
+toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
+toolkit ci explain 3447                # Current blockers and bounded failure logs
+toolkit ci main                        # Current main push and last completed verdict
+toolkit ci load                        # Queue, Kueue admission, CPU/memory/disk/I/O
+toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
+```
+
+`wait` pins the initial PR head (or asserts `--head <full SHA>`), subscribes to
+Woodpecker events before reading status, and refreshes GitHub metadata every
+30 seconds. It returns as soon as a blocking check fails, merge conflicts
+appear, human intervention is needed, or all merge requirements pass. A ready
+candidate gets a fresh check of head, base, pipeline attempt, rules, and main.
+`--until settled` waits for the remaining blocking results after a CI failure;
+head changes and structural blockers still return immediately.
+
+Woodpecker workflow results and the `ci-complete` gate determine hard CI
+failures. Failed service cleanup children inside successful workflows do not
+block a merge. Required GitHub checks must also publish success for the current
+pipeline; optional external checks are advisory. Human approval is required
+only when the effective branch rules require it, or a human requests changes.
+A branch behind main is acceptable when the branch rules do not require it
+to be current.
+
+Long queues and builds are normal. Keep awaiting the same foreground process;
+do not restart polls or diagnose an outage from elapsed time alone. A sparse
+heartbeat appears every five minutes. Disconnects reconnect with backoff and a
+fresh snapshot. `load` reports each unavailable telemetry source explicitly.
+
+Main is checked automatically. A failed last completed push keeps main red
+while its recovery build is pending. When main is red, report its evidence and
+await instructions; do not independently fix it. `ci explain --main` is an
+alias for `ci main`.
+
+| Wait exit | Meaning                                                       |
+| --------- | ------------------------------------------------------------- |
+| 0         | Merge ready                                                   |
+| 1         | Blocking check failure or merge conflict                      |
+| 2         | Usage, authentication, API, or contract error                 |
+| 3         | Human intervention (review, draft, pipeline approval)         |
+| 4         | PR head changed; explicitly start a new wait for the new head |
+| 5         | Main red; report and await instructions                       |
+| 6         | Requested timeout; this does not mean CI failed               |
+| 7         | PR closed or already merged                                   |
+
+`--json` reserves stdout for one final JSON report. Failure reports include up
+to three failed workflows with at most 60 lines / 4,000 characters of logs
+each, review excerpts when relevant, and commands for deeper evidence.
+Secrets and terminal control sequences are removed before truncation.
+`explain` is a one-shot diagnostic; a pending report exits 0 and has
+`ready: false`. SIGINT and SIGTERM cancel the foreground wait with exits 130
+and 143. The command does not merge or mutate the PR.
+
+GitHub credentials come from `GH_TOKEN` or `gh auth token`.
+The default Woodpecker connection reads the `WOODPECKER_API_TOKEN` field of
+the `Woodpecker Server` item in the `Homelab (Kubernetes)` 1Password vault,
+unless `WOODPECKER_TOKEN` is supplied. Custom `WOODPECKER_URL` or
+`WOODPECKER_REPO_ID` connections require an explicit token. Load telemetry
+uses the configured `kubectl` context and `gcx --context homelab`.
+
 ### PR health, reviews, and media
 
 `toolkit pr health [PR_NUMBER] [--json]` combines three independent signals:
@@ -78,8 +143,13 @@ Woodpecker pipeline wins when they disagree. Healthy and pending reports exit 0;
 unhealthy reports exit 1. JSON retains the top-level `prNumber`, `prUrl`,
 `overallStatus`, `checks`, and `nextSteps` fields.
 
-`toolkit pr review list|resolve|harvest` inspects and resolves code-review
-provider findings. `toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
+`toolkit pr review list [PR] [--json] [--all] [--provider NAME]` lists current,
+unresolved feedback across human reviewers and registered providers. Each item
+includes author, provider, nullable priority, full contents, path/line,
+resolution state, and a `toolkit gh api` command for the original surface.
+Omitting PR infers the current branch; `--all` includes resolved/outdated items.
+`resolve` and `harvest` retain the existing provider finding handles.
+`toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
 the lightest useful review artifact to `public.sjer.red`; directories require
 a root `index.html`, and asciinema `.cast` files get a self-contained player.
 
