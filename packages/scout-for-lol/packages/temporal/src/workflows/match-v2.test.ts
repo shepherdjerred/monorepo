@@ -105,6 +105,19 @@ async function discover(workflowId: string): Promise<unknown> {
     });
 }
 
+function startDiscovery(workflowId: string) {
+  return harness.client().workflow.start(scoutPostMatchDiscoveryV2Workflow, {
+    taskQueue: "scout-dev",
+    workflowId,
+    args: [
+      scoutPostMatchDiscoveryV2InputCodec.serialize({
+        stage,
+        trigger: "schedule",
+      }),
+    ],
+  });
+}
+
 /** A scan of one live match, with the claim maintenance closes it by. */
 function scanOf(
   ...matches: readonly ScoutDiscoveredMatchV2[]
@@ -793,10 +806,14 @@ describe("the V2 post-match poll's ownership", () => {
     const store = createScoutV2MatchStore();
     const childReached = Promise.withResolvers<true>();
     const releaseChild = Promise.withResolvers<true>();
+    const operatorClaim = Promise.withResolvers<"claimed" | "held">();
+    let discoveryCount = 0;
     await harness.startWorkers({
       ...scoutV2MatchActivityStubs(store),
       discoverPostMatchIdsV2: () => {
         const claim = claimScoutV2Poll(row);
+        discoveryCount += 1;
+        if (discoveryCount === 2) operatorClaim.resolve(claim.outcome);
         return claim.outcome === "held"
           ? { outcome: "skipped" }
           : {
@@ -829,16 +846,32 @@ describe("the V2 post-match poll's ownership", () => {
       },
     });
 
-    const scheduled = discover("post-match-discovery-overlap-scheduled");
+    // Starting the second execution without awaiting its result keeps the test
+    // environment's time-skipping clock locked while the first child is held
+    // inside an Activity. Awaiting `execute` here unlocks virtual time, which
+    // lets that Activity time out before this test releases it.
+    const scheduled = await startDiscovery(
+      "post-match-discovery-overlap-scheduled",
+    );
     await childReached.promise;
-    const operator = await discover("post-match-discovery-overlap-operator");
+    const operator = await startDiscovery(
+      "post-match-discovery-overlap-operator",
+    );
+    const operatorOutcome = await operatorClaim.promise;
     releaseChild.resolve(true);
-    await scheduled;
+    const [scheduledResult, operatorResult] = await Promise.all([
+      scheduled.result(),
+      operator.result(),
+    ]);
 
     // The operator run found the poll held, so it opened nothing and closed
     // nothing.
-    expect(operator).toMatchObject({
+    expect(operatorOutcome).toBe("held");
+    expect(operatorResult).toMatchObject({
       data: { status: "no-op", discovered: 0, childrenStarted: 0 },
+    });
+    expect(scheduledResult).toMatchObject({
+      data: { status: "completed", discovered: 1, childrenStarted: 1 },
     });
     expect(row.claims).toBe(1);
     // Exactly one close, naming the poll the scheduled run claimed.
