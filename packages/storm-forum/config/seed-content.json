@@ -1,0 +1,20 @@
+[
+  {
+    "key": "welcome",
+    "node": "news",
+    "title": "Welcome back to The Storm",
+    "message": "A fresh chapter for our Minecraft community. Explore the server, share your builds, and reconnect with old friends.\n\nJoin Minecraft at [B]ts-mc.net[/B]. Read the [URL=https://docs.ts-mc.net]server documentation[/URL], introduce yourself in General, and tell us what you are building.\n\nThis forum begins with fresh discussions. We are preserving selected community history with attribution, without recreating old accounts or attributing new posts to former members."
+  },
+  {
+    "key": "rules",
+    "node": "rules",
+    "title": "Rules & getting started",
+    "message": "Welcome! Treat other players with respect. Harassment, discrimination, threats, spam, and sharing another person's private information are not welcome here.\n\nRespect other people's builds and follow the server's published rules. Use Bug Reports for reproducible problems and Feedback for ideas. Reports, Appeals, and Applications are private to their author and staff.\n\nNew accounts verify their email. Their first three approved posts and first 24 hours establish posting history before automatic promotion; messages, signatures, and profile posts are restricted during that period.\n\nJoin at [B]ts-mc.net[/B]. See [URL=https://docs.ts-mc.net]the documentation[/URL] for server guidance. Contact staff through Private Support if you need help."
+  },
+  {
+    "key": "history",
+    "node": "general",
+    "title": "The Storm: community history",
+    "message": "This is a new editorial introduction to The Storm's history, published by the current forum staff. It is not an imported historical post.\n\nThe community's preserved site assets include the original Storm logo and the spawn background from the archive's 2016 site assets. The new forum uses these community-owned assets alongside an independently authored Storm presentation.\n\nWe will add selected archival excerpts only with their original source, date, and author clearly identified. Historical users are not recreated automatically. If you would like to contribute a memory or identify an archived work, start a discussion here or contact staff."
+  }
+]

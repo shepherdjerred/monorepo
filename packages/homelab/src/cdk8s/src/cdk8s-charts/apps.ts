@@ -69,6 +69,7 @@ import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
 import { createStormBrainApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/storm-brain.ts";
+import { createStormForumApplications } from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 import { createMinecraftMiningResetGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
@@ -198,6 +199,7 @@ export async function createAppsChart(app: App) {
   createAlertDashboardApp(chart);
   createStashApp(chart);
   createStormBrainApp(chart);
+  createStormForumApplications(chart);
 
   // ArgoCD AppProject
   createProject(chart);
