@@ -204,7 +204,8 @@ type UnionSourceInput = {
     | "timeline-events"
     | "timeline-event-participants"
     | "timeline-participant-frames"
-    | "timeline-coverage";
+    | "timeline-coverage"
+    | "raw-documents";
   /** WHERE predicate pushed into BOTH branches (empty sql = no filter). */
   predicate: SqlFragment;
 };
@@ -312,12 +313,17 @@ export function buildUnionSource(
         return "match_id, frame_index, participant_id";
       case "timeline-coverage":
         return "match_id";
+      case "raw-documents":
+        return "document_id";
     }
   })();
   if (COMPACTED_UNIQUE.has(input.dedupe)) {
     return compactedFirstSource(input, partition);
   }
-  const sourceOrder = "src";
+  const sourceOrder =
+    input.dedupe === "raw-documents"
+      ? "captured_at DESC, src DESC, source_digest"
+      : "src";
   return {
     sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY ${sourceOrder}) = 1`,
     params,

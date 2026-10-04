@@ -66,17 +66,16 @@ test("feature read tools reach the trace with their input and output", () => {
   }
 });
 
-test("a server-scoped query is inspected, with its servers kept out of the trace", () => {
+test("a server-scoped query records exact owner input and projects safe shared input", () => {
   // The strict shared input schema once rejected `servers` and failed the
   // whole turn. Servers stay out of the trace: share links are public.
   const input = {
     queryText: "FROM matches SELECT games",
     servers: ["123456789012345678"],
   };
-  expect(inspectExploreToolCall("run_report_query", input).rawInput).toEqual({
-    queryText: "FROM matches SELECT games",
-    scope: "one server",
-  });
+  expect(inspectExploreToolCall("run_report_query", input).rawInput).toEqual(
+    input,
+  );
   const result = inspectExploreToolResult("run_report_query", input, {
     ok: false,
     message: "The user is not in some of those servers.",

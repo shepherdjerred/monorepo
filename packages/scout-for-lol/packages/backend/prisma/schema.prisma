@@ -761,6 +761,7 @@ model ScoutClientCanonicalMatch {
 /// A saved explore conversation. Explore queries the whole report lake rather
 /// than one server's data, so a conversation belongs to a person, not a guild.
 model ExploreConversation {
+  preferredModel String?
   id            String    @id @default(uuid())
   userId        String
   title         String
@@ -784,8 +785,24 @@ model ExploreConversation {
 
   user     User             @relation(fields: [userId], references: [discordId], onDelete: Cascade)
   messages ExploreMessage[]
+  toolPayloads ExploreToolPayload[]
 
   @@index([userId, updatedAt])
+}
+
+/// Full inspection data is fetched on demand, never replayed into model history.
+model ExploreToolPayload {
+  id String @id @default(uuid())
+  conversationId String
+  runId String
+  toolCallId String
+  toolName String
+  direction String
+  payload String
+  createdAt DateTime @default(now())
+  conversation ExploreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  @@unique([conversationId, toolCallId, direction])
+  @@index([runId])
 }
 
 /// One turn of an explore conversation, as a node in a tree.
@@ -801,6 +818,8 @@ model ExploreConversation {
 /// share link cannot silently change meaning as the lake grows, and an
 /// anonymous viewer costs no query.
 model ExploreMessage {
+  generation String?
+  inlineEntities String?
   id             String   @id @default(uuid())
   conversationId String
   /// Null for the opening message. Siblings under one parent are versions.
@@ -839,6 +858,29 @@ model ExploreMessage {
 
   @@index([conversationId])
   @@index([conversationId, parentId])
+}
+
+/// Per-provider-request monetary hold. Ambiguous attempts retain their hold.
+model ExploreSpend {
+  id String @id @default(uuid())
+  runId String
+  ownerId String
+  month String
+  model String
+  reservedMicros Int
+  budgetMicros Int
+  state String @default("held")
+  usage String?
+  responseId String?
+  createdAt DateTime @default(now())
+  settledAt DateTime?
+  @@index([month, ownerId])
+  @@index([runId])
+}
+
+model ExploreSandboxLease {
+  id String @id @default(uuid())
+  expiresAt DateTime
 }
 
 model GuildInstall {

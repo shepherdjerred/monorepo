@@ -147,6 +147,13 @@ export async function runReportLakeFold(
         skippedGenerations: validated.skippedByTable.get(table) ?? 0,
       });
     const stagedMatches = await read("matches");
+    const stagedRawDocuments = await read("raw_documents");
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "raw_documents",
+      stagedRawDocuments,
+    );
     const stagedPrematches = await read("prematch");
     const stagedMatchTeams = await read("match_teams");
     const stagedMatchTeamBans = await read("match_team_bans");
@@ -205,6 +212,7 @@ export async function runReportLakeFold(
       buildId,
       tier: "fold" as const,
       matchRows: stagedMatches.rows,
+      rawDocumentRows: stagedRawDocuments.rows,
       matchTeamRows: stagedMatchTeams.rows,
       matchTeamBanRows: stagedMatchTeamBans.rows,
       prematchRows: stagedPrematches.rows,
@@ -229,6 +237,11 @@ export async function runReportLakeFold(
     await publishBuild(lakeDir, buildId);
     publishCompactionMetrics(summary);
     await removeFoldedStagingFiles(lakeDir, "matches", stagedMatches.foldedIds);
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "raw_documents",
+      stagedRawDocuments.foldedIds,
+    );
     await removeFoldedStagingFiles(
       lakeDir,
       "match_teams",

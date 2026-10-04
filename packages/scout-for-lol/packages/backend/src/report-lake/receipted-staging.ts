@@ -116,6 +116,8 @@ async function receiptStagedFiles(args: {
     record: buildReceipt({
       matchId: receiptMatchId(args.matchId),
       kind: lakeStagingReceiptKind(args.objectKind),
+      // Version 2 attests the complete projection, including raw_documents.
+      version: 2,
       evidence,
       recordedAt: args.options.now ?? new Date(),
     }),

@@ -18,6 +18,7 @@ export async function persistPartialAnswer(
   client: ExtendedPrismaClient,
   input: {
     stopped: boolean;
+    model?: string | undefined;
     conversationId: string;
     parentMessageId: string;
     expectedCurrentLeafId: string | null;
@@ -65,6 +66,11 @@ export async function persistPartialAnswer(
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer,
+    ...(input.model === undefined
+      ? {}
+      : {
+          generation: { model: input.model, reasoningEffort: "high" as const },
+        }),
     preview: null,
     visualization: null,
     trace: finalizeExploreTrace(input.trace),

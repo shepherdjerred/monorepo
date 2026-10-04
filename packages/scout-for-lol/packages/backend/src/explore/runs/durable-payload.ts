@@ -13,6 +13,7 @@ import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
 export const ExploreDurablePayloadSchema = z.strictObject({
   summary: z.looseObject({ runId: z.uuid() }),
   started: z.strictObject({
+    model: z.string().min(1).optional(),
     conversationId: z.uuid(),
     title: z.string(),
     messageId: z.uuid(),
