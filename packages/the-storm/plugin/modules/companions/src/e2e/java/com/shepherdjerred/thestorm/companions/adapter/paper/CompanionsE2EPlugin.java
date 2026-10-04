@@ -48,6 +48,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
@@ -194,7 +195,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     player.teleport(worksite.clone());
     for (var npc : CitizensAPI.getNPCRegistry()) {
       if (npc.data().has("thestorm-companion-id") && npc.isSpawned())
-        player(npc).teleport(worksite.clone());
+        npc.teleport(worksite.clone(), TeleportCause.PLUGIN);
     }
   }
 
