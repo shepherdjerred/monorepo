@@ -502,7 +502,7 @@ final class CompanionActor {
     return block.getType().name().equals(material);
   }
 
-  static boolean exposed(Block block) {
+  private static boolean exposed(Block block) {
     return java.util.List.of(
             org.bukkit.block.BlockFace.UP,
             org.bukkit.block.BlockFace.DOWN,

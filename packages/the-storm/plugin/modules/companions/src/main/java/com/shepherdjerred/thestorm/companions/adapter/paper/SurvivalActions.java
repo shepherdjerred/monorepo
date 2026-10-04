@@ -27,12 +27,12 @@ public final class SurvivalActions {
     this.audit = audit;
   }
 
-  boolean allowed(Player player, ProtectedAction action, Block block) {
+  public boolean allowed(Player player, ProtectedAction action, Block block) {
     return block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)
         && protection.check(player.getUniqueId(), action, block.getLocation()).isAllowed();
   }
 
-  static boolean reach(Player player, Block block) {
+  public static boolean reach(Player player, Block block) {
     var center = block.getLocation().add(0.5, 0.5, 0.5);
     var distance = player.getEyeLocation().distance(center);
     if (!player.getWorld().equals(block.getWorld())

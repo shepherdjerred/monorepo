@@ -6,22 +6,22 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 
 /** Incremental bounded scans of loaded chunks; never loads terrain on the tick thread. */
-final class ResourceScan {
+public final class ResourceScan {
   private final int radius;
   private final Location center;
   private int cursor;
 
-  ResourceScan(Location center, int radius) {
+  public ResourceScan(Location center, int radius) {
     this.center = center.clone();
     this.radius = radius;
   }
 
-  boolean finished() {
+  public boolean finished() {
     var width = radius * 2 + 1;
     return cursor >= width * width * width;
   }
 
-  Optional<Block> advance(int budget, Predicate<Block> wanted) {
+  public Optional<Block> advance(int budget, Predicate<Block> wanted) {
     var width = radius * 2 + 1;
     var volume = width * width * width;
     for (var scanned = 0; scanned < budget && cursor < volume; scanned++) {

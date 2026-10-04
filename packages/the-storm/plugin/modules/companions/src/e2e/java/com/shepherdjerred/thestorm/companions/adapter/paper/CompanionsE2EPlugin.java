@@ -285,7 +285,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
               block ->
                   Tag.LOGS.isTagged(block.getType())
                       && actions.allowed(player, ProtectedAction.BREAK, block)
-                      && CompanionActor.exposed(block));
+                      && exposed(block));
       source
           .getSender()
           .sendMessage(
@@ -300,6 +300,23 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     } catch (RuntimeException exception) {
       source.getSender().sendMessage(Component.text("scan error=" + exception));
     }
+  }
+
+  private static boolean exposed(org.bukkit.block.Block block) {
+    return Arrays.stream(org.bukkit.block.BlockFace.values())
+        .filter(
+            face ->
+                face.getModX() * face.getModX()
+                        + face.getModY() * face.getModY()
+                        + face.getModZ() * face.getModZ()
+                    == 1)
+        .map(block::getRelative)
+        .anyMatch(
+            neighbor ->
+                neighbor.getY() >= neighbor.getWorld().getMinHeight()
+                    && neighbor.getY() < neighbor.getWorld().getMaxHeight()
+                    && neighbor.getWorld().isChunkLoaded(neighbor.getX() >> 4, neighbor.getZ() >> 4)
+                    && neighbor.isPassable());
   }
 
   private void nativeActions(CommandSourceStack source) {
