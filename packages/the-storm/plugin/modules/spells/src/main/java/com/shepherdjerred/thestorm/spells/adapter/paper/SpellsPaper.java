@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.spells.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Spells;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Toolbox;
 import com.shepherdjerred.thestorm.spells.app.SpellScrolls;
@@ -69,7 +70,8 @@ public final class SpellsPaper {
             say,
             server,
             context.time(),
-            context.random());
+            context.random(),
+            context.services().require(SealedWorlds.class));
     var items = new SpellItems(context.plugin(), config);
     var flow = new CastFlow(Spells.create(config.spells(), tools), config.spells(), tools);
     var binder = new Binder(items, state, config.spells(), new Binder.Storage(store, async));

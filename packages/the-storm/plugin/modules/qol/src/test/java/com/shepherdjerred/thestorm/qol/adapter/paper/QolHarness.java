@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -9,6 +10,7 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuard;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
@@ -124,6 +126,10 @@ final class QolHarness implements AutoCloseable {
   final WorldMock world;
   final StormDatabase database;
   final FakeClock clock = FakeClock.at("2026-09-25T12:00:00Z");
+
+  /** Worlds the test seals; graves must ignore deaths there. */
+  final SealedWorlds sealed = new SealedWorlds();
+
   final Guards guards = new Guards();
   final Afk afk = new Afk();
   final Land land = new Land();
@@ -168,6 +174,7 @@ final class QolHarness implements AutoCloseable {
                   plugin,
                   plugin.getLifecycleManager(),
                   new PaperScheduler(plugin),
+                  new DirectComputePool(),
                   database,
                   new Services(),
                   directory,
@@ -184,7 +191,8 @@ final class QolHarness implements AutoCloseable {
                       harness.combat,
                       harness.land,
                       harness.guards,
-                      harness.afk),
+                      harness.afk,
+                      harness.sealed),
                   new ServerHooks(
                       GraveFace.PLAIN, player -> harness.saved.add(player.getUniqueId())));
         };

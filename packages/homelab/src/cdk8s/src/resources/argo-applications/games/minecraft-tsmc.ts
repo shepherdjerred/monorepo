@@ -102,13 +102,16 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // Candidate publication must not activate an unprepared production volume.
       tag: versions["shepherdjerred/the-storm-server/prod"],
     },
+    // Sized for the Search and Destroy world: up to ~100 ticking Citizens bot
+    // players share this server with survival, so the heap and the CPU
+    // reservation grew with it. CPU stays unlimited so bursts are not throttled.
     resources: {
       requests: {
-        memory: "6Gi",
-        cpu: "2",
+        memory: "8Gi",
+        cpu: "4",
       },
       limits: {
-        memory: "8Gi",
+        memory: "10Gi",
       },
     },
     minecraftServer: {
@@ -118,7 +121,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       levelType: "LARGEBIOMES",
       levelSeed: "6723312581398122416",
       viewDistance: 10,
-      memory: "6G",
+      memory: "8G",
       motd: "The Storm | Survival",
       pvp: true,
       gameMode: "survival",

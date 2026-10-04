@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.arena.domain.geometry.ChunkPos;
 import com.shepherdjerred.thestorm.arena.testing.FakeClock;
 import com.shepherdjerred.thestorm.arena.testing.FakeWallets;
 import com.shepherdjerred.thestorm.arena.testing.Samples;
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -132,6 +133,7 @@ public final class ArenaHarness implements AutoCloseable {
                         plugin,
                         plugin.getLifecycleManager(),
                         new PaperScheduler(plugin),
+                        new DirectComputePool(),
                         database,
                         services,
                         directory,

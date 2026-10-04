@@ -94,7 +94,9 @@ final class CombatListener implements Listener {
   /** Only damage that survived protection and other plugins starts a combat switch lock. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onPlayerDamage(EntityDamageEvent event) {
-    if (!(event.getEntity() instanceof Player victim) || event.getFinalDamage() <= 0) {
+    if (!(event.getEntity() instanceof Player victim)
+        || event.getFinalDamage() <= 0
+        || guard.isSealed(victim.getWorld())) {
       return;
     }
     var attacker =

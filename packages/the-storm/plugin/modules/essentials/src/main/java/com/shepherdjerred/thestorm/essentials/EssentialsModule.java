@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.essentials;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqBackStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeStore;
@@ -52,6 +53,7 @@ public final class EssentialsModule implements StormModule {
     var database = context.database();
     var wallets = context.services().require(Wallets.class);
     var protection = context.services().require(Protection.class);
+    var sealed = context.services().require(SealedWorlds.class);
 
     var guards = new GuardRegistry();
     var afk = new AfkTracker(context.time(), config.afkTimeout());
@@ -84,7 +86,7 @@ public final class EssentialsModule implements StormModule {
             context,
             config,
             new EssentialsPaper.App(
-                payments, guards, afk, moderation, players, warps, stores, protection));
+                payments, guards, afk, moderation, players, warps, stores, protection, sealed));
   }
 
   @Override

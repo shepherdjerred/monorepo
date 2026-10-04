@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
 import com.shepherdjerred.thestorm.essentials.app.ModerationService;
@@ -61,7 +62,8 @@ public final class EssentialsPaper {
       PlayerDirectory players,
       WarpDirectory warps,
       Stores stores,
-      Protection protection) {}
+      Protection protection,
+      SealedWorlds sealed) {}
 
   /**
    * Storage used directly by commands and listeners.
@@ -90,11 +92,13 @@ public final class EssentialsPaper {
     permissions.register(config.kits().kits().keySet(), config.kits().starter());
 
     var teleports = config.teleports();
-    var back = new BackRecorder(runtime, app.stores().back(), teleports.backHistorySize());
+    var back =
+        new BackRecorder(runtime, app.stores().back(), teleports.backHistorySize(), app.sealed());
     var flow =
         new TeleportFlow(
             runtime,
-            new TeleportFlow.Services(app.payments(), app.guards(), app.protection(), back),
+            new TeleportFlow.Services(
+                app.payments(), app.guards(), app.protection(), back, app.sealed()),
             teleports.warmup());
     var tpa = new TpaDesk(context.time(), teleports.tpaRules());
     var safe = new SafeTracker();
@@ -104,7 +108,11 @@ public final class EssentialsPaper {
             runtime,
             flow,
             new TeleportCommands.Places(
-                app.stores().homes(), app.warps(), app.stores().back(), app.protection()),
+                app.stores().homes(),
+                app.warps(),
+                app.stores().back(),
+                app.protection(),
+                app.sealed()),
             config);
     var tpaCommands = new TpaCommands(runtime, flow, tpa, teleports.tpaTimeout());
     var playerCommands =

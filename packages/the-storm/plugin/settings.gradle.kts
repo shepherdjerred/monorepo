@@ -40,6 +40,8 @@ val modules =
         "world",
         "tickets",
         "agent",
+        "rwf",
+        "rwfbots",
     )
 
 include("core", "architecture", "dist")

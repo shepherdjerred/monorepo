@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -13,6 +14,7 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mobs.MobsModule;
 import com.shepherdjerred.thestorm.mobs.app.MobLevels;
 import com.shepherdjerred.thestorm.mobs.domain.config.MobsConfig;
@@ -107,6 +109,7 @@ final class MobsPaperTest {
   MobLevels levels;
   private @Nullable MobsPaper started;
   final FixedRandom random = FixedRandom.highest();
+  final SealedWorlds sealed = new SealedWorlds();
   int lootRolls;
 
   /** The mob's loot table, as a test double: one rotten flesh per roll. */
@@ -125,6 +128,7 @@ final class MobsPaperTest {
     database = StormDatabase.open(directory.resolve("t.db"));
     var services = new Services();
     services.provide(Protection.class, new SpawnRegion());
+    services.provide(SealedWorlds.class, sealed);
     enabling =
         plugin -> {
           var context =
@@ -132,6 +136,7 @@ final class MobsPaperTest {
                   plugin,
                   plugin.getLifecycleManager(),
                   new PaperScheduler(plugin),
+                  new DirectComputePool(),
                   database,
                   services,
                   directory,
@@ -171,6 +176,18 @@ final class MobsPaperTest {
 
   static String plain(Component component) {
     return PlainTextComponentSerializer.plainText().serialize(component);
+  }
+
+  @Test
+  void aSealedWorldLevelsNoMobs() {
+    sealed.seal("wilds");
+    var wilds = server.addSimpleWorld("wilds");
+    wilds.setTime(6000);
+
+    var zombie = wilds.spawn(new Location(wilds, 3000, 5, 0), Zombie.class, SpawnReason.NATURAL);
+
+    assertThat(levels.levelOf(zombie)).isEmpty();
+    assertThat(zombie.customName()).isNull();
   }
 
   @Test
@@ -429,12 +446,14 @@ final class MobsPaperTest {
     database = StormDatabase.open(directory.resolve("t.db"));
     var services = new Services();
     services.provide(Protection.class, new SpawnRegion());
+    services.provide(SealedWorlds.class, new SealedWorlds());
     var plugin = MockBukkit.createMockPlugin("TheStorm");
     var context =
         new ModuleContext(
             plugin,
             plugin.getLifecycleManager(),
             new PaperScheduler(plugin),
+            new DirectComputePool(),
             database,
             services,
             directory,

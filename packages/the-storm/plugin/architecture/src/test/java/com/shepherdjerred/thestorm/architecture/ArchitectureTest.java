@@ -4,7 +4,10 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaConstructorCall;
+import com.tngtech.archunit.core.domain.JavaMethodCall;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -13,10 +16,14 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * The layering rules every module follows. Each module has {@code domain} (pure rules and data),
@@ -99,6 +106,31 @@ final class ArchitectureTest {
           .because("modules schedule through core's Scheduler port");
 
   @ArchTest
+  static final ArchRule THREADS_COME_FROM_CORE =
+      noClasses()
+          .that()
+          .resideOutsideOfPackage(BASE + ".core..")
+          .should()
+          .callMethodWhere(platformPoolFactory())
+          .orShould()
+          .callConstructorWhere(constructorOf(Thread.class, ForkJoinPool.class))
+          .orShould()
+          .callMethod(Thread.class, "ofPlatform")
+          .orShould()
+          .callMethod(ForkJoinPool.class, "commonPool")
+          .orShould()
+          .callMethod(CompletableFuture.class, "supplyAsync", Supplier.class)
+          .orShould()
+          .callMethod(CompletableFuture.class, "runAsync", Runnable.class)
+          .because(
+              "off-main-thread CPU work runs on core's bounded ComputePool so it is named, capped and"
+                  + " closed with the plugin; the common pool and ad-hoc platform threads are"
+                  + " neither. Virtual threads (Thread.ofVirtual, Thread.startVirtualThread,"
+                  + " Executors.newVirtualThreadPerTaskExecutor) stay allowed: they carry blocking"
+                  + " network I/O such as the HTTP brain client and the Discord gateway, which must"
+                  + " not occupy one of the pool's few platform threads");
+
+  @ArchTest
   static final ArchRule NO_INTERNAL_PAPER_API =
       noClasses()
           .should()
@@ -117,6 +149,27 @@ final class ArchitectureTest {
   @ArchTest
   static final ArchRule NO_MODULE_CYCLES =
       slices().matching(BASE + ".(*)..").should().beFreeOfCycles();
+
+  /** Every {@link Executors} factory except the virtual-thread one. */
+  private static DescribedPredicate<JavaMethodCall> platformPoolFactory() {
+    return new DescribedPredicate<>("create a platform thread pool through Executors") {
+      @Override
+      public boolean test(JavaMethodCall call) {
+        return call.getTargetOwner().isEquivalentTo(Executors.class)
+            && !call.getName().equals("newVirtualThreadPerTaskExecutor");
+      }
+    };
+  }
+
+  private static DescribedPredicate<JavaConstructorCall> constructorOf(Class<?>... types) {
+    var owners = Set.of(types);
+    return new DescribedPredicate<>("construct " + owners) {
+      @Override
+      public boolean test(JavaConstructorCall call) {
+        return owners.stream().anyMatch(call.getTargetOwner()::isEquivalentTo);
+      }
+    };
+  }
 
   private static ArchCondition<JavaClass> useOtherModulesOnlyThroughApp() {
     return new ArchCondition<>("use other modules only through their app package") {

@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.chat.app.Subscription;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.discord.adapter.discord.JdaBridge;
 import com.shepherdjerred.thestorm.discord.adapter.paper.PaperOnlinePlayers;
 import com.shepherdjerred.thestorm.discord.adapter.paper.ServerEventsListener;
@@ -76,7 +77,9 @@ public final class DiscordModule implements StormModule {
             context.logger());
     server
         .getPluginManager()
-        .registerEvents(new ServerEventsListener(relay, text), context.plugin());
+        .registerEvents(
+            new ServerEventsListener(relay, text, context.services().require(SealedWorlds.class)),
+            context.plugin());
     bridge.start(credentials, relay, commands);
     running = new Running(bridge, relay, subscription);
   }

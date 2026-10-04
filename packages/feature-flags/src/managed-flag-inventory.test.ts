@@ -383,6 +383,34 @@ describe("The Storm companion pilot rollout", () => {
   });
 });
 
+describe("Red Warfare Search and Destroy rollout", () => {
+  test("gates /rwf join on in beta while production and fallback stay off", () => {
+    const key = "the-storm-rwf-enabled";
+    expect(
+      managedFlagInventory.flags.find((flag) => flag.key === key),
+    ).toMatchObject({
+      namespace: "the-storm",
+      type: "boolean",
+      default: false,
+      rollouts: [],
+    });
+
+    const beta = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "the-storm",
+    ).find((flag) => flag.key === key);
+    expect(beta).toMatchObject({ default: true, rollouts: [] });
+
+    const prod = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "the-storm",
+    ).find((flag) => flag.key === key);
+    expect(prod).toMatchObject({ default: false, rollouts: [] });
+  });
+});
+
 describe("durable iMessage ingress rollout", () => {
   test("enables the beta gateway rollout while prod stays disabled", () => {
     const betaFlag = materializeManagedNamespaceEnvironment(

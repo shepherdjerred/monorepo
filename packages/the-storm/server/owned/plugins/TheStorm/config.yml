@@ -24,3 +24,6 @@ modules:
   world: true
   tickets: true
   agent: true
+  # Red Warfare Search and Destroy and its bots stay off until the rwf world is provisioned.
+  rwf: false
+  rwfbots: false

@@ -41,7 +41,7 @@ final class DropListenerTest {
       new DropListener(
           new ShardDrops(
               new DropsConfig(
-                  List.of(harness.world.getKey().asString()),
+                  List.of(harness.world.getKey().asString(), "minecraft:arena"),
                   List.of("SPAWNER"),
                   Map.of("ZOMBIE", new DropRule(1, 1, 1)),
                   Map.of("DIAMOND_ORE", new DropRule(1, 2, 2)))),
@@ -100,6 +100,20 @@ final class DropListenerTest {
     mine(ore(0));
 
     assertThat(shardsOnTheGround()).isEqualTo(2);
+  }
+
+  @Test
+  void oreInASealedWorldDropsNoShards() {
+    harness.sealed.seal("arena");
+    var arena = harness.server.addSimpleWorld("arena");
+    var block = arena.getBlockAt(0, 12, 0);
+    block.setType(Material.DIAMOND_ORE);
+    block.setDrops(List.of(ItemStack.of(Material.DIAMOND)));
+    listener.onPopulate(new ChunkPopulateEvent(block.getChunk()));
+
+    mine(block);
+
+    assertThat(arena.getEntities().stream().filter(Item.class::isInstance).count()).isZero();
   }
 
   @Test
