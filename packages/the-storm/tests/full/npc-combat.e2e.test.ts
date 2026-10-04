@@ -51,6 +51,7 @@ describe("NPC combat on Paper with all modules", () => {
       "market arrival",
       () => bot.entity.position.distanceTo(new Vec3(400.5, 64, 3.5)) < 0.3,
     );
+    await rcon.command(`tp ${npc("market-guard")} 401.5 64 4.5`);
     const messages: string[] = [];
     const record = (message: string) => {
       messages.push(message);
@@ -112,6 +113,8 @@ describe("NPC combat on Paper with all modules", () => {
     } finally {
       bot.off("messagestr", record);
       await nextDay(rcon);
+      await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+      await rcon.command(`tp ${npc("market-guard")} -34.5 64 4.5`);
       await rcon.command("gamerule minecraft:advance_time true");
     }
   });
@@ -200,8 +203,18 @@ describe("NPC combat on Paper with all modules", () => {
       );
     });
     expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
+    const zombieStillPresent = await rcon.command(
+      "execute if entity @e[tag=npc-hostile]",
+    );
+    if (zombieStillPresent.includes("Test passed")) {
+      expect(await health(rcon, "@e[tag=npc-hostile,limit=1]")).toBeLessThan(
+        20,
+      );
+    }
     await rcon.command("kill @e[tag=npc-hostile]");
     await rcon.command("kill @e[tag=npc-peaceful]");
+    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+    await rcon.command(`tp ${npc("guard-captain")} 41.5 67 9.5`);
     await rcon.command(`gamemode survival ${bot.username}`);
     await rcon.command("difficulty peaceful");
   });
@@ -269,6 +282,7 @@ describe("NPC spell targeting on Paper", () => {
       bot.deactivateItem();
       bot.off("messagestr", record);
       await nextDay(rcon);
+      await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
     }
   });
 });
