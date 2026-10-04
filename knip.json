@@ -64,11 +64,16 @@
         "architecture-fixtures/**/*.ts"
       ]
     },
+    "packages/mc-build": {
+      "entry": ["scripts/**/*.ts", "test/fixtures/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
+    },
     "packages/mc-harness": {
-      "entry": ["architecture-fixtures/**/*.ts"],
+      "entry": ["architecture-fixtures/**/*.ts", "scripts/**/*.ts"],
       "project": [
         "src/**/*.ts",
         "test/**/*.ts",
+        "scripts/**/*.ts",
         "architecture-fixtures/**/*.ts"
       ]
     },

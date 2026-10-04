@@ -1,0 +1,4 @@
+interface:
+  display_name: "Minecraft Building"
+  short_description: "Capture a site, author with WorldEdit and the build DSL on a canvas, render, lint, and promote"
+  default_prompt: "Use toolkit mc build to capture the area, design the build on a canvas, show me the render, then promote it."

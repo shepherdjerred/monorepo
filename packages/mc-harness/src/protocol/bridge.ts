@@ -184,17 +184,19 @@ export type WeRunResponse = z.infer<typeof WeRunResponseSchema>;
 // POST /v1/we/paste — paste a .schem (base64) through the WorldEdit API.
 // Like `//paste`, `at` is where the schematic's origin lands and `rotate`
 // pivots around that origin (bridge snapshots use their min corner as origin).
+/** Clockwise paste rotation in degrees, as `//rotate` takes it. */
+export const RotationSchema = z.union([
+  z.literal(0),
+  z.literal(90),
+  z.literal(180),
+  z.literal(270),
+]);
 export const WePasteRequestSchema = z.strictObject({
   session: SessionNameSchema,
   world: z.string().min(1),
   schematic: z.string().min(1),
   at: BlockPosSchema,
-  rotate: z.union([
-    z.literal(0),
-    z.literal(90),
-    z.literal(180),
-    z.literal(270),
-  ]),
+  rotate: RotationSchema,
   ignoreAir: z.boolean(),
 });
 export const WePasteResponseSchema = z.strictObject({

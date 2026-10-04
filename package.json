@@ -127,6 +127,7 @@
     "packages/loaded",
     "packages/macos-ai-subscription-tracker",
     "packages/macos-cross-compiler",
+    "packages/mc-build",
     "packages/mc-harness",
     "packages/ops-clients",
     "packages/ops-model",

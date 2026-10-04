@@ -7,6 +7,7 @@
   "include": [
     "src/**/*",
     "test/**/*",
+    "scripts/**/*",
     "architecture-fixtures/**/*",
     "architecture.config.ts",
     "eslint.config.ts"

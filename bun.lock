@@ -1065,10 +1065,30 @@
       "name": "@shepherdjerred/macos-cross-compiler",
       "version": "0.1.0",
     },
+    "packages/mc-build": {
+      "name": "@shepherdjerred/mc-build",
+      "version": "0.1.0",
+      "dependencies": {
+        "fflate": "0.8.3",
+        "prismarine-nbt": "2.8.0",
+        "sharp": "0.35.4",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/mc-harness": {
       "name": "@shepherdjerred/mc-harness",
       "version": "0.1.0",
       "dependencies": {
+        "@shepherdjerred/mc-build": "workspace:*",
         "@shepherdjerred/unix-socket-daemon": "workspace:*",
         "zod": "^4.4.3",
       },
@@ -4244,6 +4264,8 @@
     "@shepherdjerred/loaded": ["@shepherdjerred/loaded@workspace:packages/loaded"],
 
     "@shepherdjerred/macos-cross-compiler": ["@shepherdjerred/macos-cross-compiler@workspace:packages/macos-cross-compiler"],
+
+    "@shepherdjerred/mc-build": ["@shepherdjerred/mc-build@workspace:packages/mc-build"],
 
     "@shepherdjerred/mc-harness": ["@shepherdjerred/mc-harness@workspace:packages/mc-harness"],
 

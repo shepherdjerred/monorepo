@@ -77,6 +77,13 @@ toolkit mc paste --world world --file before.schem --at 20,-60,0 --rotate 90
 
 Take a snapshot before a large edit; `we-undo` only covers WorldEdit history.
 
+## Building
+
+For anything that should end up in a real place (a house, a garden, terrain),
+use the `minecraft-building` skill: `toolkit mc build` captures the site,
+authors on a canvas (`--record <dir>` on `we`, `paste` and `cmd` appends to the
+op log), renders, lints, replays and promotes with undo.
+
 ## Console, events, logs
 
 ```bash

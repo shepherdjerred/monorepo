@@ -430,6 +430,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/mc-build",
+      "directory": "packages/mc-build",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/mc-harness",
       "directory": "packages/mc-harness",
       "steps": [
