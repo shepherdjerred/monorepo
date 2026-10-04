@@ -4,6 +4,7 @@ import {
   type LeaguePuuid,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { withRiotIdentities } from "./identity-alias.ts";
 
 const LocalMasteryRowSchema = RawChampionMasterySchema.extend({
   puuid: z.string().min(1).max(128),
@@ -41,6 +42,10 @@ export async function readLocalMasterySnapshot(puuid: LeaguePuuid): Promise<{
     include: { observation: { select: { payload: true } } },
   });
   if (snapshot === null) return null;
-  const rows = parseLocalMasterySnapshot(snapshot.observation.payload, puuid);
+  // Mastery rows name their owner by League-client UUID.
+  const rows = parseLocalMasterySnapshot(
+    await withRiotIdentities(snapshot.observation.payload),
+    puuid,
+  );
   return rows === null ? null : { rows, capturedAt: snapshot.capturedAt };
 }

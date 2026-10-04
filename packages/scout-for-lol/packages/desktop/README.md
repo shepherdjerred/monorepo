@@ -32,6 +32,14 @@ observations survive transient network failures in the local SQLite outbox.
 Clash capture includes check-in, invitations, tournament state, rewards, and
 history; mastery capture preserves the client's season-milestone fields.
 
+## Player identity
+
+Every player ID the client reads is a League-client UUID, not the Riot API
+PUUID the server stores, and the client sends it unchanged. The server
+translates it; the backend README ("Scout Client player identity") describes
+how. The client only has to keep reporting the account profile, whose
+`gameName#tagLine` is what lets the server resolve its own player.
+
 ## Lobby and game identity
 
 LCU exposes a lobby's `partyId` while the lobby exists and a real `gameId` only
