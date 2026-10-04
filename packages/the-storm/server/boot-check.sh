@@ -35,9 +35,11 @@ fixtures_jar=$repo/packages/the-storm/plugin/dist/build/libs/TheStormFixtures.ja
 [[ -f $fixtures_jar ]] || { echo 'Build TheStormFixtures.jar with the package build first' >&2; exit 1; }
 manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json)
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
-plugins+=(TheStorm)
+plugins+=(TheStorm MCBridge)
 # Every module the owned config switches on must report enabled.
 modules=$(grep -cE '^  [a-z]+: true$' "$repo/packages/the-storm/server/owned/plugins/TheStorm/config.yml")
+# Non-secret fixture: MCBridge disables itself without a token of >= 32 chars.
+bridge_token=storm-boot-check-bridge-fixture-token
 
 cleanup() {
   docker volume rm -f "$volume" >/dev/null
@@ -79,6 +81,7 @@ boot() { # label [docker run args...]
     -e EULA=TRUE -e ONLINE_MODE=FALSE -e MEMORY=3G \
     -e SPAWN_PROTECTION=0 -e STORM_BRAIN_BEARER_TOKEN=storm-boot-check-brain-token \
     -e DISCORD_BOT_TOKEN=invalid-storm-fixture-token -e DISCORD_CHANNEL_ID=1 \
+    -e MC_BRIDGE_TOKEN="$bridge_token" -e MC_BRIDGE_BIND=127.0.0.1 \
     -e FLIPT_URL=http://127.0.0.1:9 -e FLIPT_ENVIRONMENT=beta \
     "$image" >/dev/null
   local started=$SECONDS
@@ -172,7 +175,7 @@ assert row == ("survives",), row
 ' || fail "the-storm.db lost its data across a boot"
 on_volume test -f /data/plugins/TheStorm/runtime-state.txt || fail "runtime file in plugins/TheStorm was deleted"
 on_volume test ! -e /data/plugins/Stray-1.0.jar || fail "REMOVE_OLD_MODS left a stray jar"
-expected=$( (jq -r '.plugins[].file' <<<"$manifest"; echo TheStorm.jar; echo TheStormFixtures.jar) | sort)
+expected=$( (jq -r '.plugins[].file' <<<"$manifest"; echo TheStorm.jar; echo MCBridge.jar; echo TheStormFixtures.jar) | sort)
 actual=$(on_volume find /data/plugins -maxdepth 1 -name '*.jar' -printf '%f\n' | sort)
 [[ $expected == "$actual" ]] || fail "/data/plugins jars differ from the image: $(diff <(echo "$expected") <(echo "$actual"))"
 expect_patched fresh

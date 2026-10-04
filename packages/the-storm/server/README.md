@@ -1,8 +1,8 @@
 # The Storm server image
 
 `minecraft-tsmc` runs `ghcr.io/shepherdjerred/the-storm-server`: pinned,
-pre-patched Paper, TheStorm, eleven supporting plugins, and repository-owned
-configuration. The image builds through `docker-bake.hcl`; CI publication and
+pre-patched Paper, TheStorm, the MCBridge agent bridge, eleven supporting
+plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`; CI publication and
 the version catalog control its GitOps release.
 
 CI updates the candidate pin `shepherdjerred/the-storm-server`. The live chart
@@ -21,6 +21,11 @@ The supporting plugins are LuckPerms, WorldEdit, CoreProtect, Citizens,
 BlueMap, Chunky, Geyser-Spigot, floodgate, Multiverse-Core, ViaVersion, and
 ViaBackwards. `plugins.json` is the authority for their versions, artifact
 URLs, and hashes.
+
+`MCBridge.jar` is built from `plugin/bridge` alongside TheStorm.jar. It serves
+the mc-harness agent API on port 25580, which has no Service or ingress and is
+reached only through `kubectl port-forward`. It requires `MC_BRIDGE_TOKEN`
+(the `storm-brain` 1Password item) and disables itself without one.
 Multiverse loads resource worlds before TheStorm; the world module validates
 those worlds and does not generate them during startup.
 
@@ -115,7 +120,7 @@ image verification before activation.
 4. Promote the verified candidate digest into the production catalog pin and
    remove the legacy `DISCORDSRV_TOKEN` and `CFG_DISCORD_CHANNEL_ID` chart refs.
    Reconcile the published image and chart revision through GitOps. Confirm
-   the exact twelve-plugin runtime set, all 23 modules, successful asynchronous
+   the exact runtime plugin set (`plugins.json`, TheStorm, and MCBridge), all 23 modules, successful asynchronous
    world checks, brain readiness, and the authenticated Discord bridge.
 5. Verify the windmill spawn and altar, mine entrance south of town, trainers
    and quest givers, arena join/class/leave and inventory restoration, shops,
