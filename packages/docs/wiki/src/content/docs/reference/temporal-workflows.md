@@ -158,16 +158,17 @@ Only corpus capture and context-refresh are scheduled.
 
 ## Home automation
 
-| Workflow           | Trigger                 | Brain         | Output               |
-| ------------------ | ----------------------- | ------------- | -------------------- |
-| good-morning ×3    | weekday/weekend crons   | deterministic | heat, music, scenes  |
-| vacuum-if-not-home | 09/12/17:00             | deterministic | vacuum fleet         |
-| welcome-home       | arrival edge            | deterministic | scenes, lights, dock |
-| leaving-home       | last-departure edge     | deterministic | lights off, vacuums  |
-| reconcile-lock     | every presence edge     | deterministic | deadbolt (settled)   |
-| good-night         | iOS shortcut            | deterministic | scene + sleep audio  |
-| sleep-music        | iOS Shortcut + duration | deterministic | bedroom sleep audio  |
-| sleep-ac           | iOS Shortcut + duration | deterministic | bedroom cooling      |
+| Workflow           | Trigger                 | Brain         | Output                   |
+| ------------------ | ----------------------- | ------------- | ------------------------ |
+| good-morning ×3    | weekday/weekend crons   | deterministic | heat, music, scenes      |
+| vacuum-if-not-home | 09/12/17:00             | deterministic | vacuum fleet             |
+| welcome-home       | arrival edge            | deterministic | scenes, lights, dock     |
+| leaving-home       | last-departure edge     | deterministic | lights off, vacuums      |
+| reconcile-lock     | every presence edge     | deterministic | deadbolt (settled)       |
+| pet-care-alerts    | HA sensor state changes | deterministic | HA, iPhone, Alertmanager |
+| good-night         | iOS shortcut            | deterministic | scene + sleep audio      |
+| sleep-music        | iOS Shortcut + duration | deterministic | bedroom sleep audio      |
+| sleep-ac           | iOS Shortcut + duration | deterministic | bedroom cooling          |
 
 Parameters for the sleep and morning routines are in
 [Home automation routines](/reference/home-automation-routines/).

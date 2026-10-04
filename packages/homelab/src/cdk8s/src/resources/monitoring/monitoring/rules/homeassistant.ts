@@ -111,15 +111,7 @@ function feederRules(
   suffix: "" | "_2",
 ) {
   const prefix = "granary_smart_camera_feeder";
-  const room = id === "LivingRoom" ? "living_room" : "guest_room";
   return [
-    createBinarySensorAlert({
-      name: `PetLibroFeeder${id}Problem`,
-      entity: `binary_sensor.petlibro_${room}_feeder_problem`,
-      description: `${label} PetLibro feeder reports low/empty food, a dispenser failure, missing telemetry, disconnected Wi-Fi, or no feeding in over 14 hours. Check its HA notification for details.`,
-      summary: `${label} PetLibro feeder needs attention`,
-      duration: "0s",
-    }),
     createBinarySensorAlert({
       name: `PetLibroFeeder${id}BatteryProblem`,
       entity: `binary_sensor.${prefix}_battery_status${suffix}`,
@@ -143,14 +135,6 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-petlibro-fountain",
       rules: [
-        createBinarySensorAlert({
-          name: "PetLibroFountainWaterLow",
-          entity: "binary_sensor.petlibro_fountain_water_low",
-          description:
-            "PetLibro fountain water has stayed below 650 mL for 15 minutes. Refill the tank.",
-          summary: "PetLibro fountain water shortage",
-          duration: "0s",
-        }),
         createSensorAlert({
           name: "PetLibroFountainCleaningDue",
           entity:
@@ -171,15 +155,6 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
             "PetLibro fountain filter is due: {{ $value }} days remaining.",
           summary: "PetLibro fountain filter due",
         }),
-        createBinarySensorAlert({
-          name: "PetLibroFountainOperationProblem",
-          entity: "binary_sensor.petlibro_fountain_operation_problem",
-          description:
-            "PetLibro fountain is offline, not in Flowing Water (Constant) mode, or has not dispensed for five minutes.",
-          summary: "PetLibro fountain operation problem",
-          // HA settles this sensor for five minutes before either channel sees it.
-          duration: "0s",
-        }),
       ],
     },
     {
@@ -192,22 +167,6 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-litter-robot",
       rules: [
-        createBinarySensorAlert({
-          name: "LitterRobotHomeAssistantProblem",
-          entity: "binary_sensor.litter_robot_problem",
-          description:
-            "Home Assistant reports a persistent Litter-Robot error, offline/powered-off state, removed bonnet/drawer, or dirty laser. Check the robot and its HA status code.",
-          summary: "Litter-Robot needs attention",
-          duration: "0s",
-        }),
-        createBinarySensorAlert({
-          name: "LitterRobotStalled",
-          entity: "binary_sensor.litter_robot_stalled",
-          description:
-            "The Litter-Robot has not returned to ready for 45 minutes. Check for a stuck cycle, blocked sensor, or paused robot.",
-          summary: "Litter-Robot appears stalled",
-          duration: "0s",
-        }),
         createSensorAlert({
           name: "LitterRobotLitterLow",
           entity: "trmnl_petcare_litter_percent",

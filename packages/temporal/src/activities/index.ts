@@ -6,6 +6,7 @@ import {
   golinkSyncActivities,
 } from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
+import { petCareAlertActivities } from "./pet-care-alerts.ts";
 import { homelabAuditActivities } from "./homelab/homelab-audit.ts";
 import { homelabAuditCollectorActivities } from "./homelab/homelab-audit-collectors.ts";
 import { agentTaskActivities } from "./agent/agent-task.ts";
@@ -73,6 +74,7 @@ export const reportActivities = {
   sendAgentTaskFailureReport: agentTaskActivities.sendAgentTaskFailureReport,
   ...mainVulnScanAlertActivities,
   ...linkRotScanAlertActivities,
+  ...petCareAlertActivities,
 };
 
 export const infraActivities = {

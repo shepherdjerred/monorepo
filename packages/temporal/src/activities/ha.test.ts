@@ -34,6 +34,30 @@ function configureHaFetch(response: Response): void {
   );
 }
 
+function configureHaServiceFetch(
+  requests: { url: string; body: unknown }[],
+): void {
+  Bun.env["HA_URL"] = "http://localhost:8123";
+  Bun.env["HA_TOKEN"] = "test-token";
+  globalThis.fetch = Object.assign(
+    (...args: Parameters<typeof fetch>): Promise<Response> => {
+      const [input, init] = args;
+      requests.push({
+        url:
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.href
+              : input.url,
+        body:
+          typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
+      });
+      return Promise.resolve(Response.json([]));
+    },
+    { preconnect: originalFetch.preconnect.bind(originalFetch) },
+  );
+}
+
 describe("haActivities", () => {
   beforeEach(() => {
     originalUrl = Bun.env["HA_URL"];
@@ -63,6 +87,49 @@ describe("haActivities", () => {
     await expect(haActivities.getEntityState("person.test")).rejects.toThrow(
       "HA_TOKEN environment variable is required",
     );
+  });
+
+  it("creates and dismisses tagged pet-care notifications and pushes to Jerred's iPhone", async () => {
+    const requests: { url: string; body: unknown }[] = [];
+    configureHaServiceFetch(requests);
+
+    await haActivities.setPetCareNotification({
+      entityId: "binary_sensor.litter_robot_problem",
+      title: "Litter-Robot needs attention",
+      message: "Litter-Robot reports error 4",
+      active: true,
+      sendPush: true,
+    });
+    await haActivities.setPetCareNotification({
+      entityId: "binary_sensor.litter_robot_problem",
+      title: "Litter-Robot needs attention",
+      message: "Ready again",
+      active: false,
+      sendPush: false,
+    });
+
+    expect(requests).toEqual([
+      {
+        url: "http://localhost:8123/api/services/persistent_notification/create",
+        body: {
+          notification_id: "binary_sensor.litter_robot_problem",
+          title: "Litter-Robot needs attention",
+          message: "Litter-Robot reports error 4",
+        },
+      },
+      {
+        url: "http://localhost:8123/api/services/notify/mobile_app_jerreds_iphone",
+        body: {
+          title: "Litter-Robot needs attention",
+          message: "Litter-Robot reports error 4",
+          data: { tag: "binary_sensor.litter_robot_problem" },
+        },
+      },
+      {
+        url: "http://localhost:8123/api/services/persistent_notification/dismiss",
+        body: { notification_id: "binary_sensor.litter_robot_problem" },
+      },
+    ]);
   });
 
   // A bare HaNotFoundError would reach the workflow as an untyped failure. It
