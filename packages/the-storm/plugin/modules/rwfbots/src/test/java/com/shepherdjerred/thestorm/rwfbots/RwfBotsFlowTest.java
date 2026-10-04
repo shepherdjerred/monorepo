@@ -210,6 +210,8 @@ final class RwfBotsFlowTest {
     var bots = lobby(alice, 2);
     goLive(alice, bots);
     harness.ticks(20);
+    // The red bot's click finishes arming the blue bomb.
+    harness.match.blueArmed(true);
     harness.match.fire(
         new MatchEvent.BombClicked(bots.getFirst(), FakeMatch.BLUE_BOMB, FakeMatch.T0),
         List.of(new MatchEffect.RecordStat(bots.getFirst(), "Armed")));

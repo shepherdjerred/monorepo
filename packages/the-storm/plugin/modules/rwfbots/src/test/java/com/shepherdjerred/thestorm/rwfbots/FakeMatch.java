@@ -59,6 +59,7 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   private MatchSnapshot.PhaseKind phase = MatchSnapshot.PhaseKind.LOBBY;
   private Optional<Outcome> outcome = Optional.empty();
   private boolean redArmed;
+  private boolean blueArmed;
 
   public FakeMatch(String blocksSha256) {
     this.map = map(blocksSha256);
@@ -98,6 +99,10 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
 
   public void redArmed(boolean armed) {
     redArmed = armed;
+  }
+
+  public void blueArmed(boolean armed) {
+    blueArmed = armed;
   }
 
   public void fighting(UUID uuid, TeamColor team, String kit) {
@@ -173,7 +178,9 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
                     false,
                     Optional.of(TeamColor.BLUE),
                     new BlockPos(28, 1, 16),
-                    new MatchSnapshot.BombView.State.Idle())),
+                    blueArmed
+                        ? new MatchSnapshot.BombView.State.Armed(40, Optional.empty())
+                        : new MatchSnapshot.BombView.State.Idle())),
         Optional.empty(),
         outcome);
   }

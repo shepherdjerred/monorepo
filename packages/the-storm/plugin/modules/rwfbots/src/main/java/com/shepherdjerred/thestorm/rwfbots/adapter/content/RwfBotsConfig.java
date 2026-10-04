@@ -2,8 +2,12 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.content;
 
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkRates;
+import com.shepherdjerred.thestorm.rwfbots.domain.chat.ChatSettings;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Voice;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -14,7 +18,7 @@ import java.util.regex.Pattern;
 /**
  * {@code rwfbots.yml}: the think rates, the governor thresholds, the lever curves (pinned to the
  * code so the file documents them and the module refuses a file that disagrees), the kits bots may
- * draft, the line-of-sight ray budget and trace recording.
+ * draft, the line-of-sight ray budget, trace recording and bot chat.
  *
  * @param think how often each think layer runs
  * @param governor when the governor steps in
@@ -22,6 +26,7 @@ import java.util.regex.Pattern;
  * @param draft which kits bots may be given
  * @param awareness the ray budget per think job
  * @param traces decision trace recording
+ * @param chat what bots say in the match world
  */
 public record RwfBotsConfig(
     Think think,
@@ -29,7 +34,8 @@ public record RwfBotsConfig(
     Map<String, LeverCurve> levers,
     Draft draft,
     Awareness awareness,
-    Traces traces) {
+    Traces traces,
+    Chat chat) {
 
   public RwfBotsConfig {
     levers = Map.copyOf(levers);
@@ -43,6 +49,8 @@ public record RwfBotsConfig(
     for (var key : levers.keySet()) {
       Lever.byKey(key);
     }
+    // Builds the chat settings once so a bad chat section fails at load.
+    var _ = chat.toSettings();
   }
 
   /**
@@ -179,6 +187,101 @@ public record RwfBotsConfig(
       if (queueCapacity < 1) {
         throw new IllegalArgumentException("queueCapacity must be positive");
       }
+    }
+  }
+
+  /**
+   * Bot chat in the match world; also gated by the managed Flipt flag {@code
+   * the-storm-rwfbots-chat-enabled}.
+   *
+   * @param enabled whether bots talk at all; when false the flag is never evaluated
+   * @param flagRefreshSeconds how often the flag is evaluated again
+   * @param chances the base chance, 0..1, a bot speaks at each moment
+   * @param verbosity the factor each personality verbosity applies to every chance
+   * @param rivalBoost the factor, 1..4, for a line aimed at a rival or a grudge
+   * @param botCooldownSeconds the least time between two lines by one bot
+   * @param windowSeconds the span the global line budget covers
+   * @param maxLinesPerWindow the most lines all bots together say within one window
+   * @param minGapMillis the least time between any two lines
+   * @param reactionMinMillis the shortest delay between a moment and its line
+   * @param reactionMaxMillis the longest delay between a moment and its line
+   * @param maxDelayMillis a line the rate limit would push later than this is dropped
+   * @param recentDeathSeconds how long after dying a bot may still speak
+   * @param tauntEverySeconds the mean time between idle taunt chances
+   */
+  public record Chat(
+      boolean enabled,
+      int flagRefreshSeconds,
+      Chances chances,
+      VerbosityFactors verbosity,
+      double rivalBoost,
+      int botCooldownSeconds,
+      int windowSeconds,
+      int maxLinesPerWindow,
+      int minGapMillis,
+      int reactionMinMillis,
+      int reactionMaxMillis,
+      int maxDelayMillis,
+      int recentDeathSeconds,
+      int tauntEverySeconds) {
+
+    public Chat {
+      if (flagRefreshSeconds < 1) {
+        throw new IllegalArgumentException("chat.flagRefreshSeconds must be at least 1");
+      }
+    }
+
+    public ChatSettings toSettings() {
+      return new ChatSettings(
+          chances.byMoment(),
+          verbosity.byLevel(),
+          rivalBoost,
+          Duration.ofSeconds(botCooldownSeconds),
+          Duration.ofSeconds(windowSeconds),
+          maxLinesPerWindow,
+          Duration.ofMillis(minGapMillis),
+          Duration.ofMillis(reactionMinMillis),
+          Duration.ofMillis(reactionMaxMillis),
+          Duration.ofMillis(maxDelayMillis),
+          Duration.ofSeconds(recentDeathSeconds),
+          Duration.ofSeconds(tauntEverySeconds));
+    }
+  }
+
+  /** The base chance, 0..1, per moment, keyed as the personality files key their line pools. */
+  public record Chances(
+      double greet,
+      double onKill,
+      double onDeath,
+      double onPlant,
+      double onDefuse,
+      double onWin,
+      double onLoss,
+      double onLastAlive,
+      double taunt) {
+
+    public Map<Lines.Moment, Double> byMoment() {
+      return Map.of(
+          Lines.Moment.GREET, greet,
+          Lines.Moment.ON_KILL, onKill,
+          Lines.Moment.ON_DEATH, onDeath,
+          Lines.Moment.ON_PLANT, onPlant,
+          Lines.Moment.ON_DEFUSE, onDefuse,
+          Lines.Moment.ON_WIN, onWin,
+          Lines.Moment.ON_LOSS, onLoss,
+          Lines.Moment.ON_LAST_ALIVE, onLastAlive,
+          Lines.Moment.TAUNT, taunt);
+    }
+  }
+
+  /** The factor each personality verbosity applies to every chance. */
+  public record VerbosityFactors(double quiet, double normal, double chatty) {
+
+    public Map<Voice.Verbosity, Double> byLevel() {
+      return Map.of(
+          Voice.Verbosity.QUIET, quiet,
+          Voice.Verbosity.NORMAL, normal,
+          Voice.Verbosity.CHATTY, chatty);
     }
   }
 

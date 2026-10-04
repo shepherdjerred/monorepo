@@ -8,7 +8,11 @@ loading with the stale-artifact refusal, the jOOQ stats store, gzip trace
 files, the snapshot capture, the body driver, and on MockBukkit a whole match
 with fake bodies over a fake rwf match: lobby fill and kit picks, live thinking
 and movement, new lives on death, rating and trace files at the end, the debug
-command and despawn on disable.
+command and despawn on disable. Bot chat's director (moments, chances,
+cooldowns, the rate limit, no repeats, placeholders, determinism) is unit
+tested, and on MockBukkit a bot's kill is said once, from its own kill lines
+with the `✦` marker, to the players in the rwf world only, and not at all with
+the flag off.
 
 MockBukkit cannot run Citizens, and the fake match stands in for rwf. These
 cases need the real server with Citizens installed. Each is a pass/fail check.
@@ -120,3 +124,17 @@ asserted there; the load cases belong to the manual load profile
     `npc list`, nor after the match. `/stop` itself is not run: both the local
     and the CI lane share one server across every suite file, so stopping it
     would end the run for the files after it.
+
+## Chat
+
+14. With `the-storm-rwfbots-chat-enabled` on, bots talk during a live match:
+    a watcher's and a member's client in the rwf world receive
+    `[Name ✦]: line` messages from the match's personalities, a player in
+    the main world receives none, and nothing reaches the Discord relay.
+    **Proven** in part by the showcase case: the watcher hears at least one
+    `✦` line from a shipped personality and a player in the main world hears
+    none. Discord, a member's client, the name's team colour and the pacing
+    (gap, window, cooldowns) on the real server are not inspected.
+15. Turning the flag off in Flipt silences the bots within
+    `flagRefreshSeconds` without a restart, and turning it back on brings
+    them back; a Flipt outage keeps them silent and logs a warning.
