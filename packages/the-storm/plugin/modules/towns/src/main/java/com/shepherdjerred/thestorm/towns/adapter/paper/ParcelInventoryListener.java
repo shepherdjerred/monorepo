@@ -24,8 +24,7 @@ final class ParcelInventoryListener implements Listener {
   void onClick(InventoryClickEvent event) {
     if (event.getWhoClicked() instanceof Player player) {
       var top = event.getView().getTopInventory();
-      if (frozen(top, player)
-          || (withdrawalOnly(top, player) && addsItemsToTop(event, top))) {
+      if (frozen(top, player) || (withdrawalOnly(top, player) && addsItemsToTop(event, top))) {
         event.setCancelled(true);
       }
     }
@@ -53,7 +52,12 @@ final class ParcelInventoryListener implements Listener {
     }
     return clickedTop
         && switch (action) {
-          case PLACE_ALL, PLACE_ONE, PLACE_SOME, SWAP_WITH_CURSOR, HOTBAR_SWAP, HOTBAR_MOVE_AND_READD ->
+          case PLACE_ALL,
+              PLACE_ONE,
+              PLACE_SOME,
+              SWAP_WITH_CURSOR,
+              HOTBAR_SWAP,
+              HOTBAR_MOVE_AND_READD ->
               true;
           default -> false;
         };
