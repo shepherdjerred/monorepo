@@ -66,7 +66,7 @@ const commands: Record<
 > = {
   "storm-forum": {
     command:
-      "cd /opt/storm-forum && bun scripts/runtime-smoke.ts && php-fpm --test --fpm-config /usr/local/etc/php-fpm.conf",
+      "cd /opt/storm-forum && bun scripts/runtime-smoke.ts && php-fpm --test --nodaemonize --force-stderr --fpm-config /usr/local/etc/php-fpm.conf",
     env: {},
   },
   "woodpecker-config-extension": {
