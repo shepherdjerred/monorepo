@@ -101,6 +101,12 @@ public interface MatchStore {
         throw new IllegalArgumentException("a row owes credits exactly when it has a payout");
       }
     }
+
+    /** The same row with another outcome. */
+    public PlayerRow withOutcome(Outcome newOutcome) {
+      return new PlayerRow(
+          matchId, player, team, kit, kills, deaths, newOutcome, creditsOwed, status, creditsPaid);
+    }
   }
 
   /**

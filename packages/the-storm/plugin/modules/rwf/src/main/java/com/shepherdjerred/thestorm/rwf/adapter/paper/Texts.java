@@ -111,6 +111,7 @@ final class Texts {
               describe(MatchError.CANNOT_DEFUSE_ENEMY_BOMB)),
           entry(ActionRefusal.CANNOT_DEFUSE_OWN_NUKE, describe(MatchError.CANNOT_DEFUSE_OWN_NUKE)),
           entry(ActionRefusal.BOMB_OUT_OF_REACH, "You are too far from the bomb."),
+          entry(ActionRefusal.NO_FUSE, "You have no Bomb Fuse."),
           entry(ActionRefusal.OUT_OF_REACH, "Your target is out of reach."),
           entry(ActionRefusal.NO_LINE_OF_SIGHT, "You cannot see your target."),
           entry(ActionRefusal.SAME_TEAM, "That is your team mate."),

@@ -28,6 +28,8 @@ public enum ActionRefusal {
   CANNOT_DEFUSE_OWN_NUKE,
   /** The bomb is further away than a player could reach. */
   BOMB_OUT_OF_REACH,
+  /** The combatant no longer carries the Bomb Fuse. */
+  NO_FUSE,
   /** The target is further away than a player could reach. */
   OUT_OF_REACH,
   /** A block is between the attacker and the target. */

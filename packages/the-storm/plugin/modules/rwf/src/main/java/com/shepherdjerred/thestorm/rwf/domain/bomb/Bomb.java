@@ -167,7 +167,9 @@ public record Bomb(BombSite site, BombState state) {
         outcomes.add(new BombOutcome.Exploded());
       }
     }
-    var next = new Bomb(site, new Armed(armed.team(), armed.fusedAt(), remaining, List.of()));
+    // The fuse burning down leaves any defuse attempts in progress exactly as they were.
+    var next =
+        new Bomb(site, new Armed(armed.team(), armed.fusedAt(), remaining, armed.attempts()));
     return new Step(remaining == armed.remaining() ? this : next, outcomes);
   }
 

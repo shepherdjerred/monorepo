@@ -496,3 +496,56 @@ transfer. Catalog names remain available to NPC validation, but catalog menus
 and `/shop` report that shops are loading. A failed read leaves the guard active
 and logs the startup failure; a successful read publishes the registry only
 after stale admin shops have been closed.
+
+## Red Warfare Search and Destroy (rwf)
+
+The `rwf` module ports libraryaddict's Red Warfare Search and Destroy (see
+`NOTICE`): one-life team PvP where attackers arm an enemy team's TNT bomb with
+a blaze-powder fuse, defenders defuse it, a nuke in the middle kills everyone
+but the team that armed it, and a poison forces long matches to a result. The
+rules are pure (`rwf.domain`); the Paper adapter carries out their effects at
+20 Hz and seals the match world so every other module leaves it alone.
+
+The world named in `rwf.yml` (`rwf`) must be provisioned by an operator through
+Multiverse and loaded before TheStorm enables; a flat or void world is fine
+because each map brings its own terrain. A missing world stops the server, like
+the world module's worlds. The module never generates terrain itself.
+
+Configuration and content live under `server/owned/plugins/TheStorm`:
+
+- `rwf.yml`: the world, the lobby and spectator points, how matches fill and
+  start (`minHumans`, `targetCombatants`, `maxCombatants`, the 90 s countdown,
+  the 30 s no-humans abort), the ported rule constants pinned to the code,
+  rewards (3 win / 1 lose scaled by the human share, a daily cap, the minimum
+  match length), recording and the load-test switch.
+- `rwf/kits.yml`: the kits as the operator sees them; it must describe
+  `KitBook` kit for kit or the module refuses to start.
+- `rwf/maps/<id>/map.yml` and `blocks.schem`: a map's teams, spawns, bombs,
+  nukes, region and the SHA-256 of its Sponge v3 schematic. The module pastes
+  every map at enable and whenever the world's blocks stop matching the hash,
+  20,000 blocks a tick with admission closed meanwhile. `training-yard` is a
+  generated 64x16x64 sample; its generator lives in the module's test sources.
+
+Commands: `/rwf join` (gated by the managed Flipt flag
+`the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
+closed), `/rwf leave`, `/rwf kit <id>`, `/rwf who`, and for
+`thestorm.rwf.admin`: `/rwf admin status`, `/rwf admin repair` and
+`/rwf admin loadtest <n>` (only when `loadtest.enabled`). Joining snapshots a
+player's belongings through the shared crash-safe snapshot machinery and
+restores them on leave, death, disconnect or the next login.
+
+Matches are recorded under pseudonyms (positions, actions, results) to
+`plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` for review and
+bot training; every joining human is told so on entry. Pseudonyms are
+HMAC-SHA256 over the salt in `RWF_RECORDING_SALT`, which must be set when
+`recording.enabled` is true. Recordings are pruned by age and size at enable.
+
+Payouts go through an outbox in `rwf_match_player` and the economy's keyed
+transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
+the transfer pays exactly once on the next enable. Bots are never paid.
+
+Bots are optional: the module declares the `BotRoster` port and looks it up
+when a countdown starts; the `rwfbots` module provides it. Bots act only
+through the `CombatantActions` port, which validates reach, line of sight and
+the hit window as it would for a human before acting through the server API.
+`MatchView` and `MatchEvents` publish the read model and transitions.

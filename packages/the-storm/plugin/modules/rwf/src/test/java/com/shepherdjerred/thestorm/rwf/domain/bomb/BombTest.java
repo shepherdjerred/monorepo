@@ -282,6 +282,27 @@ final class BombTest {
     }
 
     @Test
+    void aDefuseSurvivesTheFuseBurningBetweenClicks() {
+      var bomb = spam(redBomb, List.of(click(ALICE, TeamColor.BLUE, now)), 9.5);
+      now = now.plusSeconds(10);
+      bomb = bomb.tick(now).bomb();
+
+      var start = now;
+      var outcomes = new ArrayList<BombOutcome>();
+      while (bomb.armed() && !now.isAfter(start.plusMillis(9500))) {
+        var clicked = ok(bomb.click(click(BOB, TeamColor.RED, now)));
+        outcomes.addAll(clicked.outcomes());
+        now = now.plusMillis(500);
+        var ticked = clicked.bomb().tick(now);
+        outcomes.addAll(ticked.outcomes());
+        bomb = ticked.bomb();
+      }
+
+      assertThat(outcomes).contains(new BombOutcome.Defused(TeamColor.RED, List.of(BOB)));
+      assertThat(bomb.state()).isEqualTo(Idle.EMPTY);
+    }
+
+    @Test
     void restoringANukeForgetsItsTeam() {
       var armed = spam(nuke, List.of(click(ALICE, TeamColor.RED, now)), 9.5);
 
