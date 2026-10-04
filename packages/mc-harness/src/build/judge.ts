@@ -30,11 +30,17 @@ export const RUBRIC_DIMENSIONS = [
 ] as const;
 export type RubricDimension = (typeof RUBRIC_DIMENSIONS)[number];
 
-const DimensionScoresSchema = z.strictObject(
-  Object.fromEntries(
-    RUBRIC_DIMENSIONS.map((dimension) => [dimension, z.number().int().min(0).max(2)]),
-  ) as Record<RubricDimension, z.ZodNumber>,
-);
+const score = z.number().int().min(0).max(2);
+const DimensionScoresSchema = z.strictObject({
+  silhouette: score,
+  depth: score,
+  palette: score,
+  texture: score,
+  proportion: score,
+  detail: score,
+  siteFit: score,
+  lighting: score,
+} satisfies Record<RubricDimension, z.ZodNumber>);
 export type DimensionScores = z.infer<typeof DimensionScoresSchema>;
 
 /** What the model returns for one ordered comparison. */
@@ -150,14 +156,16 @@ export async function resolveRender(target: string): Promise<string> {
     return target;
   }
   const dir = path.join(target, BUILD_FILES.rendersDir);
-  const pngs = (await readdir(dir)).filter((name) => name.endsWith(".png"));
+  const names = await readdir(dir);
+  const pngs = names.filter((name) => name.endsWith(".png"));
   if (pngs.length === 0) {
     throw new Error(`${dir} has no renders; run toolkit mc build render first`);
   }
   const dated = await Promise.all(
     pngs.map(async (name) => {
       const file = path.join(dir, name);
-      return { file, mtime: (await stat(file)).mtimeMs };
+      const fileStat = await stat(file);
+      return { file, mtime: fileStat.mtimeMs };
     }),
   );
   dated.sort((x, y) => y.mtime - x.mtime);

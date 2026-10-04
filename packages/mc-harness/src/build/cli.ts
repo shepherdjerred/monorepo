@@ -111,6 +111,15 @@ function lintSummary(report: LintReport): string {
 
 type Handler = (env: Env, dir: string, values: Values, rest: string[]) => Promise<number>;
 
+function libraryTable(rows: LibraryRow[]): string {
+  return rows
+    .map(
+      (r) =>
+        `${r.slug.padEnd(18)} ${r.style.padEnd(9)} ${`${r.footprint.w.toString()}×${r.footprint.d.toString()}×${r.footprint.h.toString()}`.padEnd(9)} ${r.title} — ${r.tags.join(", ")}`,
+    )
+    .join("\n");
+}
+
 const HANDLERS: Record<string, Handler> = {
   init: async (_env, dir, values) => {
     const result = await initBuild(dir, {
@@ -226,24 +235,17 @@ const HANDLERS: Record<string, Handler> = {
     return 0;
   },
   library: async (_env, sub, values, rest) => {
-    const table = (rows: LibraryRow[]) =>
-      rows
-        .map(
-          (r) =>
-            `${r.slug.padEnd(18)} ${r.style.padEnd(9)} ${`${r.footprint.w.toString()}×${r.footprint.d.toString()}×${r.footprint.h.toString()}`.padEnd(9)} ${r.title} — ${r.tags.join(", ")}`,
-        )
-        .join("\n");
     if (sub === "ls" || sub === "search") {
       const rows = await libraryList({
         tags: values.tag ?? [],
         ...(values.text === undefined ? {} : { text: values.text }),
       });
-      print(values.json, rows, rows.length === 0 ? "no matching library entries" : table(rows));
+      print(values.json, rows, rows.length === 0 ? "no matching library entries" : libraryTable(rows));
       return 0;
     }
     if (sub === "show") {
       const entry = await libraryShow(required(rest[0], "<slug>"));
-      print(values.json, entry, `${table([entry])}\n\n${entry.notes}\n\nprogram: ${entry.program}\n\n${entry.source}`);
+      print(values.json, entry, `${libraryTable([entry])}\n\n${entry.notes}\n\nprogram: ${entry.program}\n\n${entry.source}`);
       return 0;
     }
     if (sub === "use") {
