@@ -23,6 +23,32 @@ final class NavCodecTest {
   }
 
   @Test
+  void writesDistanceFieldsInSortedOrderWhateverTheInputOrder() {
+    var reversed = new java.util.LinkedHashMap<String, DistanceField>();
+    nav.distanceFields().keySet().stream()
+        .sorted(java.util.Comparator.reverseOrder())
+        .forEach(name -> reversed.put(name, nav.distanceFields().get(name)));
+    var shuffled =
+        new NavArtifact(
+            nav.formatVersion(),
+            nav.generatorVersion(),
+            nav.mapId(),
+            nav.blocksSha256(),
+            nav.sites(),
+            nav.grid(),
+            nav.graph(),
+            nav.regions(),
+            nav.cover(),
+            nav.chokepoints(),
+            nav.routes(),
+            reversed);
+
+    assertThat(shuffled.distanceFields().keySet())
+        .containsExactlyElementsOf(nav.distanceFields().keySet().stream().sorted().toList());
+    assertThat(NavCodec.encode(shuffled)).isEqualTo(NavCodec.encode(nav));
+  }
+
+  @Test
   void rejectsBadMagic() {
     var bytes = NavCodec.encode(nav);
     bytes[0] = 'X';

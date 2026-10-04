@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -46,7 +47,10 @@ public record NavArtifact(
     if (regions.nodeCount() != graph.nodeCount()) {
       throw new IllegalArgumentException("regions and graph disagree on node count");
     }
-    distanceFields = Map.copyOf(new TreeMap<>(distanceFields));
+    // Keep the sorted view: Map.copyOf salts its iteration order per JVM, which
+    // would make NavCodec write the DISTANCE section in a different order on
+    // every run and break byte-for-byte artifact verification.
+    distanceFields = Collections.unmodifiableMap(new TreeMap<>(distanceFields));
     for (var field : distanceFields.values()) {
       if (field.size() != graph.nodeCount()) {
         throw new IllegalArgumentException("distance field and graph disagree on node count");
