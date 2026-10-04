@@ -252,7 +252,14 @@ final class MatchRunner implements MatchView, MatchEvents {
             match = step.match();
             applying = true;
             try {
-              step.effects().forEach(effects::apply);
+              // A step that starts the match may also end it (a team with nobody alive): the
+              // live world (bomb markers, recording, teams) must exist before its effects run.
+              if (before.phase().preGame() && started(match.phase())) {
+                wentLive();
+              }
+              for (var effect : step.effects()) {
+                applyGuarded(effect);
+              }
               afterStep(before, event);
             } finally {
               applying = false;
@@ -267,6 +274,23 @@ final class MatchRunner implements MatchView, MatchEvents {
     return refusal;
   }
 
+  /** Whether {@code phase} is one a match reaches only by going live first. */
+  private static boolean started(Phase phase) {
+    return phase instanceof Phase.Live || phase instanceof Phase.Ended;
+  }
+
+  /**
+   * Carries out one effect; one that fails is logged and the rest still run, so a broken block or
+   * entity can never strand the match in a phase it cannot leave.
+   */
+  private void applyGuarded(MatchEffect effect) {
+    try {
+      effects.apply(effect);
+    } catch (RuntimeException failure) {
+      parts.context().logger().error("rwf effect {} failed; carrying on", effect, failure);
+    }
+  }
+
   private void notifyListeners(MatchEvent event, List<MatchEffect> applied) {
     if (listeners.isEmpty()) {
       return;
@@ -277,15 +301,15 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
   }
 
-  /** Phase changes the adapter acts on, after the effects of the step that made them. */
+  /**
+   * Phase changes the adapter acts on after the effects of the step that made them. Going live is
+   * handled before the effects, in {@link #handle}.
+   */
   private void afterStep(RwfMatch before, MatchEvent event) {
     var was = before.phase();
     var is = match.phase();
     if (was instanceof Phase.Lobby && is instanceof Phase.Countdown) {
       fillWithBots();
-    }
-    if (!(was instanceof Phase.Live) && is instanceof Phase.Live) {
-      wentLive();
     }
     if (is instanceof Phase.Ended ended && !(was instanceof Phase.Ended)) {
       ended(ended);
@@ -912,8 +936,8 @@ final class MatchRunner implements MatchView, MatchEvents {
             victim,
             player -> {
               if (!player.isDead()) {
+                // The death event this raises reaches died(), which owns the death tally.
                 parts.combat().hurt(player.getUniqueId(), kill.cause());
-                tallies.computeIfAbsent(victim, ignored -> new Tally()).deaths++;
                 player.setHealth(0);
               }
             });

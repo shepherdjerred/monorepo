@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
+import com.shepherdjerred.thestorm.rwf.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.app.PayoutService;
@@ -305,6 +306,103 @@ final class RwfMatchFlowTest {
     assertThat(harness.snapshot().phase()).isEqualTo(MatchSnapshot.PhaseKind.LOBBY);
     assertThat(harness.snapshot().combatants()).isEmpty();
     assertThat(harness.bots.spawned()).isEmpty();
+  }
+
+  @Test
+  void aLoneHumanWinsTheInstantTheMatchStartsAndTheLobbyReopens() {
+    running = RwfHarness.prepare(directory).enable(directory, false, Map.of());
+    var harness = harness();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    var matchId = harness.snapshot().matchId();
+    RwfHarness.messages(alice);
+
+    // Going live with nobody on the other team ends the match in the same tick.
+    harness.tick(Duration.ofSeconds(91));
+
+    assertThat(harness.snapshot().phase()).isEqualTo(MatchSnapshot.PhaseKind.ENDED);
+    assertThat(harness.snapshot().outcome()).contains(new Outcome.Winner(teamOf(alice)));
+    assertThat(RwfHarness.messages(alice)).anyMatch(m -> m.contains("Team wins!"));
+    var store = new JooqMatchStore(harness.database);
+    harness.until(() -> !store.players(matchId).join().isEmpty());
+    assertThat(store.players(matchId).join())
+        .singleElement()
+        .satisfies(
+            row -> {
+              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.WIN);
+              assertThat(row.creditsOwed()).as("shorter than minMatchLength").isZero();
+              assertThat(row.status()).isEqualTo(MatchStore.PayoutStatus.NONE);
+            });
+    assertThat(harness.wallets.receipts()).isEmpty();
+
+    harness.tick(Duration.ofSeconds(16));
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
+
+    assertThat(harness.snapshot().matchId()).isNotEqualTo(matchId);
+    assertThat(harness.snapshot().combatants()).isEmpty();
+    assertThat(alice.getWorld()).isEqualTo(harness.overworld);
+    assertThat(harness.rwf.getBlockAt(55, 65, 31).getType())
+        .as("blue bomb back")
+        .isEqualTo(Material.TNT);
+  }
+
+  @Test
+  void theLobbyAcceptsPlayersAgainAfterAnInstantEnd() {
+    running = RwfHarness.prepare(directory).enable(directory, false, Map.of());
+    var harness = harness();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.tick(Duration.ofSeconds(91));
+    harness.tick(Duration.ofSeconds(16));
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
+    harness.until(() -> !harness.inMatch(alice));
+    // A restored player must log in again before another match, so the saved data is proven.
+    harness.rejoinAfterSave(alice);
+    harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
+
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+
+    assertThat(harness.snapshot().combatants()).hasSize(1);
+    assertThat(alice.getWorld()).isEqualTo(harness.rwf);
+  }
+
+  @Test
+  void aBombKillCountsOneDeath() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.goLive(alice);
+    var matchId = harness.snapshot().matchId();
+    var own = teamOf(alice);
+    var bombId = bombOf(own);
+    var block = bombBlock(bombId);
+    var armer = botOn(enemyOf(own));
+    armer.entity().teleport(block.clone().add(1.5, 0, 0.5));
+    for (var i = 0; i < 24 && !armed(bombId); i++) {
+      assertThat(harness.actions().clickBomb(armer.id(), bombId)).isEmpty();
+      harness.tick(Duration.ofMillis(500));
+    }
+    assertThat(armed(bombId)).isTrue();
+
+    // The fuse runs out: everyone on the owning team dies, Alice among them.
+    for (var i = 0; i < 62 && harness.combatant(alice).alive(); i++) {
+      harness.tick(Duration.ofSeconds(1));
+    }
+
+    assertThat(harness.combatant(alice).alive()).isFalse();
+    assertThat(alice.isDead()).isTrue();
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.ENDED);
+    var store = new JooqMatchStore(harness.database);
+    harness.until(() -> !store.players(matchId).join().isEmpty());
+    assertThat(store.players(matchId).join())
+        .singleElement()
+        .satisfies(
+            row -> {
+              assertThat(row.deaths()).isEqualTo(1);
+              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.LOSE);
+            });
   }
 
   @Test
