@@ -6,7 +6,9 @@ import { docker } from "./docker.ts";
 import {
   overlayAgentTopLevel,
   overlayBrainUrl,
+  overlayRwf,
   overlaySweep,
+  type RwfOverlay,
 } from "./config-overlays.ts";
 import {
   paper,
@@ -62,8 +64,15 @@ export type StartServerOptions = {
   mechanicsConfig?: string;
   fixturesJar?: string;
   companionsE2eJar?: string;
+  /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
+  rwf?: RwfOverlay;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
+  /**
+   * Container environment beyond the server basics: the Flipt gate address and
+   * the recording salt the modules under test read at enable.
+   */
+  env: Record<string, string>;
   /** Repository-owned plugin config directory. */
   ownedConfigDir: string;
   /** Fake brain the staged agent.yml points at. */
@@ -225,6 +234,7 @@ export async function stagePlugins(
     | "mechanicsConfig"
     | "fixturesJar"
     | "companionsE2eJar"
+    | "rwf"
     | "warmCache"
   > &
     Partial<
@@ -272,6 +282,9 @@ export async function stagePlugins(
     path.join(pluginsDir, "TheStorm", "config.yml"),
     options.stormConfig,
   );
+  if (options.rwf !== undefined) {
+    await overlayRwf(path.join(pluginsDir, "TheStorm", "rwf.yml"), options.rwf);
+  }
   if (
     options.mechanicsE2eJar !== undefined ||
     options.mechanicsConfig !== undefined
@@ -337,8 +350,7 @@ const luckPermsLibs = path.join("LuckPerms", "libs");
 function serverEnv(
   rconPassword: string,
   brainToken: string,
-  full: boolean,
-  brainUrl: string,
+  extra: Record<string, string>,
 ): Record<string, string> {
   return {
     EULA: "TRUE",
@@ -349,16 +361,7 @@ function serverEnv(
     ENABLE_RCON: "true",
     RCON_PASSWORD: rconPassword,
     STORM_BRAIN_BEARER_TOKEN: brainToken,
-    // Deliberately malformed test token: JDA rejects it locally, without
-    // authenticating to or posting in a real Discord server.
-    ...(full
-      ? {
-          DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
-          DISCORD_CHANNEL_ID: "1",
-          FLIPT_URL: brainUrl,
-          FLIPT_ENVIRONMENT: "prod",
-        }
-      : {}),
+    ...extra,
     // Keep boot hermetic: do not fetch third-party default configs.
     SKIP_DOWNLOAD_DEFAULTS: "true",
     MEMORY: "1G",
@@ -459,12 +462,7 @@ export async function startServer(
         ])
       : []),
     ...Object.entries(
-      serverEnv(
-        rconPassword,
-        options.brain.token,
-        options.fixturesJar !== undefined,
-        options.brain.baseUrl,
-      ),
+      serverEnv(rconPassword, options.brain.token, options.env),
     ).flatMap(([key, value]) => ["-e", `${key}=${value}`]),
     serverImage,
   ]);

@@ -23,12 +23,20 @@ ray casts, the hurt animation, or Citizens NPCs, and it fires no vanilla
 behaviour on its own. These cases need the real server in
 `packages/the-storm/tests/e2e`. Each is a pass/fail check.
 
+`tests/e2e/rwf.e2e.test.ts` runs humans only (rwfbots off) on the shared e2e
+server, whose fixtures plugin creates the flat void `rwf` world before TheStorm
+enables. A case marked **proven** below is asserted there; the rest still wait
+for a suite, and the bot cases (14, 15) for the rwfbots suite.
+
 ## World and maps
 
 1. With `rwf` provisioned through Multiverse (any flat or void world) the
    module enables, seals the world, holds its 16 chunks, pastes the training
    yard at `0,64,0` and opens the lobby; with the world missing, TheStorm
-   refuses to enable and the server stops.
+   refuses to enable and the server stops. **Proven** (the happy path: the
+   module enables on the fixture world, `/rwf admin status` reports the
+   training yard ready, the TNT blocks stand at the bomb sites); the missing
+   world is not.
 2. Break a block inside the yard as an operator, then restart: the verifier
    hashes the region, logs the mismatch and re-pastes it before admission opens.
 3. `/rwf admin repair` between matches reports an intact map, or re-pastes a
@@ -45,25 +53,36 @@ behaviour on its own. These cases need the real server in
    `DamageFormula` value (Trooper's Sharpness I iron sword on full iron: 2.9),
    armor and Protection are not applied twice, a second swing inside half the
    no-damage window is blocked, and a stronger one deals only the difference.
+   **Proven** except the stronger-swing difference (both humans carry the same
+   kit).
 7. Sweep attacks hit nobody; the 1.9 attack cooldown never applies (the
    `thestorm:rwf_attack_speed` modifier is present inside and gone after
-   leaving); hunger stays at 20.
+   leaving); hunger stays at 20. **Proven** for the modifier (attack speed
+   reads 204 inside, 4 after) and for hunger (the food level holds at 20 under
+   the Hunger effect while saturation drains); sweep attacks are not.
 8. Knockback follows `Knockback.compute`: a sprinting attacker stops sprinting
    and keeps 0.6 of their speed; Knockback I and Punch III arrows push further.
 9. Steak heals eight at once on right-click and is refused within a point of
    full health; golden apples eat as vanilla; the poison takes both away.
 10. Deaths: no drops, no death message, the victim respawns at once at the
     spectator point in spectator mode, the killer and cause are attributed in
-    the recording.
+    the recording. **Proven** for a bomb's victim being in spectator mode
+    during the end screen and counting one death; drops, messages and the
+    recorded attribution are not inspected.
 
 ## Bombs and bots
 
 11. Arming an enemy bomb alone takes nine seconds of fuse clicks; two arm in
     eight; the TNT block becomes floating primed TNT that never explodes on its
     own, the hologram counts down, and the owners defuse it by clicking the
-    entity.
+    entity. **Proven** for one armer (the block becomes primed TNT that stays
+    within a block of its site, the fuse warnings count down, an owner's
+    clicks on the entity restore the block); two armers and the hologram text
+    are not.
 12. At zero the bomb explodes, every living owner dies, the radius-6 crater
-    turns blocks to coal, and the reset puts them back.
+    turns blocks to coal, and the reset puts them back. **Proven** for the
+    explosion, the owner's death into spectator mode and the lobby reopening
+    on an intact map; the crater's blocks are not inspected.
 13. The nuke in the middle is armed by either team and kills everyone else.
 14. With rwfbots enabled, the countdown fills to `targetCombatants` with
     Citizens NPCs: they show `✦` after their names, carry the modifier, fight
@@ -71,24 +90,38 @@ behaviour on its own. These cases need the real server in
     match runs humans only.
 15. When the last human leaves a live match, bots are despawned and the match
     stops unpaid after `noHumansAbort`; when the last human leaves a countdown,
-    the bots leave at once.
+    the bots leave at once. Needs rwfbots: with humans only a departing human
+    empties their team and standings end the match at once, so the abort never
+    runs. The humans-only edges are **proven** instead: a lone human's match
+    goes live and ends in the same tick (the empty team is defeated, nobody is
+    paid, no bots are listed), a disconnect during the countdown cancels it,
+    and leaving a live match hands the other team the win.
 
 ## Payouts and recordings
 
 16. A win pays `round(3 x (0.25 + 0.75 x humanShare))` through the economy
     with reason `rwf:<matchId>:WIN` and idempotency key
     `rwf:<matchId>:<uuid>`; `kill -9` between the outbox write and the
-    transfer pays exactly once on restart.
+    transfer pays exactly once on restart. **Proven** for the payout itself
+    (3 to the winner, 1 to the loser, `/balance` and `rwf_match_player` agree,
+    rows end `PAID`; a match shorter than `minMatchLength` pays nobody); the
+    crash replay is not.
 17. The daily cap forfeits the excess and tells the player.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds frames at 20 Hz; `kill -9`
     during a match leaves a truncated file the next enable prunes by age.
+    **Proven** that the file exists at that path, is a non-empty gzip of the
+    size `rwf_match` records, names the match and neither player, and dropped
+    no frames; decoding and the crash prune are not.
 19. With `recording.enabled: true` and `RWF_RECORDING_SALT` unset, enabling
     fails loudly; with it set, every joining human reads the disclosure.
+    **Proven** for the disclosure with the salt set; the missing salt is not.
 
 ## Rollout
 
 20. `/rwf join` is refused while `the-storm-rwf-enabled` is false for the
     player in the configured Flipt environment, and admitted once it is true;
-    with `FLIPT_URL` unset the command stays closed to everyone.
+    with `FLIPT_URL` unset the command stays closed to everyone. **Proven** for
+    admission (the fake brain's Flipt double answers `enabled: true` for the
+    `rwf` world in `prod`); the refusals are not.
 21. Bedrock (Geyser): holograms, the sidebar and messages render.

@@ -33,6 +33,33 @@ export async function overlaySweep(
   await overlayFields(stagedAgentYml, sweep, "  ", "sweep");
 }
 
+/** The rwf.yml settings a suite overrides; durations are ISO-8601 (PT6S). */
+export type RwfOverlay = {
+  world: string;
+  minHumans: number;
+  countdown: string;
+  endLinger: string;
+  noHumansAbort: string;
+};
+
+export async function overlayRwf(
+  stagedRwfYml: string,
+  rwf: RwfOverlay,
+): Promise<void> {
+  await overlayFields(stagedRwfYml, { world: rwf.world }, "", "top-level");
+  await overlayFields(
+    stagedRwfYml,
+    {
+      minHumans: rwf.minHumans,
+      countdown: rwf.countdown,
+      endLinger: rwf.endLinger,
+      noHumansAbort: rwf.noHumansAbort,
+    },
+    "  ",
+    "match",
+  );
+}
+
 async function overlayFields(
   file: string,
   fields: Record<string, string | number>,

@@ -4,6 +4,7 @@ import type { TestProject } from "vitest/node";
 import { z } from "zod";
 import { startFakeBrain } from "./harness/fake-brain.ts";
 import { gameplayFixtures } from "./gameplay-fixtures.ts";
+import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
 import { serverLogs, startServer, type ServerInfo } from "./harness/server.ts";
 
 declare module "vitest" {
@@ -82,6 +83,21 @@ export default async function setup(project: TestProject) {
     stormJar,
     ...(await gameplayFixtures(packageRoot, full)),
     ownedConfigDir,
+    env: {
+      // The managed-flag gates (rwf join here; crier and merchant in the full
+      // suite) evaluate against the fake brain's Flipt double.
+      FLIPT_URL: brainBaseUrl,
+      FLIPT_ENVIRONMENT: "prod",
+      RWF_RECORDING_SALT: rwfRecordingSalt,
+      // Deliberately malformed test token: JDA rejects it locally, without
+      // authenticating to or posting in a real Discord server.
+      ...(full
+        ? {
+            DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
+            DISCORD_CHANNEL_ID: "1",
+          }
+        : {}),
+    },
     brain: { baseUrl: brainBaseUrl, token: brainToken },
     sweep: {
       intervalMinutes: 1,

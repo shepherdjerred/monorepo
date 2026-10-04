@@ -12,17 +12,21 @@ describe("The Storm plugin", () => {
     expect(luckPerms).toBeGreaterThanOrEqual(0);
     // paper-plugin.yml requires LuckPerms to load first.
     expect(storm).toBeGreaterThan(luckPerms);
-    // These modules power both the mechanics and AI staff integration suites.
+    // These modules power the mechanics, AI staff and Search and Destroy suites.
     const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
     expect(enabled?.[1]?.split(", ").toSorted()).toEqual([
       "agent",
       "chat",
       "economy",
       "mail",
+      "rwf",
       "tickets",
       "towns",
       "tracks",
     ]);
+    expect(logs).toContain(
+      "Prepared synthetic fixtures for Storm modules [rwf]",
+    );
     expect(logs).toContain(
       "[TheStormMechanicsE2E] Enabled real-Paper mechanics E2E harness",
     );

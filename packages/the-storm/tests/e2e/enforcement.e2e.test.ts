@@ -51,6 +51,8 @@ describe.skipIf(external)("active enforcement", () => {
         "chat",
       ]),
       ownedConfigDir,
+      // No managed-flag gate or recording runs on these three modules.
+      env: {},
       brain: {
         baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
         token,

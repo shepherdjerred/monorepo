@@ -70,7 +70,9 @@ describe("all modules together", () => {
     const logs = await serverLogs(server);
     const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
     expect(enabled?.[1]?.split(", ").toSorted()).toEqual(modules);
-    expect(logs).toContain("Prepared synthetic fixtures for all Storm modules");
+    expect(logs).toContain(
+      "Prepared synthetic fixtures for Storm modules [world, essentials, npcs, arena, shards, seasonal]",
+    );
     expect(logs).not.toContain("The Storm failed to enable");
     expect(logs).not.toContain("Could not validate shard altars");
     expect(logs).not.toContain("Could not prepare arenas");
