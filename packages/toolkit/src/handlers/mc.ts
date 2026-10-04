@@ -72,7 +72,7 @@ Target commands (--target <sandbox-id>; defaults to the only running sandbox):
   toolkit mc snapshot create --world <w> <x1,y1,z1> <x2,y2,z2> [--label s]
   toolkit mc snapshot ls | get <id> --out f.schem | restore <id>
   toolkit mc players
-  toolkit mc registry --out f.json       Block registry (feeds mc-build's gen-registry)
+  toolkit mc registry --out f.json       Block registry (feeds mc-harness gen-registry)
   toolkit mc events [--since 0] [--limit 200]
   toolkit mc logs [-n 200]
 

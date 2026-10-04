@@ -31,7 +31,7 @@ Generated from a live MCBridge `/v1/registry`; regenerate on every Paper bump
 
 ```bash
 toolkit mc registry --out /tmp/registry.json      # against a running sandbox
-bun run scripts/gen-registry.ts /tmp/registry.json
+bun run --cwd packages/mc-harness gen-registry /tmp/registry.json
 ```
 
 ## Renderer assets

@@ -4,7 +4,7 @@ import { formatBlockState, parseBlockState } from "#src/core/block-state.ts";
 
 /**
  * The committed 26.2 block registry, generated from a live MCBridge
- * `/v1/registry` by scripts/gen-registry.ts. It is the offline source of truth
+ * `/v1/registry` by mc-harness scripts/gen-registry.ts. It is the offline source of truth
  * for which block ids and property values exist.
  */
 export const RegistryFileSchema = z.strictObject({

@@ -6,7 +6,9 @@
 import { parseArgs } from "node:util";
 import type { LintReport } from "@shepherdjerred/mc-build/lint/lint.ts";
 import { BoxSchema, SessionNameSchema } from "#protocol/bridge.ts";
-import { parseBlockPos, parseTtl } from "#protocol/ipc.ts";
+import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
+import { normalizeArgv, wantsHelp } from "#protocol/argv.ts";
+import { parseBlockPos } from "#protocol/ipc.ts";
 import {
   buildStatus,
   captureSite,
@@ -220,7 +222,7 @@ const HANDLERS: Record<string, Handler> = {
 
 async function main(): Promise<number> {
   const [action, ...args] = Bun.argv.slice(2);
-  if (action === undefined || action === "help" || action === "--help") {
+  if (action === undefined || action === "help" || action === "--help" || action === "-h" || wantsHelp(args)) {
     process.stdout.write(BUILD_USAGE);
     return 0;
   }
@@ -228,7 +230,7 @@ async function main(): Promise<number> {
   if (handler === undefined) {
     throw new Error(`unknown build action "${action}"\n${BUILD_USAGE}`);
   }
-  const { values, positionals } = parseArgs({ args, options: OPTIONS, allowPositionals: true, strict: true });
+  const { values, positionals } = parseArgs({ args: normalizeArgv(args, OPTIONS), options: OPTIONS, allowPositionals: true, strict: true });
   const [dir, ...rest] = positionals;
   const env: Env = {
     client: new DaemonClient(),

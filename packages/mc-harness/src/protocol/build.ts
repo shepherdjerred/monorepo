@@ -6,7 +6,7 @@
  */
 import path from "node:path";
 import { z } from "zod";
-import { BlockPosSchema, SessionNameSchema } from "./bridge.ts";
+import { BlockPosSchema, RotationSchema, SessionNameSchema } from "./bridge.ts";
 
 export const BUILD_FILES = {
   manifest: "build.json",
@@ -38,12 +38,7 @@ export const PasteOpLogSchema = z.strictObject({
   /** Path relative to the build directory, e.g. schematics/<sha>.schem. */
   schematic: z.string().min(1),
   at: BlockPosSchema,
-  rotate: z.union([
-    z.literal(0),
-    z.literal(90),
-    z.literal(180),
-    z.literal(270),
-  ]),
+  rotate: RotationSchema,
   ignoreAir: z.boolean(),
   source: z.string(),
 });

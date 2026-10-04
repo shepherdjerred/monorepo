@@ -35,6 +35,7 @@ class FakeClient extends DaemonClient {
       results: request.ops.map((op) => ({
         command: op.command,
         ok: !op.command.includes("fail"),
+        changed: 0,
         messages: [],
         errors: [],
       })),
