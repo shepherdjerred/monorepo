@@ -82,6 +82,11 @@ through `vite preview`. Run
 `bunx turbo run build --filter=@scout-for-lol/design-system` first when
 invoking Playwright directly, otherwise the spec has no story index to read.
 
+Playwright runs on Bun. The preview launcher resolves the installed Node pin
+with `mise where node` and runs Vite using that absolute executable. This keeps
+Bun's temporary `node` shim out of Vite's HTTP server runtime. Run `mise install`
+before previewing locally; the CI browser lane installs the same Node pin.
+
 `e2e/catalog.spec.ts` walks every story in `storybook-static/index.json` and
 asserts it mounts, logs no page error, loads every image, and reports no axe
 violations, in two theme combinations (`modern`/`dark` and `classic`/`light`).
