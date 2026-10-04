@@ -8,8 +8,8 @@ export type DevAuthMode = "dev-login" | "oauth";
  * flag's own registered default in
  * `packages/backend/src/configuration/flags.ts` (`FLAG_REGISTRY`), so a local
  * static-mode run behaves like a production Flipt outage rather than
- * inventing new local-only behavior. `scout-consumer-player-profiles-enabled`
- * is the one exception, flipped on to exercise the consumer preview this
+ * inventing new local-only behavior. Consumer profiles, Explore analysis and
+ * the Explore model picker are enabled to exercise the beta features this
  * script boots by default.
  */
 export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
@@ -49,6 +49,10 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   // "no static override" warning on every poll.
   "scout-betting-parlay-ai-model": "gpt-5.6-sol",
   "scout-explore-model": "gpt-5.6-luna",
+  "scout-explore-analysis-enabled": true,
+  "scout-explore-model-picker-enabled": true,
+  "scout-explore-spend-policy":
+    '{"globalMonthlyMicros":20000000,"userMonthlyMicros":5000000,"turnMicros":500000}',
   "scout-report-ai-model": "gpt-5.6-sol",
   "scout-feature-tip-percent": 10,
   "scout-feature-tip-cooldown-hours": 72,

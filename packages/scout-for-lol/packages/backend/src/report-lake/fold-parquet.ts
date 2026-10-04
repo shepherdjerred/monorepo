@@ -1,5 +1,6 @@
 import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
+import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
@@ -27,6 +28,8 @@ export type StagingParseResult = {
 
 function columnsForTable(table: ReportLakeStagingTable) {
   switch (table) {
+    case "raw_documents":
+      return RAW_DOCUMENT_LAKE_COLUMNS;
     case "matches":
       return MATCH_LAKE_COLUMNS;
     case "match_teams":

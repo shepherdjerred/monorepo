@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { preserveRawJson } from "./preserve-raw-json.ts";
 
 /**
  * Zod schema for Riot Spectator V5 API responses
@@ -91,19 +92,21 @@ const RawObserverSchema = z.object({
 /**
  * RawCurrentGameInfo - Represents an active game from the Spectator V5 API
  */
-export const RawCurrentGameInfoSchema = z.object({
-  gameId: z.number(),
-  gameStartTime: z.number(),
-  gameMode: z.string(),
-  mapId: z.number(),
-  gameType: z.string(),
-  gameQueueConfigId: z.number(),
-  /** Elapsed game time in seconds. Negative while loading. */
-  gameLength: z.number(),
-  platformId: z.string(),
-  participants: z.array(RawCurrentGameParticipantSchema),
-  bannedChampions: z.array(RawBannedChampionSchema),
-  observers: RawObserverSchema.optional(),
-});
+export const RawCurrentGameInfoSchema = preserveRawJson(
+  z.object({
+    gameId: z.number(),
+    gameStartTime: z.number(),
+    gameMode: z.string(),
+    mapId: z.number(),
+    gameType: z.string(),
+    gameQueueConfigId: z.number(),
+    /** Elapsed game time in seconds. Negative while loading. */
+    gameLength: z.number(),
+    platformId: z.string(),
+    participants: z.array(RawCurrentGameParticipantSchema),
+    bannedChampions: z.array(RawBannedChampionSchema),
+    observers: RawObserverSchema.optional(),
+  }),
+);
 
 export type RawCurrentGameInfo = z.infer<typeof RawCurrentGameInfoSchema>;

@@ -957,6 +957,42 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-explore-analysis-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Enable full raw match datasets and isolated JavaScript analysis after the lake rebuild.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout-explore-model-picker-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Enable the Sol and Luna model picker with durable spending guards.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout-explore-spend-policy",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Set shared monthly, user monthly, and turn spending ceilings in integer microdollars.",
+      "type": "variant",
+      "default": "{\"globalMonthlyMicros\":20000000,\"userMonthlyMicros\":5000000,\"turnMicros\":500000}",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-explore-model",
       "owner": "scout",
       "namespace": "scout",
@@ -975,7 +1011,7 @@
       "source": "scout-dynamic",
       "purpose": "Set the Scout Explore question ceilings, as one JSON policy object.",
       "type": "variant",
-      "default": "{\"userMinute\":12,\"userHour\":90,\"userDay\":300,\"userWeek\":900,\"globalHour\":360,\"globalDay\":1800,\"globalWeek\":6000}",
+      "default": "{\"userMinute\":4,\"userHour\":30,\"userDay\":100,\"userWeek\":300,\"globalHour\":120,\"globalDay\":600,\"globalWeek\":2000}",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1808,6 +1844,22 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "scout-explore-analysis-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-explore-model-picker-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "streambot-plex-posters-enabled",
           "type": "boolean",

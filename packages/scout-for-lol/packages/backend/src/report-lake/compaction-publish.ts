@@ -9,6 +9,7 @@ export type CompactionSummary = {
   buildId: string;
   tier: "fold" | "rebuild";
   matchRows: number;
+  rawDocumentRows?: number;
   matchTeamRows: number;
   matchTeamBanRows: number;
   prematchRows: number;
@@ -49,6 +50,7 @@ export function publishCompactionMetrics(
   summary: Omit<CompactionSummary, "durationMs">,
 ): void {
   for (const [table, rows] of [
+    ["raw_documents", summary.rawDocumentRows ?? 0],
     ["matches", summary.matchRows],
     ["match_teams", summary.matchTeamRows],
     ["match_team_bans", summary.matchTeamBanRows],

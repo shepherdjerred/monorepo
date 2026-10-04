@@ -34,6 +34,7 @@ export type ExploreSkillContext = {
 
 /** The option shape `exploreAgentInstructions` already takes. */
 export type ExploreSkillOptions = {
+  analysis?: boolean;
   bucks: { currentTime: string } | null;
   mvpVotes?: { currentTime: string } | null | undefined;
   dares?: boolean | undefined;
@@ -83,6 +84,8 @@ export function enabledExploreSkills(
     switch (skill.capability) {
       case "always":
         return true;
+      case "analysis":
+        return options.analysis === true;
       case "bucks":
         return options.bucks !== null;
       case "dares":

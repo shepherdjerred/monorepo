@@ -1,7 +1,9 @@
-import { ListObjectsV2Command, type S3Client } from "@aws-sdk/client-s3";
+import type { S3Client } from "@aws-sdk/client-s3";
 import { createHash } from "node:crypto";
+import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
+import { populateCompetitionRankHistoryFromS3 as populateRankHistory } from "#src/report-lake/rebuild/rank-history.ts";
+
 import {
-  CachedLeaderboardSchema,
   RawCurrentGameInfoSchema,
   RawMatchSchema,
   RawTimelineSchema,
@@ -9,7 +11,6 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { reportLakeCompactionSkippedTotal } from "#src/metrics/reports/report-lake.ts";
 import {
-  flattenCompetitionRankHistory,
   flattenMatch,
   flattenMatchTeamBans,
   flattenMatchTeams,
@@ -19,7 +20,6 @@ import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
 import { remapRawJson } from "#src/report-lake/puuid-remap.ts";
 import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
-  stagingIdForCompetitionRankHistory,
   stagingIdForMatch,
   stagingIdForPrematch,
   stagingIdForTimeline,
@@ -38,7 +38,6 @@ const logger = createLogger("report-lake-rebuild-sources");
 // Bounded in-flight S3 GETs during a rebuild. Fetch+parse+flatten runs
 // concurrently; writes are funnelled serially into the single NDJSON writer.
 const REBUILD_S3_CONCURRENCY = 16;
-const LEADERBOARD_PREFIX = "leaderboards/";
 
 function sourceKey(key: string, rawText: string): string {
   return s3StagingSourceKey(
@@ -47,12 +46,35 @@ function sourceKey(key: string, rawText: string): string {
   );
 }
 
+function s3RawDocumentRow(input: {
+  kind: "match" | "timeline" | "prematch";
+  matchId: string;
+  key: string;
+  rawText: string;
+  capturedAt: Date;
+  identityMap: ReadonlyMap<string, string>;
+}) {
+  return rawDocumentRow({
+    kind: input.kind,
+    matchId: input.matchId,
+    document: JSON.parse(input.rawText),
+    capturedAt: input.capturedAt,
+    source: {
+      kind: "s3",
+      key: input.key,
+      digest: createHash("sha256").update(input.rawText).digest("hex"),
+    },
+    identityMap: input.identityMap,
+  });
+}
+
 // --- Rebuild source: S3 (canonical) ---
 
 type RebuildSourceOptions = {
   client: S3Client;
   bucket: string;
   writer: NdjsonFileWriter;
+  rawWriter?: NdjsonFileWriter;
   foldedIds: Set<string>;
   foldedSources?: Set<string>;
   /**
@@ -78,10 +100,10 @@ export async function populateMatchesFromS3(
 ): Promise<number> {
   const { client, bucket, writer, foldedIds } = options;
   let skipped = 0;
-  const batch: string[] = [];
+  const batch: { key: string; observedAt: Date }[] = [];
   const flush = async (): Promise<void> => {
     const parsedMatches = await Promise.all(
-      batch.map(async (key) => {
+      batch.map(async ({ key, observedAt }) => {
         const rawText = await readRawObjectText(client, bucket, key, options);
         const rawParsed: unknown = remapRawJson(
           JSON.parse(rawText),
@@ -94,7 +116,18 @@ export async function populateMatchesFromS3(
           });
           return null;
         }
-        return { match: parsed.data, source: sourceKey(key, rawText) };
+        return {
+          match: parsed.data,
+          source: sourceKey(key, rawText),
+          raw: s3RawDocumentRow({
+            kind: "match",
+            matchId: parsed.data.metadata.matchId,
+            key,
+            rawText,
+            capturedAt: observedAt,
+            identityMap: options.puuidRemap,
+          }),
+        };
       }),
     );
     batch.length = 0;
@@ -105,6 +138,7 @@ export async function populateMatchesFromS3(
         continue;
       }
       const { match } = result;
+      options.rawWriter?.write(result.raw);
       for (const row of flattenMatch(match)) {
         writer.write(row);
       }
@@ -133,7 +167,10 @@ export async function populateMatchesFromS3(
     if (classifyRawObjectKey(ref.key) !== "match") {
       continue; // skip timeline.json etc. under games/
     }
-    batch.push(ref.key);
+    batch.push({
+      key: ref.key,
+      observedAt: rawObjectObservedAt(ref.key, ref.lastModified),
+    });
     if (batch.length >= REBUILD_S3_CONCURRENCY) {
       await flush();
     }
@@ -145,6 +182,7 @@ export async function populateMatchesFromS3(
 }
 
 type TimelineRebuildWriters = {
+  rawWriter?: NdjsonFileWriter;
   events: NdjsonFileWriter;
   eventParticipants: NdjsonFileWriter;
   participantFrames: NdjsonFileWriter;
@@ -298,6 +336,14 @@ export async function populateTimelinesFromS3(options: {
           timeline: parsed.data,
           observedAt: item.observedAt,
           source: sourceKey(item.key, rawText),
+          raw: s3RawDocumentRow({
+            kind: "timeline",
+            matchId: parsed.data.metadata.matchId,
+            key: item.key,
+            rawText,
+            capturedAt: item.observedAt,
+            identityMap: options.puuidRemap,
+          }),
         };
       }),
     );
@@ -313,6 +359,7 @@ export async function populateTimelinesFromS3(options: {
       // Candidates arrive newest-first, so the first one seen is the winner.
       if (emitted.has(result.timeline.metadata.matchId)) continue;
       emitted.add(result.timeline.metadata.matchId);
+      options.writers.rawWriter?.write(result.raw);
       const flattened = flattenTimeline(result.timeline, result.observedAt);
       for (const row of flattened.events) options.writers.events.write(row);
       for (const row of flattened.eventParticipants) {
@@ -392,6 +439,14 @@ export async function populatePrematchFromS3(
           gameInfo: parsed.data,
           observedAt: item.observedAt,
           source: sourceKey(item.key, rawText),
+          raw: s3RawDocumentRow({
+            kind: "prematch",
+            matchId: `${parsed.data.platformId}_${String(parsed.data.gameId)}`,
+            key: item.key,
+            rawText,
+            capturedAt: item.observedAt,
+            identityMap: options.puuidRemap,
+          }),
         };
       }),
     );
@@ -419,6 +474,7 @@ export async function populatePrematchFromS3(
       // belongs to. That is exactly the ambiguity qualification removed, so
       // grouping on the key would have to guess it back.
       if (foldedIds.has(stagingId)) continue;
+      options.rawWriter?.write(result.raw);
       for (const row of flattenPrematch(result.gameInfo, result.observedAt)) {
         writer.write(row);
       }
@@ -466,104 +522,8 @@ export async function populatePrematchFromS3(
   return skipped;
 }
 
-/**
- * Materialize the authoritative daily leaderboard snapshots into a
- * language-neutral lake table. Current leaderboard objects and chart images
- * are deliberately excluded; only versioned historical JSON is replayed.
- */
-export async function populateCompetitionRankHistoryFromS3(options: {
-  client: S3Client;
-  bucket: string;
-  writer: NdjsonFileWriter;
-  foldedIds?: Set<string>;
-  foldedSources?: Set<string>;
-  abortSignal?: AbortSignal;
-}): Promise<number> {
-  const { client, bucket, writer, foldedIds, abortSignal } = options;
-  let continuationToken: string | undefined;
-  let skipped = 0;
-
-  do {
-    const response = await client.send(
-      new ListObjectsV2Command({
-        Bucket: bucket,
-        Prefix: LEADERBOARD_PREFIX,
-        ...(continuationToken === undefined
-          ? {}
-          : { ContinuationToken: continuationToken }),
-      }),
-      abortSignal === undefined ? {} : { abortSignal },
-    );
-    const keys = (response.Contents ?? [])
-      .flatMap((object) => (object.Key === undefined ? [] : [object.Key]))
-      .filter((key) =>
-        /^leaderboards\/competition-\d+\/snapshots\/\d{4}-\d{2}-\d{2}\.json$/.test(
-          key,
-        ),
-      );
-
-    for (
-      let offset = 0;
-      offset < keys.length;
-      offset += REBUILD_S3_CONCURRENCY
-    ) {
-      const chunk = keys.slice(offset, offset + REBUILD_S3_CONCURRENCY);
-      const snapshots = await Promise.all(
-        chunk.map(async (key) => {
-          // No remap here: leaderboard caches key on playerId/playerName and
-          // carry no PUUIDs, verified against the stored objects themselves.
-          const rawText = await readRawObjectText(
-            client,
-            bucket,
-            key,
-            abortSignal === undefined ? {} : { abortSignal },
-          );
-          const rawParsed: unknown = JSON.parse(rawText);
-          const parsed = CachedLeaderboardSchema.safeParse(rawParsed);
-          if (!parsed.success) {
-            logger.warn(
-              `Skipping S3 competition leaderboard ${key}: snapshot failed validation`,
-              { issue: parsed.error.issues[0] },
-            );
-            return null;
-          }
-          return { leaderboard: parsed.data, source: sourceKey(key, rawText) };
-        }),
-      );
-      for (const snapshot of snapshots) {
-        if (snapshot === null) {
-          skipped += 1;
-          reportLakeCompactionSkippedTotal.inc({
-            table: "competition_rank_history",
-          });
-          continue;
-        }
-        for (const row of flattenCompetitionRankHistory(snapshot.leaderboard)) {
-          writer.write(row);
-        }
-        foldedIds?.add(
-          stagingIdForCompetitionRankHistory(
-            snapshot.leaderboard.competitionId,
-            new Date(snapshot.leaderboard.calculatedAt)
-              .toISOString()
-              .slice(0, 10),
-          ),
-        );
-        options.foldedSources?.add(snapshot.source);
-      }
-    }
-
-    if (response.IsTruncated === true) {
-      if (response.NextContinuationToken === undefined) {
-        throw new Error(
-          "S3 leaderboard listing was truncated without a continuation token.",
-        );
-      }
-      continuationToken = response.NextContinuationToken;
-    } else {
-      continuationToken = undefined;
-    }
-  } while (continuationToken !== undefined);
-
-  return skipped;
+export async function populateCompetitionRankHistoryFromS3(
+  options: Parameters<typeof populateRankHistory>[0],
+): Promise<number> {
+  return await populateRankHistory(options);
 }

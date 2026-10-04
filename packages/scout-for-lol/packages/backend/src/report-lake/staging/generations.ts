@@ -4,6 +4,7 @@ import path from "node:path";
 import { z } from "zod";
 
 export const STAGING_TABLES = [
+  "raw_documents",
   "matches",
   "match_teams",
   "match_team_bans",
@@ -40,20 +41,21 @@ const PROJECTION_TABLES: Record<
   StagingProjectionKind,
   readonly ReportLakeStagingTable[]
 > = {
-  match: ["matches", "match_teams", "match_team_bans"],
-  prematch: ["prematch"],
+  match: ["matches", "match_teams", "match_team_bans", "raw_documents"],
+  prematch: ["prematch", "raw_documents"],
   timeline: [
     "timeline_events",
     "timeline_event_participants",
     "timeline_participant_frames",
     "timeline_coverage",
+    "raw_documents",
   ],
   competition_rank_history: ["competition_rank_history"],
 };
 
 const ManifestSchema = z
   .object({
-    version: z.literal(1),
+    version: z.union([z.literal(1), z.literal(2)]),
     generationId: z.string().regex(/^\d{13}-[0-9a-f-]{36}$/),
     projectionKind: ProjectionKindSchema,
     naturalId: z.string().min(1),
@@ -63,7 +65,9 @@ const ManifestSchema = z
   })
   .strict()
   .superRefine((manifest, context) => {
-    const expected = PROJECTION_TABLES[manifest.projectionKind];
+    const expected = PROJECTION_TABLES[manifest.projectionKind].filter(
+      (table) => manifest.version === 2 || table !== "raw_documents",
+    );
     if (
       manifest.tables.length !== expected.length ||
       expected.some((table) => !manifest.tables.includes(table))
@@ -208,7 +212,7 @@ export async function commitStagingGeneration(args: {
         .join("\u{0}"),
     );
   const manifest = ManifestSchema.parse({
-    version: 1,
+    version: 2,
     generationId,
     projectionKind: args.projectionKind,
     naturalId: args.naturalId,

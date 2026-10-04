@@ -12,6 +12,7 @@ import {
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 
 function tableSignature(
   name: string,
@@ -35,6 +36,7 @@ function tableSignature(
 describe("lakeSchemaFingerprint", () => {
   test("covers every lake table", () => {
     const independentSchema = [
+      tableSignature("raw_documents", RAW_DOCUMENT_LAKE_COLUMNS),
       tableSignature("matches", MATCH_LAKE_COLUMNS),
       tableSignature("match_teams", MATCH_TEAM_LAKE_COLUMNS),
       tableSignature("match_team_bans", MATCH_TEAM_BAN_LAKE_COLUMNS),

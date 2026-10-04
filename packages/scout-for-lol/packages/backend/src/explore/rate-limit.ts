@@ -15,18 +15,13 @@ import { exploreQuotaLimits } from "#src/config/dynamic.ts";
  *
  * The report editor charges a guild because a report belongs to one; an
  * explore conversation belongs to a user and reads the whole lake, so a guild
- * scope would mean nothing. Limits are looser than the editor's because a
- * conversation is many small turns rather than one expensive draft, but a
- * global ceiling still bounds total spend if several people explore at once.
+ * scope would mean nothing. Production question quotas and active-run
+ * admission are enforced transactionally in `temporal/durable-quota.ts`.
+ * Provider spending has its own durable ledger in `explore/spending`.
  *
- * Buckets and the active-run counters live in this process's memory, so they
- * reset on restart and would not be shared between replicas. That is exact
- * today rather than approximate: the backend deploys as a single replica with
- * the Recreate strategy (packages/homelab/src/cdk8s/src/resources/scout), so
- * there is never a second process to disagree with. Scaling this service out
- * means moving these counters to shared storage first — the quotas bound
- * model spend, and per-replica copies would multiply every ceiling by the
- * replica count.
+ * This process keeps an additional fast concurrency guard. Durable tickets
+ * skip its question buckets to avoid charging the same turn twice. The
+ * buckets remain available to callers that do not use durable execution.
  */
 
 export type ExploreRateLimitIdentity = {
@@ -60,6 +55,7 @@ export class ExploreConversationBusyError extends Error {}
  * an early exit: nothing was spent yet, so there is nothing to refund.
  */
 export type ExploreRateLimitTicket = {
+  durable?: boolean;
   allowed: true;
   runId: string;
   claimConversation: (conversationId: string) => boolean;
@@ -72,10 +68,10 @@ const MAX_ACTIVE_GLOBAL_RUNS = 5;
 /**
  * Resolved per call rather than frozen at module load.
  *
- * These ceilings bound model spend, so an operator has to be able to move
+ * These ceilings bound question volume, so an operator has to be able to move
  * them — down during a cost surprise, or up for one environment — without a
  * rebuild. `exploreQuotaLimits()` is the typed configuration read; the
- * shipped policy is its default, so a backend with no flag or env override
+ * shipped policy is its default, so a backend with no flag override
  * behaves exactly as these numbers did when they were literals here.
  */
 function quotaRules(): QuotaRule<ExploreQuotaScope>[] {
@@ -121,6 +117,7 @@ export function getExploreQuotaStatus(
 export function tryStartExploreTurn(
   identity: ExploreRateLimitIdentity,
   now = Date.now(),
+  durable = false,
 ): ExploreRateLimitTicket | ExploreRateLimitRejection {
   const quota = engine.snapshots(identity, now);
 
@@ -134,7 +131,15 @@ export function tryStartExploreTurn(
   }
 
   const limited = quota.find((snapshot) => snapshot.remaining === 0);
-  if (limited !== undefined) {
+  if ((activeUserRuns.get(identity.userId) ?? 0) > 0) {
+    return {
+      allowed: false,
+      quota,
+      retryAfterSeconds: 30,
+      reason: "You already have an Explore answer running.",
+    };
+  }
+  if (!durable && limited !== undefined) {
     return {
       allowed: false,
       quota,
@@ -148,7 +153,7 @@ export function tryStartExploreTurn(
     (activeUserRuns.get(identity.userId) ?? 0) + 1,
   );
   activeGlobalRuns++;
-  const quotaReservation = engine.reserve(identity, now);
+  const quotaReservation = durable ? null : engine.reserve(identity, now);
   const runId = globalThis.crypto.randomUUID();
   let finished = false;
   let committed = false;
@@ -156,6 +161,7 @@ export function tryStartExploreTurn(
 
   return {
     allowed: true,
+    durable,
     runId,
     claimConversation: (conversationId) => {
       if (finished) {
@@ -185,14 +191,14 @@ export function tryStartExploreTurn(
         return;
       }
       committed = true;
-      quotaReservation.commit();
+      quotaReservation?.commit();
     },
     finish: () => {
       if (finished) {
         return;
       }
       finished = true;
-      quotaReservation.release();
+      quotaReservation?.release();
       const activeForUser = activeUserRuns.get(identity.userId) ?? 0;
       if (activeForUser <= 1) {
         activeUserRuns.delete(identity.userId);
