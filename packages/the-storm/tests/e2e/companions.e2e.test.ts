@@ -55,6 +55,9 @@ describe("Citizens survival companions on Paper", () => {
       (status) => (status.match(/uuid=/gu)?.length ?? 0) === 3,
     );
     expect(initial).toContain("BREAD:8");
+    expect(await rcon.command("companiontest scan")).toContain(
+      "candidate=Optional[",
+    );
     await waitUntil(
       "three visible companion player bodies",
       () =>
