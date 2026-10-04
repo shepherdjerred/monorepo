@@ -1481,6 +1481,47 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-automatic-channel-routing-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Route Plex and sports to video channel 2 and classified music to audio channel 1 unless the requester selected a channel.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-automatic-test-guild",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-automatic-owner",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-player-card-repost-after-messages",
       "owner": "streambot",
       "namespace": "streambot",

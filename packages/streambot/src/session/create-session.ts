@@ -1,4 +1,5 @@
 import { createActor } from "xstate";
+import { webRemoteUrl } from "@shepherdjerred/streambot/discord/web-link.ts";
 import { playerCardEnabled } from "@shepherdjerred/streambot/config/dynamic.ts";
 import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { PosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
@@ -60,6 +61,13 @@ export function createSession(
   );
   // Build before the session record so `view()` can close over actor and userbot directly.
   const card = new PlayerCardManager({
+    webUrl: (requester) =>
+      webRemoteUrl(
+        options.deps.config,
+        params.guildId,
+        requester,
+        params.playbackChannel,
+      ),
     owner: {
       ...identity,
       guildId: params.guildId,

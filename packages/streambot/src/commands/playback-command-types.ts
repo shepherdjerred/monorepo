@@ -14,6 +14,13 @@ import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/play
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 export type PlaybackCommandServiceDeps = {
+  readonly preparePlayback?: () => void;
+  readonly routePlayback?: (
+    source: Source,
+    resolved: ResolvedSource | undefined,
+    userId: UserId,
+  ) => Promise<PlaybackCommandServiceDeps>;
+  readonly resetChannel?: (userId: string) => Promise<string>;
   readonly playbackChannel?: PlaybackChannelNumber;
   readonly selectChannel?: (userId: string, number: number) => Promise<string>;
   readonly listChannels?: (userId: string) => Promise<string>;

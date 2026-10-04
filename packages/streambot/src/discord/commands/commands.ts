@@ -80,8 +80,15 @@ export const commandDefinitions = [
             .setDescription(
               "Playback slot in your current Discord voice channel",
             )
-            .setRequired(true)
+            .setRequired(false)
             .setMinValue(1),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("auto")
+            .setDescription(
+              "Automatically use channel 1 for music and 2 for Plex and sports",
+            ),
         ),
     )
     .addSubcommand((sub) =>

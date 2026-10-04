@@ -1,4 +1,5 @@
 import type { PlaybackContext } from "@shepherdjerred/streambot/machine/types.ts";
+import { toRecordMedia } from "@shepherdjerred/streambot/commands/playback-recording.ts";
 import {
   queueLength,
   setPlaybackState,
@@ -30,11 +31,22 @@ const HISTORY_END_STATES = new Set([
 /** Projects actor snapshots into status, metrics, teardown, and durable playback history. */
 export class SessionObserver {
   private activeRequestId: string | undefined;
+  private completedStreams = 0;
 
   constructor(private readonly options: SessionObserverOptions) {}
 
   handle(snapshot: ObservedSnapshot): void {
     const { stateName, snap } = describeSnapshot(snapshot);
+    if (snapshot.context.completedStreams !== this.completedStreams) {
+      this.completedStreams = snapshot.context.completedStreams;
+      if (this.activeRequestId !== undefined)
+        this.options.history?.finishStartedRequest(
+          this.activeRequestId,
+          "completed",
+        );
+      this.activeRequestId = undefined;
+      this.options.session.historyRunRecorded = false;
+    }
     this.finishInactiveRequest(stateName, snapshot.context);
     this.options.session.reporter.handle(snap);
     this.options.session.card.refresh();
@@ -117,7 +129,7 @@ export class SessionObserver {
       },
       media: {
         title: resolved.title,
-        provider: current.source.kind === "file" ? "local" : "youtube",
+        provider: toRecordMedia(current.source, resolved, undefined).provider,
         source: current.source,
         ...(resolved.provenance?.canonicalUrl === undefined
           ? {}

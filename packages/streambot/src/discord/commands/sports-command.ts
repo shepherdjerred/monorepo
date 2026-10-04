@@ -18,17 +18,23 @@ import { sendSportsMenu } from "@shepherdjerred/streambot/discord/sports-menu.ts
 import {
   playbackChannelLabel,
   NUMBERED_CHANNEL_HINT,
+  PlaybackChannelNumberSchema,
 } from "@shepherdjerred/streambot/types/playback-channel.ts";
 
 type SportsCommandDeps = Pick<
   PlaybackCommandServiceDeps,
-  "config" | "library" | "resolvePlaySource" | "sports" | "featureGate"
+  | "config"
+  | "library"
+  | "resolvePlaySource"
+  | "sports"
+  | "featureGate"
+  | "history"
 > & {
   readonly getSessions: () => Pick<
     SessionManager,
     "ensureForPlay" | "releaseUnused"
   > &
-    Partial<Pick<SessionManager, "selectedChannel">>;
+    Partial<Pick<SessionManager, "selectedChannel" | "numbered">>;
 };
 
 /** Resolve the current voice channel at selection time, rather than reserving a bot while browsing. */
@@ -55,6 +61,20 @@ export async function playSportsSelection(
   const voiceChannelId = ChannelIdSchema.parse(voiceId);
   const statusChannelId = ChannelIdSchema.parse(interaction.channelId);
   const sessions = deps.getSessions();
+  const scope = { guildId, channelId: voiceChannelId, userId };
+  const numbered = sessions.numbered;
+  if (numbered !== undefined && (await numbered.automatic(scope))) {
+    const commandDeps = await numbered.commandDeps(scope, statusChannelId);
+    const result = await new PlaybackCommandService(commandDeps).play({
+      query: event.title,
+      source: "auto",
+      placement: "queue",
+      userId,
+      sourceOverride: { kind: "url", url: event.pageUrl, sportsEvent: event },
+      spoken: false,
+    });
+    return `${playbackChannelLabel(PlaybackChannelNumberSchema.parse(2))}\n${result.message}`;
+  }
   const playbackChannel = await sessions.selectedChannel?.({
     guildId,
     channelId: voiceChannelId,
@@ -96,7 +116,12 @@ export async function playSportsSelection(
       source: "auto",
       placement: "queue",
       userId,
-      sourceOverride: { kind: "url", url: event.pageUrl, mode: "video" },
+      sourceOverride: {
+        kind: "url",
+        url: event.pageUrl,
+        mode: "video",
+        sportsEvent: event,
+      },
       spoken: false,
     });
     return playbackChannel === undefined

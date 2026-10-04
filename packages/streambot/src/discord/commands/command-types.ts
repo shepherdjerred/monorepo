@@ -20,6 +20,7 @@ import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 
 /**
  * The command layer's contract types.
@@ -65,6 +66,13 @@ export type CommandInteraction = {
 };
 
 export type CommandHandlerDeps = {
+  readonly preparePlayback?: () => void;
+  readonly routePlayback?: NonNullable<
+    PlaybackCommandServiceDeps["routePlayback"]
+  >;
+  readonly assertCurrent?: NonNullable<
+    PlaybackCommandServiceDeps["assertCurrent"]
+  >;
   readonly playbackChannel?: PlaybackChannelNumber;
   readonly leaveRoom?: () => void;
   readonly config: Config;

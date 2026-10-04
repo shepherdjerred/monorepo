@@ -1,7 +1,8 @@
 import path from "node:path";
 import type { WebBootstrap } from "./auth.ts";
 import { WebSessionStore } from "./session-store.ts";
-import { WebPlayback, type WebPlaybackDeps } from "./playback.ts";
+import { WebPlayback } from "./playback.ts";
+import type { WebPlaybackDeps } from "./playback-deps.ts";
 import { createWebHandler } from "./api.ts";
 
 export function serveWebHandler(

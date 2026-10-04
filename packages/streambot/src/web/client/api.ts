@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
 import {
   ErrorSchema,
   type WebCommand,
@@ -35,13 +36,17 @@ export function commandRequest(
 }
 export type RemoteAction = WebCommand extends infer Command
   ? Command extends WebCommand
-    ? Omit<Command, "guildId" | "channelId" | "revision" | "playbackChannel">
+    ? Omit<
+        Command,
+        | "guildId"
+        | "channelId"
+        | "revision"
+        | "playbackChannel"
+        | "selectionVersion"
+        | "slotRevisions"
+      >
     : never
   : never;
 export function elapsed(seconds: number | null): string {
-  if (seconds === null) return "—";
-  const total = Math.floor(seconds);
-  return (
-    String(Math.floor(total / 60)) + ":" + String(total % 60).padStart(2, "0")
-  );
+  return seconds === null ? "—" : formatTimecode(seconds);
 }

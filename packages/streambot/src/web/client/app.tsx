@@ -2,23 +2,29 @@ import { useRemote } from "./use-remote.ts";
 import { MediaList } from "./media-list.tsx";
 import { Player, Queue } from "./player.tsx";
 import { useEffect, useRef } from "react";
+import { Link, Navigate, useLocation } from "react-router";
+import { usePageNavigation } from "./page-navigation.ts";
 
 type Remote = ReturnType<typeof useRemote>;
 
 export function App() {
   const remote = useRemote();
   const { me, snapshot } = remote;
+  const location = useLocation();
+  usePageNavigation();
+  if (location.pathname === "/")
+    return <Navigate replace to={"/plex" + location.search} />;
   return (
     <div className="app-shell">
       <header className="masthead">
-        <a className="brand" href="/" aria-label="Streambot home">
+        <Link className="brand" to="/plex" aria-label="Streambot home">
           <span className="brand-icon" aria-hidden="true">
             ▷
           </span>
           <span>
             streambot<span className="brand-dot">.</span>
           </span>
-        </a>
+        </Link>
         <span className="masthead-tag">GOOD MEDIA. GOOD COMPANY.</span>
         {me !== null && (
           <div className="account">
@@ -51,7 +57,15 @@ export function App() {
               <br />
               One little remote for your whole voice channel.
             </p>
-            <a className="primary sign-in" href="/api/auth/discord/start">
+            <a
+              className="primary sign-in"
+              href={
+                "/api/auth/discord/start?" +
+                new URLSearchParams({
+                  returnTo: location.pathname + location.search + location.hash,
+                }).toString()
+              }
+            >
               Continue with Discord <span aria-hidden="true">↗</span>
             </a>
             <p className="welcome-note">
@@ -86,6 +100,29 @@ export function App() {
                 busy={remote.busy}
                 advanced={snapshot?.advancedControls === true}
                 sportsEnabled={snapshot?.sportsEnabled === true}
+                historyEnabled={snapshot?.historyEnabled}
+                actionLabel={(selection, preferredChannel) => {
+                  if (snapshot === null) return "Play";
+                  if (
+                    preferredChannel === undefined &&
+                    snapshot.selectionMode === "auto" &&
+                    (selection.kind === "candidate" ||
+                      selection.kind === "url" ||
+                      selection.kind === "history")
+                  )
+                    return "Play";
+                  const number =
+                    snapshot.selectionMode === "auto"
+                      ? (preferredChannel ?? 2)
+                      : snapshot.selectedPlaybackChannel;
+                  const occupied =
+                    number === null
+                      ? snapshot.current !== null || snapshot.queue.length > 0
+                      : snapshot.playbackChannels.find(
+                          (slot) => slot.number === number,
+                        )?.occupied === true;
+                  return occupied ? "Queue" : "Play";
+                }}
                 play={(selection, placement) => {
                   void remote.send({ action: "play", selection, placement });
                 }}
@@ -171,15 +208,26 @@ function ContextBar({ remote }: { remote: Remote }) {
           Streambot channel
           <select
             aria-label="Streambot channel"
-            value={remote.snapshot.playbackChannel}
+            value={
+              remote.snapshot.selectionMode === "auto"
+                ? "auto"
+                : (remote.snapshot.selectedPlaybackChannel ??
+                  remote.snapshot.playbackChannel)
+            }
             disabled={remote.busy}
             onChange={(event) => {
               void remote.send({
                 action: "select",
-                number: Number(event.target.value),
+                number:
+                  event.target.value === "auto"
+                    ? null
+                    : Number(event.target.value),
               });
             }}
           >
+            {remote.snapshot.automaticRoutingEnabled && (
+              <option value="auto">Auto · music 1, video 2</option>
+            )}
             {remote.snapshot.playbackChannels.map((slot) => (
               <option key={slot.number} value={slot.number}>
                 {slot.label}
@@ -199,7 +247,39 @@ function ContextBar({ remote }: { remote: Remote }) {
         {channel?.name ?? "Join a Discord voice channel to play"}
       </div>
       <span className="context-note">Playback stays in Discord</span>
+      {remote.snapshot !== null &&
+        remote.snapshot.playbackChannels.length > 0 && (
+          <nav className="channel-views" aria-label="View playback channels">
+            {remote.snapshot.playbackChannels.map((slot) => (
+              <ChannelView
+                key={slot.number}
+                number={slot.number}
+                current={remote.snapshot?.playbackChannel === slot.number}
+              />
+            ))}
+          </nav>
+        )}
     </section>
+  );
+}
+
+function ChannelView({
+  number,
+  current,
+}: {
+  number: number;
+  current: boolean;
+}) {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  params.set("channel", String(number));
+  return (
+    <Link
+      to={location.pathname + "?" + params.toString()}
+      aria-current={current ? "page" : undefined}
+    >
+      View {number}
+    </Link>
   );
 }
 

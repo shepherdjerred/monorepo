@@ -3,11 +3,16 @@ import type { z } from "zod";
 import { SportsResultsSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { api } from "./api.ts";
 import { MediaRow, type MediaListProps } from "./media-row.tsx";
+import { useRouteState } from "./route-state.ts";
 
 export function Sports(props: MediaListProps) {
-  const [query, setQuery] = useState("");
-  const [search, setSearch] = useState("");
-  const [provider, setProvider] = useState("streameast");
+  const route = useRouteState();
+  const search = route.params.get("q") ?? "";
+  const provider = route.params.get("provider") ?? "streameast";
+  const [query, setQuery] = useState(search);
+  useEffect(() => {
+    setQuery(search);
+  }, [search]);
   const [refresh, setRefresh] = useState(0);
   const [events, setEvents] = useState<z.infer<typeof SportsResultsSchema>>([]);
   const [loading, setLoading] = useState(false);
@@ -66,7 +71,7 @@ export function Sports(props: MediaListProps) {
         className="search-form"
         onSubmit={(event) => {
           event.preventDefault();
-          setSearch(query.trim());
+          route.update({ q: query.trim() });
           setRefresh((value) => value + 1);
         }}
       >
@@ -86,7 +91,7 @@ export function Sports(props: MediaListProps) {
           aria-label="Sports provider"
           value={provider}
           onChange={(event) => {
-            setProvider(event.target.value);
+            route.update({ provider: event.target.value });
           }}
         >
           <option value="streameast">StreamEast</option>
@@ -130,6 +135,9 @@ export function Sports(props: MediaListProps) {
             title={event.title}
             detail={event.provider + " · " + eventTime(event)}
             selection={{ kind: "sports", id: event.id }}
+            {...(event.sportsArtwork === undefined
+              ? {}
+              : { sportsArtwork: event.sportsArtwork })}
             available={event.status !== "scheduled"}
             {...(event.status === "unknown"
               ? {}
@@ -156,7 +164,8 @@ function eventTime(event: z.infer<typeof SportsResultsSchema>[number]): string {
   if (event.startsAt === null)
     return event.status === "live" ? "Live now" : "Start time unavailable";
   return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
+    hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   }).format(new Date(event.startsAt));
 }

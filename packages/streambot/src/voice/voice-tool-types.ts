@@ -3,7 +3,9 @@ import { z } from "zod";
 const EmptyInputSchema = z.strictObject({});
 
 export const voiceToolSchemas = {
-  selectChannel: z.strictObject({ channel: z.number().int().positive() }),
+  selectChannel: z.strictObject({
+    channel: z.union([z.number().int().positive(), z.literal("auto")]),
+  }),
   listChannels: EmptyInputSchema,
   play: z.strictObject({
     query: z.string().min(1),

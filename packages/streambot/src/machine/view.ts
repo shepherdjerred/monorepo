@@ -1,7 +1,10 @@
 import type { SnapshotFrom } from "xstate";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
-import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type {
+  ResolvedSource,
+  QueuedSource,
+} from "@shepherdjerred/streambot/machine/types.ts";
 import {
   sourceIdentity,
   sourceLabel,
@@ -13,6 +16,8 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 type PlaybackSnapshot = SnapshotFrom<ReturnType<typeof createPlaybackMachine>>;
 
 export type QueueItemView = {
+  readonly thumbnailUrl?: string;
+  readonly queuedAt?: number;
   readonly title: string;
   readonly requesterId: UserId;
   /** Chapter markers of this item (only populated for the currently-playing item). */
@@ -71,6 +76,62 @@ export type PlaybackView = {
  * so the projection lives in exactly one place. `positionSeconds` is the streamer's live elapsed
  * time — passed in because it lives outside the XState context (it's wall-clock, not state).
  */
+function queuedView(entry: QueuedSource): QueueItemView {
+  return {
+    title:
+      entry.display?.title ??
+      entry.preResolved?.title ??
+      sourceLabel(entry.source),
+    requesterId: entry.requesterId,
+    ...(entry.display?.thumbnailUrl === undefined
+      ? {}
+      : { thumbnailUrl: entry.display.thumbnailUrl }),
+    ...(entry.queuedAt === undefined ? {} : { queuedAt: entry.queuedAt }),
+    chapters: [],
+    kind: entry.source.kind,
+    mediaKind: entry.preResolved?.mediaKind ?? null,
+    sourceId: sourceIdentity(entry.source),
+    durationSeconds:
+      entry.display?.durationSeconds ??
+      entry.preResolved?.durationSeconds ??
+      null,
+    ...(entry.preResolved?.provenance === undefined
+      ? {}
+      : { provenance: entry.preResolved.provenance }),
+    ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
+    source: entry.source,
+  };
+}
+
+function currentView(context: PlaybackSnapshot["context"]): QueueItemView {
+  if (context.current === null) throw new Error("Current playback is missing");
+  return {
+    title:
+      context.resolved?.title ??
+      context.current.display?.title ??
+      sourceLabel(context.current.source),
+    requesterId: context.current.requesterId,
+    ...(context.current.display?.thumbnailUrl === undefined
+      ? {}
+      : { thumbnailUrl: context.current.display.thumbnailUrl }),
+    ...(context.current.queuedAt === undefined
+      ? {}
+      : { queuedAt: context.current.queuedAt }),
+    chapters: context.resolved?.chapters ?? [],
+    kind: context.current.source.kind,
+    mediaKind: context.resolved?.mediaKind ?? null,
+    sourceId: sourceIdentity(context.current.source),
+    durationSeconds: context.resolved?.durationSeconds ?? null,
+    ...(context.current.requestId === undefined
+      ? {}
+      : { requestId: context.current.requestId }),
+    ...(context.resolved?.provenance === undefined
+      ? {}
+      : { provenance: context.resolved.provenance }),
+    source: context.current.source,
+  };
+}
+
 export function buildPlaybackView(
   snapshot: PlaybackSnapshot,
   positionSeconds: number | null,
@@ -82,37 +143,8 @@ export function buildPlaybackView(
       : JSON.stringify(snapshot.value);
   return {
     state,
-    current:
-      context.current === null
-        ? null
-        : {
-            title:
-              context.resolved?.title ?? sourceLabel(context.current.source),
-            requesterId: context.current.requesterId,
-            chapters: context.resolved?.chapters ?? [],
-            kind: context.current.source.kind,
-            mediaKind: context.resolved?.mediaKind ?? null,
-            sourceId: sourceIdentity(context.current.source),
-            durationSeconds: context.resolved?.durationSeconds ?? null,
-            ...(context.current.requestId === undefined
-              ? {}
-              : { requestId: context.current.requestId }),
-            ...(context.resolved?.provenance === undefined
-              ? {}
-              : { provenance: context.resolved.provenance }),
-            source: context.current.source,
-          },
-    queue: context.queue.map((entry) => ({
-      title: sourceLabel(entry.source),
-      requesterId: entry.requesterId,
-      chapters: [],
-      kind: entry.source.kind,
-      mediaKind: null,
-      sourceId: sourceIdentity(entry.source),
-      durationSeconds: null,
-      ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
-      source: entry.source,
-    })),
+    current: context.current === null ? null : currentView(context),
+    queue: context.queue.map((entry) => queuedView(entry)),
     loop: context.loop,
     volume: context.volume,
     positionSeconds:

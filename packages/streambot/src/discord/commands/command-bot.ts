@@ -10,7 +10,8 @@ import {
   type User,
 } from "discord.js";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import { CommandHandler } from "@shepherdjerred/streambot/discord/commands/command-handler.ts";
+import type { CommandHandler } from "@shepherdjerred/streambot/discord/commands/command-handler.ts";
+import { createCommandHandler } from "./create-command-handler.ts";
 import { adaptCardInteraction } from "@shepherdjerred/streambot/discord/interaction-adapters.ts";
 import { registerGlobalCommands } from "@shepherdjerred/streambot/discord/commands/command-registration.ts";
 import { VoiceTopologyWatcher } from "@shepherdjerred/streambot/discord/voice-topology.ts";
@@ -43,6 +44,7 @@ import {
 } from "@shepherdjerred/streambot/discord/client-events.ts";
 import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import { runSportsCommand } from "@shepherdjerred/streambot/discord/commands/sports-command.ts";
@@ -265,10 +267,7 @@ export class CommandBot {
     }
   }
 
-  /**
-   * Voice channel a user is currently in (for joining / addressing their session), or null. Shared
-   * by slash routing and the player card's "are you actually in the channel" permission gate.
-   */
+  /** Voice channel used by slash routing and player-card authorization. */
   private voiceChannelOf(guild: Guild | null, user: User): ChannelId | null {
     const channelId = guild?.voiceStates.cache.get(user.id)?.channelId;
     if (channelId === null || channelId === undefined) {
@@ -339,6 +338,7 @@ export class CommandBot {
       channelId: voiceChannelId ?? invokedChannel,
       interaction,
       subcommand: sub,
+      automatic: target.automatic,
       sessions,
       voiceChannelId,
       ...(playbackChannel === undefined ? {} : { playbackChannel }),
@@ -352,20 +352,39 @@ export class CommandBot {
     readonly channelId: ChannelId | null;
     readonly interaction: ChatInputCommandInteraction;
     readonly subcommand: string;
+    readonly automatic: boolean;
     readonly sessions: SessionManager;
     readonly voiceChannelId: ChannelId | null;
     readonly playbackChannel?: PlaybackChannelNumber;
   }): Promise<void> {
     try {
-      await this.buildHandler(
-        input.handle,
-        input.announceChannel,
-        input.guildId,
-        input.channelId,
-      ).run(
+      const scope =
+        input.channelId === null
+          ? null
+          : {
+              guildId: input.guildId,
+              channelId: input.channelId,
+              userId: input.interaction.user.id,
+            };
+      const routed =
+        scope !== null && input.automatic
+          ? await input.sessions.numbered.commandDeps(
+              scope,
+              input.announceChannel,
+            )
+          : undefined;
+      if (input.automatic && routed?.routePlayback === undefined)
+        throw new PlaybackCommandBoundaryError(
+          "Your channel selection changed. Try again.",
+        );
+      await this.buildHandler(input.handle, input.announceChannel, {
+        guildId: input.guildId,
+        channelId: input.channelId,
+        ...(routed === undefined ? {} : { routed }),
+      }).run(
         labelPlaybackInteraction(
           input.interaction,
-          input.playbackChannel,
+          routed === undefined ? input.playbackChannel : undefined,
           PLAY_SUBCOMMANDS.has(input.subcommand),
         ),
       );
@@ -415,43 +434,15 @@ export class CommandBot {
   private buildHandler(
     handle: SessionHandle,
     announceChannel: ChannelId | null,
-    guildId?: string,
-    channelId?: string | null,
+    options: {
+      guildId?: string;
+      channelId?: string | null;
+      routed?: PlaybackCommandServiceDeps;
+    } = {},
   ): CommandHandler {
-    return new CommandHandler({
-      ...(handle.playbackChannel === undefined
-        ? {}
-        : { playbackChannel: handle.playbackChannel }),
-      config: this.deps.config,
-      dispatch: handle.dispatch,
-      view: handle.view,
-      library: this.deps.library,
-      setVolume: handle.setVolume,
-      seek: handle.seek,
-      expandPlaylist: this.deps.expandPlaylist,
-      listSources: this.deps.listSources,
-      resolvePlaySource: this.deps.resolvePlaySource,
+    return createCommandHandler(this.deps, handle, {
+      ...options,
       announce: (message) => this.announce(announceChannel, message),
-      listSubtitleCandidates: handle.listSubtitleCandidates,
-      currentSourceId: handle.currentSourceId,
-      hasPendingSubtitleMenu: handle.hasPendingSubtitleMenu,
-      claimSubtitleMenu: handle.claimSubtitleMenu,
-      releaseSubtitleMenu: handle.releaseSubtitleMenu,
-      startVoiceDebugCapture: handle.startVoiceDebugCapture,
-      stopVoiceDebugCapture: handle.stopVoiceDebugCapture,
-      voiceDebugCaptureStatus: handle.voiceDebugCaptureStatus,
-      ...(this.deps.discovery === undefined
-        ? {}
-        : { discovery: this.deps.discovery }),
-      ...(this.deps.history === undefined
-        ? {}
-        : { history: this.deps.history }),
-      ...(guildId === undefined ? {} : { guildId }),
-      ...(channelId == null ? {} : { channelId }),
-      ...(this.deps.featureGate === undefined
-        ? {}
-        : { featureGate: this.deps.featureGate }),
-      ...(this.deps.sports === undefined ? {} : { sports: this.deps.sports }),
     });
   }
 
@@ -465,12 +456,9 @@ export class CommandBot {
     handle: SessionHandle,
   ): Promise<void> {
     const invoked = ChannelIdSchema.safeParse(interaction.channelId);
-    await this.buildHandler(
-      handle,
-      invoked.success ? invoked.data : null,
-      interaction.guildId ?? undefined,
-      handle.view().current === null ? null : undefined,
-    ).run(adaptCardInteraction(interaction, "subtitles"));
+    await this.buildHandler(handle, invoked.success ? invoked.data : null, {
+      ...(interaction.guildId === null ? {} : { guildId: interaction.guildId }),
+    }).run(adaptCardInteraction(interaction, "subtitles"));
   }
 
   private async safeHandle(

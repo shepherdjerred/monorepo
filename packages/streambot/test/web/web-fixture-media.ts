@@ -33,6 +33,19 @@ export const FIXTURE_EVENTS: readonly SportsEvent[] = [
     status: "live",
     startsAt: null,
     pageUrl: "https://v2.streameast.ga/seattle-seahawks-san-francisco-49ers-1/",
+    artwork: {
+      teams: [
+        {
+          name: "Seattle Seahawks",
+          logoUrl: "https://v2.streameast.ga/images/seattle-seahawks.svg",
+        },
+        {
+          name: "San Francisco 49ers",
+          logoUrl: "https://v2.streameast.ga/images/san-francisco-49ers.svg",
+        },
+      ],
+      league: { name: "NFL" },
+    },
   },
   {
     id: "streameast:lakers",
