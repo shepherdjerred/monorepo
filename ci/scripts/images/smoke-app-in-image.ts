@@ -141,6 +141,7 @@ const commands: Record<
       METRICS_PORT: "18795",
       OPENAI_API_KEY: "smoke-dummy",
       STORM_BRAIN_BEARER_TOKEN: "smoke-brain-token-that-is-long-enough",
+      STORM_COMPANION_BUDGET_DB: "/tmp/storm-companion-smoke.db",
       PORT: "18794",
     },
   },

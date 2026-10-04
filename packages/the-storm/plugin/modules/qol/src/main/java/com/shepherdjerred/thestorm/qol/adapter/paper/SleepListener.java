@@ -51,6 +51,10 @@ final class SleepListener implements Listener {
   /** Every second: AFK players are left out of the count; players back from AFK count again. */
   void tick() {
     for (var player : runtime.server().getOnlinePlayers()) {
+      if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(player)) {
+        player.setSleepingIgnored(true);
+        continue;
+      }
       var id = player.getUniqueId();
       var leaveOut = afk.isAfk(id) && !player.isSleeping();
       if (leaveOut && !player.isSleepingIgnored()) {
@@ -64,6 +68,7 @@ final class SleepListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     release(event.getPlayer());
   }
 

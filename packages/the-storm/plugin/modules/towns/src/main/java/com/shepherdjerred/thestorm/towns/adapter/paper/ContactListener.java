@@ -157,6 +157,7 @@ final class ContactListener implements Listener {
   /** Remembers a death so the drops that spawn right after can be marked as the dead player's. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     var player = event.getPlayer();
     lastDeath = new Death(player.getUniqueId(), Guard.position(player), server.getCurrentTick());
   }

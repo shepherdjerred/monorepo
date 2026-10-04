@@ -175,6 +175,12 @@ public final class ChatService {
     return prepareLine(speaker, channel, rawText, false);
   }
 
+  /** NPC replies share mutes, filters and repeat limits with ordinary Global messages. */
+  public boolean permitsNpcGlobal(UUID id, String name, String text) {
+    return prepare(new Speaker(id, name, false, false), ChannelKey.GLOBAL, text)
+        instanceof Result.Ok<OutgoingLine, List<ChatDenial>>;
+  }
+
   /** Checks a {@code /me} action, which goes to the speaker's focused channel. */
   public Result<OutgoingLine, List<ChatDenial>> prepareEmote(Speaker speaker, String rawAction) {
     return prepareLine(speaker, profile(speaker.id()).focus(), rawAction, true);

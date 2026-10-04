@@ -42,6 +42,7 @@ final class PlayerListener implements Listener {
    */
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     items.sweep(player.getInventory());
     items.sweep(player.getEnderChest());
@@ -52,6 +53,7 @@ final class PlayerListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var id = event.getPlayer().getUniqueId();
     arenas.all().stream()
         .filter(runner -> runner.awaitsRespawn(id))
@@ -65,6 +67,7 @@ final class PlayerListener implements Listener {
    */
   @EventHandler(priority = EventPriority.LOWEST)
   void clearDrops(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     if (arenas.of(event.getPlayer().getUniqueId()).isPresent()) {
       event.getDrops().clear();
       event.setDroppedExp(0);
@@ -78,6 +81,7 @@ final class PlayerListener implements Listener {
    */
   @EventHandler(priority = EventPriority.HIGHEST)
   void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     var id = event.getPlayer().getUniqueId();
     var runner = arenas.of(id);
     if (runner.isEmpty()) {

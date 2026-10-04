@@ -358,6 +358,7 @@ describe("Flipt network policy", () => {
     ["storm-brain to read its classify/triage gates", "storm-brain"],
     ["the production forum to read registration and season", "storm-forum"],
     ["the private forum to read registration and season", "storm-forum-beta"],
+    ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
   ])("allows %s", (_label, namespace) => {
     const policy = z
       .object({

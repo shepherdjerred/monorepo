@@ -2162,7 +2162,6 @@
       "name": "@shepherdjerred/the-storm",
       "devDependencies": {
         "@shepherdjerred/eslint-config": "workspace:*",
-        "@shepherdjerred/the-storm-brain": "workspace:*",
         "@types/bun": "1.4.2",
         "@typescript/native": "npm:typescript@7.0.2",
         "eslint": "^10.7.0",
@@ -2173,26 +2172,6 @@
         "vec3": "^0.1.7",
         "vitest": "5.0.1",
         "zod": "^4.4.3",
-      },
-    },
-    "packages/the-storm/brain": {
-      "name": "@shepherdjerred/the-storm-brain",
-      "version": "0.1.0",
-      "dependencies": {
-        "@shepherdjerred/config": "workspace:*",
-        "@shepherdjerred/feature-flags": "workspace:*",
-        "@shepherdjerred/llm-models": "workspace:*",
-        "mineflayer": "4.39.0",
-        "zod": "^4.4.3",
-      },
-      "devDependencies": {
-        "@shepherdjerred/eslint-config": "workspace:*",
-        "@types/bun": "1.4.2",
-        "@typescript/native": "npm:typescript@7.0.2",
-        "eslint": "^10.7.0",
-        "jiti": "^2.7.0",
-        "typescript": "^6.0.3",
-        "vitest": "5.0.1",
       },
     },
     "packages/toolkit": {
@@ -4269,8 +4248,6 @@
     "@shepherdjerred/terraform-provider-asuswrt": ["@shepherdjerred/terraform-provider-asuswrt@workspace:packages/terraform-provider-asuswrt"],
 
     "@shepherdjerred/the-storm": ["@shepherdjerred/the-storm@workspace:packages/the-storm"],
-
-    "@shepherdjerred/the-storm-brain": ["@shepherdjerred/the-storm-brain@workspace:packages/the-storm/brain"],
 
     "@shepherdjerred/toolkit": ["@shepherdjerred/toolkit@workspace:packages/toolkit"],
 

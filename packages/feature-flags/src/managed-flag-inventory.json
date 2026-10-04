@@ -42,11 +42,6 @@
       "description": "Minecraft main-world gameplay rollout flags."
     },
     {
-      "key": "the-storm-companion",
-      "name": "The Storm Companion",
-      "description": "Opt-in Minecraft companion pilot feature flags."
-    },
-    {
       "key": "storm",
       "name": "Storm",
       "description": "The Storm Minecraft server feature flags."
@@ -852,7 +847,7 @@
       "source": "karma-dynamic",
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
-      "default": "⭐",
+      "default": "\u2b50",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -993,30 +988,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "scout-explore-model-picker-enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-dynamic",
-      "purpose": "Enable the Sol and Luna model picker with durable spending guards.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "scout-explore-spend-policy",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-dynamic",
-      "purpose": "Set shared monthly, user monthly, and turn spending ceilings in integer microdollars.",
-      "type": "variant",
-      "default": "{\"globalMonthlyMicros\":20000000,\"userMonthlyMicros\":5000000,\"turnMicros\":500000}",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "scout-explore-model",
       "owner": "scout",
       "namespace": "scout",
@@ -1029,6 +1000,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-explore-model-picker-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Enable the Sol and Luna model picker with durable spending guards.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-explore-quota-limits",
       "owner": "scout",
       "namespace": "scout",
@@ -1036,6 +1019,18 @@
       "purpose": "Set the Scout Explore question ceilings, as one JSON policy object.",
       "type": "variant",
       "default": "{\"userMinute\":4,\"userHour\":30,\"userDay\":100,\"userWeek\":300,\"globalHour\":120,\"globalDay\":600,\"globalWeek\":2000}",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout-explore-spend-policy",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Set shared monthly, user monthly, and turn spending ceilings in integer microdollars.",
+      "type": "variant",
+      "default": "{\"globalMonthlyMicros\":20000000,\"userMonthlyMicros\":5000000,\"turnMicros\":500000}",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1176,13 +1171,25 @@
       "thresholdRollouts": []
     },
     {
-      "key": "storm-brain-triage-enabled",
+      "key": "storm-brain-conversation-enabled",
       "owner": "storm",
       "namespace": "storm",
       "source": "storm-brain",
-      "purpose": "Enable the Storm brain ticket triage flow.",
+      "purpose": "Enable bounded NPC conversation only; local survival never depends on the provider.",
       "type": "boolean",
       "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "storm-brain-conversation-model",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Select the budgeted NPC conversational model.",
+      "type": "variant",
+      "default": "gpt-6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1200,112 +1207,14 @@
       "thresholdRollouts": []
     },
     {
-      "key": "streambot-plex-posters-enabled",
-      "owner": "streambot",
-      "namespace": "streambot",
-      "source": "streambot-web",
-      "purpose": "Use Plex-only posters and grouped Library poster browsing.",
+      "key": "storm-brain-triage-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Enable the Storm brain ticket triage flow.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "streambot-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-guild-208425771172102144",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "208425771172102144"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-user-160509172704739328",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "user",
-              "operator": "eq",
-              "value": "160509172704739328"
-            }
-          ],
-          "result": true
-        }
-      ],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "streambot-web-ui-enabled",
-      "owner": "streambot",
-      "namespace": "streambot",
-      "source": "streambot-web",
-      "purpose": "Enable the authenticated web media remote and shared voice-channel controls.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "streambot-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-guild-208425771172102144",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "208425771172102144"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-user-160509172704739328",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "user",
-              "operator": "eq",
-              "value": "160509172704739328"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1348,6 +1257,47 @@
         },
         {
           "segmentKey": "streambot-user-160509172704739328",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-automatic-channel-routing-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Route Plex and sports to video channel 2 and classified music to audio channel 1 unless the requester selected a channel.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-automatic-test-guild",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-automatic-owner",
           "segmentOperator": "OR_SEGMENT_OPERATOR",
           "matchType": "ALL_SEGMENT_MATCH_TYPE",
           "constraints": [
@@ -1411,47 +1361,6 @@
               "property": "user",
               "operator": "eq",
               "value": "160509172704739328"
-            }
-          ],
-          "result": true
-        }
-      ],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "streambot-sports-streaming-enabled",
-      "owner": "streambot",
-      "namespace": "streambot",
-      "source": "streambot-media-assistant",
-      "purpose": "Enable provider event listings and live sports playback from supported sports sources.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "streambot-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-guild-208425771172102144",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "208425771172102144"
             }
           ],
           "result": true
@@ -1541,47 +1450,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "streambot-automatic-channel-routing-enabled",
-      "owner": "streambot",
-      "namespace": "streambot",
-      "source": "streambot-media-assistant",
-      "purpose": "Route Plex and sports to video channel 2 and classified music to audio channel 1 unless the requester selected a channel.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "streambot-automatic-test-guild",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-automatic-owner",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "user",
-              "operator": "eq",
-              "value": "160509172704739328"
-            }
-          ],
-          "result": true
-        }
-      ],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "streambot-player-card-repost-after-messages",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1614,6 +1482,61 @@
       "type": "variant",
       "default": "100",
       "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-plex-posters-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-web",
+      "purpose": "Use Plex-only posters and grouped Library poster browsing.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-user-160509172704739328",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
+          "result": true
+        }
+      ],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1654,6 +1577,47 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-sports-streaming-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Enable provider event listings and live sports playback from supported sports sources.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-subtitle-languages",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1678,6 +1642,61 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-web-ui-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-web",
+      "purpose": "Enable the authenticated web media remote and shared voice-channel controls.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-user-160509172704739328",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "subtitles-enabled",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1685,18 +1704,6 @@
       "purpose": "Enable Streambot subtitles.",
       "type": "boolean",
       "default": true,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "temporal-call-graph-tracing",
-      "owner": "platform",
-      "namespace": "temporal",
-      "source": "temporal-workers",
-      "purpose": "Enable Temporal client, Workflow, and Activity call-graph tracing on worker restart.",
-      "type": "boolean",
-      "default": false,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1719,6 +1726,30 @@
       "namespace": "temporal",
       "source": "temporal-agent-chat",
       "purpose": "Select the default Codex model for new durable chats started from Discord.",
+      "type": "variant",
+      "default": "gpt-5.6-luna",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "temporal-agent-chat-imessage-claude-model",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "temporal-agent-chat",
+      "purpose": "Select the Claude model for new durable iMessage chats.",
+      "type": "variant",
+      "default": "claude-opus-5",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "temporal-agent-chat-imessage-codex-model",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "temporal-agent-chat",
+      "purpose": "Select the Codex model for new durable iMessage chats.",
       "type": "variant",
       "default": "gpt-5.6-luna",
       "rollouts": [],
@@ -1750,35 +1781,23 @@
       "thresholdRollouts": []
     },
     {
-      "key": "temporal-agent-chat-imessage-claude-model",
+      "key": "temporal-call-graph-tracing",
       "owner": "platform",
       "namespace": "temporal",
-      "source": "temporal-agent-chat",
-      "purpose": "Select the Claude model for new durable iMessage chats.",
-      "type": "variant",
-      "default": "claude-opus-5",
+      "source": "temporal-workers",
+      "purpose": "Enable Temporal client, Workflow, and Activity call-graph tracing on worker restart.",
+      "type": "boolean",
+      "default": false,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
     {
-      "key": "temporal-agent-chat-imessage-codex-model",
-      "owner": "platform",
-      "namespace": "temporal",
-      "source": "temporal-agent-chat",
-      "purpose": "Select the Codex model for new durable iMessage chats.",
-      "type": "variant",
-      "default": "gpt-5.6-luna",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "the-storm-companion-pilot-enabled",
-      "owner": "the-storm-companion",
-      "namespace": "the-storm-companion",
-      "source": "the-storm-brain",
-      "purpose": "Allow the one-account, one-shot Mineflayer pilot when its time and human-presence gates also pass.",
+      "key": "the-storm-companions-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-companions",
+      "purpose": "Enable the three Citizens survival companions during Pacific core hours with a human online.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -1896,7 +1915,11 @@
     },
     {
       "category": "observability",
-      "controls": ["telemetry", "Sentry", "LLM archive"],
+      "controls": [
+        "telemetry",
+        "Sentry",
+        "LLM archive"
+      ],
       "reason": "Observability initialization is boot-scoped and must not disappear behind an unauthenticated runtime toggle."
     },
     {
@@ -1922,7 +1945,7 @@
       "key": "beta",
       "overrides": [
         {
-          "key": "scout-explore-analysis-enabled",
+          "key": "birmel-image-generation-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],
@@ -1930,34 +1953,25 @@
           "thresholdRollouts": []
         },
         {
-          "key": "scout-explore-model-picker-enabled",
+          "key": "dare_extended_contracts_enabled",
           "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "streambot-plex-posters-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "streambot-web-ui-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "initial_match_history_import_enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "scout-guild-1337623164146155593",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "server",
+                  "operator": "eq",
+                  "value": "1337623164146155593"
+                }
+              ],
+              "result": true
+            }
+          ],
           "rules": [],
           "thresholdRollouts": []
         },
@@ -2008,53 +2022,6 @@
           "thresholdRollouts": []
         },
         {
-          "key": "scout-consumer-player-profiles-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "birmel-image-generation-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "temporal-agent-chat-photon-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "dare_extended_contracts_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [
-            {
-              "segmentKey": "scout-guild-1337623164146155593",
-              "segmentOperator": "OR_SEGMENT_OPERATOR",
-              "matchType": "ALL_SEGMENT_MATCH_TYPE",
-              "constraints": [
-                {
-                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-                  "property": "server",
-                  "operator": "eq",
-                  "value": "1337623164146155593"
-                }
-              ],
-              "result": true
-            }
-          ],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "explore_on_demand_riot_enabled",
           "type": "boolean",
           "default": false,
@@ -2074,6 +2041,38 @@
               "result": true
             }
           ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "initial_match_history_import_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-consumer-player-profiles-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-explore-analysis-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-explore-model-picker-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
         },
@@ -2117,25 +2116,42 @@
           "thresholdRollouts": []
         },
         {
-          "key": "the-storm-companion-pilot-enabled",
+          "key": "storm-brain-conversation-enabled",
           "type": "boolean",
-          "default": false,
-          "rollouts": [
-            {
-              "segmentKey": "the-storm-companion-alt-1",
-              "segmentOperator": "OR_SEGMENT_OPERATOR",
-              "matchType": "ALL_SEGMENT_MATCH_TYPE",
-              "constraints": [
-                {
-                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-                  "property": "pilot",
-                  "operator": "eq",
-                  "value": "alt-1"
-                }
-              ],
-              "result": true
-            }
-          ],
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-plex-posters-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-web-ui-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "temporal-agent-chat-photon-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-companions-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
         },
@@ -2168,52 +2184,6 @@
     {
       "key": "prod",
       "overrides": [
-        {
-          "key": "streambot-numbered-channels-enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": [
-            {
-              "rank": 1,
-              "percentage": 100,
-              "result": true
-            }
-          ]
-        },
-        {
-          "key": "storm-brain-classify-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "storm-brain-triage-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "the-storm-crier-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "the-storm-merchant-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
         {
           "key": "ai_reports_enabled",
           "type": "boolean",
@@ -2398,6 +2368,52 @@
           "key": "scoutql_relational_enabled",
           "type": "boolean",
           "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "storm-brain-classify-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "storm-brain-triage-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-numbered-channels-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": [
+            {
+              "rank": 1,
+              "percentage": 100,
+              "result": true
+            }
+          ]
+        },
+        {
+          "key": "the-storm-crier-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-merchant-enabled",
+          "type": "boolean",
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []

@@ -45,7 +45,8 @@ describe("storm-brain config", () => {
         environment: { ...base },
         flagSource: {
           name: "flag",
-          get: async () => ({ value: "gpt-99" }),
+          get: async (key) =>
+            key.key === "model" ? { value: "gpt-99" } : undefined,
         },
       }),
     ).rejects.toThrow(/Unknown model id/);
@@ -62,7 +63,8 @@ describe("storm-brain config", () => {
         environment: { ...base },
         flagSource: {
           name: "flag",
-          get: async () => ({ value: "gpt-5.6-sol" }),
+          get: async (key) =>
+            key.key === "model" ? { value: "gpt-5.6-sol" } : undefined,
         },
       }),
     ).resolves.toMatchObject({ model: "gpt-5.6-sol" });

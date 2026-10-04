@@ -40,6 +40,7 @@ import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homelab/zfs-maintenance.ts";
 import { runMiningWorldResetWorkflow as _runMiningWorldResetWorkflow } from "./homelab/mining-reset.ts";
 import { runStormPlotReconciliationWorkflow as _runStormPlotReconciliationWorkflow } from "./homelab/storm-plots.ts";
+import { reconcileStormCompanionsWorkflow as _reconcileStormCompanionsWorkflow } from "./homelab/storm-companions.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
@@ -299,6 +300,9 @@ export async function runZfsMaintenanceWorkflow(): Promise<void> {
 
 export async function runMiningWorldResetWorkflow(): Promise<void> {
   return _runMiningWorldResetWorkflow();
+}
+export async function reconcileStormCompanionsWorkflow(): Promise<void> {
+  return _reconcileStormCompanionsWorkflow();
 }
 
 export async function runStormPlotReconciliationWorkflow(): Promise<void> {

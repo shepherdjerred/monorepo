@@ -66,7 +66,7 @@ final class NpcCombat {
                     ledger.restore(snapshot);
                     ready = true;
                     expire();
-                    context.logger().info("NPCs: {}", world.reconcile());
+                    world.reconcileWhenReady();
                   } catch (RuntimeException error) {
                     fail(error);
                   }

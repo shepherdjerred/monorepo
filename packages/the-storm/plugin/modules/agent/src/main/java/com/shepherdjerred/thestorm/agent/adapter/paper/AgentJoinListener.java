@@ -29,6 +29,7 @@ public final class AgentJoinListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     if (!onboarding.enabled()) {
       return;
     }

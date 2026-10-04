@@ -89,6 +89,7 @@ final class SkillListener implements Listener {
 
   @EventHandler
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     var _ =
         levels
@@ -108,6 +109,7 @@ final class SkillListener implements Listener {
 
   @EventHandler
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var id = event.getPlayer().getUniqueId();
     online.remove(id);
   }

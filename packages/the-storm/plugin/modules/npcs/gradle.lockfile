@@ -36,6 +36,7 @@ javax.inject:javax.inject:1=annotationProcessor,compileClasspath,mainPmdAuxClass
 net.bytebuddy:byte-buddy-agent:1.17.7=testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.18.11=testPmdAuxClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.18.3=testCompileClasspath
+net.citizensnpcs:citizens-main:2.0.44-b4256=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.kyori:adventure-api:5.2.0=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.kyori:adventure-bom:5.2.0=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.kyori:adventure-key:5.2.0=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath

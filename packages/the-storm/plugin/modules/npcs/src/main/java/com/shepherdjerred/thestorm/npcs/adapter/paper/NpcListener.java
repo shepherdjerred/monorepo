@@ -6,6 +6,9 @@ import com.shepherdjerred.thestorm.npcs.app.NpcInteractEvent;
 import com.shepherdjerred.thestorm.npcs.app.NpcRef;
 import com.shepherdjerred.thestorm.npcs.app.NpcTalk;
 import net.kyori.adventure.text.Component;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -35,6 +38,7 @@ final class NpcListener implements Listener {
   /** Right-clicking an NPC fires {@link NpcInteractEvent}, then opens its dialogue. */
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   void onInteract(PlayerInteractEntityEvent event) {
+    if (event.getRightClicked().hasMetadata("NPC")) return;
     var npc = world.npcOf(event.getRightClicked());
     if (npc.isEmpty()) {
       return;
@@ -44,17 +48,26 @@ final class NpcListener implements Listener {
     if (event.getHand() != EquipmentSlot.HAND) {
       return;
     }
-    if (!world.available(npc.get().id())) {
-      event
-          .getPlayer()
-          .sendMessage(
-              HouseStyle.info(npc.get().name(), Component.text("I can't talk right now.")));
+    interact(event.getPlayer(), event.getRightClicked());
+  }
+
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  void onCitizensInteract(NPCRightClickEvent event) {
+    if (world.npcOf(event.getNPC().getEntity()).isEmpty()) return;
+    event.setCancelled(true);
+    interact(event.getClicker(), event.getNPC().getEntity());
+  }
+
+  private void interact(Player player, Entity entity) {
+    var npc = world.npcOf(entity).orElseThrow();
+    if (!world.available(npc.id())) {
+      player.sendMessage(HouseStyle.info(npc.name(), Component.text("I can't talk right now.")));
       return;
     }
-    var interact = new NpcInteractEvent(event.getPlayer(), NpcRef.of(npc.get()));
+    var interact = new NpcInteractEvent(player, NpcRef.of(npc));
     events.callEvent(interact);
     if (!interact.isCancelled()) {
-      talk.talk(event.getPlayer(), npc.get());
+      talk.talk(player, npc);
     }
   }
 
@@ -123,6 +136,7 @@ final class NpcListener implements Listener {
 
   @EventHandler
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     talk.forget(event.getPlayer());
     markers.forget(event.getPlayer());
   }

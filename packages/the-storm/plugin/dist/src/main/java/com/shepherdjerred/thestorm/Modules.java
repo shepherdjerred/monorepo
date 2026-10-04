@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm;
 import com.shepherdjerred.thestorm.agent.AgentModule;
 import com.shepherdjerred.thestorm.arena.ArenaModule;
 import com.shepherdjerred.thestorm.chat.ChatModule;
+import com.shepherdjerred.thestorm.companions.CompanionsModule;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.discord.DiscordModule;
 import com.shepherdjerred.thestorm.economy.EconomyModule;
@@ -59,6 +60,7 @@ final class Modules {
         new SkillsModule(),
         new SeasonalModule(),
         new WorldModule(),
-        new QolModule());
+        new QolModule(),
+        new CompanionsModule());
   }
 }

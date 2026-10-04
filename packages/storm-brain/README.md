@@ -4,6 +4,8 @@ The LLM brain for The Storm's AI staff agent: chat classification and ticket
 triage over structured outputs. The Paper plugin (`packages/the-storm`) calls
 `POST /v1/classify` for ambiguous chat and `POST /v1/triage` for new
 tickets; this service answers with a verdict the plugin's ladders enforce.
+The companions module also calls `POST /v1/conversation` for open-ended chat.
+Companion gameplay runs entirely in the Paper plugin.
 
 ## Contract
 
@@ -16,6 +18,10 @@ confidence, label, reasoning, model, costMicros }`
 - `POST /v1/triage` — `{ ticket, comments, reporterHistory, reporterBanned,
 reporterRecentChat }` → `{ priorityId, confidence, duplicates, evidence,
 draftReply, resolve, resolutionNote, model, costMicros }`
+- `POST /v1/conversation` — `{ requestId, identity, personality, message, context }`
+  → `{ text, model, costMicros }`. The shared language-neutral schema is
+  [contracts/companion-chat.json](contracts/companion-chat.json). Action fields
+  and unknown identities are rejected.
 
 Errors are plain-text bodies with bounded outcomes:
 
@@ -26,6 +32,7 @@ Errors are plain-text bodies with bounded outcomes:
 | 413    | Payload over `STORM_BRAIN_MAX_BODY_BYTES` |
 | 400    | Malformed JSON or schema violation        |
 | 503    | Flow disabled by its Flipt flag           |
+| 429    | Shared conversation budget unavailable    |
 | 502    | Upstream LLM call failed (may still bill) |
 | 500    | Unexpected failure                        |
 
@@ -45,18 +52,19 @@ even on 502s.
   `minecraft-tsmc` namespace.
 - Image `ghcr.io/shepherdjerred/storm-brain`, versioned through the
   version catalog.
-- Flipt namespace `storm`, environment `prod`; the two flow flags above
+- Flipt namespace `storm`, environment `prod`; the three flow flags above
   are the rollout switches. The plugin needs no restart when they flip.
 
 ## Configuration
 
-| Variable                     | Required | Default     | Notes                                              |
-| ---------------------------- | -------- | ----------- | -------------------------------------------------- |
-| `STORM_BRAIN_BEARER_TOKEN`   | yes      | —           | ≥32 chars, shared secret with the game             |
-| `OPENAI_API_KEY`             | yes      | —           | Backend key for the default model, checked at boot |
-| `STORM_BRAIN_MAX_BODY_BYTES` | no       | 262144      | Per-request cap                                    |
-| `STORM_BRAIN_LLM_TIMEOUT_MS` | no       | 60000       | Per-call LLM timeout                               |
-| `PORT` / `METRICS_PORT`      | no       | 3000 / 9090 | Must differ                                        |
+| Variable                     | Required | Default     | Notes                                               |
+| ---------------------------- | -------- | ----------- | --------------------------------------------------- |
+| `STORM_BRAIN_BEARER_TOKEN`   | yes      | —           | ≥32 chars, shared secret with the game              |
+| `OPENAI_API_KEY`             | yes      | —           | Backend key for the default model, checked at boot  |
+| `STORM_COMPANION_BUDGET_DB`  | yes      | —           | Writable path to the persistent conversation ledger |
+| `STORM_BRAIN_MAX_BODY_BYTES` | no       | 262144      | Per-request cap                                     |
+| `STORM_BRAIN_LLM_TIMEOUT_MS` | no       | 60000       | Per-call LLM timeout                                |
+| `PORT` / `METRICS_PORT`      | no       | 3000 / 9090 | Must differ                                         |
 
 Flow enablement is not configuration: `POST /v1/classify` checks the
 `storm-brain-classify-enabled` flag and `/v1/triage` checks
@@ -65,6 +73,20 @@ Flow enablement is not configuration: `POST /v1/classify` checks the
 The `storm-brain-model` variant selects the model at service startup; changing
 it takes effect after the service restarts. It defaults to `gpt-5.6-luna`; the
 selected model must exist in `@shepherdjerred/llm-models` with a native route.
+
+Conversation is separately controlled by `storm-brain-conversation-enabled`,
+default off in production. Its typed model selection is `gpt-6-luna`.
+`STORM_COMPANION_BUDGET_DB` is a required bootstrap path to the persistent
+SQLite ledger. The homelab mounts this at `/data/companion-budget.db` on a
+single-writer PVC and uses a recreate rollout strategy.
+
+All three identities share $20 per Pacific calendar month. The service reserves
+a conservative catalog-price bound before contacting the provider, accounting
+for semantic attempts and transport retries. Successful calls settle to actual
+usage. Failed, timed-out and interrupted calls retain their reservation.
+Duplicate request IDs are refused. Never delete or restore an older budget
+ledger to recover chat availability: that would reset already-spent allowance.
+Exhaustion affects conversation only; the plugin keeps its game AI running.
 
 ## Observability
 
@@ -82,7 +104,7 @@ selected model must exist in `@shepherdjerred/llm-models` with a native route.
 
 ```bash
 bun --filter @shepherdjerred/storm-brain test
-PORT=3000 METRICS_PORT=9090 STORM_BRAIN_BEARER_TOKEN=... OPENAI_API_KEY=... bun src/index.ts
+PORT=3000 METRICS_PORT=9090 STORM_COMPANION_BUDGET_DB=/tmp/storm-companion-budget.db STORM_BRAIN_BEARER_TOKEN=... OPENAI_API_KEY=... bun src/index.ts
 ```
 
 To exercise the live brain against OpenAI, run with static overrides:

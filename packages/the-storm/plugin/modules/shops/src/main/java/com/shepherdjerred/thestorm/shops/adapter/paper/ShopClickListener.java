@@ -48,6 +48,7 @@ final class ShopClickListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     shops.forget(event.getPlayer().getUniqueId());
   }
 

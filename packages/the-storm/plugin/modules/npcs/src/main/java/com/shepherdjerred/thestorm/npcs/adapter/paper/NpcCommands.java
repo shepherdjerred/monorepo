@@ -70,7 +70,7 @@ final class NpcCommands {
   }
 
   LiteralCommandNode<CommandSourceStack> node() {
-    return Commands.literal("npc")
+    return Commands.literal("stormnpc")
         .requires(source -> source.getSender().hasPermission(PERMISSION))
         .then(Commands.literal("list").executes(context -> list(context.getSource().getSender())))
         .then(

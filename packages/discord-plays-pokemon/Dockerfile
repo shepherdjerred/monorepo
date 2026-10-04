@@ -98,7 +98,6 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -150,7 +149,6 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./

@@ -168,7 +168,6 @@
     "packages/temporal-observability",
     "packages/terraform-provider-asuswrt",
     "packages/the-storm",
-    "packages/the-storm/brain",
     "packages/toolkit",
     "packages/trmnl-dashboard",
     "packages/ts-mc",

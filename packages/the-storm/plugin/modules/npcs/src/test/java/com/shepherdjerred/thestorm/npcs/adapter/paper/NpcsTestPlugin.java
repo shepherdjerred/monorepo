@@ -110,7 +110,8 @@ public class NpcsTestPlugin extends JavaPlugin {
                 () -> source(data),
                 Runnable::run,
                 new MemoryState()),
-            new NpcsPaper.Hooks(new Tickets(), new Presenter()));
+            new NpcsPaper.Hooks(
+                new Tickets(), new Presenter(), new TestBodies(getServer(), NpcKeys.of(this))));
   }
 
   private static final class MemoryState implements NpcStateStore {
