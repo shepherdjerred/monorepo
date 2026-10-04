@@ -322,6 +322,7 @@ export const THE_STORM_FLAG_KEYS = [
   "the-storm-crier-enabled",
   "the-storm-merchant-enabled",
   "the-storm-shop-rentals-enabled",
+  "the-storm-rwf-enabled",
 ] as const;
 
 export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
@@ -331,6 +332,7 @@ export const THE_STORM_BOOLEAN_FLAG_KEYS = [
   "the-storm-crier-enabled",
   "the-storm-merchant-enabled",
   "the-storm-shop-rentals-enabled",
+  "the-storm-rwf-enabled",
 ] as const;
 
 export type TheStormBooleanFlagKey =
