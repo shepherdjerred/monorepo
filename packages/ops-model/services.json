@@ -172,13 +172,15 @@
         "minecraft-shuxin",
         "minecraft-sjerred",
         "minecraft-tsmc",
-        "mc-router"
+        "mc-router",
+        "mc-sandbox"
       ],
       "argoApps": [
         "minecraft-shuxin",
         "minecraft-sjerred",
         "minecraft-tsmc",
-        "mc-router"
+        "mc-router",
+        "mc-sandbox"
       ],
       "analyticsSites": ["ts-mc", "ts-mc-docs"]
     },
