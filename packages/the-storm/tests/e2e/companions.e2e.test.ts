@@ -36,7 +36,7 @@ describe("Citizens survival companions on Paper", () => {
     await rcon.command(`companiontest visit ${bot.username}`);
     const result = await rcon.command("companiontest native");
     expect(result).toContain(
-      "cancelled=false retained=2 crafted=true logs=1 planks=4 deniedMining=false mined=true placed=true remaining=3",
+      "native cancelled=false retained=2 crafted=true logs=1 planks=4 deniedMining=false mined=true placed=true remaining=3",
     );
     expect(result).toContain("food=15 bread=1");
   });

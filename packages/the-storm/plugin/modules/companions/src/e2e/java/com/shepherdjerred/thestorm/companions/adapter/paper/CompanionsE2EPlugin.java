@@ -133,12 +133,12 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
         for (var y = -60; y < -53; y++) world.getBlockAt(x, y, z).setType(Material.AIR, false);
       }
     world.setSpawnLocation(32, -60, 32);
-    for (var x = 24; x <= 40; x += 4)
-      for (var z = 24; z <= 40; z += 4) {
-        world.getBlockAt(x, -60, z).setType(Material.OAK_LOG, false);
-        world.getBlockAt(x, -59, z).setType(Material.OAK_LOG, false);
-        world.getBlockAt(x + 1, -60, z).setType(Material.STONE, false);
-      }
+    for (var x : new int[] {30, 31, 33, 34}) {
+      world.getBlockAt(x, -60, 32).setType(Material.OAK_LOG, false);
+      world.getBlockAt(x, -59, 32).setType(Material.OAK_LOG, false);
+    }
+    world.getBlockAt(32, -60, 33).setType(Material.OAK_LOG, false);
+    world.getBlockAt(32, -59, 33).setType(Material.OAK_LOG, false);
   }
 
   @Override
@@ -215,7 +215,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     npc.data().setPersistent(NPC.Metadata.REMOVE_FROM_PLAYERLIST, true);
     npc.data().setPersistent(NPC.Metadata.PICKUP_ITEMS, false);
     npc.setProtected(false);
-    var at = new Location(world, 10.5, -60, 10.5);
+    var at = new Location(world, 11.5, -60, 10.5);
     var cancellation = new CraftCancellation(npc.getMinecraftUniqueId());
     getServer().getPluginManager().registerEvents(cancellation, this);
     var coreProtect = getServer().getPluginManager().getPlugin("CoreProtect");
