@@ -190,7 +190,12 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     var player = getServer().getPlayerExact(name);
     var world = getServer().getWorld("storm_companions_test");
     if (player == null || world == null) throw new IllegalStateException("missing fixture visitor");
-    player.teleport(new Location(world, 32.5, -60, 34.5));
+    var worksite = new Location(world, 32.5, -60, 34.5);
+    player.teleport(worksite.clone());
+    for (var npc : CitizensAPI.getNPCRegistry()) {
+      if (npc.data().has("thestorm-companion-id") && npc.isSpawned())
+        player(npc).teleport(worksite.clone());
+    }
   }
 
   private static Player player(NPC npc) {
