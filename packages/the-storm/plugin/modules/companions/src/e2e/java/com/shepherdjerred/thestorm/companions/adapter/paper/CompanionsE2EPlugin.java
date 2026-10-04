@@ -399,6 +399,8 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                       + breakObservation.seen
                       + " cancelled="
                       + breakObservation.cancelled
+                      + " stages="
+                      + breakObservation.stages()
                       + nativeEating(player)));
     } finally {
       HandlerList.unregisterAll(cancellation);
@@ -437,6 +439,8 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     private final UUID player;
     private boolean seen;
     private boolean cancelled;
+    private final java.util.EnumMap<org.bukkit.event.EventPriority, Boolean> cancelledAt =
+        new java.util.EnumMap<>(org.bukkit.event.EventPriority.class);
 
     private BreakObservation(UUID player) {
       this.player = player;
@@ -447,6 +451,40 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
       if (!event.getPlayer().getUniqueId().equals(player)) return;
       seen = true;
       cancelled = event.isCancelled();
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.LOWEST, ignoreCancelled = false)
+    public void lowest(BlockBreakEvent event) {
+      observe(event, org.bukkit.event.EventPriority.LOWEST);
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.LOW, ignoreCancelled = false)
+    public void low(BlockBreakEvent event) {
+      observe(event, org.bukkit.event.EventPriority.LOW);
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.NORMAL, ignoreCancelled = false)
+    public void normal(BlockBreakEvent event) {
+      observe(event, org.bukkit.event.EventPriority.NORMAL);
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGH, ignoreCancelled = false)
+    public void high(BlockBreakEvent event) {
+      observe(event, org.bukkit.event.EventPriority.HIGH);
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST, ignoreCancelled = false)
+    public void highest(BlockBreakEvent event) {
+      observe(event, org.bukkit.event.EventPriority.HIGHEST);
+    }
+
+    private void observe(BlockBreakEvent event, org.bukkit.event.EventPriority priority) {
+      if (event.getPlayer().getUniqueId().equals(player))
+        cancelledAt.put(priority, event.isCancelled());
+    }
+
+    private String stages() {
+      return cancelledAt.toString();
     }
   }
 
