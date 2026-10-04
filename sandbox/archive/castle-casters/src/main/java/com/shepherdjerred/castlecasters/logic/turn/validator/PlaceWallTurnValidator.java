@@ -21,7 +21,7 @@ public class PlaceWallTurnValidator implements TurnValidator<PlaceWallTurn> {
     rules.add(new WallPieceLocationCoordinatesAreValidValidatorRule());
     rules.add(new WallPieceLocationCoordinatesAreWallBoardCellsValidatorRule());
     rules.add(new WallPieceLocationVertexIsFreeValidatorRule());
-    rules.add(new WallPieceLocationCoordinatesAreValidValidatorRule());
+    rules.add(new WallPieceLocationVertexIsVertexBoardCellValidatorRule());
   }
 
   @Override

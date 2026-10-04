@@ -33,6 +33,17 @@ public class WallBank {
     return new WallBank(walls);
   }
 
+  public static WallBank fromCounts(java.util.List<Integer> counts, int maximum) {
+    if (counts.size() != 2 && counts.size() != 4) throw new IllegalArgumentException("Invalid wall counts");
+    var result = new HashMap<QuoridorPlayer, Integer>();
+    for (int i = 0; i < counts.size(); i++) {
+      int count = counts.get(i);
+      if (count < 0 || count > maximum) throw new IllegalArgumentException("Invalid wall count");
+      result.put(QuoridorPlayer.fromInt(i + 1), count);
+    }
+    return new WallBank(result);
+  }
+
   public int getWallsLeft(QuoridorPlayer quoridorPlayer) {
     if (playerWalls.containsKey(quoridorPlayer)) {
       return playerWalls.get(quoridorPlayer);

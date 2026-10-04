@@ -23,9 +23,12 @@ public class PacketCodec extends ByteToMessageCodec<Packet> {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf packetAsByteBuf, List<Object> out) {
-    int numberOfBytes = packetAsByteBuf.readableBytes();
-    byte[] readBytes = new byte[numberOfBytes - 4];
-    packetAsByteBuf.skipBytes(4);
+    if (packetAsByteBuf.readableBytes() < 4) return;
+    packetAsByteBuf.markReaderIndex();
+    int length = packetAsByteBuf.readInt();
+    if (length < 1 || length > 1_048_576) throw new io.netty.handler.codec.CorruptedFrameException("Invalid packet length");
+    if (packetAsByteBuf.readableBytes() < length) { packetAsByteBuf.resetReaderIndex(); return; }
+    byte[] readBytes = new byte[length];
     packetAsByteBuf.readBytes(readBytes);
     var packet = serializer.fromBytes(readBytes);
     out.add(packet);

@@ -36,13 +36,18 @@ public class GameEngine {
   private final GameLoop gameLoop;
 
   public GameEngine(GameLogic gameLogic, WindowSettings windowSettings, EventBus<Event> eventBus) {
+    this(gameLogic, windowSettings, eventBus, new LoopControl(false));
+  }
+
+  public GameEngine(GameLogic gameLogic, WindowSettings windowSettings, EventBus<Event> eventBus,
+                    LoopControl control) {
     this.eventBus = eventBus;
     this.mouseTracker = new MouseTracker(false, new MouseCoordinate(-1, -1));
     window = new GlfwWindow(windowSettings, mouseTracker, eventBus);
     gameLoop = new GameLoop(gameLogic,
         window,
         TARGET_FRAMES_PER_SECOND,
-        TARGET_UPDATES_PER_SECOND);
+        TARGET_UPDATES_PER_SECOND, control);
   }
 
   public void run() {
@@ -55,12 +60,10 @@ public class GameEngine {
   }
 
   private void registerEventHandlers() {
-    eventBus.registerHandler(new EventLoggerHandler<>(Set.of(MouseMoveEvent.class)));
     eventBus.registerHandler(WindowResizeEvent.class, new OpenGlWindowResizeHandler());
     eventBus.registerHandler(MouseMoveEvent.class, new MouseMoveEventHandler(mouseTracker));
     eventBus.registerHandler(ToggleWireframeEvent.class, new ToggleWireframeEventHandler());
     eventBus.registerHandler(ToggleBlendingEvent.class, new ToggleBlendingEventHandler());
-    eventBus.registerHandler(KeyReleasedEvent.class, new KeyReleasedEventHandler(eventBus));
     eventBus.registerHandler(ToggleDepthEvent.class, new ToggleDepthEventHandler());
   }
 }

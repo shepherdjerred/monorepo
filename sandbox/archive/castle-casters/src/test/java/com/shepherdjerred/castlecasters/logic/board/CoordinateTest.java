@@ -1,21 +1,22 @@
 package com.shepherdjerred.castlecasters.logic.board;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class CoordinateTest {
 
-  @Disabled
   @Test
-  public void constructor_ThrowsException_WhenGivenNegativeX() {
-    Assertions.assertThrows(IllegalArgumentException.class, () -> new Coordinate(-1, 0));
+  public void signedXCanDescribeCandidateOutsideBoard() {
+    var coordinate = new Coordinate(-1, 0);
+    Assertions.assertEquals(-1, coordinate.x());
+    Assertions.assertFalse(QuoridorBoard.from(new BoardSettings(9, com.shepherdjerred.castlecasters.logic.player.PlayerCount.TWO)).isCoordinateValid(coordinate));
   }
 
-  @Disabled
   @Test
-  public void constructor_ThrowsException_WhenGivenNegativeY() {
-    Assertions.assertThrows(IllegalArgumentException.class, () -> new Coordinate(0, -1));
+  public void signedYCanDescribeCandidateOutsideBoard() {
+    var coordinate = new Coordinate(0, -1);
+    Assertions.assertEquals(-1, coordinate.y());
+    Assertions.assertFalse(QuoridorBoard.from(new BoardSettings(9, com.shepherdjerred.castlecasters.logic.player.PlayerCount.TWO)).isCoordinateValid(coordinate));
   }
 
   @Test

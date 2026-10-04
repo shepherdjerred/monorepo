@@ -52,7 +52,8 @@ public class TextureLoader implements ResourceLoader<TextureName, Texture> {
           stackTextureWidth,
           stackTextureHeight,
           stackNumberOfChannelsInTexture,
-          0);
+          4);
+      if (buffer == null) throw new IOException("Cannot decode texture: " + textureFilePath);
 
       // Assign variables from data loaded by stb
       textureWidth = stackTextureWidth.get();

@@ -14,6 +14,9 @@ public class MapLayers implements Resource, Iterable<Layer> {
   private final MapDimensions dimension;
   private final SortedMap<Integer, Layer> layerMap;
   private final Set<TextureName> textureNames;
+  private MapCoordinate boardOrigin;
+  private int boardSize;
+  public void board(MapCoordinate origin, int size) { this.boardOrigin = origin; this.boardSize = size; }
 
   public MapLayers(MapDimensions mapDimensions) {
     this.dimension = mapDimensions;

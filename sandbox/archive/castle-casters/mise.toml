@@ -1,20 +1,22 @@
 [tools]
-# renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.3.14"
-java = "25.0.2"
-
-[tasks.dev]
-description = "Set up development environment"
-run = "(cd .dagger && bun install) && dagger develop"
-
-[tasks.ci]
-description = "Run CI pipeline"
-run = "dagger call ci-with-artifacts"
+maven = "3.9.14"
 
 [tasks.build]
-description = "Build the project with Gradle"
-run = "./gradlew build"
+description = "Compile, test, and assemble the original Java game"
+run = "mvn package"
 
 [tasks.test]
-description = "Run tests with Gradle"
-run = "./gradlew test"
+description = "Rules, AI, and real socket tests"
+run = "mvn test"
+
+[tasks.play]
+description = "Launch the original desktop game"
+run = "bun tools/desktop.ts --run"
+
+[tasks.acceptance]
+description = "Drive native windows and capture framebuffer evidence"
+run = "bun tools/harness.ts"
+
+[tasks.desktop]
+description = "Build a desktop ZIP with bundled Java on its target OS"
+run = "bun tools/desktop.ts"

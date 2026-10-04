@@ -14,7 +14,7 @@ public class PlayerGoals {
     Set<Coordinate> goals = new HashSet<>();
     if (quoridorPlayer == QuoridorPlayer.ONE) {
       for (int x = 0; x <= gridSize - 1; x += 2) {
-        goals.add(new Coordinate(x, 16));
+        goals.add(new Coordinate(x, gridSize - 1));
       }
     } else if (quoridorPlayer == QuoridorPlayer.TWO) {
       for (int x = 0; x <= gridSize - 1; x += 2) {
