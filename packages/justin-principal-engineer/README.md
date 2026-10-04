@@ -115,8 +115,11 @@ identifiers in `autonomy.enabledIssueIdentifiers`. A resolved Flipt `false`
 overrides that file authorization.
 
 The host checks the entire branch against the base revision's workspace
-inventory. Autonomous changes are limited to source, tests, and README files
-in one existing workspace, plus related wiki pages. The runner rejects changes
+inventory. Autonomous changes are limited to source, tests, README files, and
+the package manifest in one existing workspace, plus related wiki pages.
+Manifest metadata and test registration are allowed; the host compares actual
+dependency declarations and resolution fields against the base revision.
+The runner rejects changes
 to infrastructure, dependencies, credentials, agent instructions, release and
 review controls, or Justin itself. Scope violations block publication and merge.
 
@@ -145,6 +148,12 @@ in status and Linear. Temporary provider or CI failures retry after 5, 15,
 then 60 minutes, capped at hourly. CI pending for an hour also yields the
 active slot. Exhausted repair budgets and scope violations remain blocked
 without further coding turns. Other issues can run while a task is blocked.
+
+After fixing an external blocker or authorizing a policy correction, use
+`bun packages/justin-principal-engineer/src/cli.ts retry AI-123` to queue an
+immediate retry. It rechecks issue authorization and publication scope under
+the reconcile lock, preserves completed work, and resumes the recorded phase.
+It does not reset the coding budget or replenish exhausted repair turns.
 
 CI authorization rejection, skipped or declined pipelines, and cancelled
 pipelines park owner-approved tasks with `agent:needs-human` and preserve their CI phase and

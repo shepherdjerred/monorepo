@@ -319,6 +319,89 @@ async function autonomousFixture() {
   };
 }
 
+describe("explicit autonomous retry", () => {
+  test("preserves completed coding output, continuation, and repair budget", async () => {
+    const f = await autonomousFixture();
+    const output = AgentOutputSchema.parse({
+      status: "changed",
+      commitTitle: "fix(toolkit): cover nested help",
+      summary: "Completed CLI repair",
+      verification: [],
+    });
+    try {
+      await f.store.save({
+        ...f.state,
+        phase: "blocked",
+        blockedFromPhase: "publishing",
+        blockedReason: "Former manifest restriction",
+        repairTurnsUsed: 2,
+        implementationStarted: true,
+        lastAgentOutput: output,
+        nextAttemptAt: null,
+      });
+      await new Reconciler(f.config, f.paths, f.run).retryTask("AI-104");
+      const states = await f.store.list();
+      expect(states[0]?.phase).toBe("blocked");
+      expect(states[0]?.blockedFromPhase).toBe("publishing");
+      expect(states[0]?.repairTurnsUsed).toBe(2);
+      expect(states[0]?.implementationStarted).toBe(true);
+      expect(states[0]?.lastAgentOutput).toEqual(output);
+      expect(states[0]?.nextAttemptAt).not.toBeNull();
+      expect(f.merge).not.toHaveBeenCalled();
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test("rejects a remaining scope violation without changing state or labels", async () => {
+    const f = await autonomousFixture();
+    vi.spyOn(GitWorkspace.prototype, "publicationPaths").mockResolvedValue([
+      "packages/toolkit/src/lib/github/client.ts",
+    ]);
+    try {
+      const state = {
+        ...f.state,
+        phase: "blocked" as const,
+        blockedFromPhase: "publishing" as const,
+        repairTurnsUsed: 1,
+        nextAttemptAt: null,
+      };
+      await f.store.save(state);
+      await expect(
+        new Reconciler(f.config, f.paths, f.run).retryTask("AI-104"),
+      ).rejects.toThrow("Autonomous scope excludes");
+      expect(await f.store.list()).toEqual([state]);
+      expect(f.calls.some((args) => args[3]?.includes("issueUpdate"))).toBe(
+        false,
+      );
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test("revoked targeting cannot be bypassed by an explicit retry", async () => {
+    const f = await autonomousFixture();
+    try {
+      await Bun.write(f.paths.config, JSON.stringify(f.config));
+      await f.store.save({
+        ...f.state,
+        phase: "blocked",
+        blockedFromPhase: "publishing",
+        repairTurnsUsed: 1,
+      });
+      await expect(
+        new Reconciler(f.config, f.paths, f.run).retryTask("AI-104"),
+      ).rejects.toThrow("flag is disabled");
+      const states = await f.store.list();
+      expect(states[0]?.nextAttemptAt).toBeNull();
+      expect(states[0]?.repairTurnsUsed).toBe(1);
+      expect(f.merge).not.toHaveBeenCalled();
+    } finally {
+      await f.cleanup();
+    }
+  });
+});
+
 describe("autonomous promotion review", () => {
   test("promotion reviews current acceptance criteria and findings without resetting the budget", async () => {
     const f = await autonomousFixture();

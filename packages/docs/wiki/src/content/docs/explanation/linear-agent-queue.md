@@ -61,6 +61,11 @@ The host checks the full branch before publication and merge, including edits
 from earlier turns. That prevents a repair from expanding a small task into
 infrastructure, dependency, credential, or delivery-policy changes.
 
+Manifest filenames cannot distinguish test registration from dependency upgrades.
+The host compares dependency declarations and resolution fields while permitting
+package metadata and test registration. Required checks and review assess the
+complete change.
+
 The [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
 persists each task's delivery mode. Existing active work therefore retains its
 owner approval requirement when autonomous delivery becomes available.

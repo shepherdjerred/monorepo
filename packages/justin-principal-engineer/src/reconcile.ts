@@ -5,6 +5,7 @@ import { DockerAgentRunner } from "#src/host/docker.ts";
 import { publishTask } from "#src/reconcile-publication.ts";
 import { GitWorkspace } from "#src/host/git-workspace.ts";
 import { createTaskState } from "#src/host/task-state.ts";
+import { retryBlockedTask } from "#src/host/task-retry.ts";
 import type { PullRequest } from "#src/integrations/github.ts";
 import { githubHost } from "#src/integrations/github-host.ts";
 import { LinearClient, providerForIssue } from "#src/integrations/linear.ts";
@@ -478,5 +479,16 @@ export class Reconciler {
 
   public async mergeReady(state: TaskState): Promise<boolean> {
     return await this.authorization.mergeReady(state);
+  }
+  public async retryTask(identifier: string): Promise<void> {
+    await retryBlockedTask({
+      identifier,
+      paths: this.paths,
+      store: this.store,
+      linear: this.linear,
+      checkScope: this.authorization.checkAutonomousScope.bind(
+        this.authorization,
+      ),
+    });
   }
 }

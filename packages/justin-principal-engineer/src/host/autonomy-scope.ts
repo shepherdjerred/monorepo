@@ -1,10 +1,25 @@
 import { z } from "zod";
 import { lstat } from "node:fs/promises";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { AutonomousBlocker } from "#src/domain/autonomy.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 
 const InventorySchema = z.object({ workspaces: z.array(z.string().min(1)) });
+const ManifestSchema = z.record(z.string(), z.unknown());
+const DEPENDENCY_FIELDS = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+  "overrides",
+  "resolutions",
+  "catalog",
+  "catalogs",
+  "trustedDependencies",
+  "packageManager",
+  "workspaces",
+] as const;
 const PROTECTED_WORKSPACES = new Set([
   "packages/justin-principal-engineer",
   "packages/code-review",
@@ -18,7 +33,7 @@ const PROTECTED_WORKSPACES = new Set([
   "packages/temporal",
 ]);
 const PROTECTED_PATH =
-  /(?:^|\/)(?:AGENTS\.md|CLAUDE\.md|SKILL\.md|package\.json|[^/]*\.lock|[^/]*lock\.json|\.agents|\.github|\.woodpecker|skills)(?:\/|$)|(?:^|\/)(?:auth(?:entication|orization)?|credentials?|secrets?|tokens?)(?:[./_-]|$)|^packages\/toolkit\/src\/(?:commands\/pr\/(?:health|review)|lib\/(?:woodpecker|review|git))/i;
+  /(?:^|\/)(?:AGENTS\.md|CLAUDE\.md|SKILL\.md|[^/]*\.lock|[^/]*lock\.json|\.agents|\.github|\.woodpecker|skills)(?:\/|$)|(?:^|\/)(?:auth(?:entication|orization)?|credentials?|secrets?|tokens?)(?:[./_-]|$)|^packages\/toolkit\/src\/(?:commands\/pr\/(?:health|review)|lib\/(?:woodpecker|review|git))/i;
 const CREDENTIAL_EDIT =
   /GH_TOKEN|LINEAR_API_KEY|WOODPECKER_TOKEN|OP_SERVICE_ACCOUNT_TOKEN|op:\/\/|privateKey|apiKey|Authorization|authToken/i;
 
@@ -45,6 +60,7 @@ function workspaceOwner(
   const relative = file.slice(owner.length + 1);
   if (!(
     relative === "README.md" ||
+    relative === "package.json" ||
     relative.startsWith("src/") ||
     relative.startsWith("test/") ||
     relative.startsWith("tests/")
@@ -53,6 +69,28 @@ function workspaceOwner(
       `Autonomous scope requires workspace source, tests, or documentation: ${file}`,
     );
   return owner;
+}
+
+async function assertManifestDependencies(input: {
+  checkout: string;
+  file: string;
+  baseBranch: string;
+  read: (args: readonly string[]) => Promise<string>;
+}): Promise<void> {
+  const before = ManifestSchema.parse(
+    JSON.parse(
+      await input.read(["show", `origin/${input.baseBranch}:${input.file}`]),
+    ),
+  );
+  const after = ManifestSchema.parse(
+    await Bun.file(path.join(input.checkout, input.file)).json(),
+  );
+  for (const field of DEPENDENCY_FIELDS) {
+    if (!isDeepStrictEqual(before[field], after[field]))
+      throw new AutonomousBlocker(
+        `Autonomous scope excludes dependency changes: ${input.file} (${field})`,
+      );
+  }
 }
 
 async function assertNoSymlink(checkout: string, file: string): Promise<void> {
@@ -105,6 +143,14 @@ export async function assertAutonomousScope(input: {
   for (const file of input.paths) {
     const owner = workspaceOwner(file, workspaces);
     await assertNoSymlink(input.checkout, file);
+    if (owner !== null && file === `${owner}/package.json`) {
+      await assertManifestDependencies({
+        checkout: input.checkout,
+        baseBranch: input.baseBranch,
+        file,
+        read,
+      });
+    }
     if (
       untracked.has(file) &&
       CREDENTIAL_EDIT.test(

@@ -21,17 +21,18 @@ const USAGE = `justin-principal-engineer
 Usage:
   justin-principal-engineer doctor
   justin-principal-engineer reconcile [--runner-source <package-directory>]
+  justin-principal-engineer retry <issue-identifier> [--runner-source <package-directory>]
   justin-principal-engineer merge-ready <issue-identifier> [--runner-source <package-directory>]
   justin-principal-engineer daemon <install|start|stop|status|uninstall>
 `;
 
 async function runReconcile(
-  command: "reconcile" | "merge-ready",
+  command: "reconcile" | "merge-ready" | "retry",
   args: readonly string[],
   paths: ReturnType<typeof runtimePaths>,
 ): Promise<void> {
   const { values } = parseArgs({
-    args: args.slice(command === "merge-ready" ? 2 : 1),
+    args: args.slice(command === "reconcile" ? 1 : 2),
     options: { "runner-source": { type: "string" } },
     strict: true,
   });
@@ -43,7 +44,11 @@ async function runReconcile(
       ? undefined
       : path.resolve(values["runner-source"]),
   );
-  if (command === "merge-ready") {
+  if (command === "retry") {
+    const identifier = args[1];
+    if (identifier === undefined) throw new Error(USAGE);
+    await reconciler.retryTask(identifier);
+  } else if (command === "merge-ready") {
     const states = await new StateStore(paths).list();
     const state = states.find(
       (candidate) => candidate.issue.identifier === args[1],
@@ -64,7 +69,11 @@ async function main(args: readonly string[]): Promise<void> {
     await doctor({ config: await loadConfig(paths), paths, run: runCommand });
     return;
   }
-  if (command === "reconcile" || command === "merge-ready") {
+  if (
+    command === "reconcile" ||
+    command === "merge-ready" ||
+    command === "retry"
+  ) {
     await runReconcile(command, args, paths);
     return;
   }

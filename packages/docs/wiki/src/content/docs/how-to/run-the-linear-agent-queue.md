@@ -151,8 +151,16 @@ Other queued issues can run while this task remains parked.
 
 For autonomous work, inspect `agent:blocked`, its reason, and its next retry
 time. Temporary failures retry automatically. Resolve the external dependency
-before a retry; a scope violation or exhausted repair budget requires a new,
-explicitly scoped task. Do not edit runtime state to reset the budget.
+before a retry. Resolve a scope violation or authorize its policy correction
+before requesting an immediate retry:
+
+```bash
+bun packages/justin-principal-engineer/src/cli.ts retry AI-123
+```
+
+The command rechecks authorization and publication scope, then resumes the
+recorded phase with its existing work and repair budget. An exhausted budget
+requires a new, explicitly scoped task. Do not edit runtime state to reset it.
 
 ## Related
 

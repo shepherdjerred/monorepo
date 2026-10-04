@@ -30,7 +30,15 @@ async function repository() {
     path.join(checkout, "packages/toolkit/src/cli.ts"),
     "export const value = 1;\n",
   );
-  await git("add", "package.json", "packages/toolkit/src/cli.ts");
+  await Bun.write(
+    path.join(checkout, "packages/toolkit/package.json"),
+    JSON.stringify({
+      name: "@fixture/toolkit",
+      dependencies: { example: "1.0.0", other: "2.0.0" },
+      scripts: { test: "vitest run test/lib" },
+    }),
+  );
+  await git("add", "package.json", "packages/toolkit");
   await git("commit", "-m", "fixture");
   await git("update-ref", "refs/remotes/origin/main", "HEAD");
   const check = (paths: string[]) =>
@@ -49,6 +57,51 @@ async function repository() {
 }
 
 describe("autonomous branch scope", () => {
+  test("allows registering regression tests and manifest metadata through the complete branch", async () => {
+    const repo = await repository();
+    try {
+      await Bun.write(
+        path.join(repo.checkout, "packages/toolkit/package.json"),
+        JSON.stringify({
+          name: "@fixture/toolkit",
+          description: "CLI tools",
+          dependencies: { other: "2.0.0", example: "1.0.0" },
+          scripts: { test: "vitest run test/cli test/lib" },
+        }),
+      );
+      await repo.git("add", "packages/toolkit/package.json");
+      await repo.git("commit", "-m", "register CLI coverage");
+      await expect(
+        repo.check(["packages/toolkit/package.json"]),
+      ).resolves.toBeUndefined();
+    } finally {
+      await repo.cleanup();
+    }
+  });
+
+  test.each([
+    { example: "1.0.0", other: "2.0.0", added: "3.0.0" },
+    { example: "2.0.0", other: "2.0.0" },
+    { example: "1.0.0" },
+  ])("rejects actual dependency changes: %j", async (dependencies) => {
+    const repo = await repository();
+    try {
+      await Bun.write(
+        path.join(repo.checkout, "packages/toolkit/package.json"),
+        JSON.stringify({
+          name: "@fixture/toolkit",
+          dependencies,
+          scripts: { test: "vitest run test/lib" },
+        }),
+      );
+      await expect(
+        repo.check(["packages/toolkit/package.json"]),
+      ).rejects.toThrow("dependency changes");
+    } finally {
+      await repo.cleanup();
+    }
+  });
+
   test("allows one existing workspace and related wiki documentation", async () => {
     const repo = await repository();
     try {
@@ -75,7 +128,6 @@ describe("autonomous branch scope", () => {
   });
 
   test.each([
-    "packages/toolkit/package.json",
     "packages/toolkit/AGENTS.md",
     "packages/code-review/src/gate.ts",
     "packages/toolkit/src/lib/github/client.ts",
