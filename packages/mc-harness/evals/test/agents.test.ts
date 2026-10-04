@@ -17,11 +17,7 @@ const base = {
 
 describe("agentInvocation", () => {
   it("runs codex non-interactively with the real CODEX_HOME", () => {
-    const invocation = agentInvocation({
-      ...base,
-      agent: "codex",
-      environment: {},
-    });
+    const invocation = agentInvocation({ ...base, agent: "codex" });
     expect(invocation.argv).toEqual([
       "codex",
       "exec",
@@ -36,19 +32,15 @@ describe("agentInvocation", () => {
     expect(invocation.env).toEqual({ CODEX_HOME: "/home/u/.codex" });
   });
 
-  it("requires a token for claude under an isolated HOME", () => {
-    expect(() =>
-      agentInvocation({ ...base, agent: "claude", environment: {} }),
-    ).toThrow(/setup-token/u);
+  it("runs claude with its real config dir and no credentials", () => {
     const invocation = agentInvocation({
       ...base,
       agent: "claude",
       model: "claude-opus-5-5",
-      environment: { CLAUDE_CODE_OAUTH_TOKEN: "tok" },
     });
     expect(invocation.argv).toContain("--dangerously-skip-permissions");
     expect(invocation.argv).toContain("claude-opus-5-5");
-    expect(invocation.env).toEqual({ CLAUDE_CODE_OAUTH_TOKEN: "tok" });
+    expect(invocation.env).toEqual({ CLAUDE_CONFIG_DIR: "/home/u/.claude" });
   });
 });
 

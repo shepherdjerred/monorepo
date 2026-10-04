@@ -11,10 +11,10 @@ export type AgentInvocation = {
 };
 
 /**
- * The non-interactive command for one task. Codex reads its login from the
- * real CODEX_HOME; Claude Code cannot find its login under an isolated HOME,
- * so it needs CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`) or
- * ANTHROPIC_API_KEY in the runner's environment.
+ * The non-interactive command for one task. Both agents keep their own login:
+ * Codex through the real CODEX_HOME, Claude Code through the real
+ * CLAUDE_CONFIG_DIR. The runner never reads or forwards provider credentials;
+ * the task environment inherits the operator's shell unchanged.
  */
 export function agentInvocation(options: {
   agent: Agent;
@@ -23,7 +23,6 @@ export function agentInvocation(options: {
   worktree: string;
   lastMessagePath: string;
   realHome: string;
-  environment: Record<string, string | undefined>;
 }): AgentInvocation {
   const model = options.model === null ? [] : ["--model", options.model];
   if (options.agent === "codex") {
@@ -43,13 +42,6 @@ export function agentInvocation(options: {
       env: { CODEX_HOME: `${options.realHome}/.codex` },
     };
   }
-  const token = options.environment["CLAUDE_CODE_OAUTH_TOKEN"];
-  const apiKey = options.environment["ANTHROPIC_API_KEY"];
-  if (token === undefined && apiKey === undefined) {
-    throw new Error(
-      "--agent claude runs under an isolated HOME where Claude Code cannot find its login. Run `claude setup-token` and export CLAUDE_CODE_OAUTH_TOKEN (or export ANTHROPIC_API_KEY) before starting the evals.",
-    );
-  }
   return {
     argv: [
       "claude",
@@ -61,10 +53,7 @@ export function agentInvocation(options: {
       "--verbose",
       "--dangerously-skip-permissions",
     ],
-    env: {
-      ...(token === undefined ? {} : { CLAUDE_CODE_OAUTH_TOKEN: token }),
-      ...(apiKey === undefined ? {} : { ANTHROPIC_API_KEY: apiKey }),
-    },
+    env: { CLAUDE_CONFIG_DIR: `${options.realHome}/.claude` },
   };
 }
 

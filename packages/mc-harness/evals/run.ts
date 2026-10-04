@@ -190,7 +190,6 @@ async function runAgent(prepared: Prepared): Promise<AgentRun> {
     worktree,
     lastMessagePath,
     realHome,
-    environment: Bun.env,
   });
   log(`running ${agent} (timeout ${String(task.timeoutMinutes)} min)`);
   const started = Date.now();

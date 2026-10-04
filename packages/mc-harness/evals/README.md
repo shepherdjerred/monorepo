@@ -10,7 +10,7 @@ tests (`evals/test/`) do run with the package tests.
 ```bash
 bun packages/mc-harness/evals/run.ts --agent codex --tasks e1,e4
 bun packages/mc-harness/evals/run.ts --agent codex --tasks all --parallel 3
-CLAUDE_CODE_OAUTH_TOKEN=… bun packages/mc-harness/evals/run.ts --agent claude --tasks e2,e5
+bun packages/mc-harness/evals/run.ts --agent claude --tasks e2,e5
 ```
 
 Options: `--model <id>` (default: the agent's configured model), `--tasks`
@@ -28,9 +28,9 @@ homes, sandboxes and daemons for debugging).
    your real `HOME`; Docker keeps your real client config.
 3. Runs the agent non-interactively with the shared preamble
    (`tasks/_preamble.md`) plus the task, an `OUT` directory, and a timeout.
-   Codex reads its login from `~/.codex`. Claude Code cannot find its login
-   under an isolated `HOME`, so it needs `CLAUDE_CODE_OAUTH_TOKEN`
-   (`claude setup-token`) or `ANTHROPIC_API_KEY` exported.
+   Codex reads its login from `~/.codex`; Claude Code reads its login through
+   `CLAUDE_CONFIG_DIR` pointed at your real `~/.claude`. The runner never reads
+   or forwards provider credentials.
 4. Grades through the task's daemon socket (never the CLI's argument parsing),
    then removes the task's sandboxes, daemon, worktree and `HOME` unless
    `--keep`.
