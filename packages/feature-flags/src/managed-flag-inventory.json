@@ -1772,6 +1772,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "woodpecker-log-retention-enabled",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "woodpecker-retention",
+      "purpose": "Permit irreversible deletion of revalidated expired Woodpecker logs; schedule starts paused.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "woodpecker-log-retention-days",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "woodpecker-retention",
+      "purpose": "Minimum completed-pipeline log retention, at least 30 days.",
+      "type": "variant",
+      "default": "30",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "voice_assistant_enabled",
       "owner": "scout",
       "namespace": "scout",

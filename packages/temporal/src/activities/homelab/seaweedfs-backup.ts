@@ -3,7 +3,10 @@ import {
   withBackupActivityHeartbeat,
   withBackupMaintenanceHeartbeat,
 } from "./seaweedfs-backup-heartbeat.ts";
-import { runGcCycle } from "@shepherdjerred/seaweedfs-backup/gc";
+import {
+  readGcInventory,
+  runGcCycle,
+} from "@shepherdjerred/seaweedfs-backup/gc";
 import { listCompletionMarkers } from "@shepherdjerred/seaweedfs-backup/manifest";
 import {
   SEAWEEDFS_BACKUP_POLICY,
@@ -16,6 +19,7 @@ import {
 import {
   BackupCadenceSchema,
   type BackupCadence,
+  type CompletionMarker,
 } from "@shepherdjerred/seaweedfs-backup/schemas";
 import {
   runBackup,
@@ -47,6 +51,38 @@ import {
 const log = createStructuredLogger("seaweedfs-backup");
 const STAGES = ["inventory", "bucket", "copy", "verify", "complete"] as const;
 
+function restoreRetentionMetrics(markers: readonly CompletionMarker[]): void {
+  const counts = retainedPointCounts(markers, SEAWEEDFS_BACKUP_POLICY);
+  for (const [tier, count] of Object.entries(counts)) {
+    seaweedFsBackupRetainedPoints.set({ tier }, count);
+  }
+  const oldestByCadence = new Map<BackupCadence, number>();
+  for (const marker of markers) {
+    const completedAt = Date.parse(marker.completedAt);
+    const oldest = oldestByCadence.get(marker.cadence);
+    if (oldest === undefined || completedAt < oldest) {
+      oldestByCadence.set(marker.cadence, completedAt);
+    }
+  }
+  const warmAfterDays = {
+    sixHourly: 7,
+    daily: 30,
+    weekly: 56,
+    monthly: 366,
+  } as const;
+  for (const [tier, days] of Object.entries(warmAfterDays)) {
+    const oldest = oldestByCadence.get(
+      tier === "sixHourly" ? "six-hourly" : "daily",
+    );
+    seaweedFsBackupRetentionWarm.set(
+      { tier },
+      oldest !== undefined && (Date.now() - oldest) / 86_400_000 >= days
+        ? 1
+        : 0,
+    );
+  }
+}
+
 export type SeaweedFsBackupActivities = typeof seaweedFsBackupActivities;
 
 function setStage(
@@ -64,11 +100,20 @@ function setStage(
 
 export async function restoreSeaweedFsBackupMetrics(): Promise<void> {
   const { source, destination, backupBucket } = storesFromEnvironment();
-  const [sourceBuckets, markers] = await Promise.all([
+  const [sourceBuckets, markers, gc] = await Promise.all([
     source.listBuckets(),
     listCompletionMarkers(destination, backupBucket),
+    readGcInventory({ store: destination, backupBucket }),
   ]);
   const coverage = evaluateCoverage(sourceBuckets, SEAWEEDFS_BACKUP_POLICY);
+  // These gauges otherwise disappear on every rollout until weekly GC runs.
+  // Published markers supply the inventory without invoking pruning or GC.
+  restoreRetentionMetrics(markers);
+  seaweedFsBackupGcBacklog.set(gc.candidateBacklog);
+  seaweedFsBackupGcObjects.set(gc.candidateCount);
+  seaweedFsBackupGcOldestCandidateTimestampSeconds.set(
+    gc.oldestPendingTimestampSeconds,
+  );
   seaweedFsBackupCoverageBuckets.set(
     { problem: "unclassified" },
     coverage.unclassified.length,
@@ -240,44 +285,7 @@ export const seaweedFsBackupActivities = {
           policy: SEAWEEDFS_BACKUP_POLICY,
           hooks,
         });
-        const counts = retainedPointCounts(
-          pruned.markers,
-          SEAWEEDFS_BACKUP_POLICY,
-        );
-        for (const [tier, count] of Object.entries(counts)) {
-          seaweedFsBackupRetainedPoints.set({ tier }, count);
-        }
-        const oldestSixHourly = pruned.markers
-          .filter((marker) => marker.cadence === "six-hourly")
-          .map((marker) => Date.parse(marker.completedAt))
-          .reduce<number | undefined>(
-            (oldest, value) =>
-              oldest === undefined || value < oldest ? value : oldest,
-            undefined,
-          );
-        const oldestDaily = pruned.markers
-          .filter((marker) => marker.cadence === "daily")
-          .map((marker) => Date.parse(marker.completedAt))
-          .reduce<number | undefined>(
-            (oldest, value) =>
-              oldest === undefined || value < oldest ? value : oldest,
-            undefined,
-          );
-        const ageDays = (value: number | undefined): number =>
-          value === undefined ? 0 : (Date.now() - value) / 86_400_000;
-        const warmAfterDays = {
-          sixHourly: 7,
-          daily: 30,
-          weekly: 56,
-          monthly: 366,
-        } as const;
-        for (const [tier, days] of Object.entries(warmAfterDays)) {
-          const oldest = tier === "sixHourly" ? oldestSixHourly : oldestDaily;
-          seaweedFsBackupRetentionWarm.set(
-            { tier },
-            ageDays(oldest) >= days ? 1 : 0,
-          );
-        }
+        restoreRetentionMetrics(pruned.markers);
         const gc = await runGcCycle({
           store: destination,
           backupBucket,

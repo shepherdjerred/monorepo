@@ -43,6 +43,7 @@ const { handleDiscordCallback, handleDiscordInstall, handleDiscordStart } =
   await import("#src/trpc/auth-web.ts");
 const { SESSION_COOKIE } = await import("#src/trpc/context.ts");
 const { signSession } = await import("#src/trpc/jwt.ts");
+const { fetchUserGuilds } = await import("#src/lib/discord-rest.ts");
 
 const INSTALL_URL = "https://scout.example/api/discord/install";
 
@@ -208,6 +209,153 @@ describe("handleDiscordInstall", () => {
       expect(location.searchParams.get("guild_id")).toBe(testAccountId("4242"));
       expect(fetchMock).toHaveBeenCalledTimes(1);
     } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+async function guildReauthFixture(
+  suffix: string,
+  firstGuildsResponse: Promise<Response>,
+  tokenStatus = 200,
+) {
+  const user = await testDb.prisma.user.create({
+    data: {
+      discordId: testAccountId(suffix),
+      discordUsername: "before-login",
+      discordAccessToken: "before-login-access",
+      discordRefreshToken: "before-login-refresh",
+      tokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    },
+  });
+  const guildReads: string[] = [];
+  const firstReadStarted = Promise.withResolvers<boolean>();
+  const fetchMock = vi.fn(
+    (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.endsWith("/users/@me/guilds")) {
+        guildReads.push(new Headers(init?.headers).get("authorization") ?? "");
+        if (guildReads.length === 1) {
+          firstReadStarted.resolve(true);
+          return firstGuildsResponse;
+        }
+        return Promise.resolve(Response.json([]));
+      }
+      if (url.endsWith("/oauth2/token")) {
+        if (tokenStatus !== 200) {
+          return Promise.resolve(
+            new Response("fixture exchange rejected", { status: tokenStatus }),
+          );
+        }
+        return Promise.resolve(
+          Response.json(
+            {
+              access_token: "after-login-access",
+              token_type: "Bearer",
+              expires_in: 604_800,
+              refresh_token: "after-login-refresh",
+              scope: "identify guilds",
+            },
+            { status: tokenStatus },
+          ),
+        );
+      }
+      if (url.endsWith("/users/@me")) {
+        return Promise.resolve(
+          Response.json({
+            id: user.discordId,
+            username: "after-login",
+            discriminator: "0",
+            avatar: null,
+          }),
+        );
+      }
+      throw new Error(`Unexpected fixture fetch: ${url}`);
+    },
+  );
+  vi.stubGlobal("fetch", fetchMock);
+  const nonce = "guild-reauth-nonce";
+  const request = installRequest(
+    `scout_oauth_state=${nonce}`,
+    `${TEST_APP_ORIGIN}/api/auth/discord/callback?code=fixture-code&state=${encodeURIComponent(`${nonce}|/app/`)}`,
+  );
+  return { user, guildReads, firstReadStarted, request };
+}
+
+const preLoginGuilds = [
+  { id: "old-guild", name: "Old", icon: null, owner: true, permissions: "8" },
+];
+
+describe("handleDiscordCallback membership ownership", () => {
+  test("successful OAuth replaces a populated pre-login guild cache", async () => {
+    const fixture = await guildReauthFixture(
+      "84001",
+      Promise.resolve(Response.json(preLoginGuilds)),
+    );
+    try {
+      expect(await fetchUserGuilds(fixture.user)).toEqual(preLoginGuilds);
+      const response = await handleDiscordCallback(fixture.request);
+      expect(response.status).toBe(302);
+      const afterLogin = await testDb.prisma.user.findUniqueOrThrow({
+        where: { discordId: fixture.user.discordId },
+      });
+      expect(await fetchUserGuilds(afterLogin)).toEqual([]);
+      expect(fixture.guildReads).toEqual([
+        "Bearer before-login-access",
+        "Bearer after-login-access",
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  test("an old pending read completing after OAuth cannot repopulate membership", async () => {
+    const pending = Promise.withResolvers<Response>();
+    const fixture = await guildReauthFixture("84002", pending.promise);
+    try {
+      const oldRead = fetchUserGuilds(fixture.user);
+      await fixture.firstReadStarted.promise;
+      const response = await handleDiscordCallback(fixture.request);
+      expect(response.status).toBe(302);
+      const afterLogin = await testDb.prisma.user.findUniqueOrThrow({
+        where: { discordId: fixture.user.discordId },
+      });
+      expect(await fetchUserGuilds(afterLogin)).toEqual([]);
+      pending.resolve(Response.json(preLoginGuilds));
+      expect(await oldRead).toEqual(preLoginGuilds);
+      expect(await fetchUserGuilds(afterLogin)).toEqual([]);
+      expect(fixture.guildReads).toEqual([
+        "Bearer before-login-access",
+        "Bearer after-login-access",
+      ]);
+    } finally {
+      pending.resolve(Response.json(preLoginGuilds));
+      vi.unstubAllGlobals();
+    }
+  });
+
+  test("a failed OAuth exchange preserves pending membership ownership", async () => {
+    const pending = Promise.withResolvers<Response>();
+    const fixture = await guildReauthFixture("84003", pending.promise, 400);
+    try {
+      const oldRead = fetchUserGuilds(fixture.user);
+      await fixture.firstReadStarted.promise;
+      const response = await handleDiscordCallback(fixture.request);
+      expect(response.status).toBe(400);
+      const stillPending = fetchUserGuilds(fixture.user);
+      pending.resolve(Response.json(preLoginGuilds));
+      expect(await Promise.all([oldRead, stillPending])).toEqual([
+        preLoginGuilds,
+        preLoginGuilds,
+      ]);
+      expect(fixture.guildReads).toEqual(["Bearer before-login-access"]);
+      expect(
+        await testDb.prisma.user.findUniqueOrThrow({
+          where: { discordId: fixture.user.discordId },
+        }),
+      ).toMatchObject({ discordAccessToken: "before-login-access" });
+    } finally {
+      pending.resolve(Response.json(preLoginGuilds));
       vi.unstubAllGlobals();
     }
   });

@@ -59,6 +59,60 @@ function parseRobot(robot: unknown) {
 }
 
 describe("LR5 Pro diagnostics", () => {
+  it("does not classify an almost-full drawer advisory as a robot fault", () => {
+    const base = readyRobot();
+    const robot = parseRobot({
+      ...base,
+      state: {
+        ...base.state,
+        dfiLevelPercent: 73,
+        statusIndicator: {
+          title: "Drawer almost full",
+          type: "DRAWER_ALMOST_FULL",
+        },
+      },
+    });
+    expect(robot).toMatchObject({
+      ready: false,
+      faulted: false,
+      wastePercent: 73,
+    });
+  });
+  it.each([
+    "isLaserDirty",
+    "isBonnetRemoved",
+    "isDrawerRemoved",
+    "isDrawerFull",
+  ] as const)("an almost-full advisory does not hide %s", (fault) => {
+    const base = readyRobot();
+    const robot = parseRobot({
+      ...base,
+      state: {
+        ...base.state,
+        [fault]: true,
+        statusIndicator: {
+          title: "Drawer almost full",
+          type: "DRAWER_ALMOST_FULL",
+        },
+      },
+    });
+    expect(robot.faulted).toBe(true);
+  });
+  it("keeps an unknown robot status actionable", () => {
+    const base = readyRobot();
+    expect(
+      parseRobot({
+        ...base,
+        state: {
+          ...base.state,
+          statusIndicator: {
+            title: "New provider status",
+            type: "UNRECOGNIZED_STATUS",
+          },
+        },
+      }).faulted,
+    ).toBe(true);
+  });
   it("uses the registry-associated vacuum availability rather than a fixed entity name", async () => {
     vi.spyOn(HomeAssistantEventClient.prototype, "connect").mockResolvedValue();
     vi.spyOn(HomeAssistantEventClient.prototype, "close").mockResolvedValue();

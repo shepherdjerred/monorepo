@@ -273,6 +273,8 @@ export const TEMPORAL_FLAG_KEYS = [
   "temporal-agent-chat-imessage-owners",
   "temporal-agent-chat-imessage-claude-model",
   "temporal-agent-chat-imessage-codex-model",
+  "woodpecker-log-retention-enabled",
+  "woodpecker-log-retention-days",
 ] as const;
 
 export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
@@ -281,6 +283,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "temporal-call-graph-tracing",
   "temporal-agent-chat-photon-enabled",
   "temporal-agent-chat-imessage-enabled",
+  "woodpecker-log-retention-enabled",
 ] as const;
 
 export type TemporalBooleanFlagKey =
@@ -293,6 +296,7 @@ export const TEMPORAL_VARIANT_FLAG_KEYS = [
   "temporal-agent-chat-imessage-owners",
   "temporal-agent-chat-imessage-claude-model",
   "temporal-agent-chat-imessage-codex-model",
+  "woodpecker-log-retention-days",
 ] as const;
 
 export type TemporalVariantFlagKey =

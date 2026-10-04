@@ -10,6 +10,7 @@ import {
   glitterCorpusWorkerActivities,
   homeActivities,
   infraActivities,
+  opsWorkerActivities,
   miningResetWorkerActivities,
   repoActivities,
   reportActivities,
@@ -117,6 +118,13 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     taskQueue: TASK_QUEUES.INFRA,
     activities: infraActivities,
     maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "infra",
+    taskQueue: TASK_QUEUES.OPS,
+    activities: opsWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 4,
   },
   {
     kind: "activity",

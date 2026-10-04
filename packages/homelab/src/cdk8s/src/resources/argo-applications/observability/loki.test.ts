@@ -33,6 +33,11 @@ const LokiValuesSchema = z.object({
 
 const LokiRetentionSchema = z.object({
   loki: z.object({
+    structuredConfig: z.object({
+      pattern_ingester: z.object({
+        tee_config: z.object({ batch_size: z.number() }),
+      }),
+    }),
     limits_config: z.object({ retention_period: z.string() }),
     compactor: z.object({
       working_directory: z.string(),
@@ -95,5 +100,15 @@ describe("Loki Argo CD application", () => {
       "/var/loki/compactor",
     );
     expect(retention.loki.compactor.delete_request_store).toBe("filesystem");
+  });
+
+  it("keeps pattern tee batches below the receiver message budget", () => {
+    const config = LokiRetentionSchema.parse(lokiValues());
+    // Pattern mining accepts lines up to 3,000 bytes. Reserve most of the
+    // 4 MiB receiver budget for protobuf labels and metadata as well.
+    expect(
+      config.loki.structuredConfig.pattern_ingester.tee_config.batch_size *
+        3000,
+    ).toBeLessThan(2 * 1024 * 1024);
   });
 });

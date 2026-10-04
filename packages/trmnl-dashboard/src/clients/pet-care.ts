@@ -196,11 +196,19 @@ export function parseLitterRobotDiagnostics(
     state.hopperStatusIndicator?.title,
     state.hopperFault,
   );
-  const ready = state.statusIndicator.type.toUpperCase() === "READY";
+  const status = state.statusIndicator.type.toUpperCase();
+  const ready = status === "READY";
+  // Normal operation and maintenance advisories are not robot faults. Keep
+  // unknown status codes and every explicit physical fault conservative.
+  const nonFaultStatus = [
+    "READY",
+    "CYCLING",
+    "CAT_DETECTED",
+    "LITTER_LOW",
+    "DRAWER_ALMOST_FULL",
+  ].includes(status);
   const faulted =
-    !["READY", "CYCLING", "CAT_DETECTED", "LITTER_LOW"].includes(
-      state.statusIndicator.type.toUpperCase(),
-    ) ||
+    !nonFaultStatus ||
     state.isLaserDirty ||
     state.isBonnetRemoved ||
     state.isDrawerRemoved ||

@@ -133,6 +133,23 @@ export function getGitckupRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "gitckup-success",
       rules: [
         {
+          alert: "GitckupRepositoryBackupFailed",
+          annotations: {
+            summary: "Gitckup repository backup failed",
+            message: escapePrometheusTemplate(
+              "Backup of {{ $labels.hoster }}/{{ $labels.owner }}/{{ $labels.repository }} failed. Check repository authorization and the last run logs; a healthy overall success rate does not establish coverage for this repository.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "gickup_repo_success == 0",
+          ),
+          // Allow the normal daily run to finish before reporting its outcome.
+          for: "2h",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
           alert: "GitckupRepoSuccessLow",
           annotations: {
             summary: "Gitckup repository backup success rate is low",

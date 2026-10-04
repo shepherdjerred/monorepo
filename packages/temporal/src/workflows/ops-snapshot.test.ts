@@ -99,13 +99,66 @@ describe("ops snapshot workflow", () => {
     );
   });
 
+  test.each(["runOpsSnapshot", "runOpsDigest"])(
+    "replays %s from before queue isolation on the recorded infra queue",
+    async (workflowType) => {
+      const environment = await TestWorkflowEnvironment.createTimeSkipping();
+      const workflowId = `ops-before-isolation-${crypto.randomUUID()}`;
+      try {
+        await runWorkflowWithActivityWorker(environment, {
+          activityTaskQueue: TASK_QUEUES.INFRA,
+          workflowPath: new URL(
+            "replay-fixtures/ops-before-ops-queue.ts",
+            import.meta.url,
+          ).pathname,
+          activities: {
+            ...collectorActivities(new Map()),
+            collectOpsLinear: () =>
+              Promise.resolve({
+                status: {
+                  source: "linear",
+                  ok: true,
+                  observedAt: summary.generatedAt,
+                  durationMs: 1,
+                },
+                signals: [],
+                metrics: [],
+                changes: [],
+              }),
+            assembleAndPublishOpsSnapshot: () => Promise.resolve(summary),
+            triggerOpsDigest: (kind: string) => Promise.resolve({ kind }),
+          },
+          execute: () =>
+            environment.client.workflow.execute(workflowType, {
+              taskQueue: TASK_QUEUES.WORKFLOWS,
+              workflowId,
+              args: workflowType === "runOpsDigest" ? [{ kind: "daily" }] : [],
+            }),
+        });
+        const history = await environment.client.workflow
+          .getHandle(workflowId)
+          .fetchHistory();
+        const queues = history.events?.flatMap(
+          (event) =>
+            event.activityTaskScheduledEventAttributes?.taskQueue?.name ?? [],
+        );
+        expect(queues?.length).toBeGreaterThan(0);
+        expect(new Set(queues)).toEqual(new Set([TASK_QUEUES.INFRA]));
+        await Worker.runReplayHistory({ workflowsPath: workflowPath }, history);
+      } finally {
+        await environment.teardown();
+      }
+    },
+    60_000,
+  );
+
   test("isolates a failing source and publishes the rest", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const attempts = new Map<string, number>();
     const published: OpsCollectorOutcome[][] = [];
     try {
       const result = await runWorkflowWithActivityWorker(environment, {
-        activityTaskQueue: TASK_QUEUES.INFRA,
+        activityTaskQueue: TASK_QUEUES.OPS,
         workflowPath,
         activities: {
           ...collectorActivities(attempts),
@@ -145,7 +198,7 @@ describe("ops snapshot workflow", () => {
     try {
       await expect(
         runWorkflowWithActivityWorker(environment, {
-          activityTaskQueue: TASK_QUEUES.INFRA,
+          activityTaskQueue: TASK_QUEUES.OPS,
           workflowPath,
           activities: {
             ...collectorActivities(new Map()),
@@ -168,13 +221,13 @@ describe("ops snapshot workflow", () => {
     }
   }, 60_000);
 
-  test("the digest workflow triggers its kind on the infra queue", async () => {
+  test("the digest workflow triggers its kind on the isolated ops queue", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const kinds: string[] = [];
     try {
       await expect(
         runWorkflowWithActivityWorker(environment, {
-          activityTaskQueue: TASK_QUEUES.INFRA,
+          activityTaskQueue: TASK_QUEUES.OPS,
           workflowPath,
           activities: {
             triggerOpsDigest: (kind: string) => {

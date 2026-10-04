@@ -9,6 +9,10 @@ import { WebActions } from "./actions.ts";
 import { WebError, requestInput } from "./errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/web/shared/artwork.ts";
+import {
+  webFailureDiagnostic,
+  webFailureEndpoint,
+} from "./failure-diagnostic.ts";
 
 async function readCommand(request: Request) {
   let value: unknown;
@@ -201,7 +205,11 @@ export function createWebHandler(deps: {
           { status: 409 },
         );
       else {
-        logger.error("web request failed", { layer: "web" });
+        logger.error("web request failed", {
+          layer: "web",
+          endpoint: webFailureEndpoint(request),
+          failure: webFailureDiagnostic(error),
+        });
         response = Response.json(
           {
             code: "unavailable",
