@@ -455,9 +455,7 @@ export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapsh
   return _runLlmBilledCostReconciliation();
 }
 
-export async function runOpsSnapshot() {
-  return _runOpsSnapshot();
-}
+export const runOpsSnapshot = () => _runOpsSnapshot();
 
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],
