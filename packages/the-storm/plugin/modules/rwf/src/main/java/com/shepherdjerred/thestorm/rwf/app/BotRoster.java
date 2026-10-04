@@ -32,4 +32,43 @@ public interface BotRoster {
 
   /** Whether {@code entity} is one of this roster's bots. */
   boolean isBot(UUID entity);
+
+  /**
+   * A roster over {@code bodies}: the provider works in {@link BotHandle}s and this translates them
+   * to the ids the rules use, so the providing module never names a {@code rwf.domain} type.
+   */
+  static BotRoster of(BotBodies bodies) {
+    return new BotRoster() {
+      private static BotHandle handle(CombatantId.Bot id) {
+        return new BotHandle(id.personalityId(), id.uuid());
+      }
+
+      @Override
+      public List<CombatantId.Bot> fill(UUID matchId, int slots) {
+        return bodies.fill(matchId, slots).stream()
+            .map(handle -> new CombatantId.Bot(handle.personalityId(), handle.uuid()))
+            .toList();
+      }
+
+      @Override
+      public void spawn(CombatantId.Bot id, Location at) {
+        bodies.spawn(handle(id), at);
+      }
+
+      @Override
+      public void despawn(CombatantId.Bot id) {
+        bodies.despawn(handle(id));
+      }
+
+      @Override
+      public Optional<Player> entity(CombatantId.Bot id) {
+        return bodies.entity(handle(id));
+      }
+
+      @Override
+      public boolean isBot(UUID entity) {
+        return bodies.isBot(entity);
+      }
+    };
+  }
 }
