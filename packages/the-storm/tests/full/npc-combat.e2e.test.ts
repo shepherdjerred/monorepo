@@ -42,13 +42,14 @@ describe("NPC combat on Paper with all modules", () => {
     await nextDay(rcon);
     await rcon.command("difficulty normal");
     await rcon.command("gamerule minecraft:spawn_mobs false");
-    await rcon.command("fill -60 63 -24 -14 63 24 minecraft:stone");
+    // Combat coverage belongs in wilderness; this area is intentionally outside Spawn Town.
+    await rcon.command("fill 385 63 -24 426 63 24 minecraft:stone");
     await rcon.command("fill 498 63 498 502 63 502 minecraft:stone");
     await rcon.command("gamerule minecraft:advance_time false");
-    await rcon.command(`tp ${bot.username} -35.5 64 3.5`);
+    await rcon.command(`tp ${bot.username} 400.5 64 3.5`);
     await waitUntil(
       "market arrival",
-      () => bot.entity.position.distanceTo(new Vec3(-35.5, 64, 3.5)) < 0.3,
+      () => bot.entity.position.distanceTo(new Vec3(400.5, 64, 3.5)) < 0.3,
     );
     const messages: string[] = [];
     const record = (message: string) => {
@@ -119,19 +120,19 @@ describe("NPC combat on Paper with all modules", () => {
     bot,
     rcon,
   }) => {
-    await rcon.command(`tp ${npc("market-guard")} -34.5 64 4.5`);
-    await rcon.command(`tp ${bot.username} -34.5 64 3`);
+    await rcon.command(`tp ${npc("market-guard")} 401.5 64 4.5`);
+    await rcon.command(`tp ${bot.username} 401.5 64 3`);
     await waitUntil("visible market sentry", () =>
       Object.values(bot.entities).some(
         (entity) =>
           entity.name === "mannequin" &&
-          entity.position.distanceTo(new Vec3(-34.5, 64, 4.5)) < 0.8,
+          entity.position.distanceTo(new Vec3(401.5, 64, 4.5)) < 0.8,
       ),
     );
     const sentry = Object.values(bot.entities).find(
       (entity) =>
         entity.name === "mannequin" &&
-        entity.position.distanceTo(new Vec3(-34.5, 64, 4.5)) < 0.8,
+        entity.position.distanceTo(new Vec3(401.5, 64, 4.5)) < 0.8,
     );
     if (sentry === undefined) throw new Error("Sentry left before attack");
     const before = await health(rcon, npc("market-guard"));
@@ -157,7 +158,7 @@ describe("NPC combat on Paper with all modules", () => {
     );
     for (const type of ["item", "experience_orb"]) {
       const drops = await rcon.command(
-        `execute if entity @e[type=minecraft:${type},x=-35,y=64,z=4,distance=..24]`,
+        `execute if entity @e[type=minecraft:${type},x=400,y=64,z=4,distance=..24]`,
       );
       expect(drops).not.toContain("Test passed");
     }
@@ -173,15 +174,15 @@ describe("NPC combat on Paper with all modules", () => {
     // Move the guard far from its original home: this reproduces the old home-radius bug.
     await rcon.command(`gamemode spectator ${bot.username}`);
     await rcon.command(`tp ${bot.username} 500 70 500`);
-    await rcon.command(`tp ${npc("guard-captain")} -35.5 64 6.5`);
-    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+    await rcon.command(`tp ${npc("guard-captain")} 400.5 64 6.5`);
+    await rcon.command(`tp ${npc("stan")} 400.5 64 0.5`);
     await rcon.command(
-      'summon minecraft:cow -34.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
+      'summon minecraft:cow 401.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
     );
     await Bun.sleep(1500);
     expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
     await rcon.command(
-      'summon minecraft:zombie -35.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
+      'summon minecraft:zombie 400.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
     );
     const original = await rcon.command(`data get entity ${npc("stan")} Pos`);
     await eventually(
@@ -212,13 +213,13 @@ describe("NPC spell targeting on Paper", () => {
     rcon,
   }) => {
     await nextDay(rcon);
-    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
-    await rcon.command(`tp ${bot.username} -35.5 64 -2.5`);
+    await rcon.command(`tp ${npc("stan")} 400.5 64 0.5`);
+    await rcon.command(`tp ${bot.username} 400.5 64 -2.5`);
     await waitUntil(
       "spellcaster arrival",
-      () => bot.entity.position.distanceTo(new Vec3(-35.5, 64, -2.5)) < 0.3,
+      () => bot.entity.position.distanceTo(new Vec3(400.5, 64, -2.5)) < 0.3,
     );
-    await bot.lookAt(new Vec3(-35.5, 65.2, 0.5), true);
+    await bot.lookAt(new Vec3(400.5, 65.2, 0.5), true);
     const before = await health(rcon, npc("stan"));
     const frozenBefore = await rcon.command(
       `data get entity ${npc("stan")} TicksFrozen`,

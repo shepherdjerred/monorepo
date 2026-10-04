@@ -496,8 +496,7 @@ final class PackedShops implements Listener {
 
   static UUID replacementToken(UUID recoveryId, UUID previousToken) {
     return UUID.nameUUIDFromBytes(
-        ("the-storm:packed-shop-reissue:" + recoveryId + ":" + previousToken)
-            .getBytes(UTF_8));
+        ("the-storm:packed-shop-reissue:" + recoveryId + ":" + previousToken).getBytes(UTF_8));
   }
 
   private CompletableFuture<Void> restoreLocks(

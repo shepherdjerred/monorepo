@@ -25,15 +25,12 @@ final class ParcelInventoryListenerTest {
   @Test
   void gracePeriodAllowsWithdrawalsAndBlocksShiftMovingItemsIntoTheProtectedInventory() {
     assertThat(
-            ParcelInventoryListener.addsItemsToTop(
-                InventoryAction.MOVE_TO_OTHER_INVENTORY, true))
+            ParcelInventoryListener.addsItemsToTop(InventoryAction.MOVE_TO_OTHER_INVENTORY, true))
         .isFalse();
     assertThat(
-            ParcelInventoryListener.addsItemsToTop(
-                InventoryAction.MOVE_TO_OTHER_INVENTORY, false))
+            ParcelInventoryListener.addsItemsToTop(InventoryAction.MOVE_TO_OTHER_INVENTORY, false))
         .isTrue();
-    assertThat(ParcelInventoryListener.addsItemsToTop(InventoryAction.PICKUP_ALL, true))
-        .isFalse();
+    assertThat(ParcelInventoryListener.addsItemsToTop(InventoryAction.PICKUP_ALL, true)).isFalse();
     assertThat(ParcelInventoryListener.addsItemsToTop(InventoryAction.COLLECT_TO_CURSOR, true))
         .isFalse();
   }
