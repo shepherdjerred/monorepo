@@ -10,14 +10,7 @@ import {
 import {
   BUCKS_INT32_MAX,
   BucksDeltaSchema,
-  DareContractSchema,
-  DareSqlEvidenceSchema,
-  StorableBucksStakeSchema,
-  RawMatchSchema,
-  type DareDeadlineSpec,
-  type DareSqlEvidence,
   type DareTargetBinding,
-  type DiscordAccountId,
   type RawMatch,
 } from "@scout-for-lol/data";
 import {
@@ -38,7 +31,16 @@ import {
   testChannelId,
   testGuildId,
 } from "#src/testing/test-ids.ts";
-import { makeTwistedFateMatch } from "#src/betting/dares/dare-test-fixtures.ts";
+import {
+  loadRiftFixture,
+  targetMatchAt,
+  type StubbedLake,
+} from "#src/betting/dares/dare-test-fixtures.ts";
+import {
+  clearDareTables,
+  createDareLifecycleHarness,
+  freezeDareAsMonotone,
+} from "#src/betting/dares/dare-integration.test-fixtures.ts";
 
 /**
  * The Dare lifecycle end to end: drafting, funding, acceptance, contribution,
@@ -50,42 +52,19 @@ import { makeTwistedFateMatch } from "#src/betting/dares/dare-test-fixtures.ts";
  * the callout — runs for real.
  */
 
-type LakeEvidence = { achieved: boolean | null; sourceMatchIds: string[] };
-const lake = vi.hoisted((): LakeEvidence => ({
+const lake = vi.hoisted((): StubbedLake => ({
   achieved: false,
   sourceMatchIds: [],
 }));
 
 vi.mock("#src/betting/dares/sql/dare-sql.ts", async () => {
-  const actual = await vi.importActual<Record<string, unknown>>(
-    "#src/betting/dares/sql/dare-sql.ts",
-  );
-  return {
-    ...actual,
-    executeDareSql: (input: {
-      compilation: { queryHash: string };
-      targets: readonly { key: string }[];
-    }): Promise<DareSqlEvidence> =>
-      Promise.resolve(
-        DareSqlEvidenceSchema.parse({
-          achieved: lake.achieved,
-          results: [],
-          targetDependencies: input.targets.map((target) => target.key),
-          coverage: "complete",
-          sourceMatchIds: lake.sourceMatchIds,
-          queryHash: input.compilation.queryHash,
-        }),
-      ),
-    decisiveTargetDependencies: (input: {
-      targets: readonly { key: string }[];
-    }) => Promise.resolve(input.targets.map((target) => target.key)),
-  };
+  const { stubbedDareSqlModule } =
+    await import("#src/betting/dares/dare-test-fixtures.ts");
+  return await stubbedDareSqlModule(lake);
 });
 
-const { createDareDraft, reviseDareDraft } =
+const { reviseDareDraft } =
   await import("#src/betting/dares/lifecycle/dare-draft.ts");
-const { postDareCallout, refreshDareCallout, refreshPendingDareCallouts } =
-  await import("#src/betting/dares/presentation/dare-callout.ts");
 const { DarePartialSettlementError } =
   await import("#src/betting/dares/settlement/dare-settle-types.ts");
 const { inspectVisibleDare, listVisibleDares } =
@@ -109,7 +88,6 @@ const TARGET = testAccountId("924");
 const SECOND_TARGET = testAccountId("925");
 const CONTRIBUTOR = testAccountId("926");
 const T0 = new Date("2026-09-01T12:00:00.000Z");
-const ONE_WIN_SQL = "SELECT COUNT(*) >= 1 AS achieved FROM T1 p WHERE p.win";
 const SHARED_WIN_SQL =
   "SELECT COUNT(*) >= 1 AS achieved FROM T1 a JOIN T2 b USING (match_id) WHERE a.win";
 let matchFixture: RawMatch;
@@ -140,22 +118,39 @@ const SECOND_TARGET_BINDING: DareTargetBinding = {
   ],
 };
 
-const deps = {
-  prismaClient: db,
-  isPolicyEnabled: async (name: Parameters<typeof addFlagOverride>[0]) =>
-    name === "betting_enabled" || name === "bucks_dares_enabled",
-};
+const {
+  deps,
+  definition,
+  makeDraft,
+  contribute,
+  intent,
+  consume,
+  fund,
+  activate,
+} = createDareLifecycleHarness({
+  db,
+  serverId: SERVER,
+  channelId: CHANNEL,
+  challenger: CHALLENGER,
+  target: TARGET,
+  targetBinding: TARGET_BINDING,
+  now: T0,
+});
 
 async function clearAll(): Promise<void> {
-  await db.matchNotificationIntent.deleteMany();
-  await db.confirmationIntent.deleteMany();
-  await db.bucksDareEvidence.deleteMany();
-  await db.bucksDareContribution.deleteMany();
-  await db.bucksDareTarget.deleteMany();
-  await db.bucksDareRevision.deleteMany();
-  await db.bucksDare.deleteMany();
-  await db.bucksLedgerEntry.deleteMany();
-  await db.bucksAccount.deleteMany();
+  await clearDareTables(db);
+}
+
+async function makeMonotone(dareId: number): Promise<void> {
+  await freezeDareAsMonotone(db, dareId);
+}
+
+function matchAt(matchId: string, minutesAfterActivation = 60): RawMatch {
+  return targetMatchAt(
+    matchFixture,
+    matchId,
+    new Date(T0.getTime() + minutesAfterActivation * 60 * 1000),
+  );
 }
 
 beforeEach(async () => {
@@ -169,10 +164,7 @@ beforeEach(async () => {
 });
 
 beforeAll(async () => {
-  const fixture: unknown = await Bun.file(
-    new URL("../../../../../testdata/rift.json", import.meta.url),
-  ).json();
-  matchFixture = RawMatchSchema.parse(fixture);
+  matchFixture = await loadRiftFixture();
 });
 
 afterAll(async () => {
@@ -181,61 +173,6 @@ afterAll(async () => {
   await clearAll();
   await db.$disconnect();
 });
-
-function definition(
-  input: {
-    queryText?: string | undefined;
-    targets?: DareTargetBinding[] | undefined;
-    deadlineSpec?: DareDeadlineSpec | undefined;
-    openingStake?: number | undefined;
-    originalText?: string | undefined;
-  } = {},
-) {
-  return {
-    originalText:
-      input.originalText ?? "I bet Virmel can't win a game on Twisted Fate",
-    queryText: input.queryText ?? ONE_WIN_SQL,
-    plainLanguage: "Virmel wins at least one eligible game.",
-    targets: input.targets ?? [TARGET_BINDING],
-    deadlineSpec: input.deadlineSpec ?? { kind: "relative", days: 7 },
-    openingStake: input.openingStake ?? 20,
-  };
-}
-
-async function makeDraft(input: Parameters<typeof definition>[0] = {}) {
-  const result = await createDareDraft(
-    {
-      ...definition(input),
-      serverId: SERVER,
-      channelId: CHANNEL,
-      challengerDiscordId: CHALLENGER,
-    },
-    deps,
-    T0,
-  );
-  if (result.kind !== "created")
-    throw new Error(`Expected Dare draft creation, got ${result.kind}.`);
-  return result.dareId;
-}
-
-/**
- * Freeze an active contract as monotone, so a satisfied match settles it
- * immediately rather than at its deadline.
- */
-async function makeMonotone(dareId: number): Promise<void> {
-  const active = await db.bucksDare.findUniqueOrThrow({
-    where: { id: dareId },
-    select: { contractJson: true },
-  });
-  if (active.contractJson === null) throw new Error("Dare is not active.");
-  const contract = DareContractSchema.parse(JSON.parse(active.contractJson));
-  await db.bucksDare.update({
-    where: { id: dareId },
-    data: {
-      contractJson: JSON.stringify({ ...contract, finality: "monotone_true" }),
-    },
-  });
-}
 
 async function fillTargetWallet(dareId: number): Promise<void> {
   const target = await db.bucksDareTarget.findFirstOrThrow({
@@ -281,74 +218,6 @@ async function expectStorageOverflowVoid(
   });
   expect(challenger.balance).toBe(SEED_GRANT);
   await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
-}
-
-async function intent(input: {
-  dareId: number;
-  actor: DiscordAccountId;
-  action: "fund" | "accept" | "decline" | "cancel";
-  key: string;
-}) {
-  const payload =
-    input.action === "fund"
-      ? ({ kind: "dare_fund" } as const)
-      : input.action === "accept"
-        ? ({ kind: "dare_accept" } as const)
-        : input.action === "decline"
-          ? ({ kind: "dare_decline" } as const)
-          : ({ kind: "dare_cancel" } as const);
-  const result = await createDareConfirmationIntent(
-    {
-      dareId: input.dareId,
-      serverId: SERVER,
-      actorDiscordId: input.actor,
-      expectedRevision: 1,
-      payload,
-      idempotencyKey: input.key,
-    },
-    deps,
-    T0,
-  );
-  if (result.kind !== "intent_created")
-    throw new Error("Expected confirmation intent.");
-  return result.intentId;
-}
-
-async function consume(intentId: string, actor: DiscordAccountId) {
-  return await consumeDareConfirmationIntent(
-    { intentId, serverId: SERVER, actorDiscordId: actor },
-    deps,
-    T0,
-  );
-}
-
-const contribute = (amount: number) => ({
-  kind: "dare_contribute" as const,
-  amount: StorableBucksStakeSchema.parse(amount),
-});
-
-async function makeContribution(
-  dareId: number,
-  actor: DiscordAccountId,
-  amount: number,
-  key: string,
-): Promise<void> {
-  const result = await createDareConfirmationIntent(
-    {
-      dareId,
-      serverId: SERVER,
-      actorDiscordId: actor,
-      expectedRevision: 1,
-      payload: contribute(amount),
-      idempotencyKey: key,
-    },
-    deps,
-    T0,
-  );
-  if (result.kind !== "intent_created") {
-    throw new Error("Expected contribution intent.");
-  }
-  await consume(result.intentId, actor);
 }
 
 async function expectChallengerBalance(balance: number): Promise<void> {
@@ -414,41 +283,6 @@ function clientFailingSecondTransaction(message: string) {
       }
       return Reflect.get(target, property, target);
     },
-  });
-}
-
-async function fund(dareId: number, key: string): Promise<void> {
-  const fundIntent = await intent({
-    dareId,
-    actor: CHALLENGER,
-    action: "fund",
-    key,
-  });
-  const funded = await consume(fundIntent, CHALLENGER);
-  if (funded.kind !== "funded")
-    throw new Error(`Expected funded Dare, got ${funded.kind}.`);
-}
-
-async function activate(dareId: number, key: string): Promise<void> {
-  await fund(dareId, `fund-${key}`);
-  const acceptIntent = await intent({
-    dareId,
-    actor: TARGET,
-    action: "accept",
-    key: `accept-${key}`,
-  });
-  const accepted = await consume(acceptIntent, TARGET);
-  if (accepted.kind !== "accepted" || !accepted.activated) {
-    throw new Error("Expected active Dare.");
-  }
-}
-
-function matchAt(matchId: string, minutesAfterActivation = 60): RawMatch {
-  return makeTwistedFateMatch(matchFixture, {
-    matchId,
-    timePlayed: 25 * 60,
-    creepScore: 200,
-    gameStartTimestamp: T0.getTime() + minutesAfterActivation * 60 * 1000,
   });
 }
 
@@ -1042,6 +876,14 @@ describe("Dare evidence and settlement", () => {
       where: { dareId, targetKey: "T1" },
     });
     expect(target).toMatchObject({ payout: 16, fee: 4 });
+    // The settling transaction names the match, so a resumed settlement can
+    // still attest this Dare after its in-memory summary is gone.
+    expect(
+      await db.bucksDare.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { settledMatchId: true },
+      }),
+    ).toEqual({ settledMatchId: match.metadata.matchId });
     if (target.bucksAccountId === null) {
       throw new Error("Accepted Dare target has no wallet.");
     }
@@ -1117,6 +959,8 @@ describe("Dare evidence and settlement", () => {
       where: { id: dareId },
     });
     expect(dare.voidReason).toBe("missing_evidence");
+    // Resolved by the deadline, not by any match.
+    expect(dare.settledMatchId).toBeNull();
     await expectChallengerBalance(SEED_GRANT);
   });
 
@@ -1155,6 +999,12 @@ describe("Dare payout storage overflow", () => {
       { dareId, resolution: "voided", value: null },
     ]);
     await expectStorageOverflowVoid(dareId, 0);
+    expect(
+      await db.bucksDare.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { settledMatchId: true },
+      }),
+    ).toEqual({ settledMatchId: match.metadata.matchId });
   });
 
   test("voids and fully refunds a deadline payout that cannot fit", async () => {
@@ -1178,231 +1028,5 @@ describe("Dare payout storage overflow", () => {
       { dareId, resolution: "voided", value: null },
     ]);
     await expectStorageOverflowVoid(dareId, 1);
-  });
-});
-
-describe("Dare callout delivery", () => {
-  test("concurrent funding replays publish one durable public callout", async () => {
-    const dareId = await makeDraft();
-    await fund(dareId, "fund-callout");
-    const sendMessage = vi.fn(() =>
-      Promise.resolve({ channelId: CHANNEL, id: "callout-message" }),
-    );
-    const calloutDependencies = {
-      prismaClient: db,
-      sendMessage,
-      editMessage: vi.fn(() => Promise.resolve()),
-    };
-
-    const results = await Promise.all([
-      postDareCallout(dareId, calloutDependencies),
-      postDareCallout(dareId, calloutDependencies),
-    ]);
-
-    expect(sendMessage).toHaveBeenCalledTimes(1);
-    expect(sendMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        nonce: `dare-v2-${dareId.toString()}`,
-        enforceNonce: true,
-      }),
-      CHANNEL,
-      SERVER,
-    );
-    expect(results.map((result) => result.kind).sort()).toEqual([
-      "existing",
-      "posted",
-    ]);
-    const dare = await db.bucksDare.findUniqueOrThrow({
-      where: { id: dareId },
-    });
-    expect(JSON.parse(dare.messageRef ?? "null")).toEqual({
-      channelId: CHANNEL,
-      messageId: "callout-message",
-    });
-    expect(dare.calloutClaimId).toBeNull();
-    expect(dare.calloutClaimedAt).toBeNull();
-    expect(dare.calloutRefreshPending).toBe(false);
-  });
-});
-
-describe("Dare callout retries", () => {
-  test("persists a failed callout edit for a later retry", async () => {
-    const dareId = await makeDraft();
-    await fund(dareId, "fund-callout-edit");
-    const dependencies = {
-      prismaClient: db,
-      sendMessage: vi.fn(() =>
-        Promise.resolve({ channelId: CHANNEL, id: "callout-edit-message" }),
-      ),
-      editMessage: vi.fn(() =>
-        Promise.reject(new Error("Discord edit failed")),
-      ),
-    };
-    await postDareCallout(dareId, dependencies);
-    const acceptIntent = await intent({
-      dareId,
-      actor: TARGET,
-      action: "accept",
-      key: "accept-before-callout-edit",
-    });
-    await consume(acceptIntent, TARGET);
-
-    await expect(refreshDareCallout(dareId, dependencies)).rejects.toThrow(
-      "Discord edit failed",
-    );
-    expect(dependencies.editMessage).toHaveBeenCalledTimes(1);
-    expect(
-      await db.bucksDare.findUniqueOrThrow({
-        where: { id: dareId },
-        select: { calloutRefreshPending: true },
-      }),
-    ).toEqual({ calloutRefreshPending: true });
-
-    const retryEditor = vi.fn(() => Promise.resolve());
-    await expect(
-      refreshPendingDareCallouts({
-        ...dependencies,
-        editMessage: retryEditor,
-      }),
-    ).resolves.toEqual([dareId]);
-    expect(retryEditor).toHaveBeenCalledTimes(1);
-    expect(
-      await db.bucksDare.findUniqueOrThrow({
-        where: { id: dareId },
-        select: { calloutRefreshPending: true },
-      }),
-    ).toEqual({ calloutRefreshPending: false });
-  });
-
-  test("does not clear refresh work created during a callout edit", async () => {
-    const dareId = await makeDraft();
-    await fund(dareId, "fund-concurrent-callout-edit");
-    const dependencies = {
-      prismaClient: db,
-      sendMessage: vi.fn(() =>
-        Promise.resolve({ channelId: CHANNEL, id: "concurrent-edit-message" }),
-      ),
-      editMessage: vi.fn(async () => {
-        await db.bucksDare.update({
-          where: { id: dareId },
-          data: {
-            calloutRefreshPending: true,
-            calloutRefreshVersion: { increment: 1 },
-          },
-        });
-      }),
-    };
-    await postDareCallout(dareId, dependencies);
-    await db.bucksDare.update({
-      where: { id: dareId },
-      data: {
-        calloutRefreshPending: true,
-        calloutRefreshVersion: { increment: 1 },
-      },
-    });
-
-    await refreshDareCallout(dareId, dependencies);
-
-    expect(
-      await db.bucksDare.findUniqueOrThrow({
-        where: { id: dareId },
-        select: { calloutRefreshPending: true },
-      }),
-    ).toEqual({ calloutRefreshPending: true });
-  });
-
-  test("propagates a failed initial callout send for retry", async () => {
-    const dareId = await makeDraft();
-    await fund(dareId, "fund-callout-send-failure");
-    const dependencies = {
-      prismaClient: db,
-      sendMessage: vi.fn(() =>
-        Promise.reject(new Error("Discord send failed")),
-      ),
-      editMessage: vi.fn(() => Promise.resolve()),
-    };
-
-    await expect(postDareCallout(dareId, dependencies)).rejects.toThrow(
-      "Discord send failed",
-    );
-    expect(dependencies.sendMessage).toHaveBeenCalledTimes(1);
-    expect(
-      await db.bucksDare.findUniqueOrThrow({
-        where: { id: dareId },
-        select: { calloutRefreshPending: true, messageRef: true },
-      }),
-    ).toEqual({ calloutRefreshPending: true, messageRef: null });
-
-    const retrySender = vi.fn(() =>
-      Promise.resolve({ channelId: CHANNEL, id: "retried-callout-message" }),
-    );
-    await expect(
-      refreshPendingDareCallouts({
-        ...dependencies,
-        sendMessage: retrySender,
-      }),
-    ).resolves.toEqual([dareId]);
-    expect(retrySender).toHaveBeenCalledTimes(1);
-    expect(
-      await db.bucksDare.findUniqueOrThrow({
-        where: { id: dareId },
-        select: { calloutRefreshPending: true, messageRef: true },
-      }),
-    ).toEqual({
-      calloutRefreshPending: false,
-      messageRef: JSON.stringify({
-        channelId: CHANNEL,
-        messageId: "retried-callout-message",
-      }),
-    });
-  });
-});
-
-describe("Dare callout contributor delivery", () => {
-  test("renders pile-ons and allows contributor mentions on post and refresh", async () => {
-    const dareId = await makeDraft({ openingStake: 10 });
-    await fund(dareId, "fund-callout-contributor");
-    await makeContribution(dareId, CONTRIBUTOR, 5, "contributor-callout-first");
-
-    const sendMessage = vi.fn(() =>
-      Promise.resolve({
-        channelId: CHANNEL,
-        id: "contributor-callout-message",
-      }),
-    );
-    const editMessage = vi.fn(() => Promise.resolve());
-    const dependencies = { prismaClient: db, sendMessage, editMessage };
-
-    await postDareCallout(dareId, dependencies);
-    expect(sendMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        content: expect.stringContaining(`<@${CONTRIBUTOR}> — **5 BB**`),
-        allowedMentions: expect.objectContaining({
-          users: expect.arrayContaining([CONTRIBUTOR]),
-        }),
-      }),
-      CHANNEL,
-      SERVER,
-    );
-
-    await makeContribution(
-      dareId,
-      CONTRIBUTOR,
-      5,
-      "contributor-callout-second",
-    );
-    await refreshDareCallout(dareId, dependencies);
-
-    expect(editMessage).toHaveBeenCalledWith({
-      channelId: CHANNEL,
-      messageId: "contributor-callout-message",
-      options: expect.objectContaining({
-        content: expect.stringContaining(`<@${CONTRIBUTOR}> — **10 BB**`),
-        allowedMentions: {
-          parse: [],
-          users: expect.arrayContaining([CONTRIBUTOR]),
-        },
-      }),
-    });
   });
 });

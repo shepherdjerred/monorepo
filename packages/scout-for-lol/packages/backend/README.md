@@ -713,7 +713,11 @@ announcement carries the payouts and refunds the ledger recorded, so the post
 names exactly who was paid or refunded and allowlists only those mentions. It
 answers to `dare_notifications_enabled` alone (DM preferences do not apply),
 and once Discord accepts it the follow-up edits the Dare callout to its final
-state. A match owed no public delivery writes neither the DMs nor the post. The
+state; the pending-callout scan skips a Dare whose post is still owed, so the
+channel reads result first. A match owed no public delivery writes neither the
+DMs nor the post. The settling transaction stamps the Dare's `settledMatchId`,
+which is how a resumed settlement receipt still names a Dare an earlier attempt
+resolved. The
 intent expires thirty days after the event, and an ambiguous DM failure stays
 `unknown-delivery` for operator resolution. The legacy Dare event/delivery
 tables continue draining pre-cutover rows; a standing legacy event owns its

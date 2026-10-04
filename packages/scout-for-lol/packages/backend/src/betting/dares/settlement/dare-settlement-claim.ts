@@ -10,6 +10,8 @@ export async function claimActiveDareSettlement(
     value: boolean | null;
     proof: unknown;
     now: Date;
+    /** The match this settlement happened on, if it was a match's. */
+    matchId?: string | undefined;
   },
 ): Promise<DareTerminalResolution> {
   const resolution =
@@ -23,6 +25,7 @@ export async function claimActiveDareSettlement(
     data: {
       dareState: resolution,
       settledAt: input.now,
+      settledMatchId: input.matchId ?? null,
       finalValue: input.value,
       proofJson: input.proof === null ? null : JSON.stringify(input.proof),
       voidReason: input.value === null ? "missing_evidence" : null,

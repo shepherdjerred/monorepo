@@ -1,6 +1,9 @@
+import { vi } from "vitest";
 import {
+  DareSqlEvidenceSchema,
   RawMatchSchema,
   RawParticipantSchema,
+  type DareSqlEvidence,
   type RawMatch,
 } from "@scout-for-lol/data";
 
@@ -87,5 +90,106 @@ export function dareSqlContractCore(input: {
       ],
     },
     competition: { kind: "standard" },
+  };
+}
+
+/** What the stubbed lake answers for every contract execution. */
+export type StubbedLake = {
+  achieved: boolean | null;
+  sourceMatchIds: string[];
+};
+
+/**
+ * Replacements for the lake-executing exports of `dare-sql.ts`, for a test's
+ * `vi.mock` factory to spread over the real module.
+ */
+export function dareSqlLakeStubs(lake: StubbedLake) {
+  return {
+    executeDareSql: (input: {
+      compilation: { queryHash: string };
+      targets: readonly { key: string }[];
+    }): Promise<DareSqlEvidence> =>
+      Promise.resolve(
+        DareSqlEvidenceSchema.parse({
+          achieved: lake.achieved,
+          results: [],
+          targetDependencies: input.targets.map((target) => target.key),
+          coverage: "complete",
+          sourceMatchIds: lake.sourceMatchIds,
+          queryHash: input.compilation.queryHash,
+        }),
+      ),
+    decisiveTargetDependencies: (input: {
+      targets: readonly { key: string }[];
+    }) => Promise.resolve(input.targets.map((target) => target.key)),
+  };
+}
+
+export async function loadRiftFixture(): Promise<RawMatch> {
+  return RawMatchSchema.parse(
+    await Bun.file(
+      new URL("../../../../../testdata/rift.json", import.meta.url),
+    ).json(),
+  );
+}
+
+/** A 25-minute Twisted Fate game by the stubbed target, started at `startAt`. */
+export function targetMatchAt(
+  fixture: RawMatch,
+  matchId: string,
+  startAt: Date,
+  creepScore = 200,
+): RawMatch {
+  return makeTwistedFateMatch(fixture, {
+    matchId,
+    timePlayed: 25 * 60,
+    creepScore,
+    gameStartTimestamp: startAt.getTime(),
+  });
+}
+
+/**
+ * Evidence that resolves a one-game contract unachieved on `matchId`: the
+ * game cap is reached, so the Dare is final on that match.
+ */
+export function finalUnachievedEvidence(input: {
+  matchId: string;
+  queryHash: string;
+}): DareSqlEvidence {
+  return DareSqlEvidenceSchema.parse({
+    achieved: false,
+    results: [],
+    targetDependencies: ["T1"],
+    coverage: "complete",
+    sourceMatchIds: [input.matchId],
+    queryHash: input.queryHash,
+    timelineEvents: [],
+  });
+}
+
+/**
+ * The `dare-sql.ts` module with only lake execution replaced, for a
+ * `vi.mock` factory: compilation stays real, evidence comes from `lake`.
+ */
+export async function stubbedDareSqlModule(
+  lake: StubbedLake,
+): Promise<Record<string, unknown>> {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    "#src/betting/dares/sql/dare-sql.ts",
+  );
+  return { ...actual, ...dareSqlLakeStubs(lake) };
+}
+
+/**
+ * A `dare-sql.ts` replacement whose every execution resolves a one-game
+ * contract unachieved and final on `matchId`.
+ */
+export function finalUnachievedDareSqlModule(input: {
+  matchId: string;
+  queryHash: string;
+}) {
+  return {
+    executeDareSql: () => Promise.resolve(finalUnachievedEvidence(input)),
+    decisiveTargetDependencies: () => Promise.resolve(["T1"]),
   };
 }
