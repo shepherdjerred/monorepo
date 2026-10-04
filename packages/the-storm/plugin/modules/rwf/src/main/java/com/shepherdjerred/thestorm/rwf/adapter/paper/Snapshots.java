@@ -16,8 +16,14 @@ import org.bukkit.entity.Player;
  */
 final class Snapshots {
 
-  /** The scope every rwf snapshot is taken for. */
+  /** The scope a member's snapshot is taken for. */
   static final String SCOPE = "rwf";
+
+  /**
+   * The scope a watcher's snapshot is taken for. A player is never a member and a watcher at once,
+   * so both share the keeper; the scope tells the stored rows apart.
+   */
+  static final String WATCH_SCOPE = "rwf_watch";
 
   private final PaperContext runtime;
   private final SnapshotKeeper keeper;
@@ -60,7 +66,12 @@ final class Snapshots {
    * put back from memory.
    */
   void capture(Player player, Consumer<Boolean> done) {
-    keeper.capture(player, SCOPE, done);
+    capture(player, SCOPE, done);
+  }
+
+  /** {@link #capture(Player, Consumer)} for {@code scope}. */
+  void capture(Player player, String scope, Consumer<Boolean> done) {
+    keeper.capture(player, scope, done);
   }
 
   /** Restores {@code player}'s snapshot if they have one; a dead player once they respawn. */

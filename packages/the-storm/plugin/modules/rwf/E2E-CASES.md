@@ -15,7 +15,16 @@ interact listener and a bot defuses it through `CombatantActions`; the rules'
 damage replaces the server's and the hit window refuses a second hit; a win
 pays through the outbox, writes a recording and resets the map; a dead member
 spectates after respawning; a live match with no humans is stopped unpaid; the
-Rewind clock lands on the trail.
+Rewind clock lands on the trail. Watching: `/rwf spectate` snapshots under
+`rwf_watch` and puts the watcher in spectator mode at the spectator point;
+leave, quit, the module stopping and a crash's snapshot all restore exactly;
+watchers are never combatants, never get the modifier and never keep a match
+alive (a match with only a watcher left is still stopped); `/rwf spectate
+next` cycles the living fighters; a member cannot watch; a watcher who joins
+keeps their original snapshot. Showcases: refused without the bot roster and
+while humans play; a bots-only showcase fills to its size, runs past the
+no-humans abort, refuses joining humans, ends by elimination, pays nobody,
+records an all-bot roster and reopens a normal lobby.
 
 MockBukkit cannot run `LivingEntity#attack`, sweep attacks, real knockback,
 projectiles in flight, chunk tickets, `TextDisplay` billboards, `hasLineOfSight`
@@ -26,7 +35,7 @@ behaviour on its own. These cases need the real server in
 `tests/e2e/rwf.e2e.test.ts` runs humans only (rwfbots off) on the shared e2e
 server, whose fixtures plugin creates the flat void `rwf` world before TheStorm
 enables. A case marked **proven** below is asserted there; the rest still wait
-for a suite, and the bot cases (14, 15) for the rwfbots suite.
+for a suite, and the bot cases (14, 15, 23) for the rwfbots suite.
 
 ## World and maps
 
@@ -125,3 +134,17 @@ for a suite, and the bot cases (14, 15) for the rwfbots suite.
     admission (the fake brain's Flipt double answers `enabled: true` for the
     `rwf` world in `prod`); the refusals are not.
 21. Bedrock (Geyser): holograms, the sidebar and messages render.
+
+## Watching
+
+22. `/rwf spectate` puts a player in spectator mode at the spectator point
+    with the match scoreboard and empties them; they never count as a human
+    (`/rwf admin status` lists them as watchers), a member's `/rwf spectate`
+    is refused, the watcher stays through the end screen and the reset, and
+    `/rwf leave` restores them exactly. **Proven** with one watcher and a lone
+    human's match; the scoreboard, `/rwf spectate next`, a watcher joining
+    and Bedrock rendering of the spectator view are not inspected.
+23. With rwfbots enabled, `/rwf admin showcase 4` plays a whole bots-only
+    match on Citizens NPCs while a human watches with `/rwf spectate next`
+    following each fighter; it pays nobody, writes a recording and bot stats,
+    and the next lobby fills bots only once a human joins.

@@ -34,6 +34,7 @@ public final class RwfPaper {
 
   private final PaperContext context;
   private final MatchRunner runner;
+  private final Watchers watchers;
   private final PaperCombatantActions actions;
   private final List<MapWorld> maps;
   private final List<Listener> listeners;
@@ -44,6 +45,7 @@ public final class RwfPaper {
   private RwfPaper(Parts parts) {
     this.context = parts.context();
     this.runner = parts.runner();
+    this.watchers = parts.watchers();
     this.actions = parts.actions();
     this.maps = parts.maps();
     this.listeners = parts.listeners();
@@ -55,6 +57,7 @@ public final class RwfPaper {
   private record Parts(
       PaperContext context,
       MatchRunner runner,
+      Watchers watchers,
       PaperCombatantActions actions,
       List<MapWorld> maps,
       List<Listener> listeners,
@@ -134,19 +137,22 @@ public final class RwfPaper {
     var actions =
         new PaperCombatantActions(
             new PaperCombatantActions.Parts(runner, tracker, recordings, keys, app.hooks()));
+    var watchers = new Watchers(runner, snapshots, boards, context);
+    var _ = runner.subscribe(watchers::onTransition);
     var guard = new ItemGuard(runner, keys);
     List<Listener> listeners =
         List.of(
             new PlayerListener(
                 new PlayerListener.Parts(
-                    runner, snapshots, guard, actions, tracker, context, keys, bombs)),
+                    runner, snapshots, guard, actions, tracker, context, keys, bombs, watchers)),
             guard,
             new CombatListener(runner, tracker, context, app.hooks()),
             new WorldListener(runner, context, bombs));
     listeners.forEach(
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
     var commands =
-        new RwfCommands(new RwfCommands.Parts(context, runner, kits, app.gate(), config, bots));
+        new RwfCommands(
+            new RwfCommands.Parts(context, runner, watchers, kits, app.gate(), config, bots));
     module
         .lifecycle()
         .registerEventHandler(
@@ -160,6 +166,7 @@ public final class RwfPaper {
             new Parts(
                 context,
                 runner,
+                watchers,
                 actions,
                 List.copyOf(maps),
                 listeners,
@@ -221,8 +228,12 @@ public final class RwfPaper {
     return actions;
   }
 
-  /** Stops the match (restoring everyone inside), the clock, listeners and permissions. */
+  /**
+   * Stops the match (restoring everyone inside and every watcher), the clock, listeners and
+   * permissions.
+   */
   public void stop() {
+    watchers.stop();
     runner.stop();
     clock.cancel();
     listeners.forEach(HandlerList::unregisterAll);

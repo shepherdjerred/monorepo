@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -54,7 +55,8 @@ import org.jspecify.annotations.Nullable;
  * Runs the one match: feeds events to the {@link RwfMatch} and carries out its effects in order,
  * ticks it twenty times a second, fills it with bots when the countdown starts, keeps the humans
  * rule, settles payouts and recordings when it ends, and publishes the read model and transitions.
- * Events raised while effects are being applied wait their turn. Main thread only.
+ * Events raised while effects are being applied wait their turn. A showcase is a match an operator
+ * fills with bots alone: the humans rule is off for it and no human may join it. Main thread only.
  */
 final class MatchRunner implements MatchView, MatchEvents {
 
@@ -118,6 +120,8 @@ final class MatchRunner implements MatchView, MatchEvents {
   private @Nullable Instant liveAt;
   private @Nullable MatchSnapshot cached;
   private @Nullable RwfMatch cachedFor;
+  private OptionalInt showcase = OptionalInt.empty();
+  private @Nullable UUID keepingSnapshot;
 
   MatchRunner(Parts parts) {
     this.parts = parts;
@@ -185,6 +189,26 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   int humans() {
     return (int) match.members().stream().filter(m -> !m.id().isBot()).count();
+  }
+
+  /** Whether this match is a bots-only showcase. */
+  boolean showcase() {
+    return showcase.isPresent();
+  }
+
+  /**
+   * The entities a watcher can follow, in join order: the living fighters once the match has
+   * started, or everyone in the lobby before it.
+   */
+  List<Player> followable() {
+    var begun = started(match.phase());
+    var out = new ArrayList<Player>();
+    for (var member : match.members()) {
+      if (!begun || member.alive()) {
+        entity(member.id()).ifPresent(out::add);
+      }
+    }
+    return out;
   }
 
   Optional<Rewinder> rewinder(CombatantId id) {
@@ -324,18 +348,26 @@ final class MatchRunner implements MatchView, MatchEvents {
   }
 
   private void fillWithBots() {
-    var slots = parts.config().match().targetCombatants() - match.members().size();
-    for (var bot : parts.bots().fill(match.matchId(), slots)) {
+    var target = showcase.orElse(parts.config().match().targetCombatants());
+    joinBots(target - match.members().size());
+  }
+
+  /** Up to {@code count} bots join the lobby now. Returns how many did. */
+  private int joinBots(int count) {
+    var joined = 0;
+    for (var bot : parts.bots().fill(match.matchId(), count)) {
       var spawned = parts.bots().spawn(bot, lobby());
       if (spawned.isEmpty()) {
         parts.context().logger().error("Bot {} did not spawn; skipping it", bot);
         continue;
       }
-      var refused = handle(new MatchEvent.Join(bot, spawned.orElseThrow().getName(), now()));
-      if (refused.isPresent()) {
+      if (handle(new MatchEvent.Join(bot, spawned.orElseThrow().getName(), now())).isEmpty()) {
+        joined++;
+      } else {
         parts.bots().despawn(bot);
       }
     }
+    return joined;
   }
 
   private void wentLive() {
@@ -484,6 +516,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     pendingPay.clear();
     poisoned.clear();
     awaitingSpectate.clear();
+    showcase = OptionalInt.empty();
     parts.combat().clear();
     parts.boards().reset();
     parts.bombs().clear();
@@ -505,19 +538,37 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** The load test: {@code count} bots join the lobby now. Returns how many did. */
   int loadTest(int count) {
-    var joined = 0;
-    for (var bot : parts.bots().fill(match.matchId(), count)) {
-      var spawned = parts.bots().spawn(bot, lobby());
-      if (spawned.isEmpty()) {
-        continue;
-      }
-      if (handle(new MatchEvent.Join(bot, spawned.orElseThrow().getName(), now())).isEmpty()) {
-        joined++;
-      } else {
-        parts.bots().despawn(bot);
-      }
+    return joinBots(count);
+  }
+
+  /**
+   * Starts a bots-only showcase of {@code count} combatants from an open lobby with no humans in
+   * it, or returns why not. It then runs as any match would, without the humans rule.
+   */
+  Optional<String> startShowcase(int count) {
+    if (!ready) {
+      return Optional.of("The match is still being prepared; try again in a moment.");
     }
-    return joined;
+    if (parts.bots().roster().isEmpty()) {
+      return Optional.of("No bot roster is provided; enable the rwfbots module.");
+    }
+    if (showcase.isPresent()) {
+      return Optional.of("A showcase is already running.");
+    }
+    if (humans() > 0) {
+      return Optional.of("Players are in the match; a showcase needs a lobby without them.");
+    }
+    if (!(match.phase() instanceof Phase.Lobby)) {
+      return Optional.of("A match is under way; start the showcase from the next lobby.");
+    }
+    showcase = OptionalInt.of(count);
+    joinBots(count - match.members().size());
+    if (match.members().isEmpty()) {
+      showcase = OptionalInt.empty();
+      return Optional.of("No bot could be spawned for the showcase; see the log.");
+    }
+    parts.context().logger().info("rwf match {} is a showcase of {}", match.matchId(), count);
+    return Optional.empty();
   }
 
   /** The match is stopping for good (disable): restore everyone, despawn bots. */
@@ -547,8 +598,15 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
   }
 
-  /** Bots never keep a countdown alive, and a live match with no humans is stopped unpaid. */
+  /**
+   * Bots never keep a countdown alive, and a live match with no humans is stopped unpaid; a
+   * showcase has no humans by design. Watchers are not members, so they never count.
+   */
   private void keepHumansRule(Instant now) {
+    if (showcase.isPresent()) {
+      humansGoneSince = null;
+      return;
+    }
     var minHumans = parts.config().match().minHumans();
     if (match.phase() instanceof Phase.Countdown && humans() < minHumans) {
       for (var member : match.members()) {
@@ -656,29 +714,65 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** A player asks to join: admission checks, then the match decides. */
   Optional<String> admit(Player player) {
-    var id = player.getUniqueId();
+    var refusal = admission(player).or(() -> snapshotRefusal(player));
+    if (refusal.isPresent()) {
+      return refusal;
+    }
+    return handle(new MatchEvent.Join(human(player), player.getName(), now())).map(Texts::describe);
+  }
+
+  /**
+   * A watcher asks to join: the snapshot taken when they started watching already holds their
+   * belongings, so it is kept and no new one is taken.
+   */
+  Optional<String> admitWatcher(Player player) {
+    var refusal = admission(player);
+    if (refusal.isPresent()) {
+      return refusal;
+    }
+    keepingSnapshot = player.getUniqueId();
+    try {
+      return handle(new MatchEvent.Join(human(player), player.getName(), now()))
+          .map(Texts::describe);
+    } finally {
+      keepingSnapshot = null;
+    }
+  }
+
+  private static CombatantId human(Player player) {
+    return new CombatantId.Human(player.getUniqueId());
+  }
+
+  private Optional<String> admission(Player player) {
     if (!ready) {
       return Optional.of("The match is still being prepared; try again in a moment.");
     }
-    if (memberOf(id).isPresent()) {
+    if (memberOf(player.getUniqueId()).isPresent()) {
       return Optional.of(Texts.describe(MatchError.ALREADY_JOINED));
     }
-    var refusal = parts.snapshots().refusal(id);
-    if (refusal.isPresent()) {
-      return Optional.of(
-          switch (refusal.orElseThrow()) {
-            case NOT_LOADED -> "The match is still starting up; try again in a moment.";
-            case CLEANUP_PENDING ->
-                "Your restored belongings must be saved before another match. Reconnect to"
-                    + " finish recovery.";
-            case RESTORE_PENDING -> {
-              parts.snapshots().recoverWhileOnline(player);
-              yield "Your belongings from your last match were restored first; join again.";
-            }
-          });
+    if (showcase.isPresent()) {
+      return Optional.of("This match is a bot showcase; watch it with /rwf spectate.");
     }
-    return handle(new MatchEvent.Join(new CombatantId.Human(id), player.getName(), now()))
-        .map(Texts::describe);
+    return Optional.empty();
+  }
+
+  /** Why {@code player} may not have a snapshot taken now, as they should read it. */
+  Optional<String> snapshotRefusal(Player player) {
+    return parts
+        .snapshots()
+        .refusal(player.getUniqueId())
+        .map(
+            refusal ->
+                switch (refusal) {
+                  case NOT_LOADED -> "The match is still starting up; try again in a moment.";
+                  case CLEANUP_PENDING ->
+                      "Your restored belongings must be saved before another match. Reconnect to"
+                          + " finish recovery.";
+                  case RESTORE_PENDING -> {
+                    parts.snapshots().recoverWhileOnline(player);
+                    yield "Your belongings from your last match were restored first; try again.";
+                  }
+                });
   }
 
   /** A member right-clicked a bomb while holding the fuse. */
@@ -730,6 +824,14 @@ final class MatchRunner implements MatchView, MatchEvents {
     var spawn =
         map == null ? parts.config().spectator().toSpawn() : map.definition().spectatorPoint();
     return Places.location(parts.context().world(), spawn);
+  }
+
+  /** Where a watcher stands: the map's spectator point, or the lobby before any map is chosen. */
+  Location watchPoint() {
+    var map = current;
+    return map == null
+        ? lobby()
+        : Places.location(parts.context().world(), map.definition().spectatorPoint());
   }
 
   /** Gives {@code player} the match's attack-speed modifier, so the 1.9 cooldown never applies. */
@@ -841,7 +943,8 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
 
     private void capture(CombatantId id) {
-      if (!(id instanceof CombatantId.Human human)) {
+      if (!(id instanceof CombatantId.Human human) || human.uuid().equals(keepingSnapshot)) {
+        // Bots have no belongings; a joining watcher keeps the snapshot they watched under.
         return;
       }
       var player = parts.context().server().getPlayer(human.uuid());

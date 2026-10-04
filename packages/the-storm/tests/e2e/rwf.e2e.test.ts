@@ -54,6 +54,8 @@ const yard = {
   duel: [new Vec3(24.5, 65, 30.5), new Vec3(25.5, 65, 30.5)],
   /** The glass platform under the open ceiling. */
   lobby: new Vec3(31.5, 78, 31.5),
+  /** Where the dead and watchers look down from. */
+  spectator: new Vec3(31.5, 76, 31.5),
 } as const;
 
 // Trooper's Sharpness I iron sword on full iron: (6 + 1.25) x (1 - 15/25).
@@ -930,6 +932,59 @@ describe("Search and Destroy without enough humans", () => {
           await disconnectBot(online);
         }
       }
+    },
+  );
+});
+
+describe("Watching Search and Destroy", () => {
+  test(
+    "a watcher sees a match through every phase without counting, and leaving restores them",
+    { timeout: 120_000 },
+    async ({ bot, secondBot, rcon }) => {
+      await waitForLobby(rcon);
+      const watcher = human(bot);
+      const player = human(secondBot);
+      await giveDiamonds(rcon, bot);
+      await giveDiamonds(rcon, secondBot);
+      const home = bot.entity.position.clone();
+      const homeB = secondBot.entity.position.clone();
+
+      bot.chat("/rwf spectate");
+      await watcher.log.until(/You are watching Search and Destroy\./u);
+      await waitUntil(
+        "the watcher in spectator mode at the spectator point",
+        () =>
+          bot.game.gameMode === "spectator" &&
+          bot.entity.position.distanceTo(yard.spectator) < 1.5,
+      );
+      expect(count(bot, "diamond")).toBe(0);
+      expect(await attackSpeedModifier(rcon, bot)).toBeUndefined();
+      expect(await rcon.command("rwf admin status")).toContain("Watchers: 1");
+
+      // A member may not watch; the watcher never counts as a human.
+      await join(player);
+      secondBot.chat("/rwf spectate");
+      await player.log.until(/leave it with \/rwf leave before watching/u);
+      await player.log.until(/The game has begun!/u, 30_000);
+      const team = await teamOf(player.log);
+      await player.log.until(new RegExp(`${team} Team wins!`, "u"));
+      const ended = await status(rcon);
+      expect(ended.humans).toBe(1);
+      await waitRestored(secondBot, homeB);
+      await waitForLobby(rcon);
+
+      // The watcher stays through the end and the reset, at the spectator point.
+      expect(bot.game.gameMode).toBe("spectator");
+      expect(bot.entity.position.distanceTo(yard.spectator)).toBeLessThan(1.5);
+      expect(await rcon.command("rwf admin status")).toContain("Watchers: 1");
+
+      bot.chat("/rwf leave");
+      await waitRestored(bot, home);
+      await waitUntil(
+        "the watcher back in survival",
+        () => bot.game.gameMode === "survival",
+      );
+      expect(await rcon.command("rwf admin status")).toContain("Watchers: 0");
     },
   );
 });

@@ -20,8 +20,9 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 /**
- * Players and the match: restoring on join, leaving on quit, dying, respawning as a spectator,
- * teleport refusals, and the right-clicks that arm bombs and use the Time Machine.
+ * Players and the match: restoring on join, leaving on quit (members and watchers), dying,
+ * respawning as a spectator, teleport refusals, and the right-clicks that arm bombs and use the
+ * Time Machine.
  */
 final class PlayerListener implements Listener {
 
@@ -33,6 +34,7 @@ final class PlayerListener implements Listener {
   private final PaperContext context;
   private final Keys keys;
   private final BombMarkers bombs;
+  private final Watchers watchers;
 
   /**
    * What the listener needs.
@@ -45,6 +47,7 @@ final class PlayerListener implements Listener {
    * @param context the shared server services
    * @param keys item and entity tags
    * @param bombs bomb entities
+   * @param watchers players watching the match
    */
   record Parts(
       MatchRunner runner,
@@ -54,7 +57,8 @@ final class PlayerListener implements Listener {
       CombatTracker tracker,
       PaperContext context,
       Keys keys,
-      BombMarkers bombs) {}
+      BombMarkers bombs,
+      Watchers watchers) {}
 
   PlayerListener(Parts parts) {
     this.runner = parts.runner();
@@ -65,6 +69,7 @@ final class PlayerListener implements Listener {
     this.context = parts.context();
     this.keys = parts.keys();
     this.bombs = parts.bombs();
+    this.watchers = parts.watchers();
   }
 
   private boolean inWorld(Player player) {
@@ -88,6 +93,7 @@ final class PlayerListener implements Listener {
     runner
         .memberOf(id)
         .ifPresent(member -> runner.handle(new MatchEvent.Disconnect(member.id(), runner.now())));
+    watchers.quit(event.getPlayer());
   }
 
   /** Kits never drop, not even into another module's grave: drops and experience go first. */
@@ -137,8 +143,9 @@ final class PlayerListener implements Listener {
   }
 
   /**
-   * Members cannot teleport out of the rwf world (pearls, homes, warps, /back, /tpa) and nobody
-   * else may teleport into it while they are not staff.
+   * Members and watchers cannot teleport out of the rwf world (pearls, homes, warps, /back, /tpa, a
+   * spectator's jump to someone elsewhere) and nobody else may teleport into it while they are not
+   * staff.
    */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onTeleport(PlayerTeleportEvent event) {
@@ -149,7 +156,7 @@ final class PlayerListener implements Listener {
       return;
     }
     var toRwf = event.getTo().getWorld().equals(context.world());
-    if (runner.memberOf(id).isPresent()) {
+    if (runner.memberOf(id).isPresent() || watchers.watching(id)) {
       if (!toRwf) {
         event.setCancelled(true);
         Texts.error(player, "You cannot leave the match that way. Use /rwf leave.");

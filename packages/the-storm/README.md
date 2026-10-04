@@ -554,11 +554,31 @@ reach) fails too; fix the map, not the tool.
 
 Commands: `/rwf join` (gated by the managed Flipt flag
 `the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
-closed), `/rwf leave`, `/rwf kit <id>`, `/rwf who`, and for
-`thestorm.rwf.admin`: `/rwf admin status`, `/rwf admin repair` and
-`/rwf admin loadtest <n>` (only when `loadtest.enabled`). Joining snapshots a
-player's belongings through the shared crash-safe snapshot machinery and
-restores them on leave, death, disconnect or the next login.
+closed), `/rwf leave`, `/rwf kit <id>`, `/rwf who`, `/rwf spectate` and
+`/rwf spectate next` (`thestorm.rwf.spectate`, granted by default, behind the
+same Flipt flag), and for `thestorm.rwf.admin`: `/rwf admin status`,
+`/rwf admin repair`, `/rwf admin loadtest <n>` (only when `loadtest.enabled`)
+and `/rwf admin showcase [count]`. Joining snapshots a player's belongings
+through the shared crash-safe snapshot machinery and restores them on leave,
+death, disconnect or the next login.
+
+Watchers (`/rwf spectate`) are snapshotted through the same keeper under the
+`rwf_watch` scope, then put in spectator mode at the map's spectator point
+with the match scoreboard; `/rwf spectate next` follows the next living
+fighter. They are never match members: the read model, the humans rule
+(`minHumans`, `noHumansAbort`), team balance and payouts never see them. They
+stay through every phase and move to each new map's spectator point, and
+`/rwf leave`, quitting, the module stopping or (after a crash) the next login
+restores them. A member cannot watch; a watcher who joins the lobby keeps the
+snapshot taken when they started watching, so no second snapshot overwrites
+it.
+
+`/rwf admin showcase [count]` (default `targetCombatants`) starts a bots-only
+match from a lobby with no humans in it. It needs the `rwfbots` roster and
+refuses while humans are in the match. The showcase is a flag on the runner,
+not the domain: the countdown fills to `count`, the humans rule is off, and
+humans may watch but not join. It plays, records and stores like any match
+(bots are never paid, so it pays nobody) and the lobby after it is normal.
 
 Matches are recorded under pseudonyms (positions, actions, results) to
 `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` for review and

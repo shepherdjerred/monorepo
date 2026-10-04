@@ -6,10 +6,14 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.PluginManager;
 
-/** The module's permissions: playing is open to everyone; the admin tools are for operators. */
+/**
+ * The module's permissions: playing and watching are open to everyone; the admin tools are for
+ * operators.
+ */
 final class RwfPermissions {
 
   static final String PLAY = "thestorm.rwf.play";
+  static final String SPECTATE = "thestorm.rwf.spectate";
   static final String ADMIN = "thestorm.rwf.admin";
 
   private final PluginManager manager;
@@ -21,9 +25,10 @@ final class RwfPermissions {
 
   void register() {
     add(PLAY, "Join, leave and play Search and Destroy", PermissionDefault.TRUE);
+    add(SPECTATE, "Watch Search and Destroy without playing", PermissionDefault.TRUE);
     add(
         ADMIN,
-        "Inspect, repair and load-test Search and Destroy, and enter its world freely",
+        "Inspect, repair, load-test and showcase Search and Destroy, and enter its world freely",
         PermissionDefault.OP);
   }
 

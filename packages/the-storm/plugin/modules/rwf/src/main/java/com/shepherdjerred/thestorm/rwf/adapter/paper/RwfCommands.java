@@ -22,13 +22,14 @@ import java.util.function.Supplier;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/** {@code /rwf}: join, leave, pick a kit, see who is in, and the admin tools. */
+/** {@code /rwf}: join, leave, watch, pick a kit, see who is in, and the admin tools. */
 final class RwfCommands {
 
   private static final int OK = Command.SINGLE_SUCCESS;
 
   private final PaperContext context;
   private final MatchRunner runner;
+  private final Watchers watchers;
   private final KitFactory kits;
   private final JoinGate gate;
   private final RwfConfig config;
@@ -39,14 +40,16 @@ final class RwfCommands {
    *
    * @param context the shared server services
    * @param runner the match
+   * @param watchers players watching the match
    * @param kits the kits, for suggestions
    * @param gate the managed rollout decision for joining
    * @param config the module settings
-   * @param bots the bot roster, for the load test
+   * @param bots the bot roster, for the load test and status
    */
   record Parts(
       PaperContext context,
       MatchRunner runner,
+      Watchers watchers,
       KitFactory kits,
       JoinGate gate,
       RwfConfig config,
@@ -55,6 +58,7 @@ final class RwfCommands {
   RwfCommands(Parts parts) {
     this.context = parts.context();
     this.runner = parts.runner();
+    this.watchers = parts.watchers();
     this.kits = parts.kits();
     this.gate = parts.gate();
     this.config = parts.config();
@@ -74,8 +78,22 @@ final class RwfCommands {
                 .executes(ctx -> asPlayer(ctx, this::join)))
         .then(
             Commands.literal("leave")
-                .requires(permission(RwfPermissions.PLAY))
+                .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
                 .executes(ctx -> asPlayer(ctx, this::leave)))
+        .then(
+            Commands.literal("spectate")
+                .requires(permission(RwfPermissions.SPECTATE))
+                .executes(ctx -> asPlayer(ctx, this::spectate))
+                .then(
+                    Commands.literal("next")
+                        .executes(
+                            ctx ->
+                                asPlayer(
+                                    ctx,
+                                    player ->
+                                        watchers
+                                            .next(player)
+                                            .ifPresent(message -> Texts.error(player, message))))))
         .then(
             Commands.literal("kit")
                 .requires(permission(RwfPermissions.PLAY))
@@ -108,12 +126,29 @@ final class RwfCommands {
                                     ctx ->
                                         loadTest(
                                             ctx.getSource().getSender(),
-                                            IntegerArgumentType.getInteger(ctx, "bots"))))))
+                                            IntegerArgumentType.getInteger(ctx, "bots")))))
+                .then(
+                    Commands.literal("showcase")
+                        .executes(
+                            ctx ->
+                                showcase(
+                                    ctx.getSource().getSender(), config.match().targetCombatants()))
+                        .then(
+                            Commands.argument(
+                                    "count",
+                                    IntegerArgumentType.integer(2, config.match().maxCombatants()))
+                                .executes(
+                                    ctx ->
+                                        showcase(
+                                            ctx.getSource().getSender(),
+                                            IntegerArgumentType.getInteger(ctx, "count"))))))
         .build();
   }
 
   private static int usage(CommandSender sender) {
-    Texts.info(sender, "/rwf join, /rwf leave, /rwf kit <kit>, /rwf who");
+    Texts.info(
+        sender,
+        "/rwf join, /rwf leave, /rwf kit <kit>, /rwf who, /rwf spectate, /rwf spectate next");
     return OK;
   }
 
@@ -129,12 +164,36 @@ final class RwfCommands {
           if (!player.isOnline()) {
             return;
           }
-          runner.admit(player).ifPresent(message -> Texts.error(player, message));
+          var refusal =
+              watchers.watching(player.getUniqueId())
+                  ? watchers.join(player)
+                  : runner.admit(player);
+          refusal.ifPresent(message -> Texts.error(player, message));
         },
         "evaluate the rwf join flag for " + player.getName());
   }
 
+  /** Watching is behind the same managed flag as joining: it shows the game. */
+  private void spectate(Player player) {
+    context.onMain(
+        gate.allows(player.getUniqueId()),
+        allowed -> {
+          if (!allowed) {
+            Texts.error(player, "Search and Destroy is not open to you yet.");
+            return;
+          }
+          if (!player.isOnline()) {
+            return;
+          }
+          watchers.watch(player).ifPresent(message -> Texts.error(player, message));
+        },
+        "evaluate the rwf join flag for watcher " + player.getName());
+  }
+
   private void leave(Player player) {
+    if (watchers.leave(player)) {
+      return;
+    }
     var member = runner.memberOf(player.getUniqueId());
     if (member.isEmpty()) {
       Texts.error(player, "You are not in the match.");
@@ -208,6 +267,9 @@ final class RwfCommands {
             + (match.members().size() - runner.humans())
             + " bots, bot roster "
             + (bots.roster().isPresent() ? "present" : "absent"));
+    Texts.info(
+        sender,
+        "Watchers: " + watchers.count() + ", showcase: " + (runner.showcase() ? "yes" : "no"));
     if (runner.ready()) {
       var map = runner.currentMap();
       Texts.info(sender, "Map busy: " + map.busy() + ", cratered blocks: " + map.crateredBlocks());
@@ -245,6 +307,21 @@ final class RwfCommands {
     }
     var joined = runner.loadTest(count);
     Texts.info(sender, "Added " + joined + " bots to the lobby.");
+    return OK;
+  }
+
+  private int showcase(CommandSender sender, int count) {
+    var refusal = runner.startShowcase(count);
+    if (refusal.isPresent()) {
+      Texts.error(sender, refusal.orElseThrow());
+    } else {
+      Texts.info(
+          sender,
+          "Showcase of "
+              + count
+              + " bots started; it counts down and plays like any match. Watch with /rwf"
+              + " spectate.");
+    }
     return OK;
   }
 
