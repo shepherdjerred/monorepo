@@ -9,8 +9,9 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
  *
  * The void is irreversible: a voided pool is no longer stale, so no later
  * pass would announce it. These tests prove the reply-target lookup runs
- * before the void, so a failing lookup leaves every pool untouched for the
- * next pass. Discord sends are stubbed; the pool rows are real.
+ * before each match's void, so a failing lookup leaves that match's pools
+ * untouched for the next pass, and that one failing match cannot stop
+ * another match's refunds. Discord sends are stubbed; the pool rows are real.
  */
 
 const { prisma } = createTestDatabase("void-stale-announce");
@@ -39,15 +40,16 @@ const { voidStaleAndAnnounce } =
   await import("#src/league/tasks/postmatch/void-stale-announce.ts");
 
 const MATCH_ID = "NA1_7701";
+const HEALTHY_MATCH_ID = "NA1_7702";
 const SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
 const CHANNEL = "300000000000007701";
 const REPORT_MESSAGE = "400000000000007701";
 
-async function makeStalePool() {
+async function makeStalePool(matchId: string = MATCH_ID) {
   const closesAt = new Date(Date.now() - VOID_GRACE_MS - 60_000);
   return await prisma.bucksMatchPool.create({
     data: {
-      matchId: MATCH_ID,
+      matchId,
       serverId: SERVER,
       detectedAt: new Date(closesAt.getTime() - 600_000),
       closesAt,
@@ -79,9 +81,15 @@ describe("voidStaleAndAnnounce", () => {
       new Error("intent read timed out"),
     );
 
-    await expect(voidStaleAndAnnounce()).rejects.toThrow(
-      "intent read timed out",
+    const failure = await voidStaleAndAnnounce().then(
+      () => null,
+      (error: unknown) => error,
     );
+    expect(failure).toBeInstanceOf(AggregateError);
+    expect(String(failure)).toContain(MATCH_ID);
+    expect(
+      failure instanceof AggregateError ? String(failure.errors[0]) : "",
+    ).toContain("intent read timed out");
 
     // Nothing irreversible happened, so the next pass finds the pool stale
     // and retries the whole step.
@@ -91,6 +99,33 @@ describe("voidStaleAndAnnounce", () => {
     });
     expect(stubs.refreshClosedBucksMessages).not.toHaveBeenCalled();
     expect(stubs.announceSettlements).not.toHaveBeenCalled();
+  });
+
+  test("voids and announces a healthy match while another match's lookup fails", async () => {
+    const broken = await makeStalePool(MATCH_ID);
+    const healthy = await makeStalePool(HEALTHY_MATCH_ID);
+    stubs.postmatchReplyTargets.mockImplementation((matchId: string) =>
+      matchId === MATCH_ID
+        ? Promise.reject(new Error("malformed delivered intent"))
+        : Promise.resolve(new Map([[CHANNEL, REPORT_MESSAGE]])),
+    );
+
+    // The corrupt match still fails the step loudly, by name.
+    await expect(voidStaleAndAnnounce()).rejects.toThrow(MATCH_ID);
+
+    expect(await poolState(broken.id)).toEqual({
+      poolState: "open",
+      settledAt: null,
+    });
+    const healed = await poolState(healthy.id);
+    expect(healed.poolState).not.toBe("open");
+    expect(stubs.announceSettlements).toHaveBeenCalledTimes(1);
+    expect(stubs.announceSettlements).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchId: HEALTHY_MATCH_ID,
+        postmatchMessageIds: new Map([[CHANNEL, REPORT_MESSAGE]]),
+      }),
+    );
   });
 
   test("retries cleanly on the next pass and replies to the report", async () => {
