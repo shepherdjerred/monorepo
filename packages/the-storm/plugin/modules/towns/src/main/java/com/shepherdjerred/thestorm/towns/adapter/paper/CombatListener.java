@@ -51,6 +51,8 @@ final class CombatListener implements Listener {
    */
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onSwing(PrePlayerAttackEntityEvent event) {
+    // Scripted Citizens NPCs use the Player entity type, but town PvP flags do not apply to them.
+    if (isStormScriptedNpc(event.getAttacked())) return;
     if (!guard.permitsHarm(event.getPlayer(), event.getAttacked(), true)) {
       event.setCancelled(true);
     }
@@ -59,14 +61,15 @@ final class CombatListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onDamage(EntityDamageEvent event) {
     var victim = event.getEntity();
-    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
-      event.setCancelled(true);
-      return;
-    }
     var source = event.getDamageSource();
-    if (isStormScriptedNpc(source.getCausingEntity())
+    if (isStormScriptedNpc(victim)
+        || isStormScriptedNpc(source.getCausingEntity())
         || (event instanceof EntityDamageByEntityEvent byEntity
             && isStormScriptedNpc(byEntity.getDamager()))) {
+      return;
+    }
+    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      event.setCancelled(true);
       return;
     }
     // The damage source names the player behind it; the damager is the same player for events
@@ -107,7 +110,9 @@ final class CombatListener implements Listener {
   /** Only damage that survived protection and other plugins starts a combat switch lock. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onPlayerDamage(EntityDamageEvent event) {
-    if (!(event.getEntity() instanceof Player victim) || event.getFinalDamage() <= 0) {
+    if (!(event.getEntity() instanceof Player victim)
+        || isStormScriptedNpc(victim)
+        || event.getFinalDamage() <= 0) {
       return;
     }
     var attacker =

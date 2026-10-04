@@ -51,13 +51,19 @@ public final class CitizensBodies implements NpcBodies, Listener {
   @Override
   public void start(Runnable action) {
     reconcile = action;
+    reconcileIfReady();
   }
 
   @EventHandler
   public void onCitizensReady(CitizensEnableEvent event) {
+    reconcileIfReady();
+  }
+
+  private void reconcileIfReady() {
+    if (!CitizensAPI.hasImplementation()) return;
     registry = CitizensAPI.getNPCRegistry();
-    if (reconcile == null) throw new IllegalStateException("NPC reconciliation was not installed");
-    reconcile.run();
+    var action = reconcile;
+    if (action != null) action.run();
   }
 
   @Override

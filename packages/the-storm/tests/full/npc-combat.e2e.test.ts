@@ -170,19 +170,23 @@ describe("NPC combat on Paper with all modules", () => {
   }) => {
     await rcon.command("difficulty normal");
     await rcon.command("time set midnight");
-    await rcon.command("fill -60 63 -24 -14 63 24 minecraft:stone");
+    await rcon.command("fill 195 63 -5 205 63 10 minecraft:stone");
     // Move the guard far from its original home: this reproduces the old home-radius bug.
     await rcon.command(`gamemode spectator ${bot.username}`);
-    await rcon.command(`tp ${bot.username} 500 70 500`);
-    await rcon.command(`tp ${npc("guard-captain")} -35.5 64 6.5`);
-    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+    await rcon.command(`tp ${bot.username} 200.5 64 3.5`);
+    await waitUntil(
+      "hostile mob chunk loaded",
+      () => bot.entity.position.distanceTo(new Vec3(200.5, 64, 3.5)) < 0.3,
+    );
+    await rcon.command(`tp ${npc("guard-captain")} 200.5 64 6.5`);
+    await rcon.command(`tp ${npc("stan")} 200.5 64 0.5`);
     await rcon.command(
-      'summon minecraft:cow -34.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
+      'summon minecraft:cow 201.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
     );
     await Bun.sleep(1500);
     expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
     await rcon.command(
-      'summon minecraft:zombie -35.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
+      'summon minecraft:zombie 200.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
     );
     const original = await rcon.command(`data get entity ${npc("stan")} Pos`);
     await eventually(
