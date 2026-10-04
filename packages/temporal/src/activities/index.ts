@@ -52,10 +52,6 @@ import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-tur
 import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
 import { discordAgentChatActivities } from "./agent/chat/discord-ingress.ts";
 import { httpAgentChatActivities } from "./agent/chat/http-ingress.ts";
-import { pollBlueBubblesMessages } from "./agent/imessage/poll.ts";
-import { prepareImessageCommand } from "./agent/imessage/prepare.ts";
-import { deliverImessageResponse } from "./agent/imessage/deliver.ts";
-import { waitForImessageCommand } from "./agent/imessage/wait.ts";
 import { preparePhotonCommand } from "./agent/photon/prepare.ts";
 import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
 import { waitForPhotonCommand } from "./agent/photon/wait.ts";
@@ -163,12 +159,6 @@ export const agentChatDeliveryActivities = {
     discordAgentChatActivities.deliverDiscordAgentChatMessage,
 };
 
-export const imessageAgentChatActivities = {
-  pollBlueBubblesMessages,
-  prepareImessageCommand,
-  deliverImessageResponse,
-  waitForImessageCommand,
-};
 export const photonAgentChatActivities = {
   preparePhotonCommand,
   deliverPhotonResponse,

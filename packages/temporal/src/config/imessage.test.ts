@@ -3,7 +3,7 @@ const flag = vi.hoisted(() => vi.fn());
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
   createFlagConfigSource: () => ({ name: "flag", get: flag }),
 }));
-import { imessageIngressConfig, ImessageOwnersSchema } from "./imessage.ts";
+import { imessageChatModels, ImessageOwnersSchema } from "./imessage.ts";
 beforeEach(() => {
   vi.resetAllMocks();
   flag.mockResolvedValue(undefined);
@@ -18,37 +18,27 @@ describe("iMessage configuration boundaries", () => {
     expect(ImessageOwnersSchema.parse("[]")).toEqual([]);
     expect(() => ImessageOwnersSchema.parse("x".repeat(201))).toThrow();
   });
-  test("absence defaults off with no permitted senders", async () => {
-    expect(await imessageIngressConfig()).toMatchObject({
-      enabled: false,
-      owners: [],
-    });
-  });
-  test("the managed empty variant permits no senders", async () => {
-    flag.mockImplementation((names: { key: string }) =>
-      Promise.resolve(names.key === "owners" ? { value: "[]" } : undefined),
-    );
-    expect(await imessageIngressConfig()).toMatchObject({ owners: [] });
-  });
-  test("explicit false remains authoritative while other flags resolve", async () => {
-    flag.mockImplementation((names: { key: string }) =>
-      Promise.resolve({
-        value:
-          names.key !== "enabled" &&
-          (names.key === "owners" ? "owner" : "fixed-model"),
-      }),
-    );
-    expect(await imessageIngressConfig()).toEqual({
+  test("absence resolves the provider model defaults", async () => {
+    expect(await imessageChatModels()).toEqual({
       sourceAvailable: true,
-      enabled: false,
-      owners: ["owner"],
-      claudeModel: "fixed-model",
-      codexModel: "fixed-model",
+      claudeModel: "claude-opus-5",
+      codexModel: "gpt-5.6-luna",
     });
+  });
+  test("new chats resolve each provider's model without reading retired admission flags", async () => {
+    flag.mockImplementation((names: { key: string }) =>
+      Promise.resolve({ value: `${names.key}-override` }),
+    );
+    expect(await imessageChatModels()).toEqual({
+      sourceAvailable: true,
+      claudeModel: "claudeModel-override",
+      codexModel: "codexModel-override",
+    });
+    expect(flag).toHaveBeenCalledTimes(2);
   });
   test("present invalid flags fail instead of silently selecting defaults", async () => {
-    flag.mockResolvedValue({ value: "not-a-boolean" });
-    await expect(imessageIngressConfig()).rejects.toThrow();
+    flag.mockResolvedValue({ value: "" });
+    await expect(imessageChatModels()).rejects.toThrow();
   });
   test("source outages are observed and retain the safe default", async () => {
     const warning = vi.spyOn(console, "warn").mockImplementation(() => {
@@ -56,10 +46,10 @@ describe("iMessage configuration boundaries", () => {
     });
     try {
       flag.mockRejectedValue(new Error("source unavailable"));
-      expect(await imessageIngressConfig()).toMatchObject({
+      expect(await imessageChatModels()).toEqual({
         sourceAvailable: false,
-        enabled: false,
-        owners: [],
+        claudeModel: "claude-opus-5",
+        codexModel: "gpt-5.6-luna",
       });
       expect(warning).toHaveBeenCalled();
     } finally {

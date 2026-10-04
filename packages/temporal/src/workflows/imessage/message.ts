@@ -31,6 +31,7 @@ const delivery = proxyActivities<ImessageActivities>({
   startToCloseTimeout: "1 minute",
   retry: { maximumAttempts: 1 },
 });
+// Retained for closed-history replay; no Activity worker executes this retired transport.
 export async function imessageAgentChatWorkflow(
   rawCommand: ImessageCommand,
 ): Promise<void> {

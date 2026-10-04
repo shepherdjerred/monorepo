@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { slimEnvelopeSchema } from "@spectrum-ts/core/webhook";
 import { z } from "zod/v4";
-import { parseImessageAction } from "#lib/bluebubbles/messages.ts";
+import { parseImessageAction } from "#lib/imessage-action.ts";
 import { validateAgentChatIngressTimestamp } from "#shared/agent/agent-chat-ingress.ts";
 import { PhotonMessageSchema } from "#shared/agent/agent-chat-photon.ts";
 

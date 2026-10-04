@@ -29,7 +29,7 @@ export const TASK_QUEUES = {
   AGENT_CHAT_INGRESS: "agent-chat-ingress",
   /** Latency-sensitive Discord delivery, isolated from long command waits. */
   AGENT_CHAT_DELIVERY: "agent-chat-delivery",
-  /** BlueBubbles polling, chat selection, and single-attempt response delivery. */
+  /** Retired BlueBubbles queue identity, retained for Workflow history replay. */
   AGENT_CHAT_IMESSAGE: "agent-chat-imessage",
   /** Signed Photon chat preparation and single-attempt response delivery. */
   AGENT_CHAT_PHOTON: "agent-chat-photon",

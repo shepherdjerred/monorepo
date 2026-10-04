@@ -5,7 +5,6 @@ import {
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
   agentChatIngressActivities,
-  imessageAgentChatActivities,
   reportActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
@@ -18,6 +17,7 @@ import {
 const ACTIVITY_TASK_QUEUES = Object.values(TASK_QUEUES).filter(
   (taskQueue) =>
     taskQueue !== TASK_QUEUES.WORKFLOWS &&
+    taskQueue !== TASK_QUEUES.AGENT_CHAT_IMESSAGE &&
     taskQueue !== TASK_QUEUES.SCOUT_BETA &&
     taskQueue !== TASK_QUEUES.SCOUT_PROD,
 );
@@ -98,7 +98,6 @@ describe("Temporal worker role contracts", () => {
       workers: [
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS }),
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY }),
-        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE }),
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_PHOTON }),
       ],
     });
@@ -206,16 +205,13 @@ describe("Temporal worker role contracts", () => {
       maxConcurrentActivityTaskExecutions: 4,
     });
   });
-  it("isolates BlueBubbles polling and delivery from long-running ingress dispatch", () => {
-    const worker = QUEUE_WORKER_DEFINITIONS.find(
-      (definition) => definition.taskQueue === TASK_QUEUES.AGENT_CHAT_IMESSAGE,
-    );
-    expect(worker).toMatchObject({
-      kind: "activity",
-      role: "control",
-      activities: imessageAgentChatActivities,
-      maxConcurrentActivityTaskExecutions: 4,
-    });
+  it("does not register the retired BlueBubbles polling or delivery queue", () => {
+    expect(
+      QUEUE_WORKER_DEFINITIONS.some(
+        (definition) =>
+          definition.taskQueue === TASK_QUEUES.AGENT_CHAT_IMESSAGE,
+      ),
+    ).toBe(false);
     expect(Object.keys(agentActivities)).not.toContain(
       "deliverImessageResponse",
     );

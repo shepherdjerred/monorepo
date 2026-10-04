@@ -390,14 +390,14 @@ describe("durable iMessage ingress rollout", () => {
       "beta",
       "temporal",
     ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
     const prodFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "prod",
       "temporal",
     ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
 
     expect(betaFlag?.default).toBe(true);

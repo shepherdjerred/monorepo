@@ -1,4 +1,4 @@
-import { imessageIngressConfig } from "#config/imessage.ts";
+import { imessageChatModels } from "#config/imessage.ts";
 import { prepareImessageChatCommand } from "#lib/imessage-chat.ts";
 import { ImessageCommandSchema } from "#shared/agent/agent-chat-imessage.ts";
 import {
@@ -32,6 +32,6 @@ export async function preparePhotonCommand(rawCommand: PhotonCommand) {
       action,
     }),
     "photon",
-    imessageIngressConfig,
+    imessageChatModels,
   );
 }

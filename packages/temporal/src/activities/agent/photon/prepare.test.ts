@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("#client", () => ({
   createTemporalClient: async () => ({ workflow: {} }),
 }));
-vi.mock("#config/imessage.ts", () => ({ imessageIngressConfig: mocks.config }));
+vi.mock("#config/imessage.ts", () => ({ imessageChatModels: mocks.config }));
 vi.mock("#lib/agent-chat-client.ts", () => ({
   resolveAgentChatBinding: mocks.resolve,
   getAgentChat: mocks.get,
