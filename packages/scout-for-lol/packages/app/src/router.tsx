@@ -45,6 +45,8 @@ import { BucksSettings } from "#src/routes/bucks/bucks-settings.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { OperationsMatches } from "#src/routes/operations/operations-matches.tsx";
+import { OperationsInbox } from "#src/routes/operations/operations-inbox.tsx";
+import { Feedback } from "#src/routes/feedback.tsx";
 import { OperationsWorkspace } from "#src/routes/operations/operations-workspace.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
@@ -228,6 +230,11 @@ export const routes: RouteObject[] = [
         loader: requireSessionLoader,
         errorElement: <RouteErrorPanel />,
         children: [
+          {
+            path: "feedback",
+            element: <Feedback />,
+            errorElement: <RouteErrorPanel />,
+          },
           { index: true, element: <GuildPicker /> },
           {
             element: <ConsumerWorkspace />,
@@ -384,6 +391,11 @@ export const routes: RouteObject[] = [
           {
             path: "scout-client/pair/:pairingId",
             element: <ScoutClientPairing />,
+            errorElement: <RouteErrorPanel />,
+          },
+          {
+            path: "operations/inbox",
+            element: <OperationsInbox />,
             errorElement: <RouteErrorPanel />,
           },
           {

@@ -49,7 +49,6 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("outreach");
 
-const SUPPORT_USER = "<@160509172704739328>";
 const GETTING_STARTED =
   "https://scout-for-lol.com/docs/tutorials/first-notification/";
 const DASHBOARD = "https://scout-for-lol.com/app/";
@@ -92,7 +91,7 @@ type Plan =
 
 function helpLine(): string {
   return (
-    `\n\nNeed a hand? DM ${SUPPORT_USER} directly, or tell us how it's going: ` +
+    "\n\nNeed a hand? Reply to this DM to reach the Scout team, or tell us how it's going: " +
     getFeedbackUrl()
   );
 }
@@ -115,7 +114,7 @@ function feedbackAsk(serverName: string, state: GuildState): string {
     `👋 You've been using Scout in **${serverName}**${extra} for a couple of weeks now. ` +
     `How's it going?\n\nAnything broken, confusing, or missing? We read every reply here: ` +
     getFeedbackUrl() +
-    `\n\nOr DM ${SUPPORT_USER} directly.`
+    "\n\nYou can also reply to this DM. Your message goes to the Scout team's private support inbox."
   );
 }
 

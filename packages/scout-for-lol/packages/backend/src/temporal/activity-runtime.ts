@@ -1,5 +1,8 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
+import type { z } from "zod";
+import configuration from "#src/configuration.ts";
+import { ScoutBackgroundJobInputSchema } from "@scout-for-lol/temporal";
 import type {
   ScoutQueueCanaryProbeInput,
   ScoutQueueCanaryProbeResult,
@@ -23,6 +26,18 @@ export function probeQueue(
   });
   return Promise.resolve({ ...input, taskQueue });
 }
+
+export function scheduleReconciliationEnabled(): boolean {
+  return configuration.temporalScheduleReconciliation !== "disabled";
+}
+
+export const NonSupportBackgroundJobInputSchema =
+  ScoutBackgroundJobInputSchema.extend({
+    kind: ScoutBackgroundJobInputSchema.shape.kind.exclude(["support-inbox"]),
+  });
+export type NonSupportBackgroundJobInput = z.infer<
+  typeof NonSupportBackgroundJobInputSchema
+>;
 
 /**
  * How often to beat, as a fraction of the Activity's own heartbeat timeout.
