@@ -12,7 +12,14 @@ export const runSeaweedFsBackupWorkflow = (
 ) => seaweedBackup.runSeaweedFsBackupWorkflow(input);
 export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
   seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
+import { runWoodpeckerLogRetention as _runWoodpeckerLogRetention } from "./ci/woodpecker-retention.ts";
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
+
+export async function runWoodpeckerLogRetention(
+  input: Parameters<typeof _runWoodpeckerLogRetention>[0] = {},
+) {
+  return await _runWoodpeckerLogRetention(input);
+}
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./homelab/golink-sync.ts";
@@ -135,7 +142,6 @@ import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
 } from "./ops-snapshot.ts";
-import type { OpsPublishSummary } from "#activities/ops/ops-publish.ts";
 import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
 import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
 import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
@@ -449,9 +455,7 @@ export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapsh
   return _runLlmBilledCostReconciliation();
 }
 
-export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
-  return _runOpsSnapshot();
-}
+export const runOpsSnapshot = () => _runOpsSnapshot();
 
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],

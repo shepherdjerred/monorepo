@@ -5,6 +5,7 @@ import {
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
   agentChatIngressActivities,
+  opsWorkerActivities,
   reportActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
@@ -163,7 +164,36 @@ describe("Temporal worker role contracts", () => {
     expect(activityNamesFor("infra")).toContain("listTailscaleIngresses");
     expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
   });
+});
 
+describe("Ops activity isolation", () => {
+  it("isolates lightweight Ops reads without multiplying heavy infra jobs", () => {
+    const workers = getWorkerRoleContract("infra").workers;
+    const ops = workers.find((worker) => worker.taskQueue === TASK_QUEUES.OPS);
+    const infra = workers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.INFRA,
+    );
+    const mining = workers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.MINING_RESET,
+    );
+    expect(ops).toMatchObject({
+      kind: "activity",
+      activities: opsWorkerActivities,
+      maxConcurrentActivityTaskExecutions: 4,
+    });
+    expect(infra).toMatchObject({ maxConcurrentActivityTaskExecutions: 1 });
+    expect(mining).toMatchObject({ maxConcurrentActivityTaskExecutions: 1 });
+    expect(Object.keys(opsWorkerActivities)).not.toContain(
+      "runHomelabAuditAgent",
+    );
+    expect(Object.keys(opsWorkerActivities)).not.toContain(
+      "refreshHomelabCrdImports",
+    );
+    expect(activityNamesFor("infra")).toContain("collectOpsKubernetes");
+  });
+});
+
+describe("Temporal capability boundaries", () => {
   it("isolates scheduled chat waiters from repo automation", () => {
     const repoWorkers = getWorkerRoleContract("repo").workers;
     expect(repoWorkers.map((worker) => worker.taskQueue)).toEqual([

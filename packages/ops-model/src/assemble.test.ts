@@ -111,7 +111,9 @@ describe("assembleSnapshot", () => {
       "ci:main",
       "renovate:approve:foo",
     ]);
-    expect(delivery.summary).toBe("1 issue · 1 waiting on you");
+    expect(delivery.summary).toBe(
+      "1 issue · 1 informational signal · 1 waiting on you",
+    );
     expect(requireMetric(delivery, "github.prs.open").value).toBe(4);
     expect(() => requireMetric(delivery, "missing")).toThrow(/no metric/);
     expect(needsMeSignals(snapshot).map((s) => s.id)).toEqual([
@@ -122,6 +124,59 @@ describe("assembleSnapshot", () => {
     );
     expect(snapshot.summary).toContain("Delivery");
   });
+
+  test("informational errors do not receive an all-clear summary", () => {
+    const snapshot = assembleSnapshot({
+      generatedAt,
+      sources: sources(),
+      signals: [
+        {
+          id: "bugsink:historical",
+          source: "bugsink",
+          section: "errors",
+          kind: "unresolved-error",
+          severity: "info",
+          needsMe: false,
+          title: "Historical unresolved issue",
+        },
+      ],
+      metrics: [],
+    });
+    expect(findSection(snapshot, "errors").summary).toBe(
+      "1 informational signal",
+    );
+    expect(snapshot.summary).toBe(
+      "No areas need attention · informational data available",
+    );
+  });
+
+  test.each(["info", "warning"] as const)(
+    "metric-only %s sections report their actual status",
+    (severity) => {
+      const snapshot = assembleSnapshot({
+        generatedAt,
+        sources: sources(),
+        signals: [],
+        metrics: [
+          {
+            section: "errors",
+            source: "bugsink",
+            id: "errors.count",
+            label: "Errors",
+            value: 1,
+            unit: "count",
+            severity,
+          },
+        ],
+      });
+      expect(findSection(snapshot, "errors").summary).toBe(
+        severity === "info"
+          ? "Informational data available"
+          : "Metrics need attention",
+      );
+      expect(snapshot.summary).not.toBe("All systems healthy");
+    },
+  );
 
   test("rejects a signal that breaks the contract", () => {
     expect(() =>
@@ -143,6 +198,46 @@ describe("assembleSnapshot", () => {
       }),
     ).toThrow();
   });
+});
+
+describe("assembleSnapshot mixed metric attention", () => {
+  test.each(["unknown", "warning", "error"] as const)(
+    "summarizes %s metrics alongside informational signals",
+    (severity) => {
+      const snapshot = assembleSnapshot({
+        generatedAt,
+        sources: sources(),
+        signals: [
+          {
+            id: "bugsink:historical",
+            source: "bugsink",
+            section: "errors",
+            kind: "unresolved-error",
+            severity: "info",
+            needsMe: false,
+            title: "Historical unresolved issue",
+          },
+        ],
+        metrics: [
+          {
+            section: "errors",
+            source: "bugsink",
+            id: "errors.count",
+            label: "Errors",
+            value: 1,
+            unit: "count",
+            severity,
+          },
+        ],
+      });
+      const errors = findSection(snapshot, "errors");
+      expect(errors.severity).toBe(severity);
+      expect(errors.summary).toBe(
+        "1 informational signal · Metrics need attention",
+      );
+      expect(snapshot.summary).toContain("need attention (Errors)");
+    },
+  );
 });
 
 describe("applyFreshness", () => {

@@ -206,6 +206,10 @@ type CachedGuilds = {
   fetchedAt: number;
 };
 const guildsCache = new Map<string, CachedGuilds>();
+// One page can resolve membership in many parallel tRPC procedures. Share the
+// authoritative read (including token refresh) instead of bursting Discord's
+// per-user rate limit before any successful result has reached the TTL cache.
+const guildsRequests = new Map<string, Promise<PartialGuild[]>>();
 const GUILDS_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
@@ -310,6 +314,27 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     guildsCache.delete(user.discordId);
   }
 
+  const pending = guildsRequests.get(user.discordId);
+  if (pending !== undefined) return await pending;
+
+  const request = fetchUncachedUserGuilds(user);
+  guildsRequests.set(user.discordId, request);
+  try {
+    const guilds = await request;
+    // Re-authentication invalidates an old in-flight request too. Its answer
+    // may finish for its original caller, but must not repopulate the cache.
+    if (guildsRequests.get(user.discordId) === request) {
+      guildsCache.set(user.discordId, { guilds, fetchedAt: Date.now() });
+    }
+    return guilds;
+  } finally {
+    if (guildsRequests.get(user.discordId) === request) {
+      guildsRequests.delete(user.discordId);
+    }
+  }
+}
+
+async function fetchUncachedUserGuilds(user: User): Promise<PartialGuild[]> {
   const token = await getFreshUserAccessToken(user);
 
   const response = await fetchWithTimeout(
@@ -353,10 +378,6 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     );
   }
 
-  guildsCache.set(user.discordId, {
-    guilds: parsed.data,
-    fetchedAt: Date.now(),
-  });
   return parsed.data;
 }
 
@@ -366,4 +387,5 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
  */
 export function invalidateUserGuildsCache(discordId: string): void {
   guildsCache.delete(discordId);
+  guildsRequests.delete(discordId);
 }

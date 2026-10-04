@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { getScoutRuleGroups } from "./scout.ts";
 import { scoutGatewayAlertRoleMatcher } from "./scout-alert-constants.ts";
+import { getOpsSnapshotRuleGroups } from "./ops-snapshot.ts";
 
 describe("Scout Temporal alert rules", () => {
   const temporal = getScoutRuleGroups().find(
@@ -212,16 +213,19 @@ describe("Scout bot-health alert rules", () => {
     expect(expression).toContain("259200");
   });
 
-  test("warns when a cron job stalls", () => {
-    const rule = botHealth?.rules?.find(
-      (candidate) => candidate.alert === "ScoutCronJobStale",
-    );
+  test("covers background schedule outcomes through the current Temporal contract", () => {
+    expect(JSON.stringify(getScoutRuleGroups())).not.toContain("cron_job_");
+    const rule = getOpsSnapshotRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .find(
+        (candidate) => candidate.alert === "TemporalScheduledCurrentFailure",
+      );
     if (rule === undefined) {
-      throw new Error("Missing ScoutCronJobStale rule");
+      throw new Error("Missing Temporal schedule failure rule");
     }
     expect(rule.labels?.["severity"]).toBe("warning");
     expect(JSON.stringify(rule.expr)).toContain(
-      "cron_job_last_success_timestamp",
+      "temporal_schedule_last_terminal_failed",
     );
   });
 

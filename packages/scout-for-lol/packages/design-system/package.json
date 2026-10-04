@@ -42,7 +42,7 @@
   "scripts": {
     "build": "bun run generate && bun x --no-install storybook build",
     "dev": "bun run generate && bun x --no-install storybook dev --port 6006 --no-open",
-    "preview": "bun x --no-install vite preview --outDir storybook-static --host 127.0.0.1 --port 6006 --strictPort",
+    "preview": "bun --no-install scripts/preview-storybook.ts",
     "generate": "bun run scripts/generate-tokens.ts",
     "generate:brand": "bun run scripts/generate-brand.ts",
     "check:generated": "bun run scripts/generate-tokens.ts --check && bun run scripts/generate-brand.ts --check",

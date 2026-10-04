@@ -543,6 +543,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runVeleroR2OrphanAuditWorkflow",
   "runSeaweedFsBackupWorkflow",
   "runSeaweedFsBackupRetentionAndGcWorkflow",
+  // Bounded inventory and log-retention Activities; no Workflow-level sleeps.
+  "runWoodpeckerLogRetention",
   "syncGolinks",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",

@@ -1,5 +1,8 @@
 import type { PrometheusSample } from "@shepherdjerred/ops-clients/prometheus.ts";
-import type { VeleroScheduleStatus } from "@shepherdjerred/ops-clients/kubernetes.ts";
+import type {
+  VeleroBackupStatus,
+  VeleroScheduleStatus,
+} from "@shepherdjerred/ops-clients/kubernetes.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
@@ -7,6 +10,7 @@ import type { SignalInput } from "@shepherdjerred/ops-model/snapshot.ts";
 import { metricsLink } from "./ops-links.ts";
 import { metric, type OpsCollection } from "./ops-types.ts";
 import { backupFreshnessSignals } from "./backup-freshness.ts";
+import { veleroOutcomes } from "./velero-outcomes.ts";
 
 const EXCLUDED_FS = 'fstype!~"tmpfs|fuse.lxcfs|squashfs|overlay"';
 
@@ -149,6 +153,7 @@ function scalar(samples: readonly PrometheusSample[]): number | null {
 export function mapMaintenance(
   samples: MaintenanceSamples,
   schedules: readonly VeleroScheduleStatus[],
+  backupResources: readonly VeleroBackupStatus[],
   now: Date,
 ): OpsCollection {
   const certificates = certificateSignals(samples);
@@ -169,9 +174,30 @@ export function mapMaintenance(
     (sample) => sample.value,
   );
   const maxDisk = ratios.length === 0 ? null : Math.max(...ratios);
+  const outcomes = veleroOutcomes(backupResources, schedules);
+  const unknownOutcomes = outcomes.observations.some(
+    (observation) => observation.failed === undefined,
+  );
   return {
-    signals: [...certificates, ...capacity, ...backups],
+    signals: [...certificates, ...capacity, ...backups, ...outcomes.signals],
     metrics: [
+      metric({
+        section: "maintenance",
+        source: "maintenance",
+        id: METRIC_IDS.backupsFailed,
+        label: "Failed backup schedules",
+        value:
+          unknownOutcomes && outcomes.signals.length === 0
+            ? null
+            : outcomes.signals.length,
+        unit: "count",
+        severity:
+          outcomes.signals.length > 0
+            ? "warning"
+            : unknownOutcomes
+              ? "unknown"
+              : "ok",
+      }),
       metric({
         section: "maintenance",
         source: "maintenance",

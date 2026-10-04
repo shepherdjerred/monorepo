@@ -99,6 +99,9 @@ therefore splits identities:
   the tab loading indefinitely.
   Upcoming events cannot be queued; the existing sports gate and control
   restrictions apply.
+  Unexpected request failures log a known endpoint and bounded error categories,
+  including nested provider failures, without recording URLs, request input,
+  identities, or raw error messages.
 - **Transports** — the userbot emits media two ways. Numbered slots fix the
   transport; legacy queues choose per item. Music
   plays as microphone audio over the ordinary voice connection (`speaking: 1`,

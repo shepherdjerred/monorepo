@@ -1,6 +1,7 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import { smartTemperatureCelsiusExpression } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartmon-metrics.ts";
 
 // smartmon_* metrics are keyed by `disk` (e.g. /dev/nvme0, /dev/sda) — the device
 // path assigned at scan time, which is NOT stable across reboots or controller
@@ -54,7 +55,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "SmartDeviceTemperatureHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             withSmartIdentity(
-              'smartmon_temperature_celsius_value{type!="nvme"} > 60',
+              `${smartTemperatureCelsiusExpression(true)} > 60`,
             ),
           ),
           for: "5m",
@@ -75,7 +76,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "SmartDeviceTemperatureCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             withSmartIdentity(
-              'smartmon_temperature_celsius_value{type!="nvme"} > 70',
+              `${smartTemperatureCelsiusExpression(true)} > 70`,
             ),
           ),
           for: "1m",
@@ -295,7 +296,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           record: "smartmon:temperature_celsius",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_temperature_celsius_value",
+            smartTemperatureCelsiusExpression(),
           ),
         },
         {

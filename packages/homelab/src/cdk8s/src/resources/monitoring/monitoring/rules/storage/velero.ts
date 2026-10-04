@@ -60,6 +60,20 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "velero-backup",
       rules: [
         {
+          alert: "VeleroBackupResourceFailed",
+          annotations: {
+            summary: "Latest terminal Velero backup failed or partially failed",
+            message: escapePrometheusTemplate(
+              "Velero schedule {{ $labels.backup_namespace }}/{{ $labels.schedule }} has a failed or partially failed terminal Backup resource. A running successor does not establish recovery; inspect the Backup CR outcome and wait for a later completed backup.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "(max by(backup_namespace,schedule) (velero_schedule_last_terminal_failed and on(namespace,pod,backup_namespace,schedule) (velero_schedule_observation_timestamp_seconds == on(backup_namespace,schedule) group_left max by(backup_namespace,schedule) (velero_schedule_observation_timestamp_seconds))) == 1) and on(backup_namespace,schedule) (max by(backup_namespace,schedule) (velero_schedule_observation_timestamp_seconds) > time() - 900)",
+          ),
+          for: "5m",
+          labels: { severity: "warning" },
+        },
+        {
           alert: "VeleroBackupFailed",
           annotations: {
             summary: "Velero backup has failed",

@@ -344,6 +344,12 @@ export function createLokiApp(chart: Chart) {
       },
       // Ruler configuration for alerting (structuredConfig merges with templated config)
       structuredConfig: {
+        pattern_ingester: {
+          // The default 5,000-line tee batch exceeded the pattern gRPC
+          // receiver's 4 MiB limit (observed 5.15 MiB). Bound batches instead
+          // of relaxing the receiver limit; raw-log ingestion is unaffected.
+          tee_config: { batch_size: 500 },
+        },
         ruler: {
           alertmanager_url:
             "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
