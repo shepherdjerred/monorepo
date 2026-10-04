@@ -30,6 +30,8 @@ Platform commands (native CLI passthroughs):
   tailscale   Tailscale CLI
 
 Monorepo workflows:
+  ci wait [PR]                Block until merge readiness or an actionable blocker
+  ci explain|main|load        Failure evidence, main health, and CI capacity
   brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
   pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
@@ -74,6 +76,7 @@ type SubcommandHandler = (
 
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  ["ci", () => import("./handlers/ci.ts").then((m) => m.handleCiCommand)],
   [
     "alerts",
     () => import("./handlers/alerts.ts").then((m) => m.handleAlertsCommand),

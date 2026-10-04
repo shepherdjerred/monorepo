@@ -36,8 +36,18 @@ based on the whole branch, not the latest commit.
 
 ## Prove readiness
 
-- Woodpecker is authoritative for CI. Use `toolkit pr health <PR>` or
-  `toolkit bk`; do not infer status from GitHub Actions.
+- Woodpecker is authoritative for CI. Use `toolkit ci wait <PR> --json` for
+  merge readiness and `toolkit ci explain <PR>` for bounded failure evidence.
+  Keep awaiting the same foreground process. Long queues and builds are normal;
+  elapsed time alone is not a failure. Use `toolkit ci load` for capacity.
+- Wait exits distinguish CI failure (1), errors (2), human intervention (3),
+  head changes (4), red main (5), timeout (6), and closed/merged PRs (7).
+  On red main, report the failure and await instructions; do not repair main.
+  A timeout is not CI failure. A changed head requires an explicit new wait.
+  Use `--until settled` when collecting all blocking results is useful.
+  Full command and credential details live in `packages/toolkit/README.md`.
+- Use `toolkit pr review list <PR> --json` for authors, priority, full feedback,
+  and raw GitHub API commands. Do not infer CI status from GitHub Actions.
 - Verify the exact PR head. A prior build or a green sibling branch is not
   evidence for the current commit.
 - Source, CI, artifact publication, ArgoCD deployment, and live behavior are

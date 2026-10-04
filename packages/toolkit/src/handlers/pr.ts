@@ -44,6 +44,7 @@ async function handleReview(args: string[]): Promise<void> {
       evidence: { type: "string" },
       provider: { type: "string" },
       retry: { type: "boolean", default: false },
+      all: { type: "boolean", default: false },
     },
     allowPositionals: true,
   });
@@ -55,6 +56,7 @@ async function handleReview(args: string[]): Promise<void> {
     evidence: values.evidence,
     provider: values.provider,
     all: values.retry,
+    includeAll: values.all,
   };
   // Handled before the switch rather than as a case: `process.exit` returns
   // `never`, so a `break` there is unreachable code while its absence reads as
@@ -101,8 +103,8 @@ Subcommands:
                              print URLs. Dirs need a root index.html; .cast
                              files get a generated HTML player page.
 
-  review list <PR>     Every provider finding, deduplicated across the
-                       surfaces it was posted on, with both handles
+  review list [PR]    Current feedback from every reviewer, including author,
+                       priority, contents, source handles, and raw API command
   review resolve <PR>  Clear one finding on every surface at once
                        (--finding <key|title> --evidence <text>)
   review harvest <PR…> Report gates that failed only because the review
@@ -117,7 +119,8 @@ Options:
   --profile <name>      (asset) AWS profile to use (overrides AWS_PROFILE)
   --finding <key>       (review resolve) Finding key or exact title
   --evidence <text>     (review resolve) Why it is resolved; required
-  --provider <id>       (review list/resolve) Provider (default: codex)
+  --provider <id>       Filter list to one provider; resolve defaults to codex
+  --all                 (review list) Include resolved and outdated feedback
   --retry               (review harvest) Re-run the eligible jobs
 
 Credentials (asset):

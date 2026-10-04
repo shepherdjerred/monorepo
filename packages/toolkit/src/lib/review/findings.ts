@@ -36,6 +36,7 @@ export type Finding = {
   path: string | null;
   line: number | null;
   isResolved: boolean;
+  isOutdated: boolean;
   threadId: string | null;
   commentId: number | null;
   url: string | null;
@@ -48,6 +49,7 @@ export async function listFindings(input: {
   token: string;
   provider?: ReviewProvider | undefined;
   head?: string | undefined;
+  includeOutdated?: boolean | undefined;
 }): Promise<{
   head: string;
   findings: Finding[];
@@ -78,7 +80,8 @@ export async function listFindings(input: {
   const findings = threads
     .filter(
       (thread) =>
-        isProviderAuthor(provider, thread.authorLogin) && !thread.isOutdated,
+        isProviderAuthor(provider, thread.authorLogin) &&
+        (!thread.isOutdated || input.includeOutdated === true),
     )
     .map((thread, index) => toFinding(thread, provider, index));
   return { head, findings, reviewState: state };
@@ -153,6 +156,7 @@ function toFinding(
     path: thread.path,
     line: thread.line,
     isResolved: thread.isResolved,
+    isOutdated: thread.isOutdated,
     threadId: thread.threadId,
     commentId: thread.commentId,
     url: thread.url,
