@@ -46,7 +46,9 @@ describe("Home Assistant rules", () => {
     expect(
       fountainRules.find((rule) => rule.alert === "PetLibroFountainWaterLow")
         ?.expr.value,
-    ).toContain(" < 60");
+    ).toBe(
+      'homeassistant_binary_sensor_state{entity="binary_sensor.petlibro_fountain_water_low"} == 1',
+    );
     expect(
       litterRules.find((rule) => rule.alert === "LitterRobotLitterLow")?.expr
         .value,

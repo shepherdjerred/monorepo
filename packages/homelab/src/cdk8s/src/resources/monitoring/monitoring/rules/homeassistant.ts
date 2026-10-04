@@ -41,10 +41,22 @@ const masterBathroomTemperatureAvailability =
 const masterBathroomTemperatureUnavailableExpr = `${masterBathroomTemperatureAvailability} == 0 or absent(${masterBathroomTemperatureAvailability})`;
 
 const PET_CARE_ENTITY_IDS = [
+  "vacuum.storage_litter_box",
+  "sensor.storage_status_code",
+  "binary_sensor.storage_bonnet_removed",
+  "binary_sensor.storage_drawer_removed",
+  "binary_sensor.storage_laser_dirty",
+  "binary_sensor.litter_robot_problem",
+  "binary_sensor.litter_robot_stalled",
+  "binary_sensor.petlibro_living_room_feeder_problem",
+  "binary_sensor.petlibro_guest_room_feeder_problem",
+  "binary_sensor.petlibro_fountain_water_low",
+  "binary_sensor.petlibro_fountain_operation_problem",
   "binary_sensor.dockstream_2_smart_fountain_water_dispensing_state",
   "binary_sensor.dockstream_2_smart_fountain_wi_fi",
   "sensor.dockstream_2_smart_fountain_remaining_cleaning_days",
   "sensor.dockstream_2_smart_fountain_remaining_filter_day",
+  "sensor.dockstream_2_smart_fountain_remaining_water",
   "sensor.dockstream_2_smart_fountain_remaining_water_2",
   "select.dockstream_2_smart_fountain_water_dispensing_mode",
   ...["", "_2"].flatMap((suffix) => [
@@ -99,31 +111,20 @@ function feederRules(
   suffix: "" | "_2",
 ) {
   const prefix = "granary_smart_camera_feeder";
+  const room = id === "LivingRoom" ? "living_room" : "guest_room";
   return [
     createBinarySensorAlert({
-      name: `PetLibroFeeder${id}FoodLow`,
-      entity: `binary_sensor.${prefix}_food_status${suffix}`,
-      description: `${label} PetLibro feeder reports low food.`,
-      summary: `${label} PetLibro feeder food low`,
-    }),
-    createBinarySensorAlert({
-      name: `PetLibroFeeder${id}DispenserProblem`,
-      entity: `binary_sensor.${prefix}_food_dispenser${suffix}`,
-      description: `${label} PetLibro feeder reports a dispenser failure.`,
-      summary: `${label} PetLibro feeder dispenser problem`,
+      name: `PetLibroFeeder${id}Problem`,
+      entity: `binary_sensor.petlibro_${room}_feeder_problem`,
+      description: `${label} PetLibro feeder reports low/empty food, a dispenser failure, missing telemetry, disconnected Wi-Fi, or no feeding in over 14 hours. Check its HA notification for details.`,
+      summary: `${label} PetLibro feeder needs attention`,
+      duration: "0s",
     }),
     createBinarySensorAlert({
       name: `PetLibroFeeder${id}BatteryProblem`,
       entity: `binary_sensor.${prefix}_battery_status${suffix}`,
       description: `${label} PetLibro feeder reports a battery problem.`,
       summary: `${label} PetLibro feeder battery problem`,
-    }),
-    expressionAlert({
-      name: `PetLibroFeeder${id}WifiDisconnected`,
-      expression: `homeassistant_binary_sensor_state{entity="binary_sensor.${prefix}_wi_fi${suffix}"} == 0`,
-      description: `${label} PetLibro feeder Wi-Fi is disconnected.`,
-      summary: `${label} PetLibro feeder offline`,
-      duration: "5m",
     }),
     createSensorAlert({
       name: `PetLibroFeeder${id}DesiccantDue`,
@@ -134,13 +135,6 @@ function feederRules(
       summary: `${label} PetLibro feeder desiccant due`,
       duration: "1h",
     }),
-    expressionAlert({
-      name: `PetLibroFeeder${id}NotDispensing`,
-      expression: `time() - homeassistant_sensor_timestamp_seconds{entity="sensor.${prefix}_last_feed_time${suffix}"} > 50400`,
-      description: `${label} PetLibro feeder has not dispensed food in over 14 hours.`,
-      summary: `${label} PetLibro feeder not dispensing`,
-      duration: "30m",
-    }),
   ];
 }
 
@@ -149,14 +143,13 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-petlibro-fountain",
       rules: [
-        createSensorAlert({
+        createBinarySensorAlert({
           name: "PetLibroFountainWaterLow",
-          entity:
-            'homeassistant_sensor_unit_percent{entity="sensor.dockstream_2_smart_fountain_remaining_water_2"}',
-          condition: "<",
-          threshold: 60,
-          description: "PetLibro fountain water is below 60%: {{ $value }}%.",
-          summary: "PetLibro fountain water low",
+          entity: "binary_sensor.petlibro_fountain_water_low",
+          description:
+            "PetLibro fountain water has stayed below 650 mL for 15 minutes. Refill the tank.",
+          summary: "PetLibro fountain water shortage",
+          duration: "0s",
         }),
         createSensorAlert({
           name: "PetLibroFountainCleaningDue",
@@ -184,7 +177,8 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           description:
             "PetLibro fountain is offline, not in Flowing Water (Constant) mode, or has not dispensed for five minutes.",
           summary: "PetLibro fountain operation problem",
-          duration: "5m",
+          // HA settles this sensor for five minutes before either channel sees it.
+          duration: "0s",
         }),
       ],
     },
@@ -198,6 +192,22 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-litter-robot",
       rules: [
+        createBinarySensorAlert({
+          name: "LitterRobotHomeAssistantProblem",
+          entity: "binary_sensor.litter_robot_problem",
+          description:
+            "Home Assistant reports a persistent Litter-Robot error, offline/powered-off state, removed bonnet/drawer, or dirty laser. Check the robot and its HA status code.",
+          summary: "Litter-Robot needs attention",
+          duration: "0s",
+        }),
+        createBinarySensorAlert({
+          name: "LitterRobotStalled",
+          entity: "binary_sensor.litter_robot_stalled",
+          description:
+            "The Litter-Robot has not returned to ready for 45 minutes. Check for a stuck cycle, blocked sensor, or paused robot.",
+          summary: "Litter-Robot appears stalled",
+          duration: "0s",
+        }),
         createSensorAlert({
           name: "LitterRobotLitterLow",
           entity: "trmnl_petcare_litter_percent",

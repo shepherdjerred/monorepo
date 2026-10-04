@@ -198,7 +198,9 @@ export function parseLitterRobotDiagnostics(
   );
   const ready = state.statusIndicator.type.toUpperCase() === "READY";
   const faulted =
-    !ready ||
+    !["READY", "CYCLING", "CAT_DETECTED", "LITTER_LOW"].includes(
+      state.statusIndicator.type.toUpperCase(),
+    ) ||
     state.isLaserDirty ||
     state.isBonnetRemoved ||
     state.isDrawerRemoved ||
