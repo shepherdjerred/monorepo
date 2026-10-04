@@ -88,6 +88,18 @@ final class TownsModuleTest {
   }
 
   @Test
+  void aParcelWorldTheServerHasNotLoadedStopsTheModule() throws Exception {
+    Files.copy(SHIPPED, directory.resolve("towns.yml"));
+    var parcels = Files.readString(Path.of("../../../server/owned/plugins/TheStorm/parcels.yml"));
+    Files.writeString(
+        directory.resolve("parcels.yml"), parcels.replace("world: world", "world: atlantis"));
+
+    assertThatThrownBy(() -> new TownsModule().enable(context()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("atlantis");
+  }
+
+  @Test
   void aMissingConfigStopsTheModule() {
     assertThatThrownBy(() -> new TownsModule().enable(context()))
         .isInstanceOf(RuntimeException.class);

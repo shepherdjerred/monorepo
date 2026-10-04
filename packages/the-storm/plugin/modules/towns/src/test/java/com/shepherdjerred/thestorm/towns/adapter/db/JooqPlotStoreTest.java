@@ -102,6 +102,8 @@ final class JooqPlotStoreTest {
         .hasRootCauseInstanceOf(IllegalStateException.class);
     var replacement = UUID.randomUUID();
     await(recoveries.reissue(saved.id(), owner, saved.token(), replacement));
+    await(recoveries.reissue(saved.id(), owner, saved.token(), replacement));
+    assertThat(await(recoveries.byId(saved.id())).orElseThrow().token()).isEqualTo(replacement);
     assertThatThrownBy(
             () ->
                 await(
