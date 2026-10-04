@@ -75,6 +75,15 @@ recognise them. They are marked with a dim ✦ after their name in the tab
 list and on their nametag, and `/rwf who` lists which players in the round
 are bots. They are tuned to be beatable, not perfect.
 
+Bots also talk. Each one has its own voice and might greet the round, brag
+about a kill, complain about a death, cheer a bomb it armed or say gg at the
+end. Their lines appear in chat with the same ✦ after the name, for example
+`[Gravel_Fox ✦]: nice try, Alice`, so you can always tell a bot from a
+person. Bot chat stays in the Search and Destroy world: only players in the
+round and people watching it see it, never survival chat or Discord. Bots do
+not read or answer your messages, and each bot waits a while between lines
+so chat never floods.
+
 ## Rewards
 
 A win pays 3 Crystals and a loss pays 1. The payout shrinks as the share of
