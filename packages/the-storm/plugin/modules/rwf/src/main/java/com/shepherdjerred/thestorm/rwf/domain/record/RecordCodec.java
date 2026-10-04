@@ -12,8 +12,10 @@ import java.util.UUID;
 
 /**
  * Writes and reads a {@link MatchRecord} as tab-separated lines, one row per record, so a recording
- * needs no library and can be appended to as the match runs. Tabs, newlines and backslashes inside
- * fields are escaped with a backslash.
+ * needs no library and can be appended to as the match runs: the row encoders ({@link #header},
+ * {@link #event}, {@link #frame}, {@link #intent}, {@link #end}) write a match as it happens and
+ * {@link #decode} reads the rows back in any order. Tabs, newlines and backslashes inside fields
+ * are escaped with a backslash.
  */
 public final class RecordCodec {
 
@@ -23,7 +25,23 @@ public final class RecordCodec {
 
   public static String encode(MatchRecord record) {
     var out = new StringBuilder();
-    var header = record.header();
+    out.append(header(record.header()));
+    for (var event : record.events()) {
+      out.append(event(event));
+    }
+    for (var frame : record.frames()) {
+      out.append(frame(frame));
+    }
+    for (var intent : record.intents()) {
+      out.append(intent(intent));
+    }
+    out.append(end(record.end()));
+    return out.toString();
+  }
+
+  /** The header row and one roster row per combatant, each newline-terminated. */
+  public static String header(RecordHeader header) {
+    var out = new StringBuilder();
     row(
         out,
         "H",
@@ -42,34 +60,51 @@ public final class RecordCodec {
           entry.kit(),
           String.valueOf(entry.bot()));
     }
-    for (var event : record.events()) {
-      row(out, "E", String.valueOf(event.tick()), event.kind(), event.subject(), event.detail());
-    }
-    for (var frame : record.frames()) {
-      row(
-          out,
-          "F",
-          String.valueOf(frame.tick()),
-          frame.pseudonym(),
-          String.valueOf(frame.x()),
-          String.valueOf(frame.y()),
-          String.valueOf(frame.z()),
-          String.valueOf(frame.yaw()),
-          String.valueOf(frame.pitch()),
-          String.valueOf(frame.health()),
-          String.valueOf(frame.slot()),
-          String.valueOf(frame.flags()));
-    }
-    for (var intent : record.intents()) {
-      row(
-          out,
-          "I",
-          String.valueOf(intent.tick()),
-          intent.pseudonym(),
-          intent.kind(),
-          intent.target());
-    }
-    var end = record.end();
+    return out.toString();
+  }
+
+  /** One event row, newline-terminated. */
+  public static String event(RecordEvent event) {
+    var out = new StringBuilder();
+    row(out, "E", String.valueOf(event.tick()), event.kind(), event.subject(), event.detail());
+    return out.toString();
+  }
+
+  /** One frame row, newline-terminated. */
+  public static String frame(Frame frame) {
+    var out = new StringBuilder();
+    row(
+        out,
+        "F",
+        String.valueOf(frame.tick()),
+        frame.pseudonym(),
+        String.valueOf(frame.x()),
+        String.valueOf(frame.y()),
+        String.valueOf(frame.z()),
+        String.valueOf(frame.yaw()),
+        String.valueOf(frame.pitch()),
+        String.valueOf(frame.health()),
+        String.valueOf(frame.slot()),
+        String.valueOf(frame.flags()));
+    return out.toString();
+  }
+
+  /** One intent row, newline-terminated. */
+  public static String intent(Intent intent) {
+    var out = new StringBuilder();
+    row(
+        out,
+        "I",
+        String.valueOf(intent.tick()),
+        intent.pseudonym(),
+        intent.kind(),
+        intent.target());
+    return out.toString();
+  }
+
+  /** The end row and one payout row per paid pseudonym, each newline-terminated. */
+  public static String end(RecordEnd end) {
+    var out = new StringBuilder();
     row(
         out,
         "X",
