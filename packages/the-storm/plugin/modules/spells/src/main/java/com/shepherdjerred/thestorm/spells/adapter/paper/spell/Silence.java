@@ -29,7 +29,7 @@ final class Silence implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Aim.creature(tools, caster, settings.range())
+    return Aim.creatureEffect(tools, caster, settings.range())
         .flatMap(
             target ->
                 target instanceof Player victim

@@ -36,7 +36,7 @@ public final class StormFixtures extends JavaPlugin {
           ((Number) anchor.get("y")).doubleValue(),
           ((Number) anchor.get("z")).doubleValue());
     }
-    for (var name : java.util.List.of("spawn", "quest-givers")) {
+    for (var name : java.util.List.of("spawn", "quest-givers", "watch")) {
       var npcs = yaml("npcs/" + name + ".yml");
       var homes = section(npcs, "npcs");
       for (var id : homes.getKeys(false)) {

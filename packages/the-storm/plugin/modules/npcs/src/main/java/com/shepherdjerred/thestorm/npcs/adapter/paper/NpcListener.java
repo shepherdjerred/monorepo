@@ -1,20 +1,23 @@
 package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.npcs.app.MarkerService;
 import com.shepherdjerred.thestorm.npcs.app.NpcInteractEvent;
 import com.shepherdjerred.thestorm.npcs.app.NpcRef;
 import com.shepherdjerred.thestorm.npcs.app.NpcTalk;
+import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.PluginManager;
 
-/** Clicks on NPCs, NPC invulnerability, chunk loads and quits. */
+/** NPC interactions, accepted attacks, next-dawn deaths, chunk loads and quits. */
 final class NpcListener implements Listener {
 
   private final NpcWorld world;
@@ -41,6 +44,13 @@ final class NpcListener implements Listener {
     if (event.getHand() != EquipmentSlot.HAND) {
       return;
     }
+    if (!world.available(npc.get().id())) {
+      event
+          .getPlayer()
+          .sendMessage(
+              HouseStyle.info(npc.get().name(), Component.text("I can't talk right now.")));
+      return;
+    }
     var interact = new NpcInteractEvent(event.getPlayer(), NpcRef.of(npc.get()));
     events.callEvent(interact);
     if (!interact.isCancelled()) {
@@ -48,12 +58,62 @@ final class NpcListener implements Listener {
     }
   }
 
-  /** NPCs are invulnerable even to creative players. */
+  /** Briefly protect saved entities while their combat state loads. */
   @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-  void onDamage(EntityDamageEvent event) {
-    if (world.npcOf(event.getEntity()).isPresent()) {
+  void onLoadingDamage(EntityDamageEvent event) {
+    if (!world.ready() && world.npcOf(event.getEntity()).isPresent()) {
+      // A saved NPC must not die before its durable absence can be recorded.
       event.setCancelled(true);
     }
+  }
+
+  /** Damage allowances apply only after startup state is available. */
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onDamage(EntityDamageEvent event) {
+    if (!world.ready() || event.getFinalDamage() <= 0) {
+      return;
+    }
+    world
+        .npcOf(event.getEntity())
+        .ifPresent(
+            npc ->
+                NpcAttackers.attacker(event)
+                    .ifPresent(
+                        attacker -> {
+                          var victim = (org.bukkit.entity.LivingEntity) event.getEntity();
+                          world
+                              .combat()
+                              .hit(
+                                  npc,
+                                  victim,
+                                  attacker,
+                                  event.getFinalDamage() >= victim.getHealth());
+                        }));
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  void onDeathDrops(EntityDeathEvent event) {
+    if (world.npcOf(event.getEntity()).isPresent()) {
+      event.getDrops().clear();
+      event.setDroppedExp(0);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onDeath(EntityDeathEvent event) {
+    world
+        .npcOf(event.getEntity())
+        .ifPresent(
+            npc -> {
+              world
+                  .combat()
+                  .died(
+                      npc,
+                      event.getEntity(),
+                      NpcAttackers.attacker(event.getDamageSource())
+                          .or(() -> java.util.Optional.ofNullable(event.getEntity().getKiller())));
+              world.died(npc.id());
+            });
   }
 
   @EventHandler

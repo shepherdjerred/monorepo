@@ -8,28 +8,34 @@ import java.util.function.Predicate;
 import org.bukkit.Location;
 import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 
-/** Selects a visible hostile inside both the guard's detection circle and its home area. */
+/** Selects visible threats around an NPC's current position, wherever its routine took it. */
 final class GuardThreats {
 
   private GuardThreats() {}
 
-  record Search(Location feet, Location home, NpcsConfig.Guard guard) {}
+  record Search(Location feet, NpcsConfig.Guard guard) {}
 
-  static Optional<Enemy> nearest(
-      Collection<Entity> nearby, Search search, Predicate<Enemy> visible) {
+  record Filters(
+      Predicate<LivingEntity> eligible,
+      Predicate<LivingEntity> offender,
+      Predicate<LivingEntity> visible) {}
+
+  static Optional<LivingEntity> nearest(Collection<Entity> nearby, Search search, Filters filters) {
     var feet = search.feet();
-    var home = search.home();
     var guard = search.guard();
-    var homeLimit = guard.homeRadius() * guard.homeRadius();
     var detectionLimit = guard.detectionRadius() * guard.detectionRadius();
     return nearby.stream()
-        .filter(Enemy.class::isInstance)
-        .map(Enemy.class::cast)
+        .filter(LivingEntity.class::isInstance)
+        .map(LivingEntity.class::cast)
+        .filter(filters.eligible())
+        .filter(enemy -> enemy instanceof Enemy || filters.offender().test(enemy))
         .filter(enemy -> enemy.isValid() && !enemy.isDead())
         .filter(enemy -> enemy.getLocation().distanceSquared(feet) <= detectionLimit)
-        .filter(enemy -> enemy.getLocation().distanceSquared(home) <= homeLimit)
-        .filter(visible)
-        .min(Comparator.comparingDouble(enemy -> enemy.getLocation().distanceSquared(feet)));
+        .filter(filters.visible())
+        .min(
+            Comparator.<LivingEntity, Boolean>comparing(enemy -> !filters.offender().test(enemy))
+                .thenComparingDouble(enemy -> enemy.getLocation().distanceSquared(feet)));
   }
 }

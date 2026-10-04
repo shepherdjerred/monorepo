@@ -106,6 +106,7 @@ final class NpcsPaperTest {
         MockBukkit.loadWith(
             NpcsTestPlugin.class,
             new PluginDescriptionFile("TheStorm", "test", NpcsTestPlugin.class.getName()));
+    server.getScheduler().performTicks(1);
   }
 
   private NpcsTestPlugin plugin() {
@@ -167,11 +168,27 @@ final class NpcsPaperTest {
     assertThat(nat.isCustomNameVisible()).isTrue();
     assertThat(plain(Objects.requireNonNull(nat.getDescription()))).isEqualTo("Test");
     assertThat(nat.isImmovable()).isTrue();
-    assertThat(nat.isInvulnerable()).isTrue();
+    assertThat(nat.isInvulnerable()).isFalse();
     assertThat(nat.isPersistent()).isTrue();
     assertThat(nat.getPose()).isEqualTo(Pose.SNEAKING);
     assertThat(nat.getLocation().getX()).isEqualTo(0.5);
     assertThat(plugin().tickets).isNotEmpty();
+  }
+
+  @Test
+  void matchingSavedNpcsLoseInvulnerabilityWithoutHealingOnReload() throws IOException {
+    writeContent(npc("nat", "Nat", 0.5, "hello"));
+    enable();
+    var nat = mannequin("nat");
+    nat.setHealth(7);
+    nat.setInvulnerable(true);
+    var admin = server.addPlayer("Admin");
+    admin.setOp(true);
+    server.dispatchCommand(admin, "npc reload");
+    server.getScheduler().performTicks(2);
+    assertThat(mannequin("nat").getUniqueId()).isEqualTo(nat.getUniqueId());
+    assertThat(nat.isInvulnerable()).isFalse();
+    assertThat(nat.getHealth()).isEqualTo(7);
   }
 
   @Test

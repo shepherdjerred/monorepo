@@ -20,8 +20,7 @@ movement:
   dwellMaxTicks: 240
 
 animation:
-  # NPCs move only while a player is within this many blocks; the rest stand
-  # still, which keeps the cost per tick bounded by what players can see.
+  # Idle NPCs animate only near players; threat reactions also run without them.
   playerRadius: 48
   # A resting NPC turns to look at a player this close.
   lookRadius: 6
@@ -29,9 +28,10 @@ animation:
   thinkIntervalTicks: 20
 
 guard:
-  # A guard reacts to hostile mobs it can see near itself and its home post.
+  # Detection follows each NPC, including civilians, wherever they are now.
   detectionRadius: 12
-  homeRadius: 16
+  responseRadius: 48
+  pursuitRadius: 64
   attackReach: 2.5
   damage: 4
   cooldownTicks: 20
@@ -62,3 +62,31 @@ dialog:
   # further than holdRadius blocks away.
   holdSeconds: 30
   holdRadius: 8
+
+# The first two damaging player hits on each NPC earn warnings before dawn.
+# Phrases rotate without repetition; the final warning adds an explicit guard warning.
+warningPhrases:
+  - "Easy there. Keep that weapon to yourself."
+  - "Mind your manners, traveler."
+  - "That hurt. Put the weapon away."
+  - "We settle our differences with words here."
+  - "Hands off. I'm trying to work."
+  - "A little respect would serve you better."
+  - "You're testing my patience."
+  - "Save that swing for the monsters."
+  - "Watch where you're pointing that thing."
+  - "I haven't given you cause for a fight."
+  - "Let's keep this visit friendly."
+  - "That is no way to greet someone."
+  - "You can stop that right now."
+  - "I would rather not trouble the Watch."
+  - "The town has enough problems without this."
+  - "Keep your blade sheathed in polite company."
+  - "You owe me an apology, not another swing."
+  - "Try asking nicely instead."
+  - "Your temper is getting ahead of you."
+  - "I'm a neighbor, not a training dummy."
+  - "Take a breath and lower your weapon."
+  - "There's no honor in picking this fight."
+  - "Careful. The Watch takes this seriously."
+  - "Come now. We can do better than that."

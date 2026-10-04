@@ -92,6 +92,33 @@ Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
 tests in `architecture/` enforce all of this.
 
+## NPCs and the town watch
+
+The NPC module reads strict content from `server/owned/plugins/TheStorm/npcs/`
+and combat settings from `npcs.yml`. Spawn has eight guards: the captain and
+east, west, market, tavern, windmill, north, and southeast watches. The captain
+stays at his post; the other guards patrol short local routes.
+
+All NPCs can take damage and die, including from projectiles, damaging spells,
+and the environment. Non-damaging spells cannot freeze, push, trap, or otherwise
+impair NPCs because those effects produce no attributed attack for the Watch to
+respond to. Civilians flee nearby hostile mobs and actual attackers; guards
+fight them. Peaceful mobs are left alone. Detection uses each NPC's current
+position, including loaded areas without nearby players. Guards within 48
+blocks answer a call for help and pursue at most 64 blocks from the incident.
+
+A player's first two damaging hits on each NPC in a game day receive private
+warnings from a shuffled bank of 24 phrases. The third hit calls the guards.
+A lethal hit calls them immediately. Wanted players receive no fresh allowance
+on another NPC; guards remember them until that world's next dawn. Warnings,
+wanted status, and deaths persist asynchronously in SQLite across reconnects
+and restarts. NPC startup waits for that state before reconciling entities.
+
+Dead NPCs return at home with full health at the next dawn and give no drops or
+XP. Dialogue, training, and quest interactions are unavailable while an NPC is
+dead or reacting to danger. `/npc list` reports deaths awaiting dawn. Reloading
+content does not reset deaths or grant fresh warnings.
+
 ## Quest content
 
 The `quests` module reads authored quests, board templates, regions, factions,

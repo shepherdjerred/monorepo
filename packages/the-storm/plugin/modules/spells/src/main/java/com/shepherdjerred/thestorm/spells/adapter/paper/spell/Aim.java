@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Targets;
 import com.shepherdjerred.thestorm.spells.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.spells.domain.temporary.Replaceability;
 import java.util.List;
@@ -18,7 +19,18 @@ final class Aim {
 
   /** The creature in sight, if the caster's spell may affect it. */
   static Result<LivingEntity, CastProblem> creature(Toolbox tools, Player caster, double range) {
-    var target = tools.targets().inSight(caster, range);
+    return creature(tools, caster, range, Targets.Mode.DAMAGE);
+  }
+
+  /** Non-damaging effects leave NPCs alone because they produce no attributed damage event. */
+  static Result<LivingEntity, CastProblem> creatureEffect(
+      Toolbox tools, Player caster, double range) {
+    return creature(tools, caster, range, Targets.Mode.EFFECT);
+  }
+
+  private static Result<LivingEntity, CastProblem> creature(
+      Toolbox tools, Player caster, double range, Targets.Mode mode) {
+    var target = tools.targets().inSight(caster, range, mode);
     if (target.isEmpty()) {
       return Result.err(CastProblem.noTarget("creature in sight"));
     }
@@ -34,7 +46,17 @@ final class Aim {
   /** Every creature around the caster the spell may affect; refuses when there are none. */
   static Result<List<LivingEntity>, CastProblem> creaturesAround(
       Toolbox tools, Player caster, double radius) {
-    var screened = tools.guard().creatures(caster, tools.targets().inView(caster, radius));
+    return creaturesAround(tools, caster, radius, Targets.Mode.DAMAGE);
+  }
+
+  static Result<List<LivingEntity>, CastProblem> creatureEffectsAround(
+      Toolbox tools, Player caster, double radius) {
+    return creaturesAround(tools, caster, radius, Targets.Mode.EFFECT);
+  }
+
+  private static Result<List<LivingEntity>, CastProblem> creaturesAround(
+      Toolbox tools, Player caster, double radius, Targets.Mode mode) {
+    var screened = tools.guard().creatures(caster, tools.targets().inView(caster, radius, mode));
     return screened.isEmpty()
         ? Result.err(CastProblem.nothingAllowed(screened, "creature nearby"))
         : Result.ok(screened.allowed());

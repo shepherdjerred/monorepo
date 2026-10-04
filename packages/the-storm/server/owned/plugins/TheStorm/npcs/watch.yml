@@ -1,0 +1,161 @@
+# Owned by the repository. Short local watches keep the busy parts of spawn covered.
+places:
+  market-watch-turn:
+    world: minecraft:overworld
+    x: -32.5
+    y: 64
+    z: 4.5
+    yaw: 180.0
+    pitch: 0.0
+  tavern-watch-turn:
+    world: minecraft:overworld
+    x: -5.5
+    y: 67
+    z: 66.5
+    yaw: 180.0
+    pitch: 0.0
+  windmill-watch-turn:
+    world: minecraft:overworld
+    x: 65.5
+    y: 69
+    z: 67.5
+    yaw: 180.0
+    pitch: 0.0
+  north-watch-turn:
+    world: minecraft:overworld
+    x: -5.5
+    y: 67
+    z: -48.5
+    yaw: 180.0
+    pitch: 0.0
+  southeast-watch-turn:
+    world: minecraft:overworld
+    x: 76.5
+    y: 64
+    z: 57.5
+    yaw: 180.0
+    pitch: 0.0
+skins: {}
+schedules:
+  market-watch:
+    shelter: none
+    slots:
+      - from: "00:00"
+        to: "00:00"
+        activity: patrol home market-watch-turn
+  tavern-watch:
+    shelter: none
+    slots:
+      - from: "00:00"
+        to: "00:00"
+        activity: patrol home tavern-watch-turn
+  windmill-watch:
+    shelter: none
+    slots:
+      - from: "00:00"
+        to: "00:00"
+        activity: patrol home windmill-watch-turn
+  north-watch:
+    shelter: none
+    slots:
+      - from: "00:00"
+        to: "00:00"
+        activity: patrol home north-watch-turn
+  southeast-watch:
+    shelter: none
+    slots:
+      - from: "00:00"
+        to: "00:00"
+        activity: patrol home southeast-watch-turn
+dialogues:
+  town-watch:
+    title: Town Watch
+    start: greet
+    nodes:
+      greet:
+        text: Keep the peace. We defend the townsfolk and watch for monsters.
+        next: none
+        options:
+          - label: Stay safe
+            then: close
+npcs:
+  market-guard:
+    name: Town Guard · Market Watch
+    description: Defends the townsfolk from attackers and monsters
+    skin: vanilla:wide/efe
+    home:
+      world: minecraft:overworld
+      x: -34.5
+      y: 64
+      z: 4.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [guard]
+    schedule: market-watch
+    dialogue: town-watch
+    trainer: none
+  tavern-guard:
+    name: Town Guard · Tavern Watch
+    description: Defends the townsfolk from attackers and monsters
+    skin: vanilla:slim/sunny
+    home:
+      world: minecraft:overworld
+      x: -5.5
+      y: 67
+      z: 64.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [guard]
+    schedule: tavern-watch
+    dialogue: town-watch
+    trainer: none
+  windmill-guard:
+    name: Town Guard · Windmill Watch
+    description: Defends the townsfolk from attackers and monsters
+    skin: vanilla:wide/zuri
+    home:
+      world: minecraft:overworld
+      x: 66.5
+      y: 69
+      z: 66.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [guard]
+    schedule: windmill-watch
+    dialogue: town-watch
+    trainer: none
+  north-guard:
+    name: Town Guard · North Watch
+    description: Defends the townsfolk from attackers and monsters
+    skin: vanilla:wide/noor
+    home:
+      world: minecraft:overworld
+      x: -5.5
+      y: 67
+      z: -47.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [guard]
+    schedule: north-watch
+    dialogue: town-watch
+    trainer: none
+  southeast-guard:
+    name: Town Guard · Southeast Watch
+    description: Defends the townsfolk from attackers and monsters
+    skin: vanilla:wide/makena
+    home:
+      world: minecraft:overworld
+      x: 76.5
+      y: 64
+      z: 59.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [guard]
+    schedule: southeast-watch
+    dialogue: town-watch
+    trainer: none

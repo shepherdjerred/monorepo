@@ -6,4 +6,6 @@ public enum HarmTarget {
   PLAYER,
   /** A pet, farm animal, villager or other non-hostile creature. Governed by the victim's land. */
   PASSIVE,
+  /** A mannequin NPC. Unprotected by land claims, matching ordinary melee attacks. */
+  NPC,
 }

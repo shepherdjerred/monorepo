@@ -280,6 +280,16 @@ final class PathFollowerTest {
   }
 
   @Test
+  void aTrappedCivilianNeverTeleportsThroughWalls() {
+    var target = spot(8.5, 64, 0.5);
+    var start = follower.start(new Intent.Flee(target), new At(ORIGIN, Rotation.SOUTH), 0);
+    var sim = new Sim(follower, start.walker(), ORIGIN, from -> Optional.empty());
+    sim.runUntilResting(50);
+    assertThat(sim.moves).noneMatch(Move.Teleport.class::isInstance);
+    assertThat(sim.position).isEqualTo(ORIGIN);
+  }
+
+  @Test
   void patrolsVisitStopsInOrderAndLoop() {
     var a = spot(0.5, 64, 2.5);
     var b = spot(2.5, 64, 2.5);

@@ -18,10 +18,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 
 /**
- * Finds what a spell acts on. Spells never affect their caster, armour stands, NPC mannequins,
- * invulnerable or dead creatures, spectators and creative players, or the configured immune bosses.
+ * Finds what a spell acts on. Spells never affect their caster, armour stands, invulnerable or dead
+ * creatures, spectators and creative players, or the configured immune bosses.
  */
 public final class Targets {
+
+  /** NPCs accept damage, whose event records the attacker, but not unattributed control effects. */
+  public enum Mode {
+    DAMAGE,
+    EFFECT
+  }
 
   private final Set<EntityType> immune;
 
@@ -36,10 +42,14 @@ public final class Targets {
 
   /** True when a spell cast by {@code caster} may act on {@code entity}. */
   public boolean affectable(Player caster, Entity entity) {
+    return affectable(caster, entity, Mode.DAMAGE);
+  }
+
+  public boolean affectable(Player caster, Entity entity, Mode mode) {
     if (!(entity instanceof LivingEntity living)
         || entity.equals(caster)
         || entity instanceof ArmorStand
-        || entity instanceof Mannequin) {
+        || (mode == Mode.EFFECT && entity instanceof Mannequin)) {
       return false;
     }
     if (!living.isValid() || living.isDead() || living.isInvulnerable()) {
@@ -55,6 +65,10 @@ public final class Targets {
 
   /** The creature {@code caster} looks at within {@code range}, unless a block is in the way. */
   public Optional<LivingEntity> inSight(Player caster, double range) {
+    return inSight(caster, range, Mode.DAMAGE);
+  }
+
+  public Optional<LivingEntity> inSight(Player caster, double range, Mode mode) {
     var eye = caster.getEyeLocation();
     var hit =
         caster
@@ -66,7 +80,7 @@ public final class Targets {
                 FluidCollisionMode.NEVER,
                 true,
                 0.3,
-                entity -> affectable(caster, entity));
+                entity -> affectable(caster, entity, mode));
     if (hit != null && hit.getHitEntity() instanceof LivingEntity target) {
       return Optional.of(target);
     }
@@ -95,8 +109,13 @@ public final class Targets {
    * spells never reach through walls.
    */
   public List<LivingEntity> inView(Player caster, double radius) {
+    return inView(caster, radius, Mode.DAMAGE);
+  }
+
+  public List<LivingEntity> inView(Player caster, double radius, Mode mode) {
     Entity body = caster;
     return around(caster, body.getLocation(), radius).stream()
+        .filter(entity -> affectable(caster, entity, mode))
         .filter(caster::hasLineOfSight)
         .toList();
   }

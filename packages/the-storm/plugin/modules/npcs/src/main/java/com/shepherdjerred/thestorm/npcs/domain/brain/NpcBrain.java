@@ -27,8 +27,8 @@ public final class NpcBrain {
           List.of(
               Behavior.sequence(
                   List.of(
-                      Behavior.condition(Mind::shouldDefend),
-                      Behavior.action(mind -> mind.choose(mind.defend())))),
+                      Behavior.condition(mind -> mind.now.threat().isPresent()),
+                      Behavior.action(mind -> mind.choose(mind.react())))),
               Behavior.sequence(
                   List.of(
                       Behavior.condition(Mind::shouldShelter),
@@ -59,12 +59,18 @@ public final class NpcBrain {
    *
    * @param time the time of day in the NPC's world
    * @param storming whether it is raining or storming there
-   * @param threat a nearby hostile mob inside the guard's patrol area, if any
+   * @param threat a nearby hostile mob or actual attacker, if any
+   * @param escape a standable destination away from the threat, required for civilians
    */
-  public record Situation(TimeOfDay time, boolean storming, Optional<Spot> threat) {
+  public record Situation(
+      TimeOfDay time, boolean storming, Optional<Spot> threat, Optional<Spot> escape) {
 
     public Situation(TimeOfDay time, boolean storming) {
-      this(time, storming, Optional.empty());
+      this(time, storming, Optional.empty(), Optional.empty());
+    }
+
+    public Situation(TimeOfDay time, boolean storming, Optional<Spot> threat) {
+      this(time, storming, threat, Optional.empty());
     }
   }
 
@@ -100,12 +106,10 @@ public final class NpcBrain {
       return now.storming() && schedule.flatMap(Schedule::shelter).isPresent();
     }
 
-    boolean shouldDefend() {
-      return npc.roles().contains("guard") && now.threat().isPresent();
-    }
-
-    Intent defend() {
-      return new Intent.Pursue(now.threat().orElseThrow());
+    Intent react() {
+      return npc.roles().contains("guard")
+          ? new Intent.Pursue(now.threat().orElseThrow())
+          : new Intent.Flee(now.escape().orElseThrow());
     }
 
     Intent shelter() {
@@ -145,7 +149,7 @@ public final class NpcBrain {
     return switch (intent) {
       case Intent.Stand(var _, var pose) -> pose;
       case Intent.Sleep _ -> NpcPose.SLEEPING;
-      case Intent.Wander _, Intent.Patrol _, Intent.Pursue _ -> NpcPose.STANDING;
+      case Intent.Wander _, Intent.Patrol _, Intent.Pursue _, Intent.Flee _ -> NpcPose.STANDING;
     };
   }
 }

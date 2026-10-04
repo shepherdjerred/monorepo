@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.npcs.app.DialogPresenter;
 import com.shepherdjerred.thestorm.npcs.app.DialogueRegistry;
 import com.shepherdjerred.thestorm.npcs.app.MarkerService;
 import com.shepherdjerred.thestorm.npcs.app.NpcCatalog;
+import com.shepherdjerred.thestorm.npcs.app.NpcStateStore;
 import com.shepherdjerred.thestorm.npcs.app.NpcTalk;
 import com.shepherdjerred.thestorm.npcs.app.Trainer;
 import com.shepherdjerred.thestorm.npcs.domain.config.NpcsConfig;
@@ -42,7 +43,8 @@ public final class NpcsPaper {
       ActionRegistry actions,
       Trainer trainer,
       Supplier<ContentSource> source,
-      Executor reader) {}
+      Executor reader,
+      NpcStateStore state) {}
 
   /**
    * The Paper services that are swapped out in tests, where MockBukkit does not implement them.
@@ -104,7 +106,8 @@ public final class NpcsPaper {
                 context.logger()),
             parts.trainer());
     world.attachListeners(talk::listeners);
-    context.logger().info("NPCs: {}", world.reconcile());
+    var combat = new NpcCombat(world, config, context, parts.state());
+    world.attachCombat(combat, npc -> talk.interrupt(npc, server::getPlayer));
     server
         .getPluginManager()
         .registerEvents(new NpcListener(world, talk, markers, server.getPluginManager()), plugin);
@@ -123,6 +126,7 @@ public final class NpcsPaper {
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
+    combat.initialize();
     return new Installed(
         markers,
         () -> {

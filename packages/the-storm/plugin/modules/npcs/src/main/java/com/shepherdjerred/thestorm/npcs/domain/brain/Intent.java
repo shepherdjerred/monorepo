@@ -16,6 +16,9 @@ public sealed interface Intent {
   /** Approach a moving hostile mob without teleporting through an obstructed route. */
   record Pursue(Spot target) implements Intent {}
 
+  /** Escape towards a standable point without teleporting through an obstructed route. */
+  record Flee(Spot target) implements Intent {}
+
   /** Walk {@code route} in order and repeat. */
   record Patrol(List<Spot> route) implements Intent {
 

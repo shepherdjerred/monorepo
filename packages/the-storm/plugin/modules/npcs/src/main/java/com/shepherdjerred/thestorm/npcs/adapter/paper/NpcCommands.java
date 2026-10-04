@@ -111,11 +111,15 @@ final class NpcCommands {
     for (var npc : npcs) {
       var home = npc.home().position();
       var state =
-          wiring
-              .world()
-              .entity(npc.id())
-              .map(entity -> entity.isValid() ? "here" : "unloaded")
-              .orElse("missing");
+          !wiring.world().ready()
+              ? "loading"
+              : wiring.world().combat().awaitingDawn(npc.id())
+                  ? "dead; returns at dawn"
+                  : wiring
+                      .world()
+                      .entity(npc.id())
+                      .map(entity -> entity.isValid() ? "here" : "unloaded")
+                      .orElse("missing");
       sender.sendMessage(
           Component.text(
               String.format(
@@ -152,6 +156,10 @@ final class NpcCommands {
   }
 
   private int reload(CommandSender sender) {
+    if (!wiring.world().ready()) {
+      sender.sendMessage(info("NPC state is loading. Try again shortly."));
+      return Command.SINGLE_SUCCESS;
+    }
     sender.sendMessage(info("Reloading NPC content..."));
     var generation = ++reloadGeneration;
     var source = wiring.source().get();

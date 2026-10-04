@@ -92,6 +92,7 @@ final class PaperProtection implements Protection {
     var actor = actor(attacker);
     return decision(
         switch (target) {
+          case NPC -> Verdict.allow();
           case PLAYER -> harmPlayer(actor, attackerAt, victimAt);
           case PASSIVE ->
               engine()

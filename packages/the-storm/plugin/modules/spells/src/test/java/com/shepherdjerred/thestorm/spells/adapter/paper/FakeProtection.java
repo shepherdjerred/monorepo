@@ -45,6 +45,7 @@ final class FakeProtection implements Protection {
       UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
     harms.add(target);
     return switch (target) {
+      case NPC -> Decision.allowed();
       case PLAYER ->
           inClaim(attackerAt) || inClaim(victimAt)
               ? new Decision.Denied(NO_PVP)
