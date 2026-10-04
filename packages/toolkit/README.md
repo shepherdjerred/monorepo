@@ -232,6 +232,9 @@ affected" message counts attempted sets and can be higher.
 | `mc snapshot create\|ls\|get\|restore`                    | Server-side `.schem` snapshots for undo        |
 | `mc info`, `mc players`, `mc events`, `mc logs`           | Versions, players, bridge events, console tail |
 | `mc registry --out f.json`                                | Block registry (input to mc-build's registry)  |
+| `mc actor spawn\|ls\|observe\|act\|quit`                  | Citizens test actors (paper, storm-dev)        |
+| `mc playtest run <file\|dir…> [--profile] [--target]`     | Run scenario files; reports under `runs/`      |
+| `mc playtest ls\|show <run-id>\|new <name>`               | Past runs, one report, scaffold a scenario     |
 
 Every command accepts `--json`. The daemon logs requests (never secrets) to
 `~/.toolkit/mc/logs/`. `cmd`, `we` and `paste` accept `--record <buildDir>` to

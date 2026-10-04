@@ -1,5 +1,6 @@
 package com.shepherdjerred.mcbridge;
 
+import com.shepherdjerred.mcbridge.adapter.citizens.CitizensActors;
 import com.shepherdjerred.mcbridge.adapter.http.BridgeHttpServer;
 import com.shepherdjerred.mcbridge.adapter.paper.EventCapture;
 import com.shepherdjerred.mcbridge.adapter.paper.LogCapture;
@@ -9,7 +10,9 @@ import com.shepherdjerred.mcbridge.adapter.paper.ServerService;
 import com.shepherdjerred.mcbridge.adapter.worldedit.AgentSessions;
 import com.shepherdjerred.mcbridge.adapter.worldedit.SnapshotStore;
 import com.shepherdjerred.mcbridge.adapter.worldedit.WorldEditService;
+import com.shepherdjerred.mcbridge.app.Actors;
 import com.shepherdjerred.mcbridge.app.MainThread;
+import com.shepherdjerred.mcbridge.app.UnsupportedActors;
 import com.shepherdjerred.mcbridge.domain.BridgeConfig;
 import com.shepherdjerred.mcbridge.domain.EventRing;
 import com.shepherdjerred.mcbridge.domain.Limits;
@@ -25,6 +28,7 @@ public final class McBridgePlugin extends JavaPlugin {
   private @Nullable BridgeHttpServer http;
   private @Nullable LogCapture logCapture;
   private @Nullable AgentSessions sessions;
+  private @Nullable Actors actors;
 
   @Override
   public void onEnable() {
@@ -49,11 +53,22 @@ public final class McBridgePlugin extends JavaPlugin {
             getDataFolder().toPath().resolve("snapshots"),
             new SnapshotStore.Dependencies(
                 server, worldEdit, mainThread, time, new SecureRandom()));
+    // Citizens is optional: its classes load only behind this check.
+    Actors harnessActors =
+        getServer().getPluginManager().isPluginEnabled("Citizens")
+            ? CitizensActors.create(this, server, mainThread, ring)
+            : new UnsupportedActors();
+    actors = harnessActors;
     BridgeRoutes routes =
         new BridgeRoutes(
             getPluginMeta().getVersion(),
             new BridgeRoutes.Services(
-                server, new RegionReader(server, mainThread), worldEdit, snapshots, ring));
+                server,
+                new RegionReader(server, mainThread),
+                worldEdit,
+                snapshots,
+                ring,
+                harnessActors));
     getServer().getPluginManager().registerEvents(new EventCapture(ring), this);
     logCapture = LogCapture.attach(ring);
     try {
@@ -62,7 +77,15 @@ public final class McBridgePlugin extends JavaPlugin {
       throw new UncheckedIOException(
           "MCBridge could not bind " + config.bind() + ":" + config.port(), e);
     }
-    getLogger().info("MCBridge listening on " + config.bind() + ":" + http.port());
+    getLogger()
+        .info(
+            "MCBridge listening on "
+                + config.bind()
+                + ":"
+                + http.port()
+                + (harnessActors.supported()
+                    ? " (Citizens actors on)"
+                    : " (no Citizens: actors off)"));
   }
 
   @Override
@@ -70,6 +93,11 @@ public final class McBridgePlugin extends JavaPlugin {
     if (http != null) {
       http.stop();
       http = null;
+    }
+    // After HTTP stops, so no request races the actors' removal.
+    if (actors != null) {
+      actors.shutdown();
+      actors = null;
     }
     if (logCapture != null) {
       logCapture.detach();

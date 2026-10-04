@@ -94,6 +94,31 @@ public final class Fields {
     }
   }
 
+  public Optional<Integer> optionalInteger(String key) {
+    return has(key) ? Optional.of(integer(key)) : Optional.empty();
+  }
+
+  /** Any finite JSON number. */
+  public double number(String key) {
+    JsonPrimitive primitive = primitive(key);
+    if (!primitive.isNumber()) {
+      throw BridgeException.badRequest(field(key) + " must be a number");
+    }
+    double value = primitive.getAsDouble();
+    if (!Double.isFinite(value)) {
+      throw BridgeException.badRequest(field(key) + " must be finite");
+    }
+    return value;
+  }
+
+  public Optional<Double> optionalNumber(String key) {
+    return has(key) ? Optional.of(number(key)) : Optional.empty();
+  }
+
+  public Optional<Boolean> optionalBool(String key) {
+    return has(key) ? Optional.of(bool(key)) : Optional.empty();
+  }
+
   public boolean bool(String key) {
     JsonPrimitive primitive = primitive(key);
     if (!primitive.isBoolean()) {

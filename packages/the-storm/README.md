@@ -18,6 +18,8 @@ from `plugin/`.
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
 | `plugin/bridge/`                   | `MCBridge.jar`, the agent bridge HTTP API (WorldEdit, region reads, snapshots, events); never part of `TheStorm.jar`   |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
+| `brain/`                           | Disabled, manual Mineflayer session for one account; no production sidecar or autonomous gameplay yet                  |
+| `playtests/`                       | mc-harness scenarios (Citizens actors on the `storm-dev` sandbox); run with `toolkit mc playtest run playtests/`       |
 | `server/`                          | The `minecraft-tsmc` server image: pinned jars, config bundle and patches (see `server/README.md`)                     |
 
 ## Commands

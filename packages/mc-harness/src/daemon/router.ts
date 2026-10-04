@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { BridgeRequestError } from "#bridge/client.ts";
 import {
+  ACTOR_ACTIONS,
+  type ActorAction,
+  ActorActionRequestSchemas,
+  ActorActionResponseSchema,
+  ActorListResponseSchema,
+  ActorNameSchema,
+  ActorObservationSchema,
+  ActorRemoveResponseSchema,
+  ActorSchema,
+  ActorSpawnRequestSchema,
   BoxSchema,
   CommandRequestSchema,
   CommandResponseSchema,
@@ -30,7 +40,15 @@ import {
   SnapshotBytesResponseSchema,
   StatusResponseSchema,
 } from "#protocol/ipc.ts";
+import {
+  PlaytestListResponseSchema,
+  PlaytestReportSchema,
+  PlaytestRunRequestSchema,
+  PlaytestRunResponseSchema,
+  RunIdSchema,
+} from "#protocol/playtest.ts";
 import { PROTOCOL_VERSION } from "#protocol/version.ts";
+import { listRuns, readRun, runPlaytests } from "#daemon/playtests.ts";
 import type { SandboxProvider } from "#sandbox/provider.ts";
 import { toSummary } from "#sandbox/record.ts";
 import type { Target } from "#src/target.ts";
@@ -129,6 +147,13 @@ async function targetGet(call: TargetCall): Promise<Response | null> {
       return reply(RegistryResponseSchema, await bridge.registry());
     }
   }
+  if (action === "actors") {
+    return reply(ActorListResponseSchema, await bridge.actorList());
+  }
+  const actor = actorPath(action);
+  if (actor !== null && actor.act === undefined) {
+    return reply(ActorObservationSchema, await bridge.actorObserve(actor.name));
+  }
   if (action.startsWith("snapshots/")) {
     const sid = action.slice("snapshots/".length);
     const bytes = await bridge.snapshotBytes(sid);
@@ -186,8 +211,59 @@ async function targetPost(call: TargetCall): Promise<Response | null> {
         await bridge.snapshotRestore(sid),
       );
     }
+    case "actors": {
+      const spawn = await body(request, ActorSpawnRequestSchema);
+      ctx.log("actor spawn", { target: id, actor: spawn.name });
+      return reply(ActorSchema, await bridge.actorSpawn(spawn));
+    }
+  }
+  const actor = actorPath(action);
+  if (actor?.act !== undefined) {
+    const act = actor.act;
+    const parsed = await body(request, ActorActionRequestSchemas[act]);
+    ctx.log("actor act", { target: id, actor: actor.name, action: act });
+    return reply(
+      ActorActionResponseSchema,
+      await bridge.actorAct(actor.name, act, parsed),
+    );
   }
   return null;
+}
+
+async function targetDelete(call: TargetCall): Promise<Response | null> {
+  const actor = actorPath(call.action);
+  if (actor === null || actor.act !== undefined) {
+    return null;
+  }
+  call.ctx.log("actor remove", { target: call.target.id, actor: actor.name });
+  return reply(
+    ActorRemoveResponseSchema,
+    await call.target.bridge.actorRemove(actor.name),
+  );
+}
+
+/** `actors/<name>` or `actors/<name>/<action>`; null for any other path. */
+export function actorPath(
+  action: string,
+): { name: string; act: ActorAction | undefined } | null {
+  const [root, name, act, ...extra] = action.split("/");
+  if (root !== "actors" || name === undefined || extra.length > 0) {
+    return null;
+  }
+  if (!ActorNameSchema.safeParse(name).success) {
+    throw new DaemonError(`Invalid actor name ${name}`);
+  }
+  if (act === undefined) {
+    return { name, act: undefined };
+  }
+  const known = ACTOR_ACTIONS.find((candidate) => candidate === act);
+  if (known === undefined) {
+    throw new DaemonError(
+      `Unknown actor action ${act}; use one of ${ACTOR_ACTIONS.join(", ")}`,
+      404,
+    );
+  }
+  return { name, act: known };
 }
 
 async function dispatchTarget(
@@ -203,12 +279,11 @@ async function dispatchTarget(
     target: await ctx.target(path.id),
     action: path.action,
   };
-  const handler =
-    request.method === "GET"
-      ? targetGet
-      : request.method === "POST"
-        ? targetPost
-        : null;
+  const handlers: Record<
+    string,
+    (call: TargetCall) => Promise<Response | null>
+  > = { GET: targetGet, POST: targetPost, DELETE: targetDelete };
+  const handler = handlers[request.method] ?? null;
   const response = handler === null ? null : await handler(call);
   if (response === null) {
     throw new DaemonError(
@@ -251,6 +326,38 @@ async function dispatchSandboxes(
   throw new DaemonError(`Unknown route ${request.method} /sandboxes`, 404);
 }
 
+async function dispatchPlaytests(
+  ctx: DaemonContext,
+  request: Request,
+  runId: string | undefined,
+): Promise<Response> {
+  if (runId === undefined && request.method === "POST") {
+    const run = await body(request, PlaytestRunRequestSchema);
+    ctx.log("playtest run", { files: run.files, target: run.target });
+    return reply(PlaytestRunResponseSchema, await runPlaytests(ctx, run));
+  }
+  if (runId === undefined && request.method === "GET") {
+    const reports = await listRuns();
+    return reply(PlaytestListResponseSchema, {
+      runs: reports.map((report) => ({
+        runId: report.runId,
+        scenario: report.scenario.name,
+        status: report.status,
+        startedAt: report.startedAt,
+        durationMs: report.durationMs,
+      })),
+    });
+  }
+  if (runId !== undefined && request.method === "GET") {
+    const parsed = RunIdSchema.safeParse(runId);
+    if (!parsed.success) {
+      throw new DaemonError(`Invalid run id ${runId}`);
+    }
+    return reply(PlaytestReportSchema, await readRun(parsed.data));
+  }
+  throw new DaemonError(`Unknown route ${request.method} /playtests`, 404);
+}
+
 async function statusResponse(ctx: DaemonContext): Promise<Response> {
   const sandboxes = await ctx.provider.list();
   return reply(StatusResponseSchema, {
@@ -276,6 +383,9 @@ async function dispatch(
   }
   if (root === "sandboxes" && parts.length <= 2) {
     return dispatchSandboxes(ctx, request, id);
+  }
+  if (root === "playtests" && parts.length <= 2) {
+    return dispatchPlaytests(ctx, request, id);
   }
   if (root === "targets" && id !== undefined && rest.length > 0) {
     return dispatchTarget(ctx, url, request, { id, action: rest.join("/") });

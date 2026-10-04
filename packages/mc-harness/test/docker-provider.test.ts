@@ -86,6 +86,9 @@ describe("paper profile", () => {
       MC_BRIDGE_PORT: "25580",
       MC_BRIDGE_BIND: "0.0.0.0",
     });
-    expect(flat.plugins.map((plugin) => plugin.name)).toEqual(["WorldEdit"]);
+    expect(flat.plugins.map((plugin) => plugin.name)).toEqual([
+      "WorldEdit",
+      "Citizens",
+    ]);
   });
 });

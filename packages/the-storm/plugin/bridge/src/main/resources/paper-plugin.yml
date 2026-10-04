@@ -11,3 +11,9 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: true
+    # /v1/actors drives Citizens player NPCs; without Citizens those routes
+    # answer `unsupported` and the capability is absent from /v1/info.
+    Citizens:
+      load: BEFORE
+      required: false
+      join-classpath: true

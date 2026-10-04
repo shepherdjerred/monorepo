@@ -32,12 +32,35 @@ export const worldEdit: PluginPin = PluginPinSchema.parse({
 });
 
 /**
- * Citizens build for Paper 26.2, for the harness's test actors. Not staged
- * until the actor routes land.
+ * Citizens build for Paper 26.2: MCBridge's test actors (/v1/actors) are
+ * Citizens player NPCs. Matches the API the bridge compiles against
+ * (citizens-main 2.0.44 in the-storm's version catalog).
  */
 export const citizens: PluginPin = PluginPinSchema.parse({
   name: "Citizens",
   version: "2.0.44-b4256",
   url: "https://ci.citizensnpcs.co/job/Citizens2/4256/artifact/dist/target/Citizens-2.0.44-b4256.jar",
   sha256: "d1f02151fd7c1ccd0b8d317249ea9cf60039711b4e3317bd6641a385878946c6",
+});
+
+/**
+ * TheStorm's paper-plugin.yml requires LuckPerms (load BEFORE); same build as
+ * the production server image. Staged by the `storm-dev` profile and the-storm e2e.
+ */
+export const luckPerms: PluginPin = PluginPinSchema.parse({
+  name: "LuckPerms",
+  version: "5.5.71",
+  url: "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
+  sha256: "49cecb66fa1fd22a133039a490e9c1e5095a238e7cd66eb9d2a16fe6c897550d",
+});
+
+/**
+ * The world module requires Multiverse to load before TheStorm, even when the
+ * module is switched off.
+ */
+export const multiverseCore: PluginPin = PluginPinSchema.parse({
+  name: "Multiverse-Core",
+  version: "5.8.0",
+  url: "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
+  sha256: "c527d9e21a25a71cb2442ac1f1bfd3a8a1efb7d89e0cb0e6a94f600304fde6c1",
 });

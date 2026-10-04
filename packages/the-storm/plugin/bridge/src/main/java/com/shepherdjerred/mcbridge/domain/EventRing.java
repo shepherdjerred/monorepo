@@ -61,4 +61,24 @@ public final class EventRing {
     }
     return new Page(cursor, truncated, List.copyOf(page));
   }
+
+  /** The sequence number of the newest event; pass as {@code since} to read only later ones. */
+  public synchronized long cursor() {
+    return lastSeq;
+  }
+
+  /** The newest {@code limit} events attributed to {@code player}, oldest first. */
+  public synchronized List<BridgeEvent> recentFor(String player, int limit) {
+    if (limit < 1) {
+      throw BridgeException.badRequest("limit must be positive");
+    }
+    List<BridgeEvent> matching = new ArrayList<>();
+    for (BridgeEvent event : events) {
+      if (player.equals(event.player())) {
+        matching.add(event);
+      }
+    }
+    int from = Math.max(0, matching.size() - limit);
+    return List.copyOf(matching.subList(from, matching.size()));
+  }
 }

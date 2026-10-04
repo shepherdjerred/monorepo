@@ -1,13 +1,15 @@
 import {
+  luckPerms,
+  multiverseCore,
   PluginPinSchema,
   type PluginPin,
 } from "@shepherdjerred/mc-harness/pins.ts";
 import minecraftData from "minecraft-data";
 import { z } from "zod";
 
-// The pinned server image and Paper build live in @shepherdjerred/mc-harness;
-// this file pins only what the Storm suite adds on top: the Mineflayer client
-// version and the plugins TheStorm requires.
+// The pinned server image, Paper build and TheStorm's required plugins live in
+// @shepherdjerred/mc-harness; this file pins only what the Mineflayer suite
+// adds on top: the client version and the Via protocol bridge.
 
 // mineflayer 4.39.0 tops out at 26.1; ViaBackwards bridges 26.2 down to it.
 export const botVersion = "26.1";
@@ -56,22 +58,7 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
       sha256:
         "f902f7da7eb99e8bfaf461f80283c4e2750b7d9727e6b508ea4bb9163f55b1db",
     },
-    {
-      // TheStorm's paper-plugin.yml requires LuckPerms (load BEFORE); same
-      // build as the production server image.
-      name: "LuckPerms",
-      version: "5.5.71",
-      url: "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
-      sha256:
-        "49cecb66fa1fd22a133039a490e9c1e5095a238e7cd66eb9d2a16fe6c897550d",
-    },
-    {
-      // The world module requires Multiverse to load before TheStorm, even
-      // when the smoke config switches all gameplay modules off.
-      name: "Multiverse-Core",
-      version: "5.8.0",
-      url: "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
-      sha256:
-        "c527d9e21a25a71cb2442ac1f1bfd3a8a1efb7d89e0cb0e6a94f600304fde6c1",
-    },
+    // TheStorm's required plugins, shared with the mc-harness storm-dev profile.
+    luckPerms,
+    multiverseCore,
   ]);

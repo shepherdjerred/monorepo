@@ -11,7 +11,8 @@
     "./sandbox/*": "./src/sandbox/*",
     "./pins.ts": "./src/pins.ts",
     "./target.ts": "./src/target.ts",
-    "./build/*": "./src/build/*"
+    "./build/*": "./src/build/*",
+    "./playtest/*": "./src/playtest/*"
   },
   "imports": {
     "#architecture": "./architecture.config.ts",
@@ -19,6 +20,7 @@
     "#bridge/*": "./src/bridge/*",
     "#providers/*": "./src/providers/*",
     "#sandbox/*": "./src/sandbox/*",
+    "#playtest/*": "./src/playtest/*",
     "#daemon/*": "./src/daemon/*",
     "#src/*": "./src/*",
     "#build/*": "./src/build/*"

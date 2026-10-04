@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { BridgeClient, BridgeRequestError } from "#bridge/client.ts";
 import {
+  actorPath,
   type DaemonContext,
   DaemonError,
   routeRequest,
 } from "#daemon/router.ts";
+import { ACTOR_ACTIONS, ActorActionRequestSchemas } from "#protocol/bridge.ts";
 import type { SandboxProvider } from "#sandbox/provider.ts";
 import type { SandboxRecord } from "#sandbox/record.ts";
 import type { Target } from "#src/target.ts";
@@ -45,6 +47,30 @@ class FakeBridge extends BridgeClient {
   }
   override snapshotBytes() {
     return Promise.resolve(new Uint8Array([104, 105]));
+  }
+  override actorSpawn(request: { name: string; world: string }) {
+    this.calls.push(`spawn:${request.name}`);
+    return Promise.resolve({
+      name: request.name,
+      uuid: "00000000-0000-4000-8000-000000000001",
+      world: request.world,
+      pos: { x: 0.5, y: -60, z: 0.5 },
+      gameMode: "SURVIVAL" as const,
+      op: false,
+    });
+  }
+  override actorAct(name: string, action: string, request: unknown) {
+    this.calls.push(`act:${name}:${action}:${JSON.stringify(request)}`);
+    return Promise.resolve({
+      ok: true,
+      detail: `${action} done`,
+      pos: { x: 1, y: -60, z: 1 },
+      events: [],
+    });
+  }
+  override actorRemove(name: string) {
+    this.calls.push(`remove:${name}`);
+    return Promise.resolve({ removed: name });
   }
 }
 
@@ -193,5 +219,68 @@ describe("daemon router", () => {
     const missingRoute = await call(ctx, "GET", "/nope");
     expect(missingTarget.status).toBe(404);
     expect(missingRoute.status).toBe(404);
+  });
+});
+
+describe("actor routes", () => {
+  it("spawns, acts and removes through the bridge", async () => {
+    const { ctx, bridge } = context();
+    const spawned = await call(ctx, "POST", "/targets/sbx-abc123/actors", {
+      name: "alice",
+      world: "world",
+      at: { x: 0, y: -60, z: 0 },
+    });
+    expect(spawned.status).toBe(200);
+    const acted = await call(
+      ctx,
+      "POST",
+      "/targets/sbx-abc123/actors/alice/goto",
+      { pos: { x: 5, y: -60, z: 5 }, range: 2 },
+    );
+    expect(acted.json).toMatchObject({ ok: true, detail: "goto done" });
+    const removed = await call(
+      ctx,
+      "DELETE",
+      "/targets/sbx-abc123/actors/alice",
+    );
+    expect(removed.json).toEqual({ removed: "alice" });
+    expect(bridge.calls).toEqual([
+      "spawn:alice",
+      'act:alice:goto:{"pos":{"x":5,"y":-60,"z":5},"range":2}',
+      "remove:alice",
+    ]);
+  });
+
+  it("rejects bodies outside the action schema", async () => {
+    const { ctx } = context();
+    const { status } = await call(
+      ctx,
+      "POST",
+      "/targets/sbx-abc123/actors/alice/place",
+      { pos: { x: 0, y: 0, z: 0 } },
+    );
+    expect(status).toBe(400);
+  });
+
+  it("parses actor paths", () => {
+    expect(actorPath("actors/alice")).toEqual({
+      name: "alice",
+      act: undefined,
+    });
+    expect(actorPath("actors/alice/use")).toEqual({
+      name: "alice",
+      act: "use",
+    });
+    expect(actorPath("snapshots/x")).toBeNull();
+    expect(() => actorPath("actors/alice/fly")).toThrow(
+      /Unknown actor action fly/u,
+    );
+    expect(() => actorPath("actors/bad-name")).toThrow(/Invalid actor name/u);
+  });
+
+  it("keeps the action list equal to the schema keys", () => {
+    expect([...ACTOR_ACTIONS].toSorted()).toEqual(
+      Object.keys(ActorActionRequestSchemas).toSorted(),
+    );
   });
 });

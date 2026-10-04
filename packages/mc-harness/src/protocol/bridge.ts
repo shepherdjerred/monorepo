@@ -235,7 +235,22 @@ export type Player = z.infer<typeof PlayerSchema>;
 export const BridgeEventSchema = z.strictObject({
   seq: z.number().int(),
   ts: z.string(),
-  type: z.enum(["chat", "command", "join", "quit", "death", "log"]),
+  // block_break/block_place: `<state> at x,y,z`; interact: `RIGHT_CLICK_BLOCK
+  // <state> at x,y,z[ (denied)]`; damage: `hit <type> <uuid> for <amount>`
+  // (player melee only); actor: harness actor lifecycle and action outcomes.
+  type: z.enum([
+    "chat",
+    "command",
+    "join",
+    "quit",
+    "death",
+    "log",
+    "block_break",
+    "block_place",
+    "interact",
+    "damage",
+    "actor",
+  ]),
   player: z.string().optional(),
   text: z.string(),
 });
@@ -247,6 +262,152 @@ export const EventsResponseSchema = z.strictObject({
   truncated: z.boolean(),
   events: z.array(BridgeEventSchema),
 });
+
+// ---------------------------------------------------------------------------
+// Test actors: Citizens player NPCs the harness drives. Needs the `citizens`
+// capability; without Citizens every route answers 422 `unsupported`. Actors
+// live in a private in-memory Citizens registry and vanish when the bridge
+// stops. The actor's name is its id. Feedback messages sent to an actor are not
+// captured (Citizens discards NPC packets): assert on world state and events.
+// ---------------------------------------------------------------------------
+
+export const ActorNameSchema = z.string().regex(/^\w{1,16}$/u);
+export const GameModeSchema = z.enum([
+  "SURVIVAL",
+  "CREATIVE",
+  "ADVENTURE",
+  "SPECTATOR",
+]);
+export const Vec3Schema = z.strictObject({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+});
+export type Vec3 = z.infer<typeof Vec3Schema>;
+
+// POST /v1/actors — gameMode defaults to SURVIVAL, op to false.
+export const ActorSpawnRequestSchema = z.strictObject({
+  name: ActorNameSchema,
+  world: z.string().min(1),
+  at: BlockPosSchema,
+  gameMode: GameModeSchema.optional(),
+  op: z.boolean().optional(),
+});
+export type ActorSpawnRequest = z.infer<typeof ActorSpawnRequestSchema>;
+export const ActorSchema = z.strictObject({
+  name: ActorNameSchema,
+  uuid: z.string(),
+  world: z.string(),
+  pos: Vec3Schema,
+  gameMode: GameModeSchema,
+  op: z.boolean(),
+});
+export type Actor = z.infer<typeof ActorSchema>;
+// GET /v1/actors
+export const ActorListResponseSchema = z.strictObject({
+  actors: z.array(ActorSchema),
+});
+const ItemStackSchema = z.strictObject({
+  item: z.string(),
+  count: z.number().int(),
+});
+// GET /v1/actors/:name — what the actor perceives.
+export const ActorObservationSchema = z.strictObject({
+  actor: ActorSchema,
+  yaw: z.number(),
+  pitch: z.number(),
+  health: z.number(),
+  food: z.number().int(),
+  heldItem: ItemStackSchema.nullable(),
+  inventory: z.array(ItemStackSchema.extend({ slot: z.number().int() })),
+  /** Block within 5 blocks along the actor's gaze. */
+  lookingAt: z
+    .strictObject({ pos: BlockPosSchema, state: z.string() })
+    .nullable(),
+  /** Up to 32 entities within 16 blocks, nearest first. */
+  nearby: z.array(
+    z.strictObject({
+      type: z.string(),
+      name: z.string().nullable(),
+      uuid: z.string(),
+      pos: Vec3Schema,
+      distance: z.number(),
+      player: z.boolean(),
+      actor: z.boolean(),
+    }),
+  ),
+  /** The actor's 20 most recent events. */
+  events: z.array(BridgeEventSchema),
+});
+export type ActorObservation = z.infer<typeof ActorObservationSchema>;
+// DELETE /v1/actors/:name
+export const ActorRemoveResponseSchema = z.strictObject({
+  removed: ActorNameSchema,
+});
+
+// POST /v1/actors/:name/<action>. Every action answers ActorActionResponse:
+// `ok` is whether it took effect, `detail` says what happened, `events` are
+// all events recorded while it ran.
+export const ActorActionRequestSchemas = {
+  /** Citizens pathfinding; waits until within `range` (default 1) or `timeoutMs` (default 30000). */
+  goto: z.strictObject({
+    pos: BlockPosSchema,
+    range: z.number().min(0.5).max(16).optional(),
+    timeoutMs: z.number().int().min(1000).max(120_000).optional(),
+  }),
+  look: z.strictObject({ pos: BlockPosSchema }),
+  /** Sets the item in a slot (default hand, count 1). */
+  equip: z.strictObject({
+    item: z.string().min(1),
+    count: z.number().int().min(1).max(64).optional(),
+    slot: z
+      .enum(["hand", "offhand", "head", "chest", "legs", "feet"])
+      .optional(),
+  }),
+  /** Fires PlayerCommandPreprocessEvent, then runs the command as the actor. */
+  command: z.strictObject({ command: z.string().min(1) }),
+  /** Player#chat: the message goes through the server's chat pipeline. */
+  chat: z.strictObject({ message: z.string().min(1).max(256) }),
+  /** Player#breakBlock: fires BlockBreakEvent and honours game mode. */
+  break: z.strictObject({ pos: BlockPosSchema }),
+  /** Sets the block with physics, fires BlockPlaceEvent, reverts if cancelled. */
+  place: z.strictObject({ pos: BlockPosSchema, block: z.string().min(1) }),
+  /**
+   * Fires PlayerInteractEvent (RIGHT_CLICK_BLOCK); unless a listener denies
+   * the use, toggles wooden doors, trapdoors, fence gates, levers and buttons
+   * like vanilla. A denial still answers `ok: true` (plugins also cancel
+   * clicks they handled); assert the effect, not `ok`.
+   */
+  use: z.strictObject({ pos: BlockPosSchema }),
+  /** Melee attack on one entity by UUID, or the nearest of a type within 16 blocks. */
+  attack: z.union([
+    z.strictObject({ entity: z.uuid() }),
+    z.strictObject({ type: z.string().min(1) }),
+  ]),
+} as const;
+export type ActorAction = keyof typeof ActorActionRequestSchemas;
+/** Every action route; a test keeps it equal to the schema keys. */
+export const ACTOR_ACTIONS = [
+  "goto",
+  "look",
+  "equip",
+  "command",
+  "chat",
+  "break",
+  "place",
+  "use",
+  "attack",
+] as const satisfies readonly ActorAction[];
+export type ActorActionRequest<Action extends ActorAction> = z.infer<
+  (typeof ActorActionRequestSchemas)[Action]
+>;
+export const ActorActionResponseSchema = z.strictObject({
+  ok: z.boolean(),
+  detail: z.string(),
+  pos: Vec3Schema,
+  events: z.array(BridgeEventSchema),
+});
+export type ActorActionResponse = z.infer<typeof ActorActionResponseSchema>;
 
 /** Request limits enforced by the bridge (413 too_large beyond these). */
 export const BRIDGE_LIMITS = {
