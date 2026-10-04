@@ -4,17 +4,19 @@ import path from "node:path";
 import { z } from "zod";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import {
-  basePaperEnv,
   ensureArtifact,
-  envArgs,
   paperJarName,
+  stagePinnedPlugins,
+  writeThrottleFreeBukkitYml,
+} from "@shepherdjerred/mc-harness/sandbox/artifacts.ts";
+import { basePaperEnv } from "@shepherdjerred/mc-harness/sandbox/paper-env.ts";
+import {
+  envArgs,
   publishedPort,
   reapPidOwnedContainers,
-  stagePinnedPlugins,
   startAndAwaitDone,
   warmMountArgs,
   warmMounts,
-  writeThrottleFreeBukkitYml,
 } from "@shepherdjerred/mc-harness/providers/docker/paper-container.ts";
 import { paper, serverImage } from "@shepherdjerred/mc-harness/pins.ts";
 import { stageCompanionsE2e } from "./companions-e2e.ts";

@@ -82,7 +82,7 @@ describe("sandbox rendering", () => {
       },
     };
     const text = renderSandbox(sandbox);
-    expect(text).toContain("sbx-abc123  ready  paper/void  keep");
+    expect(text).toContain("sbx-abc123  ready  paper/void  docker  keep");
     expect(text).toContain("game 127.0.0.1:50001  bridge 127.0.0.1:50003");
     expect(text).not.toMatch(/token|password/iu);
   });

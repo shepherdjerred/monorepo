@@ -7,14 +7,14 @@ import { type DaemonState, DaemonStateSchema } from "#protocol/ipc.ts";
 import { LOGS_DIR, SOCKET_PATH, STATE_PATH } from "#protocol/paths.ts";
 import { PROTOCOL_VERSION } from "#protocol/version.ts";
 import { DaemonError, type DaemonContext, routeRequest } from "./router.ts";
-import type { SandboxProvider } from "#sandbox/provider.ts";
+import type { SandboxBackend } from "#sandbox/provider.ts";
 import { sandboxTarget } from "#src/target.ts";
 
 /** One JSONL line per event under ~/.toolkit/mc/logs. Never pass secrets. */
 export const logLine = jsonlLogger(LOGS_DIR);
 
 async function reapExpired(
-  provider: SandboxProvider,
+  provider: SandboxBackend,
   when: string,
 ): Promise<void> {
   const reaped = await provider.reap(new Date());
@@ -24,7 +24,7 @@ async function reapExpired(
 }
 
 export async function startDaemon(options: {
-  provider: SandboxProvider;
+  provider: SandboxBackend;
   ttlSeconds: number;
   repoRoot: string;
 }): Promise<void> {

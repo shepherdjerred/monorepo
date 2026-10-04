@@ -12,7 +12,7 @@ import {
   type ScenarioMeta,
   ScenarioMetaSchema,
 } from "#protocol/playtest.ts";
-import type { SandboxProvider } from "#sandbox/provider.ts";
+import type { SandboxBackend } from "#sandbox/provider.ts";
 import type { SandboxRecord } from "#sandbox/record.ts";
 import type { Target } from "#src/target.ts";
 
@@ -22,7 +22,7 @@ const DESCRIBE_TIMEOUT_MS = 30_000;
 const STDERR_TAIL = 2000;
 
 export type RunnerContext = {
-  provider: SandboxProvider;
+  provider: SandboxBackend;
   target: (id: string) => Promise<Target>;
   repoRoot: string;
   log: (msg: string, extra?: Record<string, unknown>) => void;

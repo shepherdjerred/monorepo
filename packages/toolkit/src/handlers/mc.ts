@@ -38,6 +38,7 @@ import {
 import {
   parseBlockPos,
   ProfileSchema,
+  ProviderKindSchema,
   SandboxCreateRequestSchema,
   WorldKindSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
@@ -56,8 +57,10 @@ Daemon (runs from the monorepo checkout; needs Docker; other commands start it):
   toolkit mc daemon status [--json]
   toolkit mc daemon stop                 Also removes sandboxes not started with --keep
 
-Sandboxes (Paper 26.2 + WorldEdit + MCBridge; build MCBridge first):
-  toolkit mc sandbox up [--profile paper] [--world flat|void] [--ttl 2h] [--keep] [--json]
+Sandboxes (Paper 26.2 + WorldEdit + MCBridge; build MCBridge first). Profiles:
+paper, storm-dev (Docker by default); storm-prod, storm-candidate (the published
+image; cluster by default, ttl ≤ 8h):
+  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep] [--json]
   toolkit mc sandbox ls [--json]
   toolkit mc sandbox down <id…> | --all
 
@@ -201,6 +204,7 @@ async function handleSandbox(args: string[]): Promise<void> {
     ttl: { type: "string" },
     keep: { type: "boolean", default: false },
     all: { type: "boolean", default: false },
+    provider: { type: "string" },
   });
   switch (action) {
     case "up": {
@@ -212,6 +216,9 @@ async function handleSandbox(args: string[]): Promise<void> {
             ? DEFAULT_SANDBOX_TTL_SECONDS
             : parseTtl(values.ttl),
         keep: values.keep,
+        ...(values.provider === undefined
+          ? {}
+          : { provider: ProviderKindSchema.parse(values.provider) }),
       });
       await mcSandboxUpCommand(request, values.json);
       return;

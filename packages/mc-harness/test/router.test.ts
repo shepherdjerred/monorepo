@@ -26,7 +26,7 @@ const record: SandboxRecord = {
     rcon: { host: "127.0.0.1", port: 50_002 },
     bridge: { host: "127.0.0.1", port: 50_003 },
   },
-  containerId: "abcdef0123456789",
+  providerRef: { kind: "docker", containerId: "abcdef0123456789" },
   owner: "me@host",
   secrets: { bridgeToken: "d".repeat(48), rconPassword: "e".repeat(48) },
 };

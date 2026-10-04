@@ -35,6 +35,12 @@ toolkit mc info                          # versions, worlds, plugins, capabiliti
 a 26.2 client at `127.0.0.1:<port>` (offline mode). With one sandbox running,
 commands target it automatically; otherwise pass `--target <id>`.
 
+`--provider kubernetes` runs the sandbox as a pod in the cluster's `mc-sandbox`
+namespace instead of local Docker (ports reach you through `kubectl
+port-forward`; TTL at most 8h). `--profile storm-prod` / `storm-candidate`
+boot the published the-storm-server image at its production / candidate pin and
+default to the cluster; use them to check behavior as live tsmc runs it.
+
 ## Edit with WorldEdit
 
 Each `we` call carries its own world and selection; nothing depends on earlier

@@ -4,12 +4,13 @@ import {
   luckPerms,
   multiverseCore,
   serverImage,
+  stormServerImages,
   worldEdit,
   type PluginPin,
 } from "#src/pins.ts";
-import type { SandboxCreateRequest } from "#protocol/ipc.ts";
+import type { ProviderKind, SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BRIDGE_BUILD_COMMAND, BRIDGE_JAR } from "#protocol/paths.ts";
-import { basePaperEnv } from "#providers/docker/paper-container.ts";
+import { basePaperEnv } from "#sandbox/paper-env.ts";
 import {
   STORM_BUILD_COMMAND,
   STORM_DEV_MODULES,
@@ -48,8 +49,23 @@ export type ResolvedProfile = {
   plugins: readonly PluginPin[];
   /** Repository outputs and config staged into /plugins, in order. */
   staged: readonly StagedEntry[];
+  /**
+   * Seed /data with the pinned Paper jar and a throttle-free bukkit.yml. Off
+   * for the published storm image: it bakes its own Paper and config, and its
+   * entrypoint refuses a non-empty /data that lacks its progression marker.
+   */
+  seedData: boolean;
   ports: readonly number[];
+  /** Where the profile runs when the request names no provider. */
+  defaultProvider: ProviderKind;
+  /** Container memory for cluster sandboxes; the JVM heap is env MEMORY. */
+  memory: { request: string; limit: string };
 };
+
+/** Whether a profile stages anything into /plugins (else the image's own plugins stand). */
+export function stagesPlugins(profile: ResolvedProfile): boolean {
+  return profile.plugins.length > 0 || profile.staged.length > 0;
+}
 
 type Secrets = { bridgeToken: string; rconPassword: string };
 
@@ -60,13 +76,8 @@ const bridgeJar: StagedEntry = {
   build: BRIDGE_BUILD_COMMAND,
 };
 
-function serverEnv(
-  world: SandboxCreateRequest["world"],
-  secrets: Secrets,
-): Record<string, string> {
+function bridgeAndRconEnv(secrets: Secrets): Record<string, string> {
   return {
-    ...basePaperEnv(),
-    ...(world === "void" ? { GENERATOR_SETTINGS: VOID_GENERATOR } : {}),
     ENABLE_RCON: "true",
     RCON_PASSWORD: secrets.rconPassword,
     MC_BRIDGE_TOKEN: secrets.bridgeToken,
@@ -75,11 +86,24 @@ function serverEnv(
   };
 }
 
+function serverEnv(
+  world: SandboxCreateRequest["world"],
+  secrets: Secrets,
+): Record<string, string> {
+  return {
+    ...basePaperEnv(),
+    ...(world === "void" ? { GENERATOR_SETTINGS: VOID_GENERATOR } : {}),
+    ...bridgeAndRconEnv(secrets),
+  };
+}
+
+const PAPER_MEMORY = { request: "1536Mi", limit: "2Gi" } as const;
+
 /**
  * The `paper` profile: pinned Paper 26.2 with WorldEdit, Citizens (test
  * actors) and MCBridge, offline mode, peaceful, no spawn protection, RCON on.
  * The bridge listens on all interfaces inside the container; Docker publishes
- * it to host loopback only.
+ * it to host loopback only and the cluster reaches it by port-forward.
  */
 function paperProfile(
   world: SandboxCreateRequest["world"],
@@ -90,7 +114,10 @@ function paperProfile(
     env: serverEnv(world, secrets),
     plugins: [worldEdit, citizens],
     staged: [bridgeJar],
+    seedData: true,
     ports: [GAME_PORT, RCON_PORT, BRIDGE_PORT],
+    defaultProvider: "docker",
+    memory: PAPER_MEMORY,
   };
 }
 
@@ -140,18 +167,73 @@ function stormDevProfile(
         target: path.join("TheStormMechanicsE2E", "mechanics.yml"),
       },
     ],
+    seedData: true,
     ports: [GAME_PORT, RCON_PORT, BRIDGE_PORT],
+    defaultProvider: "docker",
+    memory: { request: "2Gi", limit: "3Gi" },
   };
+}
+
+/**
+ * The published minecraft-tsmc image, booted the way the server image's own
+ * boot-check does: fresh world, offline mode, fixture Discord and storm-brain
+ * credentials (their bridges stay offline; every module still starts). The
+ * image bakes Paper, every plugin and the owned config, so nothing is staged.
+ * MCBridge must be baked into the image (the-storm server Dockerfile); an
+ * image without it never answers the bridge health check. Amd64-only, so it
+ * defaults to the cluster.
+ */
+function stormImageProfile(image: string) {
+  return (
+    _world: SandboxCreateRequest["world"],
+    secrets: Secrets,
+  ): ResolvedProfile => ({
+    image,
+    env: {
+      EULA: "TRUE",
+      ONLINE_MODE: "FALSE",
+      MEMORY: "3G",
+      SPAWN_PROTECTION: "0",
+      STORM_BRAIN_BEARER_TOKEN: "storm-sandbox-brain-token",
+      DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
+      DISCORD_CHANNEL_ID: "1",
+      ...bridgeAndRconEnv(secrets),
+    },
+    plugins: [],
+    staged: [],
+    seedData: false,
+    ports: [GAME_PORT, RCON_PORT, BRIDGE_PORT],
+    defaultProvider: "kubernetes",
+    memory: { request: "3584Mi", limit: "4608Mi" },
+  });
 }
 
 const PROFILES: Record<
   SandboxCreateRequest["profile"],
   (world: SandboxCreateRequest["world"], secrets: Secrets) => ResolvedProfile
-> = { paper: paperProfile, "storm-dev": stormDevProfile };
+> = {
+  paper: paperProfile,
+  "storm-dev": stormDevProfile,
+  "storm-prod": stormImageProfile(stormServerImages.prod),
+  "storm-candidate": stormImageProfile(stormServerImages.candidate),
+};
 
 export function resolveProfile(
   request: Pick<SandboxCreateRequest, "profile" | "world">,
   secrets: Secrets,
 ): ResolvedProfile {
   return PROFILES[request.profile](request.world, secrets);
+}
+
+/** The provider a request runs on: its own choice, else the profile's default. */
+export function providerFor(
+  request: Pick<SandboxCreateRequest, "profile" | "world" | "provider">,
+): ProviderKind {
+  return (
+    request.provider ??
+    resolveProfile(request, {
+      bridgeToken: "0".repeat(48),
+      rconPassword: "0".repeat(48),
+    }).defaultProvider
+  );
 }

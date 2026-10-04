@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   dockerCreateArgs,
   LABELS,
-  newSandboxId,
   parseSandboxRows,
 } from "#providers/docker/provider.ts";
+import { newSandboxId } from "#sandbox/boot.ts";
 import { parsePortBinding } from "#providers/docker/paper-container.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
 

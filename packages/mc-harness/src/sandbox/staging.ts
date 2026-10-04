@@ -1,7 +1,60 @@
 import { cp, mkdir, stat } from "node:fs/promises";
 import path from "node:path";
-import type { StagedEntry } from "#sandbox/profiles.ts";
+import { paper } from "#src/pins.ts";
+import {
+  ensureArtifact,
+  paperJarName,
+  stagePinnedPlugins,
+  writeThrottleFreeBukkitYml,
+} from "#sandbox/artifacts.ts";
+import {
+  stagesPlugins,
+  type ResolvedProfile,
+  type StagedEntry,
+} from "#sandbox/profiles.ts";
 import { stormModuleConfig } from "#sandbox/storm.ts";
+
+/** A host file copied into the sandbox's /data before Paper starts. */
+export type SeedFile = { source: string; target: string };
+
+/**
+ * Stages everything a profile needs on the host under the sandbox dir:
+ * `<dir>/plugins` for the /plugins mount (when the profile stages plugins) and
+ * the /data seed files (pinned Paper jar from the cache, throttle-free
+ * bukkit.yml). Both providers copy these into the server the same way.
+ */
+export async function stageSandboxFiles(options: {
+  dir: string;
+  cacheDir: string;
+  repoRoot: string;
+  profile: ResolvedProfile;
+}): Promise<{ pluginsDir: string | null; seedFiles: SeedFile[] }> {
+  const { dir, cacheDir, repoRoot, profile } = options;
+  let pluginsDir: string | null = null;
+  if (stagesPlugins(profile)) {
+    pluginsDir = path.join(dir, "plugins");
+    await stagePinnedPlugins(
+      path.join(cacheDir, "plugins"),
+      pluginsDir,
+      profile.plugins,
+    );
+    await stageEntries(pluginsDir, repoRoot, profile.staged);
+  }
+  if (!profile.seedData) {
+    return { pluginsDir, seedFiles: [] };
+  }
+  const paperJar = path.join(cacheDir, paperJarName);
+  await ensureArtifact(paperJar, paper);
+  const bukkitYml = path.join(dir, "bukkit.yml");
+  await writeThrottleFreeBukkitYml(bukkitYml);
+  return {
+    pluginsDir,
+    seedFiles: [
+      { source: bukkitYml, target: "bukkit.yml" },
+      { source: paperJar, target: paperJarName },
+    ],
+  };
+}
 
 async function exists(file: string): Promise<boolean> {
   try {

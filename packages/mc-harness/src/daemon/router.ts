@@ -49,12 +49,12 @@ import {
 } from "#protocol/playtest.ts";
 import { PROTOCOL_VERSION } from "#protocol/version.ts";
 import { listRuns, readRun, runPlaytests } from "#daemon/playtests.ts";
-import type { SandboxProvider } from "#sandbox/provider.ts";
+import type { SandboxBackend } from "#sandbox/provider.ts";
 import { toSummary } from "#sandbox/record.ts";
 import type { Target } from "#src/target.ts";
 
 export type DaemonContext = {
-  provider: SandboxProvider;
+  provider: SandboxBackend;
   /** Resolves a ready sandbox to a target; throws DaemonError(404) otherwise. */
   target: (id: string) => Promise<Target>;
   startedAt: string;

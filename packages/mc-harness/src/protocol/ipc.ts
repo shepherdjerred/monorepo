@@ -34,9 +34,20 @@ export const SandboxIdSchema = z.string().regex(/^sbx-[0-9a-f]{6}$/u);
 /**
  * `paper`: Paper + WorldEdit + Citizens + MCBridge. `storm-dev`: that plus the
  * locally built TheStorm.jar (gameplay modules without external services).
+ * `storm-prod` / `storm-candidate`: the published the-storm-server image at its
+ * production or candidate pin, as minecraft-tsmc runs it (offline mode,
+ * fixture credentials).
  */
-export const ProfileSchema = z.enum(["paper", "storm-dev"]);
+export const ProfileSchema = z.enum([
+  "paper",
+  "storm-dev",
+  "storm-prod",
+  "storm-candidate",
+]);
 export const WorldKindSchema = z.enum(["flat", "void"]);
+/** Where a sandbox runs: local Docker, or the homelab cluster's mc-sandbox namespace. */
+export const ProviderKindSchema = z.enum(["docker", "kubernetes"]);
+export type ProviderKind = z.infer<typeof ProviderKindSchema>;
 
 export const SandboxCreateRequestSchema = z.strictObject({
   profile: ProfileSchema,
@@ -47,6 +58,8 @@ export const SandboxCreateRequestSchema = z.strictObject({
     .min(60)
     .max(24 * 60 * 60),
   keep: z.boolean(),
+  /** Defaults to the profile's provider (Kubernetes for the storm images). */
+  provider: ProviderKindSchema.optional(),
 });
 export type SandboxCreateRequest = z.infer<typeof SandboxCreateRequestSchema>;
 
@@ -58,7 +71,7 @@ const EndpointSchema = z.strictObject({
 /** A sandbox as the CLI sees it: no token, no RCON password. */
 export const SandboxSummarySchema = z.strictObject({
   id: SandboxIdSchema,
-  provider: z.enum(["docker"]),
+  provider: ProviderKindSchema,
   profile: ProfileSchema,
   world: WorldKindSchema,
   status: z.enum(["ready", "stopped"]),
