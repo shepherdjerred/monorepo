@@ -118,16 +118,19 @@ tracking existed, so their ores stay ineligible. Mob drops are unaffected.
 
 Inside a module, packages are layered:
 
-| Package         | May use                                                                                                                                           |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain`        | The JDK, core's `Result`, and its own module's `domain` and `app` value types. No Paper, Adventure, jOOQ, Jackson, JDBC, network or other modules |
-| `app`           | Use cases and the ports other modules may call                                                                                                    |
-| `adapter.paper` | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                   |
-| `adapter.db`    | jOOQ repositories over the module's own tables                                                                                                    |
+| Package            | May use                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain`           | The JDK, core's `Result`, and its own module's `domain` and `app` value types. No Paper, Adventure, jOOQ, Jackson, JDBC, network or other modules                |
+| `app`              | Use cases and the ports other modules may call                                                                                                                   |
+| `adapter.paper`    | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                                  |
+| `adapter.db`       | jOOQ repositories over the module's own tables                                                                                                                   |
+| `adapter.citizens` | `rwfbots` only: the single package allowed to use Citizens, and only `net.citizensnpcs.api` and `net.citizensnpcs.trait`. Main thread only, like `adapter.paper` |
 
 Modules reach each other only through the other module's `app` package, and
-schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
-tests in `architecture/` enforce all of this.
+schedule main-thread work only through `core.schedule.Scheduler`. No class may
+use `net.minecraft` or `org.bukkit.craftbukkit`, and `rwfbots.app` may not use
+Paper at all because it drives bots from worker threads. ArchUnit tests in
+`architecture/` enforce all of this.
 
 ## NPCs and the town watch
 

@@ -1,5 +1,8 @@
 package com.shepherdjerred.thestorm.architecture;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -53,7 +56,8 @@ final class ArchitectureTest {
               "com.zaxxer..",
               "org.flywaydb..",
               "tools.jackson..",
-              "net.dv8tion..")
+              "net.dv8tion..",
+              "net.citizensnpcs..")
           .allowEmptyShould(true)
           .because("domain logic must be testable without a server, database or network");
 
@@ -69,10 +73,62 @@ final class ArchitectureTest {
                   + " types, nothing else");
 
   @ArchTest
+  static final ArchRule CITIZENS_STAYS_IN_ITS_ADAPTER =
+      noClasses()
+          .that()
+          .resideOutsideOfPackage("..rwfbots.adapter.citizens..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage("net.citizensnpcs..")
+          .because(
+              "Citizens is an optional runtime plugin; only rwfbots.adapter.citizens binds to it, so"
+                  + " the rest of the plugin starts and tests without it");
+
+  @ArchTest
+  static final ArchRule CITIZENS_ADAPTER_USES_ONLY_THE_API_AND_TRAITS =
+      noClasses()
+          .that()
+          .resideInAPackage("..rwfbots.adapter.citizens..")
+          .should()
+          .dependOnClassesThat(
+              resideInAPackage("net.citizensnpcs..")
+                  .and(
+                      not(
+                          resideInAnyPackage(
+                              "net.citizensnpcs.api..", "net.citizensnpcs.trait.."))))
+          .allowEmptyShould(true)
+          .because(
+              "net.citizensnpcs.api and the trait classes are the supported surface; the rest of"
+                  + " citizens-main is internal and must never be reached into or copied");
+
+  @ArchTest
+  static final ArchRule NO_SERVER_INTERNALS =
+      noClasses()
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("net.minecraft..", "org.bukkit.craftbukkit..")
+          .because(
+              "NMS and CraftBukkit change with every Minecraft version; Paper's API and Citizens"
+                  + " exist to hide them");
+
+  @ArchTest
+  static final ArchRule RWFBOTS_APP_NEVER_TOUCHES_THE_SERVER =
+      noClasses()
+          .that()
+          .resideInAPackage("..rwfbots.app..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("org.bukkit..", "io.papermc..")
+          .allowEmptyShould(true)
+          .because(
+              "rwfbots.app decides bot behaviour on worker threads; it reaches the server only"
+                  + " through ports its adapters implement on the main thread");
+
+  @ArchTest
   static final ArchRule PAPER_ADAPTERS_NEVER_BLOCK =
       noClasses()
           .that()
-          .resideInAPackage("..adapter.paper..")
+          .resideInAnyPackage("..adapter.paper..", "..adapter.citizens..")
           .should()
           .dependOnClassesThat()
           .resideInAnyPackage("java.sql..", "java.net..", "java.nio.file..", "org.jooq..")
@@ -93,7 +149,7 @@ final class ArchitectureTest {
           .orShould()
           .callMethod(CompletableFuture.class, "join")
           .allowEmptyShould(true)
-          .because("listeners and commands run on the main thread");
+          .because("listeners, commands and Citizens NPC bindings run on the main thread");
 
   @ArchTest
   static final ArchRule SCHEDULING_GOES_THROUGH_THE_PORT =
