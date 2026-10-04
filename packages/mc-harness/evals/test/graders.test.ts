@@ -31,6 +31,28 @@ describe("makeMutants", () => {
     expect(noBreak?.source).toContain("alice.look(lever)");
   });
 
+  it("replaces lamps placed with an explicit state or across lines", () => {
+    const source = [
+      "  async setup({ command }) {",
+      "    await command(`setblock ${lamp.x} ${lamp.y} ${lamp.z} minecraft:redstone_lamp[lit=false]`);",
+      '    await command("setblock 1 2 3 redstone_lamp");',
+      "  },",
+      "  async run({ expect }) {",
+      "    await expect",
+      "      .block(lamp)",
+      "      .eventually(",
+      '        "minecraft:redstone_lamp[lit=true]",',
+      "        { within: 3000 },",
+      "      );",
+      "  },",
+    ].join("\n");
+    const [noLamp] = makeMutants(source);
+    expect(noLamp?.applied).toBe(true);
+    expect(noLamp?.source).toContain("${lamp.z} minecraft:stone`");
+    expect(noLamp?.source).toContain('"setblock 1 2 3 minecraft:stone"');
+    expect(noLamp?.source).toContain('"minecraft:redstone_lamp[lit=true]",');
+  });
+
   it("reports mutations that do not apply", () => {
     const mutants = makeMutants("export default {};");
     expect(mutants.map((mutant) => mutant.applied)).toEqual([

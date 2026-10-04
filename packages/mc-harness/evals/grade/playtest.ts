@@ -64,6 +64,21 @@ export const playtestGrader: Grader = async (ctx) => {
       }
     }),
   );
+  // Keep the agent's scenario and the mutants: the task worktree is removed.
+  const scenarioCopy = path.join(ctx.taskDir, "scenario.playtest.ts");
+  await Bun.write(scenarioCopy, source);
+  const mutantCopies = await Promise.all(
+    mutants
+      .filter((mutant) => mutant.applied)
+      .map(async (mutant) => {
+        const copy = path.join(
+          ctx.taskDir,
+          `mutant-${mutant.name}.playtest.ts`,
+        );
+        await Bun.write(copy, mutant.source);
+        return copy;
+      }),
+  );
 
   const sandbox = await ctx.daemon.request(
     SandboxSummarySchema,
@@ -122,5 +137,5 @@ export const playtestGrader: Grader = async (ctx) => {
       mutantFiles.map((mutantFile) => rm(mutantFile, { force: true })),
     );
   }
-  return { checks, artifacts: [], notes };
+  return { checks, artifacts: [scenarioCopy, ...mutantCopies], notes };
 };

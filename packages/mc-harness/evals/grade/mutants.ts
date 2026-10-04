@@ -10,37 +10,59 @@ export type Mutant = {
   applied: boolean;
 };
 
+const LAMP = /(?:minecraft:)?redstone_lamp(?:\[[^\]]*\])?/gu;
+
+/**
+ * Replaces every redstone lamp the scenario places with stone, whether written
+ * bare or with an explicit state (`redstone_lamp[lit=false]`). Lines inside an
+ * `expect…;` statement are left alone so the lit/unlit assertions survive.
+ */
+export function replaceLampPlacements(source: string): string {
+  let inAssertion = false;
+  return source
+    .split("\n")
+    .map((line) => {
+      if (line.includes("expect")) {
+        inAssertion = true;
+      }
+      const out = inAssertion ? line : line.replaceAll(LAMP, "minecraft:stone");
+      if (inAssertion && line.trimEnd().endsWith(";")) {
+        inAssertion = false;
+      }
+      return out;
+    })
+    .join("\n");
+}
+
 const MUTATIONS: readonly {
   name: string;
   description: string;
-  pattern: RegExp;
-  replacement: string;
+  apply: (source: string) => string;
 }[] = [
   {
     name: "no-lamp",
-    description:
-      "the redstone lamp is placed as stone (expected states keep their [lit=…])",
-    // Only bare block ids, never `minecraft:redstone_lamp[lit=…]` expectations.
-    pattern: /minecraft:redstone_lamp(?![[\w])/gu,
-    replacement: "minecraft:stone",
+    description: "every placed redstone lamp becomes stone (assertions kept)",
+    apply: replaceLampPlacements,
   },
   {
     name: "no-use",
     description: "the actor never uses the lever",
-    pattern: /await\s+[\w.]+\.use\([^)]*\)\s*;?/gu,
-    replacement: "/* eval mutant: use removed */",
+    apply: (source) =>
+      source.replaceAll(
+        /await\s+[\w.]+\.use\([^)]*\)\s*;?/gu,
+        "/* eval mutant: use removed */",
+      ),
   },
   {
     name: "no-break",
     description: "the actor looks at the lever instead of breaking it",
-    pattern: /\.break\(/gu,
-    replacement: ".look(",
+    apply: (source) => source.replaceAll(".break(", ".look("),
   },
 ];
 
 export function makeMutants(source: string): Mutant[] {
   return MUTATIONS.map((mutation) => {
-    const mutated = source.replace(mutation.pattern, mutation.replacement);
+    const mutated = mutation.apply(source);
     return {
       name: mutation.name,
       description: mutation.description,
