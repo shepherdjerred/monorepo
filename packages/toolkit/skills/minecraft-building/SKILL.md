@@ -46,8 +46,16 @@ render and getting a go-ahead when the target is a server people play on.
    toolkit mc build render <dir>     # contact sheet PNG — open it with Read
    toolkit mc build lint <dir>
    ```
-   Fix every lint error. Score the render against references/rubric.md and
-   revise (aim for ≤5 iterations). Describe what you see honestly.
+   Fix every lint error, then critique with references/rubric.md:
+   - Do **at least two** render → critique → revise iterations (≤5 total).
+     Each one scores all eight aspects 0–2, names the lowest, and makes one
+     concrete change for it; re-render and look again.
+   - A theme is a palette, not a design. Before promoting, the build must go
+     beyond the defaults on **massing** (L-shape from two footprints, a
+     second story, a wing or tower), **roof** (gable vs hip, cross gable,
+     dormer) and **one detail** (chimney, porch, garden, path, flower boxes).
+   - Report the final scores and at least one remaining weakness. A clean
+     lint is not a good-looking build; say what you actually see.
 6. **Replay:** `toolkit mc build replay <dir>` replays the log on a fresh
    seeded sandbox. A mismatch means non-deterministic ops (random `%`
    patterns); promote is still exact because it applies the frozen result.

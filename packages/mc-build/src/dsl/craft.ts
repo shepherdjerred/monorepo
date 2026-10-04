@@ -70,6 +70,29 @@ export type RoofSpec = Footprint & {
   eaves?: boolean;
 };
 
+export type HipRoofSpec = Footprint & {
+  y: number;
+  stairs: string;
+  /** Caps the ridge line left by an odd span (default: the stairs' slab). */
+  ridgeBlock?: string;
+  overhang?: number;
+  /** Upside-down stairs under the overhang edge. */
+  eaves?: boolean;
+};
+
+export type ChimneySpec = {
+  x: number;
+  z: number;
+  /** First y of the stack (e.g. the floor or foundation top). */
+  base: number;
+  height: number;
+  material: Material;
+  /** 1 (default) or 2 blocks square. */
+  size?: 1 | 2;
+  /** Placed on top of the stack, e.g. a campfire for smoke or a wall cap. */
+  cap?: string;
+};
+
 function makeFace(
   fp: Footprint,
   base: number,
@@ -134,6 +157,51 @@ function roofFrame(spec: RoofSpec): RoofFrame {
     ascendLo: alongX ? "front" : "right",
     ascendHi: alongX ? "back" : "left",
   };
+}
+
+type Rect = { lx: number; hx: number; lz: number; hz: number };
+
+/** One ring of slope cells around `rect`, each with the way it climbs. */
+function hipRing(rect: Rect, y: number): [Vec3, Dir][] {
+  const cells: [Vec3, Dir][] = [];
+  for (let x = rect.lx; x <= rect.hx; x += 1) {
+    cells.push([{ x, y, z: rect.hz }, "back"], [{ x, y, z: rect.lz }, "front"]);
+  }
+  for (let z = rect.lz + 1; z < rect.hz; z += 1) {
+    cells.push([{ x: rect.lx, y, z }, "right"], [{ x: rect.hx, y, z }, "left"]);
+  }
+  return cells;
+}
+
+/**
+ * Hip roof layers from the eaves up: each a ring of slope cells stepping in
+ * one block, ending in a ridge line (`null` direction) when one span is odd.
+ */
+function hipLayers(outer: Rect, y0: number): [Vec3, Dir | null][][] {
+  const layers: [Vec3, Dir | null][][] = [];
+  for (let k = 0; ; k += 1) {
+    const rect = {
+      lx: outer.lx + k,
+      hx: outer.hx - k,
+      lz: outer.lz + k,
+      hz: outer.hz - k,
+    };
+    if (rect.lx > rect.hx || rect.lz > rect.hz) {
+      return layers;
+    }
+    const y = y0 + k;
+    if (rect.lx < rect.hx && rect.lz < rect.hz) {
+      layers.push(hipRing(rect, y));
+      continue;
+    }
+    const ridge: [Vec3, null][] = [];
+    for (let x = rect.lx; x <= rect.hx; x += 1) {
+      for (let z = rect.lz; z <= rect.hz; z += 1) {
+        ridge.push([{ x, y, z }, null]);
+      }
+    }
+    layers.push(ridge);
+  }
 }
 
 export function createCraft(canvas: BuildCanvas, mat: Mat, site: Site | null) {
@@ -397,6 +465,71 @@ export function createCraft(canvas: BuildCanvas, mat: Mat, site: Site | null) {
     return { ridgeY };
   }
 
+  /** Upside-down stair or block under a roof cell, connecting it downward. */
+  function underside(p: Vec3, material: string): void {
+    if (canvas.get(p.x, p.y - 1, p.z) === KEEP) {
+      put({ ...p, y: p.y - 1 }, material);
+    }
+  }
+
+  /**
+   * A hip roof: stairs slope up from all four sides of a footprint starting at
+   * `y` (usually the walls' `top`), stepping in one block per layer. Corners
+   * get outer-corner stair shapes; an odd span leaves a ridge line capped with
+   * `ridgeBlock`. Every layer above the first rests on upside-down stairs so
+   * the roof is one connected structure.
+   */
+  function hipRoof(spec: HipRoofSpec) {
+    const overhang = spec.overhang ?? 1;
+    const outer = {
+      lx: spec.x - overhang,
+      hx: spec.x + spec.w - 1 + overhang,
+      lz: spec.z - overhang,
+      hz: spec.z + spec.d - 1 + overhang,
+    };
+    const ridge = mat.block(
+      spec.ridgeBlock ?? spec.stairs.replace(/_stairs(?:\[.*)?$/u, "_slab"),
+    );
+    const slope = (ascend: Dir) => mat.stairs(spec.stairs, { ascend });
+    const under = (ascend: Dir) =>
+      mat.stairs(spec.stairs, { ascend: OPPOSITE[ascend], half: "top" });
+    let top = spec.y;
+    for (const [k, cells] of hipLayers(outer, spec.y).entries()) {
+      for (const [p, ascend] of cells) {
+        put(p, ascend === null ? ridge : slope(ascend));
+        if (k > 0) {
+          underside(p, under(ascend ?? "back"));
+        } else if (ascend !== null && spec.eaves === true) {
+          underside(p, under(ascend));
+        }
+        top = p.y;
+      }
+    }
+    return { ridgeY: top };
+  }
+
+  /**
+   * A masonry stack from `base` up `height` blocks (place it after the roof so
+   * it cuts through), with an optional `cap` such as a campfire for smoke.
+   */
+  function chimney(spec: ChimneySpec) {
+    const size = spec.size ?? 1;
+    canvas.fill(
+      { x: spec.x, y: spec.base, z: spec.z, w: size, h: spec.height, d: size },
+      spec.material,
+    );
+    const top = spec.base + spec.height;
+    if (spec.cap !== undefined) {
+      const cap = mat.block(spec.cap);
+      for (let dx = 0; dx < size; dx += 1) {
+        for (let dz = 0; dz < size; dz += 1) {
+          put({ x: spec.x + dx, y: top, z: spec.z + dz }, cap);
+        }
+      }
+    }
+    return { top };
+  }
+
   /** A horizontal band on the outer plane (layer -1 protrudes, 0 is flush). */
   function trim(
     face: WallFace,
@@ -407,7 +540,17 @@ export function createCraft(canvas: BuildCanvas, mat: Mat, site: Site | null) {
     }
   }
 
-  return { foundation, floor, walls, window, door, gableRoof, trim };
+  return {
+    foundation,
+    floor,
+    walls,
+    window,
+    door,
+    gableRoof,
+    hipRoof,
+    chimney,
+    trim,
+  };
 }
 
 export type Craft = ReturnType<typeof createCraft>;

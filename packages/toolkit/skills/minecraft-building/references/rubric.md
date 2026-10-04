@@ -15,3 +15,22 @@ Score each 0–2 from the contact sheet, fix the lowest first.
 
 Lint errors (floating, unsupported, decaying leaves) are bugs, not style:
 fix them before critiquing looks.
+
+## Critique protocol
+
+Write each iteration's critique in this shape, from the rendered sheet (not
+from memory of the code):
+
+```text
+iteration 2: silhouette 1, depth 2, palette 2, texture 1, proportion 2,
+detail 0, site fit 1, lighting 2 — total 11/16
+lowest: detail (0) — bare walls at the entrance
+change: chimney on the right wall, flower boxes under the front windows
+```
+
+- Change the lowest aspect first; one focused change per iteration beats
+  many small tweaks.
+- Two iterations minimum. Stop at 14/16 or after five iterations.
+- Untouched theme defaults (one box, one gable, no details) cap silhouette and
+  detail at 1. Vary the massing, the roof type, and add a detail.
+- The final report lists the scores and at least one weakness that remains.

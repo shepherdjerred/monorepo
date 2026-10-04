@@ -53,6 +53,89 @@ function connectKind(state: string | undefined): Connects | null {
   return NON_SOLID.test(id) ? null : "solid";
 }
 
+type Horizontal = "north" | "south" | "east" | "west";
+type Stair = { facing: Horizontal; half: string };
+
+const STEP: Record<Horizontal, readonly [dx: number, dz: number]> = {
+  north: [0, -1],
+  south: [0, 1],
+  east: [1, 0],
+  west: [-1, 0],
+};
+const REVERSE: Record<Horizontal, Horizontal> = {
+  north: "south",
+  south: "north",
+  east: "west",
+  west: "east",
+};
+const COUNTER_CLOCKWISE: Record<Horizontal, Horizontal> = {
+  north: "west",
+  west: "south",
+  south: "east",
+  east: "north",
+};
+
+const HORIZONTAL = new Map<string, Horizontal>([
+  ["north", "north"],
+  ["south", "south"],
+  ["east", "east"],
+  ["west", "west"],
+]);
+
+function stairOf(state: string | undefined): Stair | null {
+  if (state === undefined || state === AIR) {
+    return null;
+  }
+  const { id, properties } = parseBlockState(state);
+  const facing = HORIZONTAL.get(properties["facing"] ?? "");
+  const half = properties["half"];
+  return facing !== undefined && half !== undefined && id.endsWith("_stairs")
+    ? { facing, half }
+    : null;
+}
+
+function axisOf(facing: Horizontal): "x" | "z" {
+  return facing === "east" || facing === "west" ? "x" : "z";
+}
+
+/**
+ * Vanilla's StairBlock.getStairsShape: a stair becomes an outer corner when
+ * the stair behind it (in its facing direction) runs across it, and an inner
+ * corner when the stair in front of it does.
+ */
+export function stairShape(
+  self: Stair,
+  at: (facing: Horizontal) => Stair | null,
+): string {
+  const canTakeShape = (side: Horizontal) => {
+    const other = at(side);
+    return other?.facing !== self.facing || other.half !== self.half;
+  };
+  const behind = at(self.facing);
+  if (
+    behind !== null &&
+    behind.half === self.half &&
+    axisOf(behind.facing) !== axisOf(self.facing) &&
+    canTakeShape(REVERSE[behind.facing])
+  ) {
+    return behind.facing === COUNTER_CLOCKWISE[self.facing]
+      ? "outer_left"
+      : "outer_right";
+  }
+  const front = at(REVERSE[self.facing]);
+  if (
+    front !== null &&
+    front.half === self.half &&
+    axisOf(front.facing) !== axisOf(self.facing) &&
+    canTakeShape(front.facing)
+  ) {
+    return front.facing === COUNTER_CLOCKWISE[self.facing]
+      ? "inner_left"
+      : "inner_right";
+  }
+  return "straight";
+}
+
 function joins(self: Connects, other: Connects | null): boolean {
   if (other === null) {
     return false;
@@ -158,6 +241,32 @@ export class BuildCanvas {
     }
   }
 
+  /**
+   * Sets `shape` on every stair from its neighbours (hip-roof corners, eaves,
+   * sills) as the game does on placement; pastes never update it.
+   */
+  private shapeStairs(): void {
+    const updates: [string, string][] = [];
+    for (const [position, state] of this.blocks) {
+      const self = stairOf(state);
+      if (self === null) {
+        continue;
+      }
+      const [x, y, z] = parseKey(position);
+      const shape = stairShape(self, (facing) => {
+        const [dx, dz] = STEP[facing];
+        return stairOf(this.blocks.get(key(x + dx, y, z + dz)));
+      });
+      updates.push([
+        position,
+        this.registry.resolve(withProperties(state, { shape })),
+      ]);
+    }
+    for (const [position, state] of updates) {
+      this.blocks.set(position, state);
+    }
+  }
+
   private connections(
     position: string,
     self: Connects,
@@ -196,6 +305,7 @@ export class BuildCanvas {
     if (this.blocks.size === 0) {
       throw new Error("The build program placed no blocks");
     }
+    this.shapeStairs();
     this.connect();
     const { min, max } = this.bounds();
     const grid = new BlockGrid({

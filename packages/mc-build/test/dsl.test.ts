@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { compileProgram, scanProgram } from "#src/compile/runner.ts";
-import { mergeBoxes } from "#src/dsl/canvas.ts";
+import { mergeBoxes, stairShape } from "#src/dsl/canvas.ts";
 import { createBuildContext } from "#src/dsl/context.ts";
 import { loadRegistry } from "#src/registry/registry.ts";
 
@@ -160,5 +160,156 @@ describe("compile", () => {
         timeoutMs: 1500,
       }),
     ).rejects.toThrow(/timed out/u);
+  });
+});
+
+describe("themes and roofs", () => {
+  const themes = ["medieval", "nordic", "desert"] as const;
+
+  test.each(themes)(
+    "%s resolves every key and builds both roof types",
+    async (name) => {
+      const registry = await loadRegistry();
+      for (const roof of ["gableRoof", "hipRoof"] as const) {
+        const { ctx, canvas } = createBuildContext({
+          registry,
+          seed: 3,
+          site: null,
+        });
+        const theme = ctx.mat.theme(name);
+        for (const value of Object.values(theme)) {
+          const state = typeof value === "string" ? value : value(1, 2, 3);
+          expect(registry.resolve(state)).toBe(state);
+        }
+        const fp = { x: 0, z: 0, w: 7, d: 5 };
+        const base = ctx.craft.foundation({
+          ...fp,
+          y: 0,
+          material: theme.foundation,
+        });
+        const walls = ctx.craft.walls({
+          ...fp,
+          y: base.top,
+          h: 3,
+          frame: theme.frame,
+          infill: theme.infill,
+        });
+        ctx.craft.window(walls.faces.front, { at: 2, w: 2, sill: theme.roof });
+        if (roof === "gableRoof") {
+          ctx.craft.gableRoof({
+            ...fp,
+            y: walls.top,
+            ridge: "x",
+            stairs: theme.roof,
+            gable: theme.trim,
+          });
+        } else {
+          ctx.craft.hipRoof({ ...fp, y: walls.top, stairs: theme.roof });
+        }
+        expect(() => canvas.compile()).not.toThrow();
+      }
+    },
+  );
+
+  test("hip roofs turn their corners and cap an odd ridge", async () => {
+    const { ctx, canvas } = createBuildContext({
+      registry: await loadRegistry(),
+      seed: 1,
+      site: null,
+    });
+    ctx.craft.hipRoof({
+      x: 0,
+      z: 0,
+      w: 3,
+      d: 3,
+      y: 0,
+      stairs: "oak_stairs",
+      overhang: 0,
+    });
+    const { grid, min } = canvas.compile();
+    const at = (x: number, y: number, z: number) =>
+      grid.get(x - min.x, y - min.y, z - min.z);
+    expect(at(0, 0, 2)).toContain("facing=north");
+    expect(at(0, 0, 2)).toContain("shape=outer_right");
+    expect(at(2, 0, 2)).toContain("shape=outer_left");
+    expect(at(0, 0, 0)).toContain("facing=south");
+    expect(at(0, 0, 0)).toContain("shape=outer_left");
+    expect(at(2, 0, 0)).toContain("shape=outer_right");
+    expect(at(0, 0, 1)).toContain("facing=east");
+    expect(at(0, 0, 1)).toContain("shape=straight");
+    expect(at(1, 1, 1)).toMatch(/^minecraft:oak_slab\[/u);
+    // The apex rests on an upside-down stair, so lint sees one structure.
+    expect(at(1, 0, 1)).toContain("half=top");
+  });
+
+  test("stair shapes follow vanilla's corner rules", () => {
+    const north = { facing: "north", half: "bottom" } as const;
+    expect(stairShape(north, () => null)).toBe("straight");
+    expect(
+      stairShape(north, (side) =>
+        side === "south" ? { facing: "east", half: "bottom" } : null,
+      ),
+    ).toBe("inner_right");
+    expect(
+      stairShape(north, (side) =>
+        side === "south" ? { facing: "west", half: "bottom" } : null,
+      ),
+    ).toBe("inner_left");
+    // A neighbour of the other half never bends a stair.
+    expect(
+      stairShape(north, (side) =>
+        side === "north" ? { facing: "east", half: "top" } : null,
+      ),
+    ).toBe("straight");
+  });
+
+  test("chimneys stack masonry and take a cap", async () => {
+    const { ctx, canvas } = createBuildContext({
+      registry: await loadRegistry(),
+      seed: 1,
+      site: null,
+    });
+    const chimney = ctx.craft.chimney({
+      x: 0,
+      z: 0,
+      base: 0,
+      height: 4,
+      material: "bricks",
+      size: 2,
+      cap: "campfire",
+    });
+    expect(chimney.top).toBe(4);
+    const { grid } = canvas.compile();
+    expect(grid.size).toEqual({ x: 2, y: 5, z: 2 });
+    expect(grid.get(1, 3, 1)).toBe("minecraft:bricks");
+    expect(grid.get(0, 4, 0)).toMatch(/^minecraft:campfire\[/u);
+  });
+
+  test("compiles the two-story hip-roof house deterministically", async () => {
+    const options = {
+      program: path.join(import.meta.dirname, "fixtures", "hip-house.build.ts"),
+      seed: 42,
+      anchor: { x: 0, y: 0, z: 0 },
+      site: null,
+    };
+    const first = await compileProgram(options);
+    const second = await compileProgram(options);
+    expect(first.grid.diff(second.grid).count).toBe(0);
+    const corners = first.grid
+      .histogram()
+      .filter((entry) =>
+        /deepslate_tile_stairs\[.*shape=outer/u.test(entry.state),
+      )
+      .reduce((sum, entry) => sum + entry.count, 0);
+    expect({ size: first.grid.size, corners }).toMatchInlineSnapshot(`
+      {
+        "corners": 20,
+        "size": {
+          "x": 13,
+          "y": 14,
+          "z": 11,
+        },
+      }
+    `);
   });
 });

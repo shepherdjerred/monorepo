@@ -103,4 +103,15 @@ describe("lint", () => {
     const report = lintGrid(compiled.grid, { registry });
     expect(report.findings).toEqual([]);
   });
+
+  test("the hip-roof house has no errors", async () => {
+    const compiled = await compileProgram({
+      program: path.join(import.meta.dirname, "fixtures", "hip-house.build.ts"),
+      seed: 42,
+      anchor: { x: 0, y: 0, z: 0 },
+      site: null,
+    });
+    const report = lintGrid(compiled.grid, { registry });
+    expect(report.findings.map((finding) => finding.code)).toEqual([]);
+  });
 });

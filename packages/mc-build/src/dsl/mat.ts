@@ -320,7 +320,8 @@ export function createMat(registry: BlockRegistry, seed: number) {
         ["smooth_sandstone", 5],
         ["sandstone", 2],
       ]),
-      roof: block("cut_sandstone_slab"),
+      // Roofs and sills take stairs; there are no cut_sandstone_stairs.
+      roof: block("smooth_sandstone_stairs"),
       roofSlab: block("cut_sandstone_slab"),
       trim: block("acacia_planks"),
       floor: block("acacia_planks"),

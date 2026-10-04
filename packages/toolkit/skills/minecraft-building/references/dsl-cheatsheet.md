@@ -52,7 +52,25 @@ export default ((ctx) => {
 | `window(face, { at, y?, w?, h?, glass?, sill?, shutters? })`                          | Glass in the recess, sill stairs outside                                       |
 | `door(face, { at, door })`                                                            | Two halves on the floor; frame the door with `postsAt`                         |
 | `gableRoof({ x, z, w, d, y, ridge, stairs, overhang?, gable?, eaves?, ridgeBlock? })` | Stair slopes, gable ends, ridge cap                                            |
+| `hipRoof({ x, z, w, d, y, stairs, overhang?, eaves?, ridgeBlock? })`                  | Slopes on all four sides, outer-corner stairs, ridge cap on odd spans          |
+| `chimney({ x, z, base, height, material, size?, cap? })`                              | Masonry stack (1 or 2 square); place after the roof; `cap: "campfire"` smokes  |
 | `trim(face, { v, material, layer? })`                                                 | Horizontal band (string course)                                                |
 
 Faces are addressed from outside: `u` left→right, `v` up from the wall base,
 `layer` 0 outer plane, 1 one block in, −1 one block out.
+
+Stair `shape` (corners) is computed on compile from neighbouring stairs, as
+the game does on placement, so roof corners and L-shaped eaves come out right.
+
+## Composing
+
+- **Second story:** `floor` at the first walls' `top - 1`, then another
+  `walls` with `y: first.top` (often shorter, `h: 3`), and the roof on the
+  upper `top`. A `trim` band at the first story's top reads as a jetty.
+- **L-shape:** two adjacent footprints (e.g. main `{0,0,9,7}`, wing
+  `{0,7,5,5}`), each with its own `walls`; `ctx.clear` the shared wall to join
+  the rooms. Roof the main block first (hip), then the wing (gable with
+  `ridge` running away from the main block) so its roof cuts into the slope.
+  Check the junction in the render; it is the usual weak spot.
+- **Exterior chimney:** `x` just outside a wall, `base` at the foundation,
+  tall enough to clear the roof by 2–3 blocks.
