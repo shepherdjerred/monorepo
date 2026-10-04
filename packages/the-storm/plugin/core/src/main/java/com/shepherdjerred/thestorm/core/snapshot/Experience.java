@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.arena.domain.snapshot;
+package com.shepherdjerred.thestorm.core.snapshot;
 
 /**
  * A player's experience, as the three numbers the game keeps.

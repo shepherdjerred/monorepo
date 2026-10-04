@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.arena.domain.snapshot;
+package com.shepherdjerred.thestorm.core.snapshot;
 
 /**
  * One active potion effect.

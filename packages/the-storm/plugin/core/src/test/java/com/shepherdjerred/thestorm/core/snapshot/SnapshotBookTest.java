@@ -1,11 +1,9 @@
-package com.shepherdjerred.thestorm.arena.domain.snapshot;
+package com.shepherdjerred.thestorm.core.snapshot;
 
-import static com.shepherdjerred.thestorm.arena.testing.Samples.ALICE;
-import static com.shepherdjerred.thestorm.arena.testing.Samples.BOB;
-import static com.shepherdjerred.thestorm.arena.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,10 +12,14 @@ import org.junit.jupiter.api.Test;
 
 final class SnapshotBookTest {
 
-  static Snapshot snapshot(UUID player, String arena) {
+  static final Instant T0 = Instant.parse("2026-09-25T12:00:00Z");
+  static final UUID ALICE = UUID.fromString("00000000-0000-0000-0000-00000000000a");
+  static final UUID BOB = UUID.fromString("00000000-0000-0000-0000-00000000000b");
+
+  static Snapshot snapshot(UUID player, String scope) {
     return new Snapshot(
         player,
-        arena,
+        scope,
         new Position("world", 1.5, 64, -2.5, 90, 10),
         new Vitals(17.5, 18, 2.5f, 0.5f, "SURVIVAL"),
         new Experience(12, 0.25f, 300),
