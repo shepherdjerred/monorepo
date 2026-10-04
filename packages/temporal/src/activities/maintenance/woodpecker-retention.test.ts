@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest";
 import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
+import { createFakeFetcher } from "@shepherdjerred/feature-flags/providers/fake-fetcher.ts";
+import flagSnapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
+import { woodpeckerRetentionConfig } from "#config/woodpecker-retention.ts";
+import { stopOnRetentionContractError } from "./woodpecker-retention-runtime.ts";
+import {
   RetentionClient,
   detailIsTerminal,
 } from "./woodpecker-retention-client.ts";
@@ -139,6 +148,94 @@ describe("Woodpecker retention repository identity", () => {
         expect(f.deleted).toEqual([]);
         expect(f.repoReads()).toBe(final ? 2 : 1);
         expect(f.referenceReads()).toBe(final ? 2 : 0);
+      }
+    },
+  );
+});
+
+describe("Woodpecker retention fresh policy guards", () => {
+  test.each(["network", "corrupt"])(
+    "fresh policy at the final write guard prevents DELETE after a %s refresh failure and recovers",
+    async (failure) => {
+      const body = {
+        ...flagSnapshot,
+        flags: flagSnapshot.flags
+          .filter((flag) => ["plain-on", "model-name"].includes(flag.key))
+          .map((flag) => ({
+            ...flag,
+            key:
+              flag.key === "plain-on"
+                ? "woodpecker-log-retention-enabled"
+                : "woodpecker-log-retention-days",
+            rules: flag.rules.map((rule) => ({
+              ...rule,
+              distributions: rule.distributions.map((distribution) => ({
+                ...distribution,
+                variantKey: "30",
+              })),
+            })),
+          })),
+      };
+      const fake = createFakeFetcher({ kind: "snapshot", body });
+      await initFeatureFlags({
+        environment: { FEATURE_FLAGS_MODE: "disabled" },
+        provider: new FliptProvider({
+          url: "http://flipt.invalid:8080",
+          namespace: "default",
+          environment: "default",
+          pollIntervalSeconds: 300,
+          fetcher: fake.fetcher,
+        }),
+      });
+      try {
+        const f = fixture();
+        let guards = 0;
+        const enabled = async () => {
+          guards++;
+          if (guards === 2)
+            fake.setBehavior(
+              failure === "network"
+                ? { kind: "network-error", message: "offline" }
+                : {
+                    kind: "snapshot",
+                    body: { namespace: { key: "default" }, flags: "invalid" },
+                  },
+            );
+          const policy = await woodpeckerRetentionConfig();
+          return policy.enabled;
+        };
+        if (failure === "network") {
+          expect(await applyOutcome(input, f.client, hooks(), enabled)).toBe(
+            "disabled",
+          );
+        } else {
+          const applyAtBoundary = async () => {
+            try {
+              return await applyOutcome(input, f.client, hooks(), enabled);
+            } catch (error) {
+              return stopOnRetentionContractError(error);
+            }
+          };
+          await expect(applyAtBoundary()).rejects.toMatchObject({
+            type: "RetentionContractError",
+            nonRetryable: true,
+            message: "Retention API/config/receipt schema validation failed",
+          });
+        }
+        expect(guards).toBe(2);
+        expect(fake.callCount()).toBe(3);
+        expect(f.deleted).toEqual([]);
+        fake.setBehavior({ kind: "snapshot", body });
+        expect(
+          await applyOutcome(input, f.client, hooks(), async () => {
+            const policy = await woodpeckerRetentionConfig();
+            return policy.enabled;
+          }),
+        ).toBe("deleted");
+        expect(fake.callCount()).toBe(5);
+        expect(f.deleted).toEqual(["/api/repos/1/logs/1"]);
+      } finally {
+        await shutdownFeatureFlags();
       }
     },
   );

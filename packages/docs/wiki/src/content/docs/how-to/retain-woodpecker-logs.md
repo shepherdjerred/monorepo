@@ -37,7 +37,11 @@ Check the managed flags in Flipt's `temporal` namespace using
 Keep `woodpecker-log-retention-enabled` false during review.
 Keep `woodpecker-log-retention-days` at its default 30 days, or an approved longer period; the typed minimum is 30.
 These flags use targeting key `woodpecker-log-retention-prod` with `environment=prod`.
-Unavailable flag evaluation disables deletion.
+Each write guard requires a fresh, validated Flipt snapshot, with the enabled and days flags resolved together.
+An unavailable Flipt snapshot disables deletion even if ordinary consumers can still read cached values.
+Disabled, uninitialized, and static providers cannot authorize deletion.
+Malformed successful snapshots or invalid typed policy values stop the Activity as contract failures.
+Both existing policy guards fetch afresh; keep the Flipt service reachable while applying a manifest.
 
 The source contracts are `packages/temporal/src/schedules/woodpecker-retention-schedule.ts`
 and `packages/temporal/src/config/woodpecker-retention.ts`.

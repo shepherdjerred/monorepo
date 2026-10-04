@@ -30,6 +30,7 @@ describe("Woodpecker log retention configuration", () => {
       targetingKey: "woodpecker-log-retention-prod",
       attributes: { environment: "prod" },
       kinds: { enabled: "boolean", days: "number" },
+      requireFreshSnapshot: true,
       onUnavailable: expect.any(Function),
     });
     expect(flag.mock.calls.map(([names]) => names.flag).toSorted()).toEqual([

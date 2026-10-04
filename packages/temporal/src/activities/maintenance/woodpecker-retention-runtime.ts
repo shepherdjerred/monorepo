@@ -96,8 +96,16 @@ export async function retentionClient(signal: AbortSignal, pulse: () => void) {
   );
 }
 
+const FatalConfigSourceErrorSchema = z.object({
+  name: z.literal("ConfigSourceFatalError"),
+});
+
 export function stopOnRetentionContractError(error: unknown): never {
-  if (error instanceof z.ZodError || error instanceof SyntaxError)
+  if (
+    error instanceof z.ZodError ||
+    error instanceof SyntaxError ||
+    FatalConfigSourceErrorSchema.safeParse(error).success
+  )
     throw ApplicationFailure.nonRetryable(
       "Retention API/config/receipt schema validation failed",
       "RetentionContractError",

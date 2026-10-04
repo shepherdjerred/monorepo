@@ -24,6 +24,7 @@ export async function woodpeckerRetentionConfig() {
         targetingKey: "woodpecker-log-retention-prod",
         attributes: { environment: "prod" },
         kinds: { enabled: "boolean", days: "number" },
+        requireFreshSnapshot: true,
         onUnavailable: () => {
           availability.value = false;
         },
