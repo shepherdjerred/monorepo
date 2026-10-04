@@ -8,3 +8,6 @@ plugin/dist/run/
 plugin/dist/build/
 # Pinned server jars, Paperclip libraries and per-run plugin staging for tests/e2e.
 /.cache/
+client/.gradle/
+client/.kotlin/
+client/build/
