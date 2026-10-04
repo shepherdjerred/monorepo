@@ -13,6 +13,8 @@ import com.shepherdjerred.thestorm.mobs.MobsModule;
 import com.shepherdjerred.thestorm.npcs.NpcsModule;
 import com.shepherdjerred.thestorm.qol.QolModule;
 import com.shepherdjerred.thestorm.quests.QuestsModule;
+import com.shepherdjerred.thestorm.rwf.RwfModule;
+import com.shepherdjerred.thestorm.rwfbots.RwfBotsModule;
 import com.shepherdjerred.thestorm.seasonal.SeasonalModule;
 import com.shepherdjerred.thestorm.shards.ShardsModule;
 import com.shepherdjerred.thestorm.shops.ShopsModule;
@@ -29,7 +31,8 @@ import java.util.List;
  * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
  * mechanics and spells need Protection. World loads before qol, which teleports into those worlds.
  * Discord reads economy and towns; agent needs tickets and chat, and reads essentials moderation
- * history when that module is on. World loads before qol, which teleports into those worlds.
+ * history when that module is on. Rwf (Search and Destroy) needs economy; rwfbots provides its bot
+ * roster and so comes after rwf. World loads before qol, which teleports into those worlds.
  */
 final class Modules {
 
@@ -53,6 +56,8 @@ final class Modules {
         new NpcsModule(),
         new QuestsModule(),
         new ArenaModule(),
+        new RwfModule(),
+        new RwfBotsModule(),
         new MobsModule(),
         new SkillsModule(),
         new SeasonalModule(),
