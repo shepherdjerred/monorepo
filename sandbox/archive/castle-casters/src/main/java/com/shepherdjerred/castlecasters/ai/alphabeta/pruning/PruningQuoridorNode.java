@@ -41,15 +41,7 @@ public class PruningQuoridorNode implements IQuoridorNode {
     Set<TreeNode> children = possibleTurns.stream()
         .map(turn -> {
           var newMatchState = match.doTurnUnchecked(turn);
-          QuoridorPlayer nextOptimizingPlayer;
-
-          if (currentDepth == 0) {
-            nextOptimizingPlayer = optimizingPlayer;
-          } else {
-            nextOptimizingPlayer = newMatchState.getActivePlayerId();
-          }
-
-          return new PruningQuoridorNode(nextOptimizingPlayer,
+          return new PruningQuoridorNode(optimizingPlayer,
               newMatchState,
               turn,
               matchEvaluator,

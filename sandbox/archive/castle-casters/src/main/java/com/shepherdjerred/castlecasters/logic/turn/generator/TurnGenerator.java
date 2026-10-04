@@ -17,8 +17,21 @@ public class TurnGenerator {
   private final TurnValidatorFactory turnValidatorFactory;
 
   public Set<Turn> generateValidTurns(Match match) {
+    return generateValidTurns(match, () -> { if (Thread.currentThread().isInterrupted()) throw new java.util.concurrent.CancellationException("Turn generation cancelled"); });
+  }
+  public Set<Turn> generateValidTurns(Match match, Runnable checkpoint) {
+    if (match.matchStatus().status() != com.shepherdjerred.castlecasters.logic.match.MatchStatus.Status.IN_PROGRESS) return Set.of();
     var allTurns = generateTurns(match);
-    return filterInvalidTurns(match, allTurns);
+    Set<Turn> result = new HashSet<>();
+    for (var turn : allTurns) {
+      checkpoint.run();
+      if (!turnValidatorFactory.getValidator(turn).validate(match, turn).isError()) result.add(turn);
+    }
+    return result;
+  }
+  public Set<MovePawnTurn> generateValidPawnTurns(Match match) {
+    if (match.matchStatus().status() != com.shepherdjerred.castlecasters.logic.match.MatchStatus.Status.IN_PROGRESS) return Set.of();
+    return generateMovePawnTurns(match).stream().filter(t -> !turnValidatorFactory.getValidator(t).validate(match,t).isError()).collect(Collectors.toSet());
   }
 
   public Set<Turn> generateInvalidTurns(Match match) {
@@ -29,7 +42,7 @@ public class TurnGenerator {
   private Set<Turn> generateTurns(Match match) {
     Set<Turn> turns = new HashSet<>();
     var movePawnTurns = generateMovePawnTurns(match);
-    var placeWallTurns = generatePlaceWallTurns(match);
+    var placeWallTurns = match.getWallsLeft(match.getActivePlayerId()) > 0 ? generatePlaceWallTurns(match) : Set.<PlaceWallTurn>of();
     turns.addAll(movePawnTurns);
     turns.addAll(placeWallTurns);
     return turns;

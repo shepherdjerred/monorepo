@@ -1,4 +1,5 @@
 module com.shepherdjerred.castlecasters {
+  requires jdk.httpserver;
   requires static lombok;
   requires org.lwjgl.glfw;
   requires org.lwjgl.opengl;
@@ -20,6 +21,8 @@ module com.shepherdjerred.castlecasters {
   requires org.apache.logging.log4j;
 
   opens com.shepherdjerred.castlecasters.logic.match to com.google.gson;
+  opens com.shepherdjerred.castlecasters.session to com.google.gson;
+  opens com.shepherdjerred.castlecasters.common.player to com.google.gson;
   opens com.shepherdjerred.castlecasters.logic.board to com.google.gson;
   opens com.shepherdjerred.castlecasters.logic.board.layout to com.google.gson;
   opens com.shepherdjerred.castlecasters.logic.board.pieces to com.google.gson;

@@ -64,6 +64,10 @@ public class GameMapLoader implements ResourceLoader<GameMapName, MapLayers> {
 
     var mapDimensions = new MapDimensions(mapWidth, mapHeight);
     var gameMap = new MapLayers(mapDimensions);
+    if (json.has("board")) {
+      var board = json.getAsJsonObject("board");
+      gameMap.board(new MapCoordinate(board.get("originX").getAsInt(), board.get("originY").getAsInt()), board.get("size").getAsInt());
+    }
 
     for (int layerId = 0; layerId < layers.size(); layerId++) {
 

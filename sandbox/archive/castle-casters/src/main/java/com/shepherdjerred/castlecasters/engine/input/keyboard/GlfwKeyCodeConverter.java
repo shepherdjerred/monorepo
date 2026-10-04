@@ -54,6 +54,9 @@ public class GlfwKeyCodeConverter {
       case GLFW_KEY_LEFT -> LEFT;
       case GLFW_KEY_RIGHT -> RIGHT;
       case GLFW_KEY_ESCAPE -> ESCAPE;
+      case GLFW_KEY_ENTER -> ENTER;
+      case GLFW_KEY_BACKSPACE -> BACKSPACE;
+      case GLFW_KEY_TAB -> TAB;
       default -> null;
     };
 

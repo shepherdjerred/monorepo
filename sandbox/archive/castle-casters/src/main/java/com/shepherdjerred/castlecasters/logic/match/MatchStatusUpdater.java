@@ -1,7 +1,7 @@
 package com.shepherdjerred.castlecasters.logic.match;
 
 import com.shepherdjerred.castlecasters.logic.match.MatchStatus.Status;
-import com.shepherdjerred.castlecasters.logic.turn.NormalMovePawnTurn;
+import com.shepherdjerred.castlecasters.logic.turn.MovePawnTurn;
 import com.shepherdjerred.castlecasters.logic.turn.Turn;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -14,7 +14,7 @@ public class MatchStatusUpdater {
 
   public MatchStatus updateMatchStatus(Turn turn, Match match) {
     var player = turn.causer();
-    if (turn instanceof NormalMovePawnTurn movePawnTurn) {
+    if (turn instanceof MovePawnTurn movePawnTurn) {
       var gridSize = match.board().getGridSize();
       var destination = movePawnTurn.destination();
 

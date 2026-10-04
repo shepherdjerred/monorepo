@@ -54,7 +54,8 @@ class PlayerSlots {
     checkNotNull(playerId);
 
     var newQuoridorPlayerMap = new HashMap<>(playerIdMap);
-    newQuoridorPlayerMap.remove(playerId);
+    checkArgument(playerId != QuoridorPlayer.NULL && playerId.toInt() <= playerCount.toInt());
+    newQuoridorPlayerMap.put(playerId, null);
     return new PlayerSlots(newQuoridorPlayerMap, playerCount);
   }
 
@@ -64,7 +65,7 @@ class PlayerSlots {
     QuoridorPlayer playerId = null;
 
     for (Map.Entry<QuoridorPlayer, Player> pair : playerIdMap.entrySet()) {
-      if (pair.getValue().uuid() == player.uuid()) {
+      if (pair.getValue() != null && pair.getValue().uuid().equals(player.uuid())) {
         playerId = pair.getKey();
         break;
       }
@@ -99,6 +100,7 @@ class PlayerSlots {
       }
     }
 
+    if (playerId == null) throw new IllegalArgumentException("Lobby is full");
     return setPlayer(playerId, player);
   }
 

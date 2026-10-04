@@ -19,7 +19,6 @@ public class MovePawnTurnValidator implements TurnValidator<MovePawnTurn> {
     rules.add(new DestinationBoardCellTypeIsPawnValidatorRule());
     rules.add(new DestinationCoordinateIsValidValidatorRule());
     rules.add(new DestinationPieceIsEmptyValidatorRule());
-    rules.add(new MoveIsCardinalValidatorRule());
     rules.add(new SourceAndDestinationAreDifferentValidatorRule());
     rules.add(new SourceBoardCellTypeIsPawnValidatorRule());
     rules.add(new SourceCoordinateIsValidValidatorRule());
@@ -31,6 +30,9 @@ public class MovePawnTurnValidator implements TurnValidator<MovePawnTurn> {
   @Override
   public TurnValidationResult validate(Match match, MovePawnTurn turn) {
     var result = new TurnValidationResult();
+    if (!(turn instanceof com.shepherdjerred.castlecasters.logic.turn.JumpPawnDiagonalTurn)) {
+      result = new MoveIsCardinalValidatorRule().validate(match, turn);
+    }
     for (ValidatorRule<MovePawnTurn> rule : rules) {
       var ruleResult = rule.validate(match, turn);
       result = TurnValidationResult.combine(result, ruleResult);
