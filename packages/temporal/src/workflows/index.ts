@@ -38,9 +38,9 @@ import { sleepAc as _sleepAc, sleepMusic as _sleepMusic } from "./ha/sleep.ts";
 import type { MotionLightRoom } from "#shared/infra/motion-light.ts";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homelab/zfs-maintenance.ts";
-import { runMiningWorldResetWorkflow as _runMiningWorldResetWorkflow } from "./homelab/mining-reset.ts";
+import { runMiningWorldResetWorkflow as resetMiningWorld } from "./homelab/mining-reset.ts";
 import { runStormPlotReconciliationWorkflow as _runStormPlotReconciliationWorkflow } from "./homelab/storm-plots.ts";
-import { reconcileStormCompanionsWorkflow as _reconcileStormCompanionsWorkflow } from "./homelab/storm-companions.ts";
+import { reconcileStormCompanionsWorkflow as reconcileCompanions } from "./homelab/storm-companions.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
@@ -297,13 +297,8 @@ export async function sleepAc(input?: SleepAutomationInput): Promise<void> {
 export async function runZfsMaintenanceWorkflow(): Promise<void> {
   return _runZfsMaintenanceWorkflow();
 }
-
-export async function runMiningWorldResetWorkflow(): Promise<void> {
-  return _runMiningWorldResetWorkflow();
-}
-export async function reconcileStormCompanionsWorkflow(): Promise<void> {
-  return _reconcileStormCompanionsWorkflow();
-}
+export const runMiningWorldResetWorkflow = () => resetMiningWorld();
+export const reconcileStormCompanionsWorkflow = () => reconcileCompanions();
 
 export async function runStormPlotReconciliationWorkflow(): Promise<void> {
   return _runStormPlotReconciliationWorkflow();
