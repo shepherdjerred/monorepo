@@ -138,6 +138,23 @@ final class SettlementRulesTest {
   }
 
   @Test
+  void arrivalPadsPreserveAllThreeBanks() {
+    var content = shipped();
+    var blueprint = new SettlementBlueprint(content).blocks();
+    var banks =
+        content.zones().stream()
+            .flatMap(zone -> zone.stations().stream())
+            .filter(station -> station.type() == SurvivalContent.StationType.BANK)
+            .toList();
+    assertThat(banks)
+        .hasSize(3)
+        .allSatisfy(bank -> assertThat(blueprint.get(bank.block())).isEqualTo("ENDER_CHEST"));
+    content.zones().stream()
+        .flatMap(zone -> zone.safePoints().stream())
+        .forEach(point -> assertThat(blueprint.get(point.block())).isEqualTo("AIR"));
+  }
+
+  @Test
   void unlockedRoutesReachEveryEntranceStationAndTheMineFloor() {
     var content = shipped();
     var blocks = new HashMap<>(new SettlementBlueprint(content).blocks());

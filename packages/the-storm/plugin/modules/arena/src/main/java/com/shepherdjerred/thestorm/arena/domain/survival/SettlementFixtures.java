@@ -71,6 +71,8 @@ final class SettlementFixtures {
 
   private void zoneFixtures(SurvivalContent.Zone zone) {
     landing(zone.entrance().block());
+    for (var spawn : zone.spawns()) landing(spawn.block());
+    for (var safe : zone.safePoints()) landing(safe.block());
     zone.gate()
         .forEach(p -> absolute(p.x(), p.y(), p.z(), zone.emeralds() == 0 ? "AIR" : "IRON_BARS"));
     zone.purchaseSigns().forEach(p -> fixture(p, "OAK_SIGN"));
@@ -95,8 +97,6 @@ final class SettlementFixtures {
                     d.type() == SurvivalContent.DefenseType.BARRICADE
                         ? "OAK_FENCE"
                         : "STONE_PRESSURE_PLATE"));
-    for (var spawn : zone.spawns()) landing(spawn.block());
-    for (var safe : zone.safePoints()) landing(safe.block());
   }
 
   private void fixture(BlockPos pos, String type) {
