@@ -254,7 +254,7 @@ describe("Scout beta workflow candidate", () => {
     expect(serialized).not.toContain('"port":5432');
     expect(serialized).not.toContain('"port":443');
   });
-  test("boots only the capable beta Workflow tracks", () => {
+  test("boots the capable beta and production Workflow tracks", () => {
     expect(
       scoutWorkflowWorkerImageIsCapable(`2.0.0-12197@sha256:${"a".repeat(64)}`),
     ).toBe(false);
@@ -269,6 +269,8 @@ describe("Scout beta workflow candidate", () => {
     expect(workflowDeployments).toEqual([
       "scout-beta-scout-workflow-worker-stable",
       "scout-beta-scout-workflow-worker-candidate",
+      "scout-prod-scout-workflow-worker-stable",
+      "scout-prod-scout-workflow-worker-candidate",
     ]);
   });
   test("requires a stable capable build before creating the candidate", () => {
