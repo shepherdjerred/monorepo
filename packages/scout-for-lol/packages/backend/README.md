@@ -695,11 +695,7 @@ crash. Its first read Activity records Temporal's run id as acceptance of that
 request, so later sweeps stop treating it as an unaccepted start. Repeated
 producer transitions reuse the standing intent without opening a new request.
 The invite expires at the series deadline; lobby-ready and overdue
-messages expire after two hours and seven days respectively. The shared Duel
-message builder serves both V2 and the legacy `DuelStatusOutbox` drain, which
-continues to deliver rows created before the producer cutover. A legacy row
-owns its dedupe key even after delivery; a producer seeing that row does not
-mint a V2 intent for the same message. V2 stores the
+messages expire after two hours and seven days respectively. V2 stores the
 guild, series, and mention list in a versioned announcement and verifies the
 series and target channel before sending. It does not create a match render
 receipt for a Duel subject.
@@ -755,10 +751,9 @@ that is not ported, and is an explicit gap.
 A `hall-record-break` intent is one guild's Hall of Fame announcement for one
 match, keyed `hall-record-break:<riotMatchId>:<guildId>` — by guild, not
 channel, so a Hall channel change never mints a second one. Its envelope is
-`{guildId, riotMatchId, records}`, the records being exactly the array v1's
-`HallRecordBreakOutbox` stores, and the arm
-(`notification/hall-record-break-notification.ts`) sends v1's own
-`hallBreakEmbed` for them. An envelope whose every record id was since
+`{guildId, riotMatchId, records}`, and the arm
+(`notification/hall-record-break-notification.ts`) renders one embed for the
+records. An envelope whose every record id was since
 retired, or that does not parse, is terminal `content-unavailable` rather than
 an empty embed. The per-server `hall_of_fame_enabled` policy is re-read before
 delivery by `notification/kind-policy.ts`, in `markNotificationReadyV2` and
@@ -967,38 +962,28 @@ retirement on `scout_durable_notification_intents_retired_total{reason,source}`
 and log it; the ready-backlog family reads `state = 'ready'` only, so a retired
 intent leaves it.
 
-### Hall record breaks move to intents per server
+### Hall record breaks are intents
 
 `evaluateHallMatch` announces a guild's record breaks inside its own Hall
 transaction through `announceHallRecordBreak`
-(`src/progression/hall/break-announcement.ts`), on exactly one path per
-(guild, match). The first path to record the announcement keeps it:
-
-- an existing `HallRecordBreakOutbox` row keeps v1's upsert, whatever the flag
-  says;
-- an existing `hall-record-break` intent is left as it is, and no outbox row
-  is written beside it, whatever the flag says; a standing intent whose
-  records differ from this evaluation's throws instead of choosing;
-- with neither, `scout_v2_progression_notifications_enabled` (Flipt, per
-  `server`, off by default in every environment) decides: on mints a
-  `pending` intent with a freshness deadline of creation plus 24 hours, off
-  writes the outbox row.
+(`src/progression/hall/break-announcement.ts`), which mints one `pending`
+`hall-record-break` intent per (guild, match) with a freshness deadline of
+creation plus 24 hours. A standing intent is left as it is; one whose records
+differ from this evaluation's throws instead of choosing.
 
 V2 uses the committed observation to suppress a `silent-backfill` match and
-throws if that observation is absent. Legacy v1 uses its discovery-time silent
-decision, so its fail-open observation dual-write cannot stall progression. If
-that write is absent while the V2 flag is on, the announcement stays on v1's
-outbox; an intent without an observation could not enter V2 fan-out. The
-records are still updated for silent matches. This also stops v1's outbox from
-queueing record breaks for backfilled history.
+throws if that observation is absent. Legacy v1 announces only when its own
+discovery-time decision is not silent and the match has a `live`
+observation; without one the records are still updated but nothing is
+announced, because an intent without an observation could not enter V2
+fan-out.
 
 Progression runs before the V2 match core's post-commit fan-out, and
 `planMatchFanOutV2` starts a notification child for every drivable non-prematch
 intent of the match, so a minted hall intent is driven by the same run with no
 extra wiring. An intent minted while v1 owns post-match discovery has no such
 fan-out and stays `pending` until a `scoutPipelineReconciliationV2Workflow`
-run drives it, so ramp the flag only where V2 owns post-match discovery. To ramp a server, add its rollout in Flipt
-and record the same targeting in `managed-flag-inventory.json`.
+run drives it.
 
 ## Beta Customs operations
 
@@ -1257,7 +1242,6 @@ Prepare a fresh or restored database explicitly before starting the image:
 ```bash
 bun x --no-install prisma migrate deploy
 bun run scripts/import-legacy-sqlite.ts --source /path/to/retained.sqlite
-bun run scripts/scoutql/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix
 bun run scripts/check-database-readiness.ts
 ```
 

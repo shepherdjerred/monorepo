@@ -10,12 +10,10 @@ import { RETIRED_HALL_RECORD_IDS } from "#src/progression/hall/legacy-record-ids
 /**
  * One broken Hall of Fame record, as a record-break announcement carries it.
  *
- * The one shape both announcement paths persist: v1's `HallRecordBreakOutbox`
- * row stores an array of these as `payloadJson`, and the V2
- * `hall-record-break` intent carries the same array inside its announcement
- * envelope. Kept in its own module, beside neither the evaluator that writes
- * it nor either reader, so the evaluator can import the V2 codec without the
- * codec importing the evaluator back.
+ * The `hall-record-break` intent carries an array of these inside its
+ * announcement envelope. Kept in its own module, beside neither the evaluator
+ * that writes it nor the reader, so the evaluator can import the codec without
+ * the codec importing the evaluator back.
  */
 export type HallBreakPayload = z.infer<typeof HallBreakPayloadSchema>;
 export const HallBreakPayloadSchema = HallRecordEvidenceSchema.extend({
@@ -27,10 +25,10 @@ export const HallBreakPayloadSchema = HallRecordEvidenceSchema.extend({
 const RecordIdFieldSchema = z.object({ recordId: z.unknown() }).partial();
 
 /**
- * Drop every queued entry naming a record id retired by a catalog rename (see
+ * Drop every stored entry naming a record id retired by a catalog rename (see
  * {@link RETIRED_HALL_RECORD_IDS}) before the entries are validated.
  *
- * A row queued before such a rename would otherwise be rejected by the
+ * An announcement minted before such a rename would otherwise be rejected by the
  * narrowed record-id enum forever. Only the known renames are dropped; any
  * other unrecognized id still reaches the schema and fails loudly.
  */

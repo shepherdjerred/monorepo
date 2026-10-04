@@ -579,16 +579,13 @@ export async function scoutRecoveryBatchV2Workflow(
  * idempotent and resumes from the durable watermark each run, so repeating the
  * input unchanged is correct rather than lossy.
  *
- * ## The v1 seam
+ * ## Competitive progression
  *
- * The v1 `progression-outbox` Schedule runs two unrelated jobs a minute:
- * `reconcileCompetitiveProgression`, which re-adopts Temporal starts whose
- * initial launch was interrupted, and the hall and duel outbox DRAINS. This
- * Workflow is the V2 equivalent of the first role only. Outbox draining stays
- * on v1 — the hall and duel outboxes have not been migrated to durable intents
- * yet, and draining them from here would deliver through a path with no intent
- * row behind it. The v1 Schedule is deliberately untouched by this change;
- * moving it belongs to the rollout, not to the lane that implements the body.
+ * Competitive progression keeps its own `progression-reconciliation` Schedule,
+ * which runs `reconcileCompetitiveProgression` to re-adopt Temporal starts
+ * whose initial launch was interrupted. Hall and Duel announcements are
+ * durable notification intents, so the stalled-intent scan here already
+ * covers their delivery.
  */
 export async function scoutPipelineReconciliationV2Workflow(
   rawInput: ScoutPipelineReconciliationV2InputEnvelope,

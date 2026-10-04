@@ -25,7 +25,6 @@ import {
   competitionFormOptions,
   type FormState,
 } from "./competition-form-fields.tsx";
-import { CompetitionPresets } from "./competition-presets.tsx";
 import { CompetitionQueueFields } from "./competition-queue-fields.tsx";
 
 type CriteriaErrors = ComponentProps<
@@ -294,17 +293,6 @@ export const LockedFormFields: Story = {
           championId: "",
           minGames: "10",
         },
-      }}
-    />
-  ),
-};
-
-export const Presets: Story = {
-  args: CRITERIA_ARGS,
-  render: () => (
-    <CompetitionPresets
-      onUsePreset={() => {
-        // The real form prefills itself from the chosen example.
       }}
     />
   ),

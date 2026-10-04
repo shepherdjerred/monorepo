@@ -736,10 +736,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/scripts/scoutql/scoutql-v2-rewrite-render.ts|packages/scout-for-lol/packages/data/src/model/legacy/report-query-render.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/leaderboard/weekly-leaderboard.integration.test.ts": {
       "clones": 1,
       "tokens": 106
@@ -1023,14 +1019,6 @@
     "packages/scout-for-lol/packages/data/src/league/raw-missions.schema.ts|packages/scout-for-lol/packages/data/src/model/arena/arena.ts": {
       "clones": 1,
       "tokens": 81
-    },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/tokens.ts": {
-      "clones": 1,
-      "tokens": 124
-    },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-spec.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/plan.ts": {
-      "clones": 1,
-      "tokens": 78
     },
     "packages/scout-for-lol/packages/data/src/model/matches/loading-screen.test.ts|packages/scout-for-lol/packages/data/src/model/matches/loading-screen.test.ts": {
       "clones": 1,

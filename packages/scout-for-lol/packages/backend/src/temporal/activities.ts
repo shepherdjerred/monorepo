@@ -291,17 +291,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             break;
           }
           case "progression-outbox": {
-            const [
-              { deliverHallRecordBreakOutbox },
-              { deliverDuelStatusOutbox },
-            ] = await Promise.all([
-              import("#src/progression/hall/outbox.ts"),
-              import("#src/progression/duels/outbox.ts"),
-            ]);
-            await Promise.all([
-              deliverHallRecordBreakOutbox(),
-              deliverDuelStatusOutbox(),
-            ]);
+            // Retired with the Hall and Duel outbox tables; see the contract.
             break;
           }
           case "progression-reconciliation": {

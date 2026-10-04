@@ -27,11 +27,6 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/convert-common-denominator-reports.ts": {
-    "unicorn/no-negated-condition": {
-      "count": 1
-    }
-  },
   "packages/backend/scripts/discover-marketing-showcase.ts": {
     "custom-rules/prefer-async-await": {
       "count": 1
@@ -83,11 +78,6 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/migrate-scoutql-v2.test.ts": {
-    "unicorn/no-await-expression-member": {
-      "count": 3
-    }
-  },
   "packages/backend/scripts/outreach.ts": {
     "@typescript-eslint/array-type": {
       "count": 1
@@ -114,11 +104,6 @@
       "count": 1
     },
     "unicorn/prefer-string-slice": {
-      "count": 1
-    }
-  },
-  "packages/backend/scripts/scoutql/scoutql-v2-rewrite-render.ts": {
-    "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
@@ -441,26 +426,6 @@
     }
   },
   "packages/data/src/lane-priors/eval.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/data/src/model/legacy/report-query-expression.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/data/src/model/legacy/report-query-parser.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/data/src/model/legacy/report-query-render-validation.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/data/src/model/legacy/report-query-render.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

@@ -476,34 +476,6 @@ describe("Scout V2 post-match ownership", () => {
   });
 });
 
-describe("Scout V2 progression notifications", () => {
-  test("assigns all beta progression delivery to V2 and leaves production off", () => {
-    const beta = scoutPolicyFlag(
-      "beta",
-      "scout_v2_progression_notifications_enabled",
-    );
-    expect(beta.default).toBe(true);
-    expect(beta.rollouts).toEqual([
-      expect.objectContaining({
-        segmentKey: "scout-guild-1337623164146155593",
-        constraints: [
-          expect.objectContaining({
-            property: "server",
-            operator: "eq",
-            value: "1337623164146155593",
-          }),
-        ],
-        result: true,
-      }),
-    ]);
-    expect(beta.rules).toEqual([]);
-
-    expect(
-      scoutPolicyFlag("prod", "scout_v2_progression_notifications_enabled"),
-    ).toMatchObject({ default: false, rollouts: [], rules: [] });
-  });
-});
-
 describe("Scout V2 prematch ownership", () => {
   test("keeps the declared default on v1 so an unreachable Flipt never moves detection", () => {
     const declared = managedFlagInventory.flags.find(

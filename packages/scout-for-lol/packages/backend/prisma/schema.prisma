@@ -2325,6 +2325,8 @@ model HallBaselineRun {
   @@index([baselineState, createdAt])
 }
 
+/// Retired: nothing reads or writes this table; the next release drops it
+/// once every role runs code that no longer references it.
 model HallRecordBreakOutbox {
   id             String    @id @default(uuid())
   guildId        String
@@ -2740,6 +2742,8 @@ model DuelRecord {
   @@index([guildId, scope, wins])
 }
 
+/// Retired: nothing reads or writes this table; the next release drops it
+/// once every role runs code that no longer references it.
 model DuelStatusOutbox {
   id             String    @id @default(uuid())
   guildId        String

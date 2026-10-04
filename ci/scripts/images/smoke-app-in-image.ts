@@ -350,7 +350,6 @@ const commands: Record<
       // image startup path with no legacy SQLite file present.
       "bun x --no-install prisma migrate deploy",
       "bun run scripts/import-legacy-sqlite.ts --allow-fresh-install",
-      'bun run scripts/scoutql/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix',
       "set +e",
       'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/check-database-readiness.ts && bun run src/index.ts" 2>&1)"',
       "status=$?",

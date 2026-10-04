@@ -17,11 +17,6 @@
       "count": 1
     }
   },
-  "scripts/convert-common-denominator-reports.ts": {
-    "unicorn/no-negated-condition": {
-      "count": 1
-    }
-  },
   "scripts/discover-marketing-showcase.ts": {
     "custom-rules/prefer-async-await": {
       "count": 1
@@ -99,11 +94,6 @@
       "count": 1
     },
     "unicorn/prefer-string-slice": {
-      "count": 1
-    }
-  },
-  "scripts/scoutql/scoutql-v2-rewrite-render.ts": {
-    "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
