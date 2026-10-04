@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.companions.adapter.paper;
 
+import static java.util.Objects.requireNonNull;
+
 import com.shepherdjerred.thestorm.chat.app.ChatLine;
 import com.shepherdjerred.thestorm.chat.app.GlobalChat;
 import com.shepherdjerred.thestorm.chat.app.Subscription;
@@ -204,7 +206,11 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                       + " uuid="
                       + npc.getUniqueId()
                       + " items="
-                      + items));
+                      + items
+                      + " at="
+                      + requireNonNull(player.getLocation()).toVector()
+                      + " target="
+                      + npc.getNavigator().getTargetAsLocation()));
     }
   }
 
@@ -268,7 +274,17 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                       + placed
                       + " remaining="
                       + NativeRecipes.stock(player).getOrDefault("OAK_PLANKS", 0)
-                      + nativeEating(player)));
+                      + nativeEating(player)
+                      + " reach="
+                      + SurvivalActions.reach(player, stone)
+                      + " allowed="
+                      + actions.allowed(player, ProtectedAction.BREAK, stone)
+                      + " queued="
+                      + !audit.unqueued(stone, "#storm-probe", player.getName())
+                      + " speed="
+                      + stone.getBreakSpeed(player)
+                      + " at="
+                      + requireNonNull(player.getLocation()).toVector()));
     } finally {
       HandlerList.unregisterAll(cancellation);
       npc.destroy();
