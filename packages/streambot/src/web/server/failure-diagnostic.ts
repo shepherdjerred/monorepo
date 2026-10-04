@@ -71,6 +71,7 @@ const ENDPOINTS = new Set([
   "/api/sports",
   "/api/library",
   "/api/search",
+  "/api/history",
 ]);
 
 export function webFailureEndpoint(request: Request): string {
