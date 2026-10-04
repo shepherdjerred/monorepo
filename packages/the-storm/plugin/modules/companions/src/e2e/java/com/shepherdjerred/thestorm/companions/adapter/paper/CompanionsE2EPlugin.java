@@ -263,32 +263,35 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     var world = getServer().getWorld("storm_companions_test");
     if (world == null) throw new IllegalStateException("fixture world missing");
     var protection = new FixtureProtection();
-    var actors =
-        java.util.stream.StreamSupport.stream(CitizensAPI.getNPCRegistry().spliterator(), false)
-            .filter(npc -> npc.data().has("thestorm-companion-id") && npc.isSpawned())
-            .map(CompanionsE2EPlugin::player)
-            .toList();
+    var actors = new java.util.ArrayList<Player>();
+    for (var npc : CitizensAPI.getNPCRegistry())
+      if (npc.data().has("thestorm-companion-id") && npc.isSpawned()) actors.add(player(npc));
     if (actors.isEmpty()) throw new IllegalStateException("companions are not spawned");
     var player = actors.getFirst();
     var scan = new ResourceScan(requireNonNull(player.getLocation()), 8);
     var actions = new SurvivalActions(protection, requireNonNull(audit));
-    var candidate =
-        scan.advance(
-            4913,
-            block ->
-                Tag.LOGS.isTagged(block.getType())
-                    && actions.allowed(player, ProtectedAction.BREAK, block)
-                    && CompanionActor.exposed(block));
-    source
-        .getSender()
-        .sendMessage(
-            Component.text(
-                "scan actor="
-                    + requireNonNull(player.getLocation()).toVector()
-                    + " candidate="
-                    + candidate.map(block -> block.getX() + "," + block.getY() + "," + block.getZ())
-                    + " finished="
-                    + scan.finished()));
+    try {
+      var candidate =
+          scan.advance(
+              4913,
+              block ->
+                  Tag.LOGS.isTagged(block.getType())
+                      && actions.allowed(player, ProtectedAction.BREAK, block)
+                      && CompanionActor.exposed(block));
+      source
+          .getSender()
+          .sendMessage(
+              Component.text(
+                  "scan actor="
+                      + requireNonNull(player.getLocation()).toVector()
+                      + " candidate="
+                      + candidate.map(
+                          block -> block.getX() + "," + block.getY() + "," + block.getZ())
+                      + " finished="
+                      + scan.finished()));
+    } catch (RuntimeException exception) {
+      source.getSender().sendMessage(Component.text("scan error=" + exception));
+    }
   }
 
   private void nativeActions(CommandSourceStack source) {
@@ -327,6 +330,8 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
       var denied = actions.mine(player, stone, Material.STONE, "#storm-probe");
       protection.deny = false;
       SurvivalActions.equip(player, Material.WOODEN_PICKAXE);
+      var reachable = SurvivalActions.reach(player, stone);
+      var unqueued = audit.unqueued(stone, "#storm-probe", player.getName());
       var mined = actions.mine(player, stone, Material.STONE, "#storm-probe");
       var placed = actions.place(player, stone, Material.OAK_PLANKS, "#storm-probe");
       source
@@ -351,6 +356,10 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                       + placed
                       + " remaining="
                       + NativeRecipes.stock(player).getOrDefault("OAK_PLANKS", 0)
+                      + " reach="
+                      + reachable
+                      + " unqueued="
+                      + unqueued
                       + nativeEating(player)));
     } finally {
       HandlerList.unregisterAll(cancellation);
