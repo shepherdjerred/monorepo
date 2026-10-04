@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -74,6 +75,7 @@ public class MechanicsTestPlugin extends JavaPlugin {
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             database,
             services,
             directory,

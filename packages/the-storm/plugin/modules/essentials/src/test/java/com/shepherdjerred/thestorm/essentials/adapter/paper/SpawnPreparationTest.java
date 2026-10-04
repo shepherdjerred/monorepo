@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -54,6 +55,7 @@ final class SpawnPreparationTest {
             plugin,
             plugin.getLifecycleManager(),
             new PaperScheduler(plugin),
+            new DirectComputePool(),
             database,
             new Services(),
             directory,

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.core.module;
 
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
@@ -17,6 +18,8 @@ import org.bukkit.plugin.Plugin;
  * @param plugin the owning plugin, for registering listeners
  * @param lifecycle Paper's lifecycle manager, for registering Brigadier commands
  * @param scheduler the main-thread scheduler port
+ * @param compute the bounded off-main-thread pool for CPU work; results come back through {@code
+ *     scheduler.mainThread()}
  * @param database shared storage
  * @param services the ports modules publish to each other
  * @param dataDirectory the plugin data folder
@@ -28,6 +31,7 @@ public record ModuleContext(
     Plugin plugin,
     LifecycleEventManager<Plugin> lifecycle,
     Scheduler scheduler,
+    ComputePool compute,
     StormDatabase database,
     Services services,
     Path dataDirectory,

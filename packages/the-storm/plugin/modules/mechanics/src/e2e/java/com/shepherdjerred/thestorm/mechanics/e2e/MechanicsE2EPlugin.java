@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mechanics.e2e;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -58,6 +59,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             database,
             services,
             getDataPath(),
