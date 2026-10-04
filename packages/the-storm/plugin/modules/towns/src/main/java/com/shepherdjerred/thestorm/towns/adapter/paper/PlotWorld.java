@@ -243,6 +243,11 @@ final class PlotWorld {
     return completion;
   }
 
+  void checkpoint(String worldName) {
+    // Paper queues chunk writes and returns without waiting for disk I/O when flush is false.
+    world(worldName).save(false);
+  }
+
   private record PasteWork(
       Iterator<BlockVector3> blocks,
       Clipboard clipboard,
@@ -273,7 +278,8 @@ final class PlotWorld {
         context.scheduler().runOnMainThreadLater(Duration.ofMillis(50), () -> pasteBatch(work));
       } else {
         pasteDecor(work);
-        work.world().save();
+        // Queue chunk persistence without waiting for Paper's chunk writer on the tick thread.
+        checkpoint(work.world().getName());
         work.completion().complete(null);
       }
     } catch (RuntimeException | WorldEditException e) {

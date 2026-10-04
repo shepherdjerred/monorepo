@@ -324,7 +324,7 @@ final class PackedShops implements Listener {
                                       offset.y(),
                                       offset.z())),
                       main())
-                  .thenRunAsync(() -> parts.world().world(destination.world()).save(), main())
+                  .thenRunAsync(() -> parts.world().checkpoint(destination.world()), main())
                   .thenCompose(ignored -> parts.recoveries().placed(recovery.id()))
                   .thenRunAsync(() -> parts.state().endWork(workId(recovery.id())), main());
             },
