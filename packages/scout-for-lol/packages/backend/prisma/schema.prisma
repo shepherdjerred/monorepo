@@ -705,7 +705,13 @@ model ScoutClientObservation {
   kind             String
   leaguePatch      String?
   platformId       String?
+  /// The observer's Riot API PUUID: the envelope's League-client UUID
+  /// translated through `LeagueIdentityAlias`, or that UUID unchanged when no
+  /// alias exists yet (such a row is quarantined).
   localPuuid       String?
+  /// The observer identity exactly as the client sent it, when it was a
+  /// League-client UUID rather than a Riot API PUUID.
+  localLcuUuid     String?
   lobbyId          String?
   gameId           String?
   payload          Json
@@ -739,6 +745,34 @@ model ScoutClientPlayerSnapshot {
 
   @@id([localPuuid, resource])
   @@index([kind, capturedAt])
+}
+
+/// The League client names players by a 36-character UUID; Riot's API names
+/// them by a 78-character PUUID encrypted per API key. The two never compare
+/// equal, so every client payload is translated through this table before
+/// anything reads a player identity out of it.
+///
+/// An alias is learned by resolving the Riot ID the client reported alongside
+/// the UUID (`gameName#tagLine`) through account-v1. The UUID-to-Riot-ID link is
+/// the client's claim; the Riot-ID-to-PUUID link is Riot's answer.
+///
+/// `ownerVerified` marks an alias whose PUUID is one of the reporting device
+/// owner's registered accounts — a player's own client vouching for itself.
+/// A verified alias replaces an unverified one; otherwise a UUID never changes
+/// owner, so the first alias stands and a later disagreement is counted rather
+/// than written. That is what stops another client's forged payload from
+/// permanently re-pointing a player who runs the client themselves.
+model LeagueIdentityAlias {
+  lcuUuid             String   @id
+  puuid               String
+  gameName            String
+  tagLine             String
+  source              String
+  ownerVerified       Boolean  @default(false)
+  learnedFromDeviceId String?
+  resolvedAt          DateTime @default(now())
+
+  @@index([puuid])
 }
 
 /// The immutable local Match-V5-compatible observation selected only after

@@ -480,6 +480,39 @@ read-back could not run inside one. The guard and the fact are therefore two
 commits by construction, which is why every V2 guarded-effect result reports
 them as separate outcomes and names the reconcile.
 
+## Scout Client player identity
+
+The League client names every player by a 36-character UUID — in the
+current-summoner profile, lobbies, match history, end-of-game blocks, and
+replay files alike. Riot's API names them by a 78-character PUUID encrypted
+per API key, which is what every `Account` row and every Riot-sourced record
+holds. The two never compare equal, so client data joins to nothing until it
+is translated.
+
+`LeagueIdentityAlias` is that translation (`scout-client/identity-alias.ts`).
+An alias is learned by resolving the Riot ID a payload states beside a UUID
+(`gameName#tagLine`, present in the profile and in match-history identities)
+through account-v1, once per player, and cached for good. Ingress learns
+every alias a batch can teach before checking it, then:
+
+- translates the observer before the ownership check, and stores the PUUID in
+  `localPuuid` with the UUID beside it in `localLcuUuid`;
+- leaves the stored payload exactly as sent — it is the evidence and its digest
+  is the idempotency key — and hands a translated copy to the quarantine
+  checks, lobby binding, and match dispatch.
+
+Every later reader of a stored payload translates its own copy the same way
+(`withRiotIdentities`): canonical match selection, replay provenance and the
+replay container check, and local mastery. A UUID with no alias is left as it
+is, so an unresolved player fails to join rather than joining wrongly, and a
+canonical match that still names anyone by UUID is refused.
+
+A client can claim any Riot ID for a UUID; ownership is still checked against
+the device owner's accounts. An alias whose PUUID is the reporting owner's
+own is `ownerVerified` and replaces an unverified one, so a player's own
+client corrects anything another client's payload taught. Outcomes are counted
+in `scout_client_identity_aliases_total{outcome}`.
+
 ## The V2 prematch path
 
 The `prematch-*` modules beside them serve `scoutPrematchDiscoveryV2Workflow`

@@ -12,6 +12,8 @@ import {
   validateReplayContainer,
   type ReplayProvenance,
 } from "./replay/container.ts";
+import { lcuUuidsFor } from "./identity-alias.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { drainRequestBody } from "./replay/drain.ts";
 import { resolveReplayProvenance } from "./replay/evidence.ts";
 import {
@@ -434,7 +436,15 @@ async function acceptReplay(
   );
   try {
     const received = await receiveReplay(metadata, temporaryPath);
-    await validateReplayContainer(temporaryPath, received.bytes, provenance);
+    await validateReplayContainer(
+      temporaryPath,
+      received.bytes,
+      provenance,
+      new Set([
+        provenance.localPuuid,
+        ...(await lcuUuidsFor(LeaguePuuidSchema.parse(provenance.localPuuid))),
+      ]),
+    );
     await uploadReplayObject(metadata, objectKey, temporaryPath, received);
     const completed = await prisma.scoutClientReplayArtifact.updateMany({
       where: {
