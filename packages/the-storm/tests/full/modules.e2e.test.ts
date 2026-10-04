@@ -45,12 +45,14 @@ const ownedConfig = path.join(
 );
 
 describe("all modules together", () => {
-  test("boots the 23 enabled modules of 25 registered with the shipped content", async ({
+  test("boots the 23 shipped modules plus rwf and rwfbots with the shipped content", async ({
     server,
     rcon,
   }) => {
     // The shipped config is the contract: every registered module listed, the
-    // same 23 switched on, and only rwf and rwfbots off.
+    // same 23 switched on, and only rwf and rwfbots off. The full lane stages
+    // it with those two switched on as well, so Search and Destroy and its
+    // bots run beside everything else.
     const owned = OwnedConfigSchema.parse(
       Bun.YAML.parse(await Bun.file(ownedConfig).text()),
     );
@@ -69,9 +71,11 @@ describe("all modules together", () => {
     ).toEqual(["rwf", "rwfbots"]);
     const logs = await serverLogs(server);
     const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
-    expect(enabled?.[1]?.split(", ").toSorted()).toEqual(modules);
+    expect(enabled?.[1]?.split(", ").toSorted()).toEqual(
+      [...modules, "rwf", "rwfbots"].toSorted(),
+    );
     expect(logs).toContain(
-      "Prepared synthetic fixtures for Storm modules [world, essentials, npcs, arena, shards, seasonal]",
+      "Prepared synthetic fixtures for Storm modules [world, essentials, npcs, arena, shards, seasonal, rwf]",
     );
     expect(logs).not.toContain("The Storm failed to enable");
     expect(logs).not.toContain("Could not validate shard altars");

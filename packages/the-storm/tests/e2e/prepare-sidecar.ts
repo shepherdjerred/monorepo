@@ -2,11 +2,12 @@ import { chmod, chown, cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stagePlugins } from "./harness/server.ts";
-import { gameplayFixtures } from "./gameplay-fixtures.ts";
+import { e2eProfile, gameplayFixtures } from "./gameplay-fixtures.ts";
 import { paper } from "./harness/pins.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "..", "..");
-const full = Bun.env["STORM_E2E_FULL"] === "1";
+const profile = e2eProfile();
+const full = profile !== "e2e";
 const stormJar = path.join(
   packageRoot,
   "plugin",
@@ -47,7 +48,7 @@ const stagingDir = path.join(
 );
 const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
   stormJar,
-  ...(await gameplayFixtures(packageRoot, full)),
+  ...(await gameplayFixtures(packageRoot, profile)),
   ownedConfigDir,
   brain: {
     baseUrl: `http://${brainHost}:${brainPort.toString()}`,

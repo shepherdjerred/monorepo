@@ -9,6 +9,7 @@
     "tests/**/*.ts",
     "vitest.e2e.config.ts",
     "vitest.full.config.ts",
+    "vitest.load.config.ts",
     "eslint.config.ts"
   ]
 }

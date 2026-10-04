@@ -600,6 +600,27 @@ modules read them through the flattened `rwf.app.view` records (`MatchState`,
 names an `rwf.domain` type. A bot provider implements `rwf.app.BotBodies` and
 publishes `BotRoster.of(bodies)`.
 
+### Watch a bot match locally
+
+`bun run rwf:watch` boots a disposable Paper server in Docker with every
+shipped module plus `rwf` and `rwfbots`, Citizens and its owned config, the
+void `rwf` world and a stand-in for Flipt that opens `/rwf` to everyone. It
+publishes the game port on `127.0.0.1:25565` (offline mode) and runs until
+Ctrl-C, which removes the container. Build the jar first.
+
+```bash
+bunx turbo run build --filter=@shepherdjerred/the-storm
+cd packages/the-storm
+bun run rwf:watch --op <your-name>     # --port <n> to use another port
+```
+
+Join `localhost` with a 26.2 client, then:
+
+1. `/rwf admin showcase 8` starts a bots-only match after a 15 s countdown.
+2. `/rwf spectate` puts you at the spectator point.
+3. `/rwf spectate next` follows the next living bot; repeat to cycle.
+4. `/rwf leave` gives your belongings back; `/rwfbots debug` shows the plans.
+
 ## Search and Destroy bots (rwfbots)
 
 The `rwfbots` module fills rwf matches with Citizens player NPCs driven by a

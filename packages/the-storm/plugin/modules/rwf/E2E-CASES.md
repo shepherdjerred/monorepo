@@ -34,8 +34,10 @@ behaviour on its own. These cases need the real server in
 
 `tests/e2e/rwf.e2e.test.ts` runs humans only (rwfbots off) on the shared e2e
 server, whose fixtures plugin creates the flat void `rwf` world before TheStorm
-enables. A case marked **proven** below is asserted there; the rest still wait
-for a suite, and the bot cases (14, 15, 23) for the rwfbots suite.
+enables. `tests/full/rwfbots.e2e.test.ts` runs the bot cases (14, 15, 16's
+human share, 23) on the full lane, where every shipped module plus rwf and
+rwfbots boots with Citizens. A case marked **proven** below is asserted in one
+of the two; the rest still wait for a suite.
 
 ## World and maps
 
@@ -96,12 +98,25 @@ for a suite, and the bot cases (14, 15, 23) for the rwfbots suite.
 14. With rwfbots enabled, the countdown fills to `targetCombatants` with
     Citizens NPCs: they show `✦` after their names, carry the modifier, fight
     only through `CombatantActions`, and are never paid; without rwfbots the
-    match runs humans only.
+    match runs humans only. **Proven**: a lone human's countdown fills to the
+    owned `targetCombatants` (8) with seven shipped personalities whose
+    signed skins reach the client, none of them on the online list or its
+    count; the scoreboard's `rwf_<team>_bot` teams carry the `✦` suffix and
+    `/rwf who` shows it after every bot; bots' recorded swings go through
+    `CombatantActions` and their hits lower the human's health; `rwf_match` counts 1 human
+    and 7 bots and `rwf_match_player` holds the human alone. The humans-only
+    half is proven by the e2e suite. The modifier on bot bodies is not
+    inspected.
 15. When the last human leaves a live match, bots are despawned and the match
     stops unpaid after `noHumansAbort`; when the last human leaves a countdown,
     the bots leave at once. Needs rwfbots: with humans only a departing human
     empties their team and standings end the match at once, so the abort never
-    runs. The humans-only edges are **proven** instead: a lone human's match
+    runs. **Proven** with rwfbots for the live match: the lone human
+    disconnects, the match is stopped within the 5 s test abort (the log
+    names the window), every bot despawns, the row has no winner, the human's
+    row is `STOPPED` and unpaid, the bots are not rated and the balance is
+    untouched; the countdown edge with bots is not. The humans-only edges are
+    **proven** too: a lone human's match
     goes live and ends in the same tick (the empty team is defeated, nobody is
     paid, no bots are listed), a disconnect during the countdown cancels it,
     and leaving a live match hands the other team the win.
@@ -113,8 +128,9 @@ for a suite, and the bot cases (14, 15, 23) for the rwfbots suite.
     `rwf:<matchId>:<uuid>`; `kill -9` between the outbox write and the
     transfer pays exactly once on restart. **Proven** for the payout itself
     (3 to the winner, 1 to the loser, `/balance` and `rwf_match_player` agree,
-    rows end `PAID`; a match shorter than `minMatchLength` pays nobody); the
-    crash replay is not.
+    rows end `PAID`; a match shorter than `minMatchLength` pays nobody), and
+    with bots for the human share (one human in eight: `round(3 x 0.34)` = 1
+    for a win, 0 for a loss, the bots never paid); the crash replay is not.
 17. The daily cap forfeits the excess and tells the player.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds frames at 20 Hz; `kill -9`
@@ -147,4 +163,10 @@ for a suite, and the bot cases (14, 15, 23) for the rwfbots suite.
 23. With rwfbots enabled, `/rwf admin showcase 4` plays a whole bots-only
     match on Citizens NPCs while a human watches with `/rwf spectate next`
     following each fighter; it pays nobody, writes a recording and bot stats,
-    and the next lobby fills bots only once a human joins.
+    and the next lobby fills bots only once a human joins. **Proven** with
+    `/rwf admin showcase 8`: one watcher follows a bot with `/rwf spectate
+next`, the bots-only match outlives the no-humans abort and ends with a
+    winner, `rwf_match` records 0 humans and 8 bots with no player rows, the
+    recording's roster is all bots, all eight personalities are rated, the
+    next lobby has no bots, and `/rwf leave` restores the watcher; following
+    every fighter in turn is not.

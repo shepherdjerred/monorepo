@@ -84,6 +84,25 @@ export type StartServerOptions = {
     slaAfterMinutes: number;
   };
   agent: { mode: string; reviewSamplePercent: number };
+  /**
+   * Container limits for a profile that measures load; the default is a 1G
+   * heap with no CPU or memory limit.
+   */
+  resources?: ServerResources;
+  /**
+   * Publish the game port on this fixed loopback port, so a real client can
+   * join `localhost`; a random free port otherwise.
+   */
+  gamePort?: number;
+};
+
+/** Docker limits and the JVM heap (itzg's MEMORY) for the server container. */
+export type ServerResources = {
+  cpus: number;
+  /** The JVM heap, as itzg's MEMORY reads it (8G). */
+  heap: string;
+  /** The container memory limit, as `docker create --memory` reads it (10g). */
+  memoryLimit: string;
 };
 
 const PortBindingSchema = z
@@ -261,6 +280,13 @@ export async function stagePlugins(
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
     });
+    // Citizens' owned config keeps rwfbots' NPCs off the tab and online
+    // lists, as the production image's plugin sync does.
+    await cp(
+      path.join(path.dirname(options.ownedConfigDir), "Citizens"),
+      path.join(pluginsDir, "Citizens"),
+      { recursive: true },
+    );
   }
   if (options.fixturesJar !== undefined) {
     await Bun.write(
@@ -351,6 +377,7 @@ function serverEnv(
   rconPassword: string,
   brainToken: string,
   extra: Record<string, string>,
+  heap: string,
 ): Record<string, string> {
   return {
     EULA: "TRUE",
@@ -364,7 +391,7 @@ function serverEnv(
     ...extra,
     // Keep boot hermetic: do not fetch third-party default configs.
     SKIP_DOWNLOAD_DEFAULTS: "true",
-    MEMORY: "1G",
+    MEMORY: heap,
     LEVEL_TYPE: "minecraft:flat",
     GENERATE_STRUCTURES: "false",
     SPAWN_PROTECTION: "0",
@@ -450,7 +477,7 @@ export async function startServer(
     "--label",
     `${pidLabel}=${process.pid.toString()}`,
     "-p",
-    "127.0.0.1::25565",
+    `127.0.0.1:${options.gamePort?.toString() ?? ""}:25565`,
     "-p",
     "127.0.0.1::25575",
     "-v",
@@ -461,8 +488,19 @@ export async function startServer(
           `${path.join(cacheDir, dir)}:${target}`,
         ])
       : []),
+    ...(options.resources === undefined
+      ? []
+      : [
+          `--cpus=${options.resources.cpus.toString()}`,
+          `--memory=${options.resources.memoryLimit}`,
+        ]),
     ...Object.entries(
-      serverEnv(rconPassword, options.brain.token, options.env),
+      serverEnv(
+        rconPassword,
+        options.brain.token,
+        options.env,
+        options.resources?.heap ?? "1G",
+      ),
     ).flatMap(([key, value]) => ["-e", `${key}=${value}`]),
     serverImage,
   ]);

@@ -1,5 +1,4 @@
 import { randomBytes } from "node:crypto";
-import path from "node:path";
 import type { Bot } from "mineflayer";
 import { Vec3 } from "vec3";
 import { describe, expect } from "vitest";
@@ -11,14 +10,19 @@ import {
   waitForMessage,
   waitUntil,
 } from "./harness/bot.ts";
-import { packageRoot } from "./harness/paths.ts";
 import { rwfTestSettings } from "./harness/rwf-settings.ts";
 import type { ServerInfo } from "./harness/server.ts";
 import {
-  copyStormDatabase,
-  querySqlite,
-  stormDataFile,
-} from "./harness/storm-data.ts";
+  eventually,
+  type MatchRow,
+  settledMatch,
+  sorted,
+  status,
+  transcript,
+  type Transcript,
+  waitForLobby,
+} from "./harness/rwf-match.ts";
+import { stormDataFile } from "./harness/storm-data.ts";
 import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
 
 /**
@@ -64,63 +68,11 @@ const trooperHit = 2.9;
 const attackSpeedModifierValue = 200;
 const startingBalance = 500;
 
-/** Every chat line a player has seen, for assertions that must not race arrivals. */
-function transcript(bot: Bot) {
-  const lines: string[] = [];
-  bot.on("messagestr", (line: string) => {
-    lines.push(line);
-  });
-  const find = (pattern: RegExp): RegExpExecArray | undefined => {
-    for (const line of lines) {
-      const match = pattern.exec(line);
-      if (match !== null) {
-        return match;
-      }
-    }
-    return undefined;
-  };
-  return {
-    lines,
-    find,
-    has: (pattern: RegExp) => find(pattern) !== undefined,
-    async until(pattern: RegExp, timeoutMs = 10_000): Promise<RegExpExecArray> {
-      const deadline = Date.now() + timeoutMs;
-      for (;;) {
-        const found = find(pattern);
-        if (found !== undefined) {
-          return found;
-        }
-        if (Date.now() > deadline) {
-          throw new Error(
-            `${bot.username} never saw ${pattern.toString()}; saw:\n${lines.join("\n")}`,
-          );
-        }
-        await Bun.sleep(50);
-      }
-    },
-  };
-}
-type Transcript = ReturnType<typeof transcript>;
-
 /** A player and their transcript. */
 type Human = { bot: Bot; log: Transcript };
 
 function human(bot: Bot): Human {
   return { bot, log: transcript(bot) };
-}
-
-async function eventually(
-  description: string,
-  check: () => Promise<boolean>,
-  timeoutMs = 15_000,
-): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (!(await check())) {
-    if (Date.now() > deadline) {
-      throw new Error(`Timed out waiting for ${description}`);
-    }
-    await Bun.sleep(200);
-  }
 }
 
 function count(bot: Bot, item: string): number {
@@ -141,13 +93,6 @@ function armor(bot: Bot): (string | undefined)[] {
 
 function coords(at: Vec3): string {
   return `${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`;
-}
-
-/** Sorts rows of primitives for order-free comparison. */
-function sorted<T>(rows: T[]): T[] {
-  return rows.toSorted((a, b) =>
-    JSON.stringify(a).localeCompare(JSON.stringify(b)),
-  );
 }
 
 // ---- RCON ----------------------------------------------------------------
@@ -240,43 +185,6 @@ async function attackSpeedModifier(
     throw new Error(`unexpected attribute reply: ${reply}`);
   }
   return undefined;
-}
-
-const StatusSchema = z.string().transform((text, context) => {
-  const ready = /Ready: (?<ready>true|false), phase: (?<phase>\w+)/u.exec(text);
-  const match =
-    /Match (?<matchId>[0-9a-f-]{36}), map (?<map>\S+), (?<humans>\d+) humans, (?<bots>\d+) bots, bot roster (?<roster>present|absent)/u.exec(
-      text,
-    );
-  if (ready?.groups === undefined || match?.groups === undefined) {
-    context.addIssue({ code: "custom", message: `no status in ${text}` });
-    return z.NEVER;
-  }
-  return {
-    ready: ready.groups["ready"] === "true",
-    phase: ready.groups["phase"] ?? "",
-    matchId: match.groups["matchId"] ?? "",
-    map: match.groups["map"] ?? "",
-    humans: Number(match.groups["humans"]),
-    bots: Number(match.groups["bots"]),
-    roster: match.groups["roster"] ?? "",
-  };
-});
-
-async function status(rcon: RconClient) {
-  return StatusSchema.parse(await rcon.command("rwf admin status"));
-}
-
-/** The previous match has reset and admission is open again. */
-async function waitForLobby(rcon: RconClient): Promise<void> {
-  await eventually(
-    "the lobby to reopen",
-    async () => {
-      const now = await status(rcon);
-      return now.ready && now.phase === "Lobby" && now.humans === 0;
-    },
-    30_000,
-  );
 }
 
 // ---- players --------------------------------------------------------------
@@ -506,80 +414,11 @@ async function defuseBomb(
 
 // ---- the database and recordings --------------------------------------------
 
-const MatchRowSchema = z.object({
-  id: z.string(),
-  map: z.string(),
-  winner: z.string().nullable(),
-  humans: z.number().int(),
-  bots: z.number().int(),
-  recording_file: z.string().nullable(),
-  recording_bytes: z.number().int(),
-  dropped_frames: z.number().int(),
-});
-const PlayerRowSchema = z.object({
-  player: z.string(),
-  team: z.string(),
-  kit: z.string(),
-  kills: z.number().int(),
-  deaths: z.number().int(),
-  result: z.string(),
-  credits_owed: z.number().int(),
-  payout_status: z.string(),
-  credits_paid: z.number().int(),
-});
-
-async function matchRows(server: ServerInfo, matchId: string) {
-  const outDir = path.join(packageRoot, ".cache", "e2e", "rwf", matchId);
-  const database = await copyStormDatabase(server, outDir);
-  const matches = z
-    .array(MatchRowSchema)
-    .parse(
-      await querySqlite(
-        database,
-        `SELECT id, map, winner, humans, bots, recording_file, recording_bytes, dropped_frames FROM rwf_match WHERE id = '${matchId}'`,
-      ),
-    );
-  const players = z
-    .array(PlayerRowSchema)
-    .parse(
-      await querySqlite(
-        database,
-        `SELECT player, team, kit, kills, deaths, result, credits_owed, payout_status, credits_paid FROM rwf_match_player WHERE match_id = '${matchId}' ORDER BY player`,
-      ),
-    );
-  return { outDir, match: matches[0], players };
-}
-
-/** The settled match row: payouts finished and the recording closed. */
-async function settledMatch(server: ServerInfo, matchId: string) {
-  let latest = await matchRows(server, matchId);
-  await eventually(
-    `match ${matchId} to settle`,
-    async () => {
-      latest = await matchRows(server, matchId);
-      return (
-        latest.match?.recording_file !== null &&
-        latest.match?.recording_file !== undefined &&
-        latest.players.length > 0 &&
-        latest.players.every(
-          (row) => row.payout_status === "PAID" || row.payout_status === "NONE",
-        )
-      );
-    },
-    30_000,
-  );
-  const match = latest.match;
-  if (match === undefined) {
-    throw new Error(`no rwf_match row for ${matchId}`);
-  }
-  return { ...latest, match };
-}
-
 /** The recording is a non-empty gzip whose rows name the match and nobody else. */
 async function expectRecording(
   server: ServerInfo,
   outDir: string,
-  match: z.infer<typeof MatchRowSchema>,
+  match: MatchRow,
   names: string[],
 ): Promise<void> {
   if (match.recording_file === null) {
