@@ -25,6 +25,10 @@ import { goodNight as _goodNight } from "./ha/good-night.ts";
 import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
 import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
+import {
+  petCareAlerts as _petCareAlerts,
+  type PetCareAlertsState,
+} from "./ha/pet-care-alerts.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { motionLight as _motionLight } from "./ha/motion-light.ts";
 import { sleepAc as _sleepAc, sleepMusic as _sleepMusic } from "./ha/sleep.ts";
@@ -88,12 +92,10 @@ import {
   runGlitterCorpusChannelOverlap as _runGlitterCorpusChannelOverlap,
   runGlitterCorpusDaily as _runGlitterCorpusDaily,
   runGlitterCorpusInventory as _runGlitterCorpusInventory,
-} from "./glitter/glitter-corpus.ts";
-import type {
-  GlitterCorpusBackfillInput,
-  GlitterCorpusChannelBackfillInput,
-  GlitterCorpusChannelOverlapInput,
-  GlitterCorpusSnapshotResult,
+  type GlitterCorpusBackfillInput,
+  type GlitterCorpusChannelBackfillInput,
+  type GlitterCorpusChannelOverlapInput,
+  type GlitterCorpusSnapshotResult,
 } from "./glitter/glitter-corpus.ts";
 import type {
   ChannelStateResult,
@@ -272,6 +274,8 @@ export async function leavingHome(): Promise<void> {
 export async function reconcileLock(): Promise<void> {
   return _reconcileLock();
 }
+
+export const petCareAlerts = (s: PetCareAlertsState = {}) => _petCareAlerts(s);
 
 export async function runVacuumIfNotHome(): Promise<void> {
   return _runVacuumIfNotHome();

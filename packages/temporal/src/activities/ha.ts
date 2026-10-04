@@ -166,6 +166,34 @@ export const haActivities = {
     console.warn(`Sent notification: ${title}`);
   },
 
+  async setPetCareNotification(input: {
+    entityId: string;
+    title: string;
+    message: string;
+    active: boolean;
+    sendPush: boolean;
+  }): Promise<void> {
+    if (!input.active) {
+      await getClient().callService("persistent_notification", "dismiss", {
+        notification_id: input.entityId,
+      });
+      return;
+    }
+
+    await getClient().callService("persistent_notification", "create", {
+      notification_id: input.entityId,
+      title: input.title,
+      message: input.message,
+    });
+    if (input.sendPush) {
+      await getClient().callService("notify", "mobile_app_jerreds_iphone", {
+        title: input.title,
+        message: input.message,
+        data: { tag: input.entityId },
+      });
+    }
+  },
+
   async getEntitiesInDomain(domain: string): Promise<EntityState[]> {
     const prefix = `${domain}.`;
     const states = await getClient().getStates();

@@ -33,25 +33,22 @@ The Woodpecker Helm types drift check fails any PR that changes a generator inpu
 ## Home Assistant pet-care alerts
 
 `config/homeassistant/configuration.yaml` owns the qualified pet-care problem
-sensors: five minutes for robot/feeder/fountain failures, 45 minutes for a
-continuous Litter-Robot waiting or cycling sequence, and 15 minutes below
-650 mL for a fountain shortage. Feeder problems also include more than 14 hours
-without dispensing; the food-status signal combines low and empty food.
-The water check reads the volume sensor's `mL` attribute, not its fluid-ounce
-state or percentage sensor.
+sensors. Temporal owns the holds, incident state, and notification delivery:
+five minutes for litter-robot, feeder, and fountain-operation problems, 45
+minutes for a continuous Litter-Robot waiting or cycling sequence, and 15
+minutes below 650 mL for a fountain shortage. Feeder problems also include
+more than 14 hours without dispensing; the food-status signal combines low
+and empty food. The water check reads the volume sensor's `mL` attribute, not
+its fluid-ounce state or percentage sensor.
 
-`automation.yaml` creates a persistent HA notification and sends one push via
-`notify.send_message` to the registered `notify.jerreds_iphone` device when a
-qualified problem turns on. Confirmed recovery dismisses the persistent
-notification. Missing water or litter status telemetry cancels pending timers
-and marks the signal unknown, without dismissing an existing incident. Restored
-input booleans suppress repeat pushes across reconnects and restarts. Attribute
-changes refresh the persistent notification's details, and HA startup recreates
-notifications for active problems. Notification actions run in a queue so
-overlapping updates cannot send duplicate pushes. Prometheus rules consume the
-same qualified sensors without a second hold time. Battery, desiccant, filter,
-and cleaning maintenance rules remain separate. The config hash rolls HA when
-GitOps changes these mounted files; no manual automation reload is needed.
+After a hold, Temporal creates a persistent HA notification, pushes to
+`notify.mobile_app_jerreds_iphone`, and publishes the warning to Alertmanager.
+Confirmed recovery dismisses the HA notification and resolves the same
+Alertmanager alert. Unknown or unavailable sensor state cancels a pending hold
+without dismissing an active incident. HA startup and WebSocket reconnects
+reconcile the current sensor states. Prometheus continues to alert on missing
+pet-care telemetry; battery, desiccant, filter, and cleaning maintenance rules
+remain separate.
 
 ## 1Password lint
 
