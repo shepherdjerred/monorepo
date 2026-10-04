@@ -95,14 +95,97 @@ describe("Woodpecker log wire format", () => {
     },
   );
 
-  test("rejects corrupt UTF-8 rather than inserting a replacement character", async () => {
-    const result = await collectFailedLog([{ data: "/w==" }]);
-    expect(result.check.status).toBe("failed");
-    expect(result.evidence.status).toBe("failure");
+  test("reports arbitrary log bytes and continues collecting subsequent failures", async () => {
+    const logRequests: string[] = [];
+    const bytes = Buffer.concat([
+      Buffer.from("compiler: "),
+      Buffer.from([0xff]),
+      Buffer.from(" invalid source\n"),
+    ]);
+    const result = await collectCiMainWith({
+      now: NOW,
+      pipelineUrl,
+      request: (path) => {
+        if (path.includes("/logs/")) {
+          logRequests.push(path);
+          return Promise.resolve(
+            path.endsWith("/777")
+              ? [{ data: bytes.toString("base64") }]
+              : logBytes("second failure cause\n"),
+          );
+        }
+        if (path.includes("/pipelines?")) {
+          return Promise.resolve([
+            summary(102, "failure"),
+            summary(103, "failure"),
+          ]);
+        }
+        const number = Number(path.split("/").at(-1));
+        return Promise.resolve(
+          detail(number, "failure", {
+            id: number === 102 ? 777 : 778,
+            name: "root verify",
+          }),
+        );
+      },
+    });
+
+    expect(result.check.status).toBe("passed");
+    expect(result.evidence.status).toBe("success");
+    expect(result.limitation).toBeUndefined();
+    expect(result.check.summary).toContain("2 failed step logs inspected");
+    expect(logRequests).toHaveLength(2);
+    expect(result.findings).toHaveLength(2);
+    expect(result.findings[0]?.detail).toContain("compiler: � invalid source");
+    expect(result.findings[1]?.detail).toContain("second failure cause");
   });
 });
 
 describe("CI homelab collector", () => {
+  test("excludes pull-request pipelines targeting main from main health", async () => {
+    const requests: string[] = [];
+    const pipelines = [
+      { ...summary(103, "failure"), branch: "main", event: "pull_request" },
+      { ...summary(102), branch: "main", event: "push" },
+    ];
+    const result = await collectCiMainWith({
+      now: NOW,
+      pipelineUrl,
+      request: (path) => {
+        requests.push(path);
+        if (path.includes("/pipelines?")) {
+          const parameters = new URL(`https://woodpecker.sjer.red${path}`)
+            .searchParams;
+          return Promise.resolve(
+            pipelines.filter(
+              (pipeline) =>
+                pipeline.branch === parameters.get("branch") &&
+                (parameters.get("event") === null ||
+                  pipeline.event === parameters.get("event")),
+            ),
+          );
+        }
+        if (path.includes("/logs/")) {
+          return Promise.resolve(logBytes("pull-request failure"));
+        }
+        const number = Number(path.split("/").at(-1));
+        return Promise.resolve(
+          number === 103
+            ? detail(103, "failure", { id: 777, name: "root verify" })
+            : detail(102),
+        );
+      },
+    });
+
+    expect(result.check.status).toBe("passed");
+    expect(result.check.summary).toContain("0 failed of 1 main pipelines");
+    expect(result.check.summary).toContain("latest #102 success");
+    expect(result.evidence.url).toBe(pipelineUrl(102));
+    expect(result.findings).toEqual([]);
+    expect(requests).not.toContain("/api/repos/7/pipelines/103");
+    expect(requests.some((path) => path.includes("/logs/"))).toBe(false);
+  });
+
   test("paginates over every main pipeline in the 24-hour window", async () => {
     const paths: string[] = [];
     const firstPage = Array.from({ length: 50 }, (_, index) =>

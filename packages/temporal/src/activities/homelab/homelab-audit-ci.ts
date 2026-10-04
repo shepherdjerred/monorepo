@@ -99,6 +99,7 @@ function repoPath(suffix: string): string {
 function pipelinesPath(since: Date, page: number): string {
   const parameters = new URLSearchParams({
     branch: "main",
+    event: "push",
     after: since.toISOString(),
     perPage: "50",
     page: page.toString(),
@@ -153,8 +154,9 @@ function decodeLog(entries: z.infer<typeof LogSchema>): string {
       entry.data === null ? Buffer.alloc(0) : Buffer.from(entry.data, "base64"),
     ),
   );
-  // A UTF-8 sequence may cross chunk boundaries; decode only after joining.
-  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  // Join split UTF-8 sequences first. External log bytes need not be UTF-8;
+  // replacement characters preserve the remaining diagnostic text.
+  return new TextDecoder("utf-8").decode(bytes);
 }
 
 function failedSteps(

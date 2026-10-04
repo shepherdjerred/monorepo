@@ -5,7 +5,10 @@ import {
   deployedArtifactReferences,
   retentionReferences,
 } from "./woodpecker-retention-references.ts";
-import { retentionTestRepo } from "./woodpecker-retention-test-fixtures.ts";
+import {
+  retentionTestRepo,
+  retentionTestPipeline,
+} from "./woodpecker-retention-test-fixtures.ts";
 
 const digest = `@sha256:${"a".repeat(64)}`;
 const read =
@@ -29,6 +32,73 @@ const chartApplication = (repoURL: string, revision = "2.0.0-1004300") => ({
 function laterReads(): never {
   throw new Error("Authorization rejection must stop later API reads");
 }
+
+describe("Woodpecker default branch references", () => {
+  test.each([false, true])(
+    "newer PR and failed push pipelines do not displace the successful default-branch push (artifact proven=%s)",
+    async (artifactProven) => {
+      const activePrHead = "d".repeat(40);
+      const mainPushCommit = "a".repeat(40);
+      const pipelines = [
+        {
+          ...retentionTestPipeline,
+          number: 53,
+          branch: "main",
+          status: "success",
+          event: "pull_request",
+          ref: "refs/pull/6/merge",
+          commit: "b".repeat(40),
+        },
+        {
+          ...retentionTestPipeline,
+          number: 52,
+          branch: "main",
+          status: "failure",
+          event: "push",
+          ref: "refs/heads/main",
+          commit: "c".repeat(40),
+        },
+        {
+          ...retentionTestPipeline,
+          number: 51,
+          branch: "main",
+          status: "success",
+          event: "push",
+          ref: "refs/heads/main",
+          commit: mainPushCommit,
+        },
+      ];
+      const result = await retentionReferences(
+        retentionTestRepo,
+        (path) => {
+          const query = new URLSearchParams(path.split("?")[1]);
+          return Promise.resolve(
+            pipelines
+              .filter(
+                (pipeline) =>
+                  pipeline.branch === query.get("branch") &&
+                  pipeline.status === query.get("status") &&
+                  (query.get("event") === null ||
+                    pipeline.event === query.get("event")),
+              )
+              .slice(0, Number(query.get("perPage"))),
+          );
+        },
+        () => Promise.resolve([{ head: { sha: activePrHead } }]),
+        read(
+          artifactProven ? ["ghcr.io/shepherdjerred/worker:2.0.0-1004207"] : [],
+        ),
+      );
+      expect(result.heads).toEqual(new Set([activePrHead, mainPushCommit]));
+      expect(result.protectAllMain).toBe(!artifactProven);
+      expect(result.protectionReasons).toEqual(
+        artifactProven
+          ? []
+          : ["No current Woodpecker-published artifact references were proven"],
+      );
+    },
+  );
+});
 
 describe("Woodpecker deployed artifact references", () => {
   test.each([403, 404])(

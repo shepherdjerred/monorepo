@@ -191,13 +191,13 @@ export async function retentionReferences(
         "Open PR reference inventory exceeds pagination safety bound",
       );
   }
-  const latest = z
-    .array(RetentionPipelineSchema)
-    .parse(
-      await woodpecker(
-        `/api/repos/${String(repo.id)}/pipelines?${new URLSearchParams({ branch: repo.default_branch, status: "success", perPage: "1" }).toString()}`,
-      ),
-    );
+  const latest = z.array(RetentionPipelineSchema).parse(
+    await woodpecker(
+      // PR pipelines share their target branch; only a push proves this
+      // default branch's latest successful build (Woodpecker 3.18.1).
+      `/api/repos/${String(repo.id)}/pipelines?${new URLSearchParams({ branch: repo.default_branch, event: "push", status: "success", perPage: "1" }).toString()}`,
+    ),
+  );
   if (latest[0] !== undefined) heads.add(latest[0].commit);
   if (repo.full_name !== "shepherdjerred/monorepo")
     return {
