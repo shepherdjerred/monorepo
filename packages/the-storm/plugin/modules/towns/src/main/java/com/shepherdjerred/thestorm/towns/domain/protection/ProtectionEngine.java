@@ -30,6 +30,14 @@ public final class ProtectionEngine {
   }
 
   public Verdict decide(Actor actor, Act act, Land land) {
+    if (land instanceof Land.WorkLand(var region)) {
+      return new Verdict.Deny(new Denial.ByRegion(region.name(), act.action()));
+    }
+    if (land instanceof Land.ParcelLand(var parcel)
+        && parcel.phase()
+            == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.RESETTING) {
+      return new Verdict.Deny(new Denial.ByRegion(parcel.definition().name(), act.action()));
+    }
     if (actor.bypass() && act.action() != Action.ATTACK_PLAYER) {
       return Verdict.allow();
     }
@@ -37,6 +45,14 @@ public final class ProtectionEngine {
       case Land.Wilderness _ -> Verdict.allow();
       case Land.TownLand(var claim) -> towns.decide(actor, act, claim);
       case Land.RegionLand(var region) -> RegionLandRule.decide(act, region);
+      case Land.WorkLand(var region) -> RegionLandRule.decide(act, region);
+      case Land.ParcelLand(var parcel) ->
+          parcel.permits(actor.player(), act)
+              ? Verdict.allow()
+              : new Verdict.Deny(
+                  act.action() == Action.ATTACK_PLAYER
+                      ? new Denial.NoPvp()
+                      : new Denial.ByRegion(parcel.definition().name(), act.action()));
     };
   }
 
@@ -70,6 +86,9 @@ public final class ProtectionEngine {
    * cannon outside it.
    */
   public boolean allowsUntracedHarm(Land origin, Land victimLand) {
+    if (victimLand.preventsPlayerDamage()) {
+      return false;
+    }
     if (origin.sameOwnerAs(victimLand)) {
       return true;
     }
@@ -81,6 +100,8 @@ public final class ProtectionEngine {
       case Land.Wilderness _ -> true;
       case Land.TownLand(var claim) -> claim.flags().has(ClaimFlag.PVP);
       case Land.RegionLand(var region) -> region.permits(FIGHT);
+      case Land.ParcelLand _ -> false;
+      case Land.WorkLand _ -> false;
     };
   }
 

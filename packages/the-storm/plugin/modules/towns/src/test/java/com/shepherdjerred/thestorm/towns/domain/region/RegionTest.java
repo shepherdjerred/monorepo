@@ -28,7 +28,12 @@ final class RegionTest {
           case Cuboid cuboid -> new RegionAreas(List.of(), List.of(cuboid));
         };
     return new AdminRegion(
-        id, id.toUpperCase(java.util.Locale.ROOT), areas, List.of(allow), RegionSpawns.unlimited());
+        id,
+        id.toUpperCase(java.util.Locale.ROOT),
+        areas,
+        List.of(allow),
+        RegionSpawns.unlimited(),
+        com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE);
   }
 
   @Test
@@ -97,7 +102,8 @@ final class RegionTest {
                     " ",
                     new RegionAreas(List.of(SPAWN_CHUNKS), List.of()),
                     List.of(),
-                    RegionSpawns.unlimited()))
+                    RegionSpawns.unlimited(),
+                    com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

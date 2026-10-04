@@ -48,5 +48,32 @@ public final class MapSync implements TownEvents {
   public void redrawAll() {
     map.eraseAll();
     state.towns().forEach(town -> landChanged(town.id()));
+    state
+        .parcels()
+        .ifPresent(
+            book ->
+                book.definitions()
+                    .forEach(
+                        def -> {
+                          var area = def.area();
+                          var outline =
+                              new com.shepherdjerred.thestorm.towns.domain.map.Outline(
+                                  java.util.List.of(
+                                      new com.shepherdjerred.thestorm.towns.domain.map.Outline
+                                          .Corner(area.from().x(), area.from().z()),
+                                      new com.shepherdjerred.thestorm.towns.domain.map.Outline
+                                          .Corner(area.to().x() + 1, area.from().z()),
+                                      new com.shepherdjerred.thestorm.towns.domain.map.Outline
+                                          .Corner(area.to().x() + 1, area.to().z() + 1),
+                                      new com.shepherdjerred.thestorm.towns.domain.map.Outline
+                                          .Corner(area.from().x(), area.to().z() + 1)),
+                                  java.util.List.of());
+                          map.draw(
+                              UUID.nameUUIDFromBytes(
+                                  ("holding:" + def.id())
+                                      .getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                              def.name() + " (" + def.kind() + ")",
+                              java.util.Map.of(area.world(), java.util.List.of(outline)));
+                        }));
   }
 }

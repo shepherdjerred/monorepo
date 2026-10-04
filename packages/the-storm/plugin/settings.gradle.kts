@@ -10,6 +10,9 @@ dependencyResolutionManagement {
     maven("https://repo.bluecolored.de/releases") {
       content { includeGroup("de.bluecolored") }
     }
+    maven("https://maven.enginehub.org/repo/") {
+      content { includeGroupByRegex("com\\.sk89q.*"); includeGroupByRegex("org\\.enginehub.*") }
+    }
   }
 }
 
@@ -25,6 +28,7 @@ val modules =
         "discord",
         "essentials",
         "messages",
+        "mail",
         "shards",
         "tracks",
         "towns",

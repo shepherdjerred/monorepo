@@ -48,6 +48,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
   packages/feature-flags \
@@ -421,6 +422,7 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
   packages/temporal-observability \

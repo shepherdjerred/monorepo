@@ -38,7 +38,7 @@ tasks.assemble { dependsOn(tasks.shadowJar) }
 // Disposable world fixtures for the full-module real-Paper suite. This jar is
 // separate from TheStorm.jar and is never copied into the production image.
 val e2e = sourceSets.create("e2e") {
-  compileClasspath += configurations.compileClasspath.get()
+  compileClasspath += configurations.compileClasspath.get() + sourceSets.main.get().output
   runtimeClasspath += output + compileClasspath
 }
 configurations[e2e.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly.get())
@@ -68,6 +68,7 @@ tasks.runServer {
   dependsOn(prepareRunServerContent)
   downloadPlugins {
     url("https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar")
+    url("https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar")
   }
 }
 

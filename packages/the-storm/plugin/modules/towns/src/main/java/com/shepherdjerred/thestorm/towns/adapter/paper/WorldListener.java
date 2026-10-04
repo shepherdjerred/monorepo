@@ -18,12 +18,17 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFertilizeEvent;
+import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.block.MoistureChangeEvent;
 import org.bukkit.event.block.SpongeAbsorbEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.world.PortalCreateEvent;
@@ -53,6 +58,36 @@ final class WorldListener implements Listener {
     if (!guard.flows(WorldEffect.FLUID_FLOW, event.getBlock(), event.getToBlock())) {
       event.setCancelled(true);
     }
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onDecay(LeavesDecayEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onFade(BlockFadeEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onForm(BlockFormEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onGrowth(BlockGrowEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onMoisture(MoistureChangeEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  private boolean naturalChange(Block block) {
+    var land = guard.land(block);
+    return Guard.flows(WorldEffect.NATURAL_CHANGE, land, land);
   }
 
   /**

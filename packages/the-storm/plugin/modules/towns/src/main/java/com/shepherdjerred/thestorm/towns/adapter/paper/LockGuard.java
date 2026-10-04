@@ -80,7 +80,8 @@ final class LockGuard {
     return switch (towns.landAt(
         block.getWorld().getName(), block.getX(), block.getY(), block.getZ())) {
       case Land.TownLand(var claim) -> Optional.of(claim.townId());
-      case Land.Wilderness _, Land.RegionLand _ -> Optional.empty();
+      case Land.Wilderness _, Land.RegionLand _, Land.ParcelLand _, Land.WorkLand _ ->
+          Optional.empty();
     };
   }
 
@@ -152,7 +153,8 @@ final class LockGuard {
           towns.manages(player.getUniqueId(), claim.townId())
               ? LockAttempt.Ground.MANAGED_CLAIM
               : LockAttempt.Ground.OTHER_CLAIM;
-      case Land.Wilderness _, Land.RegionLand _ -> LockAttempt.Ground.OPEN;
+      case Land.Wilderness _, Land.RegionLand _, Land.ParcelLand _, Land.WorkLand _ ->
+          LockAttempt.Ground.OPEN;
     };
   }
 

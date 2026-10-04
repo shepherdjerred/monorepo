@@ -113,6 +113,8 @@ public class ShopsTestPlugin extends JavaPlugin {
         });
     services.provide(Protection.class, protection);
     services.provide(
+        com.shepherdjerred.thestorm.core.protection.ManagedTrades.class, location -> true);
+    services.provide(
         PlayerDirectory.class,
         new PlayerDirectory() {
           @Override

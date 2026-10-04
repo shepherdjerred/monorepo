@@ -112,5 +112,9 @@ tasks.register("resolveAndLockAll") {
   doFirst {
     require(gradle.startParameter.isWriteDependencyLocks) { "run with --write-locks" }
   }
-  doLast { configurations.filter { it.isCanBeResolved }.forEach { it.resolve() } }
+  doLast {
+    // PMD creates its auxiliary configurations lazily when the task classpath is read.
+    tasks.withType<Pmd>().toList().forEach { it.classpath?.files }
+    configurations.filter { it.isCanBeResolved }.toList().forEach { it.resolve() }
+  }
 }

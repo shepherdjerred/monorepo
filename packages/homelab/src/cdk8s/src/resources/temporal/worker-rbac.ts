@@ -59,6 +59,18 @@ export function createTemporalMiningResetRbac(
     metadata: { name: "temporal-mining-reset", namespace: "minecraft-tsmc" },
     rules: [
       {
+        apiGroups: [""],
+        resources: ["pods/exec"],
+        resourceNames: ["minecraft-tsmc-0"],
+        verbs: ["create"],
+      },
+      {
+        apiGroups: [""],
+        resources: ["pods"],
+        resourceNames: ["minecraft-tsmc-0"],
+        verbs: ["get"],
+      },
+      {
         apiGroups: ["apps"],
         resources: ["statefulsets"],
         resourceNames: ["minecraft-tsmc"],

@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.towns.domain.protection.TrustLevel;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLookup;
 import com.shepherdjerred.thestorm.towns.domain.region.AdminRegion;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
 import com.shepherdjerred.thestorm.towns.domain.town.ClaimTrust;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownDirectory;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Every town, member and claim, in memory. Protection checks read it on the main thread for every
@@ -36,8 +38,10 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
 
   private static final Land WILDERNESS = new Land.Wilderness();
 
-  private final RegionIndex regions;
+  private RegionIndex regions;
+  private @Nullable ParcelBook parcels;
   private final Map<String, Land.RegionLand> regionLands = new HashMap<>();
+  private final Map<String, AdminRegion> workAreas = new HashMap<>();
   private final Map<UUID, Town> towns = new HashMap<>();
   private final Map<UUID, UUID> townOfPlayer = new HashMap<>();
   private final Map<String, UUID> townByName = new HashMap<>();
@@ -45,7 +49,13 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
   private final Map<UUID, Set<ChunkPos>> chunksByTown = new HashMap<>();
 
   public TownsState(RegionIndex regions) {
+    replaceRegions(regions);
+  }
+
+  /** Reindexes arrival regions synchronously when a world loads or its spawn moves. */
+  public void replaceRegions(RegionIndex regions) {
     this.regions = regions;
+    regionLands.clear();
     for (var region : regions.all()) {
       regionLands.put(region.id(), new Land.RegionLand(region));
     }
@@ -74,9 +84,51 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
     return regions;
   }
 
+  public void attachParcels(ParcelBook parcels) {
+    this.parcels = parcels;
+  }
+
+  public Optional<ParcelBook> parcels() {
+    return Optional.ofNullable(parcels);
+  }
+
+  public void beginWork(AdminRegion region) {
+    var existing = workAreas.putIfAbsent(region.id(), region);
+    if (existing != null && !existing.equals(region)) {
+      throw new IllegalStateException("work area changed during recovery: " + region.id());
+    }
+  }
+
+  public void endWork(String id) {
+    workAreas.remove(id);
+  }
+
   /** What block ({@code x}, {@code y}, {@code z}) of {@code world} is: region, claim or wild. */
   public Land landAt(String world, int x, int y, int z) {
+    return landAtExceptWork(
+        "", new com.shepherdjerred.thestorm.towns.domain.land.BlockPos(world, x, y, z));
+  }
+
+  /** Recovery checks the underlying permission while its own write reservation remains active. */
+  public Land landAtExceptWork(
+      String workId, com.shepherdjerred.thestorm.towns.domain.land.BlockPos pos) {
+    var world = pos.world();
+    var x = pos.x();
+    var y = pos.y();
+    var z = pos.z();
+    for (var region : workAreas.values()) {
+      if (!region.id().equals(workId)
+          && region.areas().all().stream().anyMatch(area -> area.contains(world, x, y, z))) {
+        return new Land.WorkLand(region);
+      }
+    }
     var region = regions.regionAt(world, x, y, z);
+    var parcelBook = parcels;
+    var parcel = parcelBook == null ? null : parcelBook.at(world, x, y, z);
+    if (parcel != null && parcelBook != null) {
+      return new Land.ParcelLand(
+          parcelBook.rights(parcel, region == null ? RegionProfile.PRESERVE : region.profile()));
+    }
     if (region != null) {
       return regionLand(region);
     }
@@ -113,6 +165,11 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
 
   @Override
   public Optional<AdminRegion> regionOverlapping(ChunkPos chunk) {
+    for (var region : workAreas.values()) {
+      if (region.areas().all().stream().anyMatch(area -> area.footprintContains(chunk))) {
+        return Optional.of(region);
+      }
+    }
     return regions.overlapping(chunk);
   }
 
@@ -153,6 +210,13 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
   }
 
   private void addRegions(String world, List<ChunkPos> settled) {
+    for (var region : workAreas.values()) {
+      for (var area : region.areas().all()) {
+        if (area.world().equals(world)) {
+          settled.addAll(area.footprint());
+        }
+      }
+    }
     for (var region : regions.all()) {
       for (var area : region.areas().all()) {
         if (area.world().equals(world)) {

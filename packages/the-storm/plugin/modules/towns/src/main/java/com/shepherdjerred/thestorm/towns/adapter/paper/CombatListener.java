@@ -59,6 +59,10 @@ final class CombatListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onDamage(EntityDamageEvent event) {
     var victim = event.getEntity();
+    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      event.setCancelled(true);
+      return;
+    }
     var source = event.getDamageSource();
     // The damage source names the player behind it; the damager is the same player for events
     // built without a full source.
@@ -201,6 +205,9 @@ final class CombatListener implements Listener {
 
   /** A potion from a player follows their harm rules; one from a dispenser, the border rules. */
   private boolean mayHarm(Optional<Culprit> thrower, Land origin, Entity victim) {
+    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      return false;
+    }
     if (thrower.isPresent()) {
       return guard.permitsHarm(thrower.get(), victim, true);
     }
@@ -220,6 +227,10 @@ final class CombatListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onKnockback(EntityKnockbackEvent event) {
     var victim = event.getEntity();
+    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      event.setCancelled(true);
+      return;
+    }
     if (event instanceof EntityPushedByEntityAttackEvent pushed) {
       var culprit = guard.culprit(pushed.getPushedBy());
       if (culprit.isPresent() && !guard.permitsHarm(culprit.get(), victim, false)) {

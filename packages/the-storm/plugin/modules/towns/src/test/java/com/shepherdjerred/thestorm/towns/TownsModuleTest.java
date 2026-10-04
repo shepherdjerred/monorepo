@@ -32,10 +32,11 @@ final class TownsModuleTest {
   private JavaPlugin plugin;
 
   @BeforeEach
-  void start() {
+  void start() throws Exception {
     MockBukkit.mock().addSimpleWorld("world");
     plugin = MockBukkit.createMockPlugin();
     database = StormDatabase.open(directory.resolve("t.db"));
+    Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
   }
 
   @AfterEach
@@ -80,6 +81,18 @@ final class TownsModuleTest {
   void aWorldTheServerHasNotLoadedStopsTheModule() throws Exception {
     var config = Files.readString(SHIPPED).replace("worlds: [world]", "worlds: [atlantis]");
     Files.writeString(directory.resolve("towns.yml"), config);
+
+    assertThatThrownBy(() -> new TownsModule().enable(context()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("atlantis");
+  }
+
+  @Test
+  void aParcelWorldTheServerHasNotLoadedStopsTheModule() throws Exception {
+    Files.copy(SHIPPED, directory.resolve("towns.yml"));
+    var parcels = Files.readString(Path.of("../../../server/owned/plugins/TheStorm/parcels.yml"));
+    Files.writeString(
+        directory.resolve("parcels.yml"), parcels.replace("world: world", "world: atlantis"));
 
     assertThatThrownBy(() -> new TownsModule().enable(context()))
         .isInstanceOf(IllegalStateException.class)

@@ -32,6 +32,7 @@ import type { MotionLightRoom } from "#shared/infra/motion-light.ts";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homelab/zfs-maintenance.ts";
 import { runMiningWorldResetWorkflow as _runMiningWorldResetWorkflow } from "./homelab/mining-reset.ts";
+import { runStormPlotReconciliationWorkflow as _runStormPlotReconciliationWorkflow } from "./homelab/storm-plots.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
@@ -134,10 +135,7 @@ import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
 } from "./ops-snapshot.ts";
-import type {
-  OpsDigestKind,
-  OpsPublishSummary,
-} from "#activities/ops/ops-publish.ts";
+import type { OpsPublishSummary } from "#activities/ops/ops-publish.ts";
 import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
 import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
 import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
@@ -297,6 +295,10 @@ export async function runMiningWorldResetWorkflow(): Promise<void> {
   return _runMiningWorldResetWorkflow();
 }
 
+export async function runStormPlotReconciliationWorkflow(): Promise<void> {
+  return _runStormPlotReconciliationWorkflow();
+}
+
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();
 }
@@ -451,9 +453,9 @@ export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
   return _runOpsSnapshot();
 }
 
-export async function runOpsDigest(input: {
-  kind: OpsDigestKind;
-}): Promise<{ kind: OpsDigestKind }> {
+export async function runOpsDigest(
+  input: Parameters<typeof _runOpsDigest>[0],
+): ReturnType<typeof _runOpsDigest> {
   return _runOpsDigest(input);
 }
 

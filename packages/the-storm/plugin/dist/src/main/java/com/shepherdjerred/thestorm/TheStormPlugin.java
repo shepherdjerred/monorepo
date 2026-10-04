@@ -106,6 +106,11 @@ public final class TheStormPlugin extends JavaPlugin {
     }
   }
 
+  /** Typed module ports for integrations; fails if the owning module is disabled. */
+  public <T> T service(Class<T> type) {
+    return services.require(type);
+  }
+
   private PluginConfig readConfig() {
     var file = getDataPath().resolve("config.yml");
     String yaml;
