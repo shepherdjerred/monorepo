@@ -54,6 +54,7 @@ import org.jspecify.annotations.Nullable;
 /** Real production runtime with a local clock, rollout gate and disposable survival world. */
 public final class CompanionsE2EPlugin extends JavaPlugin implements BasicCommand {
   private @Nullable StormDatabase database;
+  private @Nullable NaturalBlockAudit audit;
   private @Nullable CompanionsPaper running;
   private boolean gate = true;
 
@@ -108,6 +109,8 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     var coreProtect = getServer().getPluginManager().getPlugin("CoreProtect");
     if (!(coreProtect instanceof CoreProtect audit))
       throw new IllegalStateException("missing audit");
+    var naturalAudit = new NaturalBlockAudit(audit.getAPI());
+    this.audit = naturalAudit;
     running =
         new CompanionsPaper(
             context,
@@ -115,7 +118,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
             new CompanionsPaper.Parts(
                 new JooqCompanionStore(store),
                 () -> CompletableFuture.completedFuture(gate),
-                new NaturalBlockAudit(audit.getAPI()),
+                naturalAudit,
                 new FixtureProtection(),
                 (identity, message, state) -> CompletableFuture.completedFuture(Optional.empty())));
     getLifecycleManager()
@@ -155,6 +158,10 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
         status(source);
         return;
       }
+      case "audit" -> {
+        inspectAudit(source);
+        return;
+      }
       case "native" -> {
         nativeActions(source);
         return;
@@ -189,7 +196,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     }
   }
 
-  private static void status(CommandSourceStack source) {
+  private void status(CommandSourceStack source) {
     for (var npc : CitizensAPI.getNPCRegistry()) {
       if (!npc.data().has("thestorm-companion-id") || !npc.isSpawned()) continue;
       var player = player(npc);
@@ -210,8 +217,41 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                       + " at="
                       + requireNonNull(player.getLocation()).toVector()
                       + " target="
-                      + npc.getNavigator().getTargetAsLocation()));
+                      + npc.getNavigator().getTargetAsLocation()
+                      + " fixtures="
+                      + fixtureLogs()));
     }
+  }
+
+  private String fixtureLogs() {
+    var world = getServer().getWorld("storm_companions_test");
+    if (world == null) throw new IllegalStateException("fixture world missing");
+    return Arrays.stream(new int[] {30, 31, 32, 33, 34})
+        .mapToObj(x -> world.getBlockAt(x, -60, 32).getType().name())
+        .toList()
+        .toString();
+  }
+
+  private void inspectAudit(CommandSourceStack source) {
+    var world = getServer().getWorld("storm_companions_test");
+    var naturalAudit = audit;
+    if (world == null || naturalAudit == null)
+      throw new IllegalStateException("fixture audit unavailable");
+    var block = world.getBlockAt(33, -60, 32);
+    var natural = naturalAudit.natural(block, "#storm-fixture", "fixture").join();
+    var unqueued = naturalAudit.unqueued(block, "#storm-fixture", "fixture");
+    source
+        .getSender()
+        .sendMessage(
+            Component.text(
+                "audit block="
+                    + block.getType()
+                    + " natural="
+                    + natural
+                    + " unqueued="
+                    + unqueued
+                    + " loaded="
+                    + world.isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)));
   }
 
   private void nativeActions(CommandSourceStack source) {
@@ -250,6 +290,8 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
       var denied = actions.mine(player, stone, Material.STONE, "#storm-probe");
       protection.deny = false;
       SurvivalActions.equip(player, Material.WOODEN_PICKAXE);
+      var reachable = SurvivalActions.reach(player, stone);
+      var permitted = actions.allowed(player, ProtectedAction.BREAK, stone);
       var mined = actions.mine(player, stone, Material.STONE, "#storm-probe");
       var placed = actions.place(player, stone, Material.OAK_PLANKS, "#storm-probe");
       source
@@ -276,11 +318,9 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                       + NativeRecipes.stock(player).getOrDefault("OAK_PLANKS", 0)
                       + nativeEating(player)
                       + " reach="
-                      + SurvivalActions.reach(player, stone)
+                      + reachable
                       + " allowed="
-                      + actions.allowed(player, ProtectedAction.BREAK, stone)
-                      + " queued="
-                      + !audit.unqueued(stone, "#storm-probe", player.getName())
+                      + permitted
                       + " speed="
                       + stone.getBreakSpeed(player)
                       + " at="

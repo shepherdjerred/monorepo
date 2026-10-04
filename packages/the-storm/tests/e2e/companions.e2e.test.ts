@@ -34,6 +34,10 @@ describe("Citizens survival companions on Paper", () => {
     rcon,
   }) => {
     await rcon.command(`companiontest visit ${bot.username}`);
+    const audit = await rcon.command("companiontest audit");
+    expect(audit).toContain(
+      "audit block=OAK_LOG natural=true unqueued=true loaded=true",
+    );
     const result = await rcon.command("companiontest native");
     expect(result).toContain(
       "native cancelled=false retained=2 crafted=true logs=1 planks=4 deniedMining=false mined=true placed=true remaining=3",
