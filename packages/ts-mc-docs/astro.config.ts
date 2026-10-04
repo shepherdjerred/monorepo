@@ -52,6 +52,7 @@ export default defineConfig({
             { label: "Transparency", link: "/survival/transparency/" },
           ],
         },
+        { label: "Search and Destroy", link: "/search-and-destroy/" },
       ],
       social: [
         {
