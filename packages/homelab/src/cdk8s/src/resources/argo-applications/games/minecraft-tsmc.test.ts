@@ -294,3 +294,33 @@ describe("minecraft-tsmc MCBridge", () => {
     });
   });
 });
+
+describe("minecraft-tsmc Search and Destroy recordings", () => {
+  test("projects the rwf recording salt from its own item", () => {
+    const manifests = synthTsmc();
+    const items = manifests
+      .map((manifest) => OpItemSchema.safeParse(manifest))
+      .flatMap((result) => (result.success ? [result.data] : []));
+    const item = items.find(
+      ({ metadata }) => metadata.name === "minecraft-tsmc-rwf-recording",
+    );
+    expect(item?.spec.itemPath).toMatch(/\/items\/the-storm-rwf-recording$/u);
+    expect(
+      items.filter(({ spec }) =>
+        spec.itemPath.endsWith("/items/the-storm-rwf-recording"),
+      ),
+    ).toHaveLength(1);
+
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(tsmcValues()["extraEnv"]);
+    expect(extraEnv["RWF_RECORDING_SALT"]).toEqual({
+      valueFrom: {
+        secretKeyRef: {
+          name: "minecraft-tsmc-rwf-recording",
+          key: "RWF_RECORDING_SALT",
+        },
+      },
+    });
+  });
+});

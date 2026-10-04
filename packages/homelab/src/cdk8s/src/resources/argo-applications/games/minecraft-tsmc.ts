@@ -19,6 +19,7 @@ const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
+const RWF_RECORDING_SECRET_NAME = "minecraft-tsmc-rwf-recording";
 // MCBridge agent API (packages/the-storm/plugin/bridge); port-forward only.
 const MC_BRIDGE_PORT = 25_580;
 
@@ -63,6 +64,14 @@ export function createMinecraftTsmcApp(chart: Chart) {
   new OnePasswordItem(chart, "minecraft-tsmc-storm-brain-1p", {
     spec: { itemPath: vaultItemPath("storm-brain") },
     metadata: { name: BRAIN_SECRET_NAME, namespace: NAMESPACE },
+  });
+
+  // Search and Destroy recordings pseudonymise players with an HMAC over this
+  // salt. Its own item so it is projected only into the game namespace.
+  // Required field (concealed, UPPERCASE_SNAKE label): RWF_RECORDING_SALT.
+  new OnePasswordItem(chart, "minecraft-tsmc-rwf-recording-1p", {
+    spec: { itemPath: vaultItemPath("the-storm-rwf-recording") },
+    metadata: { name: RWF_RECORDING_SECRET_NAME, namespace: NAMESPACE },
   });
 
   createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
@@ -204,6 +213,15 @@ export function createMinecraftTsmcApp(chart: Chart) {
         },
       },
       MC_BRIDGE_BIND: "0.0.0.0",
+      // rwf refuses to enable with recording on and no salt.
+      RWF_RECORDING_SALT: {
+        valueFrom: {
+          secretKeyRef: {
+            name: RWF_RECORDING_SECRET_NAME,
+            key: "RWF_RECORDING_SALT",
+          },
+        },
+      },
       DISCORD_BOT_TOKEN: {
         valueFrom: {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
