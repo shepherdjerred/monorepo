@@ -21,7 +21,8 @@ public record AdminRegion(
     String name,
     RegionAreas areas,
     List<RegionAllowance> allow,
-    RegionSpawns mobSpawns) {
+    RegionSpawns mobSpawns,
+    RegionProfile profile) {
 
   private static final Pattern ID = Pattern.compile("[a-z0-9_-]{1,32}");
 

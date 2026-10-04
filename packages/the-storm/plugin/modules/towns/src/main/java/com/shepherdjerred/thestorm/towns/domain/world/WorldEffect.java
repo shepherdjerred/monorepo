@@ -37,4 +37,6 @@ public enum WorldEffect {
   REDSTONE,
   /** A portal generated for a player arriving from another dimension. */
   PORTAL_CREATION,
+  /** Leaves decaying, ice melting, weathering and other unowned natural changes. */
+  NATURAL_CHANGE,
 }

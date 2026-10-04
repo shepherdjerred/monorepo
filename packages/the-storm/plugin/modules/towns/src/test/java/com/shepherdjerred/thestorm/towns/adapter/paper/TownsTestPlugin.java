@@ -73,6 +73,11 @@ public class TownsTestPlugin extends JavaPlugin {
       Files.writeString(
           directory.resolve("towns.yml"),
           shipped.substring(0, regions + 1) + Files.readString(TEST_REGIONS));
+      Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
+      Files.copy(
+          Path.of("../../../server/owned/plugins/TheStorm/plot-reconcile.json"),
+          directory.resolve("plot-reconcile.json"),
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -105,6 +110,7 @@ public class TownsTestPlugin extends JavaPlugin {
             InstantSource.system(),
             RandomGenerator.getDefault(),
             getComponentLogger());
+    new com.shepherdjerred.thestorm.mail.MailModule().enable(context);
     new TownsModule().enable(context);
   }
 

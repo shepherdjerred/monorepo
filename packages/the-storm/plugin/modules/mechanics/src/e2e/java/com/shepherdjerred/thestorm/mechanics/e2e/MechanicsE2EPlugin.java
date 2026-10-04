@@ -96,18 +96,18 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
   private void prepareBridge(World world) {
     for (int x = BRIDGE_X - 2; x <= BRIDGE_X + 2; x++) {
       for (int z = -2; z <= 5; z++) {
-        set(world, x, BRIDGE_Y - 2, z, "minecraft:stone");
+        set(world.getBlockAt(x, BRIDGE_Y - 2, z), "minecraft:stone");
       }
     }
     var near = world.getBlockAt(BRIDGE_X, BRIDGE_Y, 0);
     var far = world.getBlockAt(BRIDGE_X, BRIDGE_Y, 4);
-    set(world, BRIDGE_X, BRIDGE_Y, 1, "minecraft:stone");
-    set(world, BRIDGE_X, BRIDGE_Y, 3, "minecraft:stone");
-    set(world, BRIDGE_X, BRIDGE_Y + 1, 0, "minecraft:oak_planks");
-    set(world, BRIDGE_X, BRIDGE_Y + 1, 4, "minecraft:oak_planks");
-    set(world, BRIDGE_X, BRIDGE_Y + 1, 1, "minecraft:oak_planks");
-    set(world, BRIDGE_X, BRIDGE_Y + 1, 2, "minecraft:oak_planks");
-    set(world, BRIDGE_X, BRIDGE_Y + 1, 3, "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y, 1), "minecraft:stone");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y, 3), "minecraft:stone");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 0), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 4), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 1), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 2), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 3), "minecraft:oak_planks");
     configureSign(near, "north", "[Bridge]");
     configureSign(far, "south", "[Bridge]");
     bindSpan(near, BRIDGE_X + "," + (BRIDGE_Y + 1) + ",0", BRIDGE_X + "," + BRIDGE_Y + ",4", true);
@@ -121,13 +121,13 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     sign.setBlockData(Bukkit.createBlockData("minecraft:oak_wall_sign[facing=north]"), false);
     configureSign(sign, "north", "[SuperPush]");
     owner(sign);
-    set(world, PISTON_X + 2, PISTON_Y, PISTON_Z, "minecraft:stone");
-    set(world, PISTON_X + 3, PISTON_Y, PISTON_Z, "minecraft:stone");
-    set(world, PISTON_X + 4, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 5, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 6, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 7, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 8, PISTON_Y, PISTON_Z, "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 2, PISTON_Y, PISTON_Z), "minecraft:stone");
+    set(world.getBlockAt(PISTON_X + 3, PISTON_Y, PISTON_Z), "minecraft:stone");
+    set(world.getBlockAt(PISTON_X + 4, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 5, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 6, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 7, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 8, PISTON_Y, PISTON_Z), "minecraft:air");
   }
 
   private void bindSpan(Block block, String anchor, String partner, boolean keeper) {
@@ -175,8 +175,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     return sign;
   }
 
-  private static void set(World world, int x, int y, int z, String data) {
-    Block block = world.getBlockAt(x, y, z);
+  private static void set(Block block, String data) {
     BlockData state = Bukkit.createBlockData(data);
     block.setBlockData(state, false);
   }

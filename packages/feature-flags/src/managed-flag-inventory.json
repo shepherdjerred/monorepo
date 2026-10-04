@@ -1733,6 +1733,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-shop-rentals-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-towns",
+      "purpose": "Admit targeted players to prepaid spawn shop rentals after recovery acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "voice_assistant_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -2028,6 +2040,14 @@
         },
         {
           "key": "the-storm-merchant-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-shop-rentals-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

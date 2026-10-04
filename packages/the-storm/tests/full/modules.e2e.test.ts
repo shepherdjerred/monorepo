@@ -13,6 +13,7 @@ const modules = [
   "essentials",
   "mechanics",
   "messages",
+  "mail",
   "mobs",
   "npcs",
   "qol",
@@ -29,7 +30,7 @@ const modules = [
 ].toSorted();
 
 describe("all modules together", () => {
-  test("boots all 21 modules with the shipped content", async ({
+  test("boots all 22 modules with the shipped content", async ({
     server,
     rcon,
   }) => {

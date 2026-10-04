@@ -37,6 +37,13 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
   .array(PluginPinSchema)
   .parse([
     {
+      name: "WorldEdit",
+      version: "7.4.5",
+      url: "https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar",
+      sha256:
+        "e5696a6d064b9969437a8888be91b0941148a28e0c3736de1554a00254a5d142",
+    },
+    {
       name: "ViaVersion",
       version: "5.12.0",
       url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",

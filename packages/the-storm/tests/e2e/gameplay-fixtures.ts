@@ -13,7 +13,7 @@ export async function gameplayFixtures(
 > {
   const content = path.join(packageRoot, "server/owned/plugins/TheStorm");
   const owned = await Bun.file(path.join(content, "config.yml")).text();
-  // The six-module suite's mechanics plugin owns its listener and geometry;
+  // The focused suite's mechanics plugin owns its listener and geometry;
   // the full suite instead runs the production module with disposable worlds.
   return full
     ? {
@@ -26,6 +26,7 @@ export async function gameplayFixtures(
     : {
         stormConfig: stormTestConfig(owned, [
           "economy",
+          "mail",
           "chat",
           "tracks",
           "towns",

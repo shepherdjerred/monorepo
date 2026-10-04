@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.discord.DiscordModule;
 import com.shepherdjerred.thestorm.economy.EconomyModule;
 import com.shepherdjerred.thestorm.essentials.EssentialsModule;
+import com.shepherdjerred.thestorm.mail.MailModule;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
 import com.shepherdjerred.thestorm.messages.MessagesModule;
 import com.shepherdjerred.thestorm.mobs.MobsModule;
@@ -39,6 +40,7 @@ final class Modules {
     return List.of(
         new EconomyModule(),
         new MessagesModule(),
+        new MailModule(),
         new ChatModule(),
         new TracksModule(),
         new TownsModule(),
