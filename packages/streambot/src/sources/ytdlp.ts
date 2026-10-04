@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseYoutubeSearchLine } from "./youtube-search-result.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
@@ -17,10 +18,7 @@ import {
   toResolvedSource,
   type YtdlpInfo,
 } from "@shepherdjerred/streambot/sources/ytdlp-info.ts";
-import {
-  getErrorMessage,
-  parseJson,
-} from "@shepherdjerred/streambot/util/errors.ts";
+import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import {
   BlockedSourceError,
   isBlockedText,
@@ -107,24 +105,7 @@ export function buildSubtitleEnumerationArgs(source: Source): string[] {
   ];
 }
 
-const YtdlpSearchResultSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  webpage_url: z.string().optional(),
-  url: z.string().optional(),
-  channel: z.string().optional(),
-  uploader: z.string().optional(),
-  thumbnail: z.string().optional(),
-  duration: z.number().optional(),
-});
-
-export type YtdlpSearchResult = {
-  readonly title: string;
-  readonly url: string;
-  readonly channel?: string;
-  readonly thumbnailUrl?: string;
-  readonly durationSeconds?: number;
-};
+import type { YtdlpSearchResult } from "./youtube-search-result.ts";
 
 /**
  * Argument list for a flat YouTube search. Extracted from {@link searchYoutube} for the same reason
@@ -164,25 +145,8 @@ export async function searchYoutube(
   const results: YtdlpSearchResult[] = [];
   for (const line of stdout.split("\n")) {
     if (line.trim().length === 0) continue;
-    const parsed = YtdlpSearchResultSchema.parse(parseJson(line));
-    const candidateUrl = parsed.webpage_url ?? parsed.url;
-    const url =
-      candidateUrl?.startsWith("http") === true
-        ? candidateUrl
-        : `https://www.youtube.com/watch?v=${parsed.id}`;
-    if (isBlockedText(parsed.title) || isBlockedUrl(url)) continue;
-    const channel = parsed.channel ?? parsed.uploader;
-    results.push({
-      title: parsed.title,
-      url,
-      ...(channel === undefined ? {} : { channel }),
-      ...(parsed.thumbnail === undefined
-        ? {}
-        : { thumbnailUrl: parsed.thumbnail }),
-      ...(parsed.duration === undefined
-        ? {}
-        : { durationSeconds: parsed.duration }),
-    });
+    const result = parseYoutubeSearchLine(line);
+    if (result !== null) results.push(result);
   }
   return results.slice(0, limit);
 }

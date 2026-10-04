@@ -8,7 +8,7 @@ import type { WebPlayback } from "./playback.ts";
 import { WebActions } from "./actions.ts";
 import { WebError, requestInput } from "./errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/web/shared/artwork.ts";
+import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
 
 async function readCommand(request: Request) {
   let value: unknown;
@@ -87,7 +87,13 @@ export function createWebHandler(deps: {
   ): Promise<Response> {
     const guildId = url.searchParams.get("guildId") ?? "";
     if (url.pathname === "/api/player")
-      return Response.json(await deps.playback.snapshot(session, guildId));
+      return Response.json(
+        await deps.playback.snapshot(
+          session,
+          guildId,
+          url.searchParams.get("playbackChannel"),
+        ),
+      );
     await deps.playback.authorize(session, guildId);
     const plexEnabled =
       (url.pathname === "/api/artwork" || url.pathname === "/api/library") &&
@@ -137,6 +143,29 @@ export function createWebHandler(deps: {
         ),
       );
     }
+    if (url.pathname === "/api/history") {
+      if (!(await deps.playback.historyEnabled(session, guildId)))
+        throw new WebError(
+          403,
+          "history_disabled",
+          "Playback history is not enabled here.",
+        );
+      return Response.json(
+        await deps.playback.history.browse({
+          params: url.searchParams,
+          userId: session.identity.userId,
+          owner: session.key + ":" + guildId,
+          catalog: deps.playback.deps.catalog,
+          sportsEnabled: await deps.playback.sportsEnabled(session, guildId),
+          requester: (guild, user) =>
+            deps.playback.requesterName(session, guild, user),
+          signal: AbortSignal.any([
+            request.signal,
+            AbortSignal.timeout(30_000),
+          ]),
+        }),
+      );
+    }
     throw new WebError(404, "not_found", "This endpoint does not exist.");
   }
 
@@ -172,7 +201,7 @@ export function createWebHandler(deps: {
       });
     }
     if (request.method === "GET" && url.pathname === "/api/auth/discord/start")
-      return auth.start();
+      return auth.start(request);
     if (
       request.method === "GET" &&
       url.pathname === "/api/auth/discord/callback"

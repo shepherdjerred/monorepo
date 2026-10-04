@@ -28,10 +28,15 @@ export type PaginatedPages = {
  * playback state, but only advertises voice commands when the validated feature flag is enabled.
  * Must stay under Discord's 2000-char message limit.
  */
-export function helpText(voiceEnabled: boolean): string {
+export function helpText(voiceEnabled: boolean, webUrl?: string): string {
   return [
     "🎬 **Streambot** — `/stream` commands",
-    "• Numbered-channel beta: `/stream select channel:1` = mic audio (default); `channel:2` = Go Live on the same userbot; 3+ = more videos. `/stream channels` shows slots within your Discord voice channel; controls target your selection.",
+    "• Channels: 1 music, 2 video, 3+ extra videos. `/stream select channel:<n>` overrides Auto; `auto:true` restores it. `/stream channels` shows your room's slots.",
+    ...(webUrl === undefined
+      ? []
+      : [
+          `🌐 **Web remote** — browse Plex, sports, history, and queues: ${webUrl}`,
+        ]),
     "",
     "**Playback**",
     "• `/stream play <query>` · `playnext <query>` · `skip` · `seek <time>`",

@@ -107,8 +107,17 @@ describe("sports picker playback", () => {
     );
     expect(h.dispatch).toHaveBeenCalledExactlyOnceWith({
       type: "ADD",
-      source: { kind: "url", url: LIVE.pageUrl, mode: "video" },
+      source: {
+        kind: "url",
+        url: LIVE.pageUrl,
+        mode: "video",
+        sportsEvent: LIVE,
+        spoken: undefined,
+        subtitles: undefined,
+      },
       requesterId: USER,
+      queuedAt: expect.any(Number),
+      display: { title: LIVE.title },
     });
     expect(h.sportsStreaming).toHaveBeenCalledWith({
       guildId: GUILD,

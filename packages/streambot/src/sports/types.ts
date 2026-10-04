@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SportsArtworkSchema } from "./artwork.ts";
 
 export const SportsProviderSchema = z.enum(["streameast", "tvsportslive"]);
 export type SportsProvider = z.infer<typeof SportsProviderSchema>;
@@ -18,6 +19,7 @@ export const SportsEventSchema = z.strictObject({
   status: z.enum(["live", "scheduled", "unknown"]),
   startsAt: z.iso.datetime().nullable(),
   pageUrl: z.url(),
+  artwork: SportsArtworkSchema.optional(),
 });
 export type SportsEvent = z.infer<typeof SportsEventSchema>;
 

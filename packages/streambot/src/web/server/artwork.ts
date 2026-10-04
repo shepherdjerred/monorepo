@@ -5,7 +5,7 @@ import type {
 } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import { isRemoteArtworkUrl } from "@shepherdjerred/streambot/web/shared/artwork.ts";
+import { isRemoteArtworkUrl } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
 import { WebError } from "./errors.ts";
 import {
   PlexArtworkUnavailableError,

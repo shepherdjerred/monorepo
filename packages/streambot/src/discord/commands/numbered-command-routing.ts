@@ -34,7 +34,11 @@ export async function resolveCommandTarget(input: {
     playbackChannel,
   } = input;
   if (input.stateless)
-    return { handle: EMPTY_HANDLE, announceChannel: invokedChannel };
+    return {
+      handle: EMPTY_HANDLE,
+      announceChannel: invokedChannel,
+      automatic: false,
+    };
   if (voiceChannelId === null) {
     await interaction.reply({
       content: "Join a voice channel first, then run that `/stream` command.",
@@ -44,6 +48,19 @@ export async function resolveCommandTarget(input: {
   }
   if (input.startingPlayback && (await input.denyStart())) return null;
   const statusChannelId = invokedChannel ?? voiceChannelId;
+  if (
+    input.startingPlayback &&
+    (await sessions.numbered.automatic({
+      guildId,
+      channelId: voiceChannelId,
+      userId: interaction.user.id,
+    }))
+  )
+    return {
+      handle: EMPTY_HANDLE,
+      announceChannel: statusChannelId,
+      automatic: true,
+    };
   const handle = input.startingPlayback
     ? sessions.ensureForPlay({
         guildId,
@@ -52,7 +69,8 @@ export async function resolveCommandTarget(input: {
         ...(playbackChannel === undefined ? {} : { playbackChannel }),
       })
     : sessions.getExisting(guildId, voiceChannelId, playbackChannel);
-  if (handle !== null) return { handle, announceChannel: statusChannelId };
+  if (handle !== null)
+    return { handle, announceChannel: statusChannelId, automatic: false };
   const missingPlayback =
     playbackChannel === undefined
       ? "Nothing is playing in your voice channel."
@@ -90,10 +108,7 @@ export async function routeNumberedCommand(input: {
     if (voiceChannelId !== null)
       content =
         sub === "select"
-          ? await sessions.numbered.select(
-              scope,
-              interaction.options.getInteger("channel", true),
-            )
+          ? await selectNumberedChannel(interaction, sessions, scope)
           : await sessions.numbered.list(
               scope,
               interaction.options.getInteger("page") ?? undefined,
@@ -135,4 +150,19 @@ export function labelPlaybackInteraction(
     reply: (message: string) => adapted.reply(label(message)),
     editReply: (message: string) => adapted.editReply(label(message)),
   };
+}
+
+async function selectNumberedChannel(
+  interaction: ChatInputCommandInteraction,
+  sessions: SessionManager,
+  scope: { guildId: string; channelId: string; userId: string },
+) {
+  const number = interaction.options.getInteger("channel");
+  const automatic = interaction.options.getBoolean("auto") === true;
+  if (automatic && number !== null)
+    return "Choose either channel:<number> or auto:true.";
+  if (automatic) return await sessions.numbered.reset(scope);
+  return number === null
+    ? "Choose channel:<number> or auto:true."
+    : await sessions.numbered.select(scope, number);
 }

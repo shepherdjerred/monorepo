@@ -23,15 +23,22 @@ export const TIPS: readonly string[] = [
 ];
 
 /** Pick one tip at random for a play/playnext reply footer. */
-export function randomTip(playbackChannel?: number): string {
-  const tips =
-    playbackChannel === undefined
-      ? TIPS
+export function randomTip(playbackChannel?: number, webUrl?: string): string {
+  const tips = [
+    ...TIPS,
+    ...(playbackChannel === undefined
+      ? []
       : [
           "Channel 1 is mic audio; select channel 2 or higher for Go Live video. Channels 1 and 2 share one userbot.",
           "Use `/stream channels` to see playback in your current voice channel. Controls target your personal selection.",
           "Select channel 3 or higher for another video. Only channel 1 writes to the mic.",
-        ];
+        ]),
+    ...(webUrl === undefined
+      ? []
+      : [
+          `Browse Plex, live sports, and recent plays in the web remote: ${webUrl}`,
+        ]),
+  ];
   const index = Math.floor(Math.random() * tips.length);
   const tip = tips[index];
   if (tip === undefined) {

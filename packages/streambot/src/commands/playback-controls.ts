@@ -31,7 +31,14 @@ export class PlaybackControls {
     return this.deps.playbackChannel !== undefined;
   }
 
-  selectChannel(userId: UserId, number: number): Promise<string> {
+  selectChannel(userId: UserId, number: number | "auto"): Promise<string> {
+    if (number === "auto") {
+      if (this.deps.resetChannel === undefined)
+        throw new PlaybackCommandBoundaryError(
+          "Automatic channels are not enabled here.",
+        );
+      return this.deps.resetChannel(userId);
+    }
     if (this.deps.selectChannel === undefined)
       throw new PlaybackCommandBoundaryError(
         "Numbered channels are not enabled here.",

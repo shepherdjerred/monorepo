@@ -80,6 +80,7 @@ export function initialPlaybackContext(input: PlaybackInput): PlaybackContext {
     lastBlockedRequester: null,
     resumeSeekSeconds: input.initialSeekSeconds ?? 0,
     crashRetries: 0,
+    completedStreams: 0,
     crashNotice: null,
     pausedPositionSeconds: null,
     startPaused: input.initialPaused ?? false,
@@ -113,6 +114,7 @@ export const MACHINE_TYPES: {
     lastBlockedRequester: null,
     resumeSeekSeconds: 0,
     crashRetries: 0,
+    completedStreams: 0,
     crashNotice: null,
     pausedPositionSeconds: null,
     startPaused: false,
@@ -180,6 +182,8 @@ export function queuedItem(event: PlaybackEvent): QueuedSource {
   return {
     source: event.source,
     requesterId: event.requesterId,
+    ...(event.display === undefined ? {} : { display: event.display }),
+    ...(event.queuedAt === undefined ? {} : { queuedAt: event.queuedAt }),
     ...(event.requestId === undefined ? {} : { requestId: event.requestId }),
     ...(event.preResolved === undefined
       ? {}
@@ -217,6 +221,10 @@ export function queueCrashRetryUpdates(
       {
         source: current.source,
         requesterId: current.requesterId,
+        ...(current.display === undefined ? {} : { display: current.display }),
+        ...(current.queuedAt === undefined
+          ? {}
+          : { queuedAt: current.queuedAt }),
         ...(current.requestId === undefined
           ? {}
           : { requestId: current.requestId }),
@@ -296,6 +304,12 @@ export function resolveDoneUpdates(
     current: {
       source: mustCurrent(context).source,
       requesterId: mustCurrent(context).requesterId,
+      ...(mustCurrent(context).display === undefined
+        ? {}
+        : { display: mustCurrent(context).display }),
+      ...(mustCurrent(context).queuedAt === undefined
+        ? {}
+        : { queuedAt: mustCurrent(context).queuedAt }),
       ...(mustCurrent(context).requestId === undefined
         ? {}
         : { requestId: mustCurrent(context).requestId }),

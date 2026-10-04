@@ -34,6 +34,8 @@ import { WebPlayback } from "@shepherdjerred/streambot/web/server/playback.ts";
 import { createWebHandler } from "@shepherdjerred/streambot/web/server/api.ts";
 import { WebSessionStore } from "@shepherdjerred/streambot/web/server/session-store.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
+import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import {
   fixturePoster,
   fixtureSports,
@@ -118,9 +120,17 @@ export function webFixture(
   options: {
     library?: LibraryEntry[];
     plexArtwork?: LibraryArtworkProvider;
+    history?: MediaHistoryStore;
+    automatic?: boolean;
+    resolve?: (source: Source) => ResolvedSource;
+    sports?: SportsCatalog;
+    username?: string;
   } = {},
 ) {
   const library = options.library ?? LIBRARY;
+  const sports = options.sports ?? fixtureSports;
+  const resolveFixture = options.resolve ?? resolved;
+  const username = options.username ?? "jerred";
   const guilds = [
     { id: GUILD, name: "The living room" },
     ...(extraGuild ? [{ id: SECOND_GUILD, name: "The studio" }] : []),
@@ -159,7 +169,7 @@ export function webFixture(
       joinVoice: (input) =>
         Promise.resolve({ guildId: input.guildId, channelId: input.channelId }),
       leaveVoice: () => Promise.resolve(),
-      resolveSource: (input) => Promise.resolve(resolved(input.source)),
+      resolveSource: (input) => Promise.resolve(resolveFixture(input.source)),
       runStream: (_input, signal) =>
         new Promise<void>((resolve) => {
           signal.addEventListener(
@@ -234,14 +244,15 @@ export function webFixture(
   });
   const catalog = new WebCatalog(() => library, discovery, {
     fetchPoster: fixturePoster,
-    sports: fixtureSports,
+    sports,
     ...(options.plexArtwork === undefined
       ? {}
       : { plexArtwork: options.plexArtwork }),
   });
   const featureGate: MediaFeatureGate = {
     assistantV2: () => Promise.resolve(advanced),
-    history: () => Promise.resolve(false),
+    history: () => Promise.resolve(options.history !== undefined),
+    automaticChannelRouting: () => Promise.resolve(options.automatic === true),
     musicOverVoice: () => Promise.resolve(true),
     sportsStreaming: () => Promise.resolve(sportsEnabled),
   };
@@ -273,15 +284,18 @@ export function webFixture(
       webVerifyMember: () => Promise.resolve(member),
       webVoiceChannel: (guildId) => (guildId === GUILD ? channel : null),
       webReady: () => true,
+      webRequesterName: (_guild, user) =>
+        Promise.resolve(user === USER ? username : "Casey"),
     },
     commands: {
       config,
       featureGate,
-      sports: fixtureSports,
+      sports,
+      ...(options.history === undefined ? {} : { history: options.history }),
       library: () => library,
       resolvePlaySource: (source) => {
         beforeResolve?.();
-        return Promise.resolve(resolved(source));
+        return Promise.resolve(resolveFixture(source));
       },
     },
     featureGate,
@@ -314,14 +328,14 @@ export function webFixture(
           ? Promise.resolve(
               Response.json(guilds.map((guild) => ({ id: guild.id }))),
             )
-          : Promise.resolve(Response.json({ id: USER, username: "jerred" }));
+          : Promise.resolve(Response.json({ id: USER, username }));
       },
       { preconnect: fetch.preconnect },
     ),
   });
   const created = store.create({
     userId: USER,
-    username: "jerred",
+    username,
     guildIds: guilds.map((guild) => guild.id),
   });
   const session = store.read(created.token);
@@ -371,6 +385,7 @@ export function webFixture(
           title: "Arrival",
         },
         requesterId: OTHER,
+        queuedAt: Date.now() - 120_000,
       });
       await waitFor(actor, (snapshot) => snapshot.matches("streaming"), {
         timeout: 2000,

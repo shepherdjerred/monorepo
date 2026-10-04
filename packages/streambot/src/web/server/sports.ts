@@ -40,6 +40,7 @@ export class WebSports {
       provider: event.provider,
       status: event.status,
       startsAt: event.startsAt,
+      ...(event.artwork === undefined ? {} : { sportsArtwork: event.artwork }),
     }));
   }
 
@@ -60,6 +61,7 @@ export class WebSports {
         kind: "url" as const,
         url: event.pageUrl,
         mode: "video" as const,
+        sportsEvent: event,
       },
       title: event.title,
     };

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { WebSnapshot } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { elapsed, type RemoteAction } from "./api.ts";
 import { Artwork } from "./artwork.tsx";
+import { SportsArtwork } from "./sports-artwork.tsx";
+import { Attribution } from "./attribution.tsx";
 
 type PlayerProps = {
   snapshot: WebSnapshot;
@@ -30,12 +32,19 @@ function PlayerTitle({ snapshot }: Pick<PlayerProps, "snapshot">) {
   const current = snapshot.current;
   return (
     <div className="player-title">
-      <Artwork
-        className="player-artwork"
-        {...(current?.artworkUrl === undefined
-          ? {}
-          : { url: current.artworkUrl })}
-      />
+      {current?.sportsArtwork === undefined ? (
+        <Artwork
+          className="player-artwork"
+          {...(current?.artworkUrl === undefined
+            ? {}
+            : { url: current.artworkUrl })}
+        />
+      ) : (
+        <SportsArtwork
+          artwork={current.sportsArtwork}
+          className="player-artwork"
+        />
+      )}
       <div>
         <p className="eyebrow">
           {snapshot.paused
@@ -47,9 +56,10 @@ function PlayerTitle({ snapshot }: Pick<PlayerProps, "snapshot">) {
         <h2>{current?.title ?? "Your next favorite is waiting"}</h2>
         <p className="muted">
           {current === null
-            ? "Queue a title to get started."
+            ? "Play a title to get started."
             : "Playing in " + (snapshot.channel?.name ?? "Discord")}
         </p>
+        {current !== null && <Attribution {...current} />}
       </div>
     </div>
   );
@@ -271,11 +281,19 @@ export function Queue({ snapshot, busy, send }: PlayerProps) {
               <span className="queue-number">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              {item.artworkUrl !== undefined && (
-                <Artwork className="queue-artwork" url={item.artworkUrl} />
+              {item.sportsArtwork === undefined ? (
+                item.artworkUrl !== undefined && (
+                  <Artwork className="queue-artwork" url={item.artworkUrl} />
+                )
+              ) : (
+                <SportsArtwork
+                  artwork={item.sportsArtwork}
+                  className="queue-artwork"
+                />
               )}
               <div>
                 <h3>{item.title}</h3>
+                <Attribution {...item} />
                 <div className="queue-item-actions">
                   <button
                     aria-label={"Move " + item.title + " up"}

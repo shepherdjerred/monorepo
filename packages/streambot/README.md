@@ -62,10 +62,17 @@ therefore splits identities:
   establishes identity; live guild membership and voice state authorize each
   media request. Everyone currently in the channel can control playback through
   the web remote. Slash, voice, and card permissions keep their existing policy.
-  Its selector shares the viewer's personal numbered channel with Discord commands;
-  each slot retains its own queue, and legacy sessions finish in their original mode.
+  The destination selector shares the viewer's personal numbered channel with Discord
+  commands. With `streambot-automatic-channel-routing-enabled`, music defaults to 1;
+  Plex, sports, and other video default to 2 across web, slash, and voice commands.
+  Manual selection wins until the viewer chooses Auto or `/stream select auto:true`.
+  Each slot retains its own queue, and legacy sessions finish in their original mode.
+  The URL's `channel` chooses the slot being viewed without changing that destination.
+  `/plex`, `/search`, `/sports`, and `/history` preserve submitted searches, filters,
+  series, pagination, and server context in URLs. Deep links survive OAuth sign-in;
+  browser Back/Forward restores the page and its scroll position.
   Media paths and subtitle references stay on the server behind opaque IDs.
-  The Plex poster rollout gives Library a movie/show poster grid. A show opens
+  The Plex poster rollout gives Plex a movie/show poster grid. A show opens
   season-grouped episodes; queue, player, and search retain compact artwork.
   Local media uses the selected Plex movie or series poster, matched by exact
   media file path. Missing Plex artwork keeps a placeholder without a TMDB lookup.
@@ -74,6 +81,15 @@ therefore splits identities:
   the authenticated Streambot endpoint; its token and internal URLs stay on the server.
   Metadata refreshes lazily after five minutes and never delays browsing or playback.
   `PLEX_BASE_URL` and `PLEX_TOKEN` are optional bootstrap and must be supplied together.
+  StreamEast artwork uses the provider's public team and league logos; missing art
+  has a generic matchup card. YouTube flat search metadata supplies thumbnails.
+  Queue entries retain their requester and enqueue time across reorder and restart,
+  including when history is disabled; older entries may have an unknown enqueue time.
+  History has separate Mine (all this user's plays) and Server views, 50 runs per page,
+  source and title filters, and the existing one-year retention. Repeated plays remain
+  individual runs. Sports remain visible after ending, but replay checks today's event
+  identity again before allocating playback. The SQLite upgrade preserves favorites
+  and saved queues. Help, eligible play tips, and player cards link to the web remote.
   Production reuses the existing Plex service and 1Password-backed token. YouTube
   discovery shows its real thumbnails. Poster lookup is lazy and does not hold
   up library browsing or playback. The Live sports tab searches today's
@@ -115,6 +131,9 @@ For frontend iteration, `bun run web:dev` proxies API requests to that server.
 the routes, session storage, command service, and playback actor are real. This
 fixture is absent from the production image. Use it after `bun run build` to inspect
 the library, queue, controls, subtitle picker, and system light/dark themes.
+
+The expanded browsing fixture is `bun run test/web/preview.ts` on port 5188 after
+`bun run build`; it includes simulated OAuth, sports artwork, history, and attribution.
 
 | Bootstrap               | Purpose                                               |
 | ----------------------- | ----------------------------------------------------- |

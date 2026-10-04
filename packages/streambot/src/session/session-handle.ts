@@ -12,6 +12,7 @@ import type {
   SessionHandle,
 } from "@shepherdjerred/streambot/session/session-types.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import { queuedDisplay } from "./queued-display.ts";
 
 export function buildSessionHandle(
   config: Config,
@@ -29,7 +30,17 @@ export function buildSessionHandle(
         throw new PlaybackCommandBoundaryError(
           "That playback ended while the command was loading. Try again.",
         );
-      session.actor.send(event);
+      session.actor.send(
+        event.type === "ADD" ||
+          event.type === "ADD_NEXT" ||
+          event.type === "PLAY_NOW"
+          ? {
+              ...event,
+              queuedAt: event.queuedAt ?? Date.now(),
+              display: queuedDisplay(event),
+            }
+          : event,
+      );
     },
     view: () =>
       buildPlaybackView(

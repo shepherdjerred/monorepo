@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SportsEventSchema } from "@shepherdjerred/streambot/sports/types.ts";
 import {
   MediaModeSchema,
   type MediaMode,
@@ -76,6 +77,7 @@ export const SourceSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("url"),
     url: z.url(),
+    sportsEvent: SportsEventSchema.optional(),
     subtitles: SubtitlePrefSchema.optional(),
     mode: MediaModeSchema.optional(),
     spoken: z.boolean().optional(),
@@ -98,7 +100,7 @@ export function sourceLabel(source: Source): string {
       return source.title;
     }
     case "url": {
-      return source.url;
+      return source.sportsEvent?.title ?? source.url;
     }
     case "search": {
       return source.query;

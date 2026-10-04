@@ -31,6 +31,7 @@ const MAX_CHAPTER_OPTIONS = 25;
 export type ButtonStyleName = "primary" | "secondary" | "danger" | "success";
 
 export type ButtonSpec = {
+  readonly url?: string;
   readonly id: string;
   readonly label: string;
   readonly style: ButtonStyleName;
@@ -66,6 +67,7 @@ export type PlayerCardPayload = {
 };
 
 export type PlayerCardInput = {
+  readonly webUrl?: string;
   readonly playbackChannel?: PlaybackChannelNumber;
   readonly view: PlaybackView;
   /** TMDB poster for the current item, when one was found. */
@@ -365,7 +367,22 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
     },
     // A finished session keeps its card as readable history, but every control is removed rather
     // than left dangling on a session that no longer exists.
-    rows: input.finished ? [] : buildRows(view),
+    rows: input.finished
+      ? []
+      : buildRows(view).map((row, index) =>
+          index !== 2 || input.webUrl === undefined
+            ? row
+            : [
+                ...row,
+                {
+                  id: "web-remote",
+                  label: "Open web remote",
+                  url: input.webUrl,
+                  style: "secondary",
+                  disabled: false,
+                } satisfies ButtonSpec,
+              ],
+        ),
     select: input.finished ? null : buildChapterSelect(view),
   };
 }
