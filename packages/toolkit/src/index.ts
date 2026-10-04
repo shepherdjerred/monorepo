@@ -41,6 +41,7 @@ Monorepo workflows:
   ops summary [--needs-me]     Summarize the homelab ops snapshot
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
+  mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
   history <SUBCOMMAND>         Search private local agent history
   backup seaweedfs <ACTION>    Inspect, verify, or restore off-site snapshots
 
@@ -87,6 +88,7 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     "discord",
     () => import("./handlers/discord.ts").then((m) => m.handleDiscordCommand),
   ],
+  ["mc", () => import("./handlers/mc.ts").then((m) => m.handleMcCommand)],
   [
     "history",
     () => import("./handlers/history.ts").then((m) => m.handleHistoryCommand),

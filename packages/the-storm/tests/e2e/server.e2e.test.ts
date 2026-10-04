@@ -7,7 +7,8 @@ import {
   waitForTranslation,
   waitUntil,
 } from "./harness/bot.ts";
-import { botProtocol, botVersion, paper } from "./harness/pins.ts";
+import { paper } from "@shepherdjerred/mc-harness/pins.ts";
+import { botProtocol, botVersion } from "./harness/pins.ts";
 import {
   ClearCountOutputSchema,
   DayTimelineOutputSchema,
