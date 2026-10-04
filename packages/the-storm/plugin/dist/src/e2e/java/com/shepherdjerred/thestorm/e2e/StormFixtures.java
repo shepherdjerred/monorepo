@@ -112,6 +112,7 @@ public final class StormFixtures extends JavaPlugin {
         world.getChunkAt(x, z).setForceLoaded(true);
       }
     }
+    colosseumFloor(min, max);
     for (var name : List.of("lobby", "spectator", "exit")) {
       stand(section(arena, name));
     }
@@ -124,6 +125,10 @@ public final class StormFixtures extends JavaPlugin {
       }
     }
     for (var point : arena.getMapList("lootChests")) {
+      var x = ((Number) point.get("x")).intValue();
+      var y = ((Number) point.get("y")).intValue();
+      var z = ((Number) point.get("z")).intValue();
+      chestPlatform(x, y, z);
       stand(
           ((Number) point.get("x")).doubleValue() + .5,
           ((Number) point.get("y")).doubleValue() + 1,
@@ -141,6 +146,24 @@ public final class StormFixtures extends JavaPlugin {
     }
     var ready = section(arena, "readyBlock");
     block(ready.getInt("x"), ready.getInt("y"), ready.getInt("z"), Material.IRON_BLOCK);
+  }
+
+  private void colosseumFloor(ConfigurationSection min, ConfigurationSection max) {
+    // The disposable flat world is far below the saved arena's floor.
+    for (var x = min.getInt("x"); x <= max.getInt("x"); x++) {
+      for (var z = min.getInt("z"); z <= max.getInt("z"); z++) {
+        block(x, 40, z, Material.STONE);
+      }
+    }
+  }
+
+  private void chestPlatform(int x, int y, int z) {
+    // Give the interacting player a platform beside the raised chest.
+    for (var dx = -1; dx <= 1; dx++) {
+      for (var dz = -1; dz <= 1; dz++) {
+        block(x + dx, y, z + dz, Material.STONE);
+      }
+    }
   }
 
   private void prepareSettlement() {

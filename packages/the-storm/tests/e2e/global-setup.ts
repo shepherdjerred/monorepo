@@ -48,6 +48,16 @@ const ExternalServerSchema = z.object({
   STORM_E2E_BRAIN_TOKEN: z.string().min(1),
 });
 
+async function arenaAdmission(server: ServerInfo): Promise<void> {
+  // An idle runner can report "open" before asynchronous map validation finishes.
+  for (let attempt = 0; attempt < 120; attempt++) {
+    const logs = await serverLogs(server);
+    if (logs.includes("Prepared arena maps; admission is open")) return;
+    await Bun.sleep(500);
+  }
+  throw new Error("The authored arenas did not open after Paper startup");
+}
+
 export default async function setup(project: TestProject) {
   const profile = e2eProfile();
   // The load profile is full plus the load-test switch and production limits.
@@ -57,14 +67,16 @@ export default async function setup(project: TestProject) {
   const external = Bun.env["STORM_E2E_HOST"] !== undefined;
   if (external) {
     const env = ExternalServerSchema.parse(Bun.env);
-    project.provide("server", {
+    const server: ServerInfo = {
       kind: "external",
       host: env.STORM_E2E_HOST,
       gamePort: env.STORM_E2E_GAME_PORT,
       rconPort: env.STORM_E2E_RCON_PORT,
       rconPassword: env.STORM_E2E_RCON_PASSWORD,
       logFile: env.STORM_E2E_LOG_FILE,
-    });
+    };
+    if (full) await arenaAdmission(server);
+    project.provide("server", server);
     project.provide("brain", { port: env.STORM_E2E_BRAIN_PORT });
     return;
   }
@@ -135,6 +147,13 @@ export default async function setup(project: TestProject) {
     console.warn(
       `[e2e] Paper ${server.info.containerId.slice(0, 12)} ready in ${server.info.bootMs.toString()}ms`,
     );
+  }
+  try {
+    if (full) await arenaAdmission(server.info);
+  } catch (error) {
+    await server.stop();
+    await brain.stop();
+    throw error;
   }
   project.provide("server", server.info);
   project.provide("brain", { port: brain.port });

@@ -127,9 +127,9 @@ describe("run class builds on real Paper", () => {
           if (path === "RESCUER") {
             expect(
               await rcon.command(
-                `execute positioned 1758.5 73 2156.5 if entity ${bot.username}[distance=..3]`,
+                `execute positioned 1758.5 73 2156.5 if entity @a[name=${bot.username},distance=..3]`,
               ),
-            ).toBe("Test passed");
+            ).toBe("Test passed. Count: 1");
           }
           const active = await rcon.command(
             `storm-fixture-survival inspect ${bot.username} none`,
