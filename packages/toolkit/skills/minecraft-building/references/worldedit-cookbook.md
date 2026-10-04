@@ -6,7 +6,7 @@ bridge sets the world, then `--pos1`/`--pos2` (the selection), then `--at`
 
 ```bash
 toolkit mc we --target <canvas> --record <dir> --world world \
-  --pos1=10,-60,10 --pos2=20,-56,18 "//walls stone_bricks"
+  --pos1 10,-60,10 --pos2 20,-56,18 "//walls stone_bricks"
 toolkit mc we --target <canvas> --record <dir> --world world --at 15,-50,14 "//sphere oak_leaves[persistent=true] 3"
 ```
 

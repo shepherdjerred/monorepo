@@ -25,27 +25,32 @@ render and getting a go-ahead when the target is a server people play on.
    two corners). Ask if the area is unknown — never guess coordinates.
 2. **Init and capture** the site (include ground under the build and some
    margin around it):
+
    ```bash
    toolkit mc build init ./builds/cottage --name cottage --world world --anchor 26,-60,26
    toolkit mc build capture ./builds/cottage --target <id> --world world 20,-61,20 40,-45,40
    ```
+
    Read `renders/site.png` before designing; note slope, water, trees.
+
 3. **Canvas:** `toolkit mc build canvas ./builds/cottage` — a void sandbox with
    the site pasted at the same coordinates; it becomes the default target.
 4. **Author** with either or both:
    - **WorldEdit**, recorded: `toolkit mc we --target <canvas> --record <dir>
---world world --pos1=x,y,z --pos2=x,y,z "//set …"`. Always give explicit
-     coordinates (`--pos1/--pos2` or `--at`); use `--pos1=` when a value starts
-     with `-`. See references/worldedit-cookbook.md.
+--world world --pos1 x,y,z --pos2 x,y,z "//set …"`. Always give explicit
+     coordinates (`--pos1/--pos2` or `--at`); negative values need no
+     quoting. See references/worldedit-cookbook.md.
    - **Program** (`build.ts`, precise architecture): edit it, then
      `toolkit mc build compile <dir>` (compiles, lints, and replaces the earlier
      program ops in the log). See references/dsl-cheatsheet.md.
 5. **Run, look, critique:**
+
    ```bash
    toolkit mc build run <dir>        # reset canvas to site, replay all ops, freeze result
    toolkit mc build render <dir>     # contact sheet PNG — open it with Read
    toolkit mc build lint <dir>
    ```
+
    Fix every lint error, then critique with references/rubric.md:
    - Do **at least two** render → critique → revise iterations (≤5 total).
      Each one scores all eight aspects 0–2, names the lowest, and makes one
@@ -56,6 +61,7 @@ render and getting a go-ahead when the target is a server people play on.
      dormer) and **one detail** (chimney, porch, garden, path, flower boxes).
    - Report the final scores and at least one remaining weakness. A clean
      lint is not a good-looking build; say what you actually see.
+
 6. **Replay:** `toolkit mc build replay <dir>` replays the log on a fresh
    seeded sandbox. A mismatch means non-deterministic ops (random `%`
    patterns); promote is still exact because it applies the frozen result.
@@ -64,12 +70,15 @@ render and getting a go-ahead when the target is a server people play on.
 7. **Show the user** the final render (and lint summary) before promoting.
 8. **Promote:** dry run prints a `planHash` and how many blocks change; then
    confirm:
+
    ```bash
    toolkit mc build promote <dir> --target <id>
    toolkit mc build promote <dir> --target <id> --confirm <planHash>
    ```
+
    It refuses if the target drifted from the captured site (re-capture and
    rebuild). The result is verified cell by cell and journaled.
+
 9. **Undo** if needed: `toolkit mc build undo <applyId>` (last in, first out;
    restores block entities such as chest contents). `toolkit mc build status
    <dir>` lists applies.
