@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -66,7 +67,7 @@ final class NpcCombat {
                     ledger.restore(snapshot);
                     ready = true;
                     expire();
-                    context.logger().info("NPCs: {}", world.reconcile());
+                    world.reconcileWhenReady();
                   } catch (RuntimeException error) {
                     fail(error);
                   }
@@ -184,7 +185,7 @@ final class NpcCombat {
               new GuardThreats.Filters(
                   target -> eligible(target) && !retreating(npc.id(), target),
                   target -> wanted(target, feet),
-                  entity::hasLineOfSight));
+                  target -> visible(entity, target)));
       seen = new Seen(tick, nearby);
       observations.put(npc.id(), seen);
     }
@@ -198,7 +199,7 @@ final class NpcCombat {
                     candidate.getLocation().distanceSquared(feet)
                         <= config.guard().detectionRadius() * config.guard().detectionRadius())
             .filter(candidate -> !(candidate instanceof Player) || wanted(candidate, feet))
-            .filter(entity::hasLineOfSight);
+            .filter(candidate -> visible(entity, candidate));
     if (target.isPresent()) {
       var danger = target.get();
       if (guard) {
@@ -208,6 +209,21 @@ final class NpcCombat {
       }
     }
     return target;
+  }
+
+  private static boolean visible(LivingEntity observer, LivingEntity target) {
+    if (!observer.getScoreboardTags().contains("storm_scripted_npc")) {
+      return observer.hasLineOfSight(target);
+    }
+    var eye = observer.getEyeLocation();
+    var direction = target.getEyeLocation().toVector().subtract(eye.toVector());
+    var distance = direction.length();
+    return distance == 0
+        || observer
+                .getWorld()
+                .rayTraceBlocks(
+                    eye, direction.normalize(), distance, FluidCollisionMode.NEVER, true)
+            == null;
   }
 
   void forget(String npc) {

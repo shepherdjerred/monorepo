@@ -1,5 +1,10 @@
 import { memo } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
+import ReactMarkdown, {
+  defaultUrlTransform,
+  type Components,
+} from "react-markdown";
+import type { ExploreMessage } from "@scout-for-lol/data";
+import { ExploreInlineEntity } from "#src/components/explore/inspection/explore-inline-entity.tsx";
 import remarkGfm from "remark-gfm";
 
 /**
@@ -99,14 +104,48 @@ const COMPONENTS: Components = {
  */
 const DISALLOWED_ELEMENTS = ["img"];
 
-function MarkdownAnswerView(props: { children: string }) {
+function MarkdownAnswerView(props: {
+  children: string;
+  inlineEntities?: ExploreMessage["inlineEntities"];
+}) {
+  const entities = new Map(
+    (props.inlineEntities ?? []).map((entity) => [entity.marker, entity]),
+  );
+  const components: Components = {
+    ...COMPONENTS,
+    a: ({ children, href }) => {
+      if (href?.startsWith("scout://") === true) {
+        const entity = entities.get(href);
+        return entity === undefined ? (
+          <>{children}</>
+        ) : (
+          <ExploreInlineEntity entity={entity} />
+        );
+      }
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="underline underline-offset-2"
+        >
+          {children}
+        </a>
+      );
+    },
+  };
   return (
     <div className="text-sm leading-relaxed">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         skipHtml
         disallowedElements={DISALLOWED_ELEMENTS}
-        components={COMPONENTS}
+        components={components}
+        urlTransform={(url) =>
+          /^scout:\/\/(?:champion|ability|item|rune|spell)\/[\w-]+$/u.test(url)
+            ? url
+            : defaultUrlTransform(url)
+        }
       >
         {props.children}
       </ReactMarkdown>

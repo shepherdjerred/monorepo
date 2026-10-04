@@ -67,6 +67,8 @@ async function settleCommand(command: ImessageCommand): Promise<void> {
     );
   }
 }
+// Retained for replay of closed histories. No bootstrap or Activity poller
+// admits or executes this retired connector.
 export async function blueBubblesIngressWorkflow(
   rawCursor: BlueBubblesCursor,
 ): Promise<never> {

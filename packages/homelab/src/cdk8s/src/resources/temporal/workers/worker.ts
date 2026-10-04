@@ -52,18 +52,6 @@ export function createTemporalWorkerDeployment(
     "temporal-worker-secret",
     onePasswordItem.name,
   );
-  const blueBubblesItem = new OnePasswordItem(
-    chart,
-    "temporal-bluebubbles-1p",
-    {
-      spec: { itemPath: vaultItemPath("gnkfumzmerw725fhm7kck3rfuq") },
-    },
-  );
-  const blueBubblesSecret = Secret.fromSecretName(
-    chart,
-    "temporal-bluebubbles-secret",
-    blueBubblesItem.name,
-  );
   const photonItem = new OnePasswordItem(chart, "temporal-photon-1p", {
     spec: { itemPath: vaultItemPath("f67iy2i34gonqynkm2vtsvnueu") },
   });
@@ -267,7 +255,6 @@ export function createTemporalWorkerDeployment(
     createTemporalIngressWorkers(chart, {
       serverServiceName: props.serverServiceName,
       secret,
-      blueBubblesSecret,
       photonSecret,
     });
 

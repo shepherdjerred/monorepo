@@ -7,7 +7,6 @@ import {
   assertDatabasePrepared,
   verifyLedgerBalances,
 } from "#src/database/startup-readiness.ts";
-import { runImport } from "#src/database/legacy-import/run-import.ts";
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
@@ -31,51 +30,16 @@ afterAll(async () => {
   await dropTestDatabase(cleanupClient, dbPath);
 });
 beforeEach(async () => {
-  await prisma.$executeRawUnsafe("DROP TABLE IF EXISTS _legacy_sqlite_import");
+  await prisma.bucksLedgerEntry.deleteMany();
+  await prisma.bucksAccount.deleteMany();
 });
 
-async function prepareFresh(): Promise<void> {
-  await runImport({
-    prisma,
-    sqlitePath: `/tmp/scout-nonexistent-${dbPath}.sqlite`,
-    allowFreshInstall: true,
-  });
-}
-
 describe("SQL-only database startup", () => {
-  test("refuses an unprepared database", async () => {
-    await expect(assertDatabasePrepared(prisma)).rejects.toThrow(
-      "not prepared",
-    );
-  });
-  test("explicit fresh preparation permits repeated startup without SQLite", async () => {
-    await prepareFresh();
+  test("a freshly migrated database boots with no import step", async () => {
     await assertDatabasePrepared(prisma);
     await assertDatabasePrepared(prisma);
-  });
-  test("an imported database needs its receipt, not its retained source", async () => {
-    await prepareFresh();
-    await prisma.$executeRawUnsafe(
-      "UPDATE _legacy_sqlite_import SET source = '/missing/retained.sqlite', source_size_bytes = 1024, source_digest = $1, row_counts = '{\"Player\": 4}'::jsonb",
-      "a".repeat(64),
-    );
-    await assertDatabasePrepared(prisma);
-  });
-  test.each([
-    "DELETE FROM _legacy_sqlite_import",
-    "UPDATE _legacy_sqlite_import SET source_digest = 'corrupt'",
-    "UPDATE _legacy_sqlite_import SET source = '/missing/source.sqlite'",
-    "UPDATE _legacy_sqlite_import SET row_counts = '{\"Player\": -1}'::jsonb",
-    "UPDATE _legacy_sqlite_import SET source_size_bytes = NULL",
-  ])("refuses incomplete or malformed receipt: %s", async (sql) => {
-    await prepareFresh();
-    await prisma.$executeRawUnsafe(sql);
-    await expect(assertDatabasePrepared(prisma)).rejects.toThrow(
-      "valid completed",
-    );
   });
   test("refuses ledger drift", async () => {
-    await prepareFresh();
     await prisma.$executeRawUnsafe(
       `INSERT INTO "BucksAccount" ("serverId", "discordId", "analyticsUserId", balance, "createdAt", "updatedAt") VALUES ('123456789012345678', '234567890123456789', 'startup-readiness-test', 1, now(), now())`,
     );

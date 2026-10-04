@@ -138,16 +138,32 @@ describe("selectImageTargets", () => {
     }
   });
 
+  test("rebuilds both sides of The Storm's shared recovery protocol", async () => {
+    expect(
+      await select([
+        "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
+      ]),
+    ).toEqual(["infra", "temporal-worker"]);
+    expect(await select(["packages/the-storm/package.json"])).toEqual([
+      "temporal-worker",
+    ]);
+  });
+
   test("rebuilds infra when the managed flag inventory changes", async () => {
     expect(
       await select(["packages/feature-flags/src/managed-flag-inventory.json"]),
     ).toContain("infra");
   });
 
+  test("rebuilds infra when the shared companion contract changes", async () => {
+    expect(
+      await select(["packages/storm-brain/contracts/companion-chat.json"]),
+    ).toContain("infra");
+  });
+
   test("leaves images alone for The Storm files outside the image context", async () => {
     for (const path of [
       "packages/the-storm/README.md",
-      "packages/the-storm/package.json",
       "packages/the-storm/tests/e2e/boot.test.ts",
     ]) {
       expect(await select([path])).toEqual([]);

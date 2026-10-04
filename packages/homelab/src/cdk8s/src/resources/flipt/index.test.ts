@@ -250,7 +250,6 @@ describe("Flipt chart", () => {
             "alert-dashboard",
             "storm",
             "the-storm",
-            "the-storm-companion",
           ].map((namespace) => `${environment}.${namespace}.yaml`),
         )
         .toSorted(),
@@ -356,6 +355,9 @@ describe("Flipt network policy", () => {
     // reads degrade to defaults, and both endpoints stay 503 even after
     // their flags are enabled.
     ["storm-brain to read its classify/triage gates", "storm-brain"],
+    ["the production forum to read registration and season", "storm-forum"],
+    ["the private forum to read registration and season", "storm-forum-beta"],
+    ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
   ])("allows %s", (_label, namespace) => {
     const policy = z
       .object({

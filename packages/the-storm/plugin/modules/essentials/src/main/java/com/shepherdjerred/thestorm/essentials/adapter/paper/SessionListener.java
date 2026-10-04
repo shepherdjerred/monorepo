@@ -55,6 +55,7 @@ final class SessionListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     presence.afk().joined(player.getUniqueId());
     arrival.kits().deliveries().deliver(player.getUniqueId());
@@ -74,6 +75,7 @@ final class SessionListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var id = event.getPlayer().getUniqueId();
     presence.afk().left(id);
     presence.tpa().forget(id);

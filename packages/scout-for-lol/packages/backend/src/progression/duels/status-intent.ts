@@ -43,18 +43,6 @@ export async function mintDuelStatusIntent(
     payload: args.payload,
   });
   const standing = await getSubjectIntent(db, { intentKey: key });
-  const legacy = await db.duelStatusOutbox.findUnique({
-    where: { dedupeKey: args.dedupeKey },
-    select: { id: true },
-  });
-  if (legacy !== null) {
-    if (standing !== null) {
-      throw new Error(`Duel status ${key} has both legacy and V2 owners`);
-    }
-    // A pre-cutover producer already made this decision. Its outbox retains
-    // ownership across retries and completed sends; never mint a second path.
-    return;
-  }
   if (standing === null) {
     const created = await upsertSubjectIntent(db, {
       duelId: args.payload.seriesId,

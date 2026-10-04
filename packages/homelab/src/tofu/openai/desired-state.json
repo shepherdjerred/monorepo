@@ -25,10 +25,6 @@
       "project_id": "proj_UtwKMvBNkqdVG3OQHzsbCuzT",
       "name": "Temporal"
     },
-    "openrouter": {
-      "project_id": "proj_lqojsKzeBDSgLX9UM57p8ZZ4",
-      "name": "OpenRouter"
-    },
     "streambot": {
       "project_id": "proj_uy98PiWuGIrnHS1aj2ayEe0k",
       "name": "Streambot"
@@ -68,17 +64,6 @@
         {
           "vault_item_id": "kdv3urwh5uwhgolabrz3pn5wsa",
           "vault_field": "OPENAI_API_KEY"
-        }
-      ]
-    },
-    "openrouter-byok-2026-08": {
-      "project_key": "openrouter",
-      "name": "OpenRouter BYOK 2026-08",
-      "onepassword_targets": [
-        {
-          "vault_item_id": "msklmk7gk2r3rq4kyeywpuafny",
-          "vault_field": "OPENROUTER_BYOK_KEYS_JSON",
-          "vault_json_path": "/openai"
         }
       ]
     },
@@ -300,7 +285,7 @@
     "storm-brain": {
       "project_key": "storm-brain",
       "mode": "allow_list",
-      "model_ids": ["gpt-5.6-luna"]
+      "model_ids": ["gpt-5.6-luna", "gpt-6-luna"]
     }
   },
   "openai_project_hosted_tool_permissions": {},

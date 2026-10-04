@@ -9,6 +9,7 @@ export type FliptFetcherTarget = {
   readonly namespace: string;
   readonly environment: string;
   readonly signal?: AbortSignal;
+  readonly requestTimeoutMilliseconds?: number;
 };
 
 /**
@@ -50,7 +51,16 @@ export function createFliptFetcher(options: FliptFetcherTarget): FliptFetcher {
     const response = await fetch(url, {
       method: "GET",
       headers,
-      ...(options.signal === undefined ? {} : { signal: options.signal }),
+      ...(options.requestTimeoutMilliseconds === undefined
+        ? options.signal === undefined
+          ? {}
+          : { signal: options.signal }
+        : {
+            signal: AbortSignal.any([
+              AbortSignal.timeout(options.requestTimeoutMilliseconds),
+              ...(options.signal === undefined ? [] : [options.signal]),
+            ]),
+          }),
     });
 
     // 304 is a successful "nothing changed" and must be handed back rather

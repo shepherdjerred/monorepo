@@ -1325,6 +1325,14 @@ describe("help", () => {
       expect(text).toMatch(new RegExp(String.raw`\b${option.name}\b`));
     }
   });
+  test("advertises automatic channels only for eligible users", () => {
+    expect(helpText(false)).not.toContain("auto:true");
+    expect(helpText(false)).toContain("chooses your destination");
+    const enabled = helpText(true, "https://streambot.sjer.red/", true);
+    expect(enabled).toContain("auto:true");
+    expect(enabled).toContain("Auto routes music to 1, video to 2");
+    expect(enabled.length).toBeLessThanOrEqual(2000);
+  });
 });
 
 describe("sources", () => {

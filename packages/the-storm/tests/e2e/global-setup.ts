@@ -104,7 +104,13 @@ export default async function setup(project: TestProject) {
       // container. This is the only useful evidence for boot and disconnect
       // failures in local E2E runs.
       await Bun.write(
-        path.join(packageRoot, ".cache", "e2e", "latest-server.log"),
+        path.join(
+          packageRoot,
+          ".cache",
+          "e2e",
+          ...(full ? ["full"] : []),
+          "latest-server.log",
+        ),
         await serverLogs(server.info),
       );
     } finally {

@@ -64,6 +64,11 @@ const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
+  "storm-forum": {
+    command:
+      "cd /opt/storm-forum && bun scripts/runtime-smoke.ts && php-fpm --test --nodaemonize --force-stderr --fpm-config /usr/local/etc/php-fpm.conf",
+    env: {},
+  },
   "woodpecker-config-extension": {
     command: [
       "set -eu",
@@ -136,6 +141,7 @@ const commands: Record<
       METRICS_PORT: "18795",
       OPENAI_API_KEY: "smoke-dummy",
       STORM_BRAIN_BEARER_TOKEN: "smoke-brain-token-that-is-long-enough",
+      STORM_COMPANION_BUDGET_DB: "/tmp/storm-companion-smoke.db",
       PORT: "18794",
     },
   },
@@ -273,6 +279,9 @@ const commands: Record<
       "setpriv --version",
       "pkill --version",
       "pgrep --version",
+      "bwrap --version",
+      "socat -V",
+      "tini --version",
       "toolkit --version",
       "toolkit woodpecker --version",
       "gcx --version",
@@ -346,16 +355,14 @@ const commands: Record<
       'postgres_bin="$(pg_config --bindir)"',
       '"$postgres_bin/initdb" -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null',
       'if ! "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-c listen_addresses= -c unix_socket_directories=/tmp" start; then cat /tmp/smoke-pg.log; exit 1; fi',
-      // Prepare this disposable database explicitly, then exercise the ordinary
-      // image startup path with no legacy SQLite file present.
+      // A fresh database needs only its migrations; exercise the ordinary
+      // image startup path, which re-runs them, against it.
       "bun x --no-install prisma migrate deploy",
-      "bun run scripts/import-legacy-sqlite.ts --allow-fresh-install",
-      'bun run scripts/scoutql/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix',
       "set +e",
       'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/check-database-readiness.ts && bun run src/index.ts" 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
-      String.raw`printf '%s\n' "$output" | grep -q "Database prepared: completed import receipt and ledger verified" || { echo "database readiness failed"; exit 1; }`,
+      String.raw`printf '%s\n' "$output" | grep -q "Database prepared: ledger verified" || { echo "database readiness failed"; exit 1; }`,
       String.raw`printf '%s\n' "$output" | grep -Fq "HTTP server started" || { echo "backend did not reach HTTP startup"; exit 1; }`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
@@ -368,7 +375,6 @@ const commands: Record<
       TEMPORAL_NAMESPACE: "dev",
       FEATURE_FLAGS_MODE: "disabled",
       DATABASE_URL: "postgres://postgres@localhost/postgres?host=/tmp",
-      LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
       // The gatewayless runtime role: the image must reach HTTP startup with a
       // dummy Discord token, which it can only do without a shard. The lake
       // fold is skipped for the same reason — there is no published build and

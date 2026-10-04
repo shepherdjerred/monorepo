@@ -1,10 +1,13 @@
 import type { Client } from "@temporalio/client";
-import { startBlueBubblesIngress } from "./imessage/start.ts";
 import {
   HomeAssistantEventClient,
   HomeAssistantRestClient,
 } from "@shepherdjerred/home-assistant";
-import { handleIosAction, handleStateChanged } from "./triggers.ts";
+import {
+  handleIosAction,
+  handleStateChanged,
+  syncPetCareStates,
+} from "./triggers.ts";
 import { startGithubWebhook, type WebhookHandle } from "./github-webhook.ts";
 import {
   startAgentTaskApi,
@@ -24,10 +27,7 @@ export type EventBridgeHandle = {
   close: () => Promise<void>;
 };
 
-export async function startHttpServers(
-  client: Client,
-): Promise<EventBridgeHandle> {
-  await startBlueBubblesIngress(client);
+export function startHttpServers(client: Client): EventBridgeHandle {
   // GitHub webhook server is optional — only start when the secret is set.
   // Local dev / smoke tests can run the worker without webhook ingest.
   let webhook: WebhookHandle | undefined;
@@ -90,6 +90,36 @@ export async function startEventBridge(
   const events = new HomeAssistantEventClient({ baseUrl, token });
   const rest = new HomeAssistantRestClient({ baseUrl, token });
   const health = trackEventBridgeConnection(events, haEventBridgeConnected);
+  let subscriptionsStarted = false;
+  let petCareSyncInFlight = false;
+  let petCareSyncAgain = false;
+
+  const requestPetCareSync = (): void => {
+    if (!subscriptionsStarted) return;
+    if (petCareSyncInFlight) {
+      petCareSyncAgain = true;
+      return;
+    }
+    petCareSyncInFlight = true;
+    void (async () => {
+      try {
+        await syncPetCareStates(client, rest);
+      } catch (error: unknown) {
+        const detail = error instanceof Error ? error.message : String(error);
+        console.error(`Failed to reconcile pet-care states: ${detail}`);
+      } finally {
+        petCareSyncInFlight = false;
+        if (petCareSyncAgain) {
+          petCareSyncAgain = false;
+          requestPetCareSync();
+        }
+      }
+    })();
+  };
+
+  events.onConnectionChange((state) => {
+    if (state === "ready") requestPetCareSync();
+  });
   events.onConnectionChange((state, detail) => {
     if (state === "error" || state === "handler-error") {
       const message =
@@ -107,7 +137,9 @@ export async function startEventBridge(
       "state_changed",
       handleStateChanged(client, rest),
     );
+    subscriptionsStarted = true;
     health.subscriptionsStarted();
+    await syncPetCareStates(client, rest);
   } catch (error: unknown) {
     // A supervisor retry must not leave a partially subscribed client alive.
     await events.close();

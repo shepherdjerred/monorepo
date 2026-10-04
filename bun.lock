@@ -1065,6 +1065,24 @@
       "name": "@shepherdjerred/macos-cross-compiler",
       "version": "0.1.0",
     },
+    "packages/mc-harness": {
+      "name": "@shepherdjerred/mc-harness",
+      "version": "0.1.0",
+      "dependencies": {
+        "@shepherdjerred/unix-socket-daemon": "workspace:*",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/monarch": {
       "name": "@shepherdjerred/monarch",
       "version": "0.1.0",
@@ -1369,6 +1387,7 @@
         "@sentry/bun": "^10.75.3",
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/feature-flags": "workspace:*",
+        "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "@shepherdjerred/temporal-observability": "workspace:*",
@@ -1389,6 +1408,7 @@
         "prism-media": "^1.3.5",
         "prisma": "^7.10.0",
         "prom-client": "^15.1.3",
+        "quickjs-emscripten": "0.32.0",
         "react": "19.3.0",
         "remeda": "^2.21.2",
         "sodium-native": "^5.0.10",
@@ -1434,6 +1454,7 @@
         "bun-types": "1.4.2",
         "eslint": "^10.7.0",
         "prettier": "^3.9.9",
+        "sharp": "^0.35.0",
         "typescript": "^6.0.3",
         "vitest": "5.0.1",
       },
@@ -1830,6 +1851,30 @@
         "vitest": "5.0.1",
       },
     },
+    "packages/storm-forum": {
+      "name": "@shepherdjerred/storm-forum",
+      "version": "1.0.0",
+      "dependencies": {
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
+        "@temporalio/activity": "1.24.0",
+        "@temporalio/worker": "1.24.0",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.1",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/streambot": {
       "name": "@shepherdjerred/streambot",
       "version": "0.0.1",
@@ -1857,6 +1902,7 @@
         "prom-client": "^15.1.3",
         "react": "19.3.0",
         "react-dom": "19.3.0",
+        "react-router": "^8.3.0",
         "xstate": "^5.32.4",
         "zod": "^4.4.3",
       },
@@ -2057,7 +2103,9 @@
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/s3-signed-request": "workspace:*",
         "@shepherdjerred/seaweedfs-backup": "workspace:*",
+        "@shepherdjerred/storm-forum": "workspace:*",
         "@shepherdjerred/temporal-observability": "workspace:*",
+        "@shepherdjerred/the-storm": "workspace:*",
         "@spectrum-ts/core": "12.10.1",
         "@spectrum-ts/imessage": "12.10.1",
         "@temporalio/activity": "1.24.0",
@@ -2132,7 +2180,7 @@
       "name": "@shepherdjerred/the-storm",
       "devDependencies": {
         "@shepherdjerred/eslint-config": "workspace:*",
-        "@shepherdjerred/the-storm-brain": "workspace:*",
+        "@shepherdjerred/mc-harness": "workspace:*",
         "@types/bun": "1.4.2",
         "@typescript/native": "npm:typescript@7.0.2",
         "eslint": "^10.7.0",
@@ -2143,26 +2191,6 @@
         "vec3": "^0.1.7",
         "vitest": "5.0.1",
         "zod": "^4.4.3",
-      },
-    },
-    "packages/the-storm/brain": {
-      "name": "@shepherdjerred/the-storm-brain",
-      "version": "0.1.0",
-      "dependencies": {
-        "@shepherdjerred/config": "workspace:*",
-        "@shepherdjerred/feature-flags": "workspace:*",
-        "@shepherdjerred/llm-models": "workspace:*",
-        "mineflayer": "4.39.0",
-        "zod": "^4.4.3",
-      },
-      "devDependencies": {
-        "@shepherdjerred/eslint-config": "workspace:*",
-        "@types/bun": "1.4.2",
-        "@typescript/native": "npm:typescript@7.0.2",
-        "eslint": "^10.7.0",
-        "jiti": "^2.7.0",
-        "typescript": "^6.0.3",
-        "vitest": "5.0.1",
       },
     },
     "packages/toolkit": {
@@ -2183,6 +2211,7 @@
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/seaweedfs-backup": "workspace:*",
+        "@shepherdjerred/unix-socket-daemon": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
         "asciinema-player": "^3.15.1",
         "debug": "^4.4.3",
@@ -2195,6 +2224,7 @@
       "devDependencies": {
         "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/mc-harness": "workspace:*",
         "@types/bun": "1.4.2",
         "@types/react": "19.3.0",
         "@typescript/native": "npm:typescript@7.0.2",
@@ -2259,6 +2289,19 @@
         "@types/bun": "1.4.2",
         "@typescript/native": "npm:typescript@7.0.2",
         "typescript": "^6.0.3",
+      },
+    },
+    "packages/unix-socket-daemon": {
+      "name": "@shepherdjerred/unix-socket-daemon",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
       },
     },
     "packages/version-catalog": {
@@ -3284,6 +3327,16 @@
 
     "@jest/types": ["@jest/types@29.6.3", "", { "dependencies": { "@jest/schemas": "^29.6.3", "@types/istanbul-lib-coverage": "^2.0.0", "@types/istanbul-reports": "^3.0.0", "@types/node": "*", "@types/yargs": "^17.0.8", "chalk": "^4.0.0" } }, "sha512-u3UPsIilWKOM3F9CXtrG8LEJmNxwoCQC/XVj4IKYXvvpx7QIi/Kg1LI5uDmDpKlac62NUtX7eLjRh+jVZcLOzw=="],
 
+    "@jitl/quickjs-ffi-types": ["@jitl/quickjs-ffi-types@0.32.0", "", {}, "sha512-v9T+GQpmk43VDJ7d72sf0Nexhk+ArvtUihW27dy7lqAl0zBObFKtSBBIm5RBjwIhE8VwsPPm9PNuvPvNqLWUEg=="],
+
+    "@jitl/quickjs-wasmfile-debug-asyncify": ["@jitl/quickjs-wasmfile-debug-asyncify@0.32.0", "", { "dependencies": { "@jitl/quickjs-ffi-types": "0.32.0" } }, "sha512-EX8zbXwGqCgAE764M+qvkHtyXDi/FUoMBea0JnES7vCM3P7a2+EOZOjGv85wtZ2sJhI1oJ+nekmqpOODFDY+hw=="],
+
+    "@jitl/quickjs-wasmfile-debug-sync": ["@jitl/quickjs-wasmfile-debug-sync@0.32.0", "", { "dependencies": { "@jitl/quickjs-ffi-types": "0.32.0" } }, "sha512-LeYWrPGC1uNCTBWvibo3ZLJj0CSVNYUXvJpXMCmuQ5Sap2cCACc3uvGvYV4homHHBAzfw5akoTqMMS4YFRtw+Q=="],
+
+    "@jitl/quickjs-wasmfile-release-asyncify": ["@jitl/quickjs-wasmfile-release-asyncify@0.32.0", "", { "dependencies": { "@jitl/quickjs-ffi-types": "0.32.0" } }, "sha512-3oSwPfja12ICz4aIblB58cuY8JlEq5Txt8Cut4VLo+LH47QN+mzCnSgnbB03hWzg1LBcc+VyyI9UOag7a1NF+Q=="],
+
+    "@jitl/quickjs-wasmfile-release-sync": ["@jitl/quickjs-wasmfile-release-sync@0.32.0", "", { "dependencies": { "@jitl/quickjs-ffi-types": "0.32.0" } }, "sha512-BKNDI/TPBfGlLNGYpLrhcDGXmIk4xHm4MRAisOBnOzpXVn9HZWsfmMAc9WMBrAHjvvds6HOikKeaOBKdPdpVrg=="],
+
     "@joshwooding/vite-plugin-react-docgen-typescript": ["@joshwooding/vite-plugin-react-docgen-typescript@0.7.0", "", { "dependencies": { "glob": "^13.0.1", "react-docgen-typescript": "^2.2.2" }, "peerDependencies": { "typescript": ">= 4.3.x", "vite": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0" }, "optionalPeers": ["typescript"] }, "sha512-qvsTEwEFefhdirGOPnu9Wp6ChfIwy2dBCRuETU3uE+4cC+PFoxMSiiEhxk4lOluA34eARHA0OxqsEUYDqRMgeQ=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
@@ -4192,6 +4245,8 @@
 
     "@shepherdjerred/macos-cross-compiler": ["@shepherdjerred/macos-cross-compiler@workspace:packages/macos-cross-compiler"],
 
+    "@shepherdjerred/mc-harness": ["@shepherdjerred/mc-harness@workspace:packages/mc-harness"],
+
     "@shepherdjerred/monarch": ["@shepherdjerred/monarch@workspace:packages/monarch"],
 
     "@shepherdjerred/ops-clients": ["@shepherdjerred/ops-clients@workspace:packages/ops-clients"],
@@ -4218,6 +4273,8 @@
 
     "@shepherdjerred/storm-brain": ["@shepherdjerred/storm-brain@workspace:packages/storm-brain"],
 
+    "@shepherdjerred/storm-forum": ["@shepherdjerred/storm-forum@workspace:packages/storm-forum"],
+
     "@shepherdjerred/streambot": ["@shepherdjerred/streambot@workspace:packages/streambot"],
 
     "@shepherdjerred/temporal": ["@shepherdjerred/temporal@workspace:packages/temporal"],
@@ -4228,8 +4285,6 @@
 
     "@shepherdjerred/the-storm": ["@shepherdjerred/the-storm@workspace:packages/the-storm"],
 
-    "@shepherdjerred/the-storm-brain": ["@shepherdjerred/the-storm-brain@workspace:packages/the-storm/brain"],
-
     "@shepherdjerred/toolkit": ["@shepherdjerred/toolkit@workspace:packages/toolkit"],
 
     "@shepherdjerred/trmnl-dashboard": ["@shepherdjerred/trmnl-dashboard@workspace:packages/trmnl-dashboard"],
@@ -4237,6 +4292,8 @@
     "@shepherdjerred/ts-mc": ["@shepherdjerred/ts-mc@workspace:packages/ts-mc"],
 
     "@shepherdjerred/ts-mc-docs": ["@shepherdjerred/ts-mc-docs@workspace:packages/ts-mc-docs"],
+
+    "@shepherdjerred/unix-socket-daemon": ["@shepherdjerred/unix-socket-daemon@workspace:packages/unix-socket-daemon"],
 
     "@shepherdjerred/version-catalog": ["@shepherdjerred/version-catalog@workspace:packages/version-catalog"],
 
@@ -7331,6 +7388,10 @@
     "queue-microtask": ["queue-microtask@1.2.3", "", {}, "sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A=="],
 
     "quick-lru": ["quick-lru@4.0.1", "", {}, "sha512-ARhCpm70fzdcvNQfPoy49IaanKkTlRWF2JMzqhcJbhSFRZv7nPTvZJdcY7301IPmvW+/p0RgIWnQDLJxifsQ7g=="],
+
+    "quickjs-emscripten": ["quickjs-emscripten@0.32.0", "", { "dependencies": { "@jitl/quickjs-wasmfile-debug-asyncify": "0.32.0", "@jitl/quickjs-wasmfile-debug-sync": "0.32.0", "@jitl/quickjs-wasmfile-release-asyncify": "0.32.0", "@jitl/quickjs-wasmfile-release-sync": "0.32.0", "quickjs-emscripten-core": "0.32.0" } }, "sha512-So0Sqw869y/S2oE3Nuc0uT3Dhqgvsj8FSrwBdsuTosVsG8ME5/OcudU1GxsrIFdFABgy17GHnTVO9TYV/bLQcA=="],
+
+    "quickjs-emscripten-core": ["quickjs-emscripten-core@0.32.0", "", { "dependencies": { "@jitl/quickjs-ffi-types": "0.32.0" } }, "sha512-QFnPfjFey8EqknSrSxe1hZrf1/8z7/6s1QzGOmKo6++02r7QRRX7ZoyNaZh7JuVjWsVW87KnQrbZqnHkOAzUyg=="],
 
     "quote-js-string": ["quote-js-string@0.1.0", "", {}, "sha512-Y3NoRtprEEZQD8RfxMCfS0ZTqc4e+i18OrXEXAvpM6TfC/3y+0L5rNbZiSnbBBEkDfFzbpd8o+cE8q3/anjMGA=="],
 

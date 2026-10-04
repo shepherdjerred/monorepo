@@ -283,12 +283,13 @@ export function buildReceipt(args: {
   evidence: unknown;
   recordedAt: Date;
   scope?: ReceiptScope;
+  version?: number;
 }): MatchProcessingReceiptRecord {
   return {
     matchId: args.matchId,
     receipt: {
       kind: args.kind,
-      version: RECEIPT_VERSION,
+      version: args.version ?? RECEIPT_VERSION,
       scope: args.scope ?? { kind: "global" },
       recordedAt: IsoInstantSchema.parse(args.recordedAt.toISOString()),
     },

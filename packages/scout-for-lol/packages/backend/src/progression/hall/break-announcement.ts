@@ -31,15 +31,13 @@ import { matchMayAnnounce } from "#src/temporal/v2/notification/match-intents.ts
  */
 export const HALL_RECORD_BREAK_FRESHNESS_MS = 24 * 60 * 60 * 1000;
 
-/** Which path took the announcement, counted by callers and asserted by tests. */
+/** What the evaluation did with the announcement, asserted by tests. */
 export type HallBreakAnnouncementPath =
-  /** A silent or backfilled match: nothing is announced on either path. */
+  /** A silent or backfilled match: nothing is announced. */
   | "silent"
-  /** v1's outbox row stands (or the V2 path is off): the v1 drain owns it. */
-  | "outbox"
-  /** A V2 intent was minted by this evaluation. */
+  /** An intent was minted by this evaluation. */
   | "intent-minted"
-  /** A V2 intent already stands for this (match, guild): it keeps ownership. */
+  /** An intent already stands for this (match, guild): it keeps ownership. */
   | "intent-standing";
 
 export type HallAnnouncementDelivery =
@@ -47,33 +45,18 @@ export type HallAnnouncementDelivery =
   | { readonly kind: "temporal-v2" };
 
 /**
- * Announce one guild's record break for one match — on exactly one path.
+ * Announce one guild's record break for one match as a `hall-record-break`
+ * notification intent.
  *
  * Runs inside the Hall evaluation's own transaction, so the announcement and
  * the record cells it describes commit together or not at all.
  *
- * ## First path owns the identity
- *
- * An announcement is one decision per (guild, match), and during the cutover
- * two pipelines can make it: v1's `HallRecordBreakOutbox` row and the V2
- * `hall-record-break` intent. Whichever exists FIRST keeps it for good, and the
- * flag only decides where a NEW decision goes:
- *
- * - an outbox row already stands → v1's upsert, unchanged, whatever the flag
- *   says, so a row the v1 drain may already be sending is never shadowed by an
- *   intent that would send it again;
- * - an intent already stands → nothing is written, whatever the flag says, so
- *   turning the flag off mid-flight cannot resurrect the announcement on v1;
- * - neither stands → the flag decides: on mints the intent, off writes the
- *   outbox row as v1 always has.
- *
  * ## Silence
  *
- * V2 uses the committed observation to decide silence. v1 uses its original
- * discovery-time decision, which remains available if its fail-open observation
- * dual-write failed. A v1 evaluation without an observation stays on the
- * legacy outbox even when the V2 flag is on: an intent without an observed
- * match could never enter V2's post-commit fan-out.
+ * The committed observation decides silence: only a `live` observation
+ * announces. A v1 evaluation that is already silent, or whose match has no
+ * live observation, announces nothing, because an intent without an observed
+ * match could never enter the post-commit fan-out.
  *
  * ## The key is the decision, the row is the truth
  *
@@ -90,8 +73,6 @@ export async function announceHallRecordBreak(
     matchId: string;
     channelId: string;
     records: readonly HallBreakPayload[];
-    /** `scout_v2_progression_notifications_enabled` for this guild. */
-    v2Enabled: boolean;
     delivery: HallAnnouncementDelivery;
     now: Date;
   },
@@ -99,19 +80,10 @@ export async function announceHallRecordBreak(
   const riotMatchId = RiotMatchIdSchema.parse(args.matchId);
   if (args.delivery.kind === "legacy-v1") {
     if (args.delivery.silent) return "silent";
+    const observation = await getObservation(tx, { matchId: riotMatchId });
+    if (observation?.deliveryMode !== "live") return "silent";
   } else if (!(await matchMayAnnounce(tx, riotMatchId))) {
     return "silent";
-  }
-
-  const outbox = await tx.hallRecordBreakOutbox.findUnique({
-    where: {
-      guildId_matchId: { guildId: args.guildId, matchId: args.matchId },
-    },
-    select: { id: true },
-  });
-  if (outbox !== null) {
-    await upsertOutbox(tx, args);
-    return "outbox";
   }
 
   const key = NotificationIntentKeySchema.parse(
@@ -127,19 +99,6 @@ export async function announceHallRecordBreak(
     requireSameAnnouncement(standing, riotMatchId, envelope);
     return "intent-standing";
   }
-  const legacyObservation =
-    args.delivery.kind === "legacy-v1" && args.v2Enabled
-      ? await getObservation(tx, { matchId: riotMatchId })
-      : null;
-  if (
-    !args.v2Enabled ||
-    (args.delivery.kind === "legacy-v1" &&
-      legacyObservation?.deliveryMode !== "live")
-  ) {
-    await upsertOutbox(tx, args);
-    return "outbox";
-  }
-
   const minted = await upsertIntent(tx, {
     matchId: riotMatchId,
     intent: {
@@ -188,31 +147,4 @@ function requireSameAnnouncement(
   throw new Error(
     `Hall record-break intent ${standing.intent.key} already stands with a different announcement than this evaluation produced for ${riotMatchId}; refusing to treat it as the same decision`,
   );
-}
-
-async function upsertOutbox(
-  tx: Db,
-  args: {
-    guildId: DiscordGuildId;
-    matchId: string;
-    channelId: string;
-    records: readonly HallBreakPayload[];
-  },
-): Promise<void> {
-  const payloadJson = JSON.stringify(args.records);
-  await tx.hallRecordBreakOutbox.upsert({
-    where: {
-      guildId_matchId: { guildId: args.guildId, matchId: args.matchId },
-    },
-    create: {
-      guildId: args.guildId,
-      matchId: args.matchId,
-      channelId: DiscordChannelIdSchema.parse(args.channelId),
-      payloadJson,
-    },
-    update: {
-      channelId: DiscordChannelIdSchema.parse(args.channelId),
-      payloadJson,
-    },
-  });
 }

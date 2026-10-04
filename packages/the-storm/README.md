@@ -15,8 +15,8 @@ from `plugin/`.
 | `plugin/dist/`                     | Assembles the shaded `TheStorm.jar` and the plugin entry point                                                         |
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
+| `plugin/bridge/`                   | `MCBridge.jar`, the agent bridge HTTP API (WorldEdit, region reads, snapshots, events); never part of `TheStorm.jar`   |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
-| `brain/`                           | Disabled, manual Mineflayer session for one account; no production sidecar or autonomous gameplay yet                  |
 | `server/`                          | The `minecraft-tsmc` server image: pinned jars, config bundle and patches (see `server/README.md`)                     |
 
 ## Commands
@@ -56,15 +56,49 @@ saplings stay ineligible across restarts through the `skills_placed_block`
 table. Block markers follow pistons, falling blocks, and Enderman movement.
 The module is enabled alongside retirement of the old mcMMO plugin.
 
-The separate `brain/` pilot remains disabled and starts only with its explicit
-`--run` command. When enabled for a supervised trial, it checks for a human
-through RCON before Microsoft authentication and again after Mineflayer spawns.
-It stays connected only during the configured 18:00–20:00 Pacific window and
-while Mineflayer's player roster includes a human. The final human's departure,
-RCON connection loss, bot disconnect, or the window deadline ends the session.
-The end deadline is a single process-local safety timeout; a future recurring
-start belongs to Temporal. See [brain/README.md](brain/README.md) for the
-credential and manual invocation contract.
+## Citizens NPCs and survival companions
+
+Upstream Citizens owns player bodies, skins and navigation for every scripted
+NPC, including guards, trainers and quest givers. Storm retains dialogue,
+schedules, combat rules and quest markers. `/stormnpc` owns Storm's commands;
+Citizens retains `/npc`. Legacy mannequin bodies are removed only after
+Citizens reconciliation succeeds. Citizens and CoreProtect jars are pinned
+and checksum verified in [server/plugins.json](server/plugins.json).
+
+The `companions` module provides Rowan, Juniper and Flint. Utility scoring,
+bounded recipe planning and incremental resource scans run locally. Their
+inventories hold real items; mining, crafting, crop replanting, eating and
+placement use native Paper operations and normal events. Shelters consume
+gathered materials and stay within 12×12×8 and 256 block changes. Crafting
+supports material-choice hand and workbench recipes; furnace cooking and
+arbitrary player automation are outside this action set.
+
+Availability requires the managed `the-storm-companions-enabled` flag,
+14:00–22:00 Pacific local time, and a real human online. Citizens entities do
+not count as humans or receive player join rewards. Companions defend against
+their attackers under ordinary PvP and claim rules. CoreProtect history and
+queue checks prevent changes to another player's recorded blocks.
+
+SQLite stores identity, inventory, vitals and construction progress. Each
+world or inventory effect records a pending journal entry before execution.
+An interrupted effect pauses that identity for operator reconciliation; it
+does not replay the effect or issue another starter kit. This does not make
+Minecraft world saves atomic with SQLite. Back up the world and Storm database
+together, and inspect both after an unclean shutdown.
+
+`/companion status` and `/companion reconcile` require
+`thestorm.companions.admin`. Nearby players can use `/companion <id> follow`,
+`stop` and `resume`. `resume` releases an ordinary stop, not a failed journal.
+The kill switch is the managed gameplay flag. Provider outages and chat budget
+exhaustion leave local survival running. Conversation uses the ordinary chat
+policy, responds only to nearby name mentions, and receives no action tools.
+Its contract and shared budget are documented in [storm-brain](../storm-brain/README.md).
+
+The Temporal core-hour schedule reconciles an already-running server and never
+wakes it. The module is installed while the managed production rollout remains
+disabled until live acceptance. Mineflayer
+is retained only as a real-client E2E dependency. `tests/e2e/harness/rcon.ts`
+contains the test client's control protocol.
 
 ## Modules
 
@@ -72,7 +106,7 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-All 21 modules ship enabled. Existing volumes must satisfy the one-time archive
+All 22 modules ship enabled. Existing volumes must satisfy the one-time archive
 contract in [server/README.md](server/README.md) before the image starts.
 
 Storm Shards award ore drops only in chunks generated after the shards module
@@ -219,6 +253,48 @@ The towns `TownRead` port exposes an alphabetical, bounded directory of town
 names with member and claim counts plus the total town count. Consumers call
 it on Paper's main thread because it snapshots the loaded towns state; it
 does not expose town membership identities or treasury data.
+
+Shared server land stays in `towns` protection, with required `SAFE`, `ARENA`
+and `PRESERVE` region profiles. Every loaded world's spawn gets a full-height
+safe region from its actual spawn position; the End arrival platform is protected
+separately. Repository-owned regions in `towns.yml` cover the larger main spawn
+and arenas. Safe regions deny all player damage, harmful potions, hostile spawns,
+fire and griefing without blocking the arena's declared gameplay allowances.
+
+`parcels.yml` declares exact block bounds, corroborated UUID owners and survey
+provenance. Holdings are separate from Town membership, Governor limits and
+treasuries. Empty owners preserve imported builds in staff custody. Permanent
+historical shops remain rent-free. Parcel owners may edit only their holding;
+the surrounding spawn's safety rules still apply. BlueMap draws exact parcel
+outlines and `/plot list` shows bounds, custody, provenance and lease terms.
+
+New rental shops use prepaid seven-day leases and a seven-day withdrawal-only
+grace period. Renewal is manual; no recurring debit exists. A durable payment
+intention and the economy's `transferOnce` ledger key recover uncertain charges.
+The managed `the-storm-shop-rentals-enabled` flag controls new admissions only.
+Renewals, expiry enforcement, mail and journal recovery continue independently.
+Each rental needs an air-only baseline above a server-owned solid foundation.
+
+After grace, the world snapshot, native inventory stock, decorative entities,
+container locks and sign-shop definitions commit before any reset. WorldEdit
+7.4.5 is a required server dependency; finite main-thread batches capture,
+restore and verify blocks while detached archive encoding runs off-thread.
+Unfinished work remains protected and resumes from its database checkpoint.
+The `mail` module exposes the public `Mail` port and `/mail`, delivering native
+item stacks with a player-data receipt before acknowledging their durable batch.
+Mail does not expire and never drops excess items when inventory space is short.
+External plugin integrations obtain published module ports through
+`TheStormPlugin.service(Class<T>)`; disabled or unordered providers fail loudly.
+
+An eviction message offers one exclusive choice: building materials plus stock,
+or an owner-bound packed chest. Right-clicking previews an empty destination,
+then `/plot confirm` rechecks permissions, Shopkeeper capacity and lock limits.
+The server reserves the whole volume and journals its preimage before writes.
+Stock, locks and shops retain their identities; old tokens cannot place twice.
+`/plot reissue <recoveryId>` replaces a lost token through mail. Staff may resume
+or roll back an unfinished placement. The Temporal reconciliation schedule uses
+the isolated mining-reset Activity queue and skips sleeping servers without
+waking them. Its RCON protocol is validated against the shared JSON contract.
 
 Town deletion commits a pending treasury payout in the same transaction as
 removing the town and its claims. The treasury then pays the former owner with a

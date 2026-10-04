@@ -1,6 +1,7 @@
 import {
   isEnabled,
   numberValue,
+  refreshFlagSnapshot,
   stringValue,
 } from "@shepherdjerred/feature-flags/index.ts";
 import {
@@ -12,6 +13,7 @@ import {
   ManagedBooleanFlagKeySchema,
   ManagedVariantFlagKeySchema,
 } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
+import { z } from "zod";
 
 /**
  * Structural mirror of `@shepherdjerred/config`'s source contract.
@@ -51,6 +53,13 @@ export type FlagSourceOptions = {
   readonly kinds: Readonly<Record<string, "boolean" | "string" | "number">>;
   readonly attributes?: Readonly<Record<string, string | number | boolean>>;
   /**
+   * Require one freshly fetched Flipt snapshot for this source's resolutions.
+   * Concurrent keys share that check. Construct a new source for each write
+   * guard; unavailable, disabled, and static providers cannot authorize writes.
+   * Invalid successful snapshots remain fatal contract failures.
+   */
+  readonly requireFreshSnapshot?: boolean;
+  /**
    * Called when the provider has no authoritative answer. Config resolution
    * still descends to its declared fallback, while consumers that advance a
    * durable cursor can pause until the provider recovers.
@@ -59,6 +68,23 @@ export type FlagSourceOptions = {
 };
 
 const FATAL_SOURCE_ERROR_NAME = "ConfigSourceFatalError";
+const ManagedSourceKeySchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("boolean"), flag: ManagedBooleanFlagKeySchema }),
+  z.object({
+    kind: z.enum(["string", "number"]),
+    flag: ManagedVariantFlagKeySchema,
+  }),
+]);
+
+async function freshSnapshotOrContractError(): Promise<boolean> {
+  try {
+    return await refreshFlagSnapshot();
+  } catch {
+    const error = new Error("Fresh flag snapshot contract invalid");
+    error.name = FATAL_SOURCE_ERROR_NAME;
+    throw error;
+  }
+}
 
 function valueOrAbsent<T>(
   result: FlagResult<T>,
@@ -91,6 +117,7 @@ function valueOrAbsent<T>(
 export function createFlagConfigSource(
   options: FlagSourceOptions,
 ): FlagConfigSource {
+  let freshSnapshot: Promise<boolean> | undefined;
   return {
     name: "flag",
     get: async (
@@ -110,44 +137,40 @@ export function createFlagConfigSource(
       };
 
       try {
-        switch (kind) {
+        const parsed = ManagedSourceKeySchema.safeParse({
+          kind,
+          flag: names.flag,
+        });
+        if (!parsed.success) {
+          throw new FlagNotFoundError(
+            names.flag,
+            `flag "${names.flag}" is not defined for kind "${kind}" in managed-flag-inventory.json`,
+          );
+        }
+        if (options.requireFreshSnapshot === true) {
+          freshSnapshot ??= freshSnapshotOrContractError();
+          if (!(await freshSnapshot)) {
+            options.onUnavailable?.(names.flag);
+            return undefined;
+          }
+        }
+        switch (parsed.data.kind) {
           case "boolean": {
-            const parsed = ManagedBooleanFlagKeySchema.safeParse(names.flag);
-            if (!parsed.success) {
-              throw new FlagNotFoundError(
-                names.flag,
-                `flag "${names.flag}" is not defined in managed-flag-inventory.json`,
-              );
-            }
-            const result = await isEnabled(parsed.data, {
+            const result = await isEnabled(parsed.data.flag, {
               default: false,
               ...evaluation,
             });
             return valueOrAbsent(result, names.flag, options.onUnavailable);
           }
           case "string": {
-            const parsed = ManagedVariantFlagKeySchema.safeParse(names.flag);
-            if (!parsed.success) {
-              throw new FlagNotFoundError(
-                names.flag,
-                `flag "${names.flag}" is not defined in managed-flag-inventory.json`,
-              );
-            }
-            const result = await stringValue(parsed.data, {
+            const result = await stringValue(parsed.data.flag, {
               default: "",
               ...evaluation,
             });
             return valueOrAbsent(result, names.flag, options.onUnavailable);
           }
           case "number": {
-            const parsed = ManagedVariantFlagKeySchema.safeParse(names.flag);
-            if (!parsed.success) {
-              throw new FlagNotFoundError(
-                names.flag,
-                `flag "${names.flag}" is not defined in managed-flag-inventory.json`,
-              );
-            }
-            const result = await numberValue(parsed.data, {
+            const result = await numberValue(parsed.data.flag, {
               default: 0,
               ...evaluation,
             });

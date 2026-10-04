@@ -420,6 +420,26 @@
       ]
     },
     {
+      "package": "@shepherdjerred/unix-socket-daemon",
+      "directory": "packages/unix-socket-daemon",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/mc-harness",
+      "directory": "packages/mc-harness",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/monarch",
       "directory": "packages/monarch",
       "steps": [
@@ -624,6 +644,11 @@
       ]
     },
     {
+      "package": "@shepherdjerred/storm-forum",
+      "directory": "packages/storm-forum",
+      "steps": [{ "runner": "vitest", "args": ["test/"] }]
+    },
+    {
       "package": "@shepherdjerred/storm-brain",
       "directory": "packages/storm-brain",
       "steps": [
@@ -790,6 +815,7 @@
             "src/workflows/agent-task.test.ts",
             "src/config/imessage.test.ts",
             "src/config/photon.test.ts",
+            "src/config/woodpecker-retention.test.ts",
             "src/worker-config.test.ts",
             "scripts/check-workflow-tracing-safety.test.ts",
             "scripts/cli-arguments.test.ts"
@@ -849,6 +875,7 @@
             "test/screenshot",
             "test/history",
             "test/discord",
+            "test/mc",
             "scripts",
             "test-integration/catalog.integration.test.ts"
           ]
@@ -972,6 +999,10 @@
         {
           "runner": "gradle",
           "args": ["-p", "plugin", "test"]
+        },
+        {
+          "runner": "vitest",
+          "args": ["tests/rcon.test.ts"]
         }
       ],
       "excludedSuites": [
@@ -981,17 +1012,7 @@
         },
         {
           "path": "tests/full",
-          "reason": "All 21 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
-        }
-      ]
-    },
-    {
-      "package": "@shepherdjerred/the-storm-brain",
-      "directory": "packages/the-storm/brain",
-      "steps": [
-        {
-          "runner": "vitest",
-          "args": ["src"]
+          "reason": "All 22 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
         }
       ]
     }

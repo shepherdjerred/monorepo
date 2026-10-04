@@ -146,6 +146,10 @@ function playbackSetup(actors: PlaybackActors) {
       consumeSeek: assign({ resumeSeekSeconds: 0 }),
       // The current item finished, was skipped, or playback stopped: its recovery budget resets.
       resetCrashRetries: assign({ crashRetries: 0 }),
+      completeStream: assign({
+        crashRetries: 0,
+        completedStreams: ({ context }) => context.completedStreams + 1,
+      }),
       // Clear ALL crash/stall recovery state (resume seek + retry budget). Applied to every
       // non-success exit from `resolving` so a recovery re-resolve that fails via ANY path
       // (reject, wedge timeout, SKIP, STOP) can't leak the crashed item's seek offset or escalated
@@ -362,7 +366,7 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             seekSeconds: context.resumeSeekSeconds,
             pipelineMode: pipelineForAttempt(context.crashRetries),
           }),
-          onDone: { target: "advance", actions: "resetCrashRetries" },
+          onDone: { target: "advance", actions: "completeStream" },
           onError: [
             // Re-resolve a crashed item at its last position while retry budget remains.
             {
@@ -440,14 +444,12 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             target: "skipped",
             actions: assign(({ context, event }) => {
               const current = mustCurrent(context);
+              const { preResolved: _resolved, ...queued } = current;
               return {
                 queue: [
                   {
+                    ...queued,
                     source: withSubtitles(current.source, event.subtitles),
-                    requesterId: current.requesterId,
-                    ...(current.requestId === undefined
-                      ? {}
-                      : { requestId: current.requestId }),
                   },
                   ...context.queue,
                 ],

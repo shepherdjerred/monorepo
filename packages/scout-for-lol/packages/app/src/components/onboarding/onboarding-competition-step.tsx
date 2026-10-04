@@ -1,47 +1,12 @@
-import { Loaded } from "@shepherdjerred/loaded";
-import { useRef, useState } from "react";
-import { useSelector } from "@tanstack/react-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { FormActions } from "@scout-for-lol/design-system/components/forms/field";
-import { CompetitionBuilderV2 } from "#src/components/competition/competition-builder-v2.tsx";
-import {
-  CompetitionFormFields,
-  EMPTY_STATE,
-  competitionFormOptions,
-  type FormState,
-} from "#src/components/competition/competition-form-fields.tsx";
+import { CompetitionBuilder } from "#src/components/competition/competition-builder.tsx";
 import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
-import {
-  focusFirstInvalid,
-  FormPendingStatus,
-  handleFormReset,
-  handleFormSubmit,
-  ServerFormError,
-  submitThenChangeValidation,
-  useScoutForm,
-} from "#src/components/semantic-form.tsx";
-import {
-  UnsavedFormDialog,
-  useUnsavedForm,
-  useUnsavedFormTransition,
-} from "#src/hooks/use-unsaved-form.tsx";
-import { analyticsMeta } from "#src/lib/analytics.ts";
-import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
-import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
-import { COMPETITION_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
-import { useTRPC } from "#src/lib/query/trpc.ts";
+import { useUnsavedFormTransition } from "#src/hooks/use-unsaved-form.tsx";
 
 const TITLE = "Start a competition";
 const DESCRIPTION =
   "A competition is a time-boxed race where members rank on one metric. Tweak the example and create.";
-
-function initialState(exampleId: string, channelId: string): FormState {
-  const example =
-    COMPETITION_EXAMPLES.find((candidate) => candidate.id === exampleId) ??
-    COMPETITION_EXAMPLES[0];
-  return example?.build(channelId) ?? EMPTY_STATE;
-}
 
 export function OnboardingCompetitionStep(props: {
   guildId: string;
@@ -51,121 +16,11 @@ export function OnboardingCompetitionStep(props: {
   onBack: () => void;
   onSkip: () => void;
 }) {
-  const trpc = useTRPC();
-  const initialChannel = props.channels[0]?.id ?? "";
-  const formElement = useRef<HTMLFormElement>(null);
-  const [error, setError] = useState<string | null>(null);
   const [builderDirty, setBuilderDirty] = useState(false);
-  const builderQuery = useQuery(
-    trpc.competition.builderCapabilities.queryOptions({
-      guildId: props.guildId,
-    }),
-  );
-
-  const mutation = useMutation(
-    trpc.competition.create.mutationOptions({
-      meta: analyticsMeta("competition_created"),
-      onSuccess: (created) => {
-        form.reset();
-        props.onCreated(created.id);
-      },
-      onError: (err) => {
-        setError(err.message);
-      },
-    }),
-  );
-
-  const form = useScoutForm({
-    ...competitionFormOptions,
-    defaultValues: initialState(props.exampleId ?? "", initialChannel),
-    validationLogic: submitThenChangeValidation,
-    validators: { onDynamic: CompetitionFormValueSchema },
-    onSubmit: ({ value }) => {
-      setError(null);
-      const parsed = CompetitionFormValueSchema.parse(value);
-      const validated = validateForm(parsed);
-      if (!validated.ok) throw new Error(validated.message);
-      mutation.mutate({
-        guildId: props.guildId,
-        channelId: parsed.channelId,
-        title: parsed.title,
-        description: parsed.description,
-        visibility: parsed.visibility,
-        maxParticipants: validated.maxParticipants,
-        gameVariant: parsed.gameVariant,
-        dates: validated.dates,
-        criteria: validated.criteria,
-        analysisTimezone: parsed.analysisTimezone,
-      });
-    },
-    onSubmitInvalid: () => {
-      focusFirstInvalid(formElement.current);
-    },
-  });
-  const isDirty = useSelector(form.store, (state) => state.isDirty);
-  const builder = Loaded.fromQuery(builderQuery, ["builderCapabilities"]);
-  const builderV2Enabled =
-    Loaded.getOrElse(builder, undefined)?.builderV2Enabled === true;
-  const transition = useUnsavedFormTransition(
-    builderV2Enabled ? builderDirty : isDirty,
-    mutation.isPending,
-  );
-  const blocker = useUnsavedForm(
-    isDirty,
-    mutation.isPending,
-    transition.isNavigationAllowed,
-  );
-
-  if (builder.status === "loading") {
-    return <p className="text-sm text-scout-subtle">Loading builder…</p>;
-  }
-  if (builder.status === "error") {
-    return (
-      <p className="text-sm text-scout-danger">
-        {Loaded.messageOf(builder.errors[0].error)}
-      </p>
-    );
-  }
-
-  if (builderV2Enabled) {
-    return (
-      <OnboardingStepFrame
-        step="build-competition"
-        title={TITLE}
-        description={DESCRIPTION}
-        hasChannels={props.channels.length > 0}
-        onBack={() => {
-          transition.request(props.onBack);
-        }}
-        onSkip={() => {
-          transition.request(props.onSkip);
-        }}
-      >
-        <div className="space-y-3">
-          <CompetitionBuilderV2
-            guildId={props.guildId}
-            channels={props.channels}
-            {...(props.exampleId === null
-              ? {}
-              : { initialScenarioId: props.exampleId })}
-            onCreated={props.onCreated}
-            onDirtyChange={setBuilderDirty}
-            isNavigationAllowed={transition.isNavigationAllowed}
-          />
-          <Button
-            variant="ghost"
-            type="button"
-            onClick={() => {
-              transition.request(props.onBack);
-            }}
-          >
-            ← Back
-          </Button>
-          {transition.dialog}
-        </div>
-      </OnboardingStepFrame>
-    );
-  }
+  const [creating, setCreating] = useState(false);
+  // While the create request is in flight, step navigation is refused: the
+  // competition may already exist, and leaving now would orphan it.
+  const transition = useUnsavedFormTransition(builderDirty, creating);
 
   return (
     <OnboardingStepFrame
@@ -181,55 +36,27 @@ export function OnboardingCompetitionStep(props: {
       }}
     >
       <div className="space-y-3">
-        <form.AppForm>
-          <form
-            ref={formElement}
-            className="space-y-5"
-            aria-busy={mutation.isPending}
-            onSubmit={(event) => {
-              handleFormSubmit(event, () => form.handleSubmit());
-            }}
-            onReset={(event) => {
-              handleFormReset(event, () => {
-                form.reset();
-              });
-              setError(null);
-            }}
-          >
-            <fieldset
-              disabled={mutation.isPending}
-              className="m-0 border-0 p-0"
-            >
-              <CompetitionFormFields
-                form={form}
-                locked={false}
-                channels={props.channels}
-              />
-            </fieldset>
-            <ServerFormError error={error} />
-            <FormActions>
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() => {
-                  transition.request(props.onBack);
-                }}
-              >
-                ← Back
-              </Button>
-              <Button type="reset" variant="outline">
-                Reset
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Creating…" : "Create competition"}
-              </Button>
-            </FormActions>
-            <FormPendingStatus pending={mutation.isPending}>
-              Creating competition…
-            </FormPendingStatus>
-          </form>
-        </form.AppForm>
-        <UnsavedFormDialog blocker={blocker} />
+        <CompetitionBuilder
+          guildId={props.guildId}
+          channels={props.channels}
+          {...(props.exampleId === null
+            ? {}
+            : { initialScenarioId: props.exampleId })}
+          onCreated={props.onCreated}
+          onDirtyChange={setBuilderDirty}
+          onPendingChange={setCreating}
+          isNavigationAllowed={transition.isNavigationAllowed}
+        />
+        <Button
+          variant="ghost"
+          type="button"
+          disabled={creating}
+          onClick={() => {
+            transition.request(props.onBack);
+          }}
+        >
+          ← Back
+        </Button>
         {transition.dialog}
       </div>
     </OnboardingStepFrame>

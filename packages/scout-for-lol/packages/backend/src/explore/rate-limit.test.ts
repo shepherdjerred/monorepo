@@ -63,27 +63,26 @@ function exhaustMinute(id: DiscordAccountId, at: number): void {
 }
 
 describe("explore rate limit", () => {
-  test("one user can reserve concurrent turns in distinct conversations", () => {
+  test("one user has one active turn across every conversation", () => {
     const first = tryStartExploreTurn({ userId }, now);
     if (!first.allowed) {
       throw new Error("expected the first turn to be allowed");
     }
 
     const second = tryStartExploreTurn({ userId }, now);
-    if (!second.allowed) {
-      throw new Error("expected the second turn to be allowed");
-    }
+    expect(second.allowed).toBe(false);
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(true);
 
     first.finish();
-    expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(true);
-    second.finish();
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
+    const next = tryStartExploreTurn({ userId }, now);
+    expect(next.allowed).toBe(true);
+    if (next.allowed) next.finish();
   });
 
   test("conversation claims serialize turns across adapters", async () => {
     const first = tryStartExploreTurn({ userId }, now);
-    const second = tryStartExploreTurn({ userId }, now);
+    const second = tryStartExploreTurn({ userId: otherUserId }, now);
     if (!first.allowed || !second.allowed) {
       throw new Error("expected both turn slots to be allowed");
     }

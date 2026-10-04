@@ -71,8 +71,18 @@ export class WebAuth {
     }
   }
 
-  start(): Response {
-    const payload = String(Date.now() + 5 * 60 * 1000) + "." + nonce();
+  start(request?: Request): Response {
+    const returnTo = this.returnTarget(
+      request === undefined
+        ? "/"
+        : (new URL(request.url).searchParams.get("returnTo") ?? "/"),
+    );
+    const payload =
+      String(Date.now() + 5 * 60 * 1000) +
+      "." +
+      nonce() +
+      "~" +
+      Buffer.from(returnTo).toString("base64url");
     const state = payload + "." + this.signState(payload);
     const target = new URL("https://discord.com/oauth2/authorize");
     target.search = new URLSearchParams({
@@ -148,7 +158,12 @@ export class WebAuth {
       username: user.username,
       guildIds: guilds.map((guild) => guild.id),
     });
-    return this.redirect("/", [
+    const encoded = state.split(".")[1]?.split("~")[1];
+    const returnTo =
+      encoded === undefined
+        ? "/"
+        : this.returnTarget(Buffer.from(encoded, "base64url").toString());
+    return this.redirect(returnTo, [
       this.cookie(STATE_COOKIE, "", 0, true),
       this.cookie(COOKIE_NAME, created.token, sessionLifetimeSeconds, true),
       this.cookie(
@@ -171,6 +186,21 @@ export class WebAuth {
 
   private callbackUrl(): string {
     return this.deps.bootstrap.publicOrigin + "/api/auth/discord/callback";
+  }
+  private returnTarget(value: string): string {
+    if (
+      value.length > 1800 ||
+      !value.startsWith("/") ||
+      value.startsWith("//") ||
+      value.includes("\\") ||
+      /\p{Cc}/u.test(value)
+    )
+      return "/";
+    const target = new URL(value, this.deps.bootstrap.publicOrigin);
+    return target.origin === this.deps.bootstrap.publicOrigin &&
+      ["/", "/plex", "/search", "/sports", "/history"].includes(target.pathname)
+      ? target.pathname + target.search + target.hash
+      : "/";
   }
   private signState(payload: string): string {
     return createHmac("sha256", this.stateSecret).update(payload).digest("hex");

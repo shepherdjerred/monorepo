@@ -19,6 +19,7 @@ export type ConsumerNavigationAvailability = {
    * every non-operator sees.
    */
   operationsAvailable?: boolean;
+  inboxAvailable?: boolean;
 };
 
 export function consumerNavigationItems(
@@ -47,6 +48,10 @@ export function consumerNavigationItems(
     ...(input.operationsAvailable === true
       ? [{ label: "Operations", to: "/operations/matches" }]
       : []),
+    ...(input.inboxAvailable === true
+      ? [{ label: "Support inbox", to: "/operations/inbox" }]
+      : []),
+    { label: "Help and feedback", to: "/feedback" },
   ];
 }
 

@@ -17,6 +17,7 @@ hold only scoped invariants that agents must keep in context.
 | [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
 | [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                    |
+| [storm-forum](storm-forum/)                                     | XenForo runtime, owned community portal, release configuration and Activity worker       |
 
 ## Discord streaming
 
@@ -79,13 +80,14 @@ hold only scoped invariants that agents must keep in context.
 | [better-skill-capped](better-skill-capped/)     | Web client rebuilding Skill Capped's catalog UI              |
 | [cooklang-for-obsidian](cooklang-for-obsidian/) | Obsidian plugin rendering `.cook` recipes with rich previews |
 | [the-storm](the-storm/)                         | Paper plugin for The Storm (ts-mc.net) Minecraft server      |
-| [the-storm-brain](the-storm/brain/)             | Opt-in Mineflayer companion pilot for The Storm              |
 
 ## Infrastructure & tooling
 
 | Package                                                   | Description                                                                    |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                             |
+| [mc-harness](mc-harness/)                                 | Minecraft sandboxes, MCBridge client, and the daemon behind `toolkit mc`       |
+| [unix-socket-daemon](unix-socket-daemon/)                 | Shared unix-socket HTTP daemon scaffolding (serve, idle TTL, PID identity)     |
 | [hkctl](hkctl/)                                           | Development-signed Apple HomeKit command-line app (Mac Catalyst)               |
 | [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                         |
 | [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …)       |

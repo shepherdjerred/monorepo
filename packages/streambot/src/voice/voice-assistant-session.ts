@@ -60,7 +60,9 @@ export type VoiceAssistantSessionOptions = {
   readonly guildId?: string;
   readonly channelId?: string;
   readonly commands: PlaybackCommandServiceDeps;
-  readonly commandsForUser?: (userId: string) => PlaybackCommandServiceDeps;
+  readonly commandsForUser?: (
+    userId: string,
+  ) => PlaybackCommandServiceDeps | Promise<PlaybackCommandServiceDeps>;
   readonly afterTurn?: (userId: string) => void;
   readonly peerUserbotIds?: ReadonlySet<string>;
   readonly announce: (message: string) => Promise<void>;
@@ -160,7 +162,9 @@ export class VoiceAssistantSession {
         const turnService =
           options.commandsForUser === undefined
             ? service
-            : new PlaybackCommandService(options.commandsForUser(turn.userId));
+            : new PlaybackCommandService(
+                await options.commandsForUser(turn.userId),
+              );
         await turn.attempt.run(async () => {
           this.telemetry.turnStarted();
           try {

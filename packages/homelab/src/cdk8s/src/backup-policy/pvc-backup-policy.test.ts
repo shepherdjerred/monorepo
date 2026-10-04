@@ -78,18 +78,18 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 50 included and 23 excluded PVCs without duplicates", () => {
+  it("classifies 53 included and 27 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(73);
-    expect(new Set(keys).size).toBe(73);
+    expect(keys).toHaveLength(80);
+    expect(new Set(keys).size).toBe(80);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(50);
+    ).toHaveLength(53);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(23);
+    ).toHaveLength(27);
   });
 
   it("classifies every synthesized and operator-managed PVC", async () => {
@@ -160,9 +160,10 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
-    // Includes PVC backup, ArgoCD, CI pod, and The Storm's server stop guards.
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(4);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(4);
+    // Includes PVC backup, ArgoCD, CI pod, The Storm's server stop, and
+    // mc-harness sandbox pod guards.
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(5);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(5);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {

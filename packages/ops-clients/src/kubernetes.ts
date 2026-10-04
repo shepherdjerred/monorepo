@@ -281,6 +281,52 @@ export type VeleroScheduleStatus = z.infer<typeof BackupMonitoringSchema> & {
   paused: boolean;
 };
 
+const VeleroBackupSchema = z.object({
+  metadata: z.object({
+    name: z.string(),
+    namespace: z.string(),
+    creationTimestamp: z.iso.datetime({ offset: true }),
+    labels: z.record(z.string(), z.string()).default({}),
+  }),
+  status: z
+    .object({
+      // Newly created backups may not have been observed by the controller yet.
+      phase: z
+        .enum([
+          "New",
+          "Queued",
+          "ReadyToStart",
+          "FailedValidation",
+          "InProgress",
+          "WaitingForPluginOperations",
+          "WaitingForPluginOperationsPartiallyFailed",
+          "Finalizing",
+          "FinalizingPartiallyFailed",
+          "Completed",
+          "PartiallyFailed",
+          "Failed",
+          "Deleting",
+        ])
+        .optional(),
+      startTimestamp: z.iso.datetime({ offset: true }).nullable().optional(),
+      completionTimestamp: z.iso
+        .datetime({ offset: true })
+        .nullable()
+        .optional(),
+    })
+    .optional(),
+});
+
+export type VeleroBackupStatus = {
+  name: string;
+  namespace: string;
+  schedule: string | undefined;
+  createdAt: string;
+  startedAt: string | undefined;
+  completedAt: string | undefined;
+  phase: NonNullable<z.infer<typeof VeleroBackupSchema>["status"]>["phase"];
+};
+
 /**
  * Read-only Kubernetes API client for nodes, pods, and ArgoCD Applications.
  * Callers inject the token provider and `fetch`, so the in-cluster CA and
@@ -401,5 +447,21 @@ export class KubernetesClient {
         ...monitoring.data,
       };
     });
+  }
+
+  async listVeleroBackups(namespace = "velero"): Promise<VeleroBackupStatus[]> {
+    const backups = await this.#list(
+      `/apis/velero.io/v1/namespaces/${encodeURIComponent(namespace)}/backups`,
+      VeleroBackupSchema,
+    );
+    return backups.map(({ metadata, status }) => ({
+      name: metadata.name,
+      namespace: metadata.namespace,
+      schedule: metadata.labels["velero.io/schedule-name"],
+      createdAt: metadata.creationTimestamp,
+      startedAt: status?.startTimestamp ?? undefined,
+      completedAt: status?.completionTimestamp ?? undefined,
+      phase: status?.phase,
+    }));
   }
 }

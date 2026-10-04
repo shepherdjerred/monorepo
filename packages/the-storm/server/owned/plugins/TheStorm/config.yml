@@ -5,6 +5,7 @@
 modules:
   economy: true
   messages: true
+  mail: true
   chat: true
   discord: true
   essentials: true
@@ -24,3 +25,4 @@ modules:
   world: true
   tickets: true
   agent: true
+  companions: true

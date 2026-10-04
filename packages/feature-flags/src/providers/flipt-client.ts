@@ -39,6 +39,7 @@ export type FliptEvaluationClient = {
   evaluateBoolean: (request: FliptEvaluationRequest) => FliptBooleanResponse;
   evaluateVariant: (request: FliptEvaluationRequest) => FliptVariantResponse;
   listFlags: () => readonly FliptFlag[];
+  refresh: () => Promise<boolean>;
   close: () => void;
 };
 
@@ -51,13 +52,12 @@ export type FliptEvaluationClientOptions = {
 };
 
 /**
- * `ErrorStrategy.Fallback` at v0.5.0. Passing the literal avoids importing the
- * vendor enum's broken declaration; `assertFallbackStrategy` checks the value
- * still matches so an upstream rename fails loudly rather than silently
- * selecting Fail, which would turn a transient refresh error into a mass flag
- * flip.
+ * `ErrorStrategy.Fail` at v0.5.0 propagates explicit refresh failures while
+ * evaluation keeps reading the last good engine snapshot. The provider catches
+ * background refresh errors; only opt-in fresh-snapshot callers require success.
+ * The literal avoids importing the vendor enum's broken declarations.
  */
-const ERROR_STRATEGY_FALLBACK = "fallback";
+const ERROR_STRATEGY_FAIL = "fail";
 
 /**
  * Responses arrive as `unknown` because they come back through
@@ -117,12 +117,12 @@ function methodOf(source: unknown, name: string, owner: string): ClientMethod {
     Reflect.apply(candidate, source, args);
 }
 
-function assertFallbackStrategy(vendorModule: unknown): void {
+function assertFailStrategy(vendorModule: unknown): void {
   const strategies = memberOf(vendorModule, "ErrorStrategy", "flipt module");
-  const fallback = memberOf(strategies, "Fallback", "ErrorStrategy");
-  if (fallback !== ERROR_STRATEGY_FALLBACK) {
+  const fail = memberOf(strategies, "Fail", "ErrorStrategy");
+  if (fail !== ERROR_STRATEGY_FAIL) {
     throw new TypeError(
-      `@flipt-io/flipt-client-js changed ErrorStrategy.Fallback from "${ERROR_STRATEGY_FALLBACK}" to ${JSON.stringify(fallback)}. Refusing to start: the wrong strategy turns a transient refresh failure into a mass flag flip.`,
+      "@flipt-io/flipt-client-js changed ErrorStrategy.Fail; refusing to hide refresh failures",
     );
   }
 }
@@ -137,7 +137,7 @@ export async function createFliptEvaluationClient(
   options: FliptEvaluationClientOptions,
 ): Promise<FliptEvaluationClient> {
   const vendorModule: unknown = await import("@flipt-io/flipt-client-js/node");
-  assertFallbackStrategy(vendorModule);
+  assertFailStrategy(vendorModule);
 
   const fliptClient = memberOf(vendorModule, "FliptClient", "flipt module");
   const init = methodOf(fliptClient, "init", "FliptClient");
@@ -147,26 +147,29 @@ export async function createFliptEvaluationClient(
     namespace: options.namespace,
     environment: options.environment,
     updateInterval: options.updateInterval,
-    // A failed *refresh* keeps the last good snapshot instead of throwing.
-    // Reverting to defaults during a transient outage would flip every flag at
-    // once — far worse than serving values a few minutes stale.
-    errorStrategy: ERROR_STRATEGY_FALLBACK,
+    errorStrategy: ERROR_STRATEGY_FAIL,
     fetcher: options.fetcher,
   });
 
-  const evaluateBoolean = methodOf(client, "evaluateBoolean", "FliptClient");
-  const evaluateVariant = methodOf(client, "evaluateVariant", "FliptClient");
-  const listFlags = methodOf(client, "listFlags", "FliptClient");
   const close = methodOf(client, "close", "FliptClient");
-
-  return {
-    evaluateBoolean: (request) =>
-      BooleanResponseSchema.parse(evaluateBoolean(request)),
-    evaluateVariant: (request) =>
-      VariantResponseSchema.parse(evaluateVariant(request)),
-    listFlags: () => FlagListSchema.parse(listFlags()),
-    close: () => {
-      close();
-    },
-  };
+  try {
+    const evaluateBoolean = methodOf(client, "evaluateBoolean", "FliptClient");
+    const evaluateVariant = methodOf(client, "evaluateVariant", "FliptClient");
+    const listFlags = methodOf(client, "listFlags", "FliptClient");
+    const refresh = methodOf(client, "refresh", "FliptClient");
+    return {
+      evaluateBoolean: (request) =>
+        BooleanResponseSchema.parse(evaluateBoolean(request)),
+      evaluateVariant: (request) =>
+        VariantResponseSchema.parse(evaluateVariant(request)),
+      listFlags: () => FlagListSchema.parse(listFlags()),
+      refresh: async () => z.boolean().parse(await refresh()),
+      close: () => {
+        close();
+      },
+    };
+  } catch (error) {
+    close();
+    throw error;
+  }
 }

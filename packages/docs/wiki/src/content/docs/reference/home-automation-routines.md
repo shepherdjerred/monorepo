@@ -8,6 +8,23 @@ sidebar:
 Parameters for the presence-driven and wall-clock routines. Source:
 [`src/workflows/ha/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/temporal/src/workflows/ha).
 
+## Pet-care alerts
+
+The event bridge signals the singleton `petCareAlerts` workflow for changes to
+the raw pet-care sensors. Temporal applies these holds and delivers each
+incident to Home Assistant, Jerred’s iPhone, and Alertmanager.
+
+| Sensor condition             | Hold   |
+| ---------------------------- | ------ |
+| Litter-Robot problem         | 5 min  |
+| Litter-Robot stalled         | 45 min |
+| Either PetLibro feeder issue | 5 min  |
+| Fountain water below 650 mL  | 15 min |
+| Fountain operation problem   | 5 min  |
+
+Only a confirmed `off` state resolves an incident. Unknown or unavailable
+state cancels a pending hold and preserves an active incident.
+
 ## Presence routines
 
 | Routine          | Trigger             | Settle       | Presence guard                                | Actions                                                                      |

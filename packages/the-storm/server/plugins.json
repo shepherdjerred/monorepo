@@ -29,6 +29,13 @@
   ],
   "plugins": [
     {
+      "name": "Citizens",
+      "version": "2.0.44-b4256",
+      "url": "https://ci.citizensnpcs.co/job/Citizens2/4256/artifact/dist/target/Citizens-2.0.44-b4256.jar",
+      "sha256": "d1f02151fd7c1ccd0b8d317249ea9cf60039711b4e3317bd6641a385878946c6",
+      "file": "Citizens-2.0.44-b4256.jar"
+    },
+    {
       "name": "BlueMap",
       "version": "5.27",
       "url": "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.27/bluemap-5.27-paper.jar",

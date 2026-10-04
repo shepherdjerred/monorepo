@@ -81,6 +81,7 @@ public final class WindmillMerchant implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     arrive(
         event.getPlayer(),
         requireNonNull(event.getPlayer().getLocation(), "joining player location"));

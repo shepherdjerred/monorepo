@@ -318,6 +318,8 @@ export async function appendExploreAnswer(
     conversationId: string;
     parentMessageId: string;
     answer: ExploreAnswer;
+    generation?: { model: string; reasoningEffort: "high" };
+    inlineEntities?: NonNullable<ExploreMessage["inlineEntities"]>;
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
     matchCards?: ExploreMatchCard[] | undefined;
@@ -345,6 +347,14 @@ export async function appendExploreAnswer(
       parentId: input.parentMessageId,
       role: "assistant",
       content: input.answer.answer,
+      generation:
+        input.generation === undefined
+          ? null
+          : JSON.stringify(input.generation),
+      inlineEntities:
+        input.inlineEntities === undefined
+          ? null
+          : JSON.stringify(input.inlineEntities),
       spokenContent: input.answer.spokenAnswer ?? null,
       queryText: input.answer.queryText,
       caveats: JSON.stringify(input.answer.caveats),

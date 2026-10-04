@@ -18,6 +18,7 @@ public final class TabListListener implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     event.getPlayer().sendPlayerListHeaderAndFooter(header, footer);
   }
 }

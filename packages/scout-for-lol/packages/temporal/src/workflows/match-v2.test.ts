@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { WorkflowClient } from "@temporalio/client";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
@@ -91,18 +92,24 @@ async function processMatch(
 }
 
 async function discover(workflowId: string): Promise<unknown> {
-  return await harness
-    .client()
-    .workflow.execute(scoutPostMatchDiscoveryV2Workflow, {
-      taskQueue: "scout-dev",
-      workflowId,
-      args: [
-        scoutPostMatchDiscoveryV2InputCodec.serialize({
-          stage,
-          trigger: "schedule",
-        }),
-      ],
-    });
+  const handle = await startDiscovery(workflowId);
+  return await handle.result();
+}
+
+function startDiscovery(
+  workflowId: string,
+  client: WorkflowClient = harness.client().workflow,
+) {
+  return client.start(scoutPostMatchDiscoveryV2Workflow, {
+    taskQueue: "scout-dev",
+    workflowId,
+    args: [
+      scoutPostMatchDiscoveryV2InputCodec.serialize({
+        stage,
+        trigger: "schedule",
+      }),
+    ],
+  });
 }
 
 /** A scan of one live match, with the claim maintenance closes it by. */
@@ -793,10 +800,14 @@ describe("the V2 post-match poll's ownership", () => {
     const store = createScoutV2MatchStore();
     const childReached = Promise.withResolvers<true>();
     const releaseChild = Promise.withResolvers<true>();
+    const operatorClaim = Promise.withResolvers<"claimed" | "held">();
+    let discoveryCount = 0;
     await harness.startWorkers({
       ...scoutV2MatchActivityStubs(store),
       discoverPostMatchIdsV2: () => {
         const claim = claimScoutV2Poll(row);
+        discoveryCount += 1;
+        if (discoveryCount === 2) operatorClaim.resolve(claim.outcome);
         return claim.outcome === "held"
           ? { outcome: "skipped" }
           : {
@@ -829,16 +840,36 @@ describe("the V2 post-match poll's ownership", () => {
       },
     });
 
-    const scheduled = discover("post-match-discovery-overlap-scheduled");
+    // Concurrent result waits must not each unlock the test server's global
+    // clock. Keep this overlap on real time while the child Activity is held.
+    const client = new WorkflowClient({
+      connection: harness.client().connection,
+      namespace: harness.client().options.namespace,
+    });
+    const scheduled = await startDiscovery(
+      "post-match-discovery-overlap-scheduled",
+      client,
+    );
     await childReached.promise;
-    const operator = await discover("post-match-discovery-overlap-operator");
+    const operator = await startDiscovery(
+      "post-match-discovery-overlap-operator",
+      client,
+    );
+    const operatorOutcome = await operatorClaim.promise;
     releaseChild.resolve(true);
-    await scheduled;
+    const [scheduledResult, operatorResult] = await Promise.all([
+      scheduled.result(),
+      operator.result(),
+    ]);
 
     // The operator run found the poll held, so it opened nothing and closed
     // nothing.
-    expect(operator).toMatchObject({
+    expect(operatorOutcome).toBe("held");
+    expect(operatorResult).toMatchObject({
       data: { status: "no-op", discovered: 0, childrenStarted: 0 },
+    });
+    expect(scheduledResult).toMatchObject({
+      data: { status: "completed", discovered: 1, childrenStarted: 1 },
     });
     expect(row.claims).toBe(1);
     // Exactly one close, naming the poll the scheduled run claimed.

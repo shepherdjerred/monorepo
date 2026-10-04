@@ -1,12 +1,13 @@
 import { Check, CircleStop, LoaderCircle, X } from "lucide-react";
+import { z } from "zod";
 import type {
   ExploreTraceDetails,
   ExploreTraceEntry,
-  ExploreTraceRawValue,
   ExploreTraceStatus,
 } from "@scout-for-lol/data";
 import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import { formatDuration } from "#src/lib/format/format-duration.ts";
+import { ExplorePayloadViewer } from "#src/components/explore/inspection/explore-payload-viewer.tsx";
 
 export function ExploreToolTrace(props: {
   trace: ExploreTraceEntry[];
@@ -37,7 +38,10 @@ function ToolStep(props: { entry: ExploreTraceEntry; showRaw: boolean }) {
         <StatusIcon status={entry.status} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-semibold">{toolLabel(entry.toolName)}</span>
+            <span className="font-semibold">
+              {toolLabel(entry.toolName)}
+              {skillName(entry)}
+            </span>
             <span className="text-scout-subtle">
               {statusLabel(entry.status)}
               {entry.durationMs === null
@@ -59,20 +63,72 @@ function ToolStep(props: { entry: ExploreTraceEntry; showRaw: boolean }) {
         (entry.rawInput !== null || entry.rawOutput !== null) && (
           <details className="mt-3 border-t border-scout-border pt-2">
             <summary className="cursor-pointer font-medium text-scout-subtle">
-              Raw JSON
+              Inputs and outputs
             </summary>
             <div className="mt-2 space-y-3">
               {entry.rawInput !== null && (
-                <RawPayload label="Input" payload={entry.rawInput} />
+                <ExplorePayloadViewer
+                  label="Input"
+                  toolCallId={entry.toolCallId}
+                  toolName={entry.toolName}
+                  payload={entry.rawInput}
+                />
               )}
               {entry.rawOutput !== null && (
-                <RawPayload label="Output" payload={entry.rawOutput} />
+                <ExplorePayloadViewer
+                  label="Output"
+                  toolCallId={entry.toolCallId}
+                  toolName={entry.toolName}
+                  payload={entry.rawOutput}
+                />
+              )}
+              {datasetBytes(entry) !== null && (
+                <ExplorePayloadViewer
+                  label="Dataset"
+                  toolCallId={entry.toolCallId}
+                  toolName={entry.toolName}
+                  payload={{
+                    kind: "omitted",
+                    reason: "payload_limit",
+                    byteLength: datasetBytes(entry) ?? 0,
+                  }}
+                />
               )}
             </div>
           </details>
         )}
+      {props.showRaw &&
+        entry.rawInput === null &&
+        entry.rawOutput === null &&
+        entry.status !== "running" && (
+          <p className="mt-2 text-scout-subtle">
+            Details were not recorded or are unavailable in this shared view.
+          </p>
+        )}
     </li>
   );
+}
+
+function skillName(entry: ExploreTraceEntry): string {
+  const raw = entry.rawInput;
+  if (entry.toolName !== "load_skill" || raw?.kind !== "value") return "";
+  const skill = z.object({ skill: z.string() }).safeParse(raw.value);
+  return skill.success ? `: ${skill.data.skill}` : "";
+}
+
+function datasetBytes(entry: ExploreTraceEntry): number | null {
+  const raw = entry.rawOutput;
+  if (
+    !["materialize_query_dataset", "materialize_raw_documents"].includes(
+      entry.toolName,
+    ) ||
+    raw?.kind !== "value"
+  )
+    return null;
+  const metadata = z
+    .object({ bytes: z.number().nonnegative(), dataset: z.string() })
+    .safeParse(raw.value);
+  return metadata.success ? metadata.data.bytes : null;
 }
 
 function CuratedDetails(props: { details: ExploreTraceDetails }) {
@@ -207,28 +263,6 @@ function LabeledQuery(props: { label: string; queryText: string }) {
   );
 }
 
-function RawPayload(props: { label: string; payload: ExploreTraceRawValue }) {
-  return (
-    <div className="space-y-1">
-      <p className="font-medium">{props.label}</p>
-      {props.payload.kind === "value" ? (
-        <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-md bg-scout-hover/50 p-3 font-mono text-xs">
-          {JSON.stringify(props.payload.value, null, 2)}
-        </pre>
-      ) : (
-        <p className="rounded-md bg-scout-hover/50 p-3 text-scout-subtle">
-          Omitted because this {formatBytes(props.payload.byteLength)} payload
-          exceeded the{" "}
-          {props.payload.reason === "payload_limit"
-            ? "per-payload"
-            : "per-turn"}{" "}
-          inspection limit.
-        </p>
-      )}
-    </div>
-  );
-}
-
 function StatusIcon(props: { status: ExploreTraceStatus }) {
   const className = "mt-0.5 size-4 shrink-0";
   if (props.status === "running") {
@@ -298,10 +332,4 @@ function statusLabel(status: ExploreTraceStatus): string {
     return "Completed";
   }
   return status === "failed" ? "Failed" : "Interrupted";
-}
-
-function formatBytes(byteLength: number): string {
-  return byteLength < 1024
-    ? `${byteLength.toString()} B`
-    : `${(byteLength / 1024).toFixed(1)} KiB`;
 }

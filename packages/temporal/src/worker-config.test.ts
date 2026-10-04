@@ -5,7 +5,7 @@ import {
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
   agentChatIngressActivities,
-  imessageAgentChatActivities,
+  opsWorkerActivities,
   reportActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
@@ -18,8 +18,11 @@ import {
 const ACTIVITY_TASK_QUEUES = Object.values(TASK_QUEUES).filter(
   (taskQueue) =>
     taskQueue !== TASK_QUEUES.WORKFLOWS &&
+    taskQueue !== TASK_QUEUES.AGENT_CHAT_IMESSAGE &&
     taskQueue !== TASK_QUEUES.SCOUT_BETA &&
-    taskQueue !== TASK_QUEUES.SCOUT_PROD,
+    taskQueue !== TASK_QUEUES.SCOUT_PROD &&
+    taskQueue !== TASK_QUEUES.STORM_FORUM_BETA &&
+    taskQueue !== TASK_QUEUES.STORM_FORUM_PROD,
 );
 
 function activityNamesFor(
@@ -35,6 +38,18 @@ function activityNamesFor(
 }
 
 describe("Temporal worker role contracts", () => {
+  it("leaves forum activities with the workers that mount each forum's files", () => {
+    for (const taskQueue of [
+      TASK_QUEUES.STORM_FORUM_BETA,
+      TASK_QUEUES.STORM_FORUM_PROD,
+    ]) {
+      expect(
+        QUEUE_WORKER_DEFINITIONS.some(
+          (definition) => definition.taskQueue === taskQueue,
+        ),
+      ).toBe(false);
+    }
+  });
   it("assigns every Activity queue to exactly one capability role", () => {
     const ownershipCounts = new Map<string, number>();
     for (const definition of QUEUE_WORKER_DEFINITIONS.filter(
@@ -98,7 +113,6 @@ describe("Temporal worker role contracts", () => {
       workers: [
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS }),
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY }),
-        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE }),
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_PHOTON }),
       ],
     });
@@ -150,7 +164,36 @@ describe("Temporal worker role contracts", () => {
     expect(activityNamesFor("infra")).toContain("listTailscaleIngresses");
     expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
   });
+});
 
+describe("Ops activity isolation", () => {
+  it("isolates lightweight Ops reads without multiplying heavy infra jobs", () => {
+    const workers = getWorkerRoleContract("infra").workers;
+    const ops = workers.find((worker) => worker.taskQueue === TASK_QUEUES.OPS);
+    const infra = workers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.INFRA,
+    );
+    const mining = workers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.MINING_RESET,
+    );
+    expect(ops).toMatchObject({
+      kind: "activity",
+      activities: opsWorkerActivities,
+      maxConcurrentActivityTaskExecutions: 4,
+    });
+    expect(infra).toMatchObject({ maxConcurrentActivityTaskExecutions: 1 });
+    expect(mining).toMatchObject({ maxConcurrentActivityTaskExecutions: 1 });
+    expect(Object.keys(opsWorkerActivities)).not.toContain(
+      "runHomelabAuditAgent",
+    );
+    expect(Object.keys(opsWorkerActivities)).not.toContain(
+      "refreshHomelabCrdImports",
+    );
+    expect(activityNamesFor("infra")).toContain("collectOpsKubernetes");
+  });
+});
+
+describe("Temporal capability boundaries", () => {
   it("isolates scheduled chat waiters from repo automation", () => {
     const repoWorkers = getWorkerRoleContract("repo").workers;
     expect(repoWorkers.map((worker) => worker.taskQueue)).toEqual([
@@ -206,16 +249,13 @@ describe("Temporal worker role contracts", () => {
       maxConcurrentActivityTaskExecutions: 4,
     });
   });
-  it("isolates BlueBubbles polling and delivery from long-running ingress dispatch", () => {
-    const worker = QUEUE_WORKER_DEFINITIONS.find(
-      (definition) => definition.taskQueue === TASK_QUEUES.AGENT_CHAT_IMESSAGE,
-    );
-    expect(worker).toMatchObject({
-      kind: "activity",
-      role: "control",
-      activities: imessageAgentChatActivities,
-      maxConcurrentActivityTaskExecutions: 4,
-    });
+  it("does not register the retired BlueBubbles polling or delivery queue", () => {
+    expect(
+      QUEUE_WORKER_DEFINITIONS.some(
+        (definition) =>
+          definition.taskQueue === TASK_QUEUES.AGENT_CHAT_IMESSAGE,
+      ),
+    ).toBe(false);
     expect(Object.keys(agentActivities)).not.toContain(
       "deliverImessageResponse",
     );

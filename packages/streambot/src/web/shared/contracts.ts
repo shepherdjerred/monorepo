@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { isRemoteArtworkUrl } from "./artwork.ts";
+import { isRemoteArtworkUrl } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
+import { SportsArtworkSchema } from "@shepherdjerred/streambot/sports/artwork.ts";
+import { HistoryProviderSchema } from "@shepherdjerred/streambot/history/provider.ts";
 
 const ArtworkUrlSchema = z
   .string()
@@ -69,6 +71,7 @@ export const CandidateSchema = z.strictObject({
 });
 export const SearchResultsSchema = z.array(CandidateSchema);
 export const MediaSelectionSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("history"), id: z.string().min(1) }),
   z.strictObject({ kind: z.literal("library"), id: z.string().min(1) }),
   z.strictObject({ kind: z.literal("candidate"), id: z.string().min(1) }),
   z.strictObject({ kind: z.literal("sports"), id: z.string().min(1) }),
@@ -78,6 +81,9 @@ export const MediaSelectionSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 export const PlayerItemSchema = z.strictObject({
+  requester: z.strictObject({ id: z.string(), name: z.string() }).optional(),
+  queuedAt: z.number().int().nonnegative().nullable().optional(),
+  sportsArtwork: SportsArtworkSchema.optional(),
   title: z.string(),
   durationSeconds: z.number().nullable(),
   mediaKind: z.enum(["music", "video"]).nullable(),
@@ -86,8 +92,17 @@ export const PlayerItemSchema = z.strictObject({
 export const SnapshotSchema = z.strictObject({
   channel: GuildSchema.nullable(),
   playbackChannel: z.number().int().positive().nullable(),
+  selectedPlaybackChannel: z.number().int().positive().nullable().default(null),
+  selectionVersion: z.string().nullable().default(null),
+  selectionMode: z.enum(["auto", "manual"]).default("manual"),
+  automaticRoutingEnabled: z.boolean().default(false),
   playbackChannels: z.array(
-    z.strictObject({ number: z.number().int().positive(), label: z.string() }),
+    z.strictObject({
+      number: z.number().int().positive(),
+      label: z.string(),
+      revision: z.string().nullable().default(null),
+      occupied: z.boolean().default(false),
+    }),
   ),
   revision: z.string().nullable(),
   state: z.string(),
@@ -99,6 +114,7 @@ export const SnapshotSchema = z.strictObject({
   loop: z.string(),
   advancedControls: z.boolean(),
   sportsEnabled: z.boolean(),
+  historyEnabled: z.boolean().default(false),
   restrictedLive: z.boolean(),
 });
 export type WebSnapshot = z.infer<typeof SnapshotSchema>;
@@ -108,6 +124,8 @@ const commandBase = {
   channelId: z.string().regex(/^\d+$/u),
   revision: z.string().nullable(),
   playbackChannel: z.number().int().positive().nullable().default(null),
+  selectionVersion: z.string().nullable().default(null),
+  slotRevisions: z.record(z.string(), z.string().nullable()).default({}),
 };
 const SimpleCommandSchema = z.strictObject({
   ...commandBase,
@@ -118,7 +136,7 @@ export const CommandSchema = z.union([
   z.strictObject({
     ...commandBase,
     action: z.literal("select"),
-    number: z.number().int().positive(),
+    number: z.number().int().positive().nullable(),
   }),
   z.strictObject({
     ...commandBase,
@@ -192,5 +210,26 @@ export const SportsResultsSchema = z.array(
     provider: z.enum(["streameast", "tvsportslive"]),
     status: z.enum(["live", "scheduled", "unknown"]),
     startsAt: z.iso.datetime().nullable(),
+    sportsArtwork: SportsArtworkSchema.optional(),
   }),
 );
+
+export const HistoryQuerySchema = z.object({
+  visibility: z.enum(["mine", "server"]).default("mine"),
+  query: z.string().trim().max(300).default(""),
+  provider: z.union([z.literal(""), HistoryProviderSchema]).default(""),
+  offset: z.coerce.number().int().nonnegative().default(0),
+});
+export const HistoryPageSchema = z.strictObject({
+  total: z.number().int().nonnegative(),
+  items: z.array(
+    PlayerItemSchema.extend({
+      id: z.string(),
+      provider: HistoryProviderSchema,
+      playedAt: z.number().int().nonnegative(),
+      endedAt: z.number().int().nonnegative().nullable(),
+      outcome: z.string().nullable(),
+      replayAvailable: z.boolean(),
+    }),
+  ),
+});

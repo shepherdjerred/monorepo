@@ -34,7 +34,6 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -48,6 +47,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
   packages/feature-flags \
@@ -94,7 +94,6 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -157,7 +156,7 @@ ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps util-linux; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps socat tini util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---
@@ -421,6 +420,7 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
   packages/temporal-observability \
@@ -469,6 +469,8 @@ ENV BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache
 # Run from the package dir so Bun resolves this package's tsconfig + imports map
 # (the `#generated/*`, `#activities/*`, … subpath imports).
 WORKDIR /app/packages/temporal
+# Reap orphaned provider/tool descendants before the dedicated UID is reused.
+ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 CMD ["bun", "src/worker.ts"]
 
 FROM runtime AS smoke

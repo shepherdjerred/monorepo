@@ -1,0 +1,54 @@
+// Owned Storm branding layered over the native Flexile parent.
+@stormAccent: #087361;
+body {
+  background-image:
+    linear-gradient(fade(#122c30, 35%), fade(#122c30, 35%)),
+    url("styles/storm/spawn.jpg");
+  background-attachment: fixed;
+  background-size: cover;
+}
+.p-body-inner {
+  min-height: 55vh;
+}
+.p-body-header {
+  background: @xf-contentBg;
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  padding: 15px 20px;
+}
+.p-body-content > .p-body-pageContent {
+  padding: 20px;
+  background: @xf-contentBg;
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px fade(#000, 12%);
+}
+.p-footer-inner {
+  background: @xf-contentBg;
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  padding: 15px;
+}
+.p-header-logo img {
+  max-width: 240px;
+}
+.button--primary {
+  background-color: @stormAccent;
+  border-color: darken(@stormAccent, 8%);
+}
+.stormWelcome {
+  border-top: 3px solid @stormAccent;
+}
+.p-body .stormWelcome {
+  border-radius: 6px;
+  padding: 1.25rem;
+  gap: 1.5rem;
+}
+@media (max-width: 800px) {
+  body {
+    background-image: none;
+  }
+  .p-body-content > .p-body-pageContent {
+    padding: 12px;
+  }
+}

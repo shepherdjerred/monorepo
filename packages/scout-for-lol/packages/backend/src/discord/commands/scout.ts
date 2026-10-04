@@ -10,6 +10,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
+import { resolveExploreModel } from "#src/config/dynamic.ts";
 import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
 import type { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { runDurableDiscordExploreTurn } from "#src/explore/runs/discord/turn.ts";
@@ -122,7 +123,11 @@ export async function executeScout(
       attach: { kind: "leaf" },
       origin: "discord",
     });
-    const started = { ...created, question: question.data };
+    const started = {
+      ...created,
+      question: question.data,
+      model: resolveExploreModel(),
+    };
     const transcript = await loadExploreTranscript(
       dependencies.client,
       started.conversationId,

@@ -9,6 +9,19 @@ re-exported from here. This package owns everything those contracts must not
 know about: Prisma's storage domain, Discord and Riot shapes, and the static
 snapshot below.
 
+## Raw Riot captures and ability icons
+
+Raw match, spectator and timeline schemas validate known fields while retaining
+the complete captured JSON, including future fields, nested arrays, nulls and
+absent optional values. Application protocol schemas remain strict. The lake
+stores complete analytical documents alongside its typed projections; spectator
+credentials remain excluded from analytical data.
+
+The static-data update downloads passive and Q/W/E/R ability icons from the
+same Data Dragon version as the champion facts. The generated asset manifest
+includes the `ability` kind and uses `Champion-slot` identities, such as
+`Ahri-Q`. Regenerate the manifest after changing committed assets.
+
 ## Bryan Bucks storability
 
 `src/model/bucks/bryan-bucks-money.ts` is the Prisma edge of the Bucks economy.
@@ -96,6 +109,11 @@ Arena augment generation also preserves IDs 71 and 250 from CommunityDragon
 15.23, which appear in recorded matches but are absent from the current
 catalog. `--arena-augments-only` regenerates that cache against the committed
 version without refreshing unrelated assets.
+
+Classic loading-screen backgrounds retain the 2 MiB asset budget. If the
+upstream PNG exceeds it, the updater recompresses it losslessly, preserving
+dimensions, pixels and metadata. It still fails if the compressed asset exceeds
+the budget; it does not reduce resolution or relax the size check.
 
 The refresh runs weekly via the `scout-data-dragon-weekly-refresh` Temporal
 schedule. Typed readers live beside the assets in `src/data-dragon/`

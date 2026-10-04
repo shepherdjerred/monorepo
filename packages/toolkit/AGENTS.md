@@ -24,6 +24,8 @@ reference.
   occupied; it must not capture an unrelated server.
 - `discord` uses a private session daemon. Every write preserves an explicit
   guild/channel target and authorized payload.
+- `mc` is a thin client for the mc-harness daemon and imports only
+  `@shepherdjerred/mc-harness/protocol/*`; it never defaults to a live server.
 - `history` is a private, rebuildable index. It returns bounded excerpts and
   never treats old conversation as current system truth.
 - `pr asset` uploads only explicit files/directories and applies the documented

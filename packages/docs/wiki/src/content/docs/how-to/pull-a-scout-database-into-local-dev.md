@@ -31,7 +31,9 @@ The snapshot carries no live secrets. `User.discordAccessToken`,
 `discordRefreshToken`, `ExploreConversation.shareToken`, and
 `TournamentLobby.password` arrive blanked; `TournamentLobby.code` — the Riot
 join credential — arrives as a per-row `redacted-<id>` stand-in, because it is
-`NOT NULL` and unique. `ApiToken` and `InstallAttributionToken` arrive empty:
+`NOT NULL` and unique. `TournamentLobby` is redacted only while the source
+schema still has it; a source migrated past its removal has no such rows to
+carry, and the pull says so. `ApiToken` and `InstallAttributionToken` arrive empty:
 their rows are nothing but credentials. The rows themselves are kept, so
 ownership and joins still work. Redaction happens at the source, so no
 credential is written here even transiently, and the run fails if any redacted

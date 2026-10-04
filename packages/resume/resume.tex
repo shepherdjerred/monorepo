@@ -18,6 +18,20 @@
 \usepackage{tabularx}
 \usepackage{xcolor}
 \usepackage{hyperref}
+% NOTE (repo-only): the vault source is built with Texpad's Computer Modern
+% fonts. XeLaTeX defaults to Latin Modern, whose slightly wider glyphs wrap
+% a few lines earlier and push the document to two pages. CMU Serif is
+% metrically Computer Modern, so the repo build wraps like the vault PDF.
+% Spacing below is otherwise identical to the vault source.
+\usepackage{fontspec}
+\setmainfont{CMU Serif}[
+  Extension = .otf,
+  UprightFont = cmunrm,
+  BoldFont = cmunbx,
+  ItalicFont = cmunti,
+  BoldItalicFont = cmunbi,
+  SmallCapsFont = lmromancaps10-regular,
+]
 
 \pagestyle{fancy}
 \fancyhf{} % clear all header and footer fields
@@ -86,70 +100,108 @@
   \href{https://sjer.red}{https://sjer.red} & GitHub: \href{https://github.com/shepherdjerred}{https://github.com/shepherdjerred}
 \end{tabular*}
 
-
-%-----------EDUCATION-----------------
-\section{Education}
-  \resumeSubHeadingListStart
-    \resumeSubheading
-      {Georgia Institute of Technology}{Atlanta, GA}
-      {Master of Science in Computer Science (OMSCS, Part-time)}{August 2022 -- Present}
-      \resumeItemListStart
-        \resumeItem{Coursework}{Distributed Systems, Compilers, Advanced Operating Systems}
-      \resumeItemListEnd
-    \resumeSubheading
-      {Harding University}{Searcy, AR}
-      {Bachelor of Science in Software Development}{August 2015 -- May 2019}
-  \resumeSubHeadingListEnd
-
-
 %-----------EXPERIENCE-----------------
 \section{Experience}
   \resumeSubHeadingListStart
 
   \resumeSubheading
     {Pinterest}{Seattle, WA}
-    {Software Engineer II}{September 2024 - Present}
+    {Software Engineer II}{September 2024 -- Present}
     \resumeItemListStart
-      % Scale: thousands of studies/experiments active at any time, each operating on millions of users
-      % Platform influences hundreds of millions of dollars of ad revenue
-      \resumeItem{Measurement Hub}{Leading frontend migration of advertiser measurement platform from 10-year-old POC to production-grade system, directing 5 engineers across thousands of experiments and millions of users. Achieved 99\% report reliability (up from 50\%). Used LLMs extensively for implementation, design docs, and bug fixes.}
-      \resumeItem{Engineering influence}{Set frontend patterns adopted by 30 engineers across 4 teams: strong typing, validation at boundaries, integration testing, and accessibility.}
-      \resumeItem{Conversion Lift}{Owning end-to-end migration of Pinterest Conversion Lift as sole technical lead. Driving API schema adoption (previously untyped) and database normalization from JSON blob to relational model. Directing 3 engineers across full-stack implementation.}
-      \resumeItem{AI tooling \& adoption}{Built internal tools giving LLMs safe access to internal systems and data. Drove org-wide AI adoption through presentations and hands-on enablement. Authored coding agent skills, guidelines, and CLI tools automating oncall. Established static analysis guardrails for AI-assisted development.}
+       % products: PBL, PCL/PCL Feasibility, 3PMMT (new product), Script Lift (new product, WIP), Foot Traffic
+       % Foot Traffic and 3PMMT launched in June
+       % My architecture also has reduced drift/error with external systems since we now have one SOT for experiment configuration
+       \resumeItem{Measurement Hub}{Tech lead for Pinterest's advertiser measurement platform. Established a shared architecture used for five measurement products which allowed for a new measurement product to be accelerated and launched.}
+       % only concern here is that it makes the database migration sound trivial, which it was not
+       % I also completely changed the workflows for reporting, leading to significantly quicker, easier, and less error prone reporting for advanced Conversion Lift uses cases, like Stealth PCL or mid-flight PCL
+       % 7 engineers: 4 were there the entire time, with an addition 3 as 'flex' engineers when I had additional work
+       \resumeItem{Conversion Lift}{Led a team of 7 engineers. Migrated existing measurement product to the new Measurement Hub platform spanning the TypeScript frontend, Python backend, Airflow workflows, and database. Replaced legacy untyped JSON with normalized, relational schemas. Redefined data model to more correctly align with the business domain resulting in more accurate metrics. Partnered with product, design, support, measurement solutions, and data science teams.}
+       % engineers: Olivia, Jessica, David. Ken did the backend
+       \resumeItem{Brand Lift}{Led Brand Lift's React frontend migration with three other engineers and implemented supporting backend APIs. Established patterns for async data loading, runtime type validation at boundaries, integration tests, and accessibility adopted by 30 engineers across four teams.}
+       % Airflow client is WIP, as is the dashboard/alert generation (they are both in review). Python server stubs, TypeScript UI client, and LLM tool calls in Python are all generated today.
+       \resumeItem{API}{Built TypeSpec-based code generation for Python API server stubs, TypeScript clients, LLM tools, and docs across repositories. Replaced hand-maintained API definitions with single schema and generated code.}
+       % identified needs -- these were efforts I drove, nobody else 'made' me do this. I saw the pain caused to users/support/eng and filled the gap
+       \resumeItem{Operations}{Led platform observability, monitoring, and alerting. Identified gaps and built audit logging, in-app incident notifications, and self-service study diagnostics for engineers, support, and advanced users.}
+       \resumeItem{AI tooling}{Built tools to leverage LLMs including CLIs and MCP integrations. Automated weekly/monthly ops reporting and drove adoption across the measurement products organization through demos and presentations.}
+%       \resumeItem{Deckorator}{Built internal service to generate presentations. Presentations are written in TypeScript with a high-fidelity PPTX importer/exporter. LLMs operate on presentations/templates like any other TypeScript code. Service uses Git datastore for versioning and features templating with Zod validation.}
+%      \resumeItem{Deckorator}{Built internal service to generate presentations. It's able to import any PPTX into a TypeScript representation. LLMs are able to edit the TypeScript DSL to modify the presentation. Exports to normal PPTX. Supports versioning via a Git datastore and templating using Zod to validate all template parameters actually exist in payload.}
+       \resumeItem{AI Companion}{Leading integration of an in-product chat interface with page context, tool calls, skills, and evals.}
+    
+%      \resumeItem{Conversion Lift}{Owned the migration of Pinterest's conversion lift project onto a modern platform (includes TypeScript frontend, Python backend, Python Apache Airflow, database schemas+dataset). Analyzed and normalized untyped data into SQL schema. Led team of 4 engineers + 3 rotating engineers. Greatly increased quality of data model and accuracy of business metrics. Approach led to fewer operational issues and studies setup with greater correctness. Worked cross-functionally with product managers, design, support, and users (measurement solutions, data science) to ensure that the migration was successful and the product solved the user's problems}
+%      % example of norms I help set:
+%      % - measurement hub dashboard where all MH metrics are located
+%      % - Zod, typing at boundareis
+%      % - Loaded/LoadingBlock pattern
+%      % - strict static typing, linting, etc. -- no type assertions
+%      % - pushed for more testing -- integration tests and end-to-end tests
+%      % - led standup, coordinated with product/design
+%      % - mentored engineers, reviewed code
+%      % - improve observability
+%      % - two new products have been built rapidly due to my architecture -- 3PMMT and Script Lift
+%      \resumeItem{Measurement Hub}{Technical lead for Pinterest's ad measurement platform which supports a significant amount of Pinterest's ad spend. About 30 engineers work on this platform. Implemented code generation with TypeSpec reducing time to create APIs for new features/products by a significant amount. Increased consistency of clients and documentation via code generation + stable schema across multiple repositories. Led operations (observability, monitoring, alerting, dashboards, etc.). Drove productivity improvements for engineers, especially re. using LLMs -- includes strict static typing in TypeScript and Python, typed lint rules, easier development of e2e/integration tests, browser-use for AI agents, and CLI/MCP/Skills for Measurement Hub and its upstream/downstream dependencies. Established technical patterns and team norms. Acted as expert for developing APIs, database and frontend/UI (establishing here that I am very much full stack)}
+%      \resumeItem{Independent Work}{Audit logging for Measurement Hub, in-app notifications to communicate with internal customers during incidents, self-serve debugging of study performance, 'debug views' in Measurement Hub for engineers, support, and advanced users.}
+%      \resumeItem{Brand Lift}{Owned frontend migration of Brand Lift to Measurement Hub. Led two other engineers to migrate to new platform. Increased quality of studies and results. Implemented backend APIs}
+%      \resumeItem{Process Automation}{Built tools using LLMs to automatically investigate, triage, and resolve issues. Includes CLI/MCP to safely access internal systems and UI to visualize in a Kanban-style layout. Built tool to automatically author weekly/monthly OE reports reducing toil/time spent investigating issues.}
+%      % Decorator never launched -- it's really in the POC
+%      \resumeItem{Deckorator}{Built internal service to generate presentations. It's able to import any PPTX into a TypeScript representation. LLMs are able to edit the TypeScript DSL to modify the presentation. Exports to normal PPTX. Supports versioning via a Git datastore and templating using Zod to validate all template parameters actually exist in payload.}
+%      % this is my active project, ETA Nov 2026
+%      \resumeItem{AI Companion}{Leading effort to add AI chat onto Measurement Hub including skills, evals, tool calls, and on-page context. Allowing users to more easily perform tasks and solve business problems using AI. Leveraging existing TypeSpec (remember: I advocated for and added TypeSpec to Measurement Hub) to generate all API tool calls targeting Measurement Hub, meaning no bespoke tools or API client needs to be hand-written both reducing dev time and possible drift cross-repo. Currently in-progress.}	
+%    
+%%      \resumeItem{Measurement Hub}{Leading frontend migration of advertiser measurement platform from 10-year-old POC to production-grade system, directing 5 engineers across thousands of experiments and millions of users. Achieved 99\% report reliability (up from 50\%). Used LLMs extensively for implementation, design docs, and bug fixes.}
+%      \resumeItem{Engineering influence}{Set frontend patterns adopted by 30 engineers across 4 teams: strong typing, validation at boundaries, integration testing, and accessibility.}
+%      \resumeItem{Conversion Lift}{Owning end-to-end migration of Pinterest Conversion Lift as sole technical lead. Driving API schema adoption (previously untyped) and database normalization from JSON blob to relational model. Directing 3 engineers across full-stack implementation.}
+%      \resumeItem{AI tooling \& adoption}{Built internal tools giving LLMs safe access to internal systems and data. Drove org-wide AI adoption through presentations and hands-on enablement. Authored coding agent skills, guidelines, and CLI tools automating oncall. Established static analysis guardrails for AI-assisted development.}
     \resumeItemListEnd
 
     \resumeSubheading
       {Posit Software}{Remote}
-      {Software Engineer}{September 2021 - June 2024}
+      {Software Engineer}{September 2021 -- June 2024}
       \resumeItemListStart
         \resumeItem{Frontend}{Led rewrite of Package Manager frontend to Vue 3 \& TypeScript, cutting 70\% of dependencies and 90\% of bundle size. Led UI redesign improving first-use experience and accessibility.}
-        \resumeItem{Testing infrastructure}{Designed containerized framework enabling isolated local testing of any component.}
         \resumeItem{macOS cross-compiler}{Built cross-compiler toolchain targeting arm64 macOS on Kubernetes. Guided team to production, enabling R package builds with C/C++/Fortran/Rust.}
-        \resumeItem{Developer experience}{Shortened feedback loops by speeding up CI and dev environments. Set up automated linters, formatters, and dependency updates.}
-        \resumeItem{Backend}{Built Go backend APIs for authentication token generation. Migrated to portable static binary, simplifying deployment across Linux/macOS.}
+        \resumeItem{Testing infrastructure}{Designed containerized framework enabling isolated local testing of any component.}
+%        \resumeItem{Developer experience}{Shortened feedback loops by speeding up CI and dev environments. Set up automated linters, formatters, and dependency updates.}
+        \resumeItem{Backend}{Built Go backend APIs for authentication token generation. Migrated product to portable static binary, simplifying deployment across Linux/macOS.}
       \resumeItemListEnd
 
     \resumeSubheading
       {Amazon Web Services}{Seattle, WA}
-      {Software Development Engineer}{July 2019 - August 2021}
+      {Software Development Engineer}{July 2019 -- August 2021}
       \resumeItemListStart
-        \resumeItem{Backend}{Implemented features using distributed state machine with DynamoDB, SQS, Lambda, S3. Optimized fleet configuration for 66\% reduction in server costs.}
+        \resumeItem{Distributed systems}{Implemented features using distributed state machine with DynamoDB, SQS, Lambda, S3. Optimized fleet configuration for 66\% reduction in service compute cost.}
         \resumeItem{Process automation}{Built tool to automatically root-cause issues using metrics and logs, reducing weekly manual effort from 4 hours to minutes.}
         \resumeItem{Operations}{On-call for service managing tens of millions of EC2 instances at thousands of requests per second. Root-caused incidents and resolved customer issues.}
         \resumeItemListEnd
 
   \resumeSubHeadingListEnd
 
-\section{Skills}
-  TypeScript, Go, Java, Python, SQL, React, Vue, Astro, Bun, Kubernetes, Docker, AWS
+%-----------EDUCATION-----------------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Georgia Institute of Technology}{Atlanta, GA}
+      {Master of Science in Computer Science (OMSCS, Part-time)}{August 2022 -- Present (Expected Spring 2027)}
+      \resumeItemListStart
+        \resumeItem{Coursework}{Distributed Systems, Compilers, Advanced Operating Systems, Database Implementation}
+      \resumeItemListEnd
+    \resumeSubheading
+      {Harding University}{Searcy, AR}
+      {Bachelor of Science in Software Development}{August 2015 -- May 2019}
+  \resumeSubHeadingListEnd
+
+%\section{Skills}
+%  TypeScript, Go, Java, Python, SQL, React, Vue, Bun, Kubernetes, Docker, AWS
 
 %-----------PROJECTS-----------------
 \section{Projects}
   \resumeSubHeadingListStart
-    \resumeSubItem{\href{https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab}{Kubernetes Homelab}}{A k3s cluster running on hardware at my home. Managed with cdk8s and ArgoCD.}
-    \resumeSubItem{Compiler}{Implemented a compiler from scratch for the Tiger language targeting MIPS assembly.}
-    \resumeSubItem{Paxos}{Implemented the Paxos consensus algorithm from scratch.}
-    \resumeSubItem{\href{https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters}{Game Engine}}{Cross-platform Java game with OpenGL rendering, alpha-beta AI, A* pathfinding, and networking.}
+    \resumeSubItem{\href{https://scout-for-lol.com}{Scout}}{Real-time match notifications for League of Legends with data lake and AI exploration tools using Temporal and Postgres.}
+    \resumeSubItem{Open Source}{\href{https://www.npmjs.com/package/astro-opengraph-images}{Astro OpenGraph Images}, \href{https://www.npmjs.com/package/webring}{webring}, \href{https://www.npmjs.com/package/@shepherdjerred/helm-types}{helm-types}.}
+    \resumeSubItem{School}{Built a compiler targeting MIPS, implemented Paxos consensus algorithm, and a \href{https://github.com/shepherdjerred/monorepo/tree/main/sandbox/archive/castle-casters}{2D game engine}.}
+    \resumeSubItem{\href{https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab}{Kubernetes Homelab}}{A two-node Talos cluster running on hardware at my home. Managed with cdk8s and ArgoCD.}
+%    \resumeSubItem{Compiler}{Implemented a compiler from scratch for the Tiger language targeting MIPS assembly.}
+%    \resumeSubItem{Paxos}{Implemented the Paxos consensus algorithm from scratch.}
+%    \resumeSubItem{\href{https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters}{Game Engine}}{Cross-platform Java game with OpenGL rendering, alpha-beta AI, A* pathfinding, and networking.}
   \resumeSubHeadingListEnd
 
 %-------------------------------------------

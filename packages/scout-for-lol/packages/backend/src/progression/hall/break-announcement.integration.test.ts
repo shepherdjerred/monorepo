@@ -15,10 +15,9 @@ import type { HallAnnouncementDelivery } from "#src/progression/hall/break-annou
  * Where a Hall record break is announced, against real rows.
  *
  * Every case runs the production decision (`announceHallRecordBreak`) over a
- * real observation, outbox and intent table: first path owns the identity,
- * the flag only routes a NEW announcement, a silent match announces nothing on
- * either path, the key survives a channel change, and a different payload
- * under a standing key is refused. The fan-out case proves the minted intent is
+ * real observation and intent table: a silent match announces nothing, the
+ * key survives a channel change, and a different payload under a standing key
+ * is refused. The fan-out case proves the minted intent is
  * one the match's own post-commit fan-out starts a notification child for,
  * with no other wiring.
  */
@@ -74,7 +73,6 @@ async function observedMatch(
 function announce(
   matchId: string,
   overrides: Partial<{
-    v2Enabled: boolean;
     channelId: string;
     records: ReturnType<typeof hallBreakRecords>;
     delivery: HallAnnouncementDelivery;
@@ -87,7 +85,6 @@ function announce(
     records:
       overrides.records ??
       hallBreakRecords(2, RiotMatchIdSchema.parse(matchId)),
-    v2Enabled: overrides.v2Enabled ?? true,
     delivery: overrides.delivery ?? { kind: "temporal-v2" },
     now: NOW,
   });
@@ -99,12 +96,6 @@ function keyOf(matchId: string) {
   );
 }
 
-async function outboxRows(matchId: string) {
-  return await prisma.hallRecordBreakOutbox.findMany({
-    where: { guildId: GUILD, matchId },
-  });
-}
-
 async function intentRows(matchId: string) {
   return await prisma.matchNotificationIntent.findMany({
     where: { riotMatchId: matchId },
@@ -112,7 +103,6 @@ async function intentRows(matchId: string) {
 }
 
 beforeEach(async () => {
-  await prisma.hallRecordBreakOutbox.deleteMany();
   await prisma.matchNotificationIntent.deleteMany();
 });
 
@@ -120,7 +110,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("with the V2 path on for the guild", () => {
+describe("a live match", () => {
   test("legacy live delivery can mint after its observation dual-write succeeds", async () => {
     const matchId = await observedMatch();
 
@@ -131,15 +121,13 @@ describe("with the V2 path on for the guild", () => {
     ).toBe("intent-minted");
 
     expect(await intentRows(matchId)).toHaveLength(1);
-    expect(await outboxRows(matchId)).toEqual([]);
   });
 
-  test("mints one pending hall intent and writes no outbox row", async () => {
+  test("mints one pending hall intent", async () => {
     const matchId = await observedMatch();
 
     expect(await announce(matchId)).toBe("intent-minted");
 
-    expect(await outboxRows(matchId)).toEqual([]);
     const stored = await getIntent(prisma, { intentKey: keyOf(matchId) });
     expect(stored?.matchId).toBe(matchId);
     expect(stored?.intent).toMatchObject({
@@ -166,25 +154,6 @@ describe("with the V2 path on for the guild", () => {
     expect(plan.notificationIntentKeys).toContain(keyOf(matchId));
   });
 
-  test("an outbox row already standing keeps the announcement on v1", async () => {
-    const matchId = await observedMatch();
-    expect(await announce(matchId, { v2Enabled: false })).toBe("outbox");
-
-    // The flag turns on after v1 took the decision: v1 keeps it, and its row
-    // is upserted exactly as before (here, following a channel change).
-    expect(
-      await announce(matchId, { v2Enabled: true, channelId: OTHER_CHANNEL }),
-    ).toBe("outbox");
-
-    expect(await intentRows(matchId)).toEqual([]);
-    const rows = await outboxRows(matchId);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.channelId).toBe(OTHER_CHANNEL);
-    expect(JSON.parse(rows[0]?.payloadJson ?? "null")).toEqual(
-      structuredClone(hallBreakRecords(2, RiotMatchIdSchema.parse(matchId))),
-    );
-  });
-
   test("a channel change re-evaluating the same break mints no second key", async () => {
     const matchId = await observedMatch();
     await announce(matchId);
@@ -197,7 +166,6 @@ describe("with the V2 path on for the guild", () => {
     expect(rows.map((row) => row.intentKey)).toEqual([keyOf(matchId)]);
     // The standing row is the decision; its target is not rewritten.
     expect(rows[0]?.targetId).toBe(CHANNEL);
-    expect(await outboxRows(matchId)).toEqual([]);
   });
 
   test("a different payload under a standing key throws instead of choosing", async () => {
@@ -213,58 +181,40 @@ describe("with the V2 path on for the guild", () => {
   });
 });
 
-describe("with the V2 path off for the guild", () => {
-  test("writes v1's outbox row when nothing stands", async () => {
-    const matchId = await observedMatch();
+describe("a silent or backfilled match", () => {
+  test("announces nothing", async () => {
+    const matchId = await observedMatch("silent-backfill");
 
-    expect(await announce(matchId, { v2Enabled: false })).toBe("outbox");
+    expect(await announce(matchId)).toBe("silent");
 
-    expect(await outboxRows(matchId)).toHaveLength(1);
     expect(await intentRows(matchId)).toEqual([]);
   });
 
-  test("an intent already standing keeps the announcement on V2", async () => {
-    const matchId = await observedMatch();
-    await announce(matchId, { v2Enabled: true });
+  test("legacy live delivery of a backfilled observation announces nothing", async () => {
+    const matchId = await observedMatch("silent-backfill");
 
-    // The flag was turned off after V2 took the decision: no outbox row may
-    // appear beside the intent, or the guild would be told twice.
-    expect(await announce(matchId, { v2Enabled: false })).toBe(
-      "intent-standing",
-    );
+    expect(
+      await announce(matchId, {
+        delivery: { kind: "legacy-v1", silent: false },
+      }),
+    ).toBe("silent");
 
-    expect(await outboxRows(matchId)).toEqual([]);
-    expect(await intentRows(matchId)).toHaveLength(1);
+    expect(await intentRows(matchId)).toEqual([]);
   });
-});
-
-describe("a silent or backfilled match", () => {
-  test.each([true, false])(
-    "announces nothing on either path (V2 on: %s)",
-    async (v2Enabled) => {
-      const matchId = await observedMatch("silent-backfill");
-
-      expect(await announce(matchId, { v2Enabled })).toBe("silent");
-
-      expect(await outboxRows(matchId)).toEqual([]);
-      expect(await intentRows(matchId)).toEqual([]);
-    },
-  );
 
   test("a match with no observation is a broken contract, not a default", async () => {
     await expect(announce("NA1_4799999")).rejects.toThrow(/no observation/u);
   });
 
-  test("legacy live delivery keeps its outbox when the observation dual-write is absent", async () => {
+  test("legacy live delivery without an observation announces nothing", async () => {
     const matchId = "NA1_4799998";
 
     expect(
       await announce(matchId, {
         delivery: { kind: "legacy-v1", silent: false },
       }),
-    ).toBe("outbox");
+    ).toBe("silent");
 
-    expect(await outboxRows(matchId)).toHaveLength(1);
     expect(await intentRows(matchId)).toEqual([]);
   });
 
@@ -277,7 +227,6 @@ describe("a silent or backfilled match", () => {
       }),
     ).toBe("silent");
 
-    expect(await outboxRows(matchId)).toEqual([]);
     expect(await intentRows(matchId)).toEqual([]);
   });
 });

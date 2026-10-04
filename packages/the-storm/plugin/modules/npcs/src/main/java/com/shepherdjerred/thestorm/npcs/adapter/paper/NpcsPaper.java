@@ -18,11 +18,10 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
-import org.bukkit.Registry;
 
 /**
- * Hooks the NPCs into Paper: reconciles the Mannequins, starts the per-tick walker, and registers
- * the listener and {@code /npc}.
+ * Hooks the NPCs into Paper: reconciles Citizens bodies, starts the per-tick walker, and registers
+ * the listener and {@code /stormnpc}.
  */
 public final class NpcsPaper {
 
@@ -33,8 +32,8 @@ public final class NpcsPaper {
   /**
    * What the app layer built.
    *
-   * @param source reads the content files again for {@code /npc reload}: called on the main thread
-   *     (to snapshot the loaded worlds), and the source it returns runs on {@code reader}
+   * @param source reads the content files again for {@code /stormnpc reload}: called on the main
+   *     thread (to snapshot the loaded worlds), and the source it returns runs on {@code reader}
    * @param reader where content files are read, off the main thread
    */
   public record Parts(
@@ -52,7 +51,7 @@ public final class NpcsPaper {
    * @param tickets the NPC chunk holds, on core's shared chunk tickets
    * @param presenter the dialog renderer
    */
-  public record Hooks(HeldChunks tickets, DialogPresenter presenter) {
+  public record Hooks(HeldChunks tickets, DialogPresenter presenter, NpcBodies bodies) {
 
     /** The real ones. */
     public static Hooks paper(ModuleContext context, NpcsConfig config) {
@@ -60,7 +59,8 @@ public final class NpcsPaper {
       return new Hooks(
           HeldChunks.paper(server, context.services().require(ChunkTickets.class)),
           new PaperDialogPresenter(
-              server, context.scheduler(), Duration.ofMinutes(config.dialog().lifetimeMinutes())));
+              server, context.scheduler(), Duration.ofMinutes(config.dialog().lifetimeMinutes())),
+          new CitizensBodies(context.plugin(), NpcKeys.of(context.plugin()), config));
     }
   }
 
@@ -72,19 +72,9 @@ public final class NpcsPaper {
     var plugin = context.plugin();
     var server = plugin.getServer();
     var keys = NpcKeys.of(plugin);
-    var navigatorType =
-        Registry.ENTITY_TYPE.getOrThrow(Mannequins.requireKey(config.navigator().entity()));
-    var navigators =
-        new Navigators(
-            server, keys, Navigators.mobClass(navigatorType), config.navigator().followRange());
     var world =
         new NpcWorld(
-            new NpcWorld.Parts(
-                server,
-                new Mannequins(server, keys),
-                navigators,
-                hooks.tickets(),
-                context.logger()),
+            new NpcWorld.Parts(server, hooks.bodies(), hooks.tickets(), context.logger()),
             parts.catalog(),
             config,
             new PathFollower(config.movement(), context.random()));
@@ -108,10 +98,19 @@ public final class NpcsPaper {
     world.attachListeners(talk::listeners);
     var combat = new NpcCombat(world, config, context, parts.state());
     world.attachCombat(combat, npc -> talk.interrupt(npc, server::getPlayer));
+    hooks.bodies().start(world::reconcileWhenReady);
     server
         .getPluginManager()
         .registerEvents(new NpcListener(world, talk, markers, server.getPluginManager()), plugin);
-    var ticker = context.scheduler().repeatOnMainThread(TICK, TICK, world::tick);
+    var ticker =
+        context
+            .scheduler()
+            .repeatOnMainThread(
+                TICK,
+                TICK,
+                () -> {
+                  if (hooks.bodies().ready()) world.tick();
+                });
     var commands =
         new NpcCommands(
             new NpcCommands.Wiring(

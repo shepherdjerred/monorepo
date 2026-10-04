@@ -102,6 +102,9 @@ export const DELETED_SCHEDULE_IDS = [
   "scout-prod-tournament-lobby-poll",
   // The protobufjs v8 watch retired once @temporalio/proto moved to ^8.
   "protobufjs-v8-watch-weekly",
+  // Hall and Duel delivery are V2 notification intents and their legacy
+  // outbox tables are dropped. Domain reconciliation remains scheduled.
+  "scout-prod-progression-outbox",
 ] as const;
 
 /**

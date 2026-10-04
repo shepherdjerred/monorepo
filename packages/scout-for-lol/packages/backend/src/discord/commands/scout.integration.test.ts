@@ -11,7 +11,8 @@ import type {
   InteractionReplyOptions,
 } from "discord.js";
 import { MessageFlags } from "discord.js";
-import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
+import { resolveExploreModel } from "#src/config/dynamic.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   executeScout,
@@ -179,6 +180,18 @@ describe("/scout ask", () => {
       2,
     );
     expect(await prisma.exploreMessage.count()).toBe(4);
+    const savedAnswers = await prisma.exploreMessage.findMany({
+      where: { role: "assistant" },
+      select: { generation: true },
+    });
+    expect(savedAnswers).toHaveLength(2);
+    const expectedGeneration = JSON.stringify({
+      model: resolveExploreModel(),
+      reasoningEffort: "high",
+    });
+    expect(
+      savedAnswers.every((answer) => answer.generation === expectedGeneration),
+    ).toBe(true);
     expect(first.deferred()).toBe(1);
     expect(first.edits).toHaveLength(1);
     const responseJson = JSON.stringify(first.edits[0]);

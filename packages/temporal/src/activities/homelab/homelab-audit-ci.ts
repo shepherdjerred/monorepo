@@ -42,11 +42,17 @@ const PipelineDetailSchema = PipelineSummarySchema.extend({
 });
 
 /**
- * One log line. `data` is a byte array rather than a string, so it has to be
- * decoded rather than concatenated.
+ * Go serializes log []byte as standard base64, or null for a nil byte slice.
+ * Reject noncanonical encodings rather than silently discarding corrupt bytes.
  */
 const LogEntrySchema = z.looseObject({
-  data: z.array(z.number().int()),
+  data: z
+    .string()
+    .refine(
+      (value) => Buffer.from(value, "base64").toString("base64") === value,
+      { message: "Woodpecker log data must be canonical base64" },
+    )
+    .nullable(),
 });
 const LogSchema = z.array(LogEntrySchema);
 
@@ -93,6 +99,7 @@ function repoPath(suffix: string): string {
 function pipelinesPath(since: Date, page: number): string {
   const parameters = new URLSearchParams({
     branch: "main",
+    event: "push",
     after: since.toISOString(),
     perPage: "50",
     page: page.toString(),
@@ -142,8 +149,14 @@ const LATEST_RED_STATUSES = new Set([
 ]);
 
 function decodeLog(entries: z.infer<typeof LogSchema>): string {
-  const bytes = entries.flatMap((entry) => entry.data);
-  return new TextDecoder().decode(Uint8Array.from(bytes));
+  const bytes = Buffer.concat(
+    entries.map((entry) =>
+      entry.data === null ? Buffer.alloc(0) : Buffer.from(entry.data, "base64"),
+    ),
+  );
+  // Join split UTF-8 sequences first. External log bytes need not be UTF-8;
+  // replacement characters preserve the remaining diagnostic text.
+  return new TextDecoder("utf-8").decode(bytes);
 }
 
 function failedSteps(

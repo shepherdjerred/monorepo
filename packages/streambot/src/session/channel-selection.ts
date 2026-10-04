@@ -10,21 +10,45 @@ import type { SessionHandle } from "@shepherdjerred/streambot/session/session-ty
 
 export class ChannelSelection {
   private readonly selections = new Map<string, PlaybackChannelNumber>();
+  private readonly lastTargets = new Map<string, PlaybackChannelNumber>();
+  private readonly versions = new Map<string, number>();
+  private readonly epoch = crypto.randomUUID();
   private key(scope: DiscoveryScope): string {
     return `${scope.guildId}:${scope.channelId}:${scope.userId}`;
   }
   get(scope: DiscoveryScope): PlaybackChannelNumber {
-    return this.selections.get(this.key(scope)) ?? AUDIO_CHANNEL;
+    return (
+      this.selections.get(this.key(scope)) ??
+      this.lastTargets.get(this.key(scope)) ??
+      AUDIO_CHANNEL
+    );
+  }
+  isManual(scope: DiscoveryScope): boolean {
+    return this.selections.has(this.key(scope));
+  }
+  version(scope: DiscoveryScope): string {
+    return this.epoch + ":" + String(this.versions.get(this.key(scope)) ?? 0);
+  }
+  follow(scope: DiscoveryScope, number: PlaybackChannelNumber): void {
+    this.lastTargets.set(this.key(scope), number);
   }
   select(scope: DiscoveryScope, value: number, maximum: number): string {
     const parsed = PlaybackChannelNumberSchema.safeParse(value);
     if (!parsed.success || value > maximum)
       return `Choose a Streambot channel from 1 to ${String(maximum)}. ${NUMBERED_CHANNEL_HINT}`;
     this.selections.set(this.key(scope), parsed.data);
+    this.versions.set(
+      this.key(scope),
+      (this.versions.get(this.key(scope)) ?? 0) + 1,
+    );
     return `Selected ${playbackChannelLabel(parsed.data)}. ${NUMBERED_CHANNEL_HINT}`;
   }
   clear(scope: DiscoveryScope): void {
     this.selections.delete(this.key(scope));
+    this.versions.set(
+      this.key(scope),
+      (this.versions.get(this.key(scope)) ?? 0) + 1,
+    );
   }
   list(
     scope: DiscoveryScope,

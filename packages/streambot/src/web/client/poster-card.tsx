@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { Link } from "react-router";
 import type { LibraryTitleSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { Artwork } from "./artwork.tsx";
 import { MediaActions, type MediaListProps } from "./media-row.tsx";
@@ -6,10 +7,12 @@ import { MediaActions, type MediaListProps } from "./media-row.tsx";
 export function PosterCard({
   item,
   openSeries,
+  seriesHref,
   ...props
 }: MediaListProps & {
   item: z.infer<typeof LibraryTitleSchema>;
   openSeries: (series: string, library: string) => void;
+  seriesHref?: (series: string, library: string) => string;
 }) {
   const artwork = (
     <Artwork
@@ -20,12 +23,17 @@ export function PosterCard({
   return (
     <article className="poster-card">
       {item.kind === "series" ? (
-        <button
+        <Link
           className="poster-open"
           aria-label={"Browse episodes of " + item.title}
-          onClick={() => {
-            openSeries(item.series, item.library);
-          }}
+          to={seriesHref?.(item.series, item.library) ?? "/plex"}
+          onClick={
+            seriesHref === undefined
+              ? () => {
+                  openSeries(item.series, item.library);
+                }
+              : undefined
+          }
         >
           {artwork}
           <h3>{item.title}</h3>
@@ -34,7 +42,7 @@ export function PosterCard({
             {item.episodes} {item.episodes === 1 ? "episode" : "episodes"}
           </p>
           <span className="poster-browse">Browse episodes ↗</span>
-        </button>
+        </Link>
       ) : (
         <>
           {artwork}

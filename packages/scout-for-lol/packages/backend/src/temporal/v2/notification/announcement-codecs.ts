@@ -349,12 +349,10 @@ export function dareSummaryAnnouncementEnvelope(
  * What a `hall-record-break` intent announces: the records one match broke in
  * one guild's Hall of Fame.
  *
- * The records are v1's own `HallBreakPayloadSchema` entries — the exact array
- * the break outbox stores as `payloadJson` — so the V2 arm renders the same
- * embed from the same data through v1's `hallBreakEmbed`. Parsing drops a
- * record id retired by a catalog rename, as v1's reader does; an announcement
- * left with no records has nothing to say, which the arm reports as
- * undeliverable content rather than an empty message.
+ * The records are `HallBreakPayloadSchema` entries. Parsing drops a record id
+ * retired by a catalog rename; an announcement left with no records has
+ * nothing to say, which the arm reports as undeliverable content rather than
+ * an empty message.
  *
  * The guild travels in the payload because the target column names only the
  * channel, and the delivery policy (`hall_of_fame_enabled`) is per server.

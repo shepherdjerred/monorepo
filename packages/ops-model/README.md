@@ -30,6 +30,13 @@ Velero freshness uses the monitoring annotations declared on each Schedule.
 Its `status.lastBackup` describes a created backup and is never completion proof.
 Missing successful-backup telemetry is unknown, including a new Schedule during
 its initial grace window; paused schedules are explicitly informational.
+The Maintenance collector also reads persisted Velero Backup resources: a failed,
+invalid, or partially failed latest terminal backup remains an issue until a
+later backup completes. Controller-startup aborts can bypass Velero counters,
+so counter-based freshness alone does not establish a successful outcome.
+
+Informational signals and metrics remain visible in section summaries. They do
+not require attention, but are not described as an all-clear section.
 
 ```bash
 bunx turbo run typecheck test lint --filter=@shepherdjerred/ops-model

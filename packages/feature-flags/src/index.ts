@@ -384,6 +384,12 @@ export async function numberValue(
   return evaluateFlag(key, details);
 }
 
+/** Opt-in authority check for destructive operations; ordinary evaluations stay cached. */
+export async function refreshFlagSnapshot(): Promise<boolean> {
+  const provider = OpenFeature.getProvider(CLIENT_NAME);
+  return provider instanceof FliptProvider && provider.refreshForEvaluation();
+}
+
 /**
  * Closes the provider, which stops its refresh timer. Without this `bun test`
  * hangs on the open interval and pods leak a poller across shutdown.

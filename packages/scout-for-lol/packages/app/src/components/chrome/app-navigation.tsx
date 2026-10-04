@@ -14,6 +14,7 @@ import {
   Trophy,
   Users,
   Wrench,
+  MessageSquare,
 } from "lucide-react";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import {
@@ -64,6 +65,8 @@ function guildNavIcon(to: string) {
 }
 
 function ToolNavIcon(props: { to: string }) {
+  if (props.to === "/feedback")
+    return <MessageSquare className="size-4 shrink-0 text-scout-subtle" />;
   if (props.to === "/explore") {
     return <Compass className="size-4 shrink-0 text-scout-subtle" />;
   }
@@ -91,6 +94,8 @@ function ToolsNavigationSection(props: {
   tools: readonly { label: string; to: string }[];
   inHalls: boolean;
   hallGuilds: readonly { id: string; name: string }[];
+  supportUnreadCount?: number;
+  replyUnreadCount?: number;
 }) {
   if (props.tools.length === 0) return null;
 
@@ -108,6 +113,17 @@ function ToolsNavigationSection(props: {
             >
               <ToolNavIcon to={item.to} />
               <span>{item.label}</span>
+              {item.to === "/operations/inbox" &&
+                (props.supportUnreadCount ?? 0) > 0 && (
+                  <span aria-label="Unread support conversations">
+                    {props.supportUnreadCount}
+                  </span>
+                )}
+              {item.to === "/feedback" && (props.replyUnreadCount ?? 0) > 0 && (
+                <span aria-label="Unread support replies">
+                  {props.replyUnreadCount}
+                </span>
+              )}
             </NavLink>
 
             {isHallItem && props.inHalls && props.hallGuilds.length > 1 ? (
@@ -282,6 +298,23 @@ function useDuelsNavTarget(guildId: string | undefined, pathname: string) {
   };
 }
 
+function useSupportInboxAvailable() {
+  const trpc = useTRPC();
+  const supportReplies = useQuery(
+    trpc.feedback.unread.queryOptions(undefined, { refetchInterval: 30_000 }),
+  );
+  const access = useQuery(
+    trpc.operations.inbox.availability.queryOptions(undefined, {
+      retry: false,
+    }),
+  );
+  return {
+    available: access.data?.available === true,
+    unreadCount: access.data?.unreadCount ?? 0,
+    replyUnreadCount: supportReplies.data?.count ?? 0,
+  };
+}
+
 export function AppNavigation() {
   const location = useLocation();
   const trpc = useTRPC();
@@ -315,6 +348,7 @@ export function AppNavigation() {
   const operationsQuery = useQuery(
     trpc.operations.availability.queryOptions(undefined, { retry: false }),
   );
+  const inboxAvailable = useSupportInboxAvailable();
   const { perms } = usePermissions(guildId);
 
   const hallGuilds =
@@ -329,6 +363,7 @@ export function AppNavigation() {
   const hallTo = resolveHallTo(activeHallGuild, hallGuilds);
 
   const tools = consumerNavigationItems({
+    inboxAvailable: inboxAvailable.available,
     exploreAvailable: exploreQuery.data?.enabled === true,
     profilesAvailable: profilesQuery.data?.state === "available",
     challengesAvailable: challengesQuery.data?.enabled === true,
@@ -362,6 +397,8 @@ export function AppNavigation() {
         tools={tools}
         inHalls={inHalls}
         hallGuilds={hallGuilds}
+        supportUnreadCount={inboxAvailable.unreadCount}
+        replyUnreadCount={inboxAvailable.replyUnreadCount}
       />
       <ChatsSection
         inExplore={isExplorePath(location.pathname)}

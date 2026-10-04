@@ -9,8 +9,13 @@ export const TASK_QUEUES = {
   REPORTS: "reports",
   /** Privileged homelab inspection and operator automation. */
   INFRA: "infra",
+  /** Bounded Ops source reads, isolated from long infra automation. */
+  OPS: "ops",
   /** Long-running mining reset, isolated from latency-sensitive infra audits. */
   MINING_RESET: "mining-reset",
+  /** Forum activities run beside their own PHP files and database credentials. */
+  STORM_FORUM_BETA: "storm-forum-beta",
+  STORM_FORUM_PROD: "storm-forum-prod",
   /** Repository refreshes, CI analysis, and GitHub event automation. */
   REPO_AUTOMATION: "repo-automation",
   /** Scout refresh and competition workflows. */
@@ -29,7 +34,7 @@ export const TASK_QUEUES = {
   AGENT_CHAT_INGRESS: "agent-chat-ingress",
   /** Latency-sensitive Discord delivery, isolated from long command waits. */
   AGENT_CHAT_DELIVERY: "agent-chat-delivery",
-  /** BlueBubbles polling, chat selection, and single-attempt response delivery. */
+  /** Retired BlueBubbles queue identity, retained for Workflow history replay. */
   AGENT_CHAT_IMESSAGE: "agent-chat-imessage",
   /** Signed Photon chat preparation and single-attempt response delivery. */
   AGENT_CHAT_PHOTON: "agent-chat-photon",
@@ -61,7 +66,10 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.HOME,
   TASK_QUEUES.REPORTS,
   TASK_QUEUES.INFRA,
+  TASK_QUEUES.OPS,
   TASK_QUEUES.MINING_RESET,
+  TASK_QUEUES.STORM_FORUM_BETA,
+  TASK_QUEUES.STORM_FORUM_PROD,
   TASK_QUEUES.REPO_AUTOMATION,
   TASK_QUEUES.SCOUT,
   TASK_QUEUES.MAINTENANCE,

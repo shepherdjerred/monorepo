@@ -180,6 +180,14 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       initiallyActive: true,
     }),
     intervalSchedule(stage, {
+      name: "support-inbox",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "support-inbox" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+      initiallyActive: true,
+    }),
+    intervalSchedule(stage, {
       name: "competition-refresh",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-refresh" }],
@@ -216,17 +224,6 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage }],
       every: "1 minute",
     }),
-    ...(stage === "beta"
-      ? []
-      : [
-          intervalSchedule(stage, {
-            name: "progression-outbox",
-            workflowType: "scoutBackgroundJobWorkflow",
-            args: [{ stage, kind: "progression-outbox" }],
-            every: "1 minute",
-            catchupWindow: CATCHUP_TIGHT,
-          }),
-        ]),
     intervalSchedule(stage, {
       name: "progression-reconciliation",
       workflowType: "scoutBackgroundJobWorkflow",

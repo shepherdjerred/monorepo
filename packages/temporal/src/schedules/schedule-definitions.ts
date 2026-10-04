@@ -11,7 +11,9 @@ import {
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 import { MINECRAFT_SCHEDULES } from "./minecraft-schedule-definitions.ts";
+import { STORM_FORUM_SCHEDULES } from "./storm-forum-schedule-definitions.ts";
 import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
+import { WOODPECKER_RETENTION_SCHEDULE } from "./woodpecker-retention-schedule.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -54,7 +56,9 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...SCOUT_SCHEDULES,
   ...BACKUP_SCHEDULES,
   ...MINECRAFT_SCHEDULES,
+  ...STORM_FORUM_SCHEDULES,
   ...AGENT_CHAT_SCHEDULES,
+  WOODPECKER_RETENTION_SCHEDULE,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",

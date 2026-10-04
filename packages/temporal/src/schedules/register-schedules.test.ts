@@ -451,6 +451,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
+  // Drain the longest PHP request before taking the coordinated snapshot.
+  backupStormForumWorkflow: 65_000,
   // preheat: 13 × 15m presence-checked hold chunks (195 minutes) + turn-off backstop
   goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
@@ -468,6 +470,7 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
+  "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",
@@ -528,6 +531,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Reset sleeps while polling the backup and Job only inside its heartbeat
   // Activity; the Workflow awaits that one bounded Activity.
   "runMiningWorldResetWorkflow",
+  "runStormPlotReconciliationWorkflow",
+  "reconcileStormCompanionsWorkflow",
   "runBugsinkHousekeepingWorkflow",
   // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
@@ -539,6 +544,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runVeleroR2OrphanAuditWorkflow",
   "runSeaweedFsBackupWorkflow",
   "runSeaweedFsBackupRetentionAndGcWorkflow",
+  // Bounded inventory and log-retention Activities; no Workflow-level sleeps.
+  "runWoodpeckerLogRetention",
   "syncGolinks",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",

@@ -68,7 +68,7 @@ async function markObservedCustomLobbyReady(
     async (transaction) => {
       await transaction.customGame.update({
         where: { id: game.id },
-        data: { state: "LOBBY_READY", tournamentLobbyId: null },
+        data: { state: "LOBBY_READY" },
       });
       await transaction.customNight.update({
         where: { id: snapshot.id },
@@ -283,13 +283,6 @@ export async function voidCustomGame(
       await transaction.customGame.update({
         where: { id: game.id },
         data: { state: "VOID", completedAt: new Date() },
-      });
-      await transaction.tournamentLobby.updateMany({
-        where: {
-          customGame: { id: game.id },
-          state: { notIn: ["reported", "cancelled", "abandoned", "expired"] },
-        },
-        data: { state: "cancelled" },
       });
       await transaction.customNight.update({
         where: { id: input.nightId },

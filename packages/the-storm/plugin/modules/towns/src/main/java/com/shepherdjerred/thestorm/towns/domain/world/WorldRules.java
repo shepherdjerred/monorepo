@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.towns.domain.world;
 
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
+import com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel;
 
 /**
  * Whether a world effect starting on {@code source} may change {@code target}.
@@ -19,6 +20,9 @@ public final class WorldRules {
   private WorldRules() {}
 
   public static boolean allows(WorldEffect effect, Land source, Land target) {
+    if (source instanceof Land.WorkLand || target instanceof Land.WorkLand) {
+      return false;
+    }
     if (source instanceof Land.Wilderness && target instanceof Land.Wilderness) {
       return true;
     }
@@ -35,8 +39,26 @@ public final class WorldRules {
     var flag = Containment.flagFor(effect);
     return switch (land) {
       case Land.Wilderness _ -> true;
+      case Land.WorkLand _ -> false;
       case Land.TownLand(var claim) -> flag.map(claim.flags()::has).orElse(true);
-      case Land.RegionLand _ -> flag.isEmpty();
+      case Land.RegionLand _ ->
+          flag.isEmpty()
+              && switch (effect) {
+                case NATURAL_CHANGE,
+                    TREE_GROWTH,
+                    BLOCK_SPREAD,
+                    SCULK_SPREAD,
+                    FALLING_BLOCK,
+                    PORTAL_CREATION ->
+                    false;
+                default -> true;
+              };
+      case Land.ParcelLand(var parcel) ->
+          parcel.phase() == ProtectedParcel.Phase.ACTIVE
+              && flag.isEmpty()
+              && effect != WorldEffect.NATURAL_CHANGE
+              && effect != WorldEffect.SCULK_SPREAD
+              && effect != WorldEffect.PORTAL_CREATION;
     };
   }
 }

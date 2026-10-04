@@ -14,6 +14,69 @@ Application state (subscriptions, competitions, guilds) is PostgreSQL 16
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.
 
+## Support messages
+
+`SupportConversation` joins web feedback, private Discord forms, and bot DMs by
+Discord identity within each environment. `Feedback` holds inbound and human
+outbound messages. Bot DMs do not require a web account; signing in later with
+the same Discord identity exposes that history. The gateway subscribes only to
+direct-message events, with partial channels enabled, not guild message content.
+Gateway message/interaction IDs and web UUIDs deduplicate retries. Intake uses
+a per-sender transaction lock, ten-message-per-minute limit, and five-upload-
+per-minute limit backed by minimal sender throttle and alert-grouping state that
+survives conversation deletion, plus operator mute. Discord DM and web screenshot
+uploads share the same sender quota. A database trigger adopts feedback inserted
+by older pods during a rolling deployment, so the one-time data migration does
+not leave late legacy submissions detached from the inbox.
+
+`/app/feedback` is the permanent composer and reply history. Operations' inbox
+uses the structural operator allowlist independently of the pipeline console
+flag; ordinary server admins cannot read it. Read, waiting-on-user, and resolved
+are separate states; an inbound follow-up reopens the conversation. Replies are
+committed to web history before notification work, so blocked Discord DMs never
+hide an answer. Notification delivery, mute changes, and deletion serialize on
+the same sender lock, so no notification can arrive after deletion commits.
+Reply request IDs prevent duplicate replies.
+
+`SupportJob` is the durable outbox. Intake groups operator alerts and DM receipts
+in five-minute windows. A prompt Temporal start drains work; the one-minute
+`support-inbox` Schedule recovers missed starts and stale claims. Discord sends
+are at-most-once attempts: interrupted/ambiguous outcomes become `UNKNOWN`, never
+automatic resends. Storage work uses deterministic keys and bounded retries.
+Operations shows delivery failures and detached file-deletion failures, with
+retry controls only for repeatable storage work. DM audit content is redacted.
+
+Screenshots accept PNG/JPEG/WebP up to 10 MiB, five per message. Web uploads
+reserve a private object key before I/O; bot attachments archive only allowlisted
+Discord CDN URLs, with no redirects and bounded byte counts. Successful copies
+clear the expiring source URL. Private `scout-support-beta`/`scout-support-prod`
+buckets are backed up separately from disposable report images. The bootstrap
+`SUPPORT_BUCKET_NAME` selects the bucket; image reads authenticate ownership or
+the operator allowlist, validate stored bytes, and return private/no-store headers.
+Accepted content remains until confirmed manual deletion. Deletion fences
+archive work, removes active records, and durably queues file cleanup. Unsubmitted
+uploads expire after 24 hours. Backups follow existing rotation; conversation
+deletion removes message and attachment content but retains the sender ID,
+recent inbound/upload timestamps, and five-minute alert/receipt grouping
+timestamps needed to preserve abuse controls. Failure notices to a sender are
+coalesced to one per minute, with only the latest notice timestamp retained.
+Muted senders also retain their minimal restriction state.
+
+`scout_support_conversations_enabled` gates new Discord controls, screenshots,
+operator alerts, and reply DMs; stored web messages remain readable and bot DM
+intake still gets receipts. `scout_support_report_action_enabled` additionally
+controls the passive report feedback button. V2 freezes that button with the
+notification presentation before delivery. These controls create no additional
+outreach messages and do not change existing outreach budgets. Fourteen-day
+Operations measurements exclude operator conversations and count report actions
+delivered/opened/submitted; delivery is not an impression. Analytics never carry
+support text, attachment URLs, or screenshot bytes.
+
+Feedback links derive from the application origin. `/help`, website support,
+the permanent form, and existing occasional outreach route to this conversation;
+GitHub issues and personal developer DMs are not support entrypoints. The
+community Discord is optional and is not mirrored into private support.
+
 ## Commands
 
 ```bash
@@ -123,9 +186,55 @@ Two invariants worth knowing before editing a skill:
   prompt itself stays byte-stable for provider prompt caching.
 - Tripwires are the rules that must hold even when a body is never loaded
   ("a prepared confirmation is a proposal, not an entity"); they render in
-  the core prompt for every turn where the skill is enabled. Skill body text
-  deliberately never enters persisted traces: `tool-inspection.ts` has no
-  `load_skill` branch, so share-link holders see only the tool name.
+  the core prompt for every turn where the skill is enabled. Exact loaded
+  bodies and tool inputs/outputs are persisted in `ExploreToolPayload`.
+  Stream previews remain bounded; owners can fetch complete payloads on demand.
+  Shared reads check the current token and frozen branch on every request,
+  project public analytical evidence, and redact private tool contracts.
+
+### Complete datasets and isolated analysis
+
+`scout-explore-analysis-enabled` gates the data-analysis skill and tools.
+`materialize_query_dataset` retains every selected row (up to 50,000);
+`materialize_raw_documents` reads captured match, prematch and timeline JSON
+for those match IDs. Raw documents preserve unknown fields, nested arrays,
+nulls and original identities with a separate remap. Spectator credentials
+are excluded. Source key, digest and capture time identify each capture;
+missing documents are reported explicitly, without acquiring new Riot data.
+
+Datasets belong to one run, have immutable names, and share a 64 MiB turn
+limit. Their generation identifies both the published build and committed
+staging snapshot; a change requires repeating the selection. Schema discovery
+and validated JSON paths expose nested fields without evaluating expressions.
+The JavaScript tool runs QuickJS in WebAssembly inside a terminated Bun worker:
+10 seconds, 256 MiB, 64 KiB output, four executions per turn, and two global
+leases in PostgreSQL. It exposes datasets and synchronous JSON results; no
+host functions, imports, filesystem, network or credentials are installed.
+
+The lake fingerprint includes `raw_documents`. Rebuild the lake from canonical
+storage before enabling analysis against an older build. Rebuild and compaction
+publish raw documents together with the existing projections. Version 2 staging
+receipts attest this larger projection; existing version 1 receipts keep their
+original meaning.
+
+### Model choice and spending
+
+`scout-explore-model-picker-enabled` offers GPT-6 Luna and GPT-6.1 Sol with
+high reasoning. The conversation remembers the choice; each answer records
+its model and reasoning setting. Legacy clients retain their strict SSE and
+REST contracts; version 3 transcript reads include the new metadata.
+
+The typed `scout-explore-spend-policy` defaults to $20 shared per UTC month,
+$5 per user per month and $0.50 per turn. PostgreSQL reservations in integer
+microdollars precede every provider step and repair, with retries disabled.
+Actual usage includes cached input and hidden reasoning output. Missing usage
+or an uncertain response keeps its maximum hold; stopping or restarting a run
+does not refund that hold. Quotas and active-run admission are durable: one
+active turn per user, five globally, and the same policy supplies the UI counts.
+Each call has a conservative 256,000-token input bound computed from UTF-8
+bytes of the complete prompt and tool schemas plus framing overhead; available
+spending can impose a smaller limit. Dataset contents stay outside the prompt
+unless a tool explicitly selects or summarizes them.
 
 ## Durable match facts
 
@@ -755,11 +864,7 @@ crash. Its first read Activity records Temporal's run id as acceptance of that
 request, so later sweeps stop treating it as an unaccepted start. Repeated
 producer transitions reuse the standing intent without opening a new request.
 The invite expires at the series deadline; lobby-ready and overdue
-messages expire after two hours and seven days respectively. The shared Duel
-message builder serves both V2 and the legacy `DuelStatusOutbox` drain, which
-continues to deliver rows created before the producer cutover. A legacy row
-owns its dedupe key even after delivery; a producer seeing that row does not
-mint a V2 intent for the same message. V2 stores the
+messages expire after two hours and seven days respectively. V2 stores the
 guild, series, and mention list in a versioned announcement and verifies the
 series and target channel before sending. It does not create a match render
 receipt for a Duel subject.
@@ -815,10 +920,9 @@ that is not ported, and is an explicit gap.
 A `hall-record-break` intent is one guild's Hall of Fame announcement for one
 match, keyed `hall-record-break:<riotMatchId>:<guildId>` — by guild, not
 channel, so a Hall channel change never mints a second one. Its envelope is
-`{guildId, riotMatchId, records}`, the records being exactly the array v1's
-`HallRecordBreakOutbox` stores, and the arm
-(`notification/hall-record-break-notification.ts`) sends v1's own
-`hallBreakEmbed` for them. An envelope whose every record id was since
+`{guildId, riotMatchId, records}`, and the arm
+(`notification/hall-record-break-notification.ts`) renders one embed for the
+records. An envelope whose every record id was since
 retired, or that does not parse, is terminal `content-unavailable` rather than
 an empty embed. The per-server `hall_of_fame_enabled` policy is re-read before
 delivery by `notification/kind-policy.ts`, in `markNotificationReadyV2` and
@@ -1027,38 +1131,28 @@ retirement on `scout_durable_notification_intents_retired_total{reason,source}`
 and log it; the ready-backlog family reads `state = 'ready'` only, so a retired
 intent leaves it.
 
-### Hall record breaks move to intents per server
+### Hall record breaks are intents
 
 `evaluateHallMatch` announces a guild's record breaks inside its own Hall
 transaction through `announceHallRecordBreak`
-(`src/progression/hall/break-announcement.ts`), on exactly one path per
-(guild, match). The first path to record the announcement keeps it:
-
-- an existing `HallRecordBreakOutbox` row keeps v1's upsert, whatever the flag
-  says;
-- an existing `hall-record-break` intent is left as it is, and no outbox row
-  is written beside it, whatever the flag says; a standing intent whose
-  records differ from this evaluation's throws instead of choosing;
-- with neither, `scout_v2_progression_notifications_enabled` (Flipt, per
-  `server`, off by default in every environment) decides: on mints a
-  `pending` intent with a freshness deadline of creation plus 24 hours, off
-  writes the outbox row.
+(`src/progression/hall/break-announcement.ts`), which mints one `pending`
+`hall-record-break` intent per (guild, match) with a freshness deadline of
+creation plus 24 hours. A standing intent is left as it is; one whose records
+differ from this evaluation's throws instead of choosing.
 
 V2 uses the committed observation to suppress a `silent-backfill` match and
-throws if that observation is absent. Legacy v1 uses its discovery-time silent
-decision, so its fail-open observation dual-write cannot stall progression. If
-that write is absent while the V2 flag is on, the announcement stays on v1's
-outbox; an intent without an observation could not enter V2 fan-out. The
-records are still updated for silent matches. This also stops v1's outbox from
-queueing record breaks for backfilled history.
+throws if that observation is absent. Legacy v1 announces only when its own
+discovery-time decision is not silent and the match has a `live`
+observation; without one the records are still updated but nothing is
+announced, because an intent without an observation could not enter V2
+fan-out.
 
 Progression runs before the V2 match core's post-commit fan-out, and
 `planMatchFanOutV2` starts a notification child for every drivable non-prematch
 intent of the match, so a minted hall intent is driven by the same run with no
 extra wiring. An intent minted while v1 owns post-match discovery has no such
 fan-out and stays `pending` until a `scoutPipelineReconciliationV2Workflow`
-run drives it, so ramp the flag only where V2 owns post-match discovery. To ramp a server, add its rollout in Flipt
-and record the same targeting in `managed-flag-inventory.json`.
+run drives it.
 
 ## Beta Customs operations
 
@@ -1175,6 +1269,11 @@ Three outcomes stay distinct on every path: Discord unreachable
 (`NOT_FOUND` / 403), and the caller not authorized (`FORBIDDEN`). Failing to
 reach Discord must never be reported as either of the other two;
 `trpc/discord-upstream.ts` and `customs/activity-auth.ts` enforce that.
+
+Parallel web procedures share one in-flight guild membership read per user
+before its five-minute success cache is populated. Failures remain errors and
+are not cached as empty guild lists. Re-authentication invalidates both the
+cached result and the old in-flight read's ability to repopulate it.
 
 Gateway events still _write_ installation state. Two background paths that used
 to _read_ the gateway cache now use the same install port, because they run as
@@ -1308,28 +1407,19 @@ Notes that are easy to get wrong:
 
 ## Database preparation and startup
 
-Ordinary image startup runs Prisma migrations, validates the completed import
-receipt and Bucks ledger using Postgres only, then boots the selected role.
-It does not open the retained SQLite snapshot or convert stored reports.
-
-Prepare a fresh or restored database explicitly before starting the image:
+Ordinary image startup runs Prisma migrations, verifies the Bucks ledger using
+Postgres only, then boots the selected role:
 
 ```bash
 bun x --no-install prisma migrate deploy
-bun run scripts/import-legacy-sqlite.ts --source /path/to/retained.sqlite
-bun run scripts/scoutql/migrate-scoutql-v2.ts --database "$DATABASE_URL" --fix
 bun run scripts/check-database-readiness.ts
 ```
 
-For an intentionally empty deployment, replace the import command with
-`bun run scripts/import-legacy-sqlite.ts --allow-fresh-install --source /path/to/absent.sqlite`.
-The importer refuses an unmarked populated database. After restoring Postgres,
-retain its `_legacy_sqlite_import` receipt; use the explicit import verification
-CLI when comparing to an original snapshot. Keep snapshots for recovery.
-
-The readiness check rejects missing or malformed import receipts and ledger
-drift. Local fixture databases use their existing bootstrap path rather than
-this hosted-image entrypoint.
+A fresh database needs nothing else: once its migrations are applied it boots
+with no import step. A restored database boots the same way. The readiness
+check refuses only ledger drift (a `BucksAccount` balance that disagrees with
+its ledger sum). Local fixture databases use their existing bootstrap path
+rather than this hosted-image entrypoint.
 
 ## Configuration
 

@@ -1,5 +1,11 @@
 pluginManagement { includeBuild("build-logic") }
 
+// Citizens publishes mutable Maven snapshots. Use the same immutable, checksum-verified
+// Jenkins artifact as the server; Maven timestamp normalization breaks Gradle locking.
+val citizensPin = Regex("(?m)^citizens = \"([^\"]+-b(\\d+))\"$")
+    .find(file("gradle/libs.versions.toml").readText())
+    ?: error("Citizens must be pinned to a Jenkins build in libs.versions.toml")
+
 dependencyResolutionManagement {
   repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
   repositories {
@@ -10,6 +16,22 @@ dependencyResolutionManagement {
     maven("https://repo.bluecolored.de/releases") {
       content { includeGroup("de.bluecolored") }
     }
+    // WorldEdit (gameplay + the MCBridge agent bridge). Exclusive, so these
+    // groups resolve from enginehub only: Maven Central mirrors some of them
+    // with different POM bytes, which breaks dependency verification.
+    exclusiveContent {
+      forRepository { maven("https://maven.enginehub.org/repo/") }
+      filter {
+        includeGroupByRegex("com\\.sk89q.*")
+        includeGroupByRegex("org\\.enginehub.*")
+      }
+    }
+    ivy("https://ci.citizensnpcs.co/job/Citizens2/${citizensPin.groupValues[2]}/artifact/dist/target") {
+      patternLayout { artifact("Citizens-[revision].jar") }
+      metadataSources { artifact() }
+      content { includeModule("net.citizensnpcs", "citizens-main") }
+    }
+    maven("https://maven.playpro.com") { content { includeGroup("net.coreprotect") } }
   }
 }
 
@@ -25,10 +47,12 @@ val modules =
         "discord",
         "essentials",
         "messages",
+        "mail",
         "shards",
         "tracks",
         "towns",
         "npcs",
+        "companions",
         "quests",
         "spells",
         "mechanics",
@@ -43,6 +67,9 @@ val modules =
     )
 
 include("core", "architecture", "dist")
+
+// MCBridge: the agent bridge plugin (its own MCBridge.jar, never part of TheStorm.jar).
+include("bridge")
 
 modules.forEach { name ->
   include(name)

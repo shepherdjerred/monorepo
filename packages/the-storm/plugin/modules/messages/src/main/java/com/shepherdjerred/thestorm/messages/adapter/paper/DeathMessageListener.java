@@ -52,6 +52,7 @@ public final class DeathMessageListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   public void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     var victim = event.getPlayer();
     var source = event.getDamageSource();
     var names = new EnumMap<Placeholder, Component>(Placeholder.class);

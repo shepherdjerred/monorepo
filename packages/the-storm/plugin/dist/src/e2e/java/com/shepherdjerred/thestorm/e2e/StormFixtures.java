@@ -29,6 +29,14 @@ public final class StormFixtures extends JavaPlugin {
       Objects.requireNonNull(
           new WorldCreator(name).type(WorldType.FLAT).generateStructures(false).createWorld());
     }
+    prepareHomes();
+    prepareArena();
+    prepareAltars();
+    prepareSeasonalDoors();
+    getLogger().info("Prepared synthetic fixtures for all Storm modules");
+  }
+
+  private void prepareHomes() {
     stand(section(yaml("essentials.yml"), "spawn"));
     for (var anchor : yaml("world.yml").getMapList("merchant.anchors")) {
       stand(
@@ -36,6 +44,15 @@ public final class StormFixtures extends JavaPlugin {
           ((Number) anchor.get("y")).doubleValue(),
           ((Number) anchor.get("z")).doubleValue());
     }
+    prepareNpcs();
+    prepareArena();
+    prepareAltars();
+    prepareSeasonalDoors();
+    getLogger().info("Prepared synthetic fixtures for all Storm modules");
+    new PlotFixtures(this).register();
+  }
+
+  private void prepareNpcs() {
     for (var name : java.util.List.of("spawn", "quest-givers", "watch")) {
       var npcs = yaml("npcs/" + name + ".yml");
       var homes = section(npcs, "npcs");
@@ -47,6 +64,9 @@ public final class StormFixtures extends JavaPlugin {
         stand(section(places, id));
       }
     }
+  }
+
+  private void prepareArena() {
     var arena = yaml("arena/arenas/colosseum.yml");
     var min = section(arena, "region.min");
     var max = section(arena, "region.max");
@@ -80,6 +100,9 @@ public final class StormFixtures extends JavaPlugin {
     }
     var ready = section(arena, "readyBlock");
     block(ready.getInt("x"), ready.getInt("y"), ready.getInt("z"), Material.IRON_BLOCK);
+  }
+
+  private void prepareAltars() {
     for (var altar : yaml("shards.yml").getMapList("altars")) {
       block(
           ((Number) altar.get("x")).intValue(),
@@ -87,6 +110,9 @@ public final class StormFixtures extends JavaPlugin {
           ((Number) altar.get("z")).intValue(),
           Material.valueOf((String) altar.get("material")));
     }
+  }
+
+  private void prepareSeasonalDoors() {
     for (var event : yaml("seasonal.yml").getMapList("events")) {
       // Bukkit exposes nested YAML lists as maps; reload each event as a section.
       var config = new YamlConfiguration();
@@ -104,7 +130,6 @@ public final class StormFixtures extends JavaPlugin {
         }
       }
     }
-    getLogger().info("Prepared synthetic fixtures for all Storm modules");
   }
 
   private YamlConfiguration yaml(String path) {

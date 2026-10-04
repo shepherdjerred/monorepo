@@ -81,6 +81,18 @@ describe("application image inputs", () => {
     expect(dockerfile).toContain("ci/scripts/images/smoke-app-configs.ts");
   });
 
+  test("keeps Storm Forum PHP-FPM in the foreground with stderr logging", async () => {
+    const dockerfile = await read("packages/storm-forum/Dockerfile");
+    const fpmConfig = await read("packages/storm-forum/runtime/fpm.conf");
+    const smoke = await read("ci/scripts/images/smoke-app-in-image.ts");
+    expect(dockerfile).toContain('"--nodaemonize", "--force-stderr"');
+    expect(fpmConfig).not.toContain("/proc/self/fd/2");
+    expect(fpmConfig).toContain("error_log = /tmp/php-fpm.log");
+    expect(smoke).toContain(
+      "php-fpm --test --nodaemonize --force-stderr --fpm-config",
+    );
+  });
+
   test("provisions Scout's throwaway database for its exact-digest smoke", async () => {
     const dockerfile = await read("ci/application-image-smoke.Dockerfile");
     expect(dockerfile).toContain("scout-for-lol)");

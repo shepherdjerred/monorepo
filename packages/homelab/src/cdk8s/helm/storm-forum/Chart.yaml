@@ -1,0 +1,6 @@
+apiVersion: v2
+name: storm-forum
+description: The Storm XenForo forum
+type: application
+version: "$version"
+appVersion: "$appVersion"

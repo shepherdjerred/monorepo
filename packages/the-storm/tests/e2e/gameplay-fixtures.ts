@@ -8,14 +8,18 @@ export async function gameplayFixtures(
 ): Promise<
   Pick<
     StartServerOptions,
-    "stormConfig" | "fixturesJar" | "mechanicsE2eJar" | "mechanicsConfig"
+    | "stormConfig"
+    | "fixturesJar"
+    | "mechanicsE2eJar"
+    | "mechanicsConfig"
+    | "companionsE2eJar"
   >
 > {
   const content = path.join(packageRoot, "server/owned/plugins/TheStorm");
   const owned = await Bun.file(path.join(content, "config.yml")).text();
-  // The six-module suite's mechanics plugin owns its listener and geometry;
+  // The focused suite's mechanics plugin owns its listener and geometry;
   // the full suite instead runs the production module with disposable worlds.
-  return full
+  const fixtures = full
     ? {
         stormConfig: owned,
         fixturesJar: path.join(
@@ -26,6 +30,7 @@ export async function gameplayFixtures(
     : {
         stormConfig: stormTestConfig(owned, [
           "economy",
+          "mail",
           "chat",
           "tracks",
           "towns",
@@ -40,4 +45,11 @@ export async function gameplayFixtures(
           path.join(content, "mechanics.yml"),
         ).text(),
       };
+  return {
+    ...fixtures,
+    companionsE2eJar: path.join(
+      packageRoot,
+      "plugin/modules/companions/build/libs/TheStormCompanionsE2E.jar",
+    ),
+  };
 }

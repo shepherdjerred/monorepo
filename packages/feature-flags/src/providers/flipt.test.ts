@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { ErrorCode } from "@openfeature/server-sdk";
 import snapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
 import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
@@ -7,18 +7,263 @@ import { createFliptFetcher } from "@shepherdjerred/feature-flags/providers/flip
 
 const CONTEXT = { targetingKey: "entity-1" };
 
-async function providerWithFixture(): Promise<FliptProvider> {
-  const fake = createFakeFetcher({ kind: "snapshot", body: snapshot });
+async function providerWithFixture(
+  fake = createFakeFetcher({ kind: "snapshot", body: snapshot }),
+  pollIntervalSeconds = 300,
+): Promise<FliptProvider> {
   const provider = new FliptProvider({
     url: "http://flipt.invalid:8080",
     namespace: "default",
     environment: "default",
-    pollIntervalSeconds: 300,
+    pollIntervalSeconds,
     fetcher: fake.fetcher,
   });
   await provider.initialize();
   return provider;
 }
+
+describe("FliptProvider — explicit freshness with one client", () => {
+  let provider: FliptProvider | undefined;
+  afterEach(async () => {
+    await provider?.onClose();
+    provider = undefined;
+    vi.useRealTimers();
+  });
+
+  test("outage leaves ordinary cached answers intact, but strict checks fail and later recover", async () => {
+    const fake = createFakeFetcher({ kind: "snapshot", body: snapshot });
+    provider = await providerWithFixture(fake);
+    fake.setBehavior({ kind: "network-error", message: "offline" });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(false);
+    expect(
+      await provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).toMatchObject({ value: true });
+    fake.setBehavior({
+      kind: "snapshot",
+      body: {
+        ...snapshot,
+        flags: snapshot.flags.map((flag) => ({ ...flag, enabled: false })),
+      },
+    });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(true);
+    expect(
+      await provider.resolveBooleanEvaluation("plain-on", true, CONTEXT),
+    ).toMatchObject({ value: false });
+    expect(fake.callCount()).toBe(3);
+  });
+
+  test("corrupt body cannot poison a later same-ETag freshness check", async () => {
+    const fake = createFakeFetcher({
+      kind: "snapshot",
+      body: snapshot,
+      etag: "first",
+    });
+    provider = await providerWithFixture(fake);
+    fake.setBehavior({
+      kind: "snapshot",
+      body: { namespace: { key: "default" }, flags: "invalid" },
+      etag: "corrupt",
+    });
+    await expect(provider.refreshForEvaluation()).rejects.toThrow();
+    fake.setBehavior({ kind: "not-modified", etag: "corrupt" });
+    await expect(provider.refreshForEvaluation()).rejects.toThrow();
+    expect(fake.sentEtags).toEqual([undefined, undefined, undefined]);
+    expect(
+      await provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).toMatchObject({ value: true });
+    fake.setBehavior({ kind: "snapshot", body: snapshot, etag: "corrupt" });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(true);
+  });
+
+  test("configured background polling keeps conditional 304 reads and one refresh failure", async () => {
+    vi.useFakeTimers();
+    const fake = createFakeFetcher({
+      kind: "snapshot",
+      body: snapshot,
+      etag: "first",
+    });
+    const failure = vi.fn();
+    provider = new FliptProvider({
+      url: "http://flipt.invalid:8080",
+      namespace: "default",
+      environment: "default",
+      pollIntervalSeconds: 1,
+      fetcher: fake.fetcher,
+      onRefreshFailure: failure,
+    });
+    await provider.initialize();
+    fake.setBehavior({ kind: "not-modified", etag: "first" });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(fake.sentEtags).toEqual([undefined, "first"]);
+    fake.setBehavior({ kind: "network-error", message: "offline" });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(failure).toHaveBeenCalledTimes(1);
+    expect(
+      await provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).toMatchObject({ value: true });
+    fake.setBehavior({
+      kind: "snapshot",
+      body: { namespace: { key: "default" }, flags: "invalid" },
+      etag: "corrupt",
+    });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(failure).toHaveBeenCalledTimes(2);
+    fake.setBehavior({
+      kind: "snapshot",
+      etag: "corrupt",
+      body: {
+        ...snapshot,
+        flags: snapshot.flags.map((flag) => ({ ...flag, enabled: false })),
+      },
+    });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(true);
+    expect(fake.sentEtags.at(-1)).toBeUndefined();
+    expect(
+      await provider.resolveBooleanEvaluation("plain-on", true, CONTEXT),
+    ).toMatchObject({ value: false });
+    await provider.onClose();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(fake.callCount()).toBe(5);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  test("concurrent strict refreshes coalesce and shutdown aborts an in-flight transport", async () => {
+    const fake = createFakeFetcher({ kind: "snapshot", body: snapshot });
+    let pending = false;
+    let started: (() => void) | undefined;
+    const fetching = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const fetcher = (options?: Parameters<typeof fake.fetcher>[0]) => {
+      if (!pending) return fake.fetcher(options);
+      started?.();
+      return new Promise<never>(() => {
+        /* The provider's abort boundary must cancel this stalled transport. */
+      });
+    };
+    provider = new FliptProvider({
+      url: "http://flipt.invalid:8080",
+      namespace: "default",
+      environment: "default",
+      pollIntervalSeconds: 300,
+      fetcher,
+    });
+    await provider.initialize();
+    const first = provider.refreshForEvaluation();
+    const second = provider.refreshForEvaluation();
+    expect(first).toBe(second);
+    await expect(first).resolves.toBe(true);
+    expect(fake.callCount()).toBe(2);
+    pending = true;
+    const closingRefresh = provider.refreshForEvaluation();
+    await fetching;
+    await provider.onClose();
+    await expect(closingRefresh).resolves.toBe(false);
+    expect(
+      await provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).toMatchObject({ errorCode: ErrorCode.PROVIDER_NOT_READY });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(false);
+  });
+
+  test("an invalid initial snapshot never becomes an initialized provider", async () => {
+    const fake = createFakeFetcher({
+      kind: "snapshot",
+      body: { namespace: { key: "default" }, flags: "invalid" },
+    });
+    provider = new FliptProvider({
+      url: "http://flipt.invalid:8080",
+      namespace: "default",
+      environment: "default",
+      pollIntervalSeconds: 300,
+      fetcher: fake.fetcher,
+    });
+    await expect(provider.initialize()).rejects.toThrow();
+    await expect(provider.refreshForEvaluation()).resolves.toBe(false);
+    expect(
+      await provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).toMatchObject({ errorCode: ErrorCode.PROVIDER_NOT_READY });
+  });
+});
+
+describe("FliptProvider — serialized refresh transport", () => {
+  test("strict refresh waits for background polling and then reads its own complete response", async () => {
+    vi.useFakeTimers();
+    const fake = createFakeFetcher({
+      kind: "snapshot",
+      body: snapshot,
+      etag: "first",
+    });
+    let release: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const provider = new FliptProvider({
+      url: "http://flipt.invalid:8080",
+      namespace: "default",
+      environment: "default",
+      pollIntervalSeconds: 1,
+      fetcher: async (options) => {
+        const response = await fake.fetcher(options);
+        if (options?.etag !== undefined) await gate;
+        return response;
+      },
+    });
+    try {
+      await provider.initialize();
+      await vi.advanceTimersByTimeAsync(1000);
+      const strict = provider.refreshForEvaluation();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(fake.sentEtags).toEqual([undefined, "first"]);
+      fake.setBehavior({
+        kind: "snapshot",
+        etag: "second",
+        body: {
+          ...snapshot,
+          flags: snapshot.flags.map((flag) => ({ ...flag, enabled: false })),
+        },
+      });
+      release?.();
+      await expect(strict).resolves.toBe(true);
+      expect(fake.sentEtags).toEqual([undefined, "first", undefined]);
+      expect(
+        await provider.resolveBooleanEvaluation("plain-on", true, CONTEXT),
+      ).toMatchObject({ value: false });
+    } finally {
+      release?.();
+      await provider.onClose();
+      vi.useRealTimers();
+    }
+  });
+
+  test("unexpected strict 304 is rejected even if it contains a valid old body", async () => {
+    const fake = createFakeFetcher({ kind: "snapshot", body: snapshot });
+    const json = vi.fn(() => Promise.resolve(snapshot));
+    const provider = new FliptProvider({
+      url: "http://flipt.invalid:8080",
+      namespace: "default",
+      environment: "default",
+      pollIntervalSeconds: 300,
+      fetcher: async (options) => {
+        const response = await fake.fetcher(options);
+        return response.status === 304 ? { ...response, json } : response;
+      },
+    });
+    try {
+      await provider.initialize();
+      fake.setBehavior({ kind: "not-modified", etag: "old" });
+      await expect(provider.refreshForEvaluation()).rejects.toThrow(
+        "Unconditional snapshot request returned 304",
+      );
+      expect(json).not.toHaveBeenCalled();
+      expect(fake.sentEtags).toEqual([undefined, undefined]);
+      expect(
+        await provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+      ).toMatchObject({ value: true });
+    } finally {
+      await provider.onClose();
+    }
+  });
+});
 
 describe("FliptProvider — absence vs. answer", () => {
   test("a flag enabled in the snapshot resolves true", async () => {

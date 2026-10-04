@@ -105,7 +105,6 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "DuelGame", column: "evidenceJson" },
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
-  { table: "HallRecordBreakOutbox", column: "payloadJson" },
   { table: "HallRecordCell", column: "holdersJson" },
   { table: "HallRecordCell", column: "evidenceJson" },
   { table: "ScoutInteractiveRun", column: "trace" },
@@ -191,9 +190,6 @@ export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // re-reads `leafHits` alone. Its subjects come from the Dare's own target
   // list, which is a tracked source and cascades with it.
   { table: "BucksDareGame", column: "snapshot" },
-  // A pending record-break announcement. Its holders are copied from the Hall
-  // cells that produced it, and those are tracked sources.
-  { table: "HallRecordBreakOutbox", column: "payloadJson" },
   // A duel game's evidence carries the match's whole participant list, so it is
   // the same ten-strangers shape as a match pool roster. The competitors that
   // matter are tracked through DuelCompetitorMember.
@@ -242,9 +238,6 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   // tracked identity is unmapped, so nothing unmapped can predate the marker
   // except through `--allow-unresolved`, which records a map row either way.
   bareArrayJson("ActiveGame", "trackedPuuids", "updatedAt"),
-  bareArrayJson("TournamentLobby", "bluePuuids", "updatedAt"),
-  bareArrayJson("TournamentLobby", "redPuuids", "updatedAt"),
-  bareArrayJson("TournamentLobby", "joinedPuuids", "updatedAt"),
   objectJson("BucksDareTarget", "accounts", "createdAt"),
   objectJson("BucksDareV2Target", "accounts", "createdAt"),
   objectJson("BucksDareV2Revision", "targetsJson", "createdAt"),

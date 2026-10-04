@@ -85,6 +85,7 @@ group "app" {
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
     "storm-brain",
+    "storm-forum",
     "woodpecker-config-extension",
   ]
 }
@@ -202,6 +203,14 @@ target "storm-brain" {
   cache-to   = cacheto("storm-brain")
 }
 
+target "storm-forum" {
+  inherits   = ["_app"]
+  dockerfile = "packages/storm-forum/Dockerfile"
+  tags       = imagetags("storm-forum")
+  cache-from = cachefrom("storm-forum")
+  cache-to   = cacheto("storm-forum")
+}
+
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
   targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server"]
@@ -237,7 +246,10 @@ target "redlib" {
 # repository-owned config bundle. See packages/the-storm/server/README.md.
 target "the-storm-server" {
   context    = "packages/the-storm"
-  contexts   = { managed-flags = "packages/feature-flags/src" }
+  contexts = {
+    managed-flags          = "packages/feature-flags/src"
+    storm-brain-contracts  = "packages/storm-brain/contracts"
+  }
   dockerfile = "server/Dockerfile"
   target     = "image"
   tags       = imagetags("the-storm-server")

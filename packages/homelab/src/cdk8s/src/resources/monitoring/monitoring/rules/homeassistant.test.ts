@@ -31,7 +31,7 @@ async function collectWorkflowEntityIds(): Promise<Set<string>> {
 }
 
 describe("Home Assistant rules", () => {
-  test("uses the requested pet-care threshold boundaries without overlap", () => {
+  test("leaves incident timing to Temporal and keeps maintenance thresholds", () => {
     const groups = getHomeAssistantRuleGroups();
     const litterRules = groups.find(
       (group) => group.name === "homeassistant-litter-robot",
@@ -44,11 +44,21 @@ describe("Home Assistant rules", () => {
     }
 
     expect(
-      fountainRules.find((rule) => rule.alert === "PetLibroFountainWaterLow")
-        ?.expr.value,
-    ).toBe(
-      'homeassistant_binary_sensor_state{entity="binary_sensor.petlibro_fountain_water_low"} == 1',
-    );
+      fountainRules.find((rule) => rule.alert === "PetLibroFountainWaterLow"),
+    ).toBeUndefined();
+    expect(
+      fountainRules.find(
+        (rule) => rule.alert === "PetLibroFountainOperationProblem",
+      ),
+    ).toBeUndefined();
+    expect(
+      litterRules.find(
+        (rule) => rule.alert === "LitterRobotHomeAssistantProblem",
+      ),
+    ).toBeUndefined();
+    expect(
+      litterRules.find((rule) => rule.alert === "LitterRobotStalled"),
+    ).toBeUndefined();
     expect(
       litterRules.find((rule) => rule.alert === "LitterRobotLitterLow")?.expr
         .value,
@@ -63,6 +73,26 @@ describe("Home Assistant rules", () => {
       litterRules.find((rule) => rule.alert === "LitterRobotWasteCritical")
         ?.expr.value,
     ).toBe("trmnl_petcare_litter_waste_percent > 80");
+
+    const feederRules = groups.find(
+      (group) => group.name === "homeassistant-petlibro-feeders",
+    )?.rules;
+    if (feederRules === undefined) throw new Error("Missing feeder rule group");
+    expect(
+      feederRules.some(
+        (rule) => rule.alert === "PetLibroFeederLivingRoomProblem",
+      ),
+    ).toBe(false);
+    expect(
+      feederRules.some(
+        (rule) => rule.alert === "PetLibroFeederGuestRoomProblem",
+      ),
+    ).toBe(false);
+    expect(
+      feederRules.some(
+        (rule) => rule.alert === "PetLibroFeederLivingRoomBatteryProblem",
+      ),
+    ).toBe(true);
   });
 
   test("will not report a hopper state read from a stale source", () => {

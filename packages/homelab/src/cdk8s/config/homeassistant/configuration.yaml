@@ -228,51 +228,32 @@ tts:
   - platform: google_translate
 ffmpeg:
 
-automation: !include automation.yaml
 scene: !include scenes.yaml
 script: !include scripts.yaml
-
-# Restored incident flags suppress repeat pushes after reconnects or restarts.
-# Only a confirmed healthy state clears a flag; omit initial to retain it.
-input_boolean:
-  litter_robot_problem_notified:
-    name: Litter Robot Problem Notified
-  litter_robot_stalled_notified:
-    name: Litter Robot Stalled Notified
-  petlibro_living_room_feeder_problem_notified:
-    name: PetLibro Living Room Feeder Problem Notified
-  petlibro_guest_room_feeder_problem_notified:
-    name: PetLibro Guest Room Feeder Problem Notified
-  petlibro_fountain_water_low_notified:
-    name: PetLibro Fountain Water Low Notified
-  petlibro_fountain_operation_problem_notified:
-    name: PetLibro Fountain Operation Problem Notified
 
 # Template binary sensors for monitoring
 # Note: Jinja2 templates are escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
 template:
   # PetLibro Dockstream 2 should run continuously. The enum selector itself has
   # no numeric Prometheus series, so collapse Wi-Fi, mode, and dispensing into
-  # one problem sensor. HA holds it for five minutes before alerting so brief
-  # integration refreshes do not page in either notification channel.
+  # one raw problem sensor. Temporal owns the alert hold and delivery.
   - binary_sensor:
       - name: "PetLibro Fountain Operation Problem"
         unique_id: petlibro_fountain_operation_problem
         device_class: problem
-        delay_on: "00:05:00"
         attributes:
           problem_detail: "The cat fountain is offline, stopped dispensing, or no longer in constant-flow mode. Check power, Wi-Fi, the pump, and water."
         state: >
           {{ "{{" }} states('binary_sensor.dockstream_2_smart_fountain_wi_fi') != 'on'
              or states('binary_sensor.dockstream_2_smart_fountain_water_dispensing_state') != 'on'
              or states('select.dockstream_2_smart_fountain_water_dispensing_mode') != 'Flowing Water (Constant)' {{ "}}" }}
-  # Debounce in HA so persistent notifications and Prometheus see the same
-  # settled problem. Missing required inputs are problems or unknown, never healthy.
+  # These raw problem sensors preserve the device conditions and details.
+  # Temporal owns the hold, incident state, and notification delivery. Missing
+  # required inputs are problems or unknown, never healthy.
   - binary_sensor:
       - name: "Litter Robot Problem"
         unique_id: litter_robot_problem
         device_class: problem
-        delay_on: "00:05:00"
         state: >
           {{ "{{" }} states('vacuum.storage_litter_box') in ['error', 'unknown', 'unavailable']
              or states('sensor.storage_status_code') not in ['rdy', 'ccc', 'ccp', 'cd', 'cst', 'ec', 'p', 'csi', 'pwru', 'pwrd']
@@ -288,7 +269,6 @@ template:
       - name: "Litter Robot Stalled"
         unique_id: litter_robot_stalled
         device_class: problem
-        delay_on: "00:45:00"
         # A fault or missing status is not recovery; only ready/complete clears.
         state: >
           {{ "{{" }} states('sensor.storage_status_code') in ['ccp', 'cd', 'cst', 'ec', 'p', 'csi', 'pwru', 'pwrd']
@@ -301,7 +281,6 @@ template:
       - name: "PetLibro Living Room Feeder Problem"
         unique_id: petlibro_living_room_feeder_problem
         device_class: problem
-        delay_on: "00:05:00"
         state: >
           {{ "{{" }} states('binary_sensor.granary_smart_camera_feeder_food_status') != 'off'
              or states('binary_sensor.granary_smart_camera_feeder_food_dispenser') != 'off'
@@ -317,7 +296,6 @@ template:
       - name: "PetLibro Guest Room Feeder Problem"
         unique_id: petlibro_guest_room_feeder_problem
         device_class: problem
-        delay_on: "00:05:00"
         state: >
           {{ "{{" }} states('binary_sensor.granary_smart_camera_feeder_food_status_2') != 'off'
              or states('binary_sensor.granary_smart_camera_feeder_food_dispenser_2') != 'off'
@@ -333,10 +311,9 @@ template:
       - name: "PetLibro Fountain Water Low"
         unique_id: petlibro_fountain_water_low
         device_class: problem
-        delay_on: "00:15:00"
         # The sensor state is in fl. oz.; PetLibro also exposes an mL attribute.
-        # Return none on missing data: cancel a pending timer, mark unknown,
-        # and preserve the incident notification until confirmed recovery.
+        # Return none on missing data so Temporal cancels a pending timer,
+        # marks unknown, and preserves an existing incident until recovery.
         state: >
           {{ "{{" }} state_attr('sensor.dockstream_2_smart_fountain_remaining_water', 'mL') | float < 650
              if has_value('sensor.dockstream_2_smart_fountain_remaining_water')

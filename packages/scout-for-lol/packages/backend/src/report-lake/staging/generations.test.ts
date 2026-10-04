@@ -19,6 +19,7 @@ const dirs: string[] = [];
 
 function matchFiles(label: string) {
   return [
+    { table: "raw_documents" as const, content: `${label} raw\n` },
     { table: "matches" as const, content: `${label} match\n` },
     { table: "match_teams" as const, content: `${label} team\n` },
     { table: "match_team_bans" as const, content: `${label} ban\n` },
@@ -41,7 +42,7 @@ afterEach(async () => {
   );
 });
 
-test("a match generation appears with all three tables after commit", async () => {
+test("a match generation appears with its raw document and all three projections after commit", async () => {
   const dir = await lakeDir();
   const generation = await commitStagingGeneration({
     lakeDir: dir,
@@ -50,6 +51,7 @@ test("a match generation appears with all three tables after commit", async () =
     observedAt: new Date("2026-09-30T00:00:00Z"),
     source: { kind: "s3", key: "games/NA1_42/match.json", digest: "abc" },
     files: [
+      { table: "raw_documents", content: '{"document_id":"match:NA1_42"}\n' },
       { table: "matches", content: '{"id":1}\n' },
       { table: "match_teams", content: "\n" },
       { table: "match_team_bans", content: "\n" },
@@ -150,7 +152,10 @@ test("fold removes only captured generations and keeps a later commit", async ()
     projectionKind: "prematch",
     naturalId: "NA1_42",
     observedAt: new Date("2026-09-30T00:00:00Z"),
-    files: [{ table: "prematch", content: "\n" }],
+    files: [
+      { table: "prematch", content: "\n" },
+      { table: "raw_documents", content: "\n" },
+    ],
   });
   const snapshot = await snapshotStagingGenerations(dir);
   const second = await commitStagingGeneration({
@@ -158,7 +163,10 @@ test("fold removes only captured generations and keeps a later commit", async ()
     projectionKind: "prematch",
     naturalId: "NA1_42",
     observedAt: new Date("2026-09-30T00:01:00Z"),
-    files: [{ table: "prematch", content: "\n" }],
+    files: [
+      { table: "prematch", content: "\n" },
+      { table: "raw_documents", content: "\n" },
+    ],
   });
   expect(
     await removeFoldedGenerations(
@@ -192,6 +200,7 @@ test("rebuild cleanup requires the exact source object and digest", async () => 
     },
     files: [
       { table: "timeline_events", content: "\n" },
+      { table: "raw_documents", content: "\n" },
       { table: "timeline_event_participants", content: "\n" },
       { table: "timeline_participant_frames", content: "\n" },
       { table: "timeline_coverage", content: "\n" },
@@ -221,7 +230,10 @@ test("rebuild cleanup retires captured siblings only after rebuilding the select
     lakeDir: dir,
     projectionKind: "prematch" as const,
     naturalId: "NA1_42",
-    files: [{ table: "prematch" as const, content: "\n" }],
+    files: [
+      { table: "prematch" as const, content: "\n" },
+      { table: "raw_documents" as const, content: "\n" },
+    ],
   };
   const older = await commitStagingGeneration({
     ...options,
@@ -261,7 +273,10 @@ test("whole query retry resolves a new snapshot after cleanup", async () => {
     projectionKind: "prematch",
     naturalId: "NA1_42",
     observedAt: new Date("2026-09-30T00:00:00Z"),
-    files: [{ table: "prematch", content: "first\n" }],
+    files: [
+      { table: "prematch", content: "first\n" },
+      { table: "raw_documents", content: "first raw\n" },
+    ],
   });
   const firstSnapshot = await snapshotStagingGenerations(dir);
   let attempts = 0;
@@ -275,7 +290,10 @@ test("whole query retry resolves a new snapshot after cleanup", async () => {
           projectionKind: "prematch",
           naturalId: "NA1_42",
           observedAt: new Date("2026-09-30T00:01:00Z"),
-          files: [{ table: "prematch", content: "second\n" }],
+          files: [
+            { table: "prematch", content: "second\n" },
+            { table: "raw_documents", content: "second raw\n" },
+          ],
         });
         await removeFoldedGenerations(
           firstSnapshot,
@@ -316,7 +334,10 @@ test("exhausted snapshot retries preserve the missing manifest error", async () 
     projectionKind: "prematch",
     naturalId: "NA1_42",
     observedAt: new Date("2026-09-30T00:00:00Z"),
-    files: [{ table: "prematch", content: "\n" }],
+    files: [
+      { table: "prematch", content: "\n" },
+      { table: "raw_documents", content: "\n" },
+    ],
   });
   await rm(path.join(generation.dir, "manifest.json"));
   await expect(snapshotStagingGenerations(dir)).rejects.toThrow();

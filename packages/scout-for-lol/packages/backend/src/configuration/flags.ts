@@ -142,17 +142,13 @@ type FlagOverride = {
   betaOnly?: true;
 };
 
-/**
- * Flag configuration
- */
 type FlagConfig = {
   default: boolean;
   overrides: FlagOverride[];
 };
 
 export type FlagName =
-  | "ai_reports_enabled"
-  | "ai_reports_unlimited"
+  | `ai_reports_${"enabled" | "unlimited"}`
   | "ai_reviews_enabled"
   | "betting_enabled"
   | "bucks_dares_enabled"
@@ -162,7 +158,6 @@ export type FlagName =
   | "bucks_transfers_enabled"
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
-  | "competition_builder_v2_enabled"
   | "challenge_runs_enabled"
   | "clash_surface"
   | "custom_nights_enabled"
@@ -176,9 +171,9 @@ export type FlagName =
   | "initial_match_history_import_enabled"
   | "scout_client_ingestion"
   | "scout_operations_console_enabled"
+  | `scout_support_${"conversations" | "report_action"}_enabled`
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
-  | "scout_v2_progression_notifications_enabled"
   | "voice_assistant_enabled";
 
 /**
@@ -274,12 +269,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     ],
   },
   custom_nights_enabled: {
-    default: false,
-    overrides: [
-      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
-    ],
-  },
-  competition_builder_v2_enabled: {
     default: false,
     overrides: [
       { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
@@ -432,12 +421,8 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
-  /**
-   * Per server, mint new Hall record breaks as V2 intents. First path owns
-   * each guild and match; the flag is off by default and ramps per server.
-   * Targeting is mirrored in managed-flag-inventory.json.
-   */
-  scout_v2_progression_notifications_enabled: { default: false, overrides: [] },
+  scout_support_conversations_enabled: { default: false, overrides: [] },
+  scout_support_report_action_enabled: { default: false, overrides: [] },
   initial_match_history_import_enabled: {
     default: false,
     overrides: [],

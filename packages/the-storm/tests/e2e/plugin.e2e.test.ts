@@ -18,6 +18,7 @@ describe("The Storm plugin", () => {
       "agent",
       "chat",
       "economy",
+      "mail",
       "tickets",
       "towns",
       "tracks",

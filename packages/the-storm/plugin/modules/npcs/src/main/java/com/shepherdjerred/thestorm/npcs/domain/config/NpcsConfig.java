@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.npcs.domain.config;
 import com.shepherdjerred.thestorm.npcs.domain.movement.MovementSettings;
 import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * {@code plugins/TheStorm/npcs.yml}, owned by the repository. The NPCs themselves are content under
@@ -11,7 +10,7 @@ import java.util.regex.Pattern;
  *
  * @param movement how NPCs walk
  * @param animation which NPCs move and how often they think
- * @param navigator the hidden mob whose pathfinder plans NPC walks
+ * @param navigator Citizens path range
  * @param markers the quest markers above NPCs
  * @param dialog conversation settings
  * @param guard how NPCs detect threats and guards respond
@@ -93,21 +92,13 @@ public record NpcsConfig(
   }
 
   /**
-   * The navigator: an invisible, silent, invulnerable mob with no goals, spawned only to ask its
-   * pathfinder for a path. It must be a passive mob so it exists in Peaceful difficulty.
+   * Citizens navigation limits.
    *
-   * @param entity the entity type key, such as {@code minecraft:llama}; about player-sized, so its
-   *     paths fit a Mannequin
    * @param followRange the longest path it will plan, in blocks; longer walks re-plan
    */
-  public record Navigator(String entity, double followRange) {
-
-    private static final Pattern KEY = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
+  public record Navigator(double followRange) {
 
     public Navigator {
-      if (!KEY.matcher(entity).matches()) {
-        throw new IllegalArgumentException("entity must be a key like minecraft:llama: " + entity);
-      }
       if (!(followRange >= 16 && followRange <= 128)) {
         throw new IllegalArgumentException("followRange must be 16..128: " + followRange);
       }

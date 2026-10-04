@@ -6,6 +6,7 @@ import {
   golinkSyncActivities,
 } from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
+import { petCareAlertActivities } from "./pet-care-alerts.ts";
 import { homelabAuditActivities } from "./homelab/homelab-audit.ts";
 import { homelabAuditCollectorActivities } from "./homelab/homelab-audit-collectors.ts";
 import { agentTaskActivities } from "./agent/agent-task.ts";
@@ -47,18 +48,17 @@ import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 import { miningResetActivities } from "./homelab/mining-reset.ts";
+import { stormPlotActivities } from "./homelab/storm-plots.ts";
+import { stormCompanionActivities } from "./homelab/storm-companions.ts";
 import { agentChatActivities } from "./agent/chat/run-agent-chat-turn.ts";
 import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-turn.ts";
 import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
 import { discordAgentChatActivities } from "./agent/chat/discord-ingress.ts";
 import { httpAgentChatActivities } from "./agent/chat/http-ingress.ts";
-import { pollBlueBubblesMessages } from "./agent/imessage/poll.ts";
-import { prepareImessageCommand } from "./agent/imessage/prepare.ts";
-import { deliverImessageResponse } from "./agent/imessage/deliver.ts";
-import { waitForImessageCommand } from "./agent/imessage/wait.ts";
 import { preparePhotonCommand } from "./agent/photon/prepare.ts";
 import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
 import { waitForPhotonCommand } from "./agent/photon/wait.ts";
+import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retention.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -74,9 +74,12 @@ export const reportActivities = {
   sendAgentTaskFailureReport: agentTaskActivities.sendAgentTaskFailureReport,
   ...mainVulnScanAlertActivities,
   ...linkRotScanAlertActivities,
+  ...petCareAlertActivities,
 };
 
 export const infraActivities = {
+  ...stormCompanionActivities,
+  ...woodpeckerRetentionActivities,
   ...dnsAuditActivities,
   ...homelabAuditActivities,
   ...homelabAuditCollectorActivities,
@@ -93,7 +96,12 @@ export const infraActivities = {
 
 export const miningResetWorkerActivities = {
   ...miningResetActivities,
+  ...stormPlotActivities,
 };
+
+// Keep the legacy infra registration above to drain recorded histories.
+// This queue exposes only bounded snapshot collection/publication operations.
+export const opsWorkerActivities = { ...opsActivities };
 
 export const repoActivities = {
   ...fetcherActivities,
@@ -163,12 +171,6 @@ export const agentChatDeliveryActivities = {
     discordAgentChatActivities.deliverDiscordAgentChatMessage,
 };
 
-export const imessageAgentChatActivities = {
-  pollBlueBubblesMessages,
-  prepareImessageCommand,
-  deliverImessageResponse,
-  waitForImessageCommand,
-};
 export const photonAgentChatActivities = {
   preparePhotonCommand,
   deliverPhotonResponse,

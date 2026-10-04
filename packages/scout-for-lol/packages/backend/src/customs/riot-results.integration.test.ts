@@ -18,24 +18,19 @@ const fixture = RawMatchSchema.parse(
     new URL("../../../../testdata/rift.json", import.meta.url),
   ).json(),
 );
-const tournamentFixture = RawMatchSchema.parse({
-  ...fixture,
-  info: { ...fixture.info, tournamentCode: "TEST-CODE" },
-});
 const GUILD_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 const CHANNEL_ID = DiscordChannelIdSchema.parse("1337623164146155594");
 const HOST_ID = DiscordAccountIdSchema.parse("160509172704739328");
 
 async function seedPendingResult(
   options: {
-    lobbyState?: "resolved" | "expired" | "in_game";
-    linkMatch?: boolean;
+    /** Bind the game to the fixture's match, as an accepted observation does. */
+    bindMatch?: boolean;
     nightState?: "PLAYING" | "ENDED";
   } = {},
 ): Promise<{
   nightId: string;
   gameId: string;
-  lobbyId: number;
 }> {
   const night = await testPrisma.customNight.create({
     data: {
@@ -52,44 +47,6 @@ async function seedPendingResult(
   await testPrisma.customActiveNight.create({
     data: { guildId: GUILD_ID, nightId: night.id },
   });
-  const blue = fixture.info.participants.filter(
-    (participant) => participant.teamId === 100,
-  );
-  const red = fixture.info.participants.filter(
-    (participant) => participant.teamId === 200,
-  );
-  const lobby = await testPrisma.tournamentLobby.create({
-    data: {
-      code: "TEST-CODE",
-      apiMode: "live",
-      providerId: 1,
-      tournamentId: 2,
-      region: "AMERICA_NORTH",
-      platformId: "NA1",
-      serverId: GUILD_ID,
-      channelId: CHANNEL_ID,
-      creatorDiscordId: HOST_ID,
-      bluePuuids: JSON.stringify(blue.map((participant) => participant.puuid)),
-      redPuuids: JSON.stringify(red.map((participant) => participant.puuid)),
-      blueAliases: JSON.stringify(
-        blue.map(
-          (participant) => participant.riotIdGameName ?? participant.puuid,
-        ),
-      ),
-      redAliases: JSON.stringify(
-        red.map(
-          (participant) => participant.riotIdGameName ?? participant.puuid,
-        ),
-      ),
-      teamSize: 5,
-      pickType: "TOURNAMENT_DRAFT",
-      mapType: "SUMMONERS_RIFT",
-      spectatorType: "ALL",
-      state: options.lobbyState ?? "resolved",
-      matchId: options.linkMatch === false ? null : fixture.metadata.matchId,
-      expiresAt: new Date(fixture.info.gameCreation + 3 * 60 * 60 * 1000),
-    },
-  });
   const game = await testPrisma.customGame.create({
     data: {
       nightId: night.id,
@@ -98,7 +55,12 @@ async function seedPendingResult(
       rosterMode: "FIRST_TEN",
       map: "SUMMONERS_RIFT",
       pickMode: "TOURNAMENT_DRAFT",
-      tournamentLobbyId: lobby.id,
+      ...(options.bindMatch === false
+        ? {}
+        : {
+            observedLobbyId: "observed-local-lobby",
+            matchId: fixture.metadata.matchId,
+          }),
     },
   });
   for (const [index, participant] of fixture.info.participants.entries()) {
@@ -123,7 +85,7 @@ async function seedPendingResult(
       },
     });
   }
-  return { nightId: night.id, gameId: game.id, lobbyId: lobby.id };
+  return { nightId: night.id, gameId: game.id };
 }
 
 beforeEach(async () => {
@@ -134,35 +96,20 @@ afterAll(async () => {
   await testPrisma.$disconnect();
 });
 
-async function expectReportedAndVerified(seeded: {
-  readonly lobbyId: number;
+async function expectVerified(seeded: {
   readonly gameId: string;
 }): Promise<void> {
-  await expect(
-    testPrisma.tournamentLobby.findUniqueOrThrow({
-      where: { id: seeded.lobbyId },
-    }),
-  ).resolves.toMatchObject({ state: "reported" });
   await expect(
     testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
-  ).resolves.toMatchObject({ state: "VERIFIED" });
-}
-
-async function detachHistoricalLobby(seeded: {
-  readonly lobbyId: number;
-  readonly gameId: string;
-}): Promise<void> {
-  await testPrisma.customGame.update({
-    where: { id: seeded.gameId },
-    data: { tournamentLobbyId: null },
+  ).resolves.toMatchObject({
+    state: "VERIFIED",
+    matchId: fixture.metadata.matchId,
   });
-  await testPrisma.tournamentLobby.delete({ where: { id: seeded.lobbyId } });
 }
 
 describe("managed Customs results", () => {
   test("does not finalize an unobserved local lobby by roster alone", async () => {
-    const seeded = await seedPendingResult({ linkMatch: false });
-    await detachHistoricalLobby(seeded);
+    const seeded = await seedPendingResult({ bindMatch: false });
 
     await expect(
       finalizeManagedCustomResult(testPrisma, fixture),
@@ -183,8 +130,7 @@ describe("managed Customs results", () => {
   });
 
   test("does not finalize an observed lobby from its roster alone", async () => {
-    const seeded = await seedPendingResult({ linkMatch: false });
-    await detachHistoricalLobby(seeded);
+    const seeded = await seedPendingResult({ bindMatch: false });
     await testPrisma.customGame.update({
       where: { id: seeded.gameId },
       data: { observedLobbyId: "observed-local-lobby" },
@@ -204,15 +150,7 @@ describe("managed Customs results", () => {
   });
 
   test("finalizes an observed lobby by its attached match identity", async () => {
-    const seeded = await seedPendingResult({ linkMatch: false });
-    await detachHistoricalLobby(seeded);
-    await testPrisma.customGame.update({
-      where: { id: seeded.gameId },
-      data: {
-        observedLobbyId: "observed-local-lobby",
-        matchId: fixture.metadata.matchId,
-      },
-    });
+    const seeded = await seedPendingResult();
 
     await expect(
       finalizeManagedCustomResult(testPrisma, fixture, "SCOUT_CLIENT"),
@@ -239,9 +177,9 @@ describe("managed Customs results", () => {
   test("projects Match-V5 and opens intermission in one transaction", async () => {
     const seeded = await seedPendingResult();
 
-    await finalizeManagedCustomResult(testPrisma, tournamentFixture);
+    await finalizeManagedCustomResult(testPrisma, fixture);
 
-    await expectReportedAndVerified(seeded);
+    await expectVerified(seeded);
     await expect(
       testPrisma.customNight.findUniqueOrThrow({
         where: { id: seeded.nightId },
@@ -266,9 +204,9 @@ describe("managed Customs results", () => {
   test("treats a retry after verified result commit as success", async () => {
     const seeded = await seedPendingResult();
 
-    await finalizeManagedCustomResult(testPrisma, tournamentFixture);
+    await finalizeManagedCustomResult(testPrisma, fixture);
     await expect(
-      finalizeManagedCustomResult(testPrisma, tournamentFixture),
+      finalizeManagedCustomResult(testPrisma, fixture),
     ).resolves.toBe(seeded.nightId);
 
     await expect(
@@ -281,20 +219,15 @@ describe("managed Customs results", () => {
     ).resolves.toBe(1);
   });
 
-  test("a projection error rolls back before lobby and cursor completion", async () => {
+  test("a projection error rolls back before cursor completion", async () => {
     const seeded = await seedPendingResult();
     await testPrisma.customGameParticipant.deleteMany({
       where: { gameId: seeded.gameId, rosterOrder: 9 },
     });
 
     await expect(
-      finalizeManagedCustomResult(testPrisma, tournamentFixture),
+      finalizeManagedCustomResult(testPrisma, fixture),
     ).rejects.toThrow("must have 10 participants");
-    await expect(
-      testPrisma.tournamentLobby.findUniqueOrThrow({
-        where: { id: seeded.lobbyId },
-      }),
-    ).resolves.toMatchObject({ state: "resolved" });
     await expect(
       testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
     ).resolves.toMatchObject({ state: "RESULT_PENDING" });
@@ -307,7 +240,7 @@ describe("managed Customs results", () => {
     const seeded = await seedPendingResult({ nightState: "ENDED" });
     await testPrisma.customActiveNight.delete({ where: { guildId: GUILD_ID } });
 
-    await finalizeManagedCustomResult(testPrisma, tournamentFixture);
+    await finalizeManagedCustomResult(testPrisma, fixture);
 
     await expect(
       testPrisma.customNight.findUniqueOrThrow({
@@ -317,36 +250,5 @@ describe("managed Customs results", () => {
     await expect(
       testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
     ).resolves.toMatchObject({ state: "VERIFIED" });
-    await expect(
-      testPrisma.tournamentLobby.findUniqueOrThrow({
-        where: { id: seeded.lobbyId },
-      }),
-    ).resolves.toMatchObject({ state: "reported" });
-  });
-
-  test("finalizes by tournament code before poller linkage", async () => {
-    const seeded = await seedPendingResult({
-      lobbyState: "in_game",
-      linkMatch: false,
-    });
-
-    await finalizeManagedCustomResult(testPrisma, tournamentFixture);
-
-    await expect(
-      testPrisma.tournamentLobby.findUniqueOrThrow({
-        where: { id: seeded.lobbyId },
-      }),
-    ).resolves.toMatchObject({
-      matchId: fixture.metadata.matchId,
-      state: "reported",
-    });
-  });
-
-  test("recovers an expired linked lobby when Match-V5 is delayed", async () => {
-    const seeded = await seedPendingResult({ lobbyState: "expired" });
-
-    await finalizeManagedCustomResult(testPrisma, tournamentFixture);
-
-    await expectReportedAndVerified(seeded);
   });
 });

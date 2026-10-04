@@ -17,11 +17,6 @@
       "count": 1
     }
   },
-  "scripts/convert-common-denominator-reports.ts": {
-    "unicorn/no-negated-condition": {
-      "count": 1
-    }
-  },
   "scripts/discover-marketing-showcase.ts": {
     "custom-rules/prefer-async-await": {
       "count": 1
@@ -99,11 +94,6 @@
       "count": 1
     },
     "unicorn/prefer-string-slice": {
-      "count": 1
-    }
-  },
-  "scripts/scoutql/scoutql-v2-rewrite-render.ts": {
-    "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
@@ -216,11 +206,6 @@
       "count": 1
     }
   },
-  "src/database/legacy-import/run-import.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/discord/interactions.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -292,11 +277,6 @@
     }
   },
   "src/lib/subscription/limits.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/report-lake/rebuild-sources.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

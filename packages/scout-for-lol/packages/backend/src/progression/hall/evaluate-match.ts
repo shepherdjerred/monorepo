@@ -19,11 +19,7 @@ import {
   announceHallRecordBreak,
   type HallAnnouncementDelivery,
 } from "#src/progression/hall/break-announcement.ts";
-import {
-  HallBreakPayloadSchema,
-  HallBreakRecordsSchema,
-  type HallBreakPayload,
-} from "#src/progression/hall/break-payload.ts";
+import { HallBreakPayloadSchema } from "#src/progression/hall/break-payload.ts";
 import { hallSettingsFromRow } from "#src/progression/hall/settings.ts";
 import {
   fetchProgressionMatches,
@@ -38,17 +34,6 @@ type TrackedAccount = {
   readonly serverId: string;
   readonly player: { readonly id: number; readonly alias: string };
 };
-
-/**
- * Parse a queued Hall break-outbox payload, dropping any entry for a record
- * id retired by a catalog rename (see `dropRetiredHallRecordIds`) instead of
- * failing on it. Any other unrecognized id still fails loudly.
- */
-export function parseHallBreakOutboxPayload(
-  payloadJson: string,
-): HallBreakPayload[] {
-  return HallBreakRecordsSchema.parse(JSON.parse(payloadJson));
-}
 
 function holderFor(account: TrackedAccount): HallRecordHolder {
   return HallRecordHolderSchema.parse({
@@ -121,10 +106,7 @@ async function evaluateGuild(
   guildId: DiscordGuildId,
   matchId: string,
   matchesByPuuid: ReadonlyMap<string, ProgressionMatchRow>,
-  options: {
-    readonly v2Enabled: boolean;
-    readonly delivery: HallAnnouncementDelivery;
-  },
+  delivery: HallAnnouncementDelivery,
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await lockHallRecords(tx, guildId);
@@ -177,15 +159,14 @@ async function evaluateGuild(
       });
     });
     // Inside this transaction, so the announcement commits with the cells it
-    // describes. Which path takes it — v1's outbox row or a V2 intent, or
-    // neither for a silent match — is `announceHallRecordBreak`'s decision.
+    // describes. Whether a silent match announces at all is
+    // `announceHallRecordBreak`'s decision.
     await announceHallRecordBreak(tx, {
       guildId,
       matchId,
       channelId: settings.channelId,
       records: payload,
-      v2Enabled: options.v2Enabled,
-      delivery: options.delivery,
+      delivery,
       now: new Date(),
     });
   });
@@ -242,13 +223,6 @@ export async function evaluateHallMatch(
     if (configuredGuildIds.has(guildId)) guildIds.add(guildId);
   }
   for (const guildId of guildIds) {
-    // Read outside the transaction: a Flipt round trip must not hold the
-    // guild's Hall lock. It only chooses where a NEW announcement goes; one
-    // already recorded keeps its path whatever this answers.
-    const v2Enabled = await isPolicyEnabled(
-      "scout_v2_progression_notifications_enabled",
-      { server: guildId },
-    );
-    await evaluateGuild(guildId, matchId, byPuuid, { v2Enabled, delivery });
+    await evaluateGuild(guildId, matchId, byPuuid, delivery);
   }
 }

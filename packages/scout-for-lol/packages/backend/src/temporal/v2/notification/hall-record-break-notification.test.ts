@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { v5 as uuidv5 } from "uuid";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import {
+  COMPETITIVE_PROGRESSION_CATALOG,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
@@ -12,13 +15,8 @@ import {
 } from "#src/temporal/v2/notification/hall-record-break.test-fixtures.ts";
 
 /**
- * The Hall-shaped delivery arm, pinned against v1.
- *
- * The parity test is the contract this arm exists to keep: the V2 message is
- * v1's `hallBreakEmbed` output for the same records, so a guild cannot tell
- * which pipeline announced its record. The snapshot pins what that embed IS,
- * so a change to v1's copy shows up here as a deliberate diff rather than
- * silently changing both paths at once.
+ * The Hall-shaped delivery arm. The snapshot pins what the embed IS, so a copy
+ * change shows up here as a deliberate diff.
  */
 
 const stubs = vi.hoisted(() => ({
@@ -42,7 +40,6 @@ vi.mock("#src/metrics/progression.ts", () => ({
   hallRecordBreakDeliveries: { inc: stubs.inc },
 }));
 
-const { hallBreakEmbed } = await import("#src/progression/hall/outbox.ts");
 const { MalformedAnnouncementIntentError } =
   await import("#src/temporal/v2/notification/announcement-codecs.ts");
 const { UndeliverableContentError } =
@@ -97,21 +94,61 @@ beforeEach(() => {
 });
 
 describe("the hall record-break message", () => {
-  test("is v1's embed for the same records, with mentions disabled", () => {
+  test("is one embed for the records, with mentions disabled", () => {
     const message = buildHallRecordBreakNotificationMessageV2(hallRecord());
-    const v1 = hallBreakEmbed(
-      JSON.stringify(hallBreakRecords()),
-      hallRiotMatchId,
-      hallGuildId,
-    );
-    if (v1 === null) throw new Error("v1 built no embed for live record ids");
 
     expect(message.allowedMentions).toEqual({ parse: [] });
     const embeds = (message.embeds ?? []).map((embed) =>
       "toJSON" in embed ? embed.toJSON() : embed,
     );
-    expect(embeds).toEqual([v1.toJSON()]);
+    expect(embeds).toHaveLength(1);
     expect(embeds).toMatchSnapshot();
+  });
+
+  test("bounds tied holder names within Discord embed limits", () => {
+    const queueFamily = COMPETITIVE_PROGRESSION_CATALOG.hall.queueFamilies[0];
+    if (queueFamily === undefined) {
+      throw new Error("Hall catalog requires a queue family");
+    }
+    const holder = {
+      playerId: 1,
+      playerAlias: "Long Hall Alias ".repeat(10),
+      accountId: 1,
+      accountAlias: "Main",
+      puuid: "hall-test-puuid",
+    };
+    const records = COMPETITIVE_PROGRESSION_CATALOG.hall.records.map(
+      (record) => ({
+        matchId: hallRiotMatchId,
+        gameEndAt: "2026-09-04T00:00:00.000Z",
+        value: 12_345,
+        holder,
+        queueFamilyId: queueFamily.id,
+        recordId: record.id,
+        holders: Array.from({ length: 20 }, () => holder),
+      }),
+    );
+
+    const message = buildHallRecordBreakNotificationMessageV2(
+      hallRecord(withRecords(records)),
+    );
+    const [embed] = (message.embeds ?? []).map((candidate) =>
+      "toJSON" in candidate ? candidate.toJSON() : candidate,
+    );
+    if (embed === undefined) throw new Error("Expected one Hall embed");
+    expect(embed.description).toContain(`/app/halls/${hallGuildId}`);
+    const fields = embed.fields ?? [];
+    const totalLength =
+      (embed.title?.length ?? 0) +
+      (embed.description?.length ?? 0) +
+      fields.reduce(
+        (total, field) => total + field.name.length + field.value.length,
+        0,
+      );
+
+    expect(fields).toHaveLength(records.length);
+    expect(fields.every((field) => field.value.length <= 1024)).toBe(true);
+    expect(totalLength).toBeLessThanOrEqual(5800);
   });
 
   test("an announcement whose every record was retired is undeliverable content", () => {

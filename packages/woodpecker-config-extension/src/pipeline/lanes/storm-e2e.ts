@@ -9,6 +9,9 @@ const PAPER_SERVER_IMAGE =
 const PAPER_WORKSPACE =
   "/woodpecker/src/github.com/shepherdjerred/monorepo/packages/the-storm/.cache/e2e/woodpecker";
 const RCON_PASSWORD = "storm-e2e-ci-rcon-password";
+// Test-only pseudonymisation salt: the rwf module refuses to enable with
+// recording on and no salt, and the owned rwf.yml ships with recording on.
+const RWF_RECORDING_SALT = "storm-e2e-ci-recording-salt";
 const BRAIN_HOST = "storm-brain";
 const BRAIN_PORT = "18081";
 const BRAIN_TOKEN = "storm-e2e-ci-brain-token";
@@ -53,6 +56,9 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
       STORM_E2E_LOG_FILE: `${dataDir}/logs/latest.log`,
       STORM_E2E_PLUGIN_DIR: pluginDir,
       STORM_E2E_DATA_DIR: dataDir,
+      // The Paper service links its plugin data dir here so the suite can read
+      // rwf's SQLite tables and match recordings the same way it reads logs.
+      STORM_E2E_STORM_DATA_DIR: `${dataDir}/storm`,
       STORM_E2E_FULL: full ? "1" : "0",
       STORM_E2E_BRAIN_HOST: BRAIN_HOST,
       STORM_E2E_BRAIN_PORT: BRAIN_PORT,
@@ -66,7 +72,7 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
         name: "paper",
         image: PAPER_SERVER_IMAGE,
         commands: [
-          `mkdir -p ${dataDir}/logs; rm -rf /data/logs; ln -s ${dataDir}/logs /data/logs; until test -f ${pluginDir}/.ready; do sleep 1; done; exec /start`,
+          `mkdir -p ${dataDir}/logs ${dataDir}/storm /data/plugins; rm -rf /data/logs /data/plugins/TheStorm; ln -s ${dataDir}/logs /data/logs; ln -s ${dataDir}/storm /data/plugins/TheStorm; until test -f ${pluginDir}/.ready; do sleep 1; done; exec /start`,
         ],
         environment: {
           EULA: "TRUE",
@@ -87,6 +93,11 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
           SIMULATION_DISTANCE: "4",
           ENABLE_AUTOPAUSE: "false",
           STORM_BRAIN_BEARER_TOKEN: BRAIN_TOKEN,
+          // The rwf join gate stays closed with FLIPT_URL unset, so both lanes
+          // point at the fake brain's Flipt endpoint.
+          FLIPT_URL: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
+          FLIPT_ENVIRONMENT: "prod",
+          RWF_RECORDING_SALT,
           COPY_PLUGINS_SRC: pluginDir,
           COPY_CONFIG_SRC: `${dataDir}/config`,
           COPY_CONFIG_DEST: "/data",
@@ -94,8 +105,6 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
             ? {
                 DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
                 DISCORD_CHANNEL_ID: "1",
-                FLIPT_URL: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
-                FLIPT_ENVIRONMENT: "prod",
               }
             : {}),
         },
@@ -130,6 +139,7 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
         "scripts/ci-test-manifest.json",
         "scripts/ci-test-manifest.schema.json",
         "packages/the-storm/**",
+        "packages/mc-harness/**",
         "packages/eslint-config/**",
       ],
     },

@@ -11,7 +11,6 @@ export function createTemporalIngressWorkers(
   props: {
     serverServiceName: string;
     secret: ISecret;
-    blueBubblesSecret: ISecret;
     photonSecret: ISecret;
   },
 ) {
@@ -52,7 +51,6 @@ export function createTemporalIngressWorkers(
         secret: props.secret,
         key: "AGENT_TASK_API_TOKEN",
       }),
-      BLUEBUBBLES_URL: EnvValue.fromValue("https://jobs.tailnet-1a49.ts.net"),
       SPECTRUM_PROJECT_ID: EnvValue.fromSecretValue({
         secret: props.photonSecret,
         key: "SPECTRUM_PROJECT_ID",
@@ -64,10 +62,6 @@ export function createTemporalIngressWorkers(
       SPECTRUM_WEBHOOK_SECRET: EnvValue.fromSecretValue({
         secret: props.photonSecret,
         key: "SPECTRUM_WEBHOOK_SECRET",
-      }),
-      BLUEBUBBLES_PASSWORD: EnvValue.fromSecretValue({
-        secret: props.blueBubblesSecret,
-        key: "password",
       }),
       AGENT_CHAT_DISCORD_TOKEN: EnvValue.fromSecretValue(
         {

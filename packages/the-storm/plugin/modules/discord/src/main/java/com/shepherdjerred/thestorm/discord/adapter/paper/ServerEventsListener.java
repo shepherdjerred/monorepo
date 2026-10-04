@@ -25,17 +25,20 @@ public final class ServerEventsListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     relay.onJoin(event.getPlayer().getName());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     relay.onLeave(event.getPlayer().getName());
   }
 
   /** Posts the final death message; nothing when it was hidden or removed. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     var message = event.deathMessage();
     if (message != null && event.getShowDeathMessages()) {
       relay.onDeath(text.plain(message));

@@ -201,9 +201,14 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "notification-intent-expiry",
     "prediction-ingest",
     "legacy-backfill",
+    // Retired: the Hall and Duel outbox drain. Accepted as a no-op for one
+    // release so a run the not-yet-deleted Schedule starts, or one already in
+    // flight, still parses while schedule reconciliation removes
+    // `scout-prod-progression-outbox`.
     "progression-outbox",
     "progression-reconciliation",
     "mvp-tally-refresh",
+    "support-inbox",
     "clash-snapshot",
   ]),
 });

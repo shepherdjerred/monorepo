@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`the hall record-break message > is v1's embed for the same records, with mentions disabled 1`] = `
+exports[`the hall record-break message > is one embed for the records, with mentions disabled 1`] = `
 [
   {
     "color": 16104002,

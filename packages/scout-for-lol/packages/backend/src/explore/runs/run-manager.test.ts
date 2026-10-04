@@ -25,7 +25,8 @@ import {
   getExploreQuotaStatus,
   tryStartExploreTurn,
 } from "#src/explore/rate-limit.ts";
-import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
+import { ExploreRunRateLimitedError } from "#src/explore/runs/run-manager.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import type { ExploreAgentResult } from "#src/explore/agent.ts";
 
 const trpc = await createOfflineTrpcHarness("explore-run-manager");
@@ -124,9 +125,10 @@ function observeUntilDone(
   manager: ExploreRunManager,
   summary: ExploreActiveRun,
   events: ExploreStreamEvent[] = [],
+  userId = owner,
 ): Promise<Extract<ExploreStreamEvent, { type: "done" }>["outcome"]> {
   return new Promise((resolve, reject) => {
-    const unsubscribe = manager.subscribe(summary.runId, owner, (event) => {
+    const unsubscribe = manager.subscribe(summary.runId, userId, (event) => {
       events.push(event);
       if (event.type === "done") {
         resolve(event.outcome);
@@ -138,9 +140,28 @@ function observeUntilDone(
   });
 }
 
-async function startNew(manager: ExploreRunManager, question: string) {
+async function createTwoActiveRuns() {
+  const agent = controlledAgent();
+  const manager = createManager(agent);
+  const first = await startNew(manager, "Question A");
+  const second = await startNew(manager, "Question B", stranger);
+  return {
+    agent,
+    manager,
+    first,
+    second,
+    firstFinished: observeUntilDone(manager, first),
+    secondFinished: observeUntilDone(manager, second, [], stranger),
+  };
+}
+
+async function startNew(
+  manager: ExploreRunManager,
+  question: string,
+  userId = owner,
+) {
   return await manager.start(
-    { userId: owner },
+    { userId },
     { conversationId: null, question, attach: { kind: "leaf" } },
     [],
   );
@@ -153,6 +174,11 @@ beforeEach(async () => {
   await trpc.prisma.user.upsert({
     where: { discordId: owner },
     create: { discordId: owner, discordUsername: "owner" },
+    update: {},
+  });
+  await trpc.prisma.user.upsert({
+    where: { discordId: stranger },
+    create: { discordId: stranger, discordUsername: "stranger" },
     update: {},
   });
 });
@@ -280,13 +306,17 @@ describe("ExploreRunManager", () => {
     expect(await finished).toBe("succeeded");
   });
 
-  test("one user can run distinct conversations but not two turns in one conversation", async () => {
+  test("each user has one active answer while separate users can run concurrently", async () => {
     const agent = controlledAgent();
     const manager = createManager(agent);
     const first = await startNew(manager, "Question A");
-    const second = await startNew(manager, "Question B");
+    await expect(
+      startNew(manager, "Another conversation"),
+    ).rejects.toBeInstanceOf(ExploreRunRateLimitedError);
+    const second = await startNew(manager, "Question B", stranger);
 
-    expect(manager.list(owner)).toHaveLength(2);
+    expect(manager.list(owner)).toHaveLength(1);
+    expect(manager.list(stranger)).toHaveLength(1);
     await expect(
       manager.start(
         { userId: owner },
@@ -300,7 +330,7 @@ describe("ExploreRunManager", () => {
     ).rejects.toBeInstanceOf(ExploreConversationBusyError);
 
     const firstFinished = observeUntilDone(manager, first);
-    const secondFinished = observeUntilDone(manager, second);
+    const secondFinished = observeUntilDone(manager, second, [], stranger);
     requiredRun(agent, 0).resolve(successfulResult("Answer A"));
     requiredRun(agent, 1).resolve(successfulResult("Answer B"));
     expect(await Promise.all([firstFinished, secondFinished])).toEqual([
@@ -310,7 +340,7 @@ describe("ExploreRunManager", () => {
     const minute = getExploreQuotaStatus({ userId: owner }).quota.find(
       (quota) => quota.scope === "user" && quota.window === "minute",
     );
-    expect(minute?.used).toBe(2);
+    expect(minute?.used).toBe(1);
   });
 
   test("a Discord-owned conversation blocks a web follow-up", async () => {
@@ -339,7 +369,7 @@ describe("ExploreRunManager", () => {
         },
         [],
       ),
-    ).rejects.toBeInstanceOf(ExploreConversationBusyError);
+    ).rejects.toBeInstanceOf(ExploreRunRateLimitedError);
     expect(
       await trpc.prisma.exploreMessage.count({
         where: { conversationId: conversation.id },
@@ -347,7 +377,9 @@ describe("ExploreRunManager", () => {
     ).toBe(1);
     discordTicket.finish();
   });
+});
 
+describe("Explore regeneration", () => {
   test("regeneration records every answer version that predates the run", async () => {
     const agent = controlledAgent();
     const manager = createManager(agent);
@@ -416,35 +448,31 @@ describe("ExploreRunManager lifecycle", () => {
   });
 
   test("stopping one run does not affect another", async () => {
-    const agent = controlledAgent();
-    const manager = createManager(agent);
-    const first = await startNew(manager, "Question A");
-    const second = await startNew(manager, "Question B");
-    const firstFinished = observeUntilDone(manager, first);
-    const secondFinished = observeUntilDone(manager, second);
+    const { agent, manager, first, second, firstFinished, secondFinished } =
+      await createTwoActiveRuns();
 
     expect(await manager.stop(first.runId, owner)).toBe(true);
     expect(await firstFinished).toBe("stopped");
     expect(manager.outcome(first.runId, owner)).toBe("stopped");
-    expect(manager.list(owner).map((run) => run.runId)).toEqual([second.runId]);
+    expect(manager.list(stranger).map((run) => run.runId)).toEqual([
+      second.runId,
+    ]);
 
     requiredRun(agent, 1).resolve(successfulResult("Answer B"));
     expect(await secondFinished).toBe("succeeded");
   });
 
   test("deleting one conversation waits for only its run", async () => {
-    const agent = controlledAgent();
-    const manager = createManager(agent);
-    const first = await startNew(manager, "Question A");
-    const second = await startNew(manager, "Question B");
-    const firstFinished = observeUntilDone(manager, first);
-    const secondFinished = observeUntilDone(manager, second);
+    const { agent, manager, first, second, firstFinished, secondFinished } =
+      await createTwoActiveRuns();
 
     expect(
       await manager.deleteConversationAndWait(first.conversationId, owner),
     ).toBe(true);
     expect(await firstFinished).toBe("stopped");
-    expect(manager.list(owner).map((run) => run.runId)).toEqual([second.runId]);
+    expect(manager.list(stranger).map((run) => run.runId)).toEqual([
+      second.runId,
+    ]);
     expect(
       await trpc.prisma.exploreConversation.findUnique({
         where: { id: first.conversationId },
@@ -581,12 +609,8 @@ describe("ExploreRunManager lifecycle", () => {
   });
 
   test("graceful shutdown interrupts every active run", async () => {
-    const agent = controlledAgent();
-    const manager = createManager(agent);
-    const first = await startNew(manager, "Question A");
-    const second = await startNew(manager, "Question B");
-    const firstFinished = observeUntilDone(manager, first);
-    const secondFinished = observeUntilDone(manager, second);
+    const { manager, firstFinished, secondFinished } =
+      await createTwoActiveRuns();
 
     await manager.shutdown();
     expect(await Promise.all([firstFinished, secondFinished])).toEqual([

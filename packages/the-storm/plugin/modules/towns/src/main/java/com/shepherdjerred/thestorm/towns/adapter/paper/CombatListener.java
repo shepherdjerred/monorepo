@@ -51,6 +51,8 @@ final class CombatListener implements Listener {
    */
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onSwing(PrePlayerAttackEntityEvent event) {
+    // Scripted Citizens NPCs use the Player entity type, but town PvP flags do not apply to them.
+    if (isStormScriptedNpc(event.getAttacked())) return;
     if (!guard.permitsHarm(event.getPlayer(), event.getAttacked(), true)) {
       event.setCancelled(true);
     }
@@ -60,6 +62,16 @@ final class CombatListener implements Listener {
   void onDamage(EntityDamageEvent event) {
     var victim = event.getEntity();
     var source = event.getDamageSource();
+    if (isStormScriptedNpc(victim)
+        || isStormScriptedNpc(source.getCausingEntity())
+        || (event instanceof EntityDamageByEntityEvent byEntity
+            && isStormScriptedNpc(byEntity.getDamager()))) {
+      return;
+    }
+    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      event.setCancelled(true);
+      return;
+    }
     // The damage source names the player behind it; the damager is the same player for events
     // built without a full source.
     var culprit =
@@ -91,10 +103,16 @@ final class CombatListener implements Listener {
     }
   }
 
+  private static boolean isStormScriptedNpc(@Nullable Entity entity) {
+    return entity != null && entity.getScoreboardTags().contains("storm_scripted_npc");
+  }
+
   /** Only damage that survived protection and other plugins starts a combat switch lock. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onPlayerDamage(EntityDamageEvent event) {
-    if (!(event.getEntity() instanceof Player victim) || event.getFinalDamage() <= 0) {
+    if (!(event.getEntity() instanceof Player victim)
+        || isStormScriptedNpc(victim)
+        || event.getFinalDamage() <= 0) {
       return;
     }
     var attacker =
@@ -201,6 +219,9 @@ final class CombatListener implements Listener {
 
   /** A potion from a player follows their harm rules; one from a dispenser, the border rules. */
   private boolean mayHarm(Optional<Culprit> thrower, Land origin, Entity victim) {
+    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      return false;
+    }
     if (thrower.isPresent()) {
       return guard.permitsHarm(thrower.get(), victim, true);
     }
@@ -220,6 +241,10 @@ final class CombatListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onKnockback(EntityKnockbackEvent event) {
     var victim = event.getEntity();
+    if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      event.setCancelled(true);
+      return;
+    }
     if (event instanceof EntityPushedByEntityAttackEvent pushed) {
       var culprit = guard.culprit(pushed.getPushedBy());
       if (culprit.isPresent() && !guard.permitsHarm(culprit.get(), victim, false)) {

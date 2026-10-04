@@ -50,23 +50,37 @@ in `beta` to drain retained executions. All other central queues are `prod`
 only. Schedule registration retires the old beta schedule without cancelling
 existing executions.
 
-| Role              | Queue or surface                                                                                              | Activity concurrency |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- | -------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage`, `agent-chat-photon` |          4 per queue |
-| `home`            | `home`                                                                                                        |                    4 |
-| `reports`         | `reports`                                                                                                     |                    4 |
-| `infra`           | `infra`                                                                                                       |                    1 |
-| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                                               |          1 per queue |
-| `scout`           | `scout`                                                                                                       |                    1 |
-| `agent`           | `agent-task`                                                                                                  |                    1 |
-| `glitter-corpus`  | `glitter-corpus`                                                                                              |                    1 |
-| `glitter-context` | `glitter-context`                                                                                             |                    1 |
-| `maintenance`     | `maintenance`                                                                                                 |                    1 |
-| `workflows`       | `monorepo-workflows`                                                                                          |                 none |
+| Role              | Queue or surface                                                                       |               Activity concurrency |
+| ----------------- | -------------------------------------------------------------------------------------- | ---------------------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-photon` |                        4 per queue |
+| `home`            | `home`                                                                                 |                                  4 |
+| `reports`         | `reports`                                                                              |                                  4 |
+| `infra`           | `infra`, `mining-reset`; bounded Ops collection on `ops`                               | 1 on each legacy queue; 4 on `ops` |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                        |                        1 per queue |
+| `scout`           | `scout`                                                                                |                                  1 |
+| `agent`           | `agent-task`                                                                           |                                  1 |
+| `glitter-corpus`  | `glitter-corpus`                                                                       |                                  1 |
+| `glitter-context` | `glitter-context`                                                                      |                                  1 |
+| `maintenance`     | `maintenance`                                                                          |                                  1 |
+| `workflows`       | `monorepo-workflows`                                                                   |                               none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
 credentials, concurrency, health, and metrics boundary.
+
+The infra process polls `ops` separately so every-five-minute snapshot fan-out
+can overlap four bounded reads while heavyweight infra automation stays serial.
+Ops queue routing is recorded with the `ops-isolated-activity-queue` Workflow
+patch. Histories created before that patch retain their `infra` Activity queue;
+the infra registry keeps the old Ops Activities available to drain them. The
+same worker credentials, pod limits, and metrics endpoint serve both queues.
+
+Woodpecker log retention uses the serial infra queue and a daily 04:45 Pacific
+Schedule with SKIP overlap, initially paused. The typed minimum retention is
+30 days and destructive execution defaults off. Exact candidates, protections,
+continuation cursors and deletion receipts remain in Workflow results; logs
+alone are deleted. See the [operator procedure](../docs/wiki/src/content/docs/how-to/retain-woodpecker-logs.md)
+for candidate rollout, dry-run review and activation.
 
 The agent worker keeps the Temporal poller at UID 0 and launches provider
 subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.
@@ -76,6 +90,15 @@ clean up private provider-owned session files, and terminate detached
 provider-UID processes before that shared identity is reused.
 Provider subprocesses lose these capabilities when their UID changes, and
 `allowPrivilegeEscalation: false` prevents regaining them.
+
+The image starts the worker under Tini to reap orphaned provider and tool
+processes. The UID cleanup checks require those processes to disappear before
+another turn starts; unreaped zombies otherwise block the queue. Claude's
+required Linux sandbox dependencies, Bubblewrap and socat, ship in the image
+and are checked by the image smoke gate.
+Claude also requires a node and container policy that permit its sandbox's
+user namespaces. Installed binaries alone do not prove that the sandbox can
+start; verify a provider turn under the production subprocess identity.
 
 The shared agent runner keeps authentication separate from tool environments.
 API-key automation uses the Codex SDK. Subscription chats use Claude Agent
@@ -179,32 +202,15 @@ retry window during an ingress outage, requiring the sender to resend.
 Inspect `photonConversationState` for pending commands and ordering. Gateway
 metrics `photon_webhook_total` and `photon_delivery_total` expose bounded outcome
 labels without message bodies. Disabling admission lets accepted work settle.
-BlueBubbles remains independently configurable; its definitions support retained
-history replay.
+BlueBubbles has no bootstrap, credentials, Activity poller, or admission flags.
+Its Workflow definitions remain only for replay of closed histories.
 
 The pinned Spectrum 12.10.1 packages have declaration-only Bun patches. Core's
 optional generic fields admit `undefined` with `exactOptionalPropertyTypes`;
 iMessage derives its definition from its config return type instead of an
 incompatible overloaded conditional type. Runtime SDK code is unchanged.
 
-## BlueBubbles iMessage ingress
-
-The control worker starts `blueBubblesIngressWorkflow` when both
-`BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD` bootstrap credentials are present.
-Missing both leaves the connector inactive; a partial pair fails startup.
-Behavior uses the typed `temporal-agent-chat-imessage-*` flags, not environment
-variables. Production defaults off with an empty sender allowlist. The managed
-Flipt seed represents that empty list as the nonempty variant key `[]`, which
-the typed config parser resolves to no permitted senders.
-
-The durable cursor excludes historical messages. Disabled or unowned polling
-advances the ROWID watermark, so activation does not backfill the disabled period.
-It advances by Messages database ROWID only after each command settles,
-and survives worker restarts and Continue-As-New. Incoming commands are processed
-in ROWID order so chat selection cannot race a following message. BlueBubbles
-retains incoming messages while a provider turn runs; ingestion resumes afterward.
-Only exact allowlisted sender handles in direct conversations are accepted.
-Outgoing messages, groups, attachments without text, and reactions are ignored.
+## iMessage commands
 
 | Input                          | Operation                                                 |
 | ------------------------------ | --------------------------------------------------------- |
@@ -216,13 +222,9 @@ Outgoing messages, groups, attachments without text, and reactions are ignored.
 | Ordinary text                  | Continue the selected chat                                |
 | `/help`                        | Show command syntax and prompt limits                     |
 
-Prompts are limited to 4,000 characters. Poll responses are bounded to 2 MiB,
-999 messages, and 50 durable commands per batch. An oversized backlog fails
-without advancing the cursor. Polling retries connection failures with durable
-backoff. Replies use AppleScript, so the BlueBubbles Private API is unnecessary.
-Delivery has one attempt: an ambiguous send fails its command Workflow without
-repeating inference or sending another reply automatically. The checkpointed
-response remains in Temporal for operator inspection.
+Prompts are limited to 4,000 characters. New chats snapshot
+`temporal-agent-chat-imessage-claude-model` or
+`temporal-agent-chat-imessage-codex-model` according to their provider.
 
 ## Documentation
 

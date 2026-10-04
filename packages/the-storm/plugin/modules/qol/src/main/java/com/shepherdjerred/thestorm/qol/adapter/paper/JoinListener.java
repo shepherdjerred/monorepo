@@ -23,6 +23,7 @@ final class JoinListener implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     flow.recoverPending();
     var _ =

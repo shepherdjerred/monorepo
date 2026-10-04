@@ -19,14 +19,13 @@ import {
   invalidEditRecordRoute,
   recordSubmitLabel,
 } from "#src/components/edit-record-query-state.tsx";
-import { CompetitionBuilderV2 } from "#src/components/competition/competition-builder-v2.tsx";
+import { CompetitionBuilder } from "#src/components/competition/competition-builder.tsx";
 import {
   CompetitionFormFields,
   EMPTY_STATE,
   competitionFormOptions,
   type FormState,
 } from "#src/components/competition/competition-form-fields.tsx";
-import { CompetitionPresets } from "#src/components/competition/competition-presets.tsx";
 import {
   focusFirstInvalid,
   FormPendingStatus,
@@ -44,7 +43,6 @@ import { analyticsMeta } from "#src/lib/analytics.ts";
 import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
 import { calendarDateInTimezone } from "#src/lib/bucks/competition-time.ts";
 import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
-import type { CompetitionExample } from "#src/lib/onboarding/onboarding-examples.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function CompetitionForm() {
@@ -87,25 +85,8 @@ export function CompetitionForm() {
       existing === undefined ? EMPTY_STATE : existingToFormState(existing),
     [existing],
   );
-  const isDraft = !isEdit || existing?.status === "DRAFT";
+  const isDraft = existing?.status === "DRAFT";
 
-  const createMutation = useMutation(
-    trpc.competition.create.mutationOptions({
-      meta: analyticsMeta("competition_created"),
-      onSuccess: (created) => {
-        allowNavigation.current = true;
-        void queryClient.invalidateQueries({
-          queryKey: trpc.competition.list.pathKey(),
-        });
-        void navigate(
-          `/g/${safeGuildId}/competitions/${created.id.toString()}`,
-        );
-      },
-      onError: (err) => {
-        setError(err.message);
-      },
-    }),
-  );
   const editMutation = useMutation(
     trpc.competition.edit.mutationOptions({
       meta: analyticsMeta("competition_edited"),
@@ -124,7 +105,7 @@ export function CompetitionForm() {
     }),
   );
 
-  const pending = createMutation.isPending || editMutation.isPending;
+  const pending = editMutation.isPending;
   const form = useScoutForm({
     ...competitionFormOptions,
     defaultValues: formDefaults,
@@ -136,33 +117,19 @@ export function CompetitionForm() {
       const validated = validateForm(parsed);
       if (!validated.ok) throw new Error(validated.message);
       const { maxParticipants, criteria, dates } = validated;
-      if (isEdit) {
-        editMutation.mutate({
-          guildId: safeGuildId,
-          competitionId,
-          title: parsed.title,
-          description: parsed.description,
-          channelId: parsed.channelId,
-          visibility: parsed.visibility,
-          maxParticipants,
-          analysisTimezone: parsed.analysisTimezone,
-          ...(isDraft
-            ? { dates, criteria, gameVariant: parsed.gameVariant }
-            : {}),
-        });
-        return;
-      }
-      createMutation.mutate({
+      // Only the edit route renders this form; creation is the builder's.
+      editMutation.mutate({
         guildId: safeGuildId,
-        channelId: parsed.channelId,
+        competitionId,
         title: parsed.title,
         description: parsed.description,
+        channelId: parsed.channelId,
         visibility: parsed.visibility,
         maxParticipants,
-        gameVariant: parsed.gameVariant,
-        dates,
-        criteria,
         analysisTimezone: parsed.analysisTimezone,
+        ...(isDraft
+          ? { dates, criteria, gameVariant: parsed.gameVariant }
+          : {}),
       });
     },
     onSubmitInvalid: () => {
@@ -194,28 +161,7 @@ export function CompetitionForm() {
     hydratedCompetitionId,
   );
 
-  function handleUsePreset(example: CompetitionExample) {
-    const previous = form.state.values;
-    const chosenChannelId = previous.channelId;
-    const channelId =
-      chosenChannelId === ""
-        ? (channelsQuery.data?.[0]?.id ?? "")
-        : chosenChannelId;
-    const built = example.build(channelId);
-    const next =
-      chosenChannelId === "" ? built : { ...built, channelId: chosenChannelId };
-    form.setFieldValue("title", next.title);
-    form.setFieldValue("description", next.description);
-    form.setFieldValue("channelId", next.channelId);
-    form.setFieldValue("visibility", next.visibility);
-    form.setFieldValue("maxParticipants", next.maxParticipants);
-    form.setFieldValue("gameVariant", next.gameVariant);
-    form.setFieldValue("analysisTimezone", next.analysisTimezone);
-    form.setFieldValue("dates", next.dates);
-    form.setFieldValue("criteria", next.criteria);
-  }
-
-  const legacyForm = (
+  const editForm = (
     <>
       <form
         ref={formElement}
@@ -234,7 +180,7 @@ export function CompetitionForm() {
         <fieldset disabled={pending} className="m-0 space-y-4 border-0 p-0">
           <CompetitionFormFields
             form={form}
-            locked={isEdit && !isDraft}
+            locked={!isDraft}
             channels={channelsQuery.data}
             channelAvailability={channelAvailability}
             onRetryChannels={() => {
@@ -259,7 +205,7 @@ export function CompetitionForm() {
             Reset
           </Button>
           <Button type="submit" disabled={pending || !canSubmit}>
-            {recordSubmitLabel(pending, isEdit)}
+            {recordSubmitLabel(pending, true)}
           </Button>
         </FormActions>
         <FormPendingStatus pending={pending}>
@@ -293,7 +239,7 @@ export function CompetitionForm() {
               <Link to={`/g/${safeGuildId}/competitions`}>Back</Link>
             </Button>
           </div>
-          {legacyForm}
+          {editForm}
         </div>
       ) : (
         <CompetitionCreatePage
@@ -302,7 +248,6 @@ export function CompetitionForm() {
           onRetryDependencies={() => {
             void channelsQuery.refetch();
           }}
-          onUsePreset={handleUsePreset}
           onCreated={(createdId) => {
             allowNavigation.current = true;
             void queryClient.invalidateQueries({
@@ -312,7 +257,6 @@ export function CompetitionForm() {
               `/g/${safeGuildId}/competitions/${createdId.toString()}`,
             );
           }}
-          legacyForm={legacyForm}
         />
       )}
     </form.AppForm>
@@ -329,55 +273,47 @@ function CompetitionCreatePage(props: {
    */
   channels: Loaded<{ id: string; name: string }[]>;
   onRetryDependencies: () => void;
-  onUsePreset: (example: CompetitionExample) => void;
   onCreated: (competitionId: number) => void;
-  legacyForm: React.ReactNode;
 }) {
-  const trpc = useTRPC();
-  const builderQuery = useQuery(
-    trpc.competition.builderCapabilities.queryOptions({
-      guildId: props.guildId,
-    }),
-  );
-  const page = Loaded.all({
-    builder: Loaded.fromQuery(builderQuery, ["builderCapabilities"]),
-    channels: props.channels,
-  });
-  const retryDependencies = () => {
-    props.onRetryDependencies();
-    void builderQuery.refetch();
-  };
-  if (page.status === "loading") {
+  const channels = props.channels;
+  if (channels.status === "loading") {
     return <p className="text-sm text-scout-subtle">Loading builder…</p>;
   }
-  if (page.status === "error") {
+  if (channels.status === "error") {
     return (
       <div role="alert" className="space-y-2 text-sm text-scout-danger">
-        <p>{Loaded.messageOf(page.errors[0].error)}</p>
-        <Button type="button" variant="outline" onClick={retryDependencies}>
+        <p>{Loaded.messageOf(channels.errors[0].error)}</p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={props.onRetryDependencies}
+        >
           Retry
         </Button>
       </div>
     );
   }
 
-  if (page.data.channels.length === 0) {
+  if (channels.data.length === 0) {
     return (
       <div role="status" className="space-y-2 text-sm text-scout-subtle">
         <p>
           Scout can&apos;t post to any channels in this server. Check its
           channel permissions, then retry.
         </p>
-        <Button type="button" variant="outline" onClick={retryDependencies}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={props.onRetryDependencies}
+        >
           Retry
         </Button>
       </div>
     );
   }
 
-  const usesV2 = page.data.builder.builderV2Enabled;
   return (
-    <div className={`${usesV2 ? "max-w-5xl" : "max-w-2xl"} space-y-4`}>
+    <div className="max-w-5xl space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold tracking-tight">
           New competition
@@ -386,18 +322,11 @@ function CompetitionCreatePage(props: {
           <Link to={`/g/${props.guildId}/competitions`}>Back</Link>
         </Button>
       </div>
-      {usesV2 ? (
-        <CompetitionBuilderV2
-          guildId={props.guildId}
-          channels={page.data.channels}
-          onCreated={props.onCreated}
-        />
-      ) : (
-        <>
-          <CompetitionPresets onUsePreset={props.onUsePreset} />
-          {props.legacyForm}
-        </>
-      )}
+      <CompetitionBuilder
+        guildId={props.guildId}
+        channels={channels.data}
+        onCreated={props.onCreated}
+      />
     </div>
   );
 }

@@ -49,7 +49,9 @@ public final class Targets {
     if (!(entity instanceof LivingEntity living)
         || entity.equals(caster)
         || entity instanceof ArmorStand
-        || (mode == Mode.EFFECT && entity instanceof Mannequin)) {
+        || (mode == Mode.EFFECT
+            && (entity instanceof Mannequin
+                || entity.getScoreboardTags().contains("storm_scripted_npc")))) {
       return false;
     }
     if (!living.isValid() || living.isDead() || living.isInvulnerable()) {

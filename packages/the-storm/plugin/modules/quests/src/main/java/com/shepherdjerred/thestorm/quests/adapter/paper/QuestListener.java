@@ -71,6 +71,7 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     if (!inMainWorld(event.getPlayer())) {
       return;
     }
@@ -80,6 +81,7 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     service.quit(event.getPlayer().getUniqueId());
     sidebars.forget(event.getPlayer().getUniqueId());
     activity.forget(event.getPlayer().getUniqueId());

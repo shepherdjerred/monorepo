@@ -81,6 +81,11 @@ public final class EssentialsPaper {
     var runtime = new PaperRuntime(server, context.scheduler(), context.time(), context.logger());
     var spawnPreparation = SpawnPreparation.start(context, config);
     var kitItems = KitItems.build(config.kits());
+    context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.essentials.app.StarterSupplies.class,
+            kitItems.starter(config.kits().starter()));
     var kits =
         new PlayerCommands.Kits(
             config.kits(),

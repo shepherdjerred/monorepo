@@ -93,6 +93,20 @@ function verifySportsGuildRollout(): void {
 }
 
 describe("ManagedFlagInventorySchema", () => {
+  test("Scout report support action is enabled in beta only", () => {
+    const flag = managedFlagInventory.flags.find(
+      ({ key }) => key === "scout_support_report_action_enabled",
+    );
+    const betaOverride = managedFlagInventory.environments
+      .find(({ key }) => key === "beta")
+      ?.overrides.find(
+        ({ key }) => key === "scout_support_report_action_enabled",
+      );
+
+    expect(flag?.default).toBe(false);
+    expect(betaOverride?.default).toBe(true);
+  });
+
   test(
     "limits Streambot sports rollout to named guilds",
     verifySportsGuildRollout,
@@ -117,7 +131,6 @@ describe("ManagedFlagInventorySchema", () => {
       "temporal",
       "alert-dashboard",
       "the-storm",
-      "the-storm-companion",
       "storm",
     ]);
     expect(
@@ -351,36 +364,35 @@ describe("The Storm companion pilot rollout", () => {
     }
   });
 
-  test("targets Alt 1 in beta while keeping production and fallback off", () => {
-    const key = "the-storm-companion-pilot-enabled";
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === key,
-    );
-    expect(declared).toMatchObject({ default: false, rollouts: [] });
+  test.each([
+    ["the-storm-companions-enabled", "the-storm"],
+    ["storm-brain-conversation-enabled", "storm"],
+  ])(
+    "enables %s in beta while keeping production and fallback off",
+    (key, namespace) => {
+      const declared = managedFlagInventory.flags.find(
+        (flag) => flag.key === key,
+      );
+      expect(declared).toMatchObject({ default: false, rollouts: [] });
 
-    const beta = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "the-storm-companion",
-    ).find((flag) => flag.key === key);
-    expect(beta).toMatchObject({
-      default: false,
-      rollouts: [
-        {
-          segmentKey: "the-storm-companion-alt-1",
-          constraints: [{ property: "pilot", value: "alt-1" }],
-          result: true,
-        },
-      ],
-    });
+      const beta = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "beta",
+        namespace,
+      ).find((flag) => flag.key === key);
+      expect(beta).toMatchObject({
+        default: true,
+        rollouts: [],
+      });
 
-    const prod = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "the-storm-companion",
-    ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: false, rollouts: [] });
-  });
+      const prod = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        namespace,
+      ).find((flag) => flag.key === key);
+      expect(prod).toMatchObject({ default: false, rollouts: [] });
+    },
+  );
 });
 
 describe("durable iMessage ingress rollout", () => {
@@ -390,14 +402,14 @@ describe("durable iMessage ingress rollout", () => {
       "beta",
       "temporal",
     ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
     const prodFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "prod",
       "temporal",
     ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
 
     expect(betaFlag?.default).toBe(true);
@@ -473,34 +485,6 @@ describe("Scout V2 post-match ownership", () => {
         scoutPolicyFlag(environment, "scout_v2_postmatch_ownership_enabled"),
       ).toMatchObject({ default: true, rollouts: [] });
     }
-  });
-});
-
-describe("Scout V2 progression notifications", () => {
-  test("assigns all beta progression delivery to V2 and leaves production off", () => {
-    const beta = scoutPolicyFlag(
-      "beta",
-      "scout_v2_progression_notifications_enabled",
-    );
-    expect(beta.default).toBe(true);
-    expect(beta.rollouts).toEqual([
-      expect.objectContaining({
-        segmentKey: "scout-guild-1337623164146155593",
-        constraints: [
-          expect.objectContaining({
-            property: "server",
-            operator: "eq",
-            value: "1337623164146155593",
-          }),
-        ],
-        result: true,
-      }),
-    ]);
-    expect(beta.rules).toEqual([]);
-
-    expect(
-      scoutPolicyFlag("prod", "scout_v2_progression_notifications_enabled"),
-    ).toMatchObject({ default: false, rollouts: [], rules: [] });
   });
 });
 

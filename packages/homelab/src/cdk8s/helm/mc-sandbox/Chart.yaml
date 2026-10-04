@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mc-sandbox
+description: Ephemeral Minecraft sandboxes for the mc-harness agent tooling
+type: application
+version: "$version"
+appVersion: "$appVersion"

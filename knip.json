@@ -64,6 +64,14 @@
         "architecture-fixtures/**/*.ts"
       ]
     },
+    "packages/mc-harness": {
+      "entry": ["architecture-fixtures/**/*.ts"],
+      "project": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "architecture-fixtures/**/*.ts"
+      ]
+    },
     "packages/discord-plays-core": {
       "project": ["src/**/*.ts"]
     },
@@ -263,6 +271,17 @@
     },
     "packages/ts-mc-docs": {
       "project": ["src/**/*.{ts,astro,mdx}", "*.ts"]
+    },
+    // Docker acceptance harnesses invoke these fixtures as subprocesses.
+    "packages/storm-forum": {
+      "entry": [
+        "scripts/*.ts",
+        "test/backup-roundtrip.ts",
+        "test/release-preflight.ts",
+        "test/s3-fixture.ts",
+        "test/smtp-fixture.ts"
+      ],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"]
     },
     "packages/streambot": {
       "entry": ["test/**/*.ts", "integration/**/*.ts", "e2e/**/*.ts"],

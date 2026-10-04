@@ -200,7 +200,20 @@ async function handleSharedTranscript(
     ...shared,
     messages: shared.messages.map((message) => {
       const { guildIds: _guildIds, ...rest } = message;
-      return rest;
+      if (url.searchParams.get("cards") === "3") return rest;
+      const {
+        generation: _generation,
+        inlineEntities: _entities,
+        ...legacy
+      } = rest;
+      return {
+        ...legacy,
+        trace: legacy.trace.map((entry) => ({
+          ...entry,
+          rawInput: null,
+          rawOutput: null,
+        })),
+      };
     }),
     conversation: {
       id: shared.conversation.id,
@@ -213,7 +226,7 @@ async function handleSharedTranscript(
   };
   const cardsVersion = url.searchParams.get("cards");
   const payload =
-    cardsVersion === "2"
+    cardsVersion === "2" || cardsVersion === "3"
       ? compatibleShared
       : {
           ...compatibleShared,

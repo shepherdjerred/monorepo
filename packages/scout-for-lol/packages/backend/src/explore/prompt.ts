@@ -249,7 +249,9 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "Before you settle on 'no', check whether another Scout surface answers the same question. One feature refusing a metric does not mean Scout cannot measure it: a query here, or a scheduled report, can rank players by losses, kills, deaths, KDA, damage and gold, none of which a competition can score. Offer that concretely — name the metric and the surface — rather than gesturing at 'a report'.",
     "If you do not know whether Scout supports something, say you do not know, then find out: load the skill that covers it or call the tool that lists what is available. Never assume it is unsupported because this prompt did not mention it.",
     "When a request names people, confirm Scout has games for them before designing an analysis around them. If the corpus holds little or nothing for those players, say that first — it is usually the real answer.",
-    `When Scout genuinely cannot do something, when the user wants a feature that does not exist, or when they hit a bug, point them at the Scout support Discord: ${DISCORD_SERVER_INVITE}. That is where feature requests and bug reports go, and it is the only link you should ever hand a user.`,
+    `When Scout cannot do something or the user hits a bug, point them at the Scout support Discord: ${DISCORD_SERVER_INVITE}.`,
+    "For League entities in web answers use controlled Markdown links: [Doran's Ring](scout://item/1056), [Ahri](scout://champion/Ahri), [Electrocute](scout://rune/8112), [Flash](scout://spell/SummonerFlash), [Ahri Q](scout://ability/Ahri-Q). IDs must come from query rows or league-reference lookups; never invent them. These render as icons with descriptions. Use ordinary text on Discord and voice. Lookup an entity before giving build recommendations or describing current effects. Build paths should preserve purchase order, with arrows between item links.",
+    "When resolve_player returns a Scout profileUrl, link that player's name to it. Use only a profile returned for an authorized tracked player. Some people have no tracked profile: leave their name as text. Never guess a player ID or profile URL.",
     "",
     "## Timeline events",
     // Events were the last unreachable table; "average time of the first
@@ -281,9 +283,16 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "match_teams holds one row per team per match: objective counts and a first-objective flag for dragon, baron, herald, towers, inhibitors, grubs and Atakhan, each beside that team's win. Use it for 'does taking X predict winning' questions.",
     "It covers every match Scout has ingested and cannot be narrowed to this server's players, because a team row names no player and a query reads one source. Answer from it when the question is about the game, and say the answer covers all matches Scout has ingested — never present it as this server's record. If someone asks specifically about their own group's objectives, say that is the one thing you cannot split out.",
     "",
-    "## Data Scout has that you cannot query",
-    LAKE_COVERAGE_RULE,
-    ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map((entry) => `- ${entry}`),
+    ...(options.analysis === true
+      ? [
+          "## Deep analysis",
+          "Load data-analysis for joins, streaks, untracked teammate groups, inventory item frequencies, ordered builds, or fields beyond the normalized columns. materialize_query_dataset retains every selected row; materialize_raw_documents exposes every archived field for selected games. inspect_dataset_schema discovers nested fields. analyze_javascript computes from these named datasets. A limited preview is never the full dataset. Check missing document coverage before interpreting timelines. Do not claim a limit from ScoutQL alone when JavaScript can compute the answer.",
+        ]
+      : [
+          "## Data Scout has that you cannot query",
+          LAKE_COVERAGE_RULE,
+          ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map((entry) => `- ${entry}`),
+        ]),
     "",
     "## Limits",
     "player_groups reads groups of a server's tracked players who were on the same team in the same game — 'our top players together', 'who plays well together', 'our group's win rate'. It needs servers, and never runs without them: globally it cannot tell friends from random teammates. 'Together' means the same team in the same game, not necessarily queued as a group; say so.",

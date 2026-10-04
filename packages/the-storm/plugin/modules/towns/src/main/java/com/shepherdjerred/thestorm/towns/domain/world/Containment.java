@@ -28,7 +28,8 @@ final class Containment {
           FALLING_BLOCK,
           PROJECTILE_IMPACT,
           REDSTONE,
-          PORTAL_CREATION ->
+          PORTAL_CREATION,
+          NATURAL_CHANGE ->
           Optional.empty();
     };
   }
@@ -55,7 +56,8 @@ final class Containment {
           FALLING_BLOCK,
           PROJECTILE_IMPACT,
           REDSTONE,
-          PORTAL_CREATION ->
+          PORTAL_CREATION,
+          NATURAL_CHANGE ->
           false;
     };
   }

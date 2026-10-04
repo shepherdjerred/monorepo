@@ -7,7 +7,42 @@ import {
 } from "#commands/pr/review.ts";
 import { healthCommand } from "#commands/pr/health.ts";
 
+function helpRequested(args: string[]): boolean {
+  return args.includes("--help") || args.includes("-h");
+}
+
+function printHealthUsage(): void {
+  console.log("Usage: toolkit pr health [PR_NUMBER] [--json]");
+}
+
+function printAssetUsage(): void {
+  console.log(
+    "Usage: toolkit pr asset <PR> <FILE|DIR...> [--markdown] [--profile <name>]",
+  );
+}
+
+function printReviewUsage(): void {
+  console.log(`Usage: toolkit pr review <ACTION> <PR> [OPTIONS]
+
+Actions:
+  list <PR>     List provider findings
+  resolve <PR>  Resolve a finding (--finding and --evidence required)
+  harvest <PR>  Report late review-gate failures (--retry to rerun)
+
+Options:
+  --repo <owner/repo>  Repository (default: auto-detect)
+  --json               Output as JSON
+  --finding <key>      Finding key or exact title
+  --evidence <text>    Why a finding is resolved
+  --provider <id>      Provider (default: codex)
+  --retry              Rerun eligible harvest jobs`);
+}
+
 async function handleHealth(args: string[]): Promise<void> {
+  if (helpRequested(args)) {
+    printHealthUsage();
+    return;
+  }
   const { values, positionals } = parseArgs({
     args,
     options: {
@@ -19,6 +54,10 @@ async function handleHealth(args: string[]): Promise<void> {
 }
 
 async function handleAsset(args: string[]): Promise<void> {
+  if (helpRequested(args)) {
+    printAssetUsage();
+    return;
+  }
   const { values, positionals } = parseArgs({
     args,
     options: {
@@ -35,6 +74,10 @@ async function handleAsset(args: string[]): Promise<void> {
 }
 
 async function handleReview(args: string[]): Promise<void> {
+  if (helpRequested(args)) {
+    printReviewUsage();
+    return;
+  }
   const { values, positionals } = parseArgs({
     args,
     options: {
@@ -125,7 +168,7 @@ Credentials (asset):
   region are resolved from ~/.aws/credentials, ~/.aws/config, and AWS_* env
   vars — like the AWS CLI. Pass --profile <name> or set AWS_PROFILE.
 `);
-    process.exit(0);
+    return;
   }
 
   switch (subcommand) {

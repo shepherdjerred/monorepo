@@ -61,11 +61,10 @@ export function createWoodpeckerPostgreSQLDatabase(chart: Chart) {
         },
       },
       volume: {
-        // Sized the way bugsink-db.ts documents: the live database is small,
-        // but Postgres block churn inflates the retained Velero ZFS snapshots
-        // far beyond it. Step logs make Woodpecker churn harder than Bugsink,
-        // so do not shrink this without checking snapshot usage first.
-        size: "32Gi",
+        // CI log history grows alongside retained Velero snapshot blocks.
+        // Expand the existing claim for headroom without deleting history or
+        // snapshots; recheck both dataset quota and growth before any resize.
+        size: "64Gi",
         storageClass: "zfs-ssd",
       },
       users: {

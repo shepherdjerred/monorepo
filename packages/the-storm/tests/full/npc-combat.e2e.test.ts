@@ -3,10 +3,10 @@ import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import { serverLogs } from "#e2e/harness/server.ts";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 
 function npc(id: string): string {
-  return `@e[type=minecraft:mannequin,nbt={BukkitValues:{"thestorm:npc":"${id}"}},limit=1]`;
+  return `@e[nbt={BukkitValues:{"thestorm:npc":"${id}"}},limit=1]`;
 }
 
 async function health(rcon: RconClient, entity: string): Promise<number> {
@@ -89,12 +89,12 @@ describe("NPC combat on Paper with all modules", () => {
         const exists = await rcon.command(`execute if entity ${npc("stan")}`);
         return !exists.includes("Test passed");
       });
-      expect(await rcon.command("npc list")).toMatch(
+      expect(await rcon.command("stormnpc list")).toMatch(
         /stan:.*dead; returns at dawn/u,
       );
-      await rcon.command("npc reload");
+      await rcon.command("stormnpc reload");
       await Bun.sleep(1500);
-      expect(await rcon.command("npc list")).toMatch(
+      expect(await rcon.command("stormnpc list")).toMatch(
         /stan:.*dead; returns at dawn/u,
       );
       await nextDay(rcon);
@@ -124,13 +124,13 @@ describe("NPC combat on Paper with all modules", () => {
     await waitUntil("visible market sentry", () =>
       Object.values(bot.entities).some(
         (entity) =>
-          entity.name === "mannequin" &&
+          entity.type === "player" &&
           entity.position.distanceTo(new Vec3(-34.5, 64, 4.5)) < 0.8,
       ),
     );
     const sentry = Object.values(bot.entities).find(
       (entity) =>
-        entity.name === "mannequin" &&
+        entity.type === "player" &&
         entity.position.distanceTo(new Vec3(-34.5, 64, 4.5)) < 0.8,
     );
     if (sentry === undefined) throw new Error("Sentry left before attack");
@@ -146,13 +146,13 @@ describe("NPC combat on Paper with all modules", () => {
     );
     await defended;
     await waitUntil("lethal attack is defended", () => bot.health < 20, 15_000);
-    expect(await rcon.command("npc list")).toMatch(
+    expect(await rcon.command("stormnpc list")).toMatch(
       /zavier:.*dead; returns at dawn/u,
     );
     await rcon.command(`tp ${bot.username} 500 64 500`);
     await rcon.command(`damage ${npc("market-guard")} 100 minecraft:generic`);
     await Bun.sleep(600);
-    expect(await rcon.command("npc list")).toMatch(
+    expect(await rcon.command("stormnpc list")).toMatch(
       /market-guard:.*dead; returns at dawn/u,
     );
     for (const type of ["item", "experience_orb"]) {
@@ -170,18 +170,23 @@ describe("NPC combat on Paper with all modules", () => {
   }) => {
     await rcon.command("difficulty normal");
     await rcon.command("time set midnight");
+    await rcon.command("fill 195 63 -5 205 63 10 minecraft:stone");
     // Move the guard far from its original home: this reproduces the old home-radius bug.
     await rcon.command(`gamemode spectator ${bot.username}`);
-    await rcon.command(`tp ${bot.username} 500 70 500`);
-    await rcon.command(`tp ${npc("guard-captain")} -35.5 64 6.5`);
-    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+    await rcon.command(`tp ${bot.username} 200.5 64 3.5`);
+    await waitUntil(
+      "hostile mob chunk loaded",
+      () => bot.entity.position.distanceTo(new Vec3(200.5, 64, 3.5)) < 0.3,
+    );
+    await rcon.command(`tp ${npc("guard-captain")} 200.5 64 6.5`);
+    await rcon.command(`tp ${npc("stan")} 200.5 64 0.5`);
     await rcon.command(
-      'summon minecraft:cow -34.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
+      'summon minecraft:cow 201.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
     );
     await Bun.sleep(1500);
     expect(await health(rcon, "@e[tag=npc-peaceful,limit=1]")).toBe(10);
     await rcon.command(
-      'summon minecraft:zombie -35.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
+      'summon minecraft:zombie 200.5 64 2.5 {Tags:["npc-hostile"],NoAI:1b,PersistenceRequired:1b}',
     );
     const original = await rcon.command(`data get entity ${npc("stan")} Pos`);
     await eventually(

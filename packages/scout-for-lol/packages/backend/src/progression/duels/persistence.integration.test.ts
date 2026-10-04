@@ -142,7 +142,6 @@ async function verifyConcurrentDirectDuelRetries(): Promise<void> {
     ),
   );
   expect(await db.scoutWorkflowStart.count()).toBe(1);
-  expect(await db.duelStatusOutbox.count()).toBe(0);
 
   await acceptNotificationStart(
     db,
@@ -380,7 +379,6 @@ beforeEach(async () => {
   vi.mocked(launchDuelSeries).mockClear();
   await db.scoutWorkflowStart.deleteMany();
   await db.matchNotificationIntent.deleteMany();
-  await db.duelStatusOutbox.deleteMany();
   await db.duelSeries.deleteMany();
   await db.duelEvent.deleteMany();
   await db.duelDisclosureAcceptance.deleteMany();
@@ -398,36 +396,6 @@ afterAll(async () => {
 });
 
 describe("duel persistence", () => {
-  test("keeps a pre-cutover outbox row as the sole owner of its send", async () => {
-    const seriesId = crypto.randomUUID();
-    const dedupeKey = `duel-invited:${seriesId}`;
-    await db.duelStatusOutbox.create({
-      data: {
-        guildId: GUILD_ID,
-        channelId: CHANNEL_ID,
-        dedupeKey,
-        payloadJson: JSON.stringify({
-          kind: "invited",
-          seriesId,
-          mentionDiscordIds: [],
-        }),
-      },
-    });
-    await db.$transaction(async (tx) => {
-      await mintDuelStatusIntent(tx, {
-        stage: "dev",
-        guildId: GUILD_ID,
-        channelId: CHANNEL_ID,
-        dedupeKey,
-        payload: { kind: "invited", seriesId, mentionDiscordIds: [] },
-        createdAt: new Date(),
-        freshnessDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      });
-    });
-    expect(await db.matchNotificationIntent.count()).toBe(0);
-    expect(await db.scoutWorkflowStart.count()).toBe(0);
-  });
-
   test("deduplicates concurrent direct-challenge retries", async () => {
     await verifyConcurrentDirectDuelRetries();
   });

@@ -44,6 +44,9 @@ describe("/help", () => {
     const payload = replyMock.mock.calls[0]?.[0];
     expect(JSON.stringify(payload)).toContain("/track");
     expect(JSON.stringify(payload)).toContain("audit history");
+    expect(JSON.stringify(payload)).toContain("DM Scout directly");
+    expect(JSON.stringify(payload)).toContain("/app/feedback");
+    expect(JSON.stringify(payload)).not.toContain("GitHub");
     expect(JSON.stringify(payload)).not.toContain("/subscription");
     expect(JSON.stringify(payload)).not.toContain("/scout ask");
   });

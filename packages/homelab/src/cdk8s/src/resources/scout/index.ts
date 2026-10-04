@@ -73,7 +73,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         "ignore-check.kube-linter.io/run-as-non-root":
           "Scout requires flexible user permissions",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "Scout requires writable filesystem for the report lake and the retained legacy SQLite file",
+          "Scout requires a writable filesystem for the report lake",
       },
     },
   });
@@ -283,6 +283,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       key: "RIOT_API_KEY",
     }),
     S3_BUCKET_NAME: EnvValue.fromValue(s3BucketName),
+    SUPPORT_BUCKET_NAME: EnvValue.fromValue(`scout-support-${stage}`),
     SENTRY_DSN: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
@@ -306,13 +307,9 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     POSTHOG_API_HOST: EnvValue.fromValue(analytics.apiHost),
     POSTHOG_SITE_KEY: EnvValue.fromValue(analytics.siteKey),
     POSTHOG_SITE_HOSTNAME: EnvValue.fromValue(analytics.siteHostname),
-    // The retained legacy SQLite file: read exactly once by the boot-time
-    // importer (scripts/import-legacy-sqlite.ts), never written again, and
-    // kept as the rollback path for the Postgres migration.
-    LEGACY_SQLITE_PATH: EnvValue.fromValue("/data/db.sqlite"),
     // Parquet "report lake" queried by the DuckDB report engine. Disposable
-    // derived data on the same PVC as the legacy DB file; rebuilt from S3 by
-    // the report-lake compaction crons.
+    // derived data on the PVC; rebuilt from S3 by the report-lake compaction
+    // crons.
     REPORT_LAKE_DIR: EnvValue.fromValue("/data/report-lake"),
     // DuckDB for reports and Explore: generous on purpose, since both answer
     // open questions over the whole lake. A query past memory_limit spills to

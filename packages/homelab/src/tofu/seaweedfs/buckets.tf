@@ -1,4 +1,15 @@
 # Static site buckets (served via Caddy s3proxy)
+# Private buckets are intentionally absent from the Caddy public bucket inventory.
+resource "aws_s3_bucket" "storm_forum_releases" {
+  bucket = "storm-forum-releases"
+  lifecycle { prevent_destroy = true }
+}
+
+resource "aws_s3_bucket" "storm_forum_backups" {
+  bucket = "storm-forum-backups"
+  lifecycle { prevent_destroy = true }
+}
+
 resource "aws_s3_bucket" "statically_typed" {
   bucket = "statically-typed"
 }
@@ -287,6 +298,15 @@ resource "aws_s3_bucket" "scout_beta" {
 
 resource "aws_s3_bucket" "scout_prod" {
   bucket = "scout-prod"
+}
+
+# Private user screenshots, never included in a static/public asset route.
+resource "aws_s3_bucket" "scout_support_beta" {
+  bucket = "scout-support-beta"
+}
+
+resource "aws_s3_bucket" "scout_support_prod" {
+  bucket = "scout-support-prod"
 }
 
 # The Scout League Classic renderer now ships Gill Sans committed in the repo
