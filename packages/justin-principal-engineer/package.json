@@ -10,6 +10,8 @@
     "#src/*": "./src/*"
   },
   "scripts": {
+    "dev": "bun src/dev.ts",
+    "dev:once": "bun src/dev.ts --once",
     "build": "bun build src/cli.ts src/container-entry.ts --outdir dist --target bun --external @openai/codex-sdk --external @shepherdjerred/llm-runtime --external zod",
     "container": "bun src/container-entry.ts",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
@@ -19,6 +21,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@shepherdjerred/config": "workspace:*",
+    "@shepherdjerred/feature-flags": "workspace:*",
     "@openai/codex-sdk": "0.156.1",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "zod": "^4.4.3"

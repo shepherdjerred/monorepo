@@ -64,18 +64,20 @@ export async function fetchBlockedReason(input: {
   if (blocked === null) return null;
   for await (const item of eachIssueComment(input)) {
     const user = recordField(item, "user");
-    if (
-      isBoundBlockedComment({
-        strategy: blocked,
-        provider: input.provider,
-        login: user === null ? null : stringField(user, "login"),
-        body: stringField(item, "body"),
-        updatedAt:
-          stringField(item, "updated_at") ?? stringField(item, "created_at"),
-        headPushedAt: input.headPushedAt,
-      })
-    ) {
-      return blocked.reason;
+    for (const strategy of blocked) {
+      if (
+        isBoundBlockedComment({
+          strategy,
+          provider: input.provider,
+          login: user === null ? null : stringField(user, "login"),
+          body: stringField(item, "body"),
+          updatedAt:
+            stringField(item, "updated_at") ?? stringField(item, "created_at"),
+          headPushedAt: input.headPushedAt,
+        })
+      ) {
+        return strategy.reason;
+      }
     }
   }
   return null;

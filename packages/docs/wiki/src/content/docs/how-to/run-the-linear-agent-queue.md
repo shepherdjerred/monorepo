@@ -1,12 +1,11 @@
 ---
 title: Run the Linear agent queue
-description: Configure the local Mac runner, enqueue a task, review its evidence, and recover a parked task.
+description: Configure the local Mac runner, enqueue a task for owner approval or autonomous DevEx delivery, and inspect recovery.
 sidebar:
   order: 2
 ---
 
-Configure the runner once, then enqueue work with four Linear labels and use
-the pull request as the feedback and approval surface.
+Configure the runner once, then choose owner-approved work or autonomous DevEx delivery when enqueueing an issue.
 
 ## 1. Create the GitHub App
 
@@ -27,7 +26,7 @@ not copy them into the repository or the runner configuration.
 
 ## 2. Create the Linear labels
 
-Create the four team labels once:
+Create the provider and parking labels in the team you queue from:
 
 ```bash
 toolkit linear label create --team SJ --name agent:codex --color '#059669' \
@@ -65,7 +64,7 @@ when Docker runs it under emulation on Apple Silicon.
 The stable checkout must not be a Herdr worktree. Task clones and state live
 under `~/Library/Application Support/justin-principal-engineer`.
 
-## 4. Validate and install
+## 4. Validate and choose a runner
 
 ```bash
 bun packages/justin-principal-engineer/src/cli.ts doctor
@@ -77,12 +76,36 @@ bun packages/justin-principal-engineer/src/cli.ts daemon status
 references, pinned container image, and GitHub App repository access. Installing
 from a temporary Herdr worktree is rejected.
 
+For local iteration, unload the installed service and run from the current
+package checkout:
+
+```bash
+bun src/cli.ts daemon stop
+bun run dev
+```
+
+Save a TypeScript source file to reload on the next reconcile. Ctrl-C drains
+the current turn and preserves state. Use `bun run dev:once` for one transition.
+These commands operate the configured live queue. See the
+[package contributor reference](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/README.md)
+for the reload and credential contracts.
+
 ## 5. Enqueue a small task
 
 Write a bounded issue with an observable finish line. Add `agent:codex` and
 leave the issue wherever it is. The next reconcile claims it, moves it to
 `In Progress`, and creates a draft PR. The provider label stays on for the
 whole task and is removed on merge.
+
+For autonomous delivery, use an issue in the `AI` team's `Developer Experience`
+project. State the allowed files, expected behavior, and focused verification.
+Choose a small code, CLI, test, or documentation change within the
+[autonomous scope contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/README.md#autonomous-devex-delivery).
+
+Enable that issue through the managed flag or local file targeting described
+in the same reference. Add both `agent:codex` and `agent:autonomous` to enqueue
+it. For a parked legacy task, also remove `agent:needs-human` once to opt it in.
+No further human approval is needed for that delivery mode.
 
 The [Linear integration](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/integrations/linear.ts)
 and [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
@@ -92,7 +115,7 @@ and [host evidence upload](https://github.com/shepherdjerred/monorepo/blob/main/
 the host uploads only the resulting trusted PNG when the agent returns a known
 `toolkit screenshot` target.
 
-## 6. Steer and approve the pull request
+## 6. Observe delivery or approve owner-controlled work
 
 Leave issue comments, review bodies, inline comments, or screenshots on the PR.
 Only feedback from Jerred's pinned GitHub identity starts a repair turn.
@@ -102,6 +125,12 @@ head with GitHub's native review control. The next reconcile rechecks CI and
 that exact-head approval, then squash-merges and completes the Linear issue.
 
 Any later push requires a new approval.
+
+For autonomous work, inspect the PR and local status instead. The
+[reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
+repairs failing checks within its persisted budget and merges after green CI.
+Confirm the issue reaches `Done` with its merged PR linked. Deployment is a
+separate acceptance step.
 
 ## 7. Recover a parked task
 
@@ -117,6 +146,11 @@ reconcile requeues it directly.
 
 The runner restores the phase recorded before parking and reuses the task clone.
 Other queued issues can run while this task remains parked.
+
+For autonomous work, inspect `agent:blocked`, its reason, and its next retry
+time. Temporary failures retry automatically. Resolve the external dependency
+before a retry; a scope violation or exhausted repair budget requires a new,
+explicitly scoped task. Do not edit runtime state to reset the budget.
 
 ## Related
 

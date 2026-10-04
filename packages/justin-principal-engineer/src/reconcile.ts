@@ -1,13 +1,12 @@
-import { buildAgentPrompt } from "#src/agent/prompt.ts";
-import { publicAgentOutput } from "#src/agent/public-output.ts";
+import { implementTask } from "#src/reconcile-implementation.ts";
 import * as deliveryHealth from "#src/domain/delivery-health.ts";
 import type { Config, PrHealth, TaskState } from "#src/domain/schemas.ts";
 import { DockerAgentRunner } from "#src/host/docker.ts";
-import { captureEvidence } from "#src/host/evidence.ts";
+import { publishTask } from "#src/reconcile-publication.ts";
 import { GitWorkspace } from "#src/host/git-workspace.ts";
 import { createTaskState } from "#src/host/task-state.ts";
-import { createGitHubAuth } from "#src/integrations/github-app.ts";
-import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
+import type { PullRequest } from "#src/integrations/github.ts";
+import { githubHost } from "#src/integrations/github-host.ts";
 import { LinearClient, providerForIssue } from "#src/integrations/linear.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import { writeInfo } from "#src/runtime/output.ts";
@@ -16,74 +15,151 @@ import { StateStore } from "#src/runtime/state-store.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
 import * as reconcileMerge from "#src/reconcile-merge.ts";
 import { failureCountForSave } from "#src/reconcile-state.ts";
+import path from "node:path";
+import {
+  AutonomousBlocker,
+  autonomyIssueBlocker,
+  isAutonomousIssue,
+} from "#src/domain/autonomy.ts";
+import { autonomyEnabled } from "#src/host/autonomy-policy.ts";
+import { DeliveryAuthorization } from "#src/host/delivery-authorization.ts";
+import { handleAutonomousFailure } from "#src/reconcile-autonomy.ts";
 export class Reconciler {
   private readonly store: StateStore;
   private readonly linear: LinearClient;
   private readonly git: GitWorkspace;
   private readonly agent: DockerAgentRunner;
+  private readonly withGitHub: ReturnType<typeof githubHost>;
+  private readonly cliPath: string;
+  private readonly authorization: DeliveryAuthorization;
   public constructor(
     private readonly config: Config,
     private readonly paths: RuntimePaths,
     private readonly run: CommandRunner,
+    runnerSource?: string,
   ) {
     this.store = new StateStore(paths);
     this.linear = new LinearClient(config.linear.team, run);
     this.git = new GitWorkspace(config, run);
-    this.agent = new DockerAgentRunner(config, run);
+    this.agent = new DockerAgentRunner(config, run, runnerSource);
+    this.withGitHub = githubHost(config, paths, run);
+    this.authorization = new DeliveryAuthorization({
+      config,
+      paths,
+      run,
+      linear: this.linear,
+      git: this.git,
+      withGitHub: this.withGitHub,
+    });
+    this.cliPath = path.join(
+      runnerSource ??
+        path.join(
+          config.repository.stableCheckout,
+          "packages/justin-principal-engineer",
+        ),
+      "src/cli.ts",
+    );
   }
   public async reconcile(): Promise<void> {
     await this.store.initialize();
     const outcome = await this.store.withLock(async () => {
-      const states = await this.store.list();
-      const active = states.find(
-        ({ phase }) => phase !== "done" && phase !== "needs_human",
-      );
-      if (active !== undefined) {
-        await this.advanceSafely(active);
-        return;
-      }
-      const issue = await this.linear.nextIssue();
-      if (issue === null) {
-        writeInfo("Queue is quiet: no eligible Linear issue");
-        return;
-      }
-      const provider = providerForIssue(issue);
-      if (provider === undefined) {
-        throw new Error(
-          `${issue.identifier} does not select exactly one provider`,
-        );
-      }
-      const timestamp = currentTimestamp();
-      const existing = states.find(
-        ({ issue: savedIssue }) => savedIssue.identifier === issue.identifier,
-      );
-      if (existing !== undefined) {
-        if (existing.phase !== "needs_human") {
-          throw new Error(
-            `${issue.identifier} already has local state in ${existing.phase}`,
-          );
-        }
-        const resumed: TaskState = {
-          ...existing,
-          issue,
-          provider,
-          phase: "claiming",
-          resumePhase: existing.resumePhase ?? "implementing",
-          failureCount: 0,
-          lastFailureFingerprint: null,
-          updatedAt: timestamp,
-        };
-        await this.store.save(resumed);
-        await this.advanceSafely(resumed);
-        return;
-      }
-      const state = createTaskState({ issue, provider, paths: this.paths });
-      await this.store.save(state);
-      await this.advanceSafely(state);
+      await this.reconcileLocked();
+      return true;
     });
     if (outcome === undefined) {
       writeInfo("Another reconciler owns the local lock; exiting");
     }
+  }
+  private async reconcileLocked(): Promise<void> {
+    const states = await this.store.list();
+    const active = states.find(
+      ({ phase }) =>
+        phase !== "done" && phase !== "needs_human" && phase !== "blocked",
+    );
+    if (active !== undefined) {
+      await this.advanceSafely(active);
+      return;
+    }
+    const due = states.find(
+      (state) =>
+        state.phase === "blocked" &&
+        state.nextAttemptAt !== null &&
+        Date.parse(state.nextAttemptAt) <= Date.now(),
+    );
+    if (due !== undefined) {
+      const issue = await this.linear.refreshIssue(due.issue.identifier);
+      if (issue === null) throw new Error("Blocked task's issue disappeared");
+      const resumed = {
+        ...due,
+        issue,
+        phase: due.resumePhase ?? "awaiting_ci",
+        resumePhase: null,
+        nextAttemptAt: null,
+      };
+      await this.store.save(resumed);
+      await this.advanceSafely(resumed);
+      return;
+    }
+    const issue = await this.linear.nextIssue(async (candidate) => {
+      const parked = states.some(
+        (state) =>
+          state.issue.identifier === candidate.identifier &&
+          state.phase === "blocked",
+      );
+      return (
+        !parked &&
+        (!isAutonomousIssue(candidate) ||
+          (autonomyIssueBlocker(candidate) === null &&
+            (await autonomyEnabled(candidate, this.paths))))
+      );
+    });
+    if (issue === null) {
+      writeInfo("Queue is quiet: no eligible Linear issue");
+      return;
+    }
+    const provider = providerForIssue(issue);
+    if (provider === undefined) {
+      throw new Error(
+        `${issue.identifier} does not select exactly one provider`,
+      );
+    }
+    const timestamp = currentTimestamp();
+    const existing = states.find(
+      ({ issue: savedIssue }) => savedIssue.identifier === issue.identifier,
+    );
+    if (existing !== undefined) {
+      if (existing.phase !== "needs_human") {
+        throw new Error(
+          `${issue.identifier} already has local state in ${existing.phase}`,
+        );
+      }
+      const resumed: TaskState = {
+        ...existing,
+        issue,
+        provider,
+        deliveryMode: isAutonomousIssue(issue)
+          ? "autonomous"
+          : existing.deliveryMode,
+        implementationStarted:
+          existing.implementationStarted || existing.prNumber !== null,
+        phase: "claiming",
+        resumePhase: existing.resumePhase ?? "implementing",
+        failureCount: 0,
+        lastFailureFingerprint: null,
+        updatedAt: timestamp,
+      };
+      await this.store.save(resumed);
+      await this.advanceSafely(resumed);
+      return;
+    }
+    const state = createTaskState({
+      issue,
+      provider,
+      paths: this.paths,
+      deliveryMode: isAutonomousIssue(issue) ? "autonomous" : "owner_approved",
+    });
+    await this.store.save(state);
+    await this.advanceSafely(state);
   }
   private async advanceSafely(initial: TaskState): Promise<void> {
     try {
@@ -94,6 +170,17 @@ export class Reconciler {
         states.find(
           ({ issue }) => issue.identifier === initial.issue.identifier,
         ) ?? initial;
+      if (latest.deliveryMode === "autonomous") {
+        await handleAutonomousFailure({
+          initial,
+          latest,
+          error,
+          store: this.store,
+          linear: this.linear,
+          save: this.save.bind(this),
+        });
+        return;
+      }
       await reconcileMerge.recordFailure({
         state: latest,
         error,
@@ -119,6 +206,8 @@ export class Reconciler {
     return next;
   }
   private async advance(state: TaskState): Promise<void> {
+    if (state.deliveryMode === "autonomous" && state.phase !== "completing")
+      state = await this.authorization.authorizeAutonomous(state);
     switch (state.phase) {
       case "claiming": {
         await this.linear.claim(state.issue);
@@ -154,9 +243,37 @@ export class Reconciler {
           linear: this.linear,
           save: this.save.bind(this),
           writeInfo,
+          ready: () => this.mergeReady(state),
+          mergeCommand: [
+            process.execPath,
+            this.cliPath,
+            "merge-ready",
+            state.issue.identifier,
+            "--runner-source",
+            path.dirname(path.dirname(this.cliPath)),
+          ],
+          confirmMerged: (sha, env) =>
+            this.git.confirmMerged(state.checkoutPath, sha, env),
         });
         return;
-      case "completing":
+      case "completing": {
+        if (state.deliveryMode === "autonomous" && state.prNumber !== null) {
+          const number = state.prNumber;
+          const merged = await this.withGitHub(async (github, env) => {
+            const pr = await github.pullRequest(number);
+            if (pr.mergedAt === null || pr.mergeCommit === null)
+              throw new Error("Autonomous task's merge is not confirmed");
+            await this.git.confirmMerged(
+              state.checkoutPath,
+              pr.mergeCommit.oid,
+              env,
+            );
+            return pr.mergeCommit.oid;
+          });
+          state = await this.save(state, "completing", {
+            mergeCommitSha: merged,
+          });
+        }
         await reconcileMerge.completeTask({
           state,
           linear: this.linear,
@@ -164,215 +281,34 @@ export class Reconciler {
           writeInfo,
         });
         return;
+      }
       case "needs_human":
+      case "blocked":
       case "done":
         return;
     }
   }
   private async implement(state: TaskState): Promise<void> {
-    const linearContext = await this.linear.agentContext(
-      state.issue.identifier,
-    );
-    const output = await this.agent.runTurn({
-      checkout: state.checkoutPath,
-      provider: state.provider,
-      prompt: buildAgentPrompt({
-        state,
-        linearContext,
-        feedback: state.pendingFeedback,
-        ...(state.pendingHealth === null
-          ? {}
-          : { health: state.pendingHealth }),
-        ...(state.pendingDiagnostics === null
-          ? {}
-          : { diagnostics: state.pendingDiagnostics }),
-      }),
+    await implementTask({
+      state,
+      linear: this.linear,
+      git: this.git,
+      agent: this.agent,
+      store: this.store,
+      save: this.save.bind(this),
     });
-    const persistedOutput = publicAgentOutput(output);
-    if (output.status === "needs_human") {
-      await reconcileMerge.pauseTask({
-        state,
-        reason: persistedOutput.summary,
-        linear: this.linear,
-        store: this.store,
-      });
-      return;
-    }
-    const changed = await this.git.changedPaths(state.checkoutPath);
-    const seenFeedbackIds = [
-      ...new Set([
-        ...state.seenFeedbackIds,
-        ...state.pendingFeedback.map(({ id }) => id),
-      ]),
-    ];
-    if (changed.length === 0) {
-      if (state.prNumber === null) {
-        if (output.status !== "no_change") {
-          throw new Error(`Agent reported ${output.status} without a change`);
-        }
-        await reconcileMerge.completeNoChangeTurn({
-          state,
-          output: persistedOutput,
-          linear: this.linear,
-          save: this.save.bind(this),
-          writeInfo,
-        });
-        return;
-      }
-      if (state.pendingHealth !== null)
-        throw new Error(`Agent made no change: ${output.summary}`);
-      if (state.pendingFeedback.length > 0) {
-        await reconcileMerge.pauseAfterNoChangeFeedback({
-          state,
-          linear: this.linear,
-          store: this.store,
-        });
-        return;
-      }
-      await this.save(state, "awaiting_ci", {
-        lastAgentOutput: persistedOutput,
-        pendingFeedback: [],
-        pendingHealth: null,
-        pendingDiagnostics: null,
-        pendingCodexFindingKeys: [],
-        seenFeedbackIds,
-      });
-      return;
-    }
-    await this.save(state, "publishing", {
-      lastAgentOutput: persistedOutput,
-      pendingFeedback: [],
-      pendingHealth: null,
-      pendingDiagnostics: null,
-      pendingCodexFindingKeys: state.pendingCodexFindingKeys,
-      evidencePublished: false,
-      evidenceMarkdown: [],
-      seenFeedbackIds,
-    });
-    writeInfo(
-      `${state.issue.identifier}: agent turn completed; publishing next`,
-    );
-  }
-  private async withGitHub<T>(
-    work: (
-      github: GitHubClient,
-      env: Readonly<Record<string, string>>,
-    ) => Promise<T>,
-  ): Promise<T> {
-    const auth = await createGitHubAuth(this.config, this.paths, this.run);
-    try {
-      const github = new GitHubClient(
-        this.config.repository.slug,
-        {
-          approver: {
-            login: this.config.github.approverLogin,
-            id: this.config.github.approverId,
-          },
-          expectedBotLogin: this.config.github.botLogin,
-        },
-        this.run,
-        auth.env,
-      );
-      return await work(github, auth.env);
-    } finally {
-      await auth.cleanup();
-    }
   }
   private async publish(state: TaskState): Promise<void> {
-    const output = state.lastAgentOutput;
-    if (output === null)
-      throw new Error("Publishing state has no agent output");
-    const linearContext = await this.linear.agentContext(
-      state.issue.identifier,
-    );
-    const [safeOutput, changed] = await this.git.preparePublication(
-      output,
-      state.checkoutPath,
-      linearContext,
-    );
-    await this.withGitHub(async (github, env) => {
-      let pr = await github.pullRequestForBranch(state.branch);
-      if (pr === null) {
-        if (changed.length > 0) {
-          await this.git.commitAndSubmit({
-            state,
-            output: safeOutput,
-            githubEnv: env,
-          });
-        } else {
-          await this.git.submitExisting({
-            state,
-            output: safeOutput,
-            githubEnv: env,
-          });
-        }
-      } else if (changed.length > 0) {
-        await this.git.publishChanges({
-          state,
-          output: safeOutput,
-          githubEnv: env,
-        });
-      } else {
-        const localHead = await this.git.headSha(state.checkoutPath);
-        if (localHead !== pr.headRefOid)
-          await this.git.submitUpdate(state, env);
-      }
-      pr = await github.pullRequestForBranch(state.branch);
-      if (pr === null) throw new Error("No PR after submit");
-      const eligibleKeys = output.resolvedFindingKeys.filter((key) =>
-        state.pendingCodexFindingKeys.includes(key),
-      );
-      const resolvedKeys =
-        eligibleKeys.length === 0
-          ? []
-          : await github.resolveCodexFindings(
-              pr.number,
-              `Addressed finding(s) ${eligibleKeys.join(", ")} in this follow-up turn. ${safeOutput.summary}`,
-              state.checkoutPath,
-              eligibleKeys,
-            );
-      state = {
-        ...state,
-        pendingCodexFindingKeys: state.pendingCodexFindingKeys.filter(
-          (key) => !resolvedKeys.includes(key),
-        ),
-      };
-      let current = await this.save(state, "publishing", {
-        prNumber: pr.number,
-        prUrl: pr.url,
-        latestHeadSha: pr.headRefOid,
-      });
-      if (!current.evidencePublished) {
-        const evidence = await captureEvidence({
-          output,
-          checkout: state.checkoutPath,
-          prNumber: pr.number,
-          githubEnv: env,
-          paths: this.paths,
-          identifier: state.issue.identifier,
-          run: this.run,
-          capture: async (target) => {
-            await this.agent.captureScreenshot({
-              checkout: state.checkoutPath,
-              ...target,
-            });
-          },
-        });
-        current = await this.save(current, "publishing", {
-          evidencePublished: true,
-          evidenceMarkdown: [...current.evidenceMarkdown, ...evidence],
-        });
-      }
-      await github.updateBody(
-        pr.number,
-        `${this.git.pullRequestBody(state, safeOutput)}${
-          current.evidenceMarkdown.length === 0
-            ? ""
-            : `\n## Visual evidence\n\n${current.evidenceMarkdown.join("\n\n")}\n`
-        }`,
-      );
-      await this.save(current, "awaiting_ci", { restackInProgress: false });
-      writeInfo(`${state.issue.identifier}: ${pr.url} is waiting for CI`);
+    await publishTask({
+      state,
+      authorization: this.authorization,
+      git: this.git,
+      linear: this.linear,
+      agent: this.agent,
+      paths: this.paths,
+      run: this.run,
+      withGitHub: this.withGitHub.bind(this),
+      save: this.save.bind(this),
     });
   }
   private async observe(
@@ -401,6 +337,22 @@ export class Reconciler {
         return { kind: "transition" };
       }
       const health = await github.health(state.prNumber, state.checkoutPath);
+      const token = env["WOODPECKER_TOKEN"];
+      if (token === undefined)
+        throw new Error("Woodpecker token missing from host environment");
+      if (
+        await reconcileMerge.pauseForCiOperatorBlocker({
+          state,
+          health,
+          pr,
+          config: this.config.woodpecker,
+          token,
+          linear: this.linear,
+          store: this.store,
+        })
+      ) {
+        return { kind: "transition" };
+      }
       if (deliveryHealth.deliveryNeedsRestack(health)) {
         const conflict = await this.git.restack(state.checkoutPath, env);
         await this.save(
@@ -445,15 +397,33 @@ export class Reconciler {
     const observation = await this.observe(state);
     if (observation.kind === "transition") return;
     if (!deliveryHealth.deliveryIsHealthy(observation.health)) {
+      if (
+        state.deliveryMode === "autonomous" &&
+        Date.now() - Date.parse(state.updatedAt) >= 60 * 60_000
+      )
+        throw new AutonomousBlocker(
+          "Exact-head CI has remained pending for an hour",
+          true,
+        );
       writeInfo(`${state.issue.identifier}: CI is still pending`);
       return;
     }
     await this.withGitHub(async (github) => {
       if (observation.pr.isDraft) await github.markReady(observation.pr.number);
     });
-    await this.save(state, "awaiting_approval", {
-      latestHeadSha: observation.pr.headRefOid,
-    });
+    await this.save(
+      state,
+      state.deliveryMode === "autonomous" ? "merging" : "awaiting_approval",
+      {
+        latestHeadSha: observation.pr.headRefOid,
+      },
+    );
+    if (state.deliveryMode === "autonomous") {
+      writeInfo(
+        `${state.issue.identifier}: CI is green; autonomous merge queued`,
+      );
+      return;
+    }
     writeInfo(
       `${state.issue.identifier}: CI is green; waiting for owner approval`,
     );
@@ -486,5 +456,9 @@ export class Reconciler {
     writeInfo(
       `${state.issue.identifier}: exact-head approval observed; merge queued`,
     );
+  }
+
+  public async mergeReady(state: TaskState): Promise<boolean> {
+    return await this.authorization.mergeReady(state);
   }
 }

@@ -11,6 +11,8 @@ describe("renderLaunchAgent", () => {
       path: "/opt/homebrew/bin:/usr/bin",
       linearApiKeyReference: "op://Automation/Linear/credential",
       woodpeckerTokenReference: "op://Automation/Woodpecker/credential",
+      woodpeckerBaseUrl: "https://woodpecker.sjer.red",
+      woodpeckerRepoId: 1,
       pinchtabConfigPath:
         "/Users/test/Library/Application Support/pinchtab/config.json",
       stdout: "/tmp/stdout.log",
@@ -24,6 +26,8 @@ describe("renderLaunchAgent", () => {
     expect(plist).toContain(
       "WOODPECKER_TOKEN=op://Automation/Woodpecker/credential",
     );
+    expect(plist).toContain("WOODPECKER_URL=https://woodpecker.sjer.red");
+    expect(plist).toContain("WOODPECKER_REPO_ID=1");
     expect(plist).toContain(
       "PINCHTAB_CONFIG=/Users/test/Library/Application Support/pinchtab/config.json",
     );

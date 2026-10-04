@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import type { LinearIssue, TaskState } from "#src/domain/schemas.ts";
+import {
+  TaskStateSchema,
+  type LinearIssue,
+  type TaskState,
+} from "#src/domain/schemas.ts";
 import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
 import { LinearClient } from "#src/integrations/linear.ts";
 import { completeTask, pauseTask } from "#src/reconcile-merge.ts";
@@ -18,7 +22,7 @@ function state(): TaskState {
     state: { name: "In Progress", type: "started" },
     labels: { nodes: [{ name: "agent:codex" }] },
   };
-  return {
+  return TaskStateSchema.parse({
     issue,
     provider: "codex",
     phase: "implementing",
@@ -41,7 +45,7 @@ function state(): TaskState {
     lastFailureFingerprint: "abc",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
-  };
+  });
 }
 
 describe("pauseTask", () => {

@@ -6,6 +6,7 @@ import {
   type Provider,
 } from "#src/domain/schemas.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
+import { AUTONOMOUS_LABEL, BLOCKED_LABEL } from "#src/domain/autonomy.ts";
 
 const QuerySchema = z.object({ nodes: z.array(LinearIssueSchema) });
 const ViewSchema = z.object({
@@ -52,9 +53,20 @@ const TeamStatesSchema = z.object({
 
 const MANAGED_LABELS = [
   {
+    name: AUTONOMOUS_LABEL,
+    color: "#2563EB",
+    description: "Authorize a small DevEx ticket for autonomous merge",
+  },
+  {
+    name: BLOCKED_LABEL,
+    color: "#D97706",
+    description:
+      "Autonomous task is blocked; see recorded reason and retry time",
+  },
+  {
     name: "agent:codex",
     color: "#059669",
-    description: "Use Codex SDK through OpenRouter",
+    description: "Use the Codex SDK with native OpenAI credentials",
   },
   {
     name: LABEL_NEEDS_HUMAN,
@@ -82,6 +94,7 @@ export function isEligibleIssue(issue: LinearIssue): boolean {
   return (
     !TERMINAL_STATE_TYPES.has(issue.state.type) &&
     !issueLabels.has(LABEL_NEEDS_HUMAN) &&
+    !issueLabels.has(BLOCKED_LABEL) &&
     providerForIssue(issue) !== undefined
   );
 }
@@ -122,7 +135,9 @@ export class LinearClient {
     ).stdout;
   }
 
-  public async nextIssue(): Promise<LinearIssue | null> {
+  public async nextIssue(
+    include?: (issue: LinearIssue) => Promise<boolean>,
+  ): Promise<LinearIssue | null> {
     const output = await this.command([
       "issue",
       "query",
@@ -141,8 +156,17 @@ export class LinearClient {
       "0",
       "--json",
     ]);
-    const selected = selectIssue(QuerySchema.parse(JSON.parse(output)).nodes);
-    return selected;
+    const candidates = QuerySchema.parse(JSON.parse(output)).nodes;
+    while (candidates.length > 0) {
+      const selected = selectIssue(candidates);
+      if (selected === null) return null;
+      if (include === undefined) return selected;
+      const fresh = await this.refreshIssue(selected.identifier);
+      if (fresh !== null && isEligibleIssue(fresh) && (await include(fresh)))
+        return fresh;
+      candidates.splice(candidates.indexOf(selected), 1);
+    }
+    return null;
   }
 
   public async agentContext(identifier: string): Promise<string | null> {
@@ -174,20 +198,14 @@ export class LinearClient {
 
   public async refreshIssue(identifier: string): Promise<LinearIssue | null> {
     const output = await this.command([
-      "issue",
-      "query",
-      "--all-teams",
-      "--search",
-      identifier,
-      "--limit",
-      "10",
-      "--json",
+      "api",
+      "query($id: String!) { issue(id: $id) { id identifier title description url priority createdAt team { key } project { id name } state { name type } labels { nodes { name } } } }",
+      "--variables-json",
+      JSON.stringify({ id: identifier }),
     ]);
-    return (
-      QuerySchema.parse(JSON.parse(output)).nodes.find(
-        (issue) => issue.identifier === identifier,
-      ) ?? null
-    );
+    return z
+      .object({ data: z.object({ issue: LinearIssueSchema.nullable() }) })
+      .parse(JSON.parse(output)).data.issue;
   }
 
   private async resolveTeam(issue: LinearIssue): Promise<string> {
@@ -322,7 +340,12 @@ export class LinearClient {
 
   private removableLabels(issue: LinearIssue): string[] {
     const present = labels(issue);
-    const candidates = [LABEL_NEEDS_HUMAN, LABEL_READY];
+    const candidates = [
+      LABEL_NEEDS_HUMAN,
+      LABEL_READY,
+      AUTONOMOUS_LABEL,
+      BLOCKED_LABEL,
+    ];
     const provider = providerForIssue(issue);
     if (provider !== undefined) candidates.push(`agent:${provider}`);
     return candidates.filter((label) => present.has(label));
@@ -398,6 +421,35 @@ export class LinearClient {
       team: await this.resolveTeam(issue),
       add: [],
       remove: [LABEL_NEEDS_HUMAN],
+    });
+  }
+
+  public async blocked(
+    issue: LinearIssue,
+    reason: string,
+    retryAt: string | null,
+  ): Promise<void> {
+    const team = await this.resolveTeam(issue);
+    await this.ensureLabels(team, [BLOCKED_LABEL]);
+    await this.mutateLabels({
+      nodeId: issue.id,
+      team,
+      add: [BLOCKED_LABEL],
+      remove: [],
+    });
+    await this.comment(
+      issue.identifier,
+      `Autonomous task blocked: ${reason}${retryAt === null ? "" : `\nNext automatic check: ${retryAt}`}`,
+    );
+  }
+
+  public async resumeBlocked(issue: LinearIssue): Promise<void> {
+    if (!labels(issue).has(BLOCKED_LABEL)) return;
+    await this.mutateLabels({
+      nodeId: issue.id,
+      team: await this.resolveTeam(issue),
+      add: [],
+      remove: [BLOCKED_LABEL],
     });
   }
 

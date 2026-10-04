@@ -647,6 +647,45 @@ describe("evaluateMultiGate", () => {
     expect(gateExitCode(d)).toBe(REVIEW_GATE_BLOCKED_EXIT_CODE);
   });
 
+  test("a missing bot seat among quota blocks remains a hard failure", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "errored",
+          blockedReason: "usage-limited",
+        }),
+        snapshot({
+          provider: coderabbitProvider,
+          reviewState: "errored",
+          blockedReason: "missing-seat",
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+    expect(d.message).toContain("missing-seat");
+  });
+
+  test("a clean Codex review passes beside a missing CodeRabbit seat", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({ provider: codexProvider }),
+        snapshot({
+          provider: coderabbitProvider,
+          reviewState: "errored",
+          blockedReason: "missing-seat",
+        }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+    expect(gateExitCode(d)).toBe(0);
+  });
+
   test("a findings failure among blocks fails hard and names the ignored", () => {
     const d = evaluateMultiGate({
       head,

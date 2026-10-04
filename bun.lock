@@ -923,6 +923,8 @@
       },
       "dependencies": {
         "@openai/codex-sdk": "0.156.1",
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "zod": "^4.4.3",
       },
