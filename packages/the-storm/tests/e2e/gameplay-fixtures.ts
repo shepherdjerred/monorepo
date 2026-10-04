@@ -65,17 +65,8 @@ export async function gameplayFixtures(
     | "rwf"
   >
 > {
-  const content = path.join(packageRoot, "server/owned/plugins/TheStorm");
-  const owned = await Bun.file(path.join(content, "config.yml")).text();
-  // The fixtures plugin builds synthetic worlds and stands for whichever
-  // modules the staged config switches on (every one in the full suite; the
-  // rwf world alone here) before TheStorm enables.
-  const fixturesJar = path.join(
-    packageRoot,
-    "plugin/dist/build/libs/TheStormFixtures.jar",
-  );
   return {
-    ...(await profileFixtures(profile, owned, content, packageRoot, fixturesJar)),
+    ...(await profileFixtures(packageRoot, profile)),
     companionsE2eJar: path.join(
       packageRoot,
       "plugin/modules/companions/build/libs/TheStormCompanionsE2E.jar",
@@ -84,11 +75,8 @@ export async function gameplayFixtures(
 }
 
 async function profileFixtures(
-  profile: E2eProfile,
-  owned: string,
-  content: string,
   packageRoot: string,
-  fixturesJar: string,
+  profile: E2eProfile,
 ): Promise<
   Pick<
     StartServerOptions,
@@ -99,6 +87,15 @@ async function profileFixtures(
     | "rwf"
   >
 > {
+  const content = path.join(packageRoot, "server/owned/plugins/TheStorm");
+  const owned = await Bun.file(path.join(content, "config.yml")).text();
+  // The fixtures plugin builds synthetic worlds and stands for whichever
+  // modules the staged config switches on (every one in the full suite; the
+  // rwf world alone here) before TheStorm enables.
+  const fixturesJar = path.join(
+    packageRoot,
+    "plugin/dist/build/libs/TheStormFixtures.jar",
+  );
   switch (profile) {
     case "full": {
       // Every shipped module plus Search and Destroy with its bots, which

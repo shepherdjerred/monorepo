@@ -18,7 +18,7 @@ import {
   rwfTestSettings,
 } from "#e2e/harness/rwf-settings.ts";
 import { startServer } from "#e2e/harness/server.ts";
-import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import { RconClient } from "#e2e/harness/rcon.ts";
 
 const ArgsSchema = z.object({
   port: z.coerce.number().int().min(1).max(65_535),

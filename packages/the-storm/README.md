@@ -121,13 +121,13 @@ tracking existed, so their ores stay ineligible. Mob drops are unaffected.
 
 Inside a module, packages are layered:
 
-| Package            | May use                                                                                                                                                          |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain`           | The JDK, core's `Result`, and its own module's `domain` and `app` value types. No Paper, Adventure, jOOQ, Jackson, JDBC, network or other modules                |
-| `app`              | Use cases and the ports other modules may call                                                                                                                   |
-| `adapter.paper`    | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                                  |
-| `adapter.db`       | jOOQ repositories over the module's own tables                                                                                                                   |
-| `adapter.citizens` | `rwfbots` only: the single package allowed to use Citizens, and only `net.citizensnpcs.api` and `net.citizensnpcs.trait`. Main thread only, like `adapter.paper` |
+| Package            | May use                                                                                                                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain`           | The JDK, core's `Result`, and its own module's `domain` and `app` value types. No Paper, Adventure, jOOQ, Jackson, JDBC, network or other modules                                                                                  |
+| `app`              | Use cases and the ports other modules may call                                                                                                                                                                                     |
+| `adapter.paper`    | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                                                                                                    |
+| `adapter.db`       | jOOQ repositories over the module's own tables                                                                                                                                                                                     |
+| `adapter.citizens` | `rwfbots` only: its single package allowed to use Citizens, and only `net.citizensnpcs.api` and `net.citizensnpcs.trait`. Main thread only, like `adapter.paper`. `npcs` and `companions` bind Citizens from their `adapter.paper` |
 
 Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. No class may
@@ -625,8 +625,8 @@ Join `localhost` with a 26.2 client, then:
 
 The `rwfbots` module fills rwf matches with Citizens player NPCs driven by a
 pure perception, tactics, team and reflex stack (`rwfbots.domain`). It needs
-the Citizens plugin (pinned in `server/plugins.json`) and enables after rwf;
-without Citizens its enable fails with a clear message.
+the Citizens plugin (pinned in `server/plugins.json` and required by
+TheStorm's `paper-plugin.yml`) and enables after rwf.
 
 Threading. The main thread runs one 1-tick task (`BotTicker`): it captures a
 `WorldSnapshot` from rwf's read model and the live entities (position,

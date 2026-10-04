@@ -4,7 +4,7 @@ import { z } from "zod";
 import { packageRoot } from "./paths.ts";
 import type { ServerInfo } from "./server.ts";
 import { copyStormDatabase, querySqlite } from "./storm-data.ts";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 
 /**
  * What the rwf suites share: a player's chat transcript, polling, the

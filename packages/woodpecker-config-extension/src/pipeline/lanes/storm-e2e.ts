@@ -37,7 +37,7 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
   return {
     key: full ? "paper-full-e2e-pr" : "paper-e2e-pr",
     label: full
-      ? "Paper 26.2 + all 21 Storm modules"
+      ? "Paper 26.2 + all 25 Storm modules"
       : "Paper 26.2 + The Storm e2e",
     image: images.base,
     commands: [

@@ -35,7 +35,7 @@ import {
 } from "#e2e/harness/rwfbots.ts";
 import { serverLogs, type ServerInfo } from "#e2e/harness/server.ts";
 import { querySqlite } from "#e2e/harness/storm-data.ts";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 
 /**
  * Search and Destroy with rwfbots on the real server: Citizens player NPCs

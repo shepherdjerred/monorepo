@@ -8,7 +8,7 @@ import { ownedConfigDir } from "./paths.ts";
 import { matchDatabase } from "./rwf-match.ts";
 import type { ServerInfo } from "./server.ts";
 import { querySqlite, stormDataFile } from "./storm-data.ts";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 
 /**
  * What the rwfbots suite reads: the shipped personalities, what a human's

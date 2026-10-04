@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.chat.app.Subscription;
 import com.shepherdjerred.thestorm.companions.adapter.coreprotect.NaturalBlockAudit;
 import com.shepherdjerred.thestorm.companions.adapter.db.JooqCompanionStore;
 import com.shepherdjerred.thestorm.companions.domain.CompanionsConfig;
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -83,6 +84,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             store,
             services,
             getDataPath(),

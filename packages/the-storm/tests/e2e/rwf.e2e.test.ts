@@ -23,7 +23,7 @@ import {
   waitForLobby,
 } from "./harness/rwf-match.ts";
 import { stormDataFile } from "./harness/storm-data.ts";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 
 /**
  * Red Warfare Search and Destroy on the real server, humans only (rwfbots is

@@ -15,7 +15,7 @@ import {
   waitForLobby,
 } from "#e2e/harness/rwf-match.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
-import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 
 /**
  * The rwfbots load test (`bun run test:load`): one human joins a match, the

@@ -24,10 +24,11 @@ file.
 
 ## Bodies
 
-1. With Citizens absent, enabling `rwfbots` fails naming Citizens and the rest
-   of TheStorm starts; with it present the module logs its personality and
-   map counts. **Proven** with Citizens present (20 personalities, 1 map with
-   a nav artifact, traces on); the absent case is not.
+1. TheStorm requires Citizens in `paper-plugin.yml`, so without it TheStorm
+   does not load at all; `rwfbots` still fails its enable naming Citizens if
+   the API has no implementation. With Citizens present the module logs its
+   personality and map counts. **Proven** with Citizens present (20
+   personalities, 1 map with a nav artifact, traces on).
 2. A drafted bot spawns as a player NPC with its personality's skin and name,
    is not in `getOnlinePlayers()`, does not count towards max players, and
    carries the `✦` suffix rwf's scoreboard gives bots. **Proven**: the

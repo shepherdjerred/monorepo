@@ -3,6 +3,7 @@ import { chmod, cp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { docker } from "./docker.ts";
+import { stageCompanionsE2e } from "./companions-e2e.ts";
 import {
   overlayAgentTopLevel,
   overlayBrainUrl,
@@ -295,14 +296,7 @@ export async function stagePlugins(
     );
   }
   if (options.companionsE2eJar !== undefined) {
-    await Bun.write(
-      path.join(pluginsDir, "TheStormCompanionsE2E", "fixture.txt"),
-      "Disposable Citizens survival acceptance world\n",
-    );
-    await Bun.write(
-      path.join(pluginsDir, "TheStormCompanionsE2E.jar"),
-      Bun.file(options.companionsE2eJar),
-    );
+    await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);
   }
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),

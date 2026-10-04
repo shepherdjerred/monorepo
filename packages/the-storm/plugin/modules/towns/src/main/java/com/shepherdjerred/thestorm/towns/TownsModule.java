@@ -34,8 +34,6 @@ import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.jspecify.annotations.Nullable;
@@ -56,7 +54,6 @@ public final class TownsModule implements StormModule {
 
   private @Nullable Runnable stopMap;
   private @Nullable FliptRentalGate rentalGate;
-  private @Nullable ExecutorService archives;
 
   @Override
   public String id() {
@@ -141,10 +138,9 @@ public final class TownsModule implements StormModule {
             new LockService.Dependencies(config.locks(), clocks, settling::isPlayerBusy));
     settling.onSettled(locks::flushDeferred);
     var recoveryStore = new JooqRecoveryStore(context.database());
-    var archiveExecutor =
-        Executors.newSingleThreadExecutor(
-            Thread.ofPlatform().daemon(true).name("storm-plot-archives").factory());
-    archives = archiveExecutor;
+    // Schematic and item archive encoding is CPU work for core's bounded pool, which closes
+    // with the plugin.
+    var archiveExecutor = context.compute().executor();
     var installed =
         TownsPaper.install(
             context,
@@ -188,11 +184,6 @@ public final class TownsModule implements StormModule {
 
   @Override
   public void disable() {
-    var executor = archives;
-    if (executor != null) {
-      executor.shutdown();
-      archives = null;
-    }
     var gate = rentalGate;
     if (gate != null) {
       gate.close();

@@ -73,16 +73,19 @@ final class ArchitectureTest {
                   + " types, nothing else");
 
   @ArchTest
-  static final ArchRule CITIZENS_STAYS_IN_ITS_ADAPTER =
+  static final ArchRule CITIZENS_STAYS_IN_ITS_ADAPTERS =
       noClasses()
           .that()
-          .resideOutsideOfPackage("..rwfbots.adapter.citizens..")
+          .resideOutsideOfPackages(
+              "..npcs.adapter.paper..",
+              "..companions.adapter.paper..",
+              "..rwfbots.adapter.citizens..")
           .should()
           .dependOnClassesThat()
           .resideInAPackage("net.citizensnpcs..")
           .because(
-              "Citizens is an optional runtime plugin; only rwfbots.adapter.citizens binds to it, so"
-                  + " the rest of the plugin starts and tests without it");
+              "Citizens bodies are bound only by the npcs and companions Paper adapters and"
+                  + " rwfbots.adapter.citizens; domains, apps and every other module stay free of it");
 
   @ArchTest
   static final ArchRule CITIZENS_ADAPTER_USES_ONLY_THE_API_AND_TRAITS =
