@@ -1,0 +1,73 @@
+id: jolly-golem
+name: Jolly_Golem
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTE4NjgwOSwKICAicHJvZmlsZUlkIiA6ICJkZTU3MWExMDJjYjg0ODgwOGZlN2M5ZjQ0OTZlY2RhZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSEZfTWluZXNraW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWJjZTg5ZTFkMmRkOWU2NDRlMDdlYjg4NmUyZGRmNDJkZDk5MzNjODdlNDRhNDgwYTU1ZThmZGE0YmQxNzU3MSIKICAgIH0KICB9Cn0="
+  signature: "a/XOmJ+qWnLskhcfzdrhUFO8OeTP3GcnXG/yHRQ02eno+CMjNsXbzaqdH3qaozvx88LGKfBbVrwXfnzNqoD4QwTABzNulmiB8+7g8lfTPsHVAvWS4aqlCMM++S6hEy5YKh69SePBAsGHph6ruWyD2QZ572whWOn+tj3XppJKcJXrORRjN75Qb9MVSh+S2dpJJB7xey/lsHX161L1UKKHdS73vbDrEXGtPj2N98PxjJEwg3itFAkoPhLLIekg7C33VZ0KaFUAxxC/vS2K5LBHv28LNGb+8Q01oFi3wKqBDvvwIDvJX/DCnS2Q+qQs6Cl9+vkXGb6zixZt0lXoybph+1qP2Yr0Rv2i8lFLV+ohU1D2VcdtMMOoaX77uJk7QI/GH+8lnOZh37BzMQhlvwPCiRJ9hkFV34RnvQ08xOftxnPFluMaPBTpl7cP2A9W1xM9xJh124L0zjSl3FQQHPq+dWFyut8znCicGnZHUVMKwOVe3DP1zRBrBXN2LwTU07reCagyEnG2mlOvm13vdxIGaRkeNkjghFWCE3Bjm+EPbiVz2hyBjWu91bMVWYFQC66DBkEgfNai73b6sBRZJE0XBIFP8uHT+gBYG2agAFQgcX1O/pTJPAeyvVHBc/gGkziG0WAdk5bsS6sn9aHL42iQWQFAnup7PhI3m9SoLbqzGOI="
+skill: 0.553
+archetype: anchor
+leverOffsets:
+  reactionMs: -0.01
+  awarenessRadius: 0.6
+  coordination: 0.71
+  technique: -0.2
+  aggression: -0.96
+kits:
+  trooper: 1
+  longbow: 0.48
+  shortbow: 0.34
+  rewind: 0.27
+roles:
+  defend: 0.94
+  retake: 0.62
+style:
+  aggression: 0.29
+  patience: 0.89
+  teamplay: 0.56
+  risk: 0.11
+voice:
+  tone:
+    - cheerful
+    - steady
+    - warm
+  verbosity: chatty
+  style: "big friendly bouncer energy; calls everyone pal, laughs at everything, never moves off the bomb"
+lines:
+  greet:
+    - hey pals! big guy's on bomb duty
+    - golem reporting in. nobody touches our nuke
+    - "evening, {team}! I brought snacks. gapples, mostly"
+  onKill:
+    - sorry pal, bomb's closed tonight
+    - "ha! nice try, {victim}"
+    - "{victim} got bounced"
+  onDeath:
+    - "oof! good hit, {killer}"
+    - "{killer} knocked over the golem. respect"
+    - somebody hold the door for me
+  onPlant:
+    - "{bomb} is ticking! I'm going home now"
+    - "lit {bomb}. back to my post, pals"
+  onDefuse:
+    - "{bomb} is safe and sound, pals"
+    - nobody lights our nuke on my shift
+  onWin:
+    - "great work, {team}! group hug"
+    - the golem is pleased. gg all
+  onLoss:
+    - aw, next time pals
+    - they got past me. I'll grow taller
+  onLastAlive:
+    - just me and the bomb now. cozy
+    - golem's last stand. come on in, slowly
+  taunt:
+    - the line starts behind me, friend
+    - bomb's this way, if you can get past
+    - I've stood here since 2013. I can wait
+quirks:
+  - good_sport
+  - gapple_hoarder
+rivals:
+  - lilnairioshnoul
+bio: A gentle giant who parks on his team's bomb and greets every attacker by name. Has never once left the bomb room voluntarily. LilNairioshnoul is the only diver who ever slipped past him, and he still talks about it.
+batch: 2
+retired: false

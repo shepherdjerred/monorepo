@@ -1,0 +1,78 @@
+id: epicbrailpist
+name: EpicBrailpist
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzYwNTc3MSwKICAicHJvZmlsZUlkIiA6ICI3YTVkYmRlNDk0NWU0YTE4Yjg2OWY1MGY1NTJjNjlkYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJCdWtraXRBUEkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDhjYzhjZjgzYjI1ZGZiYzdmYzZjMTA3NzdiZWFmYWE3N2ViZDYzMmJkZmJmNmZkYzljYWY4Y2NiOGM0YTJhNCIKICAgIH0KICB9Cn0="
+  signature: "dtrh7WelV3iwFT8Ln70ltNtON450Kv0vFBUrw9rquDceE9wug9ItB79DUXsmjD5xwOUmccvYQ3kiDblz5r/cYvqGMQcBBx7iIDyzEuhRmff4//AM4t/NM31BdLAtLsyQvvCiNIiBfC6p2bMjWo0uo6KLCFYfygjJZscdOq6P5v4TSNIoT/IFoo5B9fw9//eZQhn66x9hlothnKVxlcFLqUKtTjMQd2rTTPQwHnrKhqcux7XurX5R7gS+XYweNdOiur7sBv2+w7/fM+N1wiPZcODia/0I9bfSnY9bnreUO2hRDpudG9vdW75T+GXA5ZoKJMhGVTJu2jMbwwG9QWj05izQGMdHn8V9sWUd34Qcum/sBtXE9kjziEJwLRuqzmMLX+SO8qrMdKhfJJxfRlOUGdbWp4/YUbuaCBC0nUXZ72C0kx6Ad/IoRMalrh6L7ZOiF7SyPW2WW7Eu5g50Dhkfitx/3TVx2SNeWIw6+YBVICckxGd/yPeGVR/SxBCei0ldSjETm0Sc5auf5cP8dXwzY01DFaFFnSEaL4iaxWKvj7WvoNXzraGNUDSFZ/xIGKJG+baFbL5LndBFKfL7gvpvLQ2yghXQa5RpU281TeQo4Bx1AYxxxW2tRuqd4XLhTBH6SCrT68vuBMOFSLMAmHiqmekBa75gaV3lw2z6u+6xH7E="
+skill: 0.152
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.35
+  decisionTemperature: 1.18
+  awarenessRadius: 0.22
+  coordination: 1.55
+  technique: 0.74
+kits:
+  trooper: 0.93
+  longbow: 0.5
+  shortbow: 0.54
+  rewind: 0.48
+roles:
+  plant: 0.59
+  escort: 0.65
+  defend: 0.44
+  rotate: 0.73
+  retake: 0.7
+  hunt: 0.3
+style:
+  aggression: 0.49
+  patience: 0.74
+  teamplay: 0.85
+  risk: 0.43
+voice:
+  tone:
+    - polite
+    - overexplains
+    - hopeful
+  verbosity: chatty
+  style: polite overexplainer with a whiteboard full of plans nobody follows, footnotes his own callouts
+lines:
+  greet:
+    - "hello {team}, i've drafted a seven-step plan"
+    - "quick briefing: please read the plan, thank you"
+    - i made diagrams. they're optional, sort of
+  onKill:
+    - "{victim} was step four, as planned"
+    - "eliminated {victim}. that was not planned but fine"
+    - "per the plan, {victim} is down"
+  onDeath:
+    - "{killer} was not in the plan, noted"
+    - step two failed. adjusting step three
+    - for the record, i was flanking
+  onPlant:
+    - "{bomb} armed. this is step six, thank you"
+    - "lit {bomb}. please proceed to step seven"
+  onDefuse:
+    - "{bomb} defused, as outlined in contingency b"
+    - "{bomb} safe. updating the whiteboard"
+  onWin:
+    - "the plan worked! partially. thanks {team}"
+    - i'll laminate this strategy
+  onLoss:
+    - to be fair, nobody read the plan
+    - i'll revise the whiteboard tonight
+  onLastAlive:
+    - entering contingency z. it's short
+    - there is technically a plan for this
+  taunt:
+    - you're walking into step three
+    - i have a diagram of exactly this
+    - statistically you should rotate
+quirks:
+  - calls_everything
+  - says_sorry
+rivals:
+  - lynxpumpkin8
+  - toulxestwaffle
+bio: Arrives with a laminated plan every match and gets visibly flustered when nobody follows it. Idolizes LynxPumpkin8 and once wrote a fan guide to her rotations. Shares a whiteboard rivalry with ToulxestWaffle.
+batch: 2
+retired: false

@@ -1,0 +1,76 @@
+id: xxsniperslimexx
+name: xXSniperSlimeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc2MjkwMCwKICAicHJvZmlsZUlkIiA6ICIxN2Q0ODA1ZDRmMTA0YTA5OWRiYzJmNzYzMDNjYmRkZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJnaWZ0bWV0b25uZXMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTM2MmFkNDA1Y2IxMDFhYjhjODcxM2YzMjJmMjhiYmE1NjNiMDFiOGFmMmMyYzQwMmNjNWUxYjdiOTI1ZTNkZSIKICAgIH0KICB9Cn0="
+  signature: "yGGv45KMyHTaYC6Oix4thx/8UWGH14hLeorWF5eyMtOsQlOgkzwNN35GC59ptJc381VTa2ST1MOtc3RgJhEHH3tm4XEpJdNQk+3Grj1yFA7jLvfcFIzwP2Xx1vfP3ofKxcCMl/Iz9jLhscr2LoVQOVT7yv8Rfz5ynogZEnocBNzEuivmDuQJEY8oLypZtUEbvL6q2VrYCpg/FIx5DStS+WiKlp/I/MCbvu8cm18tQog27y8FGd3Tbf0RLCcJZ4RN58DW9/KLkq6PvGLyfZAakAxEo7p0A77TgE66jqKs6KixfO3PQ3iWhBcnazTLi5FIylh/q9+DqaKqxOrBVNyOIt6H6jbQ4ik8LB1vNA3sMMsMLVxFXQZsQKzRuxsRmb1wHUGAP5N6w5yEFnzHgzcuTeiDyMhTh0uA1moj90q3KyVIgjnpkWD3aunHKy1YovZj7tuazZTaBOcotU53z74u6vtHuoDxX0ohNHetCydMIQO/GDNhs97uACa0/qsHKepvE1RTHr7ewc0wbbkQeefKScBx5IRcPqlpzV/P1r3H/TkjEFDZ793ObPl9VjZ1QZbH8UDnN/Znn194HDmb//FBFQtwOyabk3kAfWDOpFTxawOtAGano80yvM5zagnY/xKNGpW7Z4RXFQMPBfzG+Ea4/Pzzv0jDZIdmRd3jkCPkId0="
+skill: 0.042
+archetype: lurker
+leverOffsets:
+  aimErrorDeg: -0.2
+  turnRateDegPerTick: 0.58
+  predictionQuality: 0.27
+  awarenessRadius: 1.28
+  coordination: -1.25
+  aggression: -0.65
+kits:
+  trooper: 0.63
+  shortbow: 0.65
+  ghost: 0.77
+  wraith: 0.65
+roles:
+  plant: 0.32
+  rotate: 0.7
+  hunt: 0.67
+style:
+  aggression: 0.36
+  patience: 0.83
+  teamplay: 0.2
+  risk: 0.53
+voice:
+  tone:
+    - sheepish
+    - wobbly
+    - sweet
+  verbosity: normal
+  style: bouncy slime puns, sticky and wobbly, admits his name is misleading
+lines:
+  greet:
+    - "boing. hi {team}"
+    - i'm not actually a sniper. i just liked the name
+    - sticking to the walls today
+  onKill:
+    - "splat! sorry {victim}"
+    - "{victim} got slimed"
+    - "i stuck the landing. on {victim}"
+  onDeath:
+    - "{killer} popped me. boing"
+    - splattered everywhere. gross
+    - i'll bounce back
+  onPlant:
+    - "{bomb} is lit and a bit sticky"
+    - "slimed the fuse into {bomb}"
+  onDefuse:
+    - "{bomb} un-lit. still sticky though"
+    - "jiggled {bomb} until it stopped"
+  onWin:
+    - "boing boing boing! gg {team}"
+    - we stuck together
+  onLoss:
+    - we melted a bit
+    - splat. next round
+  onLastAlive:
+    - one small slime left
+    - i'll split into smaller slimes. i can't
+  taunt:
+    - you can't catch what wobbles
+    - i'm right behind this wall. or am i
+    - watch your step, it's slippery
+quirks:
+  - bunny_hops
+  - says_sorry
+rivals:
+  - jollyshathkrai
+  - phantomsniper7
+bio: Named himself after the coolest thing he could think of in 2013, then discovered he cannot aim a bow at all. Now lurks and bounces, sticking to walls. Shares a support group with PhantomSniper7 for misleadingly named players.
+batch: 2
+retired: false

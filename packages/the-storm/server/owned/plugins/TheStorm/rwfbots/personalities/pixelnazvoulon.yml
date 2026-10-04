@@ -1,0 +1,76 @@
+id: pixelnazvoulon
+name: PixelNazvoulon
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMyMTYzNiwKICAicHJvZmlsZUlkIiA6ICJkMjU0ZjQxMDkyNTE0NTdlYmU5NGM5NDQ2ZmIzZTc3YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUcmFzaEFwcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lZTdhODYyZDg0ZjlhZDhkMjZmMmQyYWIzNGRjNGIwNTVkYjAzYjY1ZGFkZTdiNjQwZDk0OTI0YzJjM2Y4OTFmIgogICAgfQogIH0KfQ=="
+  signature: "Ok+SxotlsSZFP3uD4cBPoWQUnM78juVosYayddUGwj7Pmg+ZzKtVe7GgkY1GukUgHA+qUg1UNgzUL1UZ5mUk62EW8sHuyIO8D/m0bbiocqsRWqYp1wyBB0BoVyxCWqwLL0nnUZKwD/tPksqHWRqviRxBihNqSyQcCneZvhL8882139AxHXLBweMEMFSfFP3lUXo8MkrCH3s4UFvHpdqxAwEIMsmeOs2dvLbqyJesl5IAC3VB/TnhcySqBnXBWIkC4ySsV7GFZq1WuGLhyCreg5J+czCkY5W4dFbEEaiUy1Fsvg9rAhBoL6WetT7q/496dIetcV6V+etTlZaAlB8qhSjXA9SBjCbf+Lva2MLlgyp/XFyCaAsQYwO5lhE7trFUihukJ2/pX/pViLBBDRRl2rlcux30HJiHAYfIZ2OSfgmQmDvdchVi/wU+DPl7HgBPnWTCjGfdVL++mdYpsIZKp1tAOJ7B+q6NUU9KvoyE8J40zH86p3ZsOE5egEKbFsSXMRwH65Mt0oByLTSF6tnQvvXc5AC679MNEEnxIcWGJ8xHLt0iKXLvw/Kxr96nILH1+w61jtIOYMY6NkMsoE/Eya3IkUz6pXCCm4aDBl7dvvawepAhBi40o29753d0P1XCXNwUx8KB7eUgeHbowtOPMFQh0KtynKzxHgKWwpkR2ng="
+skill: 0.161
+archetype: troll
+leverOffsets:
+  decisionTemperature: -1.75
+  awarenessRadius: -0.62
+  coordination: -1.59
+  technique: 0.44
+kits:
+  trooper: 0.47
+  shortbow: 0.64
+  rewind: 1
+  spy: 0.89
+roles:
+  plant: 0.41
+  escort: 0.24
+  defend: 0.17
+  rotate: 0.61
+  hunt: 0.4
+style:
+  aggression: 0.62
+  patience: 0.29
+  teamplay: 0.01
+  risk: 0.83
+voice:
+  tone:
+    - glitchy
+    - absurd
+    - playful
+  verbosity: chatty
+  style: "pretends to be a buggy robot; error codes, beeps, glitched words, occasionally 'reboots'"
+lines:
+  greet:
+    - "BOOTING... hello {team}"
+    - "beep. objective: chaos"
+    - loading personality... ERROR. using chaos.exe
+  onKill:
+    - "{victim}.exe has stopped responding"
+    - "target {victim} deleted. beep"
+    - "ERROR 404: {victim} not found"
+  onDeath:
+    - "SYSTEM FAILURE. {killer} detected"
+    - "rebooting... thanks {killer}"
+    - bzzt. blue screen
+  onPlant:
+    - "{bomb}.lit = true"
+    - "installing fuses on {bomb}... 100%"
+  onDefuse:
+    - "{bomb}.lit = false. beep boop"
+    - "uninstalled the fire from {bomb}"
+  onWin:
+    - "WIN.exe executed. gg {team}"
+    - beep beep! victory protocol
+  onLoss:
+    - fatal error. gg
+    - "ctrl+z ctrl+z ctrl+z"
+  onLastAlive:
+    - single-thread mode
+    - last process running
+  taunt:
+    - have you tried turning it off and on
+    - rewinding... rewinding... oops
+    - you are being scanned. beep
+quirks:
+  - spins
+  - crouch_spam
+rivals:
+  - xxminerpickaxexx
+  - krojykrouzhd
+bio: Roleplays as a malfunctioning robot every single match, complete with error codes. Rewinds at random and calls it a firmware update. Formed a chaos alliance-turned-rivalry with xXMinerPickaxeXx over who gets to be weirder.
+batch: 2
+retired: false

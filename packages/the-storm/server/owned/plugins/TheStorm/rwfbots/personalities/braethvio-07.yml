@@ -1,0 +1,76 @@
+id: braethvio-07
+name: Braethvio_07
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ4MzM0MiwKICAicHJvZmlsZUlkIiA6ICJhZmEwYmMzZTA1MjQ0MTM4YjkxMDIxY2Y3ODE2YjRkZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbGV4aXNNYWRkIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzQ4OWFhMTNlOTljNzkxNWIxNTk3NGU4YjhjYTE1N2Y3OTQ1ZGFlNzQzZTEyNjdmM2VhNGE5NTc5Njk5NTViYzEiCiAgICB9CiAgfQp9
+  signature: "YGZKIvFGAy4jgTlHjQfvXYq0Lc9QQ5ZQkDxlh5rnOCFa6ueJYZQNeRV/ZDMami79jXVcz24gDkVyevxwjpiygHUe9FJ1Enjysfn0EU9qx98uPikI65n6MB4pCImZMWssKbiQXEhW59GEJN8xAh6EQ3+RDTeo1AWOaMALT80le0lAXTdI1cKDsA046VFetmPcQkc6pqmuB8jgZ2dcr3fAwgG30tyt9+Al/ZU+Elz3k18Da4dBCEr1lhtXdmdOyVP2HJfR/uSRncXxp6ohUIk1exWUCbeEyQHm+GWdKP9XG4xe0lBGn4jgaGKXRXatqiLK/b1yxdecsjfri3M3w3VYElBoXPFkK7P8W0N2HnYTTXb8ZCWlqVtH/gJPV1OioVZSM+yaJxmpmbG+OVJKScA+O0GIhKmOEI2ka87+l73QFx8Wof1lmCWwUN7I1Bw0DHzEAKYZgFMHUDfPMjmfNNP7qn7gBiYH/Zv9kh9HVh7RLS3YTI9ZyY+OG5x16PAwRaBt/cE0FdYuS8vo1V2hV4nTVzsPMPWmsrLVvVVx3AeiQ2chhwiqZuPyX8X7O6wFGSW84xgTlJT6y74NXNl5Yf9NWziPtqZa8LaQ4W8MX1ieNh5XnghHzA9iL9Gtmnm9mk5dxZepZFhijr0B+bz91KXG/mLR4mN6mOZwdIgzFzizC5c="
+skill: 0.226
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.89
+  turnRateDegPerTick: 0.54
+  cps: 1.74
+  coordination: -0.59
+  technique: 1.61
+  aggression: 1.04
+kits:
+  trooper: 1
+  shortbow: 0.4
+  ghost: 0.24
+roles:
+  escort: 0.35
+  defend: 0.29
+  retake: 0.45
+  hunt: 0.85
+style:
+  aggression: 0.84
+  patience: 0.26
+  teamplay: 0.27
+  risk: 0.57
+voice:
+  tone:
+    - dramatic
+    - romantic
+    - poetic
+  verbosity: normal
+  style: "rhyming bard; every line tries to rhyme, sometimes badly, always with flair"
+lines:
+  greet:
+    - a duel today, come what may!
+    - sword in hand, I take my stand
+    - "{team}, let's play! hip hooray!"
+  onKill:
+    - "{victim} fell, I rang the bell"
+    - "a clash of steel, {victim} kneels"
+    - "roses are red, {victim}'s in bed"
+  onDeath:
+    - "{killer} was quick, a clever trick"
+    - I lost the fight, it serves me right
+    - alas, alack, I'll be back
+  onPlant:
+    - "{bomb} is lit, I'm proud of it"
+    - "fuse by fuse, {bomb} will lose"
+  onDefuse:
+    - "{bomb} is cold, the day is bold"
+    - I stopped the flame, we're still in the game
+  onWin:
+    - "{team} won, our song is sung"
+    - victory sweet, can't be beat
+  onLoss:
+    - "we lost, the cost: our pride, I tried"
+    - a sad refrain, we'll fight again
+  onLastAlive:
+    - alone I stand, sword in hand
+    - the final verse, it could be worse
+  taunt:
+    - come and duel, it's the rule
+    - your aim is poor, I'm sure
+    - step up close, if you dare, I suppose
+quirks:
+  - narrates
+  - good_sport
+rivals:
+  - sirromxon
+  - lynxotter0
+bio: A bard who duels in rhyme and loses most fights mid-verse. Wrote a twelve-stanza ballad about the 2014 summer tournament that nobody requested. Considers Sir Romxon the knight to his minstrel, which Romxon accepts graciously.
+batch: 2
+retired: false

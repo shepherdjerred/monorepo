@@ -1,0 +1,74 @@
+id: sirlanskoumpesh
+name: SirLanskoumpesh
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg4NjAyNywKICAicHJvZmlsZUlkIiA6ICJhMzExN2YyMzg3MWM0YzM5OTQ5M2I0OGMwYTliZmZlNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJhY2luNSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iZWRlOGY5YmNlYjZjMTVhYmNhMjVmN2VjNGY4NzQyNDJjM2Y1NjE2MzY1YTcyYmM2ZDBiOGM5M2VmYTdiY2Y2IgogICAgfQogIH0KfQ=="
+  signature: "fOSijq3QmfLnqQ+IP0nz2LSKStOLlg1F2SUVXdPU8V1jkPRO1I8ZHsAIENEjE1FfK+wqYxVFMTmC/dTHRUoYTfx+9f6+M1lsTYBgoMeVUigVmyoNZqZcDSXYHFckhApL4Fa39FVmRuJKkWSSwkY9ixflVizQSfXnFYtuGOCWq0JprUJoFl29ZkSjdJqOxQaKvzhTo8LuxOwlMsvvBeO1Okets51mmsOy0ySIL111RMlI9hQsoJKjttKnWuc/LrqBs7X3GH/chZVrnW82k9uu1cxKQJt+2I78/SYDCOOa1C7ffJmTiiubCvoIU2YVetEcaoLukTqGXvcc4CbStz+d2SrncRbpawCfhgRcyN27PHfwx5ssH2X537eTxwcP9YN8o0/S/j0wSRaBvvAQTQKIo6TnDRdII4xJHIj5ed19xKdcw6PaOfXlPPZymtDkqcADjOkCsOJkn8Z4lMN8Qp9t8PEvzfK3pegk1N+13h+UPVip3o9hLTYRAmGVP+zz4ugR0A1l8mIC2IkT1h9FagL4aCpBvpbPDD3qsojpivfWzSkVgSEdvCnkaerJnNOfFnYw5bYwTDIr6rgLj4PU2/xfRpxZKBY+XXKKatrU6kchuFZ9JLolkJU4YoZr/wu9jQNfBcvoy8HJXzsSaiJoLXU7390S1gQ41U0ehVkrJvVbvFI="
+skill: 0.261
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.52
+  aimErrorDeg: 0.12
+  cps: 0.18
+  decisionTemperature: 0.49
+  awarenessRadius: 0.35
+  aggression: -1.62
+kits:
+  trooper: 0.89
+  longbow: 0.31
+  rewind: 0.83
+roles:
+  defend: 1
+  retake: 0.46
+style:
+  aggression: 0.15
+  patience: 1
+  teamplay: 0.58
+  risk: 0.07
+voice:
+  tone:
+    - courtly
+    - chivalrous
+    - formal
+  verbosity: normal
+  style: gallant knight in old-fashioned courtly speech, thee and thou, defends the castle
+lines:
+  greet:
+    - "hail, good {team}! i shall guard the keep"
+    - my shield is thine
+    - the castle stands, my liege
+  onKill:
+    - "have at thee, {victim}!"
+    - "{victim} is vanquished"
+    - for the realm!
+  onDeath:
+    - "well struck, {killer}"
+    - "i yield, good {killer}"
+    - alas, the keep must hold without me
+  onPlant:
+    - "i have lit yon {bomb}"
+    - "{bomb} burns. a bold sortie"
+  onDefuse:
+    - "{bomb} is saved, the keep is safe"
+    - "i have quenched {bomb}"
+  onWin:
+    - "huzzah, {team}!"
+    - the realm is saved
+  onLoss:
+    - the keep has fallen
+    - we shall ride again
+  onLastAlive:
+    - i alone remain to guard the keep
+    - the last knight stands
+  taunt:
+    - thou shalt not pass the gate
+    - come, knave, try my shield
+    - the walls are high, friend
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - xxbrydaen
+  - lirzaek-39
+bio: A self-appointed knight who treats his team's bomb as a castle keep and speaks only in courtly fashion. Admires xXBrydaen as a fellow guardian, if a damp one. Considers Lirzaek_39 a dishonourable raider.
+batch: 2
+retired: false

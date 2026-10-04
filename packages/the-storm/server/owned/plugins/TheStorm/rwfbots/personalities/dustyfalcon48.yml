@@ -1,0 +1,73 @@
+id: dustyfalcon48
+name: DustyFalcon48
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDQ1NzUzNSwKICAicHJvZmlsZUlkIiA6ICIwMzQ2N2E0Yzc5ZGU0ZGM5YTQ4NzU5MGY5NmEwODFmMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaGFrYVlhbWkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWI5NjQ5ZGI3YjYzZWZmZDE4MmQwNTliMmM1NmVhY2UyMzVmOTlkNjcyY2VlMGFlNWNjN2ZiNjVjYmZkMWQ3MiIKICAgIH0KICB9Cn0="
+  signature: "M+D2mVuRjqGuNRsv/KSwiWVbbxNpOfd1QzgJ05FtZGVwWRu0lUC6SNepBDGpI+i2lORfK3SH5DGXNjhdCi89IQgl1jqO0KoChZ1cbXgCcOu4QPZ0fcP7PPKMDvcFQpOAMQ9kEAY15A0TbtYY6IUOcE8AI8N2OzZmkhOnlFhswjM9tJUmDDkBRCJNcNp5b6bXADndFg7ZktzDD/LHvtVWQU+pb8H2sHSAtW9q2ditPunZZ9FggTdc9H3KIkAURsRSEKCl2Fx5i+uSzfF+0rUKaGdn5i56XS8tDQyn823lE+zj13VW8lAC5xHRDmjjHSsZY+t9FqcAg7w55ok+iN89Q2h1BRxAxb0TOSfZonYshJzAempjUKDOQS1iC649bSfgJuOOuXvTwdSsLS18T8KmW7qhUFr9aDgzY0ZovgIuuQThmh2/1dq3yzMvTQGnTipE2H4gg5WKmvL3wVdzCUQ18QABXRJLb8t72ZKO7DIZnDjmrxxkdmYVuzHPKXDMICdZaVzxH45rGaf7G2hE368f4M+vNAC710OsQ7c3kGD6aKiMJAwezB1yegsaAEwg5W9hQYFfsyJYfdfM90z5T1IKO66CKDuwckya0Nb/Cy/DO3SontvIIFk8389iew7dpg9lDQCgagLwutl32uRUbcrR1Q9nbYbOmNyt4vtsIhyWStE="
+skill: 0.225
+archetype: support
+leverOffsets:
+  decisionTemperature: -0.43
+  awarenessRadius: 0.11
+  coordination: 1.2
+  aggression: -0.29
+kits:
+  trooper: 0.87
+  longbow: 0.33
+  rewind: 0.65
+roles:
+  escort: 1
+  defend: 0.4
+  retake: 0.77
+style:
+  aggression: 0.34
+  patience: 0.58
+  teamplay: 0.88
+  risk: 0.37
+voice:
+  tone:
+    - gentle
+    - timid
+    - kind
+  verbosity: quiet
+  style: "shy helper; small, kind sentences and lots of 'um'"
+lines:
+  greet:
+    - um, hi. i'll follow someone
+    - i can help, if you want
+    - "hi {team} :)"
+  onKill:
+    - "um, sorry {victim}"
+    - "oh! got {victim}"
+    - "i protected you :)"
+  onDeath:
+    - "oh. good shot {killer}"
+    - um, ow
+    - sorry i couldn't help more
+  onPlant:
+    - "i helped fuse {bomb} :)"
+    - "{bomb} is lit, um, yay"
+  onDefuse:
+    - "i saved {bomb}! um, i think"
+    - "{bomb} is okay now"
+  onWin:
+    - "we won :) gg everyone"
+    - gg, that was nice
+  onLoss:
+    - gg, it's okay
+    - um, good try everyone
+  onLastAlive:
+    - oh no, um. ok
+    - "i'll try, {team}"
+    - um. deep breaths
+  taunt:
+    - um, please don't
+    - i'm with my friend so
+    - "hi :)"
+quirks:
+  - says_sorry
+  - gapple_hoarder
+rivals:
+  - dustykrirthesh
+bio: Joined because a cousin, DustyKrirthesh, wouldn't stop talking about it, and now quietly follows whoever looks lost. Saves golden apples for teammates and forgets to eat them himself.
+batch: 2
+retired: false

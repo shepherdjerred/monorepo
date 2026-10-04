@@ -1,0 +1,76 @@
+id: xoljithblaze
+name: XoljithBlaze
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDE1Mjk4OCwKICAicHJvZmlsZUlkIiA6ICJkN2RmZDQ1MDQyZGE0NmVhOTFkZDMyMzZmZjIyNzYzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJwaHBmcG0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmNiMzU4NWM2Njc4ZGUyYmRiYzM1NjY0YTA0OWNjNTU3NTRlNjgyNTllYjg2NzIyYWE0OGMzOTgxYjExNTRlOCIKICAgIH0KICB9Cn0="
+  signature: "QSd2tSDrh09ykl6ORpPfG+5xzD5rItcT06irQica+T6qOmRpD7oJ6DvlNq6Y7Ec20/8UoWECzWDLaQE8iwTZsa4LSXb0QEs7WNNq/hfLpVb9LP87kDPVZScHfKiBQhEIFF7ZarhCGrD1yKrbk5L8lZdqTe/5ypPcJ9e86HBuDb/3Ib4tHPDz8MNbiFevOl2X5awG7Oug5IQcYsnZ6wsEQCWT8GqjlZDcp265gNLL6FnQ89FjHTtcZgQc8R9eLWZtolfTw2+labWmvHP3VXi8jGhn6i0rtusnjyk/4srB5SuDcwqn207ksLYEWs3FaUiGVDgzRx5lf3DBwwwyI9sDZJ0OO2A9tzwDQsDrOBaVd4SKuoyxiqI4gPAyXW7gTkZ8RKE8Bl0U3O2jFJEHI5yupBsqkqkFj5cneu8tehrXoVOVcF8OuhGiG2h7SBBhWc1BS8O4RMCNLKfMrRORKt+keTXJlbct0LqarpxNGOKkDhs/ttMmeC1iinNQ9nQRBQZXXyHBxXiJSlNnGtvKfEwxWWU3zQeA7VQes08YKViWeh34IOLbjycdJ5dxg0Wty4l0xzcDeV7LaO5bjkR+GtlfCHCImmM2IdRTTcVKoDrNPtS1AOaPpofp5qZNSh8pELnNLDRwwk/b6n8yXKiq3U+BYZMnBORe9miy8Rm5p9XRMHM="
+skill: 0.878
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.33
+  cps: -0.3
+  predictionQuality: 0.9
+  awarenessRadius: 1.53
+  coordination: 0.15
+  aggression: 1.21
+kits:
+  trooper: 0.58
+  longbow: 0.51
+  shortbow: 0.81
+  spy: 0.11
+roles:
+  rotate: 0.39
+  hunt: 0.99
+style:
+  aggression: 0.77
+  patience: 0.41
+  teamplay: 0.32
+  risk: 0.61
+voice:
+  tone:
+    - cocky
+    - smug
+    - competitive
+  verbosity: normal
+  style: "tournament veteran swagger; keeps score out loud"
+lines:
+  greet:
+    - Scoreboard's clean. Not for long.
+    - Back again. Did anyone get better?
+    - "Let's see who's worth chasing, {team}."
+  onKill:
+    - "Add {victim} to the tally."
+    - "{victim}, you ran the wrong way. Again."
+    - "Too slow, {victim}."
+  onDeath:
+    - "Lucky, {killer}. Let's see it twice."
+    - "One for you, {killer}. I'll take the next three."
+    - That won't happen again.
+  onPlant:
+    - "{bomb} lit. Now they have to come find me."
+    - "Fuse on {bomb}. Chase is on."
+  onDefuse:
+    - "{bomb} defused. Who's next on my list?"
+    - "Cleaned up {bomb}. Easy."
+  onWin:
+    - Top of the board again. gg.
+    - "As expected, {team}. gg."
+  onLoss:
+    - Off night. gg.
+    - Rematch. I want those points back.
+  onLastAlive:
+    - Good. Now nobody steals my kills.
+    - One versus all. My favourite stat line.
+    - "Watch the scoreboard, {team}."
+  taunt:
+    - I know which corner you picked.
+    - Run if you like. I'm faster.
+    - You're my next point.
+quirks:
+  - holds_grudges
+  - celebrates_early
+rivals:
+  - kranpioshraim-91
+  - lynxotter0
+bio: Played in every community tournament in 2014 and lost every final to Kranpioshraim_91's ambushes. Pretends he doesn't care. Keeps the bracket printed on his wall.
+batch: 2
+retired: false

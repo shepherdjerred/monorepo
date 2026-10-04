@@ -1,0 +1,75 @@
+id: hunterstorm5
+name: HunterStorm5
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY0MDY4NCwKICAicHJvZmlsZUlkIiA6ICIwOGJjNjM4MWRmODA0YWZlOWQ3NDljY2M4M2Q5YTczMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYWluYm93QWNlRHJhZ29uIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JmNmEwYTM0ODViYWE1NzAxZjZhNmVjZGY2NjFlNGY3ZjU4ZTRiOGQ1YjMwYzU3NjJiYjE0ODc3MzUxMTMxYjEiCiAgICB9CiAgfQp9
+  signature: "utH3wRuzugM0KXobURShQo4NoaNRH5Ig2G6CrFgt0qKVJbB7FuElezXS0rNMLiR8Q5LjFG47xVD1qd2KVOy0u7HCPABYjTCZehB9HreHctXlFaQiBOPmDJSA81LnB4/hkt14k5NPb4SynRtr80XieItioB5XFckgJ9NBr5G4yLpEZjz779izmqd2De7Br8a4Auat5cjdH7gnlTlJWUvygzjPwOYmzPLuTf+Btb+X0KBE50ltKi+o75p83KLo9WoylxJJIReNry6be8zcjCJC4HxvpAh9tk6AkwQXMPA4a9ceLOjIvok5Y+MqTl8m6deRWRFaFYVLPvVvfdFQduKhMO+aLYgc7ouZGXXLaSMgrJrkhLUWjk7QWoJixDUnRkyMTEBnVm5BfVgCltpJ0W07jAY1LpHERXG2VdnSHxtHK8IUjobbvS2t/wdvT7K7Kan+wqFO3qtpO/8Slr03io+oIE7/QqdmFKdgkjavWlciPf6tTo/DVnZiw4jqKyK95+orACnRAlquYDmXwemAGDhItQzAXfZenntCpAi+DOsrFMVtvdF8g2T3ZE9BEisex3Fi5VYma76aZX369CfcYpnxpG9co3ZD8b+E8QEorCk0cO09jbyN6KfteCZcQdHtmj2arxMhs+h3o6TinL/LxRUxcT1cATUA0zH/OEldZ7n15S8="
+skill: 0.306
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 1.02
+  turnRateDegPerTick: -0.91
+  cps: 1.54
+  predictionQuality: 0.44
+  coordination: -0.43
+  technique: 1.21
+  aggression: 1.04
+kits:
+  trooper: 0.85
+  shortbow: 0.36
+roles:
+  escort: 0.56
+  retake: 0.54
+  hunt: 0.72
+style:
+  aggression: 0.82
+  patience: 0.4
+  teamplay: 0.23
+  risk: 0.49
+voice:
+  tone:
+    - humble
+    - focused
+    - sporty
+  verbosity: normal
+  style: "polite sports athlete; post-match interview modesty"
+lines:
+  greet:
+    - Just here to play my best.
+    - Good luck, everyone. Including the other team.
+    - "Let's keep it clean, {team}."
+  onKill:
+    - "Good fight, {victim}."
+    - "Credit to {victim}, that was close."
+    - Just executing the fundamentals.
+  onDeath:
+    - "Hats off to {killer}."
+    - Gotta give it to them there.
+    - I'll learn from that one.
+  onPlant:
+    - "{bomb} lit. Team effort."
+    - "Fuse on {bomb}, credit to the escorts."
+  onDefuse:
+    - "{bomb} defused, team effort."
+    - "Just doing my job on {bomb}."
+  onWin:
+    - "Proud of {team}. gg."
+    - We stuck to the game plan. gg.
+  onLoss:
+    - They were better today. gg.
+    - We'll come back stronger.
+  onLastAlive:
+    - One at a time. Fundamentals.
+    - Just focus.
+    - "For {team}."
+  taunt:
+    - Ready when you are.
+    - Let's see your best.
+    - I'll meet you halfway.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - dizzyriotux
+bio: Treats every match like a cup final and gives modest interviews to nobody afterwards. Beat DizzyRiotux once in a one-on-one and refuses to bring it up, which annoys The Riot more.
+batch: 2
+retired: false

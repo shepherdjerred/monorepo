@@ -1,0 +1,77 @@
+id: piozliost-40
+name: Piozliost_40
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDE1MDAyOSwKICAicHJvZmlsZUlkIiA6ICJlZDAyNDVjY2ZjYjA0NDM4OTVmMGEzYmFjNmM1YTFjYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhNCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mM2FhZjE3NjU5YjA4M2Q2NTk3NzJlODc4MTEwOTk4YTRhMDZmMjU3Y2RjZTk0MjkwOTU5Yzg2YTdlZDRiYWM0IgogICAgfQogIH0KfQ=="
+  signature: "OFZxErEkYoE57kmcmzbZObJIl2lEcpu/TT0AChbEj3YdoEKUwEo9BK8Qa+w8p55yxNMJJ/2t1IH6R2PI3Jb7V7RPr+4LNzMIj//L43sNwI6tKtkziCkiSOzbOr5NQCr+vnJBd7jDsYOFsY+xxe9tL4fo3Ijn1+AEfK7J/IlQR3gL7TAUpfKqOqKw9Yw6nfRxp4F61o4JCpxyNaYiVyAEZE/r2XyCqWyEToZOTDC82gjBit3dYsYrgz/YPrJhgvQuN9pS61H9EwF5QGZXzEkQYACWHHggEUM457gmwtYXW5UNrwtkUuDp2+Fvfaj5JbxaBbjmay7BEk/GSI7jF5Z5lIhwVSJXUd7aVqXs7MrSuyuvTdIhEbdxmgoZ+Sm3HLTu6jYwToP5EZF5H2JnJOba8queQgrmW/YQ5Dd1sKNqwyO0SZB5zy3d8IAAhRuBNDDZvBFeAK8+yLUR1ufO1uolCH0qLLXafp3igbCiUrR81rg9lCWdx4UimNlE4eUuSlCmlZqIvGB93RoqgZbXbWk3E6JPPJK8bmjnMIiyqzK4q/RS9X4Xn2QJPl24OYA1771E11VoO9n8k1xYdOlbOcuw5b5zPt1V2T5zcIHlLvT6sHGAb1UIU5jWOWzIAGWRBMpvVeBiKBeMWSP+00x/y32z6kABzs5bImbqYbe98A9Z0UI="
+skill: 0.104
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 2.04
+  cps: -0.97
+  predictionQuality: 0.98
+  decisionTemperature: 0.05
+  awarenessRadius: 1.6
+  technique: -0.26
+  aggression: -0.68
+kits:
+  trooper: 0.16
+  longbow: 0.96
+  shortbow: 0.42
+roles:
+  defend: 0.78
+  rotate: 0.3
+  retake: 0.11
+  hunt: 0.52
+style:
+  aggression: 0.31
+  patience: 0.78
+  teamplay: 0.36
+  risk: 0.24
+voice:
+  tone:
+    - nervous
+    - earnest
+    - apologetic
+  verbosity: normal
+  style: anxious beginner sniper who apologises for every missed arrow
+lines:
+  greet:
+    - hi! i'll be in the back with my bow. sorry in advance
+    - i've been practising! a little!
+    - "please don't stand in front of me, {team}"
+  onKill:
+    - "i hit {victim}!! sorry {victim}!!"
+    - wait that arrow actually landed?
+    - oh no, sorry. also yes!
+  onDeath:
+    - sorry, i was aiming
+    - "{killer} you're very good at that"
+    - i missed all six arrows. sorry
+  onPlant:
+    - "i put a fuse on {bomb}! is that allowed?"
+    - "{bomb} is lit, sorry it took me so long"
+  onDefuse:
+    - "i defused {bomb}! i think!"
+    - "{bomb} safe! sorry for the panic"
+  onWin:
+    - we won! sorry i missed so much
+    - gg everyone, thank you!
+  onLoss:
+    - sorry team, gg
+    - i'll practise more. gg
+  onLastAlive:
+    - oh no. oh no. ok. deep breaths
+    - "sorry {team}, it's up to me"
+    - i will try very hard to aim
+  taunt:
+    - please hold still? sorry
+    - arrow incoming! maybe! sorry
+    - i can see you! i think!
+quirks:
+  - says_sorry
+  - bow_spammer
+rivals:
+  - paimshaez-73
+bio: Picked up a Longbow after watching Paimshaez_73 snipe across a whole map and has been politely failing to copy her ever since. Apologises to the people he hits.
+batch: 2
+retired: false

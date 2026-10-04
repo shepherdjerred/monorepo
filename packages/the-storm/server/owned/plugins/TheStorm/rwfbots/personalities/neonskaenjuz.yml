@@ -1,0 +1,75 @@
+id: neonskaenjuz
+name: NeonSkaenjuz
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU5Mjk5MCwKICAicHJvZmlsZUlkIiA6ICJkODBlMGYyNjU2M2U0NzI3YWNiZDNlMmRlNDkxYzFiZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJYX0thZWxpc19YIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzFiMWU1OTY3YTQzYzVjY2ZlYjMxMjhlN2FlNWYxOTVmN2E5ZWIwZThmNWVjODRkZTFkM2U4NzI1ZjI1OWFlMDMiCiAgICB9CiAgfQp9
+  signature: "owGT8YdiAZ3wkEbY36zRCQOkgpQVB2xZw/Ns79zrGNIEhJRm/DgF0WBoNx7Xerflf/1kTnht3WMtW3Otu3eudRsS9Fanr5Rp+lE5Zwn1fLx21cXzcIQMBJuAEv8xVoEIQO7bUQeGOxFMKHRvobeqcFMAM5gZqEiE2Fqv8krRj+1u5PYog6QEZlvC7iSCuvJVZboSFoIVmPPo0XS2+c2wbSGCtahTdeQ92rCvDDIIQSN6eS0wFLy+mbOfemy6ECIQqnOXhqUgPLtR/lE3rloUUxE4ks7FkxEDTAZuI/ume8FREXf+4r96eZYxNI1ZM6bIod3i+WZFffbJuzzab47+2/m25MwA9kvJlIgKUWC2fA5Bwd67XiEsAMyUeY4VDUI/TfJI3SrPyIJnTM+2PLUfRNE3guDcyUyLeAaR3XpoSOazXVoCKmpGVILucV0pkio1hQogJNuabUbMEySakkgRrcSF0oonHZ1K+a4Gvd+ZRPeYNeO1f6QQZnvqnkCUHJ//CN3qJl9sdb9k3oo8d2r4bM6PeS4zMRKTWiK/ex6PRARgjhJuzo87XyqkDnehGuvYFcaWCKFgDm14jS2ZFvMlDiIsE1cwPKhlsiH58E30izz10LQEuc2apmFcHLm9MmgwASjujoLUkYrBT6JgtYFsLK+h9b0f8A9FIP2BN9xWRiA="
+skill: 0.717
+archetype: hunter
+leverOffsets:
+  reactionMs: 0.35
+  turnRateDegPerTick: 0.25
+  predictionQuality: 1.39
+  decisionTemperature: 0.56
+  awarenessRadius: 1.14
+  aggression: 1.44
+kits:
+  trooper: 0.56
+  longbow: 0.49
+  shortbow: 0.86
+  spy: 0.15
+roles:
+  rotate: 0.45
+  hunt: 1
+style:
+  aggression: 0.78
+  patience: 0.47
+  teamplay: 0.36
+  risk: 0.47
+voice:
+  tone:
+    - retro
+    - hype
+    - synthwave
+  verbosity: normal
+  style: eighties arcade announcer, high scores, neon and synths, says radical a lot
+lines:
+  greet:
+    - insert coin. player two has entered
+    - "{team}, let's set a high score"
+    - neon's on. tracking targets
+  onKill:
+    - "high score! {victim} added to the board"
+    - "radical. {victim} is game over"
+    - combo x2
+  onDeath:
+    - "{killer} beat my high score"
+    - game over, insert coin
+    - continue? 9... 8...
+  onPlant:
+    - "{bomb} lit up like an arcade sign"
+    - "bonus stage: {bomb} armed"
+  onDefuse:
+    - "{bomb} cleared. extra life"
+    - "defused {bomb}. level complete"
+  onWin:
+    - "new high score, {team}!"
+    - flawless run. radical
+  onLoss:
+    - game over. one more credit
+    - the cabinet ate my quarter
+  onLastAlive:
+    - final life. boss music on
+    - one player left. no continues
+  taunt:
+    - your initials won't make the board
+    - i can hear you on the radar
+    - coming for your high score
+quirks:
+  - celebrates_early
+  - calls_everything
+rivals:
+  - kainskoushiyt
+  - namrainthevez
+bio: Plays every match like a cabinet in a neon arcade and keeps a running scoreboard nobody else can see. Claims KainskoushiYT's montages are mostly clips of him.
+batch: 2
+retired: false

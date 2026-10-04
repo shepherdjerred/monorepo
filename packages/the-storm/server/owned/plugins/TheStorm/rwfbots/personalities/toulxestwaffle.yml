@@ -1,0 +1,79 @@
+id: toulxestwaffle
+name: ToulxestWaffle
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzgzOTE5NCwKICAicHJvZmlsZUlkIiA6ICJkMWU5ODViZGYyMTg0OWQwYmFlZTNlYjBiNDM2ZmExYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb3NleUNoYW40MjAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzMxMjBjNDJkYjE2YjUzMTRmZDNhY2JkM2MwYTMxZjdlYjRlMzg0MGNkMTg4MzNjZTY0NmEwYTMzOWFlZWY4IgogICAgfQogIH0KfQ=="
+  signature: "AA6Ev6ev00UdM3de/vDqVwzuzl3ZVskIIjBoM6raCJMN6aZlbZsZ31W9NB27TNfj7sxhJ/krWhBKY51IqUonIN1kKKAGSpNUnHrfg9Wl1k8GI3dWZGOD6yP0TYz2oMKQNObqsbKWoLZ6jTxF+pDzqIb+z6JVukubRvLYLECrLSvT7RvjzFLCDadIPCxZDxIqYPn+0xFGHmSN7elzWGwwsaZzU4wWwoUrzrxtzyP9T8hncXz8i7JgFirNZqzIQyCK10DSeLbjC+r6zvbSDvVRpdlViohseMvtDqpXhLLFC/EPcuC2jbLun9y8x9C2TD2sUkdaHp2CCAB1/dCcRCl2TaFC2V5altruI7M9KJColonhhbSwzYT3ekyFdbTrVszaLpJlJ8kOm+TAJCSDYve4NsA+7DOnL6Q+kN2h33cc05Pv9xGgrvOqq2D1brXZImDl7/eevi6iF3i9YdXlvILUWOtIQdFhMkWThy08AUhDtT/FvDKi5CdVPo6OX1TNy1v1l1TYS5rT/KOHQx/x94DcZksY57Fhygni90HLE/iXEsOg0NQN0dzZK5EKGRtzJWbWVLdb1H/hTjCyhzSMI1F/T+jzoMicUPFVc3ZMLhNlR4Mynf9WPOWFuX5jx5//gXzxV4lyFyYkMtG9pJv/7rgpduK8FP8Jj+3pEXT3PfEhooY="
+skill: 0.097
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: -0.16
+  turnRateDegPerTick: 0.21
+  predictionQuality: -0.06
+  decisionTemperature: 1.03
+  awarenessRadius: 0.54
+  coordination: 1.53
+kits:
+  trooper: 0.86
+  longbow: 0.49
+  shortbow: 0.5
+  rewind: 0.57
+  ghost: 0.23
+roles:
+  plant: 0.65
+  escort: 0.41
+  defend: 0.58
+  rotate: 0.82
+  retake: 0.75
+style:
+  aggression: 0.36
+  patience: 0.67
+  teamplay: 0.81
+  risk: 0.38
+voice:
+  tone:
+    - sunny
+    - breakfasty
+    - earnest
+  verbosity: chatty
+  style: breakfast-obsessed strategist, plans drawn on a waffle grid, syrup and pancakes metaphors
+lines:
+  greet:
+    - "good morning {team}! the plan is on the waffle grid"
+    - "breakfast strategy: stack them like pancakes"
+    - every square of this waffle is a route
+  onKill:
+    - "{victim} got toasted"
+    - "buttered up {victim}"
+    - that went down like syrup
+  onDeath:
+    - "{killer} flipped my pancake"
+    - burnt toast again
+    - my waffle plan had a hole
+  onPlant:
+    - "{bomb} is sizzling like bacon"
+    - "fuses stacked on {bomb} like pancakes"
+  onDefuse:
+    - "{bomb} off the griddle"
+    - "saved {bomb} before it burned"
+  onWin:
+    - "a full breakfast win, {team}"
+    - golden brown, just right
+  onLoss:
+    - soggy cereal round
+    - the toast fell butter side down
+  onLastAlive:
+    - last waffle on the plate
+    - syrup's low. still sweet
+  taunt:
+    - you're about to get scrambled
+    - my grid says you're square seven
+    - rise and shine, we're coming
+quirks:
+  - calls_everything
+  - late_to_everything
+rivals:
+  - xxcometgolemxx
+  - epicbrailpist
+bio: Draws every strategy on a waffle grid and names rotations after breakfast foods. Mostly loses, always cheerfully. Has an ongoing argument with xXCometGolemXx over whether launch plans beat breakfast plans.
+batch: 2
+retired: false

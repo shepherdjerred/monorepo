@@ -1,0 +1,77 @@
+id: xxminerphantomxx
+name: xXMinerPhantomXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDEzMDM0NCwKICAicHJvZmlsZUlkIiA6ICI3NzhlNzhlMGZkZWU0NTQyOTYzNzJjMWJjMDk1ZTI5ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSeWRlcnN0ZXdhIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2NjNWFhYjY2NDM2ZTc5MjNiNmZiODNlOGM4YzQzMTNhNmZiNTgxOWNlNThlMzk2YTQ4ZTQ4YWMwYmM0MzQzNTEiCiAgICB9CiAgfQp9
+  signature: "mA55JAIJVhlv2NUjQhbWNQHJB3L0W5jOH/O7N73am5WqaEGRqTFMhR0DgOtyZxLhbQBNkR5qH98+1Hzb4Uv0KBoWbLHF/a518qqbaA3qKT847ldHLORdtaZw9z3Hk36y6+UQO7aMD7qmm/0iCKhXlMA+Ogmr7Bj3XH3wCqtxaX2pE3NEZIBSp0ASBdM7UEfkTWpIW2xCqqrKEAXJg6U8b4Y8jUfEjRy+/LPqbpAQZGeEFPlPA4GjD867AhxOcbcZrjNO8v0bKyaqRgzus6RHxvIesbyohix18pspVnkZ7N/s9ND7BO5eR9RJQjR8H6rY3Mo5hi6PK1KqW+OW3Ve/KBIuMGlHL05cL7pI4XNsYu1WIqkGrffJCW8hrhL5DlqnRYKWnBS8PJ+ZXfGDQH7suWamUhjuM5LwCBgKNMup+x362s3Rm+q4/hRd7OyO44tWoodf7iQZCXmoPcIaFg6aX4DG4CpdSHRVc5haBbs2tei55jqQC0lZYRXZquvNi+Zfrn30uY6t3EqT+GeBQUSNmbr8LVrzYJfyoULGIxrZ+bVYSlBFxUkzL6WvL53Ws+11Tdeg0eb19S+mw76palDf5T2GXRXnZEyi6GT5QUe2eReNFoKVGT9+cBZG42OD5fE2fSq9yYtNBRw702YZFgLv8FtuFneAqgjFrtiFKQasqU8="
+skill: 0.891
+archetype: lurker
+leverOffsets:
+  cps: 1.04
+  predictionQuality: 0.44
+  awarenessRadius: 1.07
+  coordination: -1.58
+  technique: 0.41
+  aggression: -0.8
+kits:
+  trooper: 0.6
+  shortbow: 0.53
+  ghost: 0.68
+  wraith: 0.59
+roles:
+  plant: 0.23
+  rotate: 0.77
+  hunt: 0.94
+style:
+  aggression: 0.45
+  patience: 0.84
+  teamplay: 0.1
+  risk: 0.55
+voice:
+  tone:
+    - cryptic
+    - quiet
+    - eerie
+  verbosity: quiet
+  style: "short lowercase whispers with ellipses; talks about tunnels"
+lines:
+  greet:
+    - "...the tunnels remember me"
+    - dont mind me. im not here
+    - "..."
+  onKill:
+    - "...you heard nothing, {victim}"
+    - "the mine claims {victim}"
+    - shh
+  onDeath:
+    - "...{killer} found the tunnel"
+    - the shadows were too short
+    - hm. well spotted
+  onPlant:
+    - "{bomb}... is lit. nobody saw who"
+    - "a fuse in the dark. {bomb} wakes"
+  onDefuse:
+    - "{bomb} sleeps again"
+    - "...defused. you never saw me"
+  onWin:
+    - "...as the tunnels foretold"
+    - gg. back underground
+  onLoss:
+    - "...the mine was quiet today"
+    - gg. i will dig deeper
+  onLastAlive:
+    - "...just me and the dark"
+    - they are counting. i am hiding
+    - "...good. less noise"
+  taunt:
+    - "...behind you. no, the other way"
+    - you walked past me twice
+    - "...listen to the stone"
+quirks:
+  - stares_down
+  - late_to_everything
+rivals:
+  - xxslimeravenxx
+  - grenourgaming
+bio: Claims to have dug a secret tunnel under every Search and Destroy map, though nobody has found one. xXSlimeRavenXx has spent two years trying to prove otherwise.
+batch: 2
+retired: false

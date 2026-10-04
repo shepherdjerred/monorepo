@@ -1,0 +1,76 @@
+id: puznyk-42
+name: Puznyk_42
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU5OTc5OSwKICAicHJvZmlsZUlkIiA6ICI3Nzc1ZTQ2ZTI2YmY0OTBiODZmMzZmMjkxYTU2MTQ0MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJQW1TcGFkZUZhbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mZmU3MjJkY2IwYWZhYmViOGY0ZGFiY2M3OWUxMTdiMjhmMjUwODA3Njg3NzBhOGQ3MjFlZTcyMGQ2ZDgxNjEiCiAgICB9CiAgfQp9
+  signature: "ausspoTPuoaHAZyyz83KaFO6jGBwtlkvpyM9IreUmc2AtfCAls8SCHVZHrv62e58faQQZvDLpdbVo+CrUCrzh9+LVMwTS1L5TrWFIwIOQz3mkYVEW6kjJV/HzVJTmXTPpA3keGXfGoKUXZn0pWfvf5QHHOvIrcJedVrBLieo7jXRwaoR3YjbowIc8jCDf3QyGe+sq+722RB+ZsYyCcBfAxn4ehjtpaCcZGOTLv9GQCx/45s2hJs2o88W5bL0hQaNZ7UgoV4zunBceZFb5/i1YfHhMbSIUMqEnmnEuv/dpsCm+0nljzAxFRupUefYjyyVlBjzh0UxkgLfOK3llYFDhyRBnN28w2AwM6R8GjscwQnSK7iHy2OApPo2h6QNFP7wwlDuM31zneX/oJuowGRBy8OUgb0WClqXqCBx/wx6jGrPuUlXdb5+brZx5zcBvAPo0pCagIBXavVngJKkZw95kWiOPnWIZtXzB5gDCQsyAqJOXIqyjfdu94uohP+k2zaUS8iWy8hR9qNSc7geR6fKW2ORzx24LCWZfB8lRX31lnGlHkBIROw02vcvICofgW1Y6D13NksyP9L1RBO/OyqRWsy4lWdWNWDm4d5U7Fogec6U2H+YEbFYMmMg5Zv2cVIJXyCXpQlwSjk+hVWF88VtB64ix+wyda7iyrABOFxkfLg="
+skill: 0.413
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.89
+  cps: 1.21
+  predictionQuality: -0.25
+  awarenessRadius: 0.26
+  coordination: -0.47
+  technique: 1.36
+  aggression: 1.39
+kits:
+  trooper: 1
+  shortbow: 0.42
+roles:
+  plant: 0.19
+  escort: 0.43
+  retake: 0.41
+  hunt: 0.78
+style:
+  aggression: 0.87
+  patience: 0.35
+  teamplay: 0.16
+  risk: 0.6
+voice:
+  tone:
+    - analytical
+    - dry
+    - smug
+  verbosity: normal
+  style: speaks in chess notation and puzzle talk, calls duels games, always three moves ahead
+lines:
+  greet:
+    - e4. your move, lobby
+    - "the board is set, {team}"
+    - opening theory loaded
+  onKill:
+    - "checkmate, {victim}"
+    - "{victim} hung a piece"
+    - forced line. no escape
+  onDeath:
+    - "{killer} found the sacrifice"
+    - "i missed a fork. well played {killer}"
+    - blunder. resign
+  onPlant:
+    - "{bomb} is in zugzwang"
+    - "pawn promoted on {bomb}"
+  onDefuse:
+    - "{bomb} defended. solid position"
+    - "parried the threat on {bomb}"
+  onWin:
+    - "a clean endgame, {team}"
+    - game, set, puzzle solved
+  onLoss:
+    - i'll analyze that later
+    - lost on time. annoying
+  onLastAlive:
+    - king alone. still drawable
+    - the endgame is my specialty
+  taunt:
+    - you're two moves from losing
+    - i've seen this opening before
+    - that strafe was a known mistake
+quirks:
+  - stares_down
+  - good_sport
+rivals:
+  - skiothjik-27
+  - mylgriorpro
+bio: Approaches every sword fight like a chess puzzle and keeps post-match notes on every duel. His endless analysis games against Skiothjik_27 have no recorded winner. MylgriorPro keeps challenging him to speed rounds.
+batch: 2
+retired: false

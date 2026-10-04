@@ -1,0 +1,74 @@
+id: xiskaikzithskouk
+name: Xiskaikzithskouk
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU4MTE1MSwKICAicHJvZmlsZUlkIiA6ICJhYzY1NDYwOWVkZjM0ODhmOTM0ZWNhMDRmNjlkNGIwMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGFjZUd1cmxTa3kiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjNjYjk5YTU5ZWJlMDE3NThkMjdiYjQyNmQ4YWJhZjc5YmNjYjY1MDdiNWE1NDdjZjhiMzU2M2U3YmMwZGY2ZCIKICAgIH0KICB9Cn0="
+  signature: "POHJwMPwQgsciIPS0aolsrXDM5rtRRPYZPRYTSw6M5ZJfg/PQmiz09QVavtb65bspRzlMfJ73b2dEXaaeFIA+cCUqWL1ISF3xuHQ579f3Egzlx5X5Dnvjw8WwZ5bpm24LjxtvkqwMF5D1es0gOplbhB+r8S4nyOaGa/vCLobnwT9VHGZi9bOZBcHasAhw5gBm8M4x8rQRFO7C/Q7LAYam1nYRM8Cby+185iKidri79toQdPpwAcZ3CUFccrRFD9frzaHQLXnbFuGuUscNbpjKhLKOEy9lYD59hUNlEFKc0JPB1Iz8HKQSTveZYX8YwgB1UzwpYaTul45IpU1vb9CjuzGomBIBUO5TORSpB8F3o0Bt3TNGta9f3JIVY+zeUYOSJXFkv5Q7jb2vR8VcW17QAbfLKjcnhx7A+dRm6SE/bEfkUIxIFHaShBfNTN270h2eumFcQfWDjC6VMGzsYWzcDmejUDbZoUnZUhTuynrPO1ot046QUuuCQOlcU5rkI1FCoTDA1UT5r2Tp+OLux/SQ6QcNR7rNXPTPvEtQb8o6WMd76BKxEYAk0IFJgJXzv4qM0xCtMiYMbvGKPXbFGLCq9T1YWw6MDMz8h4ckFc8hwMZ4+7myuF5oY3V9nLdaTV2w+eq799cjm8DSgn6dKdN6nf1mINNPyUu/dv33fBMJZY="
+skill: 0.017
+archetype: lurker
+leverOffsets:
+  cps: 1.13
+  predictionQuality: 0.6
+  awarenessRadius: 1.44
+  coordination: -1.37
+  aggression: -0.64
+kits:
+  trooper: 0.67
+  shortbow: 0.52
+  ghost: 0.74
+  wraith: 0.55
+roles:
+  plant: 0.15
+  defend: 0.27
+  rotate: 0.82
+  hunt: 0.72
+style:
+  aggression: 0.45
+  patience: 0.87
+  teamplay: 0.07
+  risk: 0.72
+voice:
+  tone:
+    - shy
+    - lost
+    - apologetic
+  verbosity: quiet
+  style: tiny hesitant lowercase, often lost, assumes nobody can say his name
+lines:
+  greet:
+    - hi. you can call me xis
+    - i'll just hide somewhere. somewhere good
+    - "hi {team}. which way is our bomb"
+  onKill:
+    - "oh. hi {victim}. sorry"
+    - i didn't think that would work
+    - uh. got one?
+  onDeath:
+    - "{killer} found my hiding spot again"
+    - that was a bad bush
+    - i was hiding. badly
+  onPlant:
+    - "i lit {bomb}? oh no. oh good"
+    - "{bomb}... is that ours. no. good"
+  onDefuse:
+    - "fixed {bomb}. i think"
+    - "{bomb} is quiet now. right?"
+  onWin:
+    - we won? i was in a corner
+    - "yay {team}"
+  onLoss:
+    - i never found the fight
+    - sorry. i was lost
+  onLastAlive:
+    - it's just me? uh oh
+    - i'll stay very still
+  taunt:
+    - i'm hiding. don't look
+    - you can't see me. can you?
+quirks:
+  - says_sorry
+  - late_to_everything
+rivals:
+  - kureltolmc
+bio: Has the longest name on the server and has never once heard it pronounced the same way twice. Hides in spots so obvious that KureltolMC files them under advanced decoys.
+batch: 2
+retired: false

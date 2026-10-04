@@ -1,0 +1,76 @@
+id: hyperkoustthethy
+name: HyperKoustthethy
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTYwODQ4OSwKICAicHJvZmlsZUlkIiA6ICI3MjU1MDA3NjQzYzQ0YTZiYjM3MjJlNzc3OTk5OTFkOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4ZW50YW55IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzJkYzJiMmJjNjc5OWFjYWIxZDI4NDg2NDhlMzY2ZmVhZjNjMTkxZGIwYjIzZGMxNzAwODk3YjE2ZmQ0Njc2YWIiCiAgICB9CiAgfQp9
+  signature: "VU9TK9+DJEmspDlkgiern7XhT5xwfM9BbCP376JikSxfprjCfyKuky00GhPrrUU/3jvbJuw/PWwLsZoL7h4aFJ8ybvyrDoTZIJW/smShC6ThtHZq7koXUT/Yrf+bbNbV1N/xcISuyjMZGMJuXtlCv+3GqfOugWGVH2Xyv7lRfknLGD8ElJz1DUzI3jm73qHauXhYC7HMRLKkmQrmFnkcGarCz6o0wRjdcyXbLt1M7nOaPz7RQ1d1ixNosH3O3Zb4B+w2uqjYpKnIa7Ifi3jBgPMHMpFEDxJJhZCyZhsy8POtypnpGyoUqaOtnr77PaFHcLzBMR98pqiRFe1+c1rgyWWSr17iiJIqkSJecudnb2ZkOXxi9eIb+qubCRldclyaadLrgOlUD9B++WOPF0DfimjDuow2toUkyzpSHDQSJuPA8f87IlSOW7uHDh39mYb8ClDwPdVMdII6aPrqu5E+3cMmhOQxUyiABKeejN/x+Lqx0Rrf4vtFPkUSi9RNPDrVp0GAOR3A5orkG2qYd/rJJviAOkxM0dzN0pJEUeTHoHxo49m8keVzdgoZNanDqXHRGn3dP8yQTwknG8HZ/KweXexATqVVc+Hn8vdXptW1EU+WQ77Whe+GubvYmm5cV0HZaFAw9nq1D2zoSkHR89igaVHbpUupGTINKls4n3Tkhvw="
+skill: 0.703
+archetype: flanker
+leverOffsets:
+  reactionMs: 0.11
+  turnRateDegPerTick: 0.61
+  predictionQuality: 0.44
+  coordination: -0.9
+  aggression: 0.11
+kits:
+  trooper: 0.51
+  shortbow: 1
+  rewind: 0.3
+  wraith: 0.55
+  spy: 0.35
+roles:
+  plant: 0.31
+  rotate: 1
+  hunt: 0.47
+style:
+  aggression: 0.77
+  patience: 0.48
+  teamplay: 0.13
+  risk: 0.72
+voice:
+  tone:
+    - hyper
+    - techy
+    - fast
+  verbosity: chatty
+  style: "speed-typing gamer; abbreviations, 'gg ez' energy kept friendly, lots of lol"
+lines:
+  greet:
+    - yo yo going wide lol
+    - flank squad (just me) ready
+    - "{team} hold mid ill go round"
+  onKill:
+    - "lol {victim} didnt check left"
+    - "flanked {victim} np"
+    - surprise from the side lol
+  onDeath:
+    - "ok {killer} saw that coming lol"
+    - rip flank
+    - brb new route
+  onPlant:
+    - "{bomb} lit from the side door lol"
+    - "back door fuse on {bomb} gg"
+  onDefuse:
+    - "{bomb} defused lol close"
+    - "saved {bomb} np"
+  onWin:
+    - gg wp lol
+    - flank diff gg
+  onLoss:
+    - gg they watched the sides lol
+    - gg ok ok rematch
+  onLastAlive:
+    - "1v3 from the side lol"
+    - time for the widest flank ever
+    - "{team} watch this lol"
+  taunt:
+    - check ur sides lol
+    - im everywhere lol
+    - wrong corner buddy
+quirks:
+  - bunny_hops
+  - spins
+rivals:
+  - quiet-wolf
+bio: Types faster than he walks and walks faster than anyone. Keeps running into Quiet_Wolf in the back corridors and has decided that makes them best friends.
+batch: 2
+retired: false

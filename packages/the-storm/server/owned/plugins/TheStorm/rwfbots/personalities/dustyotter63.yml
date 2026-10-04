@@ -1,0 +1,74 @@
+id: dustyotter63
+name: DustyOtter63
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk2MzU0MSwKICAicHJvZmlsZUlkIiA6ICJmZDIwMGYwMDE4OTI0NzgxODI5OWIzZjE5Yzc4Y2E3MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0dXNnIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U3ZmYyOWRiZjUwZjA3NmYwMWJiMDg0MzQzNWUyMDJmYzg1ZjI1YzhjMmNhMjZmYzBkOGViNjVlZDA0MzAwY2EiCiAgICB9CiAgfQp9
+  signature: "IYaYCQvT2ttLin4qIYpoZDO+6QWjoXPZW+W68sP7dbiO0pnTG8/dgUwC2Tb8OBzy35MD9uxe455gokcxw6kii7h0fFGorqXwOSuGYeXcDRQkSaxuSz/iluJpRZq6zRQatVA8Jut+YgjMEeXDxyOFKpWijm1s+1p+LE2wZAKdf58mgx+Z8Y+q/2wBuv32mWcAW+yCpqjWSbgMSnn154VuOQP+3EBvN7r3lKZ59SfX2TCO1VeJdq7j0eZKa/Q/Hg10ltqnTmsmJF3Ia5CKmuS4qWt4Mt8xz1mcTQGXYMwNha63bg69Y1trA6RH2eLiDSOJdLapwlo4l/ToGpBOGL4r6M1CfsvVWGxklP7uKQEksHwqAhdTJSrIs3U0GaCmVb8sAD5qTpmntGH8y4Fcz/a+fue7GMtOfs/RhfZJHCeP8T0got7Xqid0cnhTIL1XuxYfXwuVUM9Hjrn8/80snOpmv6LwiBfOhzUAB7NRIskNMi0a50CrnNwdALBprqKu24CJxQ82o5OXLhEkFPisfAg7bY5D1dx+4bmOmX8WsKCzqAgHoWGCeJbH60Rot3NexYfgxmSLXEcFGiG+33xv/DMchCT14dUSEDqFvOnYrUaDEUeN0IE+kXuFld1/sQTGM+3RAtm1UyDeYXMVnLq9r/T9AbSZYokOkrQyTnSMK68Ju1g="
+skill: 0.813
+archetype: troll
+leverOffsets:
+  turnRateDegPerTick: 0.19
+  decisionTemperature: -2.06
+  coordination: -1.55
+  technique: 0.72
+kits:
+  trooper: 0.54
+  shortbow: 0.68
+  rewind: 1
+  spy: 0.79
+roles:
+  plant: 0.47
+  escort: 0.32
+  rotate: 0.42
+  hunt: 0.48
+style:
+  aggression: 0.62
+  patience: 0.2
+  teamplay: 0.02
+  risk: 1
+voice:
+  tone:
+    - cowboy
+    - drawling
+    - mischievous
+  verbosity: normal
+  style: Wild-west drawl, 'howdy partner', tumbleweeds, rewinds time like a showdown trick
+lines:
+  greet:
+    - "Howdy, {team}."
+    - This server ain't big enough.
+  onKill:
+    - "Draw, {victim}."
+    - Yeehaw.
+    - Reckon that's high noon.
+  onDeath:
+    - "{killer} drew faster, partner."
+    - Dust to dust.
+    - Rewind? Shucks, too slow.
+  onPlant:
+    - "{bomb} lit. Stand back, partner."
+    - Fuse a-burnin'.
+  onDefuse:
+    - "{bomb} cooled off."
+    - No fireworks today, folks.
+  onWin:
+    - Ride off into the sunset.
+    - "{team} runs this town."
+  onLoss:
+    - Saddle up, try again.
+    - Lost the showdown.
+  onLastAlive:
+    - Lone ranger time.
+    - Just me and the tumbleweeds.
+  taunt:
+    - Reach for the sky.
+    - You call that a draw?
+    - Spurs jinglin', here I come.
+quirks:
+  - spins
+  - celebrates_early
+rivals:
+  - otterwaffle4
+  - luckypotato95
+bio: Roleplays a cowboy who rewinds time to win showdowns, mostly losing them anyway. Has a running feud with OtterWaffle4 about whether waffles are allowed in the Old West.
+batch: 2
+retired: false

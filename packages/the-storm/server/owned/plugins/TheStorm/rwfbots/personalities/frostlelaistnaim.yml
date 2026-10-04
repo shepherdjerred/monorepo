@@ -1,0 +1,78 @@
+id: frostlelaistnaim
+name: FrostLelaistnaim
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDE0NjI4OCwKICAicHJvZmlsZUlkIiA6ICI0YmEzMzMxNjA0YjU0NzgwYmQ0MzBkMTc5NjI4Yjk0YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeVdpZmlKdXN0RGllZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mNDhkZWNiNWE3NDliMzkzMmMyODQwZjVlZThlMDgyNWY2YzczOTU4M2YwNmJiM2NjMjI1ZTVhMmJlNTZiMTZkIgogICAgfQogIH0KfQ=="
+  signature: "aHz/uuusGSdU+UCbcHkCJbR9dEMdOQEdwIFwMgn5XYc0DAwgiFOoxjt29MX4ahD23Gvb6v2oo3CVVMwkUC130shVmkK0wGk3wqjxKweir1c8IzNaXW47cJY3D1yUU+5h0iQDX7T7HirGHuLpxrRclbQZ/UQFfUNiZAf6bGZO8zT0XYINvR7MOElPr0hH8dy6ENZWisdA95VfmAdte1/i52mwMufx4Jz4IpmBmpSbZghi3UJhEgCzOBUv6xmFore6mOCNQzhzsLatVtT+2JRvz8vjFepZ8hXQqcJN9+5ywB7ZYdkl8hqFULhNtoR2qcAQYFclIizY2zQsf6GRVXTm0BviV9vXqoijXW+77k/1NYZE1qD8UPwy+A0XH1dmWbYh2tNme9L1B8PCGQipC/mJK2aCGsA/qf9oagosLUatfsmqjg/AxiayF1LC8cySWRN2lMgI59OAk5L8lXm6b86kFE6kaO1MET7Z5MDbHhelNT0B6SDvo3GXJ12v/MF2RU+IrPRjUiBiySM2nlp1GqNwkSNyhURpXUKICammSWFc2AfYS+EiHpAhnNAK/lPdS9CFgGr0fN4guzDExBTlFYxnbRXoERSxAB3cSfHmP1BK5OBTJcP9eoBybJCbUz4UK0qT9RR/w0ppPzWU+wxNebrB7ySoj3/lAaMp+MS9PrukACA="
+skill: 0.827
+archetype: support
+leverOffsets:
+  reactionMs: 0.39
+  awarenessRadius: 0.25
+  coordination: 1.83
+  aggression: -0.42
+kits:
+  trooper: 1
+  longbow: 0.3
+  rewind: 0.61
+  wraith: 0.15
+roles:
+  escort: 0.92
+  defend: 0.32
+  retake: 0.59
+style:
+  aggression: 0.35
+  patience: 0.59
+  teamplay: 0.89
+  risk: 0.33
+voice:
+  tone:
+    - warm
+    - encouraging
+    - motherly
+  verbosity: chatty
+  style: "caring team mum; reminds everyone to eat gapples and stick together"
+lines:
+  greet:
+    - Hello dears! Gapples in your hotbar, please.
+    - "Stick together, {team}, and nobody gets lost."
+    - Who needs an escort? I've got time.
+  onKill:
+    - "Sorry {victim}, you were bothering my planter."
+    - "Off you pop, {victim}."
+    - That's for picking on my teammate.
+  onDeath:
+    - "Oh! Well played, {killer}."
+    - Somebody cover the planter for me!
+    - Don't worry about me, keep going!
+  onPlant:
+    - "{bomb} is lit! I'm so proud of us."
+    - "Fuses stacked on {bomb}, well done team!"
+  onDefuse:
+    - "{bomb} is safe, everyone breathe."
+    - "There we are, {bomb} defused. Snacks later."
+  onWin:
+    - "Lovely teamwork, {team}! gg everyone!"
+    - I knew you could do it. gg!
+    - Group hug at spawn!
+  onLoss:
+    - gg! Heads up, we'll get the next one.
+    - Good effort, everyone. Truly.
+    - Water break, then rematch.
+  onLastAlive:
+    - Just me? Right. Sleeves up.
+    - I'll handle this, you lot watch and learn.
+    - "Stay calm, {team}, I've got it."
+  taunt:
+    - Be nice, or I'll tell your team captain.
+    - You look like you need a gapple, dear.
+    - We're coming, all of us, together.
+quirks:
+  - calls_everything
+  - good_sport
+  - always_gg
+rivals:
+  - ziokraithpvp
+  - grim-otter
+bio: The server's unofficial mum since 2013, known for escorting newcomers to the enemy bomb and reminding them to eat. Has a long, polite argument with ZiokraithPvP over who escorts better.
+batch: 2
+retired: false

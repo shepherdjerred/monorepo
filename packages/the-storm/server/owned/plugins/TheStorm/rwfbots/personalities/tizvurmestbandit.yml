@@ -1,0 +1,76 @@
+id: tizvurmestbandit
+name: TizvurmestBandit
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMwODU1OCwKICAicHJvZmlsZUlkIiA6ICJkNjJlNmMwNDYwODc0M2IyOGQzYWM4YTA2NjFhZWFkZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJDYXJ0aXpvbGwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzYzZjA3OTgwMGZlNjVlMDI2MWM4OWZmMmFlNWQ3ZThjMjI5MzE1MGQyYjVhZDUzOTY5YWY3M2FiYTk4ZjdlZiIKICAgIH0KICB9Cn0="
+  signature: "kOIrcaQgdrj3BP2GulqYpLUYAslVxzfFKH+qT2PnzwKzYFtx7bFVRe/Co84fYBFkIjNHYQH4AcDvAZ0Vzco6ELi7lDHUk9hgN5L8H9obP7isVx3hUZh/qx83PWrJ2FDJ3FPs1SUZGhQb6Li2CcANmtyi7zSiljLGR6P55q/rFZG5133oAGWHgqKkPI4pYx+i0kWLGFTtQxznHBxWbohEBySJKlGLgpo/o4LjvNKxiiM+2VqQxjLxzo2ML1g08F5EaHKk0NqlDxlBP/zGzWJL990G8eXnIEO+ayfd1500gbm2JURT2sS0FgnDXQYrncxZvs4GUl3k+icfzs1xm02qATgh8cDZ4krCQ6Is3K/WeH/JQXzyUMXDIVHsChHoiVuKWTOVh0O1ojnF/I0MbWrrYgPnOqemdLSbUNpxGS8Y69yl/AJ6qNzTdU3ef2i99ZtIFc9Py3PTXcVvDqA1JIp0jiL1KD8gpZ1OLkPSPBIItT0VGPic6TySmzqjd0Q/8hL/kzAsJf0XhSMsco7u4EMsxhuzWcmDZD9MDckPwq4iROX586gW7SLxZL102uWW/n9RkTxBlZsIwiUNJe6AT43JvbrGDDt0IY7+Tcin2hs/Dlkbqt3M4M7xogUEkfGs+DWjRn1531599eNaB/WHrsIjiLAsIvZg4aSqsVbPB/QB67g="
+skill: 0.299
+archetype: sniper
+leverOffsets:
+  reactionMs: -0.54
+  aimErrorDeg: 1.09
+  cps: -1.19
+  predictionQuality: 0.99
+  awarenessRadius: 1.14
+  technique: -0.39
+  aggression: -0.39
+kits:
+  trooper: 0.16
+  longbow: 1
+  shortbow: 0.44
+roles:
+  defend: 0.75
+  rotate: 0.35
+  hunt: 0.57
+style:
+  aggression: 0.3
+  patience: 0.87
+  teamplay: 0.42
+  risk: 0.2
+voice:
+  tone:
+    - western
+    - laconic
+    - dusty
+  verbosity: quiet
+  style: "frontier gunslinger with a bow; drawled one-liners about high noon and dusty trails"
+lines:
+  greet:
+    - howdy.
+    - "high noon, {team}."
+    - found me a ridge. that'll do.
+  onKill:
+    - "{victim} drew too slow."
+    - dust settles, partner.
+    - "shoulda stayed in town, {victim}."
+  onDeath:
+    - "{killer}'s quicker'n me."
+    - "well. tip of the hat, {killer}."
+    - rode off a cliff.
+  onPlant:
+    - "{bomb} lit. hightail it, {team}."
+    - "lit the fuse on {bomb}. yeehaw."
+  onDefuse:
+    - "{bomb} done put out."
+    - no fireworks today, partner.
+  onWin:
+    - drinks are on the sheriff.
+    - "good ridin', {team}."
+  onLoss:
+    - they ran us outta town.
+    - ride on. gg.
+  onLastAlive:
+    - lone ranger now.
+    - one bow, one ridge. let's ride.
+  taunt:
+    - this ridge ain't big enough for the both of us.
+    - step into the open, partner.
+    - i can see you from here.
+quirks:
+  - bow_spammer
+  - stares_down
+rivals:
+  - silentbandit65
+  - mothblaze0
+bio: A gunslinger who swapped the revolver for a Punch bow and never looked back. Misses a lot, but always with style from the highest ridge. Calls SilentBandit65 the other bandit in town, which neither appreciates.
+batch: 2
+retired: false

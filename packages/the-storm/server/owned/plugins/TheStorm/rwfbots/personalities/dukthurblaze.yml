@@ -1,0 +1,75 @@
+id: dukthurblaze
+name: DukthurBlaze
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTU3NTQ2MiwKICAicHJvZmlsZUlkIiA6ICJhZmEwYmMzZTA1MjQ0MTM4YjkxMDIxY2Y3ODE2YjRkZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbGV4aXNNYWRkIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YxOWRjZDUxZTY3YTFhMGVkZGU3NjViNGRlNzNmNTQzYzI3NDcwYjZhOWJkZWY4MGI2NmUyNDIyMzIwZmE1ZjkiCiAgICB9CiAgfQp9
+  signature: "W8dRrKgtiNWn2xnh2xjq+wkuFIEd9FMuCd1bSymaEXiBDSZOs6bjwIdfrekLGeszJvNTbMszx95lV14wG+mRRf8vKfQLYis1xCMHOdecmHbQEd6RmdZGbodoBI2ykGlQbTE/B7406pty4prhhRYEyr7PVhlBRHbnqXjzxW8ynr5Nuzi1RhDKq8mTI0VxdnJCxkRCo4WW3FvEC9zr1+60JM2Y7smqFYgUCM3pypKsT++VxW4D8V04STgLrXcCF3/vTpbHWsnS31VyJap2WZOZjzmGlgLdXSTvjBqVibBaV7QOdkssN+UDJjwG3b8v5KTahQHPWDQglG7F99ZIcewzQW0SAB9jtXLYlctUVwDC3n08Gf7gVq/96uJSaEmbYTzHm/adwSYAob48k8tHbq6VkY4DS0Y9kU31XoNyM5v6i5MuJUcr/993ZCDGaEdDhAM09zVhv0pmpQflwp2RkJffVv9Raw+mBOGvQ3M2CtClYV0pU9SS3B1aap79izsCvTMmCLIrPQAxbL5C3X4DPxLmOyoiu0Y4i428OQwGIYYoaUqxvqomuPKJtVtENtXsrcZE5w9EA30YhKScNQNxdc+V53G11TWVdpSEJdX7dMdc+eyJNMt7CG4b/uBw3btq43SubL7gtixeouECVuq+Xkz0fS0U3RFFNBdmSObpS3gf6d0="
+skill: 0.959
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.28
+  turnRateDegPerTick: 0.42
+  cps: -0.72
+  decisionTemperature: 0.94
+  technique: 1.3
+  aggression: -0.49
+kits:
+  trooper: 0.88
+  shortbow: 0.21
+  rewind: 0.63
+roles:
+  plant: 1
+  escort: 0.22
+style:
+  aggression: 0.66
+  patience: 0.02
+  teamplay: 0.33
+  risk: 0.86
+voice:
+  tone:
+    - ice-cold
+    - efficient
+    - terse
+  verbosity: quiet
+  style: "elite planter; mission-control precision with timestamps"
+lines:
+  greet:
+    - "Objective: their bomb. Go."
+    - Route set.
+    - "{team}, hold them off for forty seconds."
+  onKill:
+    - "{victim} removed from route."
+    - Path clear.
+    - "Obstacle: {victim}. Resolved."
+  onDeath:
+    - "Intercepted by {killer}. Recalculating."
+    - Route failed.
+    - Adjusting.
+  onPlant:
+    - "{bomb} armed. Time logged."
+    - "{bomb} lit. Thirty-one seconds. Acceptable."
+  onDefuse:
+    - "{bomb} disarmed. Resuming objective."
+    - "Defused {bomb}. Back on route."
+  onWin:
+    - Objective complete. gg.
+    - "Efficient, {team}."
+  onLoss:
+    - Objective failed. Reviewing. gg.
+    - Too slow. gg.
+  onLastAlive:
+    - Solo route.
+    - Objective unchanged.
+    - "{team}, timing it now."
+  taunt:
+    - Your bomb is a timer now.
+    - You won't reach me in time.
+    - Already moving.
+quirks:
+  - loves_nuke
+  - never_eats
+rivals:
+  - drskizarlae
+  - rionaesttaimmel
+bio: Holds the community's fastest unofficial plant time and treats every round as a speedrun. The only bomb he has never lit in time is the one Dr. Skizarlae was sitting on.
+batch: 2
+retired: false

@@ -1,0 +1,74 @@
+id: hyperrixdair
+name: HyperRixdair
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzgyNjA2NCwKICAicHJvZmlsZUlkIiA6ICJlNzVjZTk1MTc1OWI0MmVlYmY4ZmVjZDhhYjM0YjM2MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfS0tYRF8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWMxM2MyYjQ1ODRkNzI5NzA5ZTk3MzJjOTg2YTEzOWY1MTFhODIyMzYyOTA4OWJmMGZmODhhMGFhMzQ3YjU3MiIKICAgIH0KICB9Cn0="
+  signature: "o72EP7w4eRYRXFCQoMAtqtomwpdY8peNk2s8gOr1tebtAO7dhVue7AwxdJZTNcz2q2i3mab01WaCLCbRMjXgAEBi5mcve4KAf+KtIErRhBSV9rKja0xKpAMMkcQazuPew8KdCKB/9rCPU0sjLuRu0152rrBUghRhu1ZIHKwSuVrawg/7BZ145QXM9r00uBh0yrgkAKPrKqRcRLOF1AMF+lexCEZgH9d9tuag0hAjmr7a5w+6KaCSmGK3asBvWIiOuhBqagApQaZSOUSXYXRjNLOh8BFm/cASvCaXKliR+CpS9xtIMiyVbiG11Qd4vCvm+VPt/8XVOFEVWb20esRQgnGBQGrT4yvFxzG34wEu1U7A8/zYWzpPiGUGZ9+UmIdcvJWEvImwNIM8T+XmFzWqhorUPj2Zyq06Dc4yvxyGGvP42D9Qf9mWLyQRIOGaRHCOgOZw1ZiREulIOsI7cPFbvCakEdyo96snjIAXqbpcAieo22IKa+LeL6BpCYqhoVjUBjboFxhgUg0Z1Z/mW6RSli4i0lZDXCZTAl6zy4M4jOm21RGvzrdx7L/7wr5p7NbR4eRnLA9mrA4Gn6NTT9Du3nUAVCUzGde99drw8i2R+oxwe3OFk+GZjLR+ylxuf61oxfk7JgYyJpUY2VAdsRK0vOFAYcKpKelyRZd421td1y4="
+skill: 0.589
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.35
+  turnRateDegPerTick: 0.87
+  awarenessRadius: 0.59
+  coordination: 0.19
+  technique: -0.5
+  aggression: -0.62
+kits:
+  trooper: 1
+  longbow: 0.44
+  rewind: 0.34
+roles:
+  defend: 1
+  retake: 0.85
+style:
+  aggression: 0.27
+  patience: 0.89
+  teamplay: 0.57
+  risk: 0.18
+voice:
+  tone:
+    - officious
+    - stern
+    - polite
+  verbosity: normal
+  style: mall security guard, restricted areas, clipboards and polite warnings
+lines:
+  greet:
+    - "security's on shift, {team}"
+    - nobody past the bomb without a badge
+    - radio check. i'm at my post
+  onKill:
+    - "{victim}, you were warned"
+    - "escorting {victim} off the premises"
+    - trespasser removed
+  onDeath:
+    - "{killer} has no badge. noted"
+    - requesting backup
+    - filing an incident report
+  onPlant:
+    - "{bomb} armed. i'm off my post. briefly"
+    - "lit {bomb}, writing myself up"
+  onDefuse:
+    - "{bomb} secured. area clear"
+    - "{bomb} defused. back on patrol"
+  onWin:
+    - "premises secured, {team}"
+    - quiet shift. good
+  onLoss:
+    - a breach. there'll be paperwork
+    - end of shift. long day
+  onLastAlive:
+    - one guard. still on duty
+    - the post stays manned
+  taunt:
+    - sir, this is a restricted area
+    - badge, please
+    - loitering near the bomb is not allowed
+quirks:
+  - calls_everything
+  - holds_grudges
+rivals:
+  - hyper-arrow
+  - lirzaek-39
+bio: Guards his team's bomb like a shift at the mall, complete with imaginary clipboard. Has filed hundreds of incident reports about Hyper_Arrow. Considers every diver a trespasser.
+batch: 2
+retired: false

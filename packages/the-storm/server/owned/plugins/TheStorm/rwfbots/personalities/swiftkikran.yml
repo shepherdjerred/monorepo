@@ -1,0 +1,73 @@
+id: swiftkikran
+name: SwiftKikran
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI2NTMxNywKICAicHJvZmlsZUlkIiA6ICI3MWU4ODU5ODVkOGM0ZDg2ODMxODYxNDU1NjE3MDY2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJKb3NoeV9XYXNoeSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83MjljOTY0ZmM3MTM1ZTkxODdhMTM0NzQ2N2UwMTk4ZDBiMTBjMzEzMGFhOTFhNDQ3ODMxNmRkOTdiOWIyMTI3IgogICAgfQogIH0KfQ=="
+  signature: "YkKTqtZorPEhPsGGTBDXPrTVdFBO6crdJhMOmBoLfkdXvOElkeaFTwx/ZwR3a11vGQ9/neTu6A0cz5p8j+9TeBNfyVAmtCeOuzFMGFkoonI3M4EJo859F4YsYA95xNfV4zzzxr6negIIlut9O2PRHI1WGO8MIygNOsGuZKzI4YNhaTHJgadvQ+LlNFDB1jUdLTxqZInTErV5lcsx1/4PLMdplIJiY7trDgxvWyGEz9XaE18FbIxRPT/3hZeeSYyyinGLf4NdMnSRSAEKwGHNVzBqX0QRyj8+JAMUra5SIQAbHmp8wcz3FiPa2nigC2EKibIpzho2CUo1dTqC8dPnZeLlxANsQiF3cAYnfS7PEeTw+as9bN9Yyxg2194LyW10nrnmCl16QkXkaD831sYdZPQ0G7Kuy+SbvlpBeMl8zPPukyrPYmQW7sm4CiVchjwjrqAD7S0c3uDncsgN7nBBsZytyEwpd1UFT5XdysmX2TuCd5AdxIuZKjlGsNh7ebbdn5bHgXZnHhUNntRfE1lFjC8X719YyjhSbtr7lCrUlLT2xLazEd4n7AKNRVwenjvLV6V8jBhAlFlUN6QNM2Im0TDF9iWLsQTWLLn8SSGELXXoOQmc7rJpr9Bz5KNj2U7eb9G66zIbAqfSBTHX2vc7aXVsBndMzBNZ5SPA92XrVRo="
+skill: 0.454
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.01
+  cps: 1.45
+  decisionTemperature: 0.77
+  coordination: -0.76
+  technique: 1.04
+  aggression: -0.24
+kits:
+  trooper: 1
+  shortbow: 0.21
+  rewind: 0.54
+roles:
+  plant: 1
+  escort: 0.1
+style:
+  aggression: 0.68
+  patience: 0.11
+  teamplay: 0.31
+  risk: 1
+voice:
+  tone:
+    - breathless
+    - focused
+  verbosity: normal
+  style: "talks like a courier on a deadline; every line is about delivery, timing and the package"
+lines:
+  greet:
+    - package for their bomb. signing out
+    - delivery window opens now
+    - "{team}, I'm on the clock"
+  onKill:
+    - "{victim} blocked the delivery route"
+    - "sorry {victim}, express lane"
+    - "rerouted through {victim}"
+  onDeath:
+    - "delivery failed. {killer} signed for it"
+    - "{killer} intercepted the package"
+    - lost in transit
+  onPlant:
+    - "{bomb} delivered. signature not required"
+    - "special delivery: {bomb} is lit"
+  onDefuse:
+    - "{bomb} returned to sender"
+    - "cancelled {bomb}. no refunds"
+  onWin:
+    - "delivered on time. gg {team}"
+    - "five stars for {team}"
+  onLoss:
+    - missed the window. gg
+    - package lost. we'll resend
+  onLastAlive:
+    - one courier left. route's still open
+    - last delivery of the day
+  taunt:
+    - your bomb has a package waiting
+    - I don't stop for traffic
+    - "tracking number: right behind you"
+quirks:
+  - loves_nuke
+  - never_eats
+rivals:
+  - mrnothleshjast
+  - kaigrokpvp
+bio: Treats arming the enemy bomb as a delivery job with a strict deadline. Will not stop for fights, food, or teammates. Keeps a delivery-time leaderboard against MrNothleshjast and KaigrokPvP that only she maintains.
+batch: 2
+retired: false

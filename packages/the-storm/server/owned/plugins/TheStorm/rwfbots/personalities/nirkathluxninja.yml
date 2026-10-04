@@ -1,0 +1,72 @@
+id: nirkathluxninja
+name: NirkathluxNinja
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMwNDU0NCwKICAicHJvZmlsZUlkIiA6ICJjYmYxNGIxMGJhNWU0NzgwYjIyNmFiNmQzOTUxODk4YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJFZ2d5QnV0dG9uMjQxMSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mMDFmZWE0MTQ1MDI4MzI3MDliZWI1ZGIyNzcwNzk5MWM2YWZiYjlmMjBiYzRkMGI4YWMxMDE0MjA4NDBhZjIxIgogICAgfQogIH0KfQ=="
+  signature: "Q/shDowRHT3odkRYyK2t+dDD6NNNvGwWoDLWwRj86B4T4Kwsg/eQPEuNaPg4U+r7x7EUH0+mYrff2ZHR20gcj2M7i/amrJu1JFi3nGxU5doOIgXSJeKfQZe2rqUfQVXwhVwtofbEcX7em8nKCxhHBdrrjBHnOJwjH23zlU/fs2VqONEFbIsuQ+lSb/ZuYaMqEnHofWCT8+DsWQzD0G8qyk969QNd4SSLhNI029rToXJuPGtePNqnNlAY8uP0m4eokQjUazYRApTa/o8TjV/XGC6YIjXTsj1cjhoO9/ICV0WhfX89PFADAH8rhqxdikiFszh17l5DDyQ6UcWg5SBCoVLULdX6345D5UpR2XR1840EY8jhrtfsi9heyrKD3A5tBCFzSE/mzeXmgz99o+BS+YURobCqEmWhLVu7QBa8dLRrlF6NyEwrFeFdBLuVDINTiHJfwsAmDnCSds5DZcVio62yK4lzSadkw2g0hEKtQI4u7G9oZjEl1qHzIuz/JiUawlWA6XZbj/YCWjDL8CXlQoWZmXWFB9gZ/G8WixHgEH7tTWu7mjkufztJxnaL+e6EYuv6SNC63N5Vhc8m0kfU20Lq9cBK7zfMtAXI5j+pV9Y09IXO7jZa5e+ODG+J841r+Sy1mxFNhjBqDOHqb6A5Hpu3YKhzL5BMwTl9qjLsk3o="
+skill: 0.127
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.4
+  aimErrorDeg: 0.08
+  decisionTemperature: -0.06
+  awarenessRadius: 0.13
+  coordination: -0.99
+  aggression: -1.73
+kits:
+  trooper: 0.89
+  longbow: 0.3
+  rewind: 0.86
+roles:
+  defend: 0.92
+  retake: 0.33
+style:
+  aggression: 0.12
+  patience: 0.95
+  teamplay: 0.56
+  risk: 0.1
+voice:
+  tone:
+    - timid
+    - sweet
+    - hopeful
+  verbosity: quiet
+  style: "new kid hiding behind the bomb; small words, lots of 'um', proud of tiny wins"
+lines:
+  greet:
+    - um hi
+    - i'll stay by the bomb if that's ok
+    - "hi {team}. i'm new-ish"
+  onKill:
+    - "i got {victim}?? wow"
+    - "um. sorry {victim}"
+    - did that count? it counted!
+  onDeath:
+    - "oh. hi {killer}. bye"
+    - "{killer} is really good"
+    - i tried
+  onPlant:
+    - "i lit {bomb}! is that good?"
+    - "um, {bomb} is on fire now"
+  onDefuse:
+    - "i defused {bomb}! i read how"
+    - "{bomb} is safe i think"
+  onWin:
+    - "we won! yay {team}"
+    - gg everyone! that was fun
+  onLoss:
+    - gg. that's ok
+    - i'll practise more
+  onLastAlive:
+    - oh no it's just me
+    - ok. brave. brave mode
+  taunt:
+    - um. please don't come here
+    - i have a sword. just so you know
+    - i'm not scared. a little scared
+quirks:
+  - says_sorry
+  - gapple_hoarder
+rivals: []
+bio: Joined in late 2014 and has been hiding behind the team's bomb ever since, rewinding nervously. Has no rivals because everyone thinks they are adorable. Saves every golden apple for an emergency that never seems quite bad enough.
+batch: 2
+retired: false

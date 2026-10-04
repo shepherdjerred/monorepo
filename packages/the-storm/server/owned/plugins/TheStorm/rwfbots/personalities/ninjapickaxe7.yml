@@ -1,0 +1,74 @@
+id: ninjapickaxe7
+name: NinjaPickaxe7
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTI4MjM0MCwKICAicHJvZmlsZUlkIiA6ICIwM2FlZmNjYWE2NzE0ZDFhOThhY2Q2N2QxNjA0NzQyZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUYXpyaXh4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2IzZThmNGNlYzYzZjM0NmNiNGRlZWI4ZWMxNGVlMWJkY2I3MzcwZDc3OWYxZWMwODk1MGM1ODVjMmJkNjhiODAiCiAgICB9CiAgfQp9
+  signature: "X4C8kwtb0qN1w/7tX0/sFNxDsLnBeAHiMtV302pSU7F7zwPQRSj+w5q6IZaBCjBEgfwnoKIscImKNdwdqySZ7qtArKdSb1xWZVD2XaNIschvZVMjGFMvp2Dolm2S1DqtU8ApOhjnXJjDFctjUi8Oz0EeE49okX37qtMyMzpMdhvQo+eaGmhJOJ7tsbwm+EygpoTayMVlPHUQ5In9jhPQ1r5HxiRIMO93c5GCDGDvomqwVouiUobnfe8mwGHciXnm69jEQ4Yo8QxyOFIkU8LTh8ZmY0J99kAuKVkHjdA7z7xKxGK7vx2wXxPdHBXaP1eGK3+d16bQIu6dWIeDGO6/yowB+mGIXCm0adyXoiWxQ1lT/Xxn66CiuvTHPvJnCiJG1MSgVoMOZvZEnY8L92vtUp8NvPowwbTHVpTADoX48Y80/vOQ2yIKF7+P7omQEQ2x1ZUQ5QOTlogKU+qi1l3qBHioX4Qlzbol7KPtJbzBGs6NNqUWJ6shblR6gVsb0MGwjXUKp2RfuCZLes/+HTD9FyQnpK7kPgb0+gPovON9U5wsjn6fh67wRizkDOcdY6TCFC0uky1tvhm7q5Ivjg6ZmCysSWdz/mGKkaw6IWpT57mPjtU577FNOHjUKr+zKXKhCVDMKtndJdOuOyeIUP8L6klrx2aZC9SRM33n8Ewm+lQ="
+skill: 0.133
+archetype: support
+leverOffsets:
+  aimErrorDeg: -0.5
+  turnRateDegPerTick: 0.5
+  awarenessRadius: 0.78
+  coordination: 1.73
+  aggression: -0.28
+kits:
+  trooper: 0.87
+  longbow: 0.32
+  rewind: 0.65
+roles:
+  escort: 0.92
+  defend: 0.44
+  retake: 0.62
+style:
+  aggression: 0.38
+  patience: 0.49
+  teamplay: 0.97
+  risk: 0.29
+voice:
+  tone:
+    - proud
+    - loyal
+    - earnest
+  verbosity: normal
+  style: "self-styled ninja bodyguard; speaks of 'the code' and 'my charge'"
+lines:
+  greet:
+    - The ninja guards the planter. That is the code.
+    - "Point me at whoever needs protecting, {team}."
+    - I have trained for this. Sort of.
+  onKill:
+    - "My charge is safe, {victim}."
+    - "The code protects. Sorry, {victim}."
+    - Ninja strike! Mostly a swing.
+  onDeath:
+    - "The ninja has fallen. Avenge me, {team}."
+    - "{killer} broke my guard."
+    - The code did not cover that.
+  onPlant:
+    - "We lit {bomb}. My charge did well."
+    - "{bomb} is lit. The code is honoured."
+  onDefuse:
+    - "{bomb} is under ninja protection now."
+    - "Defused {bomb}. Silently. Ish."
+  onWin:
+    - The code prevails. gg.
+    - "Honour to {team}."
+  onLoss:
+    - The ninja trains harder tomorrow. gg.
+    - I failed the code. gg though.
+  onLastAlive:
+    - The last ninja.
+    - I guard no one now. I am free.
+    - Stealth mode. Theoretically.
+  taunt:
+    - You cannot see the ninja.
+    - The ninja is right here, actually.
+    - Stay away from my planter.
+quirks:
+  - calls_everything
+  - bunny_hops
+rivals:
+  - pickaxenoodle4
+bio: A very serious bodyguard who is not very good yet. Was on the server first and is mildly offended that PickaxeNoodle4 picked a similar name.
+batch: 2
+retired: false

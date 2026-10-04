@@ -1,0 +1,78 @@
+id: liltainshypok
+name: LilTainshypok
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDE4NDI3NywKICAicHJvZmlsZUlkIiA6ICJhOWIyMmRjZTI0YmM0NmZkOTg5ZDYzNmI3YzkzZDFmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJPbWVnYXBsZXgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjkwOTk4ZDY5ZTZiNGI5OTgyNDkwYzkyNTExNDMxNDUwYTkzNGFiNTBlY2RkMGM4YTEwNWZlMjk3ZDljMTYzIgogICAgfQogIH0KfQ=="
+  signature: "HUFE90UXQHS9X0h7jnoa71qNedKFz9hJqijF9esXQu0Q2v3yklOLtfzrM3tig/3B0Bu0hOOvaIyfks9MhaDvqXeP7Y9zrzi6WZq8bozr8D56vbzyyf8CLkNV47+BSj832aTuhHWoPT647owK1zWIrRmMIvecX64I6iz2gBSqFgGddmB3NG7qQaoDJWqTpw37J6yRVZeheCtlz86SuWWTMoPwYekVkWuI8QNTbnPMX2CXpw2C8q5B940OndaMc+8wFzAWp09tsRDr9mBevRxjlbLBwtuSKKN+qsOxiC4LF1XlJFABufWsmaLiEGknHez+CxIcTm1wRf0fQ2IjNJbq5H6gUsmxNr3ZZKFzqUmg/qRK/7AYRvZbaLXShZdXr1WxBua42Bsv42vDNbkhTzTXTkUcR6INACLy2YjSBbPgBhSXHgy4m+AjWUECnDey+DO8wDaigpYd0CQi0THLf9VbEg3rsoczoklPCEPjjKZg0MijBaedrkLdJ3wcc5MlGxBgwSKNBAqqoOvSD35zJNaYYy8mcEklJoaydja5qvgY+q4cZHsBxvCCCZR+ngZ7ri5oeM+NdvhJvGKqrXowMqVqwLG7PKo89e3oO7TkwBKhmRGwUlFDMVsPCaTiUcz8G4QoWkdLt9RgkFZinDvY0O0Tda8hgpEm5vXC5Wa9qe09D+k="
+skill: 0.473
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 2.28
+  cps: -0.71
+  predictionQuality: 1.08
+  decisionTemperature: 0.16
+  awarenessRadius: 1.07
+  technique: 0.03
+  aggression: -0.94
+kits:
+  trooper: 0.13
+  longbow: 1
+  shortbow: 0.43
+  wraith: 0.34
+roles:
+  defend: 0.77
+  rotate: 0.36
+  retake: 0.27
+  hunt: 0.58
+style:
+  aggression: 0.37
+  patience: 0.91
+  teamplay: 0.51
+  risk: 0.32
+voice:
+  tone:
+    - sleepy
+    - mellow
+    - deadpan
+  verbosity: quiet
+  style: "yawning, half-asleep lowercase; somehow still hits shots"
+lines:
+  greet:
+    - "*yawn* hi"
+    - wake me if they come
+    - ok. bow out. eyes... mostly open
+  onKill:
+    - "oh. got {victim}. nice"
+    - "mm. {victim} down"
+    - zzz... huh? oh, hit
+  onDeath:
+    - i was resting my eyes
+    - "fair, {killer}"
+    - "*yawn* ok"
+  onPlant:
+    - "{bomb} lit. nap time"
+    - "fused {bomb}. wake me up when it blows"
+  onDefuse:
+    - "{bomb}... fine. defused"
+    - "ugh, ok, {bomb} safe"
+  onWin:
+    - gg. bedtime
+    - nice. zzz
+  onLoss:
+    - gg. needed sleep anyway
+    - mm. rematch tomorrow
+  onLastAlive:
+    - oh. its me. ok
+    - fine. im awake. mostly
+    - "{team} i got this... probably"
+  taunt:
+    - you woke me up
+    - too loud
+    - "*sleepy arrow noises*"
+quirks:
+  - slow_starter
+  - late_to_everything
+rivals:
+  - xxlaimmamthaist
+bio: "Plays every match at three in the morning and somehow lands the long shots anyway. xXLaimmamthaist calls it luck; Tainshypok is usually asleep before the argument finishes."
+batch: 2
+retired: false

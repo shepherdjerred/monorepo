@@ -1,0 +1,74 @@
+id: cobaltmoth75
+name: CobaltMoth75
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDQ2NzIxMSwKICAicHJvZmlsZUlkIiA6ICIxNTUyNmU1OGZhOWE0NjBmODhhNmZhNjk1M2RlNjgzNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJQaWVkcml0YTE3IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JhNmJjYzRjZjc4YmQ4NmIxNDdjZjcxNjU2MWE3YmI5NjJmYzhkMTI2YWFiY2UwOWRiYmEzZmM5YjM3NTQzMzAiCiAgICB9CiAgfQp9
+  signature: "FfOfD5bU+2ZiU9aCSeyDSzi6q3lsFEelh2lWXHtoWtoxmRknnuAiD7Z81qlQogf42m6jTS9E6l889599w3+nSRseV1C7sfpBDGIV6towaKzSf179p6bpiRzfTD7mZm0dRjNaYLlFxijjgqKOMNx/T8hiwUSW6mKjKc5fJzPrDP0JLLm+R8UXkztiF7RVF81aqlSE5kR2CknDkATZkdW9FbB3x8koamPx88QNTFWf9MSwpn4XhBlQE6qD+LcElqbzB29x5aJ/YT/wWwpupn17NIJyd0UiNqJuig8CJ3vy+Ey7QrsGRrYfcAiACnrHyu5NB4ApfPNy7vXl3BV2C4v9IQHzPke8tRKurIeNcBC4EkJiWN44/lc2xsVEAJ5YEcM8K+va1n0S3hN8e9bwRcNx0TlYj2fFgHLrokjOkgxwB2F+cY8k6j3aKJ2DQjXy76C+7/brCysuNeDIg3sa2Ip3+29+Y2o8kNIryYH0aS3Xx/ZCTYNpRnbtXFVp0cPQ0ld+xcwe0eVqsCwV5Qh7aV/7mqq42Xit4QOWpuKO+q7uf2EleocrUm9kB5Aqmw8kKySruA0bc56hNXJR56dLboc7+vtzQ7GgW2Q8/2U0xCrVT1wM8X5zSkjlglOCCRfnaAs9UtJVFhPha09OTdgmlPf4Wh2Y+vQpWXhfQ9TcVuGK32Q="
+skill: 0.455
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.62
+  cps: 1.67
+  awarenessRadius: -0.32
+  coordination: -0.42
+  technique: 1.55
+  aggression: 0.98
+kits:
+  trooper: 1
+  shortbow: 0.34
+  ghost: 0.29
+roles:
+  escort: 0.3
+  retake: 0.55
+  hunt: 0.8
+style:
+  aggression: 0.89
+  patience: 0.27
+  teamplay: 0.34
+  risk: 0.4
+voice:
+  tone:
+    - poetic
+    - calm
+    - graceful
+  verbosity: normal
+  style: speaks in short poetic images about moths, light and blades
+lines:
+  greet:
+    - A moth drifts toward the light.
+    - The blade is quiet. So am I.
+    - "{team}, let us dance."
+  onKill:
+    - "{victim}, the flame was not for you."
+    - "One wingbeat. {victim} falls."
+    - Steel sings softly.
+  onDeath:
+    - "{killer}, a bright flame. I flew too close."
+    - Wings singed.
+    - The dance ends, for now.
+  onPlant:
+    - "{bomb} glows like a lantern."
+    - "A spark upon {bomb}. It brightens."
+  onDefuse:
+    - "{bomb} dims. Peace returns."
+    - "The light on {bomb} goes out."
+  onWin:
+    - The light is ours. gg.
+    - "A graceful evening, {team}."
+  onLoss:
+    - Even moths rest. gg.
+    - The lantern faded. Again tomorrow.
+  onLastAlive:
+    - One moth in the dark.
+    - Alone, I flutter on.
+    - Quiet steps. Quick blade.
+  taunt:
+    - Step into the light.
+    - I circle closer.
+    - Can you see the moth?
+quirks:
+  - good_sport
+rivals:
+  - joustshonslime
+bio: A swordsman who never says more than he must and never loses his temper. JoustshonSlime keeps challenging him to formal duels, and Cobalt keeps politely accepting.
+batch: 2
+retired: false

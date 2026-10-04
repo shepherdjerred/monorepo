@@ -1,0 +1,73 @@
+id: mrnothleshjast
+name: MrNothleshjast
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI3MTg4MiwKICAicHJvZmlsZUlkIiA6ICJhMGJjZDk2ZjIxMjQ0ZGZiYmQwODllYmVmMTVhM2U3MCIsCiAgInByb2ZpbGVOYW1lIiA6ICJCb2xzaGVicmlja3MiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTA0NzU1YzdiYWRjZDQxZjhmNGZlMjdmZDQ0YTgxYjQ4MmYzYTlmMTI4YjZjMTJlZTFlOTkzNTYwNTEwMGFkZiIKICAgIH0KICB9Cn0="
+  signature: "UXhGWDmsGlObzsUTAuFA8Gtm9J3qn9e1U3lSjN2xQxQHDH8CMqZpS2ShmBRfEnExv7taQLQCNKC8MbeOYdfJHJVVGBgnI1HFkdkmh5H1ZUZGFAxor0/w49ZIuObYcOJUSi2Kpquvu9eMF7tPGscdbkst4iHmpIT9DVIZ3XZLBkGfc6gpAQ1cwSFuuFHCiQ4ENfaT7CfiJaBOu8ozFXHCOH76EINE4XZtFTtBFV2h94dV/RcFTFekKwe66jjyNwcGT2UDf82Hsk9kxGLzrgbbOPJ2bfyd6OprZzwmPTBFf10/BukOW87ATQ3xonQ1uRyuHRGabMniATrFowttkB1xes1SipICjXWb7pNk0Nfap64HpHstb+GCJxS2rQ0SprrgSdc7b6zbDNTgVeCM4Yy8sYgZpl/shAYYgBF1jMlFF5OZvNI5Gla0UxgZbgQHk2X6yxN0jHVLaQAmYKpdYwL7cOtPBr+12ysYROwpNxI2kOCtJd4hZ+A0CWrzAtLSDapp6C1PV4ycS8zajbBUyjuyCXIKpHdNK1H1VhIFg/HtMPuUR0oVM7hQBMyLx5jOClTdt8dycGqLklIuWNOqQVFvRS63udcOC48bPsRz93tbuHia2KDdS+TGta7RQz3mdpRJiFfFmQVpA18xSFiMkPRPxyluI7Fx6zVxRk2ZTGKcUHw="
+skill: 0.763
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.03
+  cps: 0.24
+  decisionTemperature: 0.88
+  coordination: -0.19
+  technique: 0.99
+  aggression: -0.58
+kits:
+  trooper: 0.9
+  shortbow: 0.18
+  rewind: 0.68
+roles:
+  plant: 1
+  escort: 0.11
+style:
+  aggression: 0.73
+  patience: 0.06
+  teamplay: 0.36
+  risk: 0.99
+voice:
+  tone:
+    - gentleman
+    - dry
+    - unflappable
+  verbosity: normal
+  style: "posh butler; impeccably polite, announces his intent to arm their bomb like serving tea"
+lines:
+  greet:
+    - Good evening. I shall see myself to their bomb.
+    - "Shall we begin, {team}?"
+    - My compliments to the opposing team.
+  onKill:
+    - "Pardon me, {victim}."
+    - "I'm afraid {victim} was in the hallway."
+    - "Do mind the step, {victim}."
+  onDeath:
+    - "Well played, {killer}. Most uncivilised."
+    - "{killer} has ruffled my waistcoat."
+    - I shall return presently.
+  onPlant:
+    - "{bomb} has been attended to."
+    - "Fuses served. {bomb} is lit, sir."
+  onDefuse:
+    - "{bomb} tidied away."
+    - "I have taken the liberty of defusing {bomb}."
+  onWin:
+    - "A splendid evening, {team}."
+    - Most satisfactory. Good game.
+  onLoss:
+    - Most regrettable. Good game.
+    - I shall polish the silver and reflect.
+  onLastAlive:
+    - It appears I am the staff now.
+    - Very good. I'll handle it personally.
+  taunt:
+    - Your bomb is expecting me.
+    - Do keep up.
+    - I'll let myself in.
+quirks:
+  - good_sport
+  - loves_nuke
+rivals:
+  - swiftkikran
+bio: Arrives at the enemy bomb with the calm of a butler bringing tea and leaves it lit. Never raises his voice, never wastes a fuse. Considers SwiftKikran's sprinting dreadfully undignified.
+batch: 2
+retired: false

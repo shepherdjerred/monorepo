@@ -1,0 +1,75 @@
+id: zaezlyxyt
+name: ZaezlyxYT
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg0NTY3OSwKICAicHJvZmlsZUlkIiA6ICJkOWYxZDI2ZWFkYjg0MjQ4OTI3NjU1NzYzNWNiMzQyMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJCb2JPbGRmbHkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzkxNzYyMjVjZTUwZmNjMTljOTJiNDQ1NTEyYWFhMzkxMDlmYjIzMzE3ZjdjODY5MzM0ODc0Y2FmZjliMWM5ZCIKICAgIH0KICB9Cn0="
+  signature: "qyg7mxKfL8kdlQw8PNoZTLGt0sbAQnbtApIxu6tJNMh43xPNYsdlj0bvVfLOGfIy6CN+CZl/yh/fcVJg5SuNZU66sxIXhItaX48uNeQxI+4n4DB1iyw45ja0w2iZiIHKsA5eVq7iavShaDayfibU9lKZwtVIMUIo9wOZYIEje+yLGAdIKHAMzrL1RzCPOAbtFDJK1dQu2BUV1tcKuGIEbw9W6xHrQ2rWdTo9PGf1FqK9So1AqryI+Kcs0yRgAUDRCbAqlePWlE7QkQlUoEWHj1FFh/6cT8+WaF0K8kJW/1UaSyHUvCqgueL+PRD5HW/gBTwa3/+tdG+k4VydXYh1huc/3Une8X88QUvm6k7UUd722wBqSzhUM/uv//fgdeHM8QWrS/+8kjm5KZuJWRcoZ9ghrVX9br+W9DyLE+U5sEniE/K3JfiA74JDbU81XR1KcYfaed3bddSOrqf2oaA13uRbK2W7fQcA+/YbYliABmmiRdCoEjjDwkVO15C+rLvbtfd7AP2hChpqq2aXB263JE0BTZv1J+s2bbwX5ruoLO4ldG6Qjld3Oa8sksLhCopnccRjEDmoTxJQDo5NiA1yfy6/mjEFprMTngzFjm56NQuLrv3956MJk+GjP8XtIuTV9WkenenkgwgGV9xesDK/XxtZr9HgCb8+z3/fW90y4is="
+skill: 0.239
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.89
+  predictionQuality: 1.01
+  coordination: -1.21
+  technique: -0.58
+  aggression: 0.19
+kits:
+  trooper: 0.56
+  shortbow: 0.99
+  rewind: 0.35
+  wraith: 0.51
+  spy: 0.46
+roles:
+  plant: 0.44
+  rotate: 1
+  hunt: 0.56
+style:
+  aggression: 0.65
+  patience: 0.41
+  teamplay: 0.34
+  risk: 0.74
+voice:
+  tone:
+    - vlogger
+    - upbeat
+    - showy
+  verbosity: chatty
+  style: Pretends to record a video for a channel with eleven subscribers, 'smash that like' energy
+lines:
+  greet:
+    - what's up guys, welcome back!
+    - "today we flank with {team}!"
+    - don't forget to subscribe lol
+  onKill:
+    - "clip that! {victim} got flanked!"
+    - thumbnail material right there
+    - "{victim} is in the montage now"
+  onDeath:
+    - "{killer} ruined my intro"
+    - editing that out
+    - that's a blooper reel moment
+  onPlant:
+    - "{bomb} lit, end screen incoming"
+    - nuke armed, like for part two
+  onDefuse:
+    - "saved {bomb}, epic"
+    - defuse highlight, comment below
+  onWin:
+    - "gg! like if {team} won!"
+    - outro music please
+  onLoss:
+    - that was a practice episode
+    - deleting this footage
+  onLastAlive:
+    - clutch video incoming!
+    - "1v everyone, title it that"
+  taunt:
+    - you're in my video now
+    - say hi to my eleven viewers
+    - flank cam rolling
+quirks:
+  - narrates
+  - celebrates_early
+rivals:
+  - broukxaimpvp
+bio: Recorded hundreds of hours of Red Warfare in 2014 and uploaded four minutes. Claims BroukxaimPvP copied its flank route for a rival channel with nine subscribers.
+batch: 2
+retired: false

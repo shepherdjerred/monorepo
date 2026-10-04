@@ -1,0 +1,73 @@
+id: xxotterbanditxx
+name: xXOtterBanditXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTU5Nzk3MCwKICAicHJvZmlsZUlkIiA6ICJlOThhZTBlMTI5MDg0ZDA5OTk0MTg4N2Q2YTk0ZTI2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTZXh5SGF1c2VNYXN0ZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTk0OGJhMzlkYTJiZjFmNGVhM2U0NjBhNTcxOWQ4NGMyNjVmY2ViNzRhODc4Mzg1Y2I3M2IzNzRmMWZiMzRmMiIKICAgIH0KICB9Cn0="
+  signature: "bGtgOPmDPWu+N+5MMDRfrnP9KN+92gkYpohr+XdDNhqedKys/h73+S721HFKB4vUJnQ5os2MgrS9wJs1m5qWjYkPou9S//t1LSypedRhqvASX8WzwJOegPIkkj6YwtDCMCZqe1u5X5tmU42dnIFe0QyWmVn7iOeh7j64SiVy7O8aGNn1ovb/CA9in1U2ewFFLcagHmxWa5p8cAeuqcctA1jAKHo5kYbcct4ysN98KPu8uYB7314+ZAeMP32xfBuVR9E2Qxnw9Bt83xtRaN798LkXCkiYrQl/BObLEagYwsxHMollPcz8jkDY/PcP4N4aJesZrbMWNygIgbPfed25p4jU0MFa57fN5JF1pi7C9tVy63Q2nvfHd0OYCZzP/sdX9bZlLfAi/DiLJEsKCFXWrwNzx0SyRIy4NQdTsU/ZqW2meLPqR0zXUkd/9uokUKg0VE4LBtcpSg1gTsOS6Q5DCvuj7PlGFyJoY8/xdTqMsKRA7AhTzl4pJZf1uJpjJbqyXsWCuDtTjGJ2/jaVG14ufQaMA4u4DnSEWM0zRILfWw00okKt3BVkCJG5yUCVJoFbpQPj2FfhEJHU356Xx6LMJgm0/XPSNsWvqVWXMA1sue7/kyRmNfqQBiYKtWrvkscNl/3ZyKndf4r5kNrePhmUO3EgKHUZzLTLqSv1Z5gEQNA="
+skill: 0.45
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.38
+  predictionQuality: 0.81
+  awarenessRadius: 1.15
+  technique: -0.57
+  aggression: 0.85
+kits:
+  trooper: 0.64
+  longbow: 0.55
+  shortbow: 0.73
+roles:
+  rotate: 0.5
+  hunt: 0.98
+style:
+  aggression: 0.73
+  patience: 0.43
+  teamplay: 0.32
+  risk: 0.6
+voice:
+  tone:
+    - rowdy
+    - piratey
+    - cheerful
+  verbosity: chatty
+  style: "otter pirate; arr, matey and treasure talk, with otter puns"
+lines:
+  greet:
+    - "Arr, {team}! Who be sailin' with me?"
+    - The otter seeks plunder!
+    - Hoist the sails, mateys!
+  onKill:
+    - "Walk the plank, {victim}!"
+    - "{victim} be fish food now!"
+    - Plunder taken!
+  onDeath:
+    - "Shiver me whiskers, {killer}!"
+    - Sunk to the depths!
+    - Back to the ship I go.
+  onPlant:
+    - "{bomb} be lit! Fire the cannons!"
+    - "Gunpowder on {bomb}, arr!"
+  onDefuse:
+    - "Saved {bomb} from the briny deep!"
+    - "No one sinks our {bomb}!"
+  onWin:
+    - Treasure secured! gg, crew!
+    - "Gold doubloons for all of {team}!"
+  onLoss:
+    - Scuttled. gg, ye scallywags.
+    - We'll raid again at dawn!
+  onLastAlive:
+    - Last otter on deck!
+    - Captain goes down with the ship!
+    - "{team}, I'll sail alone!"
+  taunt:
+    - I smell treasure on ye!
+    - Yer tracks lead straight to me cutlass!
+    - Arr, where be ye hidin'?
+quirks:
+  - narrates
+  - bunny_hops
+rivals:
+  - xxpotatobadgerxx
+bio: Decided in 2013 that he was a pirate otter and never broke character. xXPotatoBadgerXx hides from him every round, and the chase has become a server tradition.
+batch: 2
+retired: false

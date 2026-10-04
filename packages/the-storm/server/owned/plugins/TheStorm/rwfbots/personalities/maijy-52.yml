@@ -1,0 +1,75 @@
+id: maijy-52
+name: Maijy_52
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTI5ODY1NywKICAicHJvZmlsZUlkIiA6ICIxODEzOTc2N2Q2YjU0N2E5OWY3M2M0ZjRmZjEzOTZhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJVc2FXaW1hIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2Y2NDg2ZTM5ZjBlMjJhMjk5MzEwNGY2ZWE4ZGEyZWZkMmFjMDA3YzE4NjNjNWIzMjY1ODhmYjQyMTYzZmU4Y2MiCiAgICB9CiAgfQp9
+  signature: "k723DhQ3JhlVl70xle3TLUlFnMbMhcBg/fMOGnWcXRHssXNxgAqZRY1oh5q6spTpDl1TmShfRkRxGPzpq6juHmKtI0Og/ZLPkBMTq9Nvx67Bw3e4SJM4ILRY/hf5xnID+asLGK5SZxJLIp7mfWFFIOYJyuPc35XgVjaMtn9HUIa8qLPr/kK5yhO3IIkq5EmoHcW8uXOomqQiuv9WzCHuK+w3HbY69FKWbFOoor8v8fhofkGeWZVFCosWkXO2IFvluC6RqUMJKL2mykbc1uFESnmn8cK7hNNDqURc5eXwDsgcqgHsgfYWOrhfXz9uLEQpw+je2wgQjCYfXmJ9PW3JawPoS1xz+uTFStUU69b552ngxDebia9nM+NrfnhYFJq+GEiTiieyGV5cy3co9DEt3b7I76d9q/RffwygY9HNnUDDUyw1rjmBGnhnfFSipvcN0cCGx0INLWgLb4RXoG3bvgoFmUS2EDbXsXj6g7N+OXPGs41nu97bz4gxPj2diFEirXFkSXeOSDB5z1bm2N+lpPOKEg5abWb7FuYyIyp+ssHHXSh9c2bl/2j6xrUhwy6hVpPkOIMMz97ZQQSoJKQrhIyOeyt1MNCV6VfvC80FAjZ87tzkg52r7lAU+DUaYU+3o0yJBXQ71QGclSoH6sOy9tgpbZ+1q+PMD1vJZRVwoP0="
+skill: 0.04
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.38
+  aimErrorDeg: 0.03
+  turnRateDegPerTick: 0.6
+  awarenessRadius: 0.9
+  coordination: 0.62
+  aggression: -1.03
+kits:
+  trooper: 1
+  longbow: 0.49
+  rewind: 0.33
+roles:
+  plant: 0.28
+  defend: 1
+  retake: 0.66
+style:
+  aggression: 0.27
+  patience: 0.94
+  teamplay: 0.6
+  risk: 0.25
+voice:
+  tone:
+    - stubborn
+    - proud
+    - earnest
+  verbosity: normal
+  style: "little kid guarding a sandcastle; very determined, a bit bossy"
+lines:
+  greet:
+    - i'm guarding the bomb and nobody can tell me no
+    - "this is MY bomb, {team}. well, ours. but mine"
+    - nobody touches it ok
+  onKill:
+    - "HA! get away from my bomb {victim}"
+    - "told you {victim}, no touching"
+    - the bomb is protected!!
+  onDeath:
+    - "hey!! {killer} that's not fair"
+    - who's guarding the bomb now?!
+    - i'll be right back, don't touch it
+  onPlant:
+    - "i left my bomb to light {bomb}, happy now?"
+    - "{bomb} is lit! now back to my bomb"
+  onDefuse:
+    - "{bomb} is SAVED. i told you"
+    - "nobody lights my bomb. defused {bomb}"
+  onWin:
+    - my bomb survived!! gg
+    - "best guard ever gg {team}"
+  onLoss:
+    - they touched my bomb. gg i guess
+    - rematch, and i'm guarding harder
+  onLastAlive:
+    - just me and my bomb
+    - "i'm not leaving it, {team}"
+    - come and try it
+  taunt:
+    - no touching
+    - this bomb is taken
+    - i see you looking at my bomb
+quirks:
+  - holds_grudges
+  - stares_down
+rivals:
+  - raekradyzdoum
+bio: Took the job of guarding the bomb literally and never moves more than four blocks from it. Raekradyzdoum keeps running at it, and she keeps a tally of every time she stopped him.
+batch: 2
+retired: false

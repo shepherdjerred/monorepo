@@ -1,0 +1,77 @@
+id: mothlynx8
+name: MothLynx8
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU3NzMwOSwKICAicHJvZmlsZUlkIiA6ICIxYTFiYWI1ZjFkMzU0NzFjYTc1OTlkZmRiOGIwYjBkNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJDcmVhdG9yRWxpemFoODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDU5NWZhOWQ4YzUzZDU0OTIyYThmY2UxMDJlZjUzMGM5NjY5MDYwMTczZjE5YjNhNTk5MjViODZmNjQyZTFlNCIKICAgIH0KICB9Cn0="
+  signature: "pgHw7T6SWtRhpHj0qipIAUlGpYq+1oBszUjDX1nIqGAyU5TM5s82C3h+561j5CK0UO3kF5XdfHEFK3FtsNdfIj6/MEVkS/CK4zZWLZW2OhhuByrPm17Y428zzGKyXaM4PF07FD58QtVN+znxOPfV8drCJXDbEZAf/8c0hxId+H3N4orD6z5nXVUIuKtyyCnN0xkMsmVBnLcJ9ntjigkeUPjNGJZl+OHbvT1oZmsvr1S3b4cWQ2uEbO5LdIEv5mlBT7s9CO//il4Ps9BUwnKn+Xf1KoD7EXwbeMYtEoW2ina9NPEu7z6F4REsQuBV53qb8BPL1Ta3EmSTzKip53ozYu2ywpTFYurxAYZbYenWfbN5dxzFlgV4uy7bSjNN85S1nmNB1fWkELf8m1U2S1wn6iLNNGYDvLQDUZ5VryYxekytTpcxp8tUXuzzKg6kacUpYlvHcYCfW0wqP/KrPImw2v+lt4af268j5G8fbgGqI3HNJZ0/I7WwB5igV2cHt9yQbP+PCIXJnhs3pYEwIMTxlcpv3T1RduP1FqTIG+ugE0rI1C8h7q531V3LV7QXJKs9V3beuo1qjsKyRdI1Gx0KkOKmwOc77F2J5APahN6c6Mkr4fYMgR8gFvuiPfP9Vk+PUeVJW6D9ui9uB+B6GAJL4fPQWoj4QvtGVg6CVPUxfNE="
+skill: 0.162
+archetype: troll
+leverOffsets:
+  aimErrorDeg: -0.33
+  decisionTemperature: -2.22
+  awarenessRadius: -0.32
+  coordination: -1.04
+  technique: 0.61
+kits:
+  trooper: 0.54
+  shortbow: 0.73
+  rewind: 0.97
+  spy: 0.89
+roles:
+  plant: 0.69
+  escort: 0.53
+  rotate: 0.53
+  hunt: 0.57
+style:
+  aggression: 0.81
+  patience: 0.36
+  teamplay: 0.05
+  risk: 0.86
+voice:
+  tone:
+    - chaotic
+    - giddy
+    - random
+  verbosity: chatty
+  style: excitable non sequiturs, obsessed with lamps and glowing things, easily distracted
+lines:
+  greet:
+    - "is that a lamp? hi {team}"
+    - i brought snacks. they're gone now
+    - who left the torches on? i love it
+  onKill:
+    - "oh! sorry {victim}, you were near a lamp"
+    - "bonk. that was an accident, {victim}"
+    - i meant to do that, probably
+  onDeath:
+    - "{killer} was so shiny though"
+    - worth it for the glowstone
+    - ooh, sparkles
+  onPlant:
+    - "{bomb} is glowing! pretty"
+    - "is {bomb} supposed to hiss like that"
+  onDefuse:
+    - "{bomb} stopped glowing. sad"
+    - "turned off {bomb}. nightlight time over"
+  onWin:
+    - we won? i was looking at a torch
+    - "yay {team}! lamps for everyone"
+  onLoss:
+    - we lost but i found a lantern
+    - aw. the light went out
+  onLastAlive:
+    - just me and the torches
+    - i'll follow the light. that's a plan right
+  taunt:
+    - your armor is so shiny i can't stop
+    - i'm coming to look at your torch
+    - rewinding just to say hi again
+quirks:
+  - late_to_everything
+  - spins
+  - crouch_spam
+rivals:
+  - lunarmoth52
+  - themostkraish
+bio: Wanders toward any light source on the map, which is how they once accidentally armed a bomb. Rewinds mostly to see the same torch twice. LunarMoth52 insists only one moth may exist per server.
+batch: 2
+retired: false

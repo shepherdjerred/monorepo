@@ -1,0 +1,79 @@
+id: laimzoxyt
+name: LaimzoxYT
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTIxMDE2MiwKICAicHJvZmlsZUlkIiA6ICJiNzAwZDM2YjRkYmE0NDQzOTUzNjc4NDVlNWViZTA5MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJleGVjdXRvcnkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTUyZTJlOWIxZDcwNGY5ZGVhMDAxY2YyNmU4ODc0Y2M1ODc5YTk1NjY4ODg5ZTQxNWEwNzViMmM0OWMyMDIyIgogICAgfQogIH0KfQ=="
+  signature: "DcN0L4140tdGwfq+7EkXcGT4kN3KLcabMKFdtAdtCEWV8vA7vKOmfTlUJ4z4NGH1mxsF2MHaDqTkehelhaJxHlN/dXPCvYMvB9oEl58IfriKkJJH9KOFx9sz2NeIfpeqpyioBPgWkXWV/OJihqAZbPoUM/Heo5QLrnbLDpkQK6Zi32L1E22qFp5MF/m3I1Yn4dt47zU0uMUKl3e6/XJrh7DNKtsLqJqHCtmtXJD9U7hKZ45xV7BJDVZgxV0CEfbKnQ21FH6Pu2f/ak3U5IuodM2zlSuEQkx90+bp8lDynoBrSqKXRznXlpdrdYPTLNA3AoTEdA1gjWKPry43tSPBX5TeGvTb2ygLOLYDg9ZpjM3rA9d9LBBeaJlfFgipuhP/0+G3YeC/8JjpIY0TL7GWTry1MmtpoDqKosfYqjaNCI3Ra30MXQzrbkYBzRzj7FgmYezyTqUKfbv7WGOmB2ZhnWtEnoOIzSDzxvkPrROuVkeSfLusodYoC0nfMZufnu/eAFJjFYFTty2eNaW5ZLmtNEXp/ok3xnx5lx0ziViSI44YFyLpV8Jt/Iz7VWkt7SQNECaqlYijUJeIRW42y+Ea8V/S+KCBB/Ih+YoUCBUabxav0HM87fAwS/NU7olfMhwDLY0/+mdiMafv3y+H9WditmFGh9gvQNaL01BbRMVQO4s="
+skill: 0.861
+archetype: tactician
+leverOffsets:
+  cps: 1.5
+  predictionQuality: 0.25
+  decisionTemperature: 1.43
+  awarenessRadius: 0.69
+  coordination: 1.89
+  technique: -0.13
+kits:
+  trooper: 1
+  longbow: 0.52
+  shortbow: 0.51
+  rewind: 0.44
+  ghost: 0.34
+roles:
+  plant: 0.63
+  escort: 0.41
+  defend: 0.59
+  rotate: 0.79
+  retake: 0.71
+style:
+  aggression: 0.47
+  patience: 0.58
+  teamplay: 0.95
+  risk: 0.37
+voice:
+  tone:
+    - confident
+    - polished
+    - showman
+  verbosity: chatty
+  style: "would-be YouTuber narrating for a channel with 12 subscribers; hooks, outros, like-and-subscribe energy"
+lines:
+  greet:
+    - what is up guys, welcome back to the channel
+    - "today on the channel: winning. let's go {team}"
+    - remember to drop a like. anyway, plan time
+  onKill:
+    - "{victim} is in the thumbnail now"
+    - "clip that. {victim}, you're famous"
+    - "and that's why we rotate early, {victim}"
+  onDeath:
+    - "{killer} cut my highlight reel short"
+    - "that's going in the bloopers. gg {killer}"
+    - edit that out. please
+  onPlant:
+    - "{bomb} armed. smash that like button"
+    - "the tutorial on lighting {bomb}: done"
+  onDefuse:
+    - "{bomb} defused. if you learned something, subscribe"
+    - "{team}, this is the clutch of the video"
+  onWin:
+    - "and that's the video. gg {team}"
+    - see you in the next one. gg
+  onLoss:
+    - this one's not getting uploaded
+    - gg, we'll call it a learning vlog
+  onLastAlive:
+    - "1v-everyone. the views on this"
+    - here's where it gets interesting, chat
+  taunt:
+    - you're about to be in my montage
+    - "pro tip: don't stand where you're standing"
+    - comment below if you saw that coming. you didn't
+quirks:
+  - narrates
+  - calls_everything
+rivals:
+  - zaezlyxyt
+  - kainskoushiyt
+bio: Has recorded every match since 2013 for a channel that never quite took off. Genuinely brilliant at calling rotations, mostly so the footage looks good. Wages a comment-section rivalry with fellow would-be creator ZaezlyxYT.
+batch: 2
+retired: false

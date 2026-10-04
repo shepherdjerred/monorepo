@@ -1,0 +1,77 @@
+id: skyzpiokvain-41
+name: Skyzpiokvain_41
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc3Mjk4MiwKICAicHJvZmlsZUlkIiA6ICI5OTJlM2NlZTU0YTM0ZmUwYTI2NTFkODViNTc3N2Y4YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0ZWxlZ3JhbURlc2t0b3AiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzc4M2NlM2I2ZmZiNjI1ZjY0ODNhNmY1NTZhMmJhNTVjZTAxMGMxZmQ4NzliNmVhODE2OTIzNGNkYmI1YTA2YSIKICAgIH0KICB9Cn0="
+  signature: "lh0aSY7GuCp50TSm1wVjIS2P7UDibkremmJXvSTn0BZL+Xyym9kQCFX8asqRreoOlFt2ZNUlKQx2Uy+cHjv+gF487TmnJVmG5AnKxCqsPmZcdOLSGjSPyv8MSWL+VeA7GNhBjHZdqLPAYS0ItnxXKI9B+2wOm/F6XHQrrPEvQLEawkg/6XchPbyNjSLD+DRzGG+QD7mqJyYNU2rYdSUahKw/qEF7+OYTD+0IBN3c6Xi4qa9gmnZIHFAzxr48SOZ1KH39Bz12F0pxGl8kL03ZMV3V0kSWjbJpGfzw/CyXxJ7qXoRtWNW7TFc3+cBgsJkjHbqUWqsldtDs/IikAGXyvGSCYkYj/iYVLiUj0OCWNxgHQ64svOeoehQ7I7YD/DEvPMbo1nUHYVbC1kgtp4nhHgYdODfIzz/M0XXkUVGrZu6ahfyl5GjXyiF9BcEx4xj2UQcXym+B36LlpePU/p7H3BUl6AnkJFlziY7gZ3eEfMyi65UwxALG0Q8ZrxRmNVTQ5s4H+PFXw6MZegbpStYUUz92bO2HN0Aerg6BnyVtcjYzmtngD60FruhfooTfrhPNPW+qtXgHpNrr8g+muNf8VLqgItvJd+gPkj8gD7X9eq7a5dZudXAer5kdqN0fZ+CNz6ptoHCGsmQXPHZzQ9cEIKjh8VcDbuut6U1pqVGnYvk="
+skill: 0.617
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.32
+  aimErrorDeg: 0.52
+  turnRateDegPerTick: -0.22
+  cps: 0.79
+  decisionTemperature: 0.74
+  awarenessRadius: -0.65
+  aggression: 1.6
+kits:
+  trooper: 0.96
+  shortbow: 0.57
+  rewind: 0.33
+roles:
+  plant: 0.9
+  escort: 0.38
+  retake: 0.25
+  hunt: 0.69
+style:
+  aggression: 0.84
+  patience: 0.22
+  teamplay: 0.45
+  risk: 0.91
+voice:
+  tone:
+    - broadcast
+    - cheery
+    - dramatic
+  verbosity: chatty
+  style: local tv weather forecaster, everything is a front moving in with a chance of arrows
+lines:
+  greet:
+    - "today's forecast: heavy rushing from the west"
+    - "good evening {team}, storm front moving in"
+    - high pressure building at their bomb
+  onKill:
+    - "{victim} caught in the downpour"
+    - "a cold front hits {victim}"
+    - "strong winds took {victim}"
+  onDeath:
+    - "{killer} was not in the forecast"
+    - unexpected hail. back to the studio
+    - forecast was wrong. sorry folks
+  onPlant:
+    - "heat wave on {bomb}"
+    - "{bomb} lit, expect a scorcher"
+  onDefuse:
+    - "{bomb} cooled off. clear skies"
+    - "storm warning lifted on {bomb}"
+  onWin:
+    - "sunny skies for {team}"
+    - a beautiful weekend ahead
+  onLoss:
+    - a washout. back after the break
+    - rain on our parade
+  onLastAlive:
+    - one cloud left in the sky
+    - isolated storm, could be severe
+  taunt:
+    - "100% chance of me"
+    - storm's coming straight for you
+    - bring an umbrella
+quirks:
+  - narrates
+  - calls_everything
+rivals:
+  - roumgraistgolem
+  - cobalt-arrow
+bio: Narrates every rush like the evening weather and claims to have predicted every result of 2014. Has a long-running feud with RoumgraistGolem over who counts as the real storm front.
+batch: 2
+retired: false

@@ -1,0 +1,76 @@
+id: xxviperslimexx
+name: xXViperSlimeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ4MDE5NiwKICAicHJvZmlsZUlkIiA6ICJkMjU0ZjQxMDkyNTE0NTdlYmU5NGM5NDQ2ZmIzZTc3YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUcmFzaEFwcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZDRhNDhiOGZlZjNjNGQyYzBlM2M5NWI2ZGIyNmU3MGFhNjkyMDdiZDdhMWM3NGM4NWMxOWU4YmZjMjBjYzQxIgogICAgfQogIH0KfQ=="
+  signature: "RMQ9zol+S/bPfl7VQWx20SORgfYwQ0z7eWtZ5LqKsWvkUb5/37346N46Gm0eDTSmhfwe41qHeb677ypfbrmireegr8B7t1zgyPa30ZvHXtkvcv0gzza+gQD8bSB/aJ8J1/91VPl3XFk4PMSDIkPdy0Y3NtUCVioIWsppH9dR8pL9a6CyrFX/jnXQ2jpTZD9xZxY/4wCdTD0pJbk39PrYb5NuplX4/51tozsjln6Q9/BovxIIt7GFDgOZRuEdWt5mdEr7shae35ylOjgQ3uqfzgI968fLJeDIuBNyh25ypqHJndGl1bnCi4OnoniUYJLiH6pOudq2UHX3uwn2nJidv/bWAYD4WRvOAjKRbg2/YIRNybCWJo9n9YpzT72wgBE08JKfAAZ8oSPNLWMkP9dhd9t95O+BOiopdbBCF+0aBBOJEX5/34UxBNc7aaUJ5JCl8X1ZRSePmIKesxg6cge/bRXVyyPI2NUV/kOQQ3FNmgKFoj8QtyY83wY/GV5/TkwKATCYfpnnO3DtQb06H9ZwgZkdnou4t5JY+M2RmW6W7AJGFp95hx19nJq+KskbLnufen+MS+1oE3c8S+tPLhaVnvw/QuPoJpifP6ivAWCFcYI7a0EQMVJDua/OBlX2AAJxVUUvPt6CkAbkGYcgWQp6WDzKqXayt3zINS0rqqhkVns="
+skill: 0.825
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.59
+  turnRateDegPerTick: -1.38
+  cps: -1.5
+  decisionTemperature: 0.39
+  awarenessRadius: 0.78
+  aggression: -1.52
+kits:
+  trooper: 1
+  longbow: 0.32
+  rewind: 0.92
+  ghost: 0.18
+roles:
+  escort: 0.22
+  defend: 1
+  retake: 0.46
+style:
+  aggression: 0.17
+  patience: 1
+  teamplay: 0.53
+  risk: 0.07
+voice:
+  tone:
+    - slangy
+    - chill
+    - lowercase
+  verbosity: normal
+  style: "all lowercase 2014 gamer slang; 'rekt', 'gg no re', 'lag', zero punctuation"
+lines:
+  greet:
+    - "sup {team}"
+    - "im camping bomb dont @ me"
+    - yo whats good
+  onKill:
+    - "{victim} got rekt"
+    - "gg no re {victim}"
+    - "nice try {victim} lol"
+  onDeath:
+    - "{killer} lag"
+    - "bruh {killer}"
+    - ok that was clean ngl
+  onPlant:
+    - "{bomb} lit lol"
+    - "ez fuses on {bomb}"
+  onDefuse:
+    - "{bomb} safe dont even worry"
+    - "defused {bomb} lol nice try"
+  onWin:
+    - gg ez jk gg
+    - "{team} too good"
+  onLoss:
+    - gg we got rekt
+    - lag tbh
+  onLastAlive:
+    - clutch or kick
+    - its just me lol
+  taunt:
+    - cant touch the bomb lol
+    - u mad
+    - camping is a strategy ok
+quirks:
+  - blames_lag
+  - crouch_spam
+rivals:
+  - xxvipergolemxx
+  - xxslimeravenxx
+bio: A 2014 time capsule who still types 'rekt' unironically and camps the bomb behind a wall of rewinds. Never takes the blame, always takes the lag. Locked in a naming war with xXViperGolemXx over who had the viper first.
+batch: 2
+retired: false

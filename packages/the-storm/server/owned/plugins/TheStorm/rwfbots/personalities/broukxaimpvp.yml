@@ -1,0 +1,77 @@
+id: broukxaimpvp
+name: BroukxaimPvP
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkwMzQ0NywKICAicHJvZmlsZUlkIiA6ICIzMzU3MWJiY2UyMDE0MTRiYmNkMDYyMjEyZTI4MjBlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGFkb21JbmF0b3I0NzgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGQ1NmFlYzk4ZGYyNDFjNjFjNGNjYmUzNTZjM2UyY2IwMDcwMWEzYzMyOGRhM2Q1YjNhZjY1Yjg4ZTQyNmRmZSIKICAgIH0KICB9Cn0="
+  signature: "HeKvalKFLVq36nbwf6344Y/bSbd9igejAUHrEinUFD0QqyPnOjTOXPjQieYIRH7LhjXMfzgxJ9nfPcmnkXO5bvdmvoYFoUnGHnpqacJ+te0zHP+AES+/5S5UWmetr+JmdMuJzipnAy2AgjylrGyRNoaoVOCHIEWIC0cUYlv5DpDA8gQy1U0qLfP3HD/KAO4ENV0kc0dbi+vs8nUb22yojJm1EcIooSqe7NTN0MX81XNlVTRpCByl3+OptnkeFSIS0KukH8KFinVkTVMgZeMnzoYjx9TylWc0nvqHajr1C4hcSSW/upU60/n/HkszK6Y/lmET0PyoFRCZinaanrkc0Dg/zSONwQ8VSBOjYX2LwmE9G9tB5BTPEKsxnm38WMMGmbWxrS2YDrLV8TCIexhe9Ez8OGtiKJ/k0GmeVzlhX/v8IrojQ7cElPMiyjOyKBv/Q6Fje5F088DlJEh0uRYNSXBBcGNX+gOpvUEOUWAvzWq4yYUCSCD6in/qhndqDWQ+clJHa+If3ug8f65gV1F2ASNi3RHUgoFDxkgm5rJjljj5CZD8AwS47MDhNPA9EHq2AvCW/5EZuElXHEgyaGx9wH8Y5/5LmRxSVaa2B23xgbqjQYggxxn3J5N9jR7RQh947uwZqbP/B7aqTm/ykMFmPwjzaiPlm/mgJ/M6RMHIjl8="
+skill: 0.25
+archetype: flanker
+leverOffsets:
+  reactionMs: -0.75
+  turnRateDegPerTick: 1.23
+  predictionQuality: 0.64
+  decisionTemperature: 0.55
+  coordination: -0.73
+  aggression: 0.22
+kits:
+  trooper: 0.57
+  shortbow: 1
+  rewind: 0.37
+  wraith: 0.52
+  spy: 0.43
+roles:
+  plant: 0.36
+  escort: 0.28
+  rotate: 0.91
+  hunt: 0.41
+style:
+  aggression: 0.68
+  patience: 0.34
+  teamplay: 0.26
+  risk: 0.72
+voice:
+  tone:
+    - copycat
+    - playful
+    - echoing
+  verbosity: normal
+  style: Copies the last thing anyone said, then adds 'but better', mock-rival YouTuber energy
+lines:
+  greet:
+    - welcome back! but better
+    - "{team}, flank squad. but better"
+  onKill:
+    - "{victim}, flanked. but better"
+    - clip that. but better
+    - side door but better
+  onDeath:
+    - "{killer} got me. barely"
+    - that was the worse version
+    - rerecording that
+  onPlant:
+    - "{bomb} lit. but better"
+    - fuse in, director's cut
+  onDefuse:
+    - "{bomb} saved. remastered"
+    - "{bomb} defused, deluxe edition"
+  onWin:
+    - gg but better
+    - "{team} wins, sequel incoming"
+  onLoss:
+    - that was a beta
+    - patch notes next round
+  onLastAlive:
+    - solo, the remaster
+    - "1v all. but better"
+  taunt:
+    - did that already. but better
+    - your flank, my flank, mine's better
+    - watch the remake
+quirks:
+  - late_to_everything
+  - spins
+rivals:
+  - zaezlyxyt
+  - jeshrustminer
+bio: Runs a rival flanking channel that copies ZaezlyxYT's titles with 'but better' at the end. Taught JeshrustMiner every flank route it knows, then complained when JeshrustMiner used them.
+batch: 2
+retired: false

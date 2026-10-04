@@ -1,0 +1,77 @@
+id: frost-potato
+name: Frost_Potato
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUxODIwNiwKICAicHJvZmlsZUlkIiA6ICJiMWQ4MTJlYzI4YTU0NDNhOTUxODhmNDkyZjVjYzIyMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhMyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84MjMxY2YwZDI2ZmUxMDVmY2FmOGRkOTI3OTIwMTYyMjE0MDg5MTJhMDdmZGY5MjZmZjQ5YjE4YTE4OTk3NCIKICAgIH0KICB9Cn0="
+  signature: "QQuYpOM6+lGKm3wtp8F1BfHJp7NuHMV9+i0PXQxa4CQu8hMKOruFcuoUHnd6tON6vCcX0D3mih/NbWdcm2Sg2Qet2O8yi1Wgkb2I6DQUPOwHmvssmTINMwDW8IEt1vgE+bgkoIck9dA9DyPO5doBRbnoMRgOe8QwprV4DvPQZbmH3/cs8Y23mu7S/v8JgA7kRc07MwXxneRXGo1W+hN0v6/7/KZxVlwDCUMDfIrHjnRhuqoh9GoC/QbKrAewM9Lq9broWVO28862ZVbUKvOB5qhuOOnFS8hfjyWJoWpF84MtnRsq58dkNAYXnRBOcc0Ab/N4x8Jp0WzeJpVBUPQPJebOWc+dXsg7i5d5vB62HUFE+YMBInoC7uzWu3Lfi0HUeIHc081uHe47vwsS44KAsvg7ttJUzeU0xzQI37InOwy4xjHJ7t42I2kIgcsTYQ/Du0fSAavWA0eGCsxOghJYWoa1xExcPIMKie1Zj+Y2l69+g8w6zQiF5Ce9ihnMeYVlZrCadPZQfvXZ41/vOR3AcHibEuNWn9G7G6nbwc58H7DzJChkUMMBUtJ5ZVEL0thM51/xDE3J1KI6X6B//WAEyDUzbmmh9aPXQ30lGYrwPRw5NyVNt0d9dZi63FgdDFj0bI704K0lxreR884448ITYyNBEnlhWMQphtvRxb+zrOw="
+skill: 0.765
+archetype: flanker
+leverOffsets:
+  reactionMs: -0.69
+  aimErrorDeg: 0.75
+  turnRateDegPerTick: 0.46
+  predictionQuality: 0.13
+  coordination: -0.32
+  aggression: 0.19
+kits:
+  trooper: 0.53
+  shortbow: 1
+  rewind: 0.36
+  wraith: 0.54
+  spy: 0.41
+roles:
+  plant: 0.3
+  rotate: 1
+  hunt: 0.43
+style:
+  aggression: 0.71
+  patience: 0.34
+  teamplay: 0.26
+  risk: 0.79
+voice:
+  tone:
+    - goofy
+    - wry
+    - cool
+  verbosity: normal
+  style: "self-aware potato puns; chill comedian who knows the name is silly and leans into it"
+lines:
+  greet:
+    - frozen potato, ready to serve
+    - "chilled and ready, {team}"
+    - this spud's going the long way
+  onKill:
+    - "{victim} got mashed"
+    - "fresh fries, courtesy of {victim}"
+    - "{victim} never expected a potato"
+  onDeath:
+    - "{killer} peeled me"
+    - "baked. gg {killer}"
+    - thawed out too soon
+  onPlant:
+    - "{bomb} is cooking"
+    - "spud delivery: {bomb} lit"
+  onDefuse:
+    - "{bomb} back in the freezer"
+    - "{bomb} chilled. like me"
+  onWin:
+    - the potato prevails
+    - "gg {team}, served cold"
+  onLoss:
+    - fried. gg
+    - mashed. we'll be back
+  onLastAlive:
+    - one frozen potato vs the world
+    - "spud mode: solo"
+  taunt:
+    - you got flanked by a potato
+    - check your side. potato
+    - a potato is behind you. no really
+quirks:
+  - spins
+  - good_sport
+rivals:
+  - frost-creeper
+  - tionki-82
+bio: A flanker who chose a ridiculous name and plays like it is a disguise. Comes in from the side armed with a Power bow and a pun. Frost_Creeper hates sharing the name, which only makes Frost_Potato use it more.
+batch: 2
+retired: false

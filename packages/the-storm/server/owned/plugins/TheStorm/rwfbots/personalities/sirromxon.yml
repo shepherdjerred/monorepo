@@ -1,0 +1,74 @@
+id: sirromxon
+name: SirRomxon
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMxNzcxOCwKICAicHJvZmlsZUlkIiA6ICJkOTcwYzEzZTM4YWI0NzlhOTY1OGM1ZDQ1MjZkMTM0YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJDcmltcHlMYWNlODUxMjciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTQ0ZTE2ODk3MzIwODkwNjM1MWY2MDNjMDJkMjAyMmM1YjgyZjk3OTc3OWNiNzg0NTlhMTFmMTkwMmVhN2Y5NCIKICAgIH0KICB9Cn0="
+  signature: "CMVWQ7XSeoRqNXjljWqiJhf+bBIljgQwFmRLD44UPC/Sj5NhgiNVDFPBxPwgYYmucsE+yF2pdBTJXqzm99e90fyJsoPU40oLzE0xclIF/Ln6QtHFxrZ1Zv0zp3AuZqJ4uGfo4ENiLJQi7d/GpF9DFPRmByNGxlo3ZgyLD/OXihTgvRXhuNa9dFnl97SaB5IiU2qwoEY+3JScf0FNHJ7KVJlTqHiBBpah1Zdl5RJ+VNvotTPz+rchVrqC2xrcMjO4MdnaoXZIKcDQ5diljAfU+KCY7Dk3d3tm5S8fiLVkeEj+JGvLZavzZzZzCx4C8hVil/oPfaX6LEpgJmnt3Bkh9ZLA13PB1tDRQ6O5+lpvy34T5BfLePVIEFuWxaVBWSZBvAOp7UsVxoJBcqqYMsTM9RW6NqR9t5qoo6JlNcg+CfC5oKy9rnyfeYchiOJ4x/HKQ2BQHWo0v5FbWVYTON7VgRCJy4ghQYys7Sha/J9Pc2IBS5QxsTlcPoRcKYoVeqIN2bl+WHmNgN7V9HKcbZd2Hu1PXnrA285P7Qd30CT/9u2rHzXz2TG+9prr6AlaflJQVBakg78XCCJGzyZ+hJX8OzRGeTfUalpI3WHUhXQEWf6l5Va2moGF3G53XKvIHd8+j4mikN7GPnERjrq0Euhmw7R284dMq03JeoAMzucGKW8="
+skill: 0.166
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.35
+  cps: 1.11
+  decisionTemperature: 0.08
+  coordination: -0.02
+  technique: 1.4
+  aggression: 1.28
+kits:
+  trooper: 0.91
+  shortbow: 0.4
+roles:
+  escort: 0.24
+  retake: 0.39
+  hunt: 0.79
+style:
+  aggression: 0.82
+  patience: 0.28
+  teamplay: 0.17
+  risk: 0.45
+voice:
+  tone:
+    - knightly
+    - proud
+    - theatrical
+  verbosity: chatty
+  style: medieval knight who challenges everyone to honourable single combat, thee and thou included
+lines:
+  greet:
+    - "Hark! Sir Romxon rides for {team}!"
+    - I seek a worthy foe. Any foe.
+    - Draw thy sword, whoever thou art!
+  onKill:
+    - "Yield, {victim}! Thou fought bravely."
+    - Honour is mine this day.
+    - "{victim}, rise and duel again!"
+  onDeath:
+    - "{killer}, thou art a true knight."
+    - Alas! Struck down most foully. Fairly. Foully?
+    - "I shall return, {killer}!"
+  onPlant:
+    - "For glory! {bomb} is ablaze!"
+    - "{bomb} burns for {team}!"
+  onDefuse:
+    - "The dragon {bomb} is slain!"
+    - "I have quenched {bomb}! Huzzah!"
+  onWin:
+    - "Victory for {team}! Huzzah!"
+    - A feast in the great hall tonight!
+  onLoss:
+    - We were bested with honour.
+    - The quest continues. Good game.
+  onLastAlive:
+    - I alone shall hold the bridge!
+    - The last knight stands!
+  taunt:
+    - Face me, coward! Kindly!
+    - I challenge thee to single combat!
+    - Thy bow is dishonourable!
+quirks:
+  - good_sport
+  - holds_grudges
+rivals:
+  - drnoshzax
+  - braethvio-07
+bio: A self-knighted duelist who challenges everyone to single combat and usually loses, gloriously. Has never once refused a duel. His honourable feud with DrNoshzax is entirely one-sided and he loves it.
+batch: 2
+retired: false

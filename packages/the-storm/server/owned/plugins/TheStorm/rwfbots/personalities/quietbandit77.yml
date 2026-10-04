@@ -1,0 +1,76 @@
+id: quietbandit77
+name: QuietBandit77
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzkwMjA0NywKICAicHJvZmlsZUlkIiA6ICIzYjliNTdkY2Y4ZDE0NjlkODg5NTk1ZjM5NTY5MWNiZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUc3VuZWkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWZiYzRkNmMwZDA0MjNjYzk0MTBmZDlhOTIzZjEzMzIyNzEzN2NiZTgzZGJjZTQyOTYzMmNhMjc1MzcyMDlmOSIKICAgIH0KICB9Cn0="
+  signature: "nITRt1MKR3lH9V96j2Dhdk843HZTbb/gXhZeFJvqV69KdyElKS3+gvZDfeUbpnk8JB8frIEBeRiSiaBPhAhLS1QbtoZkf7PDr5AHyg854d6eo6X0mT3WtVbLs/ZtwBw8+87PEuMaMWhxROoPoq6AaelsK4qfbxR4jsGhf6ygkvw2nG2mOTg98SHUdIIOpHkp0t6aYKE0nAXZbGf9HA9j4LQmu6DZ09L/MYC1s5dPQcsjQYK5X4VSQIiQgP5w4K+m40UEtN+U+WJfNJ5gLq7iVilsdRr87BGlkB/9XT3cHaVY+iQm9R1P6EdSdF4ekwkw3b/ck37fJgztKdS/IxfQy01j30zJy9hY+568RUsrUUKvA/88d66a5zNXfLOYMnXy/F3qNoAYRtzGz+MEjNpU8gMjvYbceOWjk7jQi8O1Gy+Cvwyi6JjwbXwy8LLlXud5uLtpjZNQqZ7hM+emSkCnNcL+4mtUMxnXgPnkguUneyvG37D/xK8uXis9va7lJomFrB/6hz0k/LPCNr0VeNoc4tud0hThj1chyS/VniVLYdgXE6CPXOl25UUAKaeA3xL0N0muvVqD/D17KiNj/QPXMX6ZNYyWq8enQoHSIgDHzYJZmuFGCYcZVsdNApwKSgQIsAVEcN9HsZPbfZVShk6chPL/ILMSmpmJ3LG+/UuFRVs="
+skill: 0.855
+archetype: troll
+leverOffsets:
+  turnRateDegPerTick: -0.37
+  decisionTemperature: -2.1
+  awarenessRadius: -0.04
+  coordination: -1.27
+  technique: 0.7
+kits:
+  trooper: 0.56
+  shortbow: 0.61
+  rewind: 1
+  spy: 0.81
+roles:
+  plant: 0.6
+  escort: 0.27
+  rotate: 0.4
+  hunt: 0.57
+style:
+  aggression: 0.55
+  patience: 0.3
+  teamplay: 0.17
+  risk: 0.93
+voice:
+  tone:
+    - mime
+    - silent
+    - whimsical
+  verbosity: quiet
+  style: mime who speaks only in asterisk stage directions, never says a real word
+lines:
+  greet:
+    - "*waves silently at {team}*"
+    - "*bows deeply*"
+    - "*pretends to be stuck in a box*"
+  onKill:
+    - "*tips invisible hat to {victim}*"
+    - "*mimes a tiny bow*"
+    - "*pretends to write {victim} on a list*"
+  onDeath:
+    - "*clutches heart dramatically at {killer}*"
+    - "*falls slowly*"
+    - "*waves goodbye*"
+  onPlant:
+    - "*mimes lighting {bomb}*"
+    - "*points at {bomb} and claps*"
+  onDefuse:
+    - "*blows out {bomb} like a candle*"
+    - "*shushes {bomb}*"
+  onWin:
+    - "*silent applause for {team}*"
+    - "*bows to the crowd*"
+  onLoss:
+    - "*sad trombone gesture*"
+    - "*shrugs*"
+  onLastAlive:
+    - "*rolls up sleeves*"
+    - "*walks against invisible wind*"
+  taunt:
+    - "*mimes pulling a rope toward the bomb*"
+    - "*points at you, then the bomb*"
+    - "*pretends to hide behind a lamppost*"
+quirks:
+  - crouch_spam
+  - spins
+rivals:
+  - xxbadgerstormxx
+  - themostkraish
+bio: Has never typed a real word in chat, only mime-style stage directions. One of the sneakiest troll players of 2014, rewinding at the worst moments. Shares a theatrical feud with the magician xXBadgerStormXx.
+batch: 2
+retired: false

@@ -1,0 +1,77 @@
+id: kythmoukpvp
+name: KythmoukPvP
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMwMjMyNiwKICAicHJvZmlsZUlkIiA6ICJhOGMzZGQ3OGVmZmI0NmYyYjlhNjcyOTE4OWU4OTI0ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNb2xlc0xMQyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lOGM4NGYwMzRiMjQ1MmRkM2QyMDEyMGQyOTI4YTg3NTA1NDI4MDdmY2I3YmI5ODgzZTNhYWRmNzZiMGI4MjkiCiAgICB9CiAgfQp9
+  signature: "TcdZOOplJFuIeUJ3WUfIL1qSkM9DoIxb2TBn58o2rD41SSSZf9fHLB6z9i+s+HzMUe5zHQHMoNeIyCkURQjOR4opbPiNKp/+fx4H1UEx/hOCiZ00jL2CqkaZiOTazQR8iER+8La1vbSRJXy0m1fcVHBItm3ET3UVta3iIZ+regmhU4eMkAnRDwk/hN8jPGC7y1z4aYoo47lADiWh2wt0Bn9M14PY1MbhoxU7YoqMxKQ7FSpnLOseeSosIWb6dCjArNpIRHvFuKCMT64QIL4mjtCCjdiHcX8gpXhcfKQDubQvh/Sb5sGsT8GcnwoQgVLjnbH1AFYDwSwi06YJf+2FBtz6l+7gy8f1XPNp9YmlXn5Iyo46yIXXxGCHWaaPCjQ8DeTQVdR/EYjSqFXkr9ZS0DIPI1Hs1LsYizI763vmHv46HlukqauEddw7mOPZtCcA8wlNQ+jmSWxHrhTDAgKNq9kEBjuw8IWHJIySMdfmZggMq4szGHUpo8iM/vphedYj2+tSmfxvfn/aB7NDdf9HU1gn6MFfIBHbSqUB0vKac9G/dHA0kliubcSJQBoyxURvbdaiKTFWsED0zeYHeBP/9TrmGIWNruAldaBiInPVBzWiJwrZLgK5PYGCTwJ7yfbbjsibclfWtzODvOSNcFkez7tdR/rUbUuBluQNjRw99cU="
+skill: 0.985
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: -0.53
+  predictionQuality: 0.25
+  decisionTemperature: 1.41
+  awarenessRadius: 0.15
+  coordination: 2.01
+kits:
+  trooper: 0.91
+  longbow: 0.53
+  shortbow: 0.51
+  rewind: 0.46
+roles:
+  plant: 0.67
+  escort: 0.54
+  defend: 0.6
+  rotate: 0.72
+  retake: 0.84
+style:
+  aggression: 0.45
+  patience: 0.7
+  teamplay: 0.79
+  risk: 0.46
+voice:
+  tone:
+    - confident
+    - instinctive
+    - brief
+  verbosity: normal
+  style: "veteran shotcaller; quick decisive calls, trusts gut over numbers, rarely explains"
+lines:
+  greet:
+    - listen up. two left, one mid, rest on me
+    - "{team}, follow my calls and we win"
+    - I've got the calls. go
+  onKill:
+    - "{victim} down. push now"
+    - "one less. {team}, rotate"
+    - "called it. {victim} was there"
+  onDeath:
+    - "{killer} read me. adjust"
+    - I'm down. keep the plan
+    - "nice, {killer}. reset"
+  onPlant:
+    - "{bomb} lit. everybody hold"
+    - "{bomb} armed. collapse on their retake"
+  onDefuse:
+    - "{bomb} safe. push their side now"
+    - "defused {bomb}. go go"
+  onWin:
+    - good calls, good team. gg
+    - "that's how {team} plays"
+  onLoss:
+    - my call. my fault. gg
+    - they outcalled us. respect
+  onLastAlive:
+    - last call is mine
+    - fine. I'll make the play
+  taunt:
+    - I already know your plan
+    - you're three rotations behind
+    - gut says you're on the left. gut's right
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - zoukxeshrekbrae
+  - laimzoxyt
+bio: The shotcaller half the server tried to imitate in 2014. Calls rotations on instinct and is right annoyingly often. Has a friendly war with Zoukxeshrekbrae over gut feeling versus spreadsheets.
+batch: 2
+retired: false

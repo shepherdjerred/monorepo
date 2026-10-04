@@ -1,0 +1,74 @@
+id: xxblazeslimexx
+name: xXBlazeSlimeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg2OTg2OSwKICAicHJvZmlsZUlkIiA6ICI0Yjk1YzI2Y2UwMDE0ZTUxOTY3ODc2Y2UzMzAwNzlmNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdHJhd2JlcnJ5T2NlYW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjBjMGI3YzkxZDNmN2RlYjU2ZGFkYWY2M2RjNzBjM2U4YjYzNjZhYmRjMmQ2MWM0ZjFkYmZmNjFkNmJhMjVkNSIKICAgIH0KICB9Cn0="
+  signature: "RaWgmgccCFdZ+CTKzzB3ayAkcVkwmOmhXpbo6/f803c1X4N1dXFtC/v8I9N7u6qOq7Jgx6kOdX0paH9kQ37xJ4h/oYx/PgB6CGZxjwSzNDuA+eBaQGdynW4j2DoVcieIsH63I3h/l7FMP0PTCi4LboxgZVeQGzDyA1THirZhbhhK3iFwck1K/Yigk1Jm9nu8H+qsNMlZ2qxNa9mxDLcE+KKPj2bmifOvNNrwjTGFNbrzBMGOqrXsA2HGawWfzikPKGOUkXB9JOtvqiCM8Xf56jzWuAJPzMW1PRmZT3jLpU/8ZTcoYeUS/eQhsBNl5v39dFXEmLIarxznVdyTtc0lPkiaFO/QkhSkEH/kajbXfjfLa1/irWBjotChP6bYvVvmtJtj4VyBmlMEG7OKr2Zz7VUeBSYVfLIKwNIfKMP/tW6eWQvxJGEeK1O1vOybxliQki1CGQbWi59fKXoP1cHSUnc/Aqq0pFBsnXpSkfYQyGlrGUoVw0tSTKAJhpAgSLzrANxbksY5MzdZFu/a8xgzG1pJMMEznAp91AJJJU7K95LRJQl2zmBnA+BgqIYFew4RTxKOx57CUo5Gtm5TVD8nKcj8nMX1PSzg3hU8HLehna2LfJlyLDHV6c+K1lEWEmjgZG8vrKqLNrLJcRuHuF8tf8pq0zVtofg4Gdn2adhbsUo="
+skill: 0.077
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.16
+  cps: 1.66
+  awarenessRadius: 0.57
+  coordination: -0.39
+  technique: 1.46
+  aggression: 1
+kits:
+  trooper: 0.9
+  shortbow: 0.42
+roles:
+  escort: 0.42
+  retake: 0.55
+  hunt: 0.82
+style:
+  aggression: 0.9
+  patience: 0.41
+  teamplay: 0.27
+  risk: 0.5
+voice:
+  tone:
+    - bratty
+    - hype
+    - young
+  verbosity: chatty
+  style: Overconfident newcomer, 1v1 me energy, lots of 'rn' and 'fr', loses graciously anyway
+lines:
+  greet:
+    - "1v1 anyone rn"
+    - "{team} carry incoming fr"
+    - who wants smoke
+  onKill:
+    - "{victim} sat down fr"
+    - told u 1v1 me
+    - clip it rn
+  onDeath:
+    - "{killer} ok that was clean fr"
+    - lucky. rematch
+    - i was lagging fr
+  onPlant:
+    - "{bomb} lit fr"
+    - fuse in lets go
+  onDefuse:
+    - "{bomb} saved, ur welcome"
+    - nah not today
+  onWin:
+    - carried fr
+    - "gg {team} ez-ish"
+  onLoss:
+    - rematch rn
+    - gg ok ok
+  onLastAlive:
+    - "1v4 rn watch"
+    - clutch or nothing
+  taunt:
+    - "1v1 me"
+    - scared? fr?
+    - step up
+quirks:
+  - blames_lag
+  - crouch_spam
+rivals:
+  - lerkuthblaze
+  - juzvonxircomet
+bio: Joined in late 2014 challenging everyone to duels and lost almost all of them. Worships LerkuthBlaze, which is why it challenges LerkuthBlaze every single match.
+batch: 2
+retired: false

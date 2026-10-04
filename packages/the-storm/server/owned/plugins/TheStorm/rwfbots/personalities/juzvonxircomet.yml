@@ -1,0 +1,74 @@
+id: juzvonxircomet
+name: JuzvonxirComet
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTcwOTQyMiwKICAicHJvZmlsZUlkIiA6ICJkMmNhNWUwZjJkMzY0YmExOGQwZjBjMjc3YTFkYTZlZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3TWlzaWV1ciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNTc2OTIwZmEzNzMyNzU4MWQ0YTY2ZTYwNWJhN2U0YmFiNGJlM2E0NWNkMzlmZDViNGM0OWVkYTlmMjkyNmZlIgogICAgfQogIH0KfQ=="
+  signature: "jWlPkVnIQcoo5g5Vv8HMlOjzBAv5pwUIlpN6+xRpYvnmCj/CqiRvN4aHA6qM5k84RDh6uqR9pIdhlr5X1jaooRN2e5bBNxSfe7Wwfl8MY92JyhX7I+XmCohN9nbcwt+vmdZQjj3lrYQYRnyl+NjT1xcjx5k+8xNEc8dIul2qs8REL3RF9CfH4w5CzU7twrFwdyUMsGPpc9NMHJuBn5PoQZbuAbS8jR4f0Vj3WTSUadFe3ahO26IRA9zFmaNL8D86IuIRd7dQYuFRe0ABPyzKhpEOnlJF44ogocBN+o0xBpjW8nr74ljwMUaZLEAL3MggEJLnBxxEyfjqGRdpErqClTcAtz6al411JI7aI6vmkq8da9D0RUdO/e1cI7RwihsrcJalE9GhPVS44vHDdYdgp1ROzPWSR1H+ROmapGg+Kb2rO0ys27l74VlIuXU3vEWlsXTAFkAdWCgxFZ+X+/wtZNkCP1Nm08R9CUddo7BNy7q+UyoK22UvMOt48l+rAKegXcKOvuoD3RxcCl88UhWnlRN4RSbudMuz1hHWdMbwTf5569ARNFTyMBH9304XdXma8Z01LSOQ1X9gh159Dc/A5ZX7MCVp515iF/Q5mFjdVL26nlScCRAmoPx0rS3FxXB+mm6iWHI+YMpMhCgeRs8pWJnQwC96G4ll2gGp4wCNc5k="
+skill: 0.554
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.55
+  turnRateDegPerTick: 0.29
+  cps: 1.08
+  awarenessRadius: -0.99
+  coordination: -0.45
+  technique: 1.56
+  aggression: 0.96
+kits:
+  trooper: 1
+  shortbow: 0.44
+roles:
+  escort: 0.34
+  retake: 0.52
+  hunt: 0.75
+style:
+  aggression: 0.81
+  patience: 0.31
+  teamplay: 0.27
+  risk: 0.41
+voice:
+  tone:
+    - formal
+    - honourable
+    - dramatic
+  verbosity: normal
+  style: "Duel etiquette: bows, challenges, 'en garde', thanks opponents by title"
+lines:
+  greet:
+    - "En garde, all who oppose {team}."
+    - I seek a worthy duel.
+  onKill:
+    - "A fine bout, {victim}."
+    - Honour satisfied.
+    - "{victim}, you fought with spirit."
+  onDeath:
+    - "I yield to {killer}. Well struck."
+    - My guard faltered.
+    - A clean defeat. I accept it.
+  onPlant:
+    - "{bomb} is armed, as agreed."
+    - A duty, not a duel.
+  onDefuse:
+    - "{bomb} is safe, by my blade."
+    - No dishonour on my watch.
+  onWin:
+    - "Victory with honour, {team}."
+    - I salute our rivals.
+  onLoss:
+    - We bow to the better side.
+    - Defeat teaches the blade.
+  onLastAlive:
+    - One blade remains. Approach.
+    - Come one at a time, please.
+  taunt:
+    - Face me, if you dare.
+    - A duel! Anyone?
+    - I await a challenger.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - lerkuthblaze
+  - meklaishloumzaek
+bio: Insists on one-on-one fights and waits politely while others finish theirs. Keeps a handwritten ledger of duels against LerkuthBlaze and Meklaishloumzaek, currently losing both.
+batch: 2
+retired: false

@@ -1,0 +1,72 @@
+id: lystshomdethtu
+name: Lystshomdethtu
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTcxOTg1OCwKICAicHJvZmlsZUlkIiA6ICJmYjZkM2E5Zjk3MWY0ZTdlYmQ0MjE2Yjk0MjE5NDA3NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJHb2xkZW5BcHBsZUdIRyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mM2NjOWRjOTY0YzE5MTc3NjE0MGNiNTg4OTE4MjJlMmEzMDVmOTZmMGZhM2EwMmM1NmM2MGYwYTU1NjcyYjJjIgogICAgfQogIH0KfQ=="
+  signature: "LpqIKlijDrrMss72GGe7EDh3dBD7T4zBbq29MkkTZxXQW7zJU4ZD3c2jY28rD1feLKBmddAMv+ayTEt0jRkwAFOc3e88E+6H1DFh86xbFFQZPu/Du5TU6PKCGK83PFTS7NbNCAdG8KBzE4Y4JUhbSyOkmHAdB5OWUzy4SDe5jBOum/BHKyQUKtFyYVxTXRBhfbgnQ6N5kyGmx3dSpSP+aGg22DtPDwa/o1slMROI+ZUK32JJQpg+W4yEiRr6Q4bd12CB0gjmS1+RaJSJaZlJFz/KrKc01yJyQanMh4oGGd5/nc/oILXShWer6H5BF/RRXwZujYGps5HRPfaLJ67EC59Pg3NOj0y8yn+uFBQtcRHd5awEwuDCyZhly5m3PWMSHSMLuvN0J8hqwXRWfff+e4gTimlMtP9DoLnJlQYDxDl2c6mLry1f3vUb4qhUN5uXsNa2t+op8yiGVh3tLZ7jzXpNlktGvP9sm9YyC/XZtobi7Be9PUJx3us3r94aj/zpKjCS/gh+OdACy7QaGBfJD3VsBMPFoyo1HsegKfPkIEjSrEsboAFlDaVHn7zWiJqSJKO7UaCO7+KAW0a3RF6W6UncU+Zi/gBPz5FNydB5VGDnh7BW3DS6ZQdUqwmFnIrMNVIMlDozvtiRfRDL2RIok8HmVTpJzBZNx3gvpJDspgM="
+skill: 0.258
+archetype: support
+leverOffsets:
+  reactionMs: -1.09
+  awarenessRadius: 0.79
+  coordination: 1.42
+  aggression: -0.28
+kits:
+  trooper: 1
+  longbow: 0.34
+  rewind: 0.67
+  spy: 0.22
+roles:
+  escort: 0.99
+  defend: 0.28
+  retake: 0.61
+style:
+  aggression: 0.32
+  patience: 0.48
+  teamplay: 1
+  risk: 0.24
+voice:
+  tone:
+    - polite
+    - fussy
+    - overexplains
+  verbosity: chatty
+  style: Polite overexplainer, footnotes everything, 'technically' and 'to be clear' constantly
+lines:
+  greet:
+    - Hello! To be clear, I'm escorting.
+    - "Technically I'm support today, {team}."
+  onKill:
+    - "To be clear, {victim} was alone."
+    - Technically that was self-defence.
+    - "Apologies {victim}, procedure."
+  onDeath:
+    - "{killer}, technically fair."
+    - For the record, I had low health.
+    - I'll explain that later.
+  onPlant:
+    - "{bomb} is armed, to be precise."
+    - Fuse placed, per the plan.
+  onDefuse:
+    - "{bomb} defused, as a courtesy."
+    - Technically, I just saved us.
+  onWin:
+    - "Footnote: {team} won."
+    - A well-documented victory.
+  onLoss:
+    - Let me explain what went wrong.
+    - Three reasons, actually.
+  onLastAlive:
+    - Technically I'm the team now.
+    - To be clear, this is bad.
+  taunt:
+    - Technically you're losing.
+    - For the record, I saw that.
+    - "To be clear: we're winning."
+quirks:
+  - says_sorry
+  - calls_everything
+rivals:
+  - dorjaekblaze
+bio: Wrote a fourteen-page forum guide to escorting the planter, with an appendix. Its longest argument was with DorjaekBlaze over whether gapples count as hydration.
+batch: 2
+retired: false

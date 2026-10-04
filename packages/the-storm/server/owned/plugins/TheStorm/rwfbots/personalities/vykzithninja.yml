@@ -1,0 +1,75 @@
+id: vykzithninja
+name: VykzithNinja
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTYzMzE5NywKICAicHJvZmlsZUlkIiA6ICIwNTljODIxYzhhODU0NGJiOWJiODVhOGMxNjVhYTc5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJoZWxsc3RydWNrZWR6IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzlmOTExOGU5ODA3MmQ0MWNhMzZlZWY1ODg1NjhkNTYxZjZkN2RkNGVlNzE5OTM5ZTk0OGE3YThlNDQyNzBkNDMiCiAgICB9CiAgfQp9
+  signature: "aOAP/W8f8XwUXDsBXdNq2P20+qaIBJZQGkKnAIWD+ZSE7o6dSW3vwNRn9248+HKR12kUWQBJbDfLhksuk0y8bZ6VApa+E8wMsZrjXUgqnv4cKEpuek8JTRikfYLVEGXepu5vNhXxEoEhCqgMSyN7OVflT6pv0/3PeOJ1qIg5ctEclU6oK/EBnJBhUi0MdGkqfF1MXQpPhIHJXLBhjnnl9lfsWy46Lnarm8iXQY+d6QksdXHlKcJjYCA35LOe+WrfxP2r3EcZwL2ZWaGVHus1WiQyGRrXwM2lTwk25YGOPfnPXJc3lbkH2K1UIG++gm6gwdC1OHfN4pPa+syfsriHvVgnGVJJ8aGU5OBDdvQD8Z27s6yS+7D+NlJWekXTsRAVuGVJ7VZBo8Bnhy0DdxdiQYinQeCetlVQKTECQ7NH8MWqAdC+DnUO2DyGiRFN8le0IdRkZ8aLSL2C8HOrEn4EMMF1Da2ptHEJuS/KR4Nf5DJkI+rNdhvHd0idvZZRA7mqENdSI6xyAVa2vSDkD9DKpL6vZwnxODwjx1FGJPxwwjacfrVLw+QSUi9CFJswwmk2DOrNBI9fZUfBf6V8scTRS4ksRHYYGOp0iQ5TW82SuPXsBSxlvo8ykPMmPFdXGYuvXKbUzo91vl9vo8nNIisyraoNhdMG3L5NZlIZlYIJcxQ="
+skill: 0.846
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.47
+  aimErrorDeg: 1.32
+  decisionTemperature: 0.24
+  awarenessRadius: 0.09
+  aggression: -1.52
+kits:
+  trooper: 1
+  longbow: 0.29
+  rewind: 0.74
+  spy: 0.34
+roles:
+  escort: 0.22
+  defend: 0.99
+  retake: 0.3
+style:
+  aggression: 0.17
+  patience: 1
+  teamplay: 0.62
+  risk: 0.08
+voice:
+  tone:
+    - zen
+    - patient
+    - serene
+  verbosity: quiet
+  style: "meditative monk; slow proverbs about stillness and waiting"
+lines:
+  greet:
+    - Be still. The round will come to us.
+    - "Breathe, {team}."
+    - The mountain does not chase.
+  onKill:
+    - "{victim} hurried. The patient one remains."
+    - Stillness wins.
+    - "Rest, {victim}."
+  onDeath:
+    - "Even the mountain erodes. Well done, {killer}."
+    - I moved too soon.
+    - Peace.
+  onPlant:
+    - "{bomb} lit, with patience."
+    - "A calm fuse on {bomb}."
+  onDefuse:
+    - "{bomb} is quiet again."
+    - "Calmly, {bomb} is safe."
+  onWin:
+    - Patience is rewarded. gg.
+    - "Well waited, {team}."
+  onLoss:
+    - Loss teaches. gg.
+    - The river flows on.
+  onLastAlive:
+    - Alone, and at peace.
+    - Stillness.
+    - "The wall and I are one, {team}."
+  taunt:
+    - Why rush?
+    - The bomb will wait. So will I.
+    - Hurry, and you will stumble.
+quirks:
+  - slow_starter
+  - gapple_hoarder
+rivals:
+  - kynjour-07
+bio: Can hold one corner of the team bomb for an entire round without moving and calls it meditation. Kynjour_07 thinks he is too passive, and they have argued about it calmly for two years.
+batch: 2
+retired: false

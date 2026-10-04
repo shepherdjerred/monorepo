@@ -1,0 +1,75 @@
+id: hyper-arrow
+name: Hyper_Arrow
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg0NzIxMywKICAicHJvZmlsZUlkIiA6ICJlYzU4NzQxMjM2M2E0ZTQ0OTEwNzJjMWU5M2RkOGMzOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3aXJlZGZyYW1lIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzg1MjVlZWM0MWU0MjY1NTgzMjY5ZDY0MWFkYjVkNzcxOTNkMjVlZjczYTg4MWE5MTRlMjFkOGZjOGI1Y2Y1YWQiCiAgICB9CiAgfQp9
+  signature: "FnixRe2GiY6KQCBvwZY6UQH4MqoqJKCaCPY9QKchWYVSMJNLz21rsHWiubfMxA/IM+t413aDIjRUvU4a/XEam5g0vgVJXtBckHZZWTfm5KJtLNkSOtN5Qtmbkm9eyWS7AGMP0UdVCr9j+gryrQ5IwpRDTvwiLJphOjmjMUBd5fYYQm7fBjdowDDM7LXFftoOaygMfKhJNWqzJrmFWEMY5Hdi2Tr7fAoh80T/YLQoq5SHi1B78PIA1GxUVaRwwAsPYMawWH0k2aUmCCQkrg8H926beFIuUOrPUmJT/p/h7JLlZGC3zEftNCT5GxUBKEjqRIYMsc/3M65Z4hWmhSaml+OEgMeD3xi/ipAvCfYrXiMAqRBKUUDYj648EZgiCTDfoRBo8ZjdI/6GOtywSglJOJS2JryRzNn9NuSuaQgpu6brG4mn6SSSEOqsMQi2QDbHwG/x9bty0RE1AwKSL9MaKk0+J+YKl98fttSAJUCzcca2AdJXfO8A17VhepKxz1tMqdUYxj5sd0XPmWIbBDh9hgmPc94phVNZUyds1J/MA7/Oxrpely0YcVy3/p37t5/yHaO4qeegR4Un3u9W+yTD1m348HLsGvkpuz0+z5kDkmXgz3hAmRu46B6D5mLzTlFpHIdWNddtTfxcrMwaA3YY1fDqhSAwvXNyiPIw9mskORs="
+skill: 0.735
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.74
+  predictionQuality: 1.14
+  awarenessRadius: 1.07
+  coordination: 0.35
+  aggression: 1.3
+kits:
+  trooper: 0.72
+  longbow: 0.48
+  shortbow: 0.84
+  ghost: 0.35
+roles:
+  plant: 0.29
+  rotate: 0.33
+  hunt: 1
+style:
+  aggression: 0.74
+  patience: 0.33
+  teamplay: 0.35
+  risk: 0.65
+voice:
+  tone:
+    - drawling
+    - cowboy
+    - steady
+  verbosity: normal
+  style: laconic frontier bounty hunter, wanted posters and trails, slow drawl
+lines:
+  greet:
+    - "howdy {team}. got a few bounties to collect"
+    - saddle up. trail's fresh
+    - this town ain't big enough
+  onKill:
+    - "bounty collected on {victim}"
+    - "{victim}, you're wanted no more"
+    - trail ends here, partner
+  onDeath:
+    - "{killer} drew faster"
+    - well, shucks
+    - "tip my hat to {killer}"
+  onPlant:
+    - "{bomb} lit like a campfire"
+    - "lit the fuse on {bomb}. ride out"
+  onDefuse:
+    - "{bomb} stomped out"
+    - "no fires in my town, {bomb} safe"
+  onWin:
+    - "yeehaw, {team}"
+    - the sheriff would be proud
+  onLoss:
+    - ride on, partner
+    - lost the trail. we'll find another
+  onLastAlive:
+    - lone rider now
+    - just me and the tumbleweeds
+  taunt:
+    - your tracks are fresh, partner
+    - "wanted: you. reward: fuses"
+    - i always get my bounty
+quirks:
+  - holds_grudges
+  - stares_down
+rivals:
+  - lunartulthek
+  - hyperrixdair
+bio: Hunts the server like a frontier bounty hunter, following tracks to wherever enemies were last seen. The only one who can find LunarTulthek. Has more incident reports from HyperRixdair than bounties collected.
+batch: 2
+retired: false

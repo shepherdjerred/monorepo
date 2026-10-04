@@ -1,0 +1,77 @@
+id: dethpoumnoodle
+name: DethpoumNoodle
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTI3ODE1OSwKICAicHJvZmlsZUlkIiA6ICJjOWZkZjFiMThhZGI0MGE3OTQwMzMyMTg3NThhZDJkMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJfc3BhY2VfODAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjYzZjY3N2Y2ZmI4ODA3YWY3NjNlYWVhNGZmOTEzMjZkNDgxYmY3NjU4NjRkZmJhYzZjMzkyZWQxMDE1OGZlIgogICAgfQogIH0KfQ=="
+  signature: "la7KE8UImwE65cK8A4RULzLPPyU3AXuV1ia1oxQSqIx2Zbwkigeo5mRCEQX1Hipr3NRoHkteCTRwDxZOvpPVXB9ktWnqkofv+NjyXFAJLKuYt0s8TMnLFWgOT0OSN5aRdMrCwlzYnNef1TCNudKRH71fFO2TFlLSy0b+S+sC2ZDdpS3HaLMxdsX7gs9TIhcf7DqSwl6LcJH6eUytblRPi/ZG4x3H585Rg5IkVwjRwVDxHTC3wy+Skwji8CTncr6b8M/+HmCabnaREErZqNCn4IRKjBxlxUf9SecgED2soPOkKayO/LJ6fDI75RbJ74KBYYL6mKZXSAAiOjGF4dBgkHGNucXWrq3+F5IL5to5iIuanwLDlECzDr85KAM16xgG+MwypKF71HJk7ZnaIEkZHqWykwbL1k6yKAxqeLVMiXxwoeZlfZeILZ04IfBNpBzBwKfm3HLN8UJgQT+1/WI9uoS3p4zyfSS7BramJJSgvZsKuEO1sbEWajwr7Sul66j7Z8n5VKG0czJXwft1aEWqdiHq1h5U0kSbkU8bSanFYARYboRD91R8jrk+jDnXTyoQ2pZarHofo+YgUniqUPQtYKzLLdtYx8EQPON0RTowo+4C+MAXaZ1eQqNd6mZGs2aWOGNwY0Rp0g+Xs1DSY+nL9vNBW0eHFhruI6/ePw7jqNw="
+skill: 0.37
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.31
+  predictionQuality: 0.45
+  decisionTemperature: 0.03
+  coordination: -0.85
+  aggression: 0.02
+kits:
+  trooper: 0.55
+  shortbow: 1
+  rewind: 0.4
+  wraith: 0.45
+  spy: 0.38
+roles:
+  plant: 0.42
+  rotate: 0.91
+  retake: 0.22
+  hunt: 0.41
+style:
+  aggression: 0.67
+  patience: 0.33
+  teamplay: 0.37
+  risk: 0.65
+voice:
+  tone:
+    - sneaky
+    - giggly
+    - mischievous
+  verbosity: normal
+  style: giggles 'hehe' and whispers plans like a kid playing hide and seek
+lines:
+  greet:
+    - hehe. going round the back
+    - shh, secret route time
+    - "{team} distract them for me hehe"
+  onKill:
+    - "hehe surprise {victim}"
+    - "boop. got {victim} from behind"
+    - "{victim} never checks the side door"
+  onDeath:
+    - "aw {killer} found my secret route"
+    - hehe... oops
+    - ok new secret route
+  onPlant:
+    - "snuck a fuse on {bomb} hehe"
+    - "{bomb} lit and nobody saw me"
+  onDefuse:
+    - "{bomb} defused, sneakily"
+    - "hehe saved {bomb}"
+  onWin:
+    - hehe gg
+    - the back door wins again
+  onLoss:
+    - aw they found all my routes. gg
+    - gg, i'll find new ones
+  onLastAlive:
+    - hehe. hide and seek time
+    - they'll never find me
+    - "{team} trust the noodle"
+  taunt:
+    - hehe where am i
+    - check behind you hehe
+    - i know a shortcut
+quirks:
+  - crouch_spam
+  - spins
+rivals:
+  - vipergolem6
+bio: Knows every side door on every map and treats flanking as a game of hide and seek. ViperGolem6 keeps taking the same routes, so they spend most rounds surprising each other.
+batch: 2
+retired: false

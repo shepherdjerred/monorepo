@@ -1,0 +1,76 @@
+id: raekradyzdoum
+name: Raekradyzdoum
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDE5MDk2MywKICAicHJvZmlsZUlkIiA6ICI0ZmNlNWJhYjJmMjI0MTdjYTk1YWVlYzA4OTRhMTY3OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJWYWF0d2FzdGFibGV0IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JlMjgwMWZhZDUxY2Y0MmZmMjI3NzI4YmY2ZDVlYTFiOTJkNTc1ZTc2NjhiY2M3YWUxZTA0ZjM5NDBhY2U2OGQiCiAgICB9CiAgfQp9
+  signature: "NJHLl4RYAveZpt2/0Io3lbNPg3CHmWYy4eaQnjK3NXKa7lGlS4uh2wdSHiJfpfFi88XzbS0f6kVZeZS9wzuo5mT5M0chig8Krp1R995XgCTkU3yA57fpz6EkRwEldIkEH3a3qHHK5yo8CmtpCbihutjnyQB4Um2HGR3ndxo/YmXPClmdFexG+htRxcOXbziEkZo3xBgmwN5fgv3BV3B7Z0aWkiqAqHnmcAPXIXb4Wkz79KVY+u5JwVhFT+vjpJ69PAXuwtgUAOhs9XMiisxbllZov2KKPzKHbyPmJhCna9l66qyfP6tpvEdSzBYkzAp8afT8KNlM5SF5LSlz4OTWF1TCn/pPmVvtnx2fuDKqCYw8LrdT21VKPhmAZLjeevS2EPU4iEDVGKiRXgPKIuZyuoirpVLmuDLsldRPQU4R0p4RHKmDCNB0j8yLqSvxsmuI5d0AKKTFE+b4IfburvejCITonIovRgvwZsIaT+ljA0vdW0rui94+qRtn6qC5Amxn+TWVDF/oKWqLZZiGaIAsM0f48/7a8YUt3ctQQJyHbQZH8PPcps6kJMaeQcu1/B1DuoktiKFiX6yvDdvISaUzlHoV0z7heYYEx0SB+Fgm5gPXQDm0GABddHa3cigMAOpCZ3/ItHOKNmBdDvqEUqfhlCqvy47L8sxF5QS3YxUKlFE="
+skill: 0.047
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.31
+  aimErrorDeg: -0.05
+  cps: -0.23
+  decisionTemperature: 0.88
+  technique: 0.73
+  aggression: -0.67
+kits:
+  trooper: 1
+  shortbow: 0.22
+  rewind: 0.6
+  ghost: 0.26
+roles:
+  plant: 0.92
+  escort: 0.1
+style:
+  aggression: 0.65
+  patience: 0.11
+  teamplay: 0.38
+  risk: 0.89
+voice:
+  tone:
+    - frantic
+    - panicky
+    - funny
+  verbosity: chatty
+  style: "always running, always panicking; breathless run-on sentences"
+lines:
+  greet:
+    - ok ok ok i'm going for the bomb DON'T FOLLOW ME
+    - running to the bomb, see you there or not
+    - "{team} cover me i have no idea what i'm doing"
+  onKill:
+    - "i hit {victim} by accident and it worked??"
+    - "sorry {victim} you were in my way"
+    - ahh! oh. i won that?
+  onDeath:
+    - i was SO CLOSE to the bomb
+    - "{killer} was standing right on it!!"
+    - who put a person there
+  onPlant:
+    - "{bomb} IS LIT I DID IT I DID IT"
+    - "fuse on {bomb} now i'm running away"
+    - "did anyone see that? {bomb} is lit!"
+  onDefuse:
+    - "wait our {bomb}? ok defused, back to running"
+    - "{bomb} saved!! i'm leaving"
+  onWin:
+    - we did it?! we did it!!
+    - gg i ran so much
+  onLoss:
+    - gg i almost lit it like four times
+    - next time i run faster
+  onLastAlive:
+    - everyone's gone?? ok bomb time
+    - i'm going for the bomb, wish me luck
+    - "{team} i'm sorry for what i'm about to do"
+  taunt:
+    - don't mind me just running past
+    - beep beep coming through
+    - your bomb looks lonely
+quirks:
+  - loves_nuke
+  - never_eats
+rivals:
+  - maijy-52
+bio: Learned on day one that you win by lighting the other bomb and never learned anything else. Maijy_52 is the only defender slow enough for him to get past, and the two newcomers have a lot of history.
+batch: 2
+retired: false

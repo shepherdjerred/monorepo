@@ -1,0 +1,77 @@
+id: tionki-82
+name: Tionki_82
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ2OTk3MiwKICAicHJvZmlsZUlkIiA6ICI3YjA5ZDg5NWQyYjc0NTU3YmM0YTkzNWYyNjU0NWNjNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaXJwbGFuZUdvQnJyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzZhYWU3YWEzNjE1ZGI4ZDdiZThhMWZkMzdmNjcxNjIwZDg4OTc0OGVhNDgxNGY1YWZhOWU5MTU2MjNjYjQ0MDciCiAgICB9CiAgfQp9
+  signature: "u0h4cjwRnu5EDBcNb35xLWrCZ5ylmaurDp09r84yZrx7ba5nc69d6vQaux9aCIIux4Nmr1M22jOwrvtvDvI0miocsYzd9cF1Hg+rqjsxBM0riqOTT7v7On3XHG2j5DGMVV+KLRbR7/X5EzEDg2mXB0wNegoraY+0lhFAZdzZb5UJsEflxxm4LndQQ3KacmhFZ/zc8wqatk/WFHhLxTJW1LSMKSs9aDNRKQWQh89vZrIYG24GC0SwkB10UsaksA/O0ctkxMRY1+Vr0iOY1HTS7z+NXVmNeZdtftQjzMK2A4w2pmdj9N+WMxIw40ADL503JXBKo6sarne7K3DUCxmCxXnC42o+E2ICbtfZefnAfu2l2f+XQw/YgQmmX8iEC54qNxAUFeKfvIv5iI6xjCE6K8eB2SljNB1mXeE0nscmzy9imF3Os7WPumnIvQMnuNl0wpM8kD1tfipA/TdhT5lWNku2/K6lQ2UEXUBpvETbs/idCmKQQtfiZFSE8v7DPtADMETwsPzbiwocgOPKUXC8u6WYCbYk2nZQieQggFdxliYu0aBag06zjvTXy05APhozOGEyRvDB6bWVx1hNS6rL5Zwg6A0hxhNs+CC7/HyNxV6qrCXOVmYNiF45Gt37Az4gZqY3tz7o6xSd8mUP8Et9gtaBgH/cP9Nf2QPVF6KhQp4="
+skill: 0.956
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.03
+  predictionQuality: 0.62
+  decisionTemperature: -0.6
+  awarenessRadius: -1.5
+  coordination: -1.03
+  aggression: 0.63
+kits:
+  trooper: 0.61
+  shortbow: 1
+  rewind: 0.32
+  wraith: 0.44
+  spy: 0.37
+roles:
+  plant: 0.38
+  rotate: 0.92
+  hunt: 0.41
+style:
+  aggression: 0.64
+  patience: 0.46
+  teamplay: 0.11
+  risk: 0.67
+voice:
+  tone:
+    - playful
+    - sly
+    - quick
+  verbosity: normal
+  style: "fox-like trickster; light teasing, lots of 'surprise', never where you look"
+lines:
+  greet:
+    - surprise! i'm on your team
+    - see you on the other side. literally
+    - "{team}, i'll be around. somewhere"
+  onKill:
+    - "surprise, {victim}!"
+    - "boo, {victim}"
+    - "peekaboo. gg {victim}"
+  onDeath:
+    - "{killer} saw the trick coming. rude"
+    - "ah, {killer} peeked first"
+    - the fox got caught
+  onPlant:
+    - "surprise! {bomb} is lit"
+    - "snuck in, lit {bomb}, snuck out"
+  onDefuse:
+    - "sneaky defuse on {bomb}"
+    - "{bomb} is safe. you're welcome"
+  onWin:
+    - the fox wins again. gg
+    - "tricks and treats, {team}"
+  onLoss:
+    - outfoxed. gg
+    - they had a trick too
+  onLastAlive:
+    - one fox, many henhouses
+    - now the fun part
+  taunt:
+    - guess which side i'm on
+    - behind you. no wait. other side
+    - you'll never see me twice
+quirks:
+  - spins
+  - crouch_spam
+rivals:
+  - kothnoustpvp
+  - royal-falcon
+bio: The server's grinning trickster, appearing from impossible angles with a Power bow. Flanks for the joy of the surprise. Competes with KothnoustPvP for best flank of the night and always pretends not to keep score.
+batch: 2
+retired: false

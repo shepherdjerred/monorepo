@@ -1,0 +1,78 @@
+id: xxlaimmamthaist
+name: xXLaimmamthaist
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY2MTY1MCwKICAicHJvZmlsZUlkIiA6ICI3MDYwMDk0OTgyZDc0MTczYTNjZjg1Zjc1NjQ3MGE5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbmV4YWN0b3N0ZW50YXQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmZjNzgyMTJmN2IwYTFhNTQ5YjRiMjA3M2YxM2NjMmYwMWI5ODg0ODg3NTE5NTJlNGE0YjQwOWI3MDBkNDA4NCIKICAgIH0KICB9Cn0="
+  signature: "Sv80H9sQjnu0kRT4lcCB7N8kkVaIERhK6QuI+WdENIg+y0xpKAvjb23ODzD1/WFh0ryNrhtqdt9bEa8RzFuP0SW4QFkLbRNh+2ZhVH/+P06QL6h01AP+B8mbuZdqIo7V0GZ1QOMLFBLorAzgey7JE0KMxzDgwTirxdzm61DQXecb36kzhqa/0TTL2j0JGRnuAw9E8U02lHRqtRJ25FIGyHrxYq4ck8kK/PN46LqgdWq5m7gHjyvGWo+90izjlX/0zAx8G3VWF3oqF8Qv22pTcN/lHc9DVR5z4aNL/yfBIXft3zCj8hcwcDFNGty0gf1yeJVkO6EpcSNXYJYImOkSJVQXa2gzsQIY827RY8Edr0LNKmb3XYiOZ97b7SzIitqBPgnpTQLls9mi8PV+0aHxSdLfOXAsn1HofqxW/cgDsRniKsYD/DPynwb1q64WORME8ysk/HWaugNIX3ceQfgjXbMw0ybf/sPnYbYSv26iM1itDB9F2lWfMj32xh2+Hi3K9yIPdYHdjYKP+L37f+Bx9YozWlffjbSZhfd3wxgvywhDgPAp1l1fiR2bN+iasb3207lc+Eh+ci263UtYOIich1S9QZvgwgirAvt9EFZFVv2j7BjZ+jjN6xnbkrU5K8pju7JOAzXRFBOOX0B93LSzsi0WebPQcOFpuAn0U6WSK6A="
+skill: 0.982
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.32
+  turnRateDegPerTick: 0.11
+  cps: -1.2
+  predictionQuality: 1.06
+  awarenessRadius: 1.05
+  technique: -0.68
+  aggression: -0.66
+kits:
+  trooper: 0.16
+  longbow: 0.86
+  shortbow: 0.46
+roles:
+  defend: 0.75
+  rotate: 0.37
+  retake: 0.14
+  hunt: 0.52
+style:
+  aggression: 0.29
+  patience: 0.87
+  teamplay: 0.44
+  risk: 0.22
+voice:
+  tone:
+    - arrogant
+    - elegant
+    - aloof
+  verbosity: quiet
+  style: "aristocratic marksman; bored superiority, fine-art metaphors"
+lines:
+  greet:
+    - How tedious. Another evening of perfect shots.
+    - I'll be on the balcony.
+    - "Do try to keep up, {team}."
+  onKill:
+    - "{victim}, a masterpiece."
+    - Exquisite.
+    - "{victim}, you were the canvas."
+  onDeath:
+    - "A crude technique, {killer}, but effective."
+    - How vulgar.
+    - Hm. Unexpected.
+  onPlant:
+    - "{bomb} lit, if one must."
+    - "Arming {bomb}. How common."
+  onDefuse:
+    - "{bomb} defused. Naturally."
+    - "I suppose I'll rescue {bomb}."
+  onWin:
+    - As anticipated. gg.
+    - "Adequate work, {team}."
+  onLoss:
+    - A rare disappointment. gg.
+    - The gallery was unkind tonight.
+  onLastAlive:
+    - At last, a stage worthy of me.
+    - Solo recital.
+    - "Observe, {team}."
+  taunt:
+    - You're well within my range.
+    - Do stand still, it's more elegant.
+    - I rarely miss.
+quirks:
+  - bow_spammer
+  - stares_down
+rivals:
+  - liltainshypok
+  - paimshaez-73
+bio: The most precise archer of the 2014 regulars, and insufferable about it. Cannot stand that LilTainshypok makes the same shots while yawning.
+batch: 2
+retired: false

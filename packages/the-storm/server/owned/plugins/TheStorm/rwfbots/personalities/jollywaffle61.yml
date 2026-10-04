@@ -1,0 +1,78 @@
+id: jollywaffle61
+name: JollyWaffle61
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI2ODcxMCwKICAicHJvZmlsZUlkIiA6ICJkMmNhNWUwZjJkMzY0YmExOGQwZjBjMjc3YTFkYTZlZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3TWlzaWV1ciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80MzgwMDBmMWNlZDU5NjJmYWM5OTA4Nzc1M2JlMWI3OGYxNDhhYjZjYTQ2MGFiMjlmNzQyNGIyMzVkYmQzNzQyIgogICAgfQogIH0KfQ=="
+  signature: "KeN75yGcBGb1OMBHW21fmnvSMFcGYVHs+dEE7HaE9InxVxw2n5CI6H+0j95skhIm7s4SFWT92+pImnG99aQHjDa+VIIkQ5CWTVM+tAXSXvkHFsSReruWOJ9c4kiUXD43BAJYoSXMCITdvJkLs7CKRxnsdyDDc3ibO+VZDaXrFLsZJWMgjEFxoczrqdpQcofE7/3ModU5J1Ys8UOFVvOhBbZPaKH3xAiEyJEie0+FX+IShfY1RnQf0pHH5WSc+eYQEq1SO0hKMbT66PRElN4wPNzchczzLYPsdn1f6DMAGIErQ642zlHfa5jG8Hp5aGvnt1v1gK7B6MsoEREAwbsaFjsVnpaO+nEMyBifxtk79tBvKCZf+C+Xnr9QjymF/GQz1UHi00969kjpVngd8Be7TDWiwGRmnG36WReiEHfOUbLE/8kDIbcp38C31o71cFDFJTGvqITCPt5U7SoQoxZb+AZPnBI9lbiGKJ0Wx92/VYFm2FQK2YS7wM+v46rbMT4sqSLYSPnit4RoID1UE+TQBuZMcSVAL4Q3x7FnJZPx+KKGbSnDBogIiUsjsUDBmkkMzeI/iGlqwoVMBa/1DAx+AVx9V5nsABMVq1Xp3XenEu/3i6fJxlZamUmADrd9wZn3sH27a96zCazJTAnkUnGjt9pvY0oWnUFtpjimTFumV8c="
+skill: 0.377
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: 0.13
+  cps: 0.1
+  predictionQuality: 0.62
+  decisionTemperature: 1.34
+  awarenessRadius: 0.69
+  coordination: 1.67
+kits:
+  trooper: 0.85
+  longbow: 0.44
+  shortbow: 0.57
+  rewind: 0.51
+roles:
+  plant: 0.54
+  escort: 0.54
+  defend: 0.47
+  rotate: 0.65
+  retake: 0.79
+style:
+  aggression: 0.36
+  patience: 0.64
+  teamplay: 0.84
+  risk: 0.41
+voice:
+  tone:
+    - sweet
+    - upbeat
+    - breakfast
+  verbosity: chatty
+  style: "diner waitress energy; calls everyone 'hun', breakfast puns, keeps the team's orders straight"
+lines:
+  greet:
+    - "morning hun! what're we ordering, {team}?"
+    - "table for {team}? right this way"
+    - fresh plan coming out of the kitchen
+  onKill:
+    - "{victim}, your order's up. it's defeat"
+    - "{victim} got served, hun"
+    - "that's one short stack of {victim}"
+  onDeath:
+    - "{killer} sent back my waffle"
+    - "oh hun, {killer} got me good"
+    - kitchen's closed for me
+  onPlant:
+    - "{bomb} is sizzling, hun"
+    - "{bomb} lit, served hot"
+  onDefuse:
+    - "{bomb} cooled down, sugar"
+    - "took {bomb} off the griddle"
+  onWin:
+    - "tips all around, {team}!"
+    - that was a full breakfast, gg
+  onLoss:
+    - burnt the waffles. gg hun
+    - we'll do the lunch rush better
+  onLastAlive:
+    - just me running the diner now
+    - solo shift, hun. watch me
+  taunt:
+    - you look hungry for a loss, hun
+    - order up! it's you
+    - you want syrup with that rotation?
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - jollybadger05
+  - otterwaffle4
+bio: "Runs her team like a diner at rush hour: everyone has a job and nobody leaves hungry. Surprisingly sharp at calling rotations between waffle puns. Disputes JollyBadger05's claim to the Jolly name and OtterWaffle4's claim to waffles."
+batch: 2
+retired: false

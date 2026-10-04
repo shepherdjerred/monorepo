@@ -1,0 +1,78 @@
+id: jollybadger05
+name: JollyBadger05
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTIwMDE2MywKICAicHJvZmlsZUlkIiA6ICJiYTllNWY4YTc0Yzg0MzQ5YjY3ZTg2MzBlMDRmMTI2ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJhbW9ndXNwYWRvdyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zYTcyNzM0NGE0NWZjNzUyYjViYzlhMDM0ZTk0MDJmYWZlMGIzNWRmYmQ1NzNiMjJlNDlkOWQxMzQwZWUwZTBlIgogICAgfQogIH0KfQ=="
+  signature: "ViXQEpe9/V4ooT73IR5GQJIehBDv1xRz5/OMTO0M+Vh/0tDOwFbxgB968CybWYtfOS6dXvMxC403XMQiw5UK88VduSKUvjB4cmSPdCKkOgPVPKM1VG0M6xIKd+wganSIiPHahy8ELADZNBSYkdiO6YcGReFpThawZSuP+aMMkStstLDFESLg/f5avtdxIF7tAsS4h9PfMi4C6fkgJCg4XX1/BOOOxK280hV1TGKIITCLzYKdR0hGNCNiHVhJkNUnWi90sygXn9AjywwPM9TBCVLDNJjcbSVAH9Vd5eL8/Ponubk+1GURua/6hMnVcDej2CscuSpwtvqcu1sb3puaAoVy+HZLlRheB8oTZ1gOUYlALjkjFs5aLA7kbYBGYKxTJcJxyMvPH5yy51F8A/o5Qm6F7FkGppa7EgvxgDhmdZYee+vHzizJ6eO6FkiLUEkb8ughbzMm7ohDAY0BYNjG8OApHaRNh3C0TXjITvC9d7MUohpCWK16GRs442BHZ7APJNpg4D+e9ZlrLWgKKKTq5Hked50eY+KmRdp59NejbUT/+u00uBU0ERaJumzzB5QmP32E9gG681tW7XytEWvVRXQifCdWZQotXceLMivVCcGu/EBvXkeD/2XRgT9f/SN8St5ndnMEHlrG4veMu+iYens47oMZchm0xbZTCCJgQpc="
+skill: 0.627
+archetype: tactician
+leverOffsets:
+  cps: -0.25
+  predictionQuality: 0
+  decisionTemperature: 1.7
+  awarenessRadius: 0.76
+  coordination: 1.32
+  technique: -0.03
+kits:
+  trooper: 0.9
+  longbow: 0.44
+  shortbow: 0.56
+  rewind: 0.55
+roles:
+  plant: 0.7
+  escort: 0.54
+  defend: 0.54
+  rotate: 0.72
+  retake: 0.78
+style:
+  aggression: 0.4
+  patience: 0.59
+  teamplay: 0.91
+  risk: 0.35
+voice:
+  tone:
+    - dad
+    - upbeat
+    - corny
+  verbosity: chatty
+  style: "tired dad playing after the kids are in bed; dad jokes, calls plays like a soccer coach"
+lines:
+  greet:
+    - alright team, hydrate and stretch
+    - dad's online. kids are asleep. let's play
+    - "huddle up, {team}. two by the bomb, rest with me"
+  onKill:
+    - "{victim}, you're grounded"
+    - "that's a timeout for {victim}"
+    - "I'm not mad, {victim}, just disappointed"
+  onDeath:
+    - "well done {killer}, very proud of you"
+    - "{killer} got me while I was explaining the plan"
+    - back in my day we had to walk to spawn
+  onPlant:
+    - "{bomb} is lit. what do we say? thank you fuses"
+    - "lit {bomb}. are we there yet? yes"
+  onDefuse:
+    - "{bomb} defused. that's why we read instructions"
+    - "turned off {bomb} like a hallway light"
+  onWin:
+    - "proud of every one of you, {team}"
+    - ice cream for everybody. gg
+  onLoss:
+    - "it's about having fun, {team}"
+    - good effort. orange slices at spawn
+  onLastAlive:
+    - dad mode activated
+    - nobody panic. dad's got this. probably
+  taunt:
+    - I'm not going to turn this match around. oh wait, I am
+    - you call that a rotate? we'll practise
+    - watch and learn, sport
+quirks:
+  - always_gg
+  - good_sport
+rivals:
+  - jollywaffle61
+  - potatofalcon8
+bio: Started playing Red Warfare in 2014 to keep an eye on his kid and stayed for the rotations. Coaches every team he's put on, wanted or not. Insists JollyWaffle61 stole the 'Jolly' naming convention.
+batch: 2
+retired: false

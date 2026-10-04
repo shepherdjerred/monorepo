@@ -1,0 +1,76 @@
+id: mrnestzaiz
+name: MrNestzaiz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzYwMzA1OCwKICAicHJvZmlsZUlkIiA6ICI3MDYwMDk0OTgyZDc0MTczYTNjZjg1Zjc1NjQ3MGE5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbmV4YWN0b3N0ZW50YXQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzFmOTA1ZGRjMWUxM2E5MWVhYzQ2MmE1NTJhNjBhMjllYzgxYjRmZTJiYTNjODAwMzdhOTAxMzVlZDU2ZDUyNiIKICAgIH0KICB9Cn0="
+  signature: "RPxPJbxTIccxshbqxAgqJkGGAq1SvVIPH2p/GogyjTrfwEEFhAyzN8vq1KLVi/Fb+IwBlBo5TUr+7vvi/IgLe8QwUgHXxCj1TeYjfEKEN4pCtJsjvWlRISX5rp6e3fBg+DDJPW2qZ8KGBpsl3vozdm50Sw8Xldiu8Kpqay1v3jmbYDteFTq8bH8aUYa2yXzvrnSlpSryLFk47jhc7Ifrot14igCRrsREui/VcxElBeDREWqEMv52z47EY5EzErXrsIwD+9Eqg2eNi2LQ0AM3CPxEB/wbmeP7CxBVLld004p8edbPJ9TKBdbiXdSgY4U9tOJg6ElFhCZCQ0VvzZhc0nqMUfzlLpUjVQxqCc17hH6O7+O4N+rUJoLfhGWcDLdWj/wn3tvhnOXqpMWA0T616e4f1YLGqL12Z1HJ9aCtLr372R9xyXeK5IvOkIIqW+Ts3AAWTbzVEpKVtkp3ATm/WCe9p1I2mNsS2Lz7sW4zaa/43HC6OBYlUY4xZms32Z9iXnw/C+BQS7IgiDwLpOeXdJec4j+fy5xKxV0k0Y1gpY0u8kc6JBirOeQ787kUXB2GumQYsUGMed/L4EWJE+LNkoGF8HtLNfik9u93jfHr8gkfAfvnCtidnRmt48Dp1kOaSAs6lcnlc/aRISp38jsNrI7hsp0ke8kI+tAGxK0pLj4="
+skill: 0.544
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.8
+  cps: 0.49
+  predictionQuality: 0.18
+  decisionTemperature: 0.5
+  awarenessRadius: -0.51
+  aggression: 1.08
+kits:
+  trooper: 1
+  shortbow: 0.6
+  rewind: 0.29
+roles:
+  plant: 0.76
+  escort: 0.49
+  retake: 0.25
+  hunt: 0.55
+style:
+  aggression: 0.96
+  patience: 0.06
+  teamplay: 0.35
+  risk: 0.69
+voice:
+  tone:
+    - energetic
+    - coach
+    - loud
+  verbosity: chatty
+  style: early-morning gym coach, reps and sprints, counts everything, never stops moving
+lines:
+  greet:
+    - "rise and grind, {team}! warm up those legs"
+    - cardio day! we sprint to their bomb
+    - no stretching. only running
+  onKill:
+    - "one rep! {victim} down"
+    - "that's a personal best on {victim}"
+    - "feel the burn, {victim}"
+  onDeath:
+    - "{killer} skipped leg day? no, i did"
+    - "cool down lap, thanks {killer}"
+    - hydrate and try again
+  onPlant:
+    - "{bomb} lit! finish line in sight"
+    - "sprinted all the way to {bomb}"
+  onDefuse:
+    - "{bomb} done. now twenty pushups"
+    - "defused {bomb}, keep the heart rate up"
+  onWin:
+    - "that's a workout, {team}!"
+    - great session, team. same time tomorrow
+  onLoss:
+    - we'll come back stronger
+    - sore today, strong tomorrow
+  onLastAlive:
+    - last lap! finish strong
+    - just me and the finish line
+  taunt:
+    - try to keep up
+    - i do this every morning
+    - your warmup is too slow
+quirks:
+  - bunny_hops
+  - never_eats
+rivals:
+  - cobalt-arrow
+  - laelshaidaik-87
+bio: Approaches each match like a gym session and is always first out of spawn. Refuses to eat golden apples on principle, calling them sugar. Has been chasing Cobalt_Arrow's rush times since 2014.
+batch: 2
+retired: false

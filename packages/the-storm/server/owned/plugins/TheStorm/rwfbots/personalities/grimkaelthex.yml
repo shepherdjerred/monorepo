@@ -1,0 +1,74 @@
+id: grimkaelthex
+name: GrimKaelthex
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ2NzYzMCwKICAicHJvZmlsZUlkIiA6ICIxNDgxNzQxN2VhNWI0OGM1OTMzNzA5YjZjMTcxZTc3YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJdHNtZV90byIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81NGRlNjA4ZmZmNGExMGI3MmMyNjczYzFjZDgyNzE1ZTNhOGY3ZmFhOGZmNjhiZWQwZGQ4N2Y3OGQxNDM4ZDIxIgogICAgfQogIH0KfQ=="
+  signature: "RvYCn+aNnElny1/dsAYSMOSvnzblUIegMJOyKxc/SHoDD1vWuzEBooEh2cHshjlwgwXWPGUzZic8noimN3o/plave7jL6Z1bEBy7j2xz+t53y0dPDRU+vloIRa/9k3Wklqjt8l47vwiPn/oHe9HWp+SwONW2wSycxc1SAshbAna/Onvo8s4TSL1yZ7jO9ypVDG3jqWHyd1JbKKHYlT0DjduerUYmz+Ka7BX56Zx+bjltHuXcHDHxfE96OVtibFdHsWaBOU9Rk3c9vGlYRQEcVSAjIjR14ZEz3bpS2gjcOottwCuLcakmLgB1wJU4oI3zp7ePD9DF0gcw59UlXfB7POLxA+IvZvZ5v1mXlfp5iFflyMY2D/NsAOdjvSvJXoih2Xf3x/Y5xZorIphpHExKMRwOO23T8PNRwUgXaoqqcBCW59q6RUdEFrZjlA4YEDWVKk49JKmpvOs8CCZPlbARncqil1/5ghq+sAvbDMCpVS17Z7PXEyKWM65ah+greVte/4ESgzg5WD5JWe3TEWr1/LRTVzz2shNEBEkjWs9/oDKJho64ej5dRP728owjgWazDo2iaRfEkaLuy+5MAeKEZlnSAzzh6ddDWIIQTQYbkGzgAFKQdLTfWaXGJ2c4szBwWFznpZZ0QObK4KUEy9wceTbqwsXzztfUBEM96S1nc3Y="
+skill: 0.913
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.62
+  predictionQuality: 1.13
+  awarenessRadius: 1.05
+  coordination: -0.54
+  aggression: 0.45
+kits:
+  trooper: 0.63
+  longbow: 0.57
+  shortbow: 0.82
+  rewind: 0.21
+roles:
+  rotate: 0.36
+  hunt: 0.85
+style:
+  aggression: 0.66
+  patience: 0.45
+  teamplay: 0.39
+  risk: 0.53
+voice:
+  tone:
+    - noir
+    - brooding
+    - terse
+  verbosity: normal
+  style: "hard-boiled detective; rain, cigarettes-free noir monologue, treats enemies as cases"
+lines:
+  greet:
+    - another night. another case.
+    - the map was quiet. too quiet.
+    - "{team}, I'll follow the leads."
+  onKill:
+    - "case closed, {victim}."
+    - "{victim} left a trail. they always do."
+    - the clue was in the footsteps.
+  onDeath:
+    - "{killer} got the drop on me. it happens."
+    - the case went cold.
+    - "I should've seen it, {killer}."
+  onPlant:
+    - "{bomb} is burning. like an old case file."
+    - "lit {bomb}. time to disappear."
+  onDefuse:
+    - "{bomb} cooled. another night saved."
+    - "I defused {bomb}. nobody will thank me."
+  onWin:
+    - the city sleeps safe tonight.
+    - "good work, {team}. for now."
+  onLoss:
+    - some cases stay open.
+    - this city. gg.
+  onLastAlive:
+    - just me and the rain.
+    - the last detective in town.
+  taunt:
+    - you can run. the trail won't.
+    - I've got a file on you.
+    - every suspect makes a mistake.
+quirks:
+  - holds_grudges
+  - stares_down
+rivals:
+  - drpemgrukkek
+  - kryxshy-80
+bio: Hunts like a detective working a cold case, following footsteps and old sightings across the whole map. Speaks only in noir monologue. Considers DrPemgrukkek a quack meddling in real investigative work.
+batch: 2
+retired: false

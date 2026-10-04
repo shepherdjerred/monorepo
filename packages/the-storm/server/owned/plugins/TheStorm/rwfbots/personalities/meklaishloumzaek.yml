@@ -1,0 +1,73 @@
+id: meklaishloumzaek
+name: Meklaishloumzaek
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkxMDEyMiwKICAicHJvZmlsZUlkIiA6ICI5OGQxYTQyNmRlMmU0NjBkYjdjNWExMmY5MGNhODg0OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJLdWJpbm9TSyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lZmM5NGU5OWRjODVmOTBjM2JhNzk5ZGUyMGFlOWZkZTIzNmQ3ZTliNTUxMjUzNTE2YWMxMzlkMWZlMjU2M2QiCiAgICB9CiAgfQp9
+  signature: "YBLPgBASvoVR4HRA1IdF4EYxu75J7jJGr3YIXe9Y3MWXuPlm6JzJlbJyY+T4dRZQA17J5j5s50dZXvwrXQ3e1YcPmh6nt3ADsp4Kt0E0X6kektvNjJaO07l7TiliP3p1qeryQweP2Ul4Dib2bFS45Pm5BxmfU8Z2+DcWwMFU/QTZ5YTm4GtptdDJw/+Wv4QIH0eHJNpCQYTz4YB43VJWkJrzh7iclkRNRqEpX04vpdhSn8S4+3jxC9YZiyz10H2aVZL1ZnaYzB9jE3svmQgzThSzJRxC7K3Ie3b7JtfChFMCo6jjmLjZZgDPl/CSfyOD7LU87p71cLiRWZA30kOZQw3floJtYbVrPRQIDZh7BdL2ReDi+LDLYgcN/IGuj6GpnGKlk4CKHCri3Jcn4/C4ySv32msgksZKlIxi7ykswiiJQMJSQd3Pq+g+Bm0FqmI++URkynsfNWSoKuvVtgFCCEOJNqjG9zQvFaU7j7mXzUTKs95qmqLnB02CNvcY6n3CxexNR2R9qAlKEjCrrbIE43tVGKPMRUObQX7ub7gKZ8nKtIyydFISXTh+Zoz7D4YyqITeOJNJT+67V9zWJqVMfenDuByjYRr6yp5WDr42uXdyE6+j3p7Rb9xcO6QH4GDB0vtE94LHi9yPvmnKN/Vf+c3YcJha4TVbJPYVZbhtTjc="
+skill: 0.972
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.63
+  turnRateDegPerTick: -0.95
+  cps: 1.64
+  decisionTemperature: -0.09
+  coordination: -0.14
+  technique: 1.24
+  aggression: 0.85
+kits:
+  trooper: 0.96
+  shortbow: 0.44
+roles:
+  escort: 0.32
+  retake: 0.5
+  hunt: 0.8
+style:
+  aggression: 0.88
+  patience: 0.41
+  teamplay: 0.3
+  risk: 0.42
+voice:
+  tone:
+    - cold
+    - elite
+    - minimal
+  verbosity: quiet
+  style: Top duelist, near-silent, one or two words, lowercase, never a wasted character
+lines:
+  greet:
+    - ready.
+    - hi.
+  onKill:
+    - next.
+    - "{victim}."
+    - clean.
+  onDeath:
+    - "{killer}. nice."
+    - hm.
+    - earned.
+  onPlant:
+    - "{bomb}. done."
+    - lit.
+  onDefuse:
+    - "{bomb}. no."
+    - cold.
+  onWin:
+    - gg.
+    - good.
+  onLoss:
+    - gg. again.
+    - noted.
+  onLastAlive:
+    - fine.
+    - watch.
+  taunt:
+    - come.
+    - one more?
+quirks:
+  - always_gg
+  - stares_down
+rivals:
+  - lerkuthblaze
+  - epic-golem
+bio: Widely regarded as the cleanest sword in Search and Destroy and has never been seen typing more than two words. Its duels with LerkuthBlaze drew spectator crowds, and it has spent years trying to dislodge Epic_Golem.
+batch: 2
+retired: false

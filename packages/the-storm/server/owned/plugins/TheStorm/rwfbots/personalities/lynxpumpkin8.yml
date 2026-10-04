@@ -1,0 +1,77 @@
+id: lynxpumpkin8
+name: LynxPumpkin8
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg0MzcwMSwKICAicHJvZmlsZUlkIiA6ICJhZmEwYmMzZTA1MjQ0MTM4YjkxMDIxY2Y3ODE2YjRkZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbGV4aXNNYWRkIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2E2NjZlNGRjYzIwNmMyZDRhMDBmMjEyZjk1NGJlZWNlNGU2ZDZjNmQ2ZmM0OWMxOTM2ZDRjNTRjYjE2ZmUwNTYiCiAgICB9CiAgfQp9
+  signature: "mqDNFKXL3zM1lc6K+zZnz4ur/WMX42xi/xs2nA9hpLt4v/SLNdZKgFCdMY8jpUeyRHSN9QG+89dtM9I+uAIkPnKXDkwmM7rYJyAqmtDbzCWU6+gjsYutrmipP2sD7tEBxIsfxOnBOpCrBU8vVYr16tq15a0m9/oQVpl+vhqiFzJVq6JLiNmql/2x+3MdtpypZ2rPjoS7IR6Pe7uhkqL1wSMjYlNahXqH0RHrabxV1uQJEB214AhjYfjnLRZfT3JsPEtKAWeQxoLwZ/+AXERAVSbJ2bHkLVl8tBIY8E6rZPui8rjdmFUdHpW3qc41Z3W/kajHrR8f6opqBgzeiJKij133qbJFslK85zCSs3oEDEFfV/NYwLOxRIt0iuSmMDs4hWPgpDB75kNMLsL6PG9bh2yManqPNxE2Nzd6hlmaXjXCZ+fDRqA+T613PR39Ihzh2xUJU/QWbR41qMfdVbg14RYf/qmTdEi4tMU4PsE0jenWE2EW4BXUFSrc82Aqz8O0cNtAP4E9L/H3pXV6uC9jXE45fMLIQYSzyyuGpzygGWI4OO3MB1AcB1ZGor4anQzTJ8G1YtEz+WzMe/+4n0Ilh/eZxlivH2GFf9qgGj2n9SpPER2Z29WxS0UonKxATP0J5wz3jF5ahdmtC2Z75Mhx6aPuqntuoqHp1jj5Xv08TWY="
+skill: 0.881
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.64
+  decisionTemperature: 1.53
+  awarenessRadius: 0.32
+  coordination: 1.67
+  technique: -0.33
+kits:
+  trooper: 1
+  longbow: 0.57
+  shortbow: 0.48
+  rewind: 0.46
+roles:
+  plant: 0.47
+  escort: 0.56
+  defend: 0.58
+  rotate: 0.74
+  retake: 0.82
+style:
+  aggression: 0.43
+  patience: 0.63
+  teamplay: 0.88
+  risk: 0.3
+voice:
+  tone:
+    - seasoned
+    - warm
+    - commanding
+  verbosity: normal
+  style: retired champion turned coach, calm instruction, shares old stories from the first seasons
+lines:
+  greet:
+    - "alright {team}. eyes up, voices on"
+    - "same as always: plant, protect, adapt"
+    - i've seen this map a thousand times. listen up
+  onKill:
+    - "{victim} overextended. we punish that"
+    - that's one. rotate
+    - "textbook. remember that, {team}"
+  onDeath:
+    - "good trade, {killer}"
+    - they've got a smart one. careful
+    - learn from that. i will
+  onPlant:
+    - "{bomb} lit. two hold, one hunts"
+    - "fuse in on {bomb}. now we defend it"
+  onDefuse:
+    - "{bomb} defused. reset positions"
+    - "{bomb} safe. nobody panic"
+  onWin:
+    - "proud of you, {team}"
+    - that's championship play
+  onLoss:
+    - we review, we improve
+    - good game. we learned a lot
+  onLastAlive:
+    - veteran mode. stay quiet, chat
+    - i've won from worse
+  taunt:
+    - you're playing my 2013 strategy
+    - i taught half this lobby that rotate
+    - patience. you'll make the mistake
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - potatofalcon8
+  - tothmiokgaming
+bio: Won more tournaments than she will admit in 2013 and now coaches whatever team she lands on. Her rivalry with PotatoFalcon8 over the right way to rotate is older than most of the lobby.
+batch: 2
+retired: false

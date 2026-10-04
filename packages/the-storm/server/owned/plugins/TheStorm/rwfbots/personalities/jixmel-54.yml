@@ -1,0 +1,73 @@
+id: jixmel-54
+name: Jixmel_54
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ3NjU1MCwKICAicHJvZmlsZUlkIiA6ICI1NjExYmE1MjFmNDM0OWYwOWE0MTI5ZTM0NjQzMDM1OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJHdXlOYW1lZEthaW5lIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U2ZDIwM2ZkMDAyZjA0Mjg2YzdjZjE5N2RiOWEyMzI3NGQ1N2MyNzVjMTI2ZGZjOGI0ZWNjY2IzNjhhNTIyMGMiCiAgICB9CiAgfQp9
+  signature: "JXpBuc2xIBxadKHbn5NpR4TAzBdwKU90SItT43T8WWJpeNIfZhg7siBM9DL1tYympx2o46OtFSrKdlJc6Q87ooQpKncqDw/e4BqtcTpA/Hz0lxWB8DNsDWXrqi6K9BGJ4bJWt7JaepCQ/X1CX+7rKipxCLli9Eqn2h+SHmeuWGzw1MdR20V+fz1w3VW/tqc7r9XM0DmKJJ9aboO1HvlnNoKp6Rz/eQPKUTbzpfHxDSMOmqNWSdoFlvrtJ0BDau2z6myn8EDLjY6k0gXXlyGX0zWZsKpDWBBUy7amzWoISdGhWDzIG7mfpGXvlA6X8Z0NNB6F8meJUBhHFB60NuUfxqZDdfkXJNloxmQpOEiYry8SbOPZ3oUU9o2+Ix9wAFkZG8LpIwmTQv+O4kH47nGtzSKHZUx9nVaKGAAOsgm05E9pSfAb2HIRsSA8JN5qQ+2Rw9ojhY+fNnxN1mcHxBd9FXAWcNTJ8rR+WuCSS+kJbkwipwko8gDqrtLMDlt6ZXELJ3XhVyXMbJoBmDtinPQBspJWEwODvWovzt8YzPuWued6teLhqize9Cj4IRju3Di/+VA5js5UD6+bK3cdM2QIaTThOkynp4okHllwoTpXwwIBr8SpiqFLutU3jMbV7tTqMJsCXQLMro1Q7OME97YxYCc32Dce1p+qwAZ/bw3ixHU="
+skill: 0.945
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.38
+  decisionTemperature: 0.31
+  awarenessRadius: 0.37
+  coordination: 0.36
+  aggression: -0.99
+kits:
+  trooper: 1
+  longbow: 0.47
+  rewind: 0.32
+roles:
+  defend: 1
+  rotate: 0.21
+  retake: 0.74
+style:
+  aggression: 0.3
+  patience: 0.84
+  teamplay: 0.68
+  risk: 0.22
+voice:
+  tone:
+    - zen
+    - calm
+    - wise
+  verbosity: quiet
+  style: "zen monk anchor; short proverbs, never rattled, treats defence as meditation"
+lines:
+  greet:
+    - breathe. hold. wait.
+    - the bomb is still. so am i.
+    - "peace, {team}."
+  onKill:
+    - "{victim} rushed. the river waited."
+    - "stillness wins, {victim}."
+    - the mountain does not chase.
+  onDeath:
+    - "{killer}, well done. nothing is permanent."
+    - the leaf falls. it is fine.
+    - balance returns.
+  onPlant:
+    - "{bomb} burns. let it."
+    - a fuse lit is a lesson taught.
+  onDefuse:
+    - "{bomb} quiets."
+    - "calm returns to {bomb}."
+  onWin:
+    - patience was the teacher.
+    - "well played, {team}."
+  onLoss:
+    - loss is also a path.
+    - gg. breathe.
+  onLastAlive:
+    - alone, but not lonely.
+    - one breath at a time.
+  taunt:
+    - hurry, if you must.
+    - the stone outlasts the wave.
+    - I have time. do you?
+quirks:
+  - never_eats
+  - good_sport
+rivals:
+  - huntersniper8
+bio: Anchors the bomb with the stillness of a monk and has not panicked once since 2013. Wins most rounds by simply being there when the rushers arrive. Finds HunterSniper8's endless rushing a fascinating meditation subject.
+batch: 2
+retired: false

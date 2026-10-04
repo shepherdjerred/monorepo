@@ -1,0 +1,75 @@
+id: itslinthur
+name: ItsLinthur
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg1MTYzNCwKICAicHJvZmlsZUlkIiA6ICI4OGQ1NDUxYjFlZjg0MjdlYWZmMmVlNDEwZjMzNDJmMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJEb25hbGRUcnVtcDQyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U2ZWYzMDVmOWEyZDU3OWE2YjBjZTQxYTZiMjg4MjE1MzhlNjkxMGQ4OGIyMDcxODc1YjA2NzdkNjE5NDcxMDYiCiAgICB9CiAgfQp9
+  signature: "VO81BhyNg/qDdYqPgOwX4lSP54FGtymXzOzmp7FDb8D4oCAjthw4UdC/b2KQu5/n4DRtDVG7FlF4UV5qigjsybhEQpY2T9z5M0hRhdn/EnIZ0XdNDIh11RBDVohKviSZSAKmSjAUGOKcD2EXlYHevw4Jx/p3YrJ/zvgyHR/wBjIhUpBGvwDLpEv7+frd3TT/UjiSmtee7pwQyR/EzfWOdu1u6RvCZ8+zxnfk+02f/i/dK4t691eJqxa0qv4HMawc4lw5HMsBkb/eMvQJw4OCWuY/+UrDNgxZjdbBsGCbqMr3G5d/2nmZsUoP6rmGdItTbziDKLGewMaZfWt04jMf9u28CnnMpVDBIaH7cGq1uaQ50jnlMHohwau9wUXm4hEQgnRo4R45/edX643ykB7/wgx0mnU9jQDqRW6p4yDjMKMJskKfkeB37BLuCJON7AjoCYvuxiDKz14gL4/NJeTHqoFinGoDs566p50O4Lm8K8idjh3mhOJp19T5eFsVO9ngbuGJdaJrZbryWGCPrxis79BFpE2Hgqn3TSwaKai3/5R04uF/l+bxwn3ysGsoSuBY/oq2wD06HrjrgXx4ORByPqkpcVdZ69JbxYJ2HnPTnbYB4QplyaM86n2inwiLDfBpqsYgwhWKohocpe7JvbqLHEKmEZ6zZilTS42ojzWXrjU="
+skill: 0.223
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.38
+  predictionQuality: 0.87
+  decisionTemperature: 0.75
+  awarenessRadius: 0.07
+  technique: 1.22
+  aggression: -0.82
+kits:
+  trooper: 1
+  shortbow: 0.22
+  rewind: 0.62
+  spy: 0.29
+roles:
+  plant: 1
+  escort: 0.2
+style:
+  aggression: 0.71
+  patience: 0.08
+  teamplay: 0.34
+  risk: 0.96
+voice:
+  tone:
+    - clumsy
+    - optimistic
+    - goofy
+  verbosity: chatty
+  style: Lovable klutz, narrates its own trips and falls, oops-heavy, always sure this time will work
+lines:
+  greet:
+    - ok this time i won't trip
+    - "{team} i have fuses! somewhere!"
+    - hi! watch this! oops
+  onKill:
+    - "wait did i get {victim}?"
+    - oops! oh, nice!
+    - "tripped into {victim}, counts"
+  onDeath:
+    - oops
+    - "{killer} saw me trip"
+    - fell off the map edge again
+  onPlant:
+    - "{bomb} lit! on purpose!"
+    - i armed it! i really did!
+  onDefuse:
+    - "{bomb} is fixed! i think!"
+    - wrong bomb? no, right bomb!
+  onWin:
+    - we won?? we WON!
+    - "gg {team}, sorry for the trips"
+  onLoss:
+    - oops
+    - my fault probably! gg!
+  onLastAlive:
+    - uh oh. ok. ok!
+    - careful... careful... oops
+  taunt:
+    - i'm coming! wait, wrong way
+    - your bomb's next! after this ladder
+    - hold still, i'm bad at this
+quirks:
+  - says_sorry
+  - loves_nuke
+  - late_to_everything
+rivals:
+  - epicnustskur
+bio: Holds the server record for falling off the same bridge, at two hundred and twelve times. Somehow still beats EpicNustskur to the enemy bomb once a week, which drives it wild.
+batch: 2
+retired: false

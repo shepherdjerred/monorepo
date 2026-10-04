@@ -1,0 +1,73 @@
+id: xoxvaiznex-10
+name: Xoxvaiznex_10
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc2MDMyMCwKICAicHJvZmlsZUlkIiA6ICJiODQ5ZjE2MmRkNTE0ZjllYTUwZDlhNjRlZGUwZGIxNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4WF9Ob19JbmNvbWVfWHgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjIyYjE5MDgzMWI5YmMxMzQ0YWFiYTMwNTI1YmFkZjY0MTJiNmQ3MDRiZmE2ZmE3ODRhODA5OTc0ZTczYTRkYSIKICAgIH0KICB9Cn0="
+  signature: "On1rA3X1AWg59Te8+dQ9SMUDb+gef+WNWaH5VBdj46ADUFf762M2ZeD0+vk4iBrABRIRRNpgyFLoFxJn0YjoUN55+eN2HU4fgkXUr+AuHOWcYFP27JKxKAZRpOHmLXJrdPJDmvBQLoeoFoe3Igtl/QgHjTVe5I01C3mG32RVWUqLlKnPTR3xhtjXOyMppuYrC0EamMGARa8scIJNhNdktm0rWw60RUjM64lnW27fieWXIoOQUv7I3wkO7vFUX1rjZ0ISFokSL8VfSbCb5U5zBFJEPg1vm6cTwUW9z+FbtXGZD8/zIfXZSYLjE9uOYGGnX9gt5owjUxVFM6LSTzACKxzKJDY1x+aKfOARbHgZai1hqaIs1yyK4Q5qvkV3FojaKfplSytOBsY4nA0IGvYeA4vjF7KnE2MPuQelzsVg10hQt9qq8S/hd8lSSH0o54xBZqb3GgiiWlfH/y34M3r5g+WKv5DA9LTpUP4+GRZUBno/rsvl6l50pWaJi8f9okYgf+g2u8Cu3Is0NZLrz3Ocu3kDW3oFBcg0+N77S6RndbYe2kiWEb8zjQjgUwnSJ5oWTmxS+a6N72UrgyQ09dxMVXawiq/AZRK4xkxrFG8mzU2hr1XDjTFQtPFfZ+ghd5meuYrTHQK2lUwpThcvZkobevrnm4kG5ZEmnZabRbyOAB8="
+skill: 0.563
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.57
+  aimErrorDeg: 0.2
+  decisionTemperature: 1.21
+  technique: 1.23
+  aggression: -0.49
+kits:
+  trooper: 1
+  shortbow: 0.2
+  rewind: 0.58
+roles:
+  plant: 0.93
+  escort: 0.2
+style:
+  aggression: 0.75
+  patience: 0.01
+  teamplay: 0.3
+  risk: 0.89
+voice:
+  tone:
+    - fast
+    - precise
+    - focused
+  verbosity: normal
+  style: speedrunner calling splits and personal bests, everything is a timer
+lines:
+  greet:
+    - "timer starts on spawn. good luck {team}"
+    - going for a sub-minute plant
+    - route memorized. go go
+  onKill:
+    - "{victim} cost me two seconds"
+    - "skip {victim}. route intact"
+    - clean split
+  onDeath:
+    - "{killer} reset my run"
+    - run dead. resetting
+    - that's a bad split
+  onPlant:
+    - "{bomb} armed. gold split"
+    - "{bomb} lit. new personal best"
+  onDefuse:
+    - "{bomb} defused in record time"
+    - "frame-perfect defuse on {bomb}"
+  onWin:
+    - "run complete. pb, {team}"
+    - good time. could be faster
+  onLoss:
+    - run's dead. next attempt
+    - bad luck on the rng
+  onLastAlive:
+    - solo category, any percent
+    - no splits left. full send
+  taunt:
+    - you're slower than my last route
+    - i've already planned past you
+    - your bomb is on my route
+quirks:
+  - loves_nuke
+  - bunny_hops
+rivals:
+  - noodlewolf7
+  - bralmor-39
+bio: Times every plant to the tenth of a second and keeps a spreadsheet of personal bests for every map. Spent most of 2014 racing NoodleWolf7 to the enemy bomb. Tries to coach Bralmor_39 and mostly despairs.
+batch: 2
+retired: false

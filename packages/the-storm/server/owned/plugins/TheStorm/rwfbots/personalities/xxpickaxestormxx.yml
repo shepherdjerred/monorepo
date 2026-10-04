@@ -1,0 +1,76 @@
+id: xxpickaxestormxx
+name: xXPickaxeStormXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk4NzE1MSwKICAicHJvZmlsZUlkIiA6ICI0NDYwMjU3Y2U3MTE0MzQ1YTA2MzBkMjgzNWY3MzcxMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNYWxlZGljdF9ZVCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83ODRhNThmYjVlYzAxOWRhZjhiNzNhOTE2NGZiZGE0NjY2ZjBkN2UwYmNkNGRmYTQwMmJhZTUwYzM2Yzc2OWE0IgogICAgfQogIH0KfQ=="
+  signature: "wBN4w4Z3u0p/V3ZW3+k17w+IJu7xQ40c1u2Q2swYdHS/mkCFtzyJz9ymJ8LwHb8OKC02BMxo7zd1egfc9xpj0WWquU++De7DeftiySRGWCvgg82RXJsAastV9sdRaYz0jnBp3gNybSpfvOqcY2XkLw/yR9wuamxldOlk1mdg0CPxgfRBJGrVqITQ2aMIU8PGyyQX09HQimgnx0wRnWJG64tHLrmkPEPUObP5tHoiqSbzzkjZZUxOUFMyd0EeTmj7kGm5JZaSjzHpQTEyX4Twyi+0tOLgnbLDtA/XYfWeSqbZjvq8ZgTDz6YabyH6VrrZenbPwd4sZwuz/gHOIjDp9cVcl7sBbfI3pb7xK8KEhDD2SuITWa82U/mWHA1FC7l/16dZHCCTaoOIBvvnyKe7jWv5FTIZGblFeogB6wX19zbmYYFTB4RYl+3QVWGXAEXC4SzkVE/rGk8sONFTl8VtFE01oLqeVpvuVeZMzLHRVy+ExoWdCAODg/1+teMvnVgy/56J71KZKZAvkEq4O7eT+zzXbGoUl4uLdZ1J6pssSf80/zoBB2GvN/U58N61XBjOU5YKQ7EFGySlI1EDMEm2kP6YaGJSW7nMk4YIIWWzmR7Cwcey8juUSOqBeKF9tejL7bQcXz+qcGLoE8Mg7urfx5KaSMibTwPlCFwRcR2TtIw="
+skill: 0.855
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.01
+  turnRateDegPerTick: -0.28
+  cps: 0.54
+  predictionQuality: 0.23
+  decisionTemperature: 0.55
+  awarenessRadius: -0.91
+  aggression: 1.54
+kits:
+  trooper: 0.89
+  shortbow: 0.5
+  rewind: 0.29
+roles:
+  plant: 0.8
+  escort: 0.43
+  retake: 0.17
+  hunt: 0.69
+style:
+  aggression: 0.92
+  patience: 0.1
+  teamplay: 0.38
+  risk: 0.65
+voice:
+  tone:
+    - stormy
+    - loud
+    - intense
+  verbosity: normal
+  style: Thunder-and-lightning hype, weather reporter of destruction, CAPS on the big word
+lines:
+  greet:
+    - "STORM incoming, {team}."
+    - "Forecast: heavy pickaxe."
+  onKill:
+    - "THUNDER on {victim}."
+    - Struck by lightning.
+    - "Storm warning ignored, {victim}."
+  onDeath:
+    - "{killer} weathered the storm."
+    - Storm passed. Briefly.
+    - Clouds clearing. Not for long.
+  onPlant:
+    - "{bomb} LIT like lightning."
+    - Strike landed.
+  onDefuse:
+    - "{bomb} grounded."
+    - Lightning rod work.
+  onWin:
+    - "Storm clears. {team} stands."
+    - Total FORECAST accuracy.
+  onLoss:
+    - The storm broke.
+    - Building another front.
+  onLastAlive:
+    - One cloud, all thunder.
+    - Eye of the STORM.
+  taunt:
+    - Hear that rumble?
+    - Take cover.
+    - Storm's on your doorstep.
+quirks:
+  - bunny_hops
+  - celebrates_early
+rivals:
+  - roguethimkrist
+  - swiftkrashtim
+bio: Arrives at every fight like a thunderstorm and leaves about as quickly. Races RogueThimkrist for first blood and has a stormy history with SwiftKrashtim over who rushed first in 2013.
+batch: 2
+retired: false

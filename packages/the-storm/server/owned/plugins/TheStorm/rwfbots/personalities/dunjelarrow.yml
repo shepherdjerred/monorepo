@@ -1,0 +1,75 @@
+id: dunjelarrow
+name: DunjelArrow
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY1NDM5MCwKICAicHJvZmlsZUlkIiA6ICIyODlhOTY3YTI5ZGU0YjliYTljYmEwYzgxZDRkNWFjMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJoYW5uaHVtcyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iOWIwNzUzNDJjMmQ2ZjVjYTNlNmUyZDAxNmQwYTA0YzljNDhmZWYyNGMyZWY0MzBiMGJiMTRhYzk3NjFhZDciCiAgICB9CiAgfQp9
+  signature: "GOO/pj7TwZX7Ba7KuvVFh8GeoaeF0Ii5miDBYpiW6++BDbP4TUPFtoS5J0sVyTME3wpqyzXsDhkMJ3q4o/peTn1SaerM4xXmRfDmS7qSb7HQ4IgKtoBkwn+uqqKOUelLyyeJV0/QV+EEdXnU29rz3I8CQsDrrcO/Ids29u8c3cQABzI3bvUj7+3hI2LFR8QGuj7+yW1lnJihqPgAIoLBXSKi4dc4e6BVY6QNrLp5w0mjLtGiNuYBiMSlt/UzX2nVkXCx841DJjLK/GuS24Mov0DyMUv9QvpblKDAFA/0vMMZKgDaSYruxc3kewuUjMovbBGOz0Yige6uJVw8TLSSaxr86SlLsFbg86MjKU0s98NJFTBbzinEEFOPTUAuVNDYDAfHcnbGx3lLfzf41QRindxPfvFp5lP3E0lm4t+8C+HJ3S77rf0YgaGKbWqjhmV8sRl3ATo14Pgv5iObzCKDIjUIPMpjWO+tLYcLF9bBzmoLH2x+76EOpfbOiRcEnDgkXh23pvfFZ5bL7+fAEU/3owsVwetH6v6D+tf3vIhobRH1G33VBlwA1MDM8JmALnx2YzKkqrhypQhTtD3KrfqETp97ikhaE5rXS9llZME5bapdsw9gTpJJOp+vW+/HmOPlx9xj1/GP/CC8dXgJoeuKclRvb02YpEKKyVm0WRu+spw="
+skill: 0.057
+archetype: hunter
+leverOffsets:
+  reactionMs: -0.9
+  turnRateDegPerTick: 0.8
+  predictionQuality: 0.75
+  awarenessRadius: 1.08
+  coordination: -0.6
+  aggression: 1.17
+kits:
+  trooper: 0.67
+  longbow: 0.44
+  shortbow: 0.87
+roles:
+  rotate: 0.54
+  retake: 0.26
+  hunt: 0.95
+style:
+  aggression: 0.76
+  patience: 0.35
+  teamplay: 0.37
+  risk: 0.49
+voice:
+  tone:
+    - boyish
+    - competitive
+    - bright
+  verbosity: normal
+  style: "eager kid with a bow; counts every hit and asks if anyone saw"
+lines:
+  greet:
+    - bow ready! who's first?
+    - i'm gonna find them all today
+    - "{team} watch my arrows!"
+  onKill:
+    - "got {victim}! that's one!"
+    - "did anyone see me hit {victim}??"
+    - "arrow count: very good"
+  onDeath:
+    - "aww {killer}!"
+    - i was aiming!!
+    - that's not fair, i was reloading
+  onPlant:
+    - "i lit {bomb}!! do i get points?"
+    - "{bomb} is lit, now let me hunt"
+  onDefuse:
+    - "saved {bomb}! back to hunting"
+    - "{bomb} safe! where'd they go?"
+  onWin:
+    - we won!! i hit like five people
+    - "gg {team}!"
+  onLoss:
+    - gg! i'll hit more next time
+    - aw. gg
+  onLastAlive:
+    - it's just me! i can do it!
+    - "{team} watch!"
+    - bow ready, one versus everyone
+  taunt:
+    - i see you!
+    - ready, aim...
+    - you can't dodge forever!
+quirks:
+  - bow_spammer
+  - celebrates_early
+rivals:
+  - mainmaiz-97
+bio: Keeps an exaggerated tally of every arrow he lands and shouts the number. Mainmaiz_97 always seems to find the enemy first, which DunjelArrow is determined to change.
+batch: 2
+retired: false

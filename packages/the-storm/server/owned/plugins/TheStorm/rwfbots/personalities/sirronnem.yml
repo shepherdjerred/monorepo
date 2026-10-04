@@ -1,0 +1,73 @@
+id: sirronnem
+name: SirRonnem
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk3NjU4NiwKICAicHJvZmlsZUlkIiA6ICI4MjYxOGI1ZjhhMzA0Njg2YTkyMTM2ZDcxZTlhZDkyMSIsCiAgInByb2ZpbGVOYW1lIiA6ICIxZXRobyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MmI3NjE1NDczZGI2ZDQ1YmRkOTNjZTA1MjUwYjFiOTAwNzIxMmE0OWQ0ZjE5ZWIwNzk2NzVjZDEwYzE3ZjciCiAgICB9CiAgfQp9
+  signature: "I2RbZwntaEvYHzzee3KJbmoFvqZ1X4zZmf6TqcVAze5iSekxEu6eNxeNnieNitdpDri24fAl+jAtSO3AwDpx0hV+HqyP8PxBmD1HzcbR0M6OKAeEfioVe/rOtMUmcDA5XsWlMdXvB2cOAJwq7fQhSwXjq688jO0srcMfhM35LoHu2SzlEN9N88Dbu2OKXA8P+bRBQs7HiR5zf6GG84ClqQ8VfuHf5TaUKv7oyuW9ocuEYJ99PxB38K+D7ow2Eic2UEfQvJIoySpXR45JIgdHOaPoo+i0xrCyoO9UTupM52E4RbnISxWqoB1iK9jx7tmEwvMwzaAepvZhxzch9yD4GXcuvJS/ZeOKUAlmsoXM4ZCxNhFmB6+snS7k2UCsSnTs25KXKzd2pDz7NsPKXvjD3vEfN7WxfJ/2OuDTxHLy7Dbnc5TG2NUkHR6MXvH9KcqtaM144KYn2Dvq4jWznnhk5GTeDfavZ4E+Ypne6UnHucQmZuC+cbraWHRraNC/DUR5hIrDiylZyZZxdwDQkz+3sEsbcS+8Pqz6WsLYZ2/FwffVwPRvQu8LDG4oycmdSRDu1lArM/czqAfBBFEwtjQec54cgITW+oEbWk7pD4AC7Vz1x4S1ZEFdsomGtgJbLSLXB/nX4UDAb5pD+5etqdit/AKd3hnUQHjRobjaULAiZ2c="
+skill: 0.255
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.53
+  cps: -0.46
+  predictionQuality: 0.93
+  decisionTemperature: 1.32
+  awarenessRadius: 1.25
+  aggression: 0.87
+kits:
+  trooper: 0.71
+  longbow: 0.57
+  shortbow: 0.96
+  rewind: 0.18
+roles:
+  rotate: 0.41
+  hunt: 0.98
+style:
+  aggression: 0.77
+  patience: 0.38
+  teamplay: 0.31
+  risk: 0.6
+voice:
+  tone:
+    - noble
+    - questing
+    - earnest
+  verbosity: normal
+  style: Questing knight on a hunt, 'my quarry', treats each enemy as a legendary beast
+lines:
+  greet:
+    - "The hunt begins, {team}!"
+    - I ride for my quarry.
+  onKill:
+    - "My quarry, {victim}, has fallen!"
+    - The beast is slain!
+    - A worthy hunt.
+  onDeath:
+    - "{killer} proved the greater beast."
+    - My quest falters.
+    - Unhorsed!
+  onPlant:
+    - "{bomb} lit for the realm!"
+    - The beacon burns!
+  onDefuse:
+    - "{bomb} saved, by my oath!"
+    - The realm is safe.
+  onWin:
+    - "Glory to {team}!"
+    - The quest is complete.
+  onLoss:
+    - We ride again at dawn.
+    - A quest is never over.
+  onLastAlive:
+    - The last knight rides.
+    - Alone, I hunt.
+  taunt:
+    - I have your scent, beast!
+    - Flee, if you can!
+    - My quarry hides poorly.
+quirks:
+  - holds_grudges
+  - narrates
+rivals:
+  - theneztar
+bio: Treats every enemy as a dragon to slay and has yet to catch one on purpose. Calls TheNeztar 'the old huntsman' and keeps asking to join the hunt.
+batch: 2
+retired: false

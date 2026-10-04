@@ -1,0 +1,74 @@
+id: swift-falcon
+name: Swift_Falcon
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg0OTM3NiwKICAicHJvZmlsZUlkIiA6ICIyMjM1MzA1MTZjZTc0NTViODk1NmFhN2NmYTk1MjA0YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaGVrZWx3aXR6IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzk2M2YwNzlkMGU5NDc3Y2Q0YTIwNjlkYjhjNjUyYjA4NTU1NjkwNjNmM2I2ZmRhNzZmMDg3MjBlNTc3Yzg5MDgiCiAgICB9CiAgfQp9
+  signature: "aqHDXghjTiahjCJxBzrXQ3XSfIZ8MJ6OBq7s4MIq7Ank98sQNatq9kjyB+JfcAmNtps7EHLhHygUyQaMVPBYJP1Q8hjuZAvvxvp8/X7P+fRr5YGauqYr9A6TC0Px1r3ol+OjIve2/Qe28kDvyqorbYjt9CpD/RgX8Dm1nEY7xMgsA96KatGXYPqaE+niBODYmmcUUQZJmVQHcLnmq71xlQ+drjk8ks4IVIDmRzr6Aay02Lr7OIeWPU6zHHZyAougtHmZLskcSeke1ddBT5QC3Aszgl+BwNyZQOvxs577BDgiLY4Wqxl4Ax8DJiubt6LEgcQPUWG5mh0yf0k3AvIuF9cZUA2wdS5rIuTBoIecv9bNevB1TUy5bDdQDXYihjWIS1LdqeKVil6mYp03JTFk9mk9oBd5Cqy0D9eaN17546ivuhAeXqwy4k9O+I7CC4RFKDTvFUonm64R41vOe+bVbVTaBRm6XhSUbjEbEQG3mqmo5q3dTkz9tlmloOSls0Wk80Ltmz+B/FIdgPrCMsdL4Jrb6LvYK2apaINpnF9ohx2cruglRS+ZBu9O4yPHb2OtPU606tNHj1cmpXtRDNw24s4QKXyfpx8FfXih4eiWVF1S+GhDWC9NE5aYYERfmnArG6Y19bus5QJxYlD5y3fm+o7JqglXf6kSqSWllFO+5x0="
+skill: 0.575
+archetype: lurker
+leverOffsets:
+  cps: 0.33
+  predictionQuality: 1.03
+  decisionTemperature: 0.46
+  awarenessRadius: 1.37
+  coordination: -1.31
+  aggression: -0.65
+kits:
+  trooper: 0.63
+  shortbow: 0.63
+  ghost: 0.77
+  wraith: 0.63
+roles:
+  plant: 0.35
+  rotate: 0.78
+  hunt: 0.9
+style:
+  aggression: 0.56
+  patience: 0.83
+  teamplay: 0.13
+  risk: 0.62
+voice:
+  tone:
+    - cryptic
+    - calm
+    - poetic
+  verbosity: quiet
+  style: Speaks in short haiku-like fragments about wind and birds
+lines:
+  greet:
+    - Wind turns. I go.
+    - Falcon leaves the nest.
+  onKill:
+    - Talons. Then silence.
+    - "{victim} heard only wind."
+    - Dive. Strike. Gone.
+  onDeath:
+    - "{killer} clipped my wings."
+    - Feathers on stone.
+    - Grounded, for now.
+  onPlant:
+    - "{bomb} breathes fire now."
+    - Fuse lit. Sky darkens.
+  onDefuse:
+    - "{bomb} quiet again."
+    - Ember falls asleep.
+  onWin:
+    - "The sky belongs to {team}."
+    - Wind at our backs.
+  onLoss:
+    - Storm passes. We return.
+    - Even falcons miss.
+  onLastAlive:
+    - One bird. Wide sky.
+    - Circle. Wait. Strike.
+  taunt:
+    - Look up.
+    - The wind knows where you are.
+    - You walk. I glide.
+quirks:
+  - stares_down
+rivals:
+  - royal-falcon
+  - badgercomet5
+bio: Never runs in a straight line and never explains itself. Considers Royal_Falcon an impostor on the grounds that there can only be one falcon, and duels BadgerComet5 for the quiet corners.
+batch: 2
+retired: false

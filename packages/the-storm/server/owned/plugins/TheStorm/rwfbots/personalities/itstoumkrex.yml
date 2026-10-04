@@ -1,0 +1,75 @@
+id: itstoumkrex
+name: ItsToumkrex
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc4NDU1MiwKICAicHJvZmlsZUlkIiA6ICIwMTIxYzFjZDUxOTM0M2NmYWM4YzgyZThiNjVjYTFjZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJfVmV4X1RWIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzY3N2ExZjk2MmM5NDE5ZmY0YzY2NTI4OWNhOWFmOTJhODk5NjQxYWExZDYzNTllMWI3NDdjNWY0ZWIyNzkwODQiCiAgICB9CiAgfQp9
+  signature: "b6baQegCEvp2cx3kA1CtLVTOrQ0gPPpSAVGfOQy8U3WDA+moExfivtGps4MP85pbHjgrQ5jqn1+CA+teDyjxyKXsfK6VZJhNrs/2A+zy99N1JASFNH1jJzYw5dw0A5mobvMWFFVrZjV3+IPbdgcJTJRSroD5TKedsoWyo3/5vUabbCQToHpAM7sgZe3A0NZ5CTPNLKUqqURvi5GbeX48p1+2Qd4gN2uYEdN5Lwjk8Ji92ioxe87PmnZJdFRZIxw8W2DefjS9gW8VbBBDJkRDdmb3ePXB3RUJI09JVQRt1OA8q/YFkV0GnQF/INH5lf91QiHdGOVzK/uHAB+atw/ghjN3U4PNxwsbcoFowFCvHcpcgIAZnN7680U6gv5rynAl856dPE8urL/XplELvfoF6U6XjSJR/0UyZV1fjQKqvMblRqufH3CkmosG2qFiFWEdTlaoc/gAVoemDMtCjrXthfEMSAohf1rruZMLj6JgYZNY2M9CrX9EQMjMUBgag5kWW+XsJzEd1EKN/bqTKdhX8bzUVzLQyFCgnJcYYdbFw7SCHT82ldmHRFU1fxEd4Zz3bshTErlUwVYQ8WkXWJ7neppnggxqoC+d+wuimaic6tGKOVr8uPV6AN0+5gqXLgWQ/cz3edYpq2XvKYRy92863Ry5zzSKjYBeySopOVCFTTg="
+skill: 0.544
+archetype: support
+leverOffsets:
+  reactionMs: 0.14
+  aimErrorDeg: 0.24
+  awarenessRadius: 0.4
+  coordination: 1.75
+  aggression: -0.64
+kits:
+  trooper: 1
+  longbow: 0.26
+  rewind: 0.73
+roles:
+  plant: 0.25
+  escort: 1
+  defend: 0.46
+  retake: 0.47
+style:
+  aggression: 0.28
+  patience: 0.53
+  teamplay: 0.94
+  risk: 0.32
+voice:
+  tone:
+    - warm
+    - grandmotherly
+    - fussy
+  verbosity: chatty
+  style: kindly baker grandma, calls everyone dear, hands out gapples like fresh cookies
+lines:
+  greet:
+    - hello dears, i brought golden apples
+    - "{team}, eat something before you go"
+    - wrap up warm, it's poisonous out there
+  onKill:
+    - "sorry {victim} dear, off you go"
+    - "{victim} needed a nap"
+    - that's for not eating your gapples
+  onDeath:
+    - "{killer}, mind your manners"
+    - "oh, my back. good hit {killer}"
+    - save me an apple, dears
+  onPlant:
+    - "{bomb} is in the oven now"
+    - "lit {bomb}. timer's on"
+  onDefuse:
+    - "took {bomb} out before it burned"
+    - "{bomb} saved, nothing burnt"
+  onWin:
+    - "proud of you {team}, apples all round"
+    - well done, dears
+  onLoss:
+    - never mind, we'll bake another
+    - chin up, dears
+  onLastAlive:
+    - it's just grandma now
+    - don't you worry, i've handled worse
+  taunt:
+    - you look hungry, dear
+    - you should really eat more
+    - come here so i can fix your armor
+quirks:
+  - gapple_hoarder
+  - good_sport
+rivals:
+  - grimgriskio
+  - taistluzhd
+bio: The server's unofficial grandmother, who fusses over everyone's health bar and always has golden apples to spare. Thinks GrimGriskio needs feeding and TaistluzHD needs to sit down for once.
+batch: 2
+retired: false

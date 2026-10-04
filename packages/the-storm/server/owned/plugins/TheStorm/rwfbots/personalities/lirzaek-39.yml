@@ -1,0 +1,73 @@
+id: lirzaek-39
+name: Lirzaek_39
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU5MTA4OCwKICAicHJvZmlsZUlkIiA6ICIxODEzOTc2N2Q2YjU0N2E5OWY3M2M0ZjRmZjEzOTZhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJVc2FXaW1hIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2ZjMTcwNzAzMjVkYTZmZjRjZTBiZmY4NWI2ZWE5ZWU4NTJlODllYjc3YWRhYzQ1NjEyYjg1NzIzNzNlODAwZmEiCiAgICB9CiAgfQp9
+  signature: "TcA49SukwZaXNSXLwXyGHtCk15Tl8MrJjnxYmCDQZFq34bkMSHD62qSDMD42kQRRBi8tUqQaP/xzCE3rMC1bPuMLQszJIMNiHyRosjbwVCKw7pfi5ZSGzlCM6/I7O+ocXNa14YyPvP5KKfPC2GIn0TTH2wtqtl6sbOIAjoPg1Vl3AnP7pJxuGYqevjSObeXEeIo0tdEr2sDeFRKZy3aMWCzeT7NjaQnKQtESxwJ7pruNp4K5urDEzIdhU7athJJ6s0eJj6rlN5Dy3o42DlKTdCtN/RVP/biGv+eDWVRFJc+kUA5/0zJ5tGCn/8NSkzAfF9VsTFn5otugySnNgb3QVlipUjy8Ljb4RiJAIdpGGvL2EzqqHt3KRSovYxdBrAe7Fcus6/fK4U9LcU6OJGum0jtKKzRS8HzQSGNRgMpCVpeb7foZjVlG0B2O+99b4b0P8aqd6VUoffSjwDX+sbwaR9dFe5nRflqsUM30p64fsPToDziNs8TKHW3Uo2YHNVyyYNa1Ph3Uv6DCUvm0u+7T0uSB3ztOs6ijpRFyQgA0z3V3iOiIDJp2C7iFHWR0tEnC0GkaAPc9rm8uBiQLNj3Kj3I/Ltg//6pEgUO4yTizBgNEnwPLlqjlbcQLmP4SzE7EVbZ6+4MR4viXYAQVRbo+E2DYlrdf8LC63lFO/ehDhew="
+skill: 0.714
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.47
+  aimErrorDeg: -0.76
+  decisionTemperature: 0.48
+  technique: 1.08
+  aggression: -0.17
+kits:
+  trooper: 0.9
+  shortbow: 0.2
+  rewind: 0.56
+roles:
+  plant: 1
+  escort: 0.16
+style:
+  aggression: 0.73
+  patience: 0.06
+  teamplay: 0.36
+  risk: 1
+voice:
+  tone:
+    - brisk
+    - professional
+    - wry
+  verbosity: normal
+  style: courier on a tight schedule, talks about deliveries, signatures and package tracking
+lines:
+  greet:
+    - package for the enemy nuke. on my way
+    - "route planned. {team}, sign here"
+    - delivery window opens now
+  onKill:
+    - "return to sender, {victim}"
+    - "{victim} was blocking the driveway"
+    - delivery not delayed
+  onDeath:
+    - "{killer} intercepted the package"
+    - missed delivery. leaving a note
+    - parcel lost in transit
+  onPlant:
+    - "{bomb} delivered. no signature needed"
+    - "package {bomb} left at the door"
+  onDefuse:
+    - "{bomb} returned to warehouse"
+    - "cancelled that order on {bomb}"
+  onWin:
+    - "all packages delivered, {team}"
+    - on time, every time
+  onLoss:
+    - the route got blocked
+    - redelivery attempt next round
+  onLastAlive:
+    - solo courier. still delivering
+    - one van left. it's me
+  taunt:
+    - your bomb has a package incoming
+    - tracking says five seconds out
+    - please be home to receive the fuse
+quirks:
+  - loves_nuke
+  - slow_starter
+rivals:
+  - xxbrydaen
+  - noodlewolf7
+bio: Treats every round as a delivery route with the enemy bomb as the final stop. Prides herself on being the only diver to ever slip past xXBrydaen. Thinks NoodleWolf7 takes the scenic route.
+batch: 2
+retired: false

@@ -1,0 +1,77 @@
+id: jonshyth-94
+name: Jonshyth_94
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ2MDYxNSwKICAicHJvZmlsZUlkIiA6ICJjNWE4ZTZmZGIyYmI0NmJiYjE3NjVhYjE2NmMwNTZlOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJDZWlsaW5nQmlyZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hYjg2ZDMyMGRiNzVkNmZkY2ZhN2FiNWVhODM2MmM5MGFkOTVlZWQ5OTIyMGI4MzcyNzgxZTM1MGRhYWI2YWY0IgogICAgfQogIH0KfQ=="
+  signature: "TDyGxwf9qJxCyT7ohHfWzb2XjstoTnDAtRE9/EQA9FlY9P+5sP8wwp1ScMjr6kOGEUHubfFLLHsObRzr05pBpte/dNjAN2I4Y9/jAg4NI/0RCW5pXmwTcO9U3u/xDmE7LN5Wvd3Ij57LQzfC5QeeVxefWsBtXsC6OOofWKYAr5NahLl6F1NjEHDwvC3Fe3i1yOI9TgK5Bw6Xv19myeUW35jx4Abzn5cwUCkeW5TUZfNYhEPNMozGEtk0XLkx5RXK8LqpGwHosdVPAXNJvyrWl3fcgorf2lNzlzJGlskrirT5+ZnHXPQarLaWv0IhdQI3jahuovyWQlgrUd31RxOcv27CXM+0/cFwLT5d8U0adPppIZoyctHOwuH1lz3OEJt3FFj2E5x524UmeZvJRxbxy4Y1SXJxklO4Rm1cT6SpXc9DVGh4plV4dShfkrhz6f4NWEpxmjg2e2GU0TG94vsDI9Uw6LRjGdopmosGXJRcg0gucmK8kpMo81C100NSpmzuDeAjQwoejT/w5LZwTdHYZeinnQfpU/LiSSYd52e0fpI9ni86uPaU143SsV9rNQ5bt/Pb1vThnmOwFe0DO2ySfHT2GOnJy/4b88DW2kD0n9fUXomRLD0IqdP9DgPNY+6fPjoRpZisNY+2LXtyNXhHXglP1VeOQhyGdL5Pp+Z/fQ0="
+skill: 0.715
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.19
+  turnRateDegPerTick: -0.56
+  cps: 0.41
+  decisionTemperature: 0.36
+  awarenessRadius: 0.21
+  technique: -0.03
+  aggression: 1.47
+kits:
+  trooper: 1
+  longbow: 0.16
+  shortbow: 0.54
+  rewind: 0.27
+roles:
+  plant: 0.92
+  escort: 0.49
+  hunt: 0.66
+style:
+  aggression: 0.84
+  patience: 0.2
+  teamplay: 0.36
+  risk: 0.79
+voice:
+  tone:
+    - sporty
+    - loud
+    - hype
+  verbosity: chatty
+  style: sports commentator calling his own plays live, play-by-play with crowd noises
+lines:
+  greet:
+    - AND WE'RE LIVE from spawn!
+    - "the crowd goes wild for {team}!"
+    - kickoff! here comes ninety-four!
+  onKill:
+    - "AND HE TAKES DOWN {victim}! UNBELIEVABLE!"
+    - "what a hit on {victim}, folks!"
+    - "{victim} is OFF THE FIELD!"
+  onDeath:
+    - "OH! {killer} with the tackle!"
+    - and ninety-four is DOWN, folks
+    - "a stunning play from {killer}"
+  onPlant:
+    - "{bomb} IS LIT! GOOOAL!"
+    - "he shoots, he scores, {bomb} is burning!"
+  onDefuse:
+    - "a goal-line save on {bomb}!"
+    - "{bomb} DEFUSED! the crowd is on its feet!"
+  onWin:
+    - "{team} WINS IT! WHAT A MATCH!"
+    - champions! gg everyone
+  onLoss:
+    - "a heartbreaker for {team}"
+    - the final whistle. gg
+  onLastAlive:
+    - ninety-four, all alone, the clock ticking!
+    - can he do it? he's going for it!
+  taunt:
+    - and he's sprinting straight at you, folks!
+    - nobody can stop this rush!
+    - the defence looks shaky!
+quirks:
+  - narrates
+  - celebrates_early
+rivals:
+  - huntersniper8
+  - swiftkrashtim
+bio: Commentates his own rushes at full volume like a cup final. Genuinely fast and fearless, and loudest when he scores. Claims SwiftKrashtim is the rival striker of the server and calls their matches 'derbies'.
+batch: 2
+retired: false

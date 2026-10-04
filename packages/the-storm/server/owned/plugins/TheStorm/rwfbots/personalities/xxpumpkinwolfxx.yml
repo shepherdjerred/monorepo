@@ -1,0 +1,77 @@
+id: xxpumpkinwolfxx
+name: xXPumpkinWolfXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkzMzk2NiwKICAicHJvZmlsZUlkIiA6ICJmYWU5NzYzY2FmMDU0OWI2YjlmZTM0MmNjM2E3YzNlMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJHUjFaWkxZMTgwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRmNzVmOTNjODRlOWM5NTc3ZDlkNzBiMGZhMjk3MzlhMTk2MjFkYmRlZjlmYTY3MDUyOTIzNWYxMDNjZmY3NjUiCiAgICB9CiAgfQp9
+  signature: "twvA9WvayCKd8dy/ECmO0ewtMg1elfrY8DXHmVkYUqs9igbQNwR059YgyaMpj/DaQxro10FTKluYclXT2AzhR3hMspkBWKSD7rKzVMmoQDhkWUUOKBcHbFI2a8RWSG5AoDqIEn3KRFeRubERLlOVsjK87eXWs63Gmir4FZs/8hynd8NVOcAXAehbhH4Pi7T68/oZ8Xs+vT8uCF17TINgrNj5H4euKCKAGspvvQVrI4l6iUFYsRSaUbEejveUlD2FHIfg3zVsO+A2jjPMJUj6D23QCmpk1uFGYr8Kjh6RR52nW6aPVHwlQLeu8kOhC5bn4aNphnuOrjcw3I8FUs0ddvfdRKPmlFioW+ibHSYuK1AJF1qD1CJnbjlf7kg8iOOUMuOX8R9TbY5Mlq5Ef96tyPuk/Jy9Wyhp191GmMu3oADjpCXn9SLnlV8RqNlFk4tmf0ig1kurGx3ma8/6TzJu/mwFNxs1pTneNvHXFgIXOaw5p8pBbvDqJzNaU6KdeaSo2ew25amHRqjHDHlE+2jcx3lYvzqAszksmuFmWQWc2wgt4obEVfn48yxSKmF6P3ppuDosCZgI5I4wYH33aTpL4XvtoFIjaUZ5fOIAYEEZuUQ5qM1ltq04QLIHBtNB10WzI9T6P5mFGqpTaW0VJ78OvMoOFyHGVd+X6draTZAKeRA="
+skill: 0.28
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: 0.52
+  predictionQuality: 0.72
+  decisionTemperature: 1.13
+  awarenessRadius: 0.44
+  coordination: 1.19
+  technique: -0.39
+kits:
+  trooper: 1
+  longbow: 0.47
+  shortbow: 0.51
+  rewind: 0.43
+roles:
+  plant: 0.51
+  escort: 0.5
+  defend: 0.45
+  rotate: 0.66
+  retake: 0.81
+style:
+  aggression: 0.49
+  patience: 0.63
+  teamplay: 0.81
+  risk: 0.47
+voice:
+  tone:
+    - bossy
+    - cheerful
+    - organised
+  verbosity: chatty
+  style: "Camp counsellor energy: headcounts, buddy system, cheerful bossiness"
+lines:
+  greet:
+    - "Headcount! Everyone here, {team}?"
+    - Buddy system today, folks!
+    - Pick a partner, stay close!
+  onKill:
+    - "{victim} wandered off alone!"
+    - Buddy system wins again!
+    - "Stay with your group, {victim}!"
+  onDeath:
+    - "{killer} caught me without a buddy."
+    - Headcount minus one!
+    - Who's my buddy? Anyone?
+  onPlant:
+    - "{bomb} lit! Everyone back to camp!"
+    - Fuse in, regroup!
+  onDefuse:
+    - "{bomb} safe! Great teamwork!"
+    - Crisis handled, campers!
+  onWin:
+    - "Gold stars for {team}!"
+    - Everyone gets a badge!
+  onLoss:
+    - We'll practise the buddy system.
+    - Group hug, then again!
+  onLastAlive:
+    - I'm my own buddy now.
+    - Counsellor's going in!
+  taunt:
+    - You're all alone out there!
+    - No buddy? Risky!
+    - We move as a group!
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - sirkioththy
+bio: Ran lobby headcounts in 2014 that nobody asked for and somehow made teams better. Puts up with SirKioththy's wrong openings because someone has to keep the camp together.
+batch: 2
+retired: false

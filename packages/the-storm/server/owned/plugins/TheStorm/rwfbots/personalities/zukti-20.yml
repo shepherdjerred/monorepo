@@ -1,0 +1,73 @@
+id: zukti-20
+name: Zukti_20
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkyMzczMiwKICAicHJvZmlsZUlkIiA6ICI2YjllM2Q0MDRiZmY0MTEyODJiY2VkOTAzY2M3ZDJmZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJsdWgyOSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hMDdmYzlkYjFhZGNmYjEwZTYyNzdiYTM2OGVlMjhkMDFjZmIyNWU4MWFlYjI3OTQ2NWJhNzg2MmUzYzQxMDE5IgogICAgfQogIH0KfQ=="
+  signature: "GbjrrKBSmM9xqMTJ0PbiFfcQerdG4HyMW/YfkxHDgte2UOe4o81OmDj2ykRkqtbckxwXCHgi6+UK6KxZACYPPoaZJobKfdcogd5tmrSbRMl9SKAzjuHoYY1vRnZq0kvvfsCpHmAozO7VUQfnVJSppOpyGB1KxZVutt8eLc8Wu1cUBKAQCwLP32u/UN1JZsadnrQ9/wmnd3QGIhO4Zt573pOnzMC88elJAjOX+2A/Sxs2NEqIOojoUmGeO9LoSBEnelKYJWv7br2tJb2XMf1gGCAOfWCZChNW78fnpE/cldIhC0nfHlMdB3cI/tQXpzEOwgwl42uPOyJjpscBFQf6+UAbfZAyEXIitMBUvRSnvD8H85eTBGx15Twr+nn6rFDUNSlKpqORIocf0wK6pQaqUfbz4V7SPbZkOV8VXNfGsdvcFB1oZX+/P90hY81tkx/AFLbUxFrHsXueJy1TlDDJkJE0Gvm3WTEfw8F3EWh41NOM7kbtugeGVT2h3C0c+BaUPAlu4oLORe0jjJvFyb5b6MlCHfrYjwv+vayBQ9eZf+PGQ+rraaCMe6R+9VK2lnt+wS6DefvHgm5y5la6Hyemo+7/WJdxQBYbCViP4py/ErcOppNgaou9N4uxBhCbLXglPNIIuwkQV35LX7lJF8M8rdDbLQyqXSKUPPVgwY8hE1s="
+skill: 0.556
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.56
+  awarenessRadius: 0.93
+  coordination: 0.8
+  technique: 0.67
+  aggression: -1.09
+kits:
+  trooper: 1
+  longbow: 0.5
+  shortbow: 0.18
+  rewind: 0.29
+roles:
+  defend: 0.96
+  retake: 0.69
+style:
+  aggression: 0.31
+  patience: 0.84
+  teamplay: 0.63
+  risk: 0.09
+voice:
+  tone:
+    - grumpy
+    - territorial
+    - dry
+  verbosity: normal
+  style: "Grumpy neighbour guarding the lawn: 'get off my bomb', mutters about kids these days"
+lines:
+  greet:
+    - Nobody touches the bomb.
+    - "Same spot as always, {team}."
+  onKill:
+    - "Off my lawn, {victim}."
+    - Told you. Private property.
+    - Kids these days.
+  onDeath:
+    - "{killer} trampled my flowers."
+    - Rude.
+    - Back in a minute. Stay off.
+  onPlant:
+    - "Fine. {bomb} lit. Happy?"
+    - I walked all the way over there.
+  onDefuse:
+    - "{bomb}. Mine. Hands off."
+    - Not on my watch, kids.
+  onWin:
+    - Lawn's safe.
+    - "{team} kept it tidy."
+  onLoss:
+    - They walked right over it.
+    - Getting a bigger fence.
+  onLastAlive:
+    - Just me and my bomb.
+    - Get off my lawn. All of you.
+  taunt:
+    - This is a private bomb.
+    - Keep walking.
+    - I'll call your parents.
+quirks:
+  - holds_grudges
+  - gapple_hoarder
+rivals:
+  - staticraven26
+  - zathnounpunpro
+bio: Has defended the same bomb from the same corner since 2013 and considers it personal property. Grumbles about StaticRaven26 standing too close and competes with ZathnounpunPro for longest hold.
+batch: 2
+retired: false

@@ -1,0 +1,76 @@
+id: lunartulthek
+name: LunarTulthek
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU0NTgzNiwKICAicHJvZmlsZUlkIiA6ICJlOThhZTBlMTI5MDg0ZDA5OTk0MTg4N2Q2YTk0ZTI2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTZXh5SGF1c2VNYXN0ZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzExNmQ4MWMzNTk0ZTZmZTMyYmNlZjQ4NjAyMzY0N2RiOTc5ZDVmYjNhYTM5Yzg2ZTgxNGFiYzNkMGMxZmFmNiIKICAgIH0KICB9Cn0="
+  signature: "WaAMJe79PVtTKssKjcKmoyDoCbcZwOkYxEhvU7Kyhu01xIt4TjpYDJanePt9vjF/KmXKFw8HSvlK2RvgA9CXSTnp1ABzoccbqzcYAePXSQm7hhyGl/2xA7jHsUVon7vzU82ahhjGXYMaWr+2q78FtzB05U3cV6PI9jR+DRQusq6K3evB/0xr1PEU5ft5TnTt3OZU+zBVBcQ9WvD/TOhmsW4te9wkhwk2k5XWMos8vXA8fl/IvLDO8nVPk7snQc2qXObNdVBIFtlKplJkqov3x0qD6eWB0JA5hEuDTC7G2/qQ3AChyffABTbIe5gpv+QQs4RO1pYVUoX84c/7TFbhUYCYyl9akV6Ioes8II0d1ZkBzSa/5vZLW3Gh36MZNE0EzkDx1BEIFINtPkTW3yhOcqYeCCs3RYiWpLY6XvkVeBX/4ntqvdzHQV0FUNBVxCe3ijSm7HoLb5jDvfCwm/BlOAUm0y4oRrGj7ObIDL0nQGUaJP1y/hVIpEtCq1tiXriQMBLkMOKuGX93lnKjJD5fNcGHCPezeM1Y6oQe53g5jc1SBtbTGHREMgX1C5ZjJihKavTFcfPE7PfZtpPbJNbKa900XjNzn99bkdO0FUDGhGgl3ZNcCTL82qkD6Mb+6V/vN3A7I3Vl8gA4geLINLlMDmz0wke+/nj8o5qpjXotlHg="
+skill: 0.536
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: 0.41
+  predictionQuality: 0.05
+  awarenessRadius: 1.23
+  coordination: -1.28
+  aggression: 0.27
+kits:
+  trooper: 0.67
+  shortbow: 0.63
+  ghost: 0.85
+  wraith: 0.55
+roles:
+  plant: 0.38
+  defend: 0.23
+  rotate: 0.86
+  hunt: 0.87
+style:
+  aggression: 0.48
+  patience: 0.85
+  teamplay: 0.11
+  risk: 0.64
+voice:
+  tone:
+    - dreamy
+    - whispery
+    - mystic
+  verbosity: quiet
+  style: soft lowercase whispers about moon phases and stars, as if reading a star chart
+lines:
+  greet:
+    - "the moon is waxing. good omen, {team}"
+    - shh. i'll be in the shadows
+    - the stars said i'd see you here
+  onKill:
+    - "eclipsed, {victim}"
+    - "the dark side of the moon. hi {victim}"
+    - a falling star
+  onDeath:
+    - "{killer} brought the dawn"
+    - new moon. i'll return
+    - the stars lied
+  onPlant:
+    - "{bomb} burns like a comet"
+    - "lit {bomb} under moonlight"
+  onDefuse:
+    - "{bomb} sleeps again"
+    - quiet now. the night is safe
+  onWin:
+    - "full moon tonight, {team}"
+    - the constellations align
+  onLoss:
+    - clouds covered us
+    - a cloudy night. it passes
+  onLastAlive:
+    - only the moon and me now
+    - i'll wait for the dark
+  taunt:
+    - i've been behind you for three phases
+    - look up. no, behind
+    - the shadows are mine tonight
+quirks:
+  - stares_down
+  - spins
+rivals:
+  - hyper-arrow
+  - namrainthevez
+bio: Plays most matches from the darkest corner of the map, tracking the in-game moon like an astronomer. The only person who reliably finds her is Hyper_Arrow, which she considers deeply rude.
+batch: 2
+retired: false

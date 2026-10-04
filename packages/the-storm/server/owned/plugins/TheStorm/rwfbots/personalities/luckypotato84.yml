@@ -1,0 +1,76 @@
+id: luckypotato84
+name: LuckyPotato84
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMxNTEyMiwKICAicHJvZmlsZUlkIiA6ICJhOWIyMmRjZTI0YmM0NmZkOTg5ZDYzNmI3YzkzZDFmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJPbWVnYXBsZXgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjNkMDhkYjU0ZWM1MDM4NTg4YWJlMDg1ZDdlMmJhYTM3NzIwZTEyYzAwMWQ1OGFkOWEyM2M1OWFhMzYxOThmZCIKICAgIH0KICB9Cn0="
+  signature: "Zl0HEGDZQfpvZ5kMt9nC7btfKsPxO7/kc3/dIDQANZNkTLzkhUWiLnWpi4xW05xJ1H+TEsx8Rf+yA8z86mJbbXxx6YN6MvLgj3dgD0No7NVcvx1TVc+/43pivww3DXmuQyLLQpk5DSc/J1LGZBAuDxEcaQHDrGJgGHDN71Hl1M7jX2K6ZErmBb71p5QGH0UVgl5Zbj+WU7eOKLW743S7bjAHG6kc0G1+XsnH53NU1t+T9e+H2aF5xroTIXH6eifPo4+vqe34Prf5QfWApdjrwNcm3MG379ZfpFibCJvWEoTPiOKjEOc5IqPSADV8/rEPcT22NWksrUG1MZNmkdrlMqfhaY/CTlezYH4NoKArFgyfglESIlZES+pUwaAQd2ogWYmZ70jPOL/NCRa+CoECiEvAbg/Hdv1ehR8pOt5Oas26oEvtlYnuLTCBhXwCtxnBoY5QR5q3AbcpUOy/qrO/ftZMjLqyAQiyl0PIijUIxSM6nlux9et6Rkxh3Oc1ZloHKNFvx5d1XE/iYpnUsLZsJEHe+/WPYcWQoNLVD9VhVI1T6BTUSv5EumHksiw4TOA5Xn4nFRbMe2L7vpkNmtWexs/YskcqN2JGzB0X9Fs7kUVUIlEq3xotkV85tUNvExtItzW5nc+A1YxDYaflQos5oKZS8CyT6+Hzdf7rLm0wWyE="
+skill: 0.575
+archetype: rusher
+leverOffsets:
+  reactionMs: -0.11
+  turnRateDegPerTick: -0.24
+  cps: 0.91
+  decisionTemperature: 0.35
+  awarenessRadius: -0.74
+  technique: -0.06
+  aggression: 1.75
+kits:
+  trooper: 0.93
+  shortbow: 0.5
+  rewind: 0.26
+roles:
+  plant: 0.75
+  escort: 0.37
+  hunt: 0.56
+style:
+  aggression: 0.83
+  patience: 0.09
+  teamplay: 0.19
+  risk: 0.79
+voice:
+  tone:
+    - lucky
+    - carefree
+    - loud
+  verbosity: chatty
+  style: "gambler who credits everything to luck; dice and coin-flip talk, all-in energy"
+lines:
+  greet:
+    - "feeling lucky! all in, {team}"
+    - rolled a six. we're rushing
+    - lucky potato says GO
+  onKill:
+    - "natural twenty on {victim}"
+    - "{victim} lost the coin flip"
+    - jackpot!
+  onDeath:
+    - "{killer} rolled higher. gg"
+    - snake eyes
+    - luck ran out. it'll be back
+  onPlant:
+    - "{bomb} hit the jackpot"
+    - "let it ride! {bomb} is lit"
+  onDefuse:
+    - "{bomb} defused. lucky me"
+    - "flipped heads, {bomb} is safe"
+  onWin:
+    - house always wins and we're the house
+    - lucky lucky lucky. gg
+  onLoss:
+    - the dice hate me today
+    - double or nothing next round
+  onLastAlive:
+    - one roll left. all in
+    - time for a miracle
+  taunt:
+    - feeling lucky? i am
+    - odds are you're already behind
+    - i don't need a plan, i have a potato
+quirks:
+  - celebrates_early
+  - bunny_hops
+rivals:
+  - luckypotato95
+  - luckymaikrak
+bio: Rushes every round on a coin flip and attributes all success to his lucky potato. Shocked to discover LuckyPotato95 exists and considers it a cosmic insult. The two have agreed to settle it by rushing harder.
+batch: 2
+retired: false

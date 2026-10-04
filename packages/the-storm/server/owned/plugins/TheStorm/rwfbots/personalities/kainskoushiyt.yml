@@ -1,0 +1,77 @@
+id: kainskoushiyt
+name: KainskoushiYT
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc2NjYwNywKICAicHJvZmlsZUlkIiA6ICIwMmI5NmI1OTdlMDA0OTUyYmM1ZmZjNDUwNmNiNmE0OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJDaGFybGllc3RvbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jNmMwYzI4MTNjNjJmZjlhMmRjMWRlOTMzOWE1ODRjYTdjNzRkOTZmODk2YTA2MzJjMTcyZGQ4MGNlMDcwZTM4IgogICAgfQogIH0KfQ=="
+  signature: "kfz9P81llk7zf1hXFSj+3sWvG6WXYjpyFpNpzGfBs1IVEaEZ08D5ERjQExORkvGQXsDg++4TjJSQ84aJ/Z+HzHnm3v7XtXt2Ov2uYfY11cKT+s+X3B2rg6UwyXcYgmGVkXBTjRHeWy91KarhdFNTmQeTeVor7VSL8kTIV44hDz18MRaIbXUW1DGQmp18bbMF7ApzaGwNMhva6Y6cmcUj45zmvneiFgmLGYO666fqKUhfZuAMWeeG1Aj+qV5lsDBSbz3rYIHq5y2zZ7O8POZEzwwXqNV1vc/11usu1rUQW6L9Dp2fUQ5GefeGS+jwcGH5m375IwNRGiK4DD+6YoX71UXtXd/5C3qTzF529q2zPtuqhI4EveUX4dVVLsnYtoCo8wiMtlkDqbWeGpTtDCXQyk2Q6F3C/88NMx9Pu+k2JqWhhHPE0NDC1z/QtaYAMk0vfi1PEFo9LIrSwP1ILEWEguPBAr7xm+lJgBMoj//9okjNzGdAraJefsA/nuBG2htxtvEhF0+A5Vjn/RwQJlJ3hn0moHFWw1zNenfzHxIUeL41X9hR1rkYqawqlfusC/U6c7nNZhRxWRVgzkhQr9WgphsymzZMy3cAQp51Bi4bVjeB1dgVcpYlwOFAvnaKTGR/W4VFSHRCqVx2gFkpsN+l0lWN9jkYdxbzWiOSoDGWbEk="
+skill: 0.493
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.89
+  cps: -0.71
+  predictionQuality: 0.33
+  awarenessRadius: 0.9
+  coordination: -0.82
+  aggression: 0.23
+kits:
+  trooper: 0.66
+  shortbow: 0.98
+  rewind: 0.33
+  wraith: 0.43
+  spy: 0.4
+roles:
+  plant: 0.42
+  rotate: 0.98
+  hunt: 0.56
+style:
+  aggression: 0.73
+  patience: 0.46
+  teamplay: 0.31
+  risk: 0.82
+voice:
+  tone:
+    - hype
+    - vlogger
+    - showy
+  verbosity: chatty
+  style: wannabe montage creator, narrates to an imaginary audience, asks everyone to hit like
+lines:
+  greet:
+    - what's up guys, welcome back to the channel
+    - "recording this one, {team}. be cool"
+    - today we flank. smash that like
+  onKill:
+    - "CLIP THAT. {victim} got outplayed"
+    - "{victim} is going in the montage"
+    - that's the thumbnail right there
+  onDeath:
+    - "{killer} cut my montage short"
+    - we'll edit that out
+    - "{killer}, that's going in the bloopers"
+  onPlant:
+    - "{bomb} armed. that's the intro clip"
+    - "planted {bomb}, like for part two"
+  onDefuse:
+    - "defused {bomb} on camera"
+    - "{bomb} saved, comment if you saw that"
+  onWin:
+    - "gg {team}, outro music please"
+    - that's a wrap, see you next video
+  onLoss:
+    - this one stays unlisted
+    - rough episode. still uploading
+  onLastAlive:
+    - clutch for the channel
+    - "1 vs many, perfect content"
+  taunt:
+    - smile, you're on my channel
+    - flank incoming, this is the best part
+    - you'll love the replay
+quirks:
+  - celebrates_early
+  - spins
+rivals:
+  - neonskaenjuz
+  - hyper-arrow
+bio: Has been recording a flank montage since 2014 that has never been finished. Swings wide every round for the perfect clip. Insists NeonSkaenjuz keeps stealing his best moments.
+batch: 2
+retired: false

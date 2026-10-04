@@ -1,0 +1,73 @@
+id: xxmaelpak
+name: xXMaelpak
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI0ODYzNCwKICAicHJvZmlsZUlkIiA6ICIxNzNkZTMxZjIzODE0YzY1YjVmZWMyMTAyYmIxZjExNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJCSVROVyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85YzczYjNmYTEwOTEyYmE5YTIwM2U3NzBjZDNkZjkyNzdmNDMzZmZlZGUwOTdkZjVhZTBiM2Q2MWQ1YzIxOWQ1IgogICAgfQogIH0KfQ=="
+  signature: "mu3zxbTOisbdvyC9tj8w6/ViYyuqAplBEa6BKCuB7/Vr3Qi0xQzDpKq3cBtFzAnpZ0+Lv6xfqbwijO1Y6VwnzZWOF9gwpzwGzJnn+UNjt1dwdCfVpNG33GperoUnVSJ+y3Hqyo3e3Ue3bhc7LYZD3iSUG56f1yxXm6OPAejifBGggy2NsvAWk2Bv3G/vCWeOtnUxx0yeoflSTVDfotCRES9jriCNp/k9IT95m8M872gcfLCF/S60nzuF0t3EvnHP6rYfzjNUZNoyT/4eeLn/rvXK0RuwWJ8rEvqwfsMhMd6zfS3inHNpKbhaA9ax/ZpnJ/pccBbO1Lyyl8DczJGMtIN5uBQi7KDo/ZG4IQa85gjIlgy4HsRXwB6mY8oD+FZfuCfWv5QzUlfcxph1f4WDAUUhf48MeAt9vRD9SgPo+KjbQHWMRQxxQaoSB2YSiqqycWXB1xZNXL0e2D1HvR6N7DvZq4S14msulaWx1/9MTiama3ZvOMu2VcwFfWPl4hyXYdRUs2mQeG6+v/6knhelrJBFVGsTvNmhkwR+uJLERsSoh5GmV3AOnCOCsd4yV4C34mkTAhKKaZUK79K2PVtPpMMkiDdzP+6HV3ph2QK9TrEdBHZQrul3aZB4vz06JqVGEoNqVEdOjcilAhnv7sNV+aAVKC5cJ0RPE5IRQW6dtZ4="
+skill: 0.691
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.67
+  decisionTemperature: 0.27
+  awarenessRadius: 0.53
+  coordination: 0.25
+  aggression: -1.94
+kits:
+  trooper: 0.91
+  longbow: 0.34
+  rewind: 0.82
+roles:
+  defend: 1
+  retake: 0.32
+style:
+  aggression: 0.11
+  patience: 0.85
+  teamplay: 0.44
+  risk: 0.19
+voice:
+  tone:
+    - grumpy
+    - stubborn
+    - dry
+  verbosity: normal
+  style: "grumpy old regular; complains about the good old days of 2013 while refusing to move an inch"
+lines:
+  greet:
+    - in my day we didn't need a plan
+    - fine. I'm on the bomb. as always
+    - kids these days and their rotating
+  onKill:
+    - "get off my lawn, {victim}"
+    - "{victim} should've respected their elders"
+    - that's how we did it in 2013
+  onDeath:
+    - "lucky shot, {killer}. back in my day..."
+    - "{killer}, the servers were better before"
+    - hmph
+  onPlant:
+    - "{bomb} lit. happy now?"
+    - "I walked over to {bomb}. my knees"
+  onDefuse:
+    - "{bomb} defused. nobody thanked me"
+    - "I've defused more bombs than you've seen, {team}"
+  onWin:
+    - told you. sit and wait. works every time
+    - gg. now get off my bomb
+  onLoss:
+    - this is what happens when you rush
+    - gg. nobody listens to me
+  onLastAlive:
+    - typical. me again
+    - fine. I'll do it myself
+  taunt:
+    - I've been sitting here since beta
+    - you rushers never learn
+    - go on then. I'm not moving
+quirks:
+  - blames_lag
+  - holds_grudges
+rivals:
+  - ziolkrukgaming
+  - pastkroxpro
+bio: Claims to have been on the server since before it opened and complains about every update since. Holds the bomb like a front porch. His feud with ZiolkrukGaming is over who gets the comfy corner.
+batch: 2
+retired: false

@@ -1,0 +1,75 @@
+id: phantomsniper7
+name: PhantomSniper7
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzgzMjUwMCwKICAicHJvZmlsZUlkIiA6ICI3YjA5ZDg5NWQyYjc0NTU3YmM0YTkzNWYyNjU0NWNjNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaXJwbGFuZUdvQnJyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzc2NmY4MDU0ZDdkYmJjZjRjNDAwM2NmMjY2OTU1MTI3YWMzNDAzYTE2NWNlODYyMTQxMmJmNjc1MWE1Y2Q4NGUiCiAgICB9CiAgfQp9
+  signature: "KLTCak3uu6oJiW2u57haDKfP4I8aDks6hynpkbFPBYUZNM3teQWNrLwZVbSBGecBX0lxfYkR/jrVfjSOygx/jJ2cu6UzI86YGuusG/92U2jQ5P5YBabdq9bbHxPQEcJC4sVAX5M5nPGiyLrJSAzVbn8ylg0U9jzZOACuu0Tov+8f32lJzFcBR10dsUWyW5XW+gVgfnhcXMdBhlV2lXT0N0oWRmoxppbDMqQbGBsF6zbP7O6anyXNL6RCH/ftX39xa+J3PGH/i2eRbSaXCbjqANIftrNBd+g8q2qd4BYd/FcSuwZB6BRBv1leWygGM7DrnWbabxNHIg4xVoR5KdqVIXYRB3Wd95DcsKwKhLrMxcSnmiX+jbDZWWQKOqSeTuf1zVREMnVbWDSzaEHCyyoFLkduH+/Z0nPhxXtVZ3SMWgsbZ8TXKjiYEpjsUmROHedQ3YzMHZ3k4qp/T9qok7xH+7YPoNhtxp2twm50sZBkyFhsJDvjQVrUY6GGMn2GuczukVe92MLZD29bU+2qL2fA2FYnrvPuv6yb9ysPKxCz7gYHu26AGGV7JA6RmGMHwESLykozXiYgGLzqC9nGFbmPLBQTLEO3HgfOf9CdumXyEFSXi/QFqlGetNHgCkqkENt3I1MUQZOOHYMp/gIYeh9dwzFCQTKHBmnkNVSNcJP9jTo="
+skill: 0.333
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.55
+  turnRateDegPerTick: 0.31
+  decisionTemperature: 0.25
+  awarenessRadius: 0.35
+  coordination: 0.73
+  aggression: -1.8
+kits:
+  trooper: 0.85
+  longbow: 0.32
+  rewind: 0.72
+roles:
+  escort: 0.27
+  defend: 0.89
+  retake: 0.33
+style:
+  aggression: 0.1
+  patience: 1
+  teamplay: 0.55
+  risk: 0
+voice:
+  tone:
+    - cozy
+    - fussy
+    - homebody
+  verbosity: normal
+  style: anxious homebody who builds a cozy fort at the bomb, talks about blankets and staying in
+lines:
+  greet:
+    - i'll be at the bomb. making it cozy
+    - "fort's going up, {team}"
+    - nobody needs to go outside, right
+  onKill:
+    - "{victim} came into my fort uninvited"
+    - "please knock next time, {victim}"
+    - visitors should call ahead
+  onDeath:
+    - "{killer} wrecked my fort"
+    - should've stayed in
+    - my blanket. my poor blanket
+  onPlant:
+    - "i went outside and lit {bomb}. never again"
+    - "{bomb} lit. heading home"
+  onDefuse:
+    - "{bomb} safe. back to the couch"
+    - "defused {bomb} in my slippers"
+  onWin:
+    - "we won without leaving! {team}"
+    - cozy victory
+  onLoss:
+    - the fort fell
+    - i'll rebuild
+  onLastAlive:
+    - just me in the fort
+    - barricading. bring snacks
+  taunt:
+    - my fort is warmer than your plan
+    - come in, wipe your feet
+    - you're letting the cold in
+quirks:
+  - gapple_hoarder
+  - slow_starter
+rivals:
+  - grumlothfuse
+  - xxsniperslimexx
+bio: Picked a fearsome name in 2013, then spent every match building a cozy fort next to his own bomb. Has never sniped anyone. GrumlothFuse keeps telling him his fort is not up to code.
+batch: 2
+retired: false

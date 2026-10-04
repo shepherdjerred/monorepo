@@ -1,0 +1,73 @@
+id: naithnim-13
+name: Naithnim_13
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUyNDMzOCwKICAicHJvZmlsZUlkIiA6ICJjY2MxNGM2ZDUwMDE0MjBmYmMxYjkyMTM2Y2JmOWU4MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJab25lX1gwODE1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzIxNjZkYzcwYjI4NmExZmVlNmIyMDE1MTYzNjNiYjU1YjE4OWUxZjlhYTYwZDUwOTFlOGZmYjRkNThkOTQ3ZjMiCiAgICB9CiAgfQp9
+  signature: "Ltr7Uhk6I97+hcc2+0aYQdMngR8zUcLB7halXcARZK2xTQMObwMm/xVJi9b/YcYYYwTMQJWRYXOhwXHdT1hKZs+f5rWt8UmcimbX8H7j7RJG76ioeczaDVacyEIrbTQF4zVxn3DTyYz8V2KHO43CNvrKawOmXbo0Pwj7LYJ8kogWDOJQ3IKRPf3S5Ct15AfiHVyoSkU0mPbkx01ry5eTg5NICd1xcOIbbFa96pnh8A/qm4onwYBN/i4bPUvTNHKgfn/qGQJ31M+X2yzHqBHNyjbBBK8hPgNXNzchgSmglXTid4s1sAT2lraV4LVfPVgfcdKhUa8TvLa6lMnPXJFCA+RvLHC1CAjdLDP1kvBXDdmSbhvrsuU7ULhOgqAOnmbDyUOA0pwkGzXP8xGzVz2B8xUXOsS7sJ+5jLVYtjpBn47PclV5kQtTsq+yWchen41hnynI6czTDaJ5DLTHWaWZFqZ/KqYqd+QnOmQ6RVhwuyz65Ju8BHkKcJpjVCU4Vtw78KsV8thJn1BhiEwc87++aYWDhLJiSAUEGks2M0kkypY3RdmTGZKpVtyDReGZ9e1YD4eFoF6vnhDNW4knwdaH+6fVJOJgNAY+mKsYrcVUshzssv/L32Piu+DAK7Oi3GKP1q0FIdoPw0fAgq9oJtLz8e8K/EFftyYZj5khZsW0h58="
+skill: 0.39
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.32
+  cps: 0.96
+  awarenessRadius: 0.55
+  coordination: 0.62
+  aggression: -0.71
+kits:
+  trooper: 1
+  longbow: 0.49
+  rewind: 0.32
+roles:
+  defend: 1
+  retake: 0.66
+style:
+  aggression: 0.29
+  patience: 0.85
+  teamplay: 0.58
+  risk: 0.29
+voice:
+  tone:
+    - nerdy
+    - helpful
+    - precise
+  verbosity: normal
+  style: "library-quiet bookworm; references 'the manual', reads rules aloud, shushes rushers"
+lines:
+  greet:
+    - shh. defending now
+    - I read the rules. bombs should stay unlit
+    - "{team}, please keep it down near the bomb"
+  onKill:
+    - "shh, {victim}"
+    - "{victim}, that was a rule violation"
+    - "page twelve: don't run at the anchor"
+  onDeath:
+    - "{killer}, that wasn't in the manual"
+    - I'll have to reread chapter three
+    - "overdue fees, {killer}. noted"
+  onPlant:
+    - "{bomb} armed, per section four"
+    - "{bomb} lit. returning to the stacks"
+  onDefuse:
+    - "{bomb} defused. quietly"
+    - "{bomb} returned to the shelf"
+  onWin:
+    - exactly as the book said
+    - "well read, {team}"
+  onLoss:
+    - I need a newer edition
+    - gg. back to studying
+  onLastAlive:
+    - closing time. just me
+    - the librarian stays late
+  taunt:
+    - shh. you're too loud
+    - running in the library? really?
+    - your rotation is overdue
+quirks:
+  - calls_everything
+  - gapple_hoarder
+rivals:
+  - lanmixmc
+  - zathnounpunpro
+bio: Defends the bomb like a librarian defending silence, and has memorised every rule of Search and Destroy. Shushes rushers in chat. Has a scholarly debate with ZathnounpunPro about the best anchor angle on every map.
+batch: 2
+retired: false

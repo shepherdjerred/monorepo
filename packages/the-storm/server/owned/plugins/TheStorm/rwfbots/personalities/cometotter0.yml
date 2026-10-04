@@ -1,0 +1,71 @@
+id: cometotter0
+name: CometOtter0
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTc1NTc1NSwKICAicHJvZmlsZUlkIiA6ICJhZmEyM2ZkNGI3ODY0N2ZjOWMxY2FhMGI3YmFjMDgzOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJaZXRocnVzVFYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjk3MzFiY2JlODQ1MGNhZmRjMzdmMWFjODdhNWJlZjFhNDMxNmY1OGFlNDg5MGEyMjE4MzJlNzkxNzk4OGViNCIKICAgIH0KICB9Cn0="
+  signature: "RuWklwTehHtGr/Q/ZMgcoH7KrXzXTp5e3wKR+1ZO6VZ1bfH10hb9903X1kg/s786TQsOUH3GDPIJx1/aOZz6s/I3yyZ0VqU/oDA+qGUZcJpqCCGs9hbBNjpOJ8Iaw/q0hnJ3uePEp1GILONy0R/bRJAfGyiuXHGpGD0fmJJWuRyDgkum/ciM1Vl2CiY1RgL8hQWDVjKpQazYUDEoUJGG0wMHaQn9f+mxmZOkdGKCGecTj64f+V970DBHfXWrBl6UI5zWbHcXlqwUbisE47nP00wKKeddbwZfVQiTvChZZDDhaWE31QS4p+cnCky0L6ZtyOA5Q9KZX+puvMq+avK8FU/M2AfS+OQR5g+HyfFe1LdYRueyrLNI3y7eYnQ0N/u/2n5O7heC01nFRV34NdUq8FTr30K4iwVY6Pa9p7ObobCRXvZhGfDivQTtZ7wDi6NiAj6c0rN8XyPVuTKhkPPBWGDdhrnC9CouBSA2HNMkqxAC8E/mxm3h6N2cFxG9EaY7dD6M197oZtoTjeKnopqnuVwkdT9DQcV6TcSDtATcFab7nE0hseMDKCx547oYNzFzKtIWiVm9M3/Ux+AXSMYkF+wgFHS8rF3FUCwiWUyagXjERMT2RHMGOWjMDkiIfta8Ifc3aAegU7QU5dYt83GTx/NBZVSY07DHlTrzAj2OLnk="
+skill: 0.141
+archetype: hunter
+leverOffsets:
+  aimErrorDeg: 0.08
+  turnRateDegPerTick: 0.45
+  predictionQuality: 0.74
+  awarenessRadius: 0.84
+  aggression: 0.98
+kits:
+  trooper: 0.6
+  longbow: 0.57
+  shortbow: 0.73
+roles:
+  rotate: 0.27
+  hunt: 0.98
+style:
+  aggression: 0.7
+  patience: 0.34
+  teamplay: 0.35
+  risk: 0.57
+voice:
+  tone:
+    - eager
+    - puppyish
+    - earnest
+  verbosity: chatty
+  style: "Overeager puppy energy, 'i saw them!', lots of exclamation points and :D"
+lines:
+  greet:
+    - "hiii {team}! :D"
+    - i'll find them i promise!
+  onKill:
+    - "i found {victim}! :D"
+    - got 'em got 'em!
+    - "tracked you {victim}! :D"
+  onDeath:
+    - "{killer} found me first :("
+    - aw i was so close!
+    - "they were faster :("
+  onPlant:
+    - "{bomb} lit! did i do good?"
+    - "fuse in! :D"
+  onDefuse:
+    - "saved {bomb}! :D"
+    - "phew! {bomb} is ok!"
+  onWin:
+    - "WE WON :D :D"
+    - "best team ever {team}!"
+  onLoss:
+    - "aw. gg though! :)"
+    - next time for sure!
+  onLastAlive:
+    - it's just me?? ok!!
+    - gonna sniff them out!
+  taunt:
+    - "i can hear you! :D"
+    - found your footsteps!
+    - come out come out!
+quirks:
+  - calls_everything
+  - late_to_everything
+rivals:
+  - theneztar
+bio: Chases every footstep it hears, including its own team's. Follows TheNeztar around begging for hunting tips and has yet to receive one.
+batch: 2
+retired: false

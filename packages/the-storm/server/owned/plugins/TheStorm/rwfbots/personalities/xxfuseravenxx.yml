@@ -1,0 +1,75 @@
+id: xxfuseravenxx
+name: xXFuseRavenXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg1NjI3NSwKICAicHJvZmlsZUlkIiA6ICIzZThhODgyM2ZlZGI0ZGYwODRmZjE1NmQ3ZDM0YzMxNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJjaGlwbXVua2llY29va2llIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2IzMTE3NDZhMjQwYzQ1MmJkZWU2MjYxNGI5NzYwNzM5Yjc4YzI2MmY5NzhmNDc2OGI0MGMxM2FjM2Q2Nzg2MSIKICAgIH0KICB9Cn0="
+  signature: "Wifb8J3nbqdkEahFwNBafuEXtLj9rLdEkb0xNI/mr9OjjyBdkjO7dCdveoK2qOcCbWtLRWZrvYXMhW+QiJ84X9u3fZzvKNJDA7D5IhcqgHkpDoPNAunrcMV4Gc+6EE/lmCiz6n2Oi1He2rvuxQheIqsgDomC9W5aBrXkS2LtKfHEBqAPpAkFc/tHBErjAqFQFdMx7sAOaOlcF88m9f/r3ZAcOPqW6FZNib+BhZPKncUZOwj7ZtJ7YyCOXPX23AvaiFARVUPuvPyyaxzuSglhubSdqfJs1I0+ScAQuuXH30hlttL8yCfz6hGkj1v1SRPFLVmqt3n4fiT5G7nbMN9P+kbizBC3jb0QL2qZ/xPDdMHoph8/A+kIeIojElfpyG5lCP/1UuauHWd7J+qygqUAiPmc9CWN41u/j7da5NEMUtQylJKPTlv8xEH2CThGZUbWUxzkCb+l9isRYhp440E1TOB0xVXscV+AMnXpdZpMlcezjG0/+2UfoUWNpwsvj1UFRPGM1Zu6PRWsn8vjhPn3dLx2lQ+NWfwXxeb9uiwt5zkAeAgFLPGQrIh/1kYgB0zPM308AIcJAUE1LompPCSq3TeMiRqAIPe26Sw/pj7O+UqGaaaav/Zd14rLv2E/jkLMScmrSmUKClvKzPl7kxbW+6fJ1So3jJdJcADvIgCJ0IE="
+skill: 0.613
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.16
+  cps: -0.07
+  decisionTemperature: 0.97
+  awarenessRadius: 0.35
+  technique: -0.46
+  aggression: -1.53
+kits:
+  trooper: 1
+  longbow: 0.27
+  rewind: 0.91
+  ghost: 0.24
+roles:
+  defend: 1
+  rotate: 0.21
+  retake: 0.38
+style:
+  aggression: 0.17
+  patience: 0.97
+  teamplay: 0.5
+  risk: 0.07
+voice:
+  tone:
+    - gloomy
+    - gothic
+    - dramatic
+  verbosity: normal
+  style: Gothic poet, ravens and candlelight, everything is doom but said fondly
+lines:
+  greet:
+    - The raven guards the bomb tonight.
+    - "Darkness falls on {team}'s door."
+  onKill:
+    - "Nevermore, {victim}."
+    - The raven claims another.
+    - "{victim} fades into the gloom."
+  onDeath:
+    - "{killer} dims the candle."
+    - A raven falls. Briefly.
+    - How fitting. How gloomy.
+  onPlant:
+    - "{bomb} smoulders like my heart."
+    - I left the nest. Regret already.
+  onDefuse:
+    - "{bomb} shall not burn tonight."
+    - Candle snuffed.
+  onWin:
+    - Sorrow, for them.
+    - "{team} survives the night."
+  onLoss:
+    - As foretold.
+    - The gloom wins this round.
+  onLastAlive:
+    - Alone, as ravens are.
+    - The last candle flickers.
+  taunt:
+    - Your path ends at my perch.
+    - Come closer to the gloom.
+    - The raven waits. Always.
+quirks:
+  - gapple_hoarder
+  - narrates
+rivals:
+  - epic-golem
+  - staticraven26
+bio: Wrote gloomy poems about the red bomb and posted them in lobby chat in 2014. Competes with Epic_Golem for the title of most immovable defender and thinks StaticRaven26 cheapens the raven name.
+batch: 2
+retired: false

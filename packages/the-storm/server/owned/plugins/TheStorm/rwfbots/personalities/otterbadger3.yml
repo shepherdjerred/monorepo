@@ -1,0 +1,73 @@
+id: otterbadger3
+name: OtterBadger3
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTIwNzM3MCwKICAicHJvZmlsZUlkIiA6ICJhYzY1NDYwOWVkZjM0ODhmOTM0ZWNhMDRmNjlkNGIwMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGFjZUd1cmxTa3kiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWVhY2I1OGI0NDdjMjU4YzY0NDZjM2JhNGNmNWQ2OTA0M2Q0YzIyZDQwODQ5YTExZWI2ZDI2ODRjMjhlY2VkNyIKICAgIH0KICB9Cn0="
+  signature: "AEG6b2BxjmAasG34YL7kszJ5phm6/lZpFDWuzLU6Bc0uAhwk22I4xPICdHxu+vpBjnAlgfkZQlfcTi8AucKnqGgu7IEKGpRXLCQ8BhnLdecPG7NVjEo/71ajR21d2ssL1eURRSnpgPzrQEJXvTH1K+Pdac7ef8dR04kVZmEMhgl7m968yZBUOZ7ME9DxesTPmC1uoJwTN5JQ2eKF8biOhtYgtJ6Ravp1G0TKrEbEnBn2Xb1jGvMOq0KOAGrVOHpCmD5HxihJyRhc3w1angtNbpTjJ/KsXASj1uUXwOmm4Lu2Yh//pLTCRN5oiMUwQzHnvLChE5+CBNFHdWzazKbtRJYLfl5BS61j4q+opDfOND9fyyDB880CrIXJWvJhS4deV1zQJQYTYU982eLBYv5O2wZ/2zFDJzZapFE/o0aSgtjEA6TDPA3Izv1Uc7cGf95f4x5exYgVj6n9eN0mmkUofk2P6wnHxNqLjrKbt1ax73QYliyFRX7SN9jjA86fQWFBryW1S0R5QEAYhB6TAYGVnx+Ma7/2TkRKyAN1oNsIS53vqvU6oxK8nFalzBOiD3IKCi3mz3vy6LHj+YTLhnWoXD/NEsd+5y2DSZttm6fYIZTrsILHEMwQevzynIR6v3gJDDA6av6vSadVAEWjg8Boxxez5bwt0vl4sCAp9HA5kX4="
+skill: 0.471
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.14
+  cps: -0.88
+  predictionQuality: 0.74
+  awarenessRadius: 1.17
+  coordination: 1
+  aggression: 0.89
+kits:
+  trooper: 0.66
+  longbow: 0.5
+  shortbow: 0.9
+roles:
+  rotate: 0.36
+  hunt: 1
+style:
+  aggression: 0.76
+  patience: 0.56
+  teamplay: 0.39
+  risk: 0.6
+voice:
+  tone:
+    - wholesome
+    - outdoorsy
+    - curious
+  verbosity: normal
+  style: "nature-loving camp counselor; compares everything to animals and trail signs"
+lines:
+  greet:
+    - good morning, campers!
+    - trail's open. leave no trace, take no prisoners
+    - "badger mode. {team}, stay on the path"
+  onKill:
+    - "{victim} wandered off the trail"
+    - "spotted {victim} by the riverbank. got 'em"
+    - nature is beautiful. so was that shot
+  onDeath:
+    - "{killer} was hiding in the brush, clever"
+    - "eaten by the food chain. gg {killer}"
+    - should've checked the trail map
+  onPlant:
+    - "{bomb} is lit, like a campfire"
+    - "fuses in {bomb}. now we hike out"
+  onDefuse:
+    - "{bomb} put out. only you can prevent nukes"
+    - "{bomb} is safe. good scouting, {team}"
+  onWin:
+    - merit badges for everyone!
+    - "a fine day outdoors, {team}"
+  onLoss:
+    - the forest wins this time
+    - gg. s'mores at spawn
+  onLastAlive:
+    - solo hike. I've done worse
+    - the badger digs in. then digs out
+  taunt:
+    - your tracks lead right to me, friend
+    - I've followed deer with better hiding spots
+    - listen to the forest. it's saying run
+quirks:
+  - calls_everything
+  - good_sport
+rivals:
+  - drpemgrukkek
+bio: A summer camp counselor who plays between campfire shifts. Tracks enemies by snapped twigs and refuses to use the word 'kill' when 'tagged' will do. Argues with DrPemgrukkek over whose tracking method is more scientific.
+batch: 2
+retired: false

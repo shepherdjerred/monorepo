@@ -1,0 +1,73 @@
+id: kaigrokpvp
+name: KaigrokPvP
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUyODIwNCwKICAicHJvZmlsZUlkIiA6ICI1MzE4YWJhNDJiMTk0ODNiODFiMWY2N2Y1ODVjNDdkNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJocHllZiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82ODQ3OGY2MTlhM2JmMzkyNjc5NjQ3MGE2MGZkY2Q4NDJkNjZlYmNkMDNhMDFlOGM2N2QxMTgyZWQ2ZTA1ZDg1IgogICAgfQogIH0KfQ=="
+  signature: "UxM1X4oCzrM9eLBHqjXIv+UcOwJ3a+e59p99e4UfebilGVbOQ2OcW9fa9rdLb2s9mTpggBsJlWNy9XbofIi1sGey9qjphwo8Aw4kdsf2w3NL/d1TYIJHg/iBeXETakUc8vRAVnnoHNl/ThekFSi/hvy/fDxzuyNJa37TmmVG1eSrIpFGhQQ59bJIMHyC1Qb31S4LZwUeNIJ3HP936KaiTq+SlOaWiCC6wtLXxHfaLUsPq6SU5VbdnYuxFEIU5dpPsrpu1UtW2YasW6jMCNqXIMZIEn3hCFoEQCWL2fkoJg6jewOQmbYhMsl/ZlU+0yxRI/Xb7CThs8JYDvb6paNmEVWxPsx71QC+gbFZ4kq+RdtMeooE9kif2S/csnR4MtoBRXsfAFq6EFGS6Kl9w73x3U+ZyezutzRX3oITF5sUibXnOk5lEAf3WGHAhThRurjzeLuIC23YkJrVrWBIaya5MDmZayQBpzNA5HpYvoxOFsanydbF7bG9+gplx24IUVWaQT30OlkgcfuvNTmugjCCqoQmhQMlVhEeT0yuxlBYmgPLz1NfY6/0TQDPUlAXOL+cCM22ehry3/7tYlaARjVWot11blMvOEzz/8oog4s7KPV0gbiXjqNg/0eqetKd0r8eJV5l8eC/HxkdRljpAkEY84WCm88fGgVSYLPHcaY/9j4="
+skill: 0.713
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.29
+  decisionTemperature: 0.86
+  coordination: 0.14
+  technique: 0.76
+  aggression: -0.39
+kits:
+  trooper: 1
+  shortbow: 0.21
+  rewind: 0.52
+roles:
+  plant: 1
+  escort: 0.13
+style:
+  aggression: 0.72
+  patience: 0.03
+  teamplay: 0.35
+  risk: 0.98
+voice:
+  tone:
+    - intense
+    - focused
+    - proud
+  verbosity: normal
+  style: "single-minded athlete; everything is a training drill for one goal: the enemy nuke"
+lines:
+  greet:
+    - eyes on their nuke. only their nuke
+    - "drill time, {team}. I go, you cover"
+    - warmup done. diving
+  onKill:
+    - "{victim} was between me and the nuke"
+    - "out of my lane, {victim}"
+    - rep one. done
+  onDeath:
+    - "{killer} stopped my run. noted"
+    - back to spawn. sprint again
+    - "good block, {killer}"
+  onPlant:
+    - "{bomb} lit. personal best"
+    - "fuses in {bomb}. clean reps"
+  onDefuse:
+    - "{bomb} safe. back to diving"
+    - "defused {bomb} on the way past"
+  onWin:
+    - "the work paid off, {team}"
+    - gg. good session
+  onLoss:
+    - more reps needed. gg
+    - slow off the line. fix it
+  onLastAlive:
+    - one more sprint
+    - this is what we train for
+  taunt:
+    - your guard is slow
+    - I'm already at your nuke
+    - can't stop the run
+quirks:
+  - loves_nuke
+  - never_eats
+rivals:
+  - lanmixmc
+  - swiftkikran
+bio: Trains bomb dives like sprint intervals and has timed every route on every map. Refuses to fight unless someone is in the lane. His honourable feud with royal guard LanmixMC is the server's favourite rivalry.
+batch: 2
+retired: false

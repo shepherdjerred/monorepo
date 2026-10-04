@@ -1,0 +1,74 @@
+id: ziokraithpvp
+name: ZiokraithPvP
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY0ODU2NSwKICAicHJvZmlsZUlkIiA6ICI5ZjJiY2M1M2U4YzM0OTY4YTc5Yzc0NTExYWQ2NmQyYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJLYWJveWlvIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2VkODBmZTk0MGE3YTUxNWFkZDdkNDUwMmY1NGZhMzQ5NTI4YTNjMGY0NDM0YTRiOGFiMGYwMTRhMGU4Y2RhMTMiCiAgICB9CiAgfQp9
+  signature: "Hr7JZUZpMawQ1pNdpfUDn3TKCI8yXr2/9d6IrP6xR4PriCuUmgoX7Au1D1wkjeR2sZ0h4MF21s3T9aMOnm97CibbwUAR1De8l4mWbY0RsV1dGM06Tu12srTLCuspRR+1/++aaAzxQvj4BOElOzY84Rb9r6VJC9ZxOMYjTR4A42hHzYIYoplRs3VH12WyNfAbgzFt0qX035uY3F8fmPg07fihBZvnBDDN3NeeuOJOGWNax8CAZD7FMqVz7duFmY4q8nKXeAx32vWMXVClLWIZIMxpEUHLiBQ77xJAf4MY6jYou1nPlbIDu0FYWH5fjahaWGbys28XNqzZvf5Eu6/zgwHqsJJw/D+Q1YPvL14vFUFPxsLQnWDuLnKQ+8takYfHvelEcIykk1rUcnp8j9j8LgroN4FqDJDpAiiH44h4+aaOyTVtAnErEoZKuTOjtkLr1+5FQfKjcTZXtQk6Z+hseB0eO6pamb+WhP+6MEiPpy11tdTLGZ8hOXInw5G4Jy1lyjhZQJGzEjw0b2S+8cjubtIF9FIlXPRmMpFx3SCE4ekzhhiKaq9eEuyxWPMY8GmLnP4JJuPE0eDP2lCW7HrxAIgm6aWNzBDssrv35gKVeh8sW4B+J/Tc4KQABRqCRDKsZciKw5/cvQCEDoRNcQzxOJl6We3Htxbx9DDyX44QYak="
+skill: 0.887
+archetype: support
+leverOffsets:
+  aimErrorDeg: 0.69
+  cps: 0.16
+  awarenessRadius: 0.66
+  coordination: 1.26
+  aggression: -0.41
+kits:
+  trooper: 1
+  longbow: 0.32
+  rewind: 0.72
+roles:
+  escort: 0.85
+  defend: 0.33
+  retake: 0.57
+style:
+  aggression: 0.31
+  patience: 0.52
+  teamplay: 1
+  risk: 0.3
+voice:
+  tone:
+    - precise
+    - polite
+    - overexplaining
+  verbosity: chatty
+  style: "polite overexplainer; footnotes every callout with context"
+lines:
+  greet:
+    - Hello all. I'll escort, which means staying beside the planter.
+    - "Quick reminder: two fuses arm faster than one, {team}."
+    - I'll share every sighting, with approximate coordinates.
+  onKill:
+    - "{victim} is down, which means our planter is clear."
+    - "Removed {victim}. For context, they were near our escort."
+    - One down, so the path is open now.
+  onDeath:
+    - "{killer} got me, which means the planter needs cover."
+    - I'm down. To clarify, the planter is still alive.
+    - "Well played, {killer}. I was out of position."
+  onPlant:
+    - "{bomb} is lit, which means we now defend it."
+    - "We armed {bomb}. Note: they will rush it."
+  onDefuse:
+    - "{bomb} is defused, so we're back to even."
+    - "Defused {bomb}. For clarity, it's safe."
+  onWin:
+    - We won, primarily through teamwork. gg.
+    - "gg {team}, excellent coordination."
+  onLoss:
+    - We lost, mostly by splitting up. gg.
+    - gg. Lessons noted for next round.
+  onLastAlive:
+    - I'm the last one, which means I'll play safe.
+    - "To summarise, {team}: it's me versus them."
+    - Last alive. Moving carefully.
+  taunt:
+    - For the record, we're coming.
+    - Just so you know, there are two of us.
+    - To be clear, that bomb is ours now.
+quirks:
+  - calls_everything
+  - good_sport
+rivals:
+  - frostlelaistnaim
+bio: Explains every callout as if writing documentation, and is genuinely the best escort on the server. Has a long, extremely polite rivalry with FrostLelaistnaim over whose planters survive longer.
+batch: 2
+retired: false

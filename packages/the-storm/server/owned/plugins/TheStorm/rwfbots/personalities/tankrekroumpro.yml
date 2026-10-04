@@ -1,0 +1,72 @@
+id: tankrekroumpro
+name: TankrekroumPro
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI1NDk4NCwKICAicHJvZmlsZUlkIiA6ICJmZDIwMGYwMDE4OTI0NzgxODI5OWIzZjE5Yzc4Y2E3MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0dXNnIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2ExMGY3OWJiMGUxMGQ0NmY3OWQxNDdjOGY2ZmU4M2Y1NjIyNzU0NWI3M2VlZTA3MzVkNjBlMWZjNTM2MmEwODEiCiAgICB9CiAgfQp9
+  signature: "NaJNwQwbuanImVx/AAdEVi2IYvaWyLVgnJ5dIwF3SL9HLMcOAvXd2Ft6O6qYW0xI7+G4zziuV/bGH5+FiOQQ8QgrpKhBDQrlYg+sgTHjNxlXQKOuP4o2bhS7z7ZzYT39Uet6uhql6JOcWYYyBzgmRmPgrdyuFM7oClVOs4WtwLWL4enUWzGExAB2sH89rBvHInAWFB4+dxVRcUupzY9JYosnp2oL4RMGfyYPd16aRiz3cSPEONt4ZstPO2YV0lMZumdjCdnznJrMdE5e98p+jM1VgtWtLoR1BZUFz14IjFzNjP4oz9BOnxLjKppybbpbJKv1zlVa0DURS5kVD5BPKGmJX3mnEHcYngGxDPgsjaaykHAHtcOvcAsWd5QThuECFB1gTDhuebhytxleWXm4SqUQM2rW7BqypU4528otKMaYO+kc8wZh9NnbvXpvod1vsFJZuQaxZz6AAJWgj7mXpbPwlvgJRSSZ45y4dZcI0kwBalTVjl+K7aJx180QEaOXvHbTFtdw9F64S6xTx3ClMfXngDUSK9XkxaW/XYgTrTgE8mUPyUHUCjKn8tmMQmJdKxzDoDBtfMCLFTa4adFteFRNBRml53FkUgotRV2bW5XQtiOMibcOJqRRLib6vUcRUc7dodPo46wgiSdxzZv7PnOOxSX967AMNuk/oBQCrC8="
+skill: 0.346
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.54
+  turnRateDegPerTick: -0.15
+  decisionTemperature: -0.14
+  awarenessRadius: 0.32
+  aggression: -1.95
+kits:
+  trooper: 0.98
+  longbow: 0.31
+  rewind: 0.77
+roles:
+  defend: 1
+  retake: 0.31
+style:
+  aggression: 0.09
+  patience: 0.97
+  teamplay: 0.5
+  risk: 0.18
+voice:
+  tone:
+    - military
+    - terse
+    - dutiful
+  verbosity: normal
+  style: "radio operator; 'over', 'copy', callsigns, treats the bomb room like a bunker"
+lines:
+  greet:
+    - bunker secured. over
+    - "tank on station, {team}. over"
+    - radio check. copy?
+  onKill:
+    - "hostile {victim} down. over"
+    - contact neutralised. holding
+    - "copy, {victim} eliminated"
+  onDeath:
+    - "tank is down. {killer} broke the line. over"
+    - requesting reinforcements. over
+    - "{killer} breached. out"
+  onPlant:
+    - "{bomb} armed. falling back to bunker"
+    - "charges set on {bomb}. over"
+  onDefuse:
+    - "{bomb} disarmed. bunker holds"
+    - "{bomb} safe. resume positions, {team}"
+  onWin:
+    - "mission complete, {team}. out"
+    - bunker held. good work all
+  onLoss:
+    - bunker lost. regroup. out
+    - negative outcome. over
+  onLastAlive:
+    - last unit in the bunker. holding
+    - solo. digging in. over
+  taunt:
+    - bunker's closed. over
+    - you'll need more than that. over
+    - hostiles approaching. bring it. over
+quirks:
+  - calls_everything
+  - gapple_hoarder
+rivals:
+  - huntersniper8
+bio: Plays every match as a radio operator holding a bunker that is actually the bomb room. Hoards golden apples like rations. Has logged HunterSniper8's every rush in a notebook titled 'incoming'.
+batch: 2
+retired: false

@@ -1,0 +1,75 @@
+id: taistluzhd
+name: TaistluzHD
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU4NTIwMywKICAicHJvZmlsZUlkIiA6ICJjMjVlMWMxZTE1YTQ0N2IwOTQ2Zjg2YzYzYzhjYjZkOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJiaWdpYm9zMzIxIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2NjNWU0NDU0YmRkZmVjMTIwZjhjMDEzZGY3NTlkNWMzMjE4NWZlODA2OTc0YjU2NmZkZDM2MGQ3N2FmZDY0ZDkiCiAgICB9CiAgfQp9
+  signature: "G5HE1BJl0wA92pq0zkf9bUR7pKVD50bsDDf5CfZALps0AxzRp/szwo5WDmp05SW205Ka0+flzXRTrTewstDDpHv2r9m/W7+exNWhTMUAyKhaWHaqD2wkLUFiD173K8JPNRDnSGheAIef0+oAlOquvvwybHZHJH5mHH139UYRnqOULJiu+XYqP+HGlhw+dDBjExgSqI554v9REA4jPqurm7qcBa4CwtfPWijG1A0r2wblXScs3EzDhIB6kqW+ZAuBrcJn4c+KASDTzMkmdVQ80S6Af6Nu621Ff+etSh9AzZNSxtJpJJ7I84Kbtw9qdp/fqzHiozxvPojIIZCx8wlhJJUQPX1BzL3iwIaYn0U6jNiNCEqXQO2fBkyouwMQ29tcHMvKjK4pgEDI5k9vUSsTZH/Gq07W8Up+7E/uKSquvqCqdM2C22W99cwksEmh9A98ODW2W2ejJwpNNjUmvON+9ZVbFvyyPVn5EYyc6Grrd8/LMh28aZUDgz2fx41vpDs+EQdBJIg8HA1q9sb88E3KO/EoqJHolESmr6dK/excvPzlUof/J0u7prxwtR1xdfLrk2m0gCs6JCfeCvW1aVcJNtm13Iv5ZcIo/UTFpdJu30mCHHYDagMHgzI8H7ocWIJGg0V4Flr7MRn0KkXo96fm3FC3toxu8+sDgaa1PZmZiJE="
+skill: 0.614
+archetype: support
+leverOffsets:
+  decisionTemperature: 0.88
+  awarenessRadius: 0.5
+  coordination: 2.12
+  technique: 0.61
+  aggression: -0.19
+kits:
+  trooper: 0.88
+  longbow: 0.26
+  rewind: 0.76
+roles:
+  escort: 0.85
+  defend: 0.31
+  retake: 0.52
+  hunt: 0.28
+style:
+  aggression: 0.29
+  patience: 0.61
+  teamplay: 1
+  risk: 0.34
+voice:
+  tone:
+    - encouraging
+    - upbeat
+    - camp-counselor
+  verbosity: chatty
+  style: summer camp counselor energy, cheers on every teammate, pep talks and gold stars
+lines:
+  greet:
+    - alright campers, hydrate and stay together
+    - "{team}, i believe in every one of you"
+    - buddy system, everyone. find a partner
+  onKill:
+    - "got {victim}! gold star for teamwork"
+    - "nice, {victim} is on time-out"
+    - that's what we practised
+  onDeath:
+    - "good hit {killer}, nice form"
+    - i'm out, keep the buddy system going
+    - "{killer} gets a gold star too"
+  onPlant:
+    - "{bomb} is lit, group hug later"
+    - "fuses stacked on {bomb}. teamwork"
+  onDefuse:
+    - "{bomb} is safe, everyone breathe"
+    - "defused {bomb}. snack break earned"
+  onWin:
+    - "so proud of you, {team}"
+    - everybody gets a ribbon
+  onLoss:
+    - we tried and that's what counts
+    - great effort. huddle up for the next one
+  onLastAlive:
+    - counselor's on duty. stay calm
+    - i've got this, campers
+  taunt:
+    - we stick together over here
+    - your buddy left you, friend
+    - come say hi, we have gapples
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - grimgriskio
+  - itstoumkrex
+bio: Runs every match like a summer camp and has handed out more golden apples than anyone in the lobby. Locked in a friendly war with GrimGriskio over whose style of support actually keeps people alive.
+batch: 2
+retired: false

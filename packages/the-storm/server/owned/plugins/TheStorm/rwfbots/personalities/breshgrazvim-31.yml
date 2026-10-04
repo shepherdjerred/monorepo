@@ -1,0 +1,78 @@
+id: breshgrazvim-31
+name: Breshgrazvim_31
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY5OTE5MiwKICAicHJvZmlsZUlkIiA6ICI0MmU4MDAxM2I3ZWE0Y2FkYmE1NDJhZWJmNDVhNjBkMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUYW1hcmlpaWlpaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZmUxYmZhMTc1Njg4M2UyYzlkNmEzZWM0MTE3NWZmN2FiYTM4NWQyYzMxODg2NzEyYTQ4OWIzYmQwYWQzYzIwIgogICAgfQogIH0KfQ=="
+  signature: "otWlCVfdRGJxme6R3d5Laih1BnPiFK0L4RnnE62ZZBSZlR6qxwyYbh74dDdNkzQuE99Y2kOdKCTSP5JHOJsgPp3DXA3TKO/IEpSA9QB1HiEFwhRegf4QxxJ5XJl2VpeUNNk7Km57Qh3ZQPWN4u1eYTrIJlowVwmfQLAVXKLM++Q6xekgVjv9ScF2dmrt740QJw48fRpcbqQf1m7YQttpm2RB9ZU4XUq3XEh2tzzZtlgLBI3DY9FIzPWeaE/oaXW78P6JSR0jSRY+Zmji2ItaF62ifXihLyJa5svrW22gyyVMo9NMOM1BvttGULFPqu+GvETlzLvZvufABHDw/9xo+26L1qmzqUFQOEmmEbaw9HPQkuUBrS+YRZWV1doPEX9InAosUiSsv//iKARFCA5ied06ndZq3ovHcpNOkMuFgSVWWg+ogj6RCAnwYiP3thIqI0IJLV792nQHl7qT+gV/Rfiig227DC4vbUUGIZaIVjbdOHjVDj/ws2JunsJuGBjyrFumlJq+3CMejLzuYrYVrjjRwseIoizPTIRvoshg6pQmgaOSRpYeawKXvlcglO9TvlWr384BcOprb54bmxB8ukC2itPjRyPIZ4OP0BOiwefMQ7ZBUW3vX96urQQwPo99PrWibHotkYVn8PF7S3VSw62+8mNbOFj8ltarCIdtbiM="
+skill: 0.462
+archetype: troll
+leverOffsets:
+  aimErrorDeg: -0.18
+  cps: 0.38
+  decisionTemperature: -2.14
+  coordination: -1.14
+  technique: 0.49
+kits:
+  trooper: 0.49
+  shortbow: 0.74
+  rewind: 0.92
+  spy: 0.82
+roles:
+  plant: 0.57
+  escort: 0.48
+  defend: 0.23
+  rotate: 0.5
+  hunt: 0.57
+style:
+  aggression: 0.56
+  patience: 0.21
+  teamplay: 0.05
+  risk: 0.8
+voice:
+  tone:
+    - chaotic
+    - theatrical
+    - silly
+  verbosity: chatty
+  style: Announces fake game modes and invented rules as if they are real, lots of ALL CAPS headings
+lines:
+  greet:
+    - WELCOME TO OPPOSITE DAY
+    - "New rule: I am the bomb now."
+    - "{team} I have a plan. It is bad."
+  onKill:
+    - "{victim} broke rule seven."
+    - "OPPOSITE DAY: you won that."
+    - "Penalty applied to {victim}."
+  onDeath:
+    - "{killer} did not read the rules."
+    - That was part of the plan.
+    - Rewind? Rewind. REWIND?
+  onPlant:
+    - "{bomb} is now a party."
+    - I armed it by accident. Again.
+  onDefuse:
+    - "Plot twist: I saved {bomb}."
+    - Responsible? Me? Rare.
+  onWin:
+    - THE RULES WORKED
+    - "{team} played my game."
+  onLoss:
+    - Opposite day means we won.
+    - Writing new rules for next round.
+  onLastAlive:
+    - Solo mode activated.
+    - Watch this. No really, watch.
+  taunt:
+    - "Today's rule: you can't hit me."
+    - I'm on your team now. Maybe.
+    - Bet you can't guess my next move. Me neither.
+quirks:
+  - spins
+  - crouch_spam
+  - narrates
+rivals:
+  - potatootter0
+  - xxpumpkinravenxx
+bio: Invented forty fake game modes in lobby chat and convinced newcomers at least six were real. Runs a long-standing chaos competition with PotatoOtter0 that nobody else is allowed to judge.
+batch: 2
+retired: false

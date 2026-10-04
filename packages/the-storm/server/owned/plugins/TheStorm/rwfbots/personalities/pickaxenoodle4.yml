@@ -1,0 +1,78 @@
+id: pickaxenoodle4
+name: PickaxeNoodle4
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDEzMzE5MiwKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iYmRhMDczYmQyMjJhMzA3MDRlZTljYzE0NjRjMjJlMjhiMjU1Yjc2MmJlY2ZlOWI3Y2Q3MGZjMjMyYmU0NjQwIgogICAgfQogIH0KfQ=="
+  signature: "v/RJDLxk2cpc3CTFccvKZj9TG+qtB6Ox7MHqm9wPQsUZAR2P0UjTaatXWMyuL6++pqhyS8jZ9VdnOopxgZi65La2S288aBRoO6bcQknXZOb4hH/tbPWmBRzYnsLGQUiAF1Fg6suCD+c5l+KUNY6draHDfFcv15cTkOXdDVT1FQ91qJcL+C5LpkuF2/6L5lRKhIM9jlKndoo/B3g7IEIQakk3kwHNVr5wFvrm1edrVxf5f46ViZ0zCKf8Y2xUWBtgRb7qSaYVVBWZ5euLBIp63+x0t3qlLpd3xX+pB7yH9trIl2jahblwAUTOKlL62l2JcR4GhDTdqmA037w1H9SojvLYh+fAVkAakzMdYiqOwCfBYY5RTeNTLvzUMLw//5Ez+UVa46GlmLCQhChZasWwsDKWf/QU8he/va3x5VXns5mLAEUhNuE3bY+FvGq6+QPTD37fyhInlgWNCt9gMleEnVYf1/E19NBoF4WPEZjgK3KvTwBOuXE/EbS1woy9rX43k6x5XQ0XgOWjjoJ0Yhrq75DKNfNZ/CX46fzZ+5/WcBWlRr/gBhicXR+jMt44bfxiK1FsuBpC4V8F6UA6IQmtvKc1q/w5shtK+B8gSp6J4vJOf1SDoDm2FUQpIZLuJ1EGwUUl0157+x9eMAYImlP9dIzkfB7oHDjx0/O1IizaKgg="
+skill: 0.166
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.72
+  turnRateDegPerTick: 0.14
+  cps: 0.49
+  decisionTemperature: 0.95
+  awarenessRadius: -0.93
+  aggression: 1.66
+kits:
+  trooper: 1
+  shortbow: 0.49
+  rewind: 0.26
+  ghost: 0.22
+roles:
+  plant: 0.67
+  escort: 0.44
+  retake: 0.14
+  hunt: 0.7
+style:
+  aggression: 0.84
+  patience: 0.07
+  teamplay: 0.32
+  risk: 0.79
+voice:
+  tone:
+    - goofy
+    - earnest
+    - cheerful
+  verbosity: chatty
+  style: "excited newbie energy, lots of :D and noodle puns"
+lines:
+  greet:
+    - "hi everyone!! :D"
+    - "noodle time! lets go {team}"
+    - "i read the wiki this morning, im ready :D"
+  onKill:
+    - "wait did i get {victim}?? :D"
+    - "oodles of noodles, sorry {victim}"
+    - i actually hit something!!
+  onDeath:
+    - "oof. nice one {killer} :D"
+    - i am a wet noodle
+    - how do people do that
+  onPlant:
+    - "{bomb} is lit!! did i do it right??"
+    - "i stacked a fuse on {bomb}!! :D"
+  onDefuse:
+    - "{bomb} is safe! i think! :D"
+    - "phew {bomb} defused"
+  onWin:
+    - "WE WON :D gg everyone"
+    - best day ever gg
+    - noodle victory dance
+  onLoss:
+    - gg! that was so fun anyway
+    - "next time for sure :D"
+  onLastAlive:
+    - "uh oh. its just me?? :O"
+    - ok noodle believe in yourself
+    - "{team} i am trying my best"
+  taunt:
+    - "pls dont hit me :D"
+    - "im coming!! slowly!! :D"
+    - noodle incoming
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - ninjapickaxe7
+bio: Joined Red Warfare in late 2014 after watching a friend play and still treats every round like a birthday party. Insists NinjaPickaxe7 copied his name, even though NinjaPickaxe7 was there first.
+batch: 2
+retired: false

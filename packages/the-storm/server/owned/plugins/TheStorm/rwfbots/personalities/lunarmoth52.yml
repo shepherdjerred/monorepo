@@ -1,0 +1,75 @@
+id: lunarmoth52
+name: LunarMoth52
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1NzkwMjI4MiwKICAicHJvZmlsZUlkIiA6ICJlYWYzOTY1YTFmMTk0NjBjYjVkYzIzYzRlYTA5ZDk1NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJiaWdpYmFzMTIzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YwNDdjMmU5ZWNiNWQ0MmNkOWQzMDg2ODFiNDg4NzliYTBhYzIwZmE4MjNhNTRiZTA4Zjc4YjNjMmMzZjdmOTEiCiAgICB9CiAgfQp9
+  signature: "IYlL/FFbLSekZu5TU0sZ/X1P4M2YYod7YQSdbALVV0qQoNQYL4TyP47syg7HH2cxEQPKVG/ofzG5qDEc50FASn/rIz7Z/6Z64NF8Km7sX8fxmXC95SBbcicIZOaRCrksuW+Blba5jSWpOGu1KO8YPCZ9uSskK4a4j4ikj1teX42xoB0FZfp9essRwf64KWWsIsUDXdtS6Talt3SQDwdktDXTaXOwmXEMyYdTA1tRYnQnNTnhowB9f/wm1iX7rfEP/aX7ffNfQ/ZpEp+92cunHk4rAU4iZUCV+ZSpY+DKlItVuhVYPyvpqUzzRTp8XCEvqa5rUxU17o/Nig5KFD3aC1zr7qCy1ySbTNnc1/IGAcM0Bja3W0eSzBL+zJ2ykt4DDgLByDsvf2hBrExAKtxqzx+nsQXTA58b6G8NoSnL1DyOxR0ZDwHo5rSpCACOPRYiOmEtiVAO1oxo2eIaPMJUo9i6YEGW7hotfmqlup7UmpaJtPFOvZCcr/foNcGZZ5ukhsSq/r61EYnWD7JFO0GrYcSNY9OTFV/p6LDlq0VA0MSgGMs/gR8mU7yXj42cNl9y9KZcnNYO49p+/cPz8yvaRueXTO2zvtRT/lTvZuTqJI43q8irmRthPLrsKL2rymgWAFlFBGIW65Fb1z0aS6q6PCWnH//QhRKLa9f9Z/z/dcg="
+skill: 0.841
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.05
+  turnRateDegPerTick: 0.63
+  predictionQuality: -0.01
+  awarenessRadius: 0.54
+  coordination: 0
+  aggression: -0.7
+kits:
+  trooper: 1
+  longbow: 0.47
+  rewind: 0.34
+  spy: 0.16
+roles:
+  defend: 1
+  retake: 0.67
+style:
+  aggression: 0.38
+  patience: 0.88
+  teamplay: 0.64
+  risk: 0.12
+voice:
+  tone:
+    - prim
+    - hushed
+    - stern
+  verbosity: quiet
+  style: strict librarian, shushes everyone, talks about due dates and quiet zones
+lines:
+  greet:
+    - quiet please. this is a defend zone
+    - "shh, {team}. positions"
+    - the bomb is not to be checked out
+  onKill:
+    - "shh, {victim}"
+    - "{victim} is overdue"
+    - "late fees applied to {victim}"
+  onDeath:
+    - "{killer}, that was far too loud"
+    - my card expired
+    - closing early
+  onPlant:
+    - "lit {bomb}. very loud. sorry"
+    - "{bomb} lit. return by the end"
+  onDefuse:
+    - "{bomb} returned on time"
+    - "{bomb} reshelved safely"
+  onWin:
+    - "thank you for keeping it down, {team}"
+    - well read, everyone
+  onLoss:
+    - the library is closed
+    - we'll reopen next round
+  onLastAlive:
+    - one librarian. all the shelves
+    - shh. i've got this
+  taunt:
+    - shhhh
+    - you're very loud for an attacker
+    - please lower your sword
+quirks:
+  - stares_down
+  - holds_grudges
+rivals:
+  - mothlynx8
+  - lunartulthek
+bio: Anchors her team's bomb with the sternness of a librarian at closing time and shushes every rusher. Insists only one moth may exist per server and MothLynx8 is the impostor. Lends LunarTulthek star charts, grudgingly.
+batch: 2
+retired: false

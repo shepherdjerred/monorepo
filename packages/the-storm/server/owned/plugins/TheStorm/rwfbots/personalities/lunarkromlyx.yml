@@ -1,0 +1,74 @@
+id: lunarkromlyx
+name: LunarKromlyx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg2NTU5NywKICAicHJvZmlsZUlkIiA6ICI1ZjU5NmViY2JlOTQ0NmQxYmI0M2JlNGYzZjRiOGJlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJUZWlsMHNzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzUzNzI1ODEwNzg0MDg4ZDdmZGE0YWE1ZTVmNWI5ZjNlMWVjODJmNTdlZTkwOTBmYWEwZGNkMWRiNjU2Njc5ZmMiCiAgICB9CiAgfQp9
+  signature: "Bu+w+dBL3ybbZj7usZVF7yJ9itY2k2m3jGS+qLVQgGMi8YjB9yl0dsy12sNwcvPXmrR87e/ajExWLbqpYDIDi+Y4HLKRDlMz1NEgevNyILDaGyblPb+H/auHa327TGZPNYKgsvWFSssAy63H2SDqAG60k0kQQrxm16caHWuZ5R4r2zaRjIrzJU8StxL3pJ/UZXOAOrt2mkiWGQdMS0fgweBExWsGkPmnPiCQ78318DJ7E5fMUZ5/cfE52b9pWr1+Twfs/XG+cjlAUCTMdSml/397KCkx+WPwoyOZjmalX1VU4fhLYmEDEOxpsUCsut7snple5OSSmI8fmNVZ4BDkf9EPXYNdKtdyUqjHjWhU9/Zn2wbLZYjcVBmCBUnv8xDysMpXg2h5qCkRrHK4GDMd1rIltvQJxwbQka6ck5ZT/vwuYDusSmUlwlAtcVCXoLWzGWMH8GL5ZSdrBkgOg2M+BquBmA2TE2GRazOVDUjoZgr2MmYQG3VFv/PvzVr1nUyvFECyz6Ae9X5SJ31X9nXfrb7dm0GRrL3PFeuUxKixkkClE1V6ZHUbiwT+PDj2eyW2ySL7nV1lWvFlWh8bJMxIWJD9NLDuByFHwGxy60nGPIQqoHzFxmBaLLLysV/AQQLZY9ZQEDersFva+kezcPkFxDjVmFcCUavld4HHLR0lUWs="
+skill: 0.513
+archetype: flanker
+leverOffsets:
+  aimErrorDeg: -0.36
+  turnRateDegPerTick: 1.27
+  predictionQuality: 0.19
+  coordination: -0.6
+  aggression: 0.21
+kits:
+  trooper: 0.67
+  shortbow: 0.94
+  rewind: 0.36
+  wraith: 0.53
+  spy: 0.42
+roles:
+  plant: 0.59
+  rotate: 0.97
+  hunt: 0.52
+style:
+  aggression: 0.59
+  patience: 0.34
+  teamplay: 0.22
+  risk: 0.74
+voice:
+  tone:
+    - dreamy
+    - mystic
+    - spacey
+  verbosity: normal
+  style: Astrology-obsessed, blames and credits the moon phase for every play
+lines:
+  greet:
+    - "Waxing moon tonight, {team}."
+    - "The stars say: go left."
+  onKill:
+    - "{victim} was a Gemini. Doomed."
+    - The moon guided that.
+    - Written in the stars.
+  onDeath:
+    - "{killer} had better stars."
+    - Mercury is in retrograde.
+    - Bad lunar timing.
+  onPlant:
+    - "{bomb} lit under a full moon."
+    - Fuse aligned with Orion.
+  onDefuse:
+    - "{bomb} saved by starlight."
+    - The cosmos say no.
+  onWin:
+    - As the stars foretold.
+    - "{team} is cosmically blessed."
+  onLoss:
+    - The moon was against us.
+    - Check the charts next round.
+  onLastAlive:
+    - Alone under the stars.
+    - The moon is with me.
+  taunt:
+    - Your horoscope says run.
+    - I read your stars. Bad news.
+    - Orbiting round the back.
+quirks:
+  - narrates
+  - blames_lag
+rivals:
+  - zaezlyxyt
+bio: Checks the in-game moon before every match and refuses to rush on a new moon. Insists ZaezlyxYT's flank videos are cursed by bad star alignment.
+batch: 2
+retired: false

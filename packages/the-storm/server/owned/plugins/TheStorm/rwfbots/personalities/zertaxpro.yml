@@ -1,0 +1,74 @@
+id: zertaxpro
+name: ZertaxPro
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUzMDgwNiwKICAicHJvZmlsZUlkIiA6ICIwMzBlMDA1OWQwY2M0YTZhODY3N2RkZWU3MjEzMjg1MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTbXVnRm9vZGllIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzMwMTU5ODEyMDFiMDBlMjQ2MzlmODkxZTc3ZjIwYzM3YmFmNjFhZWQ2NzhmZWZlYzkzZTM5YTE2NmI2YTBkMDMiCiAgICB9CiAgfQp9
+  signature: "cNnVW/SblXMKN3vLjFEE8uLTS3MG7Y3VD6X/Qd6flP3DKvjDkLvfKELNbXZUu16vmLATl6h63CpcVR12ZYFfAWk+TSJ8X/KoVByHj8O26x4MHfeFmOkIqxUbtUzqSJ8CdV/xaBiQPwlOEYVqsWIC4+O0ddo6zt8J1dIHwMWJbgTgEWeNh48Mudq0naHYCXGAtO9e9xRK4qxLCKdun4zvMtthk5PFPUl3wXvbU15S0ljvjXDZmJfeUbFHC8W8gMRCqgT708kakCgC32kkZ31V6GBPPEG5utL7VRXPMUZ539oSsei68jprE9lumvzeylDKIPqkkZw5FVSdq+T2zKrW112BLi3lZkj0s97gGg7FfF66m4BJxjSZm7DZPZGK8CEamEt15h6EQGjMMqJUTFkahE8n3EtklvDIelOd6YPvMgwqTNKqFc6YA8WECvC2p0mFMT6XScAv09U50VJjA5Yc18OJa1/IwZKkrz2BHWm4kDuOp4c3MSdsCA89GKlC3V0R/5tPYXIBMjnvTOE0cxOb38peNUWQv0m2cr4/mWYqh2uNHrvXHFm7jkbBl2jU0QFhsGRFQA9xDuNFRzn+Xj74pX2CIhiWK2ciLKl6jHoxQVfKLoYF13aGWvY4I8BSpc7/Ve1nPVEK8vDtryB9O9HIJmY9g2ysVIVZZG5sb1yjfEY="
+skill: 0.742
+archetype: support
+leverOffsets:
+  awarenessRadius: 0.33
+  coordination: 1.66
+  technique: -0.6
+  aggression: -0.32
+kits:
+  trooper: 0.94
+  longbow: 0.31
+  shortbow: 0.18
+  rewind: 0.67
+roles:
+  escort: 1
+  defend: 0.41
+  retake: 0.71
+style:
+  aggression: 0.31
+  patience: 0.59
+  teamplay: 0.88
+  risk: 0.29
+voice:
+  tone:
+    - caring
+    - steady
+    - medic
+  verbosity: normal
+  style: "combat medic; triage calls, checks on teammates, treats gapples like first aid"
+lines:
+  greet:
+    - "medic's here. stay close, {team}"
+    - anyone hurt, call it
+    - I've got you. go
+  onKill:
+    - "{victim} was on my patient"
+    - "back off from my team, {victim}"
+    - "{victim} down. you're safe"
+  onDeath:
+    - "medic down! {killer} got me"
+    - "{killer}, I was healing"
+    - someone eat a gapple for me
+  onPlant:
+    - "{bomb} lit. everybody okay?"
+    - "fuses stacked on {bomb}. good teamwork"
+  onDefuse:
+    - "{bomb} defused. checking everyone"
+    - "{bomb} stable. so are we"
+  onWin:
+    - everyone made it. mostly. gg
+    - "proud of you, {team}"
+  onLoss:
+    - we'll patch up and go again
+    - gg. rest up
+  onLastAlive:
+    - the medic's alone. that's bad
+    - I'll keep myself alive then
+  taunt:
+    - you can't get past my team
+    - my planter's protected
+    - I heal faster than you hit
+quirks:
+  - calls_everything
+  - says_sorry
+rivals:
+  - grim-otter
+  - grimskiolzu
+bio: The combat medic of the server, glued to the planter and calling out every hit taken. Stacks fuses beside whoever is arming and won't let a teammate push alone. Runs a friendly competition with Grim_Otter over who saves more planters.
+batch: 2
+retired: false

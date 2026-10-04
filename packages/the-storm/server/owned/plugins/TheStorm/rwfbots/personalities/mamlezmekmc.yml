@@ -1,0 +1,80 @@
+id: mamlezmekmc
+name: MamlezmekMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTU3ODgwMSwKICAicHJvZmlsZUlkIiA6ICIwMmI1ZWM4OTlkYTE0NzU1OTQ5YmEwMDIxOWJiYzFlYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJteWllc2h1cCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jZDg4NTJlNDAxNzE1YTA5NGFhMWZkMzI2MTQyY2I1ODNjYTllYjdkZDIyYmI0MGU2ODczOGVkZjM1MDBjYzA1IgogICAgfQogIH0KfQ=="
+  signature: "Ewuceu6ZVWgHZ65tBh75wtuyLOdYHsRGt8nlsXV4IEQiXdqzQ7fceMSwEVf5LgTT3ml5yHdqCeaggR8rOV2FmE1QNbseHG6jnNys91ohrGySkX7nZgh8jIM7UV7cn7r9wVG77+6ZI6/S3J75kAVtS42WfMa5cUQJQKkLlg0e3cRZ6Jm2vht2I6nNxz8r95HYQykf4g17reck6ySabMZjOo6vPiolmttbzo3tW4AZupNWal4AwzLp5ggvCGIdqpZ3KsqgBvSBckXPtORyGa0/TOCmIBdmNqfcqe0GUw1MwZya5Wm1kpAFMBWR4FR9flNyjjVXMOoySw5psH5IQiTYhrd7gLE7e7aeRHzdH02w/l65x/yKYOPcuDJ8ByUYsuFNwFZFhRMqNfB5QjO2m7XPViIZVatw1NKRPNvWHVBaQfIfIp8Kx852S2ZpkfILjCaLpekwhhyWF65PPpe36mVqA5hysG16v93E4qOkXQ215Lv2jJmAMJG/AnUOg8K6Tbd/tQhccvnGu0/fBmSrQrpQzplSE6nsnC8CwGfXO9wWOPc5xAA1e8huqn5RdE555HMVTXpjVP61f+VjtVopEGP+i+V0Y5hgO/2pyWRaNq8yXHak1Qjko8DxDNzOMUEIuI4wX1TllyE/cGNoORAJhZLcyVQ/zjjgKlkt9GQRsa7Ozz0="
+skill: 0.764
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: -0.99
+  predictionQuality: 0.58
+  decisionTemperature: 1.27
+  awarenessRadius: 0.83
+  coordination: 1.78
+kits:
+  trooper: 1
+  longbow: 0.52
+  shortbow: 0.46
+  rewind: 0.5
+  wraith: 0.19
+roles:
+  plant: 0.67
+  escort: 0.46
+  defend: 0.53
+  rotate: 0.8
+  retake: 0.72
+  hunt: 0.25
+style:
+  aggression: 0.36
+  patience: 0.64
+  teamplay: 0.77
+  risk: 0.51
+voice:
+  tone:
+    - analytical
+    - patient
+    - professorial
+  verbosity: chatty
+  style: "teaches strategy like a lecture; numbered plans and diagrams in words"
+lines:
+  greet:
+    - "Plan for this round, {team}: one, stack fuses. Two, stay alive."
+    - "Today's lesson: rotations."
+    - Settle in, everyone. Here's the play.
+  onKill:
+    - "{victim} was out of position. Note that, class."
+    - Textbook trade.
+    - "As diagrammed, {victim} walks into the crossfire."
+  onDeath:
+    - "Good read, {killer}. I'll adjust the plan."
+    - Rotation was a step late. My fault.
+    - Revising the plan.
+  onPlant:
+    - "{bomb} lit, step three complete."
+    - "Fuses stacked on {bomb}. Now we rotate to defend."
+  onDefuse:
+    - "{bomb} defused. Back to step two."
+    - "{bomb} safe. Everyone reset to positions."
+  onWin:
+    - "Plan executed. Well studied, {team}. gg."
+    - Full marks today. gg.
+  onLoss:
+    - Instructive loss. gg.
+    - We'll review the replay in our heads.
+  onLastAlive:
+    - "New plan: step one, survive."
+    - "I'll call it as I see it, {team}."
+    - Let's think this through.
+  taunt:
+    - I've already planned for that push.
+    - Your rotation is predictable.
+    - Interesting choice. Wrong, but interesting.
+quirks:
+  - calls_everything
+  - narrates
+rivals:
+  - skastnairpro
+  - potatofalcon8
+bio: Treats Search and Destroy like a chess class and draws plans for everyone. SkastnairPro is the student who never once followed one, and PotatoFalcon8 is the colleague who keeps proposing better ones.
+batch: 2
+retired: false

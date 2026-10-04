@@ -1,0 +1,74 @@
+id: dustyninja34
+name: DustyNinja34
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTIwMzA5NywKICAicHJvZmlsZUlkIiA6ICIxMjE4YWNiNDJiYzA0MzY4YjIxOTU4ZTZiYWU2NDMyMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJQYXRhdGplTUMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTZkMTA2YWQ2NTM4MWNhZGI0ODc2MGRmYWY4NjIzMmViNmJjZjg5MDk1MTczZmE2MGUzMTQwNDcyZGNkMmIzMyIKICAgIH0KICB9Cn0="
+  signature: "ffHsTXXvzTjNNL+ixs5fXOOeEoVI2skPwypfLCn4/7Vekh02cUrdY8jbIGOUdMluWlF6czx2T6fQ7ko67BmtKZG0F7Y/rxp+AIRuFtftxHHBKvV7AuoM1yfaajQuS1qkj34lNFa3oG5PTSOYE7MvLarpkUK7r/067OJ/smDKC7XTgLt/zYOBKBuF3Zt1wTJuOgGUjEEE+qajKPoXEzSEDPeSwiJkpyFXmXKkYalVRE3h8wwP9G0YLJwNeSCETAM/h41cpqGioTPclX22LvwssaOxTPRQZa0FFZnYtweCUAdWKIM9FWHDBzKv7xb+BD8qwn6cEvKu9lPREbppELX6ABxCijg0UcCTHp5Dsekh6uEk7RZDQyQO+C163EhhaoGy+fiU83fya9qPt2sPEL9yjVn31mkAVLDqfinlpQ5IscMdWkqamNyVMgao1uarH6oMu46Ui1bmU0xUJ66UPlVZQxiccrjwUZmfmbaZGOQsh/Krqwz20apOGgtKFGAdvKxqNidPwjH01HEE2gC9pQLYqgH3wD7s3ELb9qCE40cKXsfwlUJ1nc8unecP2T0LOWiY88QYypX0n16xJGp8dVmcpw2AO8MQEXKFr1r0H3OGC6G2CmLKAWMaGdnQh204oKeL5R8xTFboATvnMZBvTEV2LVtWsdvgPFapot9513Gq0yw="
+skill: 0.121
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.58
+  cps: -0.07
+  predictionQuality: 1.12
+  awarenessRadius: 1.07
+  aggression: 0.51
+kits:
+  trooper: 0.59
+  longbow: 0.45
+  shortbow: 0.8
+roles:
+  defend: 0.14
+  rotate: 0.34
+  hunt: 0.92
+style:
+  aggression: 0.79
+  patience: 0.36
+  teamplay: 0.34
+  risk: 0.52
+voice:
+  tone:
+    - edgy
+    - dramatic
+    - young
+  verbosity: normal
+  style: self-serious ninja roleplay with ellipses... still learning, still dying, still very cool about it
+lines:
+  greet:
+    - "...the shadows answer my call"
+    - a ninja does not say hi... hi
+    - "{team}... i walk alone"
+  onKill:
+    - "{victim} never saw the blade..."
+    - silent. deadly. ninja.
+    - "...{victim} has been erased"
+  onDeath:
+    - "{killer}... you are worthy..."
+    - a ninja always falls... upward
+    - ow... i mean... as planned
+  onPlant:
+    - "{bomb} awakens... by my hand"
+    - the fuse burns... like my spirit
+  onDefuse:
+    - "{bomb} sleeps once more..."
+    - "the ninja protects... {team}"
+  onWin:
+    - victory... was written in the stars
+    - "{team}... you have honoured the clan"
+  onLoss:
+    - "...the clan will return"
+    - a lesson... from the dojo of defeat
+  onLastAlive:
+    - "...finally. alone. as i prefer"
+    - the last ninja... rises
+  taunt:
+    - you cannot hunt what you cannot see...
+    - my footsteps are silent... except when i jump
+    - smoke bomb! (i don't have one)
+quirks:
+  - crouch_spam
+  - bunny_hops
+rivals:
+  - kryxshy-80
+  - noodlecomet0
+bio: Joined the server in summer 2014 after watching too many ninja films. Hunts with more style than success. Declared Kryxshy_80 his eternal rival after being tracked down by them nine games in a row.
+batch: 2
+retired: false

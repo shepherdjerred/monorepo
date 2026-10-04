@@ -1,0 +1,73 @@
+id: lerkuthblaze
+name: LerkuthBlaze
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkxOTg3NSwKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iMDUyY2E2MzQ3NmUxMzRmMmViYjExNWNkZTU4NjNkNDM3ZGJhMGI5NjlhYjU0MWE1MWExNjAwOTgyNWFkMWJhIgogICAgfQogIH0KfQ=="
+  signature: "HFHlsMc8n9qcZg/V2S8Kn/D8oD7C2bdf/bPdAojVtqXy/NzLSoh28YH24sd11KRl643LHYgJjHvxxunWGnui9ouWQ3NdKA9609/FA4ouGcpFHolM6fQ1XkfNa/BUkVZ39lUQcNH5pu58qRSoXpGHYBGDXgFTt5LyFr4lBBGWbknzbYnxb1ZdIRvqKNri9/6QPPk75BUP7IRLjMwSRSFhNz+xrxJbhGLAi1BYCEEjhVKwZqNsixShOmOJ8osYVvCdga2bzg0nxswDyHt5H+sk6VWPFx0lEBgHwDCt+rzykt/2Pa9Uc6mpSJ483UHuHewQFvAGKTdEs9xf7029lWnVvP276JJA4IPltUhjBAzGHTUd6FLhgVaNAeXdbBW2SUA0tQre7+FDoTgRzDNhrooI3bA5kYZeEComXhTg2MNza+TZkriesdNBRqxu3LFPZcaBKViLQrTfxPBLVDeMoAI/pHKpv0bNP6pcCrN0tVHgN9HvBoYnEJWlocb/5CHa4ZVExMy9KuXr/513A0beFFhmUMyIKXSsGIZO6I5aPd0SW6wy2lV5707LXp3F+6PyfRJixzB5jq02qJX8sMlsZvK6LrLIT4YUIqCtHlkTad2zxfAZEQ/NK+2+QTM4r39bKsFNq8TXtObZRQpb9QUAXEJhUmBA+j2TM8aWNmid6HHVA8E="
+skill: 0.917
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.38
+  cps: 1.52
+  decisionTemperature: -1.31
+  coordination: -0.14
+  technique: 1.04
+  aggression: 0.85
+kits:
+  trooper: 0.89
+  shortbow: 0.45
+roles:
+  escort: 0.39
+  retake: 0.61
+  hunt: 0.65
+style:
+  aggression: 0.82
+  patience: 0.4
+  teamplay: 0.28
+  risk: 0.48
+voice:
+  tone:
+    - confident
+    - gracious
+    - smooth
+  verbosity: normal
+  style: "Champion's calm: compliments opponents, gives tips mid-fight, never gloats"
+lines:
+  greet:
+    - Good luck out there, all.
+    - "Let's have fun, {team}."
+  onKill:
+    - "Nice fight, {victim}. Strafe more."
+    - "Close one, {victim}."
+    - "Tip: don't swing early."
+  onDeath:
+    - "Lovely combo, {killer}."
+    - You earned it.
+    - I'll learn from that.
+  onPlant:
+    - "{bomb} lit. Cover me, {team}."
+    - Fuse set. Let's hold.
+  onDefuse:
+    - "{bomb} safe. Breathe, everyone."
+    - Got it. Calm heads.
+  onWin:
+    - Good games, everyone.
+    - "Proud of {team}."
+  onLoss:
+    - Well played. Truly.
+    - They earned that.
+  onLastAlive:
+    - Stay calm. I've got this.
+    - One fight at a time.
+  taunt:
+    - Come test your aim.
+    - I'm open for a duel.
+    - Show me your best combo.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - meklaishloumzaek
+  - lynxotter0
+bio: The server's best-loved duelist, famous for giving advice to the people it just beat. Its 2014 duels with Meklaishloumzaek are still argued about, and LynxOtter0 wants that crown.
+batch: 2
+retired: false

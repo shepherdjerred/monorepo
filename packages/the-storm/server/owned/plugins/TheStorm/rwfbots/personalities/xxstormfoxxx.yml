@@ -1,0 +1,74 @@
+id: xxstormfoxxx
+name: xXStormFoxXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTU3MTg5OSwKICAicHJvZmlsZUlkIiA6ICJiMGQ0YjI4YmMxZDc0ODg5YWYwZTg2NjFjZWU5NmFhYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl9vcmciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODk4ZWM3OGIxNDA4OGQ3YzQ5NDk0MDg0NjA0ODExMjE0YzY5ZjlkMGRkMTE5OTc3ZDQ4ZjVmOGM1M2JiODI5MSIKICAgIH0KICB9Cn0="
+  signature: "FvPDFRlqWSHn26xtHjlIVK7Fd6PrRmafmjPm9WJ5XLXU8iuyDry15q9zult3HAT8dNYFbCDeXcYJPk2UyzHddZKMRbbAA6Vr64cFLG6kX9K0hJfwLrgFhZl7UTQq6H+rOhRzDdU+RWCYXj6iNRS2zDYOPIjjIP7LvrybZGCM3q6igX5AkPnejYplL8HcoAKj0vmp5a48F/FyTuADzcp/edyFOqN3kBLASiVcQbzEzKIjY/dxwWV5hx4zpKbGRlKTZuXi/CbtmMb3PFj93IZP0xYHJ3tE5UaUmj/5oeVJNXWcJ3f1UjKrZDiC2npRU6dWTF24A/I6CwfhvoMgx7PoGgYdd0CGU2j7849T904BZu1bTK1NPSJqC9WDqU1AIbKIpeDjKyB8Ys5pzYj/A6PomcOChyHQBB4TK9TRN5PnG6P/3xg2ZDoSJD8wU2alkrlwpzgluZxRsOyoF3+yLLHbQ7sHH7LENMtXIPzdkjGK8BmuCs+SXgvChCsE6JzZLwr4C27Vo9/pde6ooy7L4/cvn6dPH6sUDxi6Im0d/V/3KSMcbm9vS1uwQ/CuEjMtyV47u3yLNGNevA1uMLDHAGGqjP7K+bwkGgMZFb17sJQJ3kP4Is37mkK9RStBOE3ubazi3eYuotnH/cK3sGL0amIRuaSgzMp0s8wZ9XYfz/wQ8b8="
+skill: 0.182
+archetype: support
+leverOffsets:
+  predictionQuality: 0.19
+  decisionTemperature: -0.06
+  awarenessRadius: 0.9
+  coordination: 1.88
+  aggression: -0.69
+kits:
+  trooper: 1
+  longbow: 0.32
+  rewind: 0.74
+roles:
+  escort: 1
+  defend: 0.5
+  retake: 0.67
+style:
+  aggression: 0.4
+  patience: 0.61
+  teamplay: 0.96
+  risk: 0.21
+voice:
+  tone:
+    - grumpy
+    - sarcastic
+    - loyal
+  verbosity: normal
+  style: "reluctant helper; complains constantly but always shows up"
+lines:
+  greet:
+    - ugh. fine. i'll escort someone
+    - "who's dying first today, {team}"
+    - i'm here. don't make it weird
+  onKill:
+    - "leave my planter alone, {victim}"
+    - "ugh, {victim}, you made me fight"
+    - there. happy?
+  onDeath:
+    - "of course. thanks {killer}"
+    - nobody covered me, as usual
+    - this is fine
+  onPlant:
+    - "{bomb} is lit. you're welcome"
+    - "fused {bomb}. can we go home"
+  onDefuse:
+    - "defused {bomb}. again. by me"
+    - "{bomb} safe. nobody else was going to"
+  onWin:
+    - fine. gg
+    - we won. don't get used to it
+  onLoss:
+    - told you so. gg
+    - gg. i'm not even surprised
+  onLastAlive:
+    - oh great. it's on me
+    - "ugh, ok {team}, watch"
+    - of course it's me
+  taunt:
+    - please just go away
+    - i'm not in the mood
+    - can we skip to the part where you lose
+quirks:
+  - blames_lag
+  - late_to_everything
+rivals:
+  - arrowblaze1
+bio: Complains about every round and has never missed one. ArrowBlaze1's pep talks make him groan, and he would deny to the end that they work on him.
+batch: 2
+retired: false

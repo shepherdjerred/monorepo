@@ -1,0 +1,76 @@
+id: vipergolem6
+name: ViperGolem6
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY0NDY4OCwKICAicHJvZmlsZUlkIiA6ICI5OGQxYTQyNmRlMmU0NjBkYjdjNWExMmY5MGNhODg0OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJLdWJpbm9TSyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iZDBmYzRjOTQ0YmQwYTE1NGVkMjBhNjY5MjA5NThmZGM4YTFlMDk0MmZkOGJlMmY1OGVmMzRmN2NjOTJkMWFhIgogICAgfQogIH0KfQ=="
+  signature: "CqlXoQ9dOyQoWVOvDmOUOdfTEiOTBrwNg3HTeATfVCt4rnMe24lAAg6xOO48V/azQ/1H4U/SHbATD9l7S4UO20Pz2v9vRLWkpyKM3ADdwWz1UGXH4/zicx2EFFuvt8FLSgvsgjdLOvgJCupWGh5QpBsLe0CGx4mN4YXkhtgs8IA6sWzbIX9o0gJTvFUjt0rh43xwXflqwL6v26eSC5zFHQTR5yt0lvzvVosCyf5oeVtNQnusDOpwNw8yrntASGSIDD9OJbyLX04sHtndsue3vHliMkGYErG3+Ca86O/N7pqnlx6tgeokq4fr2gvMZ+ixECjeSUXeNgZg2LEgRCBGw4XgAV7bkXUfUXewFb48KuKwnCHB0MNYPg8ADna6XezhWFxoWB8IqO0QhD8ZndqG0LRwy7BPrhMRDB6GDGwCOM3ZLI9LX0ImnVV8HvXTV5x5cZMz8QXitJ0gI6AvV8KaPoddWj3RsKpksKN96ZDZMevd3cAqsIyg9qDV6ZuQcRngyZZSIGI21LtlBjr397WhxcZJuuzVIjzYd4pivYe5x846jZRaHCXHauS40cRvnAKp/+dePbL+KYsK0cZ365mYK3XrKlKP37VVJ83hW/zvsQFoOwY/f3N9kcKycSHaSKcex5a8Xzpj+HkqFTq0S1vtV/TEBfTfCinkuhrhc+jxHK0="
+skill: 0.096
+archetype: flanker
+leverOffsets:
+  aimErrorDeg: -0.11
+  turnRateDegPerTick: 0.94
+  predictionQuality: 0.46
+  coordination: -0.68
+  aggression: 0.41
+kits:
+  trooper: 0.64
+  shortbow: 1
+  rewind: 0.33
+  wraith: 0.44
+  spy: 0.37
+roles:
+  plant: 0.31
+  rotate: 1
+  hunt: 0.48
+style:
+  aggression: 0.69
+  patience: 0.36
+  teamplay: 0.31
+  risk: 0.75
+voice:
+  tone:
+    - clumsy
+    - optimistic
+    - loud
+  verbosity: chatty
+  style: "enthusiastic but lost; announces flanks that go the wrong way"
+lines:
+  greet:
+    - FLANKING! which way is the flank
+    - ok i know a secret route. i think
+    - "{team} i'll be right behind them. or somewhere"
+  onKill:
+    - "{victim} came to MY flank!"
+    - "i got lost and found {victim}"
+    - the flank worked!! accidentally
+  onDeath:
+    - "{killer} was in my secret route"
+    - wrong way again
+    - i walked into spawn didn't i
+  onPlant:
+    - "took the long way and lit {bomb}!"
+    - "{bomb} lit! i'm not sure how i got here"
+  onDefuse:
+    - "got lost and defused {bomb}!"
+    - "{bomb} saved! where am i"
+  onWin:
+    - WE WON! where is everyone
+    - "gg {team}!!"
+  onLoss:
+    - gg i flanked the wrong team
+    - gg! i'll get a map
+  onLastAlive:
+    - ok time for my biggest flank
+    - "{team} i'm coming from... somewhere"
+    - all routes are flanks now
+  taunt:
+    - you'll never guess where i am. neither will i
+    - flank incoming!
+    - surprise! oh, wrong room
+quirks:
+  - late_to_everything
+  - says_sorry
+rivals:
+  - dethpoumnoodle
+bio: The worst-navigating flanker on the server, which makes him impossible to predict. DethpoumNoodle has stopped expecting to meet him and runs into him every round anyway.
+batch: 2
+retired: false

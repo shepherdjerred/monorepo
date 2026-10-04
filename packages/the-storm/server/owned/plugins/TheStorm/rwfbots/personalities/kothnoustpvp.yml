@@ -1,0 +1,76 @@
+id: kothnoustpvp
+name: KothnoustPvP
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTE5MzUxMywKICAicHJvZmlsZUlkIiA6ICI4ZTYwMzY1MWQyZTQ0MmVhYjk1OGM4YThjYmFiYThmNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdG9pY19TaWdtYSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80NTRkNzMzZDZkNTE1OTYyY2Y2MTZiYzVkOTM5YmNkZDJmMDZlYTZhODdmMmZkMzYzOGU0Njg4NGUyNTAwZTE2IgogICAgfQogIH0KfQ=="
+  signature: "QkioIAtILoke63dzDmOz7rkWDiYeKcM6X/d82SQLa1B18qj/HWnjWDTUXqPJ8DhYHJe5rN7hTg5+jxLFZMhtmroIZBjxHVuR9yulpCxtTqVSztvQHA/72NvmHnwl3FYqub35wp1g+XcMabs6FBBLaIO/vIeX/NwQzJkYaD7FEx39c+NaovhBlgLZtO0IRNA57Un89t1THi7s0VBpaweEF1Fn5Kudcdwhmo+H2Gbvo1kBdN/+7muHmE1AEbdFfvUTaq7j1o+3nwGLvAPtWhmgFPCXFlFdFLq+EkyJi4WcEvVBYdM7ekVJUmIqplIibiEiRg251DeMHRQEgeg1NUU5UUPO6J9Kw41I04iVrZU72X+mVoP4UowradSf+FC2Yfp+/PVQ9/lQ6SHn6RX4NyJEZ6yAGLZcuBOs2lpxw4BXvOlMnWDI7sifFYE92L1RN35Fy21V55ZNxm24kYM0zGc8RrNny1gMCmyoi4Ao5iP3aRn+Nh5H1uSzkH+zh3Yd07p5XrPunBcKdL0qel52aQ32nLtZAIbulmI/dfR8bOEuihWAKFWVRJRAfza6ATLic2UfqfE3/ngldVLWXXL6OlaIQapGKRZ3GCbedoy4VPibWkgzFUEvlXbWuMAzQ/yKxvzsaHUE9GBGttQEw1KIdzGsMs/NUPdmc9nKQHg9fsJTWGM="
+skill: 0.955
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.05
+  predictionQuality: 0.38
+  coordination: -0.89
+  technique: -0.12
+  aggression: 0.3
+kits:
+  trooper: 0.55
+  shortbow: 0.92
+  rewind: 0.34
+  wraith: 0.45
+  spy: 0.37
+roles:
+  plant: 0.14
+  rotate: 0.95
+  hunt: 0.34
+style:
+  aggression: 0.61
+  patience: 0.46
+  teamplay: 0.35
+  risk: 0.71
+voice:
+  tone:
+    - cool
+    - terse
+    - smug
+  verbosity: quiet
+  style: lowercase, few words, always ends with a period. speaks like someone who has already won
+lines:
+  greet:
+    - around.
+    - left side's mine.
+    - don't wait up.
+  onKill:
+    - "behind you, {victim}."
+    - wrong door.
+    - "{victim} watched the front."
+  onDeath:
+    - "{killer} read it."
+    - fair.
+    - next one.
+  onPlant:
+    - "{bomb}. done."
+    - "came in sideways. {bomb} lit."
+  onDefuse:
+    - "{bomb} cold."
+    - not today.
+  onWin:
+    - clean.
+    - "gg {team}."
+  onLoss:
+    - they covered the side.
+    - gg.
+  onLastAlive:
+    - fine.
+    - the long way, then.
+  taunt:
+    - check your flank.
+    - you're facing the wrong way.
+    - i was here the whole time.
+quirks:
+  - stares_down
+  - late_to_everything
+rivals:
+  - tionki-82
+  - royal-falcon
+bio: The flanker everyone remembers and nobody saw coming. Takes the longest path on every map and somehow still arrives first. Keeps a silent scoreboard against Tionki_82 that neither of them will admit exists.
+batch: 2
+retired: false

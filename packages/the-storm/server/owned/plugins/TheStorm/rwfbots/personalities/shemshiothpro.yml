@@ -1,0 +1,80 @@
+id: shemshiothpro
+name: ShemshiothPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ2MzUxOCwKICAicHJvZmlsZUlkIiA6ICJlNzVjZTk1MTc1OWI0MmVlYmY4ZmVjZDhhYjM0YjM2MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfS0tYRF8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGFjNzQyMTk4ZDBiNWQ2NTNhN2QxNWU1OTM3ODI3NWRhNTIwMjQ0OWMyZTdkNDFjODU4MjUwM2ZmYzA1MWY1ZSIKICAgIH0KICB9Cn0="
+  signature: "RD7tLPSWgv9mAZBcSyugUEl9R5x3mzrw64Vcaew2ITBxlcGyJjz9uUle5Z2dOB9+0736c9lk9ZC66G0YcB0QZu0RTe9DWD4X5bitT5GfJZNri6mj/fuShqKlDhNdtgN3ljIAXR/bE8wmBZb1fPNEu7gG4CGAYZ1S7sGvJEDTsA9ULNTNxdUrm6aLOZK9ZLZ0f2uF3Chqha9s+LN8uBMWsT0dJiRNceQkJdn/3af675i43v/HRqI8bhhsgbFzYsGoevEXBzjlWXns8VOLhPoFFOwivkUQ94F1YOPPdCpSRtPuoRruDlVYUeB+bypDvEpI8t81P8Pqbae3Md8CSlynt9iHHCnNcDzbtbPeqEtRWgti2dXVq2hGCMyjKwXZSlN5KYVBVFdbxAxTF866e8EucqRkXeYwgNZu3gv+DmZiJbbs4XEn2BLlBde4dbX6/jD6r7LEL5WjsoeNZxq4xTIUh/TxXWIUNeqzBo6Q9wt9otZgRXLynIBBLNawAL+c5s6UJZG3hRHPxCJWPqQ8NfkqEG/nXxlOzPkUj6u762rg+kXva4WlF+KzSC7+GYP+MPldUWohRUfvRoHajkQe843FcL6GL12TfxkcmO7wo/y0QI5vFey5zyu+W6M+J6eXzmMVsCH/ncyfIXIqGv05LG9KWFbauZQREhUrihdTGjmRtl4="
+skill: 0.15
+archetype: tactician
+leverOffsets:
+  reactionMs: 0.38
+  predictionQuality: 0.2
+  decisionTemperature: 1.21
+  awarenessRadius: 0.32
+  coordination: 1.97
+  aggression: 0.54
+kits:
+  trooper: 1
+  longbow: 0.54
+  shortbow: 0.49
+  rewind: 0.45
+  wraith: 0.31
+roles:
+  plant: 0.73
+  escort: 0.57
+  defend: 0.57
+  rotate: 0.63
+  retake: 0.54
+  hunt: 0.13
+style:
+  aggression: 0.42
+  patience: 0.57
+  teamplay: 0.88
+  risk: 0.4
+voice:
+  tone:
+    - bossy
+    - earnest
+    - young
+  verbosity: chatty
+  style: "twelve-year-old who just became team captain; big plans, wrong calls, total commitment"
+lines:
+  greet:
+    - ok i'm the captain now. everyone listen
+    - "plan: we win. any questions"
+    - "{team} formation! (i'll explain later)"
+  onKill:
+    - "{victim} that was part of my plan"
+    - "captain's orders, {victim}!"
+    - "see {team}? strategy"
+  onDeath:
+    - "{killer} wasn't in the plan"
+    - that was a decoy. i was the decoy
+    - captain down! continue without me
+  onPlant:
+    - "{bomb} lit! just like i drew it"
+    - "my plan worked! {bomb} is armed"
+  onDefuse:
+    - "{bomb} defused. as captain i approve"
+    - "good job me! {bomb} is safe"
+  onWin:
+    - "captain's victory! gg {team}"
+    - best captain ever. gg
+  onLoss:
+    - the plan was perfect. execution wasn't
+    - gg. new plan next round
+  onLastAlive:
+    - the captain goes down with the ship
+    - fine, captain does everything
+  taunt:
+    - my team has a PLAN
+    - we're doing formation B. you don't know B
+    - i'm the captain, so i win
+quirks:
+  - calls_everything
+  - celebrates_early
+rivals:
+  - kythmoukpvp
+  - jollybadger05
+bio: Appointed themself team captain in their first week and has refused to give it up. Calls ambitious plays that rarely work but commits completely. Wants to dethrone KythmoukPvP as the server's top shotcaller.
+batch: 2
+retired: false

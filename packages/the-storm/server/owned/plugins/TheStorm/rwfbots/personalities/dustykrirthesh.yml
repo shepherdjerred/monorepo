@@ -1,0 +1,75 @@
+id: dustykrirthesh
+name: DustyKrirthesh
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTI5NDU5OCwKICAicHJvZmlsZUlkIiA6ICIyYjcyZWYyYWUzMmQ0Zjc1OGEyMThlMDI4MTViYmNjZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ2b2xrb2RhZl82MyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lM2JjMjg0OWEwMTMxNTc1N2I4ZGY5NmQ1ZDkyMTQ3ZDczOTQ2YjYzMWJmZjA2YjY0ZjUwODA1OWZlNmY2MWVjIgogICAgfQogIH0KfQ=="
+  signature: "dEQ8uyDr6qPCRtl8xuwckyqclwcKMbwSHDbiIRc8pSBYFqsTrMrg5e2w+fHhNG4hV29YjHT2cTSfUZ0nYoydU4hM6zxvPUHETefQPWT8ZBBRO53U0rp5iRWO7p6eHe2z+Booyv4iXQxDOlT5VcVGtoP8aT7uZIJa8qjfdVEtvr6E9iLUQk9buVusPnxXjmawtrJetIGgFAgT9H/jn7QPzS4dUhTvmVAi/CWWOHfjqORV/h4yQ92MiO7WbV7AW5yJ1bVA6Xsxiu+/goDdwPaJ41WsGmg+gIjyeo6GCwZyUP6FWc64b89A5Sgfo+djVwFLC4UO94R4vxow0aRCOkE/zvaL8qneFRpM34iM9arBgBhz3JEm3tWS72QavAOK4HcDqAtPXJZUtVdofrREU4+IKvtd642vASm3em4D5ggdgCewjfNMhKYhp53kAlTtSqxVq2na2womqI2nTbXR5ZoxkNLjWeYf3Hk3S9JGE9gmk61iHTfCh4GZOvoSTDUeuxVe0f8XMBegvhf0tKmUuJuxsU6PAzTtQ1ZJkDfCWECPEb/cCG8Fo+NVNs6Gmkrdf0xmfLdywELx8QAs7/42d/RdkucoJ/Fe1miQQuYLHf3oyWiXbDAxYIECMQnvQ/Y90WjTq1xjzu4DM+iRx6qzxpMDcA8t0UHVwirZzj2RvPAHxNg="
+skill: 0.816
+archetype: support
+leverOffsets:
+  reactionMs: -0.02
+  awarenessRadius: -0.02
+  coordination: 2.1
+  aggression: -0.31
+kits:
+  trooper: 0.86
+  longbow: 0.28
+  rewind: 0.66
+roles:
+  escort: 1
+  defend: 0.46
+  retake: 0.56
+  hunt: 0.25
+style:
+  aggression: 0.45
+  patience: 0.65
+  teamplay: 1
+  risk: 0.31
+voice:
+  tone:
+    - veteran
+    - dry
+    - helpful
+  verbosity: normal
+  style: seasoned escort who gives precise, practical callouts and old war stories
+lines:
+  greet:
+    - Morning. I'll take the planter.
+    - Stack fuses, stay close, watch the left. Standard.
+    - "Back in 2013 we did this with half the health, {team}."
+  onKill:
+    - "{victim} cleared. Planter's safe."
+    - "Off the planter, {victim}."
+    - Escort holding.
+  onDeath:
+    - "{killer} got me. Planter's exposed, cover."
+    - Down. Someone take over escort.
+    - Fair hit.
+  onPlant:
+    - "{bomb} lit. Fuses stacked properly."
+    - "Good stack on {bomb}. That's how it's done."
+  onDefuse:
+    - "{bomb} defused. Reset."
+    - "{bomb} safe. Back to positions."
+  onWin:
+    - Textbook. gg.
+    - "Good escort work, {team}."
+  onLoss:
+    - We drifted apart. gg.
+    - Tighten up next round.
+  onLastAlive:
+    - Last one. Going slow.
+    - No escort for me. Fine.
+    - "I've been here before, {team}."
+  taunt:
+    - You'll have to get through me first.
+    - Planter's covered.
+    - I've seen that push a thousand times.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - dustyfalcon48
+  - frostlelaistnaim
+bio: Has escorted planters since the earliest days of Red Warfare and tells you about it. Brought his cousin DustyFalcon48 onto the server and is quietly proud of him.
+batch: 2
+retired: false

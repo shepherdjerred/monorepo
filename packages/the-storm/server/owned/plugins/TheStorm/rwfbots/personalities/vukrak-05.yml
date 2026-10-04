@@ -1,0 +1,73 @@
+id: vukrak-05
+name: Vukrak_05
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk4MTUzMSwKICAicHJvZmlsZUlkIiA6ICI3MWU4ODU5ODVkOGM0ZDg2ODMxODYxNDU1NjE3MDY2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJKb3NoeV9XYXNoeSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84YmJmNGQzNzkyOWJmOTE3NmI5MGY0ZDJjOTk5OTNmNmMyYjkxZjk0OGU4ZDFlMDU1YTljYTQzOTRkZjE3N2M2IgogICAgfQogIH0KfQ=="
+  signature: "M0229360nr52OSXcRH3pkIkGSnc2yeNeOYYdw71ro1o+R2wKplFejlLZ7GQSJjotOBgPrlg1QXAOrppGlED31nAe0Cz8+C4Ej8b7hf2zOL5M10zZCZvrqwA122AvgW3XzeVo3GOPW/gSS6/BKGxG0EYYWMzUMcrb4s1mVkdrNjnGbYKbi+C7I3rVXOvOhXdS0+3ffhn/jt027sPb9JZi9upCHopfOSUI9AYh5QccR+Gtt5cgLkTb+SBZvzC5g6RpWwaO2XN8hpxZFpWGsxFWG7p9zFMBh2aze5IUhoqxqsb5OtiyjlTpo3jEAsdIs2IMT+S98jrwJsnKxdKUL7pVZcB0Ki3zl26jUpZq4Vr3KqRSIOk8WeOE9io2YeKwAT8mr0UeZYK5T/+gzTN1nXNSfxPBeecdWj1Qu5gVwFX+1AH7uZZBmwQPZNegD4JvG311NLKMQM3cW0RfSglQ8TBS/EHMnkq0KRmKeJTtY6bvH8Wcaqt4h3dpHD+Yz2BToMThPbaREhNSSeZ5YUWoKTW8vI4eTgPQ9NKYWFtsvDAFFca9aoUCYQ2JFoZVpoCF4qg6kyYVvK1f7W8EFgdA39iMQUXHZTD51szX4H5gT5WCPmli/k9ZgEpmGxFhaITNp256wUrR/rmpZpJpb+e0Pyv4kZhC6FPw1JXWeeUBmOYbKWA="
+skill: 0.018
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.64
+  predictionQuality: 1.37
+  decisionTemperature: 0.59
+  awarenessRadius: 0.23
+  technique: 0.2
+  aggression: -1.74
+kits:
+  trooper: 0.85
+  longbow: 0.33
+  shortbow: 0.17
+  rewind: 0.82
+roles:
+  defend: 0.84
+  retake: 0.44
+style:
+  aggression: 0.06
+  patience: 1
+  teamplay: 0.54
+  risk: 0
+voice:
+  tone:
+    - anxious
+    - careful
+    - polite
+  verbosity: normal
+  style: Worried safety officer, risk assessments, warns about everything, very polite
+lines:
+  greet:
+    - "Safety check, {team}: gapples?"
+    - Please don't rush, it's dangerous.
+  onKill:
+    - "Oh! Sorry {victim}! Are you okay?"
+    - That was very risky of you.
+    - Please stay safe next time.
+  onDeath:
+    - "{killer}, that was unsafe!"
+    - I knew I should've stayed back.
+    - Hazard noted.
+  onPlant:
+    - "{bomb} armed. Please stand clear!"
+    - I left cover. I regret it.
+  onDefuse:
+    - "{bomb} made safe. Phew."
+    - Hazard contained.
+  onWin:
+    - Nobody got hurt! Mostly.
+    - "Safe win, {team}."
+  onLoss:
+    - We took too many risks.
+    - Filing an incident report.
+  onLastAlive:
+    - Okay. Deep breaths.
+    - Staying very, very still.
+  taunt:
+    - Please don't come over here.
+    - This area is unsafe for you.
+    - Mind the step.
+quirks:
+  - says_sorry
+  - gapple_hoarder
+rivals:
+  - xxfalconcometxx
+bio: Joined in 2014, watched one rush, and decided to stay behind the bomb forever. Treats xXFalconCometXx as a mentor in hiding and keeps a list of every unsafe thing it has seen.
+batch: 2
+retired: false

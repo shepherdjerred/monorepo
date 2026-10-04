@@ -1,0 +1,74 @@
+id: noodlewolf7
+name: NoodleWolf7
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzgyMjUxMCwKICAicHJvZmlsZUlkIiA6ICJiZmQ3MjMxMGNmYWY0Yjc5OTNlYzhiYzU3ODg3YzU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbHBoYVNwQW0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTRkNjdmOTY0MmVjODk3NTk2MDFjYTNkNjlhNjBkMmMzODI3ZDVmM2U4Y2Y2OTMzNDJmMTQzZTdjZTczOTIzMyIKICAgIH0KICB9Cn0="
+  signature: "ubCWU6B5YrEdhl/xUnyiojVLSc1qYjDx/nDT485tXrbW6PwoBf0H/A+j2DrnZmqUALvmHlTx99O1mhhirqdTQj7uwYWC3V13g0v1OyuNVlf2nfWnNPXV23wbE+SCU0NiThcLULKy5T1SAAfdw/iLTAnPBvXHC8oNp+gddZLvUMbii1VDJEJCLP1TqXsFY9xOnQm+7xvEoGMrfj2T8LMYTL1PR5nYFIcGV24/oTwh3zMKd4hBQbl/MId0I2hZKfbmPZYdoETZeYsR2lCtJkPhpMMjrwlLpvvRE6l4JtiHIy+62wVoZrBPQ7qYHgvnQielM5nRbp+hf+KzKqyF1PEJlq9CZQLKHOi6awy30T2ChQ+TUde7gcgMCEu5hsadqo/0BX9Hg5oVKI6CCDaYuEfQDMr+TcrLCfpJtm0vxQ2rUKYm9G5uFSGLjNZDZ0OjRXS2wHIUxL5uGWcmMyekOzfDgx3xRnIRRG4iK8wEjr9sfH97PSx8UM+MjNihs+f/d7VKiCO2hQ3JLIIVcHfjI0nS9g1MvKTRP7znp8ru78J+MPR7WYW4Y7kamNJZMA8Mjw/4vEXdiJam/8PrtXNxs9s1Tu41X5gWt+EsOr85/DiiifOwGDceBe/81giAJQMblIfM6N4NRFYrz6DCglIJl/GijT09IjqpIyX6kGg70nIj2ig="
+skill: 0.889
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.05
+  turnRateDegPerTick: 0.24
+  predictionQuality: -0.03
+  decisionTemperature: 0.91
+  technique: 0.98
+  aggression: -0.26
+kits:
+  trooper: 1
+  shortbow: 0.18
+  rewind: 0.6
+roles:
+  plant: 1
+  escort: 0.11
+style:
+  aggression: 0.66
+  patience: 0.08
+  teamplay: 0.22
+  risk: 1
+voice:
+  tone:
+    - chef
+    - frantic
+    - proud
+  verbosity: normal
+  style: short-order line cook shouting orders, heat and timing, everything is a dish
+lines:
+  greet:
+    - kitchen's open! order up for their bomb
+    - "{team}, mise en place. go"
+    - fresh fuses, coming right up
+  onKill:
+    - "{victim} is overcooked"
+    - "back of house, {victim}"
+    - "eighty-sixed {victim}"
+  onDeath:
+    - "{killer} burned my order"
+    - "kitchen fire! thanks {killer}"
+    - dropped the plate
+  onPlant:
+    - "{bomb} is on the stove!"
+    - "order up: one hot {bomb}"
+  onDefuse:
+    - "took {bomb} off the heat"
+    - "{bomb} cooled, no burns"
+  onWin:
+    - "five stars, {team}!"
+    - chef's kiss, team
+  onLoss:
+    - the soup was cold
+    - bad service tonight
+  onLastAlive:
+    - one cook in the kitchen
+    - doing the whole dinner rush alone
+  taunt:
+    - your bomb's on the menu
+    - yes chef, coming through
+    - hot behind!
+quirks:
+  - loves_nuke
+  - calls_everything
+rivals:
+  - xoxvaiznex-10
+  - lirzaek-39
+bio: Runs every round like a dinner rush, shouting orders all the way to the enemy bomb. One of the most reliable divers of 2014. Gets very competitive whenever Xoxvaiznex_10 starts a timer.
+batch: 2
+retired: false

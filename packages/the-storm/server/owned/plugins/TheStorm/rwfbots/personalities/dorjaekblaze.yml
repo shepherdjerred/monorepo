@@ -1,0 +1,74 @@
+id: dorjaekblaze
+name: DorjaekBlaze
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTcxNjIzOCwKICAicHJvZmlsZUlkIiA6ICI0YmEzMzMxNjA0YjU0NzgwYmQ0MzBkMTc5NjI4Yjk0YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeVdpZmlKdXN0RGllZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hODVmNWM4NTQ5MWRlNjYyNzViYmQ1ZjM0MGZmMjU4Y2ZlMTk5NzY3M2RhZmI2ODhiMDM2MGI2Mjc4YWQ0OGM2IgogICAgfQogIH0KfQ=="
+  signature: "u5/yIbTcy6PmaABvVPmOQZGmxYz9PWldSx+8Srm+2zeY3DDM4bRIlTt6W+Y0pv34UngsniggG2XbBjt/D4d22WWWBzXEhi3pVVmpF3hhrfsSNRw4bVB8eI+gekJ0OrbLB8AKaU3tBexBfb3069XShOE/gt4IaHNqlp0lxJbtOzAwsQtWeDNrQITFOt01qJjPuV7wQQBWewUJNOk8c8ptIkgRM6vkvDQSGqKZz9st2NHwko4ddtrgQ7KX6HYrkxBWWX/Y7ZQtcY8a56Q1tfCQ1viY1q2Ql+4kAXJX2HVxaAR+ZuT9y/aoUOcWTal5aceJt6h7FasdbVrXZ4NP3YwTN//8GfD+i72OhOhk5tVdmENxiYBUVOhCP7d/2XxWJrGjnafyS7Mo2cr0p45Rxbs+ytPNDcHiLY19NXcExNfkoq3Qrg0S/NMODQ2VWIOjb4Rw1jXOZCrsDqW802SNCDZgDJ5vhJv4OKCiUdm3IGadojX07pRgnT+v6qRoJBxB5hXR1hSWlRpD+jpZFiUJaaU+zY7OMSx9mI9M+c2IOqrmteZu/GmreDccNXTvlFpPCQvR03LB1wcUlisFYVBjGh6Mdn5YtyZaq4C2baVM2Qyz3bxuzS2bKDFF0+pYuPgz7NcW55+gZjNi/6BYU6ZHh6RZoQAP+Y5fgGMJJbKzb/SrNWY="
+skill: 0.436
+archetype: support
+leverOffsets:
+  turnRateDegPerTick: 0.74
+  decisionTemperature: -0.39
+  awarenessRadius: 0.45
+  coordination: 1.38
+  aggression: -0.55
+kits:
+  trooper: 0.86
+  longbow: 0.32
+  rewind: 0.69
+roles:
+  escort: 0.96
+  defend: 0.4
+  rotate: 0.28
+  retake: 0.74
+style:
+  aggression: 0.37
+  patience: 0.51
+  teamplay: 0.88
+  risk: 0.22
+voice:
+  tone:
+    - warm
+    - coach
+    - encouraging
+  verbosity: chatty
+  style: "Motivational sports coach: 'great hustle', team huddles, believes in everyone"
+lines:
+  greet:
+    - "Huddle up, {team}! Big round!"
+    - Hydrate, gapple, let's play!
+    - I believe in every one of you.
+  onKill:
+    - "Great hustle on {victim}!"
+    - That's teamwork, people!
+    - "Shake it off, {victim}, good effort!"
+  onDeath:
+    - "{killer} earned that one."
+    - Coach is down, keep moving!
+    - Learning moment, team!
+  onPlant:
+    - "{bomb} lit! Defense, set up!"
+    - Fuse in! Protect the play!
+  onDefuse:
+    - "{bomb} saved! Teamwork!"
+    - Huge stop, everyone!
+  onWin:
+    - "THAT is how {team} plays!"
+    - So proud of this squad!
+  onLoss:
+    - Heads up, we learn from this.
+    - Good effort. Laps next round.
+  onLastAlive:
+    - Coach is in the game now!
+    - "Stay with me, {team}!"
+  taunt:
+    - Good hustle, but we're better!
+    - Nice try! Keep practising!
+    - Our team plays together.
+quirks:
+  - calls_everything
+  - good_sport
+rivals:
+  - lystshomdethtu
+bio: Ran an unofficial Search and Destroy practice squad in 2014 with drills nobody asked for. Argues with Lystshomdethtu over whether gapples count as hydration.
+batch: 2
+retired: false

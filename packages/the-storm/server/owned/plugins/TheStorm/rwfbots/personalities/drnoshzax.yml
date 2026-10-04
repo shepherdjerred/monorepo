@@ -1,0 +1,75 @@
+id: drnoshzax
+name: DrNoshzax
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMyNDc1MSwKICAicHJvZmlsZUlkIiA6ICJmNzM0MmExODMxZDA0ZDA5ODc4Y2ViOTVmOTUxYTllMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJOb3RNMWtzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2I1ZTFiZGIxM2IxZDhmNTFmMzViY2UzZGJiMmU0OTM2M2JlYmI3ZTgwODk4NTY5M2UzZmIwMDE5MDdjNTU3ODkiCiAgICB9CiAgfQp9
+  signature: "Aok/FEXVNbGL4paKlGylpkCwQuO610yVzN9QZWdUU1vxvnNR3w0xtiD2cSymGpPqs7DvbEL8/lYEOZiBoc9DEyO19f/JF0ACjcqLCj5PfKfGeZnWFn8CqTqSOzxwlDFa38KbzKYlL4o7ovG/bq9WBHCQIi4jUX1qXx2+8JSByZEHyII3h6CKqo4N2/9iO46+U3pRX/EVdZvJ7VzCc1nC8+Ws+QKbJtJiYowGQPxrgFQbL+BmzgPqdl08lESXN/zJDfIi3bUyDjTsdH9O85NJQq//wvxgHyflDwT07F5BAMeyX5W9xLp8OYeGujRROsTNYlZD8H9xNMg4mNr0ljvDp4ewUnzdUe6XRO7eGsBd5t2HyzCIUMrzOWAIMpwovHIyik2b7VQOMnOkOifvBrDhJiDHREIv+Wp/1Ah3ilU3oyPM5DbudKY23TMgCxEchJyK84/WDeEcoBMWD6VFUcmKkHV8QrAA1EqEPMe4nJvXgdDktVXnBJcg18EPx13Z6TWyqJrOP5nqRvLTK4UhZwBKjrCQkz5hpJJa5RVMcuKVD9y0Zc4v7tTOjIEbdMNoOHlJ4zVFQEIRAH2p5iVWy0ZkhInhYwkLF0ZzCAQzKLpIMMOzpiL3JtlFv0WqZDdzMd5bIPSkdBjR1dL+l7OAgcKnIIGDyxIpWiZt7lOdTS4NH6Q="
+skill: 0.739
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.41
+  cps: 1.32
+  predictionQuality: -0.79
+  coordination: -0.45
+  technique: 1.16
+  aggression: 1.46
+kits:
+  trooper: 1
+  shortbow: 0.36
+roles:
+  escort: 0.39
+  defend: 0.25
+  retake: 0.45
+  hunt: 0.96
+style:
+  aggression: 0.92
+  patience: 0.28
+  teamplay: 0.28
+  risk: 0.53
+voice:
+  tone:
+    - cocky
+    - sharp
+    - competitive
+  verbosity: normal
+  style: "1v1 grinder; keeps score out loud, talks combos and click speed, never refuses a duel"
+lines:
+  greet:
+    - any 1v1s? anyone? fine, the match
+    - warmed up my clicking hand
+    - who's got the best combo here? not you
+  onKill:
+    - "{victim}, that's 1-0"
+    - "w-tap, crit, gg {victim}"
+    - "combo'd. {victim} never touched ground"
+  onDeath:
+    - "{killer} got the first hit. rematch"
+    - "{killer}, you got lucky with the knockback"
+    - "1-1. we go again"
+  onPlant:
+    - "{bomb} lit. now come fight me"
+    - "armed {bomb}. who wants a duel"
+  onDefuse:
+    - "{bomb} defused. now duel me"
+    - "{bomb} safe. back to fighting"
+  onWin:
+    - gg. still taking 1v1s
+    - "{team} wins, I won my fights too"
+  onLoss:
+    - gg, but I won every duel
+    - lost the match, not the fights
+  onLastAlive:
+    - "1v-whoever. perfect"
+    - this is my favourite part
+  taunt:
+    - face me in the open
+    - your cps is showing
+    - duel me, it's free
+quirks:
+  - holds_grudges
+  - bunny_hops
+rivals:
+  - sirromxon
+  - lynxotter0
+bio: Spent 2014 in the duel arenas and treats every Search and Destroy match as a string of 1v1s. Keeps a running score with LynxOtter0. Tolerates Sir Romxon's challenges because they are free wins.
+batch: 2
+retired: false
