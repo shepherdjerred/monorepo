@@ -6,7 +6,14 @@
 import path from "node:path";
 import { DEFAULT_DAEMON_TTL_SECONDS } from "#protocol/paths.ts";
 import { DockerSandboxProvider } from "#providers/docker/provider.ts";
+import {
+  MC_HARNESS_SERVICE_ACCOUNT,
+  MC_SANDBOX_NAMESPACE,
+} from "#providers/kubernetes/kubectl.ts";
+import { KubernetesSandboxProvider } from "#providers/kubernetes/provider.ts";
+import { SandboxProviders } from "#sandbox/backend.ts";
 import { SandboxStore } from "#sandbox/record.ts";
+import { loadMcDaemonConfig } from "./config.ts";
 import { logLine, startDaemon } from "./serve.ts";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
@@ -17,11 +24,25 @@ const ttlSeconds =
     : DEFAULT_DAEMON_TTL_SECONDS;
 
 try {
+  const config = await loadMcDaemonConfig();
+  const store = new SandboxStore();
   await startDaemon({
-    provider: new DockerSandboxProvider({
-      repoRoot,
-      store: new SandboxStore(),
-    }),
+    provider: new SandboxProviders(
+      {
+        docker: new DockerSandboxProvider({ repoRoot, store }),
+        kubernetes: new KubernetesSandboxProvider({
+          repoRoot,
+          store,
+          target: {
+            context: await config.value("mcKubeContext"),
+            namespace: MC_SANDBOX_NAMESPACE,
+            as: MC_HARNESS_SERVICE_ACCOUNT,
+          },
+          log: logLine,
+        }),
+      },
+      store,
+    ),
     ttlSeconds,
     repoRoot,
   });

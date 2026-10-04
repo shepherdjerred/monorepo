@@ -24,7 +24,7 @@ export function renderStatus(status: StatusResponse): string {
 export function renderSandbox(sandbox: SandboxSummary): string {
   const { game, bridge } = sandbox.endpoints;
   return [
-    `${sandbox.id}  ${sandbox.status}  ${sandbox.profile}/${sandbox.world}${sandbox.keep ? "  keep" : ""}`,
+    `${sandbox.id}  ${sandbox.status}  ${sandbox.profile}/${sandbox.world}  ${sandbox.provider}${sandbox.keep ? "  keep" : ""}`,
     `  game ${game.host}:${String(game.port)}  bridge ${bridge.host}:${String(bridge.port)}`,
     `  expires ${sandbox.expiresAt}  boot ${String(Math.round(sandbox.bootMs / 1000))}s`,
   ].join("\n");

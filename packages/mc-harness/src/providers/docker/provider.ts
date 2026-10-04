@@ -1,11 +1,15 @@
-import { randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CACHE_DIR } from "#protocol/paths.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BridgeClient } from "#bridge/client.ts";
-import { paper } from "#src/pins.ts";
+import {
+  BOOT_TIMEOUT_MS,
+  newSandboxId,
+  newSandboxSecrets,
+  waitForBridge,
+} from "#sandbox/boot.ts";
 import {
   BRIDGE_PORT,
   GAME_PORT,
@@ -14,20 +18,20 @@ import {
   type ResolvedProfile,
 } from "#sandbox/profiles.ts";
 import type { Progress, SandboxProvider } from "#sandbox/provider.ts";
-import { requireStagedSources, stageEntries } from "#sandbox/staging.ts";
-import type { SandboxRecord, SandboxStore } from "#sandbox/record.ts";
+import { requireStagedSources, stageSandboxFiles } from "#sandbox/staging.ts";
+import {
+  dockerContainerId,
+  type SandboxRecord,
+  type SandboxStore,
+} from "#sandbox/record.ts";
 import { docker } from "./docker-cli.ts";
 import {
   containerLogs,
-  ensureArtifact,
   envArgs,
-  paperJarName,
   publishedPort,
-  stagePinnedPlugins,
   startAndAwaitDone,
   warmMountArgs,
   warmMounts,
-  writeThrottleFreeBukkitYml,
 } from "./paper-container.ts";
 
 export const LABELS = {
@@ -38,18 +42,13 @@ export const LABELS = {
   keep: "mc-harness.keep",
 } as const;
 
-const BOOT_TIMEOUT_MS = 240_000;
-
-export function newSandboxId(): `sbx-${string}` {
-  return `sbx-${randomBytes(3).toString("hex")}`;
-}
-
 /** `docker create` argv for a sandbox; pure so the label/port shape is tested. */
 export function dockerCreateArgs(options: {
   id: string;
   profileName: string;
   profile: ResolvedProfile;
-  pluginsDir: string;
+  /** Null when the profile stages no plugins (the image keeps its own). */
+  pluginsDir: string | null;
   cacheDir: string;
   expiresAt: string;
   owner: string;
@@ -73,9 +72,11 @@ export function dockerCreateArgs(options: {
       "-p",
       `127.0.0.1::${port.toString()}`,
     ]),
-    "-v",
-    `${options.pluginsDir}:/plugins:ro`,
-    ...warmMountArgs(options.cacheDir),
+    // An image that bakes its own /plugins (the storm image) keeps them.
+    ...(options.pluginsDir === null
+      ? []
+      : ["-v", `${options.pluginsDir}:/plugins:ro`]),
+    ...(options.profile.seedData ? warmMountArgs(options.cacheDir) : []),
     ...envArgs(options.profile.env),
     options.profile.image,
   ];
@@ -170,31 +171,25 @@ export class DockerSandboxProvider implements SandboxProvider {
   ): Promise<SandboxRecord> {
     const started = Date.now();
     const id = newSandboxId();
-    const secrets = {
-      bridgeToken: randomBytes(24).toString("hex"),
-      rconPassword: randomBytes(24).toString("hex"),
-    };
+    const secrets = newSandboxSecrets();
     const profile = resolveProfile(request, secrets);
     // Fail on a missing build output before writing anything.
     await requireStagedSources(this.options.repoRoot, profile.staged);
     const dir = this.options.store.dir(id);
-    const pluginsDir = path.join(dir, "plugins");
     progress("staging plugins");
-    await stagePinnedPlugins(
-      path.join(this.cacheDir, "plugins"),
-      pluginsDir,
-      profile.plugins,
-    );
-    await stageEntries(pluginsDir, this.options.repoRoot, profile.staged);
-    const paperJar = path.join(this.cacheDir, paperJarName);
-    await ensureArtifact(paperJar, paper);
-    await Promise.all(
-      warmMounts.map(async ([warm]) =>
-        mkdir(path.join(this.cacheDir, warm), { recursive: true }),
-      ),
-    );
-    const bukkitYml = path.join(dir, "bukkit.yml");
-    await writeThrottleFreeBukkitYml(bukkitYml);
+    const { pluginsDir, seedFiles } = await stageSandboxFiles({
+      dir,
+      cacheDir: this.cacheDir,
+      repoRoot: this.options.repoRoot,
+      profile,
+    });
+    if (profile.seedData) {
+      await Promise.all(
+        warmMounts.map(async ([warm]) =>
+          mkdir(path.join(this.cacheDir, warm), { recursive: true }),
+        ),
+      );
+    }
 
     const createdAt = new Date(started).toISOString();
     const expiresAt = new Date(
@@ -214,8 +209,13 @@ export class DockerSandboxProvider implements SandboxProvider {
     );
     const containerId = stdout.trim();
     try {
-      await docker(["cp", bukkitYml, `${containerId}:/data/bukkit.yml`]);
-      await docker(["cp", paperJar, `${containerId}:/data/${paperJarName}`]);
+      for (const seed of seedFiles) {
+        await docker([
+          "cp",
+          seed.source,
+          `${containerId}:/data/${seed.target}`,
+        ]);
+      }
       progress("booting Paper");
       const deadline = started + BOOT_TIMEOUT_MS;
       await startAndAwaitDone(containerId, deadline);
@@ -246,7 +246,7 @@ export class DockerSandboxProvider implements SandboxProvider {
         keep: request.keep,
         bootMs: Date.now() - started,
         endpoints: { game, rcon, bridge },
-        containerId,
+        providerRef: { kind: "docker", containerId },
         owner: this.owner,
         secrets,
       };
@@ -261,7 +261,7 @@ export class DockerSandboxProvider implements SandboxProvider {
   }
 
   async list(): Promise<SandboxRecord[]> {
-    const records = await this.options.store.list();
+    const records = await this.options.store.listFor("docker");
     const rows = await this.rows();
     const running = new Set(
       rows
@@ -270,7 +270,7 @@ export class DockerSandboxProvider implements SandboxProvider {
     );
     return records.map((record) => ({
       ...record,
-      status: running.has(record.containerId.slice(0, 12))
+      status: running.has(dockerContainerId(record).slice(0, 12))
         ? "ready"
         : "stopped",
     }));
@@ -288,7 +288,7 @@ export class DockerSandboxProvider implements SandboxProvider {
     const containers =
       rows.length > 0
         ? rows.map((row) => row.containerId)
-        : [record?.containerId ?? ""];
+        : [record === null ? "" : dockerContainerId(record)];
     for (const container of containers) {
       try {
         await docker(["rm", "-f", "-v", container]);
@@ -312,10 +312,10 @@ export class DockerSandboxProvider implements SandboxProvider {
         reaped.push(row.id);
       }
     }
-    // Records whose container vanished (docker restart, manual rm).
+    // Docker records whose container vanished (docker restart, manual rm).
     const remaining = await this.rows();
     const known = new Set(remaining.map((row) => row.id));
-    for (const record of await this.options.store.list()) {
+    for (const record of await this.options.store.listFor("docker")) {
       if (!known.has(record.id) && !reaped.includes(record.id)) {
         await this.options.store.remove(record.id);
         reaped.push(record.id);
@@ -325,7 +325,7 @@ export class DockerSandboxProvider implements SandboxProvider {
   }
 
   async logs(record: SandboxRecord, tail: number): Promise<string[]> {
-    const text = await containerLogs(record.containerId, tail);
+    const text = await containerLogs(dockerContainerId(record), tail);
     return text.split("\n").filter((line) => line.length > 0);
   }
 
@@ -340,23 +340,4 @@ export class DockerSandboxProvider implements SandboxProvider {
     ]);
     return parseSandboxRows(stdout);
   }
-}
-
-async function waitForBridge(
-  client: BridgeClient,
-  deadline: number,
-): Promise<void> {
-  let last: unknown;
-  while (Date.now() < deadline) {
-    try {
-      await client.health();
-      return;
-    } catch (error) {
-      last = error;
-      await Bun.sleep(500);
-    }
-  }
-  throw new Error(
-    `MCBridge did not answer /v1/health before the boot deadline: ${last instanceof Error ? last.message : String(last)}`,
-  );
 }

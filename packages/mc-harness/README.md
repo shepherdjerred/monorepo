@@ -5,20 +5,21 @@ for the MCBridge Paper plugin, and the session daemon that holds them.
 
 ## Layout
 
-| Path                    | What it is                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------ |
-| `src/protocol/`         | Zod-only contracts: the MCBridge wire API, daemon IPC, paths, protocol version             |
-| `src/bridge/client.ts`  | `BridgeClient` — bearer-authenticated, every response validated against the contract       |
-| `src/pins.ts`           | Pinned itzg image, Paper 26.2 build, WorldEdit and Citizens jars (url + sha256)            |
-| `src/providers/docker/` | Docker CLI wrapper, reusable Paper-container helpers, and the Docker sandbox provider      |
-| `src/sandbox/`          | Sandbox records (0600, hold secrets), profiles, staging, and the provider contract         |
-| `src/playtest/`         | Scenario API (`define.ts`), the per-run child process, expectations and run reports        |
-| `src/target.ts`         | `Target`: one server the harness acts on (bridge client + log tail)                        |
-| `src/daemon/`           | Unix-socket daemon: idle TTL, JSONL logs, sandbox lifecycle, target and playtest routes    |
-| `src/protocol/build.ts` | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)    |
-| `src/build/`            | `toolkit mc build` CLI: capture, canvas, compile, run, render, lint, replay, promote, undo |
-| `playtests/`            | The harness smoke scenario                                                                 |
-| `evals/`                | Agent eval suite (Codex/Claude tasks, graders, runner); manual, see `evals/README.md`      |
+| Path                        | What it is                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------ |
+| `src/protocol/`             | Zod-only contracts: the MCBridge wire API, daemon IPC, paths, protocol version             |
+| `src/bridge/client.ts`      | `BridgeClient` — bearer-authenticated, every response validated against the contract       |
+| `src/pins.ts`               | Pinned itzg image, Paper 26.2 build, WorldEdit and Citizens jars (url + sha256)            |
+| `src/providers/docker/`     | Docker CLI wrapper, reusable Paper-container helpers, and the Docker sandbox provider      |
+| `src/providers/kubernetes/` | Cluster sandbox provider: scoped kubectl, pod manifest, port-forward supervisor            |
+| `src/sandbox/`              | Sandbox records (0600, hold secrets), profiles, staging, and the provider contract         |
+| `src/playtest/`             | Scenario API (`define.ts`), the per-run child process, expectations and run reports        |
+| `src/target.ts`             | `Target`: one server the harness acts on (bridge client + log tail)                        |
+| `src/daemon/`               | Unix-socket daemon: idle TTL, JSONL logs, sandbox lifecycle, target and playtest routes    |
+| `src/protocol/build.ts`     | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)    |
+| `src/build/`                | `toolkit mc build` CLI: capture, canvas, compile, run, render, lint, replay, promote, undo |
+| `playtests/`                | The harness smoke scenario                                                                 |
+| `evals/`                    | Agent eval suite (Codex/Claude tasks, graders, runner); manual, see `evals/README.md`      |
 
 `toolkit` is compiled to a single binary and may import only `src/protocol/*`;
 an architecture boundary keeps that directory free of daemon, provider, and
@@ -53,6 +54,35 @@ a stale state file whose PID now belongs to another process is cleaned up
 without signalling it. Creates are
 serialized because boots share the Paperclip warm cache under
 `~/.toolkit/mc/cache`.
+
+### Cluster sandboxes
+
+`--provider kubernetes` (or a `storm-prod` / `storm-candidate` profile, which
+default to it) runs the sandbox as a pod in the homelab's `mc-sandbox`
+namespace. Every call is `kubectl --context <mcKubeContext> --as
+system:serviceaccount:mc-sandbox:mc-harness -n mc-sandbox`, so the namespace's
+RBAC bounds what the harness can do; `mcKubeContext` (env `MC_KUBE_CONTEXT` or
+`~/.toolkit/config.toml`) defaults to `admin@torvalds` and is never inferred
+from kubectl's current context.
+
+The pod (`src/providers/kubernetes/pod-manifest.ts`) is built to pass the
+namespace's admission policy: harness labels and an expiry annotation,
+`activeDeadlineSeconds` at the TTL plus ten minutes (at most 8 h, so the
+cluster kills a forgotten pod even without the daemon), `batch-low` priority on
+the CI node, bounded requests and limits on every container, `emptyDir`
+volumes only, Pod Security "restricted", and digest-pinned images. Profiles
+that stage plugins get a `stage` init container: the provider copies the staged
+`/plugins` tree and `/data` seed files in with `kubectl cp`, then touches a
+ready file. The game, RCON and bridge ports reach the laptop through a
+supervised `kubectl port-forward` that restarts with backoff and is re-attached
+(with new local ports) after a daemon restart. Reaping reads the pods' expiry
+annotations; records whose pod disappeared are dropped.
+
+`storm-prod` and `storm-candidate` boot `ghcr.io/shepherdjerred/the-storm-server`
+at the version catalog's `/prod` and candidate pins with fixture credentials,
+staging nothing: the image bakes Paper, every plugin and the owned config. It
+needs an image that bakes MCBridge; earlier images never answer the bridge
+health check.
 
 The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 `bunx turbo run build --filter=@shepherdjerred/the-storm`), its required

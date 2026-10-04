@@ -1,5 +1,5 @@
 import { BridgeClient } from "#bridge/client.ts";
-import type { SandboxProvider } from "#sandbox/provider.ts";
+import type { SandboxBackend } from "#sandbox/provider.ts";
 import type { SandboxRecord } from "#sandbox/record.ts";
 
 /**
@@ -15,7 +15,7 @@ export type Target = {
 
 export function sandboxTarget(
   record: SandboxRecord,
-  provider: SandboxProvider,
+  provider: SandboxBackend,
 ): Target {
   const { host, port } = record.endpoints.bridge;
   return {

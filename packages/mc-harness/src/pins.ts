@@ -1,9 +1,40 @@
+import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
+import {
+  parseVersionCatalog,
+  versionCatalogMap,
+} from "@shepherdjerred/version-catalog";
 import { z } from "zod";
 
 // Every external input to a disposable server is pinned by digest or hash so
 // a run is reproducible and a supply-chain swap fails loudly.
 export const serverImage =
   "itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749";
+
+const catalog = versionCatalogMap(parseVersionCatalog(rawCatalog));
+
+function catalogImage(repository: string, entry: string): string {
+  const value = catalog[entry];
+  if (value?.includes("@sha256:") !== true) {
+    throw new Error(`Version catalog entry ${entry} must be a digest pin`);
+  }
+  return `${repository}:${value}`;
+}
+
+/**
+ * The published minecraft-tsmc image at the pins the homelab deploys:
+ * `prod` is what live runs, `candidate` the latest CI build. Both come from
+ * the version catalog, so sandboxes and the cluster admission allowlist agree.
+ */
+export const stormServerImages = {
+  prod: catalogImage(
+    "ghcr.io/shepherdjerred/the-storm-server",
+    "shepherdjerred/the-storm-server/prod",
+  ),
+  candidate: catalogImage(
+    "ghcr.io/shepherdjerred/the-storm-server",
+    "shepherdjerred/the-storm-server",
+  ),
+} as const;
 
 export const paper = {
   version: "26.2",

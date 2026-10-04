@@ -199,7 +199,7 @@ repo-built MCBridge plugin, so build it first:
 ```bash
 mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble
 toolkit mc daemon start [--ttl 4h]
-toolkit mc sandbox up [--world flat|void] [--ttl 2h] [--keep]
+toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep]
 toolkit mc info
 toolkit mc we --world world --pos1 0,-60,0 --pos2 4,-56,4 "//set stone"
 toolkit mc region read --world world 0,-60,0 4,-56,4
@@ -208,7 +208,10 @@ toolkit mc sandbox down --all
 toolkit mc daemon stop
 ```
 
-A sandbox is Paper 26.2 with WorldEdit and MCBridge in a local container. Its
+A sandbox is Paper 26.2 with WorldEdit and MCBridge in a local container, or
+with `--provider kubernetes` (the default for the `storm-prod` and
+`storm-candidate` profiles) a pod in the cluster's `mc-sandbox` namespace
+reached through `kubectl port-forward`. Its
 game, RCON, and bridge ports are published on `127.0.0.1` only; the bridge
 token and RCON password live in `~/.toolkit/mc/sandboxes/<id>/record.json`
 (mode `0600`) and never appear in command output. `--target <id>` selects a

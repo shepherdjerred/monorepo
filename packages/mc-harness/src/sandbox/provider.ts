@@ -4,8 +4,8 @@ import type { SandboxRecord } from "./record.ts";
 export type Progress = (message: string) => void;
 
 /**
- * Where sandbox servers run. Docker is the only provider so far; a Kubernetes
- * provider implements the same contract.
+ * Where sandbox servers run: local Docker or the cluster's mc-sandbox
+ * namespace. Each provider owns only the records of its own kind.
  */
 export type SandboxProvider = {
   readonly kind: SandboxRecord["provider"];
@@ -22,3 +22,6 @@ export type SandboxProvider = {
   reap: (now: Date) => Promise<string[]>;
   logs: (record: SandboxRecord, tail: number) => Promise<string[]>;
 };
+
+/** What the daemon drives: every provider at once, routed per sandbox. */
+export type SandboxBackend = Omit<SandboxProvider, "kind">;

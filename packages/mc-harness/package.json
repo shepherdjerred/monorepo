@@ -38,8 +38,10 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/mc-build": "workspace:*",
     "@shepherdjerred/unix-socket-daemon": "workspace:*",
+    "@shepherdjerred/version-catalog": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
