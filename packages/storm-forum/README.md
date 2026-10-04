@@ -6,17 +6,26 @@ The forum starts with fresh discussions and clearly attributed editorial history
 
 ## Licensed inputs and image boundary
 
-The public runtime image contains PHP, Bun, the Storm add-on, and community-owned
-artwork. It contains no XenForo distribution or commercial theme/add-on code.
+The public runtime image contains PHP, Bun, the Storm add-on, community-owned
+artwork, and the authored Flexile adaptation source. It contains no XenForo
+distribution, generated native style exports, or commercial add-on code.
 `config/forum.json` is the dependency and topology contract. A release bundle
 contains a fresh licensed XenForo `upload/` tree, add-on distributions extracted
 into their native paths, and the two vendor style archives under `vendor/`.
 
-The licensed parents are UI.X 2 and UI.X 2 Dark, pinned in the manifest. Package
-their supported standalone style archives as `vendor/uix-2.zip` and
-`vendor/uix-2-dark.zip`. The optional variations-ready beta XML is not the parent
-contract. The Storm's normal, Halloween, and Christmas styles inherit from each
-parent and contain independently authored branding.
+The parent styles are Flexile adaptations for XenForo 2, authored in
+`themes/flexile/`. The builder combines those tracked customizations with the
+installed, licensed XenForo master template. Its generated archives contain
+licensed XenForo code and remain private: `vendor/flexile-storm-light.zip` and
+`vendor/flexile-storm-dark.zip`. Each archive is pinned by SHA-256, adaptation
+version, appearance, native export format, and exact XenForo base version.
+Both archives pass preflight before installation or either parent import.
+Keep the Audentio attribution in the footer when changing the adaptation.
+
+The six selectable Storm styles inherit from hidden light and dark Flexile
+parents and add the normal, Halloween, and Christmas branding. Import preserves
+their existing IDs, members' selections, and the active seasonal default. Legacy
+parents and unrelated styles are retained.
 
 Private bundles live in the protected `storm-forum-releases` bucket. Each release
 references an immutable object key and SHA-256. Init downloads and verifies the
@@ -110,9 +119,22 @@ docker build --target smoke -f packages/storm-forum/Dockerfile .
 bun packages/storm-forum/scripts/local-integration.ts /absolute/private/xenforo/upload --preview
 ```
 
+To build the private style archives from tracked source, add
+`--export-styles .local/storm-flexile/exports` to the integration command. This
+prints both checksums and copies the exports before checking the manifest pins.
+After changing the theme, review the generated checksums, update both style pins
+in `config/forum.json`, and rerun the harness. The builder requires a disposable
+localhost installation. Its native template anchors fail explicitly if a
+XenForo upgrade changes the underlying layout. Keep generated exports and the
+licensed input distributions out of Git; `.local/` is excluded from Git and the
+Docker context. The theme source and builder are version-controlled.
+
 The integration harness uses random credentials and isolated, disposable Docker
 containers. It exercises actual XenForo entities, repeated configuration, private
-support, new-account restrictions, and promotion criteria. The optional preview
+support, new-account restrictions, and promotion criteria. Theme builds also
+exercise six palettes, parent migration, repeated imports, preserved member
+choices, seasonal defaults, and rejection of altered or incompatible archives.
+The optional preview
 binds only localhost. Ctrl-C removes its exact containers and network.
 `scripts/local-backup-test.ts` takes that harness's explicit application container
 name and exercises a real database/files round trip through an isolated S3 API

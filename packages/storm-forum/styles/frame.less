@@ -1,44 +1,54 @@
-// Authored for The Storm. The framed layout recalls UI.Flex without copying vendor templates.
-@stormAccent: #128f83;
+// Owned Storm branding layered over the native Flexile parent.
+@stormAccent: #087361;
 body {
   background-image:
-    linear-gradient(fade(#122c30, 55%), fade(#122c30, 55%)),
+    linear-gradient(fade(#122c30, 35%), fade(#122c30, 35%)),
     url("styles/storm/spawn.jpg");
   background-attachment: fixed;
   background-size: cover;
 }
-.p-pageWrapper {
-  max-width: 1320px;
-  margin: 24px auto;
-  border-radius: 14px;
-  box-shadow: 0 16px 60px fade(#000, 25%);
-  overflow: hidden;
+.p-body-inner {
+  min-height: 55vh;
+}
+.p-body-header {
+  background: @xf-contentBg;
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  padding: 15px 20px;
+}
+.p-body-content > .p-body-pageContent {
+  padding: 20px;
+  background: @xf-contentBg;
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px fade(#000, 12%);
+}
+.p-footer-inner {
+  background: @xf-contentBg;
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  padding: 15px;
 }
 .p-header-logo img {
-  max-height: 72px;
-  width: auto;
-}
-.block-container {
-  border-radius: 8px;
-  overflow: hidden;
-}
-.p-nav {
-  border-bottom: 3px solid @stormAccent;
+  max-width: 240px;
 }
 .button--primary {
-  background: @stormAccent;
+  background-color: @stormAccent;
   border-color: darken(@stormAccent, 8%);
-  color: white;
 }
 .stormWelcome {
-  border-top: 4px solid @stormAccent;
+  border-top: 3px solid @stormAccent;
+}
+.p-body .stormWelcome {
+  border-radius: 6px;
+  padding: 1.25rem;
+  gap: 1.5rem;
 }
 @media (max-width: 800px) {
-  .p-pageWrapper {
-    margin: 0;
-    border-radius: 0;
-  }
   body {
     background-image: none;
+  }
+  .p-body-content > .p-body-pageContent {
+    padding: 12px;
   }
 }

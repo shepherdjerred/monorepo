@@ -53,18 +53,42 @@ export const ManifestSchema = z
     attachmentLimitKiB: z.literal(5120),
     nodes: z.array(NodeSchema).min(1),
     vendorDependencies: z.array(
-      z
-        .object({
-          key: z.string(),
-          version: z.string(),
-          kind: z.enum(["style", "addon"]),
-          path: z.string(),
-        })
-        .strict(),
+      z.discriminatedUnion("kind", [
+        z
+          .object({
+            key: z.string(),
+            version: z.string(),
+            kind: z.literal("addon"),
+            path: z.string(),
+          })
+          .strict(),
+        z
+          .object({
+            key: z.string(),
+            version: z.string().regex(/^\d+\.\d+\.\d+$/),
+            kind: z.literal("style"),
+            path: z.string().regex(/^vendor\/[\w-]+\.zip$/),
+            mode: z.enum(["light", "dark"]),
+            sha256: z.string().regex(/^[a-f0-9]{64}$/),
+          })
+          .strict(),
+      ]),
     ),
   })
   .strict()
   .superRefine((value, context) => {
+    const styles = value.vendorDependencies.filter(
+      (dependency) => dependency.kind === "style",
+    );
+    if (
+      styles.length !== 2 ||
+      new Set(styles.map((style) => style.mode)).size !== 2
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Exactly one pinned light and dark parent style is required",
+      });
+    }
     const keys = new Set<string>();
     for (const node of value.nodes) {
       if (

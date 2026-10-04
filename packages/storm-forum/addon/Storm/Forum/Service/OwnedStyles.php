@@ -23,6 +23,8 @@ final class OwnedStyles extends \XF\Service\AbstractService
             $style->user_selectable = true;
             $style->enable_variations = false;
             $style->save();
+            // Newly created/reparented styles need their native property map before value writes.
+            $app->service('XF:StyleProperty\Rebuild')->rebuildFullPropertyMap();
             $app->repository('XF:StyleProperty')->updatePropertyValues($style, $values);
             $template = $app->finder('XF:Template')->where(['style_id' => $style->style_id, 'type' => 'public', 'title' => 'extra.less'])->fetchOne() ?: $app->em()->create('XF:Template');
             $template->style_id = $style->style_id;

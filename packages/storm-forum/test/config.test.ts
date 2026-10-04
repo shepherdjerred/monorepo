@@ -5,6 +5,33 @@ import {
   ManifestSchema,
 } from "#src/config.ts";
 describe("forum configuration contracts", () => {
+  it("requires both appearance archives with immutable checksums", () => {
+    const addons = forumManifest.vendorDependencies.filter(
+      (dependency) => dependency.kind === "addon",
+    );
+    const styles = forumManifest.vendorDependencies.filter(
+      (dependency) => dependency.kind === "style",
+    );
+    expect(
+      ManifestSchema.safeParse({ ...forumManifest, vendorDependencies: addons })
+        .success,
+    ).toBe(false);
+    expect(
+      ManifestSchema.safeParse({
+        ...forumManifest,
+        vendorDependencies: [...addons, styles[0], styles[0]],
+      }).success,
+    ).toBe(false);
+    expect(
+      ManifestSchema.safeParse({
+        ...forumManifest,
+        vendorDependencies: [
+          ...addons,
+          ...styles.map((style) => ({ ...style, sha256: "not-a-digest" })),
+        ],
+      }).success,
+    ).toBe(false);
+  });
   it("requires a private backend and explicit node visibility", () => {
     expect(() =>
       ManifestSchema.parse({
