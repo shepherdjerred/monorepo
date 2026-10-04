@@ -14,6 +14,69 @@ Application state (subscriptions, competitions, guilds) is PostgreSQL 16
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.
 
+## Support messages
+
+`SupportConversation` joins web feedback, private Discord forms, and bot DMs by
+Discord identity within each environment. `Feedback` holds inbound and human
+outbound messages. Bot DMs do not require a web account; signing in later with
+the same Discord identity exposes that history. The gateway subscribes only to
+direct-message events, with partial channels enabled, not guild message content.
+Gateway message/interaction IDs and web UUIDs deduplicate retries. Intake uses
+a per-sender transaction lock, ten-message-per-minute limit, and five-upload-
+per-minute limit backed by minimal sender throttle and alert-grouping state that
+survives conversation deletion, plus operator mute. Discord DM and web screenshot
+uploads share the same sender quota. A database trigger adopts feedback inserted
+by older pods during a rolling deployment, so the one-time data migration does
+not leave late legacy submissions detached from the inbox.
+
+`/app/feedback` is the permanent composer and reply history. Operations' inbox
+uses the structural operator allowlist independently of the pipeline console
+flag; ordinary server admins cannot read it. Read, waiting-on-user, and resolved
+are separate states; an inbound follow-up reopens the conversation. Replies are
+committed to web history before notification work, so blocked Discord DMs never
+hide an answer. Notification delivery, mute changes, and deletion serialize on
+the same sender lock, so no notification can arrive after deletion commits.
+Reply request IDs prevent duplicate replies.
+
+`SupportJob` is the durable outbox. Intake groups operator alerts and DM receipts
+in five-minute windows. A prompt Temporal start drains work; the one-minute
+`support-inbox` Schedule recovers missed starts and stale claims. Discord sends
+are at-most-once attempts: interrupted/ambiguous outcomes become `UNKNOWN`, never
+automatic resends. Storage work uses deterministic keys and bounded retries.
+Operations shows delivery failures and detached file-deletion failures, with
+retry controls only for repeatable storage work. DM audit content is redacted.
+
+Screenshots accept PNG/JPEG/WebP up to 10 MiB, five per message. Web uploads
+reserve a private object key before I/O; bot attachments archive only allowlisted
+Discord CDN URLs, with no redirects and bounded byte counts. Successful copies
+clear the expiring source URL. Private `scout-support-beta`/`scout-support-prod`
+buckets are backed up separately from disposable report images. The bootstrap
+`SUPPORT_BUCKET_NAME` selects the bucket; image reads authenticate ownership or
+the operator allowlist, validate stored bytes, and return private/no-store headers.
+Accepted content remains until confirmed manual deletion. Deletion fences
+archive work, removes active records, and durably queues file cleanup. Unsubmitted
+uploads expire after 24 hours. Backups follow existing rotation; conversation
+deletion removes message and attachment content but retains the sender ID,
+recent inbound/upload timestamps, and five-minute alert/receipt grouping
+timestamps needed to preserve abuse controls. Failure notices to a sender are
+coalesced to one per minute, with only the latest notice timestamp retained.
+Muted senders also retain their minimal restriction state.
+
+`scout_support_conversations_enabled` gates new Discord controls, screenshots,
+operator alerts, and reply DMs; stored web messages remain readable and bot DM
+intake still gets receipts. `scout_support_report_action_enabled` additionally
+controls the passive report feedback button. V2 freezes that button with the
+notification presentation before delivery. These controls create no additional
+outreach messages and do not change existing outreach budgets. Fourteen-day
+Operations measurements exclude operator conversations and count report actions
+delivered/opened/submitted; delivery is not an impression. Analytics never carry
+support text, attachment URLs, or screenshot bytes.
+
+Feedback links derive from the application origin. `/help`, website support,
+the permanent form, and existing occasional outreach route to this conversation;
+GitHub issues and personal developer DMs are not support entrypoints. The
+community Discord is optional and is not mirrored into private support.
+
 ## Commands
 
 ```bash
@@ -417,6 +480,39 @@ read-back could not run inside one. The guard and the fact are therefore two
 commits by construction, which is why every V2 guarded-effect result reports
 them as separate outcomes and names the reconcile.
 
+## Scout Client player identity
+
+The League client names every player by a 36-character UUID — in the
+current-summoner profile, lobbies, match history, end-of-game blocks, and
+replay files alike. Riot's API names them by a 78-character PUUID encrypted
+per API key, which is what every `Account` row and every Riot-sourced record
+holds. The two never compare equal, so client data joins to nothing until it
+is translated.
+
+`LeagueIdentityAlias` is that translation (`scout-client/identity-alias.ts`).
+An alias is learned by resolving the Riot ID a payload states beside a UUID
+(`gameName#tagLine`, present in the profile and in match-history identities)
+through account-v1, once per player, and cached for good. Ingress learns
+every alias a batch can teach before checking it, then:
+
+- translates the observer before the ownership check, and stores the PUUID in
+  `localPuuid` with the UUID beside it in `localLcuUuid`;
+- leaves the stored payload exactly as sent — it is the evidence and its digest
+  is the idempotency key — and hands a translated copy to the quarantine
+  checks, lobby binding, and match dispatch.
+
+Every later reader of a stored payload translates its own copy the same way
+(`withRiotIdentities`): canonical match selection, replay provenance and the
+replay container check, and local mastery. A UUID with no alias is left as it
+is, so an unresolved player fails to join rather than joining wrongly, and a
+canonical match that still names anyone by UUID is refused.
+
+A client can claim any Riot ID for a UUID; ownership is still checked against
+the device owner's accounts. An alias whose PUUID is the reporting owner's
+own is `ownerVerified` and replaces an unverified one, so a player's own
+client corrects anything another client's payload taught. Outcomes are counted
+in `scout_client_identity_aliases_total{outcome}`.
+
 ## The V2 prematch path
 
 The `prematch-*` modules beside them serve `scoutPrematchDiscoveryV2Workflow`
@@ -472,6 +568,33 @@ Nothing writes `ActiveGame` now. The consumer live view reads
 minus games the report lake already holds, with each roster read from the
 archived spectator snapshot. The stale-pool void sweep replies to the
 delivered post-match intents (`postmatchReplyTargets`).
+
+### Games against bots
+
+Both pipelines wait out a spectator roster shorter than ten, because that is
+nearly always a lobby still loading in. A game against bots looks the same and
+never fills: Riot omits bots from the spectator roster entirely, so a custom
+against nine of them reports one participant for its whole length. Only the
+local Scout Client sees the rest, in the LCU lobby's `customTeam100` and
+`customTeam200`.
+
+`clientRosterCompletion` (`league/tasks/prematch/client-bot-roster.ts`) is the
+one rule both pipelines ask — v1's `shouldDeferRoster`, and V2's discovery and
+capture through `isPrematchRosterReady`, which must agree for the reason given
+above. It answers only once the game has started (`gameLength >= 0`), so a
+loading lobby still waits, and only when the client's bots leave somebody on
+both sides. The bots come from the tracked player's own accepted observations
+in two hops, because LCU never names the lobby and the game in one payload: the
+client stamps the lobby it saw onto its in-game observation, and the roster is
+read from that lobby as it stood when the game began. The desktop README
+documents the client half.
+
+Bots then render as ordinary participants with no PUUID, no summoner spells, a
+hidden rank, and the lane the client assigned them. The lane-prior model reads
+spells, so it does not infer lanes on a side bots share, and the full-side lane
+rule in `LoadingScreenDataSchema` exempts that side for the same reason. A
+completed roster is counted as
+`prematch_detections_total{status="client_completed_roster"}`.
 
 ### V2 prematch delivery and markets
 

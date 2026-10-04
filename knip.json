@@ -64,6 +64,14 @@
         "architecture-fixtures/**/*.ts"
       ]
     },
+    "packages/mc-harness": {
+      "entry": ["architecture-fixtures/**/*.ts"],
+      "project": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "architecture-fixtures/**/*.ts"
+      ]
+    },
     "packages/discord-plays-core": {
       "project": ["src/**/*.ts"]
     },

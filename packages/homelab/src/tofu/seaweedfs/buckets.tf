@@ -300,6 +300,15 @@ resource "aws_s3_bucket" "scout_prod" {
   bucket = "scout-prod"
 }
 
+# Private user screenshots, never included in a static/public asset route.
+resource "aws_s3_bucket" "scout_support_beta" {
+  bucket = "scout-support-beta"
+}
+
+resource "aws_s3_bucket" "scout_support_prod" {
+  bucket = "scout-support-prod"
+}
+
 # The Scout League Classic renderer now ships Gill Sans committed in the repo
 # under the owner's universal redistribution license, so the private
 # `scout-classic-fonts` bucket is no longer needed. Stop managing it here

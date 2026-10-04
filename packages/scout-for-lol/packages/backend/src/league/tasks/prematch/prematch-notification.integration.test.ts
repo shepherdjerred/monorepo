@@ -3,6 +3,7 @@ import {
   PlayerConfigEntrySchema,
   RawCurrentGameInfoSchema,
 } from "@scout-for-lol/data";
+import type { ObservedLobbyBot } from "#src/scout-client/lobby-payload.ts";
 
 const callOrder: string[] = [];
 const sendCalls: { message: Record<string, unknown>; channel: string }[] = [];
@@ -23,6 +24,10 @@ let channelsResult: {
 let buildLoadingScreenImpl: () => Promise<unknown> = async () => ({
   fake: true,
 });
+/** What each `buildLoadingScreenData` call was given beyond the roster. */
+const buildOptions: unknown[] = [];
+/** The bots the local client is reported to have seen for this game. */
+let observedBots: readonly ObservedLobbyBot[] = [];
 
 vi.doMock("#src/database/subscribed-channels.ts", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -55,13 +60,23 @@ vi.doMock(
   "#src/league/tasks/prematch/loading-screen-builder.ts",
   async (importOriginal) => ({
     ...(await importOriginal()),
-    buildLoadingScreenData: async () => {
+    buildLoadingScreenData: async (
+      _gameInfo: unknown,
+      _trackedPuuids: unknown,
+      _region: unknown,
+      options: unknown,
+    ) => {
       callOrder.push("buildLoadingScreenData");
+      buildOptions.push(options);
       return buildLoadingScreenImpl();
     },
     fetchParticipantRanks: async () => new Map(),
   }),
 );
+
+vi.doMock("#src/league/tasks/prematch/client-bot-roster.ts", () => ({
+  readClientObservedBots: async () => observedBots,
+}));
 
 vi.doMock("#src/analytics/guild-lifecycle.ts", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -209,6 +224,8 @@ beforeEach(() => {
     },
   ];
   buildLoadingScreenImpl = async () => ({ fake: true });
+  buildOptions.length = 0;
+  observedBots = [];
   clashGuildFlags.clear();
 });
 
@@ -299,6 +316,32 @@ describe("sendPrematchNotification", () => {
     expect(byChannel.get("channel-standard")).toBe(
       "Tracked started a Clash game",
     );
+  });
+
+  test("hands the bots the local client saw to every render of the screen", async () => {
+    // Riot's roster omits bots, so without them a bot custom renders as a
+    // near-empty lobby. Both the Clash and standard renders must get them.
+    observedBots = [{ side: "red", championId: 42, lane: "middle" }];
+    clashGuildFlags.set("123456789012345678", true);
+    channelsResult = [
+      {
+        serverId: "123456789012345678",
+        channel: "channel-clash",
+        subscriptions: [{ subscriptionId: 1, playerId: 1, filters: null }],
+      },
+      {
+        serverId: "223456789012345678",
+        channel: "channel-standard",
+        subscriptions: [{ subscriptionId: 2, playerId: 1, filters: null }],
+      },
+    ];
+
+    await sendPrematchNotification(makeCustomGameInfo(), [makeTrackedPlayer()]);
+
+    expect(buildOptions).toHaveLength(2);
+    for (const options of buildOptions) {
+      expect(options).toMatchObject({ observedBots });
+    }
   });
 
   test("renders loading-screen image for custom games (unmapped queue 3110)", async () => {

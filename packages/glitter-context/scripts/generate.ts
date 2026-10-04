@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+import { fileURLToPath } from "node:url";
+
 import {
   GenerationStateDocumentSchema,
   LoreDocumentSchema,
@@ -49,7 +51,7 @@ async function main(): Promise<void> {
   const styleCardGlob = new Bun.Glob("*_style.json");
   const rawStyleCards: Record<string, unknown> = {};
   for await (const filename of styleCardGlob.scan({
-    cwd: styleCardsRoot.pathname,
+    cwd: fileURLToPath(styleCardsRoot),
     absolute: false,
   })) {
     const personId = filename.replace(/_style\.json$/u, "");

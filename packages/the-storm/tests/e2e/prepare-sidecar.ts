@@ -3,7 +3,7 @@ import path from "node:path";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stagePlugins } from "./harness/server.ts";
 import { e2eProfile, gameplayFixtures } from "./gameplay-fixtures.ts";
-import { paper } from "./harness/pins.ts";
+import { paper } from "@shepherdjerred/mc-harness/pins.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "..", "..");
 const profile = e2eProfile();

@@ -155,6 +155,12 @@ describe("selectImageTargets", () => {
     ).toContain("infra");
   });
 
+  test("rebuilds infra when the shared companion contract changes", async () => {
+    expect(
+      await select(["packages/storm-brain/contracts/companion-chat.json"]),
+    ).toContain("infra");
+  });
+
   test("leaves images alone for The Storm files outside the image context", async () => {
     for (const path of [
       "packages/the-storm/README.md",

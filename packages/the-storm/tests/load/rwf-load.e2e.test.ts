@@ -6,7 +6,7 @@ import { randomBytes } from "node:crypto";
 import type { Bot } from "mineflayer";
 import { test } from "#e2e/fixtures.ts";
 import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
-import { docker } from "#e2e/harness/docker.ts";
+import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { packageRoot } from "#e2e/harness/paths.ts";
 import {
   eventually,

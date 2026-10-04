@@ -13,6 +13,23 @@ import {
 } from "@shepherdjerred/seaweedfs-backup/schemas";
 
 describe("SeaweedFS backup policy", () => {
+  test.each(["beta", "prod"])(
+    "protects private support screenshots in %s",
+    (stage) => {
+      const support = SEAWEEDFS_BACKUP_POLICY.buckets.find(
+        (bucket) => bucket.name === `scout-support-${stage}`,
+      );
+      if (support === undefined)
+        throw new Error("Missing support backup policy");
+      expect(support.mode).toBe("protected");
+      expect(support.cadences).toContain("daily");
+      for (const suffix of ["PNG", "jpg", "webp"]) {
+        expect(
+          objectIsProtected(`support/private/screenshot.${suffix}`, support),
+        ).toBe(true);
+      }
+    },
+  );
   test("conforms to the published language-neutral JSON Schema", () => {
     const validate = new Ajv2020({
       strict: true,

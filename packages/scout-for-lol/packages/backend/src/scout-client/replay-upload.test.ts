@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   findUnique: vi.fn(),
   accountFindMany: vi.fn(),
+  aliasFindMany: vi.fn(),
   archiveDescriptor: vi.fn(),
   archivedMatch: vi.fn(),
   selectedLocalMatch: vi.fn(),
@@ -35,6 +36,7 @@ vi.mock("#src/database/index.ts", () => ({
       }),
     scoutClientObservation: { findMany: mocks.findMany },
     account: { findMany: mocks.accountFindMany },
+    leagueIdentityAlias: { findMany: mocks.aliasFindMany },
     scoutClientReplayArtifact: {
       aggregate: mocks.aggregate,
       create: mocks.create,
@@ -134,6 +136,7 @@ beforeEach(() => {
   ]);
   mocks.archiveDescriptor.mockResolvedValue(null);
   mocks.selectedLocalMatch.mockResolvedValue(null);
+  mocks.aliasFindMany.mockResolvedValue([]);
 });
 
 function replayFixture(
@@ -307,6 +310,63 @@ function archivedMatchFor(puuid: string) {
     },
   };
 }
+
+/**
+ * The League client, its replays and its payloads all name a player by a
+ * 36-character UUID; Riot and Scout use the 78-character PUUID.
+ */
+const LOCAL_LCU_UUID = "1b2c3d4e-5f60-4718-8a9b-0c1d2e3f4a5b";
+
+/** Answer alias lookups by UUID and by PUUID, as Prisma would. */
+function aliasesFor(rows: readonly { lcuUuid: string; puuid: string }[]) {
+  mocks.aliasFindMany.mockImplementation(
+    async (query: { where: { lcuUuid?: { in: string[] }; puuid?: string } }) =>
+      rows.filter((row) =>
+        query.where.puuid === undefined
+          ? (query.where.lcuUuid?.in.includes(row.lcuUuid) ?? false)
+          : row.puuid === query.where.puuid,
+      ),
+  );
+}
+
+test("accepts a replay that names its player by League-client UUID once aliased", async () => {
+  // Every real replay is like this. The observation stores the translated
+  // PUUID as its observer while its payload, like the replay, keeps the UUID.
+  aliasesFor([{ lcuUuid: LOCAL_LCU_UUID, puuid: LOCAL_PUUID }]);
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      leaguePatch: LEAGUE_PATCH,
+      payload: {
+        resource: "match_history_game:123",
+        data: {
+          ...MATCH_HISTORY,
+          participantIdentities: [
+            { participantId: 1, player: { puuid: LOCAL_LCU_UUID } },
+          ],
+        },
+      },
+    },
+  ]);
+  const body = replayFixture(LOCAL_LCU_UUID);
+  const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
+
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).resolves.toEqual({ outcome: "accepted", digest, bytes: body.byteLength });
+});
+
+test("refuses a UUID-named replay whose player has no alias", async () => {
+  // Without the alias the replay cannot be tied to the uploader, and the
+  // container check must stay exactly as strict as before.
+  mocks.findMany.mockResolvedValue([]);
+  mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
+  mocks.archivedMatch.mockResolvedValue(archivedMatchFor(LOCAL_PUUID));
+
+  await expect(
+    uploadReplay(replayRequest(replayFixture(LOCAL_LCU_UUID)), "123", DEVICE),
+  ).rejects.toMatchObject({ status: 403 });
+});
 
 test("accepts a replay vouched for by Riot when no client observed the game", async () => {
   // The case that matters: a replay on disk from before this device was ever

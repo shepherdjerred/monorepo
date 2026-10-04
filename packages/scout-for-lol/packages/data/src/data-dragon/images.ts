@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import type { Lane } from "#src/model/riot/lane.ts";
 import { latestVersion } from "./version.ts";
 import {
@@ -25,7 +26,10 @@ export function getChampionDisplayNameById(championId: number): string {
 }
 
 function getAbsolutePath(relativePath: string): string {
-  return new URL(relativePath, import.meta.url).pathname;
+  // `pathname` is a URL path, not a filesystem path: on Windows it yields
+  // `/C:/...`, which no file API accepts. Every asset lookup here then
+  // reports a file that is plainly on disk as missing.
+  return fileURLToPath(new URL(relativePath, import.meta.url));
 }
 
 async function validateImageExists(

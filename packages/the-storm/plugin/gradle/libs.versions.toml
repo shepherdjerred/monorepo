@@ -26,6 +26,7 @@ ink = "1.3.2"
 worldedit = "7.4.5"
 citizens = "2.0.44-b4256"
 coreprotect = "24.1"
+log4j = "2.26.1"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -56,6 +57,8 @@ ink-compiler = { module = "com.bladecoder.ink:blade-ink-compiler", version.ref =
 worldedit-bukkit = { module = "com.sk89q.worldedit:worldedit-bukkit", version.ref = "worldedit" }
 citizens = { module = "net.citizensnpcs:citizens-main", version.ref = "citizens" }
 coreprotect = { module = "net.coreprotect:coreprotect", version.ref = "coreprotect" }
+worldedit-core = { module = "com.sk89q.worldedit:worldedit-core", version.ref = "worldedit" }
+log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version = "5.1.1" }

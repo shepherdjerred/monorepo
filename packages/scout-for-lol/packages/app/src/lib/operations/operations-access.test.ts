@@ -23,6 +23,7 @@ const CONSUMER_NAV = {
   challengesAvailable: false,
   bucksAvailable: false,
 };
+const HELP_LINK = { label: "Help and feedback", to: "/feedback" };
 
 describe("reading the probe", () => {
   test("an answer opens the console", () => {
@@ -86,13 +87,25 @@ describe("reading the probe", () => {
 });
 
 describe("the sidebar", () => {
+  test("support inbox is offered independently of pipeline availability", () => {
+    expect(
+      consumerNavigationItems({
+        ...CONSUMER_NAV,
+        operationsAvailable: false,
+        inboxAvailable: true,
+      }),
+    ).toEqual([{ label: "Support inbox", to: "/operations/inbox" }, HELP_LINK]);
+    expect(
+      consumerNavigationItems({ ...CONSUMER_NAV, inboxAvailable: false }),
+    ).toEqual([HELP_LINK]);
+  });
   test("offers Operations only when the server would serve it", () => {
     expect(
       consumerNavigationItems({
         ...CONSUMER_NAV,
         operationsAvailable: operationsNavVisible({ kind: "open" }),
       }),
-    ).toEqual([{ label: "Operations", to: "/operations/matches" }]);
+    ).toEqual([{ label: "Operations", to: "/operations/matches" }, HELP_LINK]);
   });
 
   test("hides the link when the flag is off", () => {
@@ -102,7 +115,7 @@ describe("the sidebar", () => {
         ...CONSUMER_NAV,
         operationsAvailable: operationsNavVisible({ kind: "hidden" }),
       }),
-    ).toEqual([]);
+    ).toEqual([HELP_LINK]);
   });
 
   test("hides the link for every other answer too", () => {
@@ -116,10 +129,10 @@ describe("the sidebar", () => {
     }
   });
 
-  test("an app with no operations answer looks exactly as it did before", () => {
+  test("an app with no operations answer still offers permanent help", () => {
     expect(
       consumerNavigationItems({ ...CONSUMER_NAV, exploreAvailable: true }),
-    ).toEqual([{ label: "Explore", to: "/explore" }]);
+    ).toEqual([{ label: "Explore", to: "/explore" }, HELP_LINK]);
   });
 });
 

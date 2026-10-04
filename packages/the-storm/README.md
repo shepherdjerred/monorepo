@@ -16,6 +16,7 @@ from `plugin/`.
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
 | `plugin/tools/rwfmap/`             | Offline rwf map analysis: bakes and verifies the bots' `nav.rwfnav` artifacts (not shaded into the plugin)             |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
+| `plugin/bridge/`                   | `MCBridge.jar`, the agent bridge HTTP API (WorldEdit, region reads, snapshots, events); never part of `TheStorm.jar`   |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
 | `server/`                          | The `minecraft-tsmc` server image: pinned jars, config bundle and patches (see `server/README.md`)                     |
 

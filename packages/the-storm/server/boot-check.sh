@@ -80,6 +80,7 @@ boot() { # label [docker run args...]
     -e EULA=TRUE -e ONLINE_MODE=FALSE -e MEMORY=3G \
     -e SPAWN_PROTECTION=0 -e STORM_BRAIN_BEARER_TOKEN=storm-boot-check-brain-token \
     -e DISCORD_BOT_TOKEN=invalid-storm-fixture-token -e DISCORD_CHANNEL_ID=1 \
+    -e FLIPT_URL=http://127.0.0.1:9 -e FLIPT_ENVIRONMENT=beta \
     "$image" >/dev/null
   local started=$SECONDS
   for _ in $(seq 1 600); do

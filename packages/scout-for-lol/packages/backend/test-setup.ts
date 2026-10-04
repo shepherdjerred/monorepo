@@ -3,6 +3,7 @@
  * Configure test environment and global setup here
  */
 import { tmpdir } from "node:os";
+import path from "node:path";
 
 // Set test environment variables
 Bun.env.NODE_ENV = "test";
@@ -46,7 +47,12 @@ Bun.env["DATABASE_URL"] =
 // where importing the harness would require a running Postgres for pure
 // script tests and drag @scout-for-lol/data into their coverage denominator
 // (the package coverage gate measures every loaded file).
-if (process.cwd() === import.meta.dir) {
+//
+// Compared with `path.relative`, not `===`: on Windows `process.cwd()` is
+// backslashed while vitest hands this module a forward-slashed
+// `import.meta.dir`, so string equality never held there and every
+// database-backed backend test failed before running.
+if (path.relative(process.cwd(), import.meta.dir) === "") {
   const { ensureTestTemplate, sweepStaleTestDatabases } =
     await import("./src/testing/test-template.ts");
   sweepStaleTestDatabases();

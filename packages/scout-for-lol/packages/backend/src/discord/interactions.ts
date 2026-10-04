@@ -1,5 +1,6 @@
 import { MessageFlags, type Client, type Interaction } from "discord.js";
 import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
+import { handleSupportInteraction } from "#src/support/discord.ts";
 import { handleChatInputCommand } from "#src/discord/commands/index.ts";
 import {
   handleBetButton,
@@ -85,11 +86,23 @@ export function handleInteractions(client: Client): void {
   logger.info("⚡ Setting up Discord interaction handlers");
 
   client.on("interactionCreate", (interaction) => {
-    void routeInteraction(interaction);
+    void routeInteractionSafely(interaction);
   });
 }
 
+async function routeInteractionSafely(interaction: Interaction): Promise<void> {
+  try {
+    await routeInteraction(interaction);
+  } catch {
+    // Do not log private modal contents or Discord error payloads.
+    logger.error("Discord interaction failed", {
+      interactionId: interaction.id,
+    });
+  }
+}
+
 async function routeInteraction(interaction: Interaction): Promise<void> {
+  if (await handleSupportInteraction(interaction)) return;
   if (interaction.isButton()) {
     // discord.js's ButtonInteraction structurally satisfies the router's
     // parameter type, so this passes the live object with no cast.

@@ -283,6 +283,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       key: "RIOT_API_KEY",
     }),
     S3_BUCKET_NAME: EnvValue.fromValue(s3BucketName),
+    SUPPORT_BUCKET_NAME: EnvValue.fromValue(`scout-support-${stage}`),
     SENTRY_DSN: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { inboxRouter } from "#src/trpc/router/operations/inbox.router.ts";
 import {
   OperationsIntentPayloadSchema,
   type OperationsIntentPayload,
@@ -36,10 +37,11 @@ import {
 /**
  * The operator surface over the durable match pipeline.
  *
- * Every procedure is built from `operationsProcedure` /
+ * Every pipeline procedure is built from `operationsProcedure` /
  * `operationsMutationProcedure`, so the allowlist check is structural rather
  * than remembered — see `operations-access.ts` for why that matters here more
  * than elsewhere.
+ * The nested support inbox shares the operator allowlist, not the pipeline flag.
  *
  * Nothing acts on a single request. An operation is PREPARED into a
  * confirmation intent and then CONFIRMED, through the same single-use,
@@ -245,6 +247,7 @@ const availability = operationsProcedure.query(() => ({
 }));
 
 export const operationsRouter = router({
+  inbox: inboxRouter,
   reportDeliveries: operationsProcedure.query(
     async () =>
       await prisma.reportDeliveryChunk.findMany({

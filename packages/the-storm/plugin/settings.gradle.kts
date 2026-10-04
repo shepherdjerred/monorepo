@@ -16,8 +16,15 @@ dependencyResolutionManagement {
     maven("https://repo.bluecolored.de/releases") {
       content { includeGroup("de.bluecolored") }
     }
-    maven("https://maven.enginehub.org/repo/") {
-      content { includeGroupByRegex("com\\.sk89q.*"); includeGroupByRegex("org\\.enginehub.*") }
+    // WorldEdit (gameplay + the MCBridge agent bridge). Exclusive, so these
+    // groups resolve from enginehub only: Maven Central mirrors some of them
+    // with different POM bytes, which breaks dependency verification.
+    exclusiveContent {
+      forRepository { maven("https://maven.enginehub.org/repo/") }
+      filter {
+        includeGroupByRegex("com\\.sk89q.*")
+        includeGroupByRegex("org\\.enginehub.*")
+      }
     }
     ivy("https://ci.citizensnpcs.co/job/Citizens2/${citizensPin.groupValues[2]}/artifact/dist/target") {
       patternLayout { artifact("Citizens-[revision].jar") }
@@ -62,6 +69,9 @@ val modules =
     )
 
 include("core", "architecture", "dist")
+
+// MCBridge: the agent bridge plugin (its own MCBridge.jar, never part of TheStorm.jar).
+include("bridge")
 
 modules.forEach { name ->
   include(name)

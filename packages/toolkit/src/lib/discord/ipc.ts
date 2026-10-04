@@ -1,4 +1,3 @@
-import { stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
@@ -11,17 +10,6 @@ export const STATE_PATH = path.join(DISCORD_DIR, "state.json");
 export const LOGS_DIR = path.join(DISCORD_DIR, "logs");
 
 export const DEFAULT_TTL_SECONDS = 4 * 60 * 60;
-
-// Bun.file(path).exists() returns false for a unix socket (it is not a regular
-// file), so use stat to test the daemon socket and state files.
-export async function pathExists(target: string): Promise<boolean> {
-  try {
-    await stat(target);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export const IdentityKindSchema = z.enum(["bot", "user"]);
 export type IdentityKind = z.infer<typeof IdentityKindSchema>;
@@ -175,16 +163,3 @@ export const ChannelsResponseSchema = z.object({
 export const ErrorResponseSchema = z.object({
   error: z.string(),
 });
-
-export function parseTtl(raw: string): number {
-  const match = /^(\d+)([smh]?)$/.exec(raw.trim());
-  if (match === null) {
-    throw new Error(
-      `Invalid TTL "${raw}" — use a number with optional s/m/h suffix, e.g. 90m or 4h`,
-    );
-  }
-  const value = Number.parseInt(match[1] ?? "", 10);
-  const unit = match[2] ?? "";
-  const multiplier = unit === "h" ? 3600 : unit === "m" ? 60 : 1;
-  return value * multiplier;
-}

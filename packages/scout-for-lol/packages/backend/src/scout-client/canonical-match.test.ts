@@ -91,6 +91,24 @@ function localBundleCandidate(timing: {
   );
 }
 
+/** The observer's League-client UUID, as the client actually reports it. */
+const LOCAL_LCU_UUID = "1b2c3d4e-5f60-4718-8a9b-0c1d2e3f4a5b";
+
+function renamedObserver(payload: unknown): unknown {
+  return JSON.parse(
+    JSON.stringify(payload).replaceAll(localObserverPuuid, LOCAL_LCU_UUID),
+  );
+}
+
+/** A candidate whose observer and payload carry the UUID, not the PUUID. */
+function asClientSentIt(named: ReturnType<typeof candidate>) {
+  return {
+    ...named,
+    localPuuid: LOCAL_LCU_UUID,
+    payload: renamedObserver(named.payload),
+  };
+}
+
 describe("parseLocalCanonicalMatch", () => {
   test("accepts a complete wrapped payload with matching identities", () => {
     expect(
@@ -126,6 +144,30 @@ describe("parseLocalCanonicalMatch", () => {
       totalDamageDealtToChampions:
         localSourceParticipant.totalDamageDealtToChampions,
     });
+  });
+
+  test("translates a bundle that names players by League-client UUID", () => {
+    // Real client payloads look like this: every identity is a 36-character
+    // UUID, and only the alias table connects it to the Riot PUUID.
+    const converted = parseLocalCanonicalMatch(
+      localMatchId,
+      asClientSentIt(localBundleCandidate(LOCAL_TIMING)),
+      new Map([[LOCAL_LCU_UUID, localObserverPuuid]]),
+    );
+
+    expect(converted?.metadata.participants).toEqual([localObserverPuuid]);
+    expect(converted?.info.participants[0]?.puuid).toBe(localObserverPuuid);
+  });
+
+  test("refuses a bundle whose players have no alias yet", () => {
+    // A canonical match is read downstream as Riot data; one that still names
+    // a player by UUID would join to nothing, or to the wrong rows.
+    expect(
+      parseLocalCanonicalMatch(
+        localMatchId,
+        asClientSentIt(localBundleCandidate(LOCAL_TIMING)),
+      ),
+    ).toBeNull();
   });
 
   test("rejects an unaccompanied legacy LCU row", () => {

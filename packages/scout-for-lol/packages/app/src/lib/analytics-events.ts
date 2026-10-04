@@ -98,6 +98,8 @@ const SCOUT_ANALYTICS_EVENTS = [
   "bucks_notification_prefs_updated",
   // Feedback prompt
   "feedback_shown",
+  "feedback_prompt_visible",
+  "feedback_opened",
   "feedback_submitted",
   "feedback_dismissed",
 ] as const;

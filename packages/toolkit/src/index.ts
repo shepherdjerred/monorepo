@@ -30,6 +30,8 @@ Platform commands (native CLI passthroughs):
   tailscale   Tailscale CLI
 
 Monorepo workflows:
+  ci wait [PR]                Block until merge readiness or an actionable blocker
+  ci explain|main|load        Failure evidence, main health, and CI capacity
   brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
   pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
@@ -41,6 +43,7 @@ Monorepo workflows:
   ops summary [--needs-me]     Summarize the homelab ops snapshot
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
+  mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
   history <SUBCOMMAND>         Search private local agent history
   backup seaweedfs <ACTION>    Inspect, verify, or restore off-site snapshots
 
@@ -74,6 +77,7 @@ type SubcommandHandler = (
 
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  ["ci", () => import("./handlers/ci.ts").then((m) => m.handleCiCommand)],
   [
     "alerts",
     () => import("./handlers/alerts.ts").then((m) => m.handleAlertsCommand),
@@ -87,6 +91,7 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     "discord",
     () => import("./handlers/discord.ts").then((m) => m.handleDiscordCommand),
   ],
+  ["mc", () => import("./handlers/mc.ts").then((m) => m.handleMcCommand)],
   [
     "history",
     () => import("./handlers/history.ts").then((m) => m.handleHistoryCommand),

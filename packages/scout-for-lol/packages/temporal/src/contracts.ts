@@ -208,6 +208,7 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "progression-outbox",
     "progression-reconciliation",
     "mvp-tally-refresh",
+    "support-inbox",
     "clash-snapshot",
   ]),
 });

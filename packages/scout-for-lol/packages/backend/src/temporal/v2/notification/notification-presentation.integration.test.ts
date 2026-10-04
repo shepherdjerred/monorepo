@@ -16,6 +16,10 @@ import {
   transitionIntent,
 } from "#src/database/durable/intent-repository.ts";
 import { expire } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
+import {
+  addFlagOverride,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
 
 const { prisma } = createTestDatabase("notification-presentation");
 const selection = vi.hoisted(() => ({
@@ -32,6 +36,7 @@ beforeEach(async () => {
   await prisma.matchNotificationIntent.deleteMany();
   await prisma.notificationPresentation.deleteMany();
   await prisma.featureTipImpression.deleteMany();
+  await prisma.supportTouchpoint.deleteMany();
   vi.clearAllMocks();
 });
 afterAll(async () => {
@@ -64,6 +69,43 @@ function record(
   });
 }
 const guildId = "100000000000000002";
+
+test("report support action is frozen across flag changes and delivered metrics deduplicate retries", async () => {
+  addFlagOverride("scout_support_conversations_enabled", true, {});
+  addFlagOverride("scout_support_report_action_enabled", true, {
+    server: DiscordGuildIdSchema.parse(guildId),
+  });
+  try {
+    const target = record("postmatch");
+    const first = await freezeNotificationMessage(
+      target,
+      { content: "Report" },
+      guildId,
+      prisma,
+    );
+    expect(JSON.stringify(first)).toContain("support:contact:NA1_9401");
+    expect(await prisma.supportTouchpoint.count()).toBe(0);
+    resetFlagOverrides("scout_support_conversations_enabled");
+    resetFlagOverrides("scout_support_report_action_enabled");
+    const retry = await freezeNotificationMessage(
+      target,
+      { content: "Changed report" },
+      guildId,
+      prisma,
+    );
+    expect(JSON.stringify(retry)).toBe(JSON.stringify(first));
+    await confirmNotificationTip(record("postmatch", "1", true), prisma);
+    await confirmNotificationTip(record("postmatch", "1", true), prisma);
+    expect(
+      await prisma.supportTouchpoint.findMany({
+        select: { surface: true, action: true },
+      }),
+    ).toEqual([{ surface: "REPORT", action: "DELIVERED" }]);
+  } finally {
+    resetFlagOverrides("scout_support_conversations_enabled");
+    resetFlagOverrides("scout_support_report_action_enabled");
+  }
+});
 
 test.each(["prematch", "postmatch"] as const)(
   "%s tips and furniture are frozen across retries and confirmed only after delivery",

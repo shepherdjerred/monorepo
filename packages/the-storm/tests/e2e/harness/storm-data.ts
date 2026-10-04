@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { docker } from "./docker.ts";
+import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { ServerInfo } from "./server.ts";
 
 /**

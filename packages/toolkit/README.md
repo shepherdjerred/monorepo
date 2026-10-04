@@ -63,6 +63,71 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 
 ## Monorepo workflows
 
+### Wait for CI and merge readiness
+
+```bash
+toolkit ci wait                         # Infer the PR for this branch
+toolkit ci wait 3447 --json             # One final report; progress on stderr
+toolkit ci wait 3447 --until settled    # Collect all blocking check results
+toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
+toolkit ci explain 3447                # Current blockers and bounded failure logs
+toolkit ci main                        # Current main push and last completed verdict
+toolkit ci load                        # Queue, Kueue admission, CPU/memory/disk/I/O
+toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
+```
+
+`wait` pins the initial PR head (or asserts `--head <full SHA>`), subscribes to
+Woodpecker events before reading status, and refreshes GitHub metadata every
+30 seconds. It returns as soon as a blocking check fails, merge conflicts
+appear, human intervention is needed, or all merge requirements pass. A ready
+candidate gets a fresh check of head, base, pipeline attempt, rules, and main.
+`--until settled` waits for the remaining blocking results after a CI failure;
+head changes and structural blockers still return immediately.
+
+Woodpecker workflow results and the `ci-complete` gate determine hard CI
+failures. Failed service cleanup children inside successful workflows do not
+block a merge. Required GitHub checks must also publish success for the current
+pipeline; optional external checks are advisory. Human approval is required
+only when the effective branch rules require it, or a human requests changes.
+A branch behind main is acceptable when the branch rules do not require it
+to be current.
+
+Long queues and builds are normal. Keep awaiting the same foreground process;
+do not restart polls or diagnose an outage from elapsed time alone. A sparse
+heartbeat appears every five minutes. Disconnects reconnect with backoff and a
+fresh snapshot. `load` reports each unavailable telemetry source explicitly.
+
+Main is checked automatically. A failed last completed push keeps main red
+while its recovery build is pending. When main is red, report its evidence and
+await instructions; do not independently fix it. `ci explain --main` is an
+alias for `ci main`.
+
+| Wait exit | Meaning                                                       |
+| --------- | ------------------------------------------------------------- |
+| 0         | Merge ready                                                   |
+| 1         | Blocking check failure or merge conflict                      |
+| 2         | Usage, authentication, API, or contract error                 |
+| 3         | Human intervention (review, draft, pipeline approval)         |
+| 4         | PR head changed; explicitly start a new wait for the new head |
+| 5         | Main red; report and await instructions                       |
+| 6         | Requested timeout; this does not mean CI failed               |
+| 7         | PR closed or already merged                                   |
+
+`--json` reserves stdout for one final JSON report. Failure reports include up
+to three failed workflows with at most 60 lines / 4,000 characters of logs
+each, review excerpts when relevant, and commands for deeper evidence.
+Secrets and terminal control sequences are removed before truncation.
+`explain` is a one-shot diagnostic; a pending report exits 0 and has
+`ready: false`. SIGINT and SIGTERM cancel the foreground wait with exits 130
+and 143. The command does not merge or mutate the PR.
+
+GitHub credentials come from `GH_TOKEN` or `gh auth token`.
+The default Woodpecker connection reads the `WOODPECKER_API_TOKEN` field of
+the `Woodpecker Server` item in the `Homelab (Kubernetes)` 1Password vault,
+unless `WOODPECKER_TOKEN` is supplied. Custom `WOODPECKER_URL` or
+`WOODPECKER_REPO_ID` connections require an explicit token. Load telemetry
+uses the configured `kubectl` context and `gcx --context homelab`.
+
 ### PR health, reviews, and media
 
 `toolkit pr health [PR_NUMBER] [--json]` combines three independent signals:
@@ -78,8 +143,13 @@ Woodpecker pipeline wins when they disagree. Healthy and pending reports exit 0;
 unhealthy reports exit 1. JSON retains the top-level `prNumber`, `prUrl`,
 `overallStatus`, `checks`, and `nextSteps` fields.
 
-`toolkit pr review list|resolve|harvest` inspects and resolves code-review
-provider findings. `toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
+`toolkit pr review list [PR] [--json] [--all] [--provider NAME]` lists current,
+unresolved feedback across human reviewers and registered providers. Each item
+includes author, provider, nullable priority, full contents, path/line,
+resolution state, and a `toolkit gh api` command for the original surface.
+Omitting PR infers the current branch; `--all` includes resolved/outdated items.
+`resolve` and `harvest` retain the existing provider finding handles.
+`toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
 the lightest useful review artifact to `public.sjer.red`; directories require
 a root `index.html`, and asciinema `.cast` files get a self-contained player.
 
@@ -114,8 +184,56 @@ PinchTab credentials or config.
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink.
 - `toolkit discord ...` operates the private local Discord session daemon.
+- `toolkit mc ...` drives disposable Minecraft sandboxes through the
+  mc-harness daemon. See [Minecraft sandboxes](#minecraft-sandboxes).
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.
+
+#### Minecraft sandboxes
+
+`toolkit mc` is a thin client for the `@shepherdjerred/mc-harness` daemon. The
+daemon runs from the monorepo checkout (`bun run
+packages/mc-harness/src/daemon/main.ts`), needs Docker, and stages the
+repo-built MCBridge plugin, so build it first:
+
+```bash
+mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble
+toolkit mc daemon start [--ttl 4h]
+toolkit mc sandbox up [--world flat|void] [--ttl 2h] [--keep]
+toolkit mc info
+toolkit mc we --world world --pos1 0,-60,0 --pos2 4,-56,4 "//set stone"
+toolkit mc region read --world world 0,-60,0 4,-56,4
+toolkit mc we-undo
+toolkit mc sandbox down --all
+toolkit mc daemon stop
+```
+
+A sandbox is Paper 26.2 with WorldEdit and MCBridge in a local container. Its
+game, RCON, and bridge ports are published on `127.0.0.1` only; the bridge
+token and RCON password live in `~/.toolkit/mc/sandboxes/<id>/record.json`
+(mode `0600`) and never appear in command output. `--target <id>` selects a
+sandbox; without it the command uses the only running one and fails when there
+are none or several. A sandbox is removed when its TTL expires or the daemon
+stops, unless it was created with `--keep`. There is no live-server target yet.
+
+Coordinates may be negative anywhere (`--pos1 -3,-60,-3`, `region read
+-6,-61,-6 6,-44,6`, `cmd tp agent -60 0`); no `--opt=` or `--` is needed.
+`toolkit mc <command> --help` prints that command's usage. Each `we` op reports
+`changed N`, the blocks whose state really changed; WorldEdit's own "blocks
+affected" message counts attempted sets and can be higher.
+
+| Command                                                   | Purpose                                        |
+| --------------------------------------------------------- | ---------------------------------------------- |
+| `mc cmd <command…>`                                       | Console command with captured feedback         |
+| `mc we --world w [--pos1] [--pos2] [--at] "//cmd"`        | WorldEdit as the `agent:<session>` actor       |
+| `mc we-undo [--steps n]`                                  | Undo that session's WorldEdit history          |
+| `mc paste --world w --file f.schem --at x,y,z [--rotate]` | Paste a Sponge schematic through WorldEdit     |
+| `mc region read --world w <a> <b> [--out f.json]`         | Exact block states and palette counts          |
+| `mc snapshot create\|ls\|get\|restore`                    | Server-side `.schem` snapshots for undo        |
+| `mc info`, `mc players`, `mc events`, `mc logs`           | Versions, players, bridge events, console tail |
+
+Every command accepts `--json`. The daemon logs requests (never secrets) to
+`~/.toolkit/mc/logs/`.
 
 #### History search
 

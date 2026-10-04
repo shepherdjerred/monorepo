@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
 import {
@@ -7,7 +8,7 @@ import {
 } from "#src/html/loading-screen/index.tsx";
 import { getArenaTrackedParticipants } from "#src/html/loading-screen/arena-layout.tsx";
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
 /**
  * Check if champion loading screen images have been downloaded.

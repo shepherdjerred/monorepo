@@ -17,6 +17,8 @@ export const MANAGED_NAMESPACES = [
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
 
 export const SCOUT_FLAG_KEYS = [
+  "scout_support_conversations_enabled",
+  "scout_support_report_action_enabled",
   "ai_reports_enabled",
   "ai_reports_unlimited",
   "ai_reviews_enabled",
@@ -65,6 +67,8 @@ export const SCOUT_FLAG_KEYS = [
 export type ScoutFlagKey = (typeof SCOUT_FLAG_KEYS)[number];
 
 export const SCOUT_BOOLEAN_FLAG_KEYS = [
+  "scout_support_conversations_enabled",
+  "scout_support_report_action_enabled",
   "ai_reports_enabled",
   "ai_reports_unlimited",
   "ai_reviews_enabled",

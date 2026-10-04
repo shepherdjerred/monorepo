@@ -339,19 +339,22 @@ export async function importMap(
     // database already holds standing only while it is still unapplied. Once
     // an applied source is reused, its old edge is archived above and the live
     // row must carry the current unresolved decision instead.
+    // PostgreSQL cannot infer a nullable parameter's type from IS NULL. Give
+    // it a text context at every occurrence; CAST is also valid on SQLite.
+    const replacement = `CAST(${db.param(4)} AS TEXT)`;
     await db.exec(
       `UPDATE "PuuidKeyMap"
           SET "gameName" = COALESCE(${db.param(2)}, "gameName"),
               "tagLine"  = COALESCE(${db.param(3)}, "tagLine"),
-              "status"   = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
+              "status"   = CASE WHEN ${replacement} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
                                 THEN "status" ELSE ${db.param(5)} END,
-              "newPuuid" = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
-                                THEN "newPuuid" ELSE ${db.param(4)} END,
+              "newPuuid" = CASE WHEN ${replacement} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
+                                THEN "newPuuid" ELSE ${replacement} END,
               "appliedAt" = CASE
-                WHEN ${db.param(4)} IS NOT NULL
-                 AND ("newPuuid" IS NULL OR "newPuuid" <> ${db.param(4)})
+                WHEN ${replacement} IS NOT NULL
+                 AND ("newPuuid" IS NULL OR "newPuuid" <> ${replacement})
                 THEN NULL
-                WHEN ${db.param(4)} IS NULL
+                WHEN ${replacement} IS NULL
                  AND "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL
                 THEN NULL
                 ELSE "appliedAt" END
