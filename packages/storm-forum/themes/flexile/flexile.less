@@ -1,0 +1,232 @@
+// Flexile adaptation for The Storm. Required vendor attribution is retained.
+html {
+  background: @xf-pageBg;
+}
+body {
+  line-height: 1.4;
+}
+.p-pageWrapper {
+  background: transparent;
+}
+.p-header {
+  background: linear-gradient(
+    to bottom,
+    mix(#fff, @xf-chromeBg, 18%),
+    @xf-chromeBg
+  );
+  border-top: 3px solid #21343b;
+}
+.p-header-inner {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.p-header-content {
+  min-height: 80px;
+  padding: 10px 0;
+}
+.p-header-logo {
+  flex: 0 0 auto;
+  width: 180px;
+  max-width: 50%;
+}
+.p-header-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60px;
+  object-fit: contain;
+}
+.flexile-headerContent {
+  margin-left: auto;
+  max-width: 410px;
+  padding: 12px;
+  background: fade(#000, 13%);
+  border-top: 1px solid fade(#fff, 20%);
+  border-radius: 6px;
+  color: #fff;
+  font-style: italic;
+  text-shadow: 0 1px darken(@xf-chromeBg, 15%);
+  p {
+    margin: 0;
+  }
+  a {
+    color: #fff;
+    font-weight: bold;
+    text-decoration: underline;
+  }
+}
+.p-nav {
+  background: @xf-chromeBg;
+}
+.p-nav-inner {
+  min-height: 35px;
+  align-items: end;
+}
+.p-nav-list > li {
+  margin-right: 3px;
+}
+.p-navEl {
+  border-radius: 4px 4px 0 0;
+}
+.p-navEl-link {
+  font-weight: bold;
+  text-shadow: 0 1px fade(#000, 35%);
+}
+.p-navEl.is-selected {
+  background: linear-gradient(
+    to bottom,
+    mix(#fff, @xf-subNavBg, 12%),
+    @xf-subNavBg
+  );
+  box-shadow: inset 0 1px fade(#fff, 20%);
+  .p-navEl-link {
+    color: @xf-subNavTextColor;
+  }
+}
+.p-sectionLinks {
+  background: linear-gradient(
+    to bottom,
+    mix(#fff, @xf-subNavBg, 10%),
+    @xf-subNavBg
+  );
+  box-shadow: inset 0 1px fade(#fff, 20%);
+  border-bottom: 1px solid darken(@xf-subNavBg, 14%);
+}
+.p-navgroup-link {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.p-body-inner {
+  padding-top: 25px;
+  padding-bottom: 20px;
+}
+.p-body-header {
+  margin: 0 0 20px;
+}
+.p-title-value {
+  font-size: 24px;
+  font-weight: bold;
+}
+.p-breadcrumbs {
+  background: linear-gradient(to bottom, @xf-contentAltBg, @xf-contentBg);
+  padding: 10px 15px;
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+}
+.block-container {
+  border: 1px solid @xf-borderColor;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px fade(#000, 9%);
+}
+.block-header {
+  font-size: 14px;
+  padding: 9px 12px;
+  border-radius: 5px 5px 0 0;
+}
+.block-minorHeader {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  font-weight: normal;
+}
+.p-body-sidebar {
+  font-size: 12px;
+  .block-container {
+    margin-bottom: 12px;
+  }
+  .block-minorHeader {
+    background: @xf-contentAltBg;
+    border-bottom: 1px solid @xf-borderColor;
+    padding: 10px 12px;
+  }
+}
+.node-body {
+  min-height: 64px;
+}
+.node-title {
+  font-weight: bold;
+  font-size: 16px;
+}
+.node-icon {
+  width: 58px;
+  padding-left: 12px;
+}
+.node-icon i::before {
+  color: @xf-linkColor;
+}
+.node--unread .node-icon i::before {
+  color: @xf-textColorFeature;
+}
+.node-extra {
+  background: @xf-contentHighlightBg;
+  border-left: 1px solid @xf-borderColorLight;
+  font-size: 11px;
+}
+.structItem {
+  font-size: 13px;
+}
+.structItem-title {
+  font-size: 15px;
+}
+.message {
+  border-radius: 6px;
+}
+.message-userDetails {
+  text-align: center;
+}
+.message-userTitle {
+  font-size: 11px;
+}
+.button {
+  background-image: linear-gradient(fade(#fff, 18%), fade(#fff, 0%));
+  border-radius: 4px;
+}
+.p-footer {
+  background: transparent;
+  color: @xf-textColorDimmed;
+  font-size: 12px;
+}
+.p-footer a {
+  color: @xf-linkColor;
+}
+.p-footer-inner {
+  border-top: 1px solid @xf-borderColor;
+  padding-top: 15px;
+}
+.flexile-attribution {
+  margin-top: 5px;
+}
+:focus-visible {
+  outline: 2px solid @xf-linkColor;
+  outline-offset: 3px;
+}
+@media (max-width: @xf-responsiveWide) {
+  .flexile-headerContent {
+    max-width: 330px;
+    font-size: 12px;
+  }
+}
+@media (max-width: @xf-responsiveMedium) {
+  .flexile-headerContent {
+    display: none;
+  }
+  .p-header-content {
+    min-height: 70px;
+  }
+  .p-header-logo img {
+    max-height: 50px;
+  }
+  .p-body-inner {
+    padding-top: 15px;
+  }
+  .p-breadcrumbs {
+    padding: 8px 10px;
+  }
+  .p-title-value {
+    font-size: 21px;
+  }
+  .block-container {
+    border-radius: 4px;
+  }
+}

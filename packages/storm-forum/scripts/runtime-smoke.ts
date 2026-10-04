@@ -18,9 +18,9 @@ const execute = async (args: string[]) => {
   assert.equal(exitCode, 0, stderr);
   return stdout;
 };
-for (const file of new Bun.Glob("{addon,runtime,test}/**/*.php").scanSync(
-  "/opt/storm-forum",
-)) {
+for (const file of new Bun.Glob(
+  "{addon,runtime,test,themes}/**/*.php",
+).scanSync("/opt/storm-forum")) {
   await execute(["php", "-l", `/opt/storm-forum/${file}`]);
 }
 const extensions = await execute(["php", "-m"]);

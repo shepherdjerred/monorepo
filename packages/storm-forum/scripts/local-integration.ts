@@ -1,8 +1,18 @@
 import path from "node:path";
 import { randomBytes } from "node:crypto";
+import { mkdir } from "node:fs/promises";
 
 // Vendor source is an explicit local input, outside the public Docker build context.
 const upload = Bun.argv[2];
+const exportFlag = Bun.argv.indexOf("--export-styles");
+const exportDirectory =
+  exportFlag === -1 ? undefined : Bun.argv[exportFlag + 1];
+if (
+  exportFlag !== -1 &&
+  (exportDirectory === undefined || exportDirectory.startsWith("--"))
+) {
+  throw new Error("--export-styles requires an output directory");
+}
 if (
   upload === undefined ||
   !(await Bun.file(path.resolve(upload, "src/XF.php")).exists())
@@ -146,6 +156,7 @@ try {
       "addon",
       "runtime",
       "styles",
+      "themes",
       "scripts",
       "test",
       "package.json",
@@ -268,6 +279,44 @@ try {
       "/opt/storm-forum/test/mail.php",
     ]),
   );
+  if (exportDirectory !== undefined || Bun.argv.includes("--preview")) {
+    // Build from tracked theme source against this disposable licensed installation.
+    await run(["exec", app, "mkdir", "-p", "/app/forum/vendor"]);
+    const themeBuildCommand = [
+      "exec",
+      "-w",
+      "/app/forum",
+      app,
+      "php",
+      "/opt/storm-forum/test/theme-build.php",
+    ];
+    const firstBuild = await run(themeBuildCommand);
+    const repeatBuild = await run(themeBuildCommand);
+    if (firstBuild !== repeatBuild) {
+      throw new Error("Native style archives changed across repeated builds");
+    }
+    process.stdout.write(repeatBuild);
+    if (exportDirectory !== undefined) {
+      await mkdir(path.resolve(exportDirectory), { recursive: true });
+      for (const mode of ["light", "dark"]) {
+        await run([
+          "cp",
+          `${app}:/app/forum/vendor/flexile-storm-${mode}.zip`,
+          path.resolve(exportDirectory, `flexile-storm-${mode}.zip`),
+        ]);
+      }
+    }
+    process.stdout.write(
+      await run([
+        "exec",
+        "-w",
+        "/app/forum",
+        app,
+        "php",
+        "/opt/storm-forum/test/styles.php",
+      ]),
+    );
+  }
   if (Bun.argv.includes("--preview")) {
     await run([
       "exec",
@@ -317,7 +366,7 @@ try {
       "daemon off;",
     ]);
     process.stdout.write(
-      "Local core-style portal preview: http://127.0.0.1:18796 · Ctrl-C cleans up.\n",
+      `Local Flexile portal preview: http://127.0.0.1:18796 · application container ${app} · Ctrl-C cleans up.\n`,
     );
     await new Promise<void>((done) => {
       process.once("SIGINT", done);

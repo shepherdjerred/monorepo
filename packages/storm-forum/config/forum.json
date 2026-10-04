@@ -103,16 +103,20 @@
   ],
   "vendorDependencies": [
     {
-      "key": "uix-light",
-      "version": "2.3.11.0.0",
+      "key": "flexile-light",
+      "version": "1.0.0",
       "kind": "style",
-      "path": "vendor/uix-2.zip"
+      "path": "vendor/flexile-storm-light.zip",
+      "mode": "light",
+      "sha256": "e3ab0784db35c64dbc3fae902905a7388d4b647ef4a1ab594917a98fdc7568d0"
     },
     {
-      "key": "uix-dark",
-      "version": "2.3.11.0.0",
+      "key": "flexile-dark",
+      "version": "1.0.0",
       "kind": "style",
-      "path": "vendor/uix-2-dark.zip"
+      "path": "vendor/flexile-storm-dark.zip",
+      "mode": "dark",
+      "sha256": "909d0509f1ca1b535896e7677b3865aa90f10d696aada2c2e28465fb4196d611"
     },
     {
       "key": "xon-library",

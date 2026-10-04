@@ -76,6 +76,7 @@ export async function validateVendorBundle(): Promise<void> {
       `Private release dependencies missing: ${missing.join(", ")}`,
     );
   }
+  await runPhp(["/opt/storm-forum/runtime/style-preflight.php"], "/app/forum");
 }
 export function validateVendorVersion(
   key: string,
