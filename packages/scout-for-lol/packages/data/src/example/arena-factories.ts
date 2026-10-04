@@ -1,4 +1,4 @@
-import type { Augment } from "@scout-for-lol/data";
+import type { Augment } from "#src/model/index.ts";
 
 export function createArenaMetrics(params: {
   playerScore0: number;

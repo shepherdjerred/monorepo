@@ -1,7 +1,9 @@
 import { describeArchitectureBoundaries } from "@shepherdjerred/architecture/testing";
-import architecture from "#architecture";
+import architecture, { layers } from "#architecture";
 
 describeArchitectureBoundaries({
   packageRoot: import.meta.dir.replace(/\/src$/u, ""),
   architecture,
+  layers,
+  layerSource: { includeModules: true },
 });

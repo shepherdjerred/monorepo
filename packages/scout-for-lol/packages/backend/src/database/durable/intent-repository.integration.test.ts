@@ -26,8 +26,24 @@ import {
   upsertIntent,
   upsertSubjectIntent,
 } from "#src/database/durable/intent-repository.ts";
-import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
+import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { z } from "zod";
+
+// A local codec with the duel-status envelope shape: the persistence layer must
+// not import a feature slice just to produce an opaque announcement.
+const duelStatusAnnouncementCodec = defineVersionedCodec({
+  kind: "scout-duel-status-announcement",
+  version: 1,
+  schema: z.strictObject({
+    guildId: DiscordGuildIdSchema,
+    payload: z.strictObject({
+      kind: z.literal("invited"),
+      seriesId: z.uuid(),
+      mentionDiscordIds: z.array(z.string()),
+    }),
+  }),
+});
 
 const { prisma } = createTestDatabase("durable-intent-repository");
 

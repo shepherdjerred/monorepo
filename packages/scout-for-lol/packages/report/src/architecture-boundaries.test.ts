@@ -5,4 +5,10 @@ describeArchitectureBoundaries({
   packageRoot: import.meta.dir.replace(/\/src$/u, ""),
   architecture,
   layers,
+  // `dataDragon` is camelCase and so cannot be a layer name.
+  layerSource: {
+    includeModules: true,
+    expand: ["html"],
+    ignore: ["dataDragon"],
+  },
 });

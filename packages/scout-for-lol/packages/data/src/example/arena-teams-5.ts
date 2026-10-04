@@ -1,4 +1,4 @@
-import { type ArenaTeam } from "@scout-for-lol/data";
+import { type ArenaTeam } from "#src/model/index.ts";
 import {
   createArenaChampion,
   createArenaMetrics,

@@ -5,7 +5,8 @@
  * Adds a participant lookup table for champion names and team names.
  */
 
-import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
+import type { RawMatch } from "#src/league/raw-match.schema.ts";
+import type { RawTimeline } from "#src/league/raw-timeline.schema.ts";
 import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 
 /**

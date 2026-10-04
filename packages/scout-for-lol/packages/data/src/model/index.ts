@@ -61,6 +61,7 @@ export * from "./matches/pairing-stats.ts";
 export * from "./progression/catalog.ts";
 export * from "./progression/account.ts";
 export * from "./progression/challenge.ts";
+export * from "./progression/challenge-evidence.ts";
 export * from "./progression/challenge-builtins.ts";
 export * from "./progression/challenge-public.ts";
 export * from "./progression/duel.ts";
