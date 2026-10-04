@@ -55,6 +55,9 @@ describe("Citizens survival companions on Paper", () => {
       (status) => (status.match(/uuid=/gu)?.length ?? 0) === 3,
     );
     expect(initial).toContain("BREAD:8");
+    // The first command can race the async Citizens hydration after bot join.
+    // Revisit only after all three persistent player bodies have spawned.
+    await rcon.command(`companiontest visit ${bot.username}`);
     expect(await rcon.command("companiontest scan")).toContain(
       "candidate=Optional[",
     );
