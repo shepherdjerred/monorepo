@@ -33,6 +33,77 @@ export async function overlaySweep(
   await overlayFields(stagedAgentYml, sweep, "  ", "sweep");
 }
 
+/** The rwf.yml settings a suite overrides; durations are ISO-8601 (PT6S). */
+export type RwfOverlay = {
+  world: string;
+  minHumans: number;
+  countdown: string;
+  endLinger: string;
+  noHumansAbort: string;
+  /** How many combatants rwfbots fills a countdown to; the owned value when absent. */
+  targetCombatants?: number;
+  /** The most combatants in a match; the owned value when absent. */
+  maxCombatants?: number;
+  /** Whether `/rwf admin loadtest <n>` is allowed; the owned value (off) when absent. */
+  loadtest?: boolean;
+};
+
+export async function overlayRwf(
+  stagedRwfYml: string,
+  rwf: RwfOverlay,
+): Promise<void> {
+  await overlayFields(stagedRwfYml, { world: rwf.world }, "", "top-level");
+  await overlaySection(stagedRwfYml, "match", {
+    minHumans: rwf.minHumans,
+    countdown: rwf.countdown,
+    endLinger: rwf.endLinger,
+    noHumansAbort: rwf.noHumansAbort,
+    ...(rwf.targetCombatants === undefined
+      ? {}
+      : { targetCombatants: rwf.targetCombatants }),
+    ...(rwf.maxCombatants === undefined
+      ? {}
+      : { maxCombatants: rwf.maxCombatants }),
+  });
+  if (rwf.loadtest !== undefined) {
+    await overlaySection(stagedRwfYml, "loadtest", {
+      enabled: rwf.loadtest.toString(),
+    });
+  }
+}
+
+/**
+ * Overlays keys inside one top-level section only, so a key repeated in
+ * several sections (`enabled` under recording and loadtest) hits the right one.
+ */
+async function overlaySection(
+  file: string,
+  section: string,
+  fields: Record<string, string | number>,
+): Promise<void> {
+  const content = await Bun.file(file).text();
+  const lines = content.split("\n");
+  const start = lines.indexOf(`${section}:`);
+  if (start === -1) {
+    throw new Error(`No ${section} section to overlay in ${file}`);
+  }
+  const after = lines.findIndex(
+    (line, index) =>
+      index > start && /^\S/u.test(line) && !line.startsWith("#"),
+  );
+  const end = after === -1 ? lines.length : after;
+  for (const [key, value] of Object.entries(fields)) {
+    const index = lines.findIndex(
+      (line, at) => at > start && at < end && line.startsWith(`  ${key}: `),
+    );
+    if (index === -1) {
+      throw new Error(`No ${section}.${key} line to overlay in ${file}`);
+    }
+    lines[index] = `  ${key}: ${value.toString()}`;
+  }
+  await Bun.write(file, lines.join("\n"));
+}
+
 async function overlayFields(
   file: string,
   fields: Record<string, string | number>,

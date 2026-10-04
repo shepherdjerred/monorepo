@@ -403,7 +403,7 @@ describe("coverage of the Buildkite pipeline", () => {
 
   /** Lanes introduced after the migration, with their acceptance purpose. */
   const WOODPECKER_ONLY: Readonly<Record<string, string>> = {
-    "paper-full-e2e-pr": "boots and exercises all 21 Storm modules together",
+    "paper-full-e2e-pr": "boots and exercises all 25 Storm modules together",
   };
 
   test("accounts for all 61 Buildkite steps", () => {

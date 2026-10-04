@@ -1,0 +1,76 @@
+id: xxfalconcometxx
+name: xXFalconCometXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY3MzkyOSwKICAicHJvZmlsZUlkIiA6ICJiODQ5ZjE2MmRkNTE0ZjllYTUwZDlhNjRlZGUwZGIxNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4WF9Ob19JbmNvbWVfWHgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmY0NWFlODk5ODExNDI3NWQyNDhhNmRhODQwZGNmNTU0M2ZjMzFhZTZmYjA3N2E0YjRjYWY1MmMzY2ZlYzcxMCIKICAgIH0KICB9Cn0="
+  signature: "nIKq6slsykRqM2BE7mxHi3OR9/xmUvuTT0FOdncnsRrP3gIoEqVd780X4/s2cL29j/uTX1n9gg325i5aQiL04rvzWA9bjplscDlvJEHoMlcjg6j1Vble7M+aQahYC9m/GA8MIadrkfJUTE/rISDonjWluPf4VcKks795qLyPyEmNgFXZeMBEcQosqsby/gFVL1DLM6+4z5V7flwZxiQ4um6fhgijhlbdLlkxTGqLt7H/eTgx058PpBkyCk7pMI4UZd8WRH3KNfx26RBh0V4wk3Q/1g9cYTQwIBQ3gu4zvwiayQrreOv0fDk14dOfneZXVjfVSKxPvsRfmi4mP0UjGDc0Jle/CqBnPCAzQyre8dpo5iHQx4QyNcrssmCoBkYssRzBHJcr78OSfVm5l9VPAPdyc3GrPh4OizSIuAXHCJXyMRrhlOm90/ox+eVsi1m5xOtEHBU59N7YVjEw6yNXmu1TBoUnXYXbLuyFTj+H8O0NAy4udaXFF09qqsfqHHfLM8dx4POuxb5rCaPSxVtAV8c3tj5jrjMMTEvotLfAYweT+FxvhAvQ0Ae1oMXsGEjSzu8HXF64uu04AFC74Uoqtjqyfdzklh/s5BEsHcxP+Mn3WfY1Y8rE6kDkSQ85/HNqGcleGxSQ8u9uwAIT7CsGMg1RIBhV0NYdjxvNRE70Ruw="
+skill: 0.45
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.03
+  decisionTemperature: 0.71
+  awarenessRadius: 0.19
+  technique: -0.67
+  aggression: -1.55
+kits:
+  trooper: 1
+  longbow: 0.28
+  rewind: 0.83
+roles:
+  plant: 0.2
+  defend: 0.97
+  retake: 0.44
+style:
+  aggression: 0.27
+  patience: 0.9
+  teamplay: 0.46
+  risk: 0.14
+voice:
+  tone:
+    - warm
+    - patient
+    - nostalgic
+  verbosity: normal
+  style: "gentle grandparent energy; calls everyone dear, tells stories about how things used to be"
+lines:
+  greet:
+    - Hello dears. Grab a gapple, it's a long round.
+    - "Ah, {team}. Let's take it slow, like the old days."
+    - Settle in, everyone. No need to rush.
+  onKill:
+    - "Sorry dear {victim}, you came too close."
+    - "Patience wins, {victim}. Patience wins."
+    - There we are. Back to my corner.
+  onDeath:
+    - "Oh my. Lovely swing, {killer}."
+    - "My knees aren't what they were, {team}."
+    - Back in my day that hit would've missed.
+  onPlant:
+    - "Well look at that, I lit {bomb}. Don't tell anyone."
+    - "{bomb} is lit, dears. Off you go now."
+  onDefuse:
+    - "There, {bomb} is tucked in and safe."
+    - "No fireworks tonight, dears. {bomb} is fine."
+  onWin:
+    - "Well done, {team}. I'm so proud of you all."
+    - Slow and steady, just like I always say.
+    - That's my team. Cookies for everyone.
+  onLoss:
+    - Ah well, there's always the next one, dears.
+    - "We'll learn from it, {team}. We always do."
+  onLastAlive:
+    - Just me then. I've waited out worse.
+    - "Don't worry {team}, I'll keep the kettle warm."
+    - I've got all the time in the world.
+  taunt:
+    - I'll be right here when you get tired, dear.
+    - Rushing never worked in my day either.
+    - Take your time. I certainly will.
+quirks:
+  - gapple_hoarder
+  - slow_starter
+rivals:
+  - pastkroxpro
+  - swiftkrashtim
+bio: The oldest regular by playtime, who learned the game watching a grandkid and stayed for the quiet corners. Firmly believes PastkroxPro would win more if he just sat down for a minute.
+batch: 1
+retired: false

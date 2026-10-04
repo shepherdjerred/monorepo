@@ -103,6 +103,9 @@ final class LockListener implements Listener {
       return;
     }
     var block = event.getBlock();
+    if (locks.isSealed(block.getWorld())) {
+      return;
+    }
     var player = event.getPlayer();
     var type = block.getType();
     if (kinds.isLockable(type) && service.policy().autoLockOnPlace() && service.isSettling()) {
@@ -147,6 +150,9 @@ final class LockListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onPlaced(BlockPlaceEvent event) {
     var block = event.getBlock();
+    if (locks.isSealed(block.getWorld())) {
+      return;
+    }
     var position = LockGuard.position(block);
     if (service.book().lockAt(position).isPresent()) {
       service.release(position);

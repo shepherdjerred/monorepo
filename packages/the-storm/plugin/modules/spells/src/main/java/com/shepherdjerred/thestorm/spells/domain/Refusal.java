@@ -57,4 +57,10 @@ public sealed interface Refusal {
 
   /** Binding needs a free inventory slot. */
   record InventoryFull() implements Refusal {}
+
+  /** The caster stands in a world a minigame sealed off from magic. */
+  record SealedWorld() implements Refusal {}
+
+  /** Recall's Mark lies in a world a minigame sealed off from magic. */
+  record SealedDestination() implements Refusal {}
 }

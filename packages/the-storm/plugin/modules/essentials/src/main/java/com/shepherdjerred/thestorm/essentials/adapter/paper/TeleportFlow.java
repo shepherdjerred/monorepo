@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
 import com.shepherdjerred.thestorm.essentials.app.TeleportPayments;
 import com.shepherdjerred.thestorm.essentials.app.TeleportPayments.Charge;
@@ -73,9 +74,14 @@ final class TeleportFlow {
    * @param guards the teleport guards other modules add
    * @param protection land protection, asked for {@code TELEPORT_INTO} on player-chosen places
    * @param back {@code /back} recording
+   * @param sealed worlds no teleport may leave or enter
    */
   record Services(
-      TeleportPayments payments, GuardRegistry guards, Protection protection, BackRecorder back) {}
+      TeleportPayments payments,
+      GuardRegistry guards,
+      Protection protection,
+      BackRecorder back,
+      SealedWorlds sealed) {}
 
   private record Pending(Ticket ticket, Exemptions exemptions, Position start, Cancellable task) {}
 
@@ -375,6 +381,12 @@ final class TeleportFlow {
   }
 
   private Optional<Component> refusal(Ticket ticket, Location destination) {
+    if (services.sealed().isSealed(ticket.mover().getWorld())) {
+      return Optional.of(Component.text("you can't teleport out of this world."));
+    }
+    if (services.sealed().isSealed(destination)) {
+      return Optional.of(Component.text("that world is closed to teleports."));
+    }
     var mover = ticket.mover().getUniqueId();
     var guard = services.guards().check(mover, destination);
     if (guard.isPresent() || !playerChosen(ticket.kind())) {

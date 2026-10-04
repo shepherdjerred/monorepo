@@ -1,0 +1,11 @@
+# Third-party notices for The Storm plugin
+
+## Red Warfare (libraryaddict)
+
+The `rwf` module ports Search and Destroy from libraryaddict's Red Warfare
+(https://github.com/libraryaddict/RedWarfare), used under a licence granted by
+its owner to Jerred Shepherd, which covers public publication of the ported code
+in this repository. Ported files carry a header naming this notice.
+
+Grant wording: TODO(jerred) — paste the exact grant text here before the first
+ported file lands.

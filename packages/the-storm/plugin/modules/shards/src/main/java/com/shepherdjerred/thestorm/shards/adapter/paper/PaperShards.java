@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.shards.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.shards.app.StormShards;
 import com.shepherdjerred.thestorm.shards.domain.Altars;
 import com.shepherdjerred.thestorm.shards.domain.Bonuses;
@@ -41,7 +42,14 @@ public final class PaperShards {
             bonuses,
             text);
     var shards = new ShardItems(new NamespacedKey(plugin, "shard"), gear, config.item());
-    var kit = new ShardKit(shards, gear, text, context.random(), context.time());
+    var kit =
+        new ShardKit(
+            shards,
+            gear,
+            text,
+            context.random(),
+            context.time(),
+            context.services().require(SealedWorlds.class));
     var altars = new Altars(config.altars(), config.upgrades().attemptCooldown());
     var placed = new PlacedBlocks(new NamespacedKey(plugin, "placed_sources"));
 

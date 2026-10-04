@@ -1,0 +1,77 @@
+id: mothblaze0
+name: MothBlaze0
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzczNzg2NCwKICAicHJvZmlsZUlkIiA6ICJkYjQwYmNjNWUzMDE0ZmZjOGVlOWQxNDU5MTcyYjdhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJhWGUxOCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81Y2FmZjk3Nzk1MDZiNmIzODUxMTI2YTliNmYwMTkxMzAzNDhmZjFhMmZmMWMwYmE5Y2RmYTI5MzRkY2U2Y2FjIgogICAgfQogIH0KfQ=="
+  signature: "Gmw1bo355nVBoyoabvIo4YwXttKGvABp4UN5+GiMqgwPSOSc5oTuNBsX/xKgTIO6SB6rZPurVUJKAvQRjH1bO+SwBVQpqCa13bD2TIr7TVDEOxwvt5aJPTDFyv5trCR7n40aqJXcjY3iK0xeABUwtAGSwX/0L2pXlECaW6pywpOq7EZ5u6019Gf4yM2bUbskZue34BGYUsiRuC1QVgYpNh5TFub23ZZUAXdG3INnd9mhzaDrf+tGXAAYyb/DyaciSmAYbwVrhseGC1qWOlXTVT43Jnefiw9oNy6k36ZzXZ05WMofpPemxtDrteJ3bPU6178CxZBejyYR8CyzWtv7rZm0T8ktqEcih2WR4YXbDrOxYkUJdwwsK196QHTTAUkWTY1ADGc8XSHz0VIA0siKbdjLES5G7BVUjTlxMvjgsrPkkkOD7AHtXy6wki1F1edYBhBadVHXkUSVY1g4JS/tOSVjnOMOTQbAYi+CiPVv1PEMR9ujJvKSmfXBbxWIr5N9zpRuOlxK2tBjp5kJkk50OXwwLMjKDyjjFNl9WqJRfx3ValkHxL44F0f6SjueCQRX1/g0Y+XyjyXuClpTUJ5m6RIlTV+R/i4m+2t+O/ZrdZNZxzRaPi/G75L5K/OV2AD8fi5It7J3AADes1RsgZmEWrOHwsKfvuEQa7DfTZ0taaI="
+skill: 0.425
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.49
+  aimErrorDeg: 2.02
+  cps: -0.64
+  predictionQuality: 1.28
+  awarenessRadius: 0.74
+  technique: -0.52
+  aggression: -0.65
+kits:
+  trooper: 0.16
+  longbow: 0.88
+  shortbow: 0.45
+  ghost: 0.19
+roles:
+  defend: 0.76
+  rotate: 0.42
+  hunt: 0.49
+style:
+  aggression: 0.3
+  patience: 0.84
+  teamplay: 0.38
+  risk: 0.17
+voice:
+  tone:
+    - serene
+    - poetic
+    - patient
+  verbosity: quiet
+  style: "speaks only in short haiku-like lines; calm, nature images, moths and flames"
+lines:
+  greet:
+    - "a moth finds its flame / {team} draws the bowstring back"
+    - "still air, long sightline / i will wait for you to move"
+    - patience is the bow
+  onKill:
+    - "the arrow flies true / {victim} drifts like falling leaves"
+    - "one breath, then release / {victim} meets the quiet"
+    - "moth to the flame, {victim}"
+  onDeath:
+    - "the flame burns the moth / {killer} found me first"
+    - "autumn comes for all / even snipers on the hill"
+    - "well aimed, {killer}"
+  onPlant:
+    - "a small spark is lit / {bomb} hums softly now"
+    - "fuse becomes a flame / {bomb} waits for dawn"
+  onDefuse:
+    - "the flame is put out / {bomb} sleeps once more"
+    - quiet hands, still bomb
+  onWin:
+    - "the long night is done / {team} greets the morning"
+    - victory, softly
+  onLoss:
+    - "the moth lost its flame / there will be other evenings"
+    - gg, quiet friends
+  onLastAlive:
+    - "alone on the hill / the wind tells me where you are"
+    - one moth, many flames
+    - "{team}, i still watch"
+  taunt:
+    - "you cross the open / i have been waiting all round"
+    - the bowstring is drawn
+    - stay behind the stone
+quirks:
+  - bow_spammer
+  - never_eats
+rivals:
+  - silentbandit65
+bio: "Sits on the highest block of every map and answers everything in haiku. Keeps a gentle sniper rivalry with SilentBandit65; the scoreboard between them is a dead tie and neither will say so aloud."
+batch: 1
+retired: false

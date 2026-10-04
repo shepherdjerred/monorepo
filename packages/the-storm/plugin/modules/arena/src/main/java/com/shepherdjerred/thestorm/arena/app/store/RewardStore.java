@@ -1,6 +1,6 @@
 package com.shepherdjerred.thestorm.arena.app.store;
 
-import com.shepherdjerred.thestorm.arena.domain.snapshot.ItemData;
+import com.shepherdjerred.thestorm.core.snapshot.ItemData;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;

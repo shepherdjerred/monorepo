@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.towns;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -50,6 +51,7 @@ final class TownsModuleTest {
         plugin,
         plugin.getLifecycleManager(),
         new PaperScheduler(plugin),
+        new DirectComputePool(),
         database,
         new Services(),
         directory,

@@ -1,0 +1,78 @@
+id: tothmiokgaming
+name: TothmiokGaming
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzcxNzI1MSwKICAicHJvZmlsZUlkIiA6ICI3NzQ3ODc3M2ExZTE0NzUxODE0M2Q5ZDA5YTc1NmQ2MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3aGF0YXJlZmVycmV0cyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zMzc1YWM3OGYyYzRlYWRmYjkyOGYwMzczYmIwM2VmMjdhZmJhZmY4Yzc4NTU2MWE0NDk5MThjODk1OWQzZDVmIgogICAgfQogIH0KfQ=="
+  signature: "snDDTv66QGQkjg5n8LPAj9qykQMesBe1Kniw+uil3izfH8ZcP8G5pyLknxolU2kiRisQAPMEtAjtLMUfm5uZ+QIQOpf1a6TlGSkvjdnI7aGbHVv+LuQozwcVEhXjq0G61DEfPRXAWMXMTkIl0K0p8j2VCuGpHG7bga8Gyq7yfSxaOvPl65rcdwXV/7OMd8AZ4JXGdB6iBC3HjlYE/722Xwl26jdd9J416SZatNaSEjMS9P9ETqa2EhZyZOJpXpCcij3KD4WtbWjyothCEAh9tT7Pz8rapXBRxwI6AI8/lqZ1PQl0/3xZMjHwnI3VeGWFiVpUh7gbRv/+UcECxPbuef6v40oyuRa0y8HSbzf1loBAIcBGwblcztZiCkJ4lmlSVaKdutZ46dR8dCGGPw0DhsLBLoBs/UhepJpDjRZDsT8qE4ChsbxxkXhWO7l6sj3OKIInOUxVtrm9hHYxUV2TE25uVekNArG6klX5IZpqRSl1vtXlTCHThjH9r+4pBttg9qNwIPzoNl3ZvC03abG+DRegd2v7xu+yOlIkau6g6qJ4bVWnVe4E1atRoWfT3RVnIw0m582N96EoN9UMRZwJ7+pTYfr72F9Bft8F9GFyByYc6jADwpzvo6nhXxvHBFfGPOL6PsmaVpYPpec8B2syC6ZNCClPmeLG2jZetGFmBTg="
+skill: 0.558
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.2
+  decisionTemperature: 1.03
+  awarenessRadius: 0.61
+  coordination: 1.7
+  technique: -0.3
+kits:
+  trooper: 0.99
+  longbow: 0.47
+  shortbow: 0.44
+  rewind: 0.51
+roles:
+  plant: 0.57
+  escort: 0.55
+  defend: 0.48
+  rotate: 0.83
+  retake: 0.9
+style:
+  aggression: 0.53
+  patience: 0.61
+  teamplay: 0.88
+  risk: 0.43
+voice:
+  tone:
+    - nerdy
+    - precise
+    - eager
+  verbosity: chatty
+  style: forum strategist citing chapters of his own unfinished guide, numbered points and all
+lines:
+  greet:
+    - "Per chapter 2 of my guide: split, then converge. Ready {team}?"
+    - "Step one: everybody check your fuses. Step two: I'll tell you."
+    - "Opening strategy loaded. Version 4.2, {team}."
+  onKill:
+    - "{victim} ignored chapter 5: never peek twice."
+    - Executed exactly as diagrammed.
+    - "Kill confirmed. Adding {victim} to the case studies."
+  onDeath:
+    - "Unexpected variable: {killer}. Updating the guide."
+    - "That was not in the flowchart, {killer}."
+    - "Footnote: do not stand where I just stood."
+  onPlant:
+    - "{bomb} armed. See chapter 7, the late plant."
+    - "Fuses stacked per protocol. {bomb} is live."
+  onDefuse:
+    - "{bomb} defused within the recommended window."
+    - "Retake complete. Chapter 9 works, {team}!"
+  onWin:
+    - "Strategy validated. Thank you, {team}."
+    - A clean win. I'll update the guide tonight.
+  onLoss:
+    - Interesting data. Not a loss, a lesson.
+    - Back to the drawing board. Literally, I have one.
+  onLastAlive:
+    - "Last player protocol: stay calm, go stealth."
+    - "Chapter 12: the clutch. Never finished writing it."
+    - "Running the solo branch of the plan, {team}."
+  taunt:
+    - Your rotation is predictable. I wrote about it.
+    - I have a diagram of exactly where you'll go.
+    - Have you read my guide? You should.
+quirks:
+  - calls_everything
+  - narrates
+rivals:
+  - potatofalcon8
+  - xxpumpkinravenxx
+bio: Has been writing the definitive Search and Destroy strategy guide since 2013 and is on chapter twelve of an estimated forty. Loses most arguments with PotatoFalcon8 on volume rather than merit.
+batch: 1
+retired: false

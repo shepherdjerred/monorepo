@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
 import com.shepherdjerred.thestorm.qol.app.CombatTracker;
@@ -56,6 +57,7 @@ public final class QolPaper {
    * @param protection land protection, for grave spots and chest sorting
    * @param guards essentials' teleport guards, for the combat guard
    * @param afk essentials' away status, for the sleep vote
+   * @param sealed worlds the graves stay out of
    */
   public record App(
       GraveStore store,
@@ -63,7 +65,8 @@ public final class QolPaper {
       CombatTracker combat,
       Protection protection,
       TeleportGuards guards,
-      AfkStatus afk) {}
+      AfkStatus afk,
+      SealedWorlds sealed) {}
 
   public static QolPaper start(ModuleContext context, QolConfig config, App app) {
     return start(context, config, app, ServerHooks.PAPER);
@@ -84,13 +87,14 @@ public final class QolPaper {
             new GravePlacement(config.graves().searchRadius()),
             policy,
             app.protection(),
-            hooks);
+            hooks,
+            app.sealed());
     var safe = new LastSafeSpots();
     var upkeep = new GraveUpkeep(runtime, parts);
     var deaths = new GraveDeaths(runtime, parts, safe, context.random());
     var opening = new GraveOpening(runtime, parts, upkeep, context.random());
     var sorting = new ContainerSorting(app.protection());
-    var combat = new CombatListener(runtime, app.combat(), config.combat());
+    var combat = new CombatListener(runtime, app.combat(), config.combat(), app.sealed());
     var sleep = new SleepListener(runtime, app.afk(), config.sleep().percent());
     var paper = new QolPaper(permissions, app.combat(), sleep, context.logger());
 

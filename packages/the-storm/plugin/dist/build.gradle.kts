@@ -53,7 +53,14 @@ val archiveTest = tasks.register<Exec>("archiveTest") {
   workingDir(rootProject.file("../server"))
   commandLine("python3", "-m", "unittest", "-v", "test_archive_progression.py")
 }
-tasks.test { dependsOn(archiveTest) }
+tasks.test {
+  dependsOn(archiveTest)
+  // ModulesTest checks the shipped module inventory against the registry.
+  inputs
+      .file(rootProject.file("../server/owned/plugins/TheStorm/config.yml"))
+      .withPropertyName("shippedConfig")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+}
 
 val runServerDirectory = rootProject.file("run")
 val prepareRunServerContent =

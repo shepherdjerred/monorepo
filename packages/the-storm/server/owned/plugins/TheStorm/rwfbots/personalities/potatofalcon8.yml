@@ -1,0 +1,79 @@
+id: potatofalcon8
+name: PotatoFalcon8
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY4MDUxMSwKICAicHJvZmlsZUlkIiA6ICJkMjU0ZjQxMDkyNTE0NTdlYmU5NGM5NDQ2ZmIzZTc3YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUcmFzaEFwcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84ZjA3YWY3MjUxZmFmMWJhNTg4NGJjMWM5NzFjMjliOWFmYjAyNTY0MmUyNjU3NTZkMTNiMDVlNTRjMjllM2Y4IgogICAgfQogIH0KfQ=="
+  signature: "EDUjahMu5TQWoWxyFPOnj5w3vz6IYfJ9mXHvHgnYg5xUXMBB6ThwkPBoyQoyyxPvc1DTaEJKVelS3Auhv+1Jm7jb1Tq18XQye9LId1jXEPXyqRW9rw9dhEtBsIm+5HVHIcYVmm/CgOUatYgFvPDVpDy2xJP/EVVfvC56rb+Ij9UnFFGdM/G7VYd/AIgZiGaoZzJ8ndFq2WPqLb7fYiPRHZAr/bOnoPvkqVq/w8rcnoI/TwZ7qSSH3DWA4xHR6YCi4QAlgqdBNjE+fnxyawT7hAnVI1v9Z8s0V9bND2KD8fiznaeiAqXaEy1TpgjVz/RuWoWDcLghDKGvdNlv+dqa5fu/foQvJWip2B1MlA0bmxmriUCTtGH+dZZNK2vQQLcqgWBlxZc/uPwsuyXEvnWzlD73wlars1xd4iGhm+/Jgnkoq99K+HS/AQ2/g8TGddpPkbTSrl65+ws622Zy+t9Y7XLBZp3pUVG3ouXdA/QSQWjoQcdX/lVCF/nb5sY8iRCIb3ZV+julPn0rlTNGccxwBEQJQLh+ceDXzYTkpRysKgBEhuCqM6fBKnF6zizdIrcl5gX9f3yAl381IHeg8WUbigG+ANO5OVgz/LqrYRP9ipIE2BILf+wJ19guNLDyEcIEkg+KLENE33oTJi4qvqCa9wU2U/cY1IZVZE0YdPWDqkQ="
+skill: 0.632
+archetype: tactician
+leverOffsets:
+  cps: -0.21
+  predictionQuality: 0.46
+  decisionTemperature: 1.56
+  awarenessRadius: 0.97
+  coordination: 1.44
+kits:
+  trooper: 1
+  longbow: 0.49
+  shortbow: 0.57
+  rewind: 0.52
+roles:
+  plant: 0.63
+  escort: 0.47
+  defend: 0.43
+  rotate: 0.72
+  retake: 0.7
+style:
+  aggression: 0.45
+  patience: 0.63
+  teamplay: 0.87
+  risk: 0.41
+voice:
+  tone:
+    - energetic
+    - analytical
+    - commentator
+  verbosity: chatty
+  style: live sports commentator calling the play-by-play, including his own moves
+lines:
+  greet:
+    - "Welcome folks to another thrilling round with {team}!"
+    - And the teams take the field! Coach Potato is ready!
+    - "Tonight's game plan: split, stack fuses, win. Let's go!"
+  onKill:
+    - "And {victim} goes down! What a play by {team}!"
+    - "Textbook! Absolutely textbook against {victim}!"
+    - "He shoots, he scores! Sorry, {victim}."
+  onDeath:
+    - "Oh! A stunning hit from {killer}! The crowd gasps!"
+    - "Coach is down! {team}, run the play without me!"
+    - "Replay will show I was robbed. Nice one, {killer}."
+  onPlant:
+    - "{bomb} is LIT! The stadium is on its feet!"
+    - "Fuse stacked, {bomb} armed! Defend the play, {team}!"
+  onDefuse:
+    - "A last-second defuse on {bomb}! Unbelievable!"
+    - "{bomb} is SAFE! What a defensive stand!"
+  onWin:
+    - "And that's the match! {team} takes it home!"
+    - What a game, folks! What a game!
+    - Champions! Somebody get me a trophy!
+  onLoss:
+    - "A tough loss for {team}, but what heart!"
+    - We'll review the tape, folks. Good game.
+  onLastAlive:
+    - It all comes down to this, folks! One player left!
+    - Coach takes the field himself! Can he do it?
+    - The whole season on my shoulders. Classic.
+  taunt:
+    - The opposition looks rattled out there, folks!
+    - Defence wins championships, and ours is ready.
+    - We've studied your tape. All of it.
+quirks:
+  - narrates
+  - calls_everything
+  - good_sport
+rivals:
+  - tothmiokgaming
+bio: Draws plays on a whiteboard nobody else can see and narrates every round like a cup final. His long-running argument with TothmiokGaming about rush versus split has outlasted three map rotations.
+batch: 1
+retired: false

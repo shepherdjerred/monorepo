@@ -1,0 +1,75 @@
+id: vividmioxjoukpo
+name: VividMioxjoukpo
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5Mzc0MTU5NCwKICAicHJvZmlsZUlkIiA6ICJjOWZkZjFiMThhZGI0MGE3OTQwMzMyMTg3NThhZDJkMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJfc3BhY2VfODAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTM4NWFiMGE4MzJhZjJjOTIwZDVhNzEwOTA2N2Q3ZTA0OTY0MGNhYmM4ZjRjZTU2ODhlNmFlMzU3NmFiMjI3NCIKICAgIH0KICB9Cn0="
+  signature: "jMuxYM+ZeQCNLq/4lg8kvaK9JYyaa4cQPw5h+5m6sjBDQFeDT7W/8tExkY1BY1V8Uyy7q3jQnDDcpVtlpYptgFEcTw+CBIxGhGouXMI23OkPBzg25J/B8K+P3GV5dfA0XNBr5RZaTo3ggcIWeyOk6k8UCXVg5pSbscLGqC8WOWaMq5ZT15zg3UfF/eTP+Tk7AM8V9odRIG7qCKFCk6LaAweNCcYorr/nhqbvaV0dsyQv39qVFWkKmsCP6tsKq6odKK7LQjNRCTmY3pheMxx2z3FpGuqVC3DELiCbOfYYqUCoDWiAr5cGungRD5pi6FICKeio9Uik9QIuiNCrMGvEsMA3jTQ+YwSp0xL2GlX69wY6f/UtxaTQfl8IQsXX0TbHjdvk3TtdmxtIUOAUw2kDI8AblmQ6tpSZ40tld2cgOGOwR4VJrIQWsg/gyxWRQkFst5RF1WH7/bJcs2WeVrvNIPBD9wQPB3DsZDb4b3to5wSLU5N2J1GjN7o92vfT+VIn81f8KpaZhOdFKXjgg4k8/B+yoQFHz6pRLZg9ub3PZJLDBuXIQttSawinJoV8S7C0HttNhdm4+4gu8ypq23GIE2kLbYY5mURY1yI3tVu6yRJ7ouoxqcmEWFlqXJTl/SRrylM6SG+h/Su2vpPbDbbezjC5SFEDEcgyWv0fwzQN3ws="
+skill: 0.188
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.71
+  aimErrorDeg: -0.72
+  turnRateDegPerTick: -0.07
+  decisionTemperature: 0.15
+  awarenessRadius: 0.71
+  aggression: -1.19
+kits:
+  trooper: 1
+  longbow: 0.28
+  rewind: 0.72
+  ghost: 0.35
+roles:
+  defend: 1
+  retake: 0.34
+style:
+  aggression: 0.15
+  patience: 0.95
+  teamplay: 0.54
+  risk: 0.05
+voice:
+  tone:
+    - nervous
+    - apologetic
+    - sweet
+  verbosity: normal
+  style: "anxious and apologetic; lots of sorry and oh no, nervous laughter, means well"
+lines:
+  greet:
+    - "oh, hi {team}! i'll just be by the bomb. sorry."
+    - hello! i'm nervous. is that normal? haha
+    - please don't let anyone sneak up on me. thanks!
+  onKill:
+    - "oh no, sorry {victim}! you startled me!"
+    - "i didn't mean to! well, i did. sorry {victim}."
+    - "i'm so sorry {victim}. good game though!"
+  onDeath:
+    - "eep. that's fair, {killer}. nice one."
+    - "i saw you coming and froze. sorry {team}!"
+    - oh no. oh no. ok. i'm fine.
+  onPlant:
+    - "i lit {bomb}?? sorry! i mean, yay!"
+    - "{bomb} is lit, please protect me {team}!"
+  onDefuse:
+    - "i defused {bomb}! my hands are shaking!"
+    - "phew, {bomb} is safe. sorry it took a while!"
+  onWin:
+    - "we won?! thank you {team}! sorry for hiding!"
+    - yay! that was scary and fun!
+  onLoss:
+    - sorry everyone, that one's on me. gg!
+    - oh no. good game though! really!
+  onLastAlive:
+    - it's just me?! oh no. ok. ok. breathing.
+    - "i'll hide very well, {team}. promise."
+    - sorry in advance, everyone.
+  taunt:
+    - please don't come over here. it's scary over here.
+    - i have a sword! i'll use it! sorry!
+    - um. boo? sorry.
+quirks:
+  - says_sorry
+  - never_eats
+rivals:
+  - xxpumpkinravenxx
+bio: Huddles beside the team bomb apologising to everyone, including the enemies who rush it. Has been ambushed by xXPumpkinRavenXx so often that she now jumps at regular pumpkins too.
+batch: 1
+retired: false

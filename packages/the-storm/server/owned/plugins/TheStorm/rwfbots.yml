@@ -1,0 +1,71 @@
+# Red Warfare Search and Destroy bots. Owned by the repository; the plugin
+# never writes it. Every key is required and unknown keys are errors.
+#
+# Personalities live in rwfbots/personalities/<id>.yml. Each rwf map needs a
+# baked navigation artifact at rwf/maps/<id>/nav.rwfnav (from the rwfmap
+# tool); a map without a current one runs humans-only.
+
+# How often each think layer runs, in server ticks, at governor level 0. The
+# governor doubles every period under load. Perception at 2 is 10 Hz, tactics
+# at 5 is 4 Hz, the team step at 15 is 1.3 Hz. A decision decided from a
+# snapshot older than maxDecisionAgeTicks is followed with its aim lock
+# dropped and a rethink requested.
+think:
+  perceptionEveryTicks: 2
+  tacticsEveryTicks: 5
+  teamEveryTicks: 15
+  maxDecisionAgeTicks: 40
+
+# When the governor steps in, in milliseconds of tick time. Level 1 (the p95
+# tick above level1Mspt, or the bot sections above botSectionMs, for
+# sustainSamples ticks) halves the think rates and makes bots with no human
+# within isolationRadius blocks reflex every other tick. Level 2 (p95 above
+# level2Mspt) also drafts level2DraftReduction fewer bots next match. Levels
+# fall one step at a time once both measures sit below the recover values for
+# sustainSamples ticks. Bots are never removed mid-round.
+governor:
+  level1Mspt: 40.0
+  level2Mspt: 47.0
+  botSectionMs: 6.0
+  recoverMspt: 35.0
+  recoverBotMs: 4.0
+  sustainSamples: 40
+  isolationRadius: 48.0
+  level2DraftReduction: 2
+
+# The lever curves: each lever's range and the exponent shaping how it
+# responds to skill (0 weakest, 1 strongest). Pinned: the module refuses to
+# start if a value here disagrees with domain/difficulty/Lever.java, so this
+# file always documents the curves in force.
+levers:
+  reactionMs: { min: 150.0, max: 450.0, exponent: 0.85, lowerIsBetter: true }
+  aimErrorDeg: { min: 0.5, max: 6.0, exponent: 1.3, lowerIsBetter: true }
+  turnRateDegPerTick:
+    { min: 8.0, max: 45.0, exponent: 1.0, lowerIsBetter: false }
+  cps: { min: 5.0, max: 12.0, exponent: 1.0, lowerIsBetter: false }
+  predictionQuality: { min: 0.0, max: 1.0, exponent: 1.0, lowerIsBetter: false }
+  decisionTemperature:
+    { min: 0.05, max: 1.0, exponent: 1.0, lowerIsBetter: true }
+  awarenessRadius: { min: 24.0, max: 64.0, exponent: 1.0, lowerIsBetter: false }
+  coordination: { min: 0.0, max: 1.0, exponent: 1.0, lowerIsBetter: false }
+  technique: { min: 0.0, max: 1.0, exponent: 1.2, lowerIsBetter: false }
+  aggression: { min: 0.0, max: 1.0, exponent: 1.0, lowerIsBetter: false }
+
+# The kits rwf ships that bots may be given (rwf/kits.yml). A personality
+# draws from its kit weights over these; one whose weights name none of them
+# (its favourites ship later) plays any of them, chosen uniformly.
+draft:
+  kits: [trooper, longbow, shortbow, rewind]
+
+# The most line-of-sight rays one think job casts (three per enemy inside a
+# bot's awareness radius); bots past the budget perceive on the next job.
+awareness:
+  losRayBudgetPerThink: 600
+
+# Decision traces: one tab-separated line per think step, gzipped per match
+# under plugins/TheStorm/<directory>/<matchId>.gz. Lines past queueCapacity
+# waiting for the writer are dropped and counted.
+traces:
+  enabled: true
+  directory: rwfbots-traces
+  queueCapacity: 4096

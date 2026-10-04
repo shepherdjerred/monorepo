@@ -1,9 +1,12 @@
+import path from "node:path";
 import { describe, expect } from "vitest";
+import { z } from "zod";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { serverLogs } from "#e2e/harness/server.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
+/** The 23 modules the shipped config enables, of the 25 it registers. */
 const modules = [
   "agent",
   "arena",
@@ -30,15 +33,50 @@ const modules = [
   "world",
 ].toSorted();
 
+const registeredModules = 25;
+
+const OwnedConfigSchema = z
+  .object({ modules: z.record(z.string(), z.boolean()) })
+  .strict();
+
+const ownedConfig = path.join(
+  import.meta.dir,
+  "../../server/owned/plugins/TheStorm/config.yml",
+);
+
 describe("all modules together", () => {
-  test("boots all 22 modules with the shipped content", async ({
+  test("boots the 23 shipped modules plus rwf and rwfbots with the shipped content", async ({
     server,
     rcon,
   }) => {
+    // The shipped config is the contract: every registered module listed, the
+    // same 23 switched on, and only rwf and rwfbots off. The full lane stages
+    // it with those two switched on as well, so Search and Destroy and its
+    // bots run beside everything else.
+    const owned = OwnedConfigSchema.parse(
+      Bun.YAML.parse(await Bun.file(ownedConfig).text()),
+    );
+    expect(Object.keys(owned.modules)).toHaveLength(registeredModules);
+    expect(
+      Object.entries(owned.modules)
+        .filter(([, on]) => on)
+        .map(([module]) => module)
+        .toSorted(),
+    ).toEqual(modules);
+    expect(
+      Object.entries(owned.modules)
+        .filter(([, on]) => !on)
+        .map(([module]) => module)
+        .toSorted(),
+    ).toEqual(["rwf", "rwfbots"]);
     const logs = await serverLogs(server);
     const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
-    expect(enabled?.[1]?.split(", ").toSorted()).toEqual(modules);
-    expect(logs).toContain("Prepared synthetic fixtures for all Storm modules");
+    expect(enabled?.[1]?.split(", ").toSorted()).toEqual(
+      [...modules, "rwf", "rwfbots"].toSorted(),
+    );
+    expect(logs).toContain(
+      "Prepared synthetic fixtures for Storm modules [world, essentials, npcs, arena, shards, seasonal, rwf]",
+    );
     expect(logs).not.toContain("The Storm failed to enable");
     expect(logs).not.toContain("Could not validate shard altars");
     expect(logs).not.toContain("Could not prepare arenas");

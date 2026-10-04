@@ -17,10 +17,13 @@ import {
   writeThrottleFreeBukkitYml,
 } from "@shepherdjerred/mc-harness/providers/docker/paper-container.ts";
 import { paper, serverImage } from "@shepherdjerred/mc-harness/pins.ts";
+import { stageCompanionsE2e } from "./companions-e2e.ts";
 import {
   overlayAgentTopLevel,
   overlayBrainUrl,
+  overlayRwf,
   overlaySweep,
+  type RwfOverlay,
 } from "./config-overlays.ts";
 import { thirdPartyPlugins } from "./pins.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
@@ -71,8 +74,15 @@ export type StartServerOptions = {
   mechanicsConfig?: string;
   fixturesJar?: string;
   companionsE2eJar?: string;
+  /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
+  rwf?: RwfOverlay;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
+  /**
+   * Container environment beyond the server basics: the Flipt gate address and
+   * the recording salt the modules under test read at enable.
+   */
+  env: Record<string, string>;
   /** Repository-owned plugin config directory. */
   ownedConfigDir: string;
   /** Fake brain the staged agent.yml points at. */
@@ -84,6 +94,25 @@ export type StartServerOptions = {
     slaAfterMinutes: number;
   };
   agent: { mode: string; reviewSamplePercent: number };
+  /**
+   * Container limits for a profile that measures load; the default is a 1G
+   * heap with no CPU or memory limit.
+   */
+  resources?: ServerResources;
+  /**
+   * Publish the game port on this fixed loopback port, so a real client can
+   * join `localhost`; a random free port otherwise.
+   */
+  gamePort?: number;
+};
+
+/** Docker limits and the JVM heap (itzg's MEMORY) for the server container. */
+export type ServerResources = {
+  cpus: number;
+  /** The JVM heap, as itzg's MEMORY reads it (8G). */
+  heap: string;
+  /** The container memory limit, as `docker create --memory` reads it (10g). */
+  memoryLimit: string;
 };
 
 const OwnedStormConfigSchema = z
@@ -124,6 +153,7 @@ export async function stagePlugins(
     | "mechanicsConfig"
     | "fixturesJar"
     | "companionsE2eJar"
+    | "rwf"
     | "warmCache"
   > &
     Partial<
@@ -144,6 +174,13 @@ export async function stagePlugins(
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
     });
+    // Citizens' owned config keeps rwfbots' NPCs off the tab and online
+    // lists, as the production image's plugin sync does.
+    await cp(
+      path.join(path.dirname(options.ownedConfigDir), "Citizens"),
+      path.join(pluginsDir, "Citizens"),
+      { recursive: true },
+    );
   }
   if (options.fixturesJar !== undefined) {
     await Bun.write(
@@ -152,19 +189,15 @@ export async function stagePlugins(
     );
   }
   if (options.companionsE2eJar !== undefined) {
-    await Bun.write(
-      path.join(pluginsDir, "TheStormCompanionsE2E", "fixture.txt"),
-      "Disposable Citizens survival acceptance world\n",
-    );
-    await Bun.write(
-      path.join(pluginsDir, "TheStormCompanionsE2E.jar"),
-      Bun.file(options.companionsE2eJar),
-    );
+    await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);
   }
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),
     options.stormConfig,
   );
+  if (options.rwf !== undefined) {
+    await overlayRwf(path.join(pluginsDir, "TheStorm", "rwf.yml"), options.rwf);
+  }
   if (
     options.mechanicsE2eJar !== undefined ||
     options.mechanicsConfig !== undefined
@@ -222,24 +255,16 @@ const luckPermsLibs = path.join("LuckPerms", "libs");
 function serverEnv(
   rconPassword: string,
   brainToken: string,
-  full: boolean,
-  brainUrl: string,
+  extra: Record<string, string>,
+  heap: string,
 ): Record<string, string> {
   return {
     ...basePaperEnv(),
     ENABLE_RCON: "true",
     RCON_PASSWORD: rconPassword,
     STORM_BRAIN_BEARER_TOKEN: brainToken,
-    // Deliberately malformed test token: JDA rejects it locally, without
-    // authenticating to or posting in a real Discord server.
-    ...(full
-      ? {
-          DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
-          DISCORD_CHANNEL_ID: "1",
-          FLIPT_URL: brainUrl,
-          FLIPT_ENVIRONMENT: "prod",
-        }
-      : {}),
+    ...extra,
+    MEMORY: heap,
   };
 }
 
@@ -306,18 +331,24 @@ export async function startServer(
     "--label",
     `${pidLabel}=${process.pid.toString()}`,
     "-p",
-    "127.0.0.1::25565",
+    `127.0.0.1:${options.gamePort?.toString() ?? ""}:25565`,
     "-p",
     "127.0.0.1::25575",
     "-v",
     `${pluginsDir}:/plugins:ro`,
     ...(options.warmCache ? warmMountArgs(cacheDir) : []),
+    ...(options.resources === undefined
+      ? []
+      : [
+          `--cpus=${options.resources.cpus.toString()}`,
+          `--memory=${options.resources.memoryLimit}`,
+        ]),
     ...envArgs(
       serverEnv(
         rconPassword,
         options.brain.token,
-        options.fixturesJar !== undefined,
-        options.brain.baseUrl,
+        options.env,
+        options.resources?.heap ?? "1G",
       ),
     ),
     serverImage,

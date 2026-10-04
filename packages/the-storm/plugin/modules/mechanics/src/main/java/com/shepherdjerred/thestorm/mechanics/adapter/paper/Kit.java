@@ -1,12 +1,14 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.app.Gatekeeper;
 import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.StructureProblem;
 import java.util.Optional;
 import java.util.UUID;
+import org.bukkit.World;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 
@@ -18,15 +20,26 @@ import org.bukkit.entity.Player;
  * @param signs mechanism sign data
  * @param guard land protection
  * @param scheduler main-thread scheduling
+ * @param sealedWorlds worlds the mechanisms stay out of
  */
 record Kit(
-    MechanicsConfig config, Gatekeeper gatekeeper, Signs signs, Guard guard, Scheduler scheduler) {
+    MechanicsConfig config,
+    Gatekeeper gatekeeper,
+    Signs signs,
+    Guard guard,
+    Scheduler scheduler,
+    SealedWorlds sealedWorlds) {
 
   /**
    * What a player is told about a mechanism sign with no recorded creator, such as a CraftBook sign
    * from the old world. Editing the sign runs creation again, which records its creator.
    */
   static final String NOT_SET_UP = new StructureProblem.NotBound().message();
+
+  /** Whether no mechanism may work in {@code world}, because a minigame sealed it. */
+  boolean sealed(World world) {
+    return sealedWorlds.isSealed(world);
+  }
 
   /**
    * Whether {@code player} may use {@code feature}'s sign, telling them why not. A sign with no

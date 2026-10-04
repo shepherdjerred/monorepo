@@ -28,6 +28,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockbukkit.mockbukkit.entity.LivingEntityMock;
+import org.mockbukkit.mockbukkit.simulate.entity.LivingEntitySimulation;
 
 final class CombatAndSortPaperTest {
 
@@ -74,6 +76,30 @@ final class CombatAndSortPaperTest {
         .isNotEmpty();
     harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
     assertThat(harness.combat.inCombat(alice.getUniqueId())).isFalse();
+  }
+
+  @Test
+  void hitsInASealedWorldTagNobodyAndLoggingOutThereNeverKills() {
+    harness.sealed.seal("arena");
+    var arena = harness.server.addSimpleWorld("arena");
+    arena.loadChunk(0, 0);
+    var alice = harness.server.addPlayer("Alice");
+    var bob = harness.server.addPlayer("Bob");
+    alice.teleport(new Location(arena, 0.5, 5, 0.5));
+    bob.teleport(new Location(arena, 2.5, 5, 0.5));
+
+    new LivingEntitySimulation((LivingEntityMock) alice).simulateDamage(1.0, bob);
+
+    assertThat(harness.combat.inCombat(alice.getUniqueId())).isFalse();
+    assertThat(harness.combat.inCombat(bob.getUniqueId())).isFalse();
+
+    // A tag earned outside, carried into the match: leaving from inside it is not a combat log.
+    harness.combat.hit(bob.getUniqueId(), alice.getUniqueId());
+    alice.disconnect();
+
+    assertThat(alice.isDead()).isFalse();
+    assertThat(harness.combat.inCombat(alice.getUniqueId())).isFalse();
+    assertThat(harness.graves.all()).isEmpty();
   }
 
   @Test

@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
@@ -50,6 +51,7 @@ final class RtpFlow {
   private final Warmups warmups;
   private final RtpPricing pricing;
   private final ChunkTickets tickets;
+  private final SealedWorlds sealed;
 
   RtpFlow(Ports ports, ModuleContext context, QolConfig config, LandingMemory memory) {
     this.worlds = ports.worlds();
@@ -64,6 +66,7 @@ final class RtpFlow {
     this.pricing =
         new RtpPricing(config.freeForDuration(), config.cooldownDuration(), config.cost());
     this.tickets = context.services().require(ChunkTickets.class);
+    this.sealed = context.services().require(SealedWorlds.class);
   }
 
   Warmups warmups() {
@@ -404,8 +407,12 @@ final class RtpFlow {
   }
 
   private Optional<World> destination(Player player, String worldName, Optional<String> biome) {
+    if (sealed.isSealed(player.getWorld())) {
+      player.sendMessage(Messages.error("You can't random teleport out of this world."));
+      return Optional.empty();
+    }
     var wild = worlds.named(worldName);
-    if (wild.isEmpty() || !wild.get().rtp()) {
+    if (wild.isEmpty() || !wild.get().rtp() || sealed.isSealed(worldName)) {
       player.sendMessage(Messages.error("That world is not open for a random teleport."));
       return Optional.empty();
     }

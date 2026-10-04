@@ -1,0 +1,73 @@
+# Red Warfare Search and Destroy. Owned by the repository; the plugin never
+# writes it. Every key is required, unknown keys are errors, durations are
+# ISO-8601 (PT90S, PT10M).
+#
+# Kits live in rwf/kits.yml and maps in rwf/maps/<id>/ (map.yml + blocks.schem).
+
+# The world matches run in. An operator provisions it through Multiverse (a
+# flat or void world is fine; the maps bring their own terrain) and it must be
+# loaded before TheStorm enables. The module seals it: every other module
+# leaves it alone.
+world: rwf
+
+# Where players wait before a match (the training-yard lobby platform) and
+# where a player stands when no match places them elsewhere.
+lobby: { x: 31.5, y: 78.0, z: 31.5, yaw: 0.0, pitch: 0.0 }
+spectator: { x: 31.5, y: 76.0, z: 31.5, yaw: 0.0, pitch: 45.0 }
+
+match:
+  # A match counts down and starts only with at least this many humans.
+  minHumans: 1
+  # Bots fill the match up to this many combatants when the rwfbots module is
+  # enabled; without it matches are humans only.
+  targetCombatants: 8
+  maxCombatants: 100
+  # From enough humans to going live, as Red Warfare had it.
+  countdown: PT90S
+  # How long the result is shown before the map resets.
+  endLinger: PT15S
+  # A live match with no humans left is stopped, unpaid, after this long.
+  noHumansAbort: PT30S
+
+# The ported Red Warfare constants this build plays by. They are pinned: the
+# module refuses to start if a value here disagrees with the code, so this
+# file always documents the rules in force.
+rules:
+  fuseSeconds: 60
+  craterRadius: 6
+  poisonTimer: PT10M
+  poisonGrace: PT1M
+  attackSpeedModifier: 200.0
+  steakHealth: 8.0
+  hunger: false
+
+rewards:
+  # Red Warfare paid 3 credits for a win and 1 for a loss (pinned).
+  win: 3
+  lose: 1
+  # The share of a payout when every other combatant is a bot (pinned).
+  botFloor: 0.25
+  # The most credits one player earns from matches in a day.
+  dailyCap: 30
+  # Matches shorter than this pay nobody.
+  minMatchLength: PT1M
+  timeZone: America/Los_Angeles
+
+recording:
+  # Every match is recorded under pseudonyms (positions, actions, results)
+  # for review and bot training; players are told so on entry. Turn this off
+  # to record nothing.
+  enabled: true
+  # Under plugins/TheStorm, as <directory>/yyyy/MM/dd/<matchId>.rwfrec.gz.
+  directory: rwf-recordings
+  retentionDays: 30
+  # 2 GiB.
+  maxBytes: 2147483648
+  # The environment variable holding the pseudonym salt. Required when
+  # recording is enabled; enabling fails loudly without it.
+  saltEnv: RWF_RECORDING_SALT
+
+loadtest:
+  # Whether /rwf admin loadtest <n> may fill the lobby with bots. Off in
+  # production.
+  enabled: false

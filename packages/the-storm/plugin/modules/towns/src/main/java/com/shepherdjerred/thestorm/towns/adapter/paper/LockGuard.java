@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.towns.app.LockBook;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -32,9 +34,15 @@ final class LockGuard {
   private final BlockKinds kinds;
   private final Notices notices;
   private final TownsState towns;
+  private final SealedWorlds sealed;
 
   record Parts(
-      LockBook book, LockAccess access, BlockKinds kinds, Notices notices, TownsState towns) {}
+      LockBook book,
+      LockAccess access,
+      BlockKinds kinds,
+      Notices notices,
+      TownsState towns,
+      SealedWorlds sealed) {}
 
   LockGuard(Parts parts) {
     this.book = parts.book();
@@ -42,11 +50,17 @@ final class LockGuard {
     this.kinds = parts.kinds();
     this.notices = parts.notices();
     this.towns = parts.towns();
+    this.sealed = parts.sealed();
+  }
+
+  /** True in a world a minigame sealed, where no container is ever locked. */
+  boolean isSealed(World world) {
+    return sealed.isSealed(world);
   }
 
   /** The lock on {@code block}, if it is a lockable container someone locked. */
   @Nullable Lock lockOf(Block block) {
-    if (!kinds.isLockable(block.getType())) {
+    if (!kinds.isLockable(block.getType()) || isSealed(block.getWorld())) {
       return null;
     }
     return book.at(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());

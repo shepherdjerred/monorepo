@@ -23,8 +23,13 @@ layout, layering table and commands.
   suppression check rejects them. Fix the finding instead.
 - Change dependencies only in `plugin/gradle/libs.versions.toml`, then refresh
   locks and verification metadata (README.md).
-- Copying from GPL/LGPL plugins is allowed with the upstream header kept;
-  Citizens (OSL-3.0), Towny and unlicensed code are clean-room only.
+- Copying from GPL/LGPL plugins is allowed with the upstream header kept.
+  Citizens (OSL-3.0) is a runtime plugin and compile-only API dependency for
+  story NPC bodies, survival companions and rwfbots bodies, used only from
+  their Paper/Citizens adapters; never copy or adapt its source.
+  libraryaddict/RedWarfare is ported under the
+  licence recorded in `NOTICE`, with an attribution header on each ported
+  file. Towny and other unlicensed code are clean-room only.
 
 ```bash
 bunx turbo run build typecheck test lint --filter=@shepherdjerred/the-storm

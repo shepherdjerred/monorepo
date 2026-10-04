@@ -64,6 +64,8 @@ val modules =
         "world",
         "tickets",
         "agent",
+        "rwf",
+        "rwfbots",
     )
 
 include("core", "architecture", "dist")
@@ -75,3 +77,9 @@ modules.forEach { name ->
   include(name)
   project(":$name").projectDir = file("modules/$name")
 }
+
+// Offline tooling under tools/: not a gameplay module, so dist never shades it
+// and the architecture project (which analyses dist and modules/*) never sees it.
+include("rwfmap")
+
+project(":rwfmap").projectDir = file("tools/rwfmap")

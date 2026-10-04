@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.e2e;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -11,8 +13,16 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** Builds only disposable synthetic fixtures from the shipped coordinates. */
+/**
+ * Builds only disposable synthetic fixtures from the shipped coordinates, for the modules the
+ * staged config.yml switches on. The full suite enables everything; the e2e suite enables a few
+ * modules and needs only their fixtures (and must not move the main world's spawn into the air).
+ */
 public final class StormFixtures extends JavaPlugin {
+
+  /** A flat world with no terrain at all: the rwf maps bring their own. */
+  private static final String VOID_PRESET =
+      "{\"layers\":[{\"block\":\"minecraft:air\",\"height\":1}],\"biome\":\"minecraft:the_void\"}";
 
   private File content;
   private World world;
@@ -24,36 +34,61 @@ public final class StormFixtures extends JavaPlugin {
     }
     content = new File(getDataFolder().getParentFile(), "TheStorm");
     world = Objects.requireNonNull(getServer().getWorld("world"));
-    world.setSpawnLocation(0, 65, 0);
-    for (var name : java.util.List.of("wilds", "peaks", "mining")) {
+    var modules = section(yaml("config.yml"), "modules");
+    var prepared = new ArrayList<String>();
+    if (enabled(modules, "world", prepared)) {
+      worldFixtures();
+    }
+    if (enabled(modules, "essentials", prepared)) {
+      world.setSpawnLocation(0, 65, 0);
+      stand(section(yaml("essentials.yml"), "spawn"));
+    }
+    if (enabled(modules, "npcs", prepared)) {
+      npcFixtures();
+    }
+    if (enabled(modules, "arena", prepared)) {
+      arenaFixtures();
+    }
+    if (enabled(modules, "shards", prepared)) {
+      shardFixtures();
+    }
+    if (enabled(modules, "seasonal", prepared)) {
+      seasonalFixtures();
+    }
+    if (enabled(modules, "rwf", prepared)) {
+      rwfWorld();
+    }
+    getLogger().info("Prepared synthetic fixtures for Storm modules " + prepared);
+    new PlotFixtures(this).register();
+  }
+
+  /** Whether {@code module} is switched on; a config that omits it is a staging bug. */
+  private static boolean enabled(ConfigurationSection modules, String module, List<String> on) {
+    if (!modules.isBoolean(module)) {
+      throw new IllegalStateException("config.yml does not list module " + module);
+    }
+    if (modules.getBoolean(module)) {
+      on.add(module);
+      return true;
+    }
+    return false;
+  }
+
+  private void worldFixtures() {
+    for (var name : List.of("wilds", "peaks", "mining")) {
       Objects.requireNonNull(
           new WorldCreator(name).type(WorldType.FLAT).generateStructures(false).createWorld());
     }
-    prepareHomes();
-    prepareArena();
-    prepareAltars();
-    prepareSeasonalDoors();
-    getLogger().info("Prepared synthetic fixtures for all Storm modules");
-  }
-
-  private void prepareHomes() {
-    stand(section(yaml("essentials.yml"), "spawn"));
     for (var anchor : yaml("world.yml").getMapList("merchant.anchors")) {
       stand(
           ((Number) anchor.get("x")).doubleValue(),
           ((Number) anchor.get("y")).doubleValue(),
           ((Number) anchor.get("z")).doubleValue());
     }
-    prepareNpcs();
-    prepareArena();
-    prepareAltars();
-    prepareSeasonalDoors();
-    getLogger().info("Prepared synthetic fixtures for all Storm modules");
-    new PlotFixtures(this).register();
   }
 
-  private void prepareNpcs() {
-    for (var name : java.util.List.of("spawn", "quest-givers", "watch")) {
+  private void npcFixtures() {
+    for (var name : List.of("spawn", "quest-givers", "watch")) {
       var npcs = yaml("npcs/" + name + ".yml");
       var homes = section(npcs, "npcs");
       for (var id : homes.getKeys(false)) {
@@ -66,7 +101,7 @@ public final class StormFixtures extends JavaPlugin {
     }
   }
 
-  private void prepareArena() {
+  private void arenaFixtures() {
     var arena = yaml("arena/arenas/colosseum.yml");
     var min = section(arena, "region.min");
     var max = section(arena, "region.max");
@@ -75,10 +110,10 @@ public final class StormFixtures extends JavaPlugin {
         world.getChunkAt(x, z).setForceLoaded(true);
       }
     }
-    for (var name : java.util.List.of("lobby", "spectator", "exit")) {
+    for (var name : List.of("lobby", "spectator", "exit")) {
       stand(section(arena, name));
     }
-    for (var name : java.util.List.of("playerSpawns", "mobSpawns")) {
+    for (var name : List.of("playerSpawns", "mobSpawns")) {
       for (var point : arena.getMapList(name)) {
         stand(
             ((Number) point.get("x")).doubleValue(),
@@ -102,7 +137,7 @@ public final class StormFixtures extends JavaPlugin {
     block(ready.getInt("x"), ready.getInt("y"), ready.getInt("z"), Material.IRON_BLOCK);
   }
 
-  private void prepareAltars() {
+  private void shardFixtures() {
     for (var altar : yaml("shards.yml").getMapList("altars")) {
       block(
           ((Number) altar.get("x")).intValue(),
@@ -112,7 +147,7 @@ public final class StormFixtures extends JavaPlugin {
     }
   }
 
-  private void prepareSeasonalDoors() {
+  private void seasonalFixtures() {
     for (var event : yaml("seasonal.yml").getMapList("events")) {
       // Bukkit exposes nested YAML lists as maps; reload each event as a section.
       var config = new YamlConfiguration();
@@ -130,6 +165,20 @@ public final class StormFixtures extends JavaPlugin {
         }
       }
     }
+  }
+
+  /**
+   * The world rwf.yml names, as an operator would provision it through Multiverse: flat and empty,
+   * loaded before TheStorm enables so the module can seal it and paste its maps.
+   */
+  private void rwfWorld() {
+    var name = Objects.requireNonNull(yaml("rwf.yml").getString("world"), "rwf.yml world");
+    Objects.requireNonNull(
+        new WorldCreator(name)
+            .type(WorldType.FLAT)
+            .generatorSettings(VOID_PRESET)
+            .generateStructures(false)
+            .createWorld());
   }
 
   private YamlConfiguration yaml(String path) {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { rwfTestSettings } from "./rwf-settings.ts";
 
 /**
  * The storm-brain double the server container talks to. It answers both flows
@@ -143,9 +144,13 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
             flag_key: z.enum([
               "the-storm-crier-enabled",
               "the-storm-merchant-enabled",
+              "the-storm-rwf-enabled",
             ]),
             entity_id: z.uuid(),
-            context: z.object({ world: z.literal("world") }).strict(),
+            // The crier and merchant evaluate in the main world; rwf in its own.
+            context: z
+              .object({ world: z.enum(["world", rwfTestSettings.world]) })
+              .strict(),
           })
           .strict()
           .safeParse(body);

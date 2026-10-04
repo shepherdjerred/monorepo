@@ -1,0 +1,77 @@
+id: zathnounpunpro
+name: ZathnounpunPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY1MTQ2MCwKICAicHJvZmlsZUlkIiA6ICJkM2Y4NTQ5YmUwZGY0NGUyOTlmZjkwMDQwZWZjNTQyMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJIYXJvbG90V2FybG90IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2RlMTg4NTNjZjk3MWE3ODg3NWMwMGZiNjY5NzY3ZmUyODUxYWEzMjhiNjU1MDUwYzMyMDliZjVmMjgzYmVmZSIKICAgIH0KICB9Cn0="
+  signature: "AZHD9hezU01feNTu85hmdrQDngCexaWvze3cQ3RlBWl0EXaH0gXUOQ/oOKLMmDHV0odX+hSscURCqg0x9rFR7HcmvwQjHT4RbCWGvFYIoEhYytSaahv0o6ij39tvUNUKn0NAee8yEFkWdpuzGJ/vBNs0c4wLpQiv/lhFNIhHIrHXMn/TWh+r5LlnOeEKTsMpxUqh7Xu2Eit5iuLyXBEJlr0akMF3bS2Ah2W5kx8pc0XZaUfPs0yOmSWRuBOo7G9UXBK3rPLymMbCiJWzZANSHIT3Ql3BqDxPLlJjSHsdFGrIujo2uBiYD5Cam3s+ouAUonyigcy8DOp5aRzGZJDa0pYltnH/youNf0KhFk0bPIac+/OIB37o2Zg8ewvxk1Qb6oNSmPodSE2Isae45xKp96Y65lJAAx6krJPH9mnHJHyp87GkPTzFLYBuvQAdFgBvtOz9niJPl4jnsllOcf8Bz8RdZ1PPtfq2+Cu/C5Sl3Z7R3Kk3T3jBhH6b/1qdWdtuxVkVTv8Vkz4vXhjp4Rgy/24g5wqjoVDJxrQ4Yz/EI9gMOEn3qMaiFRkVgEHFtasMHqCZdMYSj1vqTgXlND9eOhpQLNEr6L/SWmiKug3k5/vigbM/ScxqHX+Rw8hQVfETVnVgAPqeqlbRsbMgFiz8g7MT34UMtte3HQ/hc/nvIFI="
+skill: 0.384
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.03
+  aimErrorDeg: -0.9
+  predictionQuality: -0.16
+  awarenessRadius: 0.72
+  coordination: 0.3
+  aggression: -1.11
+kits:
+  trooper: 0.97
+  longbow: 0.47
+  rewind: 0.29
+roles:
+  defend: 1
+  retake: 0.85
+style:
+  aggression: 0.24
+  patience: 0.9
+  teamplay: 0.57
+  risk: 0.11
+voice:
+  tone:
+    - solemn
+    - formal
+    - stoic
+  verbosity: normal
+  style: "speaks like a gate guard from an old fantasy novel; thee and thou, full sentences"
+lines:
+  greet:
+    - "The gate of {team} is held. Pass if thou art friend."
+    - I take my post beside our bomb. None shall pass.
+    - "Hail, {team}. I shall guard what is ours."
+  onKill:
+    - "Thou shalt not pass, {victim}."
+    - "The gate holds. Rest now, {victim}."
+    - Another challenger falls before the gate.
+  onDeath:
+    - "Well struck, {killer}. The gate weeps."
+    - "I have fallen. Hold the line, {team}!"
+    - Mine watch is ended... for now.
+  onPlant:
+    - "By mine own hand, {bomb} is lit."
+    - The enemy's nuke burns. A rare outing for me.
+  onDefuse:
+    - "{bomb} is quenched. The gate stands."
+    - Not while I draw breath. Defused.
+    - Their fuses sputter out against the gate.
+  onWin:
+    - "Victory for {team}. The gate never fell."
+    - "Let it be written: the bomb was held."
+    - Well fought, all. I return to my post.
+  onLoss:
+    - The gate has fallen. I shall train harder.
+    - "A dark day for {team}. Good game, foes."
+  onLastAlive:
+    - I alone remain. So be it.
+    - "The last guard of {team} stands firm."
+    - Come then. One gate, one guard.
+  taunt:
+    - Approach the bomb at thy peril.
+    - Many have tried this door. Many.
+    - I can wait here all round, friend.
+quirks:
+  - always_gg
+  - stares_down
+rivals:
+  - swiftkrashtim
+  - dizzyzynthun
+bio: Has stood beside the same bomb since the first week of the server, sword drawn, refusing to chase. Keeps a tally of every rusher turned away, and SwiftKrashtim's name fills most of the page.
+batch: 1
+retired: false

@@ -1,0 +1,80 @@
+id: xxpumpkinravenxx
+name: xXPumpkinRavenXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY2NTYzMywKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82Njk0MWJlY2M5YTJjZDg3OGQ5NGY1ODYyNDM2MGI1YjUyNTQwYmRjOWM1YmI5MjhhNTdiNDdkYzg5ZTJkYTMiCiAgICB9CiAgfQp9
+  signature: "qz4HZvZ8datfwIJfQnyMGKJi2fqI5hFYNpRLH7O8ZbHIUmSkkzRO4sgN1eIj/PDc12uP9CW1jl4+gziWfCI8+UXPoexs43yUn5YrltgUgZlv41MJGGbzbGqql1N2gtZyOrj0kBRiI4F09PfKzPdded4X2Dxtf0j7i/FdtEaBQqMJ9F7xiuA8ige/lEFoFzgmay1kX7KJSD2jusB9pQ1NNDvs0WJ1R0HDaLHXPizTsXn15U3Doz0Cr2BG/EwfvzE5dWUiSPRtNZTQBZAZafUabcwr/LK6+fFrI43pW0rvCnxG/qXcSCoUgx10dCUCE2MjMpKqNMx+RFa9XYG7I8bgpyNOB/kAhF/EuNguqj9gAFFaIf4IHPWXoziphVMzbvn36Ae6Kyc3EjKHaiYU1+WH9NzqTZ2bW0Gul0hTsr+ON4j2v5IeW/6CMKTXiB+gy0lGkRLtGveGu/CQexDa5OtqfaeulXn3pPVPH4B5Xun2nfXdQmtQsRBve7Ig6nRruaRKVg2RpdbZP3zd8OiK8rkcgdijHSoO8FgkYWuLKhYwFl97ZYLBLjkOue7FkfmOGC0O6Ete0lFFzqZvZuWpEFxpTBB3e5OpUhXAkt2mI5v1tYpndqByKchH4J04ePD9zuz11SAgWUGS7cKEmLNLSB2fWgxy2xcHP3HmwEEVLV5fuoY="
+skill: 0.523
+archetype: troll
+leverOffsets:
+  aimErrorDeg: 0.34
+  turnRateDegPerTick: -0.65
+  decisionTemperature: -2.5
+  coordination: -1.56
+  technique: 0.45
+kits:
+  trooper: 0.56
+  shortbow: 0.79
+  rewind: 1
+  spy: 0.86
+roles:
+  plant: 0.41
+  escort: 0.27
+  rotate: 0.43
+  hunt: 0.47
+style:
+  aggression: 0.64
+  patience: 0.17
+  teamplay: 0.18
+  risk: 0.96
+voice:
+  tone:
+    - spooky
+    - mischievous
+    - theatrical
+  verbosity: chatty
+  style: "permanent Halloween; spooky puns, cackles written as ehehe, treats every match like a haunted house"
+lines:
+  greet:
+    - "ehehe. the pumpkin patch has opened, {team}."
+    - boo! did i scare you? no? i'll try harder.
+    - who's ready for a haunting? ehehe
+  onKill:
+    - "boo, {victim}! ehehe"
+    - "{victim} has joined the pumpkin patch."
+    - "trick AND treat, {victim}."
+  onDeath:
+    - "noooo my pumpkin. well played {killer}."
+    - i shall return... next match. ehehe
+    - "{killer} carved me up. respect."
+  onPlant:
+    - "{bomb} is lit like a jack-o-lantern!"
+    - "ehehe. tick tock goes {bomb}."
+    - "a little candle for {bomb}. spooky."
+  onDefuse:
+    - "snuffed {bomb} like a candle. ehehe"
+    - no fireworks for you tonight.
+  onWin:
+    - the haunting is complete. ehehe
+    - "{team} wins! candy for everyone!"
+    - spoooooky victory.
+  onLoss:
+    - my pumpkins have been smashed. gg.
+    - "the ghosts of {team} will remember this."
+  onLastAlive:
+    - just me and the shadows now. ehehe
+    - the last pumpkin on the vine...
+    - they can't catch what they can't find. probably.
+  taunt:
+    - i'm behind you. no, the other behind.
+    - ehehehe. you'll never guess my plan. neither will i.
+    - boo. that's it. that's the taunt.
+quirks:
+  - crouch_spam
+  - spins
+  - late_to_everything
+rivals:
+  - grimskiolzu
+  - vividmioxjoukpo
+bio: Wears a carved-pumpkin attitude all year and swears the Spy kit is real because he once saw it in a dream. His favourite target for pranks is VividMioxjoukpo, who jumps every single time.
+batch: 1
+retired: false

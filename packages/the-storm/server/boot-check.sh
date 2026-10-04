@@ -36,8 +36,9 @@ fixtures_jar=$repo/packages/the-storm/plugin/dist/build/libs/TheStormFixtures.ja
 manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json)
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
 plugins+=(TheStorm MCBridge)
-# Every module the owned config switches on must report enabled.
-modules=$(grep -cE '^  [a-z]+: true$' "$repo/packages/the-storm/server/owned/plugins/TheStorm/config.yml")
+# The modules owned/plugins/TheStorm/config.yml enables: 23 of the 25 registered
+# (rwf and rwfbots stay off until the rwf world is provisioned).
+enabled_modules=(agent arena chat companions discord economy essentials mail mechanics messages mobs npcs qol quests seasonal shards shops skills spells tickets towns tracks world)
 # Non-secret fixture: MCBridge disables itself without a token of >= 32 chars.
 bridge_token=storm-boot-check-bridge-fixture-token
 
@@ -111,8 +112,13 @@ boot() { # label [docker run args...]
   fi
   echo "[$label] all ${#plugins[@]} plugins enabled"
   grep -q 'Enabled modules:' "$log" || fail "$label: Storm modules did not start"
-  [[ $(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr ',' '\n' | wc -l) -eq $modules ]] ||
-    fail "$label: expected all $modules Storm modules"
+  # The exact enabled set, not a count: a production module swapped for a
+  # scaffold, or a disabled one switched on, must fail here.
+  local enabled expected
+  enabled=$(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr -d ' ' | tr ',' '\n' | sort | tr '\n' ' ')
+  expected=$(printf '%s\n' "${enabled_modules[@]}" | sort | tr '\n' ' ')
+  [[ "$enabled" == "$expected" ]] ||
+    fail "$label: expected the 23 enabled Storm modules (of 25 registered): $expected; got: $enabled"
   if grep -E 'Could not prepare arenas|Could not validate shard altars|Spawn preparation failed' "$log"; then
     fail "$label: required world fixtures failed"
   fi

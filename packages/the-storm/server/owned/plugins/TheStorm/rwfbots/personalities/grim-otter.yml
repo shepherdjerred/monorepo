@@ -1,0 +1,75 @@
+id: grim-otter
+name: Grim_Otter
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY4Njk2MSwKICAicHJvZmlsZUlkIiA6ICI3Nzc1ZTQ2ZTI2YmY0OTBiODZmMzZmMjkxYTU2MTQ0MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJQW1TcGFkZUZhbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hODNhZTczYmVjM2UwNzZmNDcwYWY2OWE2NjQ2YmQ2MGY2NTM0MTg4NThiODUyZmRhNjJjMmZjMmJhNTU4ZWRhIgogICAgfQogIH0KfQ=="
+  signature: "sAxRoK6yMyz6T+BXbfTzGCJzLw042WkHr82ziHtfoHqGMXnW0lZLlZZlEaCHdqe+BydhDOi/VTRBOTO/Ux6XwCcJLxwY/QSa+AnA0L+deL9jtWTknnj5X3tPWIW82RvRNipaFT5g/XclXdul99st5c4NfSi/HgxIvP9IquSnIyDfOocYGE9PVr9caj+1DhhfDMwQ5IH70WjBLJjE9VnVkKyHwW0Vh4z3NrVLqUb2Uh+BX1ze61SX+QZYAGROfj20Uef7PyWTmBLQbadSrcbWbQsjPNxPeBpRYcTS2ZReV4hTZiCmCBtrMZ5rIg4sbTe43q1dOV2xXNflvx3zQmrIyyRIbaZ/S0UJAq1UrSBhXs6SGOGW2MCr2hXfZZhm9Nreh5bOBcq80uFQFUX6RMCPM7iQVKzzgvYq2XIAMT+yVGbsEK7fNx6+6Ub7md6s734aolfUZz6uXDr6JjuYgMvVQ6Ko2ALz8tiBIoOSGg27K6Cy9JSFwxk8f24vjBDf21eiPu7gHMRT+mpa0VlLfxdRW+PPNpM3oR494CT7OyJ6IM/4rzamS4tjHZVR/i/rFBkocHRgAV+AoikuO+4n4qxpgHJlobSLI34fQjQI1THSL0fD7V3QDLSO6hCJ5CrfnavYMQ1zvdwCbxYXIKM1Aj+VUbSEFCizkQD0afILPD4VyKk="
+skill: 0.783
+archetype: support
+leverOffsets:
+  aimErrorDeg: -0.35
+  awarenessRadius: 0.62
+  coordination: 1.71
+  technique: 0.39
+  aggression: -0.29
+kits:
+  trooper: 0.86
+  longbow: 0.34
+  rewind: 0.69
+roles:
+  escort: 1
+  defend: 0.41
+  retake: 0.4
+style:
+  aggression: 0.3
+  patience: 0.59
+  teamplay: 0.91
+  risk: 0.33
+voice:
+  tone:
+    - calm
+    - terse
+    - dependable
+  verbosity: quiet
+  style: "short steady callouts from a veteran medic; never wastes a word"
+lines:
+  greet:
+    - gapple up, I'll cover
+    - Otter here. Escorting the planter.
+    - "Stay close, {team}."
+  onKill:
+    - "{victim} down. Keep moving."
+    - Cleared. Go plant.
+    - "Got {victim}. You're safe."
+  onDeath:
+    - "Down. Nice hit, {killer}."
+    - I'm out. Eat your gapples.
+    - "Lost me. Stick together, {team}."
+  onPlant:
+    - "{bomb} lit. Hold it."
+    - "Armed {bomb}. Guard the fuse."
+  onDefuse:
+    - "{bomb} safe."
+    - "Defused. Breathe, {team}."
+  onWin:
+    - "Good work, {team}."
+    - gg. Everyone ate. Proud of you.
+  onLoss:
+    - gg. We regroup.
+    - "Next one, {team}."
+  onLastAlive:
+    - Last one. Going quiet.
+    - need backup? on my way. oh. it's me.
+    - "Just me, {team}. Watch."
+  taunt:
+    - Planter's covered.
+    - You'll have to go through me first.
+    - Not on my watch.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - lynxotter0
+  - royal-falcon
+bio: A Search and Destroy veteran who sticks to the planter, shares every sighting and eats the arrows meant for others. Says maybe ten words a match. Has a friendly feud with LynxOtter0 over which animal belongs in a name.
+batch: 1
+retired: false

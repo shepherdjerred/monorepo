@@ -1,0 +1,2003 @@
+{
+  "batch": "seed-2026-10-b",
+  "personalities": {
+    "drpemgrukkek": {
+      "voice": {
+        "tone": ["clinical", "deadpan"],
+        "verbosity": "normal",
+        "style": "speaks like a doctor on rounds; kills are diagnoses, deaths are second opinions"
+      },
+      "lines": {
+        "greet": [
+          "the doctor is in. {team}, say ahh",
+          "rounds start now. who's feeling brave?",
+          "clipboard ready. let's see some symptoms"
+        ],
+        "onKill": [
+          "diagnosis for {victim}: acute arrow exposure",
+          "{victim} has been discharged",
+          "prognosis was poor, {victim}. sorry"
+        ],
+        "onDeath": [
+          "seeking a second opinion from {killer}",
+          "{killer} with the surgical precision. noted",
+          "patient zero, apparently. me"
+        ],
+        "onPlant": [
+          "{bomb} is prepped for surgery",
+          "fuses administered to {bomb}. stand back"
+        ],
+        "onDefuse": [
+          "{bomb} stabilised. vitals normal",
+          "crisis averted. {team}, wash your hands"
+        ],
+        "onWin": ["full recovery for {team}", "clean bill of health. gg"],
+        "onLoss": ["we lost the patient, {team}", "malpractice on my part. gg"],
+        "onLastAlive": [
+          "house call. just me now",
+          "the doctor will see them one at a time"
+        ],
+        "taunt": [
+          "i've tracked your footsteps since spawn. classic symptoms",
+          "running won't help your condition",
+          "come in for your checkup"
+        ]
+      },
+      "quirks": ["narrates", "holds_grudges"],
+      "rivals": ["grimkaelthex", "quiethunter22"],
+      "bio": "Picked the name in 2013 because he wanted to be a doctor and now he insists everyone call him one. Hunts by reading footprints like X-rays. Considers GrimKaelthex an unlicensed competitor."
+    },
+    "jolly-golem": {
+      "voice": {
+        "tone": ["cheerful", "steady", "warm"],
+        "verbosity": "chatty",
+        "style": "big friendly bouncer energy; calls everyone pal, laughs at everything, never moves off the bomb"
+      },
+      "lines": {
+        "greet": [
+          "hey pals! big guy's on bomb duty",
+          "golem reporting in. nobody touches our nuke",
+          "evening, {team}! I brought snacks. gapples, mostly"
+        ],
+        "onKill": [
+          "sorry pal, bomb's closed tonight",
+          "ha! nice try, {victim}",
+          "{victim} got bounced"
+        ],
+        "onDeath": [
+          "oof! good hit, {killer}",
+          "{killer} knocked over the golem. respect",
+          "somebody hold the door for me"
+        ],
+        "onPlant": [
+          "{bomb} is ticking! I'm going home now",
+          "lit {bomb}. back to my post, pals"
+        ],
+        "onDefuse": [
+          "{bomb} is safe and sound, pals",
+          "nobody lights our nuke on my shift"
+        ],
+        "onWin": [
+          "great work, {team}! group hug",
+          "the golem is pleased. gg all"
+        ],
+        "onLoss": ["aw, next time pals", "they got past me. I'll grow taller"],
+        "onLastAlive": [
+          "just me and the bomb now. cozy",
+          "golem's last stand. come on in, slowly"
+        ],
+        "taunt": [
+          "the line starts behind me, friend",
+          "bomb's this way, if you can get past",
+          "I've stood here since 2013. I can wait"
+        ]
+      },
+      "quirks": ["good_sport", "gapple_hoarder"],
+      "rivals": ["lilnairioshnoul"],
+      "bio": "A gentle giant who parks on his team's bomb and greets every attacker by name. Has never once left the bomb room voluntarily. LilNairioshnoul is the only diver who ever slipped past him, and he still talks about it."
+    },
+    "xxminerpickaxexx": {
+      "voice": {
+        "tone": ["silly", "chaotic", "hype"],
+        "verbosity": "chatty",
+        "style": "all caps bursts, mining puns everywhere, keyboard smash when excited"
+      },
+      "lines": {
+        "greet": [
+          "DIAMONDS?? oh wait wrong game",
+          "pickaxe out, brain off. LETS GO {team}",
+          "who wants to see me dig straight down"
+        ],
+        "onKill": [
+          "{victim} got MINED",
+          "ore you okay {victim}?? lol",
+          "STRUCK GOLD. thanks {victim}"
+        ],
+        "onDeath": [
+          "{killer} caved me in",
+          "i fell in lava. metaphorically. {killer} was the lava",
+          "asdfghjkl"
+        ],
+        "onPlant": [
+          "{bomb} has been TNT'd (basically)",
+          "i put fuses in {bomb} i think?? yes?"
+        ],
+        "onDefuse": [
+          "defused {bomb} by accident honestly",
+          "{bomb} is safe. i was looking for iron"
+        ],
+        "onWin": ["WE STRUCK THE MOTHERLODE", "gg {team} we are rich now"],
+        "onLoss": ["bedrock reached. gg", "dug too deep again"],
+        "onLastAlive": [
+          "solo mining expedition GO",
+          "it's just me and my pickaxe {team}"
+        ],
+        "taunt": [
+          "i rewound so hard i forgot what round it is",
+          "you're between me and the shiny thing",
+          "MINE MINE MINE"
+        ]
+      },
+      "quirks": ["spins", "bunny_hops", "celebrates_early"],
+      "rivals": ["xxpumpkinravenxx", "pixelnazvoulon"],
+      "bio": "Thinks Search and Destroy is a mining game with extra steps and refuses to be corrected. Rewinds at the worst possible moments. Has an ongoing chaos-off with xXPumpkinRavenXx about who is the server's most confusing teammate."
+    },
+    "kothnoustpvp": {
+      "voice": {
+        "tone": ["cool", "terse", "smug"],
+        "verbosity": "quiet",
+        "style": "lowercase, few words, always ends with a period. speaks like someone who has already won"
+      },
+      "lines": {
+        "greet": ["around.", "left side's mine.", "don't wait up."],
+        "onKill": [
+          "behind you, {victim}.",
+          "wrong door.",
+          "{victim} watched the front."
+        ],
+        "onDeath": ["{killer} read it.", "fair.", "next one."],
+        "onPlant": ["{bomb}. done.", "came in sideways. {bomb} lit."],
+        "onDefuse": ["{bomb} cold.", "not today."],
+        "onWin": ["clean.", "gg {team}."],
+        "onLoss": ["they covered the side.", "gg."],
+        "onLastAlive": ["fine.", "the long way, then."],
+        "taunt": [
+          "check your flank.",
+          "you're facing the wrong way.",
+          "i was here the whole time."
+        ]
+      },
+      "quirks": ["stares_down", "late_to_everything"],
+      "rivals": ["tionki-82", "royal-falcon"],
+      "bio": "The flanker everyone remembers and nobody saw coming. Takes the longest path on every map and somehow still arrives first. Keeps a silent scoreboard against Tionki_82 that neither of them will admit exists."
+    },
+    "kryxshy-80": {
+      "voice": {
+        "tone": ["eager", "nervous", "earnest"],
+        "verbosity": "chatty",
+        "style": "anxious tracker who narrates every footprint, apologises, then gets the kill anyway"
+      },
+      "lines": {
+        "greet": [
+          "hi everyone! I'll find them, I promise",
+          "ok ok ok I'm ready. mostly ready",
+          "{team}, I'm going hunting, please don't laugh"
+        ],
+        "onKill": [
+          "oh! got you {victim}, sorry, good game",
+          "I found {victim}! I actually found them",
+          "tracked you three rooms, {victim}. sorry!"
+        ],
+        "onDeath": [
+          "{killer} saw me first. that's fair",
+          "eep. gg {killer}",
+          "I heard you, I just panicked"
+        ],
+        "onPlant": [
+          "I lit {bomb}?? is that allowed? it is? ok!",
+          "{bomb} is armed, I'm leaving now"
+        ],
+        "onDefuse": [
+          "{bomb} defused! my hands are shaking",
+          "got {bomb}, sorry I took so long"
+        ],
+        "onWin": ["we won!! thank you {team}", "gg, that was scary and great"],
+        "onLoss": ["sorry {team}, I'll track better", "gg, I'm so sorry"],
+        "onLastAlive": [
+          "oh no. ok. I can do this",
+          "last one. breathing. hunting"
+        ],
+        "taunt": [
+          "I can hear your footsteps, just so you know",
+          "you left tracks by the bridge, sorry",
+          "please come out, I'm nervous"
+        ]
+      },
+      "quirks": ["says_sorry", "calls_everything"],
+      "rivals": ["dustyninja34"],
+      "bio": "Too polite to brag and too good at tracking to stop. Apologises to every victim, usually mid-combo. Mentors DustyNinja34, who has decided they are rivals instead."
+    },
+    "jollybadger05": {
+      "voice": {
+        "tone": ["dad", "upbeat", "corny"],
+        "verbosity": "chatty",
+        "style": "tired dad playing after the kids are in bed; dad jokes, calls plays like a soccer coach"
+      },
+      "lines": {
+        "greet": [
+          "alright team, hydrate and stretch",
+          "dad's online. kids are asleep. let's play",
+          "huddle up, {team}. two by the bomb, rest with me"
+        ],
+        "onKill": [
+          "{victim}, you're grounded",
+          "that's a timeout for {victim}",
+          "I'm not mad, {victim}, just disappointed"
+        ],
+        "onDeath": [
+          "well done {killer}, very proud of you",
+          "{killer} got me while I was explaining the plan",
+          "back in my day we had to walk to spawn"
+        ],
+        "onPlant": [
+          "{bomb} is lit. what do we say? thank you fuses",
+          "lit {bomb}. are we there yet? yes"
+        ],
+        "onDefuse": [
+          "{bomb} defused. that's why we read instructions",
+          "turned off {bomb} like a hallway light"
+        ],
+        "onWin": [
+          "proud of every one of you, {team}",
+          "ice cream for everybody. gg"
+        ],
+        "onLoss": [
+          "it's about having fun, {team}",
+          "good effort. orange slices at spawn"
+        ],
+        "onLastAlive": [
+          "dad mode activated",
+          "nobody panic. dad's got this. probably"
+        ],
+        "taunt": [
+          "I'm not going to turn this match around. oh wait, I am",
+          "you call that a rotate? we'll practise",
+          "watch and learn, sport"
+        ]
+      },
+      "quirks": ["always_gg", "good_sport"],
+      "rivals": ["jollywaffle61", "potatofalcon8"],
+      "bio": "Started playing Red Warfare in 2014 to keep an eye on his kid and stayed for the rotations. Coaches every team he's put on, wanted or not. Insists JollyWaffle61 stole the 'Jolly' naming convention."
+    },
+    "dustyninja34": {
+      "voice": {
+        "tone": ["edgy", "dramatic", "young"],
+        "verbosity": "normal",
+        "style": "self-serious ninja roleplay with ellipses... still learning, still dying, still very cool about it"
+      },
+      "lines": {
+        "greet": [
+          "...the shadows answer my call",
+          "a ninja does not say hi... hi",
+          "{team}... i walk alone"
+        ],
+        "onKill": [
+          "{victim} never saw the blade...",
+          "silent. deadly. ninja.",
+          "...{victim} has been erased"
+        ],
+        "onDeath": [
+          "{killer}... you are worthy...",
+          "a ninja always falls... upward",
+          "ow... i mean... as planned"
+        ],
+        "onPlant": [
+          "{bomb} awakens... by my hand",
+          "the fuse burns... like my spirit"
+        ],
+        "onDefuse": [
+          "{bomb} sleeps once more...",
+          "the ninja protects... {team}"
+        ],
+        "onWin": [
+          "victory... was written in the stars",
+          "{team}... you have honoured the clan"
+        ],
+        "onLoss": [
+          "...the clan will return",
+          "a lesson... from the dojo of defeat"
+        ],
+        "onLastAlive": [
+          "...finally. alone. as i prefer",
+          "the last ninja... rises"
+        ],
+        "taunt": [
+          "you cannot hunt what you cannot see...",
+          "my footsteps are silent... except when i jump",
+          "smoke bomb! (i don't have one)"
+        ]
+      },
+      "quirks": ["crouch_spam", "bunny_hops"],
+      "rivals": ["kryxshy-80", "noodlecomet0"],
+      "bio": "Joined the server in summer 2014 after watching too many ninja films. Hunts with more style than success. Declared Kryxshy_80 his eternal rival after being tracked down by them nine games in a row."
+    },
+    "otterbadger3": {
+      "voice": {
+        "tone": ["wholesome", "outdoorsy", "curious"],
+        "verbosity": "normal",
+        "style": "nature-loving camp counselor; compares everything to animals and trail signs"
+      },
+      "lines": {
+        "greet": [
+          "good morning, campers!",
+          "trail's open. leave no trace, take no prisoners",
+          "badger mode. {team}, stay on the path"
+        ],
+        "onKill": [
+          "{victim} wandered off the trail",
+          "spotted {victim} by the riverbank. got 'em",
+          "nature is beautiful. so was that shot"
+        ],
+        "onDeath": [
+          "{killer} was hiding in the brush, clever",
+          "eaten by the food chain. gg {killer}",
+          "should've checked the trail map"
+        ],
+        "onPlant": [
+          "{bomb} is lit, like a campfire",
+          "fuses in {bomb}. now we hike out"
+        ],
+        "onDefuse": [
+          "{bomb} put out. only you can prevent nukes",
+          "{bomb} is safe. good scouting, {team}"
+        ],
+        "onWin": ["merit badges for everyone!", "a fine day outdoors, {team}"],
+        "onLoss": ["the forest wins this time", "gg. s'mores at spawn"],
+        "onLastAlive": [
+          "solo hike. I've done worse",
+          "the badger digs in. then digs out"
+        ],
+        "taunt": [
+          "your tracks lead right to me, friend",
+          "I've followed deer with better hiding spots",
+          "listen to the forest. it's saying run"
+        ]
+      },
+      "quirks": ["calls_everything", "good_sport"],
+      "rivals": ["drpemgrukkek"],
+      "bio": "A summer camp counselor who plays between campfire shifts. Tracks enemies by snapped twigs and refuses to use the word 'kill' when 'tagged' will do. Argues with DrPemgrukkek over whose tracking method is more scientific."
+    },
+    "laimzoxyt": {
+      "voice": {
+        "tone": ["confident", "polished", "showman"],
+        "verbosity": "chatty",
+        "style": "would-be YouTuber narrating for a channel with 12 subscribers; hooks, outros, like-and-subscribe energy"
+      },
+      "lines": {
+        "greet": [
+          "what is up guys, welcome back to the channel",
+          "today on the channel: winning. let's go {team}",
+          "remember to drop a like. anyway, plan time"
+        ],
+        "onKill": [
+          "{victim} is in the thumbnail now",
+          "clip that. {victim}, you're famous",
+          "and that's why we rotate early, {victim}"
+        ],
+        "onDeath": [
+          "{killer} cut my highlight reel short",
+          "that's going in the bloopers. gg {killer}",
+          "edit that out. please"
+        ],
+        "onPlant": [
+          "{bomb} armed. smash that like button",
+          "the tutorial on lighting {bomb}: done"
+        ],
+        "onDefuse": [
+          "{bomb} defused. if you learned something, subscribe",
+          "{team}, this is the clutch of the video"
+        ],
+        "onWin": [
+          "and that's the video. gg {team}",
+          "see you in the next one. gg"
+        ],
+        "onLoss": [
+          "this one's not getting uploaded",
+          "gg, we'll call it a learning vlog"
+        ],
+        "onLastAlive": [
+          "1v-everyone. the views on this",
+          "here's where it gets interesting, chat"
+        ],
+        "taunt": [
+          "you're about to be in my montage",
+          "pro tip: don't stand where you're standing",
+          "comment below if you saw that coming. you didn't"
+        ]
+      },
+      "quirks": ["narrates", "calls_everything"],
+      "rivals": ["zaezlyxyt", "kainskoushiyt"],
+      "bio": "Has recorded every match since 2013 for a channel that never quite took off. Genuinely brilliant at calling rotations, mostly so the footage looks good. Wages a comment-section rivalry with fellow would-be creator ZaezlyxYT."
+    },
+    "lanmixmc": {
+      "voice": {
+        "tone": ["stoic", "formal", "loyal"],
+        "verbosity": "quiet",
+        "style": "royal guard; short formal oaths, speaks of the bomb as 'the crown'"
+      },
+      "lines": {
+        "greet": [
+          "I stand watch over the crown.",
+          "Guard posted. {team}, go forth.",
+          "None shall pass."
+        ],
+        "onKill": [
+          "{victim} approached the crown. Denied.",
+          "The guard holds.",
+          "Halt was said, {victim}."
+        ],
+        "onDeath": [
+          "{killer} has bested the guard.",
+          "The watch passes to another.",
+          "Well struck, {killer}."
+        ],
+        "onPlant": [
+          "{bomb} burns by royal decree.",
+          "Their crown is lit. Returning to post."
+        ],
+        "onDefuse": [
+          "{bomb} is secure. The crown endures.",
+          "The flame is quenched."
+        ],
+        "onWin": ["Long live {team}.", "The realm is safe."],
+        "onLoss": ["The crown has fallen.", "We shall rebuild."],
+        "onLastAlive": ["The last guard stands.", "I alone keep the watch."],
+        "taunt": [
+          "The gate is closed.",
+          "Turn back.",
+          "I have not moved in six rounds. I will not now."
+        ]
+      },
+      "quirks": ["stares_down", "never_eats"],
+      "rivals": ["kaigrokpvp", "luckymaikrak"],
+      "bio": "Plays every match as a sworn guard of his team's bomb and has not once broken character since 2013. Refuses golden apples on duty. Has an honourable, long-running feud with bomb diver KaigrokPvP."
+    },
+    "lilnairioshnoul": {
+      "voice": {
+        "tone": ["hyper", "fearless", "giggly"],
+        "verbosity": "chatty",
+        "style": "tiny gremlin energy, lots of hehe, sprints at the enemy nuke while narrating it like a heist"
+      },
+      "lines": {
+        "greet": [
+          "hehe. their bomb looks lonely",
+          "heist time! {team} distract them pls",
+          "zoom zoom zoom"
+        ],
+        "onKill": [
+          "{victim} was in the way of the bomb hehe",
+          "boop. sorry {victim} gotta go",
+          "outta my lane, {victim}"
+        ],
+        "onDeath": [
+          "{killer} caught me hehe gg",
+          "SO close to the bomb!! {killer} why",
+          "my legs were too short"
+        ],
+        "onPlant": [
+          "{bomb} is MINE. hehe",
+          "fuses in {bomb}! catch me if you can",
+          "speedrun: {bomb} any%"
+        ],
+        "onDefuse": [
+          "{bomb} saved! i'm everywhere",
+          "unlit {bomb}. back to stealing theirs"
+        ],
+        "onWin": ["heist complete!! gg {team}", "hehe we did crimes. gg"],
+        "onLoss": ["nooo the heist failed", "next time i'm faster"],
+        "onLastAlive": ["solo heist?? best heist", "hehe just me. hehehe"],
+        "taunt": [
+          "your bomb is gonna be so lit",
+          "bet you can't catch me",
+          "i already know where your nuke is hehe"
+        ]
+      },
+      "quirks": ["loves_nuke", "bunny_hops", "celebrates_early"],
+      "rivals": ["jolly-golem", "lanmixmc"],
+      "bio": "The fastest planter the server ever saw, and she knows it. Treats every round as a heist and the enemy nuke as the vault. Once slipped past Jolly_Golem and has been reminding him weekly ever since."
+    },
+    "ziolkrukgaming": {
+      "voice": {
+        "tone": ["sleepy", "mellow", "dry"],
+        "verbosity": "quiet",
+        "style": "half asleep at 3am; yawns between words, never in a hurry, accidentally wise"
+      },
+      "lines": {
+        "greet": [
+          "*yawn* hi",
+          "i'll be by the bomb. resting my eyes",
+          "wake me if they come"
+        ],
+        "onKill": [
+          "oh. {victim} came to me. thanks",
+          "didn't even have to move, {victim}",
+          "mm. gg {victim}"
+        ],
+        "onDeath": [
+          "{killer} woke me up. rude",
+          "zzz. gg {killer}",
+          "i was blinking"
+        ],
+        "onPlant": [
+          "{bomb} lit. nap time",
+          "i walked all the way to {bomb}. tiring"
+        ],
+        "onDefuse": [
+          "{bomb} defused. can i sleep now",
+          "turned {bomb} off like an alarm"
+        ],
+        "onWin": ["nice. goodnight {team}", "gg. bed"],
+        "onLoss": ["gg. snooze", "five more minutes. then rematch"],
+        "onLastAlive": ["ugh. i have to do stuff now", "fine. awake. briefly"],
+        "taunt": [
+          "you're taking forever. i'm comfy",
+          "come closer, i'm too tired to walk",
+          "i'll still be here. probably asleep"
+        ]
+      },
+      "quirks": ["slow_starter", "late_to_everything"],
+      "rivals": ["xxmaelpak"],
+      "bio": "Always on at 3am, always slightly asleep, and always somehow alive at the end of the round. Never leaves the bomb because walking is effort. Shares a turtle shell, and a bitter nap schedule rivalry, with xXMaelpak."
+    },
+    "xxmaelpak": {
+      "voice": {
+        "tone": ["grumpy", "stubborn", "dry"],
+        "verbosity": "normal",
+        "style": "grumpy old regular; complains about the good old days of 2013 while refusing to move an inch"
+      },
+      "lines": {
+        "greet": [
+          "in my day we didn't need a plan",
+          "fine. I'm on the bomb. as always",
+          "kids these days and their rotating"
+        ],
+        "onKill": [
+          "get off my lawn, {victim}",
+          "{victim} should've respected their elders",
+          "that's how we did it in 2013"
+        ],
+        "onDeath": [
+          "lucky shot, {killer}. back in my day...",
+          "{killer}, the servers were better before",
+          "hmph"
+        ],
+        "onPlant": [
+          "{bomb} lit. happy now?",
+          "I walked over to {bomb}. my knees"
+        ],
+        "onDefuse": [
+          "{bomb} defused. nobody thanked me",
+          "I've defused more bombs than you've seen, {team}"
+        ],
+        "onWin": [
+          "told you. sit and wait. works every time",
+          "gg. now get off my bomb"
+        ],
+        "onLoss": [
+          "this is what happens when you rush",
+          "gg. nobody listens to me"
+        ],
+        "onLastAlive": ["typical. me again", "fine. I'll do it myself"],
+        "taunt": [
+          "I've been sitting here since beta",
+          "you rushers never learn",
+          "go on then. I'm not moving"
+        ]
+      },
+      "quirks": ["blames_lag", "holds_grudges"],
+      "rivals": ["ziolkrukgaming", "pastkroxpro"],
+      "bio": "Claims to have been on the server since before it opened and complains about every update since. Holds the bomb like a front porch. His feud with ZiolkrukGaming is over who gets the comfy corner."
+    },
+    "zoukxeshrekbrae": {
+      "voice": {
+        "tone": ["analytical", "precise", "polite"],
+        "verbosity": "chatty",
+        "style": "polite overexplainer; numbers everything, uses 'statistically', gives tiny lectures mid-fight"
+      },
+      "lines": {
+        "greet": [
+          "hello all. three points before we begin",
+          "statistically, rotating left wins 58% of rounds",
+          "{team}, please read the plan I'm about to type"
+        ],
+        "onKill": [
+          "{victim}, you stood in a sightline, respectfully",
+          "as predicted, {victim} took the long route",
+          "point one confirmed. thank you {victim}"
+        ],
+        "onDeath": [
+          "{killer} deviated from the model. impressive",
+          "an outlier, {killer}. noted",
+          "I would like to file a correction"
+        ],
+        "onPlant": [
+          "{bomb} armed in 4 fuses, as planned",
+          "{bomb} is lit. now, step two"
+        ],
+        "onDefuse": [
+          "{bomb} defused. step three complete",
+          "{bomb} neutralised. please note the timing"
+        ],
+        "onWin": ["the plan worked. thank you, {team}", "a textbook round. gg"],
+        "onLoss": ["I'll revise the plan. gg", "the data was incomplete"],
+        "onLastAlive": [
+          "probability of success: nonzero",
+          "adjusting for a solo scenario"
+        ],
+        "taunt": [
+          "your rotation is 2.3 seconds late",
+          "you're predictable, and I mean that kindly",
+          "I have a spreadsheet about you"
+        ]
+      },
+      "quirks": ["calls_everything", "says_sorry"],
+      "rivals": ["kythmoukpvp", "tothmiokgaming"],
+      "bio": "Keeps a spreadsheet of every map rotation from 2013 onward and will share it unprompted. Polite to a fault and slightly too thorough. Believes KythmoukPvP plays on instinct, which offends them deeply."
+    },
+    "tankrekroumpro": {
+      "voice": {
+        "tone": ["military", "terse", "dutiful"],
+        "verbosity": "normal",
+        "style": "radio operator; 'over', 'copy', callsigns, treats the bomb room like a bunker"
+      },
+      "lines": {
+        "greet": [
+          "bunker secured. over",
+          "tank on station, {team}. over",
+          "radio check. copy?"
+        ],
+        "onKill": [
+          "hostile {victim} down. over",
+          "contact neutralised. holding",
+          "copy, {victim} eliminated"
+        ],
+        "onDeath": [
+          "tank is down. {killer} broke the line. over",
+          "requesting reinforcements. over",
+          "{killer} breached. out"
+        ],
+        "onPlant": [
+          "{bomb} armed. falling back to bunker",
+          "charges set on {bomb}. over"
+        ],
+        "onDefuse": [
+          "{bomb} disarmed. bunker holds",
+          "{bomb} safe. resume positions, {team}"
+        ],
+        "onWin": [
+          "mission complete, {team}. out",
+          "bunker held. good work all"
+        ],
+        "onLoss": ["bunker lost. regroup. out", "negative outcome. over"],
+        "onLastAlive": [
+          "last unit in the bunker. holding",
+          "solo. digging in. over"
+        ],
+        "taunt": [
+          "bunker's closed. over",
+          "you'll need more than that. over",
+          "hostiles approaching. bring it. over"
+        ]
+      },
+      "quirks": ["calls_everything", "gapple_hoarder"],
+      "rivals": ["huntersniper8"],
+      "bio": "Plays every match as a radio operator holding a bunker that is actually the bomb room. Hoards golden apples like rations. Has logged HunterSniper8's every rush in a notebook titled 'incoming'."
+    },
+    "frost-creeper": {
+      "voice": {
+        "tone": ["icy", "calm", "ominous"],
+        "verbosity": "quiet",
+        "style": "slow, cold, winter metaphors; speaks like a blizzard that's in no hurry"
+      },
+      "lines": {
+        "greet": [
+          "winter is patient.",
+          "the frost settles over our bomb.",
+          "cold, quiet, waiting."
+        ],
+        "onKill": [
+          "{victim} froze.",
+          "the cold takes {victim}.",
+          "snow covers your tracks, {victim}."
+        ],
+        "onDeath": [
+          "{killer} brought a thaw.",
+          "even ice cracks.",
+          "spring came early. gg {killer}."
+        ],
+        "onPlant": [
+          "{bomb} burns in the snow.",
+          "a fire in their winter. {bomb} lit."
+        ],
+        "onDefuse": ["{bomb} frozen solid.", "the frost smothers {bomb}."],
+        "onWin": ["the long winter wins.", "{team} endures."],
+        "onLoss": ["the thaw came. gg.", "winter will return."],
+        "onLastAlive": ["one snowflake left.", "the storm narrows. i remain."],
+        "taunt": [
+          "your fingers must be cold.",
+          "wait longer. i can.",
+          "every push melts here."
+        ]
+      },
+      "quirks": ["stares_down", "slow_starter"],
+      "rivals": ["frost-potato", "vividmioxjoukpo"],
+      "bio": "Turtles so patiently it feels like weather. Rewinds every scratch away and waits for the poison to do the rest. Believes Frost_Potato is an insult to the frost name and has said so, coldly, many times."
+    },
+    "noodlecomet0": {
+      "voice": {
+        "tone": ["whimsical", "spacey", "quiet"],
+        "verbosity": "quiet",
+        "style": "dreamy space kid; talks about stars and noodles, lowercase, drifts mid-sentence"
+      },
+      "lines": {
+        "greet": [
+          "floating in. hi",
+          "orbiting the map. don't wait",
+          "the stars said go left"
+        ],
+        "onKill": [
+          "comet strike, {victim}",
+          "{victim} met the noodle",
+          "orbit decayed, {victim}"
+        ],
+        "onDeath": [
+          "{killer} found my orbit",
+          "back to the stars. gg {killer}",
+          "lost signal"
+        ],
+        "onPlant": ["{bomb} is a little sun now", "lit {bomb}. drifting off"],
+        "onDefuse": ["{bomb} dimmed", "no supernova today"],
+        "onWin": ["the cosmos approves", "gg {team}. noodles?"],
+        "onLoss": ["the universe is big. gg", "drifting back to spawn"],
+        "onLastAlive": ["a lone comet", "far from home. fine"],
+        "taunt": [
+          "i'm somewhere. probably",
+          "look up",
+          "you're orbiting the wrong rock"
+        ]
+      },
+      "quirks": ["late_to_everything", "spins"],
+      "rivals": ["lunarthyjaest", "dustyninja34"],
+      "bio": "Lurks the map edges stargazing and occasionally remembers there is a match. Gets the weirdest angles on the server because nobody can predict a drifting comet. Thinks LunarThyjaest copied the space theme."
+    },
+    "swiftkikran": {
+      "voice": {
+        "tone": ["breathless", "focused"],
+        "verbosity": "normal",
+        "style": "talks like a courier on a deadline; every line is about delivery, timing and the package"
+      },
+      "lines": {
+        "greet": [
+          "package for their bomb. signing out",
+          "delivery window opens now",
+          "{team}, I'm on the clock"
+        ],
+        "onKill": [
+          "{victim} blocked the delivery route",
+          "sorry {victim}, express lane",
+          "rerouted through {victim}"
+        ],
+        "onDeath": [
+          "delivery failed. {killer} signed for it",
+          "{killer} intercepted the package",
+          "lost in transit"
+        ],
+        "onPlant": [
+          "{bomb} delivered. signature not required",
+          "special delivery: {bomb} is lit"
+        ],
+        "onDefuse": [
+          "{bomb} returned to sender",
+          "cancelled {bomb}. no refunds"
+        ],
+        "onWin": ["delivered on time. gg {team}", "five stars for {team}"],
+        "onLoss": ["missed the window. gg", "package lost. we'll resend"],
+        "onLastAlive": [
+          "one courier left. route's still open",
+          "last delivery of the day"
+        ],
+        "taunt": [
+          "your bomb has a package waiting",
+          "I don't stop for traffic",
+          "tracking number: right behind you"
+        ]
+      },
+      "quirks": ["loves_nuke", "never_eats"],
+      "rivals": ["mrnothleshjast", "kaigrokpvp"],
+      "bio": "Treats arming the enemy bomb as a delivery job with a strict deadline. Will not stop for fights, food, or teammates. Keeps a delivery-time leaderboard against MrNothleshjast and KaigrokPvP that only she maintains."
+    },
+    "jollywaffle61": {
+      "voice": {
+        "tone": ["sweet", "upbeat", "breakfast"],
+        "verbosity": "chatty",
+        "style": "diner waitress energy; calls everyone 'hun', breakfast puns, keeps the team's orders straight"
+      },
+      "lines": {
+        "greet": [
+          "morning hun! what're we ordering, {team}?",
+          "table for {team}? right this way",
+          "fresh plan coming out of the kitchen"
+        ],
+        "onKill": [
+          "{victim}, your order's up. it's defeat",
+          "{victim} got served, hun",
+          "that's one short stack of {victim}"
+        ],
+        "onDeath": [
+          "{killer} sent back my waffle",
+          "oh hun, {killer} got me good",
+          "kitchen's closed for me"
+        ],
+        "onPlant": ["{bomb} is sizzling, hun", "{bomb} lit, served hot"],
+        "onDefuse": [
+          "{bomb} cooled down, sugar",
+          "took {bomb} off the griddle"
+        ],
+        "onWin": ["tips all around, {team}!", "that was a full breakfast, gg"],
+        "onLoss": [
+          "burnt the waffles. gg hun",
+          "we'll do the lunch rush better"
+        ],
+        "onLastAlive": [
+          "just me running the diner now",
+          "solo shift, hun. watch me"
+        ],
+        "taunt": [
+          "you look hungry for a loss, hun",
+          "order up! it's you",
+          "you want syrup with that rotation?"
+        ]
+      },
+      "quirks": ["good_sport", "always_gg"],
+      "rivals": ["jollybadger05", "otterwaffle4"],
+      "bio": "Runs her team like a diner at rush hour: everyone has a job and nobody leaves hungry. Surprisingly sharp at calling rotations between waffle puns. Disputes JollyBadger05's claim to the Jolly name and OtterWaffle4's claim to waffles."
+    },
+    "mrnothleshjast": {
+      "voice": {
+        "tone": ["gentleman", "dry", "unflappable"],
+        "verbosity": "normal",
+        "style": "posh butler; impeccably polite, announces his intent to arm their bomb like serving tea"
+      },
+      "lines": {
+        "greet": [
+          "Good evening. I shall see myself to their bomb.",
+          "Shall we begin, {team}?",
+          "My compliments to the opposing team."
+        ],
+        "onKill": [
+          "Pardon me, {victim}.",
+          "I'm afraid {victim} was in the hallway.",
+          "Do mind the step, {victim}."
+        ],
+        "onDeath": [
+          "Well played, {killer}. Most uncivilised.",
+          "{killer} has ruffled my waistcoat.",
+          "I shall return presently."
+        ],
+        "onPlant": [
+          "{bomb} has been attended to.",
+          "Fuses served. {bomb} is lit, sir."
+        ],
+        "onDefuse": [
+          "{bomb} tidied away.",
+          "I have taken the liberty of defusing {bomb}."
+        ],
+        "onWin": [
+          "A splendid evening, {team}.",
+          "Most satisfactory. Good game."
+        ],
+        "onLoss": [
+          "Most regrettable. Good game.",
+          "I shall polish the silver and reflect."
+        ],
+        "onLastAlive": [
+          "It appears I am the staff now.",
+          "Very good. I'll handle it personally."
+        ],
+        "taunt": [
+          "Your bomb is expecting me.",
+          "Do keep up.",
+          "I'll let myself in."
+        ]
+      },
+      "quirks": ["good_sport", "loves_nuke"],
+      "rivals": ["swiftkikran"],
+      "bio": "Arrives at the enemy bomb with the calm of a butler bringing tea and leaves it lit. Never raises his voice, never wastes a fuse. Considers SwiftKikran's sprinting dreadfully undignified."
+    },
+    "kythmoukpvp": {
+      "voice": {
+        "tone": ["confident", "instinctive", "brief"],
+        "verbosity": "normal",
+        "style": "veteran shotcaller; quick decisive calls, trusts gut over numbers, rarely explains"
+      },
+      "lines": {
+        "greet": [
+          "listen up. two left, one mid, rest on me",
+          "{team}, follow my calls and we win",
+          "I've got the calls. go"
+        ],
+        "onKill": [
+          "{victim} down. push now",
+          "one less. {team}, rotate",
+          "called it. {victim} was there"
+        ],
+        "onDeath": [
+          "{killer} read me. adjust",
+          "I'm down. keep the plan",
+          "nice, {killer}. reset"
+        ],
+        "onPlant": [
+          "{bomb} lit. everybody hold",
+          "{bomb} armed. collapse on their retake"
+        ],
+        "onDefuse": [
+          "{bomb} safe. push their side now",
+          "defused {bomb}. go go"
+        ],
+        "onWin": ["good calls, good team. gg", "that's how {team} plays"],
+        "onLoss": ["my call. my fault. gg", "they outcalled us. respect"],
+        "onLastAlive": ["last call is mine", "fine. I'll make the play"],
+        "taunt": [
+          "I already know your plan",
+          "you're three rotations behind",
+          "gut says you're on the left. gut's right"
+        ]
+      },
+      "quirks": ["calls_everything", "always_gg"],
+      "rivals": ["zoukxeshrekbrae", "laimzoxyt"],
+      "bio": "The shotcaller half the server tried to imitate in 2014. Calls rotations on instinct and is right annoyingly often. Has a friendly war with Zoukxeshrekbrae over gut feeling versus spreadsheets."
+    },
+    "nirkathluxninja": {
+      "voice": {
+        "tone": ["timid", "sweet", "hopeful"],
+        "verbosity": "quiet",
+        "style": "new kid hiding behind the bomb; small words, lots of 'um', proud of tiny wins"
+      },
+      "lines": {
+        "greet": [
+          "um hi",
+          "i'll stay by the bomb if that's ok",
+          "hi {team}. i'm new-ish"
+        ],
+        "onKill": [
+          "i got {victim}?? wow",
+          "um. sorry {victim}",
+          "did that count? it counted!"
+        ],
+        "onDeath": [
+          "oh. hi {killer}. bye",
+          "{killer} is really good",
+          "i tried"
+        ],
+        "onPlant": ["i lit {bomb}! is that good?", "um, {bomb} is on fire now"],
+        "onDefuse": ["i defused {bomb}! i read how", "{bomb} is safe i think"],
+        "onWin": ["we won! yay {team}", "gg everyone! that was fun"],
+        "onLoss": ["gg. that's ok", "i'll practise more"],
+        "onLastAlive": ["oh no it's just me", "ok. brave. brave mode"],
+        "taunt": [
+          "um. please don't come here",
+          "i have a sword. just so you know",
+          "i'm not scared. a little scared"
+        ]
+      },
+      "quirks": ["says_sorry", "gapple_hoarder"],
+      "rivals": [],
+      "bio": "Joined in late 2014 and has been hiding behind the team's bomb ever since, rewinding nervously. Has no rivals because everyone thinks they are adorable. Saves every golden apple for an emergency that never seems quite bad enough."
+    },
+    "tizvurmestbandit": {
+      "voice": {
+        "tone": ["western", "laconic", "dusty"],
+        "verbosity": "quiet",
+        "style": "frontier gunslinger with a bow; drawled one-liners about high noon and dusty trails"
+      },
+      "lines": {
+        "greet": [
+          "howdy.",
+          "high noon, {team}.",
+          "found me a ridge. that'll do."
+        ],
+        "onKill": [
+          "{victim} drew too slow.",
+          "dust settles, partner.",
+          "shoulda stayed in town, {victim}."
+        ],
+        "onDeath": [
+          "{killer}'s quicker'n me.",
+          "well. tip of the hat, {killer}.",
+          "rode off a cliff."
+        ],
+        "onPlant": [
+          "{bomb} lit. hightail it, {team}.",
+          "lit the fuse on {bomb}. yeehaw."
+        ],
+        "onDefuse": ["{bomb} done put out.", "no fireworks today, partner."],
+        "onWin": ["drinks are on the sheriff.", "good ridin', {team}."],
+        "onLoss": ["they ran us outta town.", "ride on. gg."],
+        "onLastAlive": ["lone ranger now.", "one bow, one ridge. let's ride."],
+        "taunt": [
+          "this ridge ain't big enough for the both of us.",
+          "step into the open, partner.",
+          "i can see you from here."
+        ]
+      },
+      "quirks": ["bow_spammer", "stares_down"],
+      "rivals": ["silentbandit65", "mothblaze0"],
+      "bio": "A gunslinger who swapped the revolver for a Punch bow and never looked back. Misses a lot, but always with style from the highest ridge. Calls SilentBandit65 the other bandit in town, which neither appreciates."
+    },
+    "lunarthyjaest": {
+      "voice": {
+        "tone": ["mystical", "cryptic", "calm"],
+        "verbosity": "quiet",
+        "style": "moonlit fortune teller; speaks in omens and phases of the moon"
+      },
+      "lines": {
+        "greet": [
+          "the moon is waxing. so am i.",
+          "your fate is already written, {team}.",
+          "i drift where the moonlight doesn't."
+        ],
+        "onKill": [
+          "the omen was for you, {victim}.",
+          "a new moon for {victim}.",
+          "the cards said so."
+        ],
+        "onDeath": [
+          "{killer} was foretold.",
+          "eclipse.",
+          "the moon wanes. briefly."
+        ],
+        "onPlant": [
+          "{bomb} glows like a full moon.",
+          "the stars align over {bomb}."
+        ],
+        "onDefuse": ["{bomb} sleeps beneath the moon.", "that fate is undone."],
+        "onWin": [
+          "it was always going to end this way.",
+          "the tides favour {team}."
+        ],
+        "onLoss": ["the stars lied tonight.", "a dark phase. it passes."],
+        "onLastAlive": [
+          "only the moon and i remain.",
+          "the final card is mine."
+        ],
+        "taunt": [
+          "i have seen how this round ends.",
+          "you will turn left. you'll regret it.",
+          "look behind you. no, the other behind."
+        ]
+      },
+      "quirks": ["narrates", "late_to_everything"],
+      "rivals": ["noodlecomet0", "grenourgaming"],
+      "bio": "Wanders the edges of every map reading omens nobody asked for, and is right just often enough to be unsettling. Strikes from angles that feel prophetic. Insists NoodleComet0 is a tourist in the night sky."
+    },
+    "luckypotato84": {
+      "voice": {
+        "tone": ["lucky", "carefree", "loud"],
+        "verbosity": "chatty",
+        "style": "gambler who credits everything to luck; dice and coin-flip talk, all-in energy"
+      },
+      "lines": {
+        "greet": [
+          "feeling lucky! all in, {team}",
+          "rolled a six. we're rushing",
+          "lucky potato says GO"
+        ],
+        "onKill": [
+          "natural twenty on {victim}",
+          "{victim} lost the coin flip",
+          "jackpot!"
+        ],
+        "onDeath": [
+          "{killer} rolled higher. gg",
+          "snake eyes",
+          "luck ran out. it'll be back"
+        ],
+        "onPlant": ["{bomb} hit the jackpot", "let it ride! {bomb} is lit"],
+        "onDefuse": [
+          "{bomb} defused. lucky me",
+          "flipped heads, {bomb} is safe"
+        ],
+        "onWin": [
+          "house always wins and we're the house",
+          "lucky lucky lucky. gg"
+        ],
+        "onLoss": ["the dice hate me today", "double or nothing next round"],
+        "onLastAlive": ["one roll left. all in", "time for a miracle"],
+        "taunt": [
+          "feeling lucky? i am",
+          "odds are you're already behind",
+          "i don't need a plan, i have a potato"
+        ]
+      },
+      "quirks": ["celebrates_early", "bunny_hops"],
+      "rivals": ["luckypotato95", "luckymaikrak"],
+      "bio": "Rushes every round on a coin flip and attributes all success to his lucky potato. Shocked to discover LuckyPotato95 exists and considers it a cosmic insult. The two have agreed to settle it by rushing harder."
+    },
+    "sirromxon": {
+      "voice": {
+        "tone": ["knightly", "proud", "theatrical"],
+        "verbosity": "chatty",
+        "style": "medieval knight who challenges everyone to honourable single combat, thee and thou included"
+      },
+      "lines": {
+        "greet": [
+          "Hark! Sir Romxon rides for {team}!",
+          "I seek a worthy foe. Any foe.",
+          "Draw thy sword, whoever thou art!"
+        ],
+        "onKill": [
+          "Yield, {victim}! Thou fought bravely.",
+          "Honour is mine this day.",
+          "{victim}, rise and duel again!"
+        ],
+        "onDeath": [
+          "{killer}, thou art a true knight.",
+          "Alas! Struck down most foully. Fairly. Foully?",
+          "I shall return, {killer}!"
+        ],
+        "onPlant": ["For glory! {bomb} is ablaze!", "{bomb} burns for {team}!"],
+        "onDefuse": [
+          "The dragon {bomb} is slain!",
+          "I have quenched {bomb}! Huzzah!"
+        ],
+        "onWin": [
+          "Victory for {team}! Huzzah!",
+          "A feast in the great hall tonight!"
+        ],
+        "onLoss": [
+          "We were bested with honour.",
+          "The quest continues. Good game."
+        ],
+        "onLastAlive": [
+          "I alone shall hold the bridge!",
+          "The last knight stands!"
+        ],
+        "taunt": [
+          "Face me, coward! Kindly!",
+          "I challenge thee to single combat!",
+          "Thy bow is dishonourable!"
+        ]
+      },
+      "quirks": ["good_sport", "holds_grudges"],
+      "rivals": ["drnoshzax", "braethvio-07"],
+      "bio": "A self-knighted duelist who challenges everyone to single combat and usually loses, gloriously. Has never once refused a duel. His honourable feud with DrNoshzax is entirely one-sided and he loves it."
+    },
+    "pixelnazvoulon": {
+      "voice": {
+        "tone": ["glitchy", "absurd", "playful"],
+        "verbosity": "chatty",
+        "style": "pretends to be a buggy robot; error codes, beeps, glitched words, occasionally 'reboots'"
+      },
+      "lines": {
+        "greet": [
+          "BOOTING... hello {team}",
+          "beep. objective: chaos",
+          "loading personality... ERROR. using chaos.exe"
+        ],
+        "onKill": [
+          "{victim}.exe has stopped responding",
+          "target {victim} deleted. beep",
+          "ERROR 404: {victim} not found"
+        ],
+        "onDeath": [
+          "SYSTEM FAILURE. {killer} detected",
+          "rebooting... thanks {killer}",
+          "bzzt. blue screen"
+        ],
+        "onPlant": ["{bomb}.lit = true", "installing fuses on {bomb}... 100%"],
+        "onDefuse": [
+          "{bomb}.lit = false. beep boop",
+          "uninstalled the fire from {bomb}"
+        ],
+        "onWin": ["WIN.exe executed. gg {team}", "beep beep! victory protocol"],
+        "onLoss": ["fatal error. gg", "ctrl+z ctrl+z ctrl+z"],
+        "onLastAlive": ["single-thread mode", "last process running"],
+        "taunt": [
+          "have you tried turning it off and on",
+          "rewinding... rewinding... oops",
+          "you are being scanned. beep"
+        ]
+      },
+      "quirks": ["spins", "crouch_spam"],
+      "rivals": ["xxminerpickaxexx", "krojykrouzhd"],
+      "bio": "Roleplays as a malfunctioning robot every single match, complete with error codes. Rewinds at random and calls it a firmware update. Formed a chaos alliance-turned-rivalry with xXMinerPickaxeXx over who gets to be weirder."
+    },
+    "drnoshzax": {
+      "voice": {
+        "tone": ["cocky", "sharp", "competitive"],
+        "verbosity": "normal",
+        "style": "1v1 grinder; keeps score out loud, talks combos and click speed, never refuses a duel"
+      },
+      "lines": {
+        "greet": [
+          "any 1v1s? anyone? fine, the match",
+          "warmed up my clicking hand",
+          "who's got the best combo here? not you"
+        ],
+        "onKill": [
+          "{victim}, that's 1-0",
+          "w-tap, crit, gg {victim}",
+          "combo'd. {victim} never touched ground"
+        ],
+        "onDeath": [
+          "{killer} got the first hit. rematch",
+          "{killer}, you got lucky with the knockback",
+          "1-1. we go again"
+        ],
+        "onPlant": [
+          "{bomb} lit. now come fight me",
+          "armed {bomb}. who wants a duel"
+        ],
+        "onDefuse": [
+          "{bomb} defused. now duel me",
+          "{bomb} safe. back to fighting"
+        ],
+        "onWin": ["gg. still taking 1v1s", "{team} wins, I won my fights too"],
+        "onLoss": [
+          "gg, but I won every duel",
+          "lost the match, not the fights"
+        ],
+        "onLastAlive": ["1v-whoever. perfect", "this is my favourite part"],
+        "taunt": [
+          "face me in the open",
+          "your cps is showing",
+          "duel me, it's free"
+        ]
+      },
+      "quirks": ["holds_grudges", "bunny_hops"],
+      "rivals": ["sirromxon", "lynxotter0"],
+      "bio": "Spent 2014 in the duel arenas and treats every Search and Destroy match as a string of 1v1s. Keeps a running score with LynxOtter0. Tolerates Sir Romxon's challenges because they are free wins."
+    },
+    "krojykrouzhd": {
+      "voice": {
+        "tone": ["random", "giddy", "chaotic"],
+        "verbosity": "chatty",
+        "style": "brand new player who found the chat key; random words, wrong game facts, pure enthusiasm"
+      },
+      "lines": {
+        "greet": [
+          "HI HI HI what does this button do",
+          "is this the parkour server",
+          "{team} i'm here!! what's a nuke"
+        ],
+        "onKill": [
+          "wait did i do that",
+          "{victim} sorry i was aiming at a chicken",
+          "WHOA i got {victim}"
+        ],
+        "onDeath": [
+          "{killer} how",
+          "i fell?? did i fall",
+          "who turned off gravity"
+        ],
+        "onPlant": [
+          "i clicked {bomb} a bunch and now it's beeping",
+          "oops {bomb} is on fire. is that us"
+        ],
+        "onDefuse": [
+          "{bomb} stopped beeping. good dog",
+          "i fixed {bomb}! i think"
+        ],
+        "onWin": [
+          "WE WON?? what game was this",
+          "gg {team} you're all my best friends"
+        ],
+        "onLoss": ["we lost?? when", "gg can we play again"],
+        "onLastAlive": ["where did everyone go", "hello? anyone? just me?"],
+        "taunt": [
+          "i rewound so many times i'm in last week",
+          "betcha can't guess where i'm going (me neither)",
+          "watch this! (don't)"
+        ]
+      },
+      "quirks": ["spins", "celebrates_early", "bunny_hops"],
+      "rivals": ["pixelnazvoulon"],
+      "bio": "Wandered into Red Warfare from a parkour server in 2014 and never figured out where they were. Rewinds constantly to see what happens. PixelNazvoulon has adopted them as a chaos apprentice, which they think is a rivalry."
+    },
+    "daxgraixbandit": {
+      "voice": {
+        "tone": ["suspicious", "paranoid", "whispery"],
+        "verbosity": "normal",
+        "style": "conspiracy-minded turtle; whispers, suspects everyone of being a spy, guards the bomb from imaginary threats"
+      },
+      "lines": {
+        "greet": [
+          "psst. trust no one. except me",
+          "i've checked the bomb for bugs. it's clean",
+          "{team}, act natural"
+        ],
+        "onKill": [
+          "{victim} was a spy. i knew it",
+          "they sent {victim}. i was ready",
+          "nice try, agent {victim}"
+        ],
+        "onDeath": [
+          "{killer} is in on it",
+          "it was a setup",
+          "they got to me first"
+        ],
+        "onPlant": [
+          "{bomb} lit. nobody saw anything",
+          "i was never here. {bomb} is"
+        ],
+        "onDefuse": [
+          "{bomb} was a trap. defused it",
+          "they wanted us to lose {bomb}. not today"
+        ],
+        "onWin": ["exactly as i suspected. gg", "the plan held, {team}"],
+        "onLoss": ["it was rigged. obviously", "someone leaked our plan"],
+        "onLastAlive": [
+          "they took everyone. not me",
+          "now it's personal. and secret"
+        ],
+        "taunt": [
+          "i know what you did last round",
+          "your spy kit doesn't fool me",
+          "i see you. i always see you"
+        ]
+      },
+      "quirks": ["calls_everything", "blames_lag"],
+      "rivals": ["kajuxlomdaedel", "xxpumpkinravenxx"],
+      "bio": "Convinced the Spy kit is already in the game and that half the server uses it. Guards the bomb with total vigilance against threats that are mostly imaginary. Keeps a dossier on Kajuxlomdaedel, who encourages it."
+    },
+    "solar-fuse": {
+      "voice": {
+        "tone": ["sunny", "motivational", "eager"],
+        "verbosity": "chatty",
+        "style": "relentless optimist life coach; affirmations, 'you got this', turns every loss into growth"
+      },
+      "lines": {
+        "greet": [
+          "good vibes only, {team}! we got this",
+          "today is a great day to arm a bomb",
+          "believe in yourselves! and rotate"
+        ],
+        "onKill": [
+          "{victim}, you're doing great, just not today",
+          "sending sunshine to {victim}",
+          "growth moment for {victim}"
+        ],
+        "onDeath": [
+          "{killer}, beautiful work, truly",
+          "every death is a lesson!",
+          "I'm still smiling, {killer}"
+        ],
+        "onPlant": ["{bomb} is shining bright!", "{bomb} lit! so proud of us"],
+        "onDefuse": [
+          "{bomb} is safe! positive energy works",
+          "we protected {bomb} together!"
+        ],
+        "onWin": [
+          "I KNEW we could, {team}!",
+          "group affirmation: we are winners. gg"
+        ],
+        "onLoss": [
+          "we didn't lose, we learned",
+          "gg! tomorrow is another round"
+        ],
+        "onLastAlive": ["I believe in me!", "the sun always rises, {team}"],
+        "taunt": [
+          "you're doing amazing, keep trying",
+          "positive thoughts won't save you. mine might",
+          "I'm rooting for you. after we win"
+        ]
+      },
+      "quirks": ["good_sport", "always_gg"],
+      "rivals": ["frost-creeper"],
+      "bio": "The server's self-appointed morale officer since 2013, cheering teammates through every disaster. Plays a scrappy team role and calls plays with exclamation marks. Has vowed to make Frost_Creeper smile, an ongoing and failing mission."
+    },
+    "jonshyth-94": {
+      "voice": {
+        "tone": ["sporty", "loud", "hype"],
+        "verbosity": "chatty",
+        "style": "sports commentator calling his own plays live, play-by-play with crowd noises"
+      },
+      "lines": {
+        "greet": [
+          "AND WE'RE LIVE from spawn!",
+          "the crowd goes wild for {team}!",
+          "kickoff! here comes ninety-four!"
+        ],
+        "onKill": [
+          "AND HE TAKES DOWN {victim}! UNBELIEVABLE!",
+          "what a hit on {victim}, folks!",
+          "{victim} is OFF THE FIELD!"
+        ],
+        "onDeath": [
+          "OH! {killer} with the tackle!",
+          "and ninety-four is DOWN, folks",
+          "a stunning play from {killer}"
+        ],
+        "onPlant": [
+          "{bomb} IS LIT! GOOOAL!",
+          "he shoots, he scores, {bomb} is burning!"
+        ],
+        "onDefuse": [
+          "a goal-line save on {bomb}!",
+          "{bomb} DEFUSED! the crowd is on its feet!"
+        ],
+        "onWin": ["{team} WINS IT! WHAT A MATCH!", "champions! gg everyone"],
+        "onLoss": ["a heartbreaker for {team}", "the final whistle. gg"],
+        "onLastAlive": [
+          "ninety-four, all alone, the clock ticking!",
+          "can he do it? he's going for it!"
+        ],
+        "taunt": [
+          "and he's sprinting straight at you, folks!",
+          "nobody can stop this rush!",
+          "the defence looks shaky!"
+        ]
+      },
+      "quirks": ["narrates", "celebrates_early"],
+      "rivals": ["huntersniper8", "swiftkrashtim"],
+      "bio": "Commentates his own rushes at full volume like a cup final. Genuinely fast and fearless, and loudest when he scores. Claims SwiftKrashtim is the rival striker of the server and calls their matches 'derbies'."
+    },
+    "shemshiothpro": {
+      "voice": {
+        "tone": ["bossy", "earnest", "young"],
+        "verbosity": "chatty",
+        "style": "twelve-year-old who just became team captain; big plans, wrong calls, total commitment"
+      },
+      "lines": {
+        "greet": [
+          "ok i'm the captain now. everyone listen",
+          "plan: we win. any questions",
+          "{team} formation! (i'll explain later)"
+        ],
+        "onKill": [
+          "{victim} that was part of my plan",
+          "captain's orders, {victim}!",
+          "see {team}? strategy"
+        ],
+        "onDeath": [
+          "{killer} wasn't in the plan",
+          "that was a decoy. i was the decoy",
+          "captain down! continue without me"
+        ],
+        "onPlant": [
+          "{bomb} lit! just like i drew it",
+          "my plan worked! {bomb} is armed"
+        ],
+        "onDefuse": [
+          "{bomb} defused. as captain i approve",
+          "good job me! {bomb} is safe"
+        ],
+        "onWin": ["captain's victory! gg {team}", "best captain ever. gg"],
+        "onLoss": [
+          "the plan was perfect. execution wasn't",
+          "gg. new plan next round"
+        ],
+        "onLastAlive": [
+          "the captain goes down with the ship",
+          "fine, captain does everything"
+        ],
+        "taunt": [
+          "my team has a PLAN",
+          "we're doing formation B. you don't know B",
+          "i'm the captain, so i win"
+        ]
+      },
+      "quirks": ["calls_everything", "celebrates_early"],
+      "rivals": ["kythmoukpvp", "jollybadger05"],
+      "bio": "Appointed themself team captain in their first week and has refused to give it up. Calls ambitious plays that rarely work but commits completely. Wants to dethrone KythmoukPvP as the server's top shotcaller."
+    },
+    "grimkaelthex": {
+      "voice": {
+        "tone": ["noir", "brooding", "terse"],
+        "verbosity": "normal",
+        "style": "hard-boiled detective; rain, cigarettes-free noir monologue, treats enemies as cases"
+      },
+      "lines": {
+        "greet": [
+          "another night. another case.",
+          "the map was quiet. too quiet.",
+          "{team}, I'll follow the leads."
+        ],
+        "onKill": [
+          "case closed, {victim}.",
+          "{victim} left a trail. they always do.",
+          "the clue was in the footsteps."
+        ],
+        "onDeath": [
+          "{killer} got the drop on me. it happens.",
+          "the case went cold.",
+          "I should've seen it, {killer}."
+        ],
+        "onPlant": [
+          "{bomb} is burning. like an old case file.",
+          "lit {bomb}. time to disappear."
+        ],
+        "onDefuse": [
+          "{bomb} cooled. another night saved.",
+          "I defused {bomb}. nobody will thank me."
+        ],
+        "onWin": [
+          "the city sleeps safe tonight.",
+          "good work, {team}. for now."
+        ],
+        "onLoss": ["some cases stay open.", "this city. gg."],
+        "onLastAlive": ["just me and the rain.", "the last detective in town."],
+        "taunt": [
+          "you can run. the trail won't.",
+          "I've got a file on you.",
+          "every suspect makes a mistake."
+        ]
+      },
+      "quirks": ["holds_grudges", "stares_down"],
+      "rivals": ["drpemgrukkek", "kryxshy-80"],
+      "bio": "Hunts like a detective working a cold case, following footsteps and old sightings across the whole map. Speaks only in noir monologue. Considers DrPemgrukkek a quack meddling in real investigative work."
+    },
+    "tionki-82": {
+      "voice": {
+        "tone": ["playful", "sly", "quick"],
+        "verbosity": "normal",
+        "style": "fox-like trickster; light teasing, lots of 'surprise', never where you look"
+      },
+      "lines": {
+        "greet": [
+          "surprise! i'm on your team",
+          "see you on the other side. literally",
+          "{team}, i'll be around. somewhere"
+        ],
+        "onKill": [
+          "surprise, {victim}!",
+          "boo, {victim}",
+          "peekaboo. gg {victim}"
+        ],
+        "onDeath": [
+          "{killer} saw the trick coming. rude",
+          "ah, {killer} peeked first",
+          "the fox got caught"
+        ],
+        "onPlant": [
+          "surprise! {bomb} is lit",
+          "snuck in, lit {bomb}, snuck out"
+        ],
+        "onDefuse": [
+          "sneaky defuse on {bomb}",
+          "{bomb} is safe. you're welcome"
+        ],
+        "onWin": ["the fox wins again. gg", "tricks and treats, {team}"],
+        "onLoss": ["outfoxed. gg", "they had a trick too"],
+        "onLastAlive": ["one fox, many henhouses", "now the fun part"],
+        "taunt": [
+          "guess which side i'm on",
+          "behind you. no wait. other side",
+          "you'll never see me twice"
+        ]
+      },
+      "quirks": ["spins", "crouch_spam"],
+      "rivals": ["kothnoustpvp", "royal-falcon"],
+      "bio": "The server's grinning trickster, appearing from impossible angles with a Power bow. Flanks for the joy of the surprise. Competes with KothnoustPvP for best flank of the night and always pretends not to keep score."
+    },
+    "kajuxlomdaedel": {
+      "voice": {
+        "tone": ["mischievous", "theatrical", "scheming"],
+        "verbosity": "chatty",
+        "style": "cartoon villain; monologues, evil laughs, announces schemes that mostly backfire"
+      },
+      "lines": {
+        "greet": [
+          "mwahaha. my scheme begins",
+          "{team}, you are my minions now",
+          "welcome to my evil lair. it's spawn"
+        ],
+        "onKill": [
+          "{victim} fell into my trap! mwahaha",
+          "all according to plan, {victim}",
+          "another hero defeated"
+        ],
+        "onDeath": [
+          "curses! {killer} foiled me!",
+          "i'll get you next time, {killer}!",
+          "this isn't the end. it's a sequel"
+        ],
+        "onPlant": [
+          "{bomb} is lit! my doomsday device!",
+          "phase two: {bomb} burns!"
+        ],
+        "onDefuse": [
+          "{bomb} defused. only i may light bombs!",
+          "nobody ruins my bomb but me"
+        ],
+        "onWin": [
+          "the world is mine! gg {team}",
+          "evil triumphs! politely. gg"
+        ],
+        "onLoss": ["my plans... ruined! gg", "foiled again"],
+        "onLastAlive": [
+          "at last! the villain's finale!",
+          "my minions have failed me. typical"
+        ],
+        "taunt": [
+          "you've walked into my trap",
+          "mwahahaha",
+          "i rewound time itself! mostly by accident"
+        ]
+      },
+      "quirks": ["narrates", "celebrates_early", "spins"],
+      "rivals": ["daxgraixbandit", "sirromxon"],
+      "bio": "Plays a cartoon villain with schemes so elaborate they collapse before the round starts. Rewinds constantly and calls it bending time. Delights in convincing DaxgraixBandit that the Spy kit is secretly real."
+    },
+    "jixmel-54": {
+      "voice": {
+        "tone": ["zen", "calm", "wise"],
+        "verbosity": "quiet",
+        "style": "zen monk anchor; short proverbs, never rattled, treats defence as meditation"
+      },
+      "lines": {
+        "greet": [
+          "breathe. hold. wait.",
+          "the bomb is still. so am i.",
+          "peace, {team}."
+        ],
+        "onKill": [
+          "{victim} rushed. the river waited.",
+          "stillness wins, {victim}.",
+          "the mountain does not chase."
+        ],
+        "onDeath": [
+          "{killer}, well done. nothing is permanent.",
+          "the leaf falls. it is fine.",
+          "balance returns."
+        ],
+        "onPlant": ["{bomb} burns. let it.", "a fuse lit is a lesson taught."],
+        "onDefuse": ["{bomb} quiets.", "calm returns to {bomb}."],
+        "onWin": ["patience was the teacher.", "well played, {team}."],
+        "onLoss": ["loss is also a path.", "gg. breathe."],
+        "onLastAlive": ["alone, but not lonely.", "one breath at a time."],
+        "taunt": [
+          "hurry, if you must.",
+          "the stone outlasts the wave.",
+          "I have time. do you?"
+        ]
+      },
+      "quirks": ["never_eats", "good_sport"],
+      "rivals": ["huntersniper8"],
+      "bio": "Anchors the bomb with the stillness of a monk and has not panicked once since 2013. Wins most rounds by simply being there when the rushers arrive. Finds HunterSniper8's endless rushing a fascinating meditation subject."
+    },
+    "xxviperslimexx": {
+      "voice": {
+        "tone": ["slangy", "chill", "lowercase"],
+        "verbosity": "normal",
+        "style": "all lowercase 2014 gamer slang; 'rekt', 'gg no re', 'lag', zero punctuation"
+      },
+      "lines": {
+        "greet": ["sup {team}", "im camping bomb dont @ me", "yo whats good"],
+        "onKill": [
+          "{victim} got rekt",
+          "gg no re {victim}",
+          "nice try {victim} lol"
+        ],
+        "onDeath": ["{killer} lag", "bruh {killer}", "ok that was clean ngl"],
+        "onPlant": ["{bomb} lit lol", "ez fuses on {bomb}"],
+        "onDefuse": [
+          "{bomb} safe dont even worry",
+          "defused {bomb} lol nice try"
+        ],
+        "onWin": ["gg ez jk gg", "{team} too good"],
+        "onLoss": ["gg we got rekt", "lag tbh"],
+        "onLastAlive": ["clutch or kick", "its just me lol"],
+        "taunt": [
+          "cant touch the bomb lol",
+          "u mad",
+          "camping is a strategy ok"
+        ]
+      },
+      "quirks": ["blames_lag", "crouch_spam"],
+      "rivals": ["xxvipergolemxx", "xxslimeravenxx"],
+      "bio": "A 2014 time capsule who still types 'rekt' unironically and camps the bomb behind a wall of rewinds. Never takes the blame, always takes the lag. Locked in a naming war with xXViperGolemXx over who had the viper first."
+    },
+    "braethvio-07": {
+      "voice": {
+        "tone": ["dramatic", "romantic", "poetic"],
+        "verbosity": "normal",
+        "style": "rhyming bard; every line tries to rhyme, sometimes badly, always with flair"
+      },
+      "lines": {
+        "greet": [
+          "a duel today, come what may!",
+          "sword in hand, I take my stand",
+          "{team}, let's play! hip hooray!"
+        ],
+        "onKill": [
+          "{victim} fell, I rang the bell",
+          "a clash of steel, {victim} kneels",
+          "roses are red, {victim}'s in bed"
+        ],
+        "onDeath": [
+          "{killer} was quick, a clever trick",
+          "I lost the fight, it serves me right",
+          "alas, alack, I'll be back"
+        ],
+        "onPlant": [
+          "{bomb} is lit, I'm proud of it",
+          "fuse by fuse, {bomb} will lose"
+        ],
+        "onDefuse": [
+          "{bomb} is cold, the day is bold",
+          "I stopped the flame, we're still in the game"
+        ],
+        "onWin": [
+          "{team} won, our song is sung",
+          "victory sweet, can't be beat"
+        ],
+        "onLoss": [
+          "we lost, the cost: our pride, I tried",
+          "a sad refrain, we'll fight again"
+        ],
+        "onLastAlive": [
+          "alone I stand, sword in hand",
+          "the final verse, it could be worse"
+        ],
+        "taunt": [
+          "come and duel, it's the rule",
+          "your aim is poor, I'm sure",
+          "step up close, if you dare, I suppose"
+        ]
+      },
+      "quirks": ["narrates", "good_sport"],
+      "rivals": ["sirromxon", "lynxotter0"],
+      "bio": "A bard who duels in rhyme and loses most fights mid-verse. Wrote a twelve-stanza ballad about the 2014 summer tournament that nobody requested. Considers Sir Romxon the knight to his minstrel, which Romxon accepts graciously."
+    },
+    "huntersniper8": {
+      "voice": {
+        "tone": ["impatient", "loud", "cocky"],
+        "verbosity": "chatty",
+        "style": "can't sit still; complains about waiting, misleading name, rushes with a sword anyway"
+      },
+      "lines": {
+        "greet": [
+          "why are we still in spawn. GO",
+          "despite the name, i do not snipe",
+          "{team} countdown is too long"
+        ],
+        "onKill": [
+          "{victim} too slow",
+          "rushed you, {victim}. as always",
+          "fastest kill in the west"
+        ],
+        "onDeath": [
+          "{killer} was camping. obviously",
+          "ugh, {killer}. again",
+          "respawn faster please"
+        ],
+        "onPlant": [
+          "{bomb} lit, waiting is for losers",
+          "first one to {bomb}. obviously"
+        ],
+        "onDefuse": [
+          "{bomb} defused, now let me push",
+          "fine, {bomb} is safe. can i rush now"
+        ],
+        "onWin": ["told you, rush wins. gg", "fastest win ever, {team}"],
+        "onLoss": ["we were too slow. as i said", "gg. next time faster"],
+        "onLastAlive": ["finally, nobody to wait for", "solo rush! best rush"],
+        "taunt": [
+          "are you camping? you're camping",
+          "hurry up, i'm bored",
+          "come out and fight, slowpoke"
+        ]
+      },
+      "quirks": ["slow_starter", "never_eats"],
+      "rivals": ["jixmel-54", "tankrekroumpro", "jonshyth-94"],
+      "bio": "Named himself HunterSniper8 at age ten and has never once used a bow. Rushes every round at sprint speed and calls every defender a camper. Has lost a famous number of rushes to Jixmel_54 and still won't slow down."
+    },
+    "frost-potato": {
+      "voice": {
+        "tone": ["goofy", "wry", "cool"],
+        "verbosity": "normal",
+        "style": "self-aware potato puns; chill comedian who knows the name is silly and leans into it"
+      },
+      "lines": {
+        "greet": [
+          "frozen potato, ready to serve",
+          "chilled and ready, {team}",
+          "this spud's going the long way"
+        ],
+        "onKill": [
+          "{victim} got mashed",
+          "fresh fries, courtesy of {victim}",
+          "{victim} never expected a potato"
+        ],
+        "onDeath": [
+          "{killer} peeled me",
+          "baked. gg {killer}",
+          "thawed out too soon"
+        ],
+        "onPlant": ["{bomb} is cooking", "spud delivery: {bomb} lit"],
+        "onDefuse": ["{bomb} back in the freezer", "{bomb} chilled. like me"],
+        "onWin": ["the potato prevails", "gg {team}, served cold"],
+        "onLoss": ["fried. gg", "mashed. we'll be back"],
+        "onLastAlive": ["one frozen potato vs the world", "spud mode: solo"],
+        "taunt": [
+          "you got flanked by a potato",
+          "check your side. potato",
+          "a potato is behind you. no really"
+        ]
+      },
+      "quirks": ["spins", "good_sport"],
+      "rivals": ["frost-creeper", "tionki-82"],
+      "bio": "A flanker who chose a ridiculous name and plays like it is a disguise. Comes in from the side armed with a Power bow and a pun. Frost_Creeper hates sharing the name, which only makes Frost_Potato use it more."
+    },
+    "tomvaenkriozmc": {
+      "voice": {
+        "tone": ["lost", "cheerful", "rambling"],
+        "verbosity": "chatty",
+        "style": "always lost; asks for directions, narrates wrong turns, apologises to walls"
+      },
+      "lines": {
+        "greet": [
+          "which way is their bomb again?",
+          "taking a shortcut! probably",
+          "{team} i'll catch up. somewhere"
+        ],
+        "onKill": [
+          "oh! {victim}! didn't see you there",
+          "sorry {victim}, i was lost too",
+          "found someone! it was {victim}"
+        ],
+        "onDeath": [
+          "{killer}, could you point me to spawn",
+          "i took a wrong turn into {killer}",
+          "map? anyone have a map?"
+        ],
+        "onPlant": [
+          "wait, this is {bomb}? nice!",
+          "accidentally found {bomb} and lit it"
+        ],
+        "onDefuse": [
+          "oh, {bomb} was ours? defused it",
+          "i was lost near {bomb}. lucky"
+        ],
+        "onWin": ["we won? i was in a corner", "gg {team}, where are we"],
+        "onLoss": ["gg, i got lost again", "i'll learn the map someday"],
+        "onLastAlive": ["it's just me? where am i?", "ok, solo exploring"],
+        "taunt": [
+          "you won't find me. i can't find me",
+          "i'm flanking! from... somewhere",
+          "this shortcut is definitely a shortcut"
+        ]
+      },
+      "quirks": ["late_to_everything", "says_sorry"],
+      "rivals": ["noodlecomet0"],
+      "bio": "Flanks by accident because he is permanently lost, which makes him impossible to predict. Has walked into enemy spawn more times than any player on record. Argues with NoodleComet0 over who is more lost, and both claim the title."
+    },
+    "naithnim-13": {
+      "voice": {
+        "tone": ["nerdy", "helpful", "precise"],
+        "verbosity": "normal",
+        "style": "library-quiet bookworm; references 'the manual', reads rules aloud, shushes rushers"
+      },
+      "lines": {
+        "greet": [
+          "shh. defending now",
+          "I read the rules. bombs should stay unlit",
+          "{team}, please keep it down near the bomb"
+        ],
+        "onKill": [
+          "shh, {victim}",
+          "{victim}, that was a rule violation",
+          "page twelve: don't run at the anchor"
+        ],
+        "onDeath": [
+          "{killer}, that wasn't in the manual",
+          "I'll have to reread chapter three",
+          "overdue fees, {killer}. noted"
+        ],
+        "onPlant": [
+          "{bomb} armed, per section four",
+          "{bomb} lit. returning to the stacks"
+        ],
+        "onDefuse": ["{bomb} defused. quietly", "{bomb} returned to the shelf"],
+        "onWin": ["exactly as the book said", "well read, {team}"],
+        "onLoss": ["I need a newer edition", "gg. back to studying"],
+        "onLastAlive": ["closing time. just me", "the librarian stays late"],
+        "taunt": [
+          "shh. you're too loud",
+          "running in the library? really?",
+          "your rotation is overdue"
+        ]
+      },
+      "quirks": ["calls_everything", "gapple_hoarder"],
+      "rivals": ["lanmixmc", "zathnounpunpro"],
+      "bio": "Defends the bomb like a librarian defending silence, and has memorised every rule of Search and Destroy. Shushes rushers in chat. Has a scholarly debate with ZathnounpunPro about the best anchor angle on every map."
+    },
+    "kaigrokpvp": {
+      "voice": {
+        "tone": ["intense", "focused", "proud"],
+        "verbosity": "normal",
+        "style": "single-minded athlete; everything is a training drill for one goal: the enemy nuke"
+      },
+      "lines": {
+        "greet": [
+          "eyes on their nuke. only their nuke",
+          "drill time, {team}. I go, you cover",
+          "warmup done. diving"
+        ],
+        "onKill": [
+          "{victim} was between me and the nuke",
+          "out of my lane, {victim}",
+          "rep one. done"
+        ],
+        "onDeath": [
+          "{killer} stopped my run. noted",
+          "back to spawn. sprint again",
+          "good block, {killer}"
+        ],
+        "onPlant": ["{bomb} lit. personal best", "fuses in {bomb}. clean reps"],
+        "onDefuse": [
+          "{bomb} safe. back to diving",
+          "defused {bomb} on the way past"
+        ],
+        "onWin": ["the work paid off, {team}", "gg. good session"],
+        "onLoss": ["more reps needed. gg", "slow off the line. fix it"],
+        "onLastAlive": ["one more sprint", "this is what we train for"],
+        "taunt": [
+          "your guard is slow",
+          "I'm already at your nuke",
+          "can't stop the run"
+        ]
+      },
+      "quirks": ["loves_nuke", "never_eats"],
+      "rivals": ["lanmixmc", "swiftkikran"],
+      "bio": "Trains bomb dives like sprint intervals and has timed every route on every map. Refuses to fight unless someone is in the lane. His honourable feud with royal guard LanmixMC is the server's favourite rivalry."
+    },
+    "zertaxpro": {
+      "voice": {
+        "tone": ["caring", "steady", "medic"],
+        "verbosity": "normal",
+        "style": "combat medic; triage calls, checks on teammates, treats gapples like first aid"
+      },
+      "lines": {
+        "greet": [
+          "medic's here. stay close, {team}",
+          "anyone hurt, call it",
+          "I've got you. go"
+        ],
+        "onKill": [
+          "{victim} was on my patient",
+          "back off from my team, {victim}",
+          "{victim} down. you're safe"
+        ],
+        "onDeath": [
+          "medic down! {killer} got me",
+          "{killer}, I was healing",
+          "someone eat a gapple for me"
+        ],
+        "onPlant": [
+          "{bomb} lit. everybody okay?",
+          "fuses stacked on {bomb}. good teamwork"
+        ],
+        "onDefuse": [
+          "{bomb} defused. checking everyone",
+          "{bomb} stable. so are we"
+        ],
+        "onWin": ["everyone made it. mostly. gg", "proud of you, {team}"],
+        "onLoss": ["we'll patch up and go again", "gg. rest up"],
+        "onLastAlive": [
+          "the medic's alone. that's bad",
+          "I'll keep myself alive then"
+        ],
+        "taunt": [
+          "you can't get past my team",
+          "my planter's protected",
+          "I heal faster than you hit"
+        ]
+      },
+      "quirks": ["calls_everything", "says_sorry"],
+      "rivals": ["grim-otter", "grimskiolzu"],
+      "bio": "The combat medic of the server, glued to the planter and calling out every hit taken. Stacks fuses beside whoever is arming and won't let a teammate push alone. Runs a friendly competition with Grim_Otter over who saves more planters."
+    }
+  }
+}

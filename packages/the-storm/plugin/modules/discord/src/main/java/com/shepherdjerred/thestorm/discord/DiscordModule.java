@@ -5,8 +5,10 @@ import com.shepherdjerred.thestorm.chat.app.Subscription;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.discord.adapter.discord.JdaBridge;
 import com.shepherdjerred.thestorm.discord.adapter.paper.PaperOnlinePlayers;
+import com.shepherdjerred.thestorm.discord.adapter.paper.SealedPlayers;
 import com.shepherdjerred.thestorm.discord.adapter.paper.ServerEventsListener;
 import com.shepherdjerred.thestorm.discord.adapter.paper.VanillaPlainText;
 import com.shepherdjerred.thestorm.discord.app.DiscordConfig;
@@ -63,7 +65,11 @@ public final class DiscordModule implements StormModule {
             bridge,
             new DiscordRelay.Game(chat, context.scheduler(), new PaperOnlinePlayers(server)));
     context.services().provide(DiscordRelay.class, relay);
-    var subscription = chat.subscribe(relay::onChatLine);
+    var sealed = context.services().require(SealedWorlds.class);
+    // Chat lines arrive on the async chat thread; the filter answers from its own main-thread map.
+    var sealedPlayers = SealedPlayers.track(server, sealed);
+    server.getPluginManager().registerEvents(sealedPlayers, context.plugin());
+    var subscription = chat.subscribe(sealedPlayers.guarding(relay::onChatLine));
     var text = new VanillaPlainText(server.getClass().getClassLoader());
     var commands =
         new DiscordReadCommands(
@@ -76,7 +82,7 @@ public final class DiscordModule implements StormModule {
             context.logger());
     server
         .getPluginManager()
-        .registerEvents(new ServerEventsListener(relay, text), context.plugin());
+        .registerEvents(new ServerEventsListener(relay, text, sealed), context.plugin());
     bridge.start(credentials, relay, commands);
     running = new Running(bridge, relay, subscription);
   }

@@ -1,0 +1,77 @@
+id: braishbryzak-80
+name: Braishbryzak_80
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzcxOTk2OCwKICAicHJvZmlsZUlkIiA6ICIzMzU3MWJiY2UyMDE0MTRiYmNkMDYyMjEyZTI4MjBlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGFkb21JbmF0b3I0NzgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWEwNTdlOWY2YjFmZDczMjU3NWEzMTZlZmNlYTRlOWRmMTAwMzNlZTg3MGI5MTMwNDQyYjA1OTA3YjU2MzM1MyIKICAgIH0KICB9Cn0="
+  signature: "Q1E1fd+vE5qB1BxdtOr5WujL0KBqSM4fsYvk7pRZWGgx11+dMaaD2a9uvmLazsw4b84YIIoXTH3r4ulPtSm+W00HoHpweYrBCm45eF0scjCfBA/do1rsIJVTqN66CG5FLtMg2ep6DgRFJW/5SThgcF1q/EcnSu6VtpnylleDLqMi83MSurIHq/BOKt6bDJ1odYhHXI3kzKThu7DN56b6S/T2u2iXDRRJy2D5hrpA8q/Zkyxb3NVpDwWfa5Dvm95DvrPptPauhnnlKZqCwafUDfA9GnYpPJbKqhMrFNO3Zi3GOk7NMieAGrSj4FCrNYljEAvVG9uNOMPwl0jw640qXfs9rnVShRXqtgoBACcCjOS2yLWWbJjZ0azew0fQVFrsI0zpHDPoJ8bekN7D91us1K0wFZOFU0BTIdb/l4JVczZGSl5f5MRBluubQhcwcVpP9KjZIKaAfJB5t8IX4W2d2bn/p1fjpZCerzw4tldJFg5oPzTrrr9/Vobf8cUreAqKvRIYh4G3W0mJcewMB48KkVQNMjfwUFqT2WxIjR+aJ6ovouCaKX48ugyANFaiCVag7mw+QbnwL6dHXVwdmq4W2SOHJibp7e0rxYHyHuoOuz8pYmx4Sj+OLlRyZcsNbi70bXDf4vF/rJDk29mhaefxWGzY29Icow05EHNUVD7NBAM="
+skill: 0.152
+archetype: lurker
+leverOffsets:
+  cps: 0.89
+  predictionQuality: 0.63
+  awarenessRadius: 0.87
+  coordination: -1.01
+  aggression: -0.55
+kits:
+  trooper: 0.79
+  shortbow: 0.56
+  ghost: 0.89
+  wraith: 0.66
+roles:
+  plant: 0.36
+  defend: 0.2
+  rotate: 0.79
+  hunt: 0.73
+style:
+  aggression: 0.45
+  patience: 0.89
+  teamplay: 0.22
+  risk: 0.63
+voice:
+  tone:
+    - paranoid
+    - conspiratorial
+    - jumpy
+  verbosity: chatty
+  style: "lag conspiracy theorist; everything is the server's fault, whispered in urgent fragments"
+lines:
+  greet:
+    - "the server knows where we are, {team}. stay off the paths."
+    - i'm hiding. don't tell the lag.
+    - they moved the map. one block. i noticed.
+  onKill:
+    - "got {victim}! the lag was on MY side for once."
+    - "the packets favoured me. sorry {victim}."
+    - "{victim} desynced right into my sword."
+  onDeath:
+    - "LAG. that was lag. nice ping, {killer}."
+    - "i was behind the wall on MY screen, {killer}."
+    - the server wanted me gone. it's personal.
+  onPlant:
+    - "{bomb} is lit before the server could stop me."
+    - quick, light it while the tick rate is distracted.
+  onDefuse:
+    - "{bomb} defused. the lag tried to stop me. it failed."
+    - "i defused {bomb} on the third click. the first two got eaten."
+  onWin:
+    - "we beat the other team AND the server. gg {team}."
+    - the lag was with us today.
+  onLoss:
+    - you all saw the rubberband. you SAW it.
+    - gg. i'm filing a report. with myself.
+  onLastAlive:
+    - just me and the lag now. we have history.
+    - "if i disappear, it was the server, {team}."
+    - going dark. no packets. no trace.
+  taunt:
+    - you can't hit what the server can't find.
+    - i'm in the bushes. which bushes? exactly.
+    - your arrows go where the lag tells them to.
+quirks:
+  - blames_lag
+  - crouch_spam
+rivals:
+  - silentbandit65
+  - quiethunter22
+bio: Lurks in hedges convinced the server is watching him, and keeps a notebook of every rubberband he has ever seen. Blames SilentBandit65's arrows on lag even when they visibly miss.
+batch: 1
+retired: false

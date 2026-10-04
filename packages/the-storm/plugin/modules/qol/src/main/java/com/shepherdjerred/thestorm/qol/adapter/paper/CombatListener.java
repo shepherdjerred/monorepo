@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.qol.app.CombatTracker;
 import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
@@ -26,7 +27,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
  * Combat tags: a damaging hit between two players tags both. The attacker may be the player, their
  * projectile, their tamed pet, TNT they lit or a lingering potion they threw. A tagged player sees
  * a countdown above their hotbar, cannot teleport, and dies if they disconnect or time out (their
- * items go to a grave); kicks, bans and server errors never kill.
+ * items go to a grave); kicks, bans and server errors never kill. Hits inside a sealed world (a
+ * match) tag nobody, and a tagged player who stands in one when they log out is not killed: the
+ * match owns its own combat rules.
  */
 final class CombatListener implements Listener {
 
@@ -37,21 +40,26 @@ final class CombatListener implements Listener {
   private final QolRuntime runtime;
   private final CombatTracker tracker;
   private final QolConfig.Combat config;
+  private final SealedWorlds sealed;
 
-  CombatListener(QolRuntime runtime, CombatTracker tracker, QolConfig.Combat config) {
+  CombatListener(
+      QolRuntime runtime, CombatTracker tracker, QolConfig.Combat config, SealedWorlds sealed) {
     this.runtime = runtime;
     this.tracker = tracker;
     this.config = config;
+    this.sealed = sealed;
   }
 
   /** Only hits that land and hurt: protection (PvP off for either player) cancels earlier. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onHit(EntityDamageByEntityEvent event) {
-    if (!(event.getEntity() instanceof Player victim) || !(event.getFinalDamage() > 0)) {
+    if (!(event.getEntity() instanceof Player victim)
+        || !(event.getFinalDamage() > 0)
+        || sealed.isSealed(victim.getWorld())) {
       return;
     }
     var attacker = attacker(event.getDamager());
-    if (attacker.isEmpty()) {
+    if (attacker.isEmpty() || sealed.isSealed(attacker.orElseThrow().getWorld())) {
       return;
     }
     for (var fresh : tracker.hit(attacker.orElseThrow().getUniqueId(), victim.getUniqueId())) {
@@ -102,6 +110,7 @@ final class CombatListener implements Listener {
     var tagged = tracker.inCombat(id);
     tracker.clear(id);
     if (!tagged
+        || sealed.isSealed(player.getWorld())
         || !config.killOnLogout()
         || !CHOSEN_QUITS.contains(event.getReason())
         || player.isDead()) {

@@ -14,6 +14,7 @@ from `plugin/`.
 | `plugin/modules/<name>/`           | One project per gameplay module (economy, towns, quests, ...)                                                          |
 | `plugin/dist/`                     | Assembles the shaded `TheStorm.jar` and the plugin entry point                                                         |
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
+| `plugin/tools/rwfmap/`             | Offline rwf map analysis: bakes and verifies the bots' `nav.rwfnav` artifacts (not shaded into the plugin)             |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
 | `plugin/bridge/`                   | `MCBridge.jar`, the agent bridge HTTP API (WorldEdit, region reads, snapshots, events); never part of `TheStorm.jar`   |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
@@ -29,6 +30,8 @@ cd packages/the-storm/plugin
 mise exec -- gradle check                  # everything, including PMD and JaCoCo
 mise exec -- gradle spotlessApply          # format
 mise exec -- gradle :dist:runServer        # local Paper 26.2 with the plugin
+mise exec -- gradle bakeRwfMaps            # (re)bake rwf/maps/*/nav.rwfnav for the bots
+mise exec -- gradle verifyRwfMaps          # fail if a committed nav.rwfnav is stale (part of check)
 mise exec -- gradle resolveAndLockAll --write-locks   # after changing dependencies
 mise exec -- gradle --write-verification-metadata sha256 build
 ```
@@ -106,8 +109,12 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-All 22 modules ship enabled. Existing volumes must satisfy the one-time archive
-contract in [server/README.md](server/README.md) before the image starts.
+The shipped `config.yml` registers 25 modules and enables 23 of them: `rwf`
+and `rwfbots` stay off until the rwf world is provisioned. The boot check, the
+full E2E lane and `dist`'s `ModulesTest` verify that exact enabled set, not a
+count, so a production module replaced by a scaffold is caught. Existing
+volumes must satisfy the one-time archive contract in
+[server/README.md](server/README.md) before the image starts.
 
 Storm Shards award ore drops only in chunks generated after the shards module
 activates. Older chunks may contain player-placed ore from before provenance
@@ -115,16 +122,19 @@ tracking existed, so their ores stay ineligible. Mob drops are unaffected.
 
 Inside a module, packages are layered:
 
-| Package         | May use                                                                                                                                           |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain`        | The JDK, core's `Result`, and its own module's `domain` and `app` value types. No Paper, Adventure, jOOQ, Jackson, JDBC, network or other modules |
-| `app`           | Use cases and the ports other modules may call                                                                                                    |
-| `adapter.paper` | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                   |
-| `adapter.db`    | jOOQ repositories over the module's own tables                                                                                                    |
+| Package            | May use                                                                                                                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain`           | The JDK, core's `Result`, and its own module's `domain` and `app` value types. No Paper, Adventure, jOOQ, Jackson, JDBC, network or other modules                                                                                  |
+| `app`              | Use cases and the ports other modules may call                                                                                                                                                                                     |
+| `adapter.paper`    | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                                                                                                    |
+| `adapter.db`       | jOOQ repositories over the module's own tables                                                                                                                                                                                     |
+| `adapter.citizens` | `rwfbots` only: its single package allowed to use Citizens, and only `net.citizensnpcs.api` and `net.citizensnpcs.trait`. Main thread only, like `adapter.paper`. `npcs` and `companions` bind Citizens from their `adapter.paper` |
 
 Modules reach each other only through the other module's `app` package, and
-schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
-tests in `architecture/` enforce all of this.
+schedule main-thread work only through `core.schedule.Scheduler`. No class may
+use `net.minecraft` or `org.bukkit.craftbukkit`, and `rwfbots.app` may not use
+Paper at all because it drives bots from worker threads. ArchUnit tests in
+`architecture/` enforce all of this.
 
 ## NPCs and the town watch
 
@@ -490,3 +500,201 @@ transfer. Catalog names remain available to NPC validation, but catalog menus
 and `/shop` report that shops are loading. A failed read leaves the guard active
 and logs the startup failure; a successful read publishes the registry only
 after stale admin shops have been closed.
+
+## Red Warfare Search and Destroy (rwf)
+
+The `rwf` module ports libraryaddict's Red Warfare Search and Destroy (see
+`NOTICE`): one-life team PvP where attackers arm an enemy team's TNT bomb with
+a blaze-powder fuse, defenders defuse it, a nuke in the middle kills everyone
+but the team that armed it, and a poison forces long matches to a result. The
+rules are pure (`rwf.domain`); the Paper adapter carries out their effects at
+20 Hz and seals the match world so every other module leaves it alone.
+
+The world named in `rwf.yml` (`rwf`) must be provisioned by an operator through
+Multiverse and loaded before TheStorm enables; a flat or void world is fine
+because each map brings its own terrain. A missing world stops the server, like
+the world module's worlds. The module never generates terrain itself.
+
+Configuration and content live under `server/owned/plugins/TheStorm`:
+
+- `rwf.yml`: the world, the lobby and spectator points, how matches fill and
+  start (`minHumans`, `targetCombatants`, `maxCombatants`, the 90 s countdown,
+  the 30 s no-humans abort), the ported rule constants pinned to the code,
+  rewards (3 win / 1 lose scaled by the human share, a daily cap, the minimum
+  match length), recording and the load-test switch.
+- `rwf/kits.yml`: the kits as the operator sees them; it must describe
+  `KitBook` kit for kit or the module refuses to start.
+- `rwf/maps/<id>/map.yml` and `blocks.schem`: a map's teams, spawns, bombs,
+  nukes, region and the SHA-256 of its Sponge v3 schematic. The module pastes
+  every map at enable and whenever the world's blocks stop matching the hash,
+  20,000 blocks a tick with admission closed meanwhile. `training-yard` is a
+  generated 64x16x64 sample; its generator lives in the module's test sources.
+- `rwf/maps/<id>/nav.rwfnav` and `nav.summary.json`: the map's baked navigation
+  data for the bots, produced offline by the `rwfmap` tool (see Maps below).
+
+### Maps
+
+A map is authored in a build world and exported with WorldEdit
+(`//schem save <id>` as a Sponge v3 schematic, terrain only: block entities and
+entities are refused), copied to `rwf/maps/<id>/blocks.schem`, and described
+in `map.yml` (teams, spawns, bombs, nukes, region and the schematic's hash,
+which `rwfmap` reports when it disagrees). `mise exec -- gradle bakeRwfMaps`
+then runs `plugin/tools/rwfmap` over every map folder: it classifies each
+palette entry with a curated block-state table (`BlockTable`; an unknown state
+fails the bake and must be added to the table, never guessed), bakes the nav
+graph, regions, cover, chokepoints and routes with `rwfbots`' `MapBaker`, and
+writes `nav.rwfnav` plus a `nav.summary.json` of counts for diff review. The
+artifact carries the schematic's `blocksSha256`, so `rwfbots` refuses it when
+the world's blocks change. Commit all four files together.
+`mise exec -- gradle verifyRwfMaps` (part of `check`, so CI runs it) re-bakes
+every map in memory and fails if a committed `nav.rwfnav` or summary differs
+byte for byte; the bake is deterministic, so a diff means the map, the block
+table or the baker changed and the artifacts must be rebaked. A bake that
+`NavArtifact.validate()` rejects (a spawn inside a wall, a bomb no spawn can
+reach) fails too; fix the map, not the tool.
+
+Commands: `/rwf join` (gated by the managed Flipt flag
+`the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
+closed), `/rwf leave`, `/rwf kit <id>`, `/rwf who`, `/rwf spectate` and
+`/rwf spectate next` (`thestorm.rwf.spectate`, granted by default, behind the
+same Flipt flag), and for `thestorm.rwf.admin`: `/rwf admin status`,
+`/rwf admin repair`, `/rwf admin loadtest <n>` (only when `loadtest.enabled`)
+and `/rwf admin showcase [count]`. Joining snapshots a player's belongings
+through the shared crash-safe snapshot machinery and restores them on leave,
+death, disconnect or the next login.
+
+Watchers (`/rwf spectate`) are snapshotted through the same keeper under the
+`rwf_watch` scope, then put in spectator mode at the map's spectator point
+with the match scoreboard; `/rwf spectate next` follows the next living
+fighter. They are never match members: the read model, the humans rule
+(`minHumans`, `noHumansAbort`), team balance and payouts never see them. They
+stay through every phase and move to each new map's spectator point, and
+`/rwf leave`, quitting, the module stopping or (after a crash) the next login
+restores them. A member cannot watch; a watcher who joins the lobby keeps the
+snapshot taken when they started watching, so no second snapshot overwrites
+it.
+
+`/rwf admin showcase [count]` (default `targetCombatants`) starts a bots-only
+match from a lobby with no humans in it. It needs the `rwfbots` roster and
+refuses while humans are in the match. The showcase is a flag on the runner,
+not the domain: the countdown fills to `count`, the humans rule is off, and
+humans may watch but not join. It plays, records and stores like any match
+(bots are never paid, so it pays nobody) and the lobby after it is normal.
+
+Matches are recorded under pseudonyms (positions, actions, results) to
+`plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` for review and
+bot training; every joining human is told so on entry. Pseudonyms are
+HMAC-SHA256 over the salt in `RWF_RECORDING_SALT`, which must be set when
+`recording.enabled` is true. Recordings are pruned by age and size at enable.
+
+Payouts go through an outbox in `rwf_match_player` and the economy's keyed
+transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
+the transfer pays exactly once on the next enable. Bots are never paid.
+
+Bots are optional: the module declares the `BotRoster` port and looks it up
+when a countdown starts; the `rwfbots` module provides it. Bots act only
+through the `CombatantActions` port, which validates reach, line of sight and
+the hit window as it would for a human before acting through the server API.
+`MatchView` and `MatchEvents` publish the read model and transitions; other
+modules read them through the flattened `rwf.app.view` records (`MatchState`,
+`Transition`) and act through `rwf.app.BotActions`, so nothing outside rwf
+names an `rwf.domain` type. A bot provider implements `rwf.app.BotBodies` and
+publishes `BotRoster.of(bodies)`.
+
+### Watch a bot match locally
+
+`bun run rwf:watch` boots a disposable Paper server in Docker with every
+shipped module plus `rwf` and `rwfbots`, Citizens and its owned config, the
+void `rwf` world and a stand-in for Flipt that opens `/rwf` to everyone. It
+publishes the game port on `127.0.0.1:25565` (offline mode) and runs until
+Ctrl-C, which removes the container. Build the jar first.
+
+```bash
+bunx turbo run build --filter=@shepherdjerred/the-storm
+cd packages/the-storm
+bun run rwf:watch --op <your-name>     # --port <n> to use another port
+```
+
+Join `localhost` with a 26.2 client, then:
+
+1. `/rwf admin showcase 8` starts a bots-only match after a 15 s countdown.
+2. `/rwf spectate` puts you at the spectator point.
+3. `/rwf spectate next` follows the next living bot; repeat to cycle.
+4. `/rwf leave` gives your belongings back; `/rwfbots debug` shows the plans.
+
+## Search and Destroy bots (rwfbots)
+
+The `rwfbots` module fills rwf matches with Citizens player NPCs driven by a
+pure perception, tactics, team and reflex stack (`rwfbots.domain`). It needs
+the Citizens plugin (pinned in `server/plugins.json` and required by
+TheStorm's `paper-plugin.yml`) and enables after rwf.
+
+Threading. The main thread runs one 1-tick task (`BotTicker`): it captures a
+`WorldSnapshot` from rwf's read model and the live entities (position,
+velocity from the tick before, look, health, absorption, armor, held slot,
+sprinting, on ground, using an item, invisible, last hurt, bombs, poison, and
+the tick's hits, bow shots, eating, fuse clicks and footsteps), publishes it
+to the `ThinkLoop`, reads the newest `DecisionBoard`, runs each bot's
+`Reflex.tick` and applies the `BodyCommand`s to its body. The `ThinkLoop`
+keeps two one-slot mailboxes (`AtomicReference`): the newest snapshot
+replaces one not yet consumed, and a CAS flag ensures at most one think job
+runs on core's `ComputePool`. The job runs perception (10 Hz), the team step
+(about 1 Hz) and tactics (4 Hz) for the bots whose slot is due
+(`(tick + slot) % period == 0`), under a line-of-sight ray budget, with a
+fresh `SplittableRandom` per bot per job seeded from the match, the bot and
+the tick, and publishes an immutable board the main thread reads with one
+volatile read. Every decision carries the snapshot tick and the bot's life
+epoch; death, teleport, spectating and a landed Rewind bump the epoch, and a
+decision from an old life or older than `maxDecisionAgeTicks` degrades (the
+path is kept, the aim lock and pending ability dropped, a rethink requested)
+rather than being followed blindly. Bodies are resolved from the Citizens NPC
+on every call because the entity object is replaced when the skin applies;
+the attack-speed base is re-applied on every `NPCSpawnEvent`. All rule
+actions (attacks, fuse clicks, arrows, Rewind) go through `rwf.app.BotActions`;
+bots never deal damage directly.
+
+The `Governor` watches the server's recent tick times (p95) and the bot
+sections' own time with hysteresis: level 1 halves the think rates and makes
+bots with no human within 48 blocks reflex every other tick; level 2 also
+drafts fewer bots next match. It never removes a bot from a running round.
+
+Filling a match: the `Director` drafts personalities from
+`rwfbots/personalities/*.yml` (never one whose name an online human uses),
+keeps the most balanceable of a few drafts, shifts every bot's skill so the
+median bot sits a little under the median human (`MatchShift`), and gives
+each a kit from its weights over `draft.kits`; a personality whose weights
+name none of those kits (its favourites ship later) still drafts and plays one
+of them, chosen uniformly. Each bot picks that kit when it joins. Ratings are OpenSkill; after a match with a result every team goes
+through one update and each bot's record (matches, wins, kills, deaths,
+plants, defuses, mu, sigma, last seen) is written to
+`rwfbots_personality_stats`. Humans play at the default rating.
+
+Configuration and content under `server/owned/plugins/TheStorm`:
+
+- `rwfbots.yml`: think rates, governor thresholds, the lever curve table
+  (pinned to `Lever.java`), the kits bots may draft, the LOS ray budget and
+  trace recording.
+- `rwfbots/personalities/<id>.yml`: the personas (see its README): about
+  two hundred, spread evenly over twelve archetypes (rusher, lurker, sniper,
+  bomb diver, anchor, flanker, support, duelist, hunter, turtle, troll,
+  tactician) and five skill bands. The archetype is content only; play
+  differs through the style, role, kit and lever values the generator
+  derives from it. Each persona also carries a voice, chat lines per
+  moment, quirks, rivals and a bio, authored in `scripts/bots/enrichment/`;
+  the module validates them but does not speak them yet.
+- `rwf/maps/<id>/nav.rwfnav`: the map's baked navigation artifact
+  (`NavCodec` format, from the `rwfmap` tool), next to `map.yml` and
+  `blocks.schem`. Its `blocksSha256` must equal the map's `blocksSha256`;
+  the module compares them when the match chooses the map and runs that map
+  humans-only, with a logged error, when the artifact is missing, corrupt,
+  unplayable or baked from other blocks.
+
+`/rwfbots debug [bot]` (`thestorm.rwfbots.admin`) prints the governor level,
+think and staleness percentiles, the board counters and every bot's plan, or
+one bot's levers, decision and refusals.
+
+Decision traces: with `traces.enabled`, every think step appends one
+tab-separated `decision` line (tick, bot, epoch, option, plan label,
+temperature, draw, quantized features, top utilities, path length) to
+`plugins/TheStorm/rwfbots-traces/<matchId>.gz`, written off the main thread;
+lines past `queueCapacity` are dropped and counted.

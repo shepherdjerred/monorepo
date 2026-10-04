@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.bukkit.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -158,6 +159,33 @@ final class EssentialsPaperTest {
     assertThat(wallets.attempts).hasValue(2);
     assertThat(first).noneMatch(m -> m.contains("already under way"));
     assertThat(second).noneMatch(m -> m.contains("already under way"));
+  }
+
+  @Test
+  void aSealedWorldRefusesTeleportsAndHomes() {
+    harness = PaperHarness.start(directory, new FakeWallets());
+    harness.sealed.seal("arena");
+    var arena = harness.server.addSimpleWorld("arena");
+    arena.loadChunk(0, 0);
+    var alice = harness.server.addPlayer("Alice");
+    alice.teleport(new Location(arena, 0.5, 5, 0.5));
+    messages(alice);
+
+    alice.performCommand("spawn");
+    assertThat(harness.awaitMessage(alice, "You can't teleport there"))
+        .anyMatch(m -> m.contains("you can't teleport out of this world."));
+    assertThat(alice.getWorld()).isSameAs(arena);
+
+    alice.performCommand("sethome base");
+    assertThat(messages(alice)).anyMatch(m -> m.contains("You can't set a home in this world."));
+
+    var bob = harness.server.addPlayer("Bob");
+    messages(bob);
+    bob.performCommand("tpa Alice");
+    alice.performCommand("tpaccept Bob");
+    assertThat(harness.awaitMessage(bob, "You can't teleport there"))
+        .anyMatch(m -> m.contains("that world is closed to teleports."));
+    assertThat(bob.getWorld().getName()).isEqualTo("world");
   }
 
   @Test

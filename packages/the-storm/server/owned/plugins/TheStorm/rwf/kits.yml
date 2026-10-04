@@ -1,0 +1,101 @@
+# Red Warfare Search and Destroy kits, as the operator sees them. Owned by the
+# repository; the plugin never writes it. The kits themselves are code
+# (domain/kit/KitBook.java); this file must describe them exactly, kit for
+# kit, or the module refuses to start, so a change to either is visible in the
+# other. Milestone 1 ships the four free kits; see plugin/modules/rwf/KITS.md
+# for the rest.
+#
+# Every kit carries the Blaze Powder "Bomb Fuse" in hotbar slot 0; a kit's
+# fuseBonus (type BOMB_ARMING, BOMB_DEFUSING or BOMB_SPEED with a level, or
+# null) is written on the fuse. hotbar items follow the fuse in slot order;
+# armor names its slot (HELMET, CHESTPLATE, LEGGINGS, BOOTS). Prices are
+# credits; a kit is PURCHASE exactly when it has a price.
+kits:
+  - id: trooper
+    name: Trooper
+    description: >-
+      The kit that sets the standards for all others. It receives a set of iron armor and an iron sword, along with golden apples with which it can quickly recover from fights.
+    price: 0
+    availability: FREE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: { sharpness: 1 },
+        }
+      - { material: GOLDEN_APPLE, amount: 3, name: null, enchantments: {} }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {} }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
+      - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {} }
+    ability: null
+  - id: longbow
+    name: Longbow
+    description: A supporting archer, this kit receives a bow that will send enemies flying.
+    price: 0
+    availability: FREE
+    fuseBonus: null
+    hotbar:
+      - { material: STONE_SWORD, amount: 1, name: null, enchantments: {} }
+      - {
+          material: BOW,
+          amount: 1,
+          name: null,
+          enchantments: { infinity: 1, punch: 3 },
+        }
+      - { material: ARROW, amount: 1, name: null, enchantments: {} }
+    armor:
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {} }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
+      - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
+      - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
+    ability: null
+  - id: shortbow
+    name: Shortbow
+    description: A powerful archer, this kit receives a bow with which it deals precise damage.
+    price: 0
+    availability: FREE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: WOODEN_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: { knockback: 1 },
+        }
+      - {
+          material: BOW,
+          amount: 1,
+          name: null,
+          enchantments: { infinity: 1, power: 2 },
+        }
+      - { material: ARROW, amount: 1, name: null, enchantments: {} }
+    armor:
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {} }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
+      - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
+      - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
+    ability: null
+  - id: rewind
+    name: Rewind
+    description: >-
+      This kit is a master of hitting and running, as it has a magical clock that will teleport it where it was 30 seconds in the past. While health is unchanged, if the user was on fire, it will be put out like it never existed.
+    price: 0
+    availability: FREE
+    fuseBonus: null
+    hotbar:
+      - { material: IRON_SWORD, amount: 1, name: null, enchantments: {} }
+      - { material: CLOCK, amount: 1, name: Time Machine, enchantments: {} }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {} }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: { protection: 1 },
+        }
+      - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
+    ability: rewind

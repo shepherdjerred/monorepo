@@ -1,0 +1,77 @@
+id: royal-falcon
+name: Royal_Falcon
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzcxMzM2MiwKICAicHJvZmlsZUlkIiA6ICI1ZjU5NmViY2JlOTQ0NmQxYmI0M2JlNGYzZjRiOGJlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJUZWlsMHNzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JkMmQ2ODczMDA1M2IzM2FiMTY1NTJiMzQ0Nzk3ZDhmMTRlNjI0NDlkZjI3MWMwYTQxMDQyZGM5M2ExNDRjMmMiCiAgICB9CiAgfQp9
+  signature: "K2mXFJR2k+AqBLH4sapMnlOuWTwQQKoQh1eetUbLt3FdcX3M5eF5xyZ9HsrnMBG2dmnm1s2UBhV4CixBCEsiagFeklIBcTzmLhObaZZflu/s1iX+qj9K9KlP9tZl7xbdY8sbSnbLvxCD7LlCWUHYlbvl0Y8bJvuSWy7PCNyDYQi50HgE4O100JbswsOx2x2rtdeYyvlHOIsn53G3qRdI+e9LUPJlBBlS7M6igIL2FcqebfN+yV8IyvyDZi9R8xdGwGVJ6JI6seLA4OYiIrBdOFuTbAmtInyOodVULE3Qo1cmortE6AUOMq/fLnAQCFmOCyx1EoEahbvmY70+LS6T5tDFFdj7uYDOEgfrbM3L3KHkY222oF1ynFuyV09M886J7HsvEEzqOnn2C7MLybwtv+VYgdqEsPEt2B/ICjDdBcA9gGWDIcgV0NuvAcny7e73NOoR2GvAl6FJue+Wq62wURiqgQ7r14NupXLiolpFwX5Dn9PH01lG8HHSmLsPC8Y0MWCCJd3vyhMkpMfPEz9aNbgjeuYQaIoUD5XfZqtYVogfVtkVqiQTXlkxS0RPUH5ECmSQS+vbW8q9SMHoO0FHgdVJcd9/X3F2tWUuSzpWUBBpGoamH95UCc00qLPCfyOjmSRmDfQPUV1HHKksFq4JBSzzlBMsyHFQhm0ABQEGktM="
+skill: 0.633
+archetype: flanker
+leverOffsets:
+  reactionMs: -0.48
+  turnRateDegPerTick: 0.9
+  predictionQuality: 0.56
+  coordination: -0.65
+  aggression: 0.58
+kits:
+  trooper: 0.64
+  shortbow: 1
+  rewind: 0.32
+  wraith: 0.45
+  spy: 0.36
+roles:
+  plant: 0.45
+  rotate: 1
+  hunt: 0.6
+style:
+  aggression: 0.63
+  patience: 0.4
+  teamplay: 0.25
+  risk: 0.72
+voice:
+  tone:
+    - posh
+    - smug
+    - courteous
+  verbosity: normal
+  style: "an aristocrat on a country stroll; one does not rush, one simply goes round the side"
+lines:
+  greet:
+    - "Good evening, {team}. Shall we take the scenic route?"
+    - One does not walk through the front door. One goes round.
+    - Splendid weather for a flank, what?
+  onKill:
+    - "Do mind your flank next time, {victim}."
+    - "Terribly sorry, {victim}. Wrong side, I'm afraid."
+    - "Jolly good. Carry on, {team}."
+  onDeath:
+    - "How dreadfully rude, {killer}. Well played."
+    - I appear to have been flanked. How ironic.
+    - "Fetch my hat, {team}. I'm retiring for the round."
+  onPlant:
+    - "{bomb} is lit. They were looking the other way, naturally."
+    - "Arrived fashionably from the side. {bomb} is armed."
+  onDefuse:
+    - "{bomb} is quite safe now, thank you."
+    - One does tidy up after guests. Defused.
+  onWin:
+    - "A most agreeable outing, {team}."
+    - Victory, and not a hair out of place.
+  onLoss:
+    - Bad form, but good game.
+    - We shall return to the estate and reflect.
+  onLastAlive:
+    - Just me then. Rather like a quiet afternoon.
+    - "I shall take the long way round, {team}."
+    - Leave it to me, old sport.
+  taunt:
+    - You really ought to check the sides, old chap.
+    - I'll be along presently. From an angle.
+    - Front doors are so terribly common.
+quirks:
+  - good_sport
+  - late_to_everything
+rivals:
+  - xxvipergolemxx
+  - grim-otter
+bio: Treats every flank like a country walk and has never once arrived anywhere through the front. Considers xXViperGolemXx a talented but frightfully uncouth rival on the wide route.
+batch: 1
+retired: false

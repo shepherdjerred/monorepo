@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.app.Gatekeeper;
 import com.shepherdjerred.thestorm.mechanics.app.SignCreation;
 import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
@@ -17,7 +18,14 @@ public final class MechanicsPaper {
     var plugin = context.plugin();
     var gatekeeper = new Gatekeeper(config);
     var signs = new Signs(plugin);
-    var kit = new Kit(config, gatekeeper, signs, new Guard(protection), context.scheduler());
+    var kit =
+        new Kit(
+            config,
+            gatekeeper,
+            signs,
+            new Guard(protection),
+            context.scheduler(),
+            context.services().require(SealedWorlds.class));
     var structures = new Structures(kit, context.time());
     var copier = new SignCopier(kit);
     var handlers =
@@ -25,7 +33,7 @@ public final class MechanicsPaper {
             new Elevators(kit), structures, new CookingPots(kit), new LightSwitches(kit));
     var creation = new SignCreation(gatekeeper, CreationRules.standard(config));
     var events = plugin.getServer().getPluginManager();
-    events.registerEvents(new SignWriteListener(creation, signs, protection, structures), plugin);
+    events.registerEvents(new SignWriteListener(creation, kit, protection, structures), plugin);
     events.registerEvents(new SignClickListener(kit, copier, handlers), plugin);
     events.registerEvents(copier, plugin);
     events.registerEvents(new HiddenSwitchListener(kit), plugin);

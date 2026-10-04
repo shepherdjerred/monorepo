@@ -1,0 +1,48 @@
+# The training yard: a generated 64x16x64 two-team Search and Destroy map.
+# Owned by the repository; the plugin never writes it. The folder name must be
+# the map id. Every key is required and unknown keys are errors.
+#
+# blocks.schem (Sponge schematic v3) fills region exactly and is pasted at
+# region.min when the module enables and whenever the world's blocks stop
+# matching blocksSha256. Regenerate it with the TrainingYard generator in the
+# rwf module's test sources; it prints the hash to paste below.
+id: training-yard
+name: Training Yard
+author: The Storm
+region:
+  min: { x: 0, y: 64, z: 0 }
+  max: { x: 63, y: 79, z: 63 }
+# The glass platform under the open ceiling.
+lobby: { x: 31.5, y: 78.0, z: 31.5, yaw: 0.0, pitch: 0.0 }
+spectator: { x: 31.5, y: 76.0, z: 31.5, yaw: 0.0, pitch: 45.0 }
+teams:
+  # Red holds the west base and faces east.
+  - color: RED
+    spawns:
+      - { x: 6.5, y: 65.0, z: 27.5, yaw: 270.0, pitch: 0.0 }
+      - { x: 6.5, y: 65.0, z: 29.5, yaw: 270.0, pitch: 0.0 }
+      - { x: 6.5, y: 65.0, z: 33.5, yaw: 270.0, pitch: 0.0 }
+      - { x: 6.5, y: 65.0, z: 35.5, yaw: 270.0, pitch: 0.0 }
+      - { x: 11.5, y: 65.0, z: 27.5, yaw: 270.0, pitch: 0.0 }
+      - { x: 11.5, y: 65.0, z: 29.5, yaw: 270.0, pitch: 0.0 }
+      - { x: 11.5, y: 65.0, z: 33.5, yaw: 270.0, pitch: 0.0 }
+      - { x: 11.5, y: 65.0, z: 35.5, yaw: 270.0, pitch: 0.0 }
+  # Blue holds the east base and faces west.
+  - color: BLUE
+    spawns:
+      - { x: 57.5, y: 65.0, z: 27.5, yaw: 90.0, pitch: 0.0 }
+      - { x: 57.5, y: 65.0, z: 29.5, yaw: 90.0, pitch: 0.0 }
+      - { x: 57.5, y: 65.0, z: 33.5, yaw: 90.0, pitch: 0.0 }
+      - { x: 57.5, y: 65.0, z: 35.5, yaw: 90.0, pitch: 0.0 }
+      - { x: 52.5, y: 65.0, z: 27.5, yaw: 90.0, pitch: 0.0 }
+      - { x: 52.5, y: 65.0, z: 29.5, yaw: 90.0, pitch: 0.0 }
+      - { x: 52.5, y: 65.0, z: 33.5, yaw: 90.0, pitch: 0.0 }
+      - { x: 52.5, y: 65.0, z: 35.5, yaw: 90.0, pitch: 0.0 }
+# Each team's TNT block, inside its base.
+bombs:
+  - { id: red-1, team: RED, at: { x: 8, y: 65, z: 31 } }
+  - { id: blue-1, team: BLUE, at: { x: 55, y: 65, z: 31 } }
+# The nuke on the gold pedestal in the middle of the yard.
+nukes:
+  - { id: nuke-1, at: { x: 31, y: 66, z: 31 } }
+blocksSha256: 03f6daeb430aa9da0dfdcb472bfdab7b7b5a69741841d7a93444efbd53a85171
