@@ -78,7 +78,6 @@ function pendingGame(): CustomGameSnapshot {
       gameParticipant(index),
     ),
     activeCaptain: null,
-    tournamentLobby: { state: "resolved", code: "NA-TEST-CODE" },
     winner: null,
     voiceState: "READY",
     voiceReady: true,

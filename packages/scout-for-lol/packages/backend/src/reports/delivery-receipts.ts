@@ -16,15 +16,16 @@ export function reportAttachmentDigest(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-/** Freeze the entire occurrence before sending any chunk. Legacy claims are
- * adopted, never re-executed. An unfinished claim may have reached Discord. */
+/** Freeze the entire occurrence before sending any chunk. A run already
+ * recorded as delivered freezes every chunk delivered; any other run's chunks
+ * start pending. */
 export async function freezeReportDelivery(
   dispatch: ScheduledReportDispatch,
   database: ExtendedPrismaClient = prisma,
 ) {
   const reportRunId = ReportRunIdSchema.parse(dispatch.result.runId);
   return await database.$transaction(async (tx) => {
-    // Serialize initialisation for this run, including adoption of old claims.
+    // Serialize initialisation for this run.
     await tx.$queryRaw`SELECT id FROM "ReportRun" WHERE id = ${reportRunId} FOR UPDATE`;
     const existing = await tx.reportDeliveryChunk.findMany({
       where: { reportRunId },
@@ -54,29 +55,9 @@ export async function freezeReportDelivery(
       );
     }
     const chunks = splitMessageIntoChunks(dispatch.result.output.content);
-    const claims = await tx.scoutEffectClaim.findMany({
-      where: {
-        key: {
-          in: chunks.map(
-            (_, index) =>
-              `report-discord:${reportRunId.toString()}:${index.toString()}`,
-          ),
-        },
-      },
-    });
+    const delivered = run.deliveryState === "DELIVERED";
     await tx.reportDeliveryChunk.createMany({
       data: chunks.map((content, chunkIndex) => {
-        const claim = claims.find(
-          (row) =>
-            row.key ===
-            `report-discord:${reportRunId.toString()}:${chunkIndex.toString()}`,
-        );
-        const state =
-          claim?.state === "COMPLETED" || run.deliveryState === "DELIVERED"
-            ? "DELIVERED"
-            : claim === undefined
-              ? "PENDING"
-              : "UNKNOWN";
         return {
           reportRunId,
           channelId: dispatch.report.channelId,
@@ -84,16 +65,10 @@ export async function freezeReportDelivery(
           chunkIndex,
           content,
           nonce: crypto.randomUUID().replaceAll("-", "").slice(0, 24),
-          state,
-          messageId: claim?.resultId ?? null,
-          deliveredAt:
-            state === "DELIVERED"
-              ? (claim?.completedAt ?? run.deliveredAt)
-              : null,
-          lastError:
-            state === "UNKNOWN"
-              ? "Adopted an unfinished legacy send claim; delivery may have reached Discord"
-              : null,
+          state: delivered ? "DELIVERED" : "PENDING",
+          messageId: null,
+          deliveredAt: delivered ? run.deliveredAt : null,
+          lastError: null,
           attachmentKey:
             chunkIndex === 0 && image !== null ? run.imageS3Key : null,
           attachmentName:

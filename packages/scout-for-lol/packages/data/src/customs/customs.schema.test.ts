@@ -3,6 +3,7 @@ import {
   CustomAuthExchangeInputSchema,
   CustomAuditEventSchema,
   CustomCreateNightInputSchema,
+  CustomGameSnapshotSchema,
   CustomGameStateSchema,
   CustomNightSnapshotSchema,
   CustomJoinNightInputSchema,
@@ -10,6 +11,36 @@ import {
 } from "#src/customs/customs.schema.ts";
 
 describe("Customs contracts", () => {
+  test("a game snapshot from an older backend drops the retired tournament lobby", () => {
+    const current = {
+      id: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
+      sequence: 1,
+      state: "RESULT_PENDING",
+      rosterMode: "FIRST_TEN",
+      map: "SUMMONERS_RIFT",
+      pickMode: "TOURNAMENT_DRAFT",
+      participants: [],
+      activeCaptain: null,
+      winner: null,
+      voiceState: "READY",
+      voiceReady: true,
+      voiceOverride: false,
+      voiceError: null,
+      createdAt: "2026-08-30T01:00:00.000Z",
+      startedAt: "2026-08-30T01:05:00.000Z",
+      completedAt: null,
+    };
+    const legacy = {
+      ...current,
+      tournamentLobby: { state: "resolved", code: "NA-LEGACY-CODE" },
+    };
+
+    const parsed = CustomGameSnapshotSchema.parse(legacy);
+
+    expect(parsed).toEqual(current);
+    expect("tournamentLobby" in parsed).toBe(false);
+  });
+
   test("manual result state is not part of the game contract", () => {
     expect(CustomGameStateSchema.safeParse("MANUAL").success).toBe(false);
   });

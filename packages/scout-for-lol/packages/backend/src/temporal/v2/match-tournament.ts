@@ -1,11 +1,8 @@
-import type { MatchId, RawMatch } from "@scout-for-lol/data";
+import type { RawMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutTournamentResultV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
 import { finalizeAndPublishManagedCustomResult } from "#src/customs/riot-result-publication.ts";
-import {
-  findObservedCustomGame,
-  historicalTournamentLobbyIdentity,
-} from "#src/customs/riot-results.ts";
+import { findObservedCustomGame } from "#src/customs/riot-results.ts";
 import { prisma } from "#src/database/index.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 
@@ -19,8 +16,8 @@ import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
  * rediscovers the match to fix it.
  *
  * The Activity and outcome names retain "tournament" for replay compatibility
- * with existing Temporal histories. New games are discovered from observed
- * rosters; the indexed lobby lookup below exists only for historical rows.
+ * with existing Temporal histories. Managed games are identified only by the
+ * observed custom game bound to this match.
  *
  * Re-running is safe, which is what makes a crash between this stage and the
  * cursor recoverable: the result projector refuses to re-report a verified
@@ -32,7 +29,6 @@ export async function finalizeTournamentResultV2(input: {
 }): Promise<ScoutTournamentResultV2Result> {
   const context = await resolveScoutV2MatchContext(input.riotMatchId);
   return await finalizeTournamentMatchV2(
-    context.matchId,
     context.matchData,
     context.matchDataSource,
   );
@@ -46,29 +42,17 @@ export async function finalizeTournamentResultV2(input: {
  * payload resolution.
  */
 export async function finalizeTournamentMatchV2(
-  matchId: MatchId,
   matchData: RawMatch,
   matchDataSource: "RIOT" | "SCOUT_CLIENT" = "RIOT",
 ): Promise<ScoutTournamentResultV2Result> {
-  // The same identity rule v1 finalizes on, so the gate and the work can never
-  // disagree about which lobby this match belongs to.
-  const identity = historicalTournamentLobbyIdentity(
-    matchId,
-    matchData.info.tournamentCode,
-  );
-  const [lobby, observedGame] = await Promise.all([
-    prisma.tournamentLobby.findFirst({
-      where: identity,
-      select: { state: true },
-    }),
-    findObservedCustomGame(prisma, matchData),
-  ]);
-  if (lobby === null && observedGame === null) {
+  // The same identity rule the finalizer uses, so the gate and the work can
+  // never disagree about which custom game this match belongs to.
+  const observedGame = await findObservedCustomGame(prisma, matchData);
+  if (observedGame === null) {
     return { outcome: "not-a-tournament-match" };
   }
 
-  const alreadyReported =
-    lobby?.state === "reported" || observedGame?.state === "VERIFIED";
+  const alreadyReported = observedGame.state === "VERIFIED";
   await finalizeAndPublishManagedCustomResult(
     prisma,
     matchData,
@@ -77,16 +61,10 @@ export async function finalizeTournamentMatchV2(
 
   // Reported separately from the outcome because they are different claims:
   // whether THIS run finalized the result, and whether a Custom Night snapshot
-  // went out at all. A reported lobby republishes its snapshot on every pass,
-  // which is safe precisely because the snapshot is current state rather than
-  // an event.
-  const published = await prisma.tournamentLobby.findFirst({
-    where: identity,
-    select: { customGame: { select: { nightId: true } } },
-  });
-  const publishedNight =
-    observedGame !== null || published?.customGame?.nightId != null;
+  // went out at all. An observed game always republishes its night's
+  // snapshot, which is safe precisely because the snapshot is current state
+  // rather than an event.
   return alreadyReported
-    ? { outcome: "already-finalized", publishedNight }
-    : { outcome: "finalized", publishedNight };
+    ? { outcome: "already-finalized", publishedNight: true }
+    : { outcome: "finalized", publishedNight: true };
 }

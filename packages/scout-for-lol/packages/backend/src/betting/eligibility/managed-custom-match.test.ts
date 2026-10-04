@@ -2,14 +2,12 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { RawMatchSchema } from "@scout-for-lol/data";
 
 const mocks = vi.hoisted(() => ({
-  findLobby: vi.fn(),
   findCustomGame: vi.fn(),
   findDuelGame: vi.fn(),
 }));
 
 vi.mock("#src/database/index.ts", () => ({
   prisma: {
-    tournamentLobby: { findUnique: mocks.findLobby },
     customGame: { findUnique: mocks.findCustomGame },
     duelGame: { findUnique: mocks.findDuelGame },
   },
@@ -22,7 +20,6 @@ const fixture = RawMatchSchema.parse(
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.findLobby.mockResolvedValue(null);
   mocks.findCustomGame.mockResolvedValue(null);
   mocks.findDuelGame.mockResolvedValue(null);
 });
