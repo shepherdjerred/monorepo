@@ -39,7 +39,9 @@ describe("NPC combat on Paper with all modules", () => {
     rcon,
     server,
   }) => {
+    await rcon.command("forceload add 400 6");
     await nextDay(rcon);
+    await rcon.command(`gamemode survival ${bot.username}`);
     await rcon.command("difficulty normal");
     await rcon.command("gamerule minecraft:spawn_mobs false");
     // Combat coverage belongs in wilderness; this area is intentionally outside Spawn Town.
@@ -116,58 +118,79 @@ describe("NPC combat on Paper with all modules", () => {
       await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
       await rcon.command(`tp ${npc("market-guard")} -34.5 64 4.5`);
       await rcon.command("gamerule minecraft:advance_time true");
+      await rcon.command("forceload remove 400 6");
     }
   });
+});
 
+describe("NPC guard combat on Paper", () => {
   test("guards take melee damage and lethal first hits summon immediate defense", async ({
     bot,
     rcon,
   }) => {
-    await rcon.command(`tp ${npc("market-guard")} 401.5 64 4.5`);
-    await rcon.command(`tp ${bot.username} 401.5 64 3`);
-    await waitUntil("visible market sentry", () =>
-      Object.values(bot.entities).some(
+    await rcon.command("forceload add 400 6");
+    try {
+      // The unscheduled captain stays at the combat fixture instead of resuming a patrol.
+      await rcon.command(`tp ${npc("guard-captain")} 401.5 64 4.5`);
+      await rcon.command(`tp ${bot.username} 401.5 64 3`);
+      await waitUntil("visible guard captain", () =>
+        Object.values(bot.entities).some(
+          (entity) =>
+            entity.name === "mannequin" &&
+            entity.position.distanceTo(new Vec3(401.5, 64, 4.5)) < 0.8,
+        ),
+      );
+      const sentry = Object.values(bot.entities).find(
         (entity) =>
           entity.name === "mannequin" &&
           entity.position.distanceTo(new Vec3(401.5, 64, 4.5)) < 0.8,
-      ),
-    );
-    const sentry = Object.values(bot.entities).find(
-      (entity) =>
-        entity.name === "mannequin" &&
-        entity.position.distanceTo(new Vec3(401.5, 64, 4.5)) < 0.8,
-    );
-    if (sentry === undefined) throw new Error("Sentry left before attack");
-    const before = await health(rcon, npc("market-guard"));
-    const warning = waitForMessage(bot, /Warning 1 of 2/u);
-    bot.attack(sentry);
-    await warning;
-    expect(await health(rcon, npc("market-guard"))).toBeLessThan(before);
-    expect(bot.health).toBe(20);
-    const defended = waitForMessage(bot, /The Watch will defend us/u);
-    await rcon.command(
-      `damage ${npc("zavier")} 100 minecraft:player_attack by ${bot.username}`,
-    );
-    await defended;
-    await waitUntil("lethal attack is defended", () => bot.health < 20, 15_000);
-    expect(await rcon.command("npc list")).toMatch(
-      /zavier:.*dead; returns at dawn/u,
-    );
-    await rcon.command(`tp ${bot.username} 500 64 500`);
-    await rcon.command(`damage ${npc("market-guard")} 100 minecraft:generic`);
-    await Bun.sleep(600);
-    expect(await rcon.command("npc list")).toMatch(
-      /market-guard:.*dead; returns at dawn/u,
-    );
-    for (const type of ["item", "experience_orb"]) {
-      const drops = await rcon.command(
-        `execute if entity @e[type=minecraft:${type},x=400,y=64,z=4,distance=..24]`,
       );
-      expect(drops).not.toContain("Test passed");
+      if (sentry === undefined) throw new Error("Sentry left before attack");
+      const before = await health(rcon, npc("guard-captain"));
+      const warning = waitForMessage(bot, /Warning 1 of 2/u);
+      bot.attack(sentry);
+      await warning;
+      expect(await health(rcon, npc("guard-captain"))).toBeLessThan(before);
+      expect(bot.health).toBe(20);
+      const defended = waitForMessage(bot, /The Watch will defend us/u);
+      await rcon.command(
+        `damage ${npc("zavier")} 100 minecraft:player_attack by ${bot.username}`,
+      );
+      await defended;
+      await waitUntil(
+        "lethal attack is defended",
+        () => bot.health < 20,
+        15_000,
+      );
+      expect(await rcon.command("npc list")).toMatch(
+        /zavier:.*dead; returns at dawn/u,
+      );
+      await rcon.command(`tp ${bot.username} 500 64 500`);
+      await rcon.command(
+        `damage ${npc("guard-captain")} 100 minecraft:generic`,
+      );
+      await Bun.sleep(600);
+      expect(await rcon.command("npc list")).toMatch(
+        /guard-captain:.*dead; returns at dawn/u,
+      );
+      for (const type of ["item", "experience_orb"]) {
+        const drops = await rcon.command(
+          `execute if entity @e[type=minecraft:${type},x=400,y=64,z=4,distance=..24]`,
+        );
+        expect(drops).not.toContain("Test passed");
+      }
+      await nextDay(rcon);
+    } finally {
+      await nextDay(rcon);
+      await rcon.command(`tp ${npc("guard-captain")} 41.5 67 9.5`);
+      await rcon.command(`gamemode survival ${bot.username}`);
+      await rcon.command("difficulty peaceful");
+      await rcon.command("forceload remove 400 6");
     }
-    await nextDay(rcon);
   });
+});
 
+describe("NPC civilians on Paper", () => {
   test("civilians flee and call guards for hostile mobs while peaceful animals stay safe", async ({
     bot,
     rcon,
@@ -177,9 +200,10 @@ describe("NPC combat on Paper with all modules", () => {
       await rcon.command("forceload add 400 6");
       await rcon.command("difficulty normal");
       await rcon.command("time set midnight");
-      // Move the guard far from its original home: this reproduces the old home-radius bug.
-      await rcon.command(`gamemode spectator ${bot.username}`);
-      await rcon.command(`tp ${bot.username} 500 70 500`);
+      // Keep a player close enough to tick NPCs, outside their threat radius; the guard is far
+      // from its original home to reproduce the old home-radius bug.
+      await rcon.command(`gamemode survival ${bot.username}`);
+      await rcon.command(`tp ${bot.username} 420.5 70 6.5`);
       await rcon.command(`tp ${npc("guard-captain")} 400.5 64 6.5`);
       await rcon.command(`tp ${npc("stan")} 400.5 64 0.5`);
       await rcon.command(
@@ -232,25 +256,65 @@ describe("NPC spell targeting on Paper", () => {
     bot,
     rcon,
   }) => {
-    await nextDay(rcon);
-    await rcon.command(`tp ${npc("stan")} 400.5 64 0.5`);
-    await rcon.command(`tp ${bot.username} 400.5 64 -2.5`);
-    await waitUntil(
-      "spellcaster arrival",
-      () => bot.entity.position.distanceTo(new Vec3(400.5, 64, -2.5)) < 0.3,
+    const target = npc("stan");
+    const blocker = npc("winston");
+    const temporaryFloor = "-36 63 3";
+    const existingFloor = await rcon.command(
+      `execute if block ${temporaryFloor} minecraft:stone`,
     );
-    await bot.lookAt(new Vec3(400.5, 65.2, 0.5), true);
-    const before = await health(rcon, npc("stan"));
-    const frozenBefore = await rcon.command(
-      `data get entity ${npc("stan")} TicksFrozen`,
-    );
+    const placedFloor = !existingFloor.includes("Test passed");
+    if (placedFloor) {
+      const floor = await rcon.command(`setblock ${temporaryFloor} stone`);
+      if (!floor.includes("block at")) {
+        throw new Error(`Could not place spell fixture floor: ${floor}`);
+      }
+    }
     const messages: string[] = [];
     const record = (message: string) => {
       messages.push(message);
     };
     bot.on("messagestr", record);
     try {
+      await rcon.command("gamerule minecraft:advance_time false");
+      await nextDay(rcon);
+      await rcon.command(`gamemode survival ${bot.username}`);
+      await rcon.command(`tp ${bot.username} -35.5 64 3.5`);
+      await waitUntil(
+        "spellcaster arrival",
+        () => bot.entity.position.distanceTo(new Vec3(-35.5, 64, 3.5)) < 0.3,
+      );
+      await rcon.command(`tp ${blocker} -40.5 64 0.5`);
+      const before = await health(rcon, target);
+      const frozenBefore = await rcon.command(
+        `data get entity ${target} TicksFrozen`,
+      );
       for (const spell of ["freeze", "entomb", "forcepush", "drainlife"]) {
+        await rcon.command(`tp ${target} -35.5 64 0.5`);
+        await rcon.command(`tp ${blocker} -40.5 64 0.5`);
+        await bot.lookAt(new Vec3(-35.5, 65.2, 0.5), true);
+        let lastRotation = "not queried";
+        try {
+          await eventually("Paper receives aim at Stan", async () => {
+            lastRotation = await rcon.command(
+              `data get entity ${bot.username} Rotation`,
+            );
+            const match = /\[(-?[\d.]+)f, (-?[\d.]+)f\]/u.exec(lastRotation);
+            return (
+              match?.[1] !== undefined &&
+              match[2] !== undefined &&
+              Math.abs(Math.abs(Number(match[1])) - 180) < 1 &&
+              Number(match[2]) > 5 &&
+              Number(match[2]) < 25
+            );
+          });
+        } catch (error) {
+          throw new Error(
+            `Paper did not receive aim at Stan: ${lastRotation}`,
+            {
+              cause: error,
+            },
+          );
+        }
         await rcon.command(`clear ${bot.username} minecraft:paper`);
         await waitUntil("previous scroll removed", () =>
           bot.inventory.items().every((item) => item.name !== "paper"),
@@ -266,30 +330,31 @@ describe("NPC spell targeting on Paper", () => {
         await bot.equip(scroll, "hand");
         const reply = waitForMessage(
           bot,
-          spell === "drainlife"
-            ? /Stan.*Warning 1 of 2/u
-            : /No creature.*to target/u,
+          spell === "drainlife" ? /Warning 1 of 2/u : /No creature.*to target/u,
         );
         bot.activateItem();
         await reply;
         bot.deactivateItem();
         if (spell !== "drainlife") {
-          expect(await health(rcon, npc("stan"))).toBe(before);
+          expect(await health(rcon, target)).toBe(before);
           expect(
-            await rcon.command(`data get entity ${npc("stan")} TicksFrozen`),
+            await rcon.command(`data get entity ${target} TicksFrozen`),
           ).toBe(frozenBefore);
           expect(
             bot.inventory.items().some((item) => item.name === "paper"),
           ).toBe(true);
         }
       }
-      expect(await health(rcon, npc("stan"))).toBeLessThan(before);
+      expect(await health(rcon, target)).toBeLessThan(before);
     } finally {
       await Bun.write(".cache/e2e/npc-spells.txt", messages.join("\n"));
       bot.deactivateItem();
       bot.off("messagestr", record);
+      await rcon.command("gamerule minecraft:advance_time true");
       await nextDay(rcon);
-      await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
+      await rcon.command(`tp ${target} -35.5 64 0.5`);
+      await rcon.command(`tp ${blocker} -35.5 64 1.5`);
+      if (placedFloor) await rcon.command(`setblock ${temporaryFloor} air`);
     }
   });
 });
