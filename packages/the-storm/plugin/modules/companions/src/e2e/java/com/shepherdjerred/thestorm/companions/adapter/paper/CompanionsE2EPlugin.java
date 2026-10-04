@@ -47,6 +47,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -329,6 +330,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     var at = new Location(world, 11.5, -60, 10.5);
     var cancellation = new CraftCancellation(npc.getMinecraftUniqueId());
     getServer().getPluginManager().registerEvents(cancellation, this);
+    BreakObservation breakObservation = null;
     var coreProtect = getServer().getPluginManager().getPlugin("CoreProtect");
     if (!(coreProtect instanceof CoreProtect plugin))
       throw new IllegalStateException("audit missing");
@@ -336,6 +338,8 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
       if (!npc.spawn(at)) throw new IllegalStateException("native probe spawn failed");
       var player = player(npc);
       player.setGameMode(GameMode.SURVIVAL);
+      breakObservation = new BreakObservation(player.getUniqueId());
+      getServer().getPluginManager().registerEvents(breakObservation, this);
       player
           .getInventory()
           .addItem(new ItemStack(Material.OAK_LOG, 2), new ItemStack(Material.WOODEN_PICKAXE));
@@ -356,7 +360,9 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
       protection.deny = false;
       SurvivalActions.equip(player, Material.WOODEN_PICKAXE);
       var reachable = SurvivalActions.reach(player, stone);
+      var permitted = actions.allowed(player, ProtectedAction.BREAK, stone);
       var unqueued = audit.unqueued(stone, "#storm-probe", player.getName());
+      var tool = player.getInventory().getItemInMainHand().getType();
       var mined = actions.mine(player, stone, Material.STONE, "#storm-probe");
       var placed = actions.place(player, stone, Material.OAK_PLANKS, "#storm-probe");
       source
@@ -383,11 +389,20 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                       + NativeRecipes.stock(player).getOrDefault("OAK_PLANKS", 0)
                       + " reach="
                       + reachable
+                      + " allowed="
+                      + permitted
                       + " unqueued="
                       + unqueued
+                      + " tool="
+                      + tool
+                      + " breakEvent="
+                      + breakObservation.seen
+                      + " cancelled="
+                      + breakObservation.cancelled
                       + nativeEating(player)));
     } finally {
       HandlerList.unregisterAll(cancellation);
+      if (breakObservation != null) HandlerList.unregisterAll(breakObservation);
       npc.destroy();
     }
   }
@@ -415,6 +430,23 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     @EventHandler
     public void craft(CraftItemEvent event) {
       if (cancel && event.getWhoClicked().getUniqueId().equals(player)) event.setCancelled(true);
+    }
+  }
+
+  public static final class BreakObservation implements Listener {
+    private final UUID player;
+    private boolean seen;
+    private boolean cancelled;
+
+    private BreakObservation(UUID player) {
+      this.player = player;
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = false)
+    public void breakBlock(BlockBreakEvent event) {
+      if (!event.getPlayer().getUniqueId().equals(player)) return;
+      seen = true;
+      cancelled = event.isCancelled();
     }
   }
 
