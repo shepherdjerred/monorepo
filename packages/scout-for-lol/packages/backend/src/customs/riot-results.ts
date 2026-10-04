@@ -6,6 +6,7 @@ import {
   MatchIdSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
+import { ApplicationFailure } from "@temporalio/common";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 
 export type ManagedCustomResultSource = "RIOT" | "SCOUT_CLIENT";
@@ -66,10 +67,25 @@ function requireCompleteRoster(participantCount: number, gameId: string): void {
   }
 }
 
+/**
+ * The selected match evidence cannot finalize this game, and never will.
+ *
+ * Canonical match selection is final, so retrying re-reads the same payload.
+ * A plain error here was treated as transient by the client match dispatcher,
+ * which then slept and retried forever while every match queued behind it
+ * waited; non-retryable sends it to operator review and lets the queue move.
+ */
+function incompleteResult(message: string): ApplicationFailure {
+  return ApplicationFailure.nonRetryable(
+    message,
+    "ManagedCustomResultIncomplete",
+  );
+}
+
 function requireWinner(winningTeams: ReadonlySet<string>, matchId: string) {
   const values = [...winningTeams];
   if (values.length !== 1) {
-    throw new Error(
+    throw incompleteResult(
       `Match ${matchId} did not produce exactly one winning custom team`,
     );
   }
@@ -123,7 +139,7 @@ async function projectParticipantResults(
       (candidate) => candidate.puuid === participant.puuid,
     );
     if (riotParticipant === undefined) {
-      throw new Error(
+      throw incompleteResult(
         `Match ${matchId} is missing custom participant ${participant.puuid}`,
       );
     }
