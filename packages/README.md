@@ -17,6 +17,7 @@ hold only scoped invariants that agents must keep in context.
 | [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
 | [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                    |
+| [storm-forum](storm-forum/)                                     | XenForo runtime, owned community portal, release configuration and Activity worker       |
 
 ## Discord streaming
 

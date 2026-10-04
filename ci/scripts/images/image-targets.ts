@@ -18,6 +18,10 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
     owner: "@shepherdjerred/storm-brain",
     ghcrVisibility: "public",
   },
+  "storm-forum": {
+    owner: "@shepherdjerred/storm-forum",
+    ghcrVisibility: "public",
+  },
   "tasknotes-server": { owner: "tasknotes-server", ghcrVisibility: "public" },
   "starlight-karma-bot": {
     owner: "starlight-karma-bot",

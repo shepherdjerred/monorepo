@@ -54,6 +54,30 @@
   ],
   "flags": [
     {
+      "key": "storm-forum-registration-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-forum",
+      "purpose": "Open forum registration after private acceptance checks.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "storm-forum-season",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-forum",
+      "purpose": "Choose the forum's seasonal accent manually.",
+      "type": "variant",
+      "default": "normal",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "ai_reports_enabled",
       "owner": "scout",
       "namespace": "scout",

@@ -257,6 +257,19 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
+        ...["storm-forum", "storm-forum-beta"].map((namespace) => ({
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": namespace },
+              },
+              podSelector: {
+                matchLabels: { app: "storm-forum", component: "web" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        })),
         scoutBackendIngress(),
         scoutWorkflowWorkerIngress(),
         ...scoutGatewayClientIngress(),

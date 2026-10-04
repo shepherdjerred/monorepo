@@ -1,4 +1,6 @@
 // Temporal requires wrappers rather than re-exports from its entry point.
+import * as stormForum from "./homelab/storm-forum.ts";
+import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
@@ -287,6 +289,13 @@ export async function runZfsMaintenanceWorkflow(): Promise<void> {
 
 export async function runMiningWorldResetWorkflow(): Promise<void> {
   return _runMiningWorldResetWorkflow();
+}
+
+export async function maintainStormForumWorkflow(stage: ForumStage) {
+  return stormForum.maintainStormForumWorkflow(stage);
+}
+export async function backupStormForumWorkflow(stage: ForumStage) {
+  return stormForum.backupStormForumWorkflow(stage);
 }
 
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {

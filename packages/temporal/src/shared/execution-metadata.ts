@@ -24,6 +24,8 @@ const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
   [TASK_QUEUES.REPORTS]: "reports",
   [TASK_QUEUES.INFRA]: "infra",
   [TASK_QUEUES.MINING_RESET]: "infra",
+  [TASK_QUEUES.STORM_FORUM_BETA]: "infra",
+  [TASK_QUEUES.STORM_FORUM_PROD]: "infra",
   [TASK_QUEUES.REPO_AUTOMATION]: "repo",
   [TASK_QUEUES.SCOUT]: "scout",
   [TASK_QUEUES.MAINTENANCE]: "maintenance",
@@ -113,6 +115,8 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
   runMiningWorldResetWorkflow: "infra",
+  maintainStormForumWorkflow: "infra",
+  backupStormForumWorkflow: "infra",
 
   // TASK_QUEUES.REPO_AUTOMATION
   runLlmCatalogRefresh: "repo",

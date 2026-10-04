@@ -64,6 +64,11 @@ const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
+  "storm-forum": {
+    command:
+      "cd /opt/storm-forum && bun scripts/runtime-smoke.ts && php-fpm --test --fpm-config /usr/local/etc/php-fpm.conf",
+    env: {},
+  },
   "woodpecker-config-extension": {
     command: [
       "set -eu",

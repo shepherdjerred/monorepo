@@ -19,7 +19,9 @@ const ACTIVITY_TASK_QUEUES = Object.values(TASK_QUEUES).filter(
     taskQueue !== TASK_QUEUES.WORKFLOWS &&
     taskQueue !== TASK_QUEUES.AGENT_CHAT_IMESSAGE &&
     taskQueue !== TASK_QUEUES.SCOUT_BETA &&
-    taskQueue !== TASK_QUEUES.SCOUT_PROD,
+    taskQueue !== TASK_QUEUES.SCOUT_PROD &&
+    taskQueue !== TASK_QUEUES.STORM_FORUM_BETA &&
+    taskQueue !== TASK_QUEUES.STORM_FORUM_PROD,
 );
 
 function activityNamesFor(
@@ -35,6 +37,18 @@ function activityNamesFor(
 }
 
 describe("Temporal worker role contracts", () => {
+  it("leaves forum activities with the workers that mount each forum's files", () => {
+    for (const taskQueue of [
+      TASK_QUEUES.STORM_FORUM_BETA,
+      TASK_QUEUES.STORM_FORUM_PROD,
+    ]) {
+      expect(
+        QUEUE_WORKER_DEFINITIONS.some(
+          (definition) => definition.taskQueue === taskQueue,
+        ),
+      ).toBe(false);
+    }
+  });
   it("assigns every Activity queue to exactly one capability role", () => {
     const ownershipCounts = new Map<string, number>();
     for (const definition of QUEUE_WORKER_DEFINITIONS.filter(

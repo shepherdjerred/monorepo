@@ -34,6 +34,7 @@ import { createStormBrainChart } from "./cdk8s-charts/storm-brain.ts";
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
 import { resetProbeRegistry } from "./misc/probes/probe-registry.ts";
 import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
+import { createStormForumCharts } from "./resources/storm-forum/releases.ts";
 
 /**
  * Sets up all charts for the application
@@ -86,6 +87,7 @@ export async function setupCharts(app: App): Promise<void> {
   createBuildkitdChart(app);
   createStashChart(app);
   createStormBrainChart(app);
+  createStormForumCharts(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
