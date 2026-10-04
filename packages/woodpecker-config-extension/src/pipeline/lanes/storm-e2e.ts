@@ -139,6 +139,7 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
         "scripts/ci-test-manifest.json",
         "scripts/ci-test-manifest.schema.json",
         "packages/the-storm/**",
+        "packages/mc-harness/**",
         "packages/eslint-config/**",
       ],
     },

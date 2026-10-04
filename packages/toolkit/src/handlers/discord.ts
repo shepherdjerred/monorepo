@@ -16,11 +16,8 @@ import {
   voiceLeaveCommand,
   voiceStatesCommand,
 } from "#commands/discord/voice.ts";
-import {
-  DEFAULT_TTL_SECONDS,
-  IdentityKindSchema,
-  parseTtl,
-} from "#lib/discord/ipc.ts";
+import { DEFAULT_TTL_SECONDS, IdentityKindSchema } from "#lib/discord/ipc.ts";
+import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
 
 const USAGE = `
 toolkit discord — act on Discord through a session daemon
