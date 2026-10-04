@@ -340,6 +340,45 @@ describe("ingesting observations named by League-client UUID", () => {
     ).toEqual({ puuid: SELF_PUUID });
   });
 
+  test("stores no League chat credential an older client sent", async () => {
+    const withCredentials = observation(
+      "post_game",
+      {
+        resource: "post_game",
+        data: {
+          endOfGame: {
+            gameId: 5_653_248_720,
+            multiUserChatPassword: "chat-password",
+            mucJwtDto: { jwt: "header.claims.signature" },
+            teams: [{ players: [{ puuid: SELF_UUID, stats: {} }] }],
+          },
+        },
+      },
+      { gameId: "5653248720", platformId: "NA1" },
+    );
+
+    const first = await ingestObservationBatch(
+      device,
+      batch(accountProfile(), withCredentials),
+    );
+    // A retry of the same observation still matches the first copy.
+    const retry = await ingestObservationBatch(device, batch(withCredentials));
+
+    expect(first.map((receipt) => receipt.outcome)).toEqual([
+      "accepted",
+      "accepted",
+    ]);
+    expect(retry[0]?.outcome).toBe("already_accepted");
+    const stored = await prisma.scoutClientObservation.findFirstOrThrow({
+      where: { kind: "post_game" },
+      select: { payload: true },
+    });
+    const text = JSON.stringify(stored.payload);
+    expect(text).not.toContain("chat-password");
+    expect(text).not.toContain("header.claims.signature");
+    expect(text).toContain(SELF_UUID);
+  });
+
   test("survives a failed lookup and retries on the next observation", async () => {
     mocks.byRiotId.mockRejectedValueOnce(new Error("connection reset"));
 

@@ -4,6 +4,7 @@ import {
   type ScoutClientObservation,
   type ScoutClientObservationBatch,
   type ScoutClientObservationQuarantineReason,
+  withoutScoutClientCredentials,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
@@ -178,17 +179,24 @@ function sentLcuUuid(raw: ScoutClientObservation): string | null {
 
 /** An observation as sent (stored, digested) and as read (translated). */
 type ReceivedObservation = {
+  /** Exactly as the client sent it: the idempotency digest covers this. */
+  readonly sent: ScoutClientObservation;
+  /** As sent, minus credential-named keys: what is stored. */
   readonly raw: ScoutClientObservation;
+  /** 
+aw with player identities translated: what every check reads. */
   readonly observation: ScoutClientObservation;
 };
 
 async function createObservation(
   device: AuthenticatedScoutClient,
-  { raw, observation }: ReceivedObservation,
+  { sent, raw, observation }: ReceivedObservation,
   attestation: ObservationAttestation,
   now: Date,
 ): Promise<Receipt> {
-  const digest = bodyDigest(raw);
+  // The digest covers what was sent, so a client retrying an observation
+  // stored before credentials were stripped still matches its first copy.
+  const digest = bodyDigest(sent);
   const existing = await prisma.scoutClientObservation.findUnique({
     where: { observationId: observation.observationId },
     select: {
@@ -276,7 +284,12 @@ export async function ingestObservationBatch(
   const identities = await readIdentityAliases(
     observationUuids(batch.observations),
   );
-  const translated = batch.observations.map((observation) =>
+  // An older client sends the League client's chat passwords and JWTs; none
+  // of it is stored or read past this point.
+  const stripped = batch.observations.map((observation) =>
+    withoutScoutClientCredentials(observation),
+  );
+  const translated = stripped.map((observation) =>
     translateObservation(observation, identities),
   );
   const localPuuids = [
@@ -305,11 +318,12 @@ export async function ingestObservationBatch(
   );
   const attestation = { verifiedPuuids, acceptedAppVersions };
   const receipts: Receipt[] = [];
-  for (const [index, raw] of batch.observations.entries()) {
+  for (const [index, sent] of batch.observations.entries()) {
+    const raw = stripped[index] ?? withoutScoutClientCredentials(sent);
     const observation = translated[index] ?? raw;
     const receipt = await createObservation(
       device,
-      { raw, observation },
+      { sent, raw, observation },
       attestation,
       now,
     );

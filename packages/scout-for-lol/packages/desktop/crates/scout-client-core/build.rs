@@ -33,6 +33,7 @@ struct PayloadLimits {
     max_string_bytes: usize,
     max_key_bytes: usize,
     unsafe_keys: Vec<String>,
+    credential_key_fragments: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -150,6 +151,19 @@ fn validate_contract(contract: &ProtocolContract) -> Result<(), io::Error> {
     if contract.payload.unsafe_keys.is_empty() {
         return Err(invalid_contract("payload.unsafeKeys must not be empty"));
     }
+    if contract.payload.credential_key_fragments.is_empty()
+        || contract
+            .payload
+            .credential_key_fragments
+            .iter()
+            .any(|fragment| {
+                fragment.is_empty() || !fragment.bytes().all(|byte| byte.is_ascii_lowercase())
+            })
+    {
+        return Err(invalid_contract(
+            "payload.credentialKeyFragments must be non-empty lowercase ASCII words",
+        ));
+    }
     if contract.observation_kinds.is_empty() {
         return Err(invalid_contract("observationKinds must not be empty"));
     }
@@ -191,6 +205,7 @@ const MAX_OBJECT_KEYS: usize = {};
 const MAX_STRING_BYTES: usize = {};
 const MAX_KEY_BYTES: usize = {};
 const UNSAFE_KEYS: &[&str] = &[{}];
+const CREDENTIAL_KEY_FRAGMENTS: &[&str] = &[{}];
 const APP_VERSION_MAX_BYTES: usize = {};
 const LEAGUE_PATCH_MAX_BYTES: usize = {};
 const PLATFORM_ID_MAX_BYTES: usize = {};
@@ -220,6 +235,7 @@ pub enum ObservationQuarantineReason {{
         rust_usize(contract.payload.max_string_bytes),
         rust_usize(contract.payload.max_key_bytes),
         quoted_slice(&contract.payload.unsafe_keys),
+        quoted_slice(&contract.payload.credential_key_fragments),
         rust_usize(contract.envelope_string_max_bytes.app_version),
         rust_usize(contract.envelope_string_max_bytes.league_patch),
         rust_usize(contract.envelope_string_max_bytes.platform_id),
