@@ -194,8 +194,16 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     var worksite = new Location(world, 32.5, -60, 34.5);
     player.teleport(worksite.clone());
     for (var npc : CitizensAPI.getNPCRegistry()) {
-      if (npc.data().has("thestorm-companion-id") && npc.isSpawned())
-        npc.teleport(worksite.clone(), TeleportCause.PLUGIN);
+      if (!npc.data().has("thestorm-companion-id") || !npc.isSpawned()) continue;
+      var id = npc.data().get("thestorm-companion-id", "");
+      var x =
+          switch (id) {
+            case "rowan" -> 30.5;
+            case "juniper" -> 32.5;
+            case "flint" -> 34.5;
+            default -> throw new IllegalStateException("unknown test companion " + id);
+          };
+      npc.teleport(new Location(world, x, -60, 34.5), TeleportCause.PLUGIN);
     }
   }
 
