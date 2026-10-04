@@ -15,6 +15,9 @@ export type MediaFeatureGate = {
   readonly musicOverVoice: (scope: DiscoveryScope) => Promise<boolean>;
   readonly sportsStreaming?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly numberedChannels?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly automaticChannelRouting?: (
+    scope: DiscoveryScope,
+  ) => Promise<boolean>;
 };
 
 async function enabled(
@@ -30,6 +33,8 @@ async function enabled(
 }
 
 export const mediaFeatureGate: MediaFeatureGate = {
+  automaticChannelRouting: (scope) =>
+    enabled("streambot-automatic-channel-routing-enabled", scope),
   numberedChannels: async (scope) => {
     const result = await isEnabled("streambot-numbered-channels-enabled", {
       default: false,

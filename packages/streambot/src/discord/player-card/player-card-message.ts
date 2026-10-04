@@ -58,11 +58,16 @@ function toButtonRow(
 ): ActionRowBuilder<MessageActionRowComponentBuilder> {
   return new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
     ...buttons.map((spec) =>
-      new ButtonBuilder()
-        .setCustomId(spec.id)
-        .setLabel(spec.label)
-        .setStyle(toButtonStyle(spec.style))
-        .setDisabled(spec.disabled),
+      spec.url === undefined
+        ? new ButtonBuilder()
+            .setCustomId(spec.id)
+            .setLabel(spec.label)
+            .setStyle(toButtonStyle(spec.style))
+            .setDisabled(spec.disabled)
+        : new ButtonBuilder()
+            .setLabel(spec.label)
+            .setURL(spec.url)
+            .setStyle(ButtonStyle.Link),
     ),
   );
 }

@@ -61,6 +61,12 @@ export function buildSnapshot(params: {
         : {
             source: context.current.source,
             requesterId: context.current.requesterId,
+            ...(context.current.display === undefined
+              ? {}
+              : { display: context.current.display }),
+            ...(context.current.queuedAt === undefined
+              ? {}
+              : { queuedAt: context.current.queuedAt }),
             ...(context.current.requestId === undefined
               ? {}
               : { requestId: context.current.requestId }),
@@ -72,6 +78,8 @@ export function buildSnapshot(params: {
     queue: context.queue.map((entry) => ({
       source: entry.source,
       requesterId: entry.requesterId,
+      ...(entry.display === undefined ? {} : { display: entry.display }),
+      ...(entry.queuedAt === undefined ? {} : { queuedAt: entry.queuedAt }),
       ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
     })),
     resumeAttempts,
@@ -121,6 +129,8 @@ export function buildResumeInput(
   const queue = restored.queue.map((entry) => ({
     source: entry.source,
     requesterId: entry.requesterId,
+    ...(entry.display === undefined ? {} : { display: entry.display }),
+    ...(entry.queuedAt === undefined ? {} : { queuedAt: entry.queuedAt }),
     ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
   }));
 
@@ -155,6 +165,12 @@ export function buildResumeInput(
         {
           source: current.source,
           requesterId: current.requesterId,
+          ...(current.display === undefined
+            ? {}
+            : { display: current.display }),
+          ...(current.queuedAt === undefined
+            ? {}
+            : { queuedAt: current.queuedAt }),
           ...(current.requestId === undefined
             ? {}
             : { requestId: current.requestId }),

@@ -1,10 +1,11 @@
 import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
+import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import type {
   DiscoveryScope,
   MediaCandidate,
 } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import type { MediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
-import type { RecordMedia } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { RecordMedia } from "@shepherdjerred/streambot/history/types.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   sourceLabel,
@@ -78,7 +79,14 @@ function mediaProvider(
   source: Source,
   candidate: MediaCandidate | undefined,
 ): RecordMedia["provider"] {
-  return source.kind === "file" || candidate?.provider === "local"
-    ? "local"
-    : "youtube";
+  if (source.kind === "file" || candidate?.provider === "local") return "local";
+  if (source.kind === "search" || candidate?.provider === "youtube")
+    return "youtube";
+  const sports = sportsEventForSource(source.url);
+  if (sports !== null) return sports.provider;
+  return /^(?:www\.|music\.|m\.)?youtube\.com$|^youtu\.be$/u.test(
+    new URL(source.url).hostname,
+  )
+    ? "youtube"
+    : "url";
 }

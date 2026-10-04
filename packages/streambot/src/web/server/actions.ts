@@ -26,32 +26,11 @@ export class WebActions {
   ): Promise<{ message: string }> {
     if (input.action === "select")
       return await this.playback.selectChannel(session, input);
-    if (input.action === "play") {
-      // Validate opaque selections before acquiring a session for an expired or upcoming item.
-      this.playback.deps.catalog.select(
-        input.selection,
-        session.key + ":" + input.guildId,
-      );
-    }
+    if (input.action === "play") return await this.play(session, input, signal);
     const context = await this.playback.commandContext(session, input);
     const { service, userId, handle } = context;
     try {
       switch (input.action) {
-        case "play": {
-          const selected = this.playback.deps.catalog.select(
-            input.selection,
-            session.key + ":" + input.guildId,
-          );
-          return await service.play({
-            query: selected.title,
-            source: "auto",
-            placement: input.placement,
-            userId,
-            sourceOverride: selected.source,
-            spoken: false,
-            signal,
-          });
-        }
         case "pause":
           return service.pause(userId);
         case "resume":
@@ -96,6 +75,47 @@ export class WebActions {
           };
         }
       }
+    } finally {
+      this.playback.deps.sessions.releaseUnused(
+        context.guildId,
+        context.channelId,
+        context.playbackChannel,
+      );
+    }
+  }
+
+  private async play(
+    session: WebSession,
+    input: Extract<WebCommand, { action: "play" }>,
+    signal: AbortSignal,
+  ) {
+    await this.playback.authorize(session, input.guildId);
+    const owner = session.key + ":" + input.guildId;
+    if (
+      input.selection.kind === "history" &&
+      !(await this.playback.historyEnabled(session, input.guildId))
+    )
+      throw new WebError(
+        403,
+        "history_disabled",
+        "Playback history is not enabled here.",
+      );
+    // Expired selections and ended sports fail before acquiring a playback actor.
+    const selected =
+      input.selection.kind === "history"
+        ? await this.playback.history.select(input.selection.id, owner, signal)
+        : this.playback.deps.catalog.select(input.selection, owner);
+    const context = await this.playback.commandContext(session, input);
+    try {
+      return await context.service.play({
+        query: selected.title,
+        source: "auto",
+        placement: input.placement,
+        userId: context.userId,
+        sourceOverride: selected.source,
+        spoken: false,
+        signal,
+      });
     } finally {
       this.playback.deps.sessions.releaseUnused(
         context.guildId,

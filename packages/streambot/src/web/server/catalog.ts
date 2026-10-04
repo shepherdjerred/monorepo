@@ -186,6 +186,8 @@ export class WebCatalog {
     selection: Extract<WebCommand, { action: "play" }>["selection"],
     owner: string,
   ): { source: Source; title: string } {
+    if (selection.kind === "history")
+      throw new Error("History selections must be validated by WebHistory");
     if (selection.kind === "sports")
       return this.sports.select(selection.id, owner);
     if (selection.kind === "url")

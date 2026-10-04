@@ -36,6 +36,7 @@ import type { ResumeOutcome } from "@shepherdjerred/streambot/session/voice-reco
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
+import { numberedCommandDeps } from "./numbered-commands.ts";
 
 type NumberedResumeOptions = {
   origin: "boot" | "reconnect";
@@ -86,6 +87,22 @@ export class NumberedSessions {
     return (await this.selected(scope)) === undefined
       ? `Numbered channels are unavailable while a legacy queue is active or the beta is disabled. ${NUMBERED_CHANNEL_HINT}`
       : this.selection.select(scope, number, this.maximum(scope.guildId));
+  }
+  async automatic(scope: DiscoveryScope): Promise<boolean> {
+    return (
+      !this.selection.isManual(scope) &&
+      (await this.selected(scope)) !== undefined &&
+      (await this.deps.featureGate?.automaticChannelRouting?.(scope)) === true
+    );
+  }
+  async reset(scope: DiscoveryScope): Promise<string> {
+    if (
+      (await this.selected(scope)) === undefined ||
+      (await this.deps.featureGate?.automaticChannelRouting?.(scope)) !== true
+    )
+      return "Automatic channel routing is not enabled here.";
+    this.selection.clear(scope);
+    return "Automatic channels selected: music uses 1; Plex and sports use 2.";
   }
   async list(scope: DiscoveryScope, page?: number): Promise<string> {
     if ((await this.selected(scope)) === undefined)
@@ -342,70 +359,57 @@ export class NumberedSessions {
     this.assistants.clear();
   }
 
-  private voiceCommands(
-    owner: Session,
-    userId: string,
-  ): PlaybackCommandServiceDeps {
+  async commandDeps(
+    scope: DiscoveryScope,
+    statusChannelId: ChannelId | null,
+  ): Promise<PlaybackCommandServiceDeps> {
     if (
       this.deps.library === undefined ||
       this.deps.resolvePlaySource === undefined
     )
-      throw new Error("Missing voice command services");
-    const scope = {
-      guildId: owner.guildId,
-      channelId: owner.voiceChannelId,
-      userId,
-    };
-    const number = this.selection.get(scope);
-    const slotKey = keyOf(scope.guildId, scope.channelId, number);
-    let session = this.sessions.get(
-      keyOf(owner.guildId, owner.voiceChannelId, number),
-    );
-    const handle = () => {
-      if (this.sessions.get(slotKey) !== session)
-        throw new PlaybackCommandBoundaryError(
-          "Playback changed while the command was loading. Try again.",
-        );
-      return session === undefined
-        ? EMPTY_HANDLE
-        : buildSessionHandle(this.deps.config, session);
-    };
-    return {
-      ...this.deps,
-      guildId: scope.guildId,
-      channelId: scope.channelId,
-      playbackChannel: number,
-      library: this.deps.library,
-      resolvePlaySource: this.deps.resolvePlaySource,
-      view: () => handle().view(),
-      setVolume: (percent) => handle().setVolume(percent),
-      seek: (seconds) => handle().seek(seconds),
-      dispatch: (event) => {
-        const target = this.sessions.get(slotKey);
-        if (target !== session)
-          throw new PlaybackCommandBoundaryError(
-            "Playback changed while the command was loading. Try again.",
-          );
-        const active =
-          target === undefined
-            ? this.ensure({
-                guildId: scope.guildId,
-                voiceChannelId: scope.channelId,
-                statusChannelId: owner.statusChannelId ?? owner.voiceChannelId,
-                playbackChannel: number,
-              })
-            : buildSessionHandle(this.deps.config, target);
-        if (active === null)
-          throw new PlaybackCommandBoundaryError(
-            "No stream bots are available for this channel.",
-          );
-        session = this.sessions.get(slotKey);
-        active.dispatch(event);
+      throw new Error("Missing playback command services");
+    const guildId = GuildIdSchema.parse(scope.guildId);
+    const channelId = ChannelIdSchema.parse(scope.channelId);
+    return numberedCommandDeps({
+      common: {
+        ...this.deps,
+        guildId,
+        channelId,
+        library: this.deps.library,
+        resolvePlaySource: this.deps.resolvePlaySource,
+        view: EMPTY_HANDLE.view,
+        dispatch: EMPTY_HANDLE.dispatch,
+        setVolume: EMPTY_HANDLE.setVolume,
+        seek: EMPTY_HANDLE.seek,
+        announce: (message) => this.deps.announce(statusChannelId, message),
+        selectChannel: (_speaker, selected) => this.select(scope, selected),
+        resetChannel: () => this.reset(scope),
+        listChannels: () => this.list(scope),
       },
-      announce: (message) => this.deps.announce(owner.statusChannelId, message),
-      selectChannel: (_speaker, selected) => this.select(scope, selected),
-      listChannels: () => this.list(scope),
-    };
+      config: this.deps.config,
+      scope,
+      selection: this.selection,
+      maximum: this.maximum(guildId),
+      automatic: await this.automatic(scope),
+      get: (number) => this.sessions.get(keyOf(guildId, channelId, number)),
+      ensure: (number) =>
+        this.ensure({
+          guildId,
+          voiceChannelId: channelId,
+          statusChannelId: statusChannelId ?? channelId,
+          playbackChannel: number,
+        }),
+    });
+  }
+
+  private voiceCommands(
+    owner: Session,
+    userId: string,
+  ): Promise<PlaybackCommandServiceDeps> {
+    return this.commandDeps(
+      { guildId: owner.guildId, channelId: owner.voiceChannelId, userId },
+      owner.statusChannelId,
+    );
   }
 
   move(

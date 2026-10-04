@@ -143,6 +143,8 @@ export type ResolvedSource = {
 
 /** A queue entry: a requested source plus who asked for it. */
 export type QueuedSource = {
+  readonly display?: QueuedDisplay;
+  readonly queuedAt?: number;
   readonly source: Source;
   readonly requesterId: UserId;
   /** Durable request row associated with this queue entry, when history is enabled. */
@@ -191,6 +193,8 @@ export type PlaybackContext = {
    * or playback stops. Orthogonal to the per-boot resume counter (MAX_RESUME_ATTEMPTS).
    */
   crashRetries: number;
+  /** Natural stream completions distinguish a new loop run from pause, seek, and recovery. */
+  completedStreams: number;
   /** One-shot crash/retry notice for the status reporter; null until the first crash. */
   crashNotice: CrashNotice | null;
   /** Captured stream position while paused; null in every other state. */
@@ -199,7 +203,9 @@ export type PlaybackContext = {
   startPaused: boolean;
 };
 
-type AddEventPayload = {
+export type AddEventPayload = {
+  display?: QueuedDisplay;
+  queuedAt?: number;
   source: Source;
   requesterId: UserId;
   preResolved?: ResolvedSource;
@@ -275,3 +281,4 @@ export type RunStreamInput = {
   readonly pipelineMode: PipelineMode;
 };
 export type LeaveVoiceInput = { readonly voice: VoiceHandle };
+import type { QueuedDisplay } from "@shepherdjerred/streambot/metadata/queued-display.ts";
