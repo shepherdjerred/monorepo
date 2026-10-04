@@ -106,70 +106,92 @@ final class PlotResetting {
         || !parts.parcels().begin(expected.parcelId())) {
       return CompletableFuture.completedFuture(null);
     }
-    var def = definition(expected.parcelId());
-    var shops = parts.context().services().require(ShopRelocation.class);
-    if (parts.lockService().isSettling() || !shops.idle(shopArea(def.area()))) {
-      parts.parcels().end(def.id());
-      return CompletableFuture.completedFuture(null);
-    }
-    var locks =
-        parts.locks().all().stream()
-            .filter(
-                lock ->
-                    lock.blocks().stream()
-                        .anyMatch(
-                            block ->
-                                def.area()
-                                    .contains(block.world(), block.x(), block.y(), block.z())))
-            .toList();
-    if (locks.stream()
-        .anyMatch(
-            lock ->
-                !lock.owner().equals(expected.owner())
-                    || lock.blocks().stream()
-                        .anyMatch(
-                            block ->
-                                !def.area()
-                                    .contains(block.world(), block.x(), block.y(), block.z())))) {
-      return CompletableFuture.failedFuture(
-          new IllegalStateException("lock ownership or bounds cross the plot"));
-    }
-    var auxiliary =
-        new AuxiliaryArchive.Contents(
-            1, shops.snapshot(shopArea(def.area()), expected.owner()), locks);
     var id = uuid();
     var token = uuid();
+    try {
+      var def = definition(expected.parcelId());
+      var shops = parts.context().services().require(ShopRelocation.class);
+      if (parts.lockService().isSettling() || !shops.idle(shopArea(def.area()))) {
+        parts.parcels().end(def.id());
+        return CompletableFuture.completedFuture(null);
+      }
+      var locks =
+          parts.locks().all().stream()
+              .filter(
+                  lock ->
+                      lock.blocks().stream()
+                          .anyMatch(
+                              block ->
+                                  def.area()
+                                      .contains(block.world(), block.x(), block.y(), block.z())))
+              .toList();
+      if (locks.stream()
+          .anyMatch(
+              lock ->
+                  !lock.owner().equals(expected.owner())
+                      || lock.blocks().stream()
+                          .anyMatch(
+                              block ->
+                                  !def.area()
+                                      .contains(block.world(), block.x(), block.y(), block.z())))) {
+        throw new IllegalStateException("lock ownership or bounds cross the plot");
+      }
+      var auxiliary =
+          new AuxiliaryArchive.Contents(
+              1, shops.snapshot(shopArea(def.area()), expected.owner()), locks);
+      var captured = parts.world().capture(def.area());
+      return captured
+          .thenApplyAsync(
+              snapshot ->
+                  new PlotRecovery(
+                      id,
+                      def.id(),
+                      expected.owner(),
+                      new Blob(Schematics.encode(snapshot.clipboard())),
+                      new Blob(ItemsArchive.encode(snapshot.materials())),
+                      new Blob(AuxiliaryArchive.encode(auxiliary)),
+                      PlotRecovery.State.SNAPSHOT,
+                      token,
+                      Optional.empty()),
+              parts.archives())
+          .thenCompose(parts.recoveries()::snapshot)
+          .thenComposeAsync(
+              ignored -> {
+                parts
+                    .parcels()
+                    .committed(
+                        new Lease(
+                            def.id(),
+                            expected.owner(),
+                            expected.paidThrough(),
+                            Lease.State.RESETTING));
+                return parts.recoveries().byId(id);
+              },
+              main())
+          .thenComposeAsync(recovery -> reset(recovery.orElseThrow()), main())
+          .exceptionallyCompose(failure -> releaseIfUncommitted(def.id(), id, failure));
+    } catch (RuntimeException failure) {
+      parts.parcels().end(expected.parcelId());
+      return CompletableFuture.failedFuture(failure);
+    }
+  }
+
+  private CompletableFuture<Void> releaseIfUncommitted(
+      String parcelId, UUID recoveryId, Throwable failure) {
     return parts
-        .world()
-        .capture(def.area())
-        .thenApplyAsync(
-            captured ->
-                new PlotRecovery(
-                    id,
-                    def.id(),
-                    expected.owner(),
-                    new Blob(Schematics.encode(captured.clipboard())),
-                    new Blob(ItemsArchive.encode(captured.materials())),
-                    new Blob(AuxiliaryArchive.encode(auxiliary)),
-                    PlotRecovery.State.SNAPSHOT,
-                    token,
-                    Optional.empty()),
-            parts.archives())
-        .thenCompose(parts.recoveries()::snapshot)
-        .thenComposeAsync(
-            ignored -> {
-              parts
-                  .parcels()
-                  .committed(
-                      new Lease(
-                          def.id(),
-                          expected.owner(),
-                          expected.paidThrough(),
-                          Lease.State.RESETTING));
-              return parts.recoveries().byId(id);
+        .recoveries()
+        .byId(recoveryId)
+        .handleAsync(
+            (saved, lookupFailure) -> {
+              if (lookupFailure == null && saved.isEmpty()) {
+                parts.parcels().end(parcelId);
+              } else if (lookupFailure != null) {
+                failure.addSuppressed(lookupFailure);
+              }
+              return (Void) null;
             },
             main())
-        .thenComposeAsync(recovery -> reset(recovery.orElseThrow()), main());
+        .thenCompose(ignored -> CompletableFuture.failedFuture(failure));
   }
 
   private CompletableFuture<Void> reset(PlotRecovery recovery) {

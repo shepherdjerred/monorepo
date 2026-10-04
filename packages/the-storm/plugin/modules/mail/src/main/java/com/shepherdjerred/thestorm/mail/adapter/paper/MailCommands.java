@@ -101,8 +101,15 @@ public final class MailCommands implements Listener {
       player.sendMessage(Component.text("Your delivery is still settling."));
       return Command.SINGLE_SUCCESS;
     }
+    if (receipt(player).isPresent()) {
+      busy.remove(player.getUniqueId());
+      player.sendMessage(
+          Component.text(
+              "Reconnect before collecting more mail so your last delivery can be saved safely."));
+      return Command.SINGLE_SUCCESS;
+    }
     var _ =
-        recover(player)
+        CompletableFuture.<Void>completedFuture(null)
             .thenComposeAsync(
                 ignored -> {
                   if (!player.isOnline()) {
@@ -158,16 +165,12 @@ public final class MailCommands implements Listener {
     player
         .getPersistentDataContainer()
         .set(RECEIPT, PersistentDataType.STRING, batch.token().toString());
-    savePlayer(player);
-    return recover(player)
-        .thenRunAsync(
-            () ->
-                player.sendMessage(
-                    Component.text(
-                        "Collected "
-                            + batch.items().size()
-                            + " stacks. Use /mail for any remaining items.")),
-            context.scheduler().mainThread());
+    player.sendMessage(
+        Component.text(
+            "Collected "
+                + batch.items().size()
+                + " stacks. Reconnect before collecting more mail to finish saving this delivery."));
+    return CompletableFuture.completedFuture(null);
   }
 
   @EventHandler
@@ -189,19 +192,19 @@ public final class MailCommands implements Listener {
   }
 
   private CompletableFuture<Void> recover(Player player) {
-    var receipt =
-        Optional.ofNullable(
-            player.getPersistentDataContainer().get(RECEIPT, PersistentDataType.STRING));
+    var receipt = receipt(player);
     if (receipt.isEmpty()) {
       return CompletableFuture.completedFuture(null);
     }
     return mail.acknowledge(player.getUniqueId(), UUID.fromString(receipt.get()))
         .thenRunAsync(
-            () -> {
-              player.getPersistentDataContainer().remove(RECEIPT);
-              savePlayer(player);
-            },
+            () -> player.getPersistentDataContainer().remove(RECEIPT),
             context.scheduler().mainThread());
+  }
+
+  private static Optional<String> receipt(Player player) {
+    return Optional.ofNullable(
+        player.getPersistentDataContainer().get(RECEIPT, PersistentDataType.STRING));
   }
 
   private static int capacity(Player player) {
@@ -220,19 +223,5 @@ public final class MailCommands implements Listener {
         .logger()
         .error("Mail delivery for {} needs reconciliation", player.getUniqueId(), failure);
     player.sendMessage(Component.text("Your mail is saved. Delivery needs staff reconciliation."));
-  }
-
-  private void savePlayer(Player player) {
-    try {
-      player.saveData();
-    } catch (RuntimeException failure) {
-      context
-          .logger()
-          .error(
-              "Player-data delivery receipt could not be saved; stopping to preserve mail accounting",
-              failure);
-      context.plugin().getServer().shutdown();
-      throw failure;
-    }
   }
 }
