@@ -29,12 +29,26 @@ async function autoStartDaemon(): Promise<void> {
 }
 
 /** One request to the mc-harness daemon over its unix socket. */
-export async function daemonRequest<Schema extends z.ZodType>(
+export function daemonRequest<Schema extends z.ZodType>(
   schema: Schema,
   method: DaemonMethod,
   path: string,
   body?: unknown,
 ): Promise<z.infer<Schema>> {
+  return daemonSend(schema, method, path, { body });
+}
+
+/**
+ * `daemonRequest` with headers: live write flags (reason, confirmations) for
+ * `/targets/live/...` writes.
+ */
+export async function daemonSend<Schema extends z.ZodType>(
+  schema: Schema,
+  method: DaemonMethod,
+  path: string,
+  init: { body?: unknown; headers?: Record<string, string> },
+): Promise<z.infer<Schema>> {
+  const { body, headers = {} } = init;
   if (!(await pathExists(SOCKET_PATH))) {
     await autoStartDaemon();
   }
@@ -43,12 +57,11 @@ export async function daemonRequest<Schema extends z.ZodType>(
     response = await fetch(`http://daemon${path}`, {
       unix: SOCKET_PATH,
       method,
-      ...(body === undefined
-        ? {}
-        : {
-            body: JSON.stringify(body),
-            headers: { "content-type": "application/json" },
-          }),
+      headers: {
+        ...headers,
+        ...(body === undefined ? {} : { "content-type": "application/json" }),
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

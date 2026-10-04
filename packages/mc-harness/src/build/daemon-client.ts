@@ -18,6 +18,7 @@ import {
   SnapshotBytesResponseSchema,
   type SandboxCreateRequest,
 } from "#protocol/ipc.ts";
+import { type LiveWriteFlags, liveWriteHeaders } from "#protocol/live.ts";
 import { SOCKET_PATH } from "#protocol/paths.ts";
 
 /**
@@ -25,7 +26,15 @@ import { SOCKET_PATH } from "#protocol/paths.ts";
  * uses, so the daemon stays the single owner of sandboxes and their tokens.
  */
 export class DaemonClient {
-  constructor(private readonly socket = SOCKET_PATH) {}
+  private readonly writeHeaders: Record<string, string>;
+
+  /** `flags` ride every request as headers; the daemon reads them for live writes. */
+  constructor(
+    private readonly socket = SOCKET_PATH,
+    flags: LiveWriteFlags = {},
+  ) {
+    this.writeHeaders = liveWriteHeaders(flags);
+  }
 
   private async request<Schema extends z.ZodType>(
     schema: Schema,
@@ -38,9 +47,11 @@ export class DaemonClient {
       response = await fetch(`http://daemon${route}`, {
         unix: this.socket,
         method,
-        ...(body === undefined
-          ? {}
-          : { body: JSON.stringify(body), headers: { "content-type": "application/json" } }),
+        headers: {
+          ...this.writeHeaders,
+          ...(body === undefined ? {} : { "content-type": "application/json" }),
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
     } catch (error) {
       throw new Error(

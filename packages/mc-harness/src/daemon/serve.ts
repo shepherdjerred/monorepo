@@ -6,8 +6,11 @@ import {
 import { type DaemonState, DaemonStateSchema } from "#protocol/ipc.ts";
 import { LOGS_DIR, SOCKET_PATH, STATE_PATH } from "#protocol/paths.ts";
 import { PROTOCOL_VERSION } from "#protocol/version.ts";
-import { DaemonError, type DaemonContext, routeRequest } from "./router.ts";
+import { DaemonError } from "./http.ts";
+import { type DaemonContext, routeRequest } from "./router.ts";
+import { LIVE_TARGET_ID } from "#protocol/live.ts";
 import type { SandboxBackend } from "#sandbox/provider.ts";
+import type { LiveService } from "#src/live/service.ts";
 import { sandboxTarget } from "#src/target.ts";
 
 /** One JSONL line per event under ~/.toolkit/mc/logs. Never pass secrets. */
@@ -25,17 +28,22 @@ async function reapExpired(
 
 export async function startDaemon(options: {
   provider: SandboxBackend;
+  live: LiveService;
   ttlSeconds: number;
   repoRoot: string;
 }): Promise<void> {
-  const { provider, ttlSeconds, repoRoot } = options;
+  const { provider, live, ttlSeconds, repoRoot } = options;
   await mkdir(LOGS_DIR, { recursive: true, mode: 0o700 });
   await provider.preflight();
   await reapExpired(provider, "on start");
 
   const ctx: DaemonContext = {
     provider,
+    live,
     target: async (id) => {
+      if (id === LIVE_TARGET_ID) {
+        return live.target();
+      }
       const records = await provider.list();
       const record = records.find((candidate) => candidate.id === id);
       if (record === undefined) {
@@ -70,6 +78,7 @@ export async function startDaemon(options: {
     // Sandboxes expire on their own TTL even while the daemon stays busy.
     onTick: () => reapExpired(provider, "past their TTL"),
     onShutdown: async () => {
+      live.stop();
       // Kept sandboxes outlive the daemon; everything else goes with it.
       for (const record of await provider.list()) {
         if (!record.keep) {

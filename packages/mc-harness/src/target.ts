@@ -8,7 +8,8 @@ import type { SandboxRecord } from "#sandbox/record.ts";
  */
 export type Target = {
   readonly id: string;
-  readonly kind: SandboxRecord["provider"];
+  /** Sandbox provider, or `live` for minecraft-tsmc (src/live/service.ts). */
+  readonly kind: SandboxRecord["provider"] | "live";
   readonly bridge: BridgeClient;
   readonly logs: { tail: (lines: number) => Promise<string[]> };
 };

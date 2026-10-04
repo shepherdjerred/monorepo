@@ -82,3 +82,52 @@ describe("toolkit mc argument handling", () => {
     expect(stderr).toContain("toolkit mc daemon start");
   });
 });
+
+describe("toolkit mc live argument handling", () => {
+  test("live backup and undo require --reason before contacting the daemon", async () => {
+    const backup = await run(["live", "backup"]);
+    expect(backup.exitCode).toBe(1);
+    expect(backup.stderr).toContain("--reason is required");
+    const undo = await run(["live", "undo", "lj-abc-123456"]);
+    expect(undo.exitCode).toBe(1);
+    expect(undo.stderr).toContain("--reason is required");
+  });
+
+  test("rejects a malformed --affects", async () => {
+    const { stderr, exitCode } = await run([
+      "we",
+      "--world",
+      "world",
+      "--affects",
+      "1,2,3",
+      "//sphere stone 3",
+    ]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain("--affects must be x1,y1,z1:x2,y2,z2");
+  });
+
+  test("accepts live write flags on target commands", async () => {
+    const { stderr, exitCode } = await run([
+      "cmd",
+      "--target",
+      "live",
+      "--reason",
+      "screenshots",
+      "--allow-players",
+      "time",
+      "set",
+      "day",
+    ]);
+    // Parsing succeeds and the command reaches the (absent) daemon.
+    expect(exitCode).toBe(1);
+    expect(stderr).not.toContain("Unknown option");
+    expect(stderr).toContain("toolkit mc daemon start");
+  });
+
+  test("live --help lists the live commands", async () => {
+    const { stdout, exitCode } = await run(["live", "--help"]);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain("toolkit mc live status");
+    expect(stdout).toContain("toolkit mc live undo");
+  });
+});

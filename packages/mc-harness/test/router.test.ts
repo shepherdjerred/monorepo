@@ -1,14 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { BridgeClient, BridgeRequestError } from "#bridge/client.ts";
-import {
-  actorPath,
-  type DaemonContext,
-  DaemonError,
-  routeRequest,
-} from "#daemon/router.ts";
+import { DaemonError } from "#daemon/http.ts";
+import { actorPath, type DaemonContext, routeRequest } from "#daemon/router.ts";
 import { ACTOR_ACTIONS, ActorActionRequestSchemas } from "#protocol/bridge.ts";
+import { Kubectl } from "#providers/kubernetes/kubectl.ts";
 import type { SandboxProvider } from "#sandbox/provider.ts";
 import type { SandboxRecord } from "#sandbox/record.ts";
+import { LiveService } from "#src/live/service.ts";
+import { liveKubeTarget } from "#src/live/status.ts";
 import type { Target } from "#src/target.ts";
 
 const record: SandboxRecord = {
@@ -103,6 +102,20 @@ function context(): {
   };
   const ctx: DaemonContext = {
     provider,
+    live: new LiveService({
+      kubectl: new Kubectl(liveKubeTarget("test"), () =>
+        Promise.reject(new Error("no cluster in router tests")),
+      ),
+      velero: new Kubectl(liveKubeTarget("test", "velero"), () =>
+        Promise.reject(new Error("no cluster in router tests")),
+      ),
+      // Router tests never reach live tsmc, so the daemon has no bridge token.
+      token: () => "",
+      config: () => Promise.reject(new Error("unused")),
+      log: (msg) => {
+        logged.push(msg);
+      },
+    }),
     target: (id) =>
       id === record.id
         ? Promise.resolve(target)

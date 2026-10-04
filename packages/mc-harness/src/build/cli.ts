@@ -43,6 +43,9 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   undo <applyId>                        Restore the pre-apply snapshot (last-in-first-out)
   status <dir>
 
+Live tsmc: promote/undo with --target live also need --reason "<why>" (journaled), and
+--allow-players when a human is near the box. See toolkit mc live --help.
+
 Record manual edits with: toolkit mc we|paste|cmd … --record <dir>
 All commands accept --json. Exit code 2 = lint errors, replay mismatch, or failed verification.
 `;
@@ -58,6 +61,9 @@ const OPTIONS = {
   confirm: { type: "string" },
   expected: { type: "boolean", default: false },
   keep: { type: "boolean", default: false },
+  reason: { type: "string" },
+  "allow-players": { type: "boolean", default: false },
+  "confirm-dangerous": { type: "boolean", default: false },
 } as const;
 
 type Values = ReturnType<typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>>["values"];
@@ -233,7 +239,12 @@ async function main(): Promise<number> {
   const { values, positionals } = parseArgs({ args: normalizeArgv(args, OPTIONS), options: OPTIONS, allowPositionals: true, strict: true });
   const [dir, ...rest] = positionals;
   const env: Env = {
-    client: new DaemonClient(),
+    // Only live writes read these; sandbox targets ignore them.
+    client: new DaemonClient(undefined, {
+      reason: values.reason,
+      allowPlayers: values["allow-players"],
+      confirmDangerous: values["confirm-dangerous"],
+    }),
     journal: new Journal(),
     log: (message) => {
       console.error(message);

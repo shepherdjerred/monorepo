@@ -14,7 +14,15 @@ export default defineArchitecture({
         "provider or the bridge client from it would drag Docker and server code into every " +
         "toolkit invocation.",
       from: "protocol",
-      to: ["daemon", "providers", "bridge", "sandbox", "build", "playtest"],
+      to: [
+        "daemon",
+        "providers",
+        "bridge",
+        "sandbox",
+        "build",
+        "playtest",
+        "live",
+      ],
     },
     {
       name: "playtest-is-a-daemon-client",
@@ -22,7 +30,7 @@ export default defineArchitecture({
         "Playtests run in a child process and reach targets only through the daemon socket; " +
         "they must not import the daemon, providers or the bridge client (which holds tokens).",
       from: "playtest",
-      to: ["daemon", "providers", "bridge"],
+      to: ["daemon", "providers", "bridge", "live"],
     },
   ],
 });

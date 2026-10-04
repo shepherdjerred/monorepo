@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { BlockPosSchema } from "#protocol/bridge.ts";
 import { JOURNAL_DIR } from "#protocol/paths.ts";
+import { boxesOverlap } from "#src/box.ts";
 
 export const ApplyStatusSchema = z.enum(["applying", "verified", "failed", "undone"]);
 
@@ -24,18 +25,6 @@ export const JournalEntrySchema = z.strictObject({
   updatedAt: z.string(),
 });
 export type JournalEntry = z.infer<typeof JournalEntrySchema>;
-
-function overlaps(a: JournalEntry, b: JournalEntry): boolean {
-  return (
-    a.world === b.world &&
-    a.min.x <= b.max.x &&
-    b.min.x <= a.max.x &&
-    a.min.y <= b.max.y &&
-    b.min.y <= a.max.y &&
-    a.min.z <= b.max.z &&
-    b.min.z <= a.max.z
-  );
-}
 
 /** Applies per target, stored one JSON file each under ~/.toolkit/mc/journal/<target>/. */
 export class Journal {
@@ -85,7 +74,7 @@ export class Journal {
         other.applyId !== entry.applyId &&
         other.createdAt > entry.createdAt &&
         other.status !== "undone" &&
-        overlaps(entry, other),
+        boxesOverlap(entry, other),
     );
   }
 }
