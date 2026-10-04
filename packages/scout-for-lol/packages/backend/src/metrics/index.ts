@@ -231,6 +231,22 @@ export const prematchDetectionsTotal = new Counter({
 });
 
 /**
+ * Games the V2 prematch capture took, by why their roster counted as final.
+ *
+ * Reasons: "listed" (Riot listed a full roster, or an Arena one), and the two
+ * cases Riot alone would leave waiting forever — "custom_roster_final" (a
+ * started custom with someone on each side, such as a 1v1 or 2v2) and
+ * "client_bots" (a tracked player's local client supplied the bots Riot never
+ * lists).
+ */
+export const prematchRosterCompletionsTotal = new Counter({
+  name: "prematch_roster_completions_total",
+  help: "V2 prematch captures by why the roster counted as final",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
+/**
  * Total loading screen images generated (or failed)
  */
 export const prematchLoadingScreenGeneratedTotal = new Counter({

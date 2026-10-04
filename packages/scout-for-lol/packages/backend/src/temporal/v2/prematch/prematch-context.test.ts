@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
-import { isPrematchRosterComplete } from "#src/temporal/v2/prematch/prematch-context.ts";
+import {
+  isPrematchRosterComplete,
+  prematchRosterCompletion,
+} from "#src/temporal/v2/prematch/prematch-context.ts";
 
 function gameWith(overrides: {
   participants: number;
@@ -91,5 +94,27 @@ describe("isPrematchRosterComplete", () => {
         }),
       ),
     ).toBe(true);
+  });
+});
+
+describe("prematchRosterCompletion", () => {
+  test("names a full roster as listed", async () => {
+    await expect(
+      prematchRosterCompletion(gameWith({ participants: 10 }), "p".repeat(78)),
+    ).resolves.toBe("listed");
+  });
+
+  test("names a started short custom as final in its own right", async () => {
+    await expect(
+      prematchRosterCompletion(
+        gameWith({
+          participants: 2,
+          gameType: "CUSTOM_GAME",
+          gameQueueConfigId: 0,
+          gameLength: 12,
+        }),
+        "p".repeat(78),
+      ),
+    ).resolves.toBe("custom_roster_final");
   });
 });
