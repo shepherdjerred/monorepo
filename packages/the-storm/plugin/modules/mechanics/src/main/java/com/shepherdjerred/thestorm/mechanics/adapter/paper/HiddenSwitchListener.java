@@ -56,7 +56,8 @@ final class HiddenSwitchListener implements Listener {
         || event.getHand() != EquipmentSlot.HAND
         || clicked == null
         || event.useInteractedBlock() == Event.Result.DENY
-        || Signs.isSign(clicked.getType())) {
+        || Signs.isSign(clicked.getType())
+        || kit.sealed(clicked.getWorld())) {
       return;
     }
     var behind = event.getBlockFace().getOppositeFace();

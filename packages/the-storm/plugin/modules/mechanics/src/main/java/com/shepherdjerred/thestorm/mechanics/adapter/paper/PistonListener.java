@@ -194,6 +194,9 @@ final class PistonListener implements Listener {
   /** The switched-on piston signs touching {@code piston}, each with its creator. */
   private Map<Mechanism, UUID> signs(Block piston) {
     var found = new EnumMap<Mechanism, UUID>(Mechanism.class);
+    if (kit.sealed(piston.getWorld())) {
+      return found;
+    }
     for (var face : FACES) {
       var block = piston.getRelative(face);
       if (!PaperGrid.loaded(block)

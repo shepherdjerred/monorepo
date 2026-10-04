@@ -46,7 +46,8 @@ final class SignClickListener implements Listener {
         || block == null
         || event.useInteractedBlock() == Event.Result.DENY
         || !Signs.isSign(block.getType())
-        || !(block.getState(false) instanceof Sign sign)) {
+        || !(block.getState(false) instanceof Sign sign)
+        || kit.sealed(block.getWorld())) {
       return;
     }
     var player = event.getPlayer();

@@ -112,7 +112,8 @@ final class CombatListener implements Listener {
   void onPlayerDamage(EntityDamageEvent event) {
     if (!(event.getEntity() instanceof Player victim)
         || isStormScriptedNpc(victim)
-        || event.getFinalDamage() <= 0) {
+        || event.getFinalDamage() <= 0
+        || guard.isSealed(victim.getWorld())) {
       return;
     }
     var attacker =

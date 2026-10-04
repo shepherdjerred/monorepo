@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
 import java.time.InstantSource;
 import java.util.HashSet;
@@ -54,6 +55,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     this.database = database;
     var services = new Services();
     services.provide(Protection.class, new OpenProtection());
+    services.provide(SealedWorlds.class, new SealedWorlds());
     var context =
         new ModuleContext(
             this,

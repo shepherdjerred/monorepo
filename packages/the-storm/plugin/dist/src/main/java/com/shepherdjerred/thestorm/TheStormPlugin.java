@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.core.players.SqlPlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -75,6 +76,7 @@ public final class TheStormPlugin extends JavaPlugin {
     var players = new SqlPlayerDirectory(db);
     services.provide(PlayerDirectory.class, players);
     services.provide(ChunkTickets.class, new ChunkTickets(this));
+    services.provide(SealedWorlds.class, new SealedWorlds());
     getServer()
         .getPluginManager()
         .registerEvents(

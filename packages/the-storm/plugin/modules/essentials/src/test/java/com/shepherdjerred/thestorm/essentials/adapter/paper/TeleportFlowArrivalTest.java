@@ -77,7 +77,8 @@ final class TeleportFlowArrivalTest {
                 payments,
                 new GuardRegistry(),
                 new AllowAllProtection(),
-                new BackRecorder(runtime, new JooqBackStore(harness.database), 5)),
+                new BackRecorder(runtime, new JooqBackStore(harness.database), 5, harness.sealed),
+                harness.sealed),
             Duration.ZERO,
             (player, destination) -> completedFuture(true));
 

@@ -38,7 +38,8 @@ final class DropListener implements Listener {
     var config = kit.config().blockDrops();
     var type = event.getBlockState().getType();
     var player = event.getPlayer();
-    if (!config.unlock().enabled()
+    if (kit.sealed(event.getBlock().getWorld())
+        || !config.unlock().enabled()
         || !config.allowed().contains(PaperGrid.key(type))
         || !Gatekeeper.hasLevel(player::hasPermission, config.unlock().level())
         || event.getItems().stream().anyMatch(item -> item.getItemStack().getType() == type)) {
@@ -74,7 +75,9 @@ final class DropListener implements Listener {
 
   /** Drops what a sign holds and empties it, so a second destroy event drops nothing more. */
   private void releaseStock(Block block) {
-    if (!Signs.isSign(block.getType()) || !(block.getState() instanceof Sign sign)) {
+    if (kit.sealed(block.getWorld())
+        || !Signs.isSign(block.getType())
+        || !(block.getState() instanceof Sign sign)) {
       return;
     }
     var stock = kit.signs().stock(sign);

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.shards.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.shards.domain.BlockBreak;
 import com.shepherdjerred.thestorm.shards.domain.DropOutcome;
 import com.shepherdjerred.thestorm.shards.domain.MobKill;
@@ -40,6 +41,7 @@ final class DropListener implements Listener {
   private final ShardText text;
   private final RandomGenerator random;
   private final ProvenanceKeys keys;
+  private final SealedWorlds sealed;
 
   record ProvenanceKeys(NamespacedKey excludedOrigin, NamespacedKey freshChunk) {}
 
@@ -49,6 +51,7 @@ final class DropListener implements Listener {
     this.shards = kit.shards();
     this.text = kit.text();
     this.random = kit.random();
+    this.sealed = kit.sealed();
     this.keys = keys;
   }
 
@@ -121,6 +124,9 @@ final class DropListener implements Listener {
     var tool = player.getInventory().getItemInMainHand();
     var wasPlaced = placed.isPlaced(block);
     placed.clear(block);
+    if (sealed.isSealed(block.getWorld())) {
+      return;
+    }
     if (!block
         .getChunk()
         .getPersistentDataContainer()
@@ -148,7 +154,7 @@ final class DropListener implements Listener {
     if (!drops.isMobSource(type)) {
       return;
     }
-    if (hasExcludedOrigin(entity)) {
+    if (hasExcludedOrigin(entity) || sealed.isSealed(entity.getWorld())) {
       return;
     }
     var killer = entity.getKiller();

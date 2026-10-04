@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Fx;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Guard;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
@@ -29,4 +30,5 @@ public record Toolbox(
     Say say,
     Server server,
     InstantSource time,
-    RandomGenerator random) {}
+    RandomGenerator random,
+    SealedWorlds sealed) {}

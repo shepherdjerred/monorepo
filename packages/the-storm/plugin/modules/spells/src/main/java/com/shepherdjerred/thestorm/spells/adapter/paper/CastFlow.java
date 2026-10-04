@@ -80,6 +80,10 @@ final class CastFlow {
       tools.say().refusal(caster, new Refusal.Loading());
       return Optional.empty();
     }
+    if (tools.sealed().isSealed(caster.getWorld())) {
+      tools.say().refusal(caster, new Refusal.SealedWorld());
+      return Optional.empty();
+    }
     var terms = book.entry(kind).terms();
     if (pending.contains(new CooldownKey(caster.getUniqueId(), terms.cooldownGroup()))) {
       tools.say().refusal(caster, new Refusal.Loading());

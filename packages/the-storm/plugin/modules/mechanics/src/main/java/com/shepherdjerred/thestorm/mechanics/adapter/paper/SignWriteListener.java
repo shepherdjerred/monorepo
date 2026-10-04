@@ -28,15 +28,16 @@ import org.bukkit.event.block.SignChangeEvent;
 final class SignWriteListener implements Listener {
 
   private final SignCreation creation;
+  private final Kit kit;
   private final Signs signs;
   private final Protection protection;
   private final Structures structures;
   private final IdentityHashMap<SignChangeEvent, Runnable> pending = new IdentityHashMap<>();
 
-  SignWriteListener(
-      SignCreation creation, Signs signs, Protection protection, Structures structures) {
+  SignWriteListener(SignCreation creation, Kit kit, Protection protection, Structures structures) {
     this.creation = creation;
-    this.signs = signs;
+    this.kit = kit;
+    this.signs = kit.signs();
     this.protection = protection;
     this.structures = structures;
   }
@@ -44,6 +45,9 @@ final class SignWriteListener implements Listener {
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   void onSignChange(SignChangeEvent event) {
     var block = event.getBlock();
+    if (kit.sealed(block.getWorld())) {
+      return;
+    }
     var player = event.getPlayer();
     var lines = event.lines().stream().map(PaperGrid::plain).toList();
     var tagged = SignTags.parse(lines.get(SignTags.TAG_LINE));

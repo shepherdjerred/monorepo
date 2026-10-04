@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mobs.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mobs.domain.level.LevelCalculator;
 import com.shepherdjerred.thestorm.mobs.domain.level.SpawnSite;
 import com.shepherdjerred.thestorm.mobs.domain.spawn.SpawnFacts;
@@ -28,11 +29,13 @@ final class SpawnListener implements Listener {
   private final LevelApplier applier;
   private final AdminRegionIndex regions;
   private final RandomGenerator random;
+  private final SealedWorlds sealed;
 
   SpawnListener(
       Rules rules, LevelApplier applier, AdminRegionIndex regions, RandomGenerator random) {
     this.policy = rules.policy();
     this.calculator = rules.calculator();
+    this.sealed = rules.sealed();
     this.applier = applier;
     this.regions = regions;
     this.random = random;
@@ -43,12 +46,16 @@ final class SpawnListener implements Listener {
    *
    * @param policy which mobs are levelled
    * @param calculator what level they get
+   * @param sealed worlds no mob is levelled or blocked in
    */
-  record Rules(SpawnPolicy policy, LevelCalculator calculator) {}
+  record Rules(SpawnPolicy policy, LevelCalculator calculator, SealedWorlds sealed) {}
 
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   void onSpawn(CreatureSpawnEvent event) {
     var mob = event.getEntity();
+    if (sealed.isSealed(mob.getWorld())) {
+      return;
+    }
     var location = event.getLocation();
     var facts =
         new SpawnFacts(
