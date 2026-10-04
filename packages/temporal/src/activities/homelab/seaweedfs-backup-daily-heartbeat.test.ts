@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { Readable } from "node:stream";
-import { SEAWEEDFS_BACKUP_POLICY } from "@shepherdjerred/seaweedfs-backup/policy";
+import {
+  policyForCadence,
+  SEAWEEDFS_BACKUP_POLICY,
+} from "@shepherdjerred/seaweedfs-backup/policy";
 import * as BackupSnapshot from "@shepherdjerred/seaweedfs-backup/snapshot";
 import type * as BackupStore from "@shepherdjerred/seaweedfs-backup/store";
 import { seaweedFsBackupActivities } from "./seaweedfs-backup.ts";
@@ -148,7 +151,9 @@ describe("daily backup heartbeat ownership", () => {
     expectContinuousHeartbeats(start);
     expect(activity.heartbeat).toHaveBeenLastCalledWith({ stage: "inventory" });
     gate.resolve(true);
-    await expect(operation).resolves.toMatchObject({ buckets: 11 });
+    await expect(operation).resolves.toMatchObject({
+      buckets: policyForCadence(SEAWEEDFS_BACKUP_POLICY, "daily").length,
+    });
     expect(activity.heartbeat).toHaveBeenCalledWith({
       stage: "bucket",
       bucket: "glitter-discord-corpus",
@@ -215,7 +220,9 @@ describe("daily backup heartbeat ownership", () => {
         });
       }
       gate.resolve(true);
-      await expect(operation).resolves.toMatchObject({ buckets: 11 });
+      await expect(operation).resolves.toMatchObject({
+        buckets: policyForCadence(SEAWEEDFS_BACKUP_POLICY, "daily").length,
+      });
       expect(activity.heartbeat.mock.lastCall?.[0]).toMatchObject({
         stage: "complete",
       });

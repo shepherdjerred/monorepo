@@ -6,6 +6,8 @@ import { getDocsUrl, getDashboardUrl } from "#src/discord/commands/links.ts";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { isPolicyEnabled, type FlagName } from "#src/configuration/flags.ts";
+import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
+import { supportContactRow } from "#src/support/discord.ts";
 
 const logger = createLogger("commands-help");
 type HelpInteraction = { guildId: string | null; reply: CommandReply };
@@ -29,6 +31,10 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
         value: `**Dashboard:** ${dashboardUrl}\n**Documentation:** ${docsUrl}`,
       },
       {
+        name: "Help, bugs, and feedback",
+        value: `DM Scout directly or reply to a DM from Scout to reach the Scout team privately. Human replies are always saved in your web conversation; Scout also attempts a Discord notification. You don't need to be friends with the developer.\n**Conversation and feedback:** ${getFeedbackUrl()}\n**Community support server:** https://discord.gg/qmRewyHXFE`,
+      },
+      {
         name: "Lightweight commands",
         value: await commandList(interaction.guildId),
       },
@@ -40,7 +46,13 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
     )
     .setFooter({ text: "Scout for LoL • Web-first setup" });
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({
+    embeds: [embed],
+    ephemeral: true,
+    ...((await isPolicyEnabled("scout_support_conversations_enabled"))
+      ? { components: [supportContactRow()] }
+      : {}),
+  });
   logger.info("✅ Help command completed successfully");
 }
 

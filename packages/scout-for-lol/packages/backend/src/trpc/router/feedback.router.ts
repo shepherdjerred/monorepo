@@ -1,33 +1,54 @@
-/**
- * Feedback Router
- *
- * Somewhere for user feedback to actually land.
- *
- * Every prior route was a one-way DM that ended in "DM a human directly" — a
- * manual hop with no record, which is a large part of why essentially no
- * feedback was ever received. This one persists.
- */
-
 import { z } from "zod";
-import { DiscordGuildIdSchema, FeedbackBodySchema } from "@scout-for-lol/data";
+import { TRPCError } from "@trpc/server";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
 import { feedbackSubmittedTotal } from "#src/metrics/platform/web.ts";
-import { createLogger } from "#src/logger.ts";
-
-const logger = createLogger("feedback-router");
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import {
+  acceptSupportMessage,
+  ConversationCursorSchema,
+  deleteSupportConversation,
+  lockSupportSender,
+  readConversation,
+  SupportMessageSchema,
+} from "#src/support/conversations.ts";
+import {
+  ScreenshotUploadSchema,
+  queueScreenshotDeletion,
+  uploadScreenshot,
+} from "#src/support/screenshots.ts";
+import { wakeSupportJobs } from "#src/support/jobs.ts";
 
 export const feedbackRouter = router({
-  /**
-   * Whether this user has actually used Scout, i.e. created at least one
-   * subscription anywhere.
-   *
-   * Being able to *manage* a guild is not evidence of use: someone who is an
-   * admin of a server where Scout is installed but unconfigured would otherwise
-   * be asked for product feedback about a product they have never seen, and
-   * could permanently dismiss the one-time prompt before ever using it.
-   * `creatorDiscordId` is a direct usage signal and needs no Discord round-trip.
-   */
+  unread: webProcedure.query(async ({ ctx }) => {
+    const conversation = await prisma.supportConversation.findUnique({
+      where: { discordId: ctx.user.discordId },
+    });
+    if (conversation === null) return { count: 0 };
+    return {
+      count: await prisma.feedback.count({
+        where: {
+          conversationId: conversation.id,
+          direction: "OUTBOUND",
+          ...(conversation.userReadAt === null
+            ? {}
+            : {
+                OR: [
+                  { createdAt: { gt: conversation.userReadAt } },
+                  {
+                    createdAt: conversation.userReadAt,
+                    id: { gt: conversation.userReadMessageId },
+                  },
+                ],
+              }),
+        },
+      }),
+    };
+  }),
+  features: webProcedure.query(async () => ({
+    conversations: await isPolicyEnabled("scout_support_conversations_enabled"),
+  })),
   eligibility: webProcedure.query(async ({ ctx }) => {
     const [created, promptState] = await Promise.all([
       prisma.subscription.count({
@@ -37,14 +58,8 @@ export const feedbackRouter = router({
         where: { discordId: ctx.user.discordId },
       }),
     ]);
-    return {
-      // Both conditions are checked server-side. localStorage alone re-prompted
-      // the same account on another device or after clearing site data.
-      shouldAsk: created > 0 && promptState === null,
-    };
+    return { shouldAsk: created > 0 && promptState === null };
   }),
-
-  /** Record that the user dismissed the prompt without answering. */
   dismiss: webMutationProcedure.mutation(async ({ ctx }) => {
     await prisma.feedbackPromptState.upsert({
       where: { discordId: ctx.user.discordId },
@@ -53,44 +68,170 @@ export const feedbackRouter = router({
     });
     return { dismissed: true };
   }),
-
   submit: webMutationProcedure
     .input(
-      z.object({
-        // Bounded so a single submission can't be used to write unbounded data.
-        body: FeedbackBodySchema,
-        rating: z.number().int().min(1).max(5).optional(),
-        serverId: DiscordGuildIdSchema.optional(),
-      }),
+      SupportMessageSchema.and(
+        z.object({
+          rating: z.number().int().min(1).max(5).optional(),
+          serverId: DiscordGuildIdSchema.optional(),
+        }),
+      ),
     )
     .mutation(async ({ ctx, input }) => {
-      // One transaction: a feedback row committed without its prompt-state row
-      // would leave the account still eligible, so a retry would duplicate the
-      // feedback while another device kept showing the one-time prompt.
-      const created = await prisma.$transaction(async (tx) => {
-        const row = await tx.feedback.create({
-          data: {
-            discordId: ctx.user.discordId,
-            serverId: input.serverId ?? null,
-            rating: input.rating ?? null,
-            body: input.body,
-          },
-          select: { id: true },
-        });
-        await tx.feedbackPromptState.upsert({
-          where: { discordId: ctx.user.discordId },
-          create: { discordId: ctx.user.discordId, submitted: true },
-          update: { submitted: true },
-        });
-        return row;
+      const saved = await acceptSupportMessage({
+        discordId: ctx.user.discordId,
+        username: ctx.user.discordUsername,
+        body: input.body,
+        source: "WEB",
+        ...(input.submissionId === undefined
+          ? {}
+          : { submissionId: input.submissionId }),
+        attachmentIds: input.attachmentIds,
+        context: {
+          ...input.context,
+          ...(input.serverId === undefined ? {} : { serverId: input.serverId }),
+        },
+        ...(input.rating === undefined ? {} : { rating: input.rating }),
       });
-
-      feedbackSubmittedTotal.inc({
-        rated: input.rating === undefined ? "no" : "yes",
+      if (saved.inserted)
+        feedbackSubmittedTotal.inc({
+          rated: input.rating === undefined ? "no" : "yes",
+        });
+      await wakeSupportJobs();
+      return { id: saved.id, conversationId: saved.conversationId };
+    }),
+  conversation: webProcedure
+    .input(z.object({ cursor: ConversationCursorSchema.optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const conversation = await prisma.supportConversation.findUnique({
+        where: { discordId: ctx.user.discordId },
       });
-      logger.info(
-        `Feedback #${created.id.toString()} submitted by ${ctx.user.discordId}`,
-      );
-      return { id: created.id };
+      if (conversation === null)
+        return {
+          conversation: null,
+          messages: [],
+          drafts: [],
+          nextCursor: null,
+        };
+      const drafts = await prisma.supportAttachment.findMany({
+        where: { conversationId: conversation.id, feedbackId: null },
+        select: { id: true, name: true, size: true, status: true },
+        orderBy: { createdAt: "asc" },
+      });
+      return {
+        conversation: {
+          id: conversation.id,
+          status: conversation.status,
+          muted: conversation.muted,
+          userReadAt: conversation.userReadAt,
+        },
+        drafts,
+        ...(await readConversation(conversation.id, input?.cursor)),
+      };
+    }),
+  markRead: webMutationProcedure
+    .input(z.object({ messageId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const message = await prisma.feedback.findFirst({
+        where: { id: input.messageId, discordId: ctx.user.discordId },
+      });
+      if (message?.conversationId == null)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Message not found.",
+        });
+      await prisma.supportConversation.updateMany({
+        where: {
+          id: message.conversationId,
+          OR: [
+            { userReadAt: null },
+            { userReadAt: { lt: message.createdAt } },
+            {
+              userReadAt: message.createdAt,
+              userReadMessageId: { lt: message.id },
+            },
+          ],
+        },
+        data: { userReadAt: message.createdAt, userReadMessageId: message.id },
+      });
+      return { read: true };
+    }),
+  uploadScreenshot: webMutationProcedure
+    .input(ScreenshotUploadSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (!(await isPolicyEnabled("scout_support_conversations_enabled")))
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Screenshot uploads are not available yet.",
+        });
+      return await uploadScreenshot(ctx.user.discordId, input);
+    }),
+  retryScreenshot: webMutationProcedure
+    .input(z.object({ id: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const file = await prisma.supportAttachment.findFirst({
+        where: {
+          id: input.id,
+          conversation: { discordId: ctx.user.discordId },
+          status: "FAILED",
+          sourceUrl: { not: null },
+        },
+      });
+      if (file === null)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Failed screenshot not found. Please upload it again.",
+        });
+      await prisma.$transaction(async (tx) => {
+        await tx.supportAttachment.update({
+          where: { id: file.id },
+          data: { status: "PENDING" },
+        });
+        const queued = await tx.supportJob.updateMany({
+          where: { id: `archive:${file.id}`, status: "FAILED" },
+          data: { status: "QUEUED", attempts: 0, errorCode: null },
+        });
+        if (queued.count === 0)
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Screenshot archival is already being retried.",
+          });
+      });
+      await wakeSupportJobs();
+      return { queued: true };
+    }),
+  removeScreenshot: webMutationProcedure
+    .input(z.object({ id: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await prisma.$transaction(async (tx) => {
+        await lockSupportSender(tx, ctx.user.discordId);
+        const file = await tx.supportAttachment.findUnique({
+          where: { id: input.id },
+          include: { conversation: { select: { discordId: true } } },
+        });
+        if (file === null) return { removed: true, saved: false };
+        if (file.conversation.discordId !== ctx.user.discordId)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Unsubmitted screenshot not found.",
+          });
+        // Discarding an ambiguous draft cannot delete an already accepted file.
+        if (file.feedbackId !== null) return { removed: false, saved: true };
+        await queueScreenshotDeletion(tx, file);
+        return { removed: true, saved: false };
+      });
+      await wakeSupportJobs();
+      return result;
+    }),
+  deleteConversation: webMutationProcedure
+    .input(z.object({ confirmation: z.literal("DELETE") }))
+    .mutation(async ({ ctx }) => {
+      const conversation = await prisma.supportConversation.findUnique({
+        where: { discordId: ctx.user.discordId },
+      });
+      if (conversation !== null)
+        await deleteSupportConversation(conversation.id);
+      await wakeSupportJobs();
+      return { deleted: true };
     }),
 });

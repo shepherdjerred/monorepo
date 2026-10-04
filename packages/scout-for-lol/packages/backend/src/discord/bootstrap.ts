@@ -14,6 +14,7 @@ import {
 } from "#src/discord/events/guild-create.ts";
 import { reconcileConnectedGuildInstalls } from "#src/discord/events/guild-install-reconciliation.ts";
 import { handleGuildDelete } from "#src/discord/events/guild-delete.ts";
+import { handleSupportDirectMessage } from "#src/discord/events/direct-message.ts";
 import {
   discordConnectionStatus,
   discordGuildsGauge,
@@ -86,6 +87,7 @@ export const DISCORD_EVENT_NAMES = [
   Events.ClientReady,
   Events.GuildCreate,
   Events.GuildDelete,
+  Events.MessageCreate,
   Events.VoiceStateUpdate,
 ] as const;
 
@@ -534,6 +536,23 @@ export function registerDiscordEventHandlers(target: Client): void {
     void runGuildLifecycleTask(guild.id, async () => {
       await handleGuildDelete(guild);
     });
+  });
+
+  target.on(Events.MessageCreate, (message) => {
+    void (async () => {
+      try {
+        await handleSupportDirectMessage(message);
+      } catch {
+        // Database and Discord errors can contain submitted text or private URLs.
+        logger.error("Could not receive Scout support DM", {
+          messageId: message.id,
+        });
+        Sentry.captureMessage("Could not receive Scout support DM", {
+          level: "error",
+          tags: { source: "support-dm" },
+        });
+      }
+    })();
   });
 
   // Voice-assistant auto-leave: when the session's channel holds no non-bot

@@ -26,6 +26,20 @@
       "reason": "Coordinated forum database and attachment snapshots"
     },
     {
+      "name": "scout-support-beta",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Private user support screenshots; not rebuildable report images"
+    },
+    {
+      "name": "scout-support-prod",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Private user support screenshots; not rebuildable report images"
+    },
+    {
       "name": "apple-sdks",
       "mode": "protected",
       "cadences": ["daily"],

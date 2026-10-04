@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -17,18 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@scout-for-lol/design-system/components/overlays/dialog";
-import {
-  DialogFormError,
-  DialogFormFooter,
-} from "#src/components/dialog-form.tsx";
-import {
-  focusFirstInvalid,
-  FormPendingStatus,
-  handleFormSubmit,
-  submitThenChangeValidation,
-  useScoutForm,
-} from "#src/components/semantic-form.tsx";
-import { FeedbackFormSchema } from "#src/lib/form-schemas.ts";
+import { FeedbackForm } from "#src/components/feedback-form.tsx";
 
 /** Days a user must have been signed up before we ask anything. */
 const MIN_ACCOUNT_AGE_DAYS = 7;
@@ -36,14 +25,9 @@ const MIN_ACCOUNT_AGE_DAYS = 7;
 /**
  * A dismissible in-app feedback prompt.
  *
- * This exists because every other feedback channel was structurally broken: the
- * post-removal DM cannot be delivered once the bot is kicked (1 delivery in 15
- * attempts), and the surviving DM ask ends in "message a human", which nothing
- * records. A signed-in user in the dashboard is reachable and has somewhere to
- * type, so this is the one channel with no delivery problem at all.
- *
  * Shown at most once per user: dismissing or submitting silences it forever,
- * mirroring the DM message budget. Deliberately not offered in-channel.
+ * mirroring the DM message budget. The permanent support page and bot DMs
+ * remain available after dismissal.
  */
 export function FeedbackPrompt() {
   const trpc = useTRPC();
@@ -53,23 +37,9 @@ export function FeedbackPrompt() {
   const user = session.data?.user ?? null;
 
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
-  const formElement = useRef<HTMLFormElement>(null);
-
-  const submit = useMutation(
-    trpc.feedback.submit.mutationOptions({
-      onSuccess: () => {
-        if (user !== null) markFeedbackSubmitted(user.discordId);
-        track("feedback_submitted");
-        setOpen(false);
-        setHidden(true);
-      },
-      onError: (mutationError) => {
-        setError(mutationError.message);
-      },
-    }),
-  );
+  const promptRef = useRef<HTMLDivElement>(null);
+  const impressionRecorded = useRef(false);
 
   const dismissMutation = useMutation(
     trpc.feedback.dismiss.mutationOptions({
@@ -90,19 +60,6 @@ export function FeedbackPrompt() {
     }),
   );
 
-  const form = useScoutForm({
-    defaultValues: { body: "" },
-    validationLogic: submitThenChangeValidation,
-    validators: { onDynamic: FeedbackFormSchema },
-    onSubmit: ({ value }) => {
-      setError(null);
-      submit.mutate(FeedbackFormSchema.parse(value));
-    },
-    onSubmitInvalid: () => {
-      focusFirstInvalid(formElement.current);
-    },
-  });
-
   // Only ask people who have actually used Scout — i.e. created a subscription.
   // Merely being able to manage a guild where Scout is installed proves
   // nothing: that person may never have configured it, and asking them would
@@ -119,6 +76,39 @@ export function FeedbackPrompt() {
       staleTime: STALE_TIME_SLOW_LIST,
     }),
   );
+
+  const eligible =
+    user !== null &&
+    !hidden &&
+    !isFeedbackDismissed(user.discordId) &&
+    eligibility.data?.shouldAsk === true &&
+    (Date.now() - new Date(user.createdAt).getTime()) / 86_400_000 >=
+      MIN_ACCOUNT_AGE_DAYS;
+  useEffect(() => {
+    if (!eligible || promptRef.current === null || impressionRecorded.current)
+      return;
+    let intersecting = false;
+    const recordVisible = () => {
+      if (
+        intersecting &&
+        document.visibilityState === "visible" &&
+        !impressionRecorded.current
+      ) {
+        impressionRecorded.current = true;
+        track("feedback_prompt_visible", { surface: "in-app-prompt" });
+      }
+    };
+    const observer = new IntersectionObserver((entries) => {
+      intersecting = entries.some((entry) => entry.isIntersecting);
+      recordVisible();
+    });
+    document.addEventListener("visibilitychange", recordVisible);
+    observer.observe(promptRef.current);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", recordVisible);
+    };
+  }, [eligible]);
 
   if (user === null || hidden) return null;
   if (isFeedbackDismissed(user.discordId)) return null;
@@ -138,7 +128,10 @@ export function FeedbackPrompt() {
 
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-scout-surface px-3 py-1.5 text-xs text-scout-subtle shadow-md">
+      <div
+        ref={promptRef}
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-scout-surface px-3 py-1.5 text-xs text-scout-subtle shadow-md"
+      >
         <MessageSquare className="h-3.5 w-3.5 shrink-0" />
         <span className="hidden sm:inline">How&apos;s Scout working out?</span>
         <button
@@ -146,7 +139,7 @@ export function FeedbackPrompt() {
           className="min-h-6 font-medium text-scout-ink underline-offset-2 hover:underline"
           aria-label="Tell us how Scout is working"
           onClick={() => {
-            track("feedback_shown");
+            track("feedback_opened", { surface: "in-app-prompt" });
             setOpen(true);
           }}
         >
@@ -162,64 +155,25 @@ export function FeedbackPrompt() {
         </button>
       </div>
 
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) setError(null);
-        }}
-      >
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>How&apos;s Scout working out?</DialogTitle>
             <DialogDescription>
-              Anything broken, confusing, or missing? We read everything.
-              We&apos;ll only ask you this once.
+              Anything broken, confusing, or missing? Your message goes to the
+              Scout team. We&apos;ll only ask you this once.
             </DialogDescription>
           </DialogHeader>
-          <form
-            ref={formElement}
-            onSubmit={(event) => {
-              handleFormSubmit(event, () => form.handleSubmit());
+          <FeedbackForm
+            onCancel={() => {
+              setOpen(false);
             }}
-            className="space-y-4"
-            aria-busy={submit.isPending}
-          >
-            <form.AppForm>
-              <fieldset
-                disabled={submit.isPending}
-                className="m-0 border-0 p-0"
-              >
-                <form.AppField name="body">
-                  {(field) => (
-                    <field.TextareaField
-                      id="feedback-body"
-                      label="Your feedback"
-                      rows={5}
-                      maxLength={4000}
-                      placeholder="What's working, what isn't, what you wish it did…"
-                      autoComplete="off"
-                      required
-                    />
-                  )}
-                </form.AppField>
-              </fieldset>
-              <DialogFormError error={error} />
-              <FormPendingStatus pending={submit.isPending}>
-                Sending feedback…
-              </FormPendingStatus>
-              <DialogFormFooter
-                onCancel={() => {
-                  setError(null);
-                  form.reset({ body: "" });
-                  setOpen(false);
-                }}
-                pending={submit.isPending}
-                submitLabel="Send feedback"
-                pendingLabel="Sending…"
-              />
-            </form.AppForm>
-          </form>
+            onSubmitted={() => {
+              markFeedbackSubmitted(user.discordId);
+              setOpen(false);
+              setHidden(true);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>

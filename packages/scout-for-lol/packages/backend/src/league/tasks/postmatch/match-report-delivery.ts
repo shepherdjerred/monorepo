@@ -11,6 +11,8 @@ import {
 import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { decorateWithFeatureTip } from "#src/tips/index.ts";
+import { withSupportAction } from "#src/support/discord.ts";
+import { recordSupportTouchpoint } from "#src/support/measurement.ts";
 import { createLogger } from "#src/logger.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
@@ -142,6 +144,7 @@ export async function deliverPostmatchReport(input: {
     return new Map();
   }
   const facts = liveDurableFacts();
+  const supportGuilds = new Set<string>();
   const delivery = await deliverToChannels({
     message,
     channels: deliverChannels,
@@ -149,11 +152,14 @@ export async function deliverPostmatchReport(input: {
     sentryTags: { matchId },
     replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
     effectKeyPrefix,
-    decorate: async (built, guildId) =>
-      await decorateWithFeatureTip(built, {
+    decorate: async (built, guildId) => {
+      const supported = await withSupportAction(built, matchId, guildId);
+      if (supported !== built) supportGuilds.add(guildId);
+      return await decorateWithFeatureTip(supported, {
         serverId: guildId,
         surface: "postmatch",
-      }),
+      });
+    },
     recordDelivery:
       tryCreateChannelDeliveryRecorder({
         kind: "postmatch",
@@ -169,6 +175,27 @@ export async function deliverPostmatchReport(input: {
       }) ?? undefined,
   });
   await recordCoreOutputsDelivered(delivery.deliveredGuildIds, "postmatch");
+  for (const channel of deliverChannels) {
+    const messageId = delivery.messageIdsByChannel.get(channel.channel);
+    const supportActionWasDelivered =
+      supportGuilds.has(channel.serverId) ||
+      (messageId !== undefined &&
+        (await withSupportAction(message, matchId, channel.serverId)) !==
+          message);
+    if (messageId !== undefined && supportActionWasDelivered) {
+      try {
+        await recordSupportTouchpoint(
+          `delivered:${messageId}`,
+          "REPORT",
+          "DELIVERED",
+        );
+      } catch {
+        logger.warn(
+          "Postmatch report delivered but support measurement failed",
+        );
+      }
+    }
+  }
   await recordPostmatchMessageIds(matchId, delivery.messageIdsByChannel);
   await recordMatchMvpReportRefs(matchId, delivery.messageIdsByChannel);
   await recordDeliveryReceipts({

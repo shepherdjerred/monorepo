@@ -35,6 +35,7 @@ import {
   type CustomSocketData,
 } from "#src/customs/socket.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
+import { handleSupportScreenshot } from "#src/support/http.ts";
 
 const logger = createLogger("http-server");
 
@@ -298,11 +299,7 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   }
 
   // Generated chart PNGs for the web app (<img src>), cookie-authorized.
-  const imageResponse = await handleImageRoute(
-    request,
-    url,
-    corsHeadersFor(request),
-  );
+  const imageResponse = await handleImageRoutes(request, url);
   if (imageResponse !== null) {
     return imageResponse;
   }
@@ -372,6 +369,17 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
       ...corsHeadersFor(request),
     },
   });
+}
+
+async function handleImageRoutes(
+  request: Request,
+  url: URL,
+): Promise<Response | null> {
+  const supportScreenshot = await handleSupportScreenshot(request, url);
+  return (
+    supportScreenshot ??
+    (await handleImageRoute(request, url, corsHeadersFor(request)))
+  );
 }
 
 const port = server.port?.toString() ?? "unknown";

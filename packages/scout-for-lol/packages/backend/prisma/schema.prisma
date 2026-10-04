@@ -948,21 +948,183 @@ model InstallAttributionToken {
   @@index([expiresAt])
 }
 
-/// Free-text feedback submitted from the web dashboard.
-///
-/// Exists because every prior feedback path was a one-way DM ending in "reply
-/// to a human" — there was nowhere for an answer to land, so nothing was ever
-/// captured. Append-only.
+/// Private support messages from the web dashboard and bot DMs.
+/// Message contents are immutable; operators may mark them read and append replies.
 model Feedback {
-  id        Int      @id @default(autoincrement())
-  discordId String // Submitting web user
-  serverId  String? // Guild in context when submitted, when known
-  rating    Int? // Optional 1-5 sentiment
-  body      String
-  createdAt DateTime @default(now())
+  id               Int                  @id @default(autoincrement())
+  discordId        String // Sender; bot DMs do not require a web account
+  serverId         String? // Guild in context when submitted, when known
+  rating           Int? // Optional 1-5 sentiment
+  body             String
+  createdAt        DateTime             @default(now())
+  source           FeedbackSource       @default(WEB)
+  submissionId     String?              @unique
+  discordMessageId String?              @unique
+  discordChannelId String?
+  discordUsername  String?
+  attachments      Json                 @default("[]")
+  readAt           DateTime?
+  conversationId   String?
+  conversation     SupportConversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction        SupportDirection     @default(INBOUND)
+  authorDiscordId  String?
+  context          Json                 @default("{}")
+  screenshots      SupportAttachment[]
+  replies          FeedbackReply[]
 
   @@index([createdAt])
   @@index([discordId, createdAt])
+  @@index([readAt, id])
+  @@index([conversationId, createdAt, id])
+}
+
+enum FeedbackSource {
+  WEB
+  DISCORD_DM
+  DISCORD_MODAL
+}
+
+enum FeedbackReplyStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  DM_DISABLED
+}
+
+/// A reply is reserved before contacting Discord; the request id prevents resends.
+model FeedbackReply {
+  id                String              @id
+  feedbackId        Int
+  feedback          Feedback            @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  operatorDiscordId String
+  body              String
+  status            FeedbackReplyStatus @default(SENDING)
+  createdAt         DateTime            @default(now())
+  completedAt       DateTime?
+
+  @@index([feedbackId, createdAt])
+}
+
+enum SupportDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum SupportConversationStatus {
+  OPEN
+  WAITING_ON_USER
+  RESOLVED
+}
+
+enum SupportCategory {
+  HELP
+  BUG
+  IDEA
+}
+
+model SupportConversation {
+  id                String                    @id @default(uuid())
+  discordId         String                    @unique
+  username          String?
+  status            SupportConversationStatus @default(OPEN)
+  category          SupportCategory?
+  muted             Boolean                   @default(false)
+  operatorReadAt    DateTime?
+  userReadAt        DateTime?
+  userReadMessageId Int                       @default(0)
+  lastMessageAt     DateTime                  @default(now())
+  lastAlertAt       DateTime?
+  lastReceiptAt     DateTime?
+  createdAt         DateTime                  @default(now())
+  messages          Feedback[]
+  attachments       SupportAttachment[]
+  jobs              SupportJob[]
+
+  @@index([status, lastMessageAt, id])
+}
+
+/// Minimal sender-scoped throttling state survives deletion of message history.
+model SupportSenderThrottle {
+  discordId     String     @id
+  inboundAt     DateTime[] @default([])
+  uploadAt      DateTime[] @default([])
+  lastAlertAt   DateTime?
+  lastReceiptAt DateTime?
+  lastFailureNoticeAt DateTime?
+}
+
+enum SupportAttachmentStatus {
+  PENDING
+  STORED
+  FAILED
+}
+
+model SupportAttachment {
+  id             String                  @id @default(uuid())
+  conversationId String
+  conversation   SupportConversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedbackId     Int?
+  feedback       Feedback?               @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  name           String
+  contentType    String
+  size           Int
+  sourceUrl      String?
+  digest         String?
+  objectKey      String                  @unique
+  status         SupportAttachmentStatus @default(PENDING)
+  createdAt      DateTime                @default(now())
+  jobs           SupportJob[]
+
+  @@index([feedbackId])
+  @@index([createdAt])
+}
+
+enum SupportJobKind {
+  ALERT
+  ACKNOWLEDGEMENT
+  REPLY
+  ARCHIVE
+  DELETE_OBJECT
+}
+
+enum SupportJobStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  BLOCKED
+  UNKNOWN
+  SKIPPED
+}
+
+/// Durable outbox: contains references, not message contents or screenshot bytes.
+model SupportJob {
+  id             String               @id
+  kind           SupportJobKind
+  status         SupportJobStatus     @default(QUEUED)
+  conversationId String?
+  conversation   SupportConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  attachmentId   String?
+  attachment     SupportAttachment?   @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
+  replyId        String?
+  objectKey      String?
+  attempts       Int                  @default(0)
+  errorCode      String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([status, createdAt])
+}
+
+/// Anonymous support funnel evidence; identifiers deduplicate delivery/interaction events.
+model SupportTouchpoint {
+  id        String   @id
+  surface   String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt, surface, action])
 }
 
 /// A recorded outreach conversion: a guild whose FIRST subscription appeared

@@ -1,5 +1,5 @@
 /**
- * Where the web UI's "report a bug / request a feature" link points.
+ * Optional community support alongside the private in-app feedback form.
  * The Scout support Discord server — the same invite the marketing site
  * (`frontend/src/pages/support.astro`) uses.
  */
