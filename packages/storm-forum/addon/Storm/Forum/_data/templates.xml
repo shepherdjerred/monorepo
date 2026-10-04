@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+  <template type="public" title="storm_portal" version_id="1000070" version_string="1.0.0"><![CDATA[
+<xf:title>The Storm</xf:title>
+<xf:description>A Minecraft community, brought back together.</xf:description>
+<xf:css src="storm_forum.less" />
+<section class="stormWelcome">
+  <img src="{{ base_url('styles/storm/logo.svg') }}" alt="The Storm" width="180" height="120" />
+  <div><h1>Welcome to The Storm</h1><p>A place to build, explore, and catch up.</p>
+    <a class="button button--primary" href="{{ link('forums') }}">Visit the forums</a>
+    <a class="button" href="https://docs.ts-mc.net">Getting started</a>
+  </div>
+</section>
+<xf:foreach loop="$news" value="$thread">
+  <article class="block stormArticle"><div class="block-container">
+    <h2 class="block-header"><a href="{{ link('threads', $thread) }}">{$thread.title}</a></h2>
+    <div class="block-body"><div class="block-row">{{ bb_code($thread.FirstPost.message, 'post', $thread.FirstPost) }}</div></div>
+    <div class="block-footer"><xf:date time="$thread.post_date" /> · <xf:username user="$thread.User" /> · <a href="{{ link('threads', $thread) }}">Join the discussion</a></div>
+  </div></article>
+</xf:foreach>
+<xf:sidebar>
+  <div class="block"><div class="block-container"><h3 class="block-header">Minecraft</h3><div class="block-body block-row">
+    <p><strong>Join: ts-mc.net</strong></p>
+    <xf:if is="$status && $status.state == 'online'"><p>Online · {$status.online} / {$status.maximum} players</p>
+    <xf:elseif is="$status && $status.state == 'sleeping'" /><p>Sleeping · join to wake the server.</p>
+    <xf:elseif is="$status && $status.state == 'starting'" /><p>Starting · check again shortly.</p>
+    <xf:else /><p>Status unavailable. You can still try joining.</p></xf:if>
+    <xf:if is="$status"><small>Checked <xf:date time="$status.checkedAt" /></small></xf:if>
+  </div></div></div>
+  <xf:widget key="storm_recent_threads" />
+</xf:sidebar>
+  ]]></template>
+  <template type="public" title="storm_forum.less" version_id="1000070" version_string="1.0.0"><![CDATA[
+.stormWelcome {display:flex;gap:2rem;align-items:center;padding:2rem;margin-bottom:2rem;border-radius:12px;background:fade(@xf-paletteColor2, 14%);}
+.stormWelcome h1 {margin:0 0 .5rem;font-size:2rem;}
+.stormWelcome .button {margin:.5rem .5rem 0 0;}
+.stormArticle .block-row {padding:1.5rem;}
+@media(max-width:650px) {.stormWelcome {flex-direction:column;text-align:center;padding:1.5rem;} .stormWelcome h1 {font-size:1.6rem;}}
+  ]]></template>
+</templates>

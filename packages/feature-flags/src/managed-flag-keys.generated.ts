@@ -354,6 +354,8 @@ export type TheStormCompanionVariantFlagKey =
   (typeof THE_STORM_COMPANION_VARIANT_FLAG_KEYS)[number];
 
 export const STORM_FLAG_KEYS = [
+  "storm-forum-registration-enabled",
+  "storm-forum-season",
   "storm-brain-classify-enabled",
   "storm-brain-triage-enabled",
   "storm-brain-model",
@@ -362,13 +364,17 @@ export const STORM_FLAG_KEYS = [
 export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
 
 export const STORM_BOOLEAN_FLAG_KEYS = [
+  "storm-forum-registration-enabled",
   "storm-brain-classify-enabled",
   "storm-brain-triage-enabled",
 ] as const;
 
 export type StormBooleanFlagKey = (typeof STORM_BOOLEAN_FLAG_KEYS)[number];
 
-export const STORM_VARIANT_FLAG_KEYS = ["storm-brain-model"] as const;
+export const STORM_VARIANT_FLAG_KEYS = [
+  "storm-forum-season",
+  "storm-brain-model",
+] as const;
 
 export type StormVariantFlagKey = (typeof STORM_VARIANT_FLAG_KEYS)[number];
 

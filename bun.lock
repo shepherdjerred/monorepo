@@ -1832,6 +1832,30 @@
         "vitest": "5.0.1",
       },
     },
+    "packages/storm-forum": {
+      "name": "@shepherdjerred/storm-forum",
+      "version": "1.0.0",
+      "dependencies": {
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
+        "@temporalio/activity": "1.24.0",
+        "@temporalio/worker": "1.24.0",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.1",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/streambot": {
       "name": "@shepherdjerred/streambot",
       "version": "0.0.1",
@@ -2060,6 +2084,7 @@
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/s3-signed-request": "workspace:*",
         "@shepherdjerred/seaweedfs-backup": "workspace:*",
+        "@shepherdjerred/storm-forum": "workspace:*",
         "@shepherdjerred/temporal-observability": "workspace:*",
         "@spectrum-ts/core": "12.10.1",
         "@spectrum-ts/imessage": "12.10.1",
@@ -4230,6 +4255,8 @@
     "@shepherdjerred/statically-typed": ["@shepherdjerred/statically-typed@workspace:packages/statically-typed"],
 
     "@shepherdjerred/storm-brain": ["@shepherdjerred/storm-brain@workspace:packages/storm-brain"],
+
+    "@shepherdjerred/storm-forum": ["@shepherdjerred/storm-forum@workspace:packages/storm-forum"],
 
     "@shepherdjerred/streambot": ["@shepherdjerred/streambot@workspace:packages/streambot"],
 

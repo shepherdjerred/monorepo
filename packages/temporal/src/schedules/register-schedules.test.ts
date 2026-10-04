@@ -451,6 +451,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
+  // Drain the longest PHP request before taking the coordinated snapshot.
+  backupStormForumWorkflow: 65_000,
   // preheat: 13 × 15m presence-checked hold chunks (195 minutes) + turn-off backstop
   goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
@@ -468,6 +470,7 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
+  "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",

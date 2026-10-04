@@ -356,6 +356,8 @@ describe("Flipt network policy", () => {
     // reads degrade to defaults, and both endpoints stay 503 even after
     // their flags are enabled.
     ["storm-brain to read its classify/triage gates", "storm-brain"],
+    ["the production forum to read registration and season", "storm-forum"],
+    ["the private forum to read registration and season", "storm-forum-beta"],
   ])("allows %s", (_label, namespace) => {
     const policy = z
       .object({

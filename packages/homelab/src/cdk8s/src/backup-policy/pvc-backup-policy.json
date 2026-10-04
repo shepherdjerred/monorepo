@@ -1,5 +1,41 @@
 [
   {
+    "namespace": "storm-forum",
+    "name": "storm-forum-database",
+    "backup": "enabled",
+    "reason": "Forum database volume; coordinated exports are stored separately"
+  },
+  {
+    "namespace": "storm-forum",
+    "name": "storm-forum-files",
+    "backup": "enabled",
+    "reason": "Forum attachments and internal data"
+  },
+  {
+    "namespace": "storm-forum-beta",
+    "name": "storm-forum-database",
+    "backup": "disabled",
+    "reason": "Disposable protected test database restored from coordinated production exports"
+  },
+  {
+    "namespace": "storm-forum-beta",
+    "name": "storm-forum-files",
+    "backup": "disabled",
+    "reason": "Disposable protected test files restored from coordinated production exports"
+  },
+  {
+    "namespace": "storm-forum-beta",
+    "name": "storm-forum-recovery-database",
+    "backup": "disabled",
+    "reason": "Dedicated private beta restore target; source snapshots remain protected"
+  },
+  {
+    "namespace": "storm-forum-beta",
+    "name": "storm-forum-recovery-files",
+    "backup": "disabled",
+    "reason": "Dedicated private beta restore target; source snapshots remain protected"
+  },
+  {
     "namespace": "birmel",
     "name": "birmel-pvc",
     "backup": "enabled",

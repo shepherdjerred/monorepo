@@ -12,6 +12,20 @@
   },
   "buckets": [
     {
+      "name": "storm-forum-releases",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Private licensed XenForo and vendor release bundles"
+    },
+    {
+      "name": "storm-forum-backups",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Coordinated forum database and attachment snapshots"
+    },
+    {
       "name": "apple-sdks",
       "mode": "protected",
       "cadences": ["daily"],

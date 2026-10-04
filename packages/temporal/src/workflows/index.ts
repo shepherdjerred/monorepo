@@ -1,4 +1,17 @@
-// Temporal requires wrappers rather than re-exports from its entry point.
+// Declare explicit workflow wrappers, deriving their contracts from delegates.
+import * as stormForum from "./homelab/storm-forum.ts";
+import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
+import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
+
+export const maintainStormForumWorkflow = (stage: ForumStage) =>
+  stormForum.maintainStormForumWorkflow(stage);
+export const backupStormForumWorkflow = (stage: ForumStage) =>
+  stormForum.backupStormForumWorkflow(stage);
+export const runSeaweedFsBackupWorkflow = (
+  input: Parameters<typeof seaweedBackup.runSeaweedFsBackupWorkflow>[0],
+) => seaweedBackup.runSeaweedFsBackupWorkflow(input);
+export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
+  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
@@ -115,11 +128,6 @@ import {
   type WorkerDeploymentCanaryInput,
 } from "./worker-deployment-canary.ts";
 
-import {
-  runSeaweedFsBackupRetentionAndGcWorkflow as _runSeaweedFsBackupRetentionAndGcWorkflow,
-  runSeaweedFsBackupWorkflow as _runSeaweedFsBackupWorkflow,
-} from "./homelab/seaweedfs-backup.ts";
-import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
 import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
 import {
@@ -433,20 +441,6 @@ export async function runGlitterCorpusChannelOverlap(
 
 export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResult> {
   return _runGlitterCorpusDaily();
-}
-
-export async function runSeaweedFsBackupWorkflow(input: {
-  cadence: BackupCadence;
-}): Promise<{ snapshotId: string; buckets: number }> {
-  return _runSeaweedFsBackupWorkflow(input);
-}
-
-export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
-  deletedSnapshots: number;
-  deletedObjects: number;
-  candidateObjects: number;
-}> {
-  return _runSeaweedFsBackupRetentionAndGcWorkflow();
 }
 
 export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
