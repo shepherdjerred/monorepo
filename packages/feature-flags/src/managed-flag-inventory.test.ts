@@ -411,6 +411,33 @@ describe("Red Warfare Search and Destroy rollout", () => {
     ).find((flag) => flag.key === key);
     expect(prod).toMatchObject({ default: false, rollouts: [] });
   });
+
+  test("lets bots talk in beta while production and fallback stay silent", () => {
+    const key = "the-storm-rwfbots-chat-enabled";
+    expect(
+      managedFlagInventory.flags.find((flag) => flag.key === key),
+    ).toMatchObject({
+      namespace: "the-storm",
+      source: "the-storm-rwfbots-chat",
+      type: "boolean",
+      default: false,
+      rollouts: [],
+    });
+
+    const beta = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "the-storm",
+    ).find((flag) => flag.key === key);
+    expect(beta).toMatchObject({ default: true, rollouts: [] });
+
+    const prod = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "the-storm",
+    ).find((flag) => flag.key === key);
+    expect(prod).toMatchObject({ default: false, rollouts: [] });
+  });
 });
 
 describe("durable iMessage ingress rollout", () => {
