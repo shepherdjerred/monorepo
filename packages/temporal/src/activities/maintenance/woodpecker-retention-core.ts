@@ -8,6 +8,7 @@ import {
   type RetentionCursor,
   type RetentionPlanInput,
   type RetentionReceipt,
+  type RetentionRepo,
 } from "#shared/woodpecker-retention.ts";
 import type { RetentionClient } from "./woodpecker-retention-client.ts";
 import { detailIsTerminal } from "./woodpecker-retention-client.ts";
@@ -117,6 +118,8 @@ async function applyCandidate(
   client: RetentionClient,
   context: { hooks: RetentionHooks; enabled: () => Promise<boolean> },
 ): Promise<RetentionReceipt["outcome"]> {
+  if (!sameRepo(await client.repo(candidate.repo.id), candidate.repo))
+    return "changed";
   const detail = await client.detail(candidate.repo, candidate.pipeline.number);
   const refs = await client.references(candidate.repo);
   if (
@@ -137,8 +140,10 @@ async function applyCandidate(
   // Revalidate the external identity/reference guards immediately before the write.
   const freshDetail = await client.detail(candidate.repo, detail.number);
   const freshRefs = await client.references(candidate.repo);
+  const freshRepo = await client.repo(candidate.repo.id);
   context.hooks.signal.throwIfAborted();
   if (
+    !sameRepo(freshRepo, candidate.repo) ||
     !detailIsTerminal(freshDetail) ||
     JSON.stringify(freshDetail) !== JSON.stringify(detail) ||
     !retentionEligible(candidate.repo, freshDetail, cutoff, freshRefs)
@@ -148,4 +153,12 @@ async function applyCandidate(
   context.hooks.signal.throwIfAborted();
   await client.deleteLogs(candidate.repo, detail.number);
   return "deleted";
+}
+
+function sameRepo(actual: RetentionRepo, reviewed: RetentionRepo): boolean {
+  return (
+    actual.id === reviewed.id &&
+    actual.full_name === reviewed.full_name &&
+    actual.default_branch === reviewed.default_branch
+  );
 }

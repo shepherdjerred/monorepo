@@ -76,6 +76,12 @@ export class RetentionClient {
     );
   }
 
+  async repo(id: number) {
+    return RetentionRepoSchema.parse(
+      await this.request(`/api/repos/${String(id)}`),
+    );
+  }
+
   async page(repo: RetentionRepo, page: number, cutoff: number) {
     if (page > 100)
       throw new Error(
