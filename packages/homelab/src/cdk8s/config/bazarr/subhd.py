@@ -156,11 +156,30 @@ def validate_content(content: bytes) -> bytes:
     return fix_line_ending(text.encode("utf-8"))
 
 
+def zip_member_name(member: zipfile.ZipInfo) -> str:
+    name = member.filename
+    if member.flag_bits & 0x800:
+        return name
+    # Preserve ZIP's standard CP437 decoding unless GB18030 reveals a Chinese
+    # script or machine-translation marker. ASCII language codes alone do not
+    # establish the filename encoding.
+    try:
+        chinese_name = name.encode("cp437").decode("gb18030")
+    except UnicodeError:
+        return name
+    if re.search(r"简体|簡體|简英|繁体|繁體|繁英|机器翻译|機器翻譯|机翻|機翻|自动翻译|自動翻譯", chinese_name):
+        return chinese_name
+    return name
+
+
 def extract_subtitle(content: bytes, season: int, episode: int, release: str, explicit_simplified: bool) -> bytes:
     if len(content) > MAX_DOWNLOAD:
         raise APIThrottled("subhd: download exceeds size limit")
     if content.startswith(b"PK"):
-        archive = zipfile.ZipFile(io.BytesIO(content))
+        try:
+            archive = zipfile.ZipFile(io.BytesIO(content))
+        except (zipfile.BadZipFile, UnicodeError):
+            raise APIThrottled("subhd: invalid ZIP archive or filename encoding") from None
     elif content.startswith(b"Rar!"):
         archive = rarfile.RarFile(io.BytesIO(content))
     else:
@@ -169,8 +188,11 @@ def extract_subtitle(content: bytes, season: int, episode: int, release: str, ex
         members = archive.infolist()
         if len(members) > MAX_MEMBERS or sum(m.file_size for m in members) > MAX_DOWNLOAD:
             raise APIThrottled("subhd: archive exceeds expansion limit")
-        name = pick_archive_member(archive.namelist(), season, episode, release, explicit_simplified)
-        member = archive.getinfo(name)
+        names = [zip_member_name(m) if isinstance(m, zipfile.ZipInfo) else m.filename for m in members]
+        name = pick_archive_member(names, season, episode, release, explicit_simplified)
+        # Keep the original ZipInfo so the local filename header is checked
+        # against the archive's original encoding when reading the member.
+        member = members[names.index(name)]
         if member.file_size > MAX_SUBTITLE:
             raise APIThrottled("subhd: subtitle exceeds size limit")
         with archive.open(member) as stream:
