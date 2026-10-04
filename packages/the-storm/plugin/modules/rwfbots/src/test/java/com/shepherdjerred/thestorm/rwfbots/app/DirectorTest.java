@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,23 +58,36 @@ final class DirectorTest {
   }
 
   @Test
-  void thePoolExcludesOnlineHumansNamesAndPersonalitiesWithNoShippedKit() {
+  void thePoolExcludesOnlineHumansNamesButNotPersonalitiesWhoseKitsAreNotOnOffer() {
     var pool = request(4, List.of(), Set.of("ash_42")).pool();
 
     assertThat(pool)
         .extracting(Personality::id)
-        .containsExactly("bramble", "cinder", "dusk", "ember");
+        .containsExactly("bramble", "cinder", "dusk", "ember", "spectre");
+  }
+
+  @Test
+  void everyPersonalityCanBeDraftedAndPlaysAKitOnOffer() {
+    var pick = Director.pick(request(6, List.of(), Set.of()), new SplittableRandom(1));
+
+    assertThat(pick.bots())
+        .extracting(d -> d.personality().id())
+        .containsExactlyInAnyOrder("ash", "bramble", "cinder", "dusk", "ember", "spectre");
+    assertThat(pick.bots()).extracting(Director.Drafted::kit).allMatch(SHIPPED::contains);
   }
 
   @Test
   void aShortPoolFillsFewerSlotsAndAnEmptyOneNone() {
     var pick = Director.pick(request(10, List.of(), Set.of()), new SplittableRandom(1));
-    assertThat(pick.bots()).hasSize(5);
+    assertThat(pick.bots()).hasSize(6);
     assertThat(pick.bots()).extracting(d -> d.personality().id()).doesNotHaveDuplicates();
 
     var none =
         Director.pick(
-            request(3, List.of(), Set.of("Ash_42", "BRAMBLE", "cinder", "DuskRunner", "Ember_9")),
+            request(
+                3,
+                List.of(),
+                Set.of("Ash_42", "BRAMBLE", "cinder", "DuskRunner", "Ember_9", "spectre")),
             new SplittableRandom(1));
     assertThat(none.bots()).isEmpty();
   }
@@ -146,5 +160,16 @@ final class DirectorTest {
     assertThat(Director.kit(mixed, SHIPPED, new SplittableRandom(1))).isEqualTo(Kit.LONGBOW);
     assertThat(Director.kit(personality, Set.of(Kit.GHOST), new SplittableRandom(1)))
         .isEqualTo(Kit.GHOST);
+  }
+
+  @Test
+  void aPersonalityWhoseFavouritesAreNotOnOfferPlaysAnyKitThatIs() {
+    var random = new SplittableRandom(4);
+    var played = EnumSet.noneOf(Kit.class);
+    for (var draw = 0; draw < 200; draw++) {
+      played.add(Director.kit(ghostOnly(), SHIPPED, random));
+    }
+
+    assertThat(played).containsExactlyInAnyOrderElementsOf(SHIPPED);
   }
 }

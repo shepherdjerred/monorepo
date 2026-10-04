@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.Nullable;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
@@ -33,6 +34,7 @@ public final class FakeBodies implements Bodies {
   private final Set<UUID> known = new HashSet<>();
   private final Map<UUID, ActiveItem> using = new HashMap<>();
   private final List<String> orders = new ArrayList<>();
+  private @Nullable Runnable afterNextOrder;
   private int created;
 
   public FakeBodies(ServerMock server) {
@@ -57,7 +59,7 @@ public final class FakeBodies implements Bodies {
     spawned.put(bot, player);
     server.addPlayer(player);
     player.teleport(at);
-    orders.add("spawn " + player.getName());
+    order("spawn " + player.getName());
   }
 
   @Override
@@ -65,7 +67,7 @@ public final class FakeBodies implements Bodies {
     pending.remove(bot);
     var player = spawned.remove(bot);
     if (player != null) {
-      orders.add("despawn " + player.getName());
+      order("despawn " + player.getName());
       if (player.isOnline()) {
         player.disconnect();
       }
@@ -109,54 +111,54 @@ public final class FakeBodies implements Bodies {
     to.setPitch(from.getPitch());
     player.teleport(to);
     player.setSprinting(sprint);
-    orders.add("move " + player.getName() + (sprint ? " sprint" : ""));
+    order("move " + player.getName() + (sprint ? " sprint" : ""));
   }
 
   @Override
   public void stop(UUID bot) {
     player(bot).setSprinting(false);
-    orders.add("stop " + player(bot).getName());
+    order("stop " + player(bot).getName());
   }
 
   @Override
   public void look(UUID bot, float yaw, float pitch) {
     player(bot).setRotation(yaw, pitch);
-    orders.add("look " + player(bot).getName());
+    order("look " + player(bot).getName());
   }
 
   @Override
   public void jump(UUID bot) {
-    orders.add("jump " + player(bot).getName());
+    order("jump " + player(bot).getName());
   }
 
   @Override
   public void sneak(UUID bot, boolean sneaking) {
     player(bot).setSneaking(sneaking);
-    orders.add("sneak " + player(bot).getName() + " " + sneaking);
+    order("sneak " + player(bot).getName() + " " + sneaking);
   }
 
   @Override
   public void selectSlot(UUID bot, int slot) {
     player(bot).getInventory().setHeldItemSlot(slot);
-    orders.add("slot " + player(bot).getName() + " " + slot);
+    order("slot " + player(bot).getName() + " " + slot);
   }
 
   @Override
   public void swing(UUID bot) {
-    orders.add("swing " + player(bot).getName());
+    order("swing " + player(bot).getName());
   }
 
   @Override
   public void startUsing(UUID bot) {
     var held = player(bot).getInventory().getItemInMainHand().getType();
     using.put(bot, new ActiveItem(held, 0));
-    orders.add("use " + player(bot).getName() + " " + held);
+    order("use " + player(bot).getName() + " " + held);
   }
 
   @Override
   public void stopUsing(UUID bot, boolean complete) {
     using.remove(bot);
-    orders.add((complete ? "finish " : "release ") + player(bot).getName());
+    order((complete ? "finish " : "release ") + player(bot).getName());
   }
 
   @Override
@@ -167,6 +169,23 @@ public final class FakeBodies implements Bodies {
   /** Puts {@code bot} in the middle of using {@code type} for {@code usedTicks}. */
   public void using(UUID bot, Material type, int usedTicks) {
     using.put(bot, new ActiveItem(type, usedTicks));
+  }
+
+  /**
+   * Runs {@code then} once, right after the next order, inside the driver's call: how a test makes
+   * rwf react synchronously to a bot's action, the way a killing blow ends a match mid-tick.
+   */
+  public void afterNextOrder(Runnable then) {
+    afterNextOrder = then;
+  }
+
+  private void order(String order) {
+    orders.add(order);
+    var then = afterNextOrder;
+    if (then != null) {
+      afterNextOrder = null;
+      then.run();
+    }
   }
 
   /** Everything the bodies were told, oldest first, since the last call. */

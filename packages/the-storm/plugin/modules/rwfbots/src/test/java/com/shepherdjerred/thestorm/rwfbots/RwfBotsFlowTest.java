@@ -167,6 +167,43 @@ final class RwfBotsFlowTest {
   }
 
   @Test
+  void aMatchThatEndsUnderOneBotsOrdersDrivesNoOtherBotThatTick() {
+    var harness = start();
+    var alice = harness.server.addPlayer("Alice");
+    var bots = lobby(alice, 4);
+    goLive(alice, bots);
+    harness.ticks(30);
+    harness.bodies.orders();
+
+    // A bot's order is a killing blow: rwf ends the match before the ticker returns.
+    harness.bodies.afterNextOrder(
+        () -> {
+          harness.match.phase(MatchSnapshot.PhaseKind.ENDED);
+          harness.match.outcome(new Outcome.Winner(TeamColor.RED));
+          harness.match.fireTick();
+        });
+    harness.tick();
+
+    assertThat(harness.paper().loop().inMatch()).isFalse();
+    assertThat(harness.paper().roster().session()).isEmpty();
+    var orders = harness.bodies.orders();
+    var ordered =
+        harness.paper().roster().live().stream()
+            .map(BotBody::name)
+            .filter(name -> orders.stream().anyMatch(order -> ordersBy(order, name)))
+            .toList();
+    assertThat(ordered).as("only the bot whose order ended the match was driven").hasSize(1);
+    harness.ticks(5);
+    assertThat(harness.bodies.orders()).isEmpty();
+  }
+
+  /** Whether {@code order}, as {@code <kind> <name> [detail]}, was given to {@code name}. */
+  private static boolean ordersBy(String order, String name) {
+    var named = order.substring(order.indexOf(' ') + 1);
+    return named.equals(name) || named.startsWith(name + " ");
+  }
+
+  @Test
   void aFinishedMatchRatesThePersonalitiesWritesTracesAndAnswersTheDebugCommand() {
     var harness = start();
     var alice = harness.server.addPlayer("Alice");

@@ -52,7 +52,8 @@ levers:
   aggression: { min: 0.0, max: 1.0, exponent: 1.0, lowerIsBetter: false }
 
 # The kits rwf ships that bots may be given (rwf/kits.yml). A personality
-# whose kit weights name none of these is never drafted.
+# draws from its kit weights over these; one whose weights name none of them
+# (its favourites ship later) plays any of them, chosen uniformly.
 draft:
   kits: [trooper, longbow, shortbow, rewind]
 

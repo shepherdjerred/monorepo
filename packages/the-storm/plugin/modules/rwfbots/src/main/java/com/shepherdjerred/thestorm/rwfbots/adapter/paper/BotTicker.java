@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwfbots.app.BotProfile;
 import com.shepherdjerred.thestorm.rwfbots.app.BotThought;
+import com.shepherdjerred.thestorm.rwfbots.app.DecisionBoard;
 import com.shepherdjerred.thestorm.rwfbots.app.DecisionGate;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
@@ -17,7 +18,6 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import org.bukkit.Material;
@@ -27,7 +27,8 @@ import org.bukkit.entity.Player;
  * The bots' one main-thread task, every tick while a match is live: capture the world, publish it
  * to the think loop, read the newest board, judge each thought, run every bot's reflex and apply
  * the commands to its body. Then the governor hears how long the server's recent ticks took and how
- * long the bot sections did. Main thread only.
+ * long the bot sections did. A bot's action can end the match synchronously; the tick then stops
+ * driving bots, since its snapshot and board belong to the finished match. Main thread only.
  */
 public final class BotTicker {
 
@@ -106,19 +107,34 @@ public final class BotTicker {
     if (state.isEmpty() || state.orElseThrow().phase() != MatchState.Phase.LIVE) {
       return;
     }
-    var snapshot = session.orElseThrow().capture().capture(tick, state.orElseThrow());
+    var match = session.orElseThrow();
+    var snapshot = match.capture().capture(tick, state.orElseThrow());
     loop.publish(snapshot);
-    var board = loop.board();
+    var frame = new Frame(match, snapshot, loop.board());
     for (var bot : roster.live()) {
-      bot.profile().ifPresent(profile -> drive(bot, profile, snapshot, board.of(profile.id())));
+      if (!sameMatch(match)) {
+        // An earlier bot's action ended the match (a killing blow, a defuse) and rwf settled it
+        // synchronously: the rest of this tick's snapshot and board belong to a finished match.
+        break;
+      }
+      bot.profile().ifPresent(profile -> drive(bot, profile, frame));
     }
     var elapsed = nanoClock.getAsLong() - started;
     sections.record(elapsed);
     governor.observe(new Governor.Sample(msptP95(tickTimes.get()), elapsed / 1_000_000.0));
   }
 
-  private void drive(
-      BotBody bot, BotProfile profile, WorldSnapshot snapshot, Optional<BotThought> thought) {
+  /** Whether {@code match} is still the session in play; it ends when rwf settles the match. */
+  private boolean sameMatch(MatchSession match) {
+    return roster.session().map(MatchSession::matchId).filter(match.matchId()::equals).isPresent();
+  }
+
+  /** What every bot is driven from this tick: the session it started in, its world and board. */
+  private record Frame(MatchSession match, WorldSnapshot snapshot, DecisionBoard board) {}
+
+  private void drive(BotBody bot, BotProfile profile, Frame frame) {
+    var snapshot = frame.snapshot();
+    var thought = frame.board().of(profile.id());
     var self = snapshot.combatant(profile.id());
     if (self.isEmpty() || !self.orElseThrow().alive()) {
       return;
@@ -141,11 +157,11 @@ public final class BotTicker {
     var input =
         ReflexInput.of(self.orElseThrow(), snapshot, decision, percept).withGapples(gapples(bot));
     input = freshTarget(input);
-    var session = roster.session().orElseThrow();
-    var context = new ReflexContext(session.nav().grid(), profile.levers(), bot.loadout());
+    var match = frame.match();
+    var context = new ReflexContext(match.nav().grid(), profile.levers(), bot.loadout());
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());
     bot.reflex(step.state());
-    driver.apply(bot, step.commands(), session.ids(), tick);
+    driver.apply(bot, step.commands(), match.ids(), tick);
   }
 
   /** The target resolves to this tick's view of the enemy, not the percept's older one. */

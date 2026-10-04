@@ -47,6 +47,8 @@ Lever keys: `reactionMs`, `aimErrorDeg`, `turnRateDegPerTick`, `cps`,
 `coordination`, `technique`, `aggression`.
 
 Kits: `trooper`, `longbow`, `shortbow`, `rewind`, `ghost`, `wraith`, `spy`.
+Bots are handed only the kits in `rwfbots.yml` `draft.kits`; a personality
+whose weights name none of those still drafts and plays one of them.
 
 Roles: `plant`, `escort`, `defend`, `rotate`, `retake`, `hunt`.
 

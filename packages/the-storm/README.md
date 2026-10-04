@@ -661,8 +661,9 @@ Filling a match: the `Director` drafts personalities from
 `rwfbots/personalities/*.yml` (never one whose name an online human uses),
 keeps the most balanceable of a few drafts, shifts every bot's skill so the
 median bot sits a little under the median human (`MatchShift`), and gives
-each a kit from its weights over `draft.kits`. Each bot picks that kit when
-it joins. Ratings are OpenSkill; after a match with a result every team goes
+each a kit from its weights over `draft.kits`; a personality whose weights
+name none of those kits (its favourites ship later) still drafts and plays one
+of them, chosen uniformly. Each bot picks that kit when it joins. Ratings are OpenSkill; after a match with a result every team goes
 through one update and each bot's record (matches, wins, kills, deaths,
 plants, defuses, mu, sigma, last seen) is written to
 `rwfbots_personality_stats`. Humans play at the default rating.

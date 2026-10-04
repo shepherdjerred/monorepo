@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,8 +22,9 @@ import java.util.random.RandomGenerator;
 /**
  * Fills a match with bots: drafts personalities from the catalog, keeps the draft whose balanced
  * teams would be closest, shifts every bot's skill so the median bot sits a little under the median
- * human, and gives each bot a kit from its preferences. Pure: the same request and random source
- * always pick the same bots.
+ * human, and gives each bot a kit from its preferences over the kits on offer, or any kit on offer
+ * when none of its favourites is. Pure: the same request and random source always pick the same
+ * bots.
  */
 public final class Director {
 
@@ -65,11 +67,13 @@ public final class Director {
       }
     }
 
-    /** The personalities that may be drafted: active, not a human's name, with a kit to play. */
+    /**
+     * The personalities that may be drafted: active and not a human's name. Kit preferences never
+     * exclude anyone; a personality whose favourites are not on offer plays one that is.
+     */
     public List<Personality> pool() {
       return catalog.active().stream()
           .filter(p -> !excludedNames.contains(p.name().toLowerCase(Locale.ROOT)))
-          .filter(p -> p.kits().keySet().stream().anyMatch(availableKits::contains))
           .toList();
     }
 
@@ -156,13 +160,20 @@ public final class Director {
     return TeamBalancer.spread(TeamBalancer.balance(lobby, request.teamCount()));
   }
 
-  /** A kit drawn from the personality's weights over the kits on offer. */
+  /**
+   * A kit drawn from the personality's weights over the kits on offer, or uniformly from the kits
+   * on offer when it weights none of them (its favourites ship in a later milestone).
+   */
   static Kit kit(Personality personality, Set<Kit> available, RandomGenerator random) {
     var total = 0.0;
     for (var entry : personality.kits().entrySet()) {
       if (available.contains(entry.getKey())) {
         total += entry.getValue();
       }
+    }
+    if (total == 0) {
+      var offered = Arrays.stream(Kit.values()).filter(available::contains).toList();
+      return offered.get(random.nextInt(offered.size()));
     }
     var draw = random.nextDouble() * total;
     Kit last = null;

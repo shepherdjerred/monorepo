@@ -3,14 +3,23 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.content;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import com.shepherdjerred.thestorm.rwfbots.app.Director;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SplittableRandom;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-/** The personalities the server ships load as a catalog and cover the whole skill range. */
+/**
+ * The personalities the server ships load as a catalog, cover the whole skill range and can all be
+ * drafted with the kits the shipped config offers.
+ */
 final class ShippedPersonalitiesTest {
 
   private static final int BANDS = 5;
@@ -33,6 +42,21 @@ final class ShippedPersonalitiesTest {
     assertThat(catalog.all()).hasSize(20);
     assertThat(catalog.active()).hasSize(20);
     assertThat(catalog.all()).allMatch(personality -> personality.batch() == 1);
+  }
+
+  @Test
+  void aFullLobbyDraftsEveryShippedPersonalityWithAShippedKit() {
+    var config = System.getProperty("thestorm.rwfbots.config");
+    assertThat(config).as("the build passes the shipped config").isNotNull();
+    var kits = ConfigFiles.load(Path.of(config), RwfBotsConfig.class).draft().availableKits();
+    var request =
+        new Director.Request(
+            catalog, Map.of(), List.of(), catalog.active().size(), Set.of(), kits, 2);
+
+    var pick = Director.pick(request, new SplittableRandom(1));
+
+    assertThat(pick.bots()).hasSize(20);
+    assertThat(pick.bots()).extracting(Director.Drafted::kit).allMatch(kits::contains);
   }
 
   @Test
