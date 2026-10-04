@@ -574,4 +574,77 @@ Bots are optional: the module declares the `BotRoster` port and looks it up
 when a countdown starts; the `rwfbots` module provides it. Bots act only
 through the `CombatantActions` port, which validates reach, line of sight and
 the hit window as it would for a human before acting through the server API.
-`MatchView` and `MatchEvents` publish the read model and transitions.
+`MatchView` and `MatchEvents` publish the read model and transitions; other
+modules read them through the flattened `rwf.app.view` records (`MatchState`,
+`Transition`) and act through `rwf.app.BotActions`, so nothing outside rwf
+names an `rwf.domain` type. A bot provider implements `rwf.app.BotBodies` and
+publishes `BotRoster.of(bodies)`.
+
+## Search and Destroy bots (rwfbots)
+
+The `rwfbots` module fills rwf matches with Citizens player NPCs driven by a
+pure perception, tactics, team and reflex stack (`rwfbots.domain`). It needs
+the Citizens plugin (pinned in `server/plugins.json`) and enables after rwf;
+without Citizens its enable fails with a clear message.
+
+Threading. The main thread runs one 1-tick task (`BotTicker`): it captures a
+`WorldSnapshot` from rwf's read model and the live entities (position,
+velocity from the tick before, look, health, absorption, armor, held slot,
+sprinting, on ground, using an item, invisible, last hurt, bombs, poison, and
+the tick's hits, bow shots, eating, fuse clicks and footsteps), publishes it
+to the `ThinkLoop`, reads the newest `DecisionBoard`, runs each bot's
+`Reflex.tick` and applies the `BodyCommand`s to its body. The `ThinkLoop`
+keeps two one-slot mailboxes (`AtomicReference`): the newest snapshot
+replaces one not yet consumed, and a CAS flag ensures at most one think job
+runs on core's `ComputePool`. The job runs perception (10 Hz), the team step
+(about 1 Hz) and tactics (4 Hz) for the bots whose slot is due
+(`(tick + slot) % period == 0`), under a line-of-sight ray budget, with a
+fresh `SplittableRandom` per bot per job seeded from the match, the bot and
+the tick, and publishes an immutable board the main thread reads with one
+volatile read. Every decision carries the snapshot tick and the bot's life
+epoch; death, teleport, spectating and a landed Rewind bump the epoch, and a
+decision from an old life or older than `maxDecisionAgeTicks` degrades (the
+path is kept, the aim lock and pending ability dropped, a rethink requested)
+rather than being followed blindly. Bodies are resolved from the Citizens NPC
+on every call because the entity object is replaced when the skin applies;
+the attack-speed base is re-applied on every `NPCSpawnEvent`. All rule
+actions (attacks, fuse clicks, arrows, Rewind) go through `rwf.app.BotActions`;
+bots never deal damage directly.
+
+The `Governor` watches the server's recent tick times (p95) and the bot
+sections' own time with hysteresis: level 1 halves the think rates and makes
+bots with no human within 48 blocks reflex every other tick; level 2 also
+drafts fewer bots next match. It never removes a bot from a running round.
+
+Filling a match: the `Director` drafts personalities from
+`rwfbots/personalities/*.yml` (never one whose name an online human uses),
+keeps the most balanceable of a few drafts, shifts every bot's skill so the
+median bot sits a little under the median human (`MatchShift`), and gives
+each a kit from its weights over `draft.kits`. Each bot picks that kit when
+it joins. Ratings are OpenSkill; after a match with a result every team goes
+through one update and each bot's record (matches, wins, kills, deaths,
+plants, defuses, mu, sigma, last seen) is written to
+`rwfbots_personality_stats`. Humans play at the default rating.
+
+Configuration and content under `server/owned/plugins/TheStorm`:
+
+- `rwfbots.yml`: think rates, governor thresholds, the lever curve table
+  (pinned to `Lever.java`), the kits bots may draft, the LOS ray budget and
+  trace recording.
+- `rwfbots/personalities/<id>.yml`: the personas (see its README).
+- `rwf/maps/<id>/nav.rwfnav`: the map's baked navigation artifact
+  (`NavCodec` format, from the `rwfmap` tool), next to `map.yml` and
+  `blocks.schem`. Its `blocksSha256` must equal the map's `blocksSha256`;
+  the module compares them when the match chooses the map and runs that map
+  humans-only, with a logged error, when the artifact is missing, corrupt,
+  unplayable or baked from other blocks.
+
+`/rwfbots debug [bot]` (`thestorm.rwfbots.admin`) prints the governor level,
+think and staleness percentiles, the board counters and every bot's plan, or
+one bot's levers, decision and refusals.
+
+Decision traces: with `traces.enabled`, every think step appends one
+tab-separated `decision` line (tick, bot, epoch, option, plan label,
+temperature, draw, quantized features, top utilities, path length) to
+`plugins/TheStorm/rwfbots-traces/<matchId>.gz`, written off the main thread;
+lines past `queueCapacity` are dropped and counted.
