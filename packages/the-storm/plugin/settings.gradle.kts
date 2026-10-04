@@ -10,6 +10,15 @@ dependencyResolutionManagement {
     maven("https://repo.bluecolored.de/releases") {
       content { includeGroup("de.bluecolored") }
     }
+    // WorldEdit API for the MCBridge agent bridge (bridge/).
+    maven("https://maven.enginehub.org/repo/") {
+      content {
+        includeGroupByRegex("com\\.sk89q\\.worldedit.*")
+        includeGroupByRegex("org\\.enginehub.*")
+        includeGroup("com.sk89q")
+        includeGroup("com.sk89q.lib")
+      }
+    }
   }
 }
 
@@ -43,6 +52,9 @@ val modules =
     )
 
 include("core", "architecture", "dist")
+
+// MCBridge: the agent bridge plugin (its own MCBridge.jar, never part of TheStorm.jar).
+include("bridge")
 
 modules.forEach { name ->
   include(name)

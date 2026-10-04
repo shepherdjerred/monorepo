@@ -114,8 +114,50 @@ PinchTab credentials or config.
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink.
 - `toolkit discord ...` operates the private local Discord session daemon.
+- `toolkit mc ...` drives disposable Minecraft sandboxes through the
+  mc-harness daemon. See [Minecraft sandboxes](#minecraft-sandboxes).
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.
+
+#### Minecraft sandboxes
+
+`toolkit mc` is a thin client for the `@shepherdjerred/mc-harness` daemon. The
+daemon runs from the monorepo checkout (`bun run
+packages/mc-harness/src/daemon/main.ts`), needs Docker, and stages the
+repo-built MCBridge plugin, so build it first:
+
+```bash
+mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble
+toolkit mc daemon start [--ttl 4h]
+toolkit mc sandbox up [--world flat|void] [--ttl 2h] [--keep]
+toolkit mc info
+toolkit mc we --world world --pos1 0,-60,0 --pos2 4,-56,4 "//set stone"
+toolkit mc region read --world world 0,-60,0 4,-56,4
+toolkit mc we-undo
+toolkit mc sandbox down --all
+toolkit mc daemon stop
+```
+
+A sandbox is Paper 26.2 with WorldEdit and MCBridge in a local container. Its
+game, RCON, and bridge ports are published on `127.0.0.1` only; the bridge
+token and RCON password live in `~/.toolkit/mc/sandboxes/<id>/record.json`
+(mode `0600`) and never appear in command output. `--target <id>` selects a
+sandbox; without it the command uses the only running one and fails when there
+are none or several. A sandbox is removed when its TTL expires or the daemon
+stops, unless it was created with `--keep`. There is no live-server target yet.
+
+| Command                                                   | Purpose                                        |
+| --------------------------------------------------------- | ---------------------------------------------- |
+| `mc cmd <command…>`                                       | Console command with captured feedback         |
+| `mc we --world w [--pos1] [--pos2] [--at] "//cmd"`        | WorldEdit as the `agent:<session>` actor       |
+| `mc we-undo [--steps n]`                                  | Undo that session's WorldEdit history          |
+| `mc paste --world w --file f.schem --at x,y,z [--rotate]` | Paste a Sponge schematic through WorldEdit     |
+| `mc region read --world w <a> <b> [--out f.json]`         | Exact block states and palette counts          |
+| `mc snapshot create\|ls\|get\|restore`                    | Server-side `.schem` snapshots for undo        |
+| `mc info`, `mc players`, `mc events`, `mc logs`           | Versions, players, bridge events, console tail |
+
+Every command accepts `--json`. The daemon logs requests (never secrets) to
+`~/.toolkit/mc/logs/`.
 
 #### History search
 
