@@ -140,7 +140,12 @@ export const CustomGameParticipantSchema = z.strictObject({
 });
 export type CustomGameParticipant = z.infer<typeof CustomGameParticipantSchema>;
 
-export const CustomGameSnapshotSchema = z.strictObject({
+/**
+ * Not strict on purpose: during a rollout an older backend can still send the
+ * retired `tournamentLobby` key, and a plain object strips it instead of
+ * rejecting the whole real-time snapshot.
+ */
+export const CustomGameSnapshotSchema = z.object({
   id: z.uuid(),
   sequence: z.number().int().positive(),
   state: CustomGameStateSchema,
@@ -149,10 +154,6 @@ export const CustomGameSnapshotSchema = z.strictObject({
   pickMode: CustomPickModeSchema,
   participants: z.array(CustomGameParticipantSchema),
   activeCaptain: CustomTeamSchema.nullable(),
-  // Retired Tournament API lobby. Always null; kept on the wire for one
-  // release so Activity clients and backend pods on either side of the
-  // rollout still accept each other's strict snapshots.
-  tournamentLobby: z.null(),
   winner: CustomWinnerSchema.nullable(),
   voiceState: CustomVoiceStateSchema,
   voiceReady: z.boolean(),

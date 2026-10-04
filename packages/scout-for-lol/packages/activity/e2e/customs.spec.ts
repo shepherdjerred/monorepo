@@ -78,7 +78,6 @@ function pendingGame(): CustomGameSnapshot {
       gameParticipant(index),
     ),
     activeCaptain: null,
-    tournamentLobby: null,
     winner: null,
     voiceState: "READY",
     voiceReady: true,

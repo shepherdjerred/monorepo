@@ -2,9 +2,9 @@
 -- the Hall and Duel outbox tables (unread since #3413), and the legacy
 -- report-send claims adopted by report delivery receipts.
 --
--- Before merge, the operator confirms on beta and prod that no
--- `report-discord:` claim lacks a ReportDeliveryChunk (or marks those runs
--- UNKNOWN); see the PR.
+-- Before merge, the operator runs the read-only report-claim preflight on
+-- beta and prod; see the PR. The statements below are correct whatever it
+-- returns.
 
 -- The importer's raw receipt table (not a Prisma model).
 DROP TABLE IF EXISTS "_legacy_sqlite_import";
@@ -48,5 +48,23 @@ DROP TABLE "TournamentLobbyProvision";
 -- DropTable
 DROP TABLE "TournamentRegistration";
 
--- Report delivery no longer adopts legacy per-chunk send claims.
+-- Report delivery no longer adopts legacy per-chunk send claims. A run that
+-- still awaits delivery, has a legacy claim, and has no delivery receipt
+-- would otherwise freeze fresh PENDING chunks and send again, although an
+-- unfinished claim may already have reached Discord. Move those runs to the
+-- terminal NOT_REQUESTED state, which the dispatcher and the operator queue
+-- both ignore, with the reason recorded; then retire the claims.
+UPDATE "ReportRun" AS run
+SET "deliveryState" = 'NOT_REQUESTED',
+    "deliveryError" = 'Legacy report-discord send claim retired before delivery receipts; outcome unknown, not retried'
+WHERE run."deliveryState" IN ('PENDING', 'UNKNOWN')
+  AND EXISTS (
+    SELECT 1 FROM "ScoutEffectClaim" AS claim
+    WHERE claim."key" LIKE 'report-discord:' || run.id::text || ':%'
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM "ReportDeliveryChunk" AS chunk
+    WHERE chunk."reportRunId" = run.id
+  );
+
 DELETE FROM "ScoutEffectClaim" WHERE "key" LIKE 'report-discord:%';
