@@ -804,6 +804,16 @@ Multiverse and loaded before TheStorm enables; a flat or void world is fine
 because each map brings its own terrain. A missing world stops the server, like
 the world module's worlds. The module never generates terrain itself.
 
+The world is a vanilla superflat world with a single air layer and the
+`the_void` biome (the same settings the e2e fixture plugin creates), not a
+TheStorm `ChunkGenerator`, and it is not listed in `world.yml`. Multiverse
+loads its worlds before TheStorm enables, and Bukkit refuses a plugin
+generator whose plugin is not enabled yet, so a generator of ours would leave
+Multiverse unable to load the world on every boot. `world.yml` lists only the
+survival worlds the world module validates and offers to random teleport; the
+rwf module already requires and seals its own world, and listing it there
+would make the world module refuse to start while `rwf` is off.
+
 Configuration and content live under `server/owned/plugins/TheStorm`:
 
 - `rwf.yml`: the world, the lobby and spectator points, how matches fill and

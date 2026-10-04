@@ -25,15 +25,21 @@ Create the world with the Multiverse-Core 5.8.0 that
 documents `--world-type flat`, `--no-structures` and `--generator-settings`:
 
 ```text
-/mv create <world> normal --world-type flat --no-structures --generator-settings {"layers":[],"biome":"minecraft:the_void"}
+/mv create <world> normal --world-type flat --no-structures --generator-settings {"layers":[{"block":"minecraft:air","height":1}],"biome":"minecraft:the_void"}
 ```
 
 The flat type and the `--no-structures` flag are documented by Multiverse.
-The empty-layer `--generator-settings` payload is vanilla superflat JSON for
-a void preset; it has not been run through Multiverse's argument parser on
+The `--generator-settings` payload is the vanilla superflat JSON that the
+e2e fixture plugin creates the test world with: one air layer in the
+`the_void` biome. It has not been run through Multiverse's argument parser on
 this server, so confirm the created world has no terrain before continuing.
-No void generator plugin is baked into the image, so a `--generator` flag
-has nothing to point at.
+
+Do not pass `--generator`. No void generator plugin is baked into the image,
+and The Storm deliberately ships none: Multiverse loads its worlds before
+The Storm enables, and Bukkit refuses a generator whose plugin is not yet
+enabled, so the world would fail to load on every later boot. For the same
+reason the world is not listed in `world.yml`; the `rwf` module checks and
+seals it itself.
 
 ## 2. Wire the recording salt
 
