@@ -8,6 +8,7 @@ import {
 import {
   retentionEligible,
   type RetentionPipeline,
+  type RetentionRepo,
 } from "#shared/woodpecker-retention.ts";
 
 import {
@@ -16,6 +17,9 @@ import {
   retentionTestCandidate as candidate,
 } from "./woodpecker-retention-test-fixtures.ts";
 function fixture() {
+  let currentRepo = { ...repo };
+  let repoReads = 0;
+  let repoChangeAtFinal: Partial<RetentionRepo> | undefined;
   let current = { ...pipeline };
   let logs = [{ data: Buffer.from("test output").toString("base64") }];
   let steps: { id: number; state: string }[] = [{ id: 9, state: "failure" }];
@@ -30,6 +34,12 @@ function fixture() {
         deleted.push(path);
         if (deleteWorks) logs = [];
         return null;
+      }
+      if (path === `/api/repos/${String(repo.id)}`) {
+        repoReads++;
+        if (repoReads === 2)
+          currentRepo = { ...currentRepo, ...repoChangeAtFinal };
+        return currentRepo;
       }
       if (path.includes("/logs/")) return logs;
       if (path.includes("pipelines?"))
@@ -57,6 +67,11 @@ function fixture() {
   return {
     client,
     deleted,
+    changeRepo: (value: Partial<RetentionRepo>, final: boolean) => {
+      if (final) repoChangeAtFinal = value;
+      else currentRepo = { ...currentRepo, ...value };
+    },
+    repoReads: () => repoReads,
     change: (value: Partial<RetentionPipeline>) => {
       current = { ...current, ...value };
     },
@@ -89,6 +104,30 @@ async function applyOutcome(...args: Parameters<typeof applyRetentionBatch>) {
 function unusedReferences(): Promise<never> {
   throw new Error("This API test does not read references");
 }
+
+describe("Woodpecker retention repository identity", () => {
+  test.each([
+    { id: 2 },
+    { full_name: "shepherdjerred/renamed" },
+    { default_branch: "release" },
+  ])(
+    "repository identity change %j prevents DELETE at both boundaries",
+    async (change) => {
+      for (const final of [false, true]) {
+        const f = fixture();
+        f.changeRepo(change, final);
+        expect(
+          await applyOutcome(input, f.client, hooks(), () =>
+            Promise.resolve(true),
+          ),
+        ).toBe("changed");
+        expect(f.deleted).toEqual([]);
+        expect(f.repoReads()).toBe(final ? 2 : 1);
+        expect(f.referenceReads()).toBe(final ? 2 : 0);
+      }
+    },
+  );
+});
 
 describe("Woodpecker retention safety", () => {
   test("protects all nonterminal pipelines, latest references and unfinished/recent runs", () => {
