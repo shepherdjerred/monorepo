@@ -73,9 +73,15 @@ export async function queueUnhealthy(input: {
         /^(?:Workflow|GitHub check) "/.test(detail),
       ) ?? [];
   const reviewOnlyFailure =
-    failures.length > 0 &&
+    failures.some((detail) =>
+      /^Workflow "(?:codex-review-gate|review-gate)" - (?:FAILURE|ERROR)$/.test(
+        detail,
+      ),
+    ) &&
     failures.every((detail) =>
-      /^Workflow "review-gate" - (?:FAILURE|ERROR)$/.test(detail),
+      /^Workflow "(?:codex-review-gate|review-gate|ci-complete)" - (?:FAILURE|ERROR)$/.test(
+        detail,
+      ),
     );
   if (
     reviewOnlyFailure &&
