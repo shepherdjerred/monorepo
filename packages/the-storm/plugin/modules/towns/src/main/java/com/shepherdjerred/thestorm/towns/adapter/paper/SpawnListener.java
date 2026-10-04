@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
+import org.bukkit.entity.Enemy;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -26,7 +27,12 @@ final class SpawnListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onSpawn(CreatureSpawnEvent event) {
-    if (guard.land(event.getLocation()) instanceof Land.RegionLand(var region)
+    var land = guard.land(event.getLocation());
+    if (land.preventsPlayerDamage() && event.getEntity() instanceof Enemy) {
+      event.setCancelled(true);
+      return;
+    }
+    if (land instanceof Land.RegionLand(var region)
         && !region.mobSpawns().allows(event.getSpawnReason().name())) {
       event.setCancelled(true);
     }

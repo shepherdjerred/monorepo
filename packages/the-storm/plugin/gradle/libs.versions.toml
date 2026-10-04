@@ -23,6 +23,7 @@ jda = "6.7.0"
 luckperms = "5.5"
 bluemap = "2.8.1"
 ink = "1.3.2"
+worldedit = "7.4.5"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -50,6 +51,7 @@ luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
 bluemap-api = { module = "de.bluecolored:bluemap-api", version.ref = "bluemap" }
 ink-runtime = { module = "com.bladecoder.ink:blade-ink", version.ref = "ink" }
 ink-compiler = { module = "com.bladecoder.ink:blade-ink-compiler", version.ref = "ink" }
+worldedit-bukkit = { module = "com.sk89q.worldedit:worldedit-bukkit", version.ref = "worldedit" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version = "5.1.1" }

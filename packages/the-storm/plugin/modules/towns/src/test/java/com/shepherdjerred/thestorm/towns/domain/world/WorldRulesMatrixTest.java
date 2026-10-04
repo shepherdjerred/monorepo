@@ -52,18 +52,19 @@ final class WorldRulesMatrixTest {
       FLUID_FLOW         +  +  +   +    -  -  +  +  -  +  -  -  -
       ITEM_TRANSFER      +  +  +   +    -  -  -  +  -  -  -  -  -
       DISPENSE           +  +  +   +    -  -  -  +  -  -  -  -  -
-      TREE_GROWTH        +  +  +   +    -  -  +  +  -  +  -  -  -
+      TREE_GROWTH        +  +  +   +    -  -  +  -  -  +  -  -  -
       BONEMEAL_SPREAD    +  +  +   +    -  -  +  +  -  +  -  -  -
-      SCULK_SPREAD       +  +  +   +    -  -  +  +  -  +  -  -  -
-      BLOCK_SPREAD       +  +  +   +    -  -  +  +  -  +  -  -  -
+      SCULK_SPREAD       +  +  +   +    -  -  +  -  -  +  -  -  -
+      BLOCK_SPREAD       +  +  +   +    -  -  +  -  -  +  -  -  -
       EXPLOSION          +  -  +   -    -  -  +  -  -  +  -  -  -
       FIRE_SPREAD        +  -  +   -    -  -  +  -  -  +  -  -  -
       FIRE_BURN          +  -  +   -    -  -  +  -  -  +  -  -  -
       MOB_GRIEF          +  -  +   -    -  -  +  -  -  +  -  -  -
-      FALLING_BLOCK      +  +  +   +    -  -  +  +  -  +  -  -  -
+      FALLING_BLOCK      +  +  +   +    -  -  +  -  -  +  -  -  -
       PROJECTILE_IMPACT  +  +  +   +    -  -  +  +  -  +  -  -  -
       REDSTONE           +  +  +   +    -  -  +  +  -  +  -  -  -
-      PORTAL_CREATION    +  +  +   +    -  -  +  +  -  +  -  -  -
+      PORTAL_CREATION    +  +  +   +    -  -  +  -  -  +  -  -  -
+      NATURAL_CHANGE     +  +  +   +    -  -  +  -  -  +  -  -  -
       """;
 
   private static final EnumSet<ClaimFlag> ALL = EnumSet.allOf(ClaimFlag.class);

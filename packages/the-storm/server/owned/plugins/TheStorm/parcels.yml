@@ -1,0 +1,99 @@
+# Surveyed holdings only. An empty owners list preserves a build in staff custody.
+# Rentals need an air-only, bounded building volume above the server-owned ground,
+# plus a durable baseline captured with /plot admin baseline before admission.
+# Historical shop owners pay no rent and do not consume the new rental allowance.
+parcels:
+  - id: embassy-district
+    name: Old Embassy District
+    kind: HERITAGE
+    area:
+      world: world
+      from: { x: 112, y: -64, z: 624 }
+      to: { x: 223, y: 319, z: 767 }
+    owners: []
+    provenance: >-
+      Imported map1 r.0.1.mca contains the Aincrad embassy and the historical town
+      directory at 129..196,58..76,690..715. This preserves the built embassy
+      complex, not the undocumented original town claims. Original claim files
+      and ownership records are absent; held in staff custody.
+    weeklyRent: 0
+  - id: pigrider-shop
+    name: Pigrider's Historical Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 129, y: -64, z: -99 }
+      to: { x: 144, y: 319, z: -82 }
+    owners: [c538a540-3e91-4680-9e98-43f4d811e8e2]
+    provenance: >-
+      Shop signs at 143,69,-89 and 143,69,-92 identify Pigrider; the enclosed
+      shop floor spans 129..144,-99..-82. Mojang's Pigrider102 UUID matches
+      playerdata in the imported map1 archive.
+    weeklyRent: 0
+  - id: pikachu-shop
+    name: PikachuPals' Historical Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 149, y: -64, z: -136 }
+      to: { x: 167, y: 319, z: -113 }
+    owners: []
+    provenance: >-
+      The shop sign at 152,68,-124 identifies PikachuPals. Mojang's UUID
+      matches playerdata in the imported map1 archive. The exact shop boundary
+      beside the eastern public path is uncertain; held in staff custody until
+      the public path can be excluded from the editable volume.
+    weeklyRent: 0
+  - id: smaland-shop
+    name: Smaland47's Historical Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 32, y: -64, z: -155 }
+      to: { x: 49, y: 319, z: -138 }
+    owners: []
+    provenance: >-
+      Chunk Shop signs at 32,65,-147 and 32,65,-146 identify Smaland47;
+      the shop floor is enclosed by its slab border. No corroborated UUID
+      is available, so editing remains in staff custody.
+    weeklyRent: 0
+  - id: eternal-shop
+    name: Eternal's Minemart
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 102, y: -64, z: -181 }
+      to: { x: 120, y: 319, z: -160 }
+    owners: []
+    provenance: >-
+      The sign at 105,73,-169 names Eternal's Minemart; its bordered floor
+      spans 102..120,-181..-160. The display name does not establish a UUID;
+      editing remains in staff custody.
+    weeklyRent: 0
+  - id: setery-shop
+    name: Setery10's Historical Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 102, y: -64, z: -153 }
+      to: { x: 121, y: 319, z: -138 }
+    owners: []
+    provenance: >-
+      Signs at 109,67,-139 and 108,155,-152 name Setery10's ground and sky
+      shops. The ground shop's slab border establishes this footprint.
+      No corroborated UUID is available; editing remains in staff custody.
+    weeklyRent: 0
+  - id: market-01
+    name: North Market Plot 1
+    kind: RENTAL_SHOP
+    area:
+      world: world
+      from: { x: 64, y: 69, z: -184 }
+      to: { x: 75, y: 96, z: -173 }
+    owners: []
+    provenance: >-
+      A 12 by 12 building volume in the unbuilt north market area. Staff must
+      prepare the server-owned foundation at y=68 and capture an air-only
+      recovery baseline before admission. Roads and foundations stay outside
+      the player's editable volume. Weekly rent is 5 CR per buildable block.
+    weeklyRent: 720

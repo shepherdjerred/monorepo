@@ -4,27 +4,38 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
+import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.adapter.bluemap.BlueMapTownMap;
+import com.shepherdjerred.thestorm.towns.adapter.db.JooqLeaseStore;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqLocksStore;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqPvpStore;
+import com.shepherdjerred.thestorm.towns.adapter.db.JooqRecoveryStore;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqTownsStore;
 import com.shepherdjerred.thestorm.towns.adapter.paper.TownsPaper;
+import com.shepherdjerred.thestorm.towns.adapter.remote.FliptRentalGate;
 import com.shepherdjerred.thestorm.towns.app.Clocks;
 import com.shepherdjerred.thestorm.towns.app.LockBook;
 import com.shepherdjerred.thestorm.towns.app.LockService;
 import com.shepherdjerred.thestorm.towns.app.MapSync;
+import com.shepherdjerred.thestorm.towns.app.ParcelBook;
+import com.shepherdjerred.thestorm.towns.app.PlotRentals;
 import com.shepherdjerred.thestorm.towns.app.PvpService;
+import com.shepherdjerred.thestorm.towns.app.RentalGate;
 import com.shepherdjerred.thestorm.towns.app.Settling;
 import com.shepherdjerred.thestorm.towns.app.TownEvents;
 import com.shepherdjerred.thestorm.towns.app.TownListings;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
+import com.shepherdjerred.thestorm.towns.domain.parcel.ParcelsConfig;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.tracks.app.Track;
+import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.jspecify.annotations.Nullable;
@@ -44,6 +55,8 @@ public final class TownsModule implements StormModule {
   private static final long LOAD_TIMEOUT_SECONDS = 30;
 
   private @Nullable Runnable stopMap;
+  private @Nullable FliptRentalGate rentalGate;
+  private @Nullable ExecutorService archives;
 
   @Override
   public String id() {
@@ -56,12 +69,52 @@ public final class TownsModule implements StormModule {
       throw new IllegalStateException("towns and tracks disagree on the highest Governor level");
     }
     var config = context.loadConfig("towns.yml", TownsConfig.class);
+    var parcelsConfig = context.loadConfig("parcels.yml", ParcelsConfig.class);
+    TownsPaper.requireWorlds(context.plugin().getServer(), config, parcelsConfig);
     context.database().migrate(id(), TownsModule.class.getClassLoader());
     var store = new JooqTownsStore(context.database());
     var lockStore = new JooqLocksStore(context.database());
     var pvpStore = new JooqPvpStore(context.database());
     var state = new TownsState(new RegionIndex(config.regions()));
     state.load(await(store.loadAll(), "towns"));
+    var leases = new JooqLeaseStore(context.database());
+    var parcels = new ParcelBook(parcelsConfig, context.time());
+    parcels.load(await(leases.load(), "plot leases"));
+    state.attachParcels(parcels);
+    context.services().provide(ParcelBook.class, parcels);
+    var base = System.getenv("FLIPT_URL");
+    var environment = System.getenv("FLIPT_ENVIRONMENT");
+    RentalGate gate;
+    if (base == null || base.isBlank() || environment == null || environment.isBlank()) {
+      gate = player -> CompletableFuture.completedFuture(false);
+    } else {
+      var remote = new FliptRentalGate(URI.create(base), environment);
+      rentalGate = remote;
+      gate = remote;
+    }
+    var rentals =
+        new PlotRentals(
+            parcels,
+            leases,
+            context.services().require(Wallets.class),
+            new PlotRentals.Dependencies(
+                context.time(), context.random(), context.scheduler().mainThread(), gate));
+    context.services().provide(PlotRentals.class, rentals);
+    var pending = await(leases.pending(), "plot payments");
+    var _ =
+        rentals
+            .recover(pending)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  if (failure != null) {
+                    context
+                        .logger()
+                        .error(
+                            "Plot payments need reconciliation; affected plots remain frozen",
+                            failure);
+                  }
+                },
+                context.scheduler().mainThread());
     var book = new LockBook();
     book.reload(await(lockStore.loadAll(), "locks"));
     var clocks =
@@ -87,8 +140,27 @@ public final class TownsModule implements StormModule {
             lockStore,
             new LockService.Dependencies(config.locks(), clocks, settling::isPlayerBusy));
     settling.onSettled(locks::flushDeferred);
+    var recoveryStore = new JooqRecoveryStore(context.database());
+    var archiveExecutor =
+        Executors.newSingleThreadExecutor(
+            Thread.ofPlatform().daemon(true).name("storm-plot-archives").factory());
+    archives = archiveExecutor;
     var installed =
-        TownsPaper.install(context, new TownsPaper.Loaded(settling, locks, pvp), config);
+        TownsPaper.install(
+            context,
+            new TownsPaper.Loaded(settling, locks, pvp),
+            config,
+            new TownsPaper.Plots(
+                parcels,
+                rentals,
+                recoveryStore,
+                lockStore,
+                await(recoveryStore.baselines(), "plot baselines"),
+                await(recoveryStore.unfinished(), "plot recoveries"),
+                context.loadConfig(
+                    "plot-reconcile.json",
+                    com.shepherdjerred.thestorm.towns.domain.parcel.PlotProtocol.class),
+                archiveExecutor));
     context.services().provide(Protection.class, installed.protection());
     context.services().provide(SettledLand.class, installed.settled());
     context.services().provide(TownRead.class, new TownListings(state));
@@ -116,6 +188,16 @@ public final class TownsModule implements StormModule {
 
   @Override
   public void disable() {
+    var executor = archives;
+    if (executor != null) {
+      executor.shutdown();
+      archives = null;
+    }
+    var gate = rentalGate;
+    if (gate != null) {
+      gate.close();
+      rentalGate = null;
+    }
     var stop = stopMap;
     if (stop != null) {
       stop.run();

@@ -72,7 +72,7 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-All 21 modules ship enabled. Existing volumes must satisfy the one-time archive
+All 22 modules ship enabled. Existing volumes must satisfy the one-time archive
 contract in [server/README.md](server/README.md) before the image starts.
 
 Storm Shards award ore drops only in chunks generated after the shards module
@@ -219,6 +219,48 @@ The towns `TownRead` port exposes an alphabetical, bounded directory of town
 names with member and claim counts plus the total town count. Consumers call
 it on Paper's main thread because it snapshots the loaded towns state; it
 does not expose town membership identities or treasury data.
+
+Shared server land stays in `towns` protection, with required `SAFE`, `ARENA`
+and `PRESERVE` region profiles. Every loaded world's spawn gets a full-height
+safe region from its actual spawn position; the End arrival platform is protected
+separately. Repository-owned regions in `towns.yml` cover the larger main spawn
+and arenas. Safe regions deny all player damage, harmful potions, hostile spawns,
+fire and griefing without blocking the arena's declared gameplay allowances.
+
+`parcels.yml` declares exact block bounds, corroborated UUID owners and survey
+provenance. Holdings are separate from Town membership, Governor limits and
+treasuries. Empty owners preserve imported builds in staff custody. Permanent
+historical shops remain rent-free. Parcel owners may edit only their holding;
+the surrounding spawn's safety rules still apply. BlueMap draws exact parcel
+outlines and `/plot list` shows bounds, custody, provenance and lease terms.
+
+New rental shops use prepaid seven-day leases and a seven-day withdrawal-only
+grace period. Renewal is manual; no recurring debit exists. A durable payment
+intention and the economy's `transferOnce` ledger key recover uncertain charges.
+The managed `the-storm-shop-rentals-enabled` flag controls new admissions only.
+Renewals, expiry enforcement, mail and journal recovery continue independently.
+Each rental needs an air-only baseline above a server-owned solid foundation.
+
+After grace, the world snapshot, native inventory stock, decorative entities,
+container locks and sign-shop definitions commit before any reset. WorldEdit
+7.4.5 is a required server dependency; finite main-thread batches capture,
+restore and verify blocks while detached archive encoding runs off-thread.
+Unfinished work remains protected and resumes from its database checkpoint.
+The `mail` module exposes the public `Mail` port and `/mail`, delivering native
+item stacks with a player-data receipt before acknowledging their durable batch.
+Mail does not expire and never drops excess items when inventory space is short.
+External plugin integrations obtain published module ports through
+`TheStormPlugin.service(Class<T>)`; disabled or unordered providers fail loudly.
+
+An eviction message offers one exclusive choice: building materials plus stock,
+or an owner-bound packed chest. Right-clicking previews an empty destination,
+then `/plot confirm` rechecks permissions, Shopkeeper capacity and lock limits.
+The server reserves the whole volume and journals its preimage before writes.
+Stock, locks and shops retain their identities; old tokens cannot place twice.
+`/plot reissue <recoveryId>` replaces a lost token through mail. Staff may resume
+or roll back an unfinished placement. The Temporal reconciliation schedule uses
+the isolated mining-reset Activity queue and skips sleeping servers without
+waking them. Its RCON protocol is validated against the shared JSON contract.
 
 Town deletion commits a pending treasury payout in the same transaction as
 removing the town and its claims. The treasury then pays the former owner with a
