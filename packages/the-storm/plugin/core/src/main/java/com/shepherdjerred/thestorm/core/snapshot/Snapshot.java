@@ -1,15 +1,15 @@
-package com.shepherdjerred.thestorm.arena.domain.snapshot;
+package com.shepherdjerred.thestorm.core.snapshot;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Everything a player had before joining an arena, stored before anything is cleared and restored
- * exactly when they leave, die, disconnect, or rejoin after a crash.
+ * Everything a player had before joining an arena or a match, stored before anything is cleared and
+ * restored exactly when they leave, die, disconnect, or rejoin after a crash.
  *
  * @param player the player
- * @param arena the arena they joined
+ * @param scope what they joined: the arena or match the snapshot was taken for
  * @param position where they stood
  * @param vitals health, hunger and game mode
  * @param experience their experience
@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 public record Snapshot(
     UUID player,
-    String arena,
+    String scope,
     Position position,
     Vitals vitals,
     Experience experience,

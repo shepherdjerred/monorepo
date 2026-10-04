@@ -1,33 +1,33 @@
-package com.shepherdjerred.thestorm.arena.adapter.paper;
+package com.shepherdjerred.thestorm.core.snapshot;
 
-import com.shepherdjerred.thestorm.arena.domain.snapshot.EffectRecord;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Experience;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.ItemData;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Position;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Snapshot;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Vitals;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import net.kyori.adventure.key.Key;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
-/** Taking a player's state into a snapshot, putting it back, and wiping it for the arena. */
-final class PlayerStates {
+/** Taking a player's state into a snapshot, putting it back, and wiping it for a game. */
+public final class PlayerStates {
 
   private static final int FULL_FOOD = 20;
 
   private PlayerStates() {}
 
-  static Snapshot capture(Player player, String arena, Instant now) {
-    var location = Places.at(player);
+  /** A snapshot of {@code player} right now, taken for {@code scope}. */
+  public static Snapshot capture(Player player, String scope, Instant now) {
+    var location = at(player);
     var contents =
         Arrays.stream(player.getInventory().getContents())
             .map(item -> item == null ? ItemStack.empty() : item)
@@ -46,9 +46,9 @@ final class PlayerStates {
             .toList();
     return new Snapshot(
         player.getUniqueId(),
-        arena,
+        scope,
         new Position(
-            location.getWorld().getName(),
+            player.getWorld().getName(),
             location.getX(),
             location.getY(),
             location.getZ(),
@@ -71,7 +71,7 @@ final class PlayerStates {
    * Puts {@code snapshot} back exactly. Returns false, having restored everything but the position,
    * if the snapshot's world no longer exists.
    */
-  static boolean apply(Player player, Snapshot snapshot, Server server) {
+  public static boolean apply(Player player, Snapshot snapshot, Server server) {
     player.setGameMode(GameMode.valueOf(snapshot.vitals().gameMode()));
     var position = snapshot.position();
     var world = server.getWorld(position.world());
@@ -102,7 +102,7 @@ final class PlayerStates {
    * Closes the open inventory and moves the cursor into storage. Returns false, keeping any cursor
    * overflow with the player, when the inventory cannot hold it for a complete snapshot.
    */
-  static boolean settle(Player player) {
+  public static boolean settle(Player player) {
     var cursor = player.getItemOnCursor();
     player.setItemOnCursor(null);
     player.closeInventory();
@@ -120,13 +120,13 @@ final class PlayerStates {
    * Closes whatever the player has open and throws away the item on their cursor: before they are
    * emptied or restored, whatever they hold there came from the arena.
    */
-  static void discardHeld(Player player) {
+  public static void discardHeld(Player player) {
     player.closeInventory();
     player.setItemOnCursor(null);
   }
 
-  /** Empties the player for the arena: no items, effects or experience; full health and food. */
-  static void wipe(Player player, GameMode mode) {
+  /** Empties the player for the game: no items, effects or experience; full health and food. */
+  public static void wipe(Player player, GameMode mode) {
     discardHeld(player);
     player.setGameMode(mode);
     player.getInventory().clear();
@@ -137,11 +137,19 @@ final class PlayerStates {
     heal(player);
   }
 
-  static void heal(Player player) {
+  public static void heal(Player player) {
     player.setHealth(maxHealth(player));
     player.setFoodLevel(FULL_FOOD);
     player.setSaturation(FULL_FOOD);
     player.setFireTicks(0);
+  }
+
+  /**
+   * Where {@code entity} stands. Takes an {@link Entity} so a player resolves to its live position,
+   * never {@code OfflinePlayer}'s nullable last-known one.
+   */
+  private static Location at(Entity entity) {
+    return entity.getLocation();
   }
 
   private static double maxHealth(Player player) {
@@ -156,7 +164,7 @@ final class PlayerStates {
     var effects = new ArrayList<PotionEffect>();
     for (var record : records) {
       Optional<PotionEffect> effect =
-          ItemFactory.effect(record.type())
+          effectType(record.type())
               .map(
                   type ->
                       new PotionEffect(
@@ -170,5 +178,11 @@ final class PlayerStates {
       effect.ifPresent(effects::add);
     }
     return effects;
+  }
+
+  /** The effect type for {@code key}, or empty if the server has none. */
+  private static Optional<PotionEffectType> effectType(String key) {
+    return Optional.ofNullable(
+        RegistryAccess.registryAccess().getRegistry(RegistryKey.MOB_EFFECT).get(Key.key(key)));
   }
 }

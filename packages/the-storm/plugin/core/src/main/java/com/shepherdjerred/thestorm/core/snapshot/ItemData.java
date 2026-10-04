@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.arena.domain.snapshot;
+package com.shepherdjerred.thestorm.core.snapshot;
 
 import java.util.Arrays;
 import java.util.HexFormat;

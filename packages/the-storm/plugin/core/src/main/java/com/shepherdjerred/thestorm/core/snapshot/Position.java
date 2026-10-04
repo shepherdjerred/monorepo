@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.arena.domain.snapshot;
+package com.shepherdjerred.thestorm.core.snapshot;
 
 /**
  * Where a player stood, in a named world.

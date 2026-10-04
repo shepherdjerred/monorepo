@@ -4,8 +4,8 @@ import static com.shepherdjerred.thestorm.arena.adapter.db.generated.Tables.AREN
 import static com.shepherdjerred.thestorm.arena.adapter.db.generated.Tables.ARENA_VAULT_CLAIMS;
 
 import com.shepherdjerred.thestorm.arena.app.store.RewardStore;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.ItemData;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.core.snapshot.ItemData;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;

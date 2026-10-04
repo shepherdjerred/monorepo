@@ -1,14 +1,14 @@
-package com.shepherdjerred.thestorm.arena.app.store;
+package com.shepherdjerred.thestorm.core.snapshot;
 
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Snapshot;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Snapshots of players inside arenas. A restore marks its row restored only after a fresh player
- * login proves the matching marker and belongings were saved together in player data.
+ * Stored snapshots of players inside a game. Each module implements this over its own table, so two
+ * games never share rows. A restore marks its row restored only after a fresh player login proves
+ * the matching marker and belongings were saved together in player data.
  */
 public interface SnapshotStore {
 

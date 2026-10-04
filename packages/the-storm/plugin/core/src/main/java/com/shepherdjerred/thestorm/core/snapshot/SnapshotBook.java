@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.arena.domain.snapshot;
+package com.shepherdjerred.thestorm.core.snapshot;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The snapshots of players inside arenas, and the restores still being cleaned up.
+ * The snapshots of players inside a game, and the restores still being cleaned up.
  *
  * <p>A snapshot enters the book the moment it is taken (the player is emptied in the same tick) and
  * leaves it exactly once, when it is taken for restoring, so a player is never restored twice in a
@@ -17,8 +17,8 @@ import java.util.UUID;
  * inventory and its marker reached player data together. Until the mark lands the player is {@link
  * #cleaning}: a new snapshot may not be taken meanwhile.
  *
- * <p>After a crash the book starts empty and not {@link #loaded}; nobody may join an arena until
- * the stored snapshots are read back, so a stale kit can never overwrite a real snapshot.
+ * <p>After a crash the book starts empty and not {@link #loaded}; nobody may join a game until the
+ * stored snapshots are read back, so a stale kit can never overwrite a real snapshot.
  *
  * @param held player to the snapshot waiting to be restored
  * @param cleaning players restored whose stored snapshot is not yet marked restored
