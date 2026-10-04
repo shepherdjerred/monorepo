@@ -65,6 +65,12 @@ lines:
     - Hear that rumble?
     - Take cover.
     - Storm's on your doorstep.
+  lobby:
+    - "FORECAST: a hundred percent chance of rushing."
+    - Lightning picks Trooper. THUNDER follows.
+    - First blood race is on. The STORM never loses twice.
+    - Pressure is building over the lobby...
+    - "{team}, take cover. Or don't. Join the STORM."
 quirks:
   - bunny_hops
   - celebrates_early

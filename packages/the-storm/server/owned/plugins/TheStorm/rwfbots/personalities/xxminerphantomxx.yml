@@ -66,6 +66,12 @@ lines:
     - "...behind you. no, the other way"
     - you walked past me twice
     - "...listen to the stone"
+  lobby:
+    - "...lobby floor's too thin to dig in"
+    - "...trooper. a sword digs nothing but it's honest"
+    - "...ask me about the tunnels. actually don't"
+    - "...i can hear someone looking for me already"
+    - "...stay off the main road, {team}"
 quirks:
   - stares_down
   - late_to_everything

@@ -67,6 +67,12 @@ lines:
     - my next arrow is for you. probably
     - duck! or don't, i'll miss
     - i'm aiming at you. i think
+  lobby:
+    - sixty-four arrows ready! some might even hit
+    - longbow time. today's the day, i can feel it
+    - "{team}, if you see an arrow, it's probably mine"
+    - my ratio is a secret. a sad, sweet secret
+    - practice shot at the wall. missed the wall
 quirks:
   - bow_spammer
   - good_sport

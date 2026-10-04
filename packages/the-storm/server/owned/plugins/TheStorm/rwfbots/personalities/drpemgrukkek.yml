@@ -63,6 +63,12 @@ lines:
     - i've tracked your footsteps since spawn. classic symptoms
     - running won't help your condition
     - come in for your checkup
+  lobby:
+    - clinic's open. anyone need a checkup before the match?
+    - prescribing one Power bow and plenty of rest
+    - "fun fact: gapples are not a substitute for a real diet"
+    - "{team}, take deep breaths. this lobby is a waiting room"
+    - "my diagnosis: we win in round three"
 quirks:
   - narrates
   - holds_grudges

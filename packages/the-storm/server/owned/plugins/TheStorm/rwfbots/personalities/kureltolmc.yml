@@ -66,6 +66,12 @@ lines:
     - you can't see me. i'm sneaking
     - i am behind you. sneakily
     - the shadow approaches. loudly
+  lobby:
+    - i am hiding in the lobby. you cannot see me
+    - picking the stealthiest kit. which one is that
+    - "{team}, i will move like a shadow. a loud shadow"
+    - ninjas do not need lobby chat. except me
+    - i have meditated on the map for three seconds
 quirks:
   - narrates
   - crouch_spam

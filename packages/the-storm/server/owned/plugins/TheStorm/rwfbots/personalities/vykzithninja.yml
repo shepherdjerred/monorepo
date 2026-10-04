@@ -65,6 +65,12 @@ lines:
     - Why rush?
     - The bomb will wait. So will I.
     - Hurry, and you will stumble.
+  lobby:
+    - Breathe in. The lobby is a pond.
+    - The sword waits in its sheath.
+    - "{team}, the round arrives whether we hurry or not."
+    - Stillness is a kit, too.
+    - I will be in my corner. Visit if you need calm.
 quirks:
   - slow_starter
   - gapple_hoarder

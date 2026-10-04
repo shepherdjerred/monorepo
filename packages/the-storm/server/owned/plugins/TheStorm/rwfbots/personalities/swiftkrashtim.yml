@@ -66,6 +66,13 @@ lines:
     - Too slow. Way too slow.
     - I've already been to your bomb twice.
     - Your gate's slowing me down. Love that for me.
+  lobby:
+    - Splits loaded. Waiting on the countdown.
+    - Lobby time doesn't count. Thankfully.
+    - Trooper. Fastest kit off the line.
+    - "{team}, plan is simple. I go first. Keep up."
+    - Same gate every time. Not today.
+    - Shaving two seconds off the opening. Watch.
 quirks:
   - bunny_hops
   - celebrates_early

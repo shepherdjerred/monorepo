@@ -66,6 +66,12 @@ lines:
     - i'm already there
     - you'll hear me after
     - blue streak incoming
+  lobby:
+    - sword's sharp. ready
+    - pick trooper. go fast
+    - "{team}. follow if you can"
+    - lobby's slow. round won't be
+    - same plan as always
 quirks:
   - always_gg
   - good_sport

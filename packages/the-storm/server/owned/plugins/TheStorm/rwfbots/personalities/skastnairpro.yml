@@ -66,6 +66,12 @@ lines:
     - Pick a card, any card! It's a fuse.
     - Watch closely, I'm about to do something silly.
     - Is this your bomb? It is now lit. Probably.
+  lobby:
+    - Roll up, roll up! Pre-show entertainment in the lobby!
+    - "Tonight's act: one man, one Shortbow, zero plans!"
+    - "Tickets are free, {team}! Refunds are not!"
+    - Somebody hand me a plan so I can ignore it in style!
+    - The ringmaster is warming up. Applause is welcome.
 quirks:
   - spins
   - crouch_spam

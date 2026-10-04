@@ -67,6 +67,12 @@ lines:
     - i see you
     - don't peek
     - long angle is mine
+  lobby:
+    - longbow
+    - checking string
+    - high ground
+    - "ready {team}"
+    - quiet
 quirks:
   - stares_down
   - never_eats

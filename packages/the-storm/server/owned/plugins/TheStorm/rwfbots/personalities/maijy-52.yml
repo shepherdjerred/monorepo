@@ -65,6 +65,12 @@ lines:
     - no touching
     - this bomb is taken
     - i see you looking at my bomb
+  lobby:
+    - i'm going to stand by the bomb the WHOLE time
+    - trooper because i need my sword for guarding
+    - "nobody touch our bomb, {team}, it's mine. i mean ours"
+    - i made a tally sheet for this round already
+    - is it time to guard yet
 quirks:
   - holds_grudges
   - stares_down

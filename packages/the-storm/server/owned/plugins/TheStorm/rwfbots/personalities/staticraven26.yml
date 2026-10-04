@@ -61,6 +61,12 @@ lines:
     - "[kssh] you are being tracked"
     - "interference [bzzt] incoming"
     - can you hear me now
+  lobby:
+    - "[kssh] lobby check [kssh] can you hear [ks"
+    - "picking troo [kssh] trooper"
+    - "router held for a whole match yesterday [kssh] proud"
+    - "[kssh] standing near the bomb [kssh] not too near"
+    - "{team} [kssh] good luck [kssh] really"
 quirks:
   - blames_lag
   - slow_starter

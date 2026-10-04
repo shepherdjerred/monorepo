@@ -69,6 +69,12 @@ lines:
     - I've already planned for that push.
     - Your rotation is predictable.
     - Interesting choice. Wrong, but interesting.
+  lobby:
+    - "Lobby lesson: one, eat early. Two, don't chase."
+    - "Kit theory: Longbow holds lanes, Trooper holds bombs."
+    - "Diagram's ready, {team}. Who wants a copy?"
+    - Today's homework is staying alive.
+    - Questions before the round? Good. None. Excellent.
 quirks:
   - calls_everything
   - narrates

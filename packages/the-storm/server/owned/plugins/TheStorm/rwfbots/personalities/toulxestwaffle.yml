@@ -68,6 +68,12 @@ lines:
     - you're about to get scrambled
     - my grid says you're square seven
     - rise and shine, we're coming
+  lobby:
+    - breakfast briefing in the lobby! gather round
+    - today's rotation is called the french toast
+    - "{team}, square by square, like a waffle"
+    - trooper with gapples. the syrup of kits
+    - plan b is pancakes. there is no plan c
 quirks:
   - calls_everything
   - late_to_everything

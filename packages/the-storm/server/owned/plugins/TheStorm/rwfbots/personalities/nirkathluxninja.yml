@@ -63,6 +63,12 @@ lines:
     - um. please don't come here
     - i have a sword. just so you know
     - i'm not scared. a little scared
+  lobby:
+    - um, is it ok if i stand near our bomb again
+    - i practised rewinding! i'm getting better i think
+    - "{team} you're all really good. um. good luck"
+    - i got two kills last game. that's my record
+    - um what's everyone's favourite kit
 quirks:
   - says_sorry
   - gapple_hoarder

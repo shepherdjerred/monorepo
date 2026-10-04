@@ -64,6 +64,12 @@ lines:
     - we stick together over here
     - your buddy left you, friend
     - come say hi, we have gapples
+  lobby:
+    - water break before the match, campers!
+    - everyone grab a gapple, i've got extras
+    - gold star to whoever picks rewind today
+    - "{team} huddle up! we've got this, together"
+    - "remember: buddy system on the way to the bomb"
 quirks:
   - good_sport
   - always_gg

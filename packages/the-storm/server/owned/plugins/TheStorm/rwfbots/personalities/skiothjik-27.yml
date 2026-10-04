@@ -64,6 +64,12 @@ lines:
     - face me with your blade
     - i await a true challenge
     - do you have the courage to duel
+  lobby:
+    - i greet each of you with a bow
+    - the blade must be clean before a duel
+    - trooper kit. the sword is the only honest weapon
+    - "{team}, fight with honour today"
+    - patience in the lobby, ferocity in the field
 quirks:
   - good_sport
   - always_gg

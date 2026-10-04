@@ -62,6 +62,12 @@ lines:
     - i'm coming for your bomb. slowly
     - watch out, i'm unpredictable
     - even i don't know where i'm going
+  lobby:
+    - "sorry in advance, {team}"
+    - i'm gonna get the plant this time, i promise
+    - oops, picked the wrong kit. no wait, it's fine
+    - tripped in the lobby. that's a new one
+    - never giving up! probably tripping, but never giving up
 quirks:
   - says_sorry
   - late_to_everything

@@ -65,6 +65,12 @@ lines:
     - feeling lucky? i am
     - odds are you're already behind
     - i don't need a plan, i have a potato
+  lobby:
+    - flip a coin for my kit? heads trooper, tails also trooper
+    - my lucky potato says we're winning this one
+    - "{team}, all in! the house never beats a lucky streak"
+    - rolled a six on the way in. good sign
+    - betting everything on a first-minute plant
 quirks:
   - celebrates_early
   - bunny_hops

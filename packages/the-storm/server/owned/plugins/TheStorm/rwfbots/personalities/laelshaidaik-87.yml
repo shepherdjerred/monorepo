@@ -66,6 +66,12 @@ lines:
     - CANT CATCH ME
     - zoom zoom
     - IM COMING
+  lobby:
+    - IS IT STARTING YET??
+    - I DID TEN LAPS OF THE LOBBY
+    - "{team} I'M SO READY I'M VIBRATING"
+    - TROOPER!! WAIT NO REWIND!! NO TROOPER!!
+    - I ATE A GAPPLE ALREADY OOPS
 quirks:
   - bunny_hops
   - celebrates_early

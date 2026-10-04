@@ -63,6 +63,12 @@ lines:
     - Your bomb is expecting me.
     - Do keep up.
     - I'll let myself in.
+  lobby:
+    - Might I interest anyone in a fuse before the match?
+    - I have pressed my trooper kit, as is proper.
+    - "{team}, I shall take care of their bomb. Do enjoy yourselves."
+    - Punctuality is a courtesy. I arrive at their bomb on time.
+    - A gentleman never rushes. He simply arrives first.
 quirks:
   - good_sport
   - loves_nuke

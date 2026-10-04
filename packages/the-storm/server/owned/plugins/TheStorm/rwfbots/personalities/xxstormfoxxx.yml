@@ -64,6 +64,12 @@ lines:
     - please just go away
     - i'm not in the mood
     - can we skip to the part where you lose
+  lobby:
+    - why is the lobby always this long
+    - fine, trooper. whatever keeps the planter alive
+    - if anyone gives a pep talk i'm leaving
+    - "ok {team}. i'm here. don't celebrate"
+    - i was gonna skip this one. obviously didn't
 quirks:
   - blames_lag
   - late_to_everything

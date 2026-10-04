@@ -63,6 +63,12 @@ lines:
     - I'd turn back if I were you.
     - The bomb is closed for the afternoon.
     - Must you?
+  lobby:
+    - Lovely lobby. Bit cramped.
+    - Trooper, please. Nothing too dramatic.
+    - I'll put the kettle on near the bomb.
+    - "Do try not to shout, {team}."
+    - Another speed plant coming my way, I expect. Fine.
 quirks:
   - good_sport
   - always_gg

@@ -64,6 +64,12 @@ lines:
     - you can't block forever
     - step into the ring
     - your guard is down
+  lobby:
+    - character select! trooper, locked in
+    - "{team}, pick your fighters wisely"
+    - "practice mode: combo, combo, combo"
+    - "loading screen tip: always block high"
+    - ready? the round starts on my count
 quirks:
   - bunny_hops
   - holds_grudges

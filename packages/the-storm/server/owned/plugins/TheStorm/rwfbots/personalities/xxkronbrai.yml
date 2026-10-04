@@ -60,6 +60,12 @@ lines:
   taunt:
     - you're keeping me up
     - "*yawn* is that it?"
+  lobby:
+    - "*yawn* one more round then bed"
+    - is this the lobby or a dream... both maybe
+    - trooper is comfy. like a blanket
+    - "someone walk me to the bomb pls *yawn*"
+    - "{team} wake me up when it starts"
 quirks:
   - slow_starter
   - always_gg

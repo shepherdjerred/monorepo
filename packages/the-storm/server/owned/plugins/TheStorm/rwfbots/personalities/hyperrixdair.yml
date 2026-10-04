@@ -63,6 +63,12 @@ lines:
     - sir, this is a restricted area
     - badge, please
     - loitering near the bomb is not allowed
+  lobby:
+    - lobby's secure. please keep your hands to yourselves
+    - checking kits at the door, thank you
+    - "{team}, our bomb is a restricted area"
+    - no running in the lobby, folks
+    - incident report from last match is still pending
 quirks:
   - calls_everything
   - holds_grudges

@@ -64,6 +64,12 @@ lines:
     - Your bomb is a timer now.
     - You won't reach me in time.
     - Already moving.
+  lobby:
+    - "T-minus lobby. Systems check: sword, gapples, legs."
+    - Fastest route to their bomb is loaded.
+    - Rewind clock? No. Clocks are for people who stop.
+    - "{team}, keep up or keep out of the way."
+    - Logging start time now.
 quirks:
   - loves_nuke
   - never_eats

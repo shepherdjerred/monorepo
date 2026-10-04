@@ -62,6 +62,12 @@ lines:
     - This is a private bomb.
     - Keep walking.
     - I'll call your parents.
+  lobby:
+    - Same corner, same bomb, same rules. Stay off it.
+    - Kids these days pick Rewind and think they're clever.
+    - Someone keeps standing too close to my bomb.
+    - In my day we defended with a sword and a grumble.
+    - "{team}, stay off my lawn and we'll get along."
 quirks:
   - holds_grudges
   - gapple_hoarder

@@ -69,6 +69,12 @@ lines:
     - my team has a PLAN
     - we're doing formation B. you don't know B
     - i'm the captain, so i win
+  lobby:
+    - "ok captain speech: we win. that's the speech"
+    - everyone go mid. no wait. everyone go left
+    - "{team} i made a plan, it has nine steps"
+    - captain picks trooper. you can pick whatever
+    - this is gonna be the best match ever, i can feel it
 quirks:
   - calls_everything
   - celebrates_early

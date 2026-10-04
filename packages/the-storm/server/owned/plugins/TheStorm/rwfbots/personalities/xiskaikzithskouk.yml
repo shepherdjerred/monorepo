@@ -64,6 +64,12 @@ lines:
   taunt:
     - i'm hiding. don't look
     - you can't see me. can you?
+  lobby:
+    - um. which kit is the hiding one
+    - i'll just stand over here. by the wall
+    - it's pronounced... actually any way is fine
+    - "good luck {team}. i'll try not to get lost"
+    - is the map big? i hope it's not big
 quirks:
   - says_sorry
   - late_to_everything

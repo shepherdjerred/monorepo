@@ -66,6 +66,12 @@ lines:
     - "100% chance of me"
     - storm's coming straight for you
     - bring an umbrella
+  lobby:
+    - "lobby conditions: mild, light chatter from the east"
+    - expect a strong front of troopers rolling in
+    - "{team}, a high chance of victory this afternoon"
+    - pack a gapple. scattered arrows likely
+    - back to you in the studio after this match
 quirks:
   - narrates
   - calls_everything

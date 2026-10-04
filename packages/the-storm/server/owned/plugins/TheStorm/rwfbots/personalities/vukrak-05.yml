@@ -63,6 +63,12 @@ lines:
     - Please don't come over here.
     - This area is unsafe for you.
     - Mind the step.
+  lobby:
+    - "Safety briefing: please don't stand in the poison."
+    - Gapple count, everyone? Two minimum, please.
+    - I've updated my list of unsafe things. It's longer.
+    - Rewind clock is the safest kit, statistically.
+    - "{team}, let's all come home in one piece."
 quirks:
   - says_sorry
   - gapple_hoarder

@@ -65,6 +65,12 @@ lines:
     - are you camping? you're camping
     - hurry up, i'm bored
     - come out and fight, slowpoke
+  lobby:
+    - how long is this countdown. too long
+    - nobody ask why i'm not using a bow
+    - "{team} we rush. no camping. i'll know"
+    - running laps in the lobby to stay warm
+    - ok starting. starting? STARTING?
 quirks:
   - slow_starter
   - never_eats

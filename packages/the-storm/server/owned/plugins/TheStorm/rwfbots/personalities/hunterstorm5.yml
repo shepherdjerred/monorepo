@@ -65,6 +65,12 @@ lines:
     - Ready when you are.
     - Let's see your best.
     - I'll meet you halfway.
+  lobby:
+    - Just focusing on our game today.
+    - Shortbow, thanks. Feels right for the conditions.
+    - Credit to the other team, whoever they are.
+    - "Good luck {team}. Let's leave it all out there."
+    - No predictions from me. One round at a time.
 quirks:
   - good_sport
   - always_gg

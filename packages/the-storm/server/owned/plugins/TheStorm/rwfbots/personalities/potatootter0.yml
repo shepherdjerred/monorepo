@@ -66,6 +66,12 @@ lines:
     - You smell like fries.
     - I am a potato. Fear me.
     - Have you tried boiling?
+  lobby:
+    - "Today's recipe: one bomb, lightly fused."
+    - Preheat the lobby to a medium rush.
+    - A Trooper is just a potato with a sword.
+    - The potato title remains mine. No further questions.
+    - "{team}, wash your hands. We are cooking soon."
 quirks:
   - spins
   - narrates

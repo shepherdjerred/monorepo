@@ -61,6 +61,12 @@ lines:
     - Touch my planter, meet me.
     - The pack is watching.
     - Wolves hunt together.
+  lobby:
+    - "I've got your back, {team}."
+    - Pack sticks together. Always.
+    - Trooper and extra gapples. For you, not me.
+    - Sleepy one, I'll walk you to the bomb again.
+    - Planter goes first. I go in front of the planter.
 quirks:
   - holds_grudges
   - calls_everything

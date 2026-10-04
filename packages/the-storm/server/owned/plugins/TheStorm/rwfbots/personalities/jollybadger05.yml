@@ -67,6 +67,12 @@ lines:
     - I'm not going to turn this match around. oh wait, I am
     - you call that a rotate? we'll practise
     - watch and learn, sport
+  lobby:
+    - kids are asleep, coffee's hot, let's do this
+    - "{team}, quick huddle: rotate together, eat your gapples"
+    - why did the trooper bring a ladder? to raise the stakes
+    - "remember: warm up those clicking fingers, champs"
+    - back in my day we walked uphill to the bomb. both ways
 quirks:
   - always_gg
   - good_sport

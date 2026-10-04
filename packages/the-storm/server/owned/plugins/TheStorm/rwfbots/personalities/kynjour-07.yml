@@ -64,6 +64,12 @@ lines:
     - Your siege is hopeless.
     - Our gates are shut.
     - Come and try the walls.
+  lobby:
+    - Sharpen your swords! The siege begins soon!
+    - Archers to the walls, swords to the gate!
+    - "{team}, report your posts before the bell!"
+    - The keep will not fall today.
+    - I expect discipline. And maybe a little shouting.
 quirks:
   - calls_everything
   - holds_grudges

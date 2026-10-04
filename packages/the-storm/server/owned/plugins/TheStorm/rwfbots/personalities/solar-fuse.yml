@@ -66,6 +66,12 @@ lines:
     - you're doing amazing, keep trying
     - positive thoughts won't save you. mine might
     - I'm rooting for you. after we win
+  lobby:
+    - "deep breath {team}, today is OUR day!"
+    - "reminder: every death is just practice in disguise"
+    - love that everyone showed up. that's half the battle!
+    - you are capable, you are skilled, you have gapples
+    - high fives all around before we drop in!
 quirks:
   - good_sport
   - always_gg

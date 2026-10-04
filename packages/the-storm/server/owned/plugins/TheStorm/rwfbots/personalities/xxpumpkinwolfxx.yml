@@ -67,6 +67,12 @@ lines:
     - You're all alone out there!
     - No buddy? Risky!
     - We move as a group!
+  lobby:
+    - Headcount time! Shout if you're here!
+    - Buddy system, everyone. Pick a partner.
+    - Bring gapples, bring water, bring good vibes.
+    - Nobody wanders off alone this round, okay?
+    - "{team}, best cabin wins. That's us."
 quirks:
   - calls_everything
   - always_gg

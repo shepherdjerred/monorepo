@@ -68,6 +68,13 @@ lines:
     - i'm behind you. no, the other behind.
     - ehehehe. you'll never guess my plan. neither will i.
     - boo. that's it. that's the taunt.
+  lobby:
+    - ehehe. waiting rooms are the spookiest rooms.
+    - has anyone seen the spy kit? i dreamed of it again.
+    - carving a little pumpkin in my head while we wait. ehehe.
+    - rewind clock goes tick tock... spooky tick tock.
+    - "{team}, the patch is ready. the pumpkins are restless."
+    - who wants to hear a ghost story? it's about lag.
 quirks:
   - crouch_spam
   - spins

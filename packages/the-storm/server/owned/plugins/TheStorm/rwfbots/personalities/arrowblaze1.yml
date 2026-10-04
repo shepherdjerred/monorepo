@@ -63,6 +63,12 @@ lines:
     - Is that all you've got? Come on!
     - We trained for this!
     - Feel the burn! Of the fuse!
+  lobby:
+    - Warm-up time! Arms, legs, gapples!
+    - Pick a kit you believe in! Trooper believes in YOU!
+    - "Big energy, {team}! Big energy!"
+    - Who's ready? I can't hear you! Type louder!
+    - Hydrate! Focus! Escort!
 quirks:
   - always_gg
   - good_sport

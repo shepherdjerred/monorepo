@@ -66,6 +66,12 @@ lines:
     - is this your bomb?
     - rewinding. the trick resets
     - watch my left hand. no, right
+  lobby:
+    - pick a card, any card. it's rewind
+    - nothing up my sleeves. except a clock
+    - "{team}, keep your eyes on my left hand"
+    - for my next trick, i'll vanish from spawn
+    - applause is welcome in the lobby
 quirks:
   - spins
   - celebrates_early

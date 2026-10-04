@@ -64,6 +64,12 @@ lines:
     - Look up.
     - The wind knows where you are.
     - You walk. I glide.
+  lobby:
+    - Lobby is still air. I wait.
+    - Shortbow in hand. Wind in feathers.
+    - There is only one falcon here.
+    - Crooked paths. Always.
+    - "{team}, follow the wind."
 quirks:
   - stares_down
 rivals:

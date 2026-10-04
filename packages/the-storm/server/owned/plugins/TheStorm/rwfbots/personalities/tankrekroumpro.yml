@@ -62,6 +62,12 @@ lines:
     - bunker's closed. over
     - you'll need more than that. over
     - hostiles approaching. bring it. over
+  lobby:
+    - radio check, radio check. lobby reads you. over
+    - "counting rations: eight gapples. over"
+    - "{team}, report positions when we drop. over"
+    - bunker plans loaded. awaiting deployment. over
+    - signal's clear. long night ahead. over
 quirks:
   - calls_everything
   - gapple_hoarder

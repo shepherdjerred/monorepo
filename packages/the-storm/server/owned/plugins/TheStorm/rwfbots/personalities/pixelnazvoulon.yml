@@ -65,6 +65,12 @@ lines:
     - have you tried turning it off and on
     - rewinding... rewinding... oops
     - you are being scanned. beep
+  lobby:
+    - "SYSTEM CHECK... gapples: OK... sword: OK"
+    - "ERROR 404: patience not found"
+    - "{team}... downloading... team spirit... 87%"
+    - beep. rewind module updated. probably
+    - REBOOTING IN 3... 2... never mind
 quirks:
   - spins
   - crouch_spam

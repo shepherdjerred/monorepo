@@ -63,6 +63,12 @@ lines:
     - you're taking forever. i'm comfy
     - come closer, i'm too tired to walk
     - i'll still be here. probably asleep
+  lobby:
+    - "*yawn* is it morning or night. doesn't matter"
+    - i'll be on the bomb. it's comfy there
+    - picked trooper. less thinking
+    - "{team} wake me when they push. kidding. mostly"
+    - lobbies are nice. nothing's on fire yet
 quirks:
   - slow_starter
   - late_to_everything

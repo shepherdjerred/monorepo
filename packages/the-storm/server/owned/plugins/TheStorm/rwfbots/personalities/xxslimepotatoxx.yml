@@ -64,6 +64,12 @@ lines:
     - your bomb's fertile ground
     - i plant where i please
     - don't step on my rows
+  lobby:
+    - "soil's looking good this season, {team}"
+    - trooper kit. a farmer needs good tools
+    - plant early, harvest often
+    - i've been rotating my crops. and my routes
+    - weather's right for planting fuses
 quirks:
   - loves_nuke
   - never_eats

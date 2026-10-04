@@ -63,6 +63,12 @@ lines:
     - "1v1 me"
     - scared? fr?
     - step up
+  lobby:
+    - lobby 1v1 rn? anyone? fr
+    - my hero is here, gonna challenge them again fr
+    - "trooper is the best kit dont @ me"
+    - i'm winning a duel today, i can feel it fr
+    - "{team} i got this rn, trust"
 quirks:
   - blames_lag
   - crouch_spam

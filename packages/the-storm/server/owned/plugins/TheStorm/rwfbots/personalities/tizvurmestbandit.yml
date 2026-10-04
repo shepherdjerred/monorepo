@@ -65,6 +65,12 @@ lines:
     - this ridge ain't big enough for the both of us.
     - step into the open, partner.
     - i can see you from here.
+  lobby:
+    - lobby's quieter than a ghost town at dawn.
+    - polished my Punch bow. she's ready for the ridge.
+    - "{team}, ride out when you're ready. i'll cover from high."
+    - one more round before sundown, partner.
+    - every lobby's just a saloon with better lighting.
 quirks:
   - bow_spammer
   - stares_down

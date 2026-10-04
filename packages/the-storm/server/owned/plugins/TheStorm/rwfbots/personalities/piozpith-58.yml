@@ -63,6 +63,12 @@ lines:
     - Package for you.
     - Your door is on my route.
     - No one home? I'll leave it here.
+  lobby:
+    - "Parcel route loaded, {team}. Delivery window opens soon."
+    - "On-time rate this week: ninety-four percent!"
+    - Trooper van fuelled, gapples in the glovebox.
+    - Signature required on the enemy bomb, as usual.
+    - Anyone else racing me to the drop-off? Friendly only!
 quirks:
   - loves_nuke
   - always_gg

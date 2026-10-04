@@ -64,6 +64,12 @@ lines:
     - Your horoscope says run.
     - I read your stars. Bad news.
     - Orbiting round the back.
+  lobby:
+    - "The moon is in a planting phase, {team}."
+    - Mars says Trooper today. I trust Mars.
+    - No rushing until the stars line up.
+    - Rewind clocks are lucky under a full moon.
+    - Somebody's flank route has a cursed horoscope.
 quirks:
   - narrates
   - blames_lag

@@ -63,6 +63,12 @@ lines:
     - Face me, coward! Kindly!
     - I challenge thee to single combat!
     - Thy bow is dishonourable!
+  lobby:
+    - Hark! Who in this lobby shall cross blades with me?
+    - Mine sword is polished and mine honour unbent.
+    - "{team}, I ride at thy side, or at least near it."
+    - I shall challenge the first foe I see. Tis tradition.
+    - Gapples are a knight's provisions. Eat well, friends.
 quirks:
   - good_sport
   - holds_grudges

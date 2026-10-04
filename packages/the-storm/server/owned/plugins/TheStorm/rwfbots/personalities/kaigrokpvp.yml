@@ -62,6 +62,12 @@ lines:
     - your guard is slow
     - I'm already at your nuke
     - can't stop the run
+  lobby:
+    - warm-up done. heart rate steady. nuke in sight
+    - fastest route is lane two. timed it yesterday
+    - "{team}, clear the lane. i'll handle the finish line"
+    - "fuel up: one gapple, saved for the sprint"
+    - every second in the lobby is a second of visualisation
 quirks:
   - loves_nuke
   - never_eats

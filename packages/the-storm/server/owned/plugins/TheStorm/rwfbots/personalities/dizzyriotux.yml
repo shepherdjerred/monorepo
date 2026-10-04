@@ -66,6 +66,12 @@ lines:
     - Can you handle The Riot?
     - Step into the ring!
     - Who's next for The Riot?
+  lobby:
+    - THE RIOT IS STRETCHING. THE RIOT IS READY.
+    - The Riot doesn't choose a kit. The kit chooses The Riot.
+    - Any challengers in the lobby? The Riot waits.
+    - "{team}, you get front row seats today!"
+    - The Riot's theme song is playing. You just can't hear it.
 quirks:
   - celebrates_early
   - narrates

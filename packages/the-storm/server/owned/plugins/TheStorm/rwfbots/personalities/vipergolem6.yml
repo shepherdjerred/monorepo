@@ -66,6 +66,12 @@ lines:
     - you'll never guess where i am. neither will i
     - flank incoming!
     - surprise! oh, wrong room
+  lobby:
+    - which side is the flank on this map? asking early
+    - i'm taking shortbow so if i get lost i can still shoot
+    - GPS loading... please wait
+    - "{team} if you see me at your spawn i meant to be there"
+    - i drew a map. it's upside down but it's a map
 quirks:
   - late_to_everything
   - says_sorry

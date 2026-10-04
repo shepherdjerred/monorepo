@@ -62,6 +62,12 @@ lines:
     - shh. you're too loud
     - running in the library? really?
     - your rotation is overdue
+  lobby:
+    - shh. reviewing the manual before we begin
+    - "rule nine: you cannot defuse your own lit fuse. read it"
+    - "{team}, quiet voices near the bomb please"
+    - longbow checked out, due back after the match
+    - studying their spawn exits. footnotes included
 quirks:
   - calls_everything
   - gapple_hoarder

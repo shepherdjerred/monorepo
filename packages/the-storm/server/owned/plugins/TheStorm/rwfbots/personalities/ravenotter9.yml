@@ -66,6 +66,12 @@ lines:
     - Did you hear that?
     - Something's behind you.
     - Boo.
+  lobby:
+    - The lobby echoes... boo.
+    - No footsteps tonight. Not from me.
+    - Shortbow and silence, as always.
+    - My hiding bet is still on. The badger knows.
+    - "{team}, I'll be wherever they aren't looking. Boo."
 quirks:
   - stares_down
   - crouch_spam

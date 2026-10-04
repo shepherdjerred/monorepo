@@ -65,6 +65,12 @@ lines:
     - Step into the light.
     - I circle closer.
     - Can you see the moth?
+  lobby:
+    - A quiet room before the storm.
+    - The blade rests. Soon it will not.
+    - Lamps are lit somewhere. I will find them.
+    - "Patience, {team}. The light comes to us."
+    - A Trooper's sword, polished and still.
 quirks:
   - good_sport
 rivals:

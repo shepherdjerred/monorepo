@@ -68,6 +68,12 @@ lines:
     - The bomb is in my care. Visiting hours are closed.
     - Approach slowly, please. Sudden moves are bad for you.
     - I prescribe one long walk back to your spawn.
+  lobby:
+    - Clinic is open. Any pre-match complaints?
+    - "Prescription for today: one Trooper kit, two gapples, rest at the bomb."
+    - "Your vitals look good, {team}. Mostly."
+    - I recommend the Rewind clock for anyone prone to accidents.
+    - Waiting room's quiet. Enjoy it while it lasts.
 quirks:
   - gapple_hoarder
   - slow_starter

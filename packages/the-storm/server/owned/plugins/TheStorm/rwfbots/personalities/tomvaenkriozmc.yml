@@ -66,6 +66,12 @@ lines:
     - you won't find me. i can't find me
     - i'm flanking! from... somewhere
     - this shortcut is definitely a shortcut
+  lobby:
+    - is this the lobby or am i lost again
+    - can someone point me toward our side of the map
+    - "{team}, if i'm not back in five minutes, i'm in their spawn"
+    - sorry, wall. didn't see you there
+    - i've walked this lobby three times and found two new rooms
 quirks:
   - late_to_everything
   - says_sorry

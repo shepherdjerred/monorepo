@@ -62,6 +62,12 @@ lines:
     - your bomb has a package waiting
     - I don't stop for traffic
     - "tracking number: right behind you"
+  lobby:
+    - route planned. package ready. clock running.
+    - trooper kit, minimal weight, maximum speed
+    - "{team}, keep the lane clear and you'll get your delivery"
+    - "personal best is fifty-one seconds. today: faster"
+    - no stops scheduled. no gapple breaks.
 quirks:
   - loves_nuke
   - never_eats

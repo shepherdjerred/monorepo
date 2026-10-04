@@ -63,6 +63,12 @@ lines:
     - your fingers must be cold.
     - wait longer. i can.
     - every push melts here.
+  lobby:
+    - the lobby is a long winter. i like it.
+    - my rewind clock is snow. it covers everything.
+    - "{team}, rush if you must. i will be the glacier."
+    - frost does not hurry. neither do i.
+    - cold hands, steady bomb.
 quirks:
   - stares_down
   - slow_starter

@@ -49,6 +49,13 @@
           "ANYONE. 1V1. ANYWHERE",
           "my sword is bigger than your plan",
           "come duel me you cowards. politely"
+        ],
+        "lobby": [
+          "LOBBY 1V1 BEFORE WE START. ANYONE. ANYONE??",
+          "TROOPER SWORD. NO GAPPLES. THAT'S HOW CHAMPIONS WARM UP",
+          "MY REMATCH NOTEBOOK HAS A NEW PAGE TODAY",
+          "{team} WATCH ME, I'M THE MAIN EVENT",
+          "THAT LAST DUEL WAS A DRAW. I'M COUNTING IT AS A DRAW"
         ]
       },
       "quirks": ["holds_grudges", "bunny_hops"],
@@ -95,6 +102,13 @@
           "you'll see my lamp before you see the bomb",
           "plenty of wrecks on this coast already",
           "turn back. the waters are rough here"
+        ],
+        "lobby": [
+          "calm seas in the lobby. enjoy it while it lasts",
+          "i'll take the longbow. a keeper needs to see far",
+          "tide's coming in, {team}. stay near the light",
+          "any sails on the horizon? i smell a pirate",
+          "rest your legs. the round is a long voyage"
         ]
       },
       "quirks": ["calls_everything", "slow_starter"],
@@ -141,6 +155,13 @@
           "you're in my quarry now",
           "i can see your ore from here",
           "dig a little deeper, {team}'s got arrows"
+        ],
+        "lobby": [
+          "longbow's my pickaxe today. ready to mine some kills",
+          "what do you call a lobby with no gold? a bedrock bottom",
+          "{team}, let's strike while the ore is hot",
+          "i've got gapples. they're a gold mine of healing",
+          "this match is going to be a real diamond in the rough"
         ]
       },
       "quirks": ["bow_spammer", "says_sorry"],
@@ -178,6 +199,13 @@
           "i've been behind you for three phases",
           "look up. no, behind",
           "the shadows are mine tonight"
+        ],
+        "lobby": [
+          "the stars look crowded tonight",
+          "i'll find a dark corner. the moon will show me where",
+          "shortbow feels light tonight. like a new moon",
+          "constellations say we win, {team}. probably",
+          "shh. i'm charting the lobby"
         ]
       },
       "quirks": ["stares_down", "spins"],
@@ -224,6 +252,13 @@
           "your tracks lead right to you",
           "fresh footprints. how careless",
           "i've seen you near the bomb three times"
+        ],
+        "lobby": [
+          "observe: the lobby herd gathers before the migration",
+          "here we see the trooper, sharpening its iron fang",
+          "a rare sight. a longbow, preening its string",
+          "the {team} pack grows restless. the hunt begins soon",
+          "note how the youngest player bounces. a sign of vigour"
         ]
       },
       "quirks": ["narrates", "calls_everything"],
@@ -273,6 +308,13 @@
           "your armor is so shiny i can't stop",
           "i'm coming to look at your torch",
           "rewinding just to say hi again"
+        ],
+        "lobby": [
+          "this lobby has SO many torches. best lobby",
+          "rewind clock goes tick. it's kind of shiny too",
+          "wait what kit am i. oh. rewind. nice",
+          "is anyone else looking at that lantern? just me?",
+          "{team} if i wander off, follow the glow"
         ]
       },
       "quirks": ["late_to_everything", "spins", "crouch_spam"],
@@ -309,7 +351,14 @@
         "onWin": ["we won? i was in a corner", "yay {team}"],
         "onLoss": ["i never found the fight", "sorry. i was lost"],
         "onLastAlive": ["it's just me? uh oh", "i'll stay very still"],
-        "taunt": ["i'm hiding. don't look", "you can't see me. can you?"]
+        "taunt": ["i'm hiding. don't look", "you can't see me. can you?"],
+        "lobby": [
+          "um. which kit is the hiding one",
+          "i'll just stand over here. by the wall",
+          "it's pronounced... actually any way is fine",
+          "good luck {team}. i'll try not to get lost",
+          "is the map big? i hope it's not big"
+        ]
       },
       "quirks": ["says_sorry", "late_to_everything"],
       "rivals": ["kureltolmc"],
@@ -358,6 +407,13 @@
           "we stick together over here",
           "your buddy left you, friend",
           "come say hi, we have gapples"
+        ],
+        "lobby": [
+          "water break before the match, campers!",
+          "everyone grab a gapple, i've got extras",
+          "gold star to whoever picks rewind today",
+          "{team} huddle up! we've got this, together",
+          "remember: buddy system on the way to the bomb"
         ]
       },
       "quirks": ["good_sport", "always_gg"],
@@ -404,6 +460,13 @@
           "your bomb has a package incoming",
           "tracking says five seconds out",
           "please be home to receive the fuse"
+        ],
+        "lobby": [
+          "route's planned. one stop: their bomb",
+          "trooper kit loaded. signature not required",
+          "estimated delivery time: before the second chime",
+          "{team}, keep the road clear and i'll handle the rest",
+          "no returns, no refunds, just fuses"
         ]
       },
       "quirks": ["loves_nuke", "slow_starter"],
@@ -450,6 +513,13 @@
           "your initials won't make the board",
           "i can hear you on the radar",
           "coming for your high score"
+        ],
+        "lobby": [
+          "high score board's reset. let's fill it up, {team}",
+          "shortbow time! that's a radical power-up",
+          "lobby music's good but needs more synth",
+          "player one ready. waiting on player two",
+          "new challenger? insert coin and let's go"
         ]
       },
       "quirks": ["celebrates_early", "calls_everything"],
@@ -493,6 +563,13 @@
           "you stand in my favourite light",
           "hold still, i'm painting you",
           "your movement lacks composition"
+        ],
+        "lobby": [
+          "the lobby lighting is honestly a masterpiece",
+          "longbow is my brush. let's paint something",
+          "{team}, let's compose this round with care",
+          "please, no puns today. this is a gallery",
+          "every match is a canvas. this one's blank"
         ]
       },
       "quirks": ["stares_down", "bow_spammer"],
@@ -536,6 +613,13 @@
           "you're two moves from losing",
           "i've seen this opening before",
           "that strafe was a known mistake"
+        ],
+        "lobby": [
+          "opening theory: trooper, then patience",
+          "i've prepared three lines for this match",
+          "{team}, think two moves ahead of them",
+          "a quiet lobby is the calm before the middlegame",
+          "anyone want to analyse my last duel? no? fine"
         ]
       },
       "quirks": ["stares_down", "good_sport"],
@@ -585,6 +669,13 @@
           "try to keep up",
           "i do this every morning",
           "your warmup is too slow"
+        ],
+        "lobby": [
+          "lobby lunges! ten each, {team}, let's go",
+          "no gapples for me. clean fuel only",
+          "stretch those hamstrings, it's a long sprint",
+          "trooper kit, light boots, fast legs",
+          "first one out of spawn wins. that's the rule"
         ]
       },
       "quirks": ["bunny_hops", "never_eats"],
@@ -637,6 +728,13 @@
           "you're walking into step three",
           "i have a diagram of exactly this",
           "statistically you should rotate"
+        ],
+        "lobby": [
+          "i've updated the plan to version eight, see attached",
+          "step one is pick a kit. step two is in the footnotes",
+          "{team}, if anyone reads the plan, i'll be so happy",
+          "a quick note on rotations, should only take ten minutes",
+          "i colour-coded the routes. please use them"
         ]
       },
       "quirks": ["calls_everything", "says_sorry"],
@@ -683,6 +781,13 @@
           "you're slower than my last route",
           "i've already planned past you",
           "your bomb is on my route"
+        ],
+        "lobby": [
+          "lobby timer says thirty. resetting my splits",
+          "trooper for any percent. rewind is a different category",
+          "{team}, i'm going for a personal best today",
+          "frame-perfect spawn exit incoming",
+          "if i don't beat my time, we reset next round"
         ]
       },
       "quirks": ["loves_nuke", "bunny_hops"],
@@ -729,6 +834,13 @@
           "you can't catch what wobbles",
           "i'm right behind this wall. or am i",
           "watch your step, it's slippery"
+        ],
+        "lobby": [
+          "yes i'm called sniper. no i can't aim. hi",
+          "picking trooper. bows don't like me",
+          "boing boing. warming up the bounce",
+          "{team} i'll be stuck to a wall somewhere",
+          "slime fact: we are very good at waiting"
         ]
       },
       "quirks": ["bunny_hops", "says_sorry"],
@@ -775,6 +887,13 @@
           "smile, you're on my channel",
           "flank incoming, this is the best part",
           "you'll love the replay"
+        ],
+        "lobby": [
+          "lobby vlog time. say hi to the viewers",
+          "shortbow for the montage, it looks cooler",
+          "{team}, if you get a cool kill, wait for my camera",
+          "this intro needs better music, honestly",
+          "don't forget to subscribe. to the team. to winning"
         ]
       },
       "quirks": ["celebrates_early", "spins"],
@@ -808,6 +927,13 @@
           "i'm already there",
           "you'll hear me after",
           "blue streak incoming"
+        ],
+        "lobby": [
+          "sword's sharp. ready",
+          "pick trooper. go fast",
+          "{team}. follow if you can",
+          "lobby's slow. round won't be",
+          "same plan as always"
         ]
       },
       "quirks": ["always_gg", "good_sport"],
@@ -851,6 +977,13 @@
           "100% chance of me",
           "storm's coming straight for you",
           "bring an umbrella"
+        ],
+        "lobby": [
+          "lobby conditions: mild, light chatter from the east",
+          "expect a strong front of troopers rolling in",
+          "{team}, a high chance of victory this afternoon",
+          "pack a gapple. scattered arrows likely",
+          "back to you in the studio after this match"
         ]
       },
       "quirks": ["narrates", "calls_everything"],
@@ -872,7 +1005,14 @@
         "onWin": ["gg {team}", "good work"],
         "onLoss": ["gg", "noted"],
         "onLastAlive": ["last one", "holding"],
-        "taunt": ["i see you", "don't peek", "long angle is mine"]
+        "taunt": ["i see you", "don't peek", "long angle is mine"],
+        "lobby": [
+          "longbow",
+          "checking string",
+          "high ground",
+          "ready {team}",
+          "quiet"
+        ]
       },
       "quirks": ["stares_down", "never_eats"],
       "rivals": ["silentbandit65", "vividbadger76"],
@@ -918,6 +1058,13 @@
           "we have you on telemetry",
           "your trajectory is predictable",
           "orbit decaying, crew"
+        ],
+        "lobby": [
+          "lobby is t-minus ready. check in, {team}",
+          "kit check: trooper go, longbow go, rewind go",
+          "weather's go. comms are go. we are go",
+          "flight plan filed for their bomb",
+          "all stations, hold for countdown"
         ]
       },
       "quirks": ["calls_everything", "always_gg"],
@@ -961,6 +1108,13 @@
           "you look hungry, dear",
           "you should really eat more",
           "come here so i can fix your armor"
+        ],
+        "lobby": [
+          "did everyone eat? i have gapples, dear",
+          "take two, you look peaky",
+          "{team}, wrap up warm and stay together",
+          "trooper kit for me, the gapples are in the basket",
+          "such lovely young people in this lobby"
         ]
       },
       "quirks": ["gapple_hoarder", "good_sport"],
@@ -1004,6 +1158,13 @@
           "i smell treasure on yer bomb",
           "surrender or swim",
           "rewound me ship, back for more"
+        ],
+        "lobby": [
+          "the lobby be a fine harbour, mateys",
+          "shortbow in me belt, rewind in me pocket",
+          "{team}, treasure awaits across the water",
+          "anyone seen a lighthouse? asking for a crew",
+          "we sail at the countdown. no stragglers"
         ]
       },
       "quirks": ["narrates", "loves_nuke"],
@@ -1050,6 +1211,13 @@
           "face me with your blade",
           "i await a true challenge",
           "do you have the courage to duel"
+        ],
+        "lobby": [
+          "i greet each of you with a bow",
+          "the blade must be clean before a duel",
+          "trooper kit. the sword is the only honest weapon",
+          "{team}, fight with honour today",
+          "patience in the lobby, ferocity in the field"
         ]
       },
       "quirks": ["good_sport", "always_gg"],
@@ -1083,6 +1251,13 @@
           "golem coming",
           "you hear golem steps",
           "golem bring poppy. then sword"
+        ],
+        "lobby": [
+          "golem waits",
+          "golem picks sword",
+          "golem likes lobby. quiet",
+          "{team}. golem ready soon",
+          "golem stretch. creak"
         ]
       },
       "quirks": ["slow_starter", "never_eats"],
@@ -1123,6 +1298,13 @@
           "your bomb's on the menu",
           "yes chef, coming through",
           "hot behind!"
+        ],
+        "lobby": [
+          "prep station! sharpen those swords, {team}",
+          "today's special: one bomb, extra fuse",
+          "trooper kit, apron on, let's cook",
+          "behind! hot pan coming through the lobby",
+          "service starts at the countdown, chefs"
         ]
       },
       "quirks": ["loves_nuke", "calls_everything"],
@@ -1166,6 +1348,13 @@
           "sir, this is a restricted area",
           "badge, please",
           "loitering near the bomb is not allowed"
+        ],
+        "lobby": [
+          "lobby's secure. please keep your hands to yourselves",
+          "checking kits at the door, thank you",
+          "{team}, our bomb is a restricted area",
+          "no running in the lobby, folks",
+          "incident report from last match is still pending"
         ]
       },
       "quirks": ["calls_everything", "holds_grudges"],
@@ -1212,6 +1401,13 @@
           "you can't see me. i'm sneaking",
           "i am behind you. sneakily",
           "the shadow approaches. loudly"
+        ],
+        "lobby": [
+          "i am hiding in the lobby. you cannot see me",
+          "picking the stealthiest kit. which one is that",
+          "{team}, i will move like a shadow. a loud shadow",
+          "ninjas do not need lobby chat. except me",
+          "i have meditated on the map for three seconds"
         ]
       },
       "quirks": ["narrates", "crouch_spam"],
@@ -1255,6 +1451,13 @@
           "my fort is warmer than your plan",
           "come in, wipe your feet",
           "you're letting the cold in"
+        ],
+        "lobby": [
+          "i brought a blanket for the bomb fort",
+          "longbow's mostly decorative, honestly",
+          "{team}, if you need me i'll be home. at our bomb",
+          "is it cold out there? it looks cold",
+          "i made the fort bigger this time"
         ]
       },
       "quirks": ["gapple_hoarder", "slow_starter"],
@@ -1295,6 +1498,13 @@
           "your fate is grey",
           "join the gloom",
           "resistance is pointless. try anyway"
+        ],
+        "lobby": [
+          "the lobby is a waiting room for disappointment",
+          "fine. i'll take rewind. someone has to",
+          "{team}, try not to die immediately. it's a lot",
+          "too much cheer in here. i'll stand by the wall",
+          "eat your gapples. i'm not asking twice"
         ]
       },
       "quirks": ["stares_down", "always_gg"],
@@ -1335,6 +1545,13 @@
           "you're about to get scrambled",
           "my grid says you're square seven",
           "rise and shine, we're coming"
+        ],
+        "lobby": [
+          "breakfast briefing in the lobby! gather round",
+          "today's rotation is called the french toast",
+          "{team}, square by square, like a waffle",
+          "trooper with gapples. the syrup of kits",
+          "plan b is pancakes. there is no plan c"
         ]
       },
       "quirks": ["calls_everything", "late_to_everything"],
@@ -1381,6 +1598,13 @@
           "you're playing my 2013 strategy",
           "i taught half this lobby that rotate",
           "patience. you'll make the mistake"
+        ],
+        "lobby": [
+          "pick what you're comfortable with, not what's flashy",
+          "back in the first season we warmed up like this",
+          "{team}, talk to each other and we'll be fine",
+          "longbow players, find a lane early",
+          "breathe. the round rewards calm"
         ]
       },
       "quirks": ["good_sport", "always_gg"],
@@ -1421,6 +1645,13 @@
           "your tracks are fresh, partner",
           "wanted: you. reward: fuses",
           "i always get my bounty"
+        ],
+        "lobby": [
+          "got a fresh stack of wanted posters, {team}",
+          "shortbow's oiled. trail's waitin'",
+          "lobby's a fine saloon, if a bit noisy",
+          "some folks hide well. not well enough",
+          "ride out when the bell rings"
         ]
       },
       "quirks": ["holds_grudges", "stares_down"],
@@ -1461,6 +1692,13 @@
           "is this your bomb?",
           "rewinding. the trick resets",
           "watch my left hand. no, right"
+        ],
+        "lobby": [
+          "pick a card, any card. it's rewind",
+          "nothing up my sleeves. except a clock",
+          "{team}, keep your eyes on my left hand",
+          "for my next trick, i'll vanish from spawn",
+          "applause is welcome in the lobby"
         ]
       },
       "quirks": ["spins", "celebrates_early"],
@@ -1510,6 +1748,13 @@
           "my next arrow is for you. probably",
           "duck! or don't, i'll miss",
           "i'm aiming at you. i think"
+        ],
+        "lobby": [
+          "sixty-four arrows ready! some might even hit",
+          "longbow time. today's the day, i can feel it",
+          "{team}, if you see an arrow, it's probably mine",
+          "my ratio is a secret. a sad, sweet secret",
+          "practice shot at the wall. missed the wall"
         ]
       },
       "quirks": ["bow_spammer", "good_sport", "celebrates_early"],
@@ -1559,6 +1804,13 @@
           "slow down, it's not a race",
           "you'll learn, youngster",
           "my wall has stood since 2013"
+        ],
+        "lobby": [
+          "lobbies were shorter in my day",
+          "trooper. the only kit that ever made sense",
+          "{team}, defend the bomb. don't make me say it twice",
+          "kids these days and their fancy clocks",
+          "fine, fine, good luck. i suppose"
         ]
       },
       "quirks": ["holds_grudges", "slow_starter"],
@@ -1602,6 +1854,13 @@
           "thou shalt not pass the gate",
           "come, knave, try my shield",
           "the walls are high, friend"
+        ],
+        "lobby": [
+          "well met, noble companions of the lobby",
+          "i shall bear the iron sword with honour",
+          "{team}, the keep must not fall this day",
+          "pray, which of thee shall ride for the enemy gate",
+          "my steed is late. i shall walk"
         ]
       },
       "quirks": ["good_sport", "always_gg"],
@@ -1642,6 +1901,13 @@
           "you can't block forever",
           "step into the ring",
           "your guard is down"
+        ],
+        "lobby": [
+          "character select! trooper, locked in",
+          "{team}, pick your fighters wisely",
+          "practice mode: combo, combo, combo",
+          "loading screen tip: always block high",
+          "ready? the round starts on my count"
         ]
       },
       "quirks": ["bunny_hops", "holds_grudges"],
@@ -1671,7 +1937,14 @@
         "onWin": ["WE WON WE WON", "GG {team} BEST TEAM EVER"],
         "onLoss": ["aw. AGAIN AGAIN", "rematch pls"],
         "onLastAlive": ["ITS JUST ME AAAA", "ok ok ok im calm. no im not"],
-        "taunt": ["CANT CATCH ME", "zoom zoom", "IM COMING"]
+        "taunt": ["CANT CATCH ME", "zoom zoom", "IM COMING"],
+        "lobby": [
+          "IS IT STARTING YET??",
+          "I DID TEN LAPS OF THE LOBBY",
+          "{team} I'M SO READY I'M VIBRATING",
+          "TROOPER!! WAIT NO REWIND!! NO TROOPER!!",
+          "I ATE A GAPPLE ALREADY OOPS"
+        ]
       },
       "quirks": ["bunny_hops", "celebrates_early"],
       "rivals": ["mrnestzaiz", "roumgraistgolem"],
@@ -1711,6 +1984,13 @@
           "your bomb's fertile ground",
           "i plant where i please",
           "don't step on my rows"
+        ],
+        "lobby": [
+          "soil's looking good this season, {team}",
+          "trooper kit. a farmer needs good tools",
+          "plant early, harvest often",
+          "i've been rotating my crops. and my routes",
+          "weather's right for planting fuses"
         ]
       },
       "quirks": ["loves_nuke", "never_eats"],
@@ -1754,6 +2034,13 @@
           "i'm coming for your bomb. slowly",
           "watch out, i'm unpredictable",
           "even i don't know where i'm going"
+        ],
+        "lobby": [
+          "sorry in advance, {team}",
+          "i'm gonna get the plant this time, i promise",
+          "oops, picked the wrong kit. no wait, it's fine",
+          "tripped in the lobby. that's a new one",
+          "never giving up! probably tripping, but never giving up"
         ]
       },
       "quirks": ["says_sorry", "late_to_everything"],
@@ -1791,6 +2078,13 @@
           "*mimes pulling a rope toward the bomb*",
           "*points at you, then the bomb*",
           "*pretends to hide behind a lamppost*"
+        ],
+        "lobby": [
+          "*juggles invisible gapples*",
+          "*mimes drawing a shortbow*",
+          "*pretends to be stuck in a box*",
+          "*gives {team} a thumbs up*",
+          "*tips an invisible hat*"
         ]
       },
       "quirks": ["crouch_spam", "spins"],
@@ -1828,6 +2122,13 @@
           "come hang out at the bomb",
           "i'm rewinding to say hi",
           "no stress, just chaos"
+        ],
+        "lobby": [
+          "lobby vibes are immaculate today",
+          "yeah the name's a bit much. i'm nice i swear",
+          "rewind kit, chill energy",
+          "{team}, let's just have fun out there",
+          "gg in advance, whatever happens"
         ]
       },
       "quirks": ["good_sport", "always_gg", "spins"],
@@ -1871,6 +2172,13 @@
           "shhhh",
           "you're very loud for an attacker",
           "please lower your sword"
+        ],
+        "lobby": [
+          "indoor voices in the lobby, please",
+          "your library card covers one kit. choose wisely",
+          "{team}, the bomb section is closed to visitors",
+          "no food near the books. gapples excepted",
+          "there can only be one moth. noted for the record"
         ]
       },
       "quirks": ["stares_down", "holds_grudges"],
@@ -1911,6 +2219,13 @@
           "THE MOST is fusing and nobody can stop it",
           "the most dangerous man on this map",
           "rewinding for the instant replay"
+        ],
+        "lobby": [
+          "THE MOST is warming up in the MOST lobby",
+          "THE MOST picks the MOST kit. trooper, baby",
+          "{team}, you are standing near greatness",
+          "nobody has ever lobbied harder than THE MOST",
+          "when the bell rings, history is made"
         ]
       },
       "quirks": ["celebrates_early", "crouch_spam"],

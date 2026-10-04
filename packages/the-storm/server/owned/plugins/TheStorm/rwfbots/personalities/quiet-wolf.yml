@@ -68,6 +68,12 @@ lines:
     - Check your flank.
     - I'm already round back.
     - Wind's changing.
+  lobby:
+    - Waitin'.
+    - Sword. Gapples. Enough.
+    - Won't see me at spawn.
+    - Quiet in here.
+    - "Ride out soon, {team}."
 quirks:
   - good_sport
 rivals:

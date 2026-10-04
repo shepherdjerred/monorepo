@@ -64,6 +64,12 @@ lines:
     - your tracks are fresh, partner
     - "wanted: you. reward: fuses"
     - i always get my bounty
+  lobby:
+    - "got a fresh stack of wanted posters, {team}"
+    - shortbow's oiled. trail's waitin'
+    - lobby's a fine saloon, if a bit noisy
+    - some folks hide well. not well enough
+    - ride out when the bell rings
 quirks:
   - holds_grudges
   - stares_down

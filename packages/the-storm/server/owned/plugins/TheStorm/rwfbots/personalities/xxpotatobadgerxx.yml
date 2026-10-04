@@ -66,6 +66,12 @@ lines:
     - you can't see me
     - this corner is taken
     - "*rustling*"
+  lobby:
+    - "*looks for a comfy corner in the lobby*"
+    - trooper. gapples are just snacks with armour
+    - found a nice spot already
+    - "cosy round, {team}?"
+    - "*munch* sorry, pre-match snack"
 quirks:
   - gapple_hoarder
   - slow_starter

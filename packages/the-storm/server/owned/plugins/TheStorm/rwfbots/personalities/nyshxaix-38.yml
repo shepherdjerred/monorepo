@@ -67,6 +67,12 @@ lines:
     - i smell treasure on yer bomb
     - surrender or swim
     - rewound me ship, back for more
+  lobby:
+    - the lobby be a fine harbour, mateys
+    - shortbow in me belt, rewind in me pocket
+    - "{team}, treasure awaits across the water"
+    - anyone seen a lighthouse? asking for a crew
+    - we sail at the countdown. no stragglers
 quirks:
   - narrates
   - loves_nuke

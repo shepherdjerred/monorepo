@@ -63,6 +63,12 @@ lines:
     - I have your scent, beast!
     - Flee, if you can!
     - My quarry hides poorly.
+  lobby:
+    - Sharpen your swords, the quarry awaits!
+    - Tonight I slay a beast. Any beast.
+    - May I join the old huntsman's party?
+    - "Shortbow: the lance of the modern knight."
+    - "{team}, ride with me into legend!"
 quirks:
   - holds_grudges
   - narrates

@@ -64,6 +64,12 @@ lines:
     - you look hungry, dear
     - you should really eat more
     - come here so i can fix your armor
+  lobby:
+    - did everyone eat? i have gapples, dear
+    - take two, you look peaky
+    - "{team}, wrap up warm and stay together"
+    - trooper kit for me, the gapples are in the basket
+    - such lovely young people in this lobby
 quirks:
   - gapple_hoarder
   - good_sport

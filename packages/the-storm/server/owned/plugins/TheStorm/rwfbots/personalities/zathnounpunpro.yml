@@ -66,6 +66,13 @@ lines:
     - Approach the bomb at thy peril.
     - Many have tried this door. Many.
     - I can wait here all round, friend.
+  lobby:
+    - I polish mine iron blade whilst we await the horn.
+    - Trooper, as ever. A sword and a gapple serve a guard well.
+    - Who among thee shall stand the gate beside me?
+    - My tally sheet hath room for many more names this day.
+    - "Steady thy hearts, {team}. The bomb shall not fall."
+    - A bow? Nay. A guard meets his foe at arm's length.
 quirks:
   - always_gg
   - stares_down

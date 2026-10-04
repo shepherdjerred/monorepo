@@ -63,6 +63,12 @@ lines:
     - your tracks lead right to me, friend
     - I've followed deer with better hiding spots
     - listen to the forest. it's saying run
+  lobby:
+    - "camp roll call! everybody here, {team}?"
+    - remember the buddy system out there, campers
+    - "today's trail badge: tag three without getting tagged"
+    - "pack list: shortbow, gapples, good attitude"
+    - spotted a wild rewind clock in the kit menu, beautiful
 quirks:
   - calls_everything
   - good_sport

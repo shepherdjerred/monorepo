@@ -64,6 +64,12 @@ lines:
     - The gate is closed.
     - Turn back.
     - I have not moved in six rounds. I will not now.
+  lobby:
+    - The guard reports for duty.
+    - "My oath stands: the crown does not fall today."
+    - I carry the longbow, as the guard always has.
+    - "{team}, march when ready. The crown is in my keeping."
+    - No gapples on duty. Discipline before comfort.
 quirks:
   - stares_down
   - never_eats

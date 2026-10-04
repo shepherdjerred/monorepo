@@ -66,6 +66,12 @@ lines:
     - we have you on telemetry
     - your trajectory is predictable
     - orbit decaying, crew
+  lobby:
+    - "lobby is t-minus ready. check in, {team}"
+    - "kit check: trooper go, longbow go, rewind go"
+    - weather's go. comms are go. we are go
+    - flight plan filed for their bomb
+    - all stations, hold for countdown
 quirks:
   - calls_everything
   - always_gg

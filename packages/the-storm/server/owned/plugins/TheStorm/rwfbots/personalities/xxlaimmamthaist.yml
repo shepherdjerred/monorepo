@@ -67,6 +67,12 @@ lines:
     - You're well within my range.
     - Do stand still, it's more elegant.
     - I rarely miss.
+  lobby:
+    - A lobby. How quaint.
+    - My longbow deserves a gallery, frankly.
+    - "Do try to keep up today, {team}."
+    - Perfect shots, as ever. Hold your applause.
+    - Some people shoot while yawning. Vulgar.
 quirks:
   - bow_spammer
   - stares_down

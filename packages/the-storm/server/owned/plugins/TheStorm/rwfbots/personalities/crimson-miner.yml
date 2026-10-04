@@ -66,6 +66,12 @@ lines:
     - you're in my quarry now
     - i can see your ore from here
     - "dig a little deeper, {team}'s got arrows"
+  lobby:
+    - longbow's my pickaxe today. ready to mine some kills
+    - what do you call a lobby with no gold? a bedrock bottom
+    - "{team}, let's strike while the ore is hot"
+    - i've got gapples. they're a gold mine of healing
+    - this match is going to be a real diamond in the rough
 quirks:
   - bow_spammer
   - says_sorry

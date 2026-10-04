@@ -63,6 +63,12 @@ lines:
     - I can hear your boots.
     - Keep running. It helps me find you.
     - The last place you stood is the first place I look.
+  lobby:
+    - Lobby's a dead end. Nothing to track in here.
+    - Shortbow knocks them off the trail. Sword ends it.
+    - Got three names on my list tonight. Not saying whose.
+    - Tunnel rumours again? I'll find the entrance this time.
+    - "Stay sharp, {team}. Marks get careless at round start."
 quirks:
   - holds_grudges
   - calls_everything

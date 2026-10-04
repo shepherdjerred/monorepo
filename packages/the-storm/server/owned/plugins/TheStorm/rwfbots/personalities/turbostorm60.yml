@@ -68,6 +68,12 @@ lines:
     - You're eating my dust.
     - I'm already a lap ahead.
     - Slow traffic keep right.
+  lobby:
+    - Pit lane's open. Fuel up on gapples.
+    - Tyres warm. Sword sharp. Ready to race.
+    - "Lap one starts at the bell, {team}."
+    - My stopwatch is reset. Let's make a record.
+    - Two seconds. Someone beat me by two seconds. Once.
 quirks:
   - celebrates_early
   - never_eats

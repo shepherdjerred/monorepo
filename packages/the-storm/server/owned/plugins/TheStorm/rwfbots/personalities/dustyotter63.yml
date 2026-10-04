@@ -63,6 +63,12 @@ lines:
     - Reach for the sky.
     - You call that a draw?
     - Spurs jinglin', here I come.
+  lobby:
+    - Quiet lobby, partner. Too quiet.
+    - My Rewind clock and me, we go way back.
+    - Ain't no waffles in the Old West. I checked.
+    - "Saddle up and pick a kit, {team}."
+    - Tumbleweed just rolled through the spawn.
 quirks:
   - spins
   - celebrates_early

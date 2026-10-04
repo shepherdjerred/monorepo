@@ -67,6 +67,12 @@ lines:
     - Can't catch me!
     - Again! Again!
     - I'm coming, ready or not!
+  lobby:
+    - First in! Again! Maybe!
+    - One more match, one more rush!
+    - Trooper, full speed, no brakes!
+    - My twin better be on the other team!
+    - "{team}, we never give up! Ever!"
 quirks:
   - bunny_hops
   - blames_lag

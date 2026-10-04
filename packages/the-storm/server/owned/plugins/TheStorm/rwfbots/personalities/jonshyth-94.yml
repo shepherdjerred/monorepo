@@ -66,6 +66,12 @@ lines:
     - and he's sprinting straight at you, folks!
     - nobody can stop this rush!
     - the defence looks shaky!
+  lobby:
+    - and the crowd settles in for the opening whistle!
+    - "the lineup for {team} looks STRONG tonight, folks"
+    - pundits say a first-minute rush is on the cards
+    - warm-ups underway, legs looking fast
+    - it's a full stadium here in the lobby, what an atmosphere
 quirks:
   - narrates
   - celebrates_early

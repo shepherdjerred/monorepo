@@ -64,6 +64,12 @@ lines:
     - You'll have to get through me first.
     - Planter's covered.
     - I've seen that push a thousand times.
+  lobby:
+    - Back in '13 we had no lobbies. You just walked in.
+    - Trooper. Sword, apples, stay beside the planter.
+    - Who's planting? I'll be at your elbow.
+    - "Check your hotbar, {team}. Gapples on a key you can reach."
+    - My cousin's here today. Go easy on him.
 quirks:
   - calls_everything
   - always_gg

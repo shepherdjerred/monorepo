@@ -64,6 +64,12 @@ lines:
     - i have seen how this round ends.
     - you will turn left. you'll regret it.
     - look behind you. no, the other behind.
+  lobby:
+    - the stars favour the patient flank tonight
+    - i read the lobby. it says three rounds.
+    - "{team}, the moon is kind to bows this match"
+    - "an omen: someone will forget their gapples"
+    - the tide turns at the second round. remember i said so
 quirks:
   - narrates
   - late_to_everything

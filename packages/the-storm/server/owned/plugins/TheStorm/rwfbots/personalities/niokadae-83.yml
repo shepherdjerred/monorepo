@@ -65,6 +65,12 @@ lines:
     - Shh. You're too loud.
     - Your footsteps are overdue.
     - Silence, please.
+  lobby:
+    - Shh. Chapter one begins shortly.
+    - Longbow checked out. Due back after the match.
+    - "Page forty: always aim slightly above."
+    - Please keep the giggling to a minimum on the perch.
+    - "{team}, quietly now. Quietly."
 quirks:
   - bow_spammer
   - good_sport

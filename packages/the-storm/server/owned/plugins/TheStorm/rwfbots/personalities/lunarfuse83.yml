@@ -63,6 +63,12 @@ lines:
     - You're far from home, little comet.
     - The bomb is under my moon.
     - Wish upon a fuse.
+  lobby:
+    - Clear skies tonight. Good for spotting rushers.
+    - Longbow, please. Stars are far, and so are they.
+    - "Orion is up early, {team}. Take it as a sign."
+    - Brightness all the way down. It's nicer that way.
+    - Someone always casts me as the villain. I don't mind.
 quirks:
   - slow_starter
   - good_sport

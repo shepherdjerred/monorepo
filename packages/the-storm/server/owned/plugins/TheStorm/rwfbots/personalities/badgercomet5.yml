@@ -64,6 +64,12 @@ lines:
     - Mind your feet.
     - I'm under you.
     - Grr.
+  lobby:
+    - Still looking for the tunnels.
+    - Dig in, sit tight, pop out. Simple.
+    - Shortbow fits in a burrow. Longbow doesn't.
+    - Hiding bet's still on. I'm winning.
+    - "{team}. Dig deep."
 quirks:
   - stares_down
   - holds_grudges

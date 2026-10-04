@@ -63,6 +63,12 @@ lines:
     - your bomb looks lonely
     - hear that ticking? soon
     - i can smell the fuse from here
+  lobby:
+    - lobby countdown, fuse countdown, same thing really.
+    - who's racing me to the fuse this round?
+    - sword? i carry it so the kit isn't empty.
+    - ten, nine, eight... sorry, practising.
+    - "{team}, i'll handle the fuses, you handle the people."
 quirks:
   - loves_nuke
   - never_eats

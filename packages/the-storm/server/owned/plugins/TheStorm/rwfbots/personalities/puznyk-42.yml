@@ -65,6 +65,12 @@ lines:
     - you're two moves from losing
     - i've seen this opening before
     - that strafe was a known mistake
+  lobby:
+    - "opening theory: trooper, then patience"
+    - i've prepared three lines for this match
+    - "{team}, think two moves ahead of them"
+    - a quiet lobby is the calm before the middlegame
+    - anyone want to analyse my last duel? no? fine
 quirks:
   - stares_down
   - good_sport

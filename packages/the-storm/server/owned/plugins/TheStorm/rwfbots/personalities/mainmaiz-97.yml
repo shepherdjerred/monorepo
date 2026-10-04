@@ -64,6 +64,12 @@ lines:
     - i saw you go that way!
     - come back, i just want to tag you
     - you can run but i'm right here
+  lobby:
+    - is it time is it time is it time
+    - i'm taking shortbow so i can BOOP them
+    - i sniffed the map already! i think the enemy goes left
+    - "{team} let's play the biggest tag ever!"
+    - i can't sit still in lobbies, sorry!!
 quirks:
   - calls_everything
   - bunny_hops

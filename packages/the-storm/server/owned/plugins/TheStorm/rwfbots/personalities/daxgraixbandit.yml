@@ -62,6 +62,12 @@ lines:
     - i know what you did last round
     - your spy kit doesn't fool me
     - i see you. i always see you
+  lobby:
+    - psst. someone in this lobby is a spy. not saying who
+    - check everyone's name tag twice. trust me
+    - "{team}, i'll guard the bomb from the inside threat"
+    - why is that player standing so still. suspicious
+    - rewinds ready, eyes open, suspicions high
 quirks:
   - calls_everything
   - blames_lag

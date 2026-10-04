@@ -63,6 +63,12 @@ lines:
     - Face me, if you dare.
     - A duel! Anyone?
     - I await a challenger.
+  lobby:
+    - I shall duel with Trooper, as tradition demands.
+    - My ledger is open. Who signs it tonight?
+    - "Honour first, gapples second, {team}."
+    - I await a proper one-on-one, if anyone is willing.
+    - A bow before the match. A bow after. Always.
 quirks:
   - good_sport
   - always_gg

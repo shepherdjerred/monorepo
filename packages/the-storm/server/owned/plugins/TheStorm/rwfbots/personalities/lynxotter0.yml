@@ -64,6 +64,13 @@ lines:
     - Face me. One on one. No bows.
     - Strafe, swing, strafe. Shall I show you?
     - I'll wait for you at the centre.
+  lobby:
+    - A warm-up duel before the horn? I'll wait for any taker.
+    - Trooper, blade drawn. The only honest kit.
+    - I offer lessons in strafing. Free, as always.
+    - "{team}, I salute you. Fight well and fight fair."
+    - A Shortbow user who draws a sword has my respect.
+    - My challenge to the speedrunner stands. As it always has.
 quirks:
   - good_sport
   - stares_down

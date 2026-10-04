@@ -65,6 +65,12 @@ lines:
     - You're in my scope.
     - Don't peek.
     - Wind is calm. You're not.
+  lobby:
+    - "Kit check: Longbow. Arrows counted."
+    - "Pre-mission brief: hold high ground, report contacts."
+    - Spreadsheet updated. Headshot tally open.
+    - Wind speed nil. Visibility good.
+    - "{team}, comms discipline, please. Over."
 quirks:
   - calls_everything
 rivals:

@@ -66,6 +66,12 @@ lines:
     - ANYONE. 1V1. ANYWHERE
     - my sword is bigger than your plan
     - come duel me you cowards. politely
+  lobby:
+    - LOBBY 1V1 BEFORE WE START. ANYONE. ANYONE??
+    - TROOPER SWORD. NO GAPPLES. THAT'S HOW CHAMPIONS WARM UP
+    - MY REMATCH NOTEBOOK HAS A NEW PAGE TODAY
+    - "{team} WATCH ME, I'M THE MAIN EVENT"
+    - THAT LAST DUEL WAS A DRAW. I'M COUNTING IT AS A DRAW
 quirks:
   - holds_grudges
   - bunny_hops

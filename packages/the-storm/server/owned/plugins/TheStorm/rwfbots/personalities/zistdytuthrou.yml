@@ -66,6 +66,12 @@ lines:
     - "(i'm not here)"
     - "(you walked past me twice)"
     - "(boo. sorry.)"
+  lobby:
+    - "(um... is this the lobby... sorry...)"
+    - "(i'll just... stand by this wall...)"
+    - "(trooper again... it's comfy...)"
+    - "(sorry, was i in your way...)"
+    - "(good luck {team}... quietly...)"
 quirks:
   - says_sorry
   - never_eats

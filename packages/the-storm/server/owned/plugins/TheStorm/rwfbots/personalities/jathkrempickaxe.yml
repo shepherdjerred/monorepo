@@ -68,6 +68,12 @@ lines:
     - Your rotation is predictable.
     - Three moves ahead.
     - You're out of position.
+  lobby:
+    - "Opening for this game: the double flank gambit."
+    - Pieces, please pick kits that cover each other.
+    - Plan A, Plan B, and Plan C if they rush.
+    - My student will play the wrong opening. Again.
+    - "{team}, think three moves ahead."
 quirks:
   - calls_everything
   - good_sport

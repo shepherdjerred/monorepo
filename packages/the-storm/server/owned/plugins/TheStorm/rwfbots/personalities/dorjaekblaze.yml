@@ -64,6 +64,13 @@ lines:
     - Good hustle, but we're better!
     - Nice try! Keep practising!
     - Our team plays together.
+  lobby:
+    - "Stretch those fingers, {team}! Warm-up clicks!"
+    - Great hustle last round, everybody. Let's build on it!
+    - "Remember the drill: plant, escort, defuse!"
+    - Hydrate! And no, gapples do not count. Probably.
+    - Every kit is a good kit if you believe in it!
+    - "Quick huddle: we win this one together."
 quirks:
   - calls_everything
   - good_sport

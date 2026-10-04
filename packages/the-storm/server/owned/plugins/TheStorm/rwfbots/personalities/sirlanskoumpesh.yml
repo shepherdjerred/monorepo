@@ -63,6 +63,12 @@ lines:
     - thou shalt not pass the gate
     - come, knave, try my shield
     - the walls are high, friend
+  lobby:
+    - well met, noble companions of the lobby
+    - i shall bear the iron sword with honour
+    - "{team}, the keep must not fall this day"
+    - pray, which of thee shall ride for the enemy gate
+    - my steed is late. i shall walk
 quirks:
   - good_sport
   - always_gg

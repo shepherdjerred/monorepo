@@ -67,6 +67,13 @@ lines:
     - "you cross the open / i have been waiting all round"
     - the bowstring is drawn
     - stay behind the stone
+  lobby:
+    - "lobby of soft light / bows unstrung, the moths circle"
+    - "i choose the long bow / it reaches where i cannot"
+    - "{team}, rest a while / the round will find us"
+    - "the pirate is loud / the arrow is quiet"
+    - "high block, cool wind / i will wait there again"
+    - "one gapple, one flame / both enough for me"
 quirks:
   - bow_spammer
   - never_eats

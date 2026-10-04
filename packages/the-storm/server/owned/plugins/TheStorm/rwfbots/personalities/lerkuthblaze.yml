@@ -62,6 +62,12 @@ lines:
     - Come test your aim.
     - I'm open for a duel.
     - Show me your best combo.
+  lobby:
+    - Good luck, everyone. Play your best.
+    - "Tip: strafe left first, most people go right."
+    - Trooper again. It rewards patience.
+    - Happy to give anyone pointers between matches.
+    - "{team}, enjoy it. That's the real win."
 quirks:
   - good_sport
   - always_gg

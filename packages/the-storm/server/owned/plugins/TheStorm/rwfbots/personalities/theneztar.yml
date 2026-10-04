@@ -62,6 +62,12 @@ lines:
     - I see your footprints.
     - Running leaves tracks, kid.
     - Smell that? It's you.
+  lobby:
+    - Quiet lobby, kid. Good for listening.
+    - Shortbow and patience. That's all a hunter needs.
+    - Every map leaves tracks if you know where to look.
+    - Stay off my trail, kid. Or stay close. Your call.
+    - "{team}, keep your footsteps soft and your eyes open."
 quirks:
   - holds_grudges
   - calls_everything

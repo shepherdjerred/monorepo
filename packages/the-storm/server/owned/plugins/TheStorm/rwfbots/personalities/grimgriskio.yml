@@ -63,6 +63,12 @@ lines:
     - your fate is grey
     - join the gloom
     - resistance is pointless. try anyway
+  lobby:
+    - the lobby is a waiting room for disappointment
+    - fine. i'll take rewind. someone has to
+    - "{team}, try not to die immediately. it's a lot"
+    - too much cheer in here. i'll stand by the wall
+    - eat your gapples. i'm not asking twice
 quirks:
   - stares_down
   - always_gg

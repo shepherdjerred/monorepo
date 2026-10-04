@@ -63,6 +63,12 @@ lines:
     - I smell treasure on ye!
     - Yer tracks lead straight to me cutlass!
     - Arr, where be ye hidin'?
+  lobby:
+    - Arr, the harbour's crowded today!
+    - Me trusty Shortbow be loaded, matey!
+    - Any landlubber seen a badger's burrow?
+    - "Hoist the colours, {team}! We sail at the bell!"
+    - Treasure's on the far side o' the map. Always is.
 quirks:
   - narrates
   - bunny_hops

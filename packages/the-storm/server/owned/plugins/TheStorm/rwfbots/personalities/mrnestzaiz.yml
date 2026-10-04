@@ -65,6 +65,12 @@ lines:
     - try to keep up
     - i do this every morning
     - your warmup is too slow
+  lobby:
+    - "lobby lunges! ten each, {team}, let's go"
+    - no gapples for me. clean fuel only
+    - stretch those hamstrings, it's a long sprint
+    - trooper kit, light boots, fast legs
+    - first one out of spawn wins. that's the rule
 quirks:
   - bunny_hops
   - never_eats

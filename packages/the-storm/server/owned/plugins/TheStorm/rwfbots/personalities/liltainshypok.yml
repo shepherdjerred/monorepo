@@ -68,6 +68,12 @@ lines:
     - you woke me up
     - too loud
     - "*sleepy arrow noises*"
+  lobby:
+    - "*yawn* wake me when it starts"
+    - longbow's comfy. i can aim lying down
+    - is it morning yet... no? cool
+    - "five more minutes {team}"
+    - "*stretches* ok i'm like eighty percent here"
 quirks:
   - slow_starter
   - late_to_everything

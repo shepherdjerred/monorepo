@@ -65,6 +65,12 @@ lines:
     - "*mimes pulling a rope toward the bomb*"
     - "*points at you, then the bomb*"
     - "*pretends to hide behind a lamppost*"
+  lobby:
+    - "*juggles invisible gapples*"
+    - "*mimes drawing a shortbow*"
+    - "*pretends to be stuck in a box*"
+    - "*gives {team} a thumbs up*"
+    - "*tips an invisible hat*"
 quirks:
   - crouch_spam
   - spins

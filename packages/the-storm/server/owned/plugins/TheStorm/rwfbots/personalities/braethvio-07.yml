@@ -65,6 +65,12 @@ lines:
     - come and duel, it's the rule
     - your aim is poor, I'm sure
     - step up close, if you dare, I suppose
+  lobby:
+    - the lobby's still, my lute's in tune, the match begins again quite soon
+    - a trooper's blade, a gapple's grace, i'll duel the fastest on the base
+    - "{team} assemble, hear my song, our odds are good, our hearts are strong"
+    - i rhyme to warm my clicking hand, the finest bard across the land
+    - a ballad brews of rounds to come, of fuses, falls and battle drum
 quirks:
   - narrates
   - good_sport

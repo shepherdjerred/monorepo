@@ -62,6 +62,12 @@ lines:
     - your bomb has a package incoming
     - tracking says five seconds out
     - please be home to receive the fuse
+  lobby:
+    - "route's planned. one stop: their bomb"
+    - trooper kit loaded. signature not required
+    - "estimated delivery time: before the second chime"
+    - "{team}, keep the road clear and i'll handle the rest"
+    - no returns, no refunds, just fuses
 quirks:
   - loves_nuke
   - slow_starter

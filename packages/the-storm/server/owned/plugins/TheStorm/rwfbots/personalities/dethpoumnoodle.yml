@@ -67,6 +67,12 @@ lines:
     - hehe where am i
     - check behind you hehe
     - i know a shortcut
+  lobby:
+    - hehe i already know three side doors on this map
+    - shhh i'm planning
+    - shortbow lets me pop out and boop. hehe
+    - "{team} don't look for me, that's the game"
+    - hide and seek starts soon hehe
 quirks:
   - crouch_spam
   - spins

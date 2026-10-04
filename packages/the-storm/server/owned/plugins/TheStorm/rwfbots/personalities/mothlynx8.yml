@@ -65,6 +65,12 @@ lines:
     - your armor is so shiny i can't stop
     - i'm coming to look at your torch
     - rewinding just to say hi again
+  lobby:
+    - this lobby has SO many torches. best lobby
+    - rewind clock goes tick. it's kind of shiny too
+    - wait what kit am i. oh. rewind. nice
+    - is anyone else looking at that lantern? just me?
+    - "{team} if i wander off, follow the glow"
 quirks:
   - late_to_everything
   - spins

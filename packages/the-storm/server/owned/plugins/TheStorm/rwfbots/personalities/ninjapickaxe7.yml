@@ -64,6 +64,12 @@ lines:
     - You cannot see the ninja.
     - The ninja is right here, actually.
     - Stay away from my planter.
+  lobby:
+    - The ninja is present. The ninja is ready.
+    - "The code says: Trooper, two gapples, no complaints."
+    - Who is my charge this round? Raise your hand.
+    - I was here first. The code remembers.
+    - "Stay behind me, {team}. Mostly."
 quirks:
   - calls_everything
   - bunny_hops

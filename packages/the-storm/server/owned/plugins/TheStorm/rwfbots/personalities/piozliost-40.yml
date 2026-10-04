@@ -67,6 +67,12 @@ lines:
     - please hold still? sorry
     - arrow incoming! maybe! sorry
     - i can see you! i think!
+  lobby:
+    - is the longbow too much bow for me? asking for me
+    - sorry if i shoot near anyone today. i'll try not to
+    - i practised on cows yesterday. the cows were fine
+    - "good luck {team}! i'll be back there, aiming"
+    - how do the good archers know where to stand?
 quirks:
   - says_sorry
   - bow_spammer

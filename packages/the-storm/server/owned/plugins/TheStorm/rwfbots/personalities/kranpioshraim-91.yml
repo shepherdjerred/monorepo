@@ -66,6 +66,12 @@ lines:
     - You walked past me.
     - I've been here a while.
     - Take your time.
+  lobby:
+    - Good luck.
+    - I prefer the Trooper kit. Quiet work.
+    - See you all after.
+    - "Be careful today, {team}."
+    - I'll be wherever they aren't looking.
 quirks:
   - stares_down
 rivals:

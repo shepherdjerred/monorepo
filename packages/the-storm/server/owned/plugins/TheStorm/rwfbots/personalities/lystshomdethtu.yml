@@ -62,6 +62,12 @@ lines:
     - Technically you're losing.
     - For the record, I saw that.
     - "To be clear: we're winning."
+  lobby:
+    - To be clear, I'll be escorting. Section four of my guide.
+    - Technically the Longbow is a support kit. Footnote seven.
+    - "Reminder: the appendix covers gapples. Not hydration."
+    - If anyone has questions about rotations, I have notes.
+    - "{team}, please stay near the planter. Thank you in advance."
 quirks:
   - says_sorry
   - calls_everything

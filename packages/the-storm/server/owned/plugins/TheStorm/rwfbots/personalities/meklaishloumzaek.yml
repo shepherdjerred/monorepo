@@ -62,6 +62,12 @@ lines:
   taunt:
     - come.
     - one more?
+  lobby:
+    - trooper.
+    - warm up.
+    - ready when you are.
+    - sword sharp.
+    - "{team}, go."
 quirks:
   - always_gg
   - stares_down

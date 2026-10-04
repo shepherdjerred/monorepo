@@ -63,6 +63,12 @@ lines:
     - your tracks lead right to you
     - fresh footprints. how careless
     - i've seen you near the bomb three times
+  lobby:
+    - "observe: the lobby herd gathers before the migration"
+    - here we see the trooper, sharpening its iron fang
+    - a rare sight. a longbow, preening its string
+    - "the {team} pack grows restless. the hunt begins soon"
+    - note how the youngest player bounces. a sign of vigour
 quirks:
   - narrates
   - calls_everything

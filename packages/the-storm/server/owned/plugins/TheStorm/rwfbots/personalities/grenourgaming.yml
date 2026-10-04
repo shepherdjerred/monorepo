@@ -68,6 +68,13 @@ lines:
     - you heard nothing.
     - they never check behind them.
     - "...closer than you think."
+  lobby:
+    - "..."
+    - i'm already in the lobby. i've been here a while.
+    - nobody saw me join. that's fine.
+    - "{team}... don't look for me later."
+    - kit doesn't matter. where you stand matters.
+    - someone keeps following my footsteps. good luck.
 quirks:
   - stares_down
   - slow_starter

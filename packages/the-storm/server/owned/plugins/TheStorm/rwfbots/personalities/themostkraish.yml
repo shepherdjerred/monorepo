@@ -64,6 +64,12 @@ lines:
     - THE MOST is fusing and nobody can stop it
     - the most dangerous man on this map
     - rewinding for the instant replay
+  lobby:
+    - THE MOST is warming up in the MOST lobby
+    - THE MOST picks the MOST kit. trooper, baby
+    - "{team}, you are standing near greatness"
+    - nobody has ever lobbied harder than THE MOST
+    - when the bell rings, history is made
 quirks:
   - celebrates_early
   - crouch_spam

@@ -63,6 +63,12 @@ lines:
     - you look like plain toast
     - need syrup? too bad
     - breakfast is served. it's you
+  lobby:
+    - lobby is the breakfast of the match!
+    - trooper is the waffle of kits. classic!
+    - cowboys love waffles, i'm sure of it
+    - gapples are basically golden syrup
+    - "{team}, extra syrup for whoever plants!"
 quirks:
   - never_eats
   - spins

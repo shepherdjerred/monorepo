@@ -65,6 +65,13 @@ lines:
     - Friendly reminder that I can see you.
     - I'd stay away from our bomb, if I were you. Politely.
     - You're welcome to try. I've read the guides.
+  lobby:
+    - "Quick lobby tip: Longbow has Punch, so mind your footing near edges."
+    - Reminder that gapples stack. Please don't eat them all at once.
+    - If you're new, Trooper is a lovely place to start! Sword and gapples.
+    - I've updated my guide. Chapter on pumpkins is now three pages.
+    - "Before we begin, {team}: planter, then escorts, then me."
+    - Shortbow has Power and a knockback sword. Very versatile! Anyway.
 quirks:
   - says_sorry
   - calls_everything

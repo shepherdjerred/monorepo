@@ -65,6 +65,12 @@ lines:
     - you're in my video now
     - say hi to my eleven viewers
     - flank cam rolling
+  lobby:
+    - ok guys we're in the lobby, don't forget to subscribe
+    - "today's video: shortbow flanks, part forty-two"
+    - shoutout to my eleven subscribers, you know who you are
+    - if my rival copies this thumbnail i'm calling it out
+    - "{team}, act natural, we're on camera"
 quirks:
   - narrates
   - celebrates_early

@@ -15,6 +15,7 @@ import java.util.Base64;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SplittableRandom;
@@ -107,7 +108,9 @@ final class ShippedPersonalitiesTest {
     for (var personality : catalog.all()) {
       for (var moment : Lines.Moment.values()) {
         var pool = personality.lines().pool(moment);
-        assertThat(pool).as("%s %s", personality.id(), moment).hasSizeBetween(2, 6);
+        assertThat(pool)
+            .as("%s %s", personality.id(), moment)
+            .hasSizeBetween(moment.minLines(), moment.maxLines());
         for (var line : pool) {
           assertThat(line).as(personality.id()).hasSizeLessThanOrEqualTo(Lines.MAX_LINE_LENGTH);
           assertThat(moment.placeholders())
@@ -132,6 +135,18 @@ final class ShippedPersonalitiesTest {
           .as("%s greetings are its own", personality.id())
           .isTrue();
       assertThat(personality.quirks()).as(personality.id()).hasSizeBetween(1, 3);
+    }
+  }
+
+  @Test
+  void noTwoPersonalitiesShareALobbyLine() {
+    var lobby = new HashSet<String>();
+    for (var personality : catalog.all()) {
+      for (var line : personality.lines().lobby()) {
+        assertThat(lobby.add(line.toLowerCase(Locale.ROOT)))
+            .as("%s lobby line is its own: %s", personality.id(), line)
+            .isTrue();
+      }
     }
   }
 

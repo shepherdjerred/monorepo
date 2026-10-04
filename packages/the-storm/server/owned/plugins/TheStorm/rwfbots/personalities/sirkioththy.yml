@@ -65,6 +65,12 @@ lines:
     - Do mind the rotation.
     - Your formation is untidy.
     - Shall I show you out?
+  lobby:
+    - The household schedule is posted, my liege.
+    - I shall take the Trooper, if it pleases the court.
+    - My master's opening is sound. I shall play another.
+    - Kindly address me as Sir, good company.
+    - "{team}, your humble servant awaits orders."
 quirks:
   - says_sorry
   - narrates

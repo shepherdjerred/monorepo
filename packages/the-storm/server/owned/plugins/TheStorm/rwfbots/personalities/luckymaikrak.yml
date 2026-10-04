@@ -64,6 +64,13 @@ lines:
     - You'll need more than luck. I've used it all up.
     - Our bomb is blessed. Try it, see what happens.
     - Black cat crossed your path. Just saying.
+  lobby:
+    - Wait, nobody say the word win before the round. Bad luck.
+    - Found a four-leaf clover on spawn. That's a good sign.
+    - Knocking on wood. Then on stone, just in case.
+    - I always eat my gapples clockwise. It matters.
+    - "{team}, touch the bomb once for luck. Gently."
+    - Rewind feels lucky today. Trooper felt lucky yesterday.
 quirks:
   - gapple_hoarder
   - says_sorry

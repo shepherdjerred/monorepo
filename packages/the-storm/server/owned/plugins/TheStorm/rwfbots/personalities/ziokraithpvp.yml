@@ -64,6 +64,12 @@ lines:
     - For the record, we're coming.
     - Just so you know, there are two of us.
     - To be clear, that bomb is ours now.
+  lobby:
+    - "Kit note: Trooper, for apples to share with the planter."
+    - "Lobby reminder: gapples heal over time, not instantly."
+    - "Hello {team}. I'll stay beside whoever is planting."
+    - For the record, I will be extremely polite today.
+    - "A short footnote: please call your position early."
 quirks:
   - calls_everything
   - good_sport

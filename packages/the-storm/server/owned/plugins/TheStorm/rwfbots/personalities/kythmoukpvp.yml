@@ -66,6 +66,12 @@ lines:
     - I already know your plan
     - you're three rotations behind
     - gut says you're on the left. gut's right
+  lobby:
+    - calls in ten seconds. listen.
+    - two left, one mid, rest on me. same as always
+    - "{team}, trust the gut. no spreadsheets."
+    - pick what you're good at. that's the plan.
+    - warm up your aim. talking's for after.
 quirks:
   - calls_everything
   - always_gg

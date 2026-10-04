@@ -64,6 +64,12 @@ lines:
     - I can hear your footsteps, just so you know
     - you left tracks by the bridge, sorry
     - please come out, I'm nervous
+  lobby:
+    - hi! um, does anyone mind if I take hunt again?
+    - sorry, I already counted the footsteps in spawn
+    - "I'll bring the shortbow, if that's okay with {team}"
+    - good luck everyone! sorry in advance to the other team
+    - practising my tracking on the lobby chickens. there are no chickens
 quirks:
   - says_sorry
   - calls_everything

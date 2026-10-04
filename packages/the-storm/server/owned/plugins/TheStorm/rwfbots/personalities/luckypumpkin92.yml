@@ -65,6 +65,12 @@ lines:
     - Stand still, I'm gathering.
     - You're ripe from here.
     - Long field, short life.
+  lobby:
+    - "Fence line is calling me again, {team}. Leaf it to me."
+    - Punch bow is strung and ready for the harvest.
+    - A good sightline is like a full pumpkin patch.
+    - Bring your gapples, the frost comes early tonight.
+    - My sightline rival is here. The leaves are rustling.
 quirks:
   - good_sport
   - always_gg

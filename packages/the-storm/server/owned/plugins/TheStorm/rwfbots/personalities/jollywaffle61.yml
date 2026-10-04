@@ -67,6 +67,12 @@ lines:
     - you look hungry for a loss, hun
     - order up! it's you
     - you want syrup with that rotation?
+  lobby:
+    - orders up, hun! who wants trooper with extra gapples?
+    - "today's special: fresh shortbow, side of rotations"
+    - "{team}, sit tight, I'll call your positions like table numbers"
+    - coffee's hot and the match is about to start, hun
+    - no running in my diner. except to their bomb
 quirks:
   - good_sport
   - always_gg

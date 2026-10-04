@@ -63,6 +63,12 @@ lines:
     - you'll see my lamp before you see the bomb
     - plenty of wrecks on this coast already
     - turn back. the waters are rough here
+  lobby:
+    - calm seas in the lobby. enjoy it while it lasts
+    - i'll take the longbow. a keeper needs to see far
+    - "tide's coming in, {team}. stay near the light"
+    - any sails on the horizon? i smell a pirate
+    - rest your legs. the round is a long voyage
 quirks:
   - calls_everything
   - slow_starter

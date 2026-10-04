@@ -67,6 +67,13 @@ lines:
     - Your rotation is predictable. I wrote about it.
     - I have a diagram of exactly where you'll go.
     - Have you read my guide? You should.
+  lobby:
+    - "Pre-match checklist, point 1: kits. Point 2: fuses. Point 3: me."
+    - Chapter twelve draft is nearly done. Feedback welcome.
+    - Statistically, split beats rush. I have a spreadsheet.
+    - "{team}, recommended reading before we start: my guide."
+    - Rewind is underrated. See appendix C. It's not written yet.
+    - "Point 4: whoever argues rush is wrong. Ahem."
 quirks:
   - calls_everything
   - narrates

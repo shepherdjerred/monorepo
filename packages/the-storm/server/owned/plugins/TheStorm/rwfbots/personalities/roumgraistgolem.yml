@@ -65,6 +65,12 @@ lines:
     - golem coming
     - you hear golem steps
     - golem bring poppy. then sword
+  lobby:
+    - golem waits
+    - golem picks sword
+    - golem likes lobby. quiet
+    - "{team}. golem ready soon"
+    - golem stretch. creak
 quirks:
   - slow_starter
   - never_eats

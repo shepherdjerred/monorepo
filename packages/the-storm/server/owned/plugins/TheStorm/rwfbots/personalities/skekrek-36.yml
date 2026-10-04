@@ -65,6 +65,12 @@ lines:
     - behind you. no really.
     - wow. nice angle.
     - turn around.
+  lobby:
+    - lobby again. thrilling.
+    - shortbow. obviously.
+    - my route. not yours.
+    - waiting. patiently. sort of.
+    - "go {team}. i guess."
 quirks:
   - stares_down
   - holds_grudges

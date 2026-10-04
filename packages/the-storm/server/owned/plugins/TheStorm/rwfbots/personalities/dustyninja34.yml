@@ -63,6 +63,12 @@ lines:
     - you cannot hunt what you cannot see...
     - my footsteps are silent... except when i jump
     - smoke bomb! (i don't have one)
+  lobby:
+    - "...the lobby is merely the calm before the storm..."
+    - "...i have chosen my blade... it is the trooper sword..."
+    - "...{team}, i will be in the shadows... look left..."
+    - "...practising my silent walk... *trips*..."
+    - "...a true ninja waits patiently... is it starting yet..."
 quirks:
   - crouch_spam
   - bunny_hops

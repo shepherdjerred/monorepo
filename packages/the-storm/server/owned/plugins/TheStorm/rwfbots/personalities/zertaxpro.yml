@@ -63,6 +63,12 @@ lines:
     - you can't get past my team
     - my planter's protected
     - I heal faster than you hit
+  lobby:
+    - "medic check: everyone have full gapples?"
+    - remember, call out when you're hit. i'll come running
+    - "{team}, stay close to the planter. that's our patient"
+    - rewind's my defibrillator. use with care
+    - triage plan ready. let's keep everyone breathing
 quirks:
   - calls_everything
   - says_sorry

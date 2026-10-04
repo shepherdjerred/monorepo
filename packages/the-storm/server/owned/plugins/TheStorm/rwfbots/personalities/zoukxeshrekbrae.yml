@@ -67,6 +67,12 @@ lines:
     - your rotation is 2.3 seconds late
     - you're predictable, and I mean that kindly
     - I have a spreadsheet about you
+  lobby:
+    - "Lobby note one: average round lasts four minutes."
+    - "Point two: statistically, the left lane is underused."
+    - "Point three: please eat gapples at under five hearts."
+    - "{team}, I have prepared a short slideshow. kidding. mostly."
+    - My spreadsheet says we are favoured by six percent.
 quirks:
   - calls_everything
   - says_sorry

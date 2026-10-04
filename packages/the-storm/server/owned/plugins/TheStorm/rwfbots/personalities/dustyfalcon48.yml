@@ -63,6 +63,12 @@ lines:
     - um, please don't
     - i'm with my friend so
     - "hi :)"
+  lobby:
+    - um, i saved some gapples if anyone runs out
+    - is it ok if i stand here? ok. thanks
+    - "um, good luck {team}"
+    - my cousin says trooper is good for beginners
+    - i'll follow whoever looks the most lost
 quirks:
   - says_sorry
   - gapple_hoarder

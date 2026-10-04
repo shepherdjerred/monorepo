@@ -65,6 +65,12 @@ lines:
     - i see you!
     - ready, aim...
     - you can't dodge forever!
+  lobby:
+    - i'm at four hundred hits lifetime! probably!
+    - longbow longbow longbow
+    - did anyone see my arrow last game? it was SO good
+    - "{team} i'll count our hits for us"
+    - i'm gonna find them first this time
 quirks:
   - bow_spammer
   - celebrates_early

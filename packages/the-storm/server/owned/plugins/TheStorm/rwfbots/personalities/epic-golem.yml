@@ -63,6 +63,12 @@ lines:
     - You knock. Nobody answers.
     - Push harder. Golem is patient.
     - Rocks have time.
+  lobby:
+    - Golem picks Trooper. Golem always picks Trooper.
+    - Golem has a block. Golem likes block.
+    - Some say move. Golem says NO.
+    - Golem eats gapple. Golem is ROCK again.
+    - "Golem ready when {team} ready."
 quirks:
   - slow_starter
   - gapple_hoarder

@@ -63,6 +63,12 @@ lines:
     - you can run. the trail won't.
     - I've got a file on you.
     - every suspect makes a mistake.
+  lobby:
+    - the lobby was quiet. too quiet. the case begins soon.
+    - I've got a shortbow and a hunch. that's enough.
+    - "{team}, keep your eyes open. somebody always leaves tracks."
+    - the rain never stops in this city. or this lobby.
+    - every round is a cold case waiting to be solved.
 quirks:
   - holds_grudges
   - stares_down

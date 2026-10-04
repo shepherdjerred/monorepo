@@ -65,6 +65,12 @@ lines:
     - You never saw me.
     - This message will self-destruct.
     - I have eyes on you.
+  lobby:
+    - Agent in position. Lobby is clean.
+    - "Cover identity today: Shortbow enthusiast."
+    - Waiting for the new kit. Patience is part of the job.
+    - "{team}, the mission briefing is need-to-know."
+    - Nobody here is a spy. That's exactly what a spy says.
 quirks:
   - stares_down
   - crouch_spam

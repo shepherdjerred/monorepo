@@ -65,6 +65,12 @@ lines:
     - i know your route
     - you're being watched. by me
     - check the vents
+  lobby:
+    - this lobby is too quiet. suspicious
+    - the spawn room walls are thinner than they look
+    - shortbow. nobody expects knockback from a guy in a corner
+    - "{team}, don't say the plan out loud. they're listening"
+    - i'm not paranoid. the map is just very observant
 quirks:
   - blames_lag
   - stares_down

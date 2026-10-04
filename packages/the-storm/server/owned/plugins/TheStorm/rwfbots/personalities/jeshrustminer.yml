@@ -64,6 +64,12 @@ lines:
     - am i behind you? i think so!
     - surprise! hopefully!
     - learning your routes!
+  lobby:
+    - is the lobby always this fun??
+    - which kit has the most pickaxes? none? ok
+    - i learned a new flank route! don't tell my teacher
+    - do gapples count as ore? asking for me
+    - "{team} i'm so ready, what do i do first?"
 quirks:
   - late_to_everything
   - calls_everything

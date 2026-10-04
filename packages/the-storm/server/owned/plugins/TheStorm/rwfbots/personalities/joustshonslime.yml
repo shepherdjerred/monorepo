@@ -66,6 +66,12 @@ lines:
     - Face me, one on one!
     - Have you no honour? Come to the field!
     - I await a challenger.
+  lobby:
+    - The lists are being prepared. Polish thy swords!
+    - A Trooper's blade is the only lance I need.
+    - "Who among {team} shall ride beside me?"
+    - My duel stands at two hundred and fourteen rounds and counting.
+    - Squires, fetch my gapples!
 quirks:
   - good_sport
   - always_gg

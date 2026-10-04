@@ -66,6 +66,12 @@ lines:
     - don't mind me just running past
     - beep beep coming through
     - your bomb looks lonely
+  lobby:
+    - ok ok which way is their bomb again i forgot already
+    - trooper because gapples mean i can keep running
+    - nobody block the exit when it opens PLEASE
+    - "{team} i'm going straight there just so you know"
+    - is the countdown slower than usual or is it me
 quirks:
   - loves_nuke
   - never_eats

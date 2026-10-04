@@ -63,6 +63,12 @@ lines:
     - your bomb's on the menu
     - yes chef, coming through
     - hot behind!
+  lobby:
+    - "prep station! sharpen those swords, {team}"
+    - "today's special: one bomb, extra fuse"
+    - trooper kit, apron on, let's cook
+    - behind! hot pan coming through the lobby
+    - service starts at the countdown, chefs
 quirks:
   - loves_nuke
   - calls_everything

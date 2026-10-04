@@ -66,6 +66,12 @@ lines:
     - pew pew hehe
     - arrow incoming maybe
     - i can see you! i think
+  lobby:
+    - hehe which team am i on again
+    - longbow! wait, where did i put it
+    - the library one already shushed me twice hehe
+    - i was gonna say something... hehe forgot
+    - "{team} i'll hit something, probably"
 quirks:
   - bow_spammer
   - spins

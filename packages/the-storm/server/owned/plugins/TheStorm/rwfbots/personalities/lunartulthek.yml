@@ -65,6 +65,12 @@ lines:
     - i've been behind you for three phases
     - look up. no, behind
     - the shadows are mine tonight
+  lobby:
+    - the stars look crowded tonight
+    - i'll find a dark corner. the moon will show me where
+    - shortbow feels light tonight. like a new moon
+    - "constellations say we win, {team}. probably"
+    - shh. i'm charting the lobby
 quirks:
   - stares_down
   - spins

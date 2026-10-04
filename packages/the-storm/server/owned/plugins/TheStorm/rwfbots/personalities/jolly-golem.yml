@@ -63,6 +63,12 @@ lines:
     - the line starts behind me, friend
     - bomb's this way, if you can get past
     - I've stood here since 2013. I can wait
+  lobby:
+    - heyyy pals, who wants a fist bump while we wait?
+    - big guy's stretching. bomb duty takes knees
+    - trooper again for me. sword and snacks, the classic
+    - "{team}, you go have fun, i'll babysit the bomb"
+    - hahaha this lobby music slaps. there is no music
 quirks:
   - good_sport
   - gapple_hoarder

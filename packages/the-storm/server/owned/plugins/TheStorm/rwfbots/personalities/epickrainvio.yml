@@ -66,6 +66,12 @@ lines:
     - Every story needs a villain. Thanks.
     - The hero approaches your bomb.
     - Prepare for the climax.
+  lobby:
+    - Before the battle... there was the lobby.
+    - One hero. One Trooper kit. One impossible run.
+    - "{team}... the trailer starts in seconds."
+    - Every great story needs a villain. I wonder who's playing today.
+    - Coming soon... to a bomb near you.
 quirks:
   - narrates
   - loves_nuke

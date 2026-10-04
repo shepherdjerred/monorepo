@@ -65,6 +65,12 @@ lines:
     - I know which corner you picked.
     - Run if you like. I'm faster.
     - You're my next point.
+  lobby:
+    - "Bracket's printed. Your name's on it, {team}."
+    - Trooper, every time. Finals are won up close.
+    - Ask me about 2014. Actually, don't.
+    - Warm-up rounds don't count. This one does.
+    - Who's keeping score today? Oh right, me.
 quirks:
   - holds_grudges
   - celebrates_early

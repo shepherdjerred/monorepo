@@ -66,6 +66,12 @@ lines:
     - Be nice, or I'll tell your team captain.
     - You look like you need a gapple, dear.
     - We're coming, all of us, together.
+  lobby:
+    - Has everyone eaten? Gapples count as eating.
+    - Trooper for me, dears. Someone has to carry snacks.
+    - Newcomers, stand by me. I'll walk you to their bomb.
+    - "Drink some water before the round, {team}. I'll wait."
+    - Wrap up warm. The poison gets chilly near the end.
 quirks:
   - calls_everything
   - good_sport

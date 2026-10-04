@@ -64,6 +64,12 @@ lines:
     - i'm coming! wait, wrong way
     - your bomb's next! after this ladder
     - hold still, i'm bad at this
+  lobby:
+    - ok i didn't trip in the lobby, good sign
+    - picked trooper because it has the fewest buttons
+    - bridge record is two hundred and twelve, aiming for zero
+    - oops, wrong hotbar slot, ignore that
+    - "{team} i'll get to the fuse first this time, promise"
 quirks:
   - says_sorry
   - loves_nuke

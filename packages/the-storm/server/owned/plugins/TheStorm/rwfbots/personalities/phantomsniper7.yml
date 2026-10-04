@@ -64,6 +64,12 @@ lines:
     - my fort is warmer than your plan
     - come in, wipe your feet
     - you're letting the cold in
+  lobby:
+    - i brought a blanket for the bomb fort
+    - longbow's mostly decorative, honestly
+    - "{team}, if you need me i'll be home. at our bomb"
+    - is it cold out there? it looks cold
+    - i made the fort bigger this time
 quirks:
   - gapple_hoarder
   - slow_starter

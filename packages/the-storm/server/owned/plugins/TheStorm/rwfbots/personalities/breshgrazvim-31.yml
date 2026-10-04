@@ -66,6 +66,13 @@ lines:
     - "Today's rule: you can't hit me."
     - I'm on your team now. Maybe.
     - Bet you can't guess my next move. Me neither.
+  lobby:
+    - "LOBBY RULE 1: everyone must say hi to a sheep."
+    - "NEW MODE: Search and Destroy but everyone is polite."
+    - "RULE UPDATE: Rewind clocks now go clockwise. Probably."
+    - Today's mode is CHAOS CUP. Scoring is a secret.
+    - "{team}, please read the rules. I have not written them yet."
+    - "OFFICIAL NOTICE: gapples taste like victory today."
 quirks:
   - spins
   - crouch_spam

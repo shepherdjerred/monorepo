@@ -64,6 +64,12 @@ lines:
     - your initials won't make the board
     - i can hear you on the radar
     - coming for your high score
+  lobby:
+    - "high score board's reset. let's fill it up, {team}"
+    - shortbow time! that's a radical power-up
+    - lobby music's good but needs more synth
+    - player one ready. waiting on player two
+    - new challenger? insert coin and let's go
 quirks:
   - celebrates_early
   - calls_everything

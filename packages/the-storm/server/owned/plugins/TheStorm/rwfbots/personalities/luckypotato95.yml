@@ -65,6 +65,12 @@ lines:
     - Odds are on me.
     - Wanna bet?
     - Spin the wheel!
+  lobby:
+    - Lobby's open, place your bets!
+    - "Rewind clock: the house always gets a second spin."
+    - "Ninety-five is my number tonight, {team}."
+    - Let it ride, kit roulette says Trooper!
+    - Jackpot round incoming. I can feel it.
 quirks:
   - celebrates_early
   - bunny_hops

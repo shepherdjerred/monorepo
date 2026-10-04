@@ -65,6 +65,12 @@ lines:
     - check your flank.
     - you're facing the wrong way.
     - i was here the whole time.
+  lobby:
+    - waiting.
+    - shortbow again. obviously.
+    - already picked my route.
+    - "you won't see me, {team}. that's the point."
+    - lobby's quiet. good.
 quirks:
   - stares_down
   - late_to_everything

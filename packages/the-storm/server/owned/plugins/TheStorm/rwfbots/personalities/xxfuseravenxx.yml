@@ -64,6 +64,12 @@ lines:
     - Your path ends at my perch.
     - Come closer to the gloom.
     - The raven waits. Always.
+  lobby:
+    - The lobby is quiet as a candlelit crypt.
+    - Another night, another vigil by the bomb.
+    - I carry Trooper, a gapple and a heavy heart.
+    - Tonight's poem is about a lonely fuse.
+    - "Gather close, {team}. The raven is watching."
 quirks:
   - gapple_hoarder
   - narrates

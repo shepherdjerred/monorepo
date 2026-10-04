@@ -64,6 +64,12 @@ lines:
     - shhhh
     - you're very loud for an attacker
     - please lower your sword
+  lobby:
+    - indoor voices in the lobby, please
+    - your library card covers one kit. choose wisely
+    - "{team}, the bomb section is closed to visitors"
+    - no food near the books. gapples excepted
+    - there can only be one moth. noted for the record
 quirks:
   - stares_down
   - holds_grudges

@@ -56,6 +56,7 @@ final class PersonalityFilesTest {
         onLoss: ["rematch", "gg"]
         onLastAlive: ["clutch time", "just me"]
         taunt: ["come get it", "too slow"]
+        lobby: ["anyone trooper?", "gapples ready", "lets win this {team}", "brb water"]
       quirks: [always_gg, loves_nuke]
       rivals: []
       bio: Pushes first and asks questions later. Has never once checked the minimap.
@@ -89,6 +90,7 @@ final class PersonalityFilesTest {
     assertThat(ash.voice().verbosity()).isEqualTo(Voice.Verbosity.NORMAL);
     assertThat(ash.voice().style()).isEqualTo("all lowercase, 2014 gamer slang");
     assertThat(ash.lines().pool(Lines.Moment.ON_KILL)).containsExactly("sit, {victim}", "next");
+    assertThat(ash.lines().lobby()).hasSize(4).contains("lets win this {team}");
     assertThat(ash.quirks()).containsExactlyInAnyOrder(Quirk.ALWAYS_GG, Quirk.LOVES_NUKE);
     assertThat(ash.rivals()).isEmpty();
     assertThat(ash.batch()).isEqualTo(1);
@@ -186,6 +188,21 @@ final class PersonalityFilesTest {
     assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("taunt");
+  }
+
+  @Test
+  void theLobbyPoolNeedsFourToEightLinesAndOnlyTeam() throws IOException {
+    write("ash-42.yml", GOOD.replace(", \"brb water\"]", "]"));
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .hasMessageContaining("lobby needs 4..8 lines, has 3");
+
+    write("ash-42.yml", GOOD.replace("\"brb water\"", "\"hi {victim}\""));
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .hasMessageContaining("lobby lines may not use {victim}");
+
+    write("ash-42.yml", GOOD.replace("  lobby: [", "  lobbyy: ["));
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .hasMessageContaining("lobby");
   }
 
   @Test

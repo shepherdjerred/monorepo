@@ -63,6 +63,12 @@ lines:
     - hurry, if you must.
     - the stone outlasts the wave.
     - I have time. do you?
+  lobby:
+    - the lobby is a garden. be still in it.
+    - the bomb does not move. neither shall i.
+    - "{team}, haste is the rusher's teacher. let them learn."
+    - one sword, two gapples, a quiet mind.
+    - the match begins when the mind is ready.
 quirks:
   - never_eats
   - good_sport

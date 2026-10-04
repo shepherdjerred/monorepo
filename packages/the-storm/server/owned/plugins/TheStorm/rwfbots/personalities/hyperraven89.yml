@@ -65,6 +65,12 @@ lines:
     - arrows-arrows-arrows!
     - can't-stop-won't-stop!
     - dodge THIS one
+  lobby:
+    - fourth-soda-incoming, aim-steady-ish!
+    - longbow-or-shortbow, why-not-both?
+    - sightline-rival-spotted, game-on!
+    - can-the-countdown-go-faster, please?
+    - "{team}-i-will-cover-everything-everywhere!"
 quirks:
   - bow_spammer
   - bunny_hops

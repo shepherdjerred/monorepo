@@ -64,6 +64,12 @@ lines:
     - face me in the open
     - your cps is showing
     - duel me, it's free
+  lobby:
+    - anyone want a quick warm-up 1v1 before it starts?
+    - running cps drills in the lobby. stay back
+    - score's tied with the otter. not for long
+    - "{team}, i'll take whoever's on the left. send them"
+    - trooper, w-tap, crit. that's the whole plan
 quirks:
   - holds_grudges
   - bunny_hops

@@ -62,6 +62,12 @@ lines:
     - you're slower than my last route
     - i've already planned past you
     - your bomb is on my route
+  lobby:
+    - lobby timer says thirty. resetting my splits
+    - trooper for any percent. rewind is a different category
+    - "{team}, i'm going for a personal best today"
+    - frame-perfect spawn exit incoming
+    - if i don't beat my time, we reset next round
 quirks:
   - loves_nuke
   - bunny_hops

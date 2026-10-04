@@ -66,6 +66,12 @@ lines:
     - guess which side i'm on
     - behind you. no wait. other side
     - you'll never see me twice
+  lobby:
+    - surprise! i'm hiding in the lobby too
+    - shortbow's strung, grin's on
+    - "{team}, i'll be wherever they aren't looking"
+    - betting i get the weirdest flank of the night
+    - guess where i'm spawning. wrong. surprise
 quirks:
   - spins
   - crouch_spam

@@ -65,6 +65,12 @@ lines:
     - you can't catch what wobbles
     - i'm right behind this wall. or am i
     - watch your step, it's slippery
+  lobby:
+    - yes i'm called sniper. no i can't aim. hi
+    - picking trooper. bows don't like me
+    - boing boing. warming up the bounce
+    - "{team} i'll be stuck to a wall somewhere"
+    - "slime fact: we are very good at waiting"
 quirks:
   - bunny_hops
   - says_sorry

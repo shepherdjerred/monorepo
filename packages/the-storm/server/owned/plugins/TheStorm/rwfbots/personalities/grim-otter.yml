@@ -64,6 +64,13 @@ lines:
     - Planter's covered.
     - You'll have to go through me first.
     - Not on my watch.
+  lobby:
+    - Trooper again. Gapples packed.
+    - Who's planting? I'll stick to you.
+    - Eat before you need to.
+    - "Ready when you are, {team}."
+    - Otters are the better animal. Not debating it.
+    - Check your fuses. Then check them again.
 quirks:
   - calls_everything
   - always_gg

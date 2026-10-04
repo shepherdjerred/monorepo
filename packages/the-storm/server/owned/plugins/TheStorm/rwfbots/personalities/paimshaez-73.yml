@@ -67,6 +67,12 @@ lines:
     - I can see you from here.
     - Don't stand still.
     - One more step into the open.
+  lobby:
+    - Wind's calm on this map. Good.
+    - Longbow strung. Arrows counted.
+    - "Find your sightline before the round finds you, {team}."
+    - Long shots start with a quiet lobby.
+    - If anyone wants a tip about leading targets, ask.
 quirks:
   - bow_spammer
   - stares_down

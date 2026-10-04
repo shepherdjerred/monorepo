@@ -66,6 +66,12 @@ lines:
     - you got flanked by a potato
     - check your side. potato
     - a potato is behind you. no really
+  lobby:
+    - freshly frozen and ready to be served
+    - shortbow for me. mashed is a lifestyle
+    - "{team}, i'll come in from the side, like a side dish"
+    - yes the name is silly. yes i'm still flanking
+    - chilling in the lobby. literally
 quirks:
   - spins
   - good_sport

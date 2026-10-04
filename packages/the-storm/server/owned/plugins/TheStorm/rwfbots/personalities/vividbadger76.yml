@@ -67,6 +67,12 @@ lines:
     - you stand in my favourite light
     - hold still, i'm painting you
     - your movement lacks composition
+  lobby:
+    - the lobby lighting is honestly a masterpiece
+    - longbow is my brush. let's paint something
+    - "{team}, let's compose this round with care"
+    - please, no puns today. this is a gallery
+    - every match is a canvas. this one's blank
 quirks:
   - stares_down
   - bow_spammer

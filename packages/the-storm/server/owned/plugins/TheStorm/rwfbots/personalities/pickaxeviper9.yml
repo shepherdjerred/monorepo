@@ -63,6 +63,12 @@ lines:
     - Turn around.
     - This bomb is closed.
     - Try another route. There isn't one.
+  lobby:
+    - Lobby secure. Awaiting deployment.
+    - "Kit check: sword, apples, attitude."
+    - Gate duty again. Good.
+    - "Fall in, {team}. Briefing is short."
+    - "Status: bored. Status will change shortly."
 quirks:
   - stares_down
   - never_eats

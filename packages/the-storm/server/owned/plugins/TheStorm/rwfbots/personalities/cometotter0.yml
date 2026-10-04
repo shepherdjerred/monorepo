@@ -61,6 +61,12 @@ lines:
     - "i can hear you! :D"
     - found your footsteps!
     - come out come out!
+  lobby:
+    - "is it time yet?? is it?? :D"
+    - "i picked shortbow!! is that good?? :D"
+    - "i'm gonna follow the best hunter all match :D"
+    - "{team} i can hear footsteps already!! oh it's me"
+    - "pls teach me tracking, anyone, i'm a fast learner :D"
 quirks:
   - calls_everything
   - late_to_everything
