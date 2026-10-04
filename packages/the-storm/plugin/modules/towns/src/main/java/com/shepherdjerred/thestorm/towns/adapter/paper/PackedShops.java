@@ -422,6 +422,9 @@ final class PackedShops implements Listener {
                   throw new IllegalStateException(
                       "lock changed during placement; rollback requires staff reconciliation");
                 }
+                if (current.isEmpty()) {
+                  return CompletableFuture.completedFuture(null);
+                }
                 return parts
                     .lockStore()
                     .delete(saved.id())

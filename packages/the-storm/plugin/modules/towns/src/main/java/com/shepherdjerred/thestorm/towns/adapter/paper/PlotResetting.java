@@ -228,11 +228,21 @@ final class PlotResetting {
     for (var lock : auxiliary.locks()) {
       chain =
           chain.thenComposeAsync(
-              ignored ->
-                  parts
-                      .lockStore()
-                      .delete(lock.id())
-                      .thenRunAsync(() -> parts.locks().remove(lock.id()), main()),
+              ignored -> {
+                var current = parts.locks().byId(lock.id());
+                if (current.isEmpty()) {
+                  return CompletableFuture.completedFuture(null);
+                }
+                if (!current.get().equals(lock)) {
+                  return CompletableFuture.failedFuture(
+                      new IllegalStateException(
+                          "archived lock changed during reset; staff reconciliation is required"));
+                }
+                return parts
+                    .lockStore()
+                    .delete(lock.id())
+                    .thenRunAsync(() -> parts.locks().remove(lock.id()), main());
+              },
               main());
     }
     return chain;
