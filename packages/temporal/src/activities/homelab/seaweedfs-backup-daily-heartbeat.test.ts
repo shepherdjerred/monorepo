@@ -148,7 +148,7 @@ describe("daily backup heartbeat ownership", () => {
     expectContinuousHeartbeats(start);
     expect(activity.heartbeat).toHaveBeenLastCalledWith({ stage: "inventory" });
     gate.resolve(true);
-    await expect(operation).resolves.toMatchObject({ buckets: 9 });
+    await expect(operation).resolves.toMatchObject({ buckets: 11 });
     expect(activity.heartbeat).toHaveBeenCalledWith({
       stage: "bucket",
       bucket: "glitter-discord-corpus",
@@ -215,7 +215,7 @@ describe("daily backup heartbeat ownership", () => {
         });
       }
       gate.resolve(true);
-      await expect(operation).resolves.toMatchObject({ buckets: 9 });
+      await expect(operation).resolves.toMatchObject({ buckets: 11 });
       expect(activity.heartbeat.mock.lastCall?.[0]).toMatchObject({
         stage: "complete",
       });

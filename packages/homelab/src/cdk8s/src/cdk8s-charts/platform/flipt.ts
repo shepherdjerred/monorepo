@@ -37,6 +37,8 @@ const CONSUMER_NAMESPACES = [
   // temporal-call-graph-tracing check silently degrades to the default false.
   // storm-brain reads the storm namespace flags (classify/triage gates).
   "storm-brain",
+  "storm-forum",
+  "storm-forum-beta",
   "minecraft-tsmc",
   "woodpecker-ci",
 ] as const;

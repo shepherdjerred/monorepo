@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "xenforoVersion": "2.3.13",
+  "title": "The Storm",
+  "joinAddress": "ts-mc.net",
+  "smtpHost": "postal-postal-smtp-service.postal.svc.cluster.local",
+  "smtpPort": 25,
+  "sender": "forum@ts-mc.net",
+  "stages": {
+    "beta": {
+      "url": "https://storm-forum-beta.tailnet-1a49.ts.net",
+      "taskQueue": "storm-forum-beta"
+    },
+    "prod": {
+      "url": "https://forum.ts-mc.net",
+      "taskQueue": "storm-forum-prod"
+    }
+  },
+  "minecraft": {
+    "namespace": "minecraft-tsmc",
+    "statefulSet": "minecraft-tsmc",
+    "host": "minecraft-tsmc.minecraft-tsmc.svc.cluster.local",
+    "port": 25565,
+    "timeoutMs": 3000,
+    "staleAfterSeconds": 180
+  },
+  "registration": {
+    "approvedPosts": 3,
+    "accountAgeHours": 24,
+    "timerSeconds": 10
+  },
+  "attachmentLimitKiB": 5120,
+  "nodes": [
+    { "key": "official", "title": "Official", "type": "Category" },
+    {
+      "key": "news",
+      "title": "News & Announcements",
+      "parent": "official",
+      "type": "Forum",
+      "access": "announcements",
+      "article": true
+    },
+    {
+      "key": "rules",
+      "title": "Rules & Getting Started",
+      "parent": "official",
+      "type": "Forum",
+      "access": "announcements"
+    },
+    { "key": "community", "title": "Community", "type": "Category" },
+    {
+      "key": "general",
+      "title": "General",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "feedback",
+      "title": "Feedback",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "bugs",
+      "title": "Bug Reports",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "games",
+      "title": "Forum Games",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public",
+      "countMessages": false
+    },
+    { "key": "support", "title": "Private Support", "type": "Category" },
+    {
+      "key": "reports",
+      "title": "Reports",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
+    {
+      "key": "appeals",
+      "title": "Appeals",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
+    {
+      "key": "applications",
+      "title": "Applications",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
+    { "key": "staff", "title": "Staff", "type": "Forum", "access": "staff" }
+  ],
+  "vendorDependencies": [
+    {
+      "key": "uix-light",
+      "version": "2.3.11.0.0",
+      "kind": "style",
+      "path": "vendor/uix-classic.zip"
+    },
+    {
+      "key": "uix-dark",
+      "version": "2.3.11.0.0",
+      "kind": "style",
+      "path": "vendor/uix-classic-dark.zip"
+    },
+    {
+      "key": "xon-library",
+      "version": ">=1.21.1",
+      "kind": "addon",
+      "path": "src/addons/SV/StandardLib/addon.json"
+    },
+    {
+      "key": "ratings",
+      "version": "2.9.5",
+      "kind": "addon",
+      "path": "src/addons/SV/ContentRatings/addon.json"
+    },
+    {
+      "key": "media-sites",
+      "version": "2.19.3",
+      "kind": "addon",
+      "path": "src/addons/s9e/MediaSites/addon.json"
+    }
+  ]
+}

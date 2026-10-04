@@ -154,6 +154,7 @@
     "packages/statically-typed",
     "packages/stocks-sjer-red",
     "packages/storm-brain",
+    "packages/storm-forum",
     "packages/streambot",
     "packages/tasknotes-core",
     "packages/tasknotes-e2e",
