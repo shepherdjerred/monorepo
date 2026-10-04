@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { dareCalloutContent } from "#src/betting/dares/presentation/dare-callout-content.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import {
+  DARE_CALLOUT_MAX_LENGTH,
+  dareCalloutContent,
+  renderDareResult,
+} from "#src/betting/dares/presentation/dare-callout-content.ts";
 
 const ACCEPT_DEADLINE = new Date("2026-09-02T12:00:00.000Z");
 
@@ -110,5 +115,62 @@ describe("dareCalloutContent", () => {
     expect(rendered.length).toBeLessThanOrEqual(2000);
     expect(rendered).toContain("…and");
     expect(rendered).toContain("more contributor(s).");
+  });
+});
+
+describe("renderDareResult", () => {
+  // A Dare drafted before the draft-length check can carry plain-language
+  // text up to the old 4,000-character ceiling, and that text sits in the
+  // header the trimming loop cannot drop.
+  const longPlainLanguage = "Virmel wins a game. ".repeat(200);
+  const challenger = DiscordAccountIdSchema.parse("100000000000000001");
+  const payouts = Array.from({ length: 30 }, (_, index) => ({
+    discordId: DiscordAccountIdSchema.parse(
+      (200_000_000_000_000_000n + BigInt(index)).toString(),
+    ),
+    alias: `Target ${index.toString()}`,
+    net: 16,
+    fee: 4,
+  }));
+
+  test("truncates overlong plain-language text and still names a payout", () => {
+    expect(longPlainLanguage).toHaveLength(4000);
+    const rendered = renderDareResult(7, {
+      resolution: "achieved",
+      challengerDiscordId: challenger,
+      plainLanguage: longPlainLanguage,
+      potTotal: 600,
+      payouts,
+      refunds: [],
+      voidReason: null,
+    });
+
+    expect(rendered.content.length).toBeLessThanOrEqual(
+      DARE_CALLOUT_MAX_LENGTH,
+    );
+    const [, plainLine] = rendered.content.split("\n");
+    expect(plainLine?.startsWith("Virmel wins a game.")).toBe(true);
+    expect(plainLine?.endsWith("…")).toBe(true);
+    const first = payouts[0];
+    if (first === undefined) throw new Error("No payout fixture");
+    expect(rendered.content).toContain(
+      `• **Target 0** <@${first.discordId}> — +**16 BB** · **4 BB** fee`,
+    );
+    expect(rendered.content).toContain("…and 29 more.");
+    expect(rendered.mentionUserIds).toContain(first.discordId);
+  });
+
+  test("keeps short plain-language text whole", () => {
+    const rendered = renderDareResult(8, {
+      resolution: "unachieved",
+      challengerDiscordId: challenger,
+      plainLanguage: "Virmel wins a game.",
+      potTotal: 20,
+      payouts: [],
+      refunds: [{ discordId: challenger, refunded: 20, fee: 0 }],
+      voidReason: null,
+    });
+
+    expect(rendered.content.split("\n")[1]).toBe("Virmel wins a game.");
   });
 });

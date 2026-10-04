@@ -222,12 +222,13 @@ type ResultLine = { text: string; discordId: string };
 function resultHeader(
   dareId: number,
   result: DareResultAnnouncement,
+  plainLanguage: string,
 ): string[] {
   const id = `#${dareId.toString()}`;
   if (result.resolution === "achieved") {
     return [
       `✅ **Scout Dare ${id}: ACHIEVED**`,
-      result.plainLanguage,
+      plainLanguage,
       // The challenger funded the pot but appears in no payout line, and an
       // allowlisted mention only pings a user the text actually names.
       `Funded by <@${result.challengerDiscordId}>. The ${resultAmount(result.potTotal)} pot pays out:`,
@@ -236,7 +237,7 @@ function resultHeader(
   if (result.resolution === "unachieved") {
     return [
       `🛡️ **Scout Dare ${id}: THE DARE SURVIVED**`,
-      result.plainLanguage,
+      plainLanguage,
       "Contributors got their BB back:",
     ];
   }
@@ -262,26 +263,70 @@ function resultLines(result: DareResultAnnouncement): ResultLine[] {
   }));
 }
 
+function hiddenLinesNote(hidden: number): string[] {
+  return hidden === 0 ? [] : [`…and ${formatInteger(hidden)} more.`];
+}
+
+/** `text` cut to at most `room` characters, ending in an ellipsis if cut. */
+function truncateWithEllipsis(text: string, room: number): string {
+  if (text.length <= room) return text;
+  let cut = text.slice(0, Math.max(0, room - 1));
+  // Never leave half of a surrogate pair at the cut.
+  const last = cut.codePointAt(cut.length - 1);
+  if (last !== undefined && last >= 0xd8_00 && last <= 0xdb_ff) {
+    cut = cut.slice(0, -1);
+  }
+  return `${cut.trimEnd()}…`;
+}
+
+/**
+ * The header with the Dare's plain-language text bounded so the header, the
+ * first payout or refund line, and the count of any lines after it always fit
+ * the message budget. Dares drafted before the draft-length check can carry
+ * text far longer than one post; the result still has to render.
+ */
+function boundedResultHeader(
+  dareId: number,
+  result: DareResultAnnouncement,
+  lines: readonly ResultLine[],
+): string[] {
+  const first = lines[0];
+  const frame = [
+    ...resultHeader(dareId, result, ""),
+    ...(first === undefined ? [] : [first.text]),
+    ...hiddenLinesNote(Math.max(0, lines.length - 1)),
+  ].join("\n");
+  return resultHeader(
+    dareId,
+    result,
+    truncateWithEllipsis(
+      result.plainLanguage,
+      DARE_CALLOUT_MAX_LENGTH - frame.length,
+    ),
+  );
+}
+
 /**
  * The public post a resolved Dare makes in its own channel.
  *
  * Mentions are an allowlist of exactly the users the visible text names, so
  * the post pings the people whose money moved and nobody else. A pot with too
  * many contributors to fit Discord's limit names as many as fit and counts the
- * rest, rather than failing a settlement that already committed.
+ * rest, rather than failing a settlement that already committed; an overlong
+ * plain-language text is truncated so at least the first line always shows.
  */
 export function renderDareResult(
   dareId: number,
   result: DareResultAnnouncement,
 ): { content: string; mentionUserIds: string[] } {
-  const header = resultHeader(dareId, result);
   const lines = resultLines(result);
+  const header = boundedResultHeader(dareId, result, lines);
   for (let visible = lines.length; visible >= 0; visible--) {
     const hidden = lines.length - visible;
     const content = [
       ...header,
       ...lines.slice(0, visible).map((line) => line.text),
-      ...(hidden === 0 ? [] : [`…and ${formatInteger(hidden)} more.`]),
+      ...hiddenLinesNote(hidden),
     ].join("\n");
     if (content.length > DARE_CALLOUT_MAX_LENGTH) continue;
     const named = [
