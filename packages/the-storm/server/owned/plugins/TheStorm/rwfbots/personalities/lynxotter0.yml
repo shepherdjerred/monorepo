@@ -4,32 +4,74 @@ skin:
   value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzcyNjg0NSwKICAicHJvZmlsZUlkIiA6ICJlNzM4MTYzZTYwM2M0MTFkOTg4MzNiYzkyZTI4Y2IyYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJYZW5va3JhdGVzUml0dmEiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTgyODg4NjQxMjBlMWY0NmNmYzE2NzM5YjFjZjk3OWRlZDg0MjI5OGIzY2U0Y2Q0YzJjZDg3Mzg3ZTQ0NzYxYSIKICAgIH0KICB9Cn0="
   signature: "sJ+B25+M+SchrQmyic6ydwjZDyfvlTBy7ebZhtXKwXKTUCKySHDd8QuMWekkKbHF3cYo23XClFTnGIboVEzxenMmSlj3pz+BP1FRtMjLtY2lv8GkTty1kfK2nOX7nQEo6xWVGICJ71H3p/UhZRUQl3jiVzPkURAVNCfRCwc/UCBE2ovdy0q/UnMt60u+c85xVFjQd5bipikaVpSoWizA/XgqWbScGPDfpLyMxwJz0pVWdrnRfHGUHbo3eUYSM9Urc0iZrKMntiNEsezMvL3LkHbdnDdIVx8fuNbs4VBmsqzR6lyapEDKouDwzQko3Tfxph91GQe4VZHr/SyFpuPICCE7qdPoC10aXk+MXsI9JUWeOMwClnFcmU4o3VrUfYU+mlgTcSVdBYlhFjbYKeCQNXpporGAz2mVqKaL4frN6LS71SdvJY65P0wf5gQnxv79lLmB6LV64eu0hjWSoqWMV9UNdODg0IE6xCU0L6Ct79kj4A0PPpduuuB/X6qOCFpMmwmIRi+PhdtivuCEv/g0YFaiZKreot5maq+ovBREKXjjdeTp1ea250XncOjCIjUDpU4Nln34WVNQ2bXUxn0wTUJ1bWUPZ9G9jObyh7h7N14cTVF/8Y3cWJHcWQeYoczBi12LCEQOimC/Vmg9GVnLVkNoqMZNtn3LZNboj/2nMwM="
 skill: 0.837
+archetype: duelist
 leverOffsets:
-  reactionMs: -1.42
-  cps: -0.08
-  decisionTemperature: -0.5
-  technique: 0.05
-  aggression: 1.89
+  aimErrorDeg: 0.48
+  cps: 1.18
+  decisionTemperature: -0.44
+  coordination: -0.35
+  technique: 1.77
+  aggression: 1.22
 kits:
-  longbow: 1
+  trooper: 1
+  shortbow: 0.39
 roles:
-  plant: 1
-  escort: 0.45
-  hunt: 0.81
+  escort: 0.43
+  retake: 0.53
+  hunt: 0.78
 style:
-  aggression: 0.82
-  patience: 0.01
-  teamplay: 0.34
-  risk: 0.86
-chat:
+  aggression: 0.87
+  patience: 0.38
+  teamplay: 0.35
+  risk: 0.58
+voice:
   tone:
-    - hype
-    - impatient
-  verbosity: chatty
-  catchphrases:
-    - ez clap
-    - they wont see this coming
-    - bomb's up, catch me
-bio: A Search and Destroy terror who lives for the first fight of the round and plants before anyone has settled. Usually seen with a Punch bow kept at range. Talks a lot.
+    - honourable
+    - intense
+    - gracious
+  verbosity: normal
+  style: "duelist's code; formal challenges, salutes before fights, respects every opponent"
+lines:
+  greet:
+    - I seek worthy opponents. Who will duel me?
+    - "Blades ready, {team}. Leave the one-on-ones to me."
+    - A salute to both teams before we begin.
+  onKill:
+    - "A fine duel, {victim}. I salute you."
+    - "Steel decides. Rise stronger, {victim}."
+    - "Honour to {victim}. Next challenger."
+  onDeath:
+    - "Your blade was truer, {killer}. I bow."
+    - "Well fought, {killer}. A rematch, someday."
+    - "Defeated with honour. Carry on, {team}."
+  onPlant:
+    - "I cleared the way and lit {bomb} myself."
+    - "{bomb} is armed. Let them come to me."
+  onDefuse:
+    - "{bomb} is saved. No one passes my blade."
+    - Defused. The duel continues.
+  onWin:
+    - "Victory with honour, {team}."
+    - Every duel tonight was a gift. gg.
+  onLoss:
+    - Defeat teaches more than victory. gg.
+    - I bow to the stronger team.
+  onLastAlive:
+    - One blade remains. Face me, one at a time.
+    - So it falls to me. Good.
+    - "Watch closely, {team}. This is how it's done."
+  taunt:
+    - Face me. One on one. No bows.
+    - Strafe, swing, strafe. Shall I show you?
+    - I'll wait for you at the centre.
+quirks:
+  - good_sport
+  - stares_down
+  - always_gg
+rivals:
+  - swiftkrashtim
+  - pastkroxpro
+  - grim-otter
+bio: Salutes before every fight and has never once shot a bow at anyone who drew a sword. Keeps offering PastkroxPro strafing lessons and keeps challenging SwiftKrashtim to a duel he is always too fast to accept.
 batch: 1
 retired: false

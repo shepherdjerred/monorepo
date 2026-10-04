@@ -3,13 +3,10 @@ package com.shepherdjerred.thestorm.rwfbots.app;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
-import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverOffsets;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.Rating;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.SkillScale;
-import com.shepherdjerred.thestorm.rwfbots.domain.personality.Chat;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
-import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.EnumSet;
@@ -26,20 +23,10 @@ final class DirectorTest {
       Set.of(Kit.TROOPER, Kit.LONGBOW, Kit.SHORTBOW, Kit.REWIND);
 
   private static Personality ghostOnly() {
-    return new Personality(
-        "spectre",
-        "Spectre",
-        "v",
-        "s",
-        0.5,
-        LeverOffsets.NONE,
+    return Fixtures.withWeights(
+        Fixtures.personality("spectre", "Spectre", 0.5),
         Map.of(Kit.GHOST, 1.0),
-        Map.of(Role.HUNT, 1.0),
-        new Style(0.5, 0.5, 0.5, 0.5),
-        Chat.silent(),
-        "",
-        1,
-        false);
+        Map.of(Role.HUNT, 1.0));
   }
 
   private static PersonalityCatalog catalog() {
@@ -142,20 +129,10 @@ final class DirectorTest {
   void kitsComeFromThePersonalitysWeightsOverTheKitsOnOffer() {
     var personality = ghostOnly();
     var mixed =
-        new Personality(
-            "mix",
-            "Mixer",
-            "v",
-            "s",
-            0.5,
-            LeverOffsets.NONE,
+        Fixtures.withWeights(
+            Fixtures.personality("mix", "Mixer", 0.5),
             Map.of(Kit.GHOST, 5.0, Kit.LONGBOW, 1.0),
-            Map.of(Role.HUNT, 1.0),
-            new Style(0.5, 0.5, 0.5, 0.5),
-            Chat.silent(),
-            "",
-            1,
-            false);
+            Map.of(Role.HUNT, 1.0));
 
     assertThat(Director.kit(mixed, SHIPPED, new SplittableRandom(1))).isEqualTo(Kit.LONGBOW);
     assertThat(Director.kit(personality, Set.of(Kit.GHOST), new SplittableRandom(1)))

@@ -6,8 +6,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Every personality that exists, checked as a set: ids and names are unique, and any two names are
- * at least two edits apart so players never confuse them.
+ * Every personality that exists, checked as a set: ids and names are unique, any two names are at
+ * least two edits apart so players never confuse them, and every rival is a personality here.
  *
  * @param all every personality including retired ones
  */
@@ -26,6 +26,14 @@ public record PersonalityCatalog(List<Personality> all) {
       }
       if (!names.add(personality.name().toLowerCase(Locale.ROOT))) {
         throw new IllegalArgumentException("duplicate personality name: " + personality.name());
+      }
+    }
+    for (var personality : all) {
+      for (var rival : personality.rivals()) {
+        if (!ids.contains(rival)) {
+          throw new IllegalArgumentException(
+              personality.id() + " names an unknown rival: " + rival);
+        }
       }
     }
     for (var i = 0; i < all.size(); i++) {

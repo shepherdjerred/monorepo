@@ -1,37 +1,54 @@
 /**
- * Everything about a personality except its name and skin: stratified skill,
- * kit and role preferences, play style, lever offsets, chat and a templated
- * bio. All of it is a deterministic function of the batch plan and the seed.
+ * The play knobs of a personality, derived from its archetype: style, role and
+ * kit weights, and lever offsets. Each archetype has a profile (below) and every
+ * personality is that profile plus seeded jitter, so two rushers differ but a
+ * rusher never plays like a turtle. All of it is a deterministic function of
+ * the batch seed, the personality id, its archetype and its skill.
+ *
+ * Only knobs the bots actually read are set with intent. What reads them
+ * (rwfbots `domain`):
+ *
+ * - `style.aggression`: the team's round strategy (`TeamBrain.chooseStrategy`,
+ *   rush and hunt weights) and the stance on bomb routes (`Planner.stanceFor`,
+ *   aggressive above 0.6).
+ * - `style.patience`: the turtle strategy weight, and `GUARD_CHOKE` /
+ *   `HOLD_ANGLE` utilities (`Utilities.positioning`).
+ * - `style.teamplay`: the `ESCORT` utility.
+ * - `style.risk`: the `ARM` utility (going for the enemy bomb).
+ * - `roles`: the weights `RoleUtilities` bends by situation before the team
+ *   deals roles; PLANT, DEFEND, ESCORT, ROTATE, RETAKE and HUNT each boost
+ *   their matching options.
+ * - `kits`: the `Director` draws the bot's kit from these weights over the kits
+ *   on offer (trooper, longbow, shortbow and rewind ship today).
+ * - lever `aggression`: `ENGAGE`, `RETREAT`, `HOLD_ANGLE` and `HUNT` utilities.
+ * - lever `decisionTemperature`: softmax sharpness; a negative z makes choices
+ *   erratic.
+ * - levers `awarenessRadius` (perception), `coordination` (sharing sightings),
+ *   `reactionMs`, `aimErrorDeg`, `turnRateDegPerTick`, `cps`,
+ *   `predictionQuality` and `technique` (reflexes: aim, clicking, bow lead,
+ *   w-taps, crits, fuse slips).
  */
 import { clamp, round, type Rng } from "./random.ts";
 import {
+  ARCHETYPES,
   KITS,
   LEVER_KEYS,
-  MAX_CATCHPHRASES,
   ROLES,
+  type Archetype,
   type Kit,
   type LeverKey,
   type Role,
-  type Verbosity,
 } from "./schema.ts";
-
-export const ARCHETYPES = [
-  "rusher",
-  "anchor",
-  "support",
-  "lurker",
-  "flex",
-] as const;
-export type Archetype = (typeof ARCHETYPES)[number];
 
 export const SKILL_BANDS = 5;
 
-/** What the batch asks of one slot before any dice are rolled. */
-export type Slot = {
-  band: number;
-  archetype: Archetype;
-  primaryKit: Kit;
-};
+/** The kits rwf ships today; every profile leans on at least one of them. */
+export const SHIPPED_KITS: readonly Kit[] = [
+  "trooper",
+  "longbow",
+  "shortbow",
+  "rewind",
+];
 
 export type Style = {
   aggression: number;
@@ -40,251 +57,319 @@ export type Style = {
   risk: number;
 };
 
+/** An archetype's centre: what every personality of it is jittered around. */
+export type Profile = {
+  style: Style;
+  roles: Partial<Record<Role, number>>;
+  kits: Partial<Record<Kit, number>>;
+  /** Lever z-scores; positive is always stronger. */
+  levers: Partial<Record<LeverKey, number>>;
+};
+
+/**
+ * The archetype profiles. Read these as "what the archetype changes in play":
+ *
+ * - rusher: high style and lever aggression, aggressive stance, plant + hunt
+ *   roles, fast hands; low awareness.
+ * - lurker: patient, solitary (low coordination, teamplay), hunt + rotate roles,
+ *   wide awareness, ghost/wraith when they ship.
+ * - sniper: longbow first, defend + hunt roles, sharp aim and bow lead, slow
+ *   melee, low lever aggression so it holds angles.
+ * - bomb_diver: maximum risk and plant weight, low lever aggression (avoids
+ *   fights on the way), clean fuse technique, decisive.
+ * - anchor: defend + retake roles, high patience, low aggression, quick
+ *   reactions and awareness around the bomb.
+ * - flanker: rotate role first, shortbow, fast turning and lead, solitary.
+ * - support: escort role and maximum teamplay, best coordination, rewind.
+ * - duelist: top cps, technique and aim, high lever aggression, hunt + retake.
+ * - hunter: hunt role first, high aggression, prediction and awareness (the
+ *   `HUNT` utility chases remembered enemies).
+ * - turtle: lowest aggression, maximum patience, defend role, quick reactions,
+ *   rewind and gapples.
+ * - troll: very high decision temperature (erratic choices), flat roles, high
+ *   risk, poor coordination.
+ * - tactician: best decision temperature and coordination, flat roles so the
+ *   team can deal it anything, high teamplay.
+ */
+export const PROFILES: Record<Archetype, Profile> = {
+  rusher: {
+    style: { aggression: 0.9, patience: 0.12, teamplay: 0.4, risk: 0.75 },
+    roles: { plant: 0.8, hunt: 0.7, escort: 0.45 },
+    kits: { trooper: 1, shortbow: 0.55, rewind: 0.3 },
+    levers: {
+      aggression: 1.6,
+      cps: 0.6,
+      reactionMs: 0.4,
+      decisionTemperature: 0.4,
+      awarenessRadius: -0.6,
+    },
+  },
+  lurker: {
+    style: { aggression: 0.45, patience: 0.85, teamplay: 0.12, risk: 0.6 },
+    roles: { hunt: 0.85, rotate: 0.75, plant: 0.3 },
+    kits: { trooper: 0.7, shortbow: 0.6, ghost: 0.8, wraith: 0.6 },
+    levers: {
+      awarenessRadius: 1.3,
+      coordination: -1.3,
+      aggression: -0.4,
+      predictionQuality: 0.4,
+    },
+  },
+  sniper: {
+    style: { aggression: 0.3, patience: 0.88, teamplay: 0.45, risk: 0.2 },
+    roles: { defend: 0.75, hunt: 0.6, rotate: 0.4 },
+    kits: { longbow: 1, shortbow: 0.45, trooper: 0.15 },
+    levers: {
+      aimErrorDeg: 1.6,
+      predictionQuality: 1.3,
+      awarenessRadius: 0.9,
+      cps: -0.9,
+      technique: -0.4,
+      aggression: -0.7,
+    },
+  },
+  bomb_diver: {
+    style: { aggression: 0.68, patience: 0.08, teamplay: 0.3, risk: 0.96 },
+    roles: { plant: 1, escort: 0.2 },
+    kits: { trooper: 1, rewind: 0.6, shortbow: 0.2 },
+    levers: {
+      aggression: -0.5,
+      technique: 0.9,
+      decisionTemperature: 0.7,
+      reactionMs: 0.3,
+    },
+  },
+  anchor: {
+    style: { aggression: 0.3, patience: 0.9, teamplay: 0.6, risk: 0.15 },
+    roles: { defend: 1, retake: 0.7 },
+    kits: { trooper: 1, longbow: 0.45, rewind: 0.3 },
+    levers: {
+      aggression: -0.9,
+      awarenessRadius: 0.7,
+      reactionMs: 0.5,
+      coordination: 0.3,
+    },
+  },
+  flanker: {
+    style: { aggression: 0.66, patience: 0.42, teamplay: 0.25, risk: 0.7 },
+    roles: { rotate: 1, hunt: 0.5, plant: 0.4 },
+    kits: { shortbow: 1, trooper: 0.6, rewind: 0.35, wraith: 0.5, spy: 0.4 },
+    levers: {
+      turnRateDegPerTick: 0.9,
+      predictionQuality: 0.5,
+      coordination: -0.7,
+      aggression: 0.4,
+    },
+  },
+  support: {
+    style: { aggression: 0.35, patience: 0.55, teamplay: 0.96, risk: 0.3 },
+    roles: { escort: 1, retake: 0.6, defend: 0.4 },
+    kits: { trooper: 1, rewind: 0.7, longbow: 0.3 },
+    levers: { coordination: 1.7, awarenessRadius: 0.5, aggression: -0.4 },
+  },
+  duelist: {
+    style: { aggression: 0.85, patience: 0.3, teamplay: 0.3, risk: 0.5 },
+    roles: { hunt: 0.8, retake: 0.5, escort: 0.35 },
+    kits: { trooper: 1, shortbow: 0.4 },
+    levers: {
+      cps: 1.4,
+      technique: 1.4,
+      aimErrorDeg: 0.6,
+      aggression: 1.1,
+      coordination: -0.4,
+    },
+  },
+  hunter: {
+    style: { aggression: 0.76, patience: 0.4, teamplay: 0.35, risk: 0.55 },
+    roles: { hunt: 1, rotate: 0.4 },
+    kits: { shortbow: 0.85, trooper: 0.65, longbow: 0.5 },
+    levers: {
+      aggression: 0.9,
+      predictionQuality: 1.1,
+      awarenessRadius: 1,
+      turnRateDegPerTick: 0.5,
+    },
+  },
+  turtle: {
+    style: { aggression: 0.12, patience: 0.96, teamplay: 0.55, risk: 0.08 },
+    roles: { defend: 1, retake: 0.4 },
+    kits: { trooper: 1, rewind: 0.8, longbow: 0.3 },
+    levers: {
+      aggression: -1.7,
+      reactionMs: 0.6,
+      awarenessRadius: 0.4,
+      decisionTemperature: 0.4,
+    },
+  },
+  troll: {
+    style: { aggression: 0.6, patience: 0.25, teamplay: 0.1, risk: 0.9 },
+    roles: { hunt: 0.5, rotate: 0.5, plant: 0.5, escort: 0.3 },
+    kits: { rewind: 1, shortbow: 0.7, trooper: 0.5, spy: 0.8 },
+    levers: { decisionTemperature: -2.2, coordination: -1.2, technique: 0.4 },
+  },
+  tactician: {
+    style: { aggression: 0.45, patience: 0.65, teamplay: 0.85, risk: 0.4 },
+    roles: { rotate: 0.7, retake: 0.7, plant: 0.6, escort: 0.5, defend: 0.5 },
+    kits: { trooper: 1, longbow: 0.5, shortbow: 0.5, rewind: 0.5 },
+    levers: {
+      coordination: 1.6,
+      decisionTemperature: 1.3,
+      awarenessRadius: 0.5,
+      predictionQuality: 0.4,
+    },
+  },
+};
+
+/** What the batch asks of one new personality before any dice are rolled. */
+export type Slot = { archetype: Archetype; band: number };
+
 export type Traits = {
-  skill: number;
-  archetype: Archetype;
   leverOffsets: Partial<Record<LeverKey, number>>;
   kits: Partial<Record<Kit, number>>;
   roles: Partial<Record<Role, number>>;
   style: Style;
-  chat: { tone: string[]; verbosity: Verbosity; catchphrases: string[] };
-  bio: string;
 };
 
-/**
- * Stratified slots: skill bands, archetypes and primary kits each cycle through
- * their options so a batch of twenty covers every band four times, every
- * archetype four times and every kit at least twice, then the three sequences
- * are shuffled independently so they do not line up.
- */
-export function planBatch(rng: Rng, count: number): Slot[] {
-  const bands = rng.shuffle(
-    Array.from({ length: count }, (_, i) => i % SKILL_BANDS),
-  );
-  const archetypes = rng.shuffle(
-    Array.from(
-      { length: count },
-      (_, i) => ARCHETYPES[i % ARCHETYPES.length] ?? "flex",
-    ),
-  );
-  const kits = rng.shuffle(
-    Array.from({ length: count }, (_, i) => KITS[i % KITS.length] ?? "trooper"),
-  );
-  return bands.map((band, i) => ({
-    band,
-    archetype: archetypes[i] ?? "flex",
-    primaryKit: kits[i] ?? "trooper",
-  }));
+/** The skill band (0..4) a skill falls in. */
+export function bandOf(skill: number): number {
+  return Math.min(SKILL_BANDS - 1, Math.floor(skill * SKILL_BANDS));
 }
 
-const STYLE_CENTRES: Record<Archetype, Style> = {
-  rusher: { aggression: 0.85, patience: 0.2, teamplay: 0.4, risk: 0.75 },
-  anchor: { aggression: 0.3, patience: 0.85, teamplay: 0.6, risk: 0.2 },
-  support: { aggression: 0.45, patience: 0.55, teamplay: 0.9, risk: 0.35 },
-  lurker: { aggression: 0.55, patience: 0.7, teamplay: 0.2, risk: 0.65 },
-  flex: { aggression: 0.5, patience: 0.5, teamplay: 0.5, risk: 0.5 },
-};
+/** The entry of `counts` with the fewest, ties broken by `order`. */
+function fewest<K>(order: readonly K[], counts: Map<K, number>): K {
+  let best: K | undefined;
+  for (const key of order) {
+    if (
+      best === undefined ||
+      (counts.get(key) ?? 0) < (counts.get(best) ?? 0)
+    ) {
+      best = key;
+    }
+  }
+  if (best === undefined) {
+    throw new Error("nothing to choose from");
+  }
+  return best;
+}
 
-const ROLE_CENTRES: Record<Archetype, Partial<Record<Role, number>>> = {
-  rusher: { plant: 1, hunt: 0.8, escort: 0.4 },
-  anchor: { defend: 1, retake: 0.7, rotate: 0.4 },
-  support: { escort: 1, retake: 0.6, defend: 0.5 },
-  lurker: { hunt: 1, rotate: 0.6, plant: 0.5 },
-  flex: { rotate: 1, plant: 0.6, defend: 0.6, escort: 0.4 },
-};
+/**
+ * Stratified slots for `count` new personalities on top of `existing` ones:
+ * each slot goes to the archetype with the fewest personalities so far, then
+ * to that archetype's emptiest skill band, so the whole catalog stays even
+ * across archetypes and every archetype spans every band. The slots are then
+ * shuffled so archetypes do not line up with name order.
+ */
+export function planBatch(
+  rng: Rng,
+  count: number,
+  existing: readonly { archetype: Archetype; skill: number }[],
+): Slot[] {
+  const perArchetype = new Map<Archetype, number>();
+  const perBand = new Map<string, number>();
+  for (const personality of existing) {
+    perArchetype.set(
+      personality.archetype,
+      (perArchetype.get(personality.archetype) ?? 0) + 1,
+    );
+    const key = `${personality.archetype}:${String(bandOf(personality.skill))}`;
+    perBand.set(key, (perBand.get(key) ?? 0) + 1);
+  }
+  const archetypeOrder = rng.shuffle(ARCHETYPES);
+  const slots: Slot[] = [];
+  for (let i = 0; i < count; i++) {
+    const archetype = fewest(archetypeOrder, perArchetype);
+    perArchetype.set(archetype, (perArchetype.get(archetype) ?? 0) + 1);
+    const bands = rng.shuffle(
+      Array.from({ length: SKILL_BANDS }, (_, band) => band),
+    );
+    const bandCounts = new Map(
+      bands.map((band) => [
+        band,
+        perBand.get(`${archetype}:${String(band)}`) ?? 0,
+      ]),
+    );
+    const band = fewest(bands, bandCounts);
+    const key = `${archetype}:${String(band)}`;
+    perBand.set(key, (perBand.get(key) ?? 0) + 1);
+    slots.push({ archetype, band });
+  }
+  return rng.shuffle(slots);
+}
 
-/** Levers an archetype leans on; positive always means stronger. */
-const LEVER_LEANINGS: Record<Archetype, Partial<Record<LeverKey, number>>> = {
-  rusher: { aggression: 1.2, cps: 0.5, decisionTemperature: -0.5 },
-  anchor: { aggression: -1, awarenessRadius: 0.6, predictionQuality: 0.4 },
-  support: { coordination: 1.1, awarenessRadius: 0.4 },
-  lurker: { awarenessRadius: 0.8, reactionMs: 0.3, coordination: -0.8 },
-  flex: {},
-};
+/** A skill inside `band`, a little inside its edges so rounding never crosses. */
+export function sampleSkill(rng: Rng, band: number): number {
+  const width = 1 / SKILL_BANDS;
+  return round(rng.float(band * width + 0.01, (band + 1) * width - 0.01), 3);
+}
 
 function jitter(rng: Rng, centre: number, spread: number): number {
   return round(clamp(centre + rng.normal() * spread, 0, 1), 2);
 }
 
-function sampleSkill(rng: Rng, band: number): number {
-  const width = 1 / SKILL_BANDS;
-  // Stay a little inside the band so rounding never crosses into the next one.
-  return round(rng.float(band * width + 0.01, (band + 1) * width - 0.01), 3);
-}
-
-function sampleKits(rng: Rng, primary: Kit): Partial<Record<Kit, number>> {
-  const kits: Partial<Record<Kit, number>> = { [primary]: 1 };
-  const extras = rng.int(3);
-  for (const kit of rng.sample(
-    KITS.filter((candidate) => candidate !== primary),
-    extras,
-  )) {
-    kits[kit] = round(rng.float(0.15, 0.7), 2);
+/** The profile's kits scaled by up to +-15%, plus sometimes one more kit. */
+function sampleKits(rng: Rng, profile: Profile): Partial<Record<Kit, number>> {
+  const kits: Partial<Record<Kit, number>> = {};
+  for (const kit of KITS) {
+    const weight = profile.kits[kit];
+    if (weight !== undefined) {
+      kits[kit] = round(clamp(weight * rng.float(0.85, 1.15), 0.1, 1), 2);
+    }
+  }
+  if (rng.chance(0.3)) {
+    const spare = KITS.filter((kit) => kits[kit] === undefined);
+    if (spare.length > 0) {
+      kits[rng.pick(spare)] = round(rng.float(0.1, 0.35), 2);
+    }
   }
   return kits;
 }
 
 function sampleRoles(
   rng: Rng,
-  archetype: Archetype,
+  profile: Profile,
 ): Partial<Record<Role, number>> {
   const roles: Partial<Record<Role, number>> = {};
-  const centres = ROLE_CENTRES[archetype];
   for (const role of ROLES) {
-    const weight = centres[role];
+    const weight = profile.roles[role];
     if (weight !== undefined) {
-      roles[role] = round(clamp(weight + rng.normal() * 0.1, 0.1, 1), 2);
+      roles[role] = round(clamp(weight + rng.normal() * 0.08, 0.1, 1), 2);
     }
   }
-  if (rng.chance(0.4)) {
+  if (rng.chance(0.3)) {
     const spare = ROLES.filter((role) => roles[role] === undefined);
     if (spare.length > 0) {
-      roles[rng.pick(spare)] = round(rng.float(0.1, 0.35), 2);
+      roles[rng.pick(spare)] = round(rng.float(0.1, 0.3), 2);
     }
   }
   return roles;
 }
 
 /**
- * Standing z-scores, clipped to +-2: the archetype's leanings plus a few
- * random quirks, each rounded so the file reads cleanly. Levers left out sit on
- * the skill curve.
+ * The profile's lever leanings with a little noise, plus one or two personal
+ * strengths or weaknesses on other levers; clipped to +-2.5.
  */
 function sampleLeverOffsets(
   rng: Rng,
-  archetype: Archetype,
+  profile: Profile,
 ): Partial<Record<LeverKey, number>> {
   const offsets: Partial<Record<LeverKey, number>> = {};
-  const leanings = LEVER_LEANINGS[archetype];
   for (const lever of LEVER_KEYS) {
-    const lean = leanings[lever];
+    const lean = profile.levers[lever];
     if (lean !== undefined) {
-      offsets[lever] = round(clamp(lean + rng.normal() * 0.3, -2, 2), 2);
+      offsets[lever] = round(clamp(lean + rng.normal() * 0.25, -2.5, 2.5), 2);
     }
   }
-  const quirks = 1 + rng.int(3);
+  const personal = 1 + rng.int(2);
   for (const lever of rng.sample(
     LEVER_KEYS.filter((key) => offsets[key] === undefined),
-    quirks,
+    personal,
   )) {
-    const z = round(clamp(rng.normal() * 0.8, -2, 2), 2);
+    const z = round(clamp(rng.normal() * 0.6, -1.5, 1.5), 2);
     if (z !== 0) {
       offsets[lever] = z;
     }
   }
   return offsets;
-}
-
-const TONES: Record<Archetype, readonly string[]> = {
-  rusher: ["hype", "cocky", "loud", "impatient"],
-  anchor: ["calm", "dry", "methodical", "stoic"],
-  support: ["friendly", "encouraging", "chatty", "polite"],
-  lurker: ["quiet", "sly", "cryptic", "deadpan"],
-  flex: ["casual", "curious", "upbeat", "wry"],
-};
-
-const CATCHPHRASES: Record<Archetype, readonly string[]> = {
-  rusher: [
-    "rushing B dont stop me",
-    "first blood is mine",
-    "why wait? go go go",
-    "they wont see this coming",
-    "ez clap",
-    "bomb's up, catch me",
-    "no fear, only fuse",
-  ],
-  anchor: [
-    "holding. come to me.",
-    "patience wins rounds",
-    "nobody walks past this bomb",
-    "I've got site. rotate when I call.",
-    "calm down, we have time",
-    "let them come",
-    "defuse is on me",
-  ],
-  support: [
-    "I'm with you, go!",
-    "nice one, team",
-    "gapple up, I'll cover",
-    "we win together or not at all",
-    "call it and I'll be there",
-    "gg wp everyone",
-    "need backup? on my way",
-  ],
-  lurker: [
-    "...",
-    "they never check behind them",
-    "shh",
-    "found one.",
-    "wrong corner.",
-    "you heard nothing",
-    "lights out",
-  ],
-  flex: [
-    "rotating, hold a sec",
-    "ok new plan",
-    "I'll take whatever's open",
-    "wherever you need me",
-    "gg, close one",
-    "ha, did not expect that",
-    "brb, fixing the round",
-  ],
-};
-
-function sampleChat(rng: Rng, archetype: Archetype): Traits["chat"] {
-  const roll = rng.next();
-  const verbosity: Verbosity =
-    roll < 0.15 ? "silent" : roll < 0.6 ? "terse" : "chatty";
-  const tone = rng.sample(TONES[archetype], 1 + rng.int(2)).sort();
-  const lines =
-    verbosity === "silent" ? 0 : verbosity === "terse" ? 2 : 3 + rng.int(2);
-  const catchphrases = rng.sample(
-    CATCHPHRASES[archetype],
-    Math.min(lines, MAX_CATCHPHRASES),
-  );
-  return { tone, verbosity, catchphrases };
-}
-
-const TIERS: readonly string[] = [
-  "newcomer",
-  "regular",
-  "solid player",
-  "veteran",
-  "terror",
-];
-
-const ARCHETYPE_BLURBS: Record<Archetype, string> = {
-  rusher:
-    "lives for the first fight of the round and plants before anyone has settled",
-  anchor: "parks next to the team's bomb and makes every push pay for it",
-  support:
-    "sticks to the planter, shares every sighting and eats the arrows meant for others",
-  lurker:
-    "drifts off the map, waits for footsteps and shows up where nobody is looking",
-  flex: "takes whatever job is open and rotates the moment the fight shifts",
-};
-
-const KIT_BLURBS: Record<Kit, string> = {
-  trooper: "iron sword and golden apples",
-  longbow: "a Punch bow kept at range",
-  shortbow: "a Power bow and a knockback sword",
-  rewind: "a clock that undoes the last thirty seconds",
-  ghost: "no armor and nothing to see",
-  wraith: "speed, invisibility and very little health",
-  spy: "someone else's team colors",
-};
-
-function bio(
-  archetype: Archetype,
-  skill: number,
-  primary: Kit,
-  chatty: boolean,
-): string {
-  const tier =
-    TIERS[Math.min(TIERS.length - 1, Math.floor(skill * TIERS.length))] ??
-    "regular";
-  const voice = chatty ? "Talks a lot." : "Does not say much.";
-  return `A Search and Destroy ${tier} who ${ARCHETYPE_BLURBS[archetype]}. Usually seen with ${KIT_BLURBS[primary]}. ${voice}`;
 }
 
 /** The same weights with keys in canonical order, so files read consistently. */
@@ -302,40 +387,20 @@ function ordered<K extends string>(
   return result;
 }
 
-/** Every trait for one slot. */
-export function sampleTraits(rng: Rng, slot: Slot): Traits {
-  const skill = sampleSkill(rng, slot.band);
-  const centre = STYLE_CENTRES[slot.archetype];
+/** Every knob of one personality, from its archetype's profile. */
+export function sampleTraits(rng: Rng, archetype: Archetype): Traits {
+  const profile = PROFILES[archetype];
+  const centre = profile.style;
   const style: Style = {
-    aggression: jitter(rng, centre.aggression, 0.1),
-    patience: jitter(rng, centre.patience, 0.1),
-    teamplay: jitter(rng, centre.teamplay, 0.1),
-    risk: jitter(rng, centre.risk, 0.1),
+    aggression: jitter(rng, centre.aggression, 0.06),
+    patience: jitter(rng, centre.patience, 0.06),
+    teamplay: jitter(rng, centre.teamplay, 0.06),
+    risk: jitter(rng, centre.risk, 0.06),
   };
-  const chat = sampleChat(rng, slot.archetype);
   return {
-    skill,
-    archetype: slot.archetype,
-    leverOffsets: ordered(LEVER_KEYS, sampleLeverOffsets(rng, slot.archetype)),
-    kits: ordered(KITS, sampleKits(rng, slot.primaryKit)),
-    roles: ordered(ROLES, sampleRoles(rng, slot.archetype)),
+    leverOffsets: ordered(LEVER_KEYS, sampleLeverOffsets(rng, profile)),
+    kits: ordered(KITS, sampleKits(rng, profile)),
+    roles: ordered(ROLES, sampleRoles(rng, profile)),
     style,
-    chat,
-    bio: bio(
-      slot.archetype,
-      skill,
-      slot.primaryKit,
-      chat.verbosity === "chatty",
-    ),
   };
-}
-
-/**
- * Extension point, deliberately a no-op in this version: a later version may
- * rewrite `bio` and `chat.catchphrases` with a language model, keyed on the
- * traits here, and record the model in the manifest. Nothing in this script
- * calls a model today, so output stays reproducible from the seed alone.
- */
-export function enrichWithLlm(traits: Traits): Traits {
-  return traits;
 }

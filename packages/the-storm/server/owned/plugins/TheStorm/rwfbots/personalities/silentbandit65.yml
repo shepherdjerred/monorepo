@@ -4,29 +4,74 @@ skin:
   value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzczMDU5MywKICAicHJvZmlsZUlkIiA6ICI1ODAwZjIzNWQyYjQ0MDc5OTcxZTM3ZDhmNmY0OTc2ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJYZW55cmlhIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzYwNWRiMDRmMWFjOTdhNzFjMDk5NTU0MTI1ZjhiNDFmNWUzNDk3OTFmMjc3YzMwZjA0Y2Y4MGI2ZjVlZDdiMzQiCiAgICB9CiAgfQp9
   signature: "FOpvVrWJe8rxj7NGl5A0w5s/ycurauENJKQrjmERFJvTePRNfkSzVN3uxiEtjbshs5bJz2QnF9PwlgHo4ZLa9JlJUhbem89DHvOYYQ1zn48x/bTvjET/8TXLAOfGpGhEldpY3A4af58ShLhMYUbg/KYq3ywSfcU2RuOBSpbvZE6o2tltr90XkaVggJ+GeyhKUqNamMvGy7V6lUToF3cUmzWrsMKhB0guC+5sT/1Z0Pyg8ulSr61PN4keucBzKMmlEn4jm/R7buMp99OC/SvNHwUpKSeQxdWbvUSn9U5+ryZ0gQXD+XytkhaqVjhuuICp9EvpL2vLOMr7zp/zH1U00ygdF0UiyWWw5mbSY+3RSX00eBqqN6QBIuvYMV3C9e/lLG6m154lXkVSKBxltn/x2T2uE4+D02ycqPaIpauuE5NLUb8JS4iC75ZRsUFg6Vm1PWCOKHmL1B7LqN3bw2KsAfeBmMslIfYn1oqq3Xhyfdku2Dp7g0wP50JdQvLaWcIdzl1WsPPYHNbqIy3EkOAH9tVu7WLPyD0Bopc+HNPkZLg2u/gm9n+flDTpa14D0bjReD/PNOSjguebiVOA2UDkYjHjaKT/az3hnuR8O8GJfvDaJ7rtpJbHs3tPptmOaEWe5wHDK577qT82g7do81P5WranTFpWisbvXzqMw2M18VU="
 skill: 0.379
+archetype: sniper
 leverOffsets:
-  turnRateDegPerTick: -0.16
+  aimErrorDeg: 1.86
+  cps: -0.59
+  predictionQuality: 1.03
+  awarenessRadius: 0.71
+  coordination: -0.22
+  technique: -0.46
+  aggression: -0.11
 kits:
+  trooper: 0.16
   longbow: 1
-  shortbow: 0.66
+  shortbow: 0.43
 roles:
-  plant: 0.47
-  escort: 0.48
   defend: 0.86
-  rotate: 0.94
-  retake: 0.32
+  rotate: 0.32
+  hunt: 0.62
 style:
-  aggression: 0.49
-  patience: 0.58
-  teamplay: 0.37
-  risk: 0.53
-chat:
+  aggression: 0.21
+  patience: 0.83
+  teamplay: 0.46
+  risk: 0.15
+voice:
   tone:
-    - curious
-  verbosity: terse
-  catchphrases:
-    - I'll take whatever's open
-    - gg, close one
-bio: A Search and Destroy regular who takes whatever job is open and rotates the moment the fight shifts. Usually seen with a Punch bow kept at range. Does not say much.
+    - boisterous
+    - piratical
+    - ironic
+  verbosity: chatty
+  style: "loud pirate captain with a longbow, despite the name; arr, matey, announces every shot"
+lines:
+  greet:
+    - "Arr, {team}! Captain Silent reporting, loudly!"
+    - Hoist the bows, mateys! Arrows for everyone!
+    - Silent by name, not by nature. Arr!
+  onKill:
+    - "Arrow away! {victim} walks the plank!"
+    - "Ye should've ducked, {victim}!"
+    - Another one for Davy's locker!
+  onDeath:
+    - "Sunk by {killer}! A fine shot, ye scallywag."
+    - "Man overboard! Avenge me, {team}!"
+    - Arr... the sea takes us all eventually.
+  onPlant:
+    - "Lit {bomb} like a ship's cannon! Arr!"
+    - "Fuse lit on {bomb}! Batten the hatches!"
+  onDefuse:
+    - "Saved the ship! {bomb} is safe, mateys!"
+    - "No cannon fire on my deck! {bomb} defused!"
+  onWin:
+    - "Treasure for {team}! Yo ho!"
+    - Victory on the high seas!
+  onLoss:
+    - Shipwrecked. A fine voyage though. gg!
+    - "We'll sail again, {team}!"
+  onLastAlive:
+    - Last pirate aboard! I'll go down with the ship!
+    - "Just me and me bow, {team}. Arr."
+    - The captain stays on deck!
+  taunt:
+    - Arrows inbound! Ye've been warned!
+    - I can see ye from the crow's nest!
+    - Every arrow I fire has yer name on it, matey.
+quirks:
+  - bow_spammer
+  - calls_everything
+rivals:
+  - mothblaze0
+  - braishbryzak-80
+bio: Picked the quietest name he could find and then never stopped talking. Runs a loud, friendly sniper rivalry with MothBlaze0, who answers every pirate shout with a haiku.
 batch: 1
 retired: false

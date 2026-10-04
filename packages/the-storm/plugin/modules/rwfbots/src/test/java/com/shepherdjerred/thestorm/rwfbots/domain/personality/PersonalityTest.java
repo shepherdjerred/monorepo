@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.personality;
 
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.lines;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.personality;
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.withWeights;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -9,6 +11,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class PersonalityTest {
@@ -42,17 +45,102 @@ final class PersonalityTest {
   }
 
   @Test
-  void rejectsUnknownLeverFieldsAndTooManyCatchphrases() {
+  void rejectsUnknownLeverFields() {
     assertThatThrownBy(() -> LeverOffsets.parse(Map.of("charisma", 1.0)))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("charisma");
+  }
+
+  @Test
+  void aVoiceNeedsOneToFourDistinctTagsAndAStyleNote() {
+    var normal = Voice.Verbosity.NORMAL;
+    assertThat(new Voice(List.of("dry", "hype"), normal, "terse callouts").toneTags())
+        .containsExactly("dry", "hype");
+    assertThatThrownBy(() -> new Voice(List.of(), normal, "x"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Voice(List.of("a1", "b1", "c1", "d1", "e1"), normal, "x"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Voice(List.of("dry", "dry"), normal, "x"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Voice(List.of("Loud!"), normal, "x"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Voice(List.of("dry"), normal, " "))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Voice(List.of("dry"), normal, "x".repeat(121)))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void everyPoolHoldsTwoToSixShortLines() {
+    var two = List.of("ok", "sure");
+    assertThat(lines().pool(Lines.Moment.TAUNT)).containsExactly("ok", "sure");
+    assertThatThrownBy(() -> new Lines(List.of("ok"), two, two, two, two, two, two, two, two))
+        .hasMessageContaining("greet needs 2..6 lines");
+    var seven = List.of("a", "b", "c", "d", "e", "f", "g");
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, seven))
+        .hasMessageContaining("taunt needs 2..6 lines");
+    var long81 = List.of("ok", "x".repeat(81));
+    assertThatThrownBy(() -> new Lines(two, long81, two, two, two, two, two, two, two))
+        .hasMessageContaining("onKill lines must be 1..80");
+    var repeated = List.of("gg", "gg");
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, repeated, two, two, two))
+        .hasMessageContaining("onWin repeats a line");
+  }
+
+  @Test
+  void eachMomentAllowsOnlyItsOwnPlaceholders() {
+    var two = List.of("ok", "sure");
+    var kill = List.of("sit down, {victim}", "one for {team}");
+    var death = List.of("nice shot {killer}", "ugh");
+    var plant = List.of("{bomb} is lit", "go {team}");
+    var lines = new Lines(two, kill, death, plant, plant, two, two, two, two);
+    assertThat(lines.onKill()).contains("sit down, {victim}");
+    assertThat(Lines.placeholdersOf("{victim} vs {team}"))
+        .containsExactlyInAnyOrder(Lines.Placeholder.VICTIM, Lines.Placeholder.TEAM);
+
     assertThatThrownBy(
-            () ->
-                new Chat(
-                    List.of("dry"), Chat.Verbosity.CHATTY, List.of("a", "b", "c", "d", "e", "f")))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new Chat(List.of("Loud!"), Chat.Verbosity.CHATTY, List.of()))
-        .isInstanceOf(IllegalArgumentException.class);
+            () -> new Lines(List.of("hi {victim}", "yo"), two, two, two, two, two, two, two, two))
+        .hasMessageContaining("greet lines may not use {victim}");
+    assertThatThrownBy(
+            () -> new Lines(two, two, two, two, two, two, two, two, List.of("{me}", "x")))
+        .hasMessageContaining("unknown placeholder {me}");
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, List.of("a {", "x")))
+        .hasMessageContaining("stray brace");
+  }
+
+  @Test
+  void quirksAndRivalsAreBounded() {
+    var base = personality("ok", "Fine", 0.5);
+    assertThat(base.quirks()).containsExactly(Quirk.ALWAYS_GG);
+    assertThatThrownBy(() -> with(base, Set.of(), List.of()))
+        .hasMessageContaining("needs 1..3 quirks");
+    var four = Set.of(Quirk.ALWAYS_GG, Quirk.SPINS, Quirk.NARRATES, Quirk.BLAMES_LAG);
+    assertThatThrownBy(() -> with(base, four, List.of())).hasMessageContaining("1..3 quirks");
+    var gg = Set.of(Quirk.ALWAYS_GG);
+    assertThatThrownBy(() -> with(base, gg, List.of("ok"))).hasMessageContaining("bad rival");
+    assertThatThrownBy(() -> with(base, gg, List.of("a1", "a1")))
+        .hasMessageContaining("distinct rivals");
+    assertThatThrownBy(() -> with(base, gg, List.of("a1", "b1", "c1", "d1")))
+        .hasMessageContaining("at most three");
+  }
+
+  @Test
+  void aBioIsOneToThreeHundredCharacters() {
+    var base = personality("ok", "Fine", 0.5);
+    assertThatThrownBy(() -> withBio(base, "")).hasMessageContaining("bio must be 1..300");
+    assertThatThrownBy(() -> withBio(base, "x".repeat(301))).hasMessageContaining("1..300");
+    assertThat(withBio(base, "x".repeat(300)).bio()).hasSize(300);
+  }
+
+  @Test
+  void catalogRivalsMustExist() {
+    var a = with(personality("ashen", "Ashen", 0.5), Set.of(Quirk.SPINS), List.of("birch"));
+    var b = personality("birch", "Birch", 0.5);
+    assertThat(new PersonalityCatalog(List.of(a, b)).byId("ashen").orElseThrow().rivals())
+        .containsExactly("birch");
+    assertThatThrownBy(() -> new PersonalityCatalog(List.of(a)))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("ashen names an unknown rival: birch");
   }
 
   @Test
@@ -73,18 +161,35 @@ final class PersonalityTest {
   }
 
   private static Personality withKits(Personality base, Map<Kit, Double> kits) {
+    return withWeights(base, kits, Map.of(Role.PLANT, 1.0));
+  }
+
+  private static Personality with(Personality base, Set<Quirk> quirks, List<String> rivals) {
+    return copy(base, quirks, rivals, base.bio());
+  }
+
+  private static Personality withBio(Personality base, String bio) {
+    return copy(base, base.quirks(), base.rivals(), bio);
+  }
+
+  private static Personality copy(
+      Personality base, Set<Quirk> quirks, List<String> rivals, String bio) {
     return new Personality(
         base.id(),
         base.name(),
         base.skinValue(),
         base.skinSignature(),
         base.skill(),
+        base.archetype(),
         base.leverOffsets(),
-        kits,
-        Map.of(Role.PLANT, 1.0),
+        base.kits(),
+        base.roles(),
         base.style(),
-        base.chat(),
-        base.bio(),
+        base.voice(),
+        base.lines(),
+        quirks,
+        rivals,
+        bio,
         base.batch(),
         base.retired());
   }

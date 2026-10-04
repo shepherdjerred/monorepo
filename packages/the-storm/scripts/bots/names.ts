@@ -4,8 +4,12 @@
  * blocklist here, then by a Mojang profile lookup in the generator so no bot
  * wears a real player's name.
  */
+import type { MojangNames } from "./mojang.ts";
 import type { Rng } from "./random.ts";
-import { ID_PATTERN, NAME_PATTERN } from "./schema.ts";
+import { ID_PATTERN, NAME_PATTERN, namesAreDistinct } from "./schema.ts";
+
+/** How many candidates to try per accepted name before giving up on the lists. */
+const MAX_CANDIDATES_PER_NAME = 200;
 
 const ADJECTIVES = [
   "Shadow",
@@ -280,4 +284,54 @@ export function nameIsAcceptable(name: string): boolean {
     blockedTerm(name) === undefined &&
     ID_PATTERN.test(nameToId(name))
   );
+}
+
+export type Rejections = { local: number; similar: number; taken: number };
+
+export type NameRequest = {
+  count: number;
+  /** Checks each candidate is free; undefined when offline. */
+  mojang: MojangNames | undefined;
+  /** Names already in the catalog, which new names must stay away from. */
+  existing: readonly string[];
+  /** Counts why candidates were turned down. */
+  rejections: Rejections;
+};
+
+/** `count` names that pass every rule, distinct from `existing`, in order. */
+export async function chooseNames(
+  rng: Rng,
+  request: NameRequest,
+): Promise<string[]> {
+  const { count, mojang, existing, rejections } = request;
+  const chosen: string[] = [];
+  let tried = 0;
+  while (chosen.length < count) {
+    if (tried > MAX_CANDIDATES_PER_NAME * count) {
+      throw new Error(
+        `could not find ${String(count)} acceptable names from the word lists`,
+      );
+    }
+    tried++;
+    const candidate = nextCandidateName(rng);
+    if (!nameIsAcceptable(candidate)) {
+      rejections.local++;
+      continue;
+    }
+    if (
+      ![...existing, ...chosen].every((name) =>
+        namesAreDistinct(name, candidate),
+      )
+    ) {
+      rejections.similar++;
+      continue;
+    }
+    if (mojang !== undefined && (await mojang.status(candidate)) === "taken") {
+      rejections.taken++;
+      console.error(`  name ${candidate} is taken; skipping`);
+      continue;
+    }
+    chosen.push(candidate);
+  }
+  return chosen;
 }

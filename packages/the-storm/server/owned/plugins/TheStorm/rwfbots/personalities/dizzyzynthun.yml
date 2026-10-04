@@ -4,32 +4,73 @@ skin:
   value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY3NTk4MSwKICAicHJvZmlsZUlkIiA6ICI5MDczN2E1N2RlYjk0MWYxYTEyMzE1MmJkZmZjMTBmYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hODc1NGYzMGIyMmRmNmUwNWM4NjEzN2UxNTk0MGFjNDZhNmRiMWY1NWQ1MjA5ZWEzNjYxOTliYTU5ODQ4NmZhIgogICAgfQogIH0KfQ=="
   signature: "Q/bczuFPUd7yYgfx6Pag3VdWm8PB+P64cY3NHddqo9LEMocShutrxLlh2YzjJgq42PsIZF9ZV1FG6rmgrKsy79xOwbQ5kG2fCNaNI9QEjgVrwmRxnN1JH6aXH2TBK3wqs2GC4Qpf6tRdqS48qxcbO8rj2iKxpczOD+OBXhXyvwJrp9yR8L4rZyBfAEQX/d1Geu7lNyNWCLxwDQN4hxDOOypr0Cel3NIOBcxNFrbour4segj6ECqOyBCEp+qkqPfkOCT13zfnbqf+Gfc556GT47A66jsZ/MptCTg+2cTi5SxYQLMBX2SqOGr+/kIPbWYSPKP/G30OtvApI/fo7e7KjlQdefgAxh7maIjQi6UR9cbC6vlfuM2k4T3YaTuKzQ3nKYoXQy/dX6YApseUpCEeXcxXClfRd+DKaoKXHK8HLhIDY4eC3urDggHkJDx6uCEo/Qkf4nnjNPOOj1o/uSjSARJBTwMaNyGva5UV/bGDat1diz/dpRUn6SHvqYZvBDqnZz5O20gi7F+3PSTWSZWBzxMjX62GMVdgiD/X4l1VSH02enHEhfL2SdWV5FPj6IA/eWpXGoW19P2vW34i8VXHT8pJUFBoAuC6+y6RMgbtzgFq004bmSq/oYWABIqa5FfjrUzVwD1o2KaTuEjvr879JK8hN20s9GYcTGdhCPa5wtU="
 skill: 0.023
+archetype: bomb_diver
 leverOffsets:
-  cps: 0.78
-  predictionQuality: 0.11
-  decisionTemperature: -0.38
-  aggression: 1.57
+  reactionMs: 0.59
+  cps: -0.55
+  decisionTemperature: 0.99
+  coordination: 0.33
+  technique: 1.04
+  aggression: -0.75
 kits:
-  rewind: 1
+  trooper: 1
+  shortbow: 0.22
+  rewind: 0.63
 roles:
-  plant: 0.91
-  escort: 0.38
-  hunt: 0.65
+  plant: 1
+  escort: 0.29
 style:
-  aggression: 0.74
-  patience: 0.09
-  teamplay: 0.52
-  risk: 0.54
-chat:
+  aggression: 0.6
+  patience: 0.12
+  teamplay: 0.36
+  risk: 0.92
+voice:
   tone:
-    - cocky
-    - loud
+    - giddy
+    - scatterbrained
+    - cheerful
   verbosity: chatty
-  catchphrases:
-    - rushing B dont stop me
-    - no fear, only fuse
-    - ez clap
-    - why wait? go go go
-bio: A Search and Destroy newcomer who lives for the first fight of the round and plants before anyone has settled. Usually seen with a clock that undoes the last thirty seconds. Talks a lot.
+  style: dreamy and distracted, trails off with dots, forgets everything except the bomb
+lines:
+  greet:
+    - "hiii {team}... which way is the bomb again..."
+    - oh we're starting? ok! bomb! going to the bomb!
+    - hello... i brought fuses... i think...
+  onKill:
+    - "oh! sorry {victim}, you were in front of the bomb"
+    - did i do that? huh. neat.
+    - "{victim} was in my way... to the bomb..."
+  onDeath:
+    - "wait where's the bomb... oh i'm dead. hi {killer}"
+    - so close to the bomb... so close...
+    - "the bomb was RIGHT there, {team}..."
+  onPlant:
+    - "BOOM time! {bomb} is lit hehe"
+    - "{bomb} goes tick tick tick... my favourite song"
+    - "i found the bomb!! i lit it!! {team} look!!"
+  onDefuse:
+    - "oh this one's ours? ok i turned {bomb} off"
+    - "defused {bomb}... wait, that's the wrong one? no, right one!"
+  onWin:
+    - we won? yay! was there a boom? i love the boom
+    - "{team} wins! i'm dizzy. good dizzy."
+  onLoss:
+    - aw... no boom for us... gg
+    - "i got distracted by a butterfly... sorry {team}"
+  onLastAlive:
+    - just me? ok... bomb. bomb is the plan.
+    - everyone's gone... but the bomb is still there!
+    - "{team} i'll go say hi to their bomb"
+  taunt:
+    - i'm not fighting, i'm just walking to your bomb
+    - have you seen your bomb? it's very pretty
+    - tick tick tick... sorry, habit
+quirks:
+  - loves_nuke
+  - never_eats
+rivals:
+  - luckymaikrak
+  - zathnounpunpro
+bio: "Has no idea what the score is, which team won last round, or where his sword went, but always knows exactly where the enemy bomb is. LuckyMaikrak claims to have stopped him forty times; he does not remember any of them."
 batch: 1
 retired: false

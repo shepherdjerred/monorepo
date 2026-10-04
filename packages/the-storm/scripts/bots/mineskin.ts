@@ -15,6 +15,12 @@ const BASE_URL = "https://api.mineskin.org";
 const POLL_MS = 2000;
 const MAX_WAIT_MS = 180_000;
 const MAX_SUBMIT_ATTEMPTS = 5;
+/** Jobs that fail because MineSkin's own upstream is rate limited are resubmitted. */
+const MAX_JOB_ATTEMPTS = 6;
+const JOB_RETRY_BASE_MS = 30_000;
+
+/** A job MineSkin gave up on for a transient reason, such as `proxy_rate_limited`. */
+class TransientJobFailure extends Error {}
 
 const MessageSchema = z.object({
   code: z.string().optional(),
@@ -30,7 +36,16 @@ const RateLimitSchema = z
 
 const JobSchema = z.object({
   id: z.string(),
-  status: z.enum(["unknown", "waiting", "active", "failed", "completed"]),
+  // The documented statuses plus "processing", which the live API returns for
+  // a running job although the OpenAPI spec does not list it.
+  status: z.enum([
+    "unknown",
+    "waiting",
+    "active",
+    "processing",
+    "failed",
+    "completed",
+  ]),
 });
 
 const SkinSchema = z.object({
@@ -100,7 +115,13 @@ export class MineSkin {
         `mineskin: ${String(response.status)} with a non-JSON body: ${text.slice(0, 200)}`,
       );
     }
-    const body = ResponseSchema.parse(json);
+    const parsed = ResponseSchema.safeParse(json);
+    if (!parsed.success) {
+      throw new Error(
+        `mineskin: unexpected ${String(response.status)} response (${parsed.error.message}): ${text.slice(0, 300)}`,
+      );
+    }
+    const body = parsed.data;
     const relative = body.rateLimit?.next?.relative;
     if (relative !== undefined && relative > 0) {
       this.nextAllowedAt = Math.max(this.nextAllowedAt, Date.now() + relative);
@@ -115,8 +136,34 @@ export class MineSkin {
     }
   }
 
-  /** Queues `png` and waits for its signed texture. */
+  /**
+   * Queues `png` and waits for its signed texture, resubmitting with a
+   * growing delay when MineSkin fails the job for a transient upstream limit.
+   */
   async generate(
+    png: Uint8Array<ArrayBuffer>,
+    name: string,
+  ): Promise<SignedTexture> {
+    for (let attempt = 1; attempt <= MAX_JOB_ATTEMPTS; attempt++) {
+      try {
+        return await this.generateOnce(png, name);
+      } catch (error) {
+        if (!(error instanceof TransientJobFailure)) {
+          throw error;
+        }
+        const backoff = JOB_RETRY_BASE_MS * attempt;
+        console.error(
+          `${error.message}; resubmitting ${name} in ${String(backoff)} ms`,
+        );
+        this.nextAllowedAt = Math.max(this.nextAllowedAt, Date.now() + backoff);
+      }
+    }
+    throw new Error(
+      `mineskin: gave up on ${name} after ${String(MAX_JOB_ATTEMPTS)} failed jobs`,
+    );
+  }
+
+  private async generateOnce(
     png: Uint8Array<ArrayBuffer>,
     name: string,
   ): Promise<SignedTexture> {
@@ -203,7 +250,10 @@ export class MineSkin {
       }
       const status = body.job?.status;
       if (status === "failed") {
-        throw new Error(
+        const transient = (body.errors ?? []).some(
+          (error) => error.code?.includes("rate_limit") === true,
+        );
+        throw new (transient ? TransientJobFailure : Error)(
           `mineskin: job ${jobId} failed: ${describe(body.errors)}`,
         );
       }

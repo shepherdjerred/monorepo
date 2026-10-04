@@ -4,9 +4,12 @@ import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverOffsets;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
-import com.shepherdjerred.thestorm.rwfbots.domain.personality.Chat;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Voice;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
@@ -14,6 +17,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Builders for the value types tests need over and over. */
 public final class Fixtures {
@@ -57,13 +61,46 @@ public final class Fixtures {
         "texture-value",
         "texture-signature",
         skill,
+        Archetype.TACTICIAN,
         LeverOffsets.NONE,
         Map.of(Kit.TROOPER, 1.0),
         Map.of(Role.PLANT, 1.0, Role.ESCORT, 0.8, Role.DEFEND, 0.6),
         new Style(0.5, 0.5, 0.5, 0.5),
-        new Chat(List.of("dry"), Chat.Verbosity.TERSE, List.of("gg")),
+        new Voice(List.of("dry"), Voice.Verbosity.NORMAL, "short and dry"),
+        lines(),
+        Set.of(Quirk.ALWAYS_GG),
+        List.of(),
         "A test bot.",
         1,
         false);
+  }
+
+  /** {@code base} with other kit and role weights. */
+  public static Personality withWeights(
+      Personality base, Map<Kit, Double> kits, Map<Role, Double> roles) {
+    return new Personality(
+        base.id(),
+        base.name(),
+        base.skinValue(),
+        base.skinSignature(),
+        base.skill(),
+        base.archetype(),
+        base.leverOffsets(),
+        kits,
+        roles,
+        base.style(),
+        base.voice(),
+        base.lines(),
+        base.quirks(),
+        base.rivals(),
+        base.bio(),
+        base.batch(),
+        base.retired());
+  }
+
+  /** Two plain lines for every moment. */
+  public static Lines lines() {
+    var two = List.of("ok", "sure");
+    return new Lines(two, two, two, two, two, two, two, two, two);
   }
 }

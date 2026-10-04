@@ -4,32 +4,71 @@ skin:
   value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzcxMDI3OCwKICAicHJvZmlsZUlkIiA6ICIxNzNkZTMxZjIzODE0YzY1YjVmZWMyMTAyYmIxZjExNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJCSVROVyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80NDYwNzcwY2EzMjQ5M2FlMDQwMGM3ZTk3MjRhM2NjZjk4Y2NjN2MxNGFkZGJhMjJhNjdiZGYwY2Q0ZDYyNGE1IgogICAgfQogIH0KfQ=="
   signature: "dFj4K0PIUHf5mJy6EnhNaMUP+jGPbw9d5C3OcqKMm6x13+6KbWHI2Q3XuKF5xWUaPqz7UYFencq8yeHA8qTI93Vn2+Msl8NG5LVeAmBE0rrsqP9TvnAwIeYb9BwDJHjqTRKRJHcyXPM6m/JwYstY/uXV5afJrSydV7d43/2JFhGFHXZy+Jam8bFmsrdbRYIOvyt/EvNO6fiQ130j+E4pQ1DNAKNzQtDT+MXd3xQO0TF16wuc4ByZBBQGWX78LKHJFguKXmB6O21NqYi2O2k/uYl2e4/LPJpd8rayZiPosavsFgt6R2pIE5jlV67pycP+bYEWnQxbB5Eh6CdQjaHP1gln6QKNLvf0sIadVWor/idw/7GGF4iE19MDJymDgdRvrvC9K+2CB3qEYBFdFiEa1/WH876MkkG6fNtLrkjq5kQDzuIJRefBiVfl64TLmVT8/GsK8HxJa8RdAGxK8oP9B/8EGyavgH3tmK0MMCCPhxZArCybMG1rnh38gg7gXCONfj/cfJxqN9tQ19wf5wixs91GcTDuzZt3iNGRsAA9f07EpQbbHujxcSyPO4yrhSZE1BkkR09lwo39fQjpZmhSllHYUpSF9UQ62jJUmjxRK9XU/eMrkcnUPpWM1g+mQRpdOKlbHfdBO9bcIAKiLrFQf5PVwAd0Ae7rk1RJTK9t1ns="
 skill: 0.354
+archetype: anchor
 leverOffsets:
-  predictionQuality: 0.86
-  awarenessRadius: 0.97
-  coordination: -0.39
-  technique: 0.58
-  aggression: -1.53
+  reactionMs: 0.59
+  aimErrorDeg: 0.02
+  turnRateDegPerTick: 0.05
+  awarenessRadius: 0.67
+  coordination: -0.06
+  aggression: -0.52
 kits:
-  ghost: 1
+  trooper: 0.98
+  longbow: 0.48
+  rewind: 0.32
 roles:
-  defend: 0.92
-  rotate: 0.32
-  retake: 0.76
+  defend: 1
+  retake: 0.75
 style:
-  aggression: 0.44
-  patience: 0.73
-  teamplay: 0.54
-  risk: 0.04
-chat:
+  aggression: 0.37
+  patience: 0.92
+  teamplay: 0.58
+  risk: 0.3
+voice:
   tone:
-    - calm
-    - stoic
-  verbosity: chatty
-  catchphrases:
-    - defuse is on me
-    - patience wins rounds
-    - calm down, we have time
-bio: A Search and Destroy regular who parks next to the team's bomb and makes every push pay for it. Usually seen with no armor and nothing to see. Talks a lot.
+    - superstitious
+    - upbeat
+    - fretful
+  verbosity: normal
+  style: "obsessed with luck: knocks on wood, counts clovers, blames and thanks fortune for everything"
+lines:
+  greet:
+    - "Lucky socks on, {team}. We can't lose. Probably."
+    - Knocking on wood. Okay, our bomb is safe now.
+    - Rubbed my lucky gapple. Let's go.
+  onKill:
+    - "Luck was on my side, {victim}!"
+    - Four-leaf clover strikes again!
+    - "Sorry {victim}, it's my lucky day."
+  onDeath:
+    - "Walked under a ladder this morning. Nice one, {killer}."
+    - "My luck ran out. Fair hit, {killer}."
+    - I KNEW I forgot my lucky socks.
+  onPlant:
+    - "Lucky number seven fuses! {bomb} is lit!"
+    - "Fingers crossed for {bomb}!"
+  onDefuse:
+    - "Lucky save! {bomb} is safe!"
+    - "Phew. Knock on wood. {bomb} is defused."
+  onWin:
+    - "Told you the socks worked, {team}!"
+    - Lucky win! I mean, skilled. Lucky skilled.
+  onLoss:
+    - "Bad luck, {team}. I'm getting new socks."
+    - Someone broke a mirror. Wasn't me. gg.
+  onLastAlive:
+    - Last one standing. Good thing I'm lucky.
+    - Okay, clover, it's just us now.
+    - "Don't jinx it, {team}. Don't say a word."
+  taunt:
+    - You'll need more than luck. I've used it all up.
+    - Our bomb is blessed. Try it, see what happens.
+    - Black cat crossed your path. Just saying.
+quirks:
+  - gapple_hoarder
+  - says_sorry
+rivals:
+  - dizzyzynthun
+bio: Guards the team bomb surrounded by an invisible ring of charms and rituals. Insists the only reason DizzyZynthun ever gets past him is that someone talked about it out loud before the round.
 batch: 1
 retired: false

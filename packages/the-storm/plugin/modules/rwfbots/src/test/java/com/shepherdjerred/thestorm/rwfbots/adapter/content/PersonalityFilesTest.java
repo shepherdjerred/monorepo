@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
-import com.shepherdjerred.thestorm.rwfbots.domain.personality.Chat;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Voice;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.io.IOException;
@@ -24,6 +27,7 @@ final class PersonalityFilesTest {
         value: ewogICJ0aW1lc3RhbXAiIDogMQp9
         signature: c2lnbmF0dXJl
       skill: 0.62
+      archetype: bomb_diver
       leverOffsets:
         reactionMs: 0.8
         aimErrorDeg: -0.4
@@ -38,13 +42,23 @@ final class PersonalityFilesTest {
         patience: 0.3
         teamplay: 0.55
         risk: 0.6
-      chat:
+      voice:
         tone: [dry, hype]
-        verbosity: terse
-        catchphrases:
-          - gg
-          - "that one's on me"
-      bio: Pushes first and asks questions later.
+        verbosity: normal
+        style: all lowercase, 2014 gamer slang
+      lines:
+        greet: ["hi {team}", "lets go"]
+        onKill: ["sit, {victim}", "next"]
+        onDeath: ["gg {killer}", "lag"]
+        onPlant: ["{bomb} is lit", "fuse in"]
+        onDefuse: ["{bomb} is safe", "not today"]
+        onWin: ["ez", "gg"]
+        onLoss: ["rematch", "gg"]
+        onLastAlive: ["clutch time", "just me"]
+        taunt: ["come get it", "too slow"]
+      quirks: [always_gg, loves_nuke]
+      rivals: []
+      bio: Pushes first and asks questions later. Has never once checked the minimap.
       batch: 1
       retired: false
       """;
@@ -71,8 +85,12 @@ final class PersonalityFilesTest {
     assertThat(ash.kits()).containsEntry(Kit.LONGBOW, 0.35).containsKey(Kit.TROOPER);
     assertThat(ash.roles()).containsOnlyKeys(Role.PLANT, Role.ESCORT);
     assertThat(ash.style().aggression()).isEqualTo(0.7);
-    assertThat(ash.chat().verbosity()).isEqualTo(Chat.Verbosity.TERSE);
-    assertThat(ash.chat().catchphrases()).containsExactly("gg", "that one's on me");
+    assertThat(ash.archetype()).isEqualTo(Archetype.BOMB_DIVER);
+    assertThat(ash.voice().verbosity()).isEqualTo(Voice.Verbosity.NORMAL);
+    assertThat(ash.voice().style()).isEqualTo("all lowercase, 2014 gamer slang");
+    assertThat(ash.lines().pool(Lines.Moment.ON_KILL)).containsExactly("sit, {victim}", "next");
+    assertThat(ash.quirks()).containsExactlyInAnyOrder(Quirk.ALWAYS_GG, Quirk.LOVES_NUKE);
+    assertThat(ash.rivals()).isEmpty();
     assertThat(ash.batch()).isEqualTo(1);
     assertThat(ash.retired()).isFalse();
     assertThat(catalog.active()).hasSize(1);
@@ -162,6 +180,55 @@ final class PersonalityFilesTest {
   }
 
   @Test
+  void aMissingLinePoolIsAnError() throws IOException {
+    write("ash-42.yml", GOOD.replace("  taunt: [\"come get it\", \"too slow\"]\n", ""));
+
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("taunt");
+  }
+
+  @Test
+  void aLineWithAPlaceholderItsMomentLacksIsAnError() throws IOException {
+    write("ash-42.yml", GOOD.replace("\"hi {team}\"", "\"hi {victim}\""));
+
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .hasMessageContaining("ash-42.yml")
+        .hasMessageContaining("greet lines may not use {victim}");
+  }
+
+  @Test
+  void rivalsMustBeOtherShippedPersonalities() throws IOException {
+    write("ash-42.yml", GOOD.replace("rivals: []", "rivals: [ember]"));
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("ash-42 names an unknown rival: ember");
+
+    write(
+        "ember.yml",
+        GOOD.replace("id: ash-42", "id: ember")
+            .replace("name: Ash_42", "name: Ember_7")
+            .replace("rivals: []", "rivals: [ash-42]"));
+    var catalog = PersonalityFiles.loadDirectory(directory);
+    assertThat(catalog.byId("ember").orElseThrow().rivals()).containsExactly("ash-42");
+  }
+
+  @Test
+  void unknownArchetypesAndQuirksAreErrors() throws IOException {
+    write("ash-42.yml", GOOD.replace("archetype: bomb_diver", "archetype: camper"));
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .hasMessageContaining("unknown archetype: camper");
+
+    write("ash-42.yml", GOOD.replace("loves_nuke", "eats_sand"));
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .hasMessageContaining("unknown quirk: eats_sand");
+
+    write("ash-42.yml", GOOD.replace("loves_nuke", "always_gg"));
+    assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
+        .hasMessageContaining("duplicate quirk: always_gg");
+  }
+
+  @Test
   void unknownLeversKitsRolesAndVerbosityAreErrors() throws IOException {
     write("ash-42.yml", GOOD.replace("reactionMs: 0.8", "charisma: 0.8"));
     assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
@@ -175,9 +242,9 @@ final class PersonalityFilesTest {
     assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
         .hasMessageContaining("unknown role: sniper");
 
-    write("ash-42.yml", GOOD.replace("verbosity: terse", "verbosity: TERSE"));
+    write("ash-42.yml", GOOD.replace("verbosity: normal", "verbosity: NORMAL"));
     assertThatThrownBy(() -> PersonalityFiles.loadDirectory(directory))
-        .hasMessageContaining("unknown verbosity: TERSE");
+        .hasMessageContaining("unknown verbosity: NORMAL");
   }
 
   @Test

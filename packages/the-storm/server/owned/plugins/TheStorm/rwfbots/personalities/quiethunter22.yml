@@ -4,31 +4,72 @@ skin:
   value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY4Mjk2NiwKICAicHJvZmlsZUlkIiA6ICIwYmEyOTY4NDc3ZTc0NjYwODAzYThlOWIxMmQwNGU3NiIsCiAgInByb2ZpbGVOYW1lIiA6ICJQbHNQdWxsTWUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTZlZGQzMTUyZmRmNmFjYzM4NTM3MTk2OGU2ZWIxNWIyNjI1ODlkMzQyMmZiYjhhZWFlZWVkNzUzZjVlMTkyYiIKICAgIH0KICB9Cn0="
   signature: "uLyj1UCo0EDR1qZ2dU0/W3TJeGRwdoOJRB+JPl/C//ASaOj/8Zu7dLU0rI/RlSB6FMXOg/Nkgeit9zZfHV96zjys3EzkDEEXfFQD3IInAYfK7tH5qElk3JTnBT5qW1cqtmXDRJ3JTz3SdNRmSuTPlgRQwGkAVbOID43tKznskihVyQQ3jMjpd3+CHq3apCwSZtkMV7FG9fdfsq1YocSPKXI8pBsT2VJZB4ezIqFKf6SV/5nVSj9tE9blRfibn0rvM+NlG5EdeErtysnerMdH9Ja635g1bB6X2bq2s92srWoenr77psGxJPMtzHA3T72cRVhbgYwsRSqIKum1Ou2U2zh72CuYiAWhRd4kZfKDrTiZRh2YCsYDFJj88VCv9WOiB9f4MeN7DYuLi/J1/s+R82ru7gDT0btNXQAJDdz70VRibSkGpXDm9uZroBAe9AtkBgVzV+AGcjJ+F02/oWK8L1mOEmN916NvUpf+K6hZfPnQNCSCCGZ7Ay0zTio4Of1h/NR/c9lP3jy78TgMMs2XV1MOUgUB/jSqbIJvW6BzwMKH0Wjr04VMYy87unSNUiTIVrp+V4lWzuJCd8A4EqYrEJ9Ych9L3XlRUR4H5SiBcDD9LY4G8ST5ORwFZW88teWAjVyvXhzQpi3og6xgKgmFsu8u+axtaXuNFEuGOCelP8E="
 skill: 0.626
+archetype: hunter
 leverOffsets:
-  reactionMs: 0.47
-  awarenessRadius: 0.1
-  coordination: -1.26
-  technique: 0.17
+  reactionMs: 0.65
+  turnRateDegPerTick: 0.87
+  cps: -0.57
+  predictionQuality: 1.28
+  awarenessRadius: 0.7
+  aggression: 0.64
 kits:
-  longbow: 1
-  spy: 0.54
+  trooper: 0.56
+  longbow: 0.48
+  shortbow: 0.74
 roles:
-  plant: 0.45
-  rotate: 0.59
+  rotate: 0.43
   hunt: 1
 style:
-  aggression: 0.58
-  patience: 0.71
-  teamplay: 0.16
-  risk: 0.53
-chat:
+  aggression: 0.8
+  patience: 0.27
+  teamplay: 0.26
+  risk: 0.6
+voice:
   tone:
-    - cryptic
-    - deadpan
-  verbosity: terse
-  catchphrases:
-    - "..."
-    - lights out
-bio: A Search and Destroy veteran who drifts off the map, waits for footsteps and shows up where nobody is looking. Usually seen with a Punch bow kept at range. Does not say much.
+    - hushed
+    - observant
+    - wry
+  verbosity: normal
+  style: whispers like a nature documentary narrator stalking wildlife
+lines:
+  greet:
+    - Here, in the wild arena, the hunt begins.
+    - "Observe {team}. The pack gathers. Quietly now."
+    - Shh. The prey has not yet noticed us.
+  onKill:
+    - "And so {victim} returns to the food chain."
+    - "Nature is beautiful. Sorry, {victim}."
+    - "The tracker strikes. {victim} never heard a twig."
+  onDeath:
+    - "The hunter, it seems, became the hunted. Well done {killer}."
+    - "A rare reversal of nature by {killer}."
+    - Even the patient predator sometimes misses.
+  onPlant:
+    - "The nest is disturbed. {bomb} now burns."
+    - "Quietly, carefully, {bomb} is lit."
+  onDefuse:
+    - "The predator returns to protect its den. {bomb} is safe."
+    - "{bomb} quiets. The forest breathes again."
+  onWin:
+    - "The pack of {team} feasts tonight."
+    - A successful hunt. Truly remarkable.
+  onLoss:
+    - Not every hunt ends in a meal. Good game.
+    - The herd was stronger today.
+  onLastAlive:
+    - Alone, the lone hunter must rely on instinct.
+    - "The last of {team} moves through the tall grass..."
+    - Only footsteps now. Theirs, then mine.
+  taunt:
+    - I followed your footsteps here. Every single one.
+    - You left tracks. You always leave tracks.
+    - The hunter is patient. The hunter is close.
+quirks:
+  - narrates
+  - holds_grudges
+rivals:
+  - grenourgaming
+  - braishbryzak-80
+bio: Follows enemy footsteps across the whole map, narrating the chase in a reverent whisper. His one true quarry is GrenourGaming, the only player he has never managed to track.
 batch: 1
 retired: false

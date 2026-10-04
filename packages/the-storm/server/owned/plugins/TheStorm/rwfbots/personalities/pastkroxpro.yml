@@ -4,35 +4,76 @@ skin:
   value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY1NzYyMCwKICAicHJvZmlsZUlkIiA6ICI3MWU4ODU5ODVkOGM0ZDg2ODMxODYxNDU1NjE3MDY2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJKb3NoeV9XYXNoeSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yNTg0ZTAzMTZjYWVjNDJhNDJiOTc2YjAxOTk3MjliNmZhMTkwOWM3MWIzMTQ4OGZiZDk1OTM5YjRkOWUzYjA2IgogICAgfQogIH0KfQ=="
   signature: "dO4XkFqAlc1hQVfDjRGyCQk8uesRl1NTCEEXrOMc0hcuyyCLquvitspTGiBu+HIGHrfYz78BqIg1SUvFCdmaidc178QP/FpY/Fc2DNC4nFMCD5PGJGllHtjARxxyNICWtE1ZK6viJy3qAZTFvSxhErL1ndLeo8lq6DHl5Vt7oRCzNIeahY3PneRLRRjM2OcruVCkDyu/KAu0hgRE3PuRa7YR4dJVA4lfJ9sa/uL5eMTgHwNa02Tdys1wn6ezGyDWHQZQ+eWKS7dAzt6jEbvqn1QUPDfJ1UEq55SohloiBZT99LwU9bhm33QsKIT9x6gCDGvfqCNmSniys3nv4d7q1XjAnIs+5QYgRI86emaz9z/ACQzRHOouKNKPdRsPF8RwgpfylxAVWo4cPf5DcTYUcjXf3SiV/Jfpf1Z67XUnOkGDNiiy2EJFpy5vVROA9XoInBm3mG2s6TA4J6fRiad2L+1TQovOUJtfKc5E9o6iXRphJVQ0mMXslf/BQtgirLGwDwmu1jyefHUREU8myKE0o/gsGNDN3JhnbuycYXaY9nhTQNFYM1wT3FdbK9AN6d1yCnrhnNnI0+oWTgS6NFxo0Vm/oyAXLQqNtpFj5yGk/eeZk1eCrmECraAxg1X3E0I9hKiw3ol/NGKltUpS/G0ZIqLa4nTjSHpfYKf/uUCPI44="
 skill: 0.011
+archetype: rusher
 leverOffsets:
-  aimErrorDeg: 1.37
-  cps: -0.35
-  decisionTemperature: -0.66
-  awarenessRadius: 0.14
-  technique: 0.33
-  aggression: 1.2
+  reactionMs: 0.3
+  cps: 0.13
+  decisionTemperature: 0.24
+  awarenessRadius: -0.68
+  technique: -0.57
+  aggression: 1.05
 kits:
-  ghost: 0.56
-  wraith: 1
-  spy: 0.61
+  trooper: 0.86
+  shortbow: 0.56
+  rewind: 0.26
 roles:
-  plant: 1
-  escort: 0.56
-  retake: 0.12
-  hunt: 0.8
+  plant: 0.88
+  escort: 0.43
+  hunt: 0.84
 style:
-  aggression: 0.77
-  patience: 0.24
-  teamplay: 0.39
-  risk: 0.72
-chat:
+  aggression: 0.89
+  patience: 0.21
+  teamplay: 0.4
+  risk: 0.7
+voice:
   tone:
     - hype
-    - impatient
-  verbosity: terse
-  catchphrases:
-    - bomb's up, catch me
-    - no fear, only fuse
-bio: A Search and Destroy newcomer who lives for the first fight of the round and plants before anyone has settled. Usually seen with speed, invisibility and very little health. Does not say much.
+    - loud
+    - earnest
+  verbosity: chatty
+  style: "ALL CAPS ENERGY with exclamation marks; brand new to the game and loving every second"
+lines:
+  greet:
+    - "LETS GOOO {team}!! I'M READY!!"
+    - OK OK OK I'M HERE, WHERE DO I RUN
+    - FIRST ONE IN, LAST ONE TO KNOW WHY!!
+  onKill:
+    - "WAIT I GOT ONE?? SORRY {victim}!! GG!!"
+    - "NO WAY!! {team} DID YOU SEE THAT"
+    - I HIT SOMETHING AND IT WORKED!!
+  onDeath:
+    - "OK THAT WAS FAST. NICE ONE {killer}"
+    - I RAN IN AND THEN I WAS HERE??
+    - RESPAWN WHEN?? oh right. no respawns.
+  onPlant:
+    - "I DID THE FUSE THING!! {bomb} IS LIT!!"
+    - "IS THIS RIGHT?? {bomb} IS BEEPING!! GO {team}"
+  onDefuse:
+    - "I CLICKED IT AND IT STOPPED!! {bomb} SAFE!!"
+    - DEFUSED?? I DEFUSED!! WOOO
+  onWin:
+    - "WE WON!!! {team} BEST TEAM EVER"
+    - GG GG GG GG!! AGAIN AGAIN
+    - I HELPED!! I THINK!! WOOO
+  onLoss:
+    - "GG!! NEXT ONE IS OURS {team}"
+    - AW MAN. OK. REMATCH??
+    - I LEARNED SO MUCH THIS ROUND
+  onLastAlive:
+    - UH OH. IT'S JUST ME. HI.
+    - ME?? ALONE?? OK OK OK DON'T PANIC
+    - "{team} I GOT THIS. I DO NOT GOT THIS."
+  taunt:
+    - HERE I COME!! FROM THE FRONT!! AS USUAL!!
+    - YOU CAN'T STOP WHAT YOU CAN SEE COMING!!
+    - RUSHING!! DON'T WAIT FOR ME!!
+quirks:
+  - bunny_hops
+  - always_gg
+  - celebrates_early
+rivals:
+  - lynxotter0
+  - xxfalconcometxx
+bio: "Joined on a whim, picked a name with Pro in it as a joke, and has charged the front door of every match since. LynxOtter0 keeps offering to teach him to strafe; he keeps sprinting past mid-lesson."
 batch: 1
 retired: false

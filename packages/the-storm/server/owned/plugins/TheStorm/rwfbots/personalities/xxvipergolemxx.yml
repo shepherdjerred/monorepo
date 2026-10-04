@@ -4,31 +4,76 @@ skin:
   value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzczNTExMywKICAicHJvZmlsZUlkIiA6ICI4YmM3MjdlYThjZjA0YWUzYTI4MDVhY2YzNjRjMmQyNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJub3RpbnZlbnRpdmUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmViMTI0NDk2ZjY0YzdlZjFlOWEwYWIzNjIxYzNkNDhiYmVkMzFhNzhiYzEyYmNiMTcxMGZkZjgyMzIyNzRjYSIKICAgIH0KICB9Cn0="
   signature: "lsz5kb3K0x3sdobVeNh98c4kPt8Hf0O2ZCnMQ1u/AJvpEidbEVNdDfUgPlkt28zfcjbmkCXC31lsXlvD7Z04ATkZ8zMlRzDPpUhNBOPzLKesJxJz4RJEKh5aYzS+zXZlGqxZzTx0qgNV3g8UVR6I+e/WXxnGBqRAVKDWljcmUfSbiZh9M0QgDM+zK/EMcw7eBuL0GORcmY9XDrXjqXAWYHbJcgFylDE+xIQYNwAldRbl3JHpEkrw5Zeo7P7vt1CJ6fyIBRVoaAkMBBgvQdH1kgeKEyYOC/xNtIxw50tA1xsdf25b9YvO2OAnReB8/Lomv1cfu0BM1S+ThNGcha95uTEFAM29WpP/OtOjYL0yxDGxH70kc9I+7yst8OxCPpeJtbB0Fnl1zQ1nKWfMnwNSxzA1intBQldZE77HidC+MIN+jXng0b7BsyDv9K0yy4w1GTGF4Uin1YIW4QHzsU1JKY1oosZjy0yZGPxve8XbdyXbU+iYisNbkSkyCBv8Vlf9m9Khhp1+hbPxDiWWULtDjHhn8guDR07IrwVNQR+Q/51gg0z3t3LMMssQ4Tl681HowWHNrLO5a5sPqhaPV1FjNlpf51ySPFv3CtGDe6bJNC9i3ue620j7tAQ31HfeOleNxVU9Z6xCiucC933rldAWSH+jCtZucGZL7NaF7D6q57Q="
 skill: 0.887
+archetype: flanker
 leverOffsets:
-  technique: -0.3
-  aggression: -0.57
+  turnRateDegPerTick: 0.66
+  cps: -0.7
+  predictionQuality: 0.5
+  coordination: -0.62
+  aggression: 0.57
 kits:
-  trooper: 1
-  shortbow: 0.62
-  spy: 0.54
+  trooper: 0.66
+  shortbow: 1
+  rewind: 0.39
+  ghost: 0.2
+  wraith: 0.49
+  spy: 0.45
 roles:
-  plant: 0.53
-  escort: 0.32
-  defend: 0.49
-  rotate: 0.89
+  plant: 0.3
+  rotate: 1
+  hunt: 0.4
 style:
-  aggression: 0.46
-  patience: 0.41
-  teamplay: 0.38
-  risk: 0.39
-chat:
+  aggression: 0.65
+  patience: 0.32
+  teamplay: 0.22
+  risk: 0.72
+voice:
   tone:
-    - casual
-    - wry
-  verbosity: terse
-  catchphrases:
-    - gg, close one
-    - rotating, hold a sec
-bio: A Search and Destroy terror who takes whatever job is open and rotates the moment the fight shifts. Usually seen with iron sword and golden apples. Does not say much.
+    - slangy
+    - hype
+    - cocky
+  verbosity: chatty
+  style: "all lowercase 2014 gamer slang; rekt, mlg, no scope, oh baby a triple"
+lines:
+  greet:
+    - "sup {team} lets get this bread"
+    - viper online. flank mode activated
+    - mlg flanks only today boys
+  onKill:
+    - "get rekt {victim} lol"
+    - "360 flank on {victim}. clip it"
+    - oh baby a triple. ok a single. still counts
+  onDeath:
+    - "wow {killer} that was actually cracked"
+    - i got outplayed. rare footage
+    - "lagged. jk. gg {killer}"
+  onPlant:
+    - "{bomb} lit from the side lol they had no idea"
+    - "flank plant on {bomb}. mlg"
+  onDefuse:
+    - "{bomb} defused, u wish lol"
+    - "nope. {bomb} stays chill"
+  onWin:
+    - "gg ez. jk gg wp {team}"
+    - clip it and ship it
+    - too clean
+  onLoss:
+    - ok that one was fair. gg
+    - "rip {team}. run it back"
+  onLastAlive:
+    - "1v everyone. clip incoming"
+    - "ight bet. watch this {team}"
+    - time to go full flank
+  taunt:
+    - check ur sides lol
+    - u wont see me til its too late
+    - flank diff
+quirks:
+  - spins
+  - crouch_spam
+rivals:
+  - royal-falcon
+  - swiftkrashtim
+bio: Learned everything from 2014 montage videos and still narrates his plays like he's recording one. Shares the wide flank route with Royal_Falcon, who is politely appalled by every word he types.
 batch: 1
 retired: false

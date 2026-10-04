@@ -673,7 +673,14 @@ Configuration and content under `server/owned/plugins/TheStorm`:
 - `rwfbots.yml`: think rates, governor thresholds, the lever curve table
   (pinned to `Lever.java`), the kits bots may draft, the LOS ray budget and
   trace recording.
-- `rwfbots/personalities/<id>.yml`: the personas (see its README).
+- `rwfbots/personalities/<id>.yml`: the personas (see its README): about
+  two hundred, spread evenly over twelve archetypes (rusher, lurker, sniper,
+  bomb diver, anchor, flanker, support, duelist, hunter, turtle, troll,
+  tactician) and five skill bands. The archetype is content only; play
+  differs through the style, role, kit and lever values the generator
+  derives from it. Each persona also carries a voice, chat lines per
+  moment, quirks, rivals and a bio, authored in `scripts/bots/enrichment/`;
+  the module validates them but does not speak them yet.
 - `rwf/maps/<id>/nav.rwfnav`: the map's baked navigation artifact
   (`NavCodec` format, from the `rwfmap` tool), next to `map.yml` and
   `blocks.schem`. Its `blocksSha256` must equal the map's `blocksSha256`;

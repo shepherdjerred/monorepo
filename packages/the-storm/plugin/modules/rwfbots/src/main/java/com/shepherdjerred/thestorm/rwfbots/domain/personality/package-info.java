@@ -1,4 +1,4 @@
-/** Bot personalities: identity, skill, play style and chat. */
+/** Bot personalities: identity, skill, archetype, play style, voice and chat lines. */
 @NullMarked
 package com.shepherdjerred.thestorm.rwfbots.domain.personality;
 
