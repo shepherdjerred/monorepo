@@ -1,0 +1,35 @@
+id: grim-otter
+name: Grim_Otter
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY4Njk2MSwKICAicHJvZmlsZUlkIiA6ICI3Nzc1ZTQ2ZTI2YmY0OTBiODZmMzZmMjkxYTU2MTQ0MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJQW1TcGFkZUZhbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hODNhZTczYmVjM2UwNzZmNDcwYWY2OWE2NjQ2YmQ2MGY2NTM0MTg4NThiODUyZmRhNjJjMmZjMmJhNTU4ZWRhIgogICAgfQogIH0KfQ=="
+  signature: "sAxRoK6yMyz6T+BXbfTzGCJzLw042WkHr82ziHtfoHqGMXnW0lZLlZZlEaCHdqe+BydhDOi/VTRBOTO/Ux6XwCcJLxwY/QSa+AnA0L+deL9jtWTknnj5X3tPWIW82RvRNipaFT5g/XclXdul99st5c4NfSi/HgxIvP9IquSnIyDfOocYGE9PVr9caj+1DhhfDMwQ5IH70WjBLJjE9VnVkKyHwW0Vh4z3NrVLqUb2Uh+BX1ze61SX+QZYAGROfj20Uef7PyWTmBLQbadSrcbWbQsjPNxPeBpRYcTS2ZReV4hTZiCmCBtrMZ5rIg4sbTe43q1dOV2xXNflvx3zQmrIyyRIbaZ/S0UJAq1UrSBhXs6SGOGW2MCr2hXfZZhm9Nreh5bOBcq80uFQFUX6RMCPM7iQVKzzgvYq2XIAMT+yVGbsEK7fNx6+6Ub7md6s734aolfUZz6uXDr6JjuYgMvVQ6Ko2ALz8tiBIoOSGg27K6Cy9JSFwxk8f24vjBDf21eiPu7gHMRT+mpa0VlLfxdRW+PPNpM3oR494CT7OyJ6IM/4rzamS4tjHZVR/i/rFBkocHRgAV+AoikuO+4n4qxpgHJlobSLI34fQjQI1THSL0fD7V3QDLSO6hCJ5CrfnavYMQ1zvdwCbxYXIKM1Aj+VUbSEFCizkQD0afILPD4VyKk="
+skill: 0.783
+leverOffsets:
+  cps: -0.41
+  predictionQuality: 2
+  awarenessRadius: 0.15
+  coordination: 1.03
+  technique: -0.76
+kits:
+  trooper: 1
+  longbow: 0.64
+roles:
+  escort: 0.95
+  defend: 0.48
+  retake: 0.56
+  hunt: 0.27
+style:
+  aggression: 0.43
+  patience: 0.51
+  teamplay: 1
+  risk: 0.38
+chat:
+  tone:
+    - polite
+  verbosity: terse
+  catchphrases:
+    - gapple up, I'll cover
+    - need backup? on my way
+bio: A Search and Destroy veteran who sticks to the planter, shares every sighting and eats the arrows meant for others. Usually seen with iron sword and golden apples. Does not say much.
+batch: 1
+retired: false

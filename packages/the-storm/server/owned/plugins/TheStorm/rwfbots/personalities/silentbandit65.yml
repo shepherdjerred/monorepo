@@ -1,0 +1,32 @@
+id: silentbandit65
+name: SilentBandit65
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzczMDU5MywKICAicHJvZmlsZUlkIiA6ICI1ODAwZjIzNWQyYjQ0MDc5OTcxZTM3ZDhmNmY0OTc2ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJYZW55cmlhIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzYwNWRiMDRmMWFjOTdhNzFjMDk5NTU0MTI1ZjhiNDFmNWUzNDk3OTFmMjc3YzMwZjA0Y2Y4MGI2ZjVlZDdiMzQiCiAgICB9CiAgfQp9
+  signature: "FOpvVrWJe8rxj7NGl5A0w5s/ycurauENJKQrjmERFJvTePRNfkSzVN3uxiEtjbshs5bJz2QnF9PwlgHo4ZLa9JlJUhbem89DHvOYYQ1zn48x/bTvjET/8TXLAOfGpGhEldpY3A4af58ShLhMYUbg/KYq3ywSfcU2RuOBSpbvZE6o2tltr90XkaVggJ+GeyhKUqNamMvGy7V6lUToF3cUmzWrsMKhB0guC+5sT/1Z0Pyg8ulSr61PN4keucBzKMmlEn4jm/R7buMp99OC/SvNHwUpKSeQxdWbvUSn9U5+ryZ0gQXD+XytkhaqVjhuuICp9EvpL2vLOMr7zp/zH1U00ygdF0UiyWWw5mbSY+3RSX00eBqqN6QBIuvYMV3C9e/lLG6m154lXkVSKBxltn/x2T2uE4+D02ycqPaIpauuE5NLUb8JS4iC75ZRsUFg6Vm1PWCOKHmL1B7LqN3bw2KsAfeBmMslIfYn1oqq3Xhyfdku2Dp7g0wP50JdQvLaWcIdzl1WsPPYHNbqIy3EkOAH9tVu7WLPyD0Bopc+HNPkZLg2u/gm9n+flDTpa14D0bjReD/PNOSjguebiVOA2UDkYjHjaKT/az3hnuR8O8GJfvDaJ7rtpJbHs3tPptmOaEWe5wHDK577qT82g7do81P5WranTFpWisbvXzqMw2M18VU="
+skill: 0.379
+leverOffsets:
+  turnRateDegPerTick: -0.16
+kits:
+  longbow: 1
+  shortbow: 0.66
+roles:
+  plant: 0.47
+  escort: 0.48
+  defend: 0.86
+  rotate: 0.94
+  retake: 0.32
+style:
+  aggression: 0.49
+  patience: 0.58
+  teamplay: 0.37
+  risk: 0.53
+chat:
+  tone:
+    - curious
+  verbosity: terse
+  catchphrases:
+    - I'll take whatever's open
+    - gg, close one
+bio: A Search and Destroy regular who takes whatever job is open and rotates the moment the fight shifts. Usually seen with a Punch bow kept at range. Does not say much.
+batch: 1
+retired: false

@@ -1,0 +1,35 @@
+id: dizzyzynthun
+name: DizzyZynthun
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY3NTk4MSwKICAicHJvZmlsZUlkIiA6ICI5MDczN2E1N2RlYjk0MWYxYTEyMzE1MmJkZmZjMTBmYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hODc1NGYzMGIyMmRmNmUwNWM4NjEzN2UxNTk0MGFjNDZhNmRiMWY1NWQ1MjA5ZWEzNjYxOTliYTU5ODQ4NmZhIgogICAgfQogIH0KfQ=="
+  signature: "Q/bczuFPUd7yYgfx6Pag3VdWm8PB+P64cY3NHddqo9LEMocShutrxLlh2YzjJgq42PsIZF9ZV1FG6rmgrKsy79xOwbQ5kG2fCNaNI9QEjgVrwmRxnN1JH6aXH2TBK3wqs2GC4Qpf6tRdqS48qxcbO8rj2iKxpczOD+OBXhXyvwJrp9yR8L4rZyBfAEQX/d1Geu7lNyNWCLxwDQN4hxDOOypr0Cel3NIOBcxNFrbour4segj6ECqOyBCEp+qkqPfkOCT13zfnbqf+Gfc556GT47A66jsZ/MptCTg+2cTi5SxYQLMBX2SqOGr+/kIPbWYSPKP/G30OtvApI/fo7e7KjlQdefgAxh7maIjQi6UR9cbC6vlfuM2k4T3YaTuKzQ3nKYoXQy/dX6YApseUpCEeXcxXClfRd+DKaoKXHK8HLhIDY4eC3urDggHkJDx6uCEo/Qkf4nnjNPOOj1o/uSjSARJBTwMaNyGva5UV/bGDat1diz/dpRUn6SHvqYZvBDqnZz5O20gi7F+3PSTWSZWBzxMjX62GMVdgiD/X4l1VSH02enHEhfL2SdWV5FPj6IA/eWpXGoW19P2vW34i8VXHT8pJUFBoAuC6+y6RMgbtzgFq004bmSq/oYWABIqa5FfjrUzVwD1o2KaTuEjvr879JK8hN20s9GYcTGdhCPa5wtU="
+skill: 0.023
+leverOffsets:
+  cps: 0.78
+  predictionQuality: 0.11
+  decisionTemperature: -0.38
+  aggression: 1.57
+kits:
+  rewind: 1
+roles:
+  plant: 0.91
+  escort: 0.38
+  hunt: 0.65
+style:
+  aggression: 0.74
+  patience: 0.09
+  teamplay: 0.52
+  risk: 0.54
+chat:
+  tone:
+    - cocky
+    - loud
+  verbosity: chatty
+  catchphrases:
+    - rushing B dont stop me
+    - no fear, only fuse
+    - ez clap
+    - why wait? go go go
+bio: A Search and Destroy newcomer who lives for the first fight of the round and plants before anyone has settled. Usually seen with a clock that undoes the last thirty seconds. Talks a lot.
+batch: 1
+retired: false

@@ -1,0 +1,38 @@
+id: pastkroxpro
+name: PastkroxPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY1NzYyMCwKICAicHJvZmlsZUlkIiA6ICI3MWU4ODU5ODVkOGM0ZDg2ODMxODYxNDU1NjE3MDY2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJKb3NoeV9XYXNoeSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yNTg0ZTAzMTZjYWVjNDJhNDJiOTc2YjAxOTk3MjliNmZhMTkwOWM3MWIzMTQ4OGZiZDk1OTM5YjRkOWUzYjA2IgogICAgfQogIH0KfQ=="
+  signature: "dO4XkFqAlc1hQVfDjRGyCQk8uesRl1NTCEEXrOMc0hcuyyCLquvitspTGiBu+HIGHrfYz78BqIg1SUvFCdmaidc178QP/FpY/Fc2DNC4nFMCD5PGJGllHtjARxxyNICWtE1ZK6viJy3qAZTFvSxhErL1ndLeo8lq6DHl5Vt7oRCzNIeahY3PneRLRRjM2OcruVCkDyu/KAu0hgRE3PuRa7YR4dJVA4lfJ9sa/uL5eMTgHwNa02Tdys1wn6ezGyDWHQZQ+eWKS7dAzt6jEbvqn1QUPDfJ1UEq55SohloiBZT99LwU9bhm33QsKIT9x6gCDGvfqCNmSniys3nv4d7q1XjAnIs+5QYgRI86emaz9z/ACQzRHOouKNKPdRsPF8RwgpfylxAVWo4cPf5DcTYUcjXf3SiV/Jfpf1Z67XUnOkGDNiiy2EJFpy5vVROA9XoInBm3mG2s6TA4J6fRiad2L+1TQovOUJtfKc5E9o6iXRphJVQ0mMXslf/BQtgirLGwDwmu1jyefHUREU8myKE0o/gsGNDN3JhnbuycYXaY9nhTQNFYM1wT3FdbK9AN6d1yCnrhnNnI0+oWTgS6NFxo0Vm/oyAXLQqNtpFj5yGk/eeZk1eCrmECraAxg1X3E0I9hKiw3ol/NGKltUpS/G0ZIqLa4nTjSHpfYKf/uUCPI44="
+skill: 0.011
+leverOffsets:
+  aimErrorDeg: 1.37
+  cps: -0.35
+  decisionTemperature: -0.66
+  awarenessRadius: 0.14
+  technique: 0.33
+  aggression: 1.2
+kits:
+  ghost: 0.56
+  wraith: 1
+  spy: 0.61
+roles:
+  plant: 1
+  escort: 0.56
+  retake: 0.12
+  hunt: 0.8
+style:
+  aggression: 0.77
+  patience: 0.24
+  teamplay: 0.39
+  risk: 0.72
+chat:
+  tone:
+    - hype
+    - impatient
+  verbosity: terse
+  catchphrases:
+    - bomb's up, catch me
+    - no fear, only fuse
+bio: A Search and Destroy newcomer who lives for the first fight of the round and plants before anyone has settled. Usually seen with speed, invisibility and very little health. Does not say much.
+batch: 1
+retired: false

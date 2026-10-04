@@ -1,0 +1,35 @@
+id: xxfalconcometxx
+name: xXFalconCometXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY3MzkyOSwKICAicHJvZmlsZUlkIiA6ICJiODQ5ZjE2MmRkNTE0ZjllYTUwZDlhNjRlZGUwZGIxNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4WF9Ob19JbmNvbWVfWHgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmY0NWFlODk5ODExNDI3NWQyNDhhNmRhODQwZGNmNTU0M2ZjMzFhZTZmYjA3N2E0YjRjYWY1MmMzY2ZlYzcxMCIKICAgIH0KICB9Cn0="
+  signature: "nIKq6slsykRqM2BE7mxHi3OR9/xmUvuTT0FOdncnsRrP3gIoEqVd780X4/s2cL29j/uTX1n9gg325i5aQiL04rvzWA9bjplscDlvJEHoMlcjg6j1Vble7M+aQahYC9m/GA8MIadrkfJUTE/rISDonjWluPf4VcKks795qLyPyEmNgFXZeMBEcQosqsby/gFVL1DLM6+4z5V7flwZxiQ4um6fhgijhlbdLlkxTGqLt7H/eTgx058PpBkyCk7pMI4UZd8WRH3KNfx26RBh0V4wk3Q/1g9cYTQwIBQ3gu4zvwiayQrreOv0fDk14dOfneZXVjfVSKxPvsRfmi4mP0UjGDc0Jle/CqBnPCAzQyre8dpo5iHQx4QyNcrssmCoBkYssRzBHJcr78OSfVm5l9VPAPdyc3GrPh4OizSIuAXHCJXyMRrhlOm90/ox+eVsi1m5xOtEHBU59N7YVjEw6yNXmu1TBoUnXYXbLuyFTj+H8O0NAy4udaXFF09qqsfqHHfLM8dx4POuxb5rCaPSxVtAV8c3tj5jrjMMTEvotLfAYweT+FxvhAvQ0Ae1oMXsGEjSzu8HXF64uu04AFC74Uoqtjqyfdzklh/s5BEsHcxP+Mn3WfY1Y8rE6kDkSQ85/HNqGcleGxSQ8u9uwAIT7CsGMg1RIBhV0NYdjxvNRE70Ruw="
+skill: 0.45
+leverOffsets:
+  predictionQuality: 0.54
+  decisionTemperature: 0.31
+  awarenessRadius: 0.67
+  aggression: -1.16
+kits:
+  rewind: 1
+  wraith: 0.15
+  spy: 0.64
+roles:
+  defend: 1
+  rotate: 0.42
+  retake: 0.88
+style:
+  aggression: 0.31
+  patience: 0.94
+  teamplay: 0.71
+  risk: 0.25
+chat:
+  tone:
+    - calm
+    - stoic
+  verbosity: terse
+  catchphrases:
+    - holding. come to me.
+    - I've got site. rotate when I call.
+bio: A Search and Destroy solid player who parks next to the team's bomb and makes every push pay for it. Usually seen with a clock that undoes the last thirty seconds. Does not say much.
+batch: 1
+retired: false

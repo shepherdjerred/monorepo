@@ -1,0 +1,33 @@
+id: xxpumpkinravenxx
+name: xXPumpkinRavenXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY2NTYzMywKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82Njk0MWJlY2M5YTJjZDg3OGQ5NGY1ODYyNDM2MGI1YjUyNTQwYmRjOWM1YmI5MjhhNTdiNDdkYzg5ZTJkYTMiCiAgICB9CiAgfQp9
+  signature: "qz4HZvZ8datfwIJfQnyMGKJi2fqI5hFYNpRLH7O8ZbHIUmSkkzRO4sgN1eIj/PDc12uP9CW1jl4+gziWfCI8+UXPoexs43yUn5YrltgUgZlv41MJGGbzbGqql1N2gtZyOrj0kBRiI4F09PfKzPdded4X2Dxtf0j7i/FdtEaBQqMJ9F7xiuA8ige/lEFoFzgmay1kX7KJSD2jusB9pQ1NNDvs0WJ1R0HDaLHXPizTsXn15U3Doz0Cr2BG/EwfvzE5dWUiSPRtNZTQBZAZafUabcwr/LK6+fFrI43pW0rvCnxG/qXcSCoUgx10dCUCE2MjMpKqNMx+RFa9XYG7I8bgpyNOB/kAhF/EuNguqj9gAFFaIf4IHPWXoziphVMzbvn36Ae6Kyc3EjKHaiYU1+WH9NzqTZ2bW0Gul0hTsr+ON4j2v5IeW/6CMKTXiB+gy0lGkRLtGveGu/CQexDa5OtqfaeulXn3pPVPH4B5Xun2nfXdQmtQsRBve7Ig6nRruaRKVg2RpdbZP3zd8OiK8rkcgdijHSoO8FgkYWuLKhYwFl97ZYLBLjkOue7FkfmOGC0O6Ete0lFFzqZvZuWpEFxpTBB3e5OpUhXAkt2mI5v1tYpndqByKchH4J04ePD9zuz11SAgWUGS7cKEmLNLSB2fWgxy2xcHP3HmwEEVLV5fuoY="
+skill: 0.523
+leverOffsets:
+  cps: 0.08
+  predictionQuality: 0.97
+kits:
+  longbow: 0.21
+  rewind: 1
+roles:
+  plant: 0.63
+  escort: 0.34
+  defend: 0.65
+  rotate: 1
+  hunt: 0.18
+style:
+  aggression: 0.45
+  patience: 0.71
+  teamplay: 0.46
+  risk: 0.4
+chat:
+  tone:
+    - curious
+  verbosity: terse
+  catchphrases:
+    - wherever you need me
+    - ok new plan
+bio: A Search and Destroy solid player who takes whatever job is open and rotates the moment the fight shifts. Usually seen with a clock that undoes the last thirty seconds. Does not say much.
+batch: 1
+retired: false

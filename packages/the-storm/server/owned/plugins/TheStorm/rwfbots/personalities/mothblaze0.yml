@@ -1,0 +1,33 @@
+id: mothblaze0
+name: MothBlaze0
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzczNzg2NCwKICAicHJvZmlsZUlkIiA6ICJkYjQwYmNjNWUzMDE0ZmZjOGVlOWQxNDU5MTcyYjdhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJhWGUxOCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81Y2FmZjk3Nzk1MDZiNmIzODUxMTI2YTliNmYwMTkxMzAzNDhmZjFhMmZmMWMwYmE5Y2RmYTI5MzRkY2U2Y2FjIgogICAgfQogIH0KfQ=="
+  signature: "Gmw1bo355nVBoyoabvIo4YwXttKGvABp4UN5+GiMqgwPSOSc5oTuNBsX/xKgTIO6SB6rZPurVUJKAvQRjH1bO+SwBVQpqCa13bD2TIr7TVDEOxwvt5aJPTDFyv5trCR7n40aqJXcjY3iK0xeABUwtAGSwX/0L2pXlECaW6pywpOq7EZ5u6019Gf4yM2bUbskZue34BGYUsiRuC1QVgYpNh5TFub23ZZUAXdG3INnd9mhzaDrf+tGXAAYyb/DyaciSmAYbwVrhseGC1qWOlXTVT43Jnefiw9oNy6k36ZzXZ05WMofpPemxtDrteJ3bPU6178CxZBejyYR8CyzWtv7rZm0T8ktqEcih2WR4YXbDrOxYkUJdwwsK196QHTTAUkWTY1ADGc8XSHz0VIA0siKbdjLES5G7BVUjTlxMvjgsrPkkkOD7AHtXy6wki1F1edYBhBadVHXkUSVY1g4JS/tOSVjnOMOTQbAYi+CiPVv1PEMR9ujJvKSmfXBbxWIr5N9zpRuOlxK2tBjp5kJkk50OXwwLMjKDyjjFNl9WqJRfx3ValkHxL44F0f6SjueCQRX1/g0Y+XyjyXuClpTUJ5m6RIlTV+R/i4m+2t+O/ZrdZNZxzRaPi/G75L5K/OV2AD8fi5It7J3AADes1RsgZmEWrOHwsKfvuEQa7DfTZ0taaI="
+skill: 0.425
+leverOffsets:
+  reactionMs: 0.4
+  turnRateDegPerTick: 0.15
+  awarenessRadius: 0.99
+  coordination: -1.25
+kits:
+  shortbow: 1
+roles:
+  plant: 0.57
+  rotate: 0.62
+  retake: 0.16
+  hunt: 1
+style:
+  aggression: 0.69
+  patience: 0.64
+  teamplay: 0.19
+  risk: 0.78
+chat:
+  tone:
+    - sly
+  verbosity: terse
+  catchphrases:
+    - lights out
+    - you heard nothing
+bio: A Search and Destroy solid player who drifts off the map, waits for footsteps and shows up where nobody is looking. Usually seen with a Power bow and a knockback sword. Does not say much.
+batch: 1
+retired: false

@@ -1,0 +1,38 @@
+id: tothmiokgaming
+name: TothmiokGaming
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzcxNzI1MSwKICAicHJvZmlsZUlkIiA6ICI3NzQ3ODc3M2ExZTE0NzUxODE0M2Q5ZDA5YTc1NmQ2MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3aGF0YXJlZmVycmV0cyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zMzc1YWM3OGYyYzRlYWRmYjkyOGYwMzczYmIwM2VmMjdhZmJhZmY4Yzc4NTU2MWE0NDk5MThjODk1OWQzZDVmIgogICAgfQogIH0KfQ=="
+  signature: "snDDTv66QGQkjg5n8LPAj9qykQMesBe1Kniw+uil3izfH8ZcP8G5pyLknxolU2kiRisQAPMEtAjtLMUfm5uZ+QIQOpf1a6TlGSkvjdnI7aGbHVv+LuQozwcVEhXjq0G61DEfPRXAWMXMTkIl0K0p8j2VCuGpHG7bga8Gyq7yfSxaOvPl65rcdwXV/7OMd8AZ4JXGdB6iBC3HjlYE/722Xwl26jdd9J416SZatNaSEjMS9P9ETqa2EhZyZOJpXpCcij3KD4WtbWjyothCEAh9tT7Pz8rapXBRxwI6AI8/lqZ1PQl0/3xZMjHwnI3VeGWFiVpUh7gbRv/+UcECxPbuef6v40oyuRa0y8HSbzf1loBAIcBGwblcztZiCkJ4lmlSVaKdutZ46dR8dCGGPw0DhsLBLoBs/UhepJpDjRZDsT8qE4ChsbxxkXhWO7l6sj3OKIInOUxVtrm9hHYxUV2TE25uVekNArG6klX5IZpqRSl1vtXlTCHThjH9r+4pBttg9qNwIPzoNl3ZvC03abG+DRegd2v7xu+yOlIkau6g6qJ4bVWnVe4E1atRoWfT3RVnIw0m582N96EoN9UMRZwJ7+pTYfr72F9Bft8F9GFyByYc6jADwpzvo6nhXxvHBFfGPOL6PsmaVpYPpec8B2syC6ZNCClPmeLG2jZetGFmBTg="
+skill: 0.558
+leverOffsets:
+  reactionMs: -0.63
+  cps: -0.45
+  awarenessRadius: 0.4
+  coordination: 0.99
+  technique: 0.96
+kits:
+  rewind: 0.55
+  ghost: 0.4
+  spy: 1
+roles:
+  escort: 0.98
+  defend: 0.51
+  retake: 0.6
+style:
+  aggression: 0.54
+  patience: 0.5
+  teamplay: 0.73
+  risk: 0.48
+chat:
+  tone:
+    - chatty
+    - polite
+  verbosity: chatty
+  catchphrases:
+    - call it and I'll be there
+    - gapple up, I'll cover
+    - gg wp everyone
+    - need backup? on my way
+bio: A Search and Destroy solid player who sticks to the planter, shares every sighting and eats the arrows meant for others. Usually seen with someone else's team colors. Talks a lot.
+batch: 1
+retired: false

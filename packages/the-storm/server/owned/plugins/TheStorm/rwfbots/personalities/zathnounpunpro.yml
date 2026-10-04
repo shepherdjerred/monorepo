@@ -1,0 +1,35 @@
+id: zathnounpunpro
+name: ZathnounpunPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY1MTQ2MCwKICAicHJvZmlsZUlkIiA6ICJkM2Y4NTQ5YmUwZGY0NGUyOTlmZjkwMDQwZWZjNTQyMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJIYXJvbG90V2FybG90IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2RlMTg4NTNjZjk3MWE3ODg3NWMwMGZiNjY5NzY3ZmUyODUxYWEzMjhiNjU1MDUwYzMyMDliZjVmMjgzYmVmZSIKICAgIH0KICB9Cn0="
+  signature: "AZHD9hezU01feNTu85hmdrQDngCexaWvze3cQ3RlBWl0EXaH0gXUOQ/oOKLMmDHV0odX+hSscURCqg0x9rFR7HcmvwQjHT4RbCWGvFYIoEhYytSaahv0o6ij39tvUNUKn0NAee8yEFkWdpuzGJ/vBNs0c4wLpQiv/lhFNIhHIrHXMn/TWh+r5LlnOeEKTsMpxUqh7Xu2Eit5iuLyXBEJlr0akMF3bS2Ah2W5kx8pc0XZaUfPs0yOmSWRuBOo7G9UXBK3rPLymMbCiJWzZANSHIT3Ql3BqDxPLlJjSHsdFGrIujo2uBiYD5Cam3s+ouAUonyigcy8DOp5aRzGZJDa0pYltnH/youNf0KhFk0bPIac+/OIB37o2Zg8ewvxk1Qb6oNSmPodSE2Isae45xKp96Y65lJAAx6krJPH9mnHJHyp87GkPTzFLYBuvQAdFgBvtOz9niJPl4jnsllOcf8Bz8RdZ1PPtfq2+Cu/C5Sl3Z7R3Kk3T3jBhH6b/1qdWdtuxVkVTv8Vkz4vXhjp4Rgy/24g5wqjoVDJxrQ4Yz/EI9gMOEn3qMaiFRkVgEHFtasMHqCZdMYSj1vqTgXlND9eOhpQLNEr6L/SWmiKug3k5/vigbM/ScxqHX+Rw8hQVfETVnVgAPqeqlbRsbMgFiz8g7MT34UMtte3HQ/hc/nvIFI="
+skill: 0.384
+leverOffsets:
+  aimErrorDeg: 0.32
+  turnRateDegPerTick: 1.55
+  predictionQuality: 0.14
+  awarenessRadius: 0.63
+  aggression: -0.69
+kits:
+  shortbow: 1
+  wraith: 0.27
+roles:
+  defend: 0.76
+  rotate: 0.52
+  retake: 0.81
+style:
+  aggression: 0.35
+  patience: 0.99
+  teamplay: 0.77
+  risk: 0.28
+chat:
+  tone:
+    - methodical
+    - stoic
+  verbosity: terse
+  catchphrases:
+    - calm down, we have time
+    - patience wins rounds
+bio: A Search and Destroy regular who parks next to the team's bomb and makes every push pay for it. Usually seen with a Power bow and a knockback sword. Does not say much.
+batch: 1
+retired: false

@@ -1,0 +1,34 @@
+id: potatofalcon8
+name: PotatoFalcon8
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY4MDUxMSwKICAicHJvZmlsZUlkIiA6ICJkMjU0ZjQxMDkyNTE0NTdlYmU5NGM5NDQ2ZmIzZTc3YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUcmFzaEFwcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84ZjA3YWY3MjUxZmFmMWJhNTg4NGJjMWM5NzFjMjliOWFmYjAyNTY0MmUyNjU3NTZkMTNiMDVlNTRjMjllM2Y4IgogICAgfQogIH0KfQ=="
+  signature: "EDUjahMu5TQWoWxyFPOnj5w3vz6IYfJ9mXHvHgnYg5xUXMBB6ThwkPBoyQoyyxPvc1DTaEJKVelS3Auhv+1Jm7jb1Tq18XQye9LId1jXEPXyqRW9rw9dhEtBsIm+5HVHIcYVmm/CgOUatYgFvPDVpDy2xJP/EVVfvC56rb+Ij9UnFFGdM/G7VYd/AIgZiGaoZzJ8ndFq2WPqLb7fYiPRHZAr/bOnoPvkqVq/w8rcnoI/TwZ7qSSH3DWA4xHR6YCi4QAlgqdBNjE+fnxyawT7hAnVI1v9Z8s0V9bND2KD8fiznaeiAqXaEy1TpgjVz/RuWoWDcLghDKGvdNlv+dqa5fu/foQvJWip2B1MlA0bmxmriUCTtGH+dZZNK2vQQLcqgWBlxZc/uPwsuyXEvnWzlD73wlars1xd4iGhm+/Jgnkoq99K+HS/AQ2/g8TGddpPkbTSrl65+ws622Zy+t9Y7XLBZp3pUVG3ouXdA/QSQWjoQcdX/lVCF/nb5sY8iRCIb3ZV+julPn0rlTNGccxwBEQJQLh+ceDXzYTkpRysKgBEhuCqM6fBKnF6zizdIrcl5gX9f3yAl381IHeg8WUbigG+ANO5OVgz/LqrYRP9ipIE2BILf+wJ19guNLDyEcIEkg+KLENE33oTJi4qvqCa9wU2U/cY1IZVZE0YdPWDqkQ="
+skill: 0.632
+leverOffsets:
+  cps: -0.12
+  predictionQuality: 0.03
+  awarenessRadius: 0.4
+  coordination: 1.36
+kits:
+  trooper: 0.45
+  shortbow: 0.32
+  wraith: 1
+roles:
+  escort: 0.85
+  defend: 0.39
+  retake: 0.58
+style:
+  aggression: 0.63
+  patience: 0.53
+  teamplay: 1
+  risk: 0.45
+chat:
+  tone:
+    - friendly
+  verbosity: terse
+  catchphrases:
+    - gg wp everyone
+    - need backup? on my way
+bio: A Search and Destroy veteran who sticks to the planter, shares every sighting and eats the arrows meant for others. Usually seen with speed, invisibility and very little health. Does not say much.
+batch: 1
+retired: false

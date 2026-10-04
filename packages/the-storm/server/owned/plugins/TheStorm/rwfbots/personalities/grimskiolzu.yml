@@ -1,0 +1,34 @@
+id: grimskiolzu
+name: GrimSkiolzu
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzY2OTg5OCwKICAicHJvZmlsZUlkIiA6ICI2YTQ3NjRhZWEwNWY0MTE1OTc0NzFlZjNjYWU4ZTdmZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJiYWRlZW5kamVoIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNlMzUxYjQ5YzQwYTc1M2MxYmYxYzVlMGZhODgyMTExZWJhNGFjNjQ0YWYwOGEzN2U4NzRiMDQzMjFmNmUyNjMiCiAgICB9CiAgfQp9
+  signature: "feP4K2NkCgXqE/UZN3M/s9f+Dcp5oJrnf1J9VIePOYgDHp2/X2d4/2vY3u+BXCFwTWPqgh/34LScCAIdOqcKwZCzie6Lmwz9iWUrkxn8bl/jIPLf+5NqXp2VM/iU8QHVC9HzwuqtFJNNiru9tFJ7FcyUkX2T48vSWeS10YkGpVsEjLoGbsWZ+XIeAeXLWWn1TLWUDiNNFEPru+tfx9ov6jnxBpgGN2Df8eLrRyypC5pspHoTP/ISWA9aBJjeUieReOSY54/ks6ZoUz73iuR0gEJDBWaUFaD9XiAEU59EvqYJbWLdvZDqYBUvvW+y93Usu/7D/iBIzaEjkLPxwwDuLE4HpDhany062MVmbmANTJyJJC4AXnVerOUlQOK23+hijEgQUbGu9eIgIgSu5gYVa3LR+5yP8wEXDfiijv/D7cC7zcroDBZY/TFLlQpIFRZYL85ig2IuB01iyZkAZvK0NKLbgURkSOpmtqmUYuL5ij1bE0iS6x6/4+ofLr8c4CrSKujSa+1uJwc90SXC2CGR89CeZqxdAVNSKZPd6zfBxWeYpoycvPjEj1GIAYUFrU3skDP2seTYLv05zlIlKmHwt2zXVP3F71zb9WVapydZNKptpfTeKsF1LofMiQs1GwRJ5QMVNbt7saemSGQcpDKMyrbGfdNhPcm8GMAYXEINL98="
+skill: 0.355
+leverOffsets:
+  aimErrorDeg: -0.53
+  turnRateDegPerTick: 0.16
+  awarenessRadius: 0.16
+  coordination: 0.84
+  technique: 0.71
+kits:
+  longbow: 0.57
+  shortbow: 1
+roles:
+  escort: 1
+  defend: 0.58
+  retake: 0.62
+style:
+  aggression: 0.3
+  patience: 0.65
+  teamplay: 0.81
+  risk: 0.41
+chat:
+  tone:
+    - encouraging
+  verbosity: terse
+  catchphrases:
+    - gg wp everyone
+    - gapple up, I'll cover
+bio: A Search and Destroy regular who sticks to the planter, shares every sighting and eats the arrows meant for others. Usually seen with a Power bow and a knockback sword. Does not say much.
+batch: 1
+retired: false

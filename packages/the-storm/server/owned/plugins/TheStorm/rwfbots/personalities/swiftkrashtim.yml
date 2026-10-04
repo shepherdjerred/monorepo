@@ -1,0 +1,38 @@
+id: swiftkrashtim
+name: SwiftKrashtim
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTA5MzcyMzg4NiwKICAicHJvZmlsZUlkIiA6ICI0YmEzMzMxNjA0YjU0NzgwYmQ0MzBkMTc5NjI4Yjk0YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeVdpZmlKdXN0RGllZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80OTI5ZTc2YTNlZmIzYjIyYmQwODJmOGQ2YzMzY2I5NDhmZDIyODIzMTM4NTBjNjIzZDM1ZWUzNjJlOTBiMzIwIgogICAgfQogIH0KfQ=="
+  signature: "dnvDMYDS+Lb1trACws9yT1LQRjgRYoPxCUj2UY/hfENSPYsL4MkSJ+PYAXoEw2iTlFjDI/cdPIZwDUA6TEqBIsoPZNKYrz/Y4r+GpoiBoM1DUFBS/BCSIiXz91i08RbvB/BbYFT+JMbImab0mz0yS1dbdQDoiYu7UcxRZOqfLIDkYCJGYH8FgALYLTOBth1RbLZ+Xkajw3sC/S9mi/uh7ZMMlY+3ka8m8bWVIIZyTzk4GalaLKCvWSwyhWj3OkArsje5jgLs0r2n8UYO8S3cmJ2E/Y4IYHP6g1MAAdgBvTScyzHhy9BOSL8oT+w/dVLIeOp0zJ92OSXiINUDOjprqbWOlqygXZyD4AA3OWh75axTg/kjPNkkXteDglW7K7p7VfS2huK+j4myR4oW4Xpu+6ALqCjIk3XgGDbptNV3/wSal0eCSci6fK6TUVqvck2CDPQpGwS5cBPnzUigwPospKIcKWbVnOxTLbnKr7opnL2seAona8/0Jb6hCx64rkJPR3SwRyYSIXlgrsJG5X6WyfKJpPE7l1jrh2ndZACu32ML3YmhzWEW9IPXSCzPB5kwWEPYDAwigCJd0ocYquFOJE6xhCCcvXy1YeS9jolhaFI7GjJpyVqZleIq0ErTTy5HVCd8z4g7hnR/8EOJ6RpsafbWPDt0QFS3+lB5ecfBApw="
+skill: 0.872
+leverOffsets:
+  aimErrorDeg: -0.35
+  cps: 0.97
+  decisionTemperature: -0.82
+  awarenessRadius: -0.35
+  technique: 0.96
+  aggression: 1.31
+kits:
+  trooper: 1
+  shortbow: 0.15
+  wraith: 0.26
+roles:
+  plant: 0.78
+  escort: 0.3
+  defend: 0.2
+  hunt: 0.83
+style:
+  aggression: 0.69
+  patience: 0.17
+  teamplay: 0.48
+  risk: 0.82
+chat:
+  tone:
+    - impatient
+  verbosity: chatty
+  catchphrases:
+    - rushing B dont stop me
+    - they wont see this coming
+    - why wait? go go go
+bio: A Search and Destroy terror who lives for the first fight of the round and plants before anyone has settled. Usually seen with iron sword and golden apples. Talks a lot.
+batch: 1
+retired: false
