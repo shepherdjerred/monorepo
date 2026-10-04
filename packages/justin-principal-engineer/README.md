@@ -41,10 +41,11 @@ bun src/cli.ts daemon stop
 bun run dev
 ```
 
-`dev` first checks native OpenAI model access and that the configured Woodpecker
-repository ID matches `repository.slug`. Credential failures stop startup before
-a task is claimed. `doctor` performs the same checks, and each coding turn checks
-OpenAI again before installing or building container dependencies.
+`dev` first checks native OpenAI model access through the shared LLM runtime and
+that the configured Woodpecker repository ID matches `repository.slug`.
+Credential failures stop startup before a task is claimed. `doctor` performs
+the same checks, and each coding turn checks OpenAI again before installing or
+building container dependencies.
 
 `dev` runs the real configured Linear queue in the foreground, using the same
 durable task state as the LaunchAgent. It injects credentials through `op run`

@@ -1,4 +1,4 @@
-import { createCodexConfig } from "@shepherdjerred/llm-runtime";
+import { checkCodexModelAccess } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
 import type { Config } from "#src/domain/schemas.ts";
@@ -13,26 +13,10 @@ export async function checkOpenAi(
   request: Fetch = fetch,
 ): Promise<string> {
   const apiKey = await readOpReference(config.agents.codex.openAiApiKey, run);
-  const { routeModelId } = createCodexConfig({
-    apiKey,
-    modelId: config.agents.codex.model,
-  });
-  const response = await request(
-    `https://api.openai.com/v1/models/${encodeURIComponent(routeModelId)}`,
-    {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(30_000),
-    },
+  await checkCodexModelAccess(
+    { apiKey, modelId: config.agents.codex.model },
+    request,
   );
-  if (!response.ok) {
-    // Provider error bodies can echo credentials. Report only the boundary.
-    throw new Error(
-      `OpenAI model access failed (HTTP ${String(response.status)}). Codex needs a native OpenAI credential with access to the configured model.`,
-    );
-  }
-  const model = z.object({ id: z.string() }).parse(await response.json());
-  if (model.id !== routeModelId)
-    throw new Error("OpenAI returned a different model");
   return apiKey;
 }
 
