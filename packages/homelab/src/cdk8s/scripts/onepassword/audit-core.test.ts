@@ -5,8 +5,11 @@ import {
   manifestAuditReferences,
   sourceAuditReferences,
   pipelineGrantManifest,
-} from "./audit-1password-core.ts";
-import { VAULT_ID, type OpItem } from "./onepassword-lib.ts";
+} from "./audit-core.ts";
+import {
+  VAULT_ID,
+  type OpItem,
+} from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
 
 const privateValue = "fixture-sensitive-value-do-not-report";
 const items: OpItem[] = [

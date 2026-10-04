@@ -54,9 +54,14 @@ Required configuration is validated at startup: `DATABASE_URL` (a SQLite
 `file:` URL), `ALERTMANAGER_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN`,
 `GRAFANA_URL`, `GRAFANA_API_KEY`, `OPS_INGEST_TOKEN` (at least 32 characters;
 the bearer token the Temporal workflow presents), and `PROMETHEUS_URL` (the
-in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Set
-`EMAIL_ENABLED=true` only with `POSTAL_HOST`, `POSTAL_API_KEY`, `POSTAL_FROM`,
-and `POSTAL_TO` present.
+in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Postal
+uses the credential `POSTAL_API_KEY` and bootstrap connection settings
+`POSTAL_HOST` / `POSTAL_HOST_HEADER`.
+
+Incident mail uses `alert-dashboard-email-enabled` (default off). Sender and
+recipient come from `alert-dashboard-email-from` / `alert-dashboard-email-to`.
+These values are resolved through typed configuration at startup, so changing
+them requires a restart. The defaults preserve the homelab's existing routing.
 
 The flag client needs its bootstrap variables: `FEATURE_FLAGS_MODE` (`flipt`
 in the cluster, `disabled` locally), plus `FLIPT_URL`, `FLIPT_NAMESPACE`
@@ -64,16 +69,16 @@ in the cluster, `disabled` locally), plus `FLIPT_URL`, `FLIPT_NAMESPACE`
 is gated by the Flipt flag `ops-digest-email-enabled` (default off). While it
 is off, `POST /internal/v1/digests/:kind` records a skipped run and sends
 nothing. Digests use the Postal settings whenever all four are present,
-independently of `EMAIL_ENABLED`, and are sent synchronously with a
+independently of the incident-mail flag, and are sent synchronously with a
 per-period `DigestRun` claim rather than through the alert outbox, so enabling
-digests cannot drain alert email that was queued while `EMAIL_ENABLED` was
+digests cannot drain alert email that was queued while incident mail was
 off. The `DigestRun` row for each `(kind, period)` is the digest's ledger: a
 request claims it, sends through Postal with a stable message id, and marks
 it `sent` or `failed`. A repeated request for a sent or skipped period returns
 `duplicate: true`, a failed period is retried by the next request, and a claim
 older than five minutes is presumed abandoned and may be reclaimed.
 
-`EMAIL_ENABLED` and Alertmanager's own mail are alternatives, not layers. The
+Incident mail and Alertmanager's own mail are alternatives. The
 `alerts` receiver carries `email_configs` alongside its webhook, so every
 warning and critical alert is already mailed directly over Postal SMTP; turning
 this on as well would mail the same opening twice, once from Alertmanager and

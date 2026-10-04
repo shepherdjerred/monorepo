@@ -514,12 +514,15 @@ describe("Temporal domain worker isolation", () => {
       "AWS_ACCESS_KEY_ID",
       "AWS_SECRET_ACCESS_KEY",
       "POSTAL_API_KEY",
-      "RECIPIENT_EMAIL",
-      "SENDER_EMAIL",
     ]) {
       expect(reportsEnv).toContain(required);
       expect(gatewayEnv).not.toContain(required);
       expect(homeEnv).not.toContain(required);
+    }
+    for (const routing of ["RECIPIENT_EMAIL", "SENDER_EMAIL"]) {
+      expect(reportsEnv).not.toContain(routing);
+      expect(gatewayEnv).not.toContain(routing);
+      expect(homeEnv).not.toContain(routing);
     }
   });
 });

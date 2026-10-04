@@ -2,7 +2,7 @@ import type { AppConfig } from "./config.ts";
 import { collectHomePayload } from "./collectors/home.ts";
 import { collectHomelabPayload } from "./collectors/homelab.ts";
 import { PetCareService } from "./pet-care-service.ts";
-import { petDashboardEnabled } from "./dynamic-config.ts";
+import { homeDashboardConfig, petDashboardEnabled } from "./dynamic-config.ts";
 import { featureFlagMetrics } from "./feature-flag-metrics.ts";
 import { worstStatus } from "./status.ts";
 import type { HomePayload, HomelabPayload, PetCarePayload } from "./types.ts";
@@ -17,7 +17,9 @@ export type AppDeps = {
 };
 
 export function createHandler(config: AppConfig, deps: AppDeps = {}) {
-  const collectHome = deps.collectHome ?? (() => collectHomePayload(config));
+  const collectHome =
+    deps.collectHome ??
+    (async () => collectHomePayload(await homeDashboardConfig(config)));
   const collectHomelab =
     deps.collectHomelab ?? (() => collectHomelabPayload(config));
   const petCareService = new PetCareService(config);

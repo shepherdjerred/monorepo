@@ -55,8 +55,11 @@ screen is enabled.
 - Server: `PORT` (3000), `DISPLAY_TIME_ZONE` (`America/Los_Angeles`)
 - Home Assistant: `HA_URL`, `HA_BATTERY_THRESHOLD`,
   `HA_UNAVAILABLE_IGNORED_DOMAINS` (CSV of domains with no durable state),
-  and `HA_PRESENCE_ENTITIES` / `HA_SECURITY_ENTITIES` /
-  `HA_CLIMATE_ENTITIES` (CSV of `entity_id:label` pairs). Expected-unavailable
+  with connection wiring declared in homelab IaC. Presence, security, and
+  climate tiles use `trmnl-ha-presence-entities`, `trmnl-ha-security-entities`,
+  and `trmnl-ha-climate-entities` (CSV of `entity_id:label` pairs). Typed
+  configuration resolves these flags for each home payload. Defaults preserve
+  the homelab's existing tiles during a provider outage. Expected-unavailable
   entity globs (companion diagnostics, rooftop Play, living-room TV) live in
   `UNAVAILABLE_IGNORED_ENTITY_GLOBS` in source. Named presence/security/climate
   tiles still warn if those entities are unavailable. The home unavailable

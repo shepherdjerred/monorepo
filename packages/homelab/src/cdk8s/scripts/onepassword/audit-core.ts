@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { VAULT_ID, type OpItem } from "./onepassword-lib.ts";
-import { jsonCredential } from "homelab/scripts/tofu/application-secrets.ts";
 import {
-  buildFieldMapping,
-  resolveAuditItem,
-} from "./onepassword-field-map.ts";
+  VAULT_ID,
+  type OpItem,
+} from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
+import { jsonCredential } from "homelab/scripts/tofu/application-secrets.ts";
+import { buildFieldMapping, resolveAuditItem } from "./field-map.ts";
 
 export type AuditReference = {
   item: string;
@@ -221,7 +221,7 @@ export function sourceAuditReferences(
 export function pipelineGrantManifest(text: string, source: string): unknown {
   const consumers: unknown[] = [];
   for (const match of text.matchAll(
-    /grant\(\s*"([\w-]+)"\s*,\s*(?:"([\w.-]+)"|([A-Z_]+))/gu,
+    /grant\(\s*"([\w-]+)"\s*,\s*(?:"([\w.-]+)"|[A-Z_]+)/gu,
   )) {
     consumers.push(
       match[2] === undefined

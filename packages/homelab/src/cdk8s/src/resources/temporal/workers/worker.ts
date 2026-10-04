@@ -61,6 +61,22 @@ export function createTemporalWorkerDeployment(
     "temporal-flipt-auth-secret",
     fliptAuthItem.name,
   );
+  const argocdItem = new OnePasswordItem(chart, "temporal-argocd-admin-1p", {
+    spec: { itemPath: vaultItemPath("yikdwue26c7gdbk5ftbvaclkli") },
+  });
+  const bugsinkItem = new OnePasswordItem(chart, "temporal-bugsink-api-1p", {
+    spec: { itemPath: vaultItemPath("jeuqmwh3r4nwu2ivo4pa3gr7om") },
+  });
+  const argocdSecret = Secret.fromSecretName(
+    chart,
+    "temporal-argocd-admin-secret",
+    argocdItem.name,
+  );
+  const bugsinkSecret = Secret.fromSecretName(
+    chart,
+    "temporal-bugsink-api-secret",
+    bugsinkItem.name,
+  );
   const photonItem = new OnePasswordItem(chart, "temporal-photon-1p", {
     spec: { itemPath: vaultItemPath("f67iy2i34gonqynkm2vtsvnueu") },
   });
@@ -242,7 +258,9 @@ export function createTemporalWorkerDeployment(
         secret: agentCodexCredential,
         key: "CODEX_AUTH_JSON_B64",
       }),
-      S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
+      S3_ENDPOINT: EnvValue.fromValue(
+        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      ),
       AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
         secret,
         key: "AWS_ACCESS_KEY_ID",
@@ -354,7 +372,11 @@ export function createTemporalWorkerDeployment(
     fliptAuthSecret,
     scoutBryanBucksControlSecret,
     infraServiceAccount,
-    homelabAuditEnvironment: homelabAuditEnv(secret),
+    homelabAuditEnvironment: homelabAuditEnv(
+      secret,
+      argocdSecret,
+      bugsinkSecret,
+    ),
     talosConfigVolume,
     freshRssManifestVolume,
     freshRssCredentialVolume,

@@ -12,7 +12,11 @@ function requiredSecretEnv(
   return env;
 }
 
-export function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
+export function homelabAuditEnv(
+  secret: ISecret,
+  argocdSecret: ISecret,
+  bugsinkSecret: ISecret,
+): Record<string, EnvValue> {
   return {
     ...temporalFeatureFlagEnvironment(),
     BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
@@ -25,15 +29,25 @@ export function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     GCX_CONFIG: EnvValue.fromValue("/tmp/gcx-config.yaml"),
     GCX_NO_UPDATE_NOTIFIER: EnvValue.fromValue("1"),
     GCX_TELEMETRY: EnvValue.fromValue("disabled"),
+    GRAFANA_URL: EnvValue.fromValue(
+      "http://prometheus-grafana.prometheus.svc.cluster.local",
+    ),
+    ARGOCD_SERVER: EnvValue.fromValue(
+      "argocd-server.argocd.svc.cluster.local:80",
+    ),
+    WOODPECKER_REPO_ID: EnvValue.fromValue("1"),
+    BUGSINK_TOKEN: EnvValue.fromSecretValue({
+      secret: bugsinkSecret,
+      key: "BUGSINK_TOKEN",
+    }),
+    ARGOCD_AUTH_TOKEN: EnvValue.fromSecretValue({
+      secret: argocdSecret,
+      key: "ARGOCD_AUTH_TOKEN",
+    }),
     ...requiredSecretEnv(secret, [
-      "BUGSINK_TOKEN",
-      "GRAFANA_URL",
       "GRAFANA_API_KEY",
-      "ARGOCD_SERVER",
-      "ARGOCD_AUTH_TOKEN",
       "CLOUDFLARE_API_TOKEN",
       "WOODPECKER_TOKEN",
-      "WOODPECKER_REPO_ID",
     ]),
     ALERT_DASHBOARD_URL: EnvValue.fromValue(
       "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",

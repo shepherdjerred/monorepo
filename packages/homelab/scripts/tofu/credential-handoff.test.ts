@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   assertPreparationAction,
   ApplicationSecretsSchema,
+  CredentialTargetSchema,
   applicationSecrets,
   jsonCredential,
 } from "./application-secrets.ts";
@@ -12,7 +13,9 @@ import {
   verifyHandoffs,
   main,
   handoffEnvironment,
+  handoffDesiredState,
 } from "./credential-handoff.ts";
+import { collectOnePasswordTargets } from "#scripts/platform-desired-state.ts";
 import { parsePrivateJson, capturedRead } from "./secret-read.ts";
 import { z } from "zod";
 
@@ -34,6 +37,39 @@ const items = [
     ],
   },
 ];
+
+describe("generated Cloudflare handoffs", () => {
+  test("generated Cloudflare handoffs do not require unmanaged token targets", () => {
+    const generated = { vault_item_id: "generated", vault_field: "API_TOKEN" };
+    const existing = { vault_item_id: "existing", vault_field: "API_TOKEN" };
+    const desired = {
+      cloudflare_api_tokens: {
+        generated: { managed: true, ...generated },
+        existing: { managed: false, ...existing },
+      },
+    };
+    const targets = collectOnePasswordTargets(
+      handoffDesiredState(desired, "cloudflare-tokens"),
+    ).map((reference) => CredentialTargetSchema.parse(reference));
+    const report = verifyHandoffs(
+      { generated: { api_token: "fixture-token", ...generated } },
+      targets,
+      [
+        {
+          id: "generated",
+          title: "generated",
+          fields: [{ id: "token", label: "API_TOKEN", value: "fixture-token" }],
+        },
+      ],
+    );
+    expect(report).toHaveLength(1);
+    expect(report[0]?.status).toBe("matches");
+    expect(desired.cloudflare_api_tokens.existing).toEqual({
+      managed: false,
+      ...existing,
+    });
+  });
+});
 
 describe("credential preparation", () => {
   test("failed private subprocess output stays out of errors", async () => {

@@ -64,10 +64,9 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           secret,
           key: "TRMNL_API_KEY",
         }),
-        HA_URL: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_URL",
-        }),
+        HA_URL: EnvValue.fromValue(
+          "http://home-homeassistant-service.home.svc.cluster.local:8123",
+        ),
         HA_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "HA_TOKEN",
@@ -79,18 +78,6 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
-        HA_PRESENCE_ENTITIES: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_PRESENCE_ENTITIES",
-        }),
-        HA_SECURITY_ENTITIES: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_SECURITY_ENTITIES",
-        }),
-        HA_CLIMATE_ENTITIES: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_CLIMATE_ENTITIES",
-        }),
         // The homelab screen renders from the ops snapshot the ops dashboard
         // (deployed as alert-dashboard) serves.
         OPS_DASHBOARD_URL: EnvValue.fromValue(OPS_DASHBOARD_URL),

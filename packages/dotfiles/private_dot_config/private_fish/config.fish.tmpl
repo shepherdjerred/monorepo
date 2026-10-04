@@ -95,7 +95,7 @@ set -gx POSTHOG_CLI_PROJECT_ID '549883'
 if status is-interactive
   {{ if lookPath "op" -}}
   set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
-  set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
+  set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/m2xw5xzzb7ftfg3pgudagdfvje/ANTHROPIC_API_KEY" }}'
   {{ end -}}
   # Keep provider API keys available to ordinary tools, but coding-agent
   # wrappers explicitly remove direct API credentials. Claude and Codex

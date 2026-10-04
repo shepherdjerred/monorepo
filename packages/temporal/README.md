@@ -229,6 +229,14 @@ Prompts are limited to 4,000 characters. New chats snapshot
 `temporal-agent-chat-imessage-claude-model` or
 `temporal-agent-chat-imessage-codex-model` according to their provider.
 
+## Report mail configuration
+
+The reports worker resolves `temporal-email-recipient` and
+`temporal-email-sender` through typed configuration for each delivery activity.
+Defaults preserve the existing homelab routing during a flag-provider outage.
+Postal credentials stay in 1Password; service endpoints and host routing are
+reviewed homelab bootstrap settings. Workflow histories contain no credentials.
+
 ## Documentation
 
 - [Temporal overview](../docs/wiki/src/content/docs/explanation/temporal/overview.md)

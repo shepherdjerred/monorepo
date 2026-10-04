@@ -7,8 +7,29 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { featureFlagMetrics } from "./feature-flag-metrics.ts";
+import { parseEntities, type AppConfig } from "./config.ts";
 
 const DEFINITION = {
+  presenceEntities: {
+    schema: z.string().transform(parseEntities),
+    sources: ["flag", "default"],
+    default: "person.jerred:Jerred,person.shuxin:Shuxin,person.fengyu:Fengyu",
+    names: { flag: "trmnl-ha-presence-entities" },
+  },
+  securityEntities: {
+    schema: z.string().transform(parseEntities),
+    sources: ["flag", "default"],
+    default:
+      "lock.front_door:Front Door,binary_sensor.sensor_motion_detection:Sensor Motion detection,binary_sensor.sensor_motion_detection_2:Sensor Motion detection,binary_sensor.front_door_motion:Front Door Motion",
+    names: { flag: "trmnl-ha-security-entities" },
+  },
+  climateEntities: {
+    schema: z.string().transform(parseEntities),
+    sources: ["flag", "default"],
+    default:
+      "climate.bedroom:Bedroom,climate.living_room:Living Room,climate.master_bathroom:Master Bathroom,climate.guest_bathroom:Guest Bathroom,climate.office:Office,climate.guest_room:Guest Room",
+    names: { flag: "trmnl-ha-climate-entities" },
+  },
   petDashboardEnabled: {
     schema: z.boolean(),
     sources: ["flag", "default"],
@@ -25,7 +46,12 @@ function createResolver() {
     sources: {
       flag: createFlagConfigSource({
         targetingKey: "trmnl-dashboard",
-        kinds: { petDashboardEnabled: "boolean" },
+        kinds: {
+          petDashboardEnabled: "boolean",
+          presenceEntities: "string",
+          securityEntities: "string",
+          climateEntities: "string",
+        },
       }),
     },
     hooks: {
@@ -64,6 +90,24 @@ export async function petDashboardEnabled(): Promise<boolean> {
   return resolver.value("petDashboardEnabled", {
     targetingKey: "trmnl-dashboard",
   });
+}
+
+/** Resolve entity selection for each home payload, using the existing client. */
+export async function homeDashboardConfig(
+  config: AppConfig,
+): Promise<AppConfig> {
+  if (resolver === undefined) {
+    throw new Error("home config read before initializeDynamicConfig()");
+  }
+  const [presence, security, climate] = await Promise.all([
+    resolver.value("presenceEntities"),
+    resolver.value("securityEntities"),
+    resolver.value("climateEntities"),
+  ]);
+  return {
+    ...config,
+    homeAssistant: { ...config.homeAssistant, presence, security, climate },
+  };
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { buildFieldMapping } from "./onepassword-field-map.ts";
-import { VAULT_ID, type OpItem } from "./onepassword-lib.ts";
+import { buildFieldMapping } from "./field-map.ts";
+import {
+  VAULT_ID,
+  type OpItem,
+} from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
 
 const privateValue = "fixture-never-serialize-this";
 const items: OpItem[] = [

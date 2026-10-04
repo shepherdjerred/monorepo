@@ -8,13 +8,13 @@ import {
   pipelineGrantManifest,
   type AuditReference,
   type AuditCoverage,
-} from "./audit-1password-core.ts";
-import { resolveAuditItem } from "./onepassword-field-map.ts";
-import type { OpItem } from "./onepassword-lib.ts";
+} from "./audit-core.ts";
+import { resolveAuditItem } from "./field-map.ts";
+import type { OpItem } from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
 import {
   synthManifests,
   collectDesiredStateTargets,
-} from "./check-1password-items.ts";
+} from "homelab/src/cdk8s/scripts/check-1password-items.ts";
 import {
   capturedRead,
   parsePrivateJson,
@@ -23,7 +23,7 @@ import {
 import { previewAdoption } from "homelab/scripts/tofu/credential-handoff.ts";
 import { applicationSecrets } from "homelab/scripts/tofu/application-secrets.ts";
 
-const root = new URL("../../../../../", import.meta.url).pathname;
+const root = new URL("../../../../../../", import.meta.url).pathname;
 const KubeListSchema = z.object({ items: z.array(z.unknown()) });
 
 async function sourceIdentity() {
@@ -233,7 +233,7 @@ async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.some((arg) => arg !== "--live"))
     throw new Error(
-      "Usage: audit-1password-vault.ts [--live] (read-only JSON on stdout)",
+      "Usage: audit-vault.ts [--live] (read-only JSON on stdout)",
     );
   const coverage: AuditCoverage = {
     inspected: [

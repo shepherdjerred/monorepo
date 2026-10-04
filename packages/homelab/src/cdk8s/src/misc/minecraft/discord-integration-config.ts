@@ -42,6 +42,7 @@ export function getDiscordIntegrationExtraVolumes(name: string): object[] {
 
 export function getDiscordIntegrationConfigInitContainer(
   secretName: string,
+  channelId: string,
 ): object {
   return {
     name: "configure-discord-integration",
@@ -67,9 +68,7 @@ exec mc-image-helper sync-and-interpolate \
       },
       {
         name: "CFG_DISCORD_CHANNEL_ID",
-        valueFrom: {
-          secretKeyRef: { name: secretName, key: "DISCORD_CHANNEL_ID" },
-        },
+        value: channelId,
       },
     ],
     resources: {

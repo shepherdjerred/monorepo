@@ -12,7 +12,7 @@ import {
   type CredentialTarget,
 } from "./application-secrets.ts";
 import { capturedRead, parsePrivateJson, readVault } from "./secret-read.ts";
-import { resolveAuditItem } from "#cdk8s/scripts/onepassword-field-map.ts";
+import { resolveAuditItem } from "#cdk8s/scripts/onepassword/field-map.ts";
 import type { OpItem } from "#cdk8s/scripts/onepassword-lib.ts";
 import { STATE_CREDENTIALS } from "./tofu-stack-manifest.ts";
 
@@ -278,6 +278,27 @@ function targetOwners(desired: unknown, stack: string): Map<string, string> {
   return owners;
 }
 
+/** Cloudflare emits sensitive handoffs only for generated, managed tokens. */
+export function handoffDesiredState(desired: unknown, stack: string): unknown {
+  if (stack !== "cloudflare-tokens") return desired;
+  const parsed = z
+    .looseObject({
+      cloudflare_api_tokens: z.record(
+        z.string(),
+        z.looseObject({ managed: z.boolean() }),
+      ),
+    })
+    .parse(desired);
+  return {
+    ...parsed,
+    cloudflare_api_tokens: Object.fromEntries(
+      Object.entries(parsed.cloudflare_api_tokens).filter(
+        ([, token]) => token.managed,
+      ),
+    ),
+  };
+}
+
 export async function main(args: string[]): Promise<void> {
   const [stack, action, expectedHead] = args;
   assertPreparationAction(action ?? "");
@@ -318,13 +339,15 @@ export async function main(args: string[]): Promise<void> {
     );
     return;
   }
-  const desired =
+  const desired = handoffDesiredState(
     stack === "application-secrets"
       ? applicationSecrets
       : await loadPlatformDesiredState(
           new URL(`../../src/tofu/${stack}/`, import.meta.url).pathname,
           stack,
-        );
+        ),
+    stack,
+  );
   const targets =
     stack === "application-secrets"
       ? applicationTargets
@@ -357,6 +380,8 @@ export async function main(args: string[]): Promise<void> {
       "packages/homelab/src/tofu",
       "packages/homelab/scripts/tofu",
       "packages/homelab/scripts/platform-desired-state.ts",
+      "packages/homelab/src/cdk8s/scripts/onepassword",
+      "packages/homelab/src/cdk8s/scripts/onepassword-lib.ts",
     ],
     "source status",
   );

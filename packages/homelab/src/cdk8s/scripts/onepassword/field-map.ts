@@ -2,8 +2,8 @@ import {
   formatSecretDataName,
   VAULT_ID,
   type OpItem,
-} from "./onepassword-lib.ts";
-import type { AuditReference } from "./audit-1password-core.ts";
+} from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
+import type { AuditReference } from "./audit-core.ts";
 import { jsonCredential } from "homelab/scripts/tofu/application-secrets.ts";
 
 type Field = NonNullable<OpItem["fields"]>[number];

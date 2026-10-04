@@ -10,6 +10,7 @@ import type { PreviewPort } from "#application/ports";
 import { AlertmanagerClient } from "#infrastructure/alertmanager-client";
 import { readConfig } from "#infrastructure/config";
 import {
+  alertEmailConfig,
   createDigestGate,
   flagMetricsRecorder,
 } from "#infrastructure/digest-flag";
@@ -28,7 +29,26 @@ import { reconcileAndPublish } from "#server/reconciliation";
 import { serializedWorker } from "#server/serialized-worker";
 import { systemClock } from "#shared/time";
 
-const config = readConfig(Bun.env);
+const metrics = new Metrics();
+const digestGate = await createDigestGate({
+  environment: Bun.env,
+  metrics: flagMetricsRecorder({
+    countEvaluation: (flag, reason) => {
+      metrics.increment("feature_flag_evaluations_total", { flag, reason });
+    },
+    countError: (operation) => {
+      metrics.increment("feature_flag_errors_total", { operation });
+    },
+    providerReady: (ready) => {
+      metrics.gauge("feature_flag_provider_ready", ready ? 1 : 0);
+    },
+    snapshotAge: (seconds) => {
+      metrics.gauge("feature_flag_snapshot_age_seconds", seconds);
+    },
+  }),
+});
+const environment: Record<string, string | undefined> = Bun.env;
+const config = readConfig({ ...environment, ...(await alertEmailConfig()) });
 initializeTracing({
   enabled: config.TELEMETRY_ENABLED,
   serviceName: config.OTEL_SERVICE_NAME,
@@ -47,7 +67,6 @@ const grafanaPreviews = new GrafanaPreviewClient({
     (host) => host.trim(),
   ),
 });
-const metrics = new Metrics();
 const previews: PreviewPort = {
   health: () => grafanaPreviews.health(),
   previews: async (input, alert) => {
@@ -101,23 +120,6 @@ const service = new AlertService({
   previews,
   clock: systemClock,
   emailEnabled: config.EMAIL_ENABLED,
-});
-const digestGate = await createDigestGate({
-  environment: Bun.env,
-  metrics: flagMetricsRecorder({
-    countEvaluation: (flag, reason) => {
-      metrics.increment("feature_flag_evaluations_total", { flag, reason });
-    },
-    countError: (operation) => {
-      metrics.increment("feature_flag_errors_total", { operation });
-    },
-    providerReady: (ready) => {
-      metrics.gauge("feature_flag_provider_ready", ready ? 1 : 0);
-    },
-    snapshotAge: (seconds) => {
-      metrics.gauge("feature_flag_snapshot_age_seconds", seconds);
-    },
-  }),
 });
 const series = new PrometheusSeries(config.PROMETHEUS_URL);
 const ops = new OpsService({
