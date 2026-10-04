@@ -241,14 +241,14 @@ describe("managed Customs results", () => {
     // changes, so retrying can't help — and the client match dispatcher
     // retries a plain error forever, holding up every match behind it.
     const seeded = await seedPendingResult();
-    const [, ...withoutFirst] = tournamentFixture.info.participants;
+    const [, ...withoutFirst] = fixture.info.participants;
     const partial = RawMatchSchema.parse({
-      ...tournamentFixture,
+      ...fixture,
       metadata: {
-        ...tournamentFixture.metadata,
+        ...fixture.metadata,
         participants: withoutFirst.map((participant) => participant.puuid),
       },
-      info: { ...tournamentFixture.info, participants: withoutFirst },
+      info: { ...fixture.info, participants: withoutFirst },
     });
 
     await expect(
