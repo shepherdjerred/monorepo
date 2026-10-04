@@ -1,13 +1,26 @@
 import { Glob } from "bun";
 import path from "node:path";
 
-async function sourceSnapshot(directory: string): Promise<Map<string, string>> {
+export async function sourceSnapshot(
+  directory: string,
+  read: (file: string) => Promise<ArrayBuffer> = (file) =>
+    Bun.file(file).arrayBuffer(),
+): Promise<Map<string, string>> {
   const files = new Map<string, string>();
   for (const file of new Glob("**/*.ts").scanSync({
     cwd: directory,
     absolute: true,
   })) {
-    files.set(file, Bun.hash(await Bun.file(file).arrayBuffer()).toString(16));
+    try {
+      files.set(file, Bun.hash(await read(file)).toString(16));
+    } catch (error) {
+      if (!(
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ))
+        throw error;
+    }
   }
   return files;
 }

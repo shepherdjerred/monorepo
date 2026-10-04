@@ -181,6 +181,7 @@ export const TaskStateSchema = z.object({
   repairTurnsUsed: z.number().int().nonnegative().default(0),
   implementationStarted: z.boolean().default(false),
   blockedReason: z.string().nullable().default(null),
+  blockedFromPhase: TaskPhaseSchema.nullable().default(null),
   nextAttemptAt: z.iso.datetime().nullable().default(null),
   blockedAttempts: z.number().int().nonnegative().default(0),
   mergeCommitSha: z

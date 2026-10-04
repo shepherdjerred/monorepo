@@ -19,6 +19,7 @@ export function createTaskState(input: {
     repairTurnsUsed: 0,
     implementationStarted: false,
     blockedReason: null,
+    blockedFromPhase: null,
     nextAttemptAt: null,
     blockedAttempts: 0,
     mergeCommitSha: null,

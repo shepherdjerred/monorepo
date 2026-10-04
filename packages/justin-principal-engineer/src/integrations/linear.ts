@@ -428,6 +428,7 @@ export class LinearClient {
     issue: LinearIssue,
     reason: string,
     retryAt: string | null,
+    options?: { comment: boolean },
   ): Promise<void> {
     const team = await this.resolveTeam(issue);
     await this.ensureLabels(team, [BLOCKED_LABEL]);
@@ -437,10 +438,11 @@ export class LinearClient {
       add: [BLOCKED_LABEL],
       remove: [],
     });
-    await this.comment(
-      issue.identifier,
-      `Autonomous task blocked: ${reason}${retryAt === null ? "" : `\nNext automatic check: ${retryAt}`}`,
-    );
+    if (options?.comment !== false)
+      await this.comment(
+        issue.identifier,
+        `Autonomous task blocked: ${reason}${retryAt === null ? "" : `\nNext automatic check: ${retryAt}`}`,
+      );
   }
 
   public async resumeBlocked(issue: LinearIssue): Promise<void> {

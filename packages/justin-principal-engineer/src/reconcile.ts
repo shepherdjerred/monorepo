@@ -92,8 +92,9 @@ export class Reconciler {
       const resumed = {
         ...due,
         issue,
-        phase: due.resumePhase ?? "awaiting_ci",
-        resumePhase: null,
+        phase: due.blockedFromPhase ?? due.resumePhase ?? "awaiting_ci",
+        resumePhase: due.blockedFromPhase === null ? null : due.resumePhase,
+        blockedFromPhase: null,
         nextAttemptAt: null,
       };
       await this.store.save(resumed);

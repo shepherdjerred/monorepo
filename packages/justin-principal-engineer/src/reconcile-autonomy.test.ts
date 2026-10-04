@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { TaskStateSchema } from "#src/domain/schemas.ts";
 import {
   DEVEX_PROJECT_ID,
@@ -16,6 +16,8 @@ import {
   assertRepairBudget,
   codingTurnStarted,
   blockAutonomousTask,
+  handleAutonomousFailure,
+  formatTaskStatus,
 } from "#src/reconcile-autonomy.ts";
 
 const issue = {
@@ -113,8 +115,13 @@ describe("autonomous authorization and recovery", () => {
           delay * 60_000,
         );
         expect(saved.phase).toBe("blocked");
-        expect(saved.resumePhase).toBe("awaiting_ci");
-        state = { ...saved, phase: "awaiting_ci", resumePhase: null };
+        expect(saved.blockedFromPhase).toBe("awaiting_ci");
+        state = {
+          ...saved,
+          phase: "awaiting_ci",
+          resumePhase: null,
+          blockedFromPhase: null,
+        };
       }
       await blockAutonomousTask({
         state,
@@ -127,5 +134,93 @@ describe("autonomous authorization and recovery", () => {
     } finally {
       await rm(home, { recursive: true });
     }
+  });
+
+  test("repeated blocks restore the label while deduplicating comments", async () => {
+    const home = await mkdtemp(path.join(os.tmpdir(), "justin-label-retry-"));
+    const paths = runtimePaths(home);
+    const store = new StateStore(paths);
+    const calls: string[][] = [];
+    const linear = new LinearClient("AI", fakeLinearRunner(calls));
+    try {
+      const state = createTaskState({
+        paths,
+        issue,
+        provider: "codex",
+        deliveryMode: "autonomous",
+      });
+      await blockAutonomousTask({
+        state,
+        reason: "Unavailable",
+        retryable: true,
+        linear,
+        store,
+      });
+      const [saved] = await store.list();
+      if (saved === undefined) throw new Error("Missing block");
+      expect(saved.blockedFromPhase).toBe("claiming");
+      expect(saved.resumePhase).toBe("claimed");
+      await blockAutonomousTask({
+        state: saved,
+        reason: "Unavailable",
+        retryable: true,
+        linear,
+        store,
+      });
+      expect(
+        calls.filter((args) => args[3]?.includes("issueUpdate")),
+      ).toHaveLength(2);
+      expect(
+        calls.filter((args) => args[3] === "comment" && args[4] === "add"),
+      ).toHaveLength(1);
+      expect(
+        formatTaskStatus({ ...saved, phase: "claimed", nextAttemptAt: null }),
+      ).not.toContain("Unavailable");
+    } finally {
+      await rm(home, { recursive: true });
+    }
+  });
+
+  test("a failed repair preserves its CI health, logs, and finding references", async () => {
+    const initial = {
+      ...createTaskState({
+        paths: runtimePaths("/tmp/fixture"),
+        issue,
+        provider: "codex",
+        deliveryMode: "autonomous",
+      }),
+      phase: "implementing" as const,
+    };
+    const latest = {
+      ...codingTurnStarted(initial),
+      pendingDiagnostics: "Compiler failure in CI",
+      pendingHealth: {
+        prNumber: 42,
+        prUrl: "https://github.com/owner/repo/pull/42",
+        overallStatus: "UNHEALTHY" as const,
+        checks: [],
+        nextSteps: [],
+      },
+      pendingReviewFindings: [{ provider: "codex" as const, key: "finding" }],
+    };
+    const save = vi.fn().mockResolvedValue(latest);
+    await handleAutonomousFailure({
+      initial,
+      latest,
+      error: new Error("Coding turn timed out"),
+      store: new StateStore(runtimePaths("/tmp/fixture")),
+      linear: new LinearClient("AI", fakeLinearRunner()),
+      save,
+    });
+    expect(save).toHaveBeenCalledWith(
+      latest,
+      "implementing",
+      expect.objectContaining({
+        pendingHealth: latest.pendingHealth,
+        pendingDiagnostics: expect.stringContaining(
+          "Compiler failure in CI\n\nPrevious repair turn failed: Coding turn timed out",
+        ),
+      }),
+    );
   });
 });

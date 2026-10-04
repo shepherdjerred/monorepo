@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 
-import { ConfigSchema } from "#src/domain/schemas.ts";
+import { AgentOutputSchema, ConfigSchema } from "#src/domain/schemas.ts";
 import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
 import { Reconciler } from "#src/reconcile.ts";
 import { runtimePaths } from "#src/runtime/paths.ts";
@@ -17,6 +17,8 @@ import {
 import { DEVEX_PROJECT_ID } from "#src/domain/autonomy.ts";
 import { GitWorkspace } from "#src/host/git-workspace.ts";
 import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
+import { DockerAgentRunner } from "#src/host/docker.ts";
+import { LinearClient } from "#src/integrations/linear.ts";
 
 vi.mock("#src/integrations/github-app.ts", () => ({
   createGitHubAuth: async () => ({
@@ -302,6 +304,7 @@ async function autonomousFixture() {
   return {
     ...fixtureState,
     state,
+    pr,
     store,
     run,
     calls,
@@ -317,6 +320,106 @@ async function autonomousFixture() {
 }
 
 describe("autonomous merge acceptance", () => {
+  test("a due blocked claim retries Linear claim and preserves its continuation", async () => {
+    const f = await autonomousFixture();
+    const claim = vi
+      .spyOn(LinearClient.prototype, "claim")
+      .mockResolvedValue(undefined);
+    try {
+      await f.store.save({
+        ...f.state,
+        phase: "blocked",
+        blockedFromPhase: "claiming",
+        resumePhase: "awaiting_ci",
+        nextAttemptAt: "2026-01-01T00:00:00Z",
+      });
+      await new Reconciler(f.config, f.paths, f.run).reconcile();
+      expect(claim).toHaveBeenCalledOnce();
+      const states = await f.store.list();
+      expect(states[0]?.phase).toBe("awaiting_ci");
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test.each([false, true])(
+    "publishes only after verification and finding resolution (verification failure: %s)",
+    async (verificationFails) => {
+      const f = await autonomousFixture();
+      const events: string[] = [];
+      const finding = { provider: "coderabbit" as const, key: "finding-1" };
+      const output = AgentOutputSchema.parse({
+        status: "changed",
+        commitTitle: "fix(toolkit): honor the argument boundary",
+        summary: "Fixture repair",
+        verification: [],
+        resolvedFindings: [finding],
+      });
+      vi.spyOn(LinearClient.prototype, "agentContext").mockResolvedValue("");
+      vi.spyOn(GitWorkspace.prototype, "preparePublication").mockResolvedValue([
+        output,
+        ["packages/toolkit/src/handlers/pr.ts"],
+      ]);
+      vi.spyOn(
+        DockerAgentRunner.prototype,
+        "verifyWorkspace",
+      ).mockImplementation(() => {
+        events.push("verify");
+        return verificationFails
+          ? Promise.reject(new Error("Verification failed"))
+          : Promise.resolve(["Focused build, typecheck, test, lint passed"]);
+      });
+      vi.spyOn(
+        GitHubClient.prototype,
+        "pullRequestForBranch",
+      ).mockResolvedValue(f.pr);
+      const resolve = vi
+        .spyOn(GitHubClient.prototype, "resolveFindings")
+        .mockImplementation(() => {
+          events.push("resolve");
+          return Promise.resolve([finding]);
+        });
+      vi.spyOn(GitWorkspace.prototype, "publishChanges").mockImplementation(
+        () => {
+          events.push("publish");
+          return Promise.resolve();
+        },
+      );
+      vi.spyOn(GitHubClient.prototype, "updateBody").mockResolvedValue(
+        undefined,
+      );
+      try {
+        await f.store.save({
+          ...f.state,
+          phase: "publishing",
+          prNumber: f.pr.number,
+          prUrl: f.pr.url,
+          lastAgentOutput: output,
+          pendingReviewFindings: [finding],
+        });
+        await new Reconciler(f.config, f.paths, f.run).reconcile();
+        if (verificationFails) {
+          expect(events).toEqual(["verify"]);
+          expect(resolve).not.toHaveBeenCalled();
+        } else {
+          expect(events).toEqual(["verify", "resolve", "publish"]);
+          expect(resolve).toHaveBeenCalledWith(
+            f.pr.number,
+            expect.stringContaining(
+              "Focused build, typecheck, test, lint passed",
+            ),
+            f.state.checkoutPath,
+            [finding],
+          );
+          const states = await f.store.list();
+          expect(states[0]?.pendingReviewFindings).toEqual([]);
+        }
+      } finally {
+        await f.cleanup();
+      }
+    },
+  );
+
   test("green CI goes directly to merge and completes only after ancestry confirmation", async () => {
     const f = await autonomousFixture();
     try {

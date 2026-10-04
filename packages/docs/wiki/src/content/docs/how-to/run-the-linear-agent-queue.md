@@ -76,16 +76,16 @@ bun packages/justin-principal-engineer/src/cli.ts daemon status
 references, pinned container image, and GitHub App repository access. Installing
 from a temporary Herdr worktree is rejected.
 
-For local iteration, unload the installed service and run from the current
-package checkout:
+For local iteration, unload the installed service and run from the monorepo root:
 
 ```bash
-bun src/cli.ts daemon stop
-bun run dev
+bun packages/justin-principal-engineer/src/cli.ts daemon stop
+bun run --cwd packages/justin-principal-engineer dev
 ```
 
 Save a TypeScript source file to reload on the next reconcile. Ctrl-C drains
-the current turn and preserves state. Use `bun run dev:once` for one transition.
+the current turn and preserves state. Use
+`bun run --cwd packages/justin-principal-engineer dev:once` for one transition.
 These commands operate the configured live queue. See the
 [package contributor reference](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/README.md)
 for the reload and credential contracts.

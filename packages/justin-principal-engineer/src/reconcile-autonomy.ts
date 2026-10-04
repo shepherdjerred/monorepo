@@ -30,8 +30,11 @@ export async function handleAutonomousFailure(input: {
   const reason = error instanceof Error ? error.message : String(error);
   if (repairable || error instanceof WorkspaceVerificationFailure) {
     await input.save(latest, "implementing", {
-      pendingDiagnostics: reason,
-      pendingHealth: null,
+      pendingDiagnostics:
+        latest.pendingDiagnostics === null
+          ? reason
+          : `${latest.pendingDiagnostics}\n\nPrevious repair turn failed: ${reason}`,
+      pendingHealth: latest.pendingHealth,
     });
     return;
   }
@@ -65,14 +68,15 @@ export async function blockAutonomousTask(input: {
     ...input.state,
     phase: "blocked",
     blockedReason: input.reason,
-    resumePhase: input.state.resumePhase ?? input.state.phase,
+    blockedFromPhase: input.state.blockedFromPhase ?? input.state.phase,
     blockedAttempts: attempts,
     nextAttemptAt: retryAt,
     updatedAt: currentTimestamp(),
   };
   await input.store.save(next);
-  if (input.state.blockedReason !== input.reason)
-    await input.linear.blocked(input.state.issue, input.reason, retryAt);
+  await input.linear.blocked(input.state.issue, input.reason, retryAt, {
+    comment: input.state.blockedReason !== input.reason,
+  });
   console.error(
     `${input.state.issue.identifier}: blocked: ${input.reason}${retryAt === null ? "" : `; retry ${retryAt}`}`,
   );
@@ -101,5 +105,5 @@ export function codingTurnStarted(state: TaskState): TaskState {
 }
 
 export function formatTaskStatus(state: TaskState): string {
-  return `${state.issue.identifier}: ${state.phase} (${state.deliveryMode}, repairs ${String(state.repairTurnsUsed)}/${String(MAX_REPAIR_TURNS)})${state.blockedReason === null ? "" : `; ${state.blockedReason}`}${state.nextAttemptAt === null ? "" : `; retry ${state.nextAttemptAt}`}${state.prUrl === null ? "" : ` ${state.prUrl}`}`;
+  return `${state.issue.identifier}: ${state.phase} (${state.deliveryMode}, repairs ${String(state.repairTurnsUsed)}/${String(MAX_REPAIR_TURNS)})${state.phase !== "blocked" || state.blockedReason === null ? "" : `; ${state.blockedReason}`}${state.nextAttemptAt === null ? "" : `; retry ${state.nextAttemptAt}`}${state.prUrl === null ? "" : ` ${state.prUrl}`}`;
 }

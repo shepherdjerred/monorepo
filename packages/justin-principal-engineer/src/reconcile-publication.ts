@@ -50,6 +50,49 @@ export async function publishTask(input: {
   }
   await input.withGitHub(async (github, env) => {
     let pr = await github.pullRequestForBranch(state.branch);
+    const requested = [
+      ...output.resolvedFindings,
+      ...output.resolvedFindingKeys.map((key) => ({
+        provider: "codex" as const,
+        key,
+      })),
+    ];
+    const pending = [
+      ...state.pendingReviewFindings,
+      ...state.pendingCodexFindingKeys.map((key) => ({
+        provider: "codex" as const,
+        key,
+      })),
+    ];
+    const eligible = requested.filter((ref) =>
+      pending.some(
+        (value) => value.provider === ref.provider && value.key === ref.key,
+      ),
+    );
+    // Host verification has passed. Resolve the addressed findings before
+    // publication so the new head's review gate sees both code and thread state.
+    const resolved =
+      pr === null
+        ? []
+        : await github.resolveFindings(
+            pr.number,
+            `Agent-reported repair verified locally before publication. Reviewed base: ${pr.headRefOid}.\n\nHost checks:\n${verification.join("\n")}`,
+            state.checkoutPath,
+            eligible,
+          );
+    state = {
+      ...state,
+      pendingCodexFindingKeys: state.pendingCodexFindingKeys.filter(
+        (key) =>
+          !resolved.some((ref) => ref.provider === "codex" && ref.key === key),
+      ),
+      pendingReviewFindings: state.pendingReviewFindings.filter(
+        (ref) =>
+          !resolved.some(
+            (value) => value.provider === ref.provider && value.key === ref.key,
+          ),
+      ),
+    };
     if (pr === null) {
       if (changed.length > 0) {
         await input.git.commitAndSubmit({
@@ -76,44 +119,6 @@ export async function publishTask(input: {
     }
     pr = await github.pullRequestForBranch(state.branch);
     if (pr === null) throw new Error("No PR after submit");
-    const requested = [
-      ...output.resolvedFindings,
-      ...output.resolvedFindingKeys.map((key) => ({
-        provider: "codex" as const,
-        key,
-      })),
-    ];
-    const pending = [
-      ...state.pendingReviewFindings,
-      ...state.pendingCodexFindingKeys.map((key) => ({
-        provider: "codex" as const,
-        key,
-      })),
-    ];
-    const eligible = requested.filter((ref) =>
-      pending.some(
-        (value) => value.provider === ref.provider && value.key === ref.key,
-      ),
-    );
-    const resolved = await github.resolveFindings(
-      pr.number,
-      safeOutput.summary,
-      state.checkoutPath,
-      eligible,
-    );
-    state = {
-      ...state,
-      pendingCodexFindingKeys: state.pendingCodexFindingKeys.filter(
-        (key) =>
-          !resolved.some((ref) => ref.provider === "codex" && ref.key === key),
-      ),
-      pendingReviewFindings: state.pendingReviewFindings.filter(
-        (ref) =>
-          !resolved.some(
-            (value) => value.provider === ref.provider && value.key === ref.key,
-          ),
-      ),
-    };
     let current = await input.save(state, "publishing", {
       prNumber: pr.number,
       prUrl: pr.url,

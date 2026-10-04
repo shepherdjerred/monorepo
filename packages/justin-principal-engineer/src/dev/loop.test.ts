@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { runDevLoop } from "#src/dev/loop.ts";
+import { runDevLoop, sourceSnapshot } from "#src/dev/loop.ts";
 
 const directories: string[] = [];
 const controllers: AbortController[] = [];
@@ -34,6 +34,25 @@ function start(input: Parameters<typeof runDevLoop>[0]): Promise<void> {
 }
 
 describe("foreground development", () => {
+  test("an atomic save disappearing during a scan is transient; permission errors fail", async () => {
+    const { directory, file } = await setup();
+    const snapshot = await sourceSnapshot(directory, async (listed) => {
+      await rm(listed);
+      return await Bun.file(listed).arrayBuffer();
+    });
+    expect(snapshot.size).toBe(0);
+    await Bun.write(file, "replacement");
+    const replacement = await sourceSnapshot(directory);
+    expect(replacement.has(file)).toBe(true);
+    await expect(
+      sourceSnapshot(directory, () =>
+        Promise.reject(
+          Object.assign(new Error("Unreadable source"), { code: "EACCES" }),
+        ),
+      ),
+    ).rejects.toThrow("Unreadable source");
+  });
+
   test("a source save starts a fresh process that sees the edit", async () => {
     const { directory, file, controller } = await setup();
     const outputs: string[] = [];
