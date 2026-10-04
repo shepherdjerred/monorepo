@@ -8,6 +8,7 @@ import {
   InfoResponseSchema,
   PlayersResponseSchema,
   RegionReadResponseSchema,
+  RegistryResponseSchema,
   SnapshotListResponseSchema,
   SnapshotRestoreResponseSchema,
   SnapshotSchema,
@@ -20,6 +21,7 @@ import {
   LogsResponseSchema,
   SnapshotBytesResponseSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
+import { recordOp, storeSchematic } from "#lib/mc/build.ts";
 import { daemonRequest } from "#lib/mc/client.ts";
 import {
   renderCommand,
@@ -34,6 +36,9 @@ import { resolveTarget } from "#lib/mc/target.ts";
 
 export type TargetOptions = { target: string | undefined; json: boolean };
 
+/** `--record <buildDir>`: append the op to that build's op log on success. */
+export type RecordOption = { record: string | undefined };
+
 function print<T>(json: boolean, value: T, render: (value: T) => string): void {
   console.log(json ? JSON.stringify(value, null, 2) : render(value));
 }
@@ -47,7 +52,7 @@ async function targetPath(
 }
 
 export async function mcCmdCommand(
-  options: TargetOptions,
+  options: TargetOptions & RecordOption,
   command: string,
 ): Promise<void> {
   const result = await daemonRequest(
@@ -59,11 +64,19 @@ export async function mcCmdCommand(
   print(options.json, result, renderCommand);
   if (!result.success) {
     process.exitCode = 1;
+    return;
+  }
+  if (options.record !== undefined) {
+    await recordOp(options.record, {
+      kind: "command",
+      command,
+      source: "manual",
+    });
   }
 }
 
 export async function mcWeCommand(
-  options: TargetOptions & { session: string; world: string },
+  options: TargetOptions & RecordOption & { session: string; world: string },
   op: WeOp,
 ): Promise<void> {
   const result = await daemonRequest(
@@ -75,6 +88,15 @@ export async function mcWeCommand(
   print(options.json, result, renderWe);
   if (result.results.some((entry) => !entry.ok)) {
     process.exitCode = 1;
+    return;
+  }
+  if (options.record !== undefined) {
+    await recordOp(options.record, {
+      kind: "we",
+      world: options.world,
+      ...op,
+      source: "manual",
+    });
   }
 }
 
@@ -97,7 +119,7 @@ export async function mcWeUndoCommand(
 }
 
 export async function mcPasteCommand(
-  options: TargetOptions & { session: string; world: string },
+  options: TargetOptions & RecordOption & { session: string; world: string },
   paste: {
     file: string;
     at: BlockPos;
@@ -125,6 +147,17 @@ export async function mcPasteCommand(
     (value) =>
       `pasted ${String(value.changed)} block(s) into ${String(value.min.x)},${String(value.min.y)},${String(value.min.z)} → ${String(value.max.x)},${String(value.max.y)},${String(value.max.z)}; history ${String(value.historySize)}`,
   );
+  if (options.record !== undefined) {
+    await recordOp(options.record, {
+      kind: "paste",
+      world: options.world,
+      schematic: await storeSchematic(options.record, paste.file),
+      at: paste.at,
+      rotate: paste.rotate,
+      ignoreAir: paste.ignoreAir,
+      source: "manual",
+    });
+  }
 }
 
 export async function mcRegionReadCommand(
@@ -214,6 +247,22 @@ export async function mcInfoCommand(options: TargetOptions): Promise<void> {
     await targetPath(options, "info"),
   );
   print(options.json, info, renderInfo);
+}
+
+export async function mcRegistryCommand(
+  options: TargetOptions,
+  out: string,
+): Promise<void> {
+  const registry = await daemonRequest(
+    RegistryResponseSchema,
+    "GET",
+    await targetPath(options, "registry"),
+  );
+  await mkdir(path.dirname(path.resolve(out)), { recursive: true });
+  await Bun.write(out, JSON.stringify(registry));
+  console.log(
+    `wrote ${out}: ${registry.blocks.length.toString()} blocks (Minecraft ${registry.minecraftVersion}, data ${registry.dataVersion.toString()})`,
+  );
 }
 
 export async function mcPlayersCommand(options: TargetOptions): Promise<void> {

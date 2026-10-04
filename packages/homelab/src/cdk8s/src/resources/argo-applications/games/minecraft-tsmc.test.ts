@@ -263,3 +263,34 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     );
   });
 });
+
+describe("minecraft-tsmc MCBridge", () => {
+  test("wires MCBridge to the storm-brain token on a port-forward-only port", () => {
+    const values = tsmcValues();
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(values["extraEnv"]);
+    expect(extraEnv["MC_BRIDGE_TOKEN"]).toEqual({
+      valueFrom: {
+        secretKeyRef: {
+          name: "minecraft-tsmc-storm-brain",
+          key: "MC_BRIDGE_TOKEN",
+        },
+      },
+    });
+    expect(extraEnv["MC_BRIDGE_BIND"]).toBe("0.0.0.0");
+    const server = z
+      .record(z.string(), z.unknown())
+      .parse(values["minecraftServer"]);
+    const ports = z
+      .array(z.record(z.string(), z.unknown()))
+      .parse(server["extraPorts"]);
+    expect(ports).toContainEqual({
+      service: { enabled: false, port: 25_580 },
+      protocol: "TCP",
+      containerPort: 25_580,
+      name: "bridge",
+      ingress: { enabled: false },
+    });
+  });
+});

@@ -8,6 +8,7 @@ import {
   InfoResponseSchema,
   PlayersResponseSchema,
   RegionReadResponseSchema,
+  RegistryResponseSchema,
   SnapshotCreateRequestSchema,
   SnapshotListResponseSchema,
   SnapshotRestoreResponseSchema,
@@ -123,6 +124,9 @@ async function targetGet(call: TargetCall): Promise<Response | null> {
     }
     case "snapshots": {
       return reply(SnapshotListResponseSchema, await bridge.snapshotList());
+    }
+    case "registry": {
+      return reply(RegistryResponseSchema, await bridge.registry());
     }
   }
   if (action.startsWith("snapshots/")) {

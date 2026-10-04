@@ -20,6 +20,18 @@ export const DAEMON_ENTRY = path.join(
   "main.ts",
 );
 
+/** Build workflow CLI (`toolkit mc build …` runs it from source). */
+export const BUILD_ENTRY = path.join(
+  "packages",
+  "mc-harness",
+  "src",
+  "build",
+  "cli.ts",
+);
+
+/** Journals of applies (promote) per target, for verify and undo. */
+export const JOURNAL_DIR = path.join(MC_DIR, "journal");
+
 /** Path of the built MCBridge plugin relative to the repository root. */
 export const BRIDGE_JAR = path.join(
   "packages",

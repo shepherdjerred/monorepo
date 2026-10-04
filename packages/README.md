@@ -86,6 +86,7 @@ hold only scoped invariants that agents must keep in context.
 | Package                                                   | Description                                                                    |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                             |
+| [mc-build](mc-build/)                                     | Minecraft block registry, schematics, build DSL, lint, and offline renderer    |
 | [mc-harness](mc-harness/)                                 | Minecraft sandboxes, MCBridge client, and the daemon behind `toolkit mc`       |
 | [unix-socket-daemon](unix-socket-daemon/)                 | Shared unix-socket HTTP daemon scaffolding (serve, idle TTL, PID identity)     |
 | [hkctl](hkctl/)                                           | Development-signed Apple HomeKit command-line app (Mac Catalyst)               |

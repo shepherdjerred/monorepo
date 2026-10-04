@@ -231,9 +231,36 @@ affected" message counts attempted sets and can be higher.
 | `mc region read --world w <a> <b> [--out f.json]`         | Exact block states and palette counts          |
 | `mc snapshot create\|ls\|get\|restore`                    | Server-side `.schem` snapshots for undo        |
 | `mc info`, `mc players`, `mc events`, `mc logs`           | Versions, players, bridge events, console tail |
+| `mc registry --out f.json`                                | Block registry (input to mc-build's registry)  |
 
 Every command accepts `--json`. The daemon logs requests (never secrets) to
-`~/.toolkit/mc/logs/`.
+`~/.toolkit/mc/logs/`. `cmd`, `we` and `paste` accept `--record <buildDir>` to
+append the op to a build's op log once it succeeds.
+
+#### Minecraft builds
+
+`toolkit mc build …` runs the mc-harness build CLI from the checkout (it needs
+the `@shepherdjerred/mc-build` registry, renderer and compile child, which stay
+out of the compiled binary). A build directory holds `build.json`, the op log,
+the captured site and renders; the `minecraft-building` skill describes the
+loop.
+
+```bash
+toolkit mc build init ./cottage --name cottage --world world --anchor 26,-60,26
+toolkit mc build capture ./cottage --target <id> --world world 20,-61,20 40,-45,40
+toolkit mc build canvas ./cottage                # void sandbox seeded with the site
+toolkit mc build compile ./cottage               # build.ts → schematic paste op + lint
+toolkit mc build run ./cottage                   # reset canvas, replay ops, freeze result
+toolkit mc build render ./cottage                # contact sheet PNG
+toolkit mc build replay ./cottage                # fresh sandbox, diff against the frozen result
+toolkit mc build promote ./cottage --target <id> [--confirm <planHash>]
+toolkit mc build undo <applyId>
+```
+
+Promote refuses when the target no longer matches the captured site, requires
+the plan hash from its dry run, takes an undo snapshot, pastes the frozen
+canvas result, and verifies it cell by cell. Applies are journaled under
+`~/.toolkit/mc/journal/<target>/`.
 
 #### History search
 

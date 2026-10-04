@@ -19,6 +19,8 @@ const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
+// MCBridge agent API (packages/the-storm/plugin/bridge); port-forward only.
+const MC_BRIDGE_PORT = 25_580;
 
 /**
  * The Paper version baked into ghcr.io/shepherdjerred/the-storm-server. The
@@ -155,6 +157,15 @@ export function createMinecraftTsmcApp(chart: Chart) {
           name: "bedrock",
           ingress: { enabled: false },
         },
+        {
+          // MCBridge (mc-harness agent API). No Service or ingress: agents
+          // reach it only through `kubectl port-forward` with the bearer token.
+          service: { enabled: false, port: MC_BRIDGE_PORT },
+          protocol: "TCP",
+          containerPort: MC_BRIDGE_PORT,
+          name: "bridge",
+          ingress: { enabled: false },
+        },
       ],
 
       rcon: {
@@ -186,6 +197,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
           },
         },
       },
+      // MCBridge disables itself without this token; same storm-brain item.
+      MC_BRIDGE_TOKEN: {
+        valueFrom: {
+          secretKeyRef: { name: BRAIN_SECRET_NAME, key: "MC_BRIDGE_TOKEN" },
+        },
+      },
+      MC_BRIDGE_BIND: "0.0.0.0",
       DISCORD_BOT_TOKEN: {
         valueFrom: {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
