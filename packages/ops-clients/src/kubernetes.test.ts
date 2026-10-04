@@ -117,6 +117,7 @@ describe("KubernetesClient Velero outcomes", () => {
             metadata,
             status: {
               phase: "PartiallyFailed",
+              startTimestamp: "2026-10-01T02:05:00Z",
               completionTimestamp: "2026-10-01T02:30:00Z",
             },
           },
@@ -124,7 +125,17 @@ describe("KubernetesClient Velero outcomes", () => {
       },
       {
         metadata: {},
-        items: [{ metadata: { ...metadata, name: "daily-2", labels: {} } }],
+        items: [
+          { metadata: { ...metadata, name: "daily-2", labels: {} } },
+          {
+            metadata: { ...metadata, name: "daily-3" },
+            status: {
+              phase: "InProgress",
+              startTimestamp: null,
+              completionTimestamp: null,
+            },
+          },
+        ],
       },
     );
     await expect(kube.listVeleroBackups()).resolves.toEqual([
@@ -133,6 +144,7 @@ describe("KubernetesClient Velero outcomes", () => {
         namespace: "velero",
         schedule: "daily",
         createdAt: "2026-10-01T02:00:00Z",
+        startedAt: "2026-10-01T02:05:00Z",
         completedAt: "2026-10-01T02:30:00Z",
         phase: "PartiallyFailed",
       },
@@ -141,12 +153,41 @@ describe("KubernetesClient Velero outcomes", () => {
         namespace: "velero",
         schedule: undefined,
         createdAt: "2026-10-01T02:00:00Z",
+        startedAt: undefined,
         completedAt: undefined,
         phase: undefined,
+      },
+      {
+        name: "daily-3",
+        namespace: "velero",
+        schedule: "daily",
+        createdAt: "2026-10-01T02:00:00Z",
+        startedAt: undefined,
+        completedAt: undefined,
+        phase: "InProgress",
       },
     ]);
     expect(requests[1]?.url).toContain("continue=page-2");
   });
+  test.each(["startTimestamp", "completionTimestamp"])(
+    "rejects malformed %s rather than treating it as absent",
+    async (field) => {
+      const { client: kube } = client({
+        metadata: {},
+        items: [
+          {
+            metadata: {
+              name: "daily",
+              namespace: "velero",
+              creationTimestamp: "2026-10-01T02:00:00Z",
+            },
+            status: { phase: "InProgress", [field]: "not-a-timestamp" },
+          },
+        ],
+      });
+      await expect(kube.listVeleroBackups()).rejects.toThrow();
+    },
+  );
   test("rejects an unknown Velero phase instead of hiding a producer contract change", async () => {
     const { client: kube } = client({
       metadata: {},

@@ -308,7 +308,11 @@ const VeleroBackupSchema = z.object({
           "Deleting",
         ])
         .optional(),
-      completionTimestamp: z.iso.datetime({ offset: true }).optional(),
+      startTimestamp: z.iso.datetime({ offset: true }).nullable().optional(),
+      completionTimestamp: z.iso
+        .datetime({ offset: true })
+        .nullable()
+        .optional(),
     })
     .optional(),
 });
@@ -318,6 +322,7 @@ export type VeleroBackupStatus = {
   namespace: string;
   schedule: string | undefined;
   createdAt: string;
+  startedAt: string | undefined;
   completedAt: string | undefined;
   phase: NonNullable<z.infer<typeof VeleroBackupSchema>["status"]>["phase"];
 };
@@ -454,7 +459,8 @@ export class KubernetesClient {
       namespace: metadata.namespace,
       schedule: metadata.labels["velero.io/schedule-name"],
       createdAt: metadata.creationTimestamp,
-      completedAt: status?.completionTimestamp,
+      startedAt: status?.startTimestamp ?? undefined,
+      completedAt: status?.completionTimestamp ?? undefined,
       phase: status?.phase,
     }));
   }

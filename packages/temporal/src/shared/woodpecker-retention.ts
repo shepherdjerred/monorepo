@@ -6,10 +6,12 @@ export const RetentionPipelineSchema = z.object({
     "pending",
     "running",
     "blocked",
+    "created",
     "success",
     "failure",
     "error",
     "killed",
+    "canceled",
     "declined",
     "skipped",
   ]),
@@ -68,7 +70,7 @@ export const RetentionCheckpointSchema = z.object({
   cursor: z.object({
     repoIndex: z.number().int().nonnegative(),
     page: z.number().int().positive(),
-    offset: z.number().int().min(0).max(99).optional(),
+    offset: z.number().int().min(0).max(49).optional(),
   }),
 });
 export const RetentionManifestSchema = z.object({
@@ -103,7 +105,7 @@ export function retentionEligible(
   },
 ): boolean {
   return (
-    !["pending", "running", "blocked"].includes(pipeline.status) &&
+    !["pending", "running", "blocked", "created"].includes(pipeline.status) &&
     pipeline.created < cutoff &&
     pipeline.finished > 0 &&
     pipeline.finished < cutoff &&
