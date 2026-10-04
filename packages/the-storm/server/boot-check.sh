@@ -36,6 +36,8 @@ fixtures_jar=$repo/packages/the-storm/plugin/dist/build/libs/TheStormFixtures.ja
 manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json)
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
 plugins+=(TheStorm)
+# Every module the owned config switches on must report enabled.
+modules=$(grep -cE '^  [a-z]+: true$' "$repo/packages/the-storm/server/owned/plugins/TheStorm/config.yml")
 
 cleanup() {
   docker volume rm -f "$volume" >/dev/null
@@ -77,6 +79,7 @@ boot() { # label [docker run args...]
     -e EULA=TRUE -e ONLINE_MODE=FALSE -e MEMORY=3G \
     -e SPAWN_PROTECTION=0 -e STORM_BRAIN_BEARER_TOKEN=storm-boot-check-brain-token \
     -e DISCORD_BOT_TOKEN=invalid-storm-fixture-token -e DISCORD_CHANNEL_ID=1 \
+    -e FLIPT_URL=http://127.0.0.1:9 -e FLIPT_ENVIRONMENT=beta \
     "$image" >/dev/null
   local started=$SECONDS
   for _ in $(seq 1 600); do
@@ -105,8 +108,8 @@ boot() { # label [docker run args...]
   fi
   echo "[$label] all ${#plugins[@]} plugins enabled"
   grep -q 'Enabled modules:' "$log" || fail "$label: Storm modules did not start"
-  [[ $(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr ',' '\n' | wc -l) -eq 21 ]] ||
-    fail "$label: expected all 21 Storm modules"
+  [[ $(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr ',' '\n' | wc -l) -eq $modules ]] ||
+    fail "$label: expected all $modules Storm modules"
   if grep -E 'Could not prepare arenas|Could not validate shard altars|Spawn preparation failed' "$log"; then
     fail "$label: required world fixtures failed"
   fi
