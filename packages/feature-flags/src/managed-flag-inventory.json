@@ -54,6 +54,30 @@
   ],
   "flags": [
     {
+      "key": "scout_support_conversations_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable private support conversations and durable delivery.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout_support_report_action_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Offer a private support action to Scout report readers.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "ai_reports_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -1808,6 +1832,22 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "scout_support_conversations_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout_support_report_action_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "streambot-plex-posters-enabled",
           "type": "boolean",

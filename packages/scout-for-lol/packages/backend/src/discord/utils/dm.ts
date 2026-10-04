@@ -60,6 +60,9 @@ export const DmKindSchema = z.enum([
   // audit row and the same budget rules as every other DM instead of a second
   // send path of its own.
   "match_notification",
+  "support_acknowledgement",
+  "support_reply",
+  "support_notification",
 ]);
 export type DmKind = z.infer<typeof DmKindSchema>;
 
@@ -114,10 +117,12 @@ const CORE_DM_KINDS: ReadonlySet<string> = new Set([
   // A match notification is what the recipient subscribed to, so it is product
   // output and carries neither the budget nor its footer.
   "match_notification",
+  "support_acknowledgement",
+  "support_reply",
+  "support_notification",
 ]);
 
 export type SendDmOptions = {
-  client: Client;
   userId: DiscordAccountId;
   message: string;
   kind: DmKind;
@@ -150,7 +155,14 @@ export type SendDmOptions = {
    * plain content and `message` exists purely for the audit trail.
    */
   contentWithEmbeds?: string;
-};
+} & (
+  | { client: Client; delivery?: never }
+  | {
+      client?: never;
+      /** REST-only delivery for application processes with no gateway client. */
+      delivery: (userId: DiscordAccountId, message: string) => Promise<void>;
+    }
+);
 
 /**
  * Write a single audit row for a DM attempt. Best-effort: a failure to record
@@ -176,7 +188,9 @@ async function recordDmAudit(
         recipientTag: row.recipientTag ?? null,
         guildId: row.guildId ?? null,
         kind: row.kind,
-        content: row.content,
+        content: row.kind.startsWith("support_")
+          ? "[Private support message; see the support inbox]"
+          : row.content,
         deliveryStatus: row.status,
         ladderStage: row.ladderStage ?? null,
         errorMessage: row.errorMessage ?? null,
@@ -422,10 +436,14 @@ async function recordSendOutcome(
 }
 
 async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
-  const { client, userId, kind, guildId } = options;
+  const { userId, kind, guildId } = options;
   const db = options.prisma ?? prisma;
 
   let message = options.message;
+
+  if (options.delivery !== undefined && options.embeds !== undefined) {
+    throw new Error("REST-only DM delivery does not support embeds");
+  }
 
   if (options.embeds !== undefined && options.budget !== undefined) {
     // The budget footer mutates content; an embed send has no content to
@@ -511,9 +529,14 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   }
 
   try {
-    const user = await client.users.fetch(userId);
-    recipientTag = recipientTag ?? user.tag;
-    await deliverToUser(user, options, message);
+    if (options.client === undefined) {
+      options.onSendAttempt?.();
+      await options.delivery(userId, message);
+    } else {
+      const user = await options.client.users.fetch(userId);
+      recipientTag = recipientTag ?? user.tag;
+      await deliverToUser(user, options, message);
+    }
     logger.info(`[DM] Successfully sent ${kind} DM to user ${userId}`);
     await recordSendOutcome(db, {
       reservedRowId,
@@ -528,7 +551,9 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   } catch (error) {
     const dmDisabled =
       error instanceof DiscordAPIError && error.code === CANNOT_DM_USER_CODE;
-    const errorMsg = getErrorMessage(error);
+    const errorMsg = kind.startsWith("support_")
+      ? "Support delivery failed (details redacted)"
+      : getErrorMessage(error);
 
     if (dmDisabled) {
       logger.info(

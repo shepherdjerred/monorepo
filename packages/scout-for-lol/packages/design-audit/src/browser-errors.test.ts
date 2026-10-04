@@ -21,4 +21,25 @@ test("only expected visibility refusals are excluded from page errors", () => {
     ),
   ).toBe(false);
   expect(isExpectedNavigationProbe("", 403)).toBe(false);
+  for (const path of [
+    "operations.inbox.availability",
+    "operations.availability,operations.inbox.availability",
+  ]) {
+    const url = `http://localhost:5180/trpc/${path}`;
+    expect(isExpectedNavigationProbe(url, 403)).toBe(true);
+    expect(isExpectedNavigationProbe(url, 404)).toBe(true);
+    expect(isExpectedNavigationProbe(url, 500)).toBe(false);
+  }
+  expect(
+    isExpectedNavigationProbe(
+      "http://localhost:5180/trpc/operations.inbox.list",
+      403,
+    ),
+  ).toBe(false);
+  expect(
+    isExpectedNavigationProbe(
+      "http://localhost:5180/trpc/operations.inbox.availability,operations.inbox.list",
+      403,
+    ),
+  ).toBe(false);
 });

@@ -26,6 +26,16 @@ answer.
 
 ![The Discord slash-command entry for /track, showing the riot-id, region, and alias option pills with the riot-id hint "Riot ID, for example Faker#KR1".](../../../assets/discord-track-options.png)
 
+## `/help`
+
+Shows setup links, available commands, and ways to reach the Scout team. For
+help, bug reports, or feedback, DM Scout directly or reply to a DM from Scout.
+Messages are stored in a private conversation shared with Scout's human team.
+Replies are always readable in the web conversation; Scout also attempts a DM
+notification. Choose **Contact Scout** in `/help` to write privately without
+opening a DM, or add screenshots in the web form. The command also links to the support
+Discord server. If Discord prevents you from messaging Scout, use the web form.
+
 ## `/track`
 
 Creates a player, a Riot account, and a subscription posting to **the channel

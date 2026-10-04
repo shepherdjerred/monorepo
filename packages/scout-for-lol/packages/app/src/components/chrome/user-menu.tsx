@@ -1,4 +1,5 @@
-import { Bug, ChevronDown, ExternalLink, LogOut } from "lucide-react";
+import { Bug, ChevronDown, LogOut } from "lucide-react";
+import { Link } from "react-router";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
-import { SUPPORT_URL } from "#src/lib/support.ts";
 import { resetIdentity, trackAndFlush } from "#src/lib/analytics.ts";
 
 async function logout() {
@@ -64,14 +64,10 @@ export function UserMenu(props: { username: string }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="gap-2 text-xs">
-          <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
+          <Link to="/feedback">
             <Bug className="size-3.5 text-scout-subtle" aria-hidden="true" />
-            <span>Report a bug</span>
-            <ExternalLink
-              className="ml-auto size-3 opacity-60"
-              aria-hidden="true"
-            />
-          </a>
+            <span>Help and feedback</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
