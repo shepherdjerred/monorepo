@@ -14,6 +14,7 @@ from `plugin/`.
 | `plugin/modules/<name>/`           | One project per gameplay module (economy, towns, quests, ...)                                                          |
 | `plugin/dist/`                     | Assembles the shaded `TheStorm.jar` and the plugin entry point                                                         |
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
+| `plugin/tools/rwfmap/`             | Offline rwf map analysis: bakes and verifies the bots' `nav.rwfnav` artifacts (not shaded into the plugin)             |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
 | `server/`                          | The `minecraft-tsmc` server image: pinned jars, config bundle and patches (see `server/README.md`)                     |
@@ -28,6 +29,8 @@ cd packages/the-storm/plugin
 mise exec -- gradle check                  # everything, including PMD and JaCoCo
 mise exec -- gradle spotlessApply          # format
 mise exec -- gradle :dist:runServer        # local Paper 26.2 with the plugin
+mise exec -- gradle bakeRwfMaps            # (re)bake rwf/maps/*/nav.rwfnav for the bots
+mise exec -- gradle verifyRwfMaps          # fail if a committed nav.rwfnav is stale (part of check)
 mise exec -- gradle resolveAndLockAll --write-locks   # after changing dependencies
 mise exec -- gradle --write-verification-metadata sha256 build
 ```
@@ -525,6 +528,29 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   every map at enable and whenever the world's blocks stop matching the hash,
   20,000 blocks a tick with admission closed meanwhile. `training-yard` is a
   generated 64x16x64 sample; its generator lives in the module's test sources.
+- `rwf/maps/<id>/nav.rwfnav` and `nav.summary.json`: the map's baked navigation
+  data for the bots, produced offline by the `rwfmap` tool (see Maps below).
+
+### Maps
+
+A map is authored in a build world and exported with WorldEdit
+(`//schem save <id>` as a Sponge v3 schematic, terrain only: block entities and
+entities are refused), copied to `rwf/maps/<id>/blocks.schem`, and described
+in `map.yml` (teams, spawns, bombs, nukes, region and the schematic's hash,
+which `rwfmap` reports when it disagrees). `mise exec -- gradle bakeRwfMaps`
+then runs `plugin/tools/rwfmap` over every map folder: it classifies each
+palette entry with a curated block-state table (`BlockTable`; an unknown state
+fails the bake and must be added to the table, never guessed), bakes the nav
+graph, regions, cover, chokepoints and routes with `rwfbots`' `MapBaker`, and
+writes `nav.rwfnav` plus a `nav.summary.json` of counts for diff review. The
+artifact carries the schematic's `blocksSha256`, so `rwfbots` refuses it when
+the world's blocks change. Commit all four files together.
+`mise exec -- gradle verifyRwfMaps` (part of `check`, so CI runs it) re-bakes
+every map in memory and fails if a committed `nav.rwfnav` or summary differs
+byte for byte; the bake is deterministic, so a diff means the map, the block
+table or the baker changed and the artifacts must be rebaked. A bake that
+`NavArtifact.validate()` rejects (a spawn inside a wall, a bomb no spawn can
+reach) fails too; fix the map, not the tool.
 
 Commands: `/rwf join` (gated by the managed Flipt flag
 `the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
