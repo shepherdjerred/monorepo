@@ -23,15 +23,17 @@
     "#playtest/*": "./src/playtest/*",
     "#daemon/*": "./src/daemon/*",
     "#src/*": "./src/*",
-    "#build/*": "./src/build/*"
+    "#build/*": "./src/build/*",
+    "#evals/*": "./evals/*"
   },
   "scripts": {
     "build": "bun build src/daemon/main.ts src/build/cli.ts --target=bun --outdir=dist --external=sharp",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test evals/test",
     "lint": "bunx eslint --cache . && check-architecture",
     "daemon": "bun run src/daemon/main.ts",
     "gen-registry": "bun run scripts/gen-registry.ts",
+    "evals": "bun evals/run.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },

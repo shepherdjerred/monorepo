@@ -18,6 +18,7 @@ for the MCBridge Paper plugin, and the session daemon that holds them.
 | `src/protocol/build.ts` | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)    |
 | `src/build/`            | `toolkit mc build` CLI: capture, canvas, compile, run, render, lint, replay, promote, undo |
 | `playtests/`            | The harness smoke scenario                                                                 |
+| `evals/`                | Agent eval suite (Codex/Claude tasks, graders, runner); manual, see `evals/README.md`      |
 
 `toolkit` is compiled to a single binary and may import only `src/protocol/*`;
 an architecture boundary keeps that directory free of daemon, provider, and
@@ -131,4 +132,5 @@ bun run typecheck
 bun run test
 bun run lint
 bun run daemon     # run the daemon in the foreground (toolkit mc daemon start detaches it)
+bun run evals -- --agent codex --tasks e1,e4   # agent evals (Docker + model spend; see evals/README.md)
 ```

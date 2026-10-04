@@ -9,6 +9,7 @@
     "test/**/*",
     "scripts/**/*",
     "playtests/**/*",
+    "evals/**/*",
     "architecture-fixtures/**/*",
     "architecture.config.ts",
     "eslint.config.ts"
