@@ -164,11 +164,19 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
         return;
       }
       case "scan" -> {
-        inspectScan(source);
+        try {
+          inspectScan(source);
+        } catch (Throwable error) {
+          source.getSender().sendMessage(Component.text("scan error=" + error));
+        }
         return;
       }
       case "native" -> {
-        nativeActions(source);
+        try {
+          nativeActions(source);
+        } catch (Throwable error) {
+          source.getSender().sendMessage(Component.text("native error=" + error));
+        }
         return;
       }
       default -> throw new IllegalArgumentException("unknown fixture command");
