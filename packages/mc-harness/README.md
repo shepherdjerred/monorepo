@@ -146,6 +146,9 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
   `expected.schem` + `expected.json`.
+- **Import** turns a `.litematic`, `.schem` or OBJ mesh into a schematic
+  under `schematics/`, appends a paste op (`source` `import:<sha>`), lints it
+  and renders a preview.
 - **Replay** proves the log is deterministic on a fresh seeded sandbox. Random
   WorldEdit `%` patterns are not, so promote never depends on replaying ops.
 - **Promote** checks the target still matches `siteHash`, requires the dry

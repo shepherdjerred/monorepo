@@ -5,6 +5,16 @@ export type Vec3 = { x: number; y: number; z: number };
 
 export const AIR = "minecraft:air";
 
+/** The six face-adjacent offsets. */
+export const FACE_NEIGHBORS: readonly Vec3[] = [
+  { x: 1, y: 0, z: 0 },
+  { x: -1, y: 0, z: 0 },
+  { x: 0, y: 1, z: 0 },
+  { x: 0, y: -1, z: 0 },
+  { x: 0, y: 0, z: 1 },
+  { x: 0, y: 0, z: -1 },
+];
+
 /** A block entity kept alongside the grid (position is grid-local). */
 export type GridBlockEntity = { pos: Vec3; id: string };
 

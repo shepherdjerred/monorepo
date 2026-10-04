@@ -5,7 +5,9 @@
  */
 import { parseArgs } from "node:util";
 import type { LintReport } from "@shepherdjerred/mc-build/lint/lint.ts";
-import { BoxSchema, SessionNameSchema } from "#protocol/bridge.ts";
+import { z } from "zod";
+import { PALETTE_NAMES } from "@shepherdjerred/mc-build/import/palette.ts";
+import { BoxSchema, RotationSchema, SessionNameSchema } from "#protocol/bridge.ts";
 import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
 import { normalizeArgv, wantsHelp } from "#protocol/argv.ts";
 import { parseBlockPos } from "#protocol/ipc.ts";
@@ -14,6 +16,7 @@ import {
   captureSite,
   compileBuild,
   createCanvas,
+  importBuild,
   initBuild,
   lintBuild,
   promoteBuild,
@@ -36,6 +39,10 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   capture <dir> --target <id> --world <w> <x1,y1,z1> <x2,y2,z2>   Snapshot the site (+ render)
   canvas <dir> [--ttl 2h]               Void sandbox seeded with the site (becomes the default target)
   compile <dir>                         build.ts → schematic + paste op (replaces earlier program ops)
+  import <dir> <file> [--at x,y,z] [--rotate 0|90|180|270]
+                                        .litematic/.schem → schematic + paste op (+ preview render)
+  import <dir> <model.obj> --height <n> [--solid] [--palette default|wool|concrete|terracotta]
+                                        OBJ mesh (MTL colors/textures) → voxels → nearest blocks
   run <dir> [--target id]               Reset canvas to the site, replay all ops, record expected
   render <dir> [--target id | --expected] [--name n]
   lint <dir> [--target id | --expected]
@@ -73,6 +80,11 @@ const OPTIONS = {
   tag: { type: "string", multiple: true },
   text: { type: "string" },
   force: { type: "boolean", default: false },
+  at: { type: "string" },
+  rotate: { type: "string" },
+  height: { type: "string" },
+  solid: { type: "boolean", default: false },
+  palette: { type: "string" },
 } as const;
 
 /** Usage label for the first positional when it is not a build directory. */
@@ -82,6 +94,7 @@ const FIRST_POSITIONAL: Record<string, string> = {
   judge: "<a>",
   library: "<ls|search|show|use>",
 };
+const PaletteNameSchema = z.enum(PALETTE_NAMES);
 
 type Values = ReturnType<typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>>["values"];
 
@@ -159,6 +172,27 @@ const HANDLERS: Record<string, Handler> = {
       [
         `compiled ${result.blocks.toString()} blocks → ${result.schematic} (paste at ${result.at.x.toString()},${result.at.y.toString()},${result.at.z.toString()}; ${result.clears.toString()} clear box(es))`,
         ...result.logs.map((line) => `  log: ${line}`),
+        lintSummary(result.lint),
+      ].join("\n"),
+    );
+    return result.lint.ok ? 0 : 2;
+  },
+  import: async (_env, dir, values, rest) => {
+    const [file] = rest;
+    const result = await importBuild(dir, required(file, "<file>"), {
+      ...(values.at === undefined ? {} : { at: parseBlockPos(values.at) }),
+      rotate: RotationSchema.parse(Number(values.rotate ?? "0")),
+      ...(values.height === undefined ? {} : { height: Number(values.height) }),
+      solid: values.solid,
+      palette: PaletteNameSchema.parse(values.palette ?? "default"),
+    });
+    print(
+      values.json,
+      result,
+      [
+        `imported ${result.description}`,
+        `  ${result.blocks.toString()} blocks, ${result.size.x.toString()}×${result.size.y.toString()}×${result.size.z.toString()} → ${result.schematic} (paste at ${result.at.x.toString()},${result.at.y.toString()},${result.at.z.toString()})`,
+        `  render: ${result.render}`,
         lintSummary(result.lint),
       ].join("\n"),
     );

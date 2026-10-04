@@ -256,6 +256,8 @@ toolkit mc build init ./cottage --name cottage --world world --anchor 26,-60,26
 toolkit mc build capture ./cottage --target <id> --world world 20,-61,20 40,-45,40
 toolkit mc build canvas ./cottage                # void sandbox seeded with the site
 toolkit mc build compile ./cottage               # build.ts → schematic paste op + lint
+toolkit mc build import ./cottage house.litematic --at 26,-60,26   # .litematic/.schem
+toolkit mc build import ./cottage statue.obj --height 24 --solid   # OBJ mesh → blocks
 toolkit mc build run ./cottage                   # reset canvas, replay ops, freeze result
 toolkit mc build render ./cottage                # contact sheet PNG
 toolkit mc build replay ./cottage                # fresh sandbox, diff against the frozen result

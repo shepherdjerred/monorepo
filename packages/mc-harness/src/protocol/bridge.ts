@@ -191,6 +191,7 @@ export const RotationSchema = z.union([
   z.literal(180),
   z.literal(270),
 ]);
+export type Rotation = z.infer<typeof RotationSchema>;
 export const WePasteRequestSchema = z.strictObject({
   session: SessionNameSchema,
   world: z.string().min(1),

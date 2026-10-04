@@ -45,6 +45,11 @@ render and getting a go-ahead when the target is a server people play on.
      program ops in the log). See references/dsl-cheatsheet.md.
      Start from the closest curated program: `library search --tag <t>`,
      then `library use <slug> <dir>`.
+   - **Import** an existing design: `toolkit mc build import <dir> <file>
+[--at x,y,z]` takes `.litematic` or `.schem`; an OBJ mesh (statues,
+     organic shapes, image→3D output) also needs `--height <blocks>` and
+     optionally `--solid` and `--palette wool|concrete|terracotta`. Each
+     import appends a paste op and renders a preview to check before `run`.
 5. **Run, look, critique:**
 
    ```bash
