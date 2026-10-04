@@ -111,7 +111,7 @@ public final class CitizensBodies implements NpcBodies, Listener {
 
   private void configure(NPC npc, NpcDefinition definition) {
     npc.setName(definition.name());
-    npc.setProtected(true);
+    npc.setProtected(false);
     npc.data().setPersistent(NPC.Metadata.REMOVE_FROM_PLAYERLIST, true);
     npc.data().setPersistent(NPC.Metadata.REMOVE_FROM_TABLIST, true);
     npc.data().setPersistent(NPC.Metadata.SILENT, true);
@@ -146,12 +146,13 @@ public final class CitizensBodies implements NpcBodies, Listener {
     var npc = require(entity);
     configure(npc, definition);
     npc.data().setPersistent(FINGERPRINT, definition.fingerprint());
+    entity.getPersistentDataContainer().set(keys.npc(), PersistentDataType.STRING, definition.id());
     var equipment = entity.getEquipment();
     if (equipment == null) throw new IllegalStateException("NPC lacks equipment");
     equipment.setItemInMainHand(
         new ItemStack(definition.roles().contains("guard") ? Material.IRON_SWORD : Material.AIR));
-    entity.setInvulnerable(true);
     entity.addScoreboardTag("storm_scripted_npc");
+    entity.addScoreboardTag("thestorm_npc_" + definition.id());
     pose(entity, definition.pose());
   }
 

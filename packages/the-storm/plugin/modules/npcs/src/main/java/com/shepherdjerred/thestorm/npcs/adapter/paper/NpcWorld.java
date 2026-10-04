@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
@@ -314,6 +315,7 @@ final class NpcWorld {
 
   private void track(NpcDefinition npc, LivingEntity entity) {
     entity.setInvulnerable(false);
+    if (entity instanceof Player player) player.setGameMode(GameMode.SURVIVAL);
     var entry = live.get(npc.id());
     var previousHome =
         entry == null ? parts.bodies().savedHome(entity) : Optional.of(entry.npc.home().toString());
@@ -409,7 +411,8 @@ final class NpcWorld {
 
   static boolean shouldReconsider(@Nullable Walker walker, boolean scheduled, boolean threatened) {
     if (walker == null || scheduled) return true;
-    var reacting = walker.intent() instanceof Intent.Pursue || walker.intent() instanceof Intent.Flee;
+    var reacting =
+        walker.intent() instanceof Intent.Pursue || walker.intent() instanceof Intent.Flee;
     return threatened != reacting;
   }
 

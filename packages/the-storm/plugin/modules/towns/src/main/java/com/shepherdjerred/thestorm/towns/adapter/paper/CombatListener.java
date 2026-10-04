@@ -64,6 +64,11 @@ final class CombatListener implements Listener {
       return;
     }
     var source = event.getDamageSource();
+    if (isStormScriptedNpc(source.getCausingEntity())
+        || (event instanceof EntityDamageByEntityEvent byEntity
+            && isStormScriptedNpc(byEntity.getDamager()))) {
+      return;
+    }
     // The damage source names the player behind it; the damager is the same player for events
     // built without a full source.
     var culprit =
@@ -93,6 +98,10 @@ final class CombatListener implements Listener {
     if (!allowed) {
       event.setCancelled(true);
     }
+  }
+
+  private static boolean isStormScriptedNpc(@Nullable Entity entity) {
+    return entity != null && entity.getScoreboardTags().contains("storm_scripted_npc");
   }
 
   /** Only damage that survived protection and other plugins starts a combat switch lock. */

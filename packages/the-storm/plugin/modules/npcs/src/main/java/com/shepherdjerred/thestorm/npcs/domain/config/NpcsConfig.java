@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.npcs.domain.config;
 import com.shepherdjerred.thestorm.npcs.domain.movement.MovementSettings;
 import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * {@code plugins/TheStorm/npcs.yml}, owned by the repository. The NPCs themselves are content under

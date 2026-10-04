@@ -43,7 +43,7 @@ describe("all modules together", () => {
     expect(logs).not.toContain("Could not validate shard altars");
     expect(logs).not.toContain("Could not prepare arenas");
     const roster = await rcon.command("stormnpc list");
-    expect(roster).toContain("31 NPCs");
+    expect(roster).toContain("36 NPCs");
     expect(roster).not.toMatch(/missing|unloaded/u);
     expect(await rcon.command("worldborder get")).toContain("40000");
     expect(
