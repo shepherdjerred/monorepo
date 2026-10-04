@@ -1,0 +1,7 @@
+{
+  "title": "Plaza well",
+  "tags": ["well", "plaza", "village", "centerpiece", "water", "decoration"],
+  "style": "medieval",
+  "footprint": { "w": 21, "d": 21, "h": 7 },
+  "notes": "A round cobble plaza (computed from a radius), a 3×3 well with a stone rim, fence posts and a small hip roof with a hanging lantern, benches on four sides, planters and lamp posts on the diagonals. A village center you can drop into a larger settlement."
+}

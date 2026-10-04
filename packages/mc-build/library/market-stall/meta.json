@@ -1,0 +1,7 @@
+{
+  "title": "Market stalls",
+  "tags": ["market", "stall", "plaza", "village", "small", "decoration"],
+  "style": "medieval",
+  "footprint": { "w": 21, "d": 15, "h": 6 },
+  "notes": "A `stall` helper (fence posts, a striped wool canopy sloping toward the counter, barrels with goods, chests behind, a hanging lantern) placed twice on a noise-textured cobble square with benches and a lamp post. Copy the helper to fill a village market."
+}

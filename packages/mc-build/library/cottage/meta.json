@@ -1,0 +1,7 @@
+{
+  "title": "Timber cottage",
+  "tags": ["house", "cottage", "small", "timber-frame", "gable-roof", "garden"],
+  "style": "medieval",
+  "footprint": { "w": 16, "d": 16, "h": 12 },
+  "notes": "Medieval theme on a 9×7 footprint: recessed timber walls, shuttered front windows, a gable roof with overhang and eaves, an exterior chimney cutting the eave, a furnished room, lantern posts and a garden. A good starting point for any small house."
+}

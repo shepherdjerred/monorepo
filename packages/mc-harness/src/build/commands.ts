@@ -17,7 +17,7 @@ import { Journal, type JournalEntry } from "./journal.ts";
 import { diffGrids, readGrid, resetToSite, runOps, type GridDiff, type RunContext } from "./ops.ts";
 import { BuildWorkspace } from "./workspace.ts";
 
-const PROGRAM_TEMPLATE = `import type { BuildProgram } from "@shepherdjerred/mc-build/dsl/context.ts";
+export const PROGRAM_TEMPLATE = `import type { BuildProgram } from "@shepherdjerred/mc-build/dsl/context.ts";
 
 /**
  * Build program: local frame +x right, +y up, +z toward the front (south at

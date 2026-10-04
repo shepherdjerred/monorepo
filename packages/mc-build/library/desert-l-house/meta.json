@@ -1,0 +1,7 @@
+{
+  "title": "Desert L-house",
+  "tags": ["house", "l-shape", "flat-roof", "courtyard", "awning"],
+  "style": "desert",
+  "footprint": { "w": 18, "d": 18, "h": 8 },
+  "notes": "Two footprints joined into an L with an opening between the wings, flat sandstone roofs with parapets and chiseled corner posts (a helper defined in the program), a striped wool awning on fence posts over the courtyard, sand ground with dead bushes and cacti. Shows L-massing and flat-roof styling without a roof primitive."
+}

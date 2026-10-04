@@ -20,6 +20,7 @@ import {
   type GenerateValidatedObjectResult as InnerGenerateValidatedObjectResult,
   type GoogleCredentials as InnerGoogleCredentials,
   type LlmCallMetadata as InnerLlmCallMetadata,
+  type LlmImageInput as InnerLlmImageInput,
   type LlmRuntimeOptions as InnerLlmRuntimeOptions,
   type LlmRuntimeLogger as InnerLlmRuntimeLogger,
   type LlmRuntimeLogRecord as InnerLlmRuntimeLogRecord,
@@ -103,6 +104,7 @@ export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = Identity<
 export type GoogleCredentials = Identity<InnerGoogleCredentials>;
 export type ModelRequirements = Identity<InnerModelRequirements>;
 export type LlmCallMetadata = Identity<InnerLlmCallMetadata>;
+export type LlmImageInput = Identity<InnerLlmImageInput>;
 export type LlmRuntimeOptions = Identity<InnerLlmRuntimeOptions>;
 export type LlmRuntimeLogRecord = Identity<InnerLlmRuntimeLogRecord>;
 export type LlmRuntimeLogger = (

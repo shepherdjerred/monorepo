@@ -24,6 +24,8 @@ import {
   verifyApply,
   type Env,
 } from "./commands.ts";
+import { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } from "./judge.ts";
+import { libraryList, libraryShow, libraryUse, type LibraryRow } from "./library.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
 
@@ -42,6 +44,9 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   verify <applyId>
   undo <applyId>                        Restore the pre-apply snapshot (last-in-first-out)
   status <dir>
+  library ls|search [--tag t]… [--text s] | show <slug> | use <slug> <dir> [--force]
+                                        Curated programs to start from (mc-build library/)
+  judge <a> <b> [--model id]            Pairwise vision judge of two renders (PNG or build dir), order-swapped
 
 Live tsmc: promote/undo with --target live also need --reason "<why>" (journaled), and
 --allow-players when a human is near the box. See toolkit mc live --help.
@@ -64,7 +69,19 @@ const OPTIONS = {
   reason: { type: "string" },
   "allow-players": { type: "boolean", default: false },
   "confirm-dangerous": { type: "boolean", default: false },
+  model: { type: "string" },
+  tag: { type: "string", multiple: true },
+  text: { type: "string" },
+  force: { type: "boolean", default: false },
 } as const;
+
+/** Usage label for the first positional when it is not a build directory. */
+const FIRST_POSITIONAL: Record<string, string> = {
+  verify: "<applyId>",
+  undo: "<applyId>",
+  judge: "<a>",
+  library: "<ls|search|show|use>",
+};
 
 type Values = ReturnType<typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>>["values"];
 
@@ -93,6 +110,15 @@ function lintSummary(report: LintReport): string {
 }
 
 type Handler = (env: Env, dir: string, values: Values, rest: string[]) => Promise<number>;
+
+function libraryTable(rows: LibraryRow[]): string {
+  return rows
+    .map(
+      (r) =>
+        `${r.slug.padEnd(18)} ${r.style.padEnd(9)} ${`${r.footprint.w.toString()}×${r.footprint.d.toString()}×${r.footprint.h.toString()}`.padEnd(9)} ${r.title} — ${r.tags.join(", ")}`,
+    )
+    .join("\n");
+}
 
 const HANDLERS: Record<string, Handler> = {
   init: async (_env, dir, values) => {
@@ -208,6 +234,49 @@ const HANDLERS: Record<string, Handler> = {
     );
     return 0;
   },
+  library: async (_env, sub, values, rest) => {
+    if (sub === "ls" || sub === "search") {
+      const rows = await libraryList({
+        tags: values.tag ?? [],
+        ...(values.text === undefined ? {} : { text: values.text }),
+      });
+      print(values.json, rows, rows.length === 0 ? "no matching library entries" : libraryTable(rows));
+      return 0;
+    }
+    if (sub === "show") {
+      const entry = await libraryShow(required(rest[0], "<slug>"));
+      print(values.json, entry, `${libraryTable([entry])}\n\n${entry.notes}\n\nprogram: ${entry.program}\n\n${entry.source}`);
+      return 0;
+    }
+    if (sub === "use") {
+      const result = await libraryUse(required(rest[0], "<slug>"), required(rest[1], "<dir>"), {
+        force: values.force,
+      });
+      print(values.json, result, `copied library/${result.slug} → ${result.program}; adapt it, then toolkit mc build compile`);
+      return 0;
+    }
+    throw new Error(`unknown library command "${sub}"\n${BUILD_USAGE}`);
+  },
+  judge: async (_env, a, values, rest) => {
+    const verdict = await judgeRenders(a, required(rest[0], "<b>"), {
+      model: values.model ?? DEFAULT_JUDGE_MODEL,
+    });
+    const row = (who: "a" | "b") =>
+      `  ${who} ${verdict.totals[who].toString().padStart(2)}/16  ${RUBRIC_DIMENSIONS.map((d) => `${d} ${verdict.scores[who][d].toString()}`).join(", ")}`;
+    print(
+      values.json,
+      verdict,
+      [
+        `judge (${verdict.model}): ${verdict.winner === "tie" ? "tie" : `${verdict.winner} wins`} — confidence ${verdict.confidence.toFixed(2)}${verdict.agreed ? "" : " (orderings disagreed)"}`,
+        `  a = ${verdict.renders.a}`,
+        `  b = ${verdict.renders.b}`,
+        row("a"),
+        row("b"),
+        ...verdict.critique.map((line) => `  - ${line}`),
+      ].join("\n"),
+    );
+    return 0;
+  },
   status: async (env, dir, values) => {
     const result = await buildStatus(env, dir);
     const site = result.manifest.site;
@@ -250,7 +319,7 @@ async function main(): Promise<number> {
       console.error(message);
     },
   };
-  return handler(env, required(dir, action === "verify" || action === "undo" ? "<applyId>" : "<dir>"), values, rest);
+  return handler(env, required(dir, FIRST_POSITIONAL[action] ?? "<dir>"), values, rest);
 }
 
 try {

@@ -7,14 +7,15 @@ daemon.
 
 ## Layout
 
-| Path            | What it is                                                                                                                                                        |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/registry/` | Committed `generated/blocks-26.2.json` (ids, property enums, defaults) and `BlockRegistry` validation with suggestions                                            |
-| `src/core/`     | Block-state parsing, `BlockGrid` (palette + YZX `Uint32Array`), Sponge v3 `.schem` read/write, region-read decoding, site analysis (heightmap, masks, `siteHash`) |
-| `src/dsl/`      | Build DSL: sparse canvas (KEEP vs explicit AIR), `geo`, `mat`, `craft`, connection pass for panes/fences/walls                                                    |
-| `src/compile/`  | Runs a `build.ts` program in a child Bun process (empty env, timeout, import scan)                                                                                |
-| `src/lint/`     | Findings for invalid states, floating parts, gravity, attachments, leaf decay, flat facades, monotone surfaces, dark interiors                                    |
-| `src/render/`   | Software rasterizer: blockstates/models → quads → z-buffer → contact sheet PNG                                                                                    |
+| Path            | What it is                                                                                                                                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/registry/` | Committed `generated/blocks-26.2.json` (ids, property enums, defaults) and `BlockRegistry` validation with suggestions                                                                             |
+| `src/core/`     | Block-state parsing, `BlockGrid` (palette + YZX `Uint32Array`), Sponge v3 `.schem` read/write, region-read decoding, site analysis (heightmap, masks, `siteHash`)                                  |
+| `src/dsl/`      | Build DSL: sparse canvas (KEEP vs explicit AIR), `geo`, `mat`, connection pass for panes/fences/walls; `craft.ts` merges the primitive modules in `dsl/craft/` (walls, roofs, structures, furnish) |
+| `src/library/`  | Catalog loader for `library/<slug>/{build.ts, meta.json}`: curated, lint-clean programs agents copy and adapt                                                                                      |
+| `src/compile/`  | Runs a `build.ts` program in a child Bun process (empty env, timeout, import scan)                                                                                                                 |
+| `src/lint/`     | Findings for invalid states, floating parts, gravity, attachments, leaf decay, flat facades, monotone surfaces, dark interiors                                                                     |
+| `src/render/`   | Software rasterizer: blockstates/models → quads → z-buffer → contact sheet PNG                                                                                                                     |
 
 ## DSL frame
 
@@ -45,4 +46,16 @@ texture pack the test authors itself, so CI needs no Mojang assets.
 ```bash
 bun run scripts/render.ts test/fixtures/house.build.ts /tmp/house.png
 bun run typecheck && bun run test && bun run lint
+```
+
+## Library
+
+Each `library/<slug>/` holds a `build.ts` program and a `meta.json` (title,
+kebab-case tags, style, footprint, notes) validated by `LibraryMetaSchema`.
+Tests compile every entry twice and require identical grids and zero lint
+findings. After editing an entry, render and look at it:
+
+```bash
+bun run scripts/library-report.ts /tmp/library [slug…]   # lint + contact sheets
+bun run scripts/lint-program.ts library/cottage/build.ts
 ```
