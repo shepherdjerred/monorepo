@@ -68,7 +68,7 @@ final class ZombiesBox {
       return true;
     }
     if (!runner.machines().powered()) {
-      Texts.error(player, "Restore power at the foundry first.");
+      Texts.error(player, "Restore power at " + runner.map().powerDistrict() + " first.");
       runner.feedback().play(player, SurvivalFeedback.Cue.FAILURE);
       return true;
     }

@@ -171,8 +171,18 @@ public final class StormFixtures extends JavaPlugin {
         com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
             content.toPath().resolve("arena/survival.yml"),
             com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent.class);
-    new com.shepherdjerred.thestorm.arena.domain.survival.SettlementBlueprint(survival)
-        .blocks()
+    prepareSurvival(survival);
+    var rustworks =
+        com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+                content.toPath().resolve("arena/rustworks.yml"),
+                com.shepherdjerred.thestorm.arena.domain.survival.SurvivalMapContent.class)
+            .withRules(survival);
+    prepareSurvival(rustworks);
+  }
+
+  private void prepareSurvival(
+      com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent survival) {
+    com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(survival)
         .forEach(
             (pos, material) -> {
               world.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);

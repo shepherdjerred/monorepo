@@ -36,7 +36,7 @@ public final class ArenaPaper {
   private final Cancellable clock;
   private final ArenaPermissions permissions;
   private final List<ArenaRunner> runners;
-  private final SettlementProvisioner provisioner;
+  private final List<SettlementProvisioner> provisioners;
   private boolean stopped;
 
   private ArenaPaper(
@@ -45,13 +45,13 @@ public final class ArenaPaper {
       List<Listener> listeners,
       Cancellable clock,
       ArenaPermissions permissions,
-      SettlementProvisioner provisioner) {
+      List<SettlementProvisioner> provisioners) {
     this.arenas = arenas;
     this.runners = List.copyOf(runners);
     this.listeners = List.copyOf(listeners);
     this.clock = clock;
     this.permissions = permissions;
-    this.provisioner = provisioner;
+    this.provisioners = List.copyOf(provisioners);
   }
 
   /**
@@ -77,11 +77,20 @@ public final class ArenaPaper {
    * Starts every arena. Missing worlds and unknown content fail immediately; chest blocks are
    * checked after their chunks load asynchronously, with admissions closed until cleanup finishes.
    */
-  public record Content(ArenaBundle colosseum, SurvivalContent survival) {}
+  public record Content(ArenaBundle colosseum, List<SurvivalContent> survivalMaps) {
+    public Content {
+      survivalMaps = List.copyOf(survivalMaps);
+      var ids = new java.util.HashSet<String>();
+      colosseum.arenas().forEach(arena -> ids.add(arena.id()));
+      for (var map : survivalMaps) {
+        if (!ids.add(map.arena().id()))
+          throw new IllegalArgumentException("Duplicate arena " + map.arena().id());
+      }
+    }
+  }
 
   public static ArenaPaper start(ModuleContext module, Content data, App app, ServerHooks hooks) {
     var content = data.colosseum();
-    var survival = data.survival();
     var context =
         new PaperContext(module.plugin(), module.scheduler(), module.time(), module.random());
     var keys = new Keys(module.plugin());
@@ -141,8 +150,9 @@ public final class ArenaPaper {
               services,
               ArenaGame.open(setup(content, definition))));
     }
-    SurvivalItems.validate(survival);
-    if (survival.enabled()) {
+    for (var survival : data.survivalMaps()) {
+      SurvivalItems.validate(survival);
+      if (!survival.enabled()) continue;
       var definition = survival.arena();
       var world = context.server().getWorld(definition.world());
       if (world == null) {
@@ -176,12 +186,16 @@ public final class ArenaPaper {
       throw new IllegalStateException("Invalid arenas: " + String.join("; ", problems));
     }
     var arenas = new Arenas(runners, snapshots);
-    var provisioner =
-        new SettlementProvisioner(
-            context,
-            survival,
-            new SettlementProvisioner.Ports(
-                app.settlementStore(), module.services(), hooks.chunks()));
+    var provisioners =
+        data.survivalMaps().stream()
+            .map(
+                survival ->
+                    new SettlementProvisioner(
+                        context,
+                        survival,
+                        new SettlementProvisioner.Ports(
+                            app.settlementStore(), module.services(), hooks.chunks())))
+            .toList();
     context.presence(arenas);
     var commands = new ArenaCommands(context, arenas, content.classes(), app.leaderboard());
     module
@@ -197,7 +211,13 @@ public final class ArenaPaper {
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS,
-            event -> SettlementCommands.register(event.registrar(), provisioner));
+            event -> {
+              for (var i = 0; i < provisioners.size(); i++)
+                SettlementCommands.register(
+                    event.registrar(),
+                    data.survivalMaps().get(i).arena().id(),
+                    provisioners.get(i));
+            });
     var permissions = new ArenaPermissions(context.server().getPluginManager());
     permissions.register(content.classes());
     var guard = new ItemGuard(arenas, keys);
@@ -212,7 +232,7 @@ public final class ArenaPaper {
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
     var clock = module.scheduler().repeatOnMainThread(TICK, TICK, arenas::tick);
     snapshots.load(player -> arenas.arenaOf(player).isPresent());
-    var started = new ArenaPaper(arenas, runners, listeners, clock, permissions, provisioner);
+    var started = new ArenaPaper(arenas, runners, listeners, clock, permissions, provisioners);
     started.prepare(context);
     return started;
   }
@@ -307,7 +327,7 @@ public final class ArenaPaper {
   /** Stops every game (restoring everyone inside), the clock, listeners and permissions. */
   public void stop() {
     stopped = true;
-    provisioner.stop();
+    provisioners.forEach(SettlementProvisioner::stop);
     runners.forEach(runner -> runner.world().cancelPreload());
     arenas.stopAll();
     clock.cancel();

@@ -7,9 +7,9 @@ import io.papermc.paper.command.brigadier.Commands;
 final class SettlementCommands {
   private SettlementCommands() {}
 
-  static void register(Commands commands, SettlementProvisioner provisioner) {
+  static void register(Commands commands, String map, SettlementProvisioner provisioner) {
     commands.register(
-        Commands.literal("settlement")
+        Commands.literal(map)
             .requires(source -> source.getSender().hasPermission(ArenaPermissions.ADMIN))
             .then(
                 Commands.literal("preview")
@@ -41,6 +41,6 @@ final class SettlementCommands {
                                   return 1;
                                 })))
             .build(),
-        "Preview, provision, or restore the authored settlement footprint");
+        "Preview, provision, or restore the authored " + map + " footprint");
   }
 }
