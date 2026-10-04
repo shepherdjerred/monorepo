@@ -211,6 +211,22 @@ function makeTrackedPlayer() {
   });
 }
 
+/** Two subscribed guilds: one Clash channel, one standard channel. */
+function useClashAndStandardChannels(): void {
+  channelsResult = [
+    {
+      serverId: "123456789012345678",
+      channel: "channel-clash",
+      subscriptions: [{ subscriptionId: 1, playerId: 1, filters: null }],
+    },
+    {
+      serverId: "223456789012345678",
+      channel: "channel-standard",
+      subscriptions: [{ subscriptionId: 2, playerId: 1, filters: null }],
+    },
+  ];
+}
+
 beforeEach(() => {
   callOrder.length = 0;
   sendCalls.length = 0;
@@ -286,18 +302,7 @@ describe("sendPrematchNotification", () => {
 
   test("keeps Clash chrome only for guilds with clash_surface", async () => {
     clashGuildFlags.set("123456789012345678", true);
-    channelsResult = [
-      {
-        serverId: "123456789012345678",
-        channel: "channel-clash",
-        subscriptions: [{ subscriptionId: 1, playerId: 1, filters: null }],
-      },
-      {
-        serverId: "223456789012345678",
-        channel: "channel-standard",
-        subscriptions: [{ subscriptionId: 2, playerId: 1, filters: null }],
-      },
-    ];
+    useClashAndStandardChannels();
     const clashGame = RawCurrentGameInfoSchema.parse({
       ...makeGameInfo(),
       gameType: "CUSTOM",
@@ -323,18 +328,7 @@ describe("sendPrematchNotification", () => {
     // near-empty lobby. Both the Clash and standard renders must get them.
     observedBots = [{ side: "red", championId: 42, lane: "middle" }];
     clashGuildFlags.set("123456789012345678", true);
-    channelsResult = [
-      {
-        serverId: "123456789012345678",
-        channel: "channel-clash",
-        subscriptions: [{ subscriptionId: 1, playerId: 1, filters: null }],
-      },
-      {
-        serverId: "223456789012345678",
-        channel: "channel-standard",
-        subscriptions: [{ subscriptionId: 2, playerId: 1, filters: null }],
-      },
-    ];
+    useClashAndStandardChannels();
 
     await sendPrematchNotification(makeCustomGameInfo(), [makeTrackedPlayer()]);
 
