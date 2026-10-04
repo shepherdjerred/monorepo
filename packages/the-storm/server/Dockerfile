@@ -7,7 +7,7 @@
 # file reaches /data.
 
 ########################
-## TheStorm.jar
+## TheStorm.jar + MCBridge.jar
 ########################
 # Gradle and Corretto majors match .mise.toml's gradle and java pins
 # (minecraft-tsmc.test.ts enforces the Gradle version). Renovate's Dockerfile
@@ -25,7 +25,7 @@ COPY --from=managed-flags managed-flag-inventory.json /feature-flags/src/managed
 # hadolint ignore=DL3022
 COPY --from=storm-brain-contracts companion-chat.json /storm-brain/contracts/companion-chat.json
 RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
-  gradle -p plugin :dist:shadowJar --no-daemon --console=plain
+  gradle -p plugin :dist:shadowJar :bridge:jar --no-daemon --console=plain
 
 ########################
 ## Paper + third-party jars
@@ -49,6 +49,10 @@ COPY --from=fetch /out/paper/ /opt/paper/
 COPY --from=fetch /out/paper-defaults/ /opt/paper-defaults/
 COPY --from=fetch /out/plugins/ /plugins/
 COPY --from=plugin --chmod=0644 /src/plugin/dist/build/libs/TheStorm.jar /plugins/
+# MCBridge: the mc-harness agent bridge (HTTP on MC_BRIDGE_PORT, default 25580,
+# reached only by kubectl port-forward). It disables itself without
+# MC_BRIDGE_TOKEN, which the chart injects from 1Password.
+COPY --from=plugin --chmod=0644 /src/plugin/bridge/build/libs/MCBridge.jar /plugins/
 # Repository-owned plugin files (every file under server/owned/plugins/) ride
 # itzg's /plugins sync into /data/plugins: overwritten when they differ, never
 # deleted. Secrets never live here; patches interpolate ${CFG_*} env instead.
@@ -81,14 +85,14 @@ ENTRYPOINT ["/usr/local/bin/storm-entrypoint"]
 FROM release AS smoke
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Every third-party jar matches its pin, the jar set is exactly the manifest
-# plus TheStorm.jar, TheStorm.jar is a Paper plugin, Paper is pre-patched at
+# plus TheStorm.jar and MCBridge.jar, both are Paper plugins, Paper is pre-patched at
 # the path PAPER_CUSTOM_JAR names, and every patch op is a $put (a $set on a
 # key an older file lacks stops the boot).
 RUN set -eu; \
   jq -r '.plugins[] | "\(.sha256)  /plugins/\(.file)"' /opt/the-storm/plugins.json \
     | sha256sum --check --strict -; \
   expected=$( { jq -r '.plugins[].file' /opt/the-storm/plugins.json; \
-    echo TheStorm.jar; } | sort); \
+    echo TheStorm.jar; echo MCBridge.jar; } | sort); \
   actual=$(find /plugins -maxdepth 1 -name '*.jar' -printf '%f\n' | sort); \
   [ "$expected" = "$actual" ] || { echo "jar set mismatch"; diff <(echo "$expected") <(echo "$actual"); exit 1; }; \
   unzip -p /plugins/TheStorm.jar paper-plugin.yml > /tmp/paper-plugin.yml; \
@@ -96,6 +100,10 @@ RUN set -eu; \
   grep -qx "api-version: '26.2'" /tmp/paper-plugin.yml; \
   grep -qx 'main: com.shepherdjerred.thestorm.TheStormPlugin' /tmp/paper-plugin.yml; \
   unzip -l /plugins/TheStorm.jar contracts/companion-chat.json > /dev/null; \
+  unzip -p /plugins/MCBridge.jar paper-plugin.yml > /tmp/mcbridge-plugin.yml; \
+  grep -qx 'name: MCBridge' /tmp/mcbridge-plugin.yml; \
+  grep -qx 'api-version: "26.2"' /tmp/mcbridge-plugin.yml; \
+  grep -qx 'main: com.shepherdjerred.mcbridge.McBridgePlugin' /tmp/mcbridge-plugin.yml; \
   test -f "$PAPER_CUSTOM_JAR"; \
   test -f /opt/paper/versions/26.2/paper-26.2.jar; \
   test -f /plugins/TheStorm/config.yml; \
