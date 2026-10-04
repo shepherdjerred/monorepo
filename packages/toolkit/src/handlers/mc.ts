@@ -1,4 +1,4 @@
-import { type ParseArgsOptionsConfig, parseArgs } from "node:util";
+import type { ParseArgsOptionsConfig } from "node:util";
 import { mcBuildCommand } from "#commands/mc/build.ts";
 import {
   mcDaemonStartCommand,
@@ -27,6 +27,8 @@ import {
   mcWeUndoCommand,
   type TargetOptions,
 } from "#commands/mc/world.ts";
+import { parseMcArgs } from "./mc-args.ts";
+import { handleMcActor, handleMcPlaytest } from "./mc-play.ts";
 import {
   BoxSchema,
   SessionNameSchema,
@@ -40,10 +42,7 @@ import {
   WorldKindSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
 import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
-import {
-  normalizeArgv,
-  wantsHelp,
-} from "@shepherdjerred/mc-harness/protocol/argv.ts";
+import { wantsHelp } from "@shepherdjerred/mc-harness/protocol/argv.ts";
 import {
   DEFAULT_DAEMON_TTL_SECONDS,
   DEFAULT_SANDBOX_TTL_SECONDS,
@@ -75,6 +74,20 @@ Target commands (--target <sandbox-id>; defaults to the only running sandbox):
   toolkit mc registry --out f.json       Block registry (feeds mc-harness gen-registry)
   toolkit mc events [--since 0] [--limit 200]
   toolkit mc logs [-n 200]
+
+Actors (Citizens player NPCs; profiles paper and storm-dev):
+  toolkit mc actor spawn <name> --world <w> --at x,y,z [--game-mode SURVIVAL] [--op]
+  toolkit mc actor ls | observe <name> | quit <name…> | --all
+  toolkit mc actor act <name> goto|look|break|use --pos x,y,z [--range 1] [--timeout 30000]
+  toolkit mc actor act <name> place --pos x,y,z --block <state>
+  toolkit mc actor act <name> equip --item <id> [--count 1] [--slot hand]
+  toolkit mc actor act <name> command|chat <text…>
+  toolkit mc actor act <name> attack --entity <uuid> | --type <entity-type>
+
+Playtests (scenario files; sandbox-only):
+  toolkit mc playtest run <file|dir…> [--target <id> | --profile paper|storm-dev] [--grep s] [--keep]
+  toolkit mc playtest ls | show <run-id>
+  toolkit mc playtest new <name> [--dir playtests]
 
 Common options: --target <id>, --session <name> (WorldEdit session, default "agent"), --json
 --record <buildDir> on cmd, we and paste appends the op to that build's op log on success.
@@ -114,14 +127,7 @@ function parse<const Options extends ParseArgsOptionsConfig>(
   args: string[],
   options: Options,
 ) {
-  const merged: typeof COMMON & Options = { ...COMMON, ...options };
-  return parseArgs({
-    // Negative coordinates (-6,-61,-6) would otherwise parse as options.
-    args: normalizeArgv(args, merged),
-    options: merged,
-    allowPositionals: true,
-    strict: true,
-  });
+  return parseMcArgs(COMMON, args, options);
 }
 
 function targetOptions(values: {
@@ -449,6 +455,14 @@ export async function handleMcCommand(
       }
       case "build": {
         await mcBuildCommand(args);
+        return;
+      }
+      case "actor": {
+        await handleMcActor(args);
+        return;
+      }
+      case "playtest": {
+        await handleMcPlaytest(args);
         return;
       }
     }

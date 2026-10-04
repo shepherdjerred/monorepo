@@ -69,11 +69,16 @@
       "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/mc-harness": {
-      "entry": ["architecture-fixtures/**/*.ts", "scripts/**/*.ts"],
+      "entry": [
+        "architecture-fixtures/**/*.ts",
+        "scripts/**/*.ts",
+        "playtests/**/*.ts"
+      ],
       "project": [
         "src/**/*.ts",
         "test/**/*.ts",
         "scripts/**/*.ts",
+        "playtests/**/*.ts",
         "architecture-fixtures/**/*.ts"
       ]
     },
@@ -306,7 +311,8 @@
         "vitest.full.config.ts",
         "vitest.load.config.ts",
         "tests/e2e/global-setup.ts",
-        "tests/e2e/prepare-sidecar.ts"
+        "tests/e2e/prepare-sidecar.ts",
+        "playtests/**/*.playtest.ts"
       ]
     },
     "packages/temporal": {

@@ -10,6 +10,17 @@ export const STATE_PATH = path.join(MC_DIR, "state.json");
 export const LOGS_DIR = path.join(MC_DIR, "logs");
 export const SANDBOXES_DIR = path.join(MC_DIR, "sandboxes");
 export const CACHE_DIR = path.join(MC_DIR, "cache");
+/** One directory per playtest run: report.json, events.jsonl, server.log, schematics. */
+export const RUNS_DIR = path.join(MC_DIR, "runs");
+
+/** Path of the playtest child entry point relative to the repository root. */
+export const PLAYTEST_CHILD_ENTRY = path.join(
+  "packages",
+  "mc-harness",
+  "src",
+  "playtest",
+  "child.ts",
+);
 
 /** Path of the daemon entry point relative to the repository root. */
 export const DAEMON_ENTRY = path.join(

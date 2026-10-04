@@ -9,7 +9,13 @@ public enum EventType {
   JOIN,
   QUIT,
   DEATH,
-  LOG;
+  LOG,
+  BLOCK_BREAK,
+  BLOCK_PLACE,
+  INTERACT,
+  DAMAGE,
+  /** Harness actor lifecycle and action outcomes. */
+  ACTOR;
 
   public String wire() {
     return name().toLowerCase(Locale.ROOT);

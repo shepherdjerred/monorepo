@@ -2,11 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import {
-  BRIDGE_BUILD_COMMAND,
-  BRIDGE_JAR,
-  CACHE_DIR,
-} from "#protocol/paths.ts";
+import { CACHE_DIR } from "#protocol/paths.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BridgeClient } from "#bridge/client.ts";
 import { paper } from "#src/pins.ts";
@@ -18,6 +14,7 @@ import {
   type ResolvedProfile,
 } from "#sandbox/profiles.ts";
 import type { Progress, SandboxProvider } from "#sandbox/provider.ts";
+import { requireStagedSources, stageEntries } from "#sandbox/staging.ts";
 import type { SandboxRecord, SandboxStore } from "#sandbox/record.ts";
 import { docker } from "./docker-cli.ts";
 import {
@@ -172,18 +169,14 @@ export class DockerSandboxProvider implements SandboxProvider {
     progress: Progress,
   ): Promise<SandboxRecord> {
     const started = Date.now();
-    const bridgeJar = path.join(this.options.repoRoot, BRIDGE_JAR);
-    if (!(await Bun.file(bridgeJar).exists())) {
-      throw new Error(
-        `MCBridge.jar is not built (${bridgeJar}). Build it first:\n  ${BRIDGE_BUILD_COMMAND}`,
-      );
-    }
     const id = newSandboxId();
     const secrets = {
       bridgeToken: randomBytes(24).toString("hex"),
       rconPassword: randomBytes(24).toString("hex"),
     };
     const profile = resolveProfile(request, secrets);
+    // Fail on a missing build output before writing anything.
+    await requireStagedSources(this.options.repoRoot, profile.staged);
     const dir = this.options.store.dir(id);
     const pluginsDir = path.join(dir, "plugins");
     progress("staging plugins");
@@ -192,7 +185,7 @@ export class DockerSandboxProvider implements SandboxProvider {
       pluginsDir,
       profile.plugins,
     );
-    await Bun.write(path.join(pluginsDir, "MCBridge.jar"), Bun.file(bridgeJar));
+    await stageEntries(pluginsDir, this.options.repoRoot, profile.staged);
     const paperJar = path.join(this.cacheDir, paperJarName);
     await ensureArtifact(paperJar, paper);
     await Promise.all(

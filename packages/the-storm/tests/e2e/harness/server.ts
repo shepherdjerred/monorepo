@@ -115,29 +115,6 @@ export type ServerResources = {
   memoryLimit: string;
 };
 
-const OwnedStormConfigSchema = z
-  .object({ modules: z.record(z.string(), z.boolean()) })
-  .strict();
-
-/**
- * Turns the repository-owned config.yml into one with every module disabled.
- * The plugin rejects a config that omits a module, so the key set always
- * follows the owned file.
- */
-export function stormTestConfig(ownedYaml: string, enabled: string[]): string {
-  const owned = OwnedStormConfigSchema.parse(Bun.YAML.parse(ownedYaml));
-  const known = new Set(Object.keys(owned.modules));
-  const unknown = enabled.filter((module) => !known.has(module));
-  if (unknown.length > 0) {
-    throw new Error(`Unknown modules: ${unknown.join(", ")}`);
-  }
-  const on = new Set(enabled);
-  const modules = Object.keys(owned.modules).map(
-    (module) => `  ${module}: ${on.has(module).toString()}`,
-  );
-  return ["modules:", ...modules, ""].join("\n");
-}
-
 /**
  * Builds this run's /plugins mount: the pinned third-party jars, the plugin
  * under test and its repository-owned config directory.

@@ -9,7 +9,10 @@ import java.nio.charset.StandardCharsets;
 
 /** A response body with its status and content type. */
 public final class Response {
-  private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
+  // serializeNulls: a member set to JsonNull is a contract `null` (nullable
+  // fields); absent optional fields are simply never added.
+  private static final Gson GSON =
+      new GsonBuilder().disableHtmlEscaping().serializeNulls().create();
   private static final String JSON = "application/json";
 
   private final int status;

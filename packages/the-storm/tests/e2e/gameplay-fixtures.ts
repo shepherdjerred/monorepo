@@ -1,10 +1,7 @@
 import path from "node:path";
 import { z } from "zod";
-import {
-  stormTestConfig,
-  type ServerResources,
-  type StartServerOptions,
-} from "./harness/server.ts";
+import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
+import type { ServerResources, StartServerOptions } from "./harness/server.ts";
 import { rwfTestSettings } from "./harness/rwf-settings.ts";
 
 /**
@@ -47,7 +44,7 @@ function withBots(owned: string): string {
   )
     .filter(([, on]) => on)
     .map(([module]) => module);
-  return stormTestConfig(owned, [...enabled, "rwf", "rwfbots"]);
+  return stormModuleConfig(owned, [...enabled, "rwf", "rwfbots"]);
 }
 
 /** Local Docker and CI sidecars use the same module and fixture contract per profile. */
@@ -119,7 +116,7 @@ async function profileFixtures(
       // geometry; the full suite instead runs the production module with
       // disposable worlds.
       return {
-        stormConfig: stormTestConfig(owned, [
+        stormConfig: stormModuleConfig(owned, [
           "economy",
           "mail",
           "chat",

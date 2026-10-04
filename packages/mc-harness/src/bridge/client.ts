@@ -1,5 +1,15 @@
 import type { z } from "zod";
 import {
+  type ActorAction,
+  ActorActionRequestSchemas,
+  type ActorActionRequest,
+  ActorActionResponseSchema,
+  ActorListResponseSchema,
+  ActorObservationSchema,
+  ActorRemoveResponseSchema,
+  ActorSchema,
+  ActorSpawnRequestSchema,
+  type ActorSpawnRequest,
   type Box,
   BridgeErrorSchema,
   type BridgeError,
@@ -22,6 +32,9 @@ import {
 } from "#protocol/bridge.ts";
 
 export type BridgeEndpoint = { baseUrl: string; token: string };
+
+const GOTO_SLACK_MS = 15_000;
+const DEFAULT_GOTO_TIMEOUT_MS = 30_000;
 
 /** A non-2xx bridge response, or one whose body broke the contract. */
 export class BridgeRequestError extends Error {
@@ -139,13 +152,78 @@ export class BridgeClient {
     );
   }
 
+  actorSpawn(request: ActorSpawnRequest) {
+    return this.json(
+      ActorSchema,
+      "POST",
+      "/v1/actors",
+      ActorSpawnRequestSchema.parse(request),
+    );
+  }
+
+  actorList() {
+    return this.json(ActorListResponseSchema, "GET", "/v1/actors");
+  }
+
+  actorObserve(name: string) {
+    return this.json(
+      ActorObservationSchema,
+      "GET",
+      `/v1/actors/${encodeURIComponent(name)}`,
+    );
+  }
+
+  actorRemove(name: string) {
+    return this.json(
+      ActorRemoveResponseSchema,
+      "DELETE",
+      `/v1/actors/${encodeURIComponent(name)}`,
+    );
+  }
+
+  actorAct<Action extends ActorAction>(
+    name: string,
+    action: Action,
+    request: ActorActionRequest<Action>,
+  ) {
+    const body = ActorActionRequestSchemas[action].parse(request);
+    // A goto blocks until arrival or its own timeout; outlast it.
+    const timeoutMs =
+      action === "goto"
+        ? Math.max(
+            this.timeoutMs,
+            (ActorActionRequestSchemas.goto.parse(request).timeoutMs ??
+              DEFAULT_GOTO_TIMEOUT_MS) + GOTO_SLACK_MS,
+          )
+        : this.timeoutMs;
+    return this.call(ActorActionResponseSchema, {
+      method: "POST",
+      path: `/v1/actors/${encodeURIComponent(name)}/${action}`,
+      body,
+      timeoutMs,
+    });
+  }
+
   private async json<Schema extends z.ZodType>(
     schema: Schema,
-    method: "GET" | "POST",
+    method: "GET" | "POST" | "DELETE",
     path: string,
     body?: unknown,
   ): Promise<z.infer<Schema>> {
-    const response = await this.send(method, path, body);
+    return this.call(schema, { method, path, body, timeoutMs: this.timeoutMs });
+  }
+
+  private async call<Schema extends z.ZodType>(
+    schema: Schema,
+    request: {
+      method: "GET" | "POST" | "DELETE";
+      path: string;
+      body: unknown;
+      timeoutMs: number;
+    },
+  ): Promise<z.infer<Schema>> {
+    const { method, path, body, timeoutMs } = request;
+    const response = await this.send(method, path, body, timeoutMs);
     const payload: unknown = await response.json();
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
@@ -159,9 +237,10 @@ export class BridgeClient {
   }
 
   private async send(
-    method: "GET" | "POST",
+    method: "GET" | "POST" | "DELETE",
     path: string,
     body?: unknown,
+    timeoutMs = this.timeoutMs,
   ): Promise<Response> {
     const response = await fetch(`${this.endpoint.baseUrl}${path}`, {
       method,
@@ -170,7 +249,7 @@ export class BridgeClient {
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: AbortSignal.timeout(this.timeoutMs),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     if (response.ok) {
       return response;

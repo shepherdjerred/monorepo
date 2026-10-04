@@ -1,7 +1,6 @@
 package com.shepherdjerred.mcbridge;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.shepherdjerred.mcbridge.adapter.http.Fields;
 import com.shepherdjerred.mcbridge.adapter.http.Json;
@@ -12,6 +11,9 @@ import com.shepherdjerred.mcbridge.adapter.paper.RegionReader;
 import com.shepherdjerred.mcbridge.adapter.paper.ServerService;
 import com.shepherdjerred.mcbridge.adapter.worldedit.SnapshotStore;
 import com.shepherdjerred.mcbridge.adapter.worldedit.WorldEditService;
+import com.shepherdjerred.mcbridge.app.Actors;
+import com.shepherdjerred.mcbridge.domain.ActorName;
+import com.shepherdjerred.mcbridge.domain.ActorRequests;
 import com.shepherdjerred.mcbridge.domain.BridgeEvent;
 import com.shepherdjerred.mcbridge.domain.BridgeException;
 import com.shepherdjerred.mcbridge.domain.EventRing;
@@ -31,6 +33,7 @@ final class BridgeRoutes {
   static final int API_VERSION = 1;
 
   private static final Set<String> NO_KEYS = Set.of();
+  private static final Set<String> POS_KEYS = Set.of("pos");
   private static final Set<String> WE_OP_KEYS = Set.of("command", "pos1", "pos2", "at");
 
   private final String bridgeVersion;
@@ -39,6 +42,7 @@ final class BridgeRoutes {
   private final WorldEditService worldEdit;
   private final SnapshotStore snapshots;
   private final EventRing events;
+  private final Actors actors;
 
   /** The services the routes call. */
   record Services(
@@ -46,7 +50,8 @@ final class BridgeRoutes {
       RegionReader regions,
       WorldEditService worldEdit,
       SnapshotStore snapshots,
-      EventRing events) {}
+      EventRing events,
+      Actors actors) {}
 
   BridgeRoutes(String bridgeVersion, Services services) {
     this.bridgeVersion = bridgeVersion;
@@ -55,6 +60,7 @@ final class BridgeRoutes {
     this.worldEdit = services.worldEdit();
     this.snapshots = services.snapshots();
     this.events = services.events();
+    this.actors = services.actors();
   }
 
   Router router() {
@@ -72,7 +78,20 @@ final class BridgeRoutes {
         .add("POST", "/v1/we/paste", this::wePaste)
         .add("POST", "/v1/we/undo", this::weUndo)
         .add("GET", "/v1/players", request -> Response.json(server.players()))
-        .add("GET", "/v1/events", this::events);
+        .add("GET", "/v1/events", this::events)
+        .add("POST", "/v1/actors", this::spawnActor)
+        .add("GET", "/v1/actors", request -> Response.json(actors.list()))
+        .add("GET", "/v1/actors/:name", request -> Response.json(actors.observe(actor(request))))
+        .add("DELETE", "/v1/actors/:name", request -> Response.json(actors.remove(actor(request))))
+        .add("POST", "/v1/actors/:name/goto", this::actorGoto)
+        .add("POST", "/v1/actors/:name/look", this::actorLook)
+        .add("POST", "/v1/actors/:name/equip", this::actorEquip)
+        .add("POST", "/v1/actors/:name/command", this::actorCommand)
+        .add("POST", "/v1/actors/:name/chat", this::actorChat)
+        .add("POST", "/v1/actors/:name/break", this::actorBreak)
+        .add("POST", "/v1/actors/:name/place", this::actorPlace)
+        .add("POST", "/v1/actors/:name/use", this::actorUse)
+        .add("POST", "/v1/actors/:name/attack", this::actorAttack);
   }
 
   private Response health(Request request) {
@@ -90,6 +109,9 @@ final class BridgeRoutes {
     response.addProperty("dataVersion", worldEdit.dataVersion());
     JsonArray capabilities = new JsonArray();
     capabilities.add("worldedit");
+    if (actors.supported()) {
+      capabilities.add("citizens");
+    }
     response.add("capabilities", capabilities);
     return Response.json(response);
   }
@@ -195,7 +217,7 @@ final class BridgeRoutes {
     EventRing.Page page = events.since(since, (int) limit);
     JsonArray list = new JsonArray();
     for (BridgeEvent event : page.events()) {
-      list.add(event(event));
+      list.add(Json.event(event));
     }
     JsonObject response = new JsonObject();
     response.addProperty("cursor", page.cursor());
@@ -204,15 +226,83 @@ final class BridgeRoutes {
     return Response.json(response);
   }
 
-  private static JsonElement event(BridgeEvent event) {
-    JsonObject object = new JsonObject();
-    object.addProperty("seq", event.seq());
-    object.addProperty("ts", event.ts().toString());
-    object.addProperty("type", event.type().wire());
-    if (event.player() != null) {
-      object.addProperty("player", event.player());
-    }
-    object.addProperty("text", event.text());
-    return object;
+  private static ActorName actor(Request request) {
+    return new ActorName(request.param("name"));
+  }
+
+  private Response spawnActor(Request request) {
+    Fields body = request.json(Set.of("name", "world", "at", "gameMode", "op"));
+    return Response.json(
+        actors.spawn(
+            new ActorRequests.Spawn(
+                new ActorName(body.string("name")),
+                body.nonEmptyString("world"),
+                body.blockPos("at"),
+                body.optionalString("gameMode")
+                    .map(ActorRequests.Mode::parse)
+                    .orElse(ActorRequests.Mode.SURVIVAL),
+                body.optionalBool("op").orElse(false))));
+  }
+
+  private Response actorGoto(Request request) {
+    Fields body = request.json(Set.of("pos", "range", "timeoutMs"));
+    return Response.json(
+        actors.goTo(
+            actor(request),
+            ActorRequests.Goto.of(
+                body.blockPos("pos"),
+                body.optionalNumber("range"),
+                body.optionalInteger("timeoutMs"))));
+  }
+
+  private Response actorLook(Request request) {
+    return Response.json(actors.look(actor(request), request.json(POS_KEYS).blockPos("pos")));
+  }
+
+  private Response actorEquip(Request request) {
+    Fields body = request.json(Set.of("item", "count", "slot"));
+    return Response.json(
+        actors.equip(
+            actor(request),
+            new ActorRequests.Equip(
+                body.nonEmptyString("item"),
+                body.optionalInteger("count").orElse(1),
+                body.optionalString("slot")
+                    .map(ActorRequests.Slot::parse)
+                    .orElse(ActorRequests.Slot.HAND))));
+  }
+
+  private Response actorCommand(Request request) {
+    Fields body = request.json(Set.of("command"));
+    return Response.json(actors.command(actor(request), body.nonEmptyString("command")));
+  }
+
+  private Response actorChat(Request request) {
+    Fields body = request.json(Set.of("message"));
+    return Response.json(
+        actors.chat(actor(request), new ActorRequests.Chat(body.string("message"))));
+  }
+
+  private Response actorBreak(Request request) {
+    return Response.json(actors.breakBlock(actor(request), request.json(POS_KEYS).blockPos("pos")));
+  }
+
+  private Response actorPlace(Request request) {
+    Fields body = request.json(Set.of("pos", "block"));
+    return Response.json(
+        actors.place(actor(request), body.blockPos("pos"), body.nonEmptyString("block")));
+  }
+
+  private Response actorUse(Request request) {
+    return Response.json(actors.use(actor(request), request.json(POS_KEYS).blockPos("pos")));
+  }
+
+  private Response actorAttack(Request request) {
+    Fields body = request.json(Set.of("entity", "type"));
+    return Response.json(
+        actors.attack(
+            actor(request),
+            ActorRequests.attackTarget(
+                body.optionalString("entity"), body.optionalString("type"))));
   }
 }

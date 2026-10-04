@@ -31,7 +31,11 @@ export type StatusResponse = z.infer<typeof StatusResponseSchema>;
 export const ShutdownResponseSchema = z.strictObject({ ok: z.literal(true) });
 
 export const SandboxIdSchema = z.string().regex(/^sbx-[0-9a-f]{6}$/u);
-export const ProfileSchema = z.enum(["paper"]);
+/**
+ * `paper`: Paper + WorldEdit + Citizens + MCBridge. `storm-dev`: that plus the
+ * locally built TheStorm.jar (gameplay modules without external services).
+ */
+export const ProfileSchema = z.enum(["paper", "storm-dev"]);
 export const WorldKindSchema = z.enum(["flat", "void"]);
 
 export const SandboxCreateRequestSchema = z.strictObject({

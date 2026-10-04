@@ -31,6 +31,11 @@ layout, layering table and commands.
   licence recorded in `NOTICE`, with an attribution header on each ported
   file. Towny and other unlicensed code are clean-room only.
 
+- Gameplay that a player triggers through world interaction can be proven with
+  `toolkit mc playtest run playtests/` (Citizens actors on the `storm-dev`
+  sandbox; see the toolkit `minecraft-harness` skill). Client-only flows stay in
+  `tests/e2e`.
+
 ```bash
 bunx turbo run build typecheck test lint --filter=@shepherdjerred/the-storm
 ```
