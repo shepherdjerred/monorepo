@@ -77,6 +77,15 @@ provider-UID processes before that shared identity is reused.
 Provider subprocesses lose these capabilities when their UID changes, and
 `allowPrivilegeEscalation: false` prevents regaining them.
 
+The image starts the worker under Tini to reap orphaned provider and tool
+processes. The UID cleanup checks require those processes to disappear before
+another turn starts; unreaped zombies otherwise block the queue. Claude's
+required Linux sandbox dependencies, Bubblewrap and socat, ship in the image
+and are checked by the image smoke gate.
+Claude also requires a node and container policy that permit its sandbox's
+user namespaces. Installed binaries alone do not prove that the sandbox can
+start; verify a provider turn under the production subprocess identity.
+
 The shared agent runner keeps authentication separate from tool environments.
 API-key automation uses the Codex SDK. Subscription chats use Claude Agent
 SDK or Codex App Server with in-memory `chatgptAuthTokens` authentication and
