@@ -44,6 +44,7 @@ export async function harness(
   joins: Mock;
   disconnects: Mock;
   plays: { identity: string; transport: string }[];
+  completions: (() => void)[];
   play: (
     value: number,
     channel?: typeof voiceChannelId,
@@ -61,6 +62,7 @@ export async function harness(
     ((info: VoiceCloseInfo) => void) | null
   >();
   const plays: { identity: string; transport: string }[] = [];
+  const completions: (() => void)[] = [];
   const entries: UserbotEntry[] = Array.from({ length: size }, (_, index) => {
     const identity = `account-${String(index)}`;
     let lastClose: VoiceCloseInfo | null = null;
@@ -86,6 +88,7 @@ export async function harness(
         plays.push({ identity, transport: input.resolved.mediaKind });
         if (!signal.aborted)
           await new Promise<void>((resolve) => {
+            completions.push(resolve);
             signal.addEventListener(
               "abort",
               () => {
@@ -221,6 +224,7 @@ export async function harness(
     joins,
     disconnects,
     plays,
+    completions,
     play,
     dir,
     closeListeners,

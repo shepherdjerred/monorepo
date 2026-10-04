@@ -241,16 +241,19 @@ h3 {
   gap: 24px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 22px;
+  overflow-x: auto;
 }
-.tabs button {
+.tabs a {
   background: transparent;
   border: 0;
   border-radius: 0;
   padding: 10px 0 13px;
   color: var(--muted);
   border-bottom: 2px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.tabs button[aria-selected="true"] {
+.tabs a[aria-current="page"] {
   color: var(--text);
   border-bottom-color: var(--accent-strong);
   font-weight: 600;
@@ -336,6 +339,77 @@ h3 {
   height: 100%;
   object-fit: cover;
 }
+.landscape-row .media-artwork {
+  width: 112px;
+  height: 63px;
+}
+.sports-artwork {
+  position: relative;
+  width: 88px;
+  height: 76px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--tint);
+  display: grid;
+  place-items: center;
+  padding: 8px;
+}
+.matchup-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.matchup-logos img {
+  width: 30px;
+  height: 36px;
+  object-fit: contain;
+}
+.team-monogram {
+  color: var(--accent-strong);
+  font-size: 10px;
+  font-weight: 700;
+}
+.league-mark {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+}
+.league-mark img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+.sports-artwork.queue-artwork {
+  width: 50px;
+  height: 50px;
+  padding: 3px;
+}
+.sports-artwork.queue-artwork img {
+  width: 18px;
+  height: 22px;
+}
+.sports-artwork.queue-artwork .league-mark {
+  display: none;
+}
+.sports-artwork.player-artwork {
+  width: 76px;
+  height: 72px;
+}
+.attribution,
+.history-time {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 4px 0;
+}
+.history-time {
+  padding-top: 12px;
+}
+.series-navigation a,
+.pagination a {
+  color: var(--accent-strong);
+}
 .player-artwork {
   width: 52px;
   height: 72px;
@@ -379,6 +453,8 @@ h3 {
   margin-top: auto;
 }
 .poster-open {
+  text-decoration: none;
+  color: inherit;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -1078,4 +1154,14 @@ h3 {
   * {
     transition: none !important;
   }
+}
+
+.channel-views {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+}
+.channel-views a[aria-current="page"] {
+  color: var(--accent);
+  font-weight: 700;
 }

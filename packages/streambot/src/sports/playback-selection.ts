@@ -119,7 +119,7 @@ export async function selectSportsSourceOverride(input: {
     signal: input.signal,
     resolve: input.resolve,
   });
-  return direct?.sports === true ? direct : null;
+  return direct?.sports === true ? { ...direct, source: input.source } : null;
 }
 
 export async function selectSportsPlayback(input: {
@@ -160,6 +160,7 @@ export async function selectSportsPlayback(input: {
       kind: "url",
       url: event.pageUrl,
       mode: "video",
+      sportsEvent: event,
     };
     try {
       return {

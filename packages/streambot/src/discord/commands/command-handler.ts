@@ -161,7 +161,23 @@ export class CommandHandler {
         await this.handleSources(interaction);
         return true;
       case "help":
-        await interaction.reply(helpText(this.deps.config.voice.enabled));
+        await interaction.reply(
+          helpText(
+            this.deps.config.voice.enabled,
+            await webRemoteUrl(
+              this.deps.config,
+              this.deps.guildId,
+              interaction.userId,
+              this.deps.playbackChannel,
+            ),
+            this.deps.guildId !== undefined &&
+              (await this.deps.featureGate?.automaticChannelRouting?.({
+                guildId: this.deps.guildId,
+                channelId: this.deps.channelId ?? "help",
+                userId: interaction.userId,
+              })) === true,
+          ),
+        );
         return true;
       default:
         return false;
@@ -472,3 +488,4 @@ export class CommandHandler {
     }
   }
 }
+import { webRemoteUrl } from "@shepherdjerred/streambot/discord/web-link.ts";

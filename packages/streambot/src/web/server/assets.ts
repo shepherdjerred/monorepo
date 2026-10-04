@@ -8,7 +8,10 @@ export async function serveWebAsset(
   const root = path.resolve(assetsDir);
   const filePath = path.resolve(
     root,
-    "." + (url.pathname === "/" ? "/index.html" : url.pathname),
+    "." +
+      (["/", "/plex", "/search", "/sports", "/history"].includes(url.pathname)
+        ? "/index.html"
+        : url.pathname),
   );
   if (!filePath.startsWith(root + path.sep))
     throw new WebError(404, "not_found", "This page does not exist.");
