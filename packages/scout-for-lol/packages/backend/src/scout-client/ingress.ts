@@ -25,6 +25,16 @@ import {
   LOCAL_CANONICAL_DELAY_MS,
   parseLocalCanonicalMatch,
 } from "./canonical-match.ts";
+import {
+  type IdentityMap,
+  isLcuUuid,
+  readIdentityAliases,
+} from "./identity-alias.ts";
+import {
+  learnBatchIdentities,
+  observationUuids,
+  translateObservation,
+} from "./observation-identity.ts";
 import { reconcileProcessedClientBinding } from "./late-binding.ts";
 import { observedPostGameMatchId } from "./lobby-payload.ts";
 import {
@@ -159,13 +169,26 @@ export function observationQuarantineReason(
     : null;
 }
 
+/** The observer UUID the client sent, kept when it was a League-client UUID. */
+function sentLcuUuid(raw: ScoutClientObservation): string | null {
+  return raw.localPuuid !== undefined && isLcuUuid(raw.localPuuid)
+    ? raw.localPuuid
+    : null;
+}
+
+/** An observation as sent (stored, digested) and as read (translated). */
+type ReceivedObservation = {
+  readonly raw: ScoutClientObservation;
+  readonly observation: ScoutClientObservation;
+};
+
 async function createObservation(
   device: AuthenticatedScoutClient,
-  observation: ScoutClientObservation,
+  { raw, observation }: ReceivedObservation,
   attestation: ObservationAttestation,
   now: Date,
 ): Promise<Receipt> {
-  const digest = bodyDigest(observation);
+  const digest = bodyDigest(raw);
   const existing = await prisma.scoutClientObservation.findUnique({
     where: { observationId: observation.observationId },
     select: {
@@ -220,9 +243,10 @@ async function createObservation(
         leaguePatch: observation.leaguePatch ?? null,
         platformId: observation.platformId ?? null,
         localPuuid: observation.localPuuid ?? null,
+        localLcuUuid: sentLcuUuid(raw),
         lobbyId: observation.lobbyId ?? null,
         gameId: observation.gameId ?? null,
-        payload: observation.payload ?? Prisma.JsonNull,
+        payload: raw.payload ?? Prisma.JsonNull,
         bodyDigest: digest,
         disposition: reason === null ? "ACCEPTED" : "QUARANTINED",
         quarantineReason: reason,
@@ -248,9 +272,16 @@ export async function ingestObservationBatch(
   batch: ScoutClientObservationBatch,
   now = new Date(),
 ): Promise<readonly Receipt[]> {
+  await learnBatchIdentities(device, batch.observations);
+  const identities = await readIdentityAliases(
+    observationUuids(batch.observations),
+  );
+  const translated = batch.observations.map((observation) =>
+    translateObservation(observation, identities),
+  );
   const localPuuids = [
     ...new Set(
-      batch.observations.flatMap((observation) =>
+      translated.flatMap((observation) =>
         observation.localPuuid === undefined ? [] : [observation.localPuuid],
       ),
     ),
@@ -274,10 +305,11 @@ export async function ingestObservationBatch(
   );
   const attestation = { verifiedPuuids, acceptedAppVersions };
   const receipts: Receipt[] = [];
-  for (const observation of batch.observations) {
+  for (const [index, raw] of batch.observations.entries()) {
+    const observation = translated[index] ?? raw;
     const receipt = await createObservation(
       device,
-      observation,
+      { raw, observation },
       attestation,
       now,
     );
@@ -316,6 +348,7 @@ export function acceptedClientMatchDispatches(
   batch: ScoutClientObservationBatch,
   receipts: readonly Receipt[],
   now = new Date(),
+  identities: IdentityMap = new Map(),
 ): readonly ScoutClientMatchDispatchItemV2[] {
   const accepted = new Set(
     receipts
@@ -326,7 +359,8 @@ export function acceptedClientMatchDispatches(
     new Date(now.getTime() + LOCAL_CANONICAL_DELAY_MS).toISOString(),
   );
   const starts = new Map<string, ScoutClientMatchDispatchItemV2>();
-  for (const observation of batch.observations) {
+  for (const raw of batch.observations) {
+    const observation = translateObservation(raw, identities);
     if (
       observation.kind !== "post_game" ||
       !accepted.has(observation.observationId) ||
@@ -343,13 +377,17 @@ export function acceptedClientMatchDispatches(
     const deliveryMode = postGameDeliveryMode(observation);
     if (deliveryMode === null) continue;
     const sourcePuuid = LeaguePuuidSchema.parse(observation.localPuuid);
-    const match = parseLocalCanonicalMatch(parsed.data, {
-      observationId: observation.observationId,
-      platformId: observation.platformId,
-      localPuuid: observation.localPuuid,
-      payload: observation.payload,
-      bodyDigest: bodyDigest(observation),
-    });
+    const match = parseLocalCanonicalMatch(
+      parsed.data,
+      {
+        observationId: observation.observationId,
+        platformId: observation.platformId,
+        localPuuid: observation.localPuuid,
+        payload: raw.payload,
+        bodyDigest: bodyDigest(raw),
+      },
+      identities,
+    );
     if (match === null) continue;
     const candidate: ScoutClientMatchDispatchItemV2 = {
       riotMatchId: parsed.data,
@@ -404,7 +442,13 @@ export async function startAcceptedClientMatches(
   batch: ScoutClientObservationBatch,
   receipts: readonly Receipt[],
 ): Promise<void> {
-  const starts = acceptedClientMatchDispatches(batch, receipts);
+  // Ingest has already learned every alias this batch can teach.
+  const starts = acceptedClientMatchDispatches(
+    batch,
+    receipts,
+    new Date(),
+    await readIdentityAliases(observationUuids(batch.observations)),
+  );
   if (starts.length > 0) {
     const supervisor = currentScoutTemporalSupervisor();
     if (supervisor === undefined) {
