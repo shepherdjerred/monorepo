@@ -19,6 +19,11 @@ COPY plugin/ plugin/
 # `managed-flags` is a BuildKit named context supplied by docker-bake.hcl.
 # hadolint ignore=DL3022
 COPY --from=managed-flags managed-flag-inventory.json /feature-flags/src/managed-flag-inventory.json
+# The companions module bundles the shared brain contract from
+# ../../storm-brain/contracts (relative to plugin/); without it TheStorm fails
+# to enable. `storm-brain-contracts` is a BuildKit named context.
+# hadolint ignore=DL3022
+COPY --from=storm-brain-contracts companion-chat.json /storm-brain/contracts/companion-chat.json
 RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
   gradle -p plugin :dist:shadowJar --no-daemon --console=plain
 
@@ -90,6 +95,7 @@ RUN set -eu; \
   grep -qx 'name: TheStorm' /tmp/paper-plugin.yml; \
   grep -qx "api-version: '26.2'" /tmp/paper-plugin.yml; \
   grep -qx 'main: com.shepherdjerred.thestorm.TheStormPlugin' /tmp/paper-plugin.yml; \
+  unzip -l /plugins/TheStorm.jar contracts/companion-chat.json > /dev/null; \
   test -f "$PAPER_CUSTOM_JAR"; \
   test -f /opt/paper/versions/26.2/paper-26.2.jar; \
   test -f /plugins/TheStorm/config.yml; \
