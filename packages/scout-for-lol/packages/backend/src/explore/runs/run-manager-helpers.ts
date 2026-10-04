@@ -34,6 +34,24 @@ import type {
 } from "#src/explore/runs/run-manager-types.ts";
 import { broadcastExploreEvent } from "#src/explore/runs/run-events.ts";
 
+/** Recovery reuses durable admission; it never reserves another question. */
+export function createRecoveredExploreTicket(
+  runId: string,
+): ExploreRateLimitTicket {
+  return {
+    durable: true,
+    allowed: true,
+    runId,
+    claimConversation: () => true,
+    commit: () => {
+      // The persisted run already owns its reservation.
+    },
+    finish: () => {
+      // The persisted run already owns its reservation.
+    },
+  };
+}
+
 export function abortActiveExploreRun(
   run: ActiveRun,
   reason: Exclude<RunTermination, null>,

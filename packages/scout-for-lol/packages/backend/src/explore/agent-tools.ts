@@ -1,20 +1,19 @@
 import { tool } from "ai";
+import { registerExploreToolContracts } from "#src/explore/inspection/tool-contracts.ts";
+import { exploreAnalysisEnabled } from "#src/config/dynamic.ts";
+import { createAnalysisTools } from "#src/explore/analysis/tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { z } from "zod";
 import {
-  type DiscordAccountId,
   EXPLORE_MAX_PREVIEW_CALLS,
   EXPLORE_MAX_TOOL_CALLS,
   EXPLORE_MODEL_PREVIEW_MAX_ROWS,
   ReportQueryTextSchema,
-  type DiscordChannelId,
-  type ExploreMessage,
-  type ExploreStreamEvent,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/editor/format-expr.ts";
 import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
-import type { LlmSubject } from "@shepherdjerred/llm-observability/subject";
 import { prisma } from "#src/database/index.ts";
 import type { CreationCapability } from "#src/explore/creation/capability.ts";
 import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
@@ -31,7 +30,6 @@ import {
   type ExploreSkillOptions,
 } from "#src/explore/skills/registry.ts";
 import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
-import type { ExploreSurface } from "#src/explore/surface.ts";
 import { type BucksExploreCapability } from "#src/explore/tools/bucks-tools.ts";
 import { createClashExploreTools } from "#src/explore/tools/clash-tools.ts";
 import { createLeagueExploreTools } from "#src/explore/tools/league-tools.ts";
@@ -66,42 +64,8 @@ function describeExploreLoadoutPairs(pairs: Set<string>): string {
     .join(", ");
 }
 
-export type ExploreAgentParams = {
-  runId: string;
-  conversationId: string;
-  /**
-   * Who this turn is being answered for. Required rather than optional: an
-   * Explore turn always has an asker, and an optional field would quietly
-   * produce unattributed spend the first time a caller forgot it.
-   */
-  subject: LlmSubject;
-  question: string;
-  /** Prior turns of this conversation, oldest first. */
-  history: ExploreMessage[];
-  /**
-   * The asker's Discord servers, used only to resolve a `player('…')` alias.
-   * Explore is global otherwise; this is the one lookup that reads per-server
-   * data, so it stays bounded to servers this person belongs to.
-   */
-  guildIds: string[];
-  /**
-   * The asker. Only the Bryan Bucks account tool reads it — the tool is
-   * structurally scoped to the requester's own balance.
-   */
-  requesterId: DiscordAccountId;
-  /** Discord-originated dare drafts keep the invoking channel as metadata. */
-  originChannelId: DiscordChannelId | null;
-  /**
-   * Which product surface this turn is answered on. Creation tools are
-   * web-only; see `explore/surface.ts` for why that is structural rather than
-   * a policy choice.
-   */
-  surface: ExploreSurface;
-  abortSignal: AbortSignal;
-  emit: (event: ExploreStreamEvent) => void | Promise<void>;
-};
-
 export type RunState = {
+  authorizedProfileUrls?: Set<string>;
   toolCalls: number;
   previewCalls: number;
   /** Result of the most recent successful query, attached to the answer. */
@@ -197,6 +161,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
             firstSeen: z.string(),
             lastSeen: z.string(),
             matchedBy: z.enum(["alias", "riot_id"]),
+            profileUrl: z.string().nullable(),
           }),
         ),
         message: z.string(),
@@ -213,16 +178,34 @@ export function createExploreTools(options: ExploreToolsOptions) {
           guildIds: turn.guildIds,
           abortSignal: params.abortSignal,
         });
+        const candidates = await Promise.all(
+          found.map(async (identity) => {
+            const profile = await prisma.player.findFirst({
+              where: {
+                serverId: { in: params.guildIds },
+                accounts: { some: { puuid: { in: identity.puuids } } },
+              },
+              select: { id: true },
+              orderBy: { id: "asc" },
+            });
+            const profileUrl =
+              profile === null ? null : `/app/players/${profile.id.toString()}`;
+            if (profileUrl !== null)
+              state.authorizedProfileUrls?.add(profileUrl);
+            return {
+              displayName: identity.displayName,
+              riotIds: identity.riotIds,
+              accounts: identity.puuids.length,
+              games: identity.games,
+              firstSeen: identity.firstSeen,
+              lastSeen: identity.lastSeen,
+              matchedBy: identity.matchedBy,
+              profileUrl,
+            };
+          }),
+        );
         return {
-          candidates: found.map((identity) => ({
-            displayName: identity.displayName,
-            riotIds: identity.riotIds,
-            accounts: identity.puuids.length,
-            games: identity.games,
-            firstSeen: identity.firstSeen,
-            lastSeen: identity.lastSeen,
-            matchedBy: identity.matchedBy,
-          })),
+          candidates,
           message:
             found.length === 0
               ? `No player matches "${inputData.query}". Say the data does not cover them rather than guessing at a similar name.`
@@ -361,7 +344,8 @@ export function createExploreTools(options: ExploreToolsOptions) {
 
   // The system prompt carries the full language reference, so the
   // `get_report_language` reference tool is not registered here.
-  return {
+  return registerExploreToolContracts({
+    ...(exploreAnalysisEnabled() ? createAnalysisTools(params, track) : {}),
     load_skill: createLoadSkillTool({
       skills: enabledExploreSkills(skillOptions),
       context: {
@@ -407,5 +391,5 @@ export function createExploreTools(options: ExploreToolsOptions) {
           track,
         })
       : {}),
-  };
+  });
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { preserveRawJson } from "./preserve-raw-json.ts";
 import { RawParticipantSchema } from "./raw-participant.schema.ts";
 import { RawTeamSchema } from "./raw-team.schema.ts";
 
@@ -54,12 +55,14 @@ export type RawInfo = z.infer<typeof RawInfoSchema>;
 /**
  * Main RawMatch schema - represents a complete match from Riot Games Match V5 API
  */
-export const RawMatchSchema = z
-  .object({
-    metadata: RawMetadataSchema,
-    info: RawInfoSchema,
-  })
-  .strict();
+export const RawMatchSchema = preserveRawJson(
+  z
+    .object({
+      metadata: RawMetadataSchema,
+      info: RawInfoSchema,
+    })
+    .strict(),
+);
 
 export type RawMatch = z.infer<typeof RawMatchSchema>;
 

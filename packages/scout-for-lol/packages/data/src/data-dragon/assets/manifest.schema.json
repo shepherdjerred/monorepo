@@ -14,7 +14,7 @@
         "additionalProperties": false,
         "required": ["kind", "canonicalId", "mimeType", "width", "height", "relativePath", "sha256"],
         "properties": {
-          "kind": { "enum": ["champion", "champion-loading", "champion-splash", "item", "rune", "spell", "augment", "lane", "background"] },
+          "kind": { "enum": ["champion", "ability", "champion-loading", "champion-splash", "item", "rune", "spell", "augment", "lane", "background"] },
           "canonicalId": { "type": "string", "minLength": 1 },
           "mimeType": { "enum": ["image/png", "image/jpeg"] },
           "width": { "type": "integer", "minimum": 1 },

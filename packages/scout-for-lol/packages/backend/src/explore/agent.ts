@@ -1,4 +1,8 @@
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
+import { createToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
+import { withExploreSpend } from "#src/explore/spending/model.ts";
+import { hydrateInlineEntities } from "#src/explore/analysis/inline-entities.ts";
+import { authorizedProfileLinks } from "#src/explore/analysis/profile-links.ts";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
@@ -9,16 +13,14 @@ import {
   type ExploreAnswer,
   type ExploreMatchCard,
   type ExploreLoadoutCard,
+  type ExploreMessage,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
-import { exploreModel } from "#src/config/dynamic.ts";
-import {
-  createExploreTools,
-  type ExploreAgentParams,
-  type RunState,
-} from "#src/explore/agent-tools.ts";
+import { exploreModel, exploreAnalysisEnabled } from "#src/config/dynamic.ts";
+import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { drainExploreStreams } from "#src/explore/stream.ts";
@@ -46,6 +48,7 @@ import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
 const logger = createLogger("explore-agent");
 
 export type ExploreAgentResult = {
+  inlineEntities?: NonNullable<ExploreMessage["inlineEntities"]>;
   answer: ExploreAnswer;
   /** The result of the last successful query, kept for the transcript. */
   preview: ReportAiPreviewSummary | null;
@@ -68,14 +71,16 @@ export async function streamExploreAgent(
 async function streamExploreAgentInternal(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
-  const model = exploreModel();
+  const model = params.model ?? exploreModel();
   const runtime = getLlmRuntime();
   if (runtime === undefined) {
     throw new Error("OpenAI credentials are required for explore");
   }
   assertWithinBudget();
 
+  const profileUrls = new Set<string>();
   const state: RunState = {
+    authorizedProfileUrls: profileUrls,
     toolCalls: 0,
     previewCalls: 0,
     lastPreview: null,
@@ -106,6 +111,7 @@ async function streamExploreAgentInternal(
 
   const clock = { currentTime: new Date().toISOString() };
   const skillOptions = {
+    analysis: exploreAnalysisEnabled(),
     bucks: bucksCapability === null ? null : clock,
     mvpVotes: mvpVotesCapability === null ? null : clock,
     dares: daresEnabled,
@@ -120,7 +126,12 @@ async function streamExploreAgentInternal(
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
     instructions: exploreAgentInstructions(skillOptions),
-    model: runtime.languageModel(model, ["tools"]),
+    model: withExploreSpend(runtime.languageModel(model, ["tools"]), {
+      ownerId: params.requesterId,
+      runId: params.runId,
+      model,
+    }),
+    maxRetries: 0,
     tools: createExploreTools({
       params,
       state,
@@ -166,7 +177,11 @@ async function streamExploreAgentInternal(
   // `partialOutputStream`. The prose the page renders comes from the latter —
   // a `text-delta` part is raw JSON here. Both views must be drained together;
   // drainExploreStreams owns that invariant and its regression test.
-  const streamState = await drainExploreStreams(stream, params.emit);
+  const streamState = await drainExploreStreams(
+    stream,
+    params.emit,
+    createToolPayloadCapture(params.conversationId, params.runId),
+  );
 
   // Charge generation even if output validation or artifact hydration fails.
   const usage = await stream.usage;
@@ -212,7 +227,11 @@ async function streamExploreAgentInternal(
           ignorable: true,
         });
         const correction = await generateText({
-          model: runtime.languageModel(model),
+          model: withExploreSpend(runtime.languageModel(model), {
+            ownerId: params.requesterId,
+            runId: params.runId,
+            model,
+          }),
           output: Output.object({ schema: ExploreCardSelectionSchema }),
           maxOutputTokens,
           maxRetries: 0,
@@ -265,8 +284,13 @@ async function streamExploreAgentInternal(
     );
   }
 
+  const linkedAnswer = {
+    ...answer,
+    answer: authorizedProfileLinks(answer.answer, profileUrls),
+  };
   return {
-    answer,
+    answer: linkedAnswer,
+    inlineEntities: await hydrateInlineEntities(linkedAnswer.answer),
     preview: answer.includeVisualization ? state.lastPreview : null,
     visualization: answer.includeVisualization ? state.lastVisualization : null,
     matchCards,

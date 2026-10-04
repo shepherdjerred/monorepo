@@ -15,6 +15,8 @@ import { ForbiddenPanel } from "#src/components/chrome/forbidden-panel.tsx";
 import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { SectionSkeleton } from "#src/components/chrome/section-skeleton.tsx";
 import { useExploreConversation } from "#src/hooks/use-explore-conversation.ts";
+import { useExploreModel } from "#src/hooks/use-explore-model.ts";
+import { ExploreModelControls } from "#src/components/explore/inspection/explore-model-controls.tsx";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
   exploreTurnIsActive,
@@ -87,7 +89,15 @@ export function Explore() {
     title,
     origin,
     shared,
+    modelPickerEnabled,
+    preferredModel,
+    spending,
   } = useExploreConversation(conversationId);
+  const { model, chooseModel, requestModel } = useExploreModel(
+    conversationId,
+    preferredModel,
+    modelPickerEnabled,
+  );
 
   const pendingTurn = runs.pendingTurn(conversationId);
   const turnActive = exploreTurnIsActive(pendingTurn, runs.discoverySettled);
@@ -111,9 +121,9 @@ export function Explore() {
   }, [queryClient, trpc.explore.list]);
 
   const refreshConversation = useCallback(
-    async (id: string): Promise<void> => {
+    async (_id: string): Promise<void> => {
       await queryClient.invalidateQueries({
-        queryKey: trpc.explore.get.queryKey({ conversationId: id }),
+        queryKey: trpc.explore.get.queryKey(),
       });
       await refreshList();
     },
@@ -122,6 +132,7 @@ export function Explore() {
 
   const { ask, handleEdit, handleRegenerate, handleRetry } =
     useExploreTurnActions({
+      model: requestModel,
       conversationId,
       messages,
       runs,
@@ -361,6 +372,8 @@ export function Explore() {
           pendingVisualization={pendingVisualization}
           turnActive={turnActive}
           showRawTrace
+          allowIntentActions
+          conversationId={conversationId ?? undefined}
           actions={transcriptActions}
           hasError={pageError !== null}
         />
@@ -388,7 +401,13 @@ export function Explore() {
           in every theme, which switches with `data-scout-mode`. */}
       <div ref={setComposerElement} className={layout.composerClass}>
         <ExploreJumpToLatest pinned={pinned} onClick={scrollToBottom} />
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto rounded-lg bg-scout-canvas">
+          <ExploreModelControls
+            enabled={modelPickerEnabled}
+            model={model}
+            chooseModel={chooseModel}
+            spending={spending}
+          />
           <ExploreComposer
             active={pendingTurn !== null}
             disabled={!runs.discoverySettled}
@@ -425,7 +444,7 @@ function errorText(error: unknown): string {
 function ExploreJumpToLatest(props: { pinned: boolean; onClick: () => void }) {
   if (props.pinned) return null;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
+    <div className="pointer-events-none absolute inset-x-0 -top-2 flex justify-center">
       <Button
         type="button"
         variant="outline"

@@ -9,6 +9,19 @@ re-exported from here. This package owns everything those contracts must not
 know about: Prisma's storage domain, Discord and Riot shapes, and the static
 snapshot below.
 
+## Raw Riot captures and ability icons
+
+Raw match, spectator and timeline schemas validate known fields while retaining
+the complete captured JSON, including future fields, nested arrays, nulls and
+absent optional values. Application protocol schemas remain strict. The lake
+stores complete analytical documents alongside its typed projections; spectator
+credentials remain excluded from analytical data.
+
+The static-data update downloads passive and Q/W/E/R ability icons from the
+same Data Dragon version as the champion facts. The generated asset manifest
+includes the `ability` kind and uses `Champion-slot` identities, such as
+`Ahri-Q`. Regenerate the manifest after changing committed assets.
+
 ## Bryan Bucks storability
 
 `src/model/bucks/bryan-bucks-money.ts` is the Prisma edge of the Bucks economy.

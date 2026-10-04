@@ -72,9 +72,19 @@ describe("Explore trace recording", () => {
     expect(finalized[0]?.message).toContain("Interrupted");
   });
 
-  test("removes owner-only payloads from a shared transcript", () => {
+  test("shares query evidence while removing private server membership", () => {
     const trace: ExploreTraceEntry[] = [];
-    recordExploreTraceEvent(trace, TOOL_CALL);
+    recordExploreTraceEvent(trace, {
+      ...TOOL_CALL,
+      rawInput: {
+        kind: "value",
+        value: {
+          queryText: "FROM matches SELECT games",
+          servers: ["private-server"],
+        },
+        byteLength: 100,
+      },
+    });
     const transcript = ExploreTranscriptSchema.parse({
       conversation: {
         id: "11111111-1111-4111-8111-111111111111",
@@ -97,7 +107,8 @@ describe("Explore trace recording", () => {
 
     const publicTranscript = redactSharedExploreTranscript(transcript);
     const encoded = JSON.stringify(publicTranscript);
-    expect(encoded).not.toContain("owner-only-input");
+    expect(encoded).not.toContain("private-server");
+    expect(encoded).toContain("FROM matches SELECT games");
     expect(publicTranscript.messages[0]?.trace[0]?.details?.kind).toBe(
       "execution",
     );

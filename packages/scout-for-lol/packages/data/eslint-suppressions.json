@@ -45,9 +45,6 @@
     "max-lines": {
       "count": 1
     },
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    },
     "unicorn/no-useless-undefined": {
       "count": 1
     },

@@ -78,13 +78,13 @@ export type ExploreQuotaLimits = z.infer<typeof ExploreQuotaLimitsSchema>;
  * become the first wall for the second concurrent explorer.
  */
 export const DEFAULT_EXPLORE_QUOTA_LIMITS: ExploreQuotaLimits = {
-  userMinute: 12,
-  userHour: 90,
-  userDay: 300,
-  userWeek: 900,
-  globalHour: 360,
-  globalDay: 1800,
-  globalWeek: 6000,
+  userMinute: 4,
+  userHour: 30,
+  userDay: 100,
+  userWeek: 300,
+  globalHour: 120,
+  globalDay: 600,
+  globalWeek: 2000,
 };
 
 /**

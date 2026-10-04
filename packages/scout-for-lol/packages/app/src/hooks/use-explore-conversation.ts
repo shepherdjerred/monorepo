@@ -1,6 +1,7 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { useQuery } from "@tanstack/react-query";
 import type { ExploreMessage, ExploreQuotaSnapshot } from "@scout-for-lol/data";
+import { ExploreTranscriptSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
@@ -29,8 +30,12 @@ export function useExploreConversation(conversationId: string | null) {
   const availability = Loaded.getOrElse(status, undefined);
   const enabled = availability?.enabled === true;
   const transcript = useQuery({
-    ...trpc.explore.get.queryOptions({ conversationId: conversationId ?? "" }),
+    ...trpc.explore.get.queryOptions({
+      conversationId: conversationId ?? "",
+      version: 3,
+    }),
     enabled: enabled && conversationId !== null,
+    select: (data) => ExploreTranscriptSchema.parse(data),
   });
 
   // The transcript is the owner-only content the status check guards, so it is
@@ -46,6 +51,9 @@ export function useExploreConversation(conversationId: string | null) {
     statusQuery,
     enabled,
     quota: availability?.quota ?? NO_QUOTA,
+    modelPickerEnabled: availability?.modelPickerEnabled === true,
+    spending: availability?.spending,
+    preferredModel: conversation?.conversation.preferredModel ?? "gpt-6-luna",
     transcript,
     messages: conversation?.messages ?? NO_MESSAGES,
     title: conversation?.conversation.title ?? "Explore",

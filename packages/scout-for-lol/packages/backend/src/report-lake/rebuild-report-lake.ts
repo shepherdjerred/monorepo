@@ -1,5 +1,6 @@
 import { mkdir, rm, unlink } from "node:fs/promises";
 import path from "node:path";
+import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
@@ -77,6 +78,8 @@ async function rebuildLocked(
   try {
     const matchesTmp = path.join(buildDir, "matches.ndjson.tmp");
     const matchWriter = new NdjsonFileWriter(matchesTmp);
+    const rawTmp = path.join(buildDir, "raw-documents.ndjson.tmp");
+    const rawWriter = new NdjsonFileWriter(rawTmp);
     const matchTeamsTmp = path.join(buildDir, "match-teams.ndjson.tmp");
     const matchTeamWriter = new NdjsonFileWriter(matchTeamsTmp);
     const matchTeamBansTmp = path.join(buildDir, "match-team-bans.ndjson.tmp");
@@ -99,6 +102,7 @@ async function rebuildLocked(
       client,
       bucket,
       writer: matchWriter,
+      rawWriter,
       teamWriter: matchTeamWriter,
       teamBanWriter: matchTeamBanWriter,
       foldedIds: foldedMatchIds,
@@ -113,6 +117,7 @@ async function rebuildLocked(
       client,
       bucket,
       writer: prematchWriter,
+      rawWriter,
       foldedIds: foldedPrematchIds,
       foldedSources: rebuiltSources,
       puuidRemap,
@@ -125,6 +130,7 @@ async function rebuildLocked(
       client,
       bucket,
       buildDir,
+      rawWriter,
       foldedSources: rebuiltSources,
       puuidRemap,
       abortSignal: deadline,
@@ -142,6 +148,7 @@ async function rebuildLocked(
     await matchTeamWriter.close();
     await matchTeamBanWriter.close();
     await prematchWriter.close();
+    await rawWriter.close();
     onProgress?.({
       phase: "writing-parquet",
       files: foldedMatchIds.size + foldedPrematchIds.size,
@@ -152,6 +159,12 @@ async function rebuildLocked(
     try {
       await withDuckDBConnection(
         async (session) => {
+          if (rawWriter.rows > 0) {
+            await session.run(
+              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(RAW_DOCUMENT_LAKE_COLUMNS)})) TO '${path.join(buildDir, "raw_documents")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+              [rawTmp],
+            );
+          }
           if (matchWriter.rows > 0) {
             await session.run(
               `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "matches")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
@@ -184,6 +197,7 @@ async function rebuildLocked(
       await unlink(matchTeamsTmp);
       await unlink(matchTeamBansTmp);
       await unlink(prematchTmp);
+      await unlink(rawTmp);
     }
 
     deadline.throwIfAborted();
@@ -207,6 +221,7 @@ async function rebuildLocked(
     deadline.throwIfAborted();
 
     const summary = {
+      rawDocumentRows: rawWriter.rows,
       buildId,
       tier: "rebuild" as const,
       matchRows: matchWriter.rows,

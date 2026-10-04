@@ -32,6 +32,7 @@ import {
   type RiotPatch,
 } from "./riot-patch.ts";
 import { generateAbilityFactsAssets } from "./ability-facts.ts";
+import { downloadAbilityIcons } from "./ability-icons.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
 import {
   PatchChangesetHistorySchema,
@@ -913,6 +914,13 @@ async function retryFailedLoadingScreens(
  * function exits non-zero so CI catches it — silent data drift is exactly
  * what caused the original "no picture" bug.
  */
+function numericChampionId(name: string, key: string): number {
+  const championId = Number(key);
+  if (!Number.isSafeInteger(championId) || championId <= 0)
+    throw new Error(`Champion ${name} has invalid championId ${key}`);
+  return championId;
+}
+
 async function downloadChampionLoadingImages(
   cdVersion: string,
   championList: ChampionListData,
@@ -931,12 +939,7 @@ async function downloadChampionLoadingImages(
   const failedSkins: LoadingScreenFailure[] = [];
 
   for (const [championName, listEntry] of championEntries) {
-    const championId = Number(listEntry.key);
-    if (!Number.isSafeInteger(championId) || championId <= 0) {
-      throw new Error(
-        `Champion ${championName} has invalid championId ${listEntry.key}`,
-      );
-    }
+    const championId = numericChampionId(championName, listEntry.key);
 
     const result = await downloadLoadingScreenSkin(
       cdVersion,
@@ -1152,12 +1155,7 @@ async function downloadChampionSplashImages(
   const failedSkins: SplashFailure[] = [];
 
   for (const [championName, listEntry] of championEntries) {
-    const championId = Number(listEntry.key);
-    if (!Number.isSafeInteger(championId) || championId <= 0) {
-      throw new Error(
-        `Champion ${championName} has invalid championId ${listEntry.key}`,
-      );
-    }
+    const championId = numericChampionId(championName, listEntry.key);
 
     const result = await downloadSplashSkin(
       dataDragonVersion,
@@ -1574,6 +1572,17 @@ async function maybeAppendChangelogEntry(
   console.log(`✓ Added changelog entry for League patch ${patch.patch}`);
 }
 
+function assertPinnedVersion(
+  option: string,
+  requested: string | undefined,
+  committed: string,
+): void {
+  if (requested !== undefined && requested !== committed)
+    throw new Error(
+      `${option} must use the committed Data Dragon version ${committed}; received ${requested}`,
+    );
+}
+
 async function main(): Promise<void> {
   try {
     const requestedVersion = process.argv.find((argument) =>
@@ -1584,14 +1593,11 @@ async function main(): Promise<void> {
       if (previousVersion === undefined) {
         throw new Error("--arena-augments-only requires a committed version");
       }
-      if (
-        requestedVersion !== undefined &&
-        requestedVersion !== previousVersion
-      ) {
-        throw new Error(
-          `--arena-augments-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
-        );
-      }
+      assertPinnedVersion(
+        "--arena-augments-only",
+        requestedVersion,
+        previousVersion,
+      );
       await fetchAndSaveArenaAugments(
         getArenaAugmentsUrl(getCommunityDragonVersion(previousVersion)),
       );
@@ -1602,14 +1608,11 @@ async function main(): Promise<void> {
       if (previousVersion === undefined) {
         throw new Error("--classic-assets-only requires a Data Dragon version");
       }
-      if (
-        requestedVersion !== undefined &&
-        requestedVersion !== previousVersion
-      ) {
-        throw new Error(
-          `--classic-assets-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
-        );
-      }
+      assertPinnedVersion(
+        "--classic-assets-only",
+        requestedVersion,
+        previousVersion,
+      );
       const version = previousVersion;
       const cdVersion = getCommunityDragonVersion(version);
       await createDirectories();
@@ -1637,14 +1640,11 @@ async function main(): Promise<void> {
           "--ability-facts-only requires a committed version.json",
         );
       }
-      if (
-        requestedVersion !== undefined &&
-        requestedVersion !== previousVersion
-      ) {
-        throw new Error(
-          `--ability-facts-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
-        );
-      }
+      assertPinnedVersion(
+        "--ability-facts-only",
+        requestedVersion,
+        previousVersion,
+      );
       const cdVersion = getCommunityDragonVersion(previousVersion);
       await ensureDir(`${ASSETS_DIR}/ability-facts`);
       const committedChampionList: unknown = await Bun.file(
@@ -1730,6 +1730,7 @@ async function main(): Promise<void> {
     );
     // Must run after downloadChampionData: reads the freshly written
     // assets/champion/{Key}.json files.
+    await downloadAbilityIcons(version);
     await generateAbilityFacts(cdVersion, championNames);
     const runeImagesCount = await downloadRuneImages(runes);
     const historicalRuneImagesCount = await downloadHistoricalRuneAssets();

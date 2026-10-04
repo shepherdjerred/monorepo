@@ -8,7 +8,7 @@ tripwires:
 ---
 ## Game review
 
-Load `scoutql` and identify the requested player and matches before interpreting them. Start with outcome, role, champion, matchup, kills/deaths/assists, farm, gold, vision, damage, objectives, duration, and game count. Separate direct evidence from interpretation.
+Use the ScoutQL field guide and language reference in the core instructions to identify the requested player and matches before interpreting them. Start with outcome, role, champion, matchup, kills/deaths/assists, farm, gold, vision, damage, objectives, duration, and game count. Separate direct evidence from interpretation. When analysis tools are available, load `data-analysis` to inspect full raw documents and compute joins, ordered sequences, or nested damage.
 
 For one game, project `match_id` and attach a match card when it adds context. For several games, distinguish recurring behavior from a one-off. If the question depends on event order, check timeline coverage and use `acquire_match_timelines` only for up to 10 eligible match IDs returned by the most recent query. Do not treat absent timeline events as zero when coverage is incomplete.
 

@@ -21,7 +21,6 @@ import {
   deleteExploreConversation,
   loadExploreTranscript,
 } from "#src/explore/store.ts";
-import type { ExploreInvalidTurnError } from "#src/explore/store.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 import {
   DurableExploreUnavailableError,
@@ -34,12 +33,16 @@ import {
 import {
   attachEvents,
   createActiveExploreRun,
+  createRecoveredExploreTicket,
   createDeferred,
   executeActiveExploreRun,
   recordTerminalExploreOutcome,
   settleActiveExploreRun,
 } from "#src/explore/runs/run-manager-helpers.ts";
-import { startExploreRun } from "#src/explore/runs/run-manager-start.ts";
+import {
+  startExploreRun,
+  refreshExploreRejectionQuota,
+} from "#src/explore/runs/run-manager-start.ts";
 import type {
   ActiveRun,
   ExploreAgentRunner,
@@ -49,7 +52,6 @@ import type {
   StartedTurn,
   TerminalRun,
 } from "#src/explore/runs/run-manager-types.ts";
-import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
 import { recordExploreEvent } from "#src/explore/runs/run-events.ts";
 
 const TERMINAL_OUTCOME_TTL_MS = 5 * 60 * 1000;
@@ -62,13 +64,6 @@ export class ExploreRunRateLimitedError extends Error {
     this.rejection = rejection;
   }
 }
-
-export type ExploreRunStartError =
-  | ExploreConversationBusyError
-  | ExploreRunUnavailableError
-  | ExploreRunRateLimitedError
-  | ExploreInvalidTurnError
-  | ExploreNotFoundError;
 
 /**
  * Owns Explore work independently of any one browser response.
@@ -125,10 +120,17 @@ export class ExploreRunManager {
       );
     }
 
-    const ticket = tryStartExploreTurn(identity, Date.now());
+    const ticket = tryStartExploreTurn(
+      identity,
+      Date.now(),
+      !this.#inlineExecutionForTests,
+    );
     if (!ticket.allowed) {
       scoutExploreTurnsTotal.inc({ status: "rate_limited" });
-      throw new ExploreRunRateLimitedError(ticket);
+      const rejection = this.#inlineExecutionForTests
+        ? ticket
+        : await refreshExploreRejectionQuota(this.#client, identity, ticket);
+      throw new ExploreRunRateLimitedError(rejection);
     }
     if (!ticket.claimConversation(conversationId)) {
       ticket.finish();
@@ -288,17 +290,7 @@ export class ExploreRunManager {
     if (transcript === null) {
       throw new ExploreNotFoundError("Conversation not found.");
     }
-    const ticket: ExploreRateLimitTicket = {
-      allowed: true,
-      runId: input.summary.runId,
-      claimConversation: () => true,
-      commit: () => {
-        // Rehydrated runs do not own a new quota reservation.
-      },
-      finish: () => {
-        // Rehydrated runs do not own a new quota reservation.
-      },
-    };
+    const ticket = createRecoveredExploreTicket(input.summary.runId);
     const run = createActiveExploreRun({
       summary: input.summary,
       identity: input.identity,
