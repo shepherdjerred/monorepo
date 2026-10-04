@@ -11,6 +11,7 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import { clientRosterCompletion } from "#src/league/tasks/prematch/client-bot-roster.ts";
+import { isStartedCustomRosterFinal } from "#src/league/tasks/prematch/spectator-roster.ts";
 
 /**
  * What every V2 prematch Activity needs before it can do anything: the live
@@ -48,13 +49,18 @@ const STANDARD_PARTICIPANT_COUNT = 10;
  * the first run that takes the game, so a run that archived a half-filled
  * roster would own that ID with a snapshot missing tracked players, and every
  * later poll would be deduplicated against it.
+ *
+ * A started custom is the exception both pipelines share: a 1v1 or 2v2 is
+ * short by design, and once play begins its roster is final
+ * (`isStartedCustomRosterFinal`).
  */
 export function isPrematchRosterComplete(
   gameInfo: RawCurrentGameInfo,
 ): boolean {
   return (
     isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
-    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT
+    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT ||
+    isStartedCustomRosterFinal(gameInfo)
   );
 }
 

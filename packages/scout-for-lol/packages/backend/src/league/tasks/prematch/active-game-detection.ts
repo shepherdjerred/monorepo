@@ -12,6 +12,7 @@ import {
 } from "#src/database/player-accounts.ts";
 import {
   isLikelyPreStartLobby,
+  isStartedCustomRosterFinal,
   rosterIsAsCompleteAsItWillGet,
 } from "#src/league/tasks/prematch/spectator-roster.ts";
 import { clientRosterCompletion } from "#src/league/tasks/prematch/client-bot-roster.ts";
@@ -193,6 +194,13 @@ async function shouldDeferRoster(
   puuid: string,
 ): Promise<boolean> {
   if (!isLikelyPreStartLobby(gameInfo)) return false;
+  if (isStartedCustomRosterFinal(gameInfo)) {
+    logger.info(
+      `[${alias}] 🎯 Proceeding with started custom gameId=${gameInfo.gameId.toString()} — ${gameInfo.participants.length.toString()} players is its whole roster`,
+    );
+    prematchDetectionsTotal.inc({ status: "custom_roster_final" });
+    return false;
+  }
   const bots = await clientRosterCompletion(gameInfo, new Set([puuid]));
   if (bots === null) {
     recordDeferredRoster(alias, gameInfo);

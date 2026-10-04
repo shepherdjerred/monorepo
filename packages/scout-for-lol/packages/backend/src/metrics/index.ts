@@ -221,6 +221,8 @@ export const prematchDetectionsTotal = new Counter({
   // (roster still filling during the loading screen),
   // "deferred_undersized_roster" (the game has started, so this is the roster
   // Riot will report — notably, bots are never listed at all),
+  // "custom_roster_final" (a started custom with someone on each side — a
+  // 1v1, 2v2 or other short custom whose roster is simply that size),
   // "client_completed_roster" (that short roster was finished with the bots a
   // tracked player's local client saw in the lobby, so detection proceeds) and
   // "owned_by_v2" (the V2 prematch path already captured this game)
