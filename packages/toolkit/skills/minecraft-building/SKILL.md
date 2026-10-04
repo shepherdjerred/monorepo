@@ -43,6 +43,8 @@ render and getting a go-ahead when the target is a server people play on.
    - **Program** (`build.ts`, precise architecture): edit it, then
      `toolkit mc build compile <dir>` (compiles, lints, and replaces the earlier
      program ops in the log). See references/dsl-cheatsheet.md.
+     Start from the closest curated program: `library search --tag <t>`,
+     then `library use <slug> <dir>`.
 5. **Run, look, critique:**
 
    ```bash

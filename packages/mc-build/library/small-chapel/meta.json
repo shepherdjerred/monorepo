@@ -1,0 +1,7 @@
+{
+  "title": "Small chapel",
+  "tags": ["chapel", "church", "tower", "landmark", "stone", "gable-roof"],
+  "style": "medieval",
+  "footprint": { "w": 18, "d": 27, "h": 20 },
+  "notes": "A 9×15 stone nave with log posts, rows of tall windows, a steep deepslate gable roof, pews, an altar and aisle lights, plus a square bell tower over the entrance with a hip-roof spire and a bell. Shows combining `walls`, `tower` and two roof primitives."
+}

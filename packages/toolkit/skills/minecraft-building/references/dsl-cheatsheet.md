@@ -82,3 +82,11 @@ the game does on placement, so roof corners and L-shaped eaves come out right.
   Check the junction in the render; it is the usual weak spot.
 - **Exterior chimney:** `x` just outside a wall, `base` at the foundation,
   tall enough to clear the roof by 2–3 blocks.
+
+## Library
+
+`toolkit mc build library ls|search --tag <t>|show <slug>` lists curated,
+lint-clean programs (cottage, nordic two-story, desert L-house, watchtower,
+chapel, bridge, plaza well, market stalls). `library use <slug> <dir>` copies
+one as the build's `build.ts`; start from the closest one and adapt it rather
+than from the blank scaffold.

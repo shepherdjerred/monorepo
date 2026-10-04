@@ -26,7 +26,7 @@ export const TASKS: readonly TaskDef[] = [
     title: "cottage through the build pipeline",
     file: "e2-cottage.md",
     timeoutMinutes: 60,
-    grade: buildGrader,
+    grade: buildGrader("cottage"),
   },
   {
     id: "e3",
@@ -47,7 +47,7 @@ export const TASKS: readonly TaskDef[] = [
     title: "two-story hillside house",
     file: "e5-hillside-house.md",
     timeoutMinutes: 75,
-    grade: buildGrader,
+    grade: buildGrader("nordic-two-story"),
   },
   {
     id: "e6",

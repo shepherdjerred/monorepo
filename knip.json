@@ -65,8 +65,17 @@
       ]
     },
     "packages/mc-build": {
-      "entry": ["scripts/**/*.ts", "test/fixtures/**/*.ts"],
-      "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
+      "entry": [
+        "scripts/**/*.ts",
+        "test/fixtures/**/*.ts",
+        "library/*/build.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "scripts/**/*.ts",
+        "library/**/*.ts"
+      ]
     },
     "packages/mc-harness": {
       "entry": [

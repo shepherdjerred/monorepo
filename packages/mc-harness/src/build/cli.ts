@@ -25,6 +25,7 @@ import {
   type Env,
 } from "./commands.ts";
 import { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } from "./judge.ts";
+import { libraryList, libraryShow, libraryUse, type LibraryRow } from "./library.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
 
@@ -43,6 +44,8 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   verify <applyId>
   undo <applyId>                        Restore the pre-apply snapshot (last-in-first-out)
   status <dir>
+  library ls|search [--tag t]… [--text s] | show <slug> | use <slug> <dir> [--force]
+                                        Curated programs to start from (mc-build library/)
   judge <a> <b> [--model id]            Pairwise vision judge of two renders (PNG or build dir), order-swapped
 
 Live tsmc: promote/undo with --target live also need --reason "<why>" (journaled), and
@@ -67,6 +70,9 @@ const OPTIONS = {
   "allow-players": { type: "boolean", default: false },
   "confirm-dangerous": { type: "boolean", default: false },
   model: { type: "string" },
+  tag: { type: "string", multiple: true },
+  text: { type: "string" },
+  force: { type: "boolean", default: false },
 } as const;
 
 /** Usage label for the first positional when it is not a build directory. */
@@ -74,6 +80,7 @@ const FIRST_POSITIONAL: Record<string, string> = {
   verify: "<applyId>",
   undo: "<applyId>",
   judge: "<a>",
+  library: "<ls|search|show|use>",
 };
 
 type Values = ReturnType<typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>>["values"];
@@ -217,6 +224,36 @@ const HANDLERS: Record<string, Handler> = {
       `${applyId}: undone; target ${result.restoredToSite ? "matches the captured site again" : "restored from snapshot (differs from the captured site — it changed before the apply)"}`,
     );
     return 0;
+  },
+  library: async (_env, sub, values, rest) => {
+    const table = (rows: LibraryRow[]) =>
+      rows
+        .map(
+          (r) =>
+            `${r.slug.padEnd(18)} ${r.style.padEnd(9)} ${`${r.footprint.w.toString()}×${r.footprint.d.toString()}×${r.footprint.h.toString()}`.padEnd(9)} ${r.title} — ${r.tags.join(", ")}`,
+        )
+        .join("\n");
+    if (sub === "ls" || sub === "search") {
+      const rows = await libraryList({
+        tags: values.tag ?? [],
+        ...(values.text === undefined ? {} : { text: values.text }),
+      });
+      print(values.json, rows, rows.length === 0 ? "no matching library entries" : table(rows));
+      return 0;
+    }
+    if (sub === "show") {
+      const entry = await libraryShow(required(rest[0], "<slug>"));
+      print(values.json, entry, `${table([entry])}\n\n${entry.notes}\n\nprogram: ${entry.program}\n\n${entry.source}`);
+      return 0;
+    }
+    if (sub === "use") {
+      const result = await libraryUse(required(rest[0], "<slug>"), required(rest[1], "<dir>"), {
+        force: values.force,
+      });
+      print(values.json, result, `copied library/${result.slug} → ${result.program}; adapt it, then toolkit mc build compile`);
+      return 0;
+    }
+    throw new Error(`unknown library command "${sub}"\n${BUILD_USAGE}`);
   },
   judge: async (_env, a, values, rest) => {
     const verdict = await judgeRenders(a, required(rest[0], "<b>"), {

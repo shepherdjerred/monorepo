@@ -1,0 +1,7 @@
+{
+  "title": "Arched stone bridge",
+  "tags": ["bridge", "infrastructure", "canal", "water", "stone", "arch"],
+  "style": "medieval",
+  "footprint": { "w": 25, "d": 15, "h": 6 },
+  "notes": "A three-wide deck that steps up over a walled canal, brick-wall railings, an arch of upside-down stairs and top slabs under the span, and lamp posts at both ends. The canal is closed at its ends so the water is contained."
+}
