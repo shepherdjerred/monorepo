@@ -332,28 +332,10 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "critical",
           },
         },
-        {
-          // A cron task (polling, dispatch, outreach, cleanup) that stops
-          // succeeding entirely produces nothing and throws nothing. The
-          // per-job last-success timestamp is the only signal. 25h backstop —
-          // every scout cron runs at least daily, so a 25h gap means stalled.
-          alert: "ScoutCronJobStale",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "Scout cron job {{ $labels.job_name }} is stalled",
-            ),
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} cron job {{ $labels.job_name }} has not succeeded in {{ $value | humanizeDuration }}. It may have stopped running (deadlock, unhandled rejection, or scheduler death).",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "(time() - max by (environment, job_name) (cron_job_last_success_timestamp)) > 90000",
-          ),
-          for: "10m",
-          labels: {
-            severity: "warning",
-          },
-        },
+        // Background schedules use TemporalScheduledCurrentFailure and
+        // TemporalScheduleHealthUnknown in ops-snapshot.ts. The retired cron
+        // timestamp has no producers and its daily assumption excludes weekly
+        // work; do not add a duplicate schedule failure alert here.
         {
           alert: "ScoutInitialHistoryImportStale",
           annotations: {

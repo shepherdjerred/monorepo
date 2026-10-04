@@ -15,6 +15,7 @@ import {
   devGuildOverride,
   fetchUserGuilds,
   hasAdministrator,
+  invalidateUserGuildsCache,
 } from "#src/lib/discord-rest.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
 
@@ -28,7 +29,7 @@ let userSeq = 0;
 function testUser(overrides: Partial<User> = {}): User {
   userSeq += 1;
   return {
-    discordId: testAccountId(userSeq.toString()),
+    discordId: testAccountId(userSeq.toString().padStart(12, "0")),
     discordUsername: "tester",
     discordAvatar: null,
     discordAccessToken: "valid-access-token",
@@ -65,6 +66,65 @@ async function captureError(promise: Promise<unknown>): Promise<unknown> {
 }
 
 describe("fetchUserGuilds", () => {
+  it("coalesces concurrent membership checks into one authoritative read", async () => {
+    const response = Promise.withResolvers<Response>();
+    installFetch(() => response.promise);
+    const user = testUser();
+    const requests = Array.from({ length: 12 }, () => fetchUserGuilds(user));
+    response.resolve(new Response("[]"));
+    expect(await Promise.all(requests)).toEqual(
+      Array.from({ length: 12 }, () => []),
+    );
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(await fetchUserGuilds(user)).toEqual([]);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("shares failures without caching an empty authorization answer", async () => {
+    const response = Promise.withResolvers<Response>();
+    installFetch(() => response.promise);
+    const user = testUser();
+    const requests = Array.from({ length: 12 }, () =>
+      captureError(fetchUserGuilds(user)),
+    );
+    response.resolve(new Response("limited", { status: 429 }));
+    for (const error of await Promise.all(requests)) {
+      expect(error).toMatchObject({ reason: "http_error", status: 429 });
+    }
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    respondWith("[]");
+    expect(await fetchUserGuilds(user)).toEqual([]);
+  });
+
+  it("does not share membership results between users", async () => {
+    respondWith("[]");
+    await Promise.all([
+      fetchUserGuilds(testUser()),
+      fetchUserGuilds(testUser()),
+    ]);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("an invalidated in-flight request cannot cache pre-login membership", async () => {
+    const response = Promise.withResolvers<Response>();
+    installFetch(() => response.promise);
+    const user = testUser();
+    const oldRequest = fetchUserGuilds(user);
+    // Let the pending read enter fetch before changing the stub.
+    await Promise.resolve();
+    invalidateUserGuildsCache(user.discordId);
+    respondWith("[]");
+    await fetchUserGuilds(user);
+    response.resolve(
+      Response.json([
+        { id: "old", name: "Old", icon: null, owner: true, permissions: "8" },
+      ]),
+    );
+    expect(await oldRequest).toHaveLength(1);
+    expect(await fetchUserGuilds(user)).toEqual([]);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("returns the parsed list when Discord answers", async () => {
     respondWith(
       JSON.stringify([

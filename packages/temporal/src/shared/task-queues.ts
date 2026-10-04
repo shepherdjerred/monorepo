@@ -9,6 +9,8 @@ export const TASK_QUEUES = {
   REPORTS: "reports",
   /** Privileged homelab inspection and operator automation. */
   INFRA: "infra",
+  /** Bounded Ops source reads, isolated from long infra automation. */
+  OPS: "ops",
   /** Long-running mining reset, isolated from latency-sensitive infra audits. */
   MINING_RESET: "mining-reset",
   /** Forum activities run beside their own PHP files and database credentials. */
@@ -64,6 +66,7 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.HOME,
   TASK_QUEUES.REPORTS,
   TASK_QUEUES.INFRA,
+  TASK_QUEUES.OPS,
   TASK_QUEUES.MINING_RESET,
   TASK_QUEUES.STORM_FORUM_BETA,
   TASK_QUEUES.STORM_FORUM_PROD,

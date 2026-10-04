@@ -148,6 +148,42 @@ async function readCandidateSet(
   );
 }
 
+/** Observe pending sets without treating their contents as eligible deletes. */
+export async function readGcInventory(input: {
+  store: ObjectStore;
+  backupBucket: string;
+}): Promise<{
+  candidateBacklog: number;
+  candidateCount: number;
+  oldestPendingTimestampSeconds: number;
+}> {
+  const objects = await input.store.listObjects(
+    input.backupBucket,
+    "gc/candidates/",
+  );
+  let oldest: number | undefined;
+  let newest: number | undefined;
+  let candidateCount = 0;
+  for (const object of objects) {
+    const candidateSet = await readCandidateSet(
+      input.store,
+      input.backupBucket,
+      object.key,
+    );
+    const createdAt = Date.parse(candidateSet.createdAt);
+    if (oldest === undefined || createdAt < oldest) oldest = createdAt;
+    if (newest === undefined || createdAt > newest) {
+      newest = createdAt;
+      candidateCount = candidateSet.candidates.length;
+    }
+  }
+  return {
+    candidateBacklog: objects.length,
+    candidateCount,
+    oldestPendingTimestampSeconds: oldest === undefined ? 0 : oldest / 1000,
+  };
+}
+
 export async function sweepGcCandidates(input: {
   store: ObjectStore;
   backupBucket: string;

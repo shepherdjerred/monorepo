@@ -3,6 +3,7 @@ import {
   createGcCandidateSet,
   sweepGcCandidates,
   runGcCycle,
+  readGcInventory,
 } from "@shepherdjerred/seaweedfs-backup/gc";
 import {
   manifestKey,
@@ -92,6 +93,60 @@ async function protectObject(store: InMemoryObjectStore, objectKey: string) {
   });
   return key;
 }
+
+describe("read-only pending GC inventory", () => {
+  test("reports no pending sets only after a successful empty listing", async () => {
+    const store = new InMemoryObjectStore();
+    store.createBucket("backup");
+    await expect(
+      readGcInventory({ store, backupBucket: "backup" }),
+    ).resolves.toEqual({
+      candidateBacklog: 0,
+      candidateCount: 0,
+      oldestPendingTimestampSeconds: 0,
+    });
+  });
+
+  test("uses persisted set creation time and newest contents without deletion or publication", async () => {
+    const { store, keys } = await candidateFixture();
+    await protectObject(store, keys[0]);
+    await createGcCandidateSet({
+      store,
+      backupBucket: "backup",
+      policy: POLICY,
+      now: new Date("2026-01-03"),
+    });
+    const remove = vi.spyOn(store, "deleteObject");
+    const write = vi.spyOn(store, "putObject");
+    await expect(
+      readGcInventory({ store, backupBucket: "backup" }),
+    ).resolves.toEqual({
+      candidateBacklog: 2,
+      candidateCount: 1,
+      oldestPendingTimestampSeconds: Date.parse("2026-01-01") / 1000,
+    });
+    expect(remove).not.toHaveBeenCalled();
+    expect(write).not.toHaveBeenCalled();
+  });
+
+  test("rejects unreadable candidate sets instead of reporting an empty healthy backlog", async () => {
+    const { store, candidateKey } = await candidateFixture();
+    store.seed("backup", candidateKey, "invalid gzip");
+    await expect(
+      readGcInventory({ store, backupBucket: "backup" }),
+    ).rejects.toThrow();
+  });
+
+  test("propagates listing failure instead of reporting zero candidates", async () => {
+    const { store } = await candidateFixture();
+    vi.spyOn(store, "listObjects").mockRejectedValue(
+      new Error("Inventory unavailable"),
+    );
+    await expect(
+      readGcInventory({ store, backupBucket: "backup" }),
+    ).rejects.toThrow("Inventory unavailable");
+  });
+});
 
 describe("two-phase garbage collection", () => {
   test("fails closed if a retained protection manifest is unreadable", async () => {

@@ -1147,6 +1147,11 @@ Three outcomes stay distinct on every path: Discord unreachable
 reach Discord must never be reported as either of the other two;
 `trpc/discord-upstream.ts` and `customs/activity-auth.ts` enforce that.
 
+Parallel web procedures share one in-flight guild membership read per user
+before its five-minute success cache is populated. Failures remain errors and
+are not cached as empty guild lists. Re-authentication invalidates both the
+cached result and the old in-flight read's ability to repopulate it.
+
 Gateway events still _write_ installation state. Two background paths that used
 to _read_ the gateway cache now use the same install port, because they run as
 Temporal Activities that a split deployment executes with no shard at all:

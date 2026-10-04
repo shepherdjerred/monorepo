@@ -56,6 +56,7 @@ import { httpAgentChatActivities } from "./agent/chat/http-ingress.ts";
 import { preparePhotonCommand } from "./agent/photon/prepare.ts";
 import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
 import { waitForPhotonCommand } from "./agent/photon/wait.ts";
+import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retention.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -74,6 +75,7 @@ export const reportActivities = {
 };
 
 export const infraActivities = {
+  ...woodpeckerRetentionActivities,
   ...dnsAuditActivities,
   ...homelabAuditActivities,
   ...homelabAuditCollectorActivities,
@@ -92,6 +94,10 @@ export const miningResetWorkerActivities = {
   ...miningResetActivities,
   ...stormPlotActivities,
 };
+
+// Keep the legacy infra registration above to drain recorded histories.
+// This queue exposes only bounded snapshot collection/publication operations.
+export const opsWorkerActivities = { ...opsActivities };
 
 export const repoActivities = {
   ...fetcherActivities,

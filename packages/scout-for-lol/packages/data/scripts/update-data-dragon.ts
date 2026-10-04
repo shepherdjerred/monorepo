@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { first } from "remeda";
 import { $ } from "bun";
+import { backgroundPngWithinBudget } from "./background-png.ts";
 import { SummonerSchema } from "#src/data-dragon/summoner.ts";
 import {
   HistoricalRuneAssetSchema,
@@ -364,7 +365,17 @@ async function downloadClassicBackground(cdVersion: string): Promise<void> {
   console.log(
     `\nDownloading League Classic loading-screen background from ${classicBackgroundUrl}...`,
   );
-  await downloadImage(classicBackgroundUrl, CLASSIC_BACKGROUND_PATH);
+  const response = await fetchWithRetry(classicBackgroundUrl);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch image ${classicBackgroundUrl}: ${String(response.status)}`,
+    );
+  }
+  const background = await backgroundPngWithinBudget(
+    new Uint8Array(await response.arrayBuffer()),
+    MAX_SPLASH_IMAGE_BYTES,
+  );
+  await Bun.write(CLASSIC_BACKGROUND_PATH, background);
   assertFileSizeAtMost(
     CLASSIC_BACKGROUND_PATH,
     MAX_SPLASH_IMAGE_BYTES,

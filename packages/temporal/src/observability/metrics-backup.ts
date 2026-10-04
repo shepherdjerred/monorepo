@@ -111,6 +111,12 @@ export const seaweedFsBackupGcOldestCandidateTimestampSeconds = new Gauge({
   registers: [register],
 });
 
+// A process restart says nothing about persisted candidates. Publish only
+// after reading their inventory or completing an actual maintenance cycle.
+seaweedFsBackupGcBacklog.remove();
+seaweedFsBackupGcObjects.remove();
+seaweedFsBackupGcOldestCandidateTimestampSeconds.remove();
+
 export const seaweedFsBackupGcRevalidationFailuresTotal = new Counter({
   name: "seaweedfs_backup_gc_revalidation_failures_total",
   help: "SeaweedFS backup GC cycles stopped by failed protection-set revalidation",

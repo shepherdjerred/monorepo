@@ -55,6 +55,8 @@ import { mapPostHog, mapProbes, PROBE_QUERY } from "./product.ts";
 import { mapRenovate } from "./renovate.ts";
 import { mapTalos, parseMachineStatuses, parseServices } from "./talos.ts";
 import { mapTraces, TRACE_WINDOW_MS } from "./traces.ts";
+import { veleroOutcomes } from "./velero-outcomes.ts";
+import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
 
 // Each collector does the I/O for one source, updates that source's gauges,
 // and hands the upstream data to its pure mapper.
@@ -269,7 +271,10 @@ export async function collectTraces(
 
 export async function collectMaintenance(
   prometheus: PrometheusClient,
-  kubernetes: Pick<KubernetesClient, "listVeleroSchedules">,
+  kubernetes: Pick<
+    KubernetesClient,
+    "listVeleroSchedules" | "listVeleroBackups"
+  >,
   now: Date,
 ): Promise<OpsCollection> {
   const run = (key: MaintenanceQuery) =>
@@ -284,6 +289,7 @@ export async function collectMaintenance(
     cpu,
     memory,
     schedules,
+    backupResources,
   ] = await Promise.all([
     run("certificates"),
     run("probeCertificates"),
@@ -294,8 +300,9 @@ export async function collectMaintenance(
     run("cpu"),
     run("memory"),
     kubernetes.listVeleroSchedules(),
+    kubernetes.listVeleroBackups(),
   ]);
-  return mapMaintenance(
+  const collection = mapMaintenance(
     {
       certificates,
       probeCertificates,
@@ -307,8 +314,14 @@ export async function collectMaintenance(
       memory,
     },
     schedules,
+    backupResources,
     now,
   );
+  recordVeleroOutcomes(
+    veleroOutcomes(backupResources, schedules).observations,
+    now,
+  );
+  return collection;
 }
 
 export async function collectAi(

@@ -127,7 +127,6 @@ describe("Temporal workflow outcome rules", () => {
     }
 
     const healthAlerts = [
-      "TemporalDomainWorkflowPollerUnavailable",
       "TemporalDomainQueueBacklog",
       "TemporalDomainScheduleToStartHigh",
       "TemporalDomainWorkerScrapeDown",
@@ -146,6 +145,18 @@ describe("Temporal workflow outcome rules", () => {
         ),
       );
     }
+
+    const workflowRules = failuresGroup.rules.filter(
+      (rule) => rule.alert === "TemporalDomainWorkflowPollerUnavailable",
+    );
+    expect(workflowRules).toHaveLength(
+      TEMPORAL_DOMAIN_QUEUES.filter(
+        (definition) => definition.workflowPoller !== false,
+      ).length,
+    );
+    expect(
+      workflowRules.map((rule) => rule.labels?.["task_queue"]),
+    ).not.toContain("ops");
 
     const activityRules = failuresGroup.rules.filter(
       (rule) => rule.alert === "TemporalDomainActivityPollerUnavailable",
@@ -293,15 +304,13 @@ describe("Scout Data Dragon failure rules", () => {
     // AND clears 24h later — a bare counter can't do both (increase() misses the
     // first born-at-1 failure; max_over_time(counter) never ages out).
     //
-    // The `_s` suffix is required: the gauge has unit "s" and the worker's
-    // exporter runs with unitSuffix:true, so the exported series is
-    // `..._timestamp_s`. Querying the bare name matched nothing and the alert
-    // never fired — this asserts the suffixed name so the regression can't recur.
+    // Timestamp gauges are exported without a unit suffix, even though the
+    // duration histogram uses `_s`. Match the observed gauge contract.
     expect(expression).toContain(
-      "scout_data_dragon_auto_merge_last_failure_timestamp_s",
+      "scout_data_dragon_auto_merge_last_failure_timestamp[",
     );
     expect(expression).not.toContain(
-      "scout_data_dragon_auto_merge_last_failure_timestamp[",
+      "scout_data_dragon_auto_merge_last_failure_timestamp_s",
     );
     expect(expression).toContain("time() -");
     expect(expression).toContain("60 * 60 * 24");
@@ -309,7 +318,7 @@ describe("Scout Data Dragon failure rules", () => {
     // single-replica worker restart doesn't stale the series and wrongly clear
     // the alert.
     expect(expression).toContain(
-      "max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp_s[24h])",
+      "max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp[24h])",
     );
     expect(expression).not.toContain("increase(");
   });

@@ -194,6 +194,7 @@ describe("maintenance", () => {
           alertSeverity: "warning",
         },
       ],
+      [],
       now,
     );
     expect(result.signals.map((s) => [s.id, s.severity])).toEqual([
@@ -221,6 +222,7 @@ describe("maintenance", () => {
       "maintenance.disk.max_used_ratio": [0.92, "maintenance"],
       "maintenance.certificates.expiring_soon": [1, "maintenance"],
       "maintenance.backups.stale": [1, "maintenance"],
+      "maintenance.backups.failed": [null, "maintenance"],
       "cluster.cpu.used_ratio": [0.25, "platform"],
       "cluster.memory.used_ratio": [0.5, "platform"],
     });
@@ -228,7 +230,7 @@ describe("maintenance", () => {
 
   test("a sample without its identifying label is a broken contract", () => {
     expect(() =>
-      mapMaintenance(maintenance({ zpools: [sample(0.5)] }), [], now),
+      mapMaintenance(maintenance({ zpools: [sample(0.5)] }), [], [], now),
     ).toThrow(/zpool_name/);
   });
 });
