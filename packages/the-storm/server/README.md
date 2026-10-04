@@ -13,7 +13,8 @@ Candidate publication cannot restart production with an unprepared volume.
 
 ## Plugin and configuration ownership
 
-All 21 Storm modules are enabled in `owned/plugins/TheStorm/config.yml`.
+`owned/plugins/TheStorm/config.yml` registers 25 Storm modules and enables 23;
+`rwf` and `rwfbots` stay off until the rwf world is provisioned.
 Storm owns gameplay, economy, chat, towns and locks, quests, NPCs, skills,
 arena, moderation, Discord relay, sleep, graves, and native world borders.
 
@@ -114,7 +115,8 @@ image verification before activation.
 4. Promote the verified candidate digest into the production catalog pin and
    remove the legacy `DISCORDSRV_TOKEN` and `CFG_DISCORD_CHANNEL_ID` chart refs.
    Reconcile the published image and chart revision through GitOps. Confirm
-   the exact eleven-plugin runtime set, all 21 modules, successful asynchronous
+   the exact eleven-plugin runtime set, the 23 enabled Storm modules (of 25
+   registered), successful asynchronous
    world checks, brain readiness, and the authenticated Discord bridge.
 5. Verify the windmill spawn and altar, mine entrance south of town, trainers
    and quest givers, arena join/class/leave and inventory restoration, shops,

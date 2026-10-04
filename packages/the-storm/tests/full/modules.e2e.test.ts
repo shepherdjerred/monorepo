@@ -1,9 +1,12 @@
+import path from "node:path";
 import { describe, expect } from "vitest";
+import { z } from "zod";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { serverLogs } from "#e2e/harness/server.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
+/** The 23 modules the shipped config enables, of the 25 it registers. */
 const modules = [
   "agent",
   "arena",
@@ -30,11 +33,40 @@ const modules = [
   "world",
 ].toSorted();
 
+const registeredModules = 25;
+
+const OwnedConfigSchema = z
+  .object({ modules: z.record(z.string(), z.boolean()) })
+  .strict();
+
+const ownedConfig = path.join(
+  import.meta.dir,
+  "../../server/owned/plugins/TheStorm/config.yml",
+);
+
 describe("all modules together", () => {
-  test("boots all 22 modules with the shipped content", async ({
+  test("boots the 23 enabled modules of 25 registered with the shipped content", async ({
     server,
     rcon,
   }) => {
+    // The shipped config is the contract: every registered module listed, the
+    // same 23 switched on, and only rwf and rwfbots off.
+    const owned = OwnedConfigSchema.parse(
+      Bun.YAML.parse(await Bun.file(ownedConfig).text()),
+    );
+    expect(Object.keys(owned.modules)).toHaveLength(registeredModules);
+    expect(
+      Object.entries(owned.modules)
+        .filter(([, on]) => on)
+        .map(([module]) => module)
+        .toSorted(),
+    ).toEqual(modules);
+    expect(
+      Object.entries(owned.modules)
+        .filter(([, on]) => !on)
+        .map(([module]) => module)
+        .toSorted(),
+    ).toEqual(["rwf", "rwfbots"]);
     const logs = await serverLogs(server);
     const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
     expect(enabled?.[1]?.split(", ").toSorted()).toEqual(modules);
