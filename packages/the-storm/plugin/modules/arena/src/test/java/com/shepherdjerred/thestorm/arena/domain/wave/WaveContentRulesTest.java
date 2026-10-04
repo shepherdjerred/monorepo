@@ -196,7 +196,9 @@ final class WaveContentRulesTest {
     var far = OptionalDouble.of(10);
     var none = OptionalDouble.empty();
 
-    assertThat(MobBrain.decide(Behavior.VANILLA, near)).isEqualTo(MobBrain.Action.NOTHING);
+    assertThat(MobBrain.decide(Behavior.VANILLA, near)).isEqualTo(MobBrain.Action.HUNT);
+    assertThat(MobBrain.decide(Behavior.VANILLA, OptionalDouble.of(80)))
+        .isEqualTo(MobBrain.Action.HUNT);
     assertThat(MobBrain.decide(Behavior.CHASE, far)).isEqualTo(MobBrain.Action.HUNT);
     assertThat(MobBrain.decide(Behavior.KAMIKAZE, far)).isEqualTo(MobBrain.Action.HUNT);
     assertThat(MobBrain.decide(Behavior.KAMIKAZE, near)).isEqualTo(MobBrain.Action.DETONATE);

@@ -1013,6 +1013,16 @@
         {
           "runner": "vitest",
           "args": ["tests/rcon.test.ts"]
+        },
+        {
+          "runner": "gradle",
+          "name": "client",
+          "args": ["-p", "client", "test"]
+        },
+        {
+          "runner": "vitest",
+          "name": "client-controller",
+          "args": ["tools/client"]
         }
       ],
       "excludedSuites": [

@@ -165,7 +165,7 @@ final class PlayerListener implements Listener {
   }
 
   /** A member reaches only blocks in their arena: its signs, ready block and loot chests. */
-  private void member(PlayerInteractEvent event, Block block, GameRunner runner) {
+  private void member(PlayerInteractEvent event, Block block, ArenaRunner runner) {
     if (!runner.world().contains(block.getLocation())) {
       event.setCancelled(true);
       return;
@@ -188,7 +188,7 @@ final class PlayerListener implements Listener {
       event.setUseInteractedBlock(Event.Result.DENY);
       commands.ready(player);
     } else if (block.getState() instanceof Container
-        && !(definition.lootChests().contains(pos) && runner.isFighter(player.getUniqueId()))) {
+        && !LootAccess.allowed(runner, player.getUniqueId(), block)) {
       event.setUseInteractedBlock(Event.Result.DENY);
     }
   }

@@ -6,6 +6,7 @@
   },
   "include": [
     "scripts/**/*.ts",
+    "tools/**/*.ts",
     "tests/**/*.ts",
     "playtests/**/*.ts",
     "vitest.e2e.config.ts",

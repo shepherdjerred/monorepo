@@ -15,7 +15,7 @@ public final class MobBrain {
 
   /** What to do. */
   public enum Action {
-    /** Leave the mob to its vanilla AI. */
+    /** No fighter is available, or a harmless follower is already close enough. */
     NOTHING,
     /** Target the nearest fighter. */
     HUNT,
@@ -35,8 +35,7 @@ public final class MobBrain {
     }
     var distance = nearest.getAsDouble();
     return switch (behavior) {
-      case VANILLA -> Action.NOTHING;
-      case CHASE -> Action.HUNT;
+      case VANILLA, CHASE -> Action.HUNT;
       case KAMIKAZE -> distance <= DETONATE_RANGE ? Action.DETONATE : Action.HUNT;
       case FOLLOW -> distance > FOLLOW_RANGE ? Action.APPROACH : Action.NOTHING;
     };

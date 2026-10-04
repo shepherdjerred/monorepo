@@ -112,7 +112,8 @@ public final class WaveTable {
                       definition,
                       WaveScaling.bossHealth(definition, difficulty),
                       WaveScaling.damage(mob(definition.mob()), wave, difficulty),
-                      entities(definition.mob()));
+                      entities(definition.mob()),
+                      difficulty.players());
                 });
     return new ResolvedWave(wave, entry.kind(), units, boss);
   }

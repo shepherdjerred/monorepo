@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.arena.domain.game.Notice;
 import com.shepherdjerred.thestorm.arena.domain.game.NoticeKind;
 import com.shepherdjerred.thestorm.arena.domain.game.Phase;
 import com.shepherdjerred.thestorm.arena.domain.kit.ClassBook;
+import com.shepherdjerred.thestorm.arena.domain.kit.GearProgression;
 import com.shepherdjerred.thestorm.arena.domain.kit.ItemSpec;
 import com.shepherdjerred.thestorm.arena.domain.reward.VaultSettings;
 import com.shepherdjerred.thestorm.core.result.Result;
@@ -33,18 +34,20 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.potion.PotionEffect;
 
 /**
  * Runs one arena: feeds events to its {@link ArenaGame} and carries out the effects, in order.
  * Events raised while effects are being carried out wait their turn. Main thread only.
  */
-final class GameRunner {
+final class GameRunner implements ArenaRunner {
 
   private final ArenaWorld world;
   private final Services services;
   private final Set<UUID> awaitingRespawn = new HashSet<>();
   private final ArrayDeque<GameEvent> waiting = new ArrayDeque<>();
+  private final ColosseumPursuit pursuit = new ColosseumPursuit();
   private ArenaGame game;
   private boolean applying;
 
@@ -86,11 +89,13 @@ final class GameRunner {
     this.game = game;
   }
 
-  String id() {
+  @Override
+  public String id() {
     return world.definition().id();
   }
 
-  ArenaWorld world() {
+  @Override
+  public ArenaWorld world() {
     return world;
   }
 
@@ -98,16 +103,29 @@ final class GameRunner {
     return game;
   }
 
-  Optional<Member> member(UUID player) {
+  @Override
+  public java.util.Collection<Member> members() {
+    return game.members();
+  }
+
+  @Override
+  public boolean running() {
+    return game.phase().running();
+  }
+
+  @Override
+  public Optional<Member> member(UUID player) {
     return game.member(player);
   }
 
-  boolean isFighter(UUID player) {
+  @Override
+  public boolean isFighter(UUID player) {
     return member(player).filter(Member.Fighter.class::isInstance).isPresent();
   }
 
   /** Applies {@code event}, or returns why it was refused. */
-  Optional<GameError> handle(GameEvent event) {
+  @Override
+  public Optional<GameError> handle(GameEvent event) {
     if (applying) {
       waiting.add(event);
       return Optional.empty();
@@ -177,7 +195,8 @@ final class GameRunner {
   }
 
   /** One second of the arena: containment, custom AI, the boss, then the game's clock. */
-  void tick() {
+  @Override
+  public void tick() {
     if (world.preloadFailed()) {
       handle(new GameEvent.Stop());
       return;
@@ -187,6 +206,7 @@ final class GameRunner {
       world.contain();
       var fighters = online(game.fighters().stream().map(Member::id).toList());
       world.think(fighters);
+      pursuit.tick(world, fighters, services.context().time().instant());
       world.tickBoss(services.context().time().instant(), fighters, online(audience()));
     }
     keepInside();
@@ -244,29 +264,34 @@ final class GameRunner {
   }
 
   /** Whether {@code player} died in this arena and is waiting to respawn and be restored. */
-  boolean awaitsRespawn(UUID player) {
+  @Override
+  public boolean awaitsRespawn(UUID player) {
     return awaitingRespawn.contains(player);
   }
 
   /** Where a player who died here respawns: the exit, outside the region. */
-  Location exit() {
+  @Override
+  public Location exit() {
     return Places.location(world.world(), world.definition().exit());
   }
 
   /** The player respawned after dying here: restore them. */
-  void respawned(Player player) {
+  @Override
+  public void respawned(Player player) {
     if (awaitingRespawn.remove(player.getUniqueId())) {
       services.snapshots().restore(player);
     }
   }
 
   /** The player quit while waiting to respawn: their snapshot is restored when they return. */
-  void quitWhileDead(UUID player) {
+  @Override
+  public void quitWhileDead(UUID player) {
     awaitingRespawn.remove(player);
   }
 
   /** Tells everyone in the arena something. */
-  void announce(Notice notice) {
+  @Override
+  public void announce(Notice notice) {
     online(audience()).forEach(player -> services.texts().notice(player, notice));
   }
 
@@ -291,7 +316,12 @@ final class GameRunner {
       case GameEffect.Equip equip ->
           withPlayer(equip.player(), player -> equip(player, equip.kit()));
       case GameEffect.Upgrade upgrade ->
-          withPlayer(upgrade.player(), player -> upgrade(player, upgrade.kit()));
+          withPlayer(upgrade.player(), player -> upgrade(player, upgrade.kit(), upgrade.wave()));
+      case GameEffect.RestockChests _ -> {
+        world.restock();
+        online(game.fighters().stream().map(Member::id).toList())
+            .forEach(player -> Texts.info(player, "The supply chests have been restocked."));
+      }
       case GameEffect.SendToArena send -> withPlayer(send.player(), player -> send(player, send));
       case GameEffect.Restore restore -> restore(restore.player());
       case GameEffect.RestoreAfterRespawn restore -> {
@@ -328,7 +358,10 @@ final class GameRunner {
                               record.wave(),
                               services.context().time().instant())),
                   "record " + record.name() + "'s best wave");
-      case GameEffect.ResetArena _ -> world.reset();
+      case GameEffect.ResetArena _ -> {
+        pursuit.reset();
+        world.reset();
+      }
     }
   }
 
@@ -382,8 +415,12 @@ final class GameRunner {
     var arenaClass = services.classes().require(kit);
     PlayerStates.wipe(player, GameMode.SURVIVAL);
     var inventory = player.getInventory();
-    for (var spec : arenaClass.items()) {
-      var stack = services.items().arenaItem(spec);
+    for (var index = 0; index < arenaClass.items().size(); index++) {
+      var spec = GearProgression.at(arenaClass.items().get(index), 1);
+      var stack =
+          GearProgression.equipment(spec)
+              ? services.items().classGear(spec, kit + ":" + index)
+              : services.items().arenaItem(spec);
       spec.slot()
           .ifPresentOrElse(
               slot -> inventory.setItem(MobFactory.slot(slot), stack),
@@ -400,12 +437,52 @@ final class GameRunner {
                         amplifier)));
   }
 
-  private void upgrade(Player player, String kit) {
+  private void upgrade(Player player, String kit, int wave) {
+    var inventory = player.getInventory();
+    var specs = services.classes().require(kit).items();
+    for (var index = 0; index < specs.size(); index++) {
+      var spec = specs.get(index);
+      if (!GearProgression.equipment(spec)) {
+        continue;
+      }
+      upgradeGear(player, spec, kit + ":" + index, wave);
+    }
+    // Repair looted equipment too, and retain the player's chosen equipment and consumables.
+    for (var slot = 0; slot < inventory.getSize(); slot++) {
+      var stack = inventory.getItem(slot);
+      if (stack != null && services.items().isArenaItem(stack)) {
+        stack.editMeta(Damageable.class, meta -> meta.setDamage(0));
+      }
+    }
     var stacks =
         services.classes().require(kit).upgrade().stream()
             .map(services.items()::arenaItem)
             .toArray(ItemStack[]::new);
     player.getInventory().addItem(stacks);
+    Texts.info(player, "Kit supplies refilled and gear upgraded/repaired for wave " + wave + ".");
+  }
+
+  private void upgradeGear(Player player, ItemSpec spec, String gearId, int wave) {
+    var inventory = player.getInventory();
+    var replacement = services.items().classGear(GearProgression.at(spec, wave), gearId);
+    var found = false;
+    for (var slot = 0; slot < inventory.getSize(); slot++) {
+      var current = inventory.getItem(slot);
+      if (current != null && services.items().isClassGear(current, gearId)) {
+        inventory.setItem(slot, replacement.clone());
+        found = true;
+      }
+    }
+    if (!found) {
+      spec.slot()
+          .ifPresentOrElse(
+              slot -> {
+                if (inventory.getItem(MobFactory.slot(slot)).isEmpty()) {
+                  inventory.setItem(MobFactory.slot(slot), replacement);
+                }
+              },
+              () -> inventory.addItem(replacement));
+    }
   }
 
   private void send(Player player, GameEffect.SendToArena send) {
@@ -496,7 +573,7 @@ final class GameRunner {
   /** Every item spec this runner may hand out, for building at enable. */
   static List<ItemSpec> specs(ClassBook classes) {
     return classes.classes().values().stream()
-        .flatMap(c -> Stream.concat(c.items().stream(), c.upgrade().stream()))
+        .flatMap(c -> Stream.concat(GearProgression.templates(c).stream(), c.upgrade().stream()))
         .toList();
   }
 }

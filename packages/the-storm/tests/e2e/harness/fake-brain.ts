@@ -145,6 +145,7 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
               "the-storm-crier-enabled",
               "the-storm-merchant-enabled",
               "the-storm-rwf-enabled",
+              "the-storm-survival-enabled",
             ]),
             entity_id: z.uuid(),
             // The crier and merchant evaluate in the main world; rwf in its own.

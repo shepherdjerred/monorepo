@@ -18,3 +18,17 @@ export async function docker(args: readonly string[]): Promise<CommandResult> {
   }
   return { stdout, stderr };
 }
+
+type ServerLogSource =
+  | { kind: "container"; containerId: string }
+  | { kind: "external"; logFile: string };
+
+export const serverLogs = async (info: ServerLogSource): Promise<string> =>
+  info.kind === "external"
+    ? Bun.file(info.logFile).text()
+    : containerLogs(info.containerId);
+
+async function containerLogs(containerId: string): Promise<string> {
+  const { stdout } = await docker(["logs", containerId]);
+  return stdout;
+}

@@ -49,7 +49,12 @@ public final class ArenaHarness implements AutoCloseable {
   static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm");
 
   private static final List<String> FILES =
-      List.of("arena.yml", "arena/classes.yml", "arena/waves.yml", "arena/arenas/colosseum.yml");
+      List.of(
+          "arena.yml",
+          "arena/classes.yml",
+          "arena/waves.yml",
+          "arena/survival.yml",
+          "arena/arenas/colosseum.yml");
 
   private static Consumer<JavaPlugin> enabling = plugin -> {};
 
@@ -171,6 +176,11 @@ public final class ArenaHarness implements AutoCloseable {
                 ? Path.of("src/test/resources/colosseum.yml")
                 : SHIPPED.resolve(file);
         Files.copy(source, target);
+        if (file.equals("arena/survival.yml")) {
+          // Native Paper tests own survival geometry; this fixture covers legacy lifecycle.
+          Files.writeString(
+              target, Files.readString(target).replace("enabled: true", "enabled: false"));
+        }
       }
     } catch (IOException e) {
       throw new UncheckedIOException(e);

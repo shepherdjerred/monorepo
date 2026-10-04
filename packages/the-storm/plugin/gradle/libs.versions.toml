@@ -1,6 +1,11 @@
 # Single source of truth for every dependency and Gradle plugin version.
 # Renovate bumps these; build-logic reads them through the `libs` catalog.
 [versions]
+client-minecraft = "26.2"
+fabric-loader = "0.19.5"
+fabric-api = "0.161.0+26.2"
+fabric-loom = "1.17.21"
+jackson-annotations = "2.22"
 paper = "26.2.build.129-stable"
 jspecify = "1.0.1"
 errorprone = "2.50.0"
@@ -29,6 +34,10 @@ coreprotect = "24.1"
 log4j = "2.26.1"
 
 [libraries]
+errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
+client-minecraft = { module = "com.mojang:minecraft", version.ref = "client-minecraft" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
@@ -36,6 +45,8 @@ nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
 errorprone-support-contrib = { module = "tech.picnic.error-prone-support:error-prone-contrib", version.ref = "errorprone-support" }
 errorprone-support-refaster = { module = "tech.picnic.error-prone-support:refaster-runner", version.ref = "errorprone-support" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-core = { module = "tools.jackson.core:jackson-core", version.ref = "jackson" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson-annotations" }
 jackson-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
 jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
@@ -61,6 +72,7 @@ worldedit-core = { module = "com.sk89q.worldedit:worldedit-core", version.ref = 
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 
 [plugins]
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 errorprone = { id = "net.ltgt.errorprone", version = "5.1.1" }
 spotless = { id = "com.diffplug.spotless", version = "8.10.2" }
 shadow = { id = "com.gradleup.shadow", version = "9.6.1" }

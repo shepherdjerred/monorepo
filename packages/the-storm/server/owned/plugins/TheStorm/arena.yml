@@ -35,8 +35,8 @@ scaling:
   healthPerExtraPlayer: 0.2
   # +40% more mobs per extra fighter.
   countPerExtraPlayer: 0.4
-  # +35% boss health per extra fighter.
-  bossHealthPerExtraPlayer: 0.35
+  # +80% boss health per extra fighter, bounded by the vanilla health cap.
+  bossHealthPerExtraPlayer: 0.8
 
 # The ominous-trial ladder. An arena names its tier by number (1 is Ominous I).
 # reward multiplies both the crystals per boss wave and the per-game cap, so a
@@ -371,7 +371,7 @@ rewards:
 # The hidden loot chests: filled when a game starts, emptied when it ends.
 # What fighters find stays in the arena (it is gone when they leave).
 lootChests:
-  rolls: 4
+  rolls: 1
   entries:
     - weight: 6
       item:
@@ -483,7 +483,7 @@ messages:
   # {wave} {boss}
   bossWave: "Wave {wave}: {boss} has come for you!"
   # {wave}
-  upgradeWave: "Wave {wave}: supplies! Your kit has been refilled."
+  upgradeWave: "Wave {wave}: supplies! Your gear improves and your kit is refilled."
   # {wave}
   waveCleared: "Wave {wave} cleared."
   # {amount} {wave}

@@ -15,13 +15,13 @@ import org.bukkit.entity.Player;
 /** Every arena's runner, and who is in which. Main thread only. */
 public final class Arenas implements ArenaPresence {
 
-  private final Map<String, GameRunner> runners;
+  private final Map<String, ArenaRunner> runners;
   private final Snapshots snapshots;
   private boolean ready;
   private boolean startupFailed;
 
-  Arenas(List<GameRunner> runners, Snapshots snapshots) {
-    var byId = new TreeMap<String, GameRunner>();
+  Arenas(List<ArenaRunner> runners, Snapshots snapshots) {
+    var byId = new TreeMap<String, ArenaRunner>();
     runners.forEach(runner -> byId.put(runner.id(), runner));
     this.runners = byId;
     this.snapshots = snapshots;
@@ -29,19 +29,19 @@ public final class Arenas implements ArenaPresence {
 
   @Override
   public Optional<String> arenaOf(UUID player) {
-    return of(player).map(GameRunner::id);
+    return of(player).map(ArenaRunner::id);
   }
 
   Snapshots snapshots() {
     return snapshots;
   }
 
-  Optional<GameRunner> byId(String id) {
+  Optional<ArenaRunner> byId(String id) {
     return Optional.ofNullable(runners.get(id));
   }
 
   /** The arena {@code player} is in. */
-  Optional<GameRunner> of(UUID player) {
+  Optional<ArenaRunner> of(UUID player) {
     return runners.values().stream()
         .filter(runner -> runner.member(player).isPresent())
         .findFirst();
@@ -53,19 +53,19 @@ public final class Arenas implements ArenaPresence {
   }
 
   /** The arena whose region contains {@code location}. */
-  Optional<GameRunner> at(Location location) {
+  Optional<ArenaRunner> at(Location location) {
     return runners.values().stream()
         .filter(runner -> runner.world().contains(location))
         .findFirst();
   }
 
   /** The arena whose region contains {@code location}, if a game is under way there. */
-  Optional<GameRunner> runningAt(Location location) {
-    return at(location).filter(runner -> runner.game().phase().running());
+  Optional<ArenaRunner> runningAt(Location location) {
+    return at(location).filter(runner -> runner.running());
   }
 
   /** The arena {@code player} is in, once their snapshot is stored (not while still joining). */
-  Optional<GameRunner> arrived(UUID player) {
+  Optional<ArenaRunner> arrived(UUID player) {
     return of(player).filter(runner -> !isPending(runner, player));
   }
 
@@ -74,11 +74,11 @@ public final class Arenas implements ArenaPresence {
     return of(player).filter(runner -> isPending(runner, player)).isPresent();
   }
 
-  private static boolean isPending(GameRunner runner, UUID player) {
+  private static boolean isPending(ArenaRunner runner, UUID player) {
     return runner.member(player).filter(Member.Pending.class::isInstance).isPresent();
   }
 
-  Collection<GameRunner> all() {
+  Collection<ArenaRunner> all() {
     return List.copyOf(runners.values());
   }
 
@@ -95,7 +95,9 @@ public final class Arenas implements ArenaPresence {
   }
 
   void tick() {
-    runners.values().forEach(GameRunner::tick);
+    if (ready) {
+      runners.values().forEach(ArenaRunner::tick);
+    }
   }
 
   /** Stops every game and restores everyone: the plugin is shutting down. */
@@ -104,7 +106,7 @@ public final class Arenas implements ArenaPresence {
   }
 
   /** {@code player} asks to play in {@code runner}'s arena. */
-  void join(Player player, GameRunner runner) {
+  void join(Player player, ArenaRunner runner) {
     if (admit(player)) {
       runner
           .handle(new GameEvent.Join(player.getUniqueId(), player.getName()))
@@ -112,8 +114,19 @@ public final class Arenas implements ArenaPresence {
     }
   }
 
+  void joinDebug(Player player, ArenaRunner runner, int round) {
+    if (!admit(player)) return;
+    if (!(runner instanceof SurvivalRunner survival) || !survival.game().debugStart(round)) {
+      Texts.error(player, "Debug joins require settlement and an empty or matching debug lobby.");
+      return;
+    }
+    runner
+        .handle(new GameEvent.Join(player.getUniqueId(), player.getName()))
+        .ifPresent(error -> Texts.error(player, error));
+  }
+
   /** {@code player} asks to watch {@code runner}'s arena. */
-  void spectate(Player player, GameRunner runner) {
+  void spectate(Player player, ArenaRunner runner) {
     if (admit(player)) {
       runner
           .handle(new GameEvent.Spectate(player.getUniqueId(), player.getName()))

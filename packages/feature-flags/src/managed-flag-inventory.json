@@ -1841,6 +1841,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-survival-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-arena",
+      "purpose": "Admit targeted players to the provisioned settlement survival mode.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-merchant-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -2089,6 +2101,14 @@
               "result": true
             }
           ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-survival-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
         },
@@ -2468,6 +2488,14 @@
         },
         {
           "key": "the-storm-merchant-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-survival-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

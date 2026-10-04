@@ -639,8 +639,7 @@ final class ArenaSafetyTest {
     staff.openInventory(alice.getInventory());
     staff.closeInventory();
 
-    assertThat(alice.getInventory().getItemInMainHand().getType())
-        .isEqualTo(Material.DIAMOND_SWORD);
+    assertThat(alice.getInventory().getItemInMainHand().getType()).isEqualTo(Material.STONE_SWORD);
     assertThat(harness.server.getOnlinePlayers()).hasSize(2);
   }
 

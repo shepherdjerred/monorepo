@@ -16,10 +16,48 @@ final class Keys {
 
   private final NamespacedKey item;
   private final NamespacedKey entity;
+  private final NamespacedKey run;
+  private final NamespacedKey gear;
+  private final NamespacedKey upgrade;
+  private final NamespacedKey legendary;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "arena_item");
     this.entity = new NamespacedKey(plugin, "arena_entity");
+    this.run = new NamespacedKey(plugin, "survival_run");
+    this.gear = new NamespacedKey(plugin, "arena_gear");
+    this.upgrade = new NamespacedKey(plugin, "survival_upgrade");
+    this.legendary = new NamespacedKey(plugin, "survival_legendary");
+  }
+
+  void legendary(
+      ItemStack stack, com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon id) {
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer().set(legendary, PersistentDataType.STRING, id.name()));
+  }
+
+  Optional<com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon> legendary(
+      ItemStack stack) {
+    if (stack.isEmpty() || !stack.hasItemMeta()) return Optional.empty();
+    return Optional.ofNullable(
+            stack
+                .getItemMeta()
+                .getPersistentDataContainer()
+                .get(legendary, PersistentDataType.STRING))
+        .map(com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon::valueOf);
+  }
+
+  int upgrade(ItemStack stack) {
+    if (stack.isEmpty() || !stack.hasItemMeta()) return 0;
+    var value =
+        stack.getItemMeta().getPersistentDataContainer().get(upgrade, PersistentDataType.INTEGER);
+    return value == null ? 0 : value;
+  }
+
+  void upgrade(ItemStack stack, int tier) {
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(upgrade, PersistentDataType.INTEGER, tier));
   }
 
   /** Marks {@code stack} as an arena item. */
@@ -32,6 +70,37 @@ final class Keys {
     return !stack.isEmpty()
         && stack.hasItemMeta()
         && stack.getItemMeta().getPersistentDataContainer().has(item, PersistentDataType.BOOLEAN);
+  }
+
+  void gear(ItemStack stack, String id) {
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(gear, PersistentDataType.STRING, id));
+  }
+
+  boolean isGear(ItemStack stack, String id) {
+    return !stack.isEmpty()
+        && stack.hasItemMeta()
+        && id.equals(
+            stack.getItemMeta().getPersistentDataContainer().get(gear, PersistentDataType.STRING));
+  }
+
+  void tag(ItemStack stack, java.util.UUID runId) {
+    tag(stack);
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer()
+                .set(run, PersistentDataType.STRING, runId.toString()));
+  }
+
+  boolean belongsTo(ItemStack stack, java.util.UUID runId) {
+    return isArenaItem(stack)
+        && runId
+            .toString()
+            .equals(
+                stack
+                    .getItemMeta()
+                    .getPersistentDataContainer()
+                    .get(run, PersistentDataType.STRING));
   }
 
   /** Marks {@code target} as belonging to arena {@code arena}. */

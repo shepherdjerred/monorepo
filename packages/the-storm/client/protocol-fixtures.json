@@ -1,0 +1,35 @@
+{
+  "valid": [
+    { "version": 1, "id": "status-1", "action": "status", "arguments": {} },
+    {
+      "version": 1,
+      "id": "move-1",
+      "action": "input",
+      "arguments": { "buttons": ["forward", "jump"], "ticks": 10 }
+    },
+    {
+      "version": 1,
+      "id": "capture-1",
+      "action": "capture",
+      "arguments": { "name": "lobby" }
+    }
+  ],
+  "invalid": [
+    {
+      "version": 2,
+      "id": "wrong-version",
+      "action": "status",
+      "arguments": {}
+    },
+    { "version": 1, "id": "", "action": "status", "arguments": {} },
+    { "version": 1, "id": "missing-args", "action": "status" },
+    { "version": 1, "id": "bad-args", "action": "status", "arguments": [] },
+    {
+      "version": 1,
+      "id": "extra",
+      "action": "status",
+      "arguments": {},
+      "extra": true
+    }
+  ]
+}

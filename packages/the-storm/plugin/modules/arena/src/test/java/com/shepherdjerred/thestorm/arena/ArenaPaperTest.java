@@ -184,16 +184,16 @@ final class ArenaPaperTest {
     alice.performCommand("arena class knight");
 
     var sword = alice.getInventory().getItemInMainHand();
-    assertThat(sword.getType()).isEqualTo(Material.DIAMOND_SWORD);
+    assertThat(sword.getType()).isEqualTo(Material.STONE_SWORD);
     var tag = new NamespacedKey("thestorm", "arena_item");
     assertThat(
             sword.getItemMeta().getPersistentDataContainer().has(tag, PersistentDataType.BOOLEAN))
         .isTrue();
-    assertThat(sword.getItemMeta().isUnbreakable()).isTrue();
+    assertThat(sword.getItemMeta().isUnbreakable()).isFalse();
     assertThat(alice.getInventory().getItemInOffHand().getType()).isEqualTo(Material.SHIELD);
     assertThat(alice.getInventory().getHelmet()).isNotNull();
     assertThat(requireNonNull(alice.getInventory().getHelmet()).getType())
-        .isEqualTo(Material.IRON_HELMET);
+        .isEqualTo(Material.LEATHER_HELMET);
     assertThat(
             Arrays.stream(alice.getInventory().getContents())
                 .filter(Objects::nonNull)

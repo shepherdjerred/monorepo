@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
 import { test } from "./fixtures.ts";
-import { serverLogs } from "./harness/server.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 
 describe("The Storm plugin", () => {
   test("enables on Paper 26.2 after LuckPerms with E2E modules on", async ({
