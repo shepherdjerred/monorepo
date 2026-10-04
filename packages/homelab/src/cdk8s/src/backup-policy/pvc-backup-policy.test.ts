@@ -160,9 +160,10 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
-    // Includes PVC backup, ArgoCD, CI pod, and The Storm's server stop guards.
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(4);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(4);
+    // Includes PVC backup, ArgoCD, CI pod, The Storm's server stop, and
+    // mc-harness sandbox pod guards.
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(5);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(5);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {
