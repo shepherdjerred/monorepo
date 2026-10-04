@@ -59,6 +59,8 @@ render and getting a go-ahead when the target is a server people play on.
 6. **Replay:** `toolkit mc build replay <dir>` replays the log on a fresh
    seeded sandbox. A mismatch means non-deterministic ops (random `%`
    patterns); promote is still exact because it applies the frozen result.
+   Verify and replay ignore state the server recomputes from neighbors (pane,
+   fence and wall connections, stair shape, leaf distance), so panes are fine.
 7. **Show the user** the final render (and lint summary) before promoting.
 8. **Promote:** dry run prints a `planHash` and how many blocks change; then
    confirm:

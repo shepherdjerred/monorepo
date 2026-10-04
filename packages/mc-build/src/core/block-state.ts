@@ -79,3 +79,37 @@ const AIR_IDS = new Set([
 export function isAir(raw: string): boolean {
   return AIR_IDS.has(blockId(raw));
 }
+
+const CONNECTION_KEYS = ["north", "south", "east", "west", "up"] as const;
+const CONNECTING_BLOCK = /(?:_pane|_fence|_wall|^minecraft:iron_bars)$/u;
+
+/**
+ * Properties the server recomputes from neighbors after a paste: pane, bar,
+ * fence and wall connections, stair shape, fence-gate `in_wall`, and leaf
+ * `distance`. Exact comparisons of a build against the world ignore them.
+ */
+export function neighborDerivedKeys(id: string): readonly string[] {
+  if (CONNECTING_BLOCK.test(id)) {
+    return CONNECTION_KEYS;
+  }
+  if (id.endsWith("_stairs")) {
+    return ["shape"];
+  }
+  if (id.endsWith("_fence_gate")) {
+    return ["in_wall"];
+  }
+  return id.endsWith("_leaves") ? ["distance"] : [];
+}
+
+/** The state with neighbor-derived properties removed (see neighborDerivedKeys). */
+export function withoutNeighborDerived(raw: string): string {
+  const state = parseBlockState(raw);
+  const derived = neighborDerivedKeys(state.id);
+  if (derived.length === 0) {
+    return formatBlockState(state);
+  }
+  const properties = Object.fromEntries(
+    Object.entries(state.properties).filter(([key]) => !derived.includes(key)),
+  );
+  return formatBlockState({ id: state.id, properties });
+}

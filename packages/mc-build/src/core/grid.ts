@@ -149,6 +149,8 @@ export class BlockGrid {
   diff(
     other: BlockGrid,
     limit = 100,
+    /** Maps both sides before comparing, e.g. withoutNeighborDerived. */
+    normalize: (state: string) => string = (state) => state,
   ): {
     count: number;
     mismatches: { at: Vec3; expected: string; actual: string }[];
@@ -166,7 +168,7 @@ export class BlockGrid {
     let count = 0;
     this.forEach((x, y, z, expected) => {
       const actual = other.get(x, y, z);
-      if (actual !== expected) {
+      if (actual !== expected && normalize(actual) !== normalize(expected)) {
         count += 1;
         if (mismatches.length < limit) {
           mismatches.push({ at: { x, y, z }, expected, actual });

@@ -1,3 +1,4 @@
+import { withoutNeighborDerived } from "@shepherdjerred/mc-build/core/block-state.ts";
 import { BlockGrid, gridFromRegionRead, type Vec3 } from "@shepherdjerred/mc-build/core/grid.ts";
 import type { Box, WeOp } from "#protocol/bridge.ts";
 import type { Op } from "#protocol/build.ts";
@@ -98,9 +99,13 @@ export type GridDiff = {
   samples: { at: Vec3; expected: string; actual: string }[];
 };
 
-/** Cell diff with sample positions translated to world coordinates. */
+/**
+ * Cell diff with sample positions translated to world coordinates. Ignores
+ * neighbor-derived state (pane/fence/wall connections, stair shape, leaf
+ * distance) that the server recomputes after a paste.
+ */
 export function diffGrids(expected: BlockGrid, actual: BlockGrid, origin: Vec3): GridDiff {
-  const result = expected.diff(actual, 10);
+  const result = expected.diff(actual, 10, withoutNeighborDerived);
   return {
     mismatches: result.count,
     samples: result.mismatches.map((mismatch) => ({

@@ -3,8 +3,10 @@ import { describe, expect, test } from "vitest";
 import {
   formatBlockState,
   isAir,
+  neighborDerivedKeys,
   normalizeBlockState,
   parseBlockState,
+  withoutNeighborDerived,
   withProperties,
 } from "#src/core/block-state.ts";
 import { BlockGrid, gridFromRegionRead } from "#src/core/grid.ts";
@@ -122,5 +124,71 @@ describe("Sponge v3 schematics", () => {
     expect(read.grid.palette.length).toBe(200);
     expect(read.grid.diff(grid).count).toBe(0);
     expect(read.dataVersion).toBe(4903);
+  });
+});
+
+describe("neighbor-derived state", () => {
+  test("names only properties the server recomputes from neighbors", () => {
+    expect(neighborDerivedKeys("minecraft:glass_pane")).toEqual([
+      "north",
+      "south",
+      "east",
+      "west",
+      "up",
+    ]);
+    expect(neighborDerivedKeys("minecraft:iron_bars")).toHaveLength(5);
+    expect(neighborDerivedKeys("minecraft:cobblestone_wall")).toHaveLength(5);
+    expect(neighborDerivedKeys("minecraft:oak_fence")).toHaveLength(5);
+    expect(neighborDerivedKeys("minecraft:oak_fence_gate")).toEqual([
+      "in_wall",
+    ]);
+    expect(neighborDerivedKeys("minecraft:oak_stairs")).toEqual(["shape"]);
+    expect(neighborDerivedKeys("minecraft:oak_leaves")).toEqual(["distance"]);
+    expect(neighborDerivedKeys("minecraft:stone_bricks")).toEqual([]);
+    expect(neighborDerivedKeys("minecraft:oak_wall_sign")).toEqual([]);
+  });
+
+  test("strips them while keeping every other property", () => {
+    expect(
+      withoutNeighborDerived(
+        "minecraft:oak_stairs[facing=east,half=bottom,shape=inner_left,waterlogged=false]",
+      ),
+    ).toBe("minecraft:oak_stairs[facing=east,half=bottom,waterlogged=false]");
+    expect(
+      withoutNeighborDerived(
+        "minecraft:glass_pane[east=true,north=false,south=false,waterlogged=false,west=true]",
+      ),
+    ).toBe("minecraft:glass_pane[waterlogged=false]");
+  });
+
+  test("grid diff ignores recomputed connections but not real changes", () => {
+    const size = { x: 2, y: 1, z: 1 };
+    const expected = BlockGrid.fromIndices(
+      size,
+      [
+        "minecraft:glass_pane[east=true,north=false,south=false,waterlogged=false,west=false]",
+        "minecraft:stone",
+      ],
+      new Uint32Array([0, 1]),
+    );
+    const recomputed = BlockGrid.fromIndices(
+      size,
+      [
+        "minecraft:glass_pane[east=false,north=false,south=false,waterlogged=false,west=false]",
+        "minecraft:stone",
+      ],
+      new Uint32Array([0, 1]),
+    );
+    const changed = BlockGrid.fromIndices(
+      size,
+      [
+        "minecraft:glass_pane[east=true,north=false,south=false,waterlogged=false,west=false]",
+        "minecraft:dirt",
+      ],
+      new Uint32Array([0, 1]),
+    );
+    expect(expected.diff(recomputed).count).toBe(1);
+    expect(expected.diff(recomputed, 10, withoutNeighborDerived).count).toBe(0);
+    expect(expected.diff(changed, 10, withoutNeighborDerived).count).toBe(1);
   });
 });
