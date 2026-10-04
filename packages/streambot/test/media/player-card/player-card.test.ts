@@ -22,6 +22,7 @@ function render(
     posterUrl?: string | null;
     enabled?: boolean;
     finished?: boolean;
+    webUrl?: string;
   } = {},
 ): PlayerCardPayload {
   return renderPlayerCard({
@@ -29,6 +30,7 @@ function render(
     posterUrl: options.posterUrl ?? null,
     enabled: options.enabled ?? true,
     finished: options.finished ?? false,
+    ...(options.webUrl === undefined ? {} : { webUrl: options.webUrl }),
   });
 }
 
@@ -71,6 +73,25 @@ describe("renderProgressBar", () => {
 });
 
 describe("live sports player card", () => {
+  test("eligible sports cards include a working web link within Discord row limits", () => {
+    const current = view().current;
+    if (current === null) throw new Error("fixture has a current item");
+    const webUrl = "https://streambot.sjer.red/";
+    const payload = render(
+      {
+        current: {
+          ...current,
+          source: { kind: "url", url: "https://tvsportslive.fr/example-game/" },
+        },
+      },
+      { webUrl },
+    );
+    expect(
+      payload.rows.flat().find((button) => button.id === "web-remote")?.url,
+    ).toBe(webUrl);
+    expect(payload.rows.every((row) => row.length <= 5)).toBe(true);
+    expect(render({}, { webUrl, finished: true }).rows).toEqual([]);
+  });
   test("renders only skip, stop, and volume controls", () => {
     const current = view().current;
     if (current === null) throw new Error("fixture has a current item");

@@ -170,6 +170,12 @@ export class CommandHandler {
               interaction.userId,
               this.deps.playbackChannel,
             ),
+            this.deps.guildId !== undefined &&
+              (await this.deps.featureGate?.automaticChannelRouting?.({
+                guildId: this.deps.guildId,
+                channelId: this.deps.channelId ?? "help",
+                userId: interaction.userId,
+              })) === true,
           ),
         );
         return true;

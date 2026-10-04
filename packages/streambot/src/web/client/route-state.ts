@@ -31,3 +31,12 @@ export function useRouteState() {
 export function pageOffset(value: string | null): number {
   return value !== null && /^\d{1,7}$/u.test(value) ? Number(value) : 0;
 }
+
+export function selectedGuildId(
+  guilds: readonly { id: string }[],
+  requested: string | null,
+): string {
+  return (
+    guilds.find((guild) => guild.id === requested)?.id ?? guilds[0]?.id ?? ""
+  );
+}

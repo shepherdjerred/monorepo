@@ -356,6 +356,7 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
   }
   const { view } = input;
   const title = view.current?.title ?? "Nothing playing";
+  const rows = buildRows(view);
   return {
     content: "",
     embed: {
@@ -369,8 +370,8 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
     // than left dangling on a session that no longer exists.
     rows: input.finished
       ? []
-      : buildRows(view).map((row, index) =>
-          index !== 2 || input.webUrl === undefined
+      : rows.map((row, index) =>
+          index !== rows.length - 1 || input.webUrl === undefined
             ? row
             : [
                 ...row,

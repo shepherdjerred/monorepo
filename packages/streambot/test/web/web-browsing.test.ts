@@ -110,3 +110,12 @@ test("duration uses clock fields through hour boundaries", () => {
   expect(elapsed(59)).toBe("0:59");
   expect(elapsed(null)).toBe("—");
 });
+
+import { selectedGuildId } from "@shepherdjerred/streambot/web/client/route-state.ts";
+test("stale or unauthorized server deep links recover to an available guild", () => {
+  const guilds = [{ id: "available" }, { id: "second" }];
+  expect(selectedGuildId(guilds, "stale")).toBe("available");
+  expect(selectedGuildId(guilds, "second")).toBe("second");
+  expect(selectedGuildId(guilds, null)).toBe("available");
+  expect(selectedGuildId([], "stale")).toBe("");
+});

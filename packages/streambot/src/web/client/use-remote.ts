@@ -9,12 +9,13 @@ import {
   type WebSnapshot,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { api, ApiError, commandRequest, type RemoteAction } from "./api.ts";
+import { selectedGuildId } from "./route-state.ts";
 
 export function useRemote() {
   const [me, setMe] = useState<z.infer<typeof MeSchema> | null>(null);
   const [loading, setLoading] = useState(true);
   const [params, setParams] = useSearchParams();
-  const guildId = params.get("guild") ?? me?.guilds[0]?.id ?? "";
+  const guildId = selectedGuildId(me?.guilds ?? [], params.get("guild"));
   const viewedChannel = params.get("channel");
   const pendingAction = useRef<AbortController | null>(null);
   const [snapshot, setSnapshot] = useState<WebSnapshot | null>(null);
@@ -38,11 +39,12 @@ export function useRemote() {
   };
 
   useEffect(() => {
-    if (me !== null && guildId !== "" && params.get("guild") === null) {
+    if (me !== null && guildId !== "" && params.get("guild") !== guildId) {
       setParams(
         (previous) => {
           const next = new URLSearchParams(previous);
           next.set("guild", guildId);
+          next.delete("channel");
           return next;
         },
         { replace: true },
