@@ -5,6 +5,7 @@
     "noEmit": true
   },
   "include": [
+    "scripts/**/*.ts",
     "tests/**/*.ts",
     "vitest.e2e.config.ts",
     "vitest.full.config.ts",
