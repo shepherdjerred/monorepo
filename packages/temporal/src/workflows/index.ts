@@ -472,11 +472,8 @@ export async function agentChatWorkflow(
   return _agentChatWorkflow(input);
 }
 
-export async function agentChatTurnReceiptWorkflow(
-  input: AgentChatReceiptInput,
-): Promise<AgentChatTurnResult> {
-  return _agentChatTurnReceiptWorkflow(input);
-}
+export const agentChatTurnReceiptWorkflow = (input: AgentChatReceiptInput) =>
+  _agentChatTurnReceiptWorkflow(input);
 
 export async function agentChatCatalogWorkflow(
   state?: AgentChatCatalogState,
@@ -484,17 +481,12 @@ export async function agentChatCatalogWorkflow(
   return _agentChatCatalogWorkflow(state);
 }
 
-export async function scheduledAgentChatTurnWorkflow(
+export const scheduledAgentChatTurnWorkflow = (
   input: ScheduledAgentChatTurnInput,
-): Promise<AgentChatTurnResult> {
-  return _scheduledAgentChatTurnWorkflow(input);
-}
+) => _scheduledAgentChatTurnWorkflow(input);
 
-export async function discordAgentChatWorkflow(
-  input: DiscordAgentChatCommand,
-): Promise<void> {
-  return _discordAgentChatWorkflow(input);
-}
+export const discordAgentChatWorkflow = (input: DiscordAgentChatCommand) =>
+  _discordAgentChatWorkflow(input);
 
 export async function httpAgentChatWorkflow(
   input: HttpAgentChatCommand,
