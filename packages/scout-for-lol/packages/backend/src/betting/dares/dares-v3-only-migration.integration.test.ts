@@ -11,7 +11,7 @@ import {
  * it; a terminal one is safe to drop.
  */
 
-const MIGRATION = "20261003000000_dares_v3_only";
+const MIGRATION = "20261004000000_dares_v3_only";
 const CHANNEL = "300000000000000001";
 
 let replay: MigrationReplay | undefined;
