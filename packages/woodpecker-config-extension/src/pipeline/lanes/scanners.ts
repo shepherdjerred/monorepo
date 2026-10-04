@@ -106,11 +106,14 @@ const TRIVY_DB = {
 const TRIVY_FINDINGS_EXIT = 7;
 const SEMGREP_FINDINGS_EXIT = 1;
 
-function trivyCommands(): string[] {
+function trivyCommands(isolated: boolean): string[] {
+  const cache = isolated
+    ? "--cache-backend memory --cache-dir /tmp/trivy"
+    : `--cache-backend memory --cache-dir ${TRIVY_DB.path} --skip-db-update`;
   return [
     'echo "OPTIONAL SECURITY SCAN: HIGH/CRITICAL findings do not block merge; scanner failures do."',
     "set +e",
-    `trivy fs --cache-backend memory --cache-dir ${TRIVY_DB.path} --skip-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code ${TRIVY_FINDINGS_EXIT.toString()} --skip-dirs node_modules --skip-dirs sandbox .`,
+    `trivy fs ${cache} --scanners vuln --severity HIGH,CRITICAL --exit-code ${TRIVY_FINDINGS_EXIT.toString()} --skip-dirs node_modules --skip-dirs sandbox .`,
     "trivy_status=$?",
     "set -e",
     `if [ "$trivy_status" -eq ${TRIVY_FINDINGS_EXIT.toString()} ]; then`,
@@ -147,18 +150,22 @@ function semgrepCommands(): string[] {
   ];
 }
 
-export function scannerSteps(images: CiImages): CiStep[] {
+export function scannerSteps(
+  images: CiImages,
+  options: { readonly isolated?: boolean } = {},
+): CiStep[] {
+  const isolated = options.isolated === true;
   return [
     {
       key: "trivy",
       label: "trivy",
       image: images.catalog["aquasec/trivy"],
-      commands: trivyCommands(),
+      commands: trivyCommands(isolated),
       shell: "sh",
       timeoutMinutes: 20,
       resources: SCANNER_TIER,
       events: ["pull_request"],
-      volumes: [TRIVY_DB],
+      ...(isolated ? {} : { volumes: [TRIVY_DB] }),
       changed: {
         include: [...GLOBAL_SELECTOR_INPUTS, ...DEPENDENCY_MANIFESTS],
         exclude: ["sandbox/**"],

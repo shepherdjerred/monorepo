@@ -110,10 +110,13 @@ Then run the unfiltered command. This catches accidental drift in every managed
 environment before the operator change is considered complete.
 
 :::caution
-Flipt has no authentication. Network reachability is the authorization
-boundary, so keep the endpoint private and do not expose it publicly.
+The evaluation snapshot used by this check remains credentialless for runtime
+compatibility. The Flipt UI and management API require the `operator` browser
+login from the `flipt-auth` 1Password item. Keep the endpoint private even
+with that gateway in place.
 :::
 
 ## Related
 
 - [Configuration layers](/explanation/homelab/configuration/)
+- [Homelab control-plane access](/reference/homelab-control-plane-access/)

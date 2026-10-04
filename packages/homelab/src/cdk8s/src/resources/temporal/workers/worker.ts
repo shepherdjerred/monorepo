@@ -52,6 +52,15 @@ export function createTemporalWorkerDeployment(
     "temporal-worker-secret",
     onePasswordItem.name,
   );
+  const fliptAuthItem = new OnePasswordItem(chart, "temporal-flipt-auth-1p", {
+    metadata: { name: "temporal-flipt-auth" },
+    spec: { itemPath: vaultItemPath("3mvuwmlazccxpq7tz7myqigtvq") },
+  });
+  const fliptAuthSecret = Secret.fromSecretName(
+    chart,
+    "temporal-flipt-auth-secret",
+    fliptAuthItem.name,
+  );
   const photonItem = new OnePasswordItem(chart, "temporal-photon-1p", {
     spec: { itemPath: vaultItemPath("f67iy2i34gonqynkm2vtsvnueu") },
   });
@@ -342,6 +351,7 @@ export function createTemporalWorkerDeployment(
   } = createTemporalOperationsWorkers(chart, {
     serverServiceName: props.serverServiceName,
     secret,
+    fliptAuthSecret,
     scoutBryanBucksControlSecret,
     infraServiceAccount,
     homelabAuditEnvironment: homelabAuditEnv(secret),

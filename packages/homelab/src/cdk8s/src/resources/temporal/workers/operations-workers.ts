@@ -66,6 +66,7 @@ function veleroR2AuditEnv(secret: ISecret): Record<string, EnvValue> {
 export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
+  fliptAuthSecret: ISecret;
   scoutBryanBucksControlSecret: ISecret;
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
@@ -198,6 +199,10 @@ export function createTemporalOperationsWorkers(
       FLIPT_URL: EnvValue.fromValue(
         "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       ),
+      FLIPT_OPERATOR_TOKEN: EnvValue.fromSecretValue({
+        secret: props.fliptAuthSecret,
+        key: "operator-token",
+      }),
       FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
       FRESHRSS_API_URL: EnvValue.fromValue(
         "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",

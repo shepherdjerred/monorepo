@@ -4,6 +4,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   IntOrString,
+  KubeNetworkPolicy,
   KubePersistentVolumeClaim,
   KubeService,
   Quantity,
@@ -13,6 +14,27 @@ import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+
+const FILER_UPSTREAM_PORT = 8888;
+const FILER_GATEWAY_PORT = 8889;
+const FILER_AUTH_SECRET = "seaweedfs-filer-auth";
+export const FILER_GATEWAY_CONFIG = `{
+  admin off
+  auto_https off
+}
+
+:${FILER_GATEWAY_PORT.toString()} {
+  handle /health {
+    respond "ok" 200
+  }
+  handle {
+    basic_auth {
+      operator {$SEAWEEDFS_FILER_BASIC_HASH}
+    }
+    reverse_proxy 127.0.0.1:${FILER_UPSTREAM_PORT.toString()}
+  }
+}
+`;
 
 export function createSeaweedfsApp(chart: Chart) {
   new Namespace(chart, "seaweedfs-namespace", {
@@ -65,6 +87,17 @@ export function createSeaweedfsApp(chart: Chart) {
     },
   });
 
+  new OnePasswordItem(chart, "seaweedfs-filer-auth-onepassword", {
+    spec: {
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zkvjvzfvj3zzhxq5pumebqdoiu",
+    },
+    metadata: {
+      name: FILER_AUTH_SECRET,
+      namespace: "seaweedfs",
+    },
+  });
+
   // S3 API is tailnet-only (seaweedfs-s3.tailnet-1a49.ts.net). It is NOT exposed
   // on the public Cloudflare tunnel: the state bucket (homelab-tofu-state) and
   // llm-archive live on this gateway, and the only public consumer was an
@@ -94,7 +127,10 @@ export function createSeaweedfsApp(chart: Chart) {
     probePath: "/status",
   });
 
-  // ClusterIP service for Filer UI (the helm chart creates a headless service which doesn't work with Tailscale ingress)
+  // ClusterIP service for the authenticated Filer UI gateway. The Helm chart
+  // creates a headless service, which does not work with Tailscale ingress.
+  // The raw Filer port remains available only to SeaweedFS components in this
+  // namespace, so the external hostname and UI capabilities remain unchanged.
   new KubeService(chart, "seaweedfs-filer-ui-service", {
     metadata: {
       name: "seaweedfs-filer-ui",
@@ -113,8 +149,74 @@ export function createSeaweedfsApp(chart: Chart) {
       ports: [
         {
           name: "http",
-          port: 8888,
-          targetPort: IntOrString.fromNumber(8888),
+          port: FILER_UPSTREAM_PORT,
+          targetPort: IntOrString.fromNumber(FILER_GATEWAY_PORT),
+        },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "seaweedfs-filer-netpol", {
+    metadata: {
+      name: "seaweedfs-filer-netpol",
+      namespace: "seaweedfs",
+    },
+    spec: {
+      podSelector: {
+        matchLabels: {
+          "app.kubernetes.io/component": "filer",
+          "app.kubernetes.io/name": "seaweedfs",
+        },
+      },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          // SeaweedFS master, volume, S3, and Filer pods retain their existing
+          // internal protocol access, including raw HTTP and gRPC.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
+              },
+            },
+          ],
+        },
+        {
+          // Tailscale can reach only the authenticated UI gateway.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
+          ports: [
+            {
+              port: IntOrString.fromNumber(FILER_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
+        },
+        {
+          // Prometheus retains metrics access and probes the public health
+          // path on the same authenticated gateway used by Tailscale.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [
+            {
+              port: IntOrString.fromNumber(9327),
+              protocol: "TCP",
+            },
+            {
+              port: IntOrString.fromNumber(FILER_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
         },
       ],
     },
@@ -124,8 +226,9 @@ export function createSeaweedfsApp(chart: Chart) {
   createIngress(chart, "seaweedfs-filer-ingress", {
     namespace: "seaweedfs",
     service: "seaweedfs-filer-ui",
-    port: 8888,
+    port: FILER_UPSTREAM_PORT,
     hosts: ["seaweedfs-filer"],
+    probePath: "/health",
   });
 
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {
@@ -230,6 +333,58 @@ export function createSeaweedfsApp(chart: Chart) {
       logs: {
         type: "emptyDir",
       },
+      sidecars: [
+        {
+          name: "authenticated-gateway",
+          image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+          imagePullPolicy: "IfNotPresent",
+          command: ["/bin/sh", "-c"],
+          args: [
+            'printf "%s" "$CADDY_CONFIG" > /tmp/Caddyfile && exec caddy run --config /tmp/Caddyfile --adapter caddyfile',
+          ],
+          ports: [
+            { name: "authenticated-ui", containerPort: FILER_GATEWAY_PORT },
+          ],
+          env: [
+            { name: "CADDY_CONFIG", value: FILER_GATEWAY_CONFIG },
+            {
+              name: "SEAWEEDFS_FILER_BASIC_HASH",
+              valueFrom: {
+                secretKeyRef: {
+                  name: FILER_AUTH_SECRET,
+                  key: "basic-hash",
+                },
+              },
+            },
+          ],
+          volumeMounts: [{ name: "filer-gateway-tmp", mountPath: "/tmp" }],
+          resources: {
+            requests: { cpu: "5m", memory: "16Mi" },
+            limits: { cpu: "100m", memory: "64Mi" },
+          },
+          securityContext: {
+            runAsUser: 1000,
+            runAsGroup: 1000,
+            runAsNonRoot: true,
+            readOnlyRootFilesystem: true,
+            allowPrivilegeEscalation: false,
+            privileged: false,
+            capabilities: { drop: ["ALL"] },
+          },
+          livenessProbe: {
+            httpGet: { path: "/health", port: FILER_GATEWAY_PORT },
+            periodSeconds: 30,
+          },
+          readinessProbe: {
+            httpGet: { path: "/health", port: FILER_GATEWAY_PORT },
+            periodSeconds: 10,
+          },
+        },
+      ],
+      extraVolumes: `
+- name: filer-gateway-tmp
+  emptyDir: {}
+`,
       // Enable S3 gateway on filer (used for internal filer operations)
       s3: {
         enabled: true,

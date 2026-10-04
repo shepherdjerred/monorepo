@@ -1,10 +1,12 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 const MAX_TRACE_BYTES = 50_000_000;
 
@@ -14,6 +16,11 @@ const MAX_TRACE_BYTES = 50_000_000;
  * Deployed in SingleBinary mode suitable for homelab scale.
  */
 export function createTempoApp(chart: Chart) {
+  new OnePasswordItem(chart, "tempo-monitoring-auth-onepassword", {
+    metadata: { name: "monitoring-api-auth", namespace: "tempo" },
+    spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
+  });
+
   // Tempo values - SingleBinary mode with OTLP receiver enabled
   const tempoValues: HelmValuesForChart<"tempo"> = {
     // This chart exposes distributor settings through its configuration template.
@@ -103,7 +110,7 @@ metrics_generator:
       metricsGenerator: {
         enabled: true,
         remoteWriteUrl:
-          "http://prometheus-operated.prometheus:9090/api/v1/write",
+          "http://prometheus-kube-prometheus-prometheus.prometheus:9090/api/v1/write",
         processor: {
           service_graphs: {},
           span_metrics: {},
@@ -113,6 +120,16 @@ metrics_generator:
         // survives pod restarts.
         storage: {
           path: "/var/tempo/metrics-generator",
+          remote_write: [
+            {
+              url: "http://prometheus-kube-prometheus-prometheus.prometheus:9090/api/v1/write",
+              authorization: {
+                type: "Bearer",
+                credentials_file:
+                  "/etc/tempo/secrets/monitoring-api-auth/prometheus-write-token",
+              },
+            },
+          ],
         },
         traces_storage: {
           path: "/var/tempo/metrics-generator-traces",
@@ -126,6 +143,13 @@ metrics_generator:
         },
         limits: { memory: "4Gi" },
       },
+      extraVolumeMounts: [
+        {
+          name: "monitoring-api-auth",
+          mountPath: "/etc/tempo/secrets/monitoring-api-auth",
+          readOnly: true,
+        },
+      ],
     },
     // Persistence configuration
     persistence: {
@@ -141,6 +165,12 @@ metrics_generator:
     service: {
       type: "ClusterIP",
     },
+    extraVolumes: [
+      {
+        name: "monitoring-api-auth",
+        secret: { secretName: "monitoring-api-auth" },
+      },
+    ],
   };
 
   return new Application(chart, "tempo-app", {

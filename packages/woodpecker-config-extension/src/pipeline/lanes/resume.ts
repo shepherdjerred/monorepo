@@ -36,7 +36,7 @@ export function resumeSteps(images: CiImages): CiStep[] {
         "cd ../..",
         // The deploy lane consumes this with --prebuilt rather than
         // reinstalling a TeX toolchain to rebuild it.
-        "bun --no-install scripts/ci/ci-artifact.ts put resume-pdf packages/resume/resume.pdf",
+        "bun --no-install scripts/ci/ci-artifact.ts put resume-pdf",
       ],
       timeoutMinutes: 20,
       resources: MEDIUM_TIER,

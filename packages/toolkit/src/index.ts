@@ -126,10 +126,12 @@ async function resolveCommandCredentials(
     return;
   }
   if (command !== "discord") {
-    await resolveCredentials(requiredCredentialsFor(command, subcommand));
+    await resolveCredentials(
+      requiredCredentialsFor(command, subcommand, Bun.env, args.slice(1)),
+    );
     return;
   }
-  const names = requiredCredentialsFor(command, subcommand);
+  const names = requiredCredentialsFor(command, subcommand, Bun.env);
   const failures: string[] = [];
   for (const name of names) {
     try {

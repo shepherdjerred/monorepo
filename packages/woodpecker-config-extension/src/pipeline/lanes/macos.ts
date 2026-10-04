@@ -109,6 +109,10 @@ const LANES: readonly MacosLane[] = [
     label: "TaskNotes macOS",
     timeoutMinutes: 90,
     commands: [
+      'export TASKNOTES_CI_RUN_ID="woodpecker-${CI_PIPELINE_NUMBER}"',
+      'cleanup_tasknotes_servers() { bun --no-install ci/scripts/macos/cleanup-tasknotes-test-servers.ts "$TASKNOTES_CI_RUN_ID"; }',
+      "cleanup_tasknotes_servers",
+      "trap cleanup_tasknotes_servers EXIT INT TERM",
       // The preflight prints the SHA-1 of the Apple Development identity the
       // signed UI tests must use.
       'TASKNOTES_UITEST_IDENTITY="$(bun --no-install ci/scripts/macos/macos-native-preflight.ts tasknotes)"',

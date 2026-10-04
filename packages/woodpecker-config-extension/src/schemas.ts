@@ -14,6 +14,11 @@ export const PipelineSchema = z.looseObject({
   branch: z.string(),
   commit: z.string(),
   ref: z.string(),
+  /** Woodpecker's pipeline number, used only for audit context. */
+  number: z.number().int().nonnegative().default(0),
+  /** Native review fields are parsed for contract visibility, never trusted. */
+  reviewed: z.number().int().nonnegative().default(0),
+  reviewed_by: z.string().default(""),
   /**
    * Account that owns the change: the pusher, or the account that opened the
    * pull request. Authenticated by the forge, not taken from commit metadata,

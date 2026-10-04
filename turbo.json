@@ -22,7 +22,8 @@
   // (64 MB zstd) — over the default upload timeout, so those tasks
   // remote-MISSED every build ("cache artifact ... too large to upload
   // within the timeout").
-  "remoteCache": { "uploadTimeout": 300 },
+  "remoteCache": { "uploadTimeout": 300, "signature": true },
+  "futureFlags": { "longerSignatureKey": true },
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

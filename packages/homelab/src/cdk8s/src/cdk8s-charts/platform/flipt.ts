@@ -14,10 +14,8 @@ import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-po
 /**
  * Namespaces allowed to evaluate flags.
  *
- * Flipt runs with `authentication.required: false`, so reachability IS the
- * authorization model: this list and the tailnet ingress are the whole
- * boundary. Add a namespace here in the same change that starts reading flags
- * from it.
+ * These namespaces consume the explicitly unauthenticated evaluation surface.
+ * Flipt management remains authenticated even from an allowed namespace.
  */
 const CONSUMER_NAMESPACES = [
   "starlight-karma-bot-beta",
@@ -55,11 +53,10 @@ export function createFliptChart(app: App) {
 
   createFliptDeployment(chart);
 
-  // Flipt runs with authentication disabled, so these policies ARE the access
-  // boundary: reachability is the whole authorization model. Tailscale reaches
-  // the UI, Prometheus scrapes metrics and runs the blackbox probe, and each
-  // consumer namespace is added here as it adopts flags. Nothing else can talk
-  // to it, in either direction.
+  // Network policy limits the authenticated gateway's callers. Tailscale
+  // reaches the Basic-authenticated UI, Prometheus scrapes the explicitly
+  // public metrics route, and consumers can only use the evaluation routes
+  // that the gateway and Flipt both exempt from authentication.
   new KubeNetworkPolicy(chart, "flipt-ingress-netpol", {
     metadata: { name: "flipt-ingress-netpol" },
     spec: {
@@ -79,8 +76,7 @@ export function createFliptChart(app: App) {
               },
             },
             // Consumer namespaces. Each service is added here as it adopts
-            // flags — Flipt runs with authentication disabled, so this list is
-            // the access control.
+            // flags; native authentication separately protects management.
             ...CONSUMER_NAMESPACES.map((namespace) => ({
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": namespace },

@@ -111,6 +111,34 @@ const PodTemplateSchema = z.object({
   }),
 });
 
+const SecretEnvironmentSchema = z.object({
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        containers: z.array(
+          z.object({
+            env: z.array(
+              z
+                .object({
+                  name: z.string(),
+                  valueFrom: z
+                    .object({
+                      secretKeyRef: z.object({
+                        name: z.string(),
+                        key: z.string(),
+                      }),
+                    })
+                    .optional(),
+                })
+                .loose(),
+            ),
+          }),
+        ),
+      }),
+    }),
+  }),
+});
+
 describe("Woodpecker CI namespace", () => {
   /**
    * Kueue's pod integration can only be scoped by namespace, and it gates
@@ -131,6 +159,10 @@ describe("Woodpecker CI namespace", () => {
 
   it("holds the CI work, and the control plane holds only the control plane", () => {
     const manifests = woodpeckerManifests();
+    const controlPlaneSecrets = new Set([
+      "woodpecker-extension-github-credentials",
+      "woodpecker-server-credentials",
+    ]);
     const deploymentsIn = (namespace: string) =>
       manifests
         .filter(
@@ -152,13 +184,27 @@ describe("Woodpecker CI namespace", () => {
       if (
         manifest.kind === "PersistentVolumeClaim" ||
         (manifest.kind === "OnePasswordItem" &&
-          manifest.metadata.name !== "woodpecker-server-credentials")
+          !controlPlaneSecrets.has(manifest.metadata.name))
       ) {
         expect(manifest.metadata.namespace, manifest.metadata.name).toBe(
           "woodpecker-ci",
         );
       }
     }
+  });
+
+  it("gives the config extension only its dedicated GitHub approval token", () => {
+    const deployment = SecretEnvironmentSchema.parse(
+      find("Deployment", "woodpecker-woodpecker-config-extension"),
+    );
+    const approvalToken = deployment.spec.template.spec.containers[0]?.env.find(
+      (entry) => entry.name === "GITHUB_APPROVAL_READ_TOKEN",
+    );
+
+    expect(approvalToken?.valueFrom?.secretKeyRef).toEqual({
+      name: "woodpecker-extension-github-credentials",
+      key: "GITHUB_DOWNLOAD_TOKEN",
+    });
   });
 
   /** The clone pod runs as `default`; no CI pod needs the Kubernetes API. */

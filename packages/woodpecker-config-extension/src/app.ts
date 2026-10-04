@@ -5,7 +5,10 @@ import { authorizePipeline } from "#src/authorization.ts";
 import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
-import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import {
+  buildPipelineSteps,
+  credentiallessHostedAutomationSteps,
+} from "#src/pipeline/steps.ts";
 import {
   PlatformApplyStackSchema,
   type PlatformOperation,
@@ -18,6 +21,7 @@ import {
   internalImagePinSteps,
   isInternalImagePinChange,
 } from "#src/pipeline/internal-image-pin-change.ts";
+import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 
 export type AppOptions = {
   /** Resolves Woodpecker's signing key; the caller caches it. */
@@ -42,6 +46,8 @@ export type AppOptions = {
     branch: string,
   ) => Promise<string | undefined>;
   readonly compareChangedFiles?: typeof changedFilesSince;
+  /** Checks an exact hosted-automation head against forge review state. */
+  readonly hostedAutomationApproved?: (pipeline: Pipeline) => Promise<boolean>;
 };
 
 function platformOperationRequest(
@@ -125,6 +131,43 @@ async function stepsForMainChange({
     : steps;
 }
 
+async function needsCredentiallessHostedAutomation(
+  actorClass: "owner-controlled" | "hosted-automation",
+  pipeline: Pipeline,
+  approvalCheck: AppOptions["hostedAutomationApproved"],
+): Promise<boolean> {
+  if (actorClass !== "hosted-automation" || pipeline.event !== "pull_request") {
+    return false;
+  }
+  try {
+    return (await approvalCheck?.(pipeline)) !== true;
+  } catch (error) {
+    console.warn("hosted automation approval lookup failed", error);
+    return true;
+  }
+}
+
+async function resolveChangedFiles({
+  pipeline,
+  repoName,
+  defaultBranch,
+  changedBase,
+  compare,
+}: {
+  pipeline: Pipeline;
+  repoName: string;
+  defaultBranch: string;
+  changedBase: string | undefined;
+  compare: typeof changedFilesSince;
+}): Promise<readonly string[] | undefined> {
+  if (pipeline.event !== "push" || pipeline.branch !== defaultBranch) {
+    return pipeline.changed_files;
+  }
+  return changedBase === undefined
+    ? undefined
+    : compare(`shepherdjerred/${repoName}`, changedBase, pipeline.commit);
+}
+
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
 
@@ -196,6 +239,22 @@ export function createApp(options: AppOptions): Hono {
       });
     }
 
+    if (
+      await needsCredentiallessHostedAutomation(
+        authorization.actorClass,
+        pipeline,
+        options.hostedAutomationApproved,
+      )
+    ) {
+      const credentialless = selectSteps(
+        credentiallessHostedAutomationSteps(images),
+        selectionContext,
+      );
+      return context.json({
+        configs: emitWorkflows(credentialless, identity),
+      });
+    }
+
     if (platformOperation !== undefined && "operation" in platformOperation) {
       const { operation } = platformOperation;
       const steps = buildPipelineSteps({
@@ -219,16 +278,13 @@ export function createApp(options: AppOptions): Hono {
       options.verifyBase(repo.id, repo.default_branch),
       options.imageReleaseBase(repo.id, repo.default_branch),
     ]);
-    const changedFiles =
-      pipeline.event === "push" && pipeline.branch === repo.default_branch
-        ? changedBase === undefined
-          ? undefined
-          : await (options.compareChangedFiles ?? changedFilesSince)(
-              `shepherdjerred/${repo.name}`,
-              changedBase,
-              pipeline.commit,
-            )
-        : pipeline.changed_files;
+    const changedFiles = await resolveChangedFiles({
+      pipeline,
+      repoName: repo.name,
+      defaultBranch: repo.default_branch,
+      changedBase,
+      compare: options.compareChangedFiles ?? changedFilesSince,
+    });
     if (changedFiles === undefined) {
       console.warn(
         "could not establish complete main diff; selecting all lanes",
@@ -240,16 +296,19 @@ export function createApp(options: AppOptions): Hono {
       verifyBase,
       imageReleaseBase,
     });
-    const selected = selectSteps(
-      await stepsForMainChange({
-        steps,
-        pipeline,
-        defaultBranch: repo.default_branch,
-        changedFiles,
-        changedBase,
-        imageFetcher: options.imageFetcher,
-      }),
-      { ...selectionContext, changedFiles: changedFiles ?? [] },
+    const selected = signRemoteCacheSteps(
+      selectSteps(
+        await stepsForMainChange({
+          steps,
+          pipeline,
+          defaultBranch: repo.default_branch,
+          changedFiles,
+          changedBase,
+          imageFetcher: options.imageFetcher,
+        }),
+        { ...selectionContext, changedFiles: changedFiles ?? [] },
+      ),
+      pipeline.event === "pull_request" ? "pull-request" : "trusted",
     );
 
     return context.json({

@@ -13,8 +13,9 @@
 #
 #   temporal --profile homelab workflow list
 #
-# The homelab server is tailnet-only, so no credential belongs here — the
-# tailnet is the auth boundary.
+# `toolkit temporal` resolves the API token through its credential broker and
+# exports it only to the Temporal process. The token is never written to this
+# profile or exported into the interactive shell.
 
 [profile]
 

@@ -22,7 +22,10 @@ function pipeline(overrides: Record<string, unknown>) {
 
 describe("pipeline authorization", () => {
   test("admits the owner", () => {
-    expect(authorizePipeline(pipeline({}))).toEqual({ allowed: true });
+    expect(authorizePipeline(pipeline({}))).toEqual({
+      allowed: true,
+      actorClass: "owner-controlled",
+    });
   });
 
   test("admits the owner's agent account and the repository's bots", () => {
@@ -35,9 +38,7 @@ describe("pipeline authorization", () => {
       const result = authorizePipeline(
         pipeline({ author: login, sender: login }),
       );
-      expect(result, `${login} should be able to run CI`).toEqual({
-        allowed: true,
-      });
+      expect(result.allowed, `${login} should be able to run CI`).toBe(true);
     }
   });
 
@@ -120,7 +121,10 @@ describe("pipeline authorization", () => {
       sender: "shepherdjerred",
     });
     expect(pushed.from_fork).toBe(false);
-    expect(authorizePipeline(pushed)).toEqual({ allowed: true });
+    expect(authorizePipeline(pushed)).toEqual({
+      allowed: true,
+      actorClass: "owner-controlled",
+    });
   });
 
   /**
@@ -148,7 +152,10 @@ describe("pipeline authorization", () => {
     const result = authorizePipeline(
       pipeline({ event: "manual", author: "shepherdjerred", sender: "" }),
     );
-    expect(result).toEqual({ allowed: true });
+    expect(result).toEqual({
+      allowed: true,
+      actorClass: "owner-controlled",
+    });
   });
 
   test("refuses an untrusted manual trigger", () => {
@@ -184,5 +191,18 @@ describe("pipeline authorization", () => {
       "renovate[bot]",
       "shepherdjerred",
     ]);
+  });
+
+  test("classifies hosted Renovate separately from owner-controlled bots", () => {
+    for (const identities of [
+      { author: "renovate[bot]", sender: "renovate[bot]" },
+      { author: "shepherdjerred", sender: "renovate[bot]" },
+      { author: "renovate[bot]", sender: "shepherdjerred" },
+    ]) {
+      expect(authorizePipeline(pipeline(identities))).toEqual({
+        allowed: true,
+        actorClass: "hosted-automation",
+      });
+    }
   });
 });

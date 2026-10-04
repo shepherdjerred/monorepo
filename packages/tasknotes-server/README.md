@@ -44,12 +44,13 @@ Mutating requests may include `X-Mutation-Id`. The server persists the response
 in the vault and returns it with `X-Idempotent-Replay: true` on replay instead
 of executing the mutation twice.
 
-| Variable     | Required | Default | Purpose                            |
-| ------------ | -------- | ------- | ---------------------------------- |
-| `VAULT_PATH` | yes      | —       | shared vault directory             |
-| `TASKS_DIR`  | no       | empty   | task subdirectory within the vault |
-| `AUTH_TOKEN` | yes      | —       | bearer authentication token        |
-| `PORT`       | no       | `3000`  | HTTP port                          |
+| Variable     | Required | Default     | Purpose                            |
+| ------------ | -------- | ----------- | ---------------------------------- |
+| `VAULT_PATH` | yes      | —           | shared vault directory             |
+| `TASKS_DIR`  | no       | empty       | task subdirectory within the vault |
+| `AUTH_TOKEN` | yes      | —           | bearer authentication token        |
+| `HOST`       | no       | `127.0.0.1` | HTTP bind address                  |
+| `PORT`       | no       | `3000`      | HTTP port                          |
 
 Migration and audit utilities live in `scripts/`; read the script's help and
 run the vault audit before applying a migration. [AGENTS.md](AGENTS.md) contains

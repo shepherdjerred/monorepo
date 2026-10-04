@@ -47,6 +47,11 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
     "woodpecker-extension-secret-ref",
     "woodpecker-server-credentials",
   );
+  const githubSecretRef = Secret.fromSecretName(
+    chart,
+    "woodpecker-extension-github-secret-ref",
+    "woodpecker-extension-github-credentials",
+  );
 
   const deployment = new Deployment(chart, "woodpecker-config-extension", {
     replicas: 1,
@@ -72,6 +77,10 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
         WOODPECKER_API_TOKEN: EnvValue.fromSecretValue({
           secret: serverSecretRef,
           key: "WOODPECKER_API_TOKEN",
+        }),
+        GITHUB_APPROVAL_READ_TOKEN: EnvValue.fromSecretValue({
+          secret: githubSecretRef,
+          key: "GITHUB_DOWNLOAD_TOKEN",
         }),
         PORT: EnvValue.fromValue(CONFIG_EXTENSION_PORT.toString()),
       },
