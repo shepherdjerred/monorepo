@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
 import { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { register } from "#observability/metrics.ts";
+import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
 import { MAINTENANCE_QUERIES } from "./maintenance.ts";
 import {
   collectMaintenance,
@@ -56,7 +57,10 @@ describe("ops source collectors", () => {
     });
     const result = await collectMaintenance(
       prometheus,
-      { listVeleroSchedules: () => Promise.resolve([]) },
+      {
+        listVeleroSchedules: () => Promise.resolve([]),
+        listVeleroBackups: () => Promise.resolve([]),
+      },
       new Date("2026-10-01T12:00:00Z"),
     );
     expect(queries.toSorted()).toEqual(
@@ -110,6 +114,53 @@ describe("ops source collectors", () => {
     );
     expect(text).toContain(
       'renovate_updates_pending{state="open-pr",component="temporal-worker"} 0',
+    );
+  });
+
+  test("a failed inventory read retains old outcome evidence and its old observation time", async () => {
+    recordVeleroOutcomes(
+      [{ namespace: "velero", schedule: "daily", failed: true }],
+      new Date("2026-10-01T12:00:00Z"),
+    );
+    const beforeText = await metricsText();
+    const before = beforeText
+      .split("\n")
+      .filter((line) => line.startsWith("velero_schedule_"));
+    const prometheus = new PrometheusClient({
+      baseUrl: "http://prometheus:9090",
+      fetch: () =>
+        Promise.resolve(
+          Response.json({
+            status: "success",
+            data: { resultType: "vector", result: [] },
+          }),
+        ),
+    });
+    await expect(
+      collectMaintenance(
+        prometheus,
+        {
+          listVeleroSchedules: () => Promise.resolve([]),
+          listVeleroBackups: () =>
+            Promise.reject(new Error("inventory unavailable")),
+        },
+        new Date("2026-10-01T13:00:00Z"),
+      ),
+    ).rejects.toThrow("inventory unavailable");
+    const failedReadText = await metricsText();
+    expect(
+      failedReadText
+        .split("\n")
+        .filter((line) => line.startsWith("velero_schedule_")),
+    ).toEqual(before);
+    recordVeleroOutcomes(
+      [{ namespace: "velero", schedule: "new", failed: undefined }],
+      new Date("2026-10-01T13:00:00Z"),
+    );
+    const after = await metricsText();
+    expect(after).not.toContain("velero_schedule_last_terminal_failed{");
+    expect(after).toContain(
+      'velero_schedule_observation_timestamp_seconds{backup_namespace="velero",schedule="new",component="temporal-worker"} 1790859600',
     );
   });
 });

@@ -8,6 +8,7 @@ import {
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { CHANNEL, GUILD, LIBRARY, USER, webFixture } from "./web-fixture.ts";
 import { fixtureSports } from "./web-fixture-media.ts";
+import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 let fixture: ReturnType<typeof webFixture>;
 afterEach(() => {
@@ -134,6 +135,38 @@ describe("web media artwork", () => {
 });
 
 describe("web live sports", () => {
+  test("provider failures retain safe diagnostics without private data in logs or responses", async () => {
+    fixture = webFixture();
+    const timeout = new DOMException(
+      "private stream URL and credential",
+      "TimeoutError",
+    );
+    const network = Object.assign(new Error("private provider URL"), {
+      code: "ECONNRESET",
+    });
+    vi.spyOn(fixtureSports, "listToday").mockRejectedValueOnce(
+      new AggregateError([timeout, network], "private provider details"),
+    );
+    const logged = vi.spyOn(logger, "error").mockImplementation(vi.fn());
+    const response = await fixture.handler(get("/api/sports?guildId=" + GUILD));
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      code: "unavailable",
+      message: "Streambot could not complete this request. Try again shortly.",
+    });
+    expect(logged).toHaveBeenCalledExactlyOnceWith("web request failed", {
+      layer: "web",
+      endpoint: "/api/sports",
+      failure: {
+        kind: "aggregate",
+        causes: [{ kind: "timeout" }, { kind: "network" }],
+      },
+    });
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("private");
+    expect(JSON.stringify(logged.mock.calls)).not.toContain(GUILD);
+    expect(fixture.allocations()).toBe(0);
+  });
+
   test("the web provider choice reaches the catalog before fetching listings", async () => {
     fixture = webFixture();
     const listing = vi.spyOn(fixtureSports, "listToday");

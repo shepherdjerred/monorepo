@@ -2,6 +2,10 @@ source:
   github:
     - token_file: /secrets/password
       user: shepherdjerred
+      # This source lists authenticated repositories. v0.10.47 matches bare
+      # names; tab-dance/tabdance is the only discovered repository with this name.
+      exclude:
+        - tabdance
       wiki: true
       issues: true
       starred: false

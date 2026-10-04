@@ -50,23 +50,37 @@ in `beta` to drain retained executions. All other central queues are `prod`
 only. Schedule registration retires the old beta schedule without cancelling
 existing executions.
 
-| Role              | Queue or surface                                                                                              | Activity concurrency |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- | -------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage`, `agent-chat-photon` |          4 per queue |
-| `home`            | `home`                                                                                                        |                    4 |
-| `reports`         | `reports`                                                                                                     |                    4 |
-| `infra`           | `infra`                                                                                                       |                    1 |
-| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                                               |          1 per queue |
-| `scout`           | `scout`                                                                                                       |                    1 |
-| `agent`           | `agent-task`                                                                                                  |                    1 |
-| `glitter-corpus`  | `glitter-corpus`                                                                                              |                    1 |
-| `glitter-context` | `glitter-context`                                                                                             |                    1 |
-| `maintenance`     | `maintenance`                                                                                                 |                    1 |
-| `workflows`       | `monorepo-workflows`                                                                                          |                 none |
+| Role              | Queue or surface                                                                                              |               Activity concurrency |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage`, `agent-chat-photon` |                        4 per queue |
+| `home`            | `home`                                                                                                        |                                  4 |
+| `reports`         | `reports`                                                                                                     |                                  4 |
+| `infra`           | `infra`, `mining-reset`; bounded Ops collection on `ops`                                                      | 1 on each legacy queue; 4 on `ops` |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                                               |                        1 per queue |
+| `scout`           | `scout`                                                                                                       |                                  1 |
+| `agent`           | `agent-task`                                                                                                  |                                  1 |
+| `glitter-corpus`  | `glitter-corpus`                                                                                              |                                  1 |
+| `glitter-context` | `glitter-context`                                                                                             |                                  1 |
+| `maintenance`     | `maintenance`                                                                                                 |                                  1 |
+| `workflows`       | `monorepo-workflows`                                                                                          |                               none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
 credentials, concurrency, health, and metrics boundary.
+
+The infra process polls `ops` separately so every-five-minute snapshot fan-out
+can overlap four bounded reads while heavyweight infra automation stays serial.
+Ops queue routing is recorded with the `ops-isolated-activity-queue` Workflow
+patch. Histories created before that patch retain their `infra` Activity queue;
+the infra registry keeps the old Ops Activities available to drain them. The
+same worker credentials, pod limits, and metrics endpoint serve both queues.
+
+Woodpecker log retention uses the serial infra queue and a daily 04:45 Pacific
+Schedule with SKIP overlap, initially paused. The typed minimum retention is
+30 days and destructive execution defaults off. Exact candidates, protections,
+continuation cursors and deletion receipts remain in Workflow results; logs
+alone are deleted. See the [operator procedure](../docs/wiki/src/content/docs/how-to/retain-woodpecker-logs.md)
+for candidate rollout, dry-run review and activation.
 
 The agent worker keeps the Temporal poller at UID 0 and launches provider
 subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.

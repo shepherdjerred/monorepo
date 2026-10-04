@@ -77,11 +77,16 @@ function pluralize(count: number, noun: string): string {
 function sectionSummary(
   signals: readonly Signal[],
   failedSources: readonly SourceId[],
+  metrics: readonly Metric[],
 ): string {
   const attention = signals.filter((signal) => isAttention(signal.severity));
   const parts: string[] = [];
   if (attention.length > 0) {
     parts.push(pluralize(attention.length, "issue"));
+  }
+  const informational = signals.filter((signal) => signal.severity === "info");
+  if (informational.length > 0) {
+    parts.push(pluralize(informational.length, "informational signal"));
   }
   const needsMe = signals.filter((signal) => signal.needsMe).length;
   if (needsMe > 0) {
@@ -90,7 +95,13 @@ function sectionSummary(
   if (failedSources.length > 0) {
     parts.push(`no data from ${failedSources.join(", ")}`);
   }
-  return parts.length === 0 ? "All clear" : parts.join(" · ");
+  if (parts.length > 0) return parts.join(" · ");
+  if (metrics.some((metric) => isAttention(metric.severity))) {
+    return "Metrics need attention";
+  }
+  return metrics.some((metric) => metric.severity === "info")
+    ? "Informational data available"
+    : "All clear";
 }
 
 /** Signals sorted worst-first, then oldest-first. */
@@ -134,7 +145,7 @@ export function assembleSnapshot(input: AssembleInput): Snapshot {
       id: definition.id,
       title: definition.title,
       severity: worstSeverity(severities),
-      summary: sectionSummary(sectionSignals, failedSources),
+      summary: sectionSummary(sectionSignals, failedSources, metrics),
       sources: [...definition.sources],
       metrics,
       signals: sectionSignals,
@@ -158,7 +169,9 @@ function snapshotSummary(sections: readonly Section[]): string {
     section.signals.filter((signal) => signal.needsMe),
   ).length;
   if (needsMe === 0 && attention.length === 0) {
-    return "All systems healthy";
+    return sections.some((section) => section.severity === "info")
+      ? "No areas need attention · informational data available"
+      : "All systems healthy";
   }
   const parts: string[] = [];
   if (attention.length > 0) {

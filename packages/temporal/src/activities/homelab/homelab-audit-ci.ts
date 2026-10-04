@@ -42,11 +42,17 @@ const PipelineDetailSchema = PipelineSummarySchema.extend({
 });
 
 /**
- * One log line. `data` is a byte array rather than a string, so it has to be
- * decoded rather than concatenated.
+ * Go serializes log []byte as standard base64, or null for a nil byte slice.
+ * Reject noncanonical encodings rather than silently discarding corrupt bytes.
  */
 const LogEntrySchema = z.looseObject({
-  data: z.array(z.number().int()),
+  data: z
+    .string()
+    .refine(
+      (value) => Buffer.from(value, "base64").toString("base64") === value,
+      { message: "Woodpecker log data must be canonical base64" },
+    )
+    .nullable(),
 });
 const LogSchema = z.array(LogEntrySchema);
 
@@ -142,8 +148,13 @@ const LATEST_RED_STATUSES = new Set([
 ]);
 
 function decodeLog(entries: z.infer<typeof LogSchema>): string {
-  const bytes = entries.flatMap((entry) => entry.data);
-  return new TextDecoder().decode(Uint8Array.from(bytes));
+  const bytes = Buffer.concat(
+    entries.map((entry) =>
+      entry.data === null ? Buffer.alloc(0) : Buffer.from(entry.data, "base64"),
+    ),
+  );
+  // A UTF-8 sequence may cross chunk boundaries; decode only after joining.
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
 }
 
 function failedSteps(

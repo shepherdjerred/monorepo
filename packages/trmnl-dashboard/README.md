@@ -39,6 +39,8 @@ successful fetch time across failures; alerts detect failed, missing, or expired
 observations. Whisker's `lastSeen` remains informational because it records device
 changes rather than a polling heartbeat. Offline and robot faults have separate
 metrics and alerts.
+The `DRAWER_ALMOST_FULL` advisory does not set the robot-fault metric; explicit
+hardware-fault fields and unknown status codes remain actionable.
 
 `/api/pets` is controlled by the managed `pet-dashboard-enabled` flag and is
 absent (404) by default. The internal metrics endpoint remains available to the

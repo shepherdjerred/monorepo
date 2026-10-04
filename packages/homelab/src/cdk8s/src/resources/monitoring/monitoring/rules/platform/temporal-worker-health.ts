@@ -30,6 +30,8 @@ type TemporalDomainQueueDefinition = {
   candidateDeploymentPattern?: string;
   candidateServicePattern?: string;
   activityPoller: boolean;
+  /** False for queues exposing Activities only. */
+  workflowPoller?: boolean;
   servedNamespaces: readonly string[];
   /**
    * Namespaces that carry *workflow* pollers, when they differ from the
@@ -122,6 +124,15 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-infra-worker",
       servicePattern: ".*temporal-infra-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod"],
+    },
+    {
+      queue: "ops",
+      metricsNamespace: "temporal",
+      deploymentPattern: "temporal-temporal-infra-worker",
+      servicePattern: ".*temporal-infra-worker.*metrics.*",
+      activityPoller: true,
+      workflowPoller: false,
       servedNamespaces: ["prod"],
     },
     {
@@ -218,7 +229,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
                 "The domain queue has had no activity-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
             },
             expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-              `count(sum by (exported_namespace) (temporal_worker_num_pollers{${pollerSelector},poller_type="activity_task"})) < ${String(definition.servedNamespaces.length)}`,
+              `(count(sum by (exported_namespace) (temporal_worker_num_pollers{${pollerSelector},poller_type="activity_task"}) > 0) or vector(0)) < ${String(definition.servedNamespaces.length)}`,
             ),
             for: "5m",
             labels,
@@ -229,19 +240,23 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
       ? `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5 or histogram_quantile(0.95, sum by (le) (rate(temporal_worker_activity_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5`
       : `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5`;
     return [
-      {
-        alert: "TemporalDomainWorkflowPollerUnavailable",
-        annotations: {
-          summary: `Temporal workflow poller unavailable for ${definition.queue}`,
-          description:
-            "The domain queue has had no workflow-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `count(sum by (exported_namespace) (temporal_worker_num_pollers{${workflowPollerSelector},poller_type="workflow_task"})) < ${String(workflowNamespaces.length)}`,
-        ),
-        for: "5m",
-        labels,
-      },
+      ...(definition.workflowPoller === false
+        ? []
+        : [
+            {
+              alert: "TemporalDomainWorkflowPollerUnavailable",
+              annotations: {
+                summary: `Temporal workflow poller unavailable for ${definition.queue}`,
+                description:
+                  "The domain queue has had no workflow-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
+              },
+              expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+                `count(sum by (exported_namespace) (temporal_worker_num_pollers{${workflowPollerSelector},poller_type="workflow_task"})) < ${String(workflowNamespaces.length)}`,
+              ),
+              for: "5m",
+              labels,
+            },
+          ]),
       ...activityRules,
       {
         alert: "TemporalDomainQueueBacklog",

@@ -23,6 +23,7 @@ const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
   [TASK_QUEUES.HOME]: "home",
   [TASK_QUEUES.REPORTS]: "reports",
   [TASK_QUEUES.INFRA]: "infra",
+  [TASK_QUEUES.OPS]: "infra",
   [TASK_QUEUES.MINING_RESET]: "infra",
   [TASK_QUEUES.REPO_AUTOMATION]: "repo",
   [TASK_QUEUES.SCOUT]: "scout",

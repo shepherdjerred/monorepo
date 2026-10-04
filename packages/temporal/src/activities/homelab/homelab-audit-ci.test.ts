@@ -42,10 +42,65 @@ function pipelineUrl(number: number): string {
   return `https://woodpecker.sjer.red/repos/7/pipeline/${number.toString()}`;
 }
 
-/** Log bytes as the API returns them: per-line arrays of byte values. */
-function logBytes(text: string): { data: number[] }[] {
-  return [{ data: [...new TextEncoder().encode(text)] }];
+/** Go []byte values are serialized as standard base64 strings. */
+function logBytes(text: string): { data: string }[] {
+  return [{ data: Buffer.from(text, "utf8").toString("base64") }];
 }
+
+function collectFailedLog(log: unknown) {
+  return collectCiMainWith({
+    now: NOW,
+    pipelineUrl,
+    request: (path) =>
+      Promise.resolve(
+        path.includes("/logs/")
+          ? log
+          : path.includes("/pipelines?")
+            ? [summary(102, "failure")]
+            : detail(102, "failure", { id: 777, name: "root verify" }),
+      ),
+  });
+}
+
+describe("Woodpecker log wire format", () => {
+  test("joins base64 bytes before decoding UTF-8 split across chunks", async () => {
+    const text = "compiler: café 🐑\n";
+    const bytes = Buffer.from(text, "utf8");
+    const offset = bytes.indexOf(0xc3) + 1;
+    const result = await collectFailedLog([
+      { data: bytes.subarray(0, offset).toString("base64") },
+      { data: bytes.subarray(offset).toString("base64") },
+    ]);
+    expect(result.check.status).toBe("passed");
+    expect(result.findings[0]?.detail).toContain(text.trim());
+  });
+
+  test("accepts nil Go byte slices between valid log chunks", async () => {
+    const result = await collectFailedLog([
+      ...logBytes("first line\n"),
+      { data: null, type: 0 },
+      ...logBytes("failure cause\n"),
+    ]);
+    expect(result.check.status).toBe("passed");
+    expect(result.findings[0]?.detail).toContain("first line\nfailure cause");
+  });
+
+  test.each(["not base64!", "Zg=", "Zh==", "raw café", [65, 66], 4])(
+    "fails collection on corrupt or unknown wire data %j",
+    async (data) => {
+      const result = await collectFailedLog([{ data }]);
+      expect(result.check.status).toBe("failed");
+      expect(result.evidence.status).toBe("failure");
+      expect(result.findings).toEqual([]);
+    },
+  );
+
+  test("rejects corrupt UTF-8 rather than inserting a replacement character", async () => {
+    const result = await collectFailedLog([{ data: "/w==" }]);
+    expect(result.check.status).toBe("failed");
+    expect(result.evidence.status).toBe("failure");
+  });
+});
 
 describe("CI homelab collector", () => {
   test("paginates over every main pipeline in the 24-hour window", async () => {
