@@ -56,6 +56,9 @@ import { pollBlueBubblesMessages } from "./agent/imessage/poll.ts";
 import { prepareImessageCommand } from "./agent/imessage/prepare.ts";
 import { deliverImessageResponse } from "./agent/imessage/deliver.ts";
 import { waitForImessageCommand } from "./agent/imessage/wait.ts";
+import { preparePhotonCommand } from "./agent/photon/prepare.ts";
+import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
+import { waitForPhotonCommand } from "./agent/photon/wait.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -151,6 +154,7 @@ export const billingActivities = {
 };
 
 export const agentChatIngressActivities = {
+  waitForPhotonCommand,
   ...discordAgentChatActivities,
   ...httpAgentChatActivities,
 };
@@ -164,4 +168,8 @@ export const imessageAgentChatActivities = {
   prepareImessageCommand,
   deliverImessageResponse,
   waitForImessageCommand,
+};
+export const photonAgentChatActivities = {
+  preparePhotonCommand,
+  deliverPhotonResponse,
 };

@@ -154,6 +154,15 @@ import type {
 } from "#shared/agent/agent-chat-imessage.ts";
 import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
+import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
+import { photonConversationWorkflow as _photonConversationWorkflow } from "./photon/conversation.ts";
+
+export const photonConversationWorkflow = (
+  ...args: Parameters<typeof _photonConversationWorkflow>
+) => _photonConversationWorkflow(...args);
+export const photonAgentChatWorkflow = (
+  ...args: Parameters<typeof _photonAgentChatWorkflow>
+) => _photonAgentChatWorkflow(...args);
 
 export async function blueBubblesIngressWorkflow(
   cursor: BlueBubblesCursor,

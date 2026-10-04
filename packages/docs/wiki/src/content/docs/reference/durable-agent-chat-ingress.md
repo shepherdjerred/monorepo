@@ -1,11 +1,11 @@
 ---
 title: Durable agent chat ingress
-description: BlueBubbles, HTTP, and Discord contracts for starting, selecting, listing, and continuing Temporal-backed agent chats.
+description: Photon, BlueBubbles, HTTP, and Discord contracts for starting, selecting, listing, and continuing Temporal-backed agent chats.
 ---
 
-The Temporal control worker owns BlueBubbles polling, a transport-neutral HTTP
+The Temporal control worker owns Photon webhooks, BlueBubbles polling, a transport-neutral HTTP
 contract, and a dedicated Discord slash command for durable Claude Code and Codex chats.
-HTTP clients and BlueBubbles share the chat runtime. The Discord adapter starts a
+All transports share the chat runtime. The Discord adapter starts a
 durable command Workflow that calls the same chat client; it does not create a
 separate conversation store. See the
 [HTTP adapter](https://github.com/shepherdjerred/monorepo/blob/fe62b26b0b0a306eee682e3f351bb9be47536d6d/packages/temporal/src/event-bridge/agent-chat-api.ts),
@@ -217,6 +217,32 @@ Sources: [connector bootstrap](https://github.com/shepherdjerred/monorepo/blob/7
 [message Workflow](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/workflows/imessage/message.ts),
 [owner and model configuration](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/config/imessage.ts),
 and [bounded polling](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/activities/agent/imessage/poll.ts).
+
+## Photon iMessage webhook
+
+| Contract            | Value                                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Route               | Signed `POST /webhooks/photon` on the existing agent task API origin                                                                       |
+| Credentials         | `SPECTRUM_PROJECT_ID`, `SPECTRUM_PROJECT_SECRET`, `SPECTRUM_WEBHOOK_SECRET`; gateway only                                                  |
+| Admission flags     | `temporal-agent-chat-photon-enabled` and `temporal-agent-chat-photon-owners`; default off and `[]`                                         |
+| Signature           | SDK native Spectrum verifier; HMAC over raw bytes; five-minute past/future timestamp window                                                |
+| Accepted input      | Allowlisted inbound iMessage text in direct conversations                                                                                  |
+| Commands and models | Same text commands and model flags as BlueBubbles above; initial plain text returns `/new` instructions                                    |
+| Identity            | `kind: imessage`; Photon-prefixed hash of project and space; message ID includes the source message ID                                     |
+| Acknowledgement     | HTTP 200 after a completed Temporal admission Update, or for a duplicate/ignored/disabled delivery                                         |
+| Errors              | 400 malformed input; 401 invalid signature; 409 conflicting recent message identity; 413 oversized body; 503 unavailable or full admission |
+| Queue bounds        | 50 pending commands, 100 recent fingerprints, 500,000 serialized state bytes; 128,000 webhook bytes                                        |
+| Ordering            | One command settles before the next; older source timestamps receive a resend response without inference                                   |
+| Rollover            | Continue-As-New after 100 settled commands or a Temporal history-size suggestion; queued input and ordering survive                        |
+| Activities          | Control-owned `agent-chat-photon` for preparation/delivery; `agent-chat-ingress` for long waits                                            |
+| Reply               | Original Photon space and assigned line; checkpointed provider result; one Workflow delivery attempt                                       |
+| Outage boundary     | Durability follows gateway receipt; Photon can exhaust its finite ingress retries; no history reconciliation                               |
+| Inspection          | `photonConversationState` query, child execution history, `photon_webhook_total`, `photon_delivery_total`                                  |
+| Rollback            | Disabled admission acknowledges new deliveries without dispatch; accepted commands finish                                                  |
+
+Source: [Temporal package contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md),
+[gateway mount](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/event-bridge/agent-task-api.ts),
+and [registered Workflows](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/index.ts).
 
 ## Error contract
 
