@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
+import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Material;

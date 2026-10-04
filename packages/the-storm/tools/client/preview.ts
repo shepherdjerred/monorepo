@@ -5,8 +5,10 @@ import path from "node:path";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
-import { startServer, stormTestConfig } from "#e2e/harness/server.ts";
+import { startServer } from "#e2e/harness/server.ts";
+import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
+import { rwfRecordingSalt } from "#e2e/harness/rwf-settings.ts";
 import { startControl, ViewpointsSchema } from "./control.ts";
 import {
   request,
@@ -116,12 +118,12 @@ async function run(
   );
   const configs = options.vanilla
     ? {
-        stormConfig: stormTestConfig(
+        stormConfig: stormModuleConfig(
           await Bun.file(path.join(ownedConfigDir, "config.yml")).text(),
           [],
         ),
       }
-    : await gameplayFixtures(packageRoot, true);
+    : await gameplayFixtures(packageRoot, "full");
   const server = await startServer({
     cacheDir: path.join(packageRoot, ".cache/client/server"),
     bootTimeoutMs: 180_000,
@@ -129,6 +131,13 @@ async function run(
     stormJar: path.join(packageRoot, "plugin/dist/build/libs/TheStorm.jar"),
     ...configs,
     ownedConfigDir,
+    env: {
+      FLIPT_URL: `http://host.docker.internal:${brain.port.toString()}`,
+      FLIPT_ENVIRONMENT: "prod",
+      RWF_RECORDING_SALT: rwfRecordingSalt,
+      DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
+      DISCORD_CHANNEL_ID: "1",
+    },
     brain: {
       baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
       token: brainToken,

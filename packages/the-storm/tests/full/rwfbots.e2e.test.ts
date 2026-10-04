@@ -33,7 +33,8 @@ import {
   type StatsRow,
   type Team,
 } from "#e2e/harness/rwfbots.ts";
-import { serverLogs, type ServerInfo } from "#e2e/harness/server.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import type { ServerInfo } from "#e2e/harness/server.ts";
 import { querySqlite } from "#e2e/harness/storm-data.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 
