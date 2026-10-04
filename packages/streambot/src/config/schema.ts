@@ -163,13 +163,24 @@ export const ConfigSchema = z.strictObject({
     /**
      * Seconds of input demuxed at full speed before `readrate` pacing engages (ffmpeg's
      * `-readrate_initial_burst`; its built-in default is 0.5s). The send pacer forwards this
-     * pre-roll into the Discord receiver's jitter buffer, giving the otherwise zero-margin
+     * pre-roll into the Discord receiver's jitter buffer (which holds at most
+     * `videoPlayoutDelayMaxMs` of it), giving the otherwise zero-margin
      * realtime pipeline a cushion: transient production dips (heavy-bitrate scenes on 4K HDR
      * remuxes) drain the cushion instead of stuttering playback, and `readrate` lets ffmpeg catch
      * back up to the wall-clock line afterwards. Bounded (a few MB of media), so it cannot recreate
      * the unbounded buffer growth / GC pauses that `readrate: 1` was introduced to fix.
      */
     readrateInitialBurst: z.number().positive().default(2.5),
+    /**
+     * Go Live jitter-buffer ceiling advertised to viewers through the RTP playout-delay extension
+     * (minimum stays 0). libwebrtc receivers treat `min = 0, max <= 500 ms` as a low-latency
+     * stream and render each frame the moment it decodes, so any delivery jitter or NACK
+     * retransmit shows up as a visible hitch. The fork's 100 ms default suits an interactive game
+     * stream, not a film. Above 500 ms the receiver smooths playout and grows its buffer, within
+     * this bound, only as far as the measured network jitter requires. That headroom is also the
+     * only place the `readrateInitialBurst` pre-roll can actually land.
+     */
+    videoPlayoutDelayMaxMs: z.number().int().min(0).max(40_950).default(1000),
   }),
   voice: VoiceConfigSchema.default({
     enabled: false,
