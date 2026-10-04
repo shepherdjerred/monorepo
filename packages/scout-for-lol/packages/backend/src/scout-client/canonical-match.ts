@@ -12,6 +12,12 @@ import {
   LOCAL_MATCH_TIMING_DRIFT_MS,
   convertLcuMatchBundle,
 } from "./canonical/lcu-match.ts";
+import {
+  type IdentityMap,
+  lcuUuidsIn,
+  readIdentityAliases,
+  translatePayloadIdentities,
+} from "./identity-alias.ts";
 
 export const LOCAL_CANONICAL_DELAY_MS = 2 * 60 * 1000;
 
@@ -30,18 +36,34 @@ function embeddedPayload(payload: unknown): unknown {
   return embedded.success ? embedded.data.data : payload;
 }
 
+/** A Riot API PUUID: the only player identity a canonical match may carry. */
+const RIOT_PUUID_LENGTH = 78;
+
 /**
  * Accept only complete Match-V5-compatible local evidence with identities that
  * agree with both the requested match and verified observer. Complete LCU
  * Match-V5 `info` objects can safely receive their missing metadata wrapper;
  * legacy match-history rows remain partial evidence and are never promoted.
+ *
+ * The payload names players by League-client UUID and is translated through
+ * `identities` first. A match that still names anyone by UUID afterwards is
+ * refused: a canonical match is read by everything downstream as Riot data,
+ * and an identity from the other namespace would join to nothing at best and
+ * to the wrong rows at worst.
  */
 export function parseLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
   candidate: Candidate,
+  identities: IdentityMap = new Map(),
 ): RawMatch | null {
   const platform = platformRouteOf(riotMatchId);
-  const payload = embeddedPayload(candidate.payload);
+  const payload = embeddedPayload(
+    translatePayloadIdentities(candidate.payload, identities),
+  );
+  const localPuuid =
+    candidate.localPuuid === null
+      ? null
+      : (identities.get(candidate.localPuuid) ?? candidate.localPuuid);
   const localBundle = convertLcuMatchBundle(riotMatchId, payload);
   const complete = RawMatchSchema.safeParse(localBundle ?? payload);
   const infoOnly = complete.success ? null : RawInfoSchema.safeParse(payload);
@@ -63,15 +85,24 @@ export function parseLocalCanonicalMatch(
     : infoMatch?.success === true
       ? infoMatch.data
       : null;
-  if (match === null) return null;
+  if (match === null || localPuuid === null) return null;
   return match.metadata.matchId !== riotMatchId ||
     match.info.platformId.toUpperCase() !== platform ||
     candidate.platformId?.toUpperCase() !== platform ||
     `${platform}_${match.info.gameId.toString()}` !== riotMatchId ||
-    candidate.localPuuid === null ||
-    !match.metadata.participants.includes(candidate.localPuuid)
+    !match.metadata.participants.includes(localPuuid) ||
+    match.metadata.participants.some(
+      (puuid) => puuid.length !== RIOT_PUUID_LENGTH,
+    )
     ? null
     : match;
+}
+
+/** The aliases a stored candidate needs before it can be parsed. */
+async function candidateIdentities(candidate: Candidate): Promise<IdentityMap> {
+  const uuids = new Set(lcuUuidsIn(candidate.payload));
+  if (candidate.localPuuid !== null) uuids.add(candidate.localPuuid);
+  return readIdentityAliases(uuids);
 }
 
 /** Read the already-fixed local source without selecting a new one. */
@@ -86,6 +117,7 @@ export async function readSelectedLocalCanonicalMatch(
   const match = parseLocalCanonicalMatch(
     riotMatchId,
     selected.sourceObservation,
+    await candidateIdentities(selected.sourceObservation),
   );
   if (match === null) {
     throw ApplicationFailure.nonRetryable(
@@ -154,8 +186,14 @@ export async function resolveLocalCanonicalMatch(
     },
     orderBy: [{ capturedAt: "asc" }, { observationId: "asc" }],
   });
-  const valid = candidates.flatMap((candidate) => {
-    const match = parseLocalCanonicalMatch(riotMatchId, candidate);
+  const parsed = await Promise.all(
+    candidates.map(async (candidate) => ({
+      candidate,
+      identities: await candidateIdentities(candidate),
+    })),
+  );
+  const valid = parsed.flatMap(({ candidate, identities }) => {
+    const match = parseLocalCanonicalMatch(riotMatchId, candidate, identities);
     return match === null ? [] : [{ candidate, match }];
   });
   if (valid.length === 0) return null;
@@ -182,6 +220,7 @@ export async function resolveLocalCanonicalMatch(
   const resolved = parseLocalCanonicalMatch(
     riotMatchId,
     chosen.sourceObservation,
+    await candidateIdentities(chosen.sourceObservation),
   );
   if (resolved === null) conflictingCandidates(riotMatchId);
   return resolved;
