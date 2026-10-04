@@ -131,6 +131,10 @@ final class RwfMatchFlowTest {
     assertThat(armed(bombId)).isTrue();
     assertThat(block.getBlock().getType()).isEqualTo(Material.AIR);
     assertThat(harness.rwf.getEntitiesByClass(TNTPrimed.class)).hasSize(1);
+    // Armed TNT floats on its site: no gravity and no spawn push, or nobody could reach it.
+    var armedTnt = harness.rwf.getEntitiesByClass(TNTPrimed.class).iterator().next();
+    assertThat(armedTnt.hasGravity()).isFalse();
+    assertThat(armedTnt.getVelocity().lengthSquared()).isZero();
 
     // The owners defuse it: a bot on that team, through the actions port, within reach.
     var defuser = botOn(enemy);

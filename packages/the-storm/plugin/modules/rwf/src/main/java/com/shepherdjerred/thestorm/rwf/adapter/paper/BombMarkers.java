@@ -18,6 +18,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.util.Vector;
 
 /**
  * What a bomb looks like in the world: the TNT block while idle, primed TNT floating on the spot
@@ -102,6 +103,9 @@ final class BombMarkers {
                 entity -> {
                   entity.setFuseTicks(ENTITY_FUSE_TICKS);
                   entity.setGravity(false);
+                  // Vanilla gives fresh primed TNT a random sideways push and
+                  // 0.2 upward; without gravity it would drift out of reach.
+                  entity.setVelocity(new Vector());
                   entity.setInvulnerable(true);
                   entity.setPersistent(false);
                   keys.tagBomb(entity, bombId);
@@ -137,8 +141,20 @@ final class BombMarkers {
     world().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 4, 1);
   }
 
-  /** Updates every hologram from {@code snapshot}. */
+  /** Updates every hologram from {@code snapshot} and keeps armed TNT pinned to its site. */
   void update(MatchSnapshot snapshot) {
+    for (var entry : primed.entrySet()) {
+      var site = sites.get(entry.getKey());
+      var tnt = entry.getValue();
+      if (site == null || !tnt.isValid()) {
+        continue;
+      }
+      var home = Places.center(world(), site.position());
+      if (tnt.getLocation().distanceSquared(home) > 0.01 || tnt.getVelocity().lengthSquared() > 0) {
+        tnt.setVelocity(new Vector());
+        tnt.teleport(home);
+      }
+    }
     for (var view : snapshot.bombs()) {
       var hologram = holograms.get(view.id());
       var site = sites.get(view.id());
