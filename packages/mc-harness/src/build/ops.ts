@@ -1,5 +1,6 @@
 import { withoutNeighborDerived } from "@shepherdjerred/mc-build/core/block-state.ts";
-import { BlockGrid, gridFromRegionRead, type Vec3 } from "@shepherdjerred/mc-build/core/grid.ts";
+import type { BlockGrid} from "@shepherdjerred/mc-build/core/grid.ts";
+import { gridFromRegionRead, type Vec3 } from "@shepherdjerred/mc-build/core/grid.ts";
 import type { Box, WeOp } from "#protocol/bridge.ts";
 import type { Op } from "#protocol/build.ts";
 import type { DaemonClient } from "./daemon-client.ts";
@@ -56,7 +57,7 @@ export async function runOps(context: RunContext, ops: readonly Op[]): Promise<n
   let batch: WeOp[] = [];
   let batchWorld: string | null = null;
   const flush = async () => {
-    if (batch.length > 0 && batchWorld !== null) {
+    if (batchWorld !== null && batch.length > 0) {
       await runWeBatch(context, batchWorld, batch);
     }
     batch = [];

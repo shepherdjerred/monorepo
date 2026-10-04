@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { BlockGrid, gridFromRegionRead } from "@shepherdjerred/mc-build/core/grid.ts";
+import type { BlockGrid} from "@shepherdjerred/mc-build/core/grid.ts";
+import { gridFromRegionRead } from "@shepherdjerred/mc-build/core/grid.ts";
 import { RegionReadSchema } from "@shepherdjerred/mc-build/core/region-read.ts";
 import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { SiteInfoSchema, type SiteInfo } from "@shepherdjerred/mc-build/core/site.ts";

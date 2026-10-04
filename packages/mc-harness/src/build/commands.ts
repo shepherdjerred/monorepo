@@ -377,6 +377,7 @@ export async function buildStatus(
   const manifest = await workspace.manifest();
   const { ops } = await workspace.oplog();
   const program = ops.filter((op) => op.source.startsWith("program:")).length;
-  const applies = (await env.journal.list()).filter((entry) => entry.buildDir === workspace.dir);
+  const entries = await env.journal.list();
+  const applies = entries.filter((entry) => entry.buildDir === workspace.dir);
   return { manifest, ops: { manual: ops.length - program, program }, applies };
 }

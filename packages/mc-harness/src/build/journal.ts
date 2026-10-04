@@ -69,7 +69,8 @@ export class Journal {
   }
 
   async find(applyId: string): Promise<JournalEntry> {
-    const entry = (await this.list()).find((candidate) => candidate.applyId === applyId);
+    const entries = await this.list();
+    const entry = entries.find((candidate) => candidate.applyId === applyId);
     if (entry === undefined) {
       throw new Error(`No journal entry ${applyId}`);
     }
