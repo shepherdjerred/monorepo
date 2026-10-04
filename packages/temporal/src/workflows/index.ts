@@ -272,13 +272,9 @@ export async function welcomeHome(firstArrival = true): Promise<void> {
   return _welcomeHome(firstArrival);
 }
 
-export async function leavingHome(): Promise<void> {
-  return _leavingHome();
-}
+export const leavingHome = (): Promise<void> => _leavingHome();
 
-export async function reconcileLock(): Promise<void> {
-  return _reconcileLock();
-}
+export const reconcileLock = (): Promise<void> => _reconcileLock();
 
 export const petCareAlerts = (s: PetCareAlertsState = {}) => _petCareAlerts(s);
 
