@@ -18,12 +18,26 @@ final class Keys {
   private final NamespacedKey entity;
   private final NamespacedKey run;
   private final NamespacedKey gear;
+  private final NamespacedKey upgrade;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "arena_item");
     this.entity = new NamespacedKey(plugin, "arena_entity");
     this.run = new NamespacedKey(plugin, "survival_run");
     this.gear = new NamespacedKey(plugin, "arena_gear");
+    this.upgrade = new NamespacedKey(plugin, "survival_upgrade");
+  }
+
+  int upgrade(ItemStack stack) {
+    if (stack.isEmpty() || !stack.hasItemMeta()) return 0;
+    var value =
+        stack.getItemMeta().getPersistentDataContainer().get(upgrade, PersistentDataType.INTEGER);
+    return value == null ? 0 : value;
+  }
+
+  void upgrade(ItemStack stack, int tier) {
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(upgrade, PersistentDataType.INTEGER, tier));
   }
 
   /** Marks {@code stack} as an arena item. */

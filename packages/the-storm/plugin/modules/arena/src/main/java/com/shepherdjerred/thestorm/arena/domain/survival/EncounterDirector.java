@@ -3,7 +3,7 @@ package com.shepherdjerred.thestorm.arena.domain.survival;
 import java.util.List;
 import java.util.Set;
 
-/** Endless encounters with bounded concurrent entities and authored unlock requirements. */
+/** Smooth pressure budgets: special enemies spend a limited share of each encounter. */
 public final class EncounterDirector {
   public enum Event {
     HORDE,
@@ -23,38 +23,106 @@ public final class EncounterDirector {
       String boss,
       int concurrentLimit,
       int spawnBatch,
-      int spawnIntervalSeconds) {}
+      int spawnIntervalSeconds,
+      int specialBudget,
+      int rangedLimit) {}
 
   private EncounterDirector() {}
 
   public static Encounter plan(int round, int players, Set<String> open) {
-    if (round < 1 || players < 1 || players > 4) {
+    if (round < 1 || players < 1 || players > 4)
       throw new IllegalArgumentException("Invalid encounter");
-    }
+    var extra = players - 1;
+    var boss = round % 5 == 0 ? boss(round, open) : "";
     var event = event(round, open);
-    var opening = round <= 3;
-    var count =
-        opening
-            ? 4 + round * 2 + (players - 1) * 3
-            : (int) Math.min(160, 8L + round * 3L + (players - 1) * 5L);
-    var health = opening ? 0.45 + round * 0.15 : Math.min(8, 1 + (round - 1) * 0.08);
-    var damage = opening ? 0.35 + round * 0.15 : Math.min(3, 1 + (round - 1) * 0.025);
+    var count = Math.min(160, count(round, !boss.isEmpty()) + extra * 3);
+    var specials =
+        round < 6
+            ? 0
+            : Math.max(1, (int) (count * Math.min(.25, .10 + Math.max(0, round - 8) * .01)));
     return new Encounter(
         event,
         count,
-        health,
-        damage,
+        health(round),
+        damage(round),
         roster(event, round),
-        round % 5 == 0 ? boss(round, open) : "",
-        opening ? 2 + round + (players - 1) * 2 : 32,
-        opening ? 1 : 4,
-        opening ? 3 : 1);
+        boss,
+        Math.min(32, cap(round, !boss.isEmpty()) + extra * 2),
+        1,
+        round <= 3 ? 3 : round <= 7 ? 2 : 1,
+        specials,
+        rangedLimit(round, players));
+  }
+
+  private static int count(int round, boolean boss) {
+    if (boss) return round == 5 ? 4 : Math.min(40, 6 + (round / 5 - 2) * 2);
+    return switch (round) {
+      case 1 -> 6;
+      case 2 -> 8;
+      case 3 -> 10;
+      case 4 -> 12;
+      case 6 -> 16;
+      case 7 -> 18;
+      default -> (int) Math.min(160, 20L + Math.max(0, round - 8) * 2L);
+    };
+  }
+
+  private static int cap(int round, boolean boss) {
+    if (boss) return round == 5 ? 3 : Math.min(20, 7 + round / 10);
+    return switch (round) {
+      case 1 -> 3;
+      case 2 -> 4;
+      case 3 -> 5;
+      case 4 -> 6;
+      case 6 -> 7;
+      case 7 -> 8;
+      default -> Math.min(20, 9 + Math.max(0, round - 8) / 2);
+    };
+  }
+
+  private static double health(int round) {
+    return switch (round) {
+      case 1 -> .60;
+      case 2 -> .75;
+      case 3 -> .90;
+      case 4, 5 -> 1;
+      case 6 -> 1.05;
+      case 7 -> 1.10;
+      default -> Math.min(8, 1.15 + (round - 8) * .07);
+    };
+  }
+
+  private static double damage(int round) {
+    return switch (round) {
+      case 1 -> .50;
+      case 2 -> .65;
+      case 3 -> .80;
+      case 4, 5 -> .85;
+      case 6 -> .90;
+      case 7 -> .95;
+      default -> Math.min(3, 1 + (round - 8) * .02);
+    };
+  }
+
+  private static int rangedLimit(int round, int players) {
+    if (round < 6) return 0;
+    if (round <= 7) return players == 1 ? 1 : 2;
+    return Math.min(4, 1 + players / 2 + round / 15);
+  }
+
+  public static double bossHealth(int round, int players) {
+    if (round < 5 || round % 5 != 0 || players < 1 || players > 4)
+      throw new IllegalArgumentException("Invalid boss");
+    return Math.min(1000, (40 + 12.0 * round) * (1 + (players - 1) * 0.55));
+  }
+
+  public static boolean ranged(String id) {
+    return Set.of("pillager", "bogged", "parched", "blaze", "witch", "skeleton-horseman")
+        .contains(id);
   }
 
   private static Event event(int round, Set<String> open) {
-    if (round % 5 == 0 || round < 3) {
-      return Event.HORDE;
-    }
+    if (round < 8 || round % 5 == 0) return Event.HORDE;
     return switch (round % 6) {
       case 0 -> open.contains("barracks") ? Event.ILLAGER_SIEGE : Event.HORDE;
       case 1 -> Event.OMINOUS_TRIAL;
@@ -66,13 +134,14 @@ public final class EncounterDirector {
   }
 
   private static List<String> roster(Event event, int round) {
+    if (round < 6) return round == 1 ? List.of("zombie") : List.of("zombie", "husk");
     return switch (event) {
       case HORDE ->
-          round <= 3
-              ? round == 1 ? List.of("zombie") : List.of("zombie", "husk")
-              : List.of("zombie", "husk", "spider", "bogged", "parched", "sulfur-cube");
+          round < 8
+              ? List.of("pillager")
+              : List.of("spider", "bogged", "arena-slime", "sulfur-cube");
       case ILLAGER_SIEGE -> List.of("pillager", "vindicator", "witch");
-      case OMINOUS_TRIAL -> List.of("bogged", "cave-spider", "sulfur-cube", "gale-sovereign");
+      case OMINOUS_TRIAL -> List.of("bogged", "cave-spider", "sulfur-cube");
       case MOUNTED_ASSAULT -> List.of("camel-husk-jockey", "zombie-horseman", "skeleton-horseman");
       case PALE_INCURSION -> List.of("vex", "wither-skeleton", "bogged");
       case NETHER_BREACH -> List.of("blaze", "brute-guard", "magma-cube", "wither-skeleton");

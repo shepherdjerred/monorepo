@@ -22,6 +22,42 @@ public final class SurvivalGame {
   private Phase phase = Phase.LOBBY;
   private Instant deadline = Instant.MIN;
   private int round;
+  private int startRound = 1;
+  private boolean debug;
+
+  public boolean debug() {
+    return debug;
+  }
+
+  public int startRound() {
+    return startRound;
+  }
+
+  public boolean debugStart(int target) {
+    if (target < 1 || target > 1000 || phase != Phase.LOBBY) return false;
+    if (!players.isEmpty() && (!debug || startRound != target)) return false;
+    debug = true;
+    startRound = target;
+    round = target - 1;
+    return true;
+  }
+
+  public boolean purchaseSelfRevive(UUID id) {
+    var player = players.get(id);
+    if (player == null || player.status() != Survivor.Status.STANDING || player.selfRevive())
+      return false;
+    players.put(
+        id,
+        new Survivor(
+            player.id(),
+            player.name(),
+            player.role(),
+            player.status(),
+            player.ready(),
+            true,
+            player.bleedout()));
+    return true;
+  }
 
   public Collection<Survivor> players() {
     return List.copyOf(players.values());
@@ -197,6 +233,8 @@ public final class SurvivalGame {
     players.clear();
     phase = Phase.LOBBY;
     round = 0;
+    startRound = 1;
+    debug = false;
     deadline = Instant.MIN;
   }
 }

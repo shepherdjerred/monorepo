@@ -16,6 +16,7 @@ public final class BossMechanics {
 
   public record Cast(Shape shape, Point origin, Point aim, Instant impact, int phase) {
     public boolean hits(Point point) {
+      if (Math.abs(point.y() - aim.y()) > 2.5) return false;
       var dx = point.x() - origin.x();
       var dz = point.z() - origin.z();
       var length = Math.hypot(aim.x() - origin.x(), aim.z() - origin.z());

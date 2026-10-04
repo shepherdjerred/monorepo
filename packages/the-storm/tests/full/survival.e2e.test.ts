@@ -3,7 +3,7 @@ import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
-const at = (x: number, y: number, z: number) => new Vec3(x + 1200, y, z + 1616);
+const at = (x: number, y: number, z: number) => new Vec3(x, y, z);
 
 describe("settlement opening on real Paper", () => {
   test(
@@ -79,9 +79,19 @@ describe("settlement opening on real Paper", () => {
           messages.some((message) => /self-revive|Downed!/u.test(message)),
         ).toBe(false);
         expect(bot.health).toBeGreaterThan(0);
-        expect(
-          bot.inventory.items().find((item) => item.name === "emerald")?.count,
-        ).toBe(12);
+        const emeralds = bot.inventory
+          .items()
+          .find((item) => item.name === "emerald")?.count;
+        const nuke = messages.some((m) => m.includes("Team power-up: NUKE"));
+        const double = messages.some((m) =>
+          m.includes("Team power-up: DOUBLE_EMERALDS"),
+        );
+        if (!nuke && !double) expect(emeralds).toBe(12);
+        else {
+          expect(emeralds).toBeGreaterThanOrEqual(nuke ? 2 : 12);
+          expect(emeralds).toBeLessThanOrEqual(double ? 24 : 12);
+          expect((emeralds ?? 0) % 2).toBe(0);
+        }
       } finally {
         bot.deactivateItem();
         bot.off("messagestr", listen);
@@ -113,8 +123,6 @@ describe("settlement survival on real Paper", () => {
     await round;
 
     async function travel(x: number, z: number) {
-      x += 1200;
-      z += 1616;
       await rcon.command(
         `tp ${bot.username} ${x.toString()} 73 ${z.toString()}`,
       );
@@ -132,31 +140,31 @@ describe("settlement survival on real Paper", () => {
       if (node === null) throw new Error("Node is missing");
       await bot.activateBlock(node);
     }
-    await travel(564.5, 526.5);
-    await gather(at(562, 73, 524));
+    await travel(1759.5, 2147.5);
+    await gather(at(1757, 73, 2146));
     await waitUntil("first wood harvest", () =>
       bot.inventory
         .items()
         .some((i) => i.name === "oak_planks" && i.count === 4),
     );
-    await gather(at(562, 73, 524));
+    await gather(at(1757, 73, 2146));
     await waitUntil("second wood harvest", () =>
       bot.inventory
         .items()
         .some((i) => i.name === "oak_planks" && i.count === 8),
     );
     const depleted = waitForMessage(bot, /Depleted for you this round/u);
-    await gather(at(562, 73, 524));
+    await gather(at(1757, 73, 2146));
     await depleted;
-    await travel(578.5, 574.5);
-    await gather(at(580, 73, 576));
+    await travel(1764.5, 2164.5);
+    await gather(at(1766, 73, 2165));
     await waitUntil("stone harvest", () =>
       bot.inventory
         .items()
         .some((i) => i.name === "cobblestone" && i.count === 4),
     );
-    await travel(562.5, 526.5);
-    const station = bot.blockAt(at(560, 73, 524));
+    await travel(1762.5, 2150.5);
+    const station = bot.blockAt(at(1763, 73, 2148));
     if (station === null) throw new Error("Workbench is missing");
     await bot.activateBlock(station);
     await waitUntil("crafting menu", () => bot.currentWindow !== null);

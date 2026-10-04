@@ -65,13 +65,6 @@ final class SurvivalMenus {
                         recipe.name() + " " + recipe.ingredients(),
                         SurvivalItems.material(recipe.material()),
                         () -> runner.actions().craft(player, recipe))));
-    for (var perk : SurvivalActions.Perk.values()) {
-      choices.add(
-          new Choice(
-              perk + " — 30 emeralds",
-              Material.EMERALD,
-              () -> runner.actions().perk(player, perk)));
-    }
     runner.fighters().stream()
         .filter(p -> !p.equals(player))
         .filter(p -> Places.at(p).distanceSquared(Places.at(player)) < 64)

@@ -1,10 +1,19 @@
 import { describe, expect } from "vitest";
+import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import { ClearCountOutputSchema } from "#e2e/harness/rcon-output.ts";
 
 const enemies = '@e[nbt={BukkitValues:{"thestorm:arena_entity":"colosseum"}}]';
 const chests = ["179 48 2", "227 48 -46", "275 48 2"] as const;
+
+async function itemCount(rcon: RconClient, player: string, item: string) {
+  const response = await rcon.command(`clear ${player} minecraft:${item} 0`);
+  return response === `No items were found on player ${player}`
+    ? 0
+    : ClearCountOutputSchema.parse(response).count;
+}
 
 async function start(rcon: RconClient) {
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -15,6 +24,87 @@ async function start(rcon: RconClient) {
   }
   throw new Error("Colosseum chunks never became ready");
 }
+
+describe("Colosseum chest access on real Paper", () => {
+  test("fighters can open and withdraw from every authored arena chest", async ({
+    bot,
+    rcon,
+  }) => {
+    const positions = [
+      [179, 48, 2],
+      [185, 48, 2],
+      [212, 42, 2],
+      [227, 48, -40],
+      [227, 48, -46],
+      [227, 42, -13],
+      [225, 42, 2],
+      [227, 42, 0],
+      [229, 42, 2],
+      [227, 42, 4],
+      [227, 42, 17],
+      [227, 48, 44],
+      [227, 48, 50],
+      [242, 42, 2],
+      [269, 48, 2],
+      [275, 48, 2],
+    ];
+    const joined = waitForMessage(bot, /entered The Colosseum/u);
+    bot.chat("/arena join colosseum");
+    await joined;
+    const selected = waitForMessage(bot, /You are a Knight/u);
+    bot.chat("/arena class knight");
+    await selected;
+    await rcon.command("difficulty normal");
+    try {
+      const started = waitForMessage(bot, /Wave 1!/u);
+      await start(rcon);
+      await started;
+      await rcon.command(
+        `effect give ${bot.username} minecraft:resistance infinite 255 true`,
+      );
+      for (const coordinates of positions) {
+        const [x, y, z] = coordinates;
+        if (x === undefined || y === undefined || z === undefined)
+          throw new Error("Invalid chest fixture");
+        await rcon.command(
+          `tp ${bot.username} ${(x + 0.5).toString()} ${(y + 1).toString()} ${(z + 1.5).toString()}`,
+        );
+        const position = new Vec3(x, y, z);
+        await waitUntil(
+          "chest is in reach",
+          () =>
+            bot.entity.position.distanceTo(position) < 4 &&
+            Math.abs(bot.entity.position.x - x - 0.5) < 0.2 &&
+            Math.abs(bot.entity.position.z - z - 1.5) < 0.2 &&
+            bot.blockAt(position)?.name === "chest",
+        );
+        const block = bot.blockAt(position);
+        if (block === null) throw new Error("Authored chest missing");
+        await bot.waitForTicks(5);
+        const chest = await bot.openContainer(block);
+        try {
+          const loot = chest.containerItems()[0];
+          if (loot === undefined) throw new Error("Chest was not stocked");
+          const { name, type, metadata, count } = loot;
+          const before = await itemCount(rcon, bot.username, name);
+          await chest.withdraw(type, metadata, count);
+          await chest.close();
+          await bot.waitForTicks(5);
+          const after = await itemCount(rcon, bot.username, name);
+          expect(after, `Chest ${coordinates.join(",")} delivers ${name}`).toBe(
+            before + count,
+          );
+        } finally {
+          if (bot.currentWindow !== null) await chest.close();
+        }
+        await bot.waitForTicks(5);
+      }
+    } finally {
+      await rcon.command("arena stop colosseum");
+      await rcon.command("difficulty peaceful");
+    }
+  }, 120_000);
+});
 
 describe("Colosseum on real Paper", () => {
   test("distant zombies pursue a fighter across the arena floor", async ({
@@ -182,7 +272,13 @@ describe("Colosseum on real Paper", () => {
           // Its summon spell is telegraphed too, before scaled reinforcements arrive.
           const adds = waitForMessage(bot, /Reinforcements incoming/u, 30_000);
           await adds;
-          await Bun.sleep(3000);
+          await waitUntil(
+            "telegraphed boss reinforcements arrive",
+            () =>
+              Object.values(bot.entities).filter((e) => e.name === "bogged")
+                .length >= 3,
+            10_000,
+          );
           expect(
             Object.values(bot.entities).filter((e) => e.name === "bogged")
               .length,

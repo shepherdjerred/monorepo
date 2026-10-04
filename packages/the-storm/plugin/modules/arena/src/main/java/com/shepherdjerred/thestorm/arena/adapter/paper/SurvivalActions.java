@@ -1,7 +1,9 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
+import com.shepherdjerred.thestorm.arena.domain.survival.PurchaseConfirmation;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
+import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,15 +17,12 @@ import org.bukkit.potion.PotionEffectType;
 
 /** Purchases, explicitly donated resources and modest class abilities. Main thread only. */
 final class SurvivalActions {
-  enum Perk {
-    VITALITY,
-    SWIFTNESS,
-    HARDENED
-  }
 
   private final SurvivalRunner runner;
+  private final PurchaseConfirmation purchases = new PurchaseConfirmation();
+  private final Map<UUID, Integer> selfPurchases = new HashMap<>();
   private final Map<UUID, Instant> cooldowns = new HashMap<>();
-  private final Map<UUID, Set<Perk>> perks = new HashMap<>();
+  private final Map<UUID, Set<SurvivalPerk>> perks = new HashMap<>();
 
   SurvivalActions(SurvivalRunner runner) {
     this.runner = runner;
@@ -39,9 +38,22 @@ final class SurvivalActions {
     }
   }
 
-  void unlock(Player player, SurvivalContent.Zone zone) {
+  void unlock(
+      Player player,
+      SurvivalContent.Zone zone,
+      com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos sign) {
     if (!runner.map().state().unlockable(zone)) {
       Texts.error(player, "Open the connecting routes first, or this route is already open.");
+      return;
+    }
+    if (!purchases.confirm(
+        player.getUniqueId(), sign.toString(), runner.context().time().instant())) {
+      Texts.info(
+          player,
+          zone.name()
+              + " costs "
+              + zone.emeralds()
+              + " emeralds. Click this sign again within three seconds.");
       return;
     }
     if (runner.items().spend(player, Map.of("EMERALD", zone.emeralds()))) {
@@ -97,29 +109,61 @@ final class SurvivalActions {
     Texts.info(player, "Gathered " + resource.amount() + " " + resource.material() + ".");
   }
 
-  void perk(Player player, Perk perk) {
-    var owned = perks.computeIfAbsent(player.getUniqueId(), _ -> new HashSet<>());
+  boolean has(Player player, SurvivalPerk perk) {
+    return perks.getOrDefault(player.getUniqueId(), Set.of()).contains(perk);
+  }
+
+  String perks(Player player) {
+    return perks.getOrDefault(player.getUniqueId(), Set.of()).toString();
+  }
+
+  void perk(Player player, SurvivalPerk perk) {
+    var id = player.getUniqueId();
+    var owned = perks.computeIfAbsent(id, _ -> new HashSet<>());
     if (owned.contains(perk)) {
       Texts.info(player, "You already have that perk.");
       return;
     }
-    if (runner.items().spend(player, Map.of("EMERALD", 30))) {
-      owned.add(perk);
-      applyPerks(player);
-      Texts.info(player, "Purchased " + perk + " for this run.");
+    var solo = runner.game().participants().size() == 1;
+    if (perk == SurvivalPerk.QUICK_REVIVE
+        && solo
+        && (selfPurchases.getOrDefault(id, 0) >= 2
+            || runner.game().player(id).orElseThrow().selfRevive())) {
+      Texts.info(player, "Use your existing self-revive first. At most two extra charges per run.");
+      return;
     }
+    if (!runner.items().spend(player, Map.of("EMERALD", perk.price()))) return;
+    owned.add(perk);
+    if (perk == SurvivalPerk.QUICK_REVIVE && solo) {
+      if (!runner.game().purchaseSelfRevive(id))
+        throw new IllegalStateException("Self-revive purchase rejected");
+      selfPurchases.merge(id, 1, Integer::sum);
+    }
+    applyPerks(player);
+    Texts.info(player, "Purchased " + perk + ". Perks are lost when downed.");
   }
 
   void applyPerks(Player player) {
-    for (var perk : perks.getOrDefault(player.getUniqueId(), Set.of())) {
-      var type =
-          switch (perk) {
-            case VITALITY -> PotionEffectType.HEALTH_BOOST;
-            case SWIFTNESS -> PotionEffectType.SPEED;
-            case HARDENED -> PotionEffectType.RESISTANCE;
-          };
-      player.addPotionEffect(new PotionEffect(type, PotionEffect.INFINITE_DURATION, 0));
-    }
+    if (has(player, SurvivalPerk.JUGGERNOG))
+      player.addPotionEffect(
+          new PotionEffect(PotionEffectType.HEALTH_BOOST, PotionEffect.INFINITE_DURATION, 1));
+    if (has(player, SurvivalPerk.STAMIN_UP))
+      player.addPotionEffect(
+          new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0));
+  }
+
+  void losePerks(Player player) {
+    perks.remove(player.getUniqueId());
+    player.removePotionEffect(PotionEffectType.SPEED);
+    player.removePotionEffect(PotionEffectType.HEALTH_BOOST);
+    if (player.getHealth() > 20) player.setHealth(20);
+  }
+
+  void leave(UUID id) {
+    perks.remove(id);
+    cooldowns.remove(id);
+    purchases.remove(id);
+    selfPurchases.remove(id);
   }
 
   void donate(Player source, Player target, Material material, int amount) {

@@ -214,7 +214,8 @@ final class WorldListener implements Listener {
           running(event.getLocation())
               .ifPresent(
                   runner -> {
-                    if (!runner.world().adopt(event.getEntity())) {
+                    if (runner instanceof SurvivalRunner
+                        || !runner.world().adopt(event.getEntity())) {
                       event.setCancelled(true);
                     }
                   });

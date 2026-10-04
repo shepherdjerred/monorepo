@@ -188,7 +188,7 @@ final class PlayerListener implements Listener {
       event.setUseInteractedBlock(Event.Result.DENY);
       commands.ready(player);
     } else if (block.getState() instanceof Container
-        && !(definition.lootChests().contains(pos) && runner.isFighter(player.getUniqueId()))) {
+        && !LootAccess.allowed(runner, player.getUniqueId(), block)) {
       event.setUseInteractedBlock(Event.Result.DENY);
     }
   }

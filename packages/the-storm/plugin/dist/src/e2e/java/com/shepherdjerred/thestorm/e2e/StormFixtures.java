@@ -33,6 +33,7 @@ public final class StormFixtures extends JavaPlugin {
       throw new IllegalStateException("Synthetic fixtures require an offline test server");
     }
     content = new File(getDataFolder().getParentFile(), "TheStorm");
+    com.shepherdjerred.thestorm.arena.adapter.paper.ArenaFixtures.install(this, content.toPath());
     world = Objects.requireNonNull(getServer().getWorld("world"));
     var modules = section(yaml("config.yml"), "modules");
     var prepared = new ArrayList<String>();
@@ -145,7 +146,17 @@ public final class StormFixtures extends JavaPlugin {
             com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent.class);
     new com.shepherdjerred.thestorm.arena.domain.survival.SettlementBlueprint(survival)
         .blocks()
-        .forEach((pos, material) -> block(pos.x(), pos.y(), pos.z(), Material.valueOf(material)));
+        .forEach(
+            (pos, material) -> {
+              world.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);
+              world
+                  .getBlockAt(pos.x(), pos.y(), pos.z())
+                  .setBlockData(
+                      material.startsWith("minecraft:")
+                          ? org.bukkit.Bukkit.createBlockData(material)
+                          : Material.valueOf(material).createBlockData(),
+                      false);
+            });
   }
 
   private void shardFixtures() {

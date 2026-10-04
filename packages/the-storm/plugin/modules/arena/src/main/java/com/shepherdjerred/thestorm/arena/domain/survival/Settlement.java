@@ -72,6 +72,10 @@ public final class Settlement {
     harvested.clear();
   }
 
+  public void openAll() {
+    content.zones().stream().map(SurvivalContent.Zone::id).forEach(open::add);
+  }
+
   public void reset() {
     open.clear();
     content.zones().stream()

@@ -371,7 +371,7 @@ rewards:
 # The hidden loot chests: filled when a game starts, emptied when it ends.
 # What fighters find stays in the arena (it is gone when they leave).
 lootChests:
-  rolls: 4
+  rolls: 1
   entries:
     - weight: 6
       item:

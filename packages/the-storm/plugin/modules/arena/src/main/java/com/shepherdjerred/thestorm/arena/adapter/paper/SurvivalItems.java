@@ -116,19 +116,18 @@ final class SurvivalItems {
     give(player, Material.STONE_SWORD, 1);
     give(player, Material.BREAD, returning ? 2 : 5);
     player.getInventory().setChestplate(stack(Material.LEATHER_CHESTPLATE, 1));
-    if (returning) {
-      return;
+    if (!returning) {
+      player.getInventory().setHelmet(stack(Material.LEATHER_HELMET, 1));
+      player.getInventory().setLeggings(stack(Material.LEATHER_LEGGINGS, 1));
+      player.getInventory().setBoots(stack(Material.LEATHER_BOOTS, 1));
     }
-    player.getInventory().setHelmet(stack(Material.LEATHER_HELMET, 1));
-    player.getInventory().setLeggings(stack(Material.LEATHER_LEGGINGS, 1));
-    player.getInventory().setBoots(stack(Material.LEATHER_BOOTS, 1));
     switch (role) {
       case FIGHTER -> player.getInventory().setItemInOffHand(stack(Material.SHIELD, 1));
       case RANGER -> {
         give(player, Material.BOW, 1);
-        give(player, Material.ARROW, 24);
+        give(player, Material.ARROW, returning ? 12 : 24);
       }
-      case MEDIC -> give(player, Material.GOLDEN_APPLE, 2);
+      case MEDIC -> give(player, Material.GOLDEN_APPLE, returning ? 1 : 2);
       case ENGINEER -> {
         give(player, Material.OAK_PLANKS, 12);
         give(player, Material.IRON_INGOT, 4);
@@ -138,6 +137,66 @@ final class SurvivalItems {
         give(player, Material.GLOWSTONE_DUST, 8);
       }
       case BEASTMASTER -> give(player, Material.BONE, 8);
+    }
+  }
+
+  boolean weapon(ItemStack stack) {
+    return owns(stack)
+        && (stack.getType().name().endsWith("_SWORD")
+            || stack.getType().name().endsWith("_AXE")
+            || stack.getType() == Material.BOW
+            || stack.getType() == Material.CROSSBOW
+            || stack.getType() == Material.TRIDENT);
+  }
+
+  int tier(ItemStack stack) {
+    return keys.upgrade(stack);
+  }
+
+  double multiplier(ItemStack stack) {
+    if (!weapon(stack)) return 1;
+    return switch (tier(stack)) {
+      case 0 -> 1;
+      case 1 -> 1.35;
+      case 2 -> 1.70;
+      case 3 -> 2.10;
+      default -> throw new IllegalStateException("Invalid weapon tier");
+    };
+  }
+
+  void upgrade(ItemStack stack, int tier) {
+    if (!weapon(stack) || tier < 1 || tier > 3)
+      throw new IllegalArgumentException("Invalid upgrade");
+    keys.upgrade(stack, tier);
+    stack.editMeta(
+        meta -> {
+          meta.displayName(
+              net.kyori.adventure.text.Component.text(
+                  "Pack-a-Punch " + tier + " · " + stack.getType()));
+          if (meta instanceof org.bukkit.inventory.meta.Damageable damageable)
+            damageable.setDamage(0);
+        });
+  }
+
+  void debug(Player player, int round) {
+    var preset = com.shepherdjerred.thestorm.arena.domain.survival.DebugPreset.at(round);
+    if (preset.iron()) {
+      var inventory = player.getInventory();
+      inventory.setItem(0, stack(Material.IRON_SWORD, 1));
+      inventory.setHelmet(stack(Material.IRON_HELMET, 1));
+      inventory.setChestplate(stack(Material.IRON_CHESTPLATE, 1));
+      inventory.setLeggings(stack(Material.IRON_LEGGINGS, 1));
+      inventory.setBoots(stack(Material.IRON_BOOTS, 1));
+      give(player, Material.IRON_INGOT, 16);
+      give(player, Material.REDSTONE, 16);
+      give(player, Material.BREAD, 12);
+      give(player, Material.EMERALD, preset.emeralds());
+    }
+    if (preset.weaponTier() > 0) {
+      for (var item :
+          java.util.Objects.requireNonNull(player.getInventory().getStorageContents())) {
+        if (item != null && weapon(item)) upgrade(item, preset.weaponTier());
+      }
     }
   }
 

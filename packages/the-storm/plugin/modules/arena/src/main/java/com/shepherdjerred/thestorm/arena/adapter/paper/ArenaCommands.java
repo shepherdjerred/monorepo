@@ -53,7 +53,34 @@ final class ArenaCommands {
         .then(
             Commands.literal("join")
                 .requires(permission(ArenaPermissions.PLAY))
-                .then(arenaArgument(this::join)))
+                .then(
+                    arenaArgument(this::join)
+                        .then(
+                            Commands.argument(
+                                    "round",
+                                    com.mojang.brigadier.arguments.IntegerArgumentType.integer(
+                                        1, 1000))
+                                .requires(permission(ArenaPermissions.DEBUG))
+                                .executes(
+                                    command ->
+                                        asPlayer(
+                                            command,
+                                            player ->
+                                                arenas
+                                                    .byId(
+                                                        StringArgumentType.getString(
+                                                            command, "arena"))
+                                                    .ifPresentOrElse(
+                                                        runner ->
+                                                            arenas.joinDebug(
+                                                                player,
+                                                                runner,
+                                                                com.mojang.brigadier.arguments
+                                                                    .IntegerArgumentType.getInteger(
+                                                                    command, "round")),
+                                                        () ->
+                                                            Texts.error(
+                                                                player, "Unknown arena.")))))))
         .then(
             Commands.literal("spec")
                 .requires(permission(ArenaPermissions.SPECTATE))

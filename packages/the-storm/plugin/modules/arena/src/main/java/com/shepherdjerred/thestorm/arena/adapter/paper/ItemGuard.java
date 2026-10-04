@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Location;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -129,24 +128,12 @@ final class ItemGuard implements Listener {
     if (type == InventoryType.PLAYER || type == InventoryType.CRAFTING) {
       return true;
     }
-    return runner.isFighter(player)
-        && at(inventory)
-            .filter(location -> runner.world().contains(location))
-            .map(
-                location ->
-                    runner
-                        .world()
-                        .definition()
-                        .lootChests()
-                        .contains(Places.pos(location.getBlock())))
-            .orElse(false);
+    return LootAccess.allowed(runner, player, inventory);
   }
 
   /** Where a block's inventory is: its holder block's location, if a block holds it. */
   private static Optional<Location> at(Inventory inventory) {
-    return inventory.getHolder() instanceof BlockState block
-        ? Optional.of(block.getLocation())
-        : Optional.empty();
+    return LootAccess.locations(inventory).stream().findFirst();
   }
 
   /** Players still joining are frozen; outsiders clicking an arena item lose it. */

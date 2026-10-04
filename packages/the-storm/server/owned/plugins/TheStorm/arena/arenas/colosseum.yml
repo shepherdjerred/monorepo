@@ -58,10 +58,23 @@ classSigns:
 # The block to right-click when ready (MobArena's iron block).
 readyBlock: { x: 220, y: 33, z: 2 }
 
-# Hidden chests, refilled with loot at the start of every game.
+# Every chest in the saved Colosseum, stocked at start and every five cleared waves.
 lootChests:
   - { x: 179, y: 48, z: 2 }
+  - { x: 185, y: 48, z: 2 }
+  - { x: 212, y: 42, z: 2 }
+  - { x: 227, y: 48, z: -40 }
   - { x: 227, y: 48, z: -46 }
+  - { x: 227, y: 42, z: -13 }
+  - { x: 225, y: 42, z: 2 }
+  - { x: 227, y: 42, z: 0 }
+  - { x: 229, y: 42, z: 2 }
+  - { x: 227, y: 42, z: 4 }
+  - { x: 227, y: 42, z: 17 }
+  - { x: 227, y: 48, z: 44 }
+  - { x: 227, y: 48, z: 50 }
+  - { x: 242, y: 42, z: 2 }
+  - { x: 269, y: 48, z: 2 }
   - { x: 275, y: 48, z: 2 }
 
 # Signs outside the arena that join it when right-clicked.

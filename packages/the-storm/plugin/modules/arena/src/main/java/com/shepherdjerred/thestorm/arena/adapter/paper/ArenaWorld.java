@@ -362,6 +362,13 @@ final class ArenaWorld {
     mobs.addAll(spawned);
     var archetype = parts.table().mob(mob);
     for (var entity : spawned) {
+      if (entity instanceof org.bukkit.entity.AbstractCubeMob cube) {
+        parts
+            .context()
+            .server()
+            .getMobGoals()
+            .addGoal(cube, 0, new CubePursuitGoal(cube, parts.context().time()));
+      }
       pursuitRange(entity);
       if (archetype.behavior() != Behavior.VANILLA) {
         brains.put(entity.getUniqueId(), archetype);
@@ -456,7 +463,7 @@ final class ArenaWorld {
     }
   }
 
-  private static void hunt(Mob hunter, Player target, double distance) {
+  static void hunt(Mob hunter, Player target, double distance) {
     if (!target.equals(hunter.getTarget())) {
       hunter.setTarget(target);
     }

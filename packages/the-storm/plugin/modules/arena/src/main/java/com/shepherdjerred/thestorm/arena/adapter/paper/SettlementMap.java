@@ -3,17 +3,29 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.arena.domain.survival.Settlement;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Predicate;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
-/** Only authored gates and defenses change during a run. Permanent buildings stay protected. */
+/** Protected geometry, deliberate gates and rescue anchors share the same authored areas. */
 final class SettlementMap {
   private final ArenaWorld world;
   private final SurvivalContent content;
   private final Settlement state;
-  private final java.util.Map<String, java.util.UUID> trapOwners = new java.util.HashMap<>();
+  private final Map<String, UUID> trapOwners = new HashMap<>();
+  private final Map<UUID, Location> lastSafe = new HashMap<>();
+  private final Set<UUID> visitors = new HashSet<>();
 
   SettlementMap(ArenaWorld world, SurvivalContent content) {
     this.world = world;
@@ -33,77 +45,210 @@ final class SettlementMap {
     return content.zones().stream().filter(z -> state.accessible(z.id())).toList();
   }
 
-  Optional<SurvivalContent.Zone> zone(Player player) {
-    var point = Places.point(Places.at(player));
-    return content.zones().stream().filter(z -> z.bounds().contains(point)).findFirst();
+  Optional<SurvivalContent.Zone> zone(Location at) {
+    return content.zones().stream().filter(z -> z.contains(Places.point(at))).findFirst();
   }
 
-  void contain(Player player) {
-    if (!world.contains(Places.at(player))
-        || zone(player).filter(z -> !state.accessible(z.id())).isPresent()) {
-      player.teleport(Places.location(world.world(), world.definition().playerSpawns().getFirst()));
+  Optional<SurvivalContent.Zone> zone(Player player) {
+    return zone(Places.at(player));
+  }
+
+  boolean offshore(Location at) {
+    return content.expedition().area().contains(Places.point(at));
+  }
+
+  boolean combat(Location at) {
+    return zone(at).filter(z -> state.accessible(z.id())).isPresent();
+  }
+
+  boolean allowed(Player player) {
+    var at = Places.at(player);
+    return world.contains(at)
+        && (combat(at) || (visitors.contains(player.getUniqueId()) && offshore(at)));
+  }
+
+  void visit(UUID id, boolean offshore) {
+    if (offshore) visitors.add(id);
+    else visitors.remove(id);
+  }
+
+  void contain(Player player, Predicate<Location> castDanger) {
+    var at = Places.at(player);
+    if (allowed(player)) {
+      if (standing(at) && !threatened(at, castDanger))
+        lastSafe.put(player.getUniqueId(), at.clone());
+      return;
     }
+    var safe = rescue(player.getUniqueId(), at, castDanger);
+    player.teleport(safe);
+    player.setFallDistance(0);
+    player.setVelocity(new org.bukkit.util.Vector());
+    player.setNoDamageTicks(40);
+    Texts.info(player, "Returned to the nearest safe route.");
+  }
+
+  Location rescue(UUID id, Location from, Predicate<Location> castDanger) {
+    var candidates = new ArrayList<Location>();
+    for (var zone : open()) {
+      zone.safePoints().forEach(p -> candidates.add(Places.location(world.world(), p)));
+    }
+    if (visitors.contains(id))
+      content
+          .expedition()
+          .safePoints()
+          .forEach(p -> candidates.add(Places.location(world.world(), p)));
+    var previous = lastSafe.get(id);
+    if (previous != null && (combat(previous) || (visitors.contains(id) && offshore(previous))))
+      candidates.add(previous);
+    return candidates.stream()
+        .filter(SettlementMap::standing)
+        .min(
+            Comparator.comparing((Location at) -> threatened(at, castDanger))
+                .thenComparingDouble(at -> threatened(at, castDanger) ? -clearance(at) : 0)
+                .thenComparingDouble(at -> at.distanceSquared(from)))
+        .orElseThrow(() -> new IllegalStateException("No valid settlement rescue anchor"))
+        .clone();
+  }
+
+  private boolean threatened(Location at, Predicate<Location> danger) {
+    return danger.test(at) || clearance(at) < 36;
+  }
+
+  private double clearance(Location at) {
+    return world.enemies().stream()
+        .mapToDouble(e -> e.getLocation().distanceSquared(at))
+        .min()
+        .orElse(Double.MAX_VALUE);
+  }
+
+  private static boolean standing(Location at) {
+    var feet = at.getBlock();
+    var floor = at.clone().add(0, -0.1, 0).getBlock();
+    return feet.isPassable()
+        && !feet.isLiquid()
+        && !Set.of(Material.FIRE, Material.SOUL_FIRE, Material.POWDER_SNOW).contains(feet.getType())
+        && feet.getRelative(org.bukkit.block.BlockFace.UP).isPassable()
+        && !java.util.Objects.requireNonNull(at.getWorld())
+            .hasCollisionsIn(
+                new org.bukkit.util.BoundingBox(
+                    at.getX() - .3,
+                    at.getY(),
+                    at.getZ() - .3,
+                    at.getX() + .3,
+                    at.getY() + 1.8,
+                    at.getZ() + .3))
+        && floor.isCollidable()
+        && !Set.of(Material.MAGMA_BLOCK, Material.CAMPFIRE, Material.SOUL_CAMPFIRE, Material.CACTUS)
+            .contains(floor.getType());
+  }
+
+  Location entrance(Player target) {
+    var points =
+        offshore(Places.at(target))
+            ? content.expedition().spawns()
+            : zone(target)
+                .orElseThrow(() -> new IllegalStateException("Fighter outside combat district"))
+                .spawns();
+    return points.stream()
+        .map(p -> Places.location(world.world(), p))
+        .filter(SettlementMap::standing)
+        .max(Comparator.comparingDouble(at -> at.distanceSquared(Places.at(target))))
+        .orElseThrow(() -> new IllegalStateException("Enemy entrance is obstructed"));
   }
 
   void reset() {
     state.reset();
     trapOwners.clear();
-    labels();
-    content
-        .zones()
-        .forEach(
-            zone -> {
-              zone.gate()
-                  .forEach(
-                      block ->
-                          world
-                              .block(block)
-                              .setType(
-                                  state.accessible(zone.id()) ? Material.AIR : Material.IRON_BARS,
-                                  false));
-              zone.defenses()
-                  .forEach(
-                      defense -> {
-                        if (defense.type() == SurvivalContent.DefenseType.BARRICADE) {
-                          barricade(defense, Material.OAK_FENCE);
-                        } else {
-                          world
-                              .block(defense.block())
-                              .setType(Material.STONE_PRESSURE_PLATE, false);
-                        }
-                      });
-            });
-  }
-
-  private void labels() {
-    content.arena().classSigns().forEach((id, block) -> label(block, id, "Select class"));
+    lastSafe.clear();
+    visitors.clear();
     for (var zone : content.zones()) {
-      var floor = content.arena().playerSpawns().getFirst().point().block().y();
-      label(
-          new BlockPos(zone.bounds().min().x() + 20, floor, zone.bounds().min().z() + 5),
-          zone.name(),
-          "Settlement district");
+      zone.gate()
+          .forEach(
+              block ->
+                  world
+                      .block(block)
+                      .setType(
+                          state.accessible(zone.id()) ? Material.AIR : Material.IRON_BARS, false));
+      zone.defenses()
+          .forEach(
+              d -> {
+                if (d.type() == SurvivalContent.DefenseType.BARRICADE)
+                  barricade(d, Material.OAK_FENCE);
+                else world.block(d.block()).setType(Material.STONE_PRESSURE_PLATE, false);
+              });
     }
+    labels();
   }
 
-  private void label(BlockPos block, String title, String hint) {
-    if (!(world.block(block).getState() instanceof org.bukkit.block.Sign sign)) {
-      throw new IllegalStateException("Authored sign is missing at " + block);
+  void labels() {
+    content.arena().classSigns().forEach((id, block) -> label(block, id, "Select class", "", ""));
+    for (var zone : content.zones()) {
+      zone.purchaseSigns()
+          .forEach(
+              p ->
+                  label(
+                      p,
+                      zone.name(),
+                      state.accessible(zone.id()) ? "Route open" : zone.emeralds() + " emeralds",
+                      state.accessible(zone.id()) ? "Explore / gather" : "Click twice",
+                      "within 3 seconds"));
     }
-    var side = sign.getSide(org.bukkit.block.sign.Side.FRONT);
-    side.line(0, net.kyori.adventure.text.Component.text(title));
-    side.line(1, net.kyori.adventure.text.Component.text(hint));
+    for (var machine : content.machines()) {
+      var name =
+          switch (machine.type()) {
+            case FOOD -> "Food counter";
+            case POWER -> "Power generator";
+            case MYSTERY_BOX -> "Mystery box";
+            case JUGGERNOG -> "Juggernog";
+            case STAMIN_UP -> "Stamin-Up";
+            case DOUBLE_TAP -> "Double Tap";
+            case QUICK_REVIVE -> "Quick Revive";
+            case PACK_A_PUNCH -> "Pack-a-Punch";
+          };
+      var price =
+          switch (machine.type()) {
+            case FOOD -> "3 bread / 2 emeralds";
+            case POWER -> "4 iron + 4 redstone";
+            case MYSTERY_BOX -> "16 emeralds";
+            case JUGGERNOG -> "24 emeralds";
+            case STAMIN_UP -> "20 emeralds";
+            case DOUBLE_TAP -> "32 emeralds";
+            case QUICK_REVIVE -> "16 emeralds";
+            case PACK_A_PUNCH -> "36 / 72 / 108";
+          };
+      label(machine.block(), name, price, "Click for details", "");
+    }
+    content
+        .planeParts()
+        .forEach(p -> label(p.block(), p.name(), "Plane part / fuel", "Carry to airstrip", ""));
+    label(content.planeWorkbench(), "Airstrip", "Install / board", "Rounds continue", "");
+    label(
+        content.expedition().returnSign(),
+        "Return flight",
+        "Back to Settlement",
+        "Rounds continue",
+        "");
+  }
+
+  void label(BlockPos pos, String... lines) {
+    if (!(world.block(pos).getState() instanceof org.bukkit.block.Sign sign))
+      throw new IllegalStateException("Authored sign missing: " + pos);
+    for (var side : org.bukkit.block.sign.Side.values()) {
+      var text = sign.getSide(side);
+      for (var i = 0; i < 4; i++) text.line(i, Component.text(lines[i]));
+    }
     sign.setWaxed(true);
     sign.update(true, false);
   }
 
   void unlock(SurvivalContent.Zone zone) {
     state.unlock(zone);
-    zone.gate().forEach(block -> world.block(block).setType(Material.AIR, false));
+    zone.gate().forEach(p -> world.block(p).setType(Material.AIR, false));
+    labels();
   }
 
   Optional<SurvivalContent.Zone> gate(BlockPos pos) {
-    return content.zones().stream().filter(z -> z.gate().contains(pos)).findFirst();
+    return content.zones().stream().filter(z -> z.purchaseSigns().contains(pos)).findFirst();
   }
 
   Optional<SurvivalContent.Station> station(BlockPos pos) {
@@ -127,67 +272,66 @@ final class SettlementMap {
         .findFirst();
   }
 
-  BlockPos objective() {
-    return open().stream()
-        .flatMap(z -> z.resources().stream())
-        .map(SurvivalContent.Resource::block)
-        .findFirst()
-        .orElseThrow(() -> new IllegalStateException("An open zone needs a boss objective"));
+  Optional<SurvivalContent.Machine> machine(BlockPos pos) {
+    return content.machines().stream().filter(m -> m.block().equals(pos)).findFirst();
   }
 
-  void arm(SurvivalContent.Defense defense, java.util.UUID player) {
+  BlockPos objective() {
+    return content.bossObjective();
+  }
+
+  void arm(SurvivalContent.Defense defense, UUID player) {
     state.arm(defense.id());
     trapOwners.put(defense.id(), player);
   }
 
-  void charge(org.bukkit.Location at) {
+  void charge(Location at) {
     open().stream()
         .flatMap(z -> z.defenses().stream())
         .filter(d -> d.type() == SurvivalContent.DefenseType.BARRICADE)
         .filter(d -> Places.location(world.world(), d.block().center()).distanceSquared(at) < 25)
         .forEach(
             d -> {
-              while (state.strength(d.id()) > 0) {
-                state.breach(d.id());
-              }
+              while (state.strength(d.id()) > 0) state.breach(d.id());
               barricade(d, Material.AIR);
             });
   }
 
-  void tick(java.util.function.BiConsumer<org.bukkit.entity.LivingEntity, java.util.UUID> credit) {
-    for (var zone : open()) {
-      zone.defenses().forEach(defense -> tickDefense(defense, credit));
-    }
+  void repairAll() {
+    open().stream()
+        .flatMap(z -> z.defenses().stream())
+        .filter(d -> d.type() == SurvivalContent.DefenseType.BARRICADE)
+        .forEach(
+            d -> {
+              state.repair(d.id());
+              barricade(d, Material.OAK_FENCE);
+            });
+  }
+
+  void tick(java.util.function.BiConsumer<org.bukkit.entity.LivingEntity, UUID> credit) {
+    for (var zone : open()) zone.defenses().forEach(d -> tickDefense(d, credit));
   }
 
   private void tickDefense(
       SurvivalContent.Defense defense,
-      java.util.function.BiConsumer<org.bukkit.entity.LivingEntity, java.util.UUID> credit) {
-    if (state.strength(defense.id()) == 0) {
-      return;
-    }
+      java.util.function.BiConsumer<org.bukkit.entity.LivingEntity, UUID> credit) {
+    if (state.strength(defense.id()) == 0) return;
     var at = Places.location(world.world(), defense.block().center());
     var enemies =
         world.enemies().stream().filter(e -> e.getLocation().distanceSquared(at) < 9).toList();
-    if (enemies.isEmpty()) {
-      return;
-    }
+    if (enemies.isEmpty()) return;
     if (defense.type() == SurvivalContent.DefenseType.BARRICADE) {
-      if (state.breach(defense.id())) {
-        barricade(defense, Material.AIR);
-      }
+      if (state.breach(defense.id())) barricade(defense, Material.AIR);
     } else {
       state.breach(defense.id());
       var owner =
           java.util.Objects.requireNonNull(
               trapOwners.remove(defense.id()), "Charged trap has no owner");
       enemies.forEach(
-          enemy -> {
-            credit.accept(enemy, owner);
-            enemy.damage(12);
-            if (defense.type() == SurvivalContent.DefenseType.FLAME_TRAP) {
-              enemy.setFireTicks(80);
-            }
+          e -> {
+            credit.accept(e, owner);
+            e.damage(12);
+            if (defense.type() == SurvivalContent.DefenseType.FLAME_TRAP) e.setFireTicks(80);
           });
       world.world().playSound(at, org.bukkit.Sound.BLOCK_ANVIL_LAND, 0.5f, 1.5f);
     }

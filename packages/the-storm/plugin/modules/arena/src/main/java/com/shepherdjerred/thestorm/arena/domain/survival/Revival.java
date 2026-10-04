@@ -13,12 +13,24 @@ public final class Revival {
   private final Map<UUID, Channel> channels = new HashMap<>();
 
   public boolean channel(UUID rescuer, UUID target, Instant now) {
+    return channel(rescuer, target, now, 5);
+  }
+
+  public double progress(UUID rescuer, Instant now, int seconds) {
+    var channel = channels.get(rescuer);
+    return channel == null
+        ? 0
+        : Math.clamp(
+            java.time.Duration.between(channel.since(), now).toMillis() / (seconds * 1000.0), 0, 1);
+  }
+
+  public boolean channel(UUID rescuer, UUID target, Instant now, int seconds) {
     var current = channels.get(rescuer);
     if (current == null || !current.target().equals(target)) {
       channels.put(rescuer, new Channel(target, now));
       return false;
     }
-    return !now.isBefore(current.since().plusSeconds(5));
+    return !now.isBefore(current.since().plusSeconds(seconds));
   }
 
   public Optional<UUID> target(UUID rescuer) {

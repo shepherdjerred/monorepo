@@ -28,14 +28,20 @@ final class SurvivalBoss {
   private Instant vulnerableUntil = Instant.MIN;
   private int heartHits;
   private boolean charged;
+  private boolean striking;
+  private final java.util.function.IntConsumer adds;
+  private final int round;
+  private final Set<Integer> phases = new HashSet<>();
 
-  record Spawn(String id, LivingEntity entity, BlockPos objective) {}
+  record Spawn(String id, LivingEntity entity, BlockPos objective, int round) {}
 
-  SurvivalBoss(Spawn spawn, ArenaWorld world, Instant now) {
+  SurvivalBoss(Spawn spawn, ArenaWorld world, Instant now, java.util.function.IntConsumer adds) {
     this.id = spawn.id();
     this.entity = spawn.entity();
     this.world = world;
     this.objective = spawn.objective();
+    this.adds = adds;
+    this.round = spawn.round();
     mechanics = new BossMechanics(id, now);
     entity.customName(Component.text(name()));
     entity.setCustomNameVisible(true);
@@ -61,6 +67,14 @@ final class SurvivalBoss {
 
   boolean charged() {
     return charged;
+  }
+
+  boolean striking() {
+    return striking;
+  }
+
+  java.util.Optional<BossMechanics.Cast> cast() {
+    return mechanics.cast();
   }
 
   String name() {
@@ -97,6 +111,8 @@ final class SurvivalBoss {
                 java.util.Comparator.comparingDouble(
                     p -> Places.at(p).distanceSquared(entity.getLocation())))
             .orElseThrow();
+    var phase = mechanics.phase(fraction);
+    if (phases.add(phase)) adds.accept(phase);
     if (mechanics.begin(
         now, Places.point(entity.getLocation()), Places.point(Places.at(target)), fraction)) {
       audience.forEach(
@@ -132,7 +148,7 @@ final class SurvivalBoss {
       for (var z = -24; z <= 24; z += 2) {
         var point =
             new com.shepherdjerred.thestorm.arena.domain.geometry.Point(
-                cast.origin().x() + x, cast.origin().y(), cast.origin().z() + z);
+                cast.origin().x() + x, cast.aim().y(), cast.origin().z() + z);
         if (cast.hits(point)) {
           world
               .world()
@@ -162,17 +178,20 @@ final class SurvivalBoss {
       charged = true;
       entity.setVelocity(new Vector());
     }
-    if (cast.phase() > 1) {
-      world.summon(
-          id.equals("hexmaster") ? "vindicator" : "zombie", cast.phase(), entity.getLocation(), 1);
-    }
+    vulnerableUntil = now.plusSeconds(cast.shape() == BossMechanics.Shape.CHARGE ? 5 : 4);
   }
 
   private void strike(BossMechanics.Cast cast, Player player) {
-    if (!cast.hits(Places.point(Places.at(player)))) {
+    if (!cast.hits(Places.point(Places.at(player))) || !entity.hasLineOfSight(player)) {
       return;
     }
-    player.damage(4 + cast.phase() * 2, entity);
+    striking = true;
+    try {
+      player.damage(
+          round == 5 ? 3 + cast.phase() : Math.min(10, 4 + cast.phase() + round / 15), entity);
+    } finally {
+      striking = false;
+    }
     if (cast.shape() == BossMechanics.Shape.WIND_LANES) {
       var push = Places.at(player).toVector().subtract(entity.getLocation().toVector());
       if (push.lengthSquared() > 0.01) {

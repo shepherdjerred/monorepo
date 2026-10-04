@@ -245,7 +245,7 @@ final class SettlementProvisioner {
         || block.getState() instanceof org.bukkit.block.TileState) {
       conflicts.add(pos);
     }
-    var after = Material.valueOf(entry.getValue()).createBlockData().getAsString();
+    var after = BlueprintBlock.parse(entry.getValue()).getAsString();
     var before = block.getBlockData().getAsString();
     if (!before.equals(after)) {
       changes.add(new SettlementStore.Change(pos, before, after));

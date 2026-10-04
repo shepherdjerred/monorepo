@@ -87,10 +87,7 @@ final class SettlementRulesTest {
             .isTrue();
       }
     }
-    var quarry =
-        content.zones().stream().filter(z -> z.id().equals("quarry")).findFirst().orElseThrow();
-    var min = quarry.bounds().min();
-    assertThat(reachable).contains(new BlockPos(min.x() + 21, 67, min.z() + 32));
+    assertThat(reachable).contains(new BlockPos(1834, 67, 2165));
   }
 
   private static Set<BlockPos> reachable(Map<BlockPos, String> blocks, BlockPos start) {

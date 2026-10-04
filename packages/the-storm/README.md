@@ -391,7 +391,8 @@ this avoids a synchronous player-data write on the server tick.
 ### Colosseum
 
 `/arena join colosseum` keeps the original finite 72-wave format: pick a class,
-start with a kit, fight waves and bosses, and scavenge the three shared caches.
+start with a kit, fight waves and bosses, and scavenge all sixteen shared caches. Every cache receives
+one weighted loot stack at the start and at each five-wave resupply checkpoint.
 Classes start with stone tools, leather armor and reduced enchantments while
 keeping their spells, consumables and companion identities. Wave 6 raises gear
 to the intermediate tier, wave 16 grants the authored class equipment, and wave
@@ -422,24 +423,27 @@ damage scaling still apply. Food and healing consumables remain available.
 
 The Colosseum retains its finite 72-wave game. Settlement is a separate,
 endless, one-to-four-player crafting survival game. Its eight connected
-districts span 160 × 160 blocks. Permanent buildings are protected; purchased
+districts occupy a compact 112 × 112 ruined coastal fortress, inside the original
+160 × 160 protected footprint. A separate staging dock holds the lobby; an
+offshore forge is reached by plane. Permanent buildings are protected; purchased
 routes, barricades, charged traps, and personal gathering budgets reset each run.
 
-| Command or interaction                          | Result                                                          |
-| ----------------------------------------------- | --------------------------------------------------------------- |
-| `/arena join settlement`                        | Saves belongings and enters the survival lobby                  |
-| `/arena class fighter\|ranger\|medic`           | Selects an initial class                                        |
-| `/arena class engineer\|alchemist\|beastmaster` | Selects an unlocked class at 500, 1,500, or 3,000 persistent XP |
-| `/arena ready`                                  | Starts the countdown when participants are ready                |
-| `/survival ability`                             | Uses the class ability, with a 40-second cooldown               |
-| `/survival status`                              | Shows round, XP, emerald items, and opened districts            |
-| `/survival give <player> <material> <amount>`   | Donates run items to a nearby standing teammate                 |
-| Right-click a resource node                     | Gathers from a personal, finite per-round budget                |
-| Right-click a station                           | Opens curated crafting, personal perks, and donation choices    |
-| Right-click a locked gate                       | Pays physical emeralds to open a shared route                   |
-| Right-click a defense                           | Repairs a barricade or charges a trap with materials            |
-| Sneak within three blocks of a downed teammate  | Revives after five uninterrupted seconds                        |
-| `/arena leave`                                  | Restores pre-run belongings                                     |
+| Command or interaction                          | Result                                                                |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| `/arena join settlement`                        | Saves belongings and enters the separate staging dock                 |
+| `/arena join settlement <round>`                | Creates a shared practice lobby; requires `thestorm.arena.debug` (OP) |
+| `/arena class fighter\|ranger\|medic`           | Selects an initial class                                              |
+| `/arena class engineer\|alchemist\|beastmaster` | Selects an unlocked class at 500, 1,500, or 3,000 persistent XP       |
+| `/arena ready`                                  | Starts the countdown when participants are ready                      |
+| `/survival ability`                             | Uses the class ability, with a 40-second cooldown                     |
+| `/survival status`                              | Shows round, XP, emerald items, and opened districts                  |
+| `/survival give <player> <material> <amount>`   | Donates run items to a nearby standing teammate                       |
+| Right-click a resource node                     | Gathers from a personal, finite per-round budget                      |
+| Right-click a station                           | Opens curated crafting and donation choices                           |
+| Click a route sign twice within three seconds   | Confirms its displayed emerald price and opens a shared route         |
+| Right-click a defense                           | Repairs a barricade or charges a trap with materials                  |
+| Sneak within three blocks with line of sight    | Revives after five uninterrupted seconds, or three with Quick Revive  |
+| `/arena leave`                                  | Restores pre-run belongings                                           |
 
 Fighter has an area knockback attack; Ranger supplies arrows and a speed burst;
 Medic heals nearby teammates. Engineer repairs, Alchemist weakens the horde,
@@ -448,18 +452,33 @@ rounds award persistent XP through idempotent database credits. Currency and
 gathered materials are physical items tagged to the current run.
 
 A downed player has 30 seconds before becoming a spectator. Bleedouts return
-next round with a weaker kit. Solo players get one self-revive per run; losing
+next round with a weaker kit that retains the selected class's signature tools.
+Glowing players and floating labels show the bleedout timer and revive instructions;
+both players see channel progress. Damage, attacks, other interactions, releasing
+sneak, losing sight or leaving range interrupt the channel. Revives restore eight
+HP and grant two seconds of damage protection. Solo players get one free self-revive per run; losing
 every standing player ends the run. Monsters pursue players across the map,
-including riders and offspring, with bounded spawning and stuck-mob recovery.
+including riders and size-two hostile cubes, with bounded spawning and stuck-mob
+recovery. Native offspring are suppressed; authored adds use the encounter queue.
+Mounted enemies count as one encounter unit, and orphan mounts are removed.
+A round bar shows active and queued units separately from boss health. Crossing
+bounds returns the player to the nearest accessible collision-free, hazard-free
+anchor, avoiding enemies and marked casts when possible, without healing.
 
 The first three rounds introduce the horde gradually. A solo opening has six
 adult, unarmed zombies at 60% health and 50% attack damage, arriving one every
 three seconds with at most three alive. Rounds two and three add husks and
 increase the count, health, damage, and concurrent limit. Baby zombies and
-other enemy types appear from round four onward. Opening zombies cannot summon
+special enemy types arrive from round six onward. Opening zombies cannot summon
 Hard-difficulty reinforcements beyond the planned wave.
 Every starting class receives a full leather armor set; returning after a
-bleedout retains the weaker chestplate-only kit.
+bleedout retains the weaker chestplate-only kit and class tools. Round four has
+12 enemies with six active solo; round five has four supports, at most two active,
+and the first boss. Rounds six and seven have 16 and 18 enemies with caps seven
+and eight. Each extra player adds three enemies and two active slots. Special
+mobs spend 10–25% of the wave budget; ranged mobs begin at round six, have a
+wind-up, at least three seconds between shots and limited concurrent slots.
+Early ranged hits are capped at four raw HP and cannot inflict poison or slowness.
 
 Standing survivors recover half a heart every five seconds after eight seconds
 without damage, up to one-third of their current maximum health. Passive
@@ -467,11 +486,54 @@ recovery works during combat and resupply, without consuming food or applying
 a potion effect. Food regeneration, potions, and class healing can heal above
 that ceiling. Downed players and spectators do not receive passive recovery.
 
-Every fifth round has a phased boss with marked casts and recovery windows.
+Every fifth round has a phased boss with three-second marked casts, line-of-sight
+checks and recovery windows. Native boss attacks are replaced by authored spells.
+Boss health is `(40 + 12 × round) × (1 + 0.55 × extra players)`, capped at 1,000;
+round five therefore has 100/155/210/265 HP for one through four players, with
+four-to-six-HP spells before armor. Party size increases health and support
+pressure without multiplying damage per hit. Later bosses add enemies once
+at phase thresholds through the normal spawn budget.
 The Evoker's glowing ritual node interrupts casts; the Creaking's node opens
 a damage window after three interactions. The Ravager breaks nearby barricades
 after a charge. Special encounters use illager, trial, mounted, pale, and Nether
 rosters as their required districts become available.
+
+Market wheat nodes give nine wheat per harvest, twice per player per round;
+the food counter sells three bread for two emeralds. Shared routes cost quarry
+12, foundry 20, infirmary 12, barracks 16, ramparts 20 and crypt 24 emeralds.
+Click the same sign twice, 200 milliseconds to three seconds apart, to confirm.
+
+Restore power at the foundry with four iron and four redstone. Physical machines
+sell Juggernog (24 emeralds, eight extra max HP), Stamin-Up (20, Speed I), Double
+Tap (32, 25% extra weapon damage), and Quick Revive (16, three-second channels).
+Quick Revive works before power and can grant a solo replacement self-revive,
+after the current charge is used, at most twice per run. All perks disappear
+immediately when downed, including a self-revive.
+
+The powered mystery box costs 16 emeralds: iron sword 40%, Power I bow 25%,
+crossbow 20%, diamond sword 10%, trident 5%; ranged rewards include arrows.
+Pack-a-Punch upgrades the held run weapon for 36/72/108 emeralds, fully repairs
+it and preserves its enchantments. Damage multipliers are 1.35/1.70/2.10;
+projectiles retain the upgrade and Double Tap strength at firing time.
+
+Five plane parts are scattered through market, quarry, foundry, barracks and
+ramparts. Each player carries one part and installs it at the airstrip. Leaving
+returns undelivered cargo. Power plus all five parts permits a flight to the
+offshore forge. Players board individually over five seconds; rounds continue
+and enemies redeploy toward occupied areas with their health and counts intact.
+A return station operates independently. Later departures require five fuel
+pickups and at least one cleared round since the previous departure.
+
+Defeated enemies can drop Max Ammo, Double Emeralds (30 seconds), Insta-Kill
+(15 seconds), Nuke, or Carpenter. Drops have an 8% chance, a shared 30-second
+cooldown, and at most one pickup outstanding for 20 seconds. Nuke and Insta-Kill
+exclude bosses. Carpenter repairs barricades and supplies modest team healing.
+
+Debug rounds 1–1,000 use the ordinary shared lobby and ready countdown. Teammates
+join without debug permission. Presets use starter equipment at 1–3, iron at
+4–7, Pack-a-Punch I at 8–14, II at 15–24 and III at 25+, with matching supplies,
+routes, power and plane progress. Debug play writes no XP or leaderboard results.
+An active run or conflicting lobby cannot be fast-forwarded.
 
 Placement is controlled by strict `arena/survival.yml`; admission also requires
 the managed `the-storm-survival-enabled` flag for the player. Missing Flipt

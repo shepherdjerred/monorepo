@@ -145,6 +145,10 @@ final class MobFactory {
   void configure(LivingEntity mob, MobArchetype archetype, Tuning tuning, String arena) {
     keys.tag(mob, arena);
     mob.setPersistent(false);
+    // Native size one slimes are harmless; changing size also resets attributes, so do it first.
+    if (mob instanceof org.bukkit.entity.AbstractCubeMob cube) {
+      cube.setSize(2);
+    }
     // Piglins and hoglins outside the Nether turn into zombified mobs, which would leave the wave.
     if (mob instanceof PiglinAbstract piglin) {
       piglin.setImmuneToZombification(true);

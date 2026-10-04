@@ -53,6 +53,9 @@ final class SurvivalRunner implements ArenaRunner {
   private SurvivalItems items;
   private SurvivalCombat combat;
   private SurvivalActions actions;
+  private ZombiesMachines machines;
+  private ZombiesDrops drops;
+  private final SurvivalHud hud;
   private final SurvivalMenus menus;
   private boolean prepared;
   private boolean stopping;
@@ -70,6 +73,9 @@ final class SurvivalRunner implements ArenaRunner {
     items = new SurvivalItems(services.keys(), run);
     combat = newCombat();
     actions = new SurvivalActions(this);
+    machines = new ZombiesMachines(this);
+    drops = new ZombiesDrops(this);
+    hud = new SurvivalHud(this);
     menus = new SurvivalMenus(this);
   }
 
@@ -111,6 +117,22 @@ final class SurvivalRunner implements ArenaRunner {
 
   SurvivalActions actions() {
     return actions;
+  }
+
+  ZombiesMachines machines() {
+    return machines;
+  }
+
+  ZombiesDrops drops() {
+    return drops;
+  }
+
+  SurvivalHud hud() {
+    return hud;
+  }
+
+  void tag(org.bukkit.entity.Entity entity) {
+    services.keys().tag(entity, id());
   }
 
   long xp(UUID id) {
@@ -290,6 +312,12 @@ final class SurvivalRunner implements ArenaRunner {
     } else {
       items.equip(player, SurvivalClass.FIGHTER, false);
       player.teleport(Places.location(world.world(), world.definition().lobby()));
+      if (game.debug())
+        Texts.info(
+            player,
+            "DEBUG lobby · starts at round "
+                + game.startRound()
+                + ". Teammates may join normally; no persistent progression.");
       Texts.info(
           player,
           "Survival: Fighter, Ranger or Medic. /arena class <class>, then /arena ready."
@@ -361,6 +389,8 @@ final class SurvivalRunner implements ArenaRunner {
     }
     if (running()) {
       outsiders();
+      machines.tick();
+      drops.tick();
       revive();
       fighters().forEach(this::recover);
     }
@@ -370,6 +400,7 @@ final class SurvivalRunner implements ArenaRunner {
         cleared();
       }
     }
+    hud.tick();
   }
 
   @Override
@@ -399,6 +430,7 @@ final class SurvivalRunner implements ArenaRunner {
   private void validateStartup(
       Map<com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos, String> blueprint) {
     var entries = blueprint.entrySet().iterator();
+    var palette = new HashMap<String, org.bukkit.block.data.BlockData>();
     startupTask =
         context()
             .scheduler()
@@ -412,9 +444,10 @@ final class SurvivalRunner implements ArenaRunner {
                       if (!volatileBlock(entry.getKey())
                           && !world
                               .block(entry.getKey())
-                              .getType()
-                              .name()
-                              .equals(entry.getValue())) {
+                              .getBlockData()
+                              .matches(
+                                  palette.computeIfAbsent(
+                                      entry.getValue(), BlueprintBlock::parse))) {
                         throw new IllegalStateException(
                             "Settlement blueprint is missing or changed at " + entry.getKey());
                       }
@@ -483,6 +516,8 @@ final class SurvivalRunner implements ArenaRunner {
 
   private void beginRound(Collection<Survivor> before) {
     map.state().nextRound();
+    var spawnIndex = 0;
+    prepareDebug(before);
     for (var survivor : game.players()) {
       var prior = before.stream().filter(old -> old.id().equals(survivor.id())).findFirst();
       var player = context().server().getPlayer(survivor.id());
@@ -493,10 +528,21 @@ final class SurvivalRunner implements ArenaRunner {
         items.equip(player, survivor.role(), true);
         actions.applyPerks(player);
         player.teleport(
-            Places.location(world.world(), world.definition().playerSpawns().getFirst()));
+            Places.location(
+                world.world(),
+                world
+                    .definition()
+                    .playerSpawns()
+                    .get(spawnIndex++ % world.definition().playerSpawns().size())));
       } else if (prior.filter(old -> old.status() == Survivor.Status.LOBBY).isPresent()) {
+        if (game.debug()) items.debug(player, game.startRound());
         player.teleport(
-            Places.location(world.world(), world.definition().playerSpawns().getFirst()));
+            Places.location(
+                world.world(),
+                world
+                    .definition()
+                    .playerSpawns()
+                    .get(spawnIndex++ % world.definition().playerSpawns().size())));
         if (survivor.role() == SurvivalClass.BEASTMASTER) {
           world.spawnWolves(player, 1);
         }
@@ -505,11 +551,24 @@ final class SurvivalRunner implements ArenaRunner {
     combat.begin(game.round(), game.participants().size(), online());
   }
 
+  private void prepareDebug(Collection<Survivor> before) {
+    if (!game.debug() || before.stream().noneMatch(p -> p.status() == Survivor.Status.LOBBY))
+      return;
+    if (game.startRound() >= 4)
+      map.content().zones().stream().filter(map.state()::unlockable).forEach(map::unlock);
+    map.labels();
+    machines.debug(game.startRound());
+  }
+
   private void keepMembers() {
     for (var player : online()) {
+      if (downed(player.getUniqueId())) continue;
       if (isFighter(player.getUniqueId())) {
-        map.contain(player);
-      } else if (!world.contains(Places.at(player))
+        map.contain(player, combat::castDanger);
+      } else if (player.getGameMode() == org.bukkit.GameMode.SPECTATOR) {
+        if (!world.contains(Places.at(player)))
+          player.teleport(Places.location(world.world(), world.definition().spectator()));
+      } else if (!map.content().lobbyArea().contains(Places.point(Places.at(player)))
           && !player.isDead()
           && game.player(player.getUniqueId())
               .filter(p -> p.status() != Survivor.Status.JOINING)
@@ -539,21 +598,33 @@ final class SurvivalRunner implements ArenaRunner {
                       game.player(p.getUniqueId())
                           .filter(s -> s.status() == Survivor.Status.DOWNED)
                           .isPresent())
-              .filter(p -> Places.at(p).distanceSquared(Places.at(rescuer)) < 9)
+              .filter(
+                  p ->
+                      Places.at(p).distanceSquared(Places.at(rescuer)) <= 9
+                          && rescuer.hasLineOfSight(p))
               .findFirst();
       if (!rescuer.isSneaking() || target.isEmpty()) {
         revival.interrupt(id);
         continue;
       }
       var downed = target.orElseThrow();
-      rescuer.sendActionBar(
-          net.kyori.adventure.text.Component.text(
-              "Reviving " + downed.getName() + " — hold sneak"));
-      if (revival.channel(id, downed.getUniqueId(), context().time().instant())) {
+      var seconds =
+          actions.has(
+                  rescuer,
+                  com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.QUICK_REVIVE)
+              ? 3
+              : 5;
+      var complete = revival.channel(id, downed.getUniqueId(), context().time().instant(), seconds);
+      var percent =
+          (int) Math.round(revival.progress(id, context().time().instant(), seconds) * 100);
+      hud.hint(rescuer, "Reviving " + downed.getName() + " · " + percent + "% · hold sneak", 2);
+      hud.hint(downed, rescuer.getName() + " is reviving you · " + percent + "%", 2);
+      if (complete) {
         game.revive(downed.getUniqueId());
         downed.setGameMode(GameMode.SURVIVAL);
         downed.setHealth(8);
         downed.setGlowing(false);
+        downed.setNoDamageTicks(40);
         revival.interrupt(id);
         Texts.info(downed, "You were revived.");
       }
@@ -574,6 +645,7 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   void hurt(Player player, double finalDamage) {
+    if (finalDamage <= 0) return;
     revival.interrupt(player.getUniqueId());
     if (finalDamage > 0 && isFighter(player.getUniqueId())) {
       recovery.hurt(player.getUniqueId(), context().time().instant());
@@ -582,6 +654,8 @@ final class SurvivalRunner implements ArenaRunner {
       return;
     }
     var self = game.down(player.getUniqueId(), context().time().instant());
+    actions.losePerks(player);
+    machines.interrupt(player.getUniqueId());
     player.setHealth(self ? 10 : 1);
     player.setFireTicks(0);
     player.closeInventory();
@@ -601,6 +675,7 @@ final class SurvivalRunner implements ArenaRunner {
 
   void interrupted(UUID id) {
     revival.interrupt(id);
+    machines.interrupt(id);
   }
 
   boolean downed(UUID id) {
@@ -620,6 +695,7 @@ final class SurvivalRunner implements ArenaRunner {
   private void cleared() {
     var now = context().time().instant();
     for (var player : game.participants()) {
+      if (game.debug()) continue;
       credit(new SurvivalProgress.Credit(player.id(), run, "round:" + game.round(), 10));
       context()
           .logFailure(
@@ -638,6 +714,7 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   private void credit(SurvivalProgress.Credit credit) {
+    if (game.debug()) return;
     context()
         .onMain(
             services.progress().credit(credit),
@@ -651,6 +728,7 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   private void leave(UUID id) {
+    machines.leave(id);
     game.leave(id);
     spectators.remove(id);
     revival.interrupt(id);
@@ -658,9 +736,12 @@ final class SurvivalRunner implements ArenaRunner {
     world.removeWolves(id);
     var player = context().server().getPlayer(id);
     if (player != null) {
+      actions.losePerks(player);
       player.setGlowing(false);
+      hud.leave(player);
       services.snapshots().restore(player);
     }
+    actions.leave(id);
     if (!stopping && (game.participants().isEmpty() || game.wiped())) {
       stop();
     }
@@ -674,6 +755,7 @@ final class SurvivalRunner implements ArenaRunner {
     stopping = true;
     try {
       combat.reset();
+      drops.reset();
       if (prepared && world.chunksReady()) {
         map.reset();
       }
@@ -689,6 +771,8 @@ final class SurvivalRunner implements ArenaRunner {
       items = new SurvivalItems(services.keys(), run);
       combat = newCombat();
       actions = new SurvivalActions(this);
+      machines = new ZombiesMachines(this);
+      drops = new ZombiesDrops(this);
     } finally {
       stopping = false;
     }

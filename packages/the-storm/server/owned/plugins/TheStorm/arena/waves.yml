@@ -245,6 +245,17 @@ mobs:
     rider: null
     behavior: CHASE
     blast: 0
+  arena-slime:
+    type: SLIME
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
   magma-cube:
     type: MAGMA_CUBE
     health: 1.0
