@@ -27,7 +27,14 @@ import {
   mcWeUndoCommand,
   type TargetOptions,
 } from "#commands/mc/world.ts";
+import {
+  LIVE_WRITE_OPTIONS,
+  liveWriteFlags,
+  type LiveWriteValues,
+} from "#lib/mc/live.ts";
 import { parseMcArgs } from "./mc-args.ts";
+import { handleMcLive } from "./mc-live.ts";
+import { MC_USAGE, subcommandUsage } from "./mc-usage.ts";
 import { handleMcActor, handleMcPlaytest } from "./mc-play.ts";
 import {
   BoxSchema,
@@ -42,6 +49,7 @@ import {
   SandboxCreateRequestSchema,
   WorldKindSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
+import { parseAffects } from "@shepherdjerred/mc-harness/protocol/live.ts";
 import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
 import { wantsHelp } from "@shepherdjerred/mc-harness/protocol/argv.ts";
 import {
@@ -49,75 +57,11 @@ import {
   DEFAULT_SANDBOX_TTL_SECONDS,
 } from "@shepherdjerred/mc-harness/protocol/paths.ts";
 
-export const MC_USAGE = `
-toolkit mc — drive Minecraft sandboxes through the mc-harness daemon
-
-Daemon (runs from the monorepo checkout; needs Docker; other commands start it):
-  toolkit mc daemon start [--ttl 4h]
-  toolkit mc daemon status [--json]
-  toolkit mc daemon stop                 Also removes sandboxes not started with --keep
-
-Sandboxes (Paper 26.2 + WorldEdit + MCBridge; build MCBridge first). Profiles:
-paper, storm-dev (Docker by default); storm-prod, storm-candidate (the published
-image; cluster by default, ttl ≤ 8h):
-  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep] [--json]
-  toolkit mc sandbox ls [--json]
-  toolkit mc sandbox down <id…> | --all
-
-Target commands (--target <sandbox-id>; defaults to the only running sandbox):
-  toolkit mc info                        Versions, worlds, plugins, capabilities
-  toolkit mc cmd <command…>              Console command with captured output
-  toolkit mc we --world <w> [--pos1 x,y,z] [--pos2 x,y,z] [--at x,y,z] "<//command>"
-  toolkit mc we-undo [--steps 1]
-  toolkit mc paste --world <w> --file f.schem --at x,y,z [--rotate 0|90|180|270] [--ignore-air]
-  toolkit mc region read --world <w> <x1,y1,z1> <x2,y2,z2> [--out f.json]
-  toolkit mc snapshot create --world <w> <x1,y1,z1> <x2,y2,z2> [--label s]
-  toolkit mc snapshot ls | get <id> --out f.schem | restore <id>
-  toolkit mc players
-  toolkit mc registry --out f.json       Block registry (feeds mc-harness gen-registry)
-  toolkit mc events [--since 0] [--limit 200]
-  toolkit mc logs [-n 200]
-
-Actors (Citizens player NPCs; profiles paper and storm-dev):
-  toolkit mc actor spawn <name> --world <w> --at x,y,z [--game-mode SURVIVAL] [--op]
-  toolkit mc actor ls | observe <name> | quit <name…> | --all
-  toolkit mc actor act <name> goto|look|break|use --pos x,y,z [--range 1] [--timeout 30000]
-  toolkit mc actor act <name> place --pos x,y,z --block <state>
-  toolkit mc actor act <name> equip --item <id> [--count 1] [--slot hand]
-  toolkit mc actor act <name> command|chat <text…>
-  toolkit mc actor act <name> attack --entity <uuid> | --type <entity-type>
-
-Playtests (scenario files; sandbox-only):
-  toolkit mc playtest run <file|dir…> [--target <id> | --profile paper|storm-dev] [--grep s] [--keep]
-  toolkit mc playtest ls | show <run-id>
-  toolkit mc playtest new <name> [--dir playtests]
-
-Common options: --target <id>, --session <name> (WorldEdit session, default "agent"), --json
---record <buildDir> on cmd, we and paste appends the op to that build's op log on success.
-Use "cmd -- <command>" for negative coordinates, and --pos1=x,y,z when a value starts with "-".
-
-Build workflow (capture → canvas → author → run/render/lint → replay → promote → undo):
-  toolkit mc build help
-`;
-
-/** The usage lines for one subcommand, e.g. `toolkit mc we --help`. */
-export function subcommandUsage(subcommand: string): string {
-  const lines = MC_USAGE.split("\n").filter((line) =>
-    line.trimStart().startsWith(`toolkit mc ${subcommand}`),
-  );
-  if (lines.length === 0) {
-    return MC_USAGE;
-  }
-  const common = MC_USAGE.split("\n").find((line) =>
-    line.startsWith("Common options:"),
-  );
-  return [...lines, "", common ?? ""].join("\n");
-}
-
 const COMMON = {
   target: { type: "string" },
   json: { type: "boolean", default: false },
   session: { type: "string", default: "agent" },
+  ...LIVE_WRITE_OPTIONS,
 } as const satisfies ParseArgsOptionsConfig;
 
 function fail(message: string): never {
@@ -133,14 +77,20 @@ function parse<const Options extends ParseArgsOptionsConfig>(
   return parseMcArgs(COMMON, args, options);
 }
 
-function targetOptions(values: {
-  target?: string | undefined;
-  json?: boolean | undefined;
-}): TargetOptions {
+function targetOptions(
+  values: LiveWriteValues & {
+    target?: string | undefined;
+    json?: boolean | undefined;
+  },
+): TargetOptions {
   if (values.target === "") {
     fail("--target needs a sandbox id");
   }
-  return { target: values.target, json: values.json === true };
+  return {
+    target: values.target,
+    json: values.json === true,
+    write: liveWriteFlags(values),
+  };
 }
 
 function requireString(value: unknown, name: string): string {
@@ -247,20 +197,30 @@ async function handleWe(args: string[]): Promise<void> {
     pos1: { type: "string" },
     pos2: { type: "string" },
     at: { type: "string" },
+    affects: { type: "string" },
     record: { type: "string" },
   });
   const command = positionals.join(" ");
+  const world = requireString(values.world, "--world");
+  const [a, b, ...extra] = values.affects?.split(":") ?? [];
+  if (values.affects !== undefined && (b === undefined || extra.length > 0)) {
+    fail("--affects must be x1,y1,z1:x2,y2,z2");
+  }
+  const affects =
+    a === undefined || b === undefined ? undefined : parseAffects(world, a, b);
   const op = WeOpSchema.parse({
     command,
     ...(values.pos1 === undefined ? {} : { pos1: parseBlockPos(values.pos1) }),
     ...(values.pos2 === undefined ? {} : { pos2: parseBlockPos(values.pos2) }),
     ...(values.at === undefined ? {} : { at: parseBlockPos(values.at) }),
   });
+  const options = targetOptions(values);
   await mcWeCommand(
     {
-      ...targetOptions(values),
+      ...options,
+      write: { ...options.write, affects },
       session: SessionNameSchema.parse(values.session),
-      world: requireString(values.world, "--world"),
+      world,
       record: values.record,
     },
     op,
@@ -470,6 +430,10 @@ export async function handleMcCommand(
       }
       case "playtest": {
         await handleMcPlaytest(args);
+        return;
+      }
+      case "live": {
+        await handleMcLive(args);
         return;
       }
     }

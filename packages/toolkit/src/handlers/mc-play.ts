@@ -14,6 +14,11 @@ import {
   mcPlaytestShowCommand,
 } from "#commands/mc/playtest.ts";
 import { actorActionBody } from "#lib/mc/play.ts";
+import {
+  LIVE_WRITE_OPTIONS,
+  liveWriteFlags,
+  type LiveWriteValues,
+} from "#lib/mc/live.ts";
 import { parseMcArgs } from "./mc-args.ts";
 import {
   ACTOR_ACTIONS,
@@ -26,11 +31,12 @@ import {
   WorldKindSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
 
-// `toolkit mc actor …` and `toolkit mc playtest …`; usage lives in MC_USAGE (handlers/mc.ts).
+// `toolkit mc actor …` and `toolkit mc playtest …`; usage lives in MC_USAGE (handlers/mc-usage.ts).
 
 const COMMON = {
   target: { type: "string" },
   json: { type: "boolean", default: false },
+  ...LIVE_WRITE_OPTIONS,
 } as const satisfies ParseArgsOptionsConfig;
 
 function fail(message: string): never {
@@ -46,11 +52,17 @@ function parse<const Options extends ParseArgsOptionsConfig>(
   return parseMcArgs(COMMON, args, options);
 }
 
-function targetOptions(values: {
-  target?: string | undefined;
-  json?: boolean | undefined;
-}): ActorOptions {
-  return { target: values.target, json: values.json === true };
+function targetOptions(
+  values: LiveWriteValues & {
+    target?: string | undefined;
+    json?: boolean | undefined;
+  },
+): ActorOptions {
+  return {
+    target: values.target,
+    json: values.json === true,
+    write: liveWriteFlags(values),
+  };
 }
 
 function requireString(value: unknown, name: string): string {

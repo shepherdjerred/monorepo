@@ -15,6 +15,7 @@ for the MCBridge Paper plugin, and the session daemon that holds them.
 | `src/sandbox/`              | Sandbox records (0600, hold secrets), profiles, staging, and the provider contract         |
 | `src/playtest/`             | Scenario API (`define.ts`), the per-run child process, expectations and run reports        |
 | `src/target.ts`             | `Target`: one server the harness acts on (bridge client + log tail)                        |
+| `src/live/`                 | Live tsmc: cluster status, port-forward, write guard, Velero backups, journal and undo     |
 | `src/daemon/`               | Unix-socket daemon: idle TTL, JSONL logs, sandbox lifecycle, target and playtest routes    |
 | `src/protocol/build.ts`     | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)    |
 | `src/build/`                | `toolkit mc build` CLI: capture, canvas, compile, run, render, lint, replay, promote, undo |
@@ -154,6 +155,49 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 
 The CLI reaches servers only through the daemon socket, so the daemon remains
 the sole owner of sandboxes and bridge tokens.
+
+## Live minecraft-tsmc
+
+`--target live` (never inferred) makes the daemon's `LiveService`
+(`src/live/`) the target. It reads cluster state as the
+`mc-sandbox:mc-harness` ServiceAccount (`kubectl --as`): the StatefulSet, pod
+`minecraft-tsmc-0` and the `sjer.red/mining-reset-lock` annotation. An asleep
+or locked server is a 409 refusal; the harness never scales, patches or
+annotates anything. When usable, it supervises a `kubectl port-forward` to the
+pod's MCBridge port 25580. The bridge token comes only from the daemon's
+`MC_BRIDGE_TOKEN` environment (from the `storm-brain` 1Password item). Logs come
+from bridge `log` events, because the ServiceAccount has no `pods/log` there.
+
+Every write route goes through `guarded()` (`src/daemon/live-routes.ts`).
+Sandbox writes run directly. Live writes are assessed and authorized by the
+pure guard (`src/live/guard.ts`) from the `x-mc-*` request headers (reason,
+allow-players, confirm-dangerous, affects):
+
+- **Tier 0**: commands and actor moves, journaled only.
+- **Tier 1**: WorldEdit, paste, snapshot restore and actor block actions. The
+  write's box is snapshotted on the bridge before it runs, so
+  `live undo` can restore it.
+- **Tier 2**: regions over `mcLiveMaxRegionVolume` and dangerous commands.
+  These also need a clean completed Velero backup covering `minecraft-tsmc`
+  newer than `mcLiveBackupMaxAgeHours`; dangerous commands also need
+  `--confirm-dangerous`.
+
+The guard refuses outright:
+
+- console block commands, which could not be undone;
+- worlds outside `mcLiveWorlds` (`mining` is rejected at config load);
+- boxes over the snapshot limit, and selection-less WorldEdit shapes without
+  `--affects`;
+- humans inside the box. Humans within `mcLiveNearPlayerRadius` need
+  `--allow-players`; NPCs are ignored.
+
+Each attempt that passes the guard is appended to
+`~/.toolkit/mc/journal/live/<date>.jsonl` with its reason, tier, box, humans
+online, backup and snapshot id, whether or not it succeeds. `live undo` is
+last-in-first-out over overlapping boxes. `live backup` creates a Velero
+`Backup` shaped like the mining reset's.
+
+Operator steps: the wiki how-to "Operate The Storm with the agent harness".
 
 ## Commands
 

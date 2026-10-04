@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -21,8 +22,12 @@ import {
   LogsResponseSchema,
   SnapshotBytesResponseSchema,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
+import {
+  type LiveWriteFlags,
+  liveWriteHeaders,
+} from "@shepherdjerred/mc-harness/protocol/live.ts";
 import { recordOp, storeSchematic } from "#lib/mc/build.ts";
-import { daemonRequest } from "#lib/mc/client.ts";
+import { daemonRequest, daemonSend } from "#lib/mc/client.ts";
 import {
   renderCommand,
   renderEvents,
@@ -34,7 +39,25 @@ import {
 } from "#lib/mc/render.ts";
 import { resolveTarget } from "#lib/mc/target.ts";
 
-export type TargetOptions = { target: string | undefined; json: boolean };
+export type TargetOptions = {
+  target: string | undefined;
+  json: boolean;
+  /** Live write flags; the daemon requires a reason for `--target live` writes. */
+  write?: LiveWriteFlags | undefined;
+};
+
+/** POSTs a write to the target; live writes carry the guard's flags as headers. */
+async function postWrite<Schema extends z.ZodType>(
+  schema: Schema,
+  options: TargetOptions,
+  action: string,
+  body: unknown,
+): Promise<z.infer<Schema>> {
+  return daemonSend(schema, "POST", await targetPath(options, action), {
+    body,
+    headers: liveWriteHeaders(options.write ?? {}),
+  });
+}
 
 /** `--record <buildDir>`: append the op to that build's op log on success. */
 export type RecordOption = { record: string | undefined };
@@ -55,12 +78,9 @@ export async function mcCmdCommand(
   options: TargetOptions & RecordOption,
   command: string,
 ): Promise<void> {
-  const result = await daemonRequest(
-    CommandResponseSchema,
-    "POST",
-    await targetPath(options, "command"),
-    { command },
-  );
+  const result = await postWrite(CommandResponseSchema, options, "command", {
+    command,
+  });
   print(options.json, result, renderCommand);
   if (!result.success) {
     process.exitCode = 1;
@@ -79,12 +99,11 @@ export async function mcWeCommand(
   options: TargetOptions & RecordOption & { session: string; world: string },
   op: WeOp,
 ): Promise<void> {
-  const result = await daemonRequest(
-    WeRunResponseSchema,
-    "POST",
-    await targetPath(options, "we"),
-    { session: options.session, world: options.world, ops: [op] },
-  );
+  const result = await postWrite(WeRunResponseSchema, options, "we", {
+    session: options.session,
+    world: options.world,
+    ops: [op],
+  });
   print(options.json, result, renderWe);
   if (result.results.some((entry) => !entry.ok)) {
     process.exitCode = 1;
@@ -104,12 +123,10 @@ export async function mcWeUndoCommand(
   options: TargetOptions & { session: string },
   steps: number,
 ): Promise<void> {
-  const result = await daemonRequest(
-    WeUndoResponseSchema,
-    "POST",
-    await targetPath(options, "undo"),
-    { session: options.session, steps },
-  );
+  const result = await postWrite(WeUndoResponseSchema, options, "undo", {
+    session: options.session,
+    steps,
+  });
   print(
     options.json,
     result,
@@ -128,19 +145,14 @@ export async function mcPasteCommand(
   },
 ): Promise<void> {
   const bytes = await Bun.file(paste.file).arrayBuffer();
-  const result = await daemonRequest(
-    WePasteResponseSchema,
-    "POST",
-    await targetPath(options, "paste"),
-    {
-      session: options.session,
-      world: options.world,
-      schematic: Buffer.from(bytes).toString("base64"),
-      at: paste.at,
-      rotate: paste.rotate,
-      ignoreAir: paste.ignoreAir,
-    },
-  );
+  const result = await postWrite(WePasteResponseSchema, options, "paste", {
+    session: options.session,
+    world: options.world,
+    schematic: Buffer.from(bytes).toString("base64"),
+    at: paste.at,
+    rotate: paste.rotate,
+    ignoreAir: paste.ignoreAir,
+  });
   print(
     options.json,
     result,
@@ -165,10 +177,10 @@ export async function mcRegionReadCommand(
   box: Box,
   out: string | undefined,
 ): Promise<void> {
-  const region = await daemonRequest(
+  const region = await postWrite(
     RegionReadResponseSchema,
-    "POST",
-    await targetPath(options, "region-read"),
+    options,
+    "region-read",
     box,
   );
   if (out !== undefined) {

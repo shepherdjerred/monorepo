@@ -48,13 +48,25 @@ import {
   RunIdSchema,
 } from "#protocol/playtest.ts";
 import { PROTOCOL_VERSION } from "#protocol/version.ts";
+import { LIVE_TARGET_ID } from "#protocol/live.ts";
 import { listRuns, readRun, runPlaytests } from "#daemon/playtests.ts";
 import type { SandboxBackend } from "#sandbox/provider.ts";
 import { toSummary } from "#sandbox/record.ts";
+import { pasteBox } from "#src/live/paste-box.ts";
+import type { LiveService } from "#src/live/service.ts";
 import type { Target } from "#src/target.ts";
+import { body, DaemonError, reply } from "./http.ts";
+import {
+  dispatchLive,
+  guarded,
+  liveErrorResponse,
+  snapshotBox,
+} from "./live-routes.ts";
 
 export type DaemonContext = {
   provider: SandboxBackend;
+  /** Live minecraft-tsmc (`--target live`). */
+  live: LiveService;
   /** Resolves a ready sandbox to a target; throws DaemonError(404) otherwise. */
   target: (id: string) => Promise<Target>;
   startedAt: string;
@@ -64,33 +76,7 @@ export type DaemonContext = {
   log: (msg: string, extra?: Record<string, unknown>) => void;
 };
 
-export class DaemonError extends Error {
-  constructor(
-    message: string,
-    readonly status = 400,
-  ) {
-    super(message);
-  }
-}
-
 const SnapshotRestoreBodySchema = z.strictObject({ id: z.string().min(1) });
-
-async function body<Schema extends z.ZodType>(
-  request: Request,
-  schema: Schema,
-): Promise<z.infer<Schema>> {
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    throw new DaemonError("Request body must be JSON");
-  }
-  const parsed = schema.safeParse(raw);
-  if (!parsed.success) {
-    throw new DaemonError(`Invalid request: ${parsed.error.message}`);
-  }
-  return parsed.data;
-}
 
 function intParam(url: URL, name: string, fallback: number): number {
   const raw = url.searchParams.get(name);
@@ -101,11 +87,6 @@ function intParam(url: URL, name: string, fallback: number): number {
     throw new DaemonError(`${name} must be a non-negative integer`);
   }
   return Number(raw);
-}
-
-/** Validates an outgoing body so the daemon never emits off-contract JSON. */
-function reply(schema: z.ZodType, value: unknown): Response {
-  return Response.json(schema.parse(value));
 }
 
 type TargetCall = {
@@ -172,7 +153,14 @@ async function targetPost(call: TargetCall): Promise<Response | null> {
     case "command": {
       const { command } = await body(request, CommandRequestSchema);
       ctx.log("command", { target: id, command });
-      return reply(CommandResponseSchema, await bridge.command(command));
+      return reply(
+        CommandResponseSchema,
+        await guarded(
+          call,
+          () => Promise.resolve({ kind: "command", command }),
+          (live) => live.bridge.command(command),
+        ),
+      );
     }
     case "we": {
       const run = await body(request, WeRunRequestSchema);
@@ -181,16 +169,46 @@ async function targetPost(call: TargetCall): Promise<Response | null> {
         world: run.world,
         commands: run.ops.map((op) => op.command),
       });
-      return reply(WeRunResponseSchema, await bridge.weRun(run));
+      return reply(
+        WeRunResponseSchema,
+        await guarded(
+          call,
+          () => Promise.resolve({ kind: "we", world: run.world, ops: run.ops }),
+          (live) => live.bridge.weRun(run),
+        ),
+      );
     }
     case "paste": {
       const paste = await body(request, WePasteRequestSchema);
       ctx.log("paste", { target: id, world: paste.world, at: paste.at });
-      return reply(WePasteResponseSchema, await bridge.wePaste(paste));
+      return reply(
+        WePasteResponseSchema,
+        await guarded(
+          call,
+          async () => ({
+            kind: "paste",
+            world: paste.world,
+            box: await pasteBox(
+              paste.world,
+              paste.at,
+              paste.rotate,
+              paste.schematic,
+            ),
+          }),
+          (live) => live.bridge.wePaste(paste),
+        ),
+      );
     }
     case "undo": {
       const undo = await body(request, WeUndoRequestSchema);
-      return reply(WeUndoResponseSchema, await bridge.weUndo(undo));
+      return reply(
+        WeUndoResponseSchema,
+        await guarded(
+          call,
+          () => Promise.resolve({ kind: "we-undo", steps: undo.steps }),
+          (live) => live.bridge.weUndo(undo),
+        ),
+      );
     }
     case "region-read": {
       const box = await body(request, BoxSchema);
@@ -208,13 +226,33 @@ async function targetPost(call: TargetCall): Promise<Response | null> {
       ctx.log("snapshot-restore", { target: id, snapshot: sid });
       return reply(
         SnapshotRestoreResponseSchema,
-        await bridge.snapshotRestore(sid),
+        await guarded(
+          call,
+          async () => ({
+            kind: "snapshot-restore",
+            snapshotId: sid,
+            box: await snapshotBox(target, sid),
+          }),
+          (live) => live.bridge.snapshotRestore(sid),
+        ),
       );
     }
     case "actors": {
       const spawn = await body(request, ActorSpawnRequestSchema);
       ctx.log("actor spawn", { target: id, actor: spawn.name });
-      return reply(ActorSchema, await bridge.actorSpawn(spawn));
+      return reply(
+        ActorSchema,
+        await guarded(
+          call,
+          () =>
+            Promise.resolve({
+              kind: "actor-spawn",
+              name: spawn.name,
+              world: spawn.world,
+            }),
+          (live) => live.bridge.actorSpawn(spawn),
+        ),
+      );
     }
   }
   const actor = actorPath(action);
@@ -224,10 +262,31 @@ async function targetPost(call: TargetCall): Promise<Response | null> {
     ctx.log("actor act", { target: id, actor: actor.name, action: act });
     return reply(
       ActorActionResponseSchema,
-      await bridge.actorAct(actor.name, act, parsed),
+      await guarded(
+        call,
+        async () => ({
+          kind: "actor-act",
+          name: actor.name,
+          act,
+          pos: "pos" in parsed ? parsed.pos : undefined,
+          command: "command" in parsed ? parsed.command : undefined,
+          world: BLOCK_ACTIONS.has(act)
+            ? await actorWorld(target, actor.name)
+            : undefined,
+        }),
+        (live) => live.bridge.actorAct(actor.name, act, parsed),
+      ),
     );
   }
   return null;
+}
+
+/** Actor actions that change blocks; the guard needs the actor's world. */
+const BLOCK_ACTIONS: ReadonlySet<string> = new Set(["break", "place", "use"]);
+
+async function actorWorld(target: Target, name: string): Promise<string> {
+  const observation = await target.bridge.actorObserve(name);
+  return observation.actor.world;
 }
 
 async function targetDelete(call: TargetCall): Promise<Response | null> {
@@ -238,7 +297,11 @@ async function targetDelete(call: TargetCall): Promise<Response | null> {
   call.ctx.log("actor remove", { target: call.target.id, actor: actor.name });
   return reply(
     ActorRemoveResponseSchema,
-    await call.target.bridge.actorRemove(actor.name),
+    await guarded(
+      call,
+      () => Promise.resolve({ kind: "actor-remove", name: actor.name }),
+      (live) => live.bridge.actorRemove(actor.name),
+    ),
   );
 }
 
@@ -387,6 +450,9 @@ async function dispatch(
   if (root === "playtests" && parts.length <= 2) {
     return dispatchPlaytests(ctx, request, id);
   }
+  if (root === LIVE_TARGET_ID && id !== undefined && parts.length === 2) {
+    return dispatchLive(ctx, url, request, id);
+  }
   if (root === "targets" && id !== undefined && rest.length > 0) {
     return dispatchTarget(ctx, url, request, { id, action: rest.join("/") });
   }
@@ -404,6 +470,10 @@ export async function routeRequest(
   } catch (error) {
     if (error instanceof DaemonError) {
       return Response.json({ error: error.message }, { status: error.status });
+    }
+    const live = liveErrorResponse(error, ctx.log, url.pathname);
+    if (live !== null) {
+      return live;
     }
     if (error instanceof BridgeRequestError) {
       return Response.json(

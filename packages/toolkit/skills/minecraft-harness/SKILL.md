@@ -1,6 +1,6 @@
 ---
 name: minecraft-harness
-description: Drive disposable Minecraft (Paper 26.2) sandboxes through `toolkit mc` — run console commands, edit with WorldEdit, read exact block states, snapshot and restore regions, and watch events and logs. Use to try out a plugin change, prototype a build, or validate a gameplay idea in a throwaway server.
+description: Drive disposable Minecraft (Paper 26.2) sandboxes through `toolkit mc` — run console commands, edit with WorldEdit, read exact block states, snapshot and restore regions, and watch events and logs — and make guarded, journaled, undoable changes on live tsmc with `--target live`. Use to try out a plugin change, prototype a build, validate a gameplay idea, or apply an agreed change to The Storm.
 allowed-tools:
   - Bash
   - Read
@@ -16,7 +16,8 @@ history.
 
 ## Safety
 
-- Sandboxes only. There is no live-server target yet; `--target live` fails.
+- Sandboxes by default. Live tsmc is reached only with an explicit
+  `--target live`; read "Live tsmc" below first.
 - A sandbox is disposable: it is removed at its TTL (default 2h) or when the
   daemon stops, unless created with `--keep`.
 - Ports are bound to `127.0.0.1`. Never print the bridge token or RCON password
@@ -127,6 +128,29 @@ the event tail usually explain it. Limits: actors receive no chat or messages,
 never join, and cannot drive client UI (dialogs, inventories); prove those with
 the-storm's Mineflayer E2E suite. A denied `use` still reports `ok: true`, so
 assert effects. Playtests never run against live servers.
+
+## Live tsmc
+
+Only for a change the user asked for (wiki: "Operate The Storm with the agent harness").
+
+```bash
+toolkit mc live status        # refuses while asleep or mining-reset locked
+toolkit mc cmd --target live --reason "daylight for screenshots" time set noon
+toolkit mc build promote <dir> --target live --reason "<why>" [--confirm <hash>]
+toolkit mc live journal --since 1d
+toolkit mc live undo <journal-id> --reason "<why>"
+```
+
+- Asleep: ask the user to join ts-mc.net. Never scale the StatefulSet, edit
+  mc-router annotations, or touch the mining-reset lock.
+- No token (HTTP 412): the user restarts the daemon with the printed
+  `MC_BRIDGE_TOKEN=$(op read …)` hint. Never print the token.
+- Tier 1 (WorldEdit, paste, restore, actor block actions) is snapshotted first
+  and undoable. Tier 2 (huge regions, `stop`, `kill`, `co rollback`, `//regen`)
+  needs `toolkit mc live backup --wait --reason …`; dangerous commands also need
+  `--confirm-dangerous`. Use `we`/`paste`, not `fill`/`setblock`.
+- A human inside the box blocks the write; within 32 blocks needs
+  `--allow-players`. Rehearse on a `storm-prod` sandbox first.
 
 ## Clean up
 

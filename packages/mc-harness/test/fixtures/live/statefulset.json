@@ -1,0 +1,29 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "StatefulSet",
+  "metadata": {
+    "name": "minecraft-tsmc",
+    "namespace": "minecraft-tsmc",
+    "annotations": {
+      "argocd.argoproj.io/tracking-id": "minecraft-tsmc:apps/StatefulSet:minecraft-tsmc/minecraft-tsmc"
+    }
+  },
+  "spec": {
+    "replicas": 1,
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "name": "minecraft-tsmc",
+            "image": "ghcr.io/shepherdjerred/the-storm-server:adhoc-atmosphere-e62223703f@sha256:e85692205de43135b021995a8a8698559ccb3bc50b269acb911c4e9592da44e2"
+          }
+        ]
+      }
+    }
+  },
+  "status": {
+    "replicas": 1,
+    "readyReplicas": 1,
+    "currentReplicas": 1
+  }
+}

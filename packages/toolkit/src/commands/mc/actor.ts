@@ -7,7 +7,11 @@ import {
   ActorSchema,
   type ActorSpawnRequest,
 } from "@shepherdjerred/mc-harness/protocol/bridge.ts";
-import { daemonRequest } from "#lib/mc/client.ts";
+import {
+  type LiveWriteFlags,
+  liveWriteHeaders,
+} from "@shepherdjerred/mc-harness/protocol/live.ts";
+import { daemonRequest, daemonSend } from "#lib/mc/client.ts";
 import {
   renderActor,
   renderActorAction,
@@ -16,7 +20,12 @@ import {
 } from "#lib/mc/play.ts";
 import { resolveTarget } from "#lib/mc/target.ts";
 
-export type ActorOptions = { target: string | undefined; json: boolean };
+export type ActorOptions = {
+  target: string | undefined;
+  json: boolean;
+  /** Live write flags; the daemon requires a reason for `--target live` actor writes. */
+  write?: LiveWriteFlags | undefined;
+};
 
 async function actorsPath(options: ActorOptions, rest = ""): Promise<string> {
   const id = await resolveTarget(options.target);
@@ -31,11 +40,11 @@ export async function mcActorSpawnCommand(
   options: ActorOptions,
   spawn: ActorSpawnRequest,
 ): Promise<void> {
-  const actor = await daemonRequest(
+  const actor = await daemonSend(
     ActorSchema,
     "POST",
     await actorsPath(options),
-    spawn,
+    { body: spawn, headers: liveWriteHeaders(options.write ?? {}) },
   );
   print(options.json, actor, renderActor);
 }
@@ -67,11 +76,11 @@ export async function mcActorActCommand(
   action: ActorAction,
   body: unknown,
 ): Promise<void> {
-  const result = await daemonRequest(
+  const result = await daemonSend(
     ActorActionResponseSchema,
     "POST",
     await actorsPath(options, `/${encodeURIComponent(name)}/${action}`),
-    body,
+    { body: body, headers: liveWriteHeaders(options.write ?? {}) },
   );
   print(options.json, result, renderActorAction);
   if (!result.ok) {
@@ -94,10 +103,11 @@ export async function mcActorQuitCommand(
     targets = listed.actors.map((actor) => actor.name);
   }
   for (const name of targets) {
-    const { removed } = await daemonRequest(
+    const { removed } = await daemonSend(
       ActorRemoveResponseSchema,
       "DELETE",
       await actorsPath(options, `/${encodeURIComponent(name)}`),
+      { headers: liveWriteHeaders(options.write ?? {}) },
     );
     console.log(`removed ${removed}`);
   }

@@ -25,3 +25,4 @@ The [Minecraft chart](https://github.com/shepherdjerred/monorepo/blob/main/packa
 
 - [About the homelab](/explanation/homelab/overview/)
 - [Connect to a homelab database](/how-to/connect-to-a-homelab-database/) for the local port-forward pattern
+- [Operate The Storm with the agent harness](/how-to/operate-the-storm-with-the-agent-harness/) for guarded agent changes through MCBridge, which reads `MC_BRIDGE_TOKEN` from the same `storm-brain` item

@@ -1,4 +1,4 @@
 interface:
   display_name: "Minecraft Harness"
-  short_description: "Drive disposable Paper sandboxes with WorldEdit and console commands"
+  short_description: "Drive Paper sandboxes, and guarded live tsmc changes, with WorldEdit and console commands"
   default_prompt: "Use toolkit mc to start a Paper sandbox and inspect or edit it with WorldEdit."
