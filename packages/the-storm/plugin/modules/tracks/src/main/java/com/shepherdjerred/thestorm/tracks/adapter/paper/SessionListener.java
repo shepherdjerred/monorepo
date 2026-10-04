@@ -20,11 +20,13 @@ final class SessionListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOWEST)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     sessions.joined(event.getPlayer().getUniqueId());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer().getUniqueId();
     sessions.quit(player);
     commands.forget(player);

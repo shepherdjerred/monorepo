@@ -184,7 +184,7 @@ final class NpcsPaperTest {
     nat.setInvulnerable(true);
     var admin = server.addPlayer("Admin");
     admin.setOp(true);
-    server.dispatchCommand(admin, "npc reload");
+    server.dispatchCommand(admin, "stormnpc reload");
     server.getScheduler().performTicks(2);
     assertThat(mannequin("nat").getUniqueId()).isEqualTo(nat.getUniqueId());
     assertThat(nat.isInvulnerable()).isFalse();
@@ -269,7 +269,7 @@ final class NpcsPaperTest {
     enable();
     var admin = server.addPlayer("Admin");
     admin.setOp(true);
-    server.dispatchCommand(admin, "npc list");
+    server.dispatchCommand(admin, "stormnpc list");
     var lines = messages(admin);
     assertThat(lines.getFirst()).isEqualTo("[NPCs]: 2 NPCs:");
     assertThat(lines)
@@ -284,7 +284,7 @@ final class NpcsPaperTest {
     var admin = server.addPlayer("Admin");
     admin.setOp(true);
     admin.teleport(new Location(world, 12.25, 70, -4.5, 90, 0));
-    server.dispatchCommand(admin, "npc here stan");
+    server.dispatchCommand(admin, "stormnpc here stan");
     assertThat(messages(admin))
         .contains(
             """
@@ -305,7 +305,7 @@ final class NpcsPaperTest {
     writeContent(npc("nat", "Nat", 0.5, "hello"));
     enable();
     var player = server.addPlayer("Alice");
-    server.dispatchCommand(player, "npc list");
+    server.dispatchCommand(player, "stormnpc list");
     assertThat(messages(player)).noneMatch(line -> line.contains("NPCs:"));
   }
 
@@ -319,7 +319,7 @@ final class NpcsPaperTest {
         npc("nat", "Nat the Innkeeper", 0.5, "hello") + npc("thomas", "Thomas", 6.5, "none"));
     var admin = server.addPlayer("Admin");
     admin.setOp(true);
-    server.dispatchCommand(admin, "npc reload");
+    server.dispatchCommand(admin, "stormnpc reload");
     server.getScheduler().performTicks(2);
     assertThat(messages(admin))
         .contains("[NPCs]: Reloaded 2 NPCs: 1 spawned, 1 updated, 0 unchanged, 1 removed.");
@@ -337,7 +337,7 @@ final class NpcsPaperTest {
     writeContent(npc("nat", "Nat", 0.5, "missing-dialogue"));
     var admin = server.addPlayer("Admin");
     admin.setOp(true);
-    server.dispatchCommand(admin, "npc reload");
+    server.dispatchCommand(admin, "stormnpc reload");
     server.getScheduler().performTicks(2);
     var lines = messages(admin);
     assertThat(lines).contains("[NPCs]: Content has 1 problems; kept the old NPCs:");

@@ -40,6 +40,7 @@ final class OwnerNoticesListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var owner = event.getPlayer().getUniqueId();
     replies.whenDone(
         store.listUnnotified(owner),

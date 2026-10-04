@@ -41,6 +41,7 @@ public final class AmbientBarks implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     announce(
         event.getPlayer(),
         requireNonNull(event.getPlayer().getLocation(), "joining player has no location"));

@@ -51,6 +51,7 @@ final class GraveDeaths {
   }
 
   void died(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     if (event.getKeepInventory()) {
       return;
     }

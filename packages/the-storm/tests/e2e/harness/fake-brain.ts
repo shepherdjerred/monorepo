@@ -123,6 +123,20 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
         url.pathname === "/evaluate/v1/boolean" &&
         request.method === "POST"
       ) {
+        const body: unknown = await request.json();
+        const companion = z
+          .strictObject({
+            namespace_key: z.literal("the-storm"),
+            flag_key: z.literal("the-storm-companions-enabled"),
+            entity_id: z.literal("the-storm-companions"),
+            context: z.strictObject({}),
+          })
+          .safeParse(body);
+        if (
+          companion.success &&
+          request.headers.get("x-flipt-environment") === "prod"
+        )
+          return Response.json({ enabled: false });
         const evaluated = z
           .object({
             namespace_key: z.literal("the-storm"),
@@ -134,7 +148,7 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
             context: z.object({ world: z.literal("world") }).strict(),
           })
           .strict()
-          .safeParse(await request.json());
+          .safeParse(body);
         return !evaluated.success ||
           request.headers.get("x-flipt-environment") !== "prod"
           ? new Response("invalid evaluation", { status: 400 })

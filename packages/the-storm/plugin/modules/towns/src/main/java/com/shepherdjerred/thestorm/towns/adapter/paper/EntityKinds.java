@@ -59,6 +59,9 @@ final class EntityKinds {
     if (entity.getUniqueId().equals(attacker)) {
       return new Victim.Self();
     }
+    if (entity.getScoreboardTags().contains("storm_scripted_npc")) {
+      return new Victim.Unprotected();
+    }
     if (entity instanceof Player) {
       return new Victim.OtherPlayer(entity.getUniqueId());
     }

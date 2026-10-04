@@ -59,9 +59,9 @@ public final class Guard {
       return reason(protection.check(caster, ProtectedAction.BUILD, victimAt));
     }
     var kind =
-        target instanceof Player
-            ? HarmTarget.PLAYER
-            : target instanceof Mannequin ? HarmTarget.NPC : HarmTarget.PASSIVE;
+        target.getScoreboardTags().contains("storm_scripted_npc") || target instanceof Mannequin
+            ? HarmTarget.NPC
+            : target instanceof Player ? HarmTarget.PLAYER : HarmTarget.PASSIVE;
     return reason(protection.checkHarm(caster, casterAt, kind, victimAt));
   }
 

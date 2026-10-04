@@ -8,6 +8,7 @@ const modules = [
   "agent",
   "arena",
   "chat",
+  "companions",
   "discord",
   "economy",
   "essentials",
@@ -41,9 +42,9 @@ describe("all modules together", () => {
     expect(logs).not.toContain("The Storm failed to enable");
     expect(logs).not.toContain("Could not validate shard altars");
     expect(logs).not.toContain("Could not prepare arenas");
-    expect(
-      await rcon.command("execute if entity @e[type=minecraft:mannequin]"),
-    ).toContain("Test passed");
+    const roster = await rcon.command("stormnpc list");
+    expect(roster).toContain("36 NPCs");
+    expect(roster).not.toMatch(/missing|unloaded/u);
     expect(await rcon.command("worldborder get")).toContain("40000");
     expect(
       await rcon.command("execute in minecraft:the_nether run worldborder get"),
@@ -83,22 +84,23 @@ describe("all modules together", () => {
     bot,
     rcon,
   }) => {
-    await rcon.command(`tp ${bot.username} 72.5 64 59.5`);
+    await rcon.command("setblock 72 63 61 minecraft:stone");
+    await rcon.command(`tp ${bot.username} 72.5 64 61.5`);
     await waitUntil(
       "farm arrival",
-      () => bot.entity.position.distanceTo(new Vec3(72.5, 64, 59.5)) < 0.2,
+      () => bot.entity.position.distanceTo(new Vec3(72.5, 64, 61.5)) < 0.5,
     );
-    await waitUntil("Martha mannequin", () =>
+    await waitUntil("Martha player body", () =>
       Object.values(bot.entities).some(
         (entity) =>
-          entity.name === "mannequin" &&
-          entity.position.distanceTo(new Vec3(72.5, 64, 59.5)) < 2,
+          entity.type === "player" &&
+          entity.position.distanceTo(new Vec3(72.5, 64, 59.5)) < 0.5,
       ),
     );
     const martha = Object.values(bot.entities).find(
       (entity) =>
-        entity.name === "mannequin" &&
-        entity.position.distanceTo(new Vec3(72.5, 64, 59.5)) < 2,
+        entity.type === "player" &&
+        entity.position.distanceTo(new Vec3(72.5, 64, 59.5)) < 0.5,
     );
     if (martha === undefined)
       throw new Error("Martha disappeared before interaction");
@@ -106,6 +108,7 @@ describe("all modules together", () => {
     bot._client.on("packet", (data: unknown, meta: { name: string }) => {
       if (meta.name === "show_dialog") dialogs.push(data);
     });
+    await bot.activateEntityAt(martha, martha.position.offset(0, 1, 0));
     await bot.activateEntity(martha);
     await waitUntil("Martha dialogue", () =>
       dialogs.some((dialog) => JSON.stringify(dialog).includes("Martha")),

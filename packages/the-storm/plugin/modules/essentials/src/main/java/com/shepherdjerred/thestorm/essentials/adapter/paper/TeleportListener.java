@@ -68,6 +68,7 @@ final class TeleportListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     var player = event.getPlayer();
     safe.deathPoint(player)
         .ifPresent(point -> back.record(player.getUniqueId(), point, BackEntry.Cause.DEATH));

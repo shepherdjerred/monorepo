@@ -116,7 +116,7 @@ final class NpcCombatTest {
             List.of(),
             List.of(new NpcLedger.Death("minecraft:overworld", "stan", 24000))));
     assertThat(combat.awaitingDawn("stan")).isTrue();
-    verify(npcs).reconcile();
+    verify(npcs).reconcileWhenReady();
   }
 
   @Test

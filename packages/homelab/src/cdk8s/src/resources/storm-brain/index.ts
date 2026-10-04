@@ -4,6 +4,7 @@ import {
   Capability,
   Cpu,
   Deployment,
+  DeploymentStrategy,
   EnvValue,
   Probe,
   SeccompProfileType,
@@ -19,6 +20,7 @@ import {
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 
 export const BRAIN_PORT = 3000;
 export const BRAIN_METRICS_PORT = 9090;
@@ -41,7 +43,12 @@ export function createStormBrainDeployment(chart: Chart) {
 
   const deployment = new Deployment(chart, "storm-brain", {
     replicas: 1,
+    strategy: DeploymentStrategy.recreate(),
+    securityContext: { fsGroup: 1000 },
     podMetadata: { labels: { app: "storm-brain" } },
+  });
+  const budget = new ZfsNvmeVolume(chart, "storm-brain-budget", {
+    storage: Size.gibibytes(1),
   });
   const container = deployment.addContainer(
     withCommonProps({
@@ -53,6 +60,9 @@ export function createStormBrainDeployment(chart: Chart) {
       ],
       envVariables: {
         PORT: EnvValue.fromValue(String(BRAIN_PORT)),
+        STORM_COMPANION_BUDGET_DB: EnvValue.fromValue(
+          "/data/companion-budget.db",
+        ),
         METRICS_PORT: EnvValue.fromValue(String(BRAIN_METRICS_PORT)),
         STORM_BRAIN_BEARER_TOKEN: EnvValue.fromSecretValue({
           secret: brainSecretRef,
@@ -102,6 +112,14 @@ export function createStormBrainDeployment(chart: Chart) {
     }),
   );
   container.mount("/tmp", Volume.fromEmptyDir(chart, "storm-brain-tmp", "tmp"));
+  container.mount(
+    "/data",
+    Volume.fromPersistentVolumeClaim(
+      chart,
+      "storm-brain-budget-volume",
+      budget.claim,
+    ),
+  );
   setRevisionHistoryLimit(deployment, 5);
 
   const service = new Service(chart, "storm-brain-service", {

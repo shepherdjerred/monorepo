@@ -978,6 +978,10 @@
         {
           "runner": "gradle",
           "args": ["-p", "plugin", "test"]
+        },
+        {
+          "runner": "vitest",
+          "args": ["tests/rcon.test.ts"]
         }
       ],
       "excludedSuites": [
@@ -987,17 +991,7 @@
         },
         {
           "path": "tests/full",
-          "reason": "All 21 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
-        }
-      ]
-    },
-    {
-      "package": "@shepherdjerred/the-storm-brain",
-      "directory": "packages/the-storm/brain",
-      "steps": [
-        {
-          "runner": "vitest",
-          "args": ["src"]
+          "reason": "All 22 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
         }
       ]
     }

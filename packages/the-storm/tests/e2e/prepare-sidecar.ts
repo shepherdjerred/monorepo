@@ -1,6 +1,6 @@
 import { chmod, chown, cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import { RconClient } from "#e2e/harness/rcon.ts";
 import { stagePlugins } from "./harness/server.ts";
 import { gameplayFixtures } from "./gameplay-fixtures.ts";
 import { paper } from "./harness/pins.ts";

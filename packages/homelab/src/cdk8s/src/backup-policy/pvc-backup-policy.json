@@ -1,5 +1,11 @@
 [
   {
+    "namespace": "storm-brain",
+    "name": "storm-brain-budget",
+    "backup": "enabled",
+    "reason": "Shared companion conversation spend ledger; loss resets billed allowance"
+  },
+  {
     "namespace": "storm-forum",
     "name": "storm-forum-database",
     "backup": "enabled",

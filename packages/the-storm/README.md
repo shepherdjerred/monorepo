@@ -16,7 +16,6 @@ from `plugin/`.
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
-| `brain/`                           | Disabled, manual Mineflayer session for one account; no production sidecar or autonomous gameplay yet                  |
 | `server/`                          | The `minecraft-tsmc` server image: pinned jars, config bundle and patches (see `server/README.md`)                     |
 
 ## Commands
@@ -56,15 +55,49 @@ saplings stay ineligible across restarts through the `skills_placed_block`
 table. Block markers follow pistons, falling blocks, and Enderman movement.
 The module is enabled alongside retirement of the old mcMMO plugin.
 
-The separate `brain/` pilot remains disabled and starts only with its explicit
-`--run` command. When enabled for a supervised trial, it checks for a human
-through RCON before Microsoft authentication and again after Mineflayer spawns.
-It stays connected only during the configured 18:00–20:00 Pacific window and
-while Mineflayer's player roster includes a human. The final human's departure,
-RCON connection loss, bot disconnect, or the window deadline ends the session.
-The end deadline is a single process-local safety timeout; a future recurring
-start belongs to Temporal. See [brain/README.md](brain/README.md) for the
-credential and manual invocation contract.
+## Citizens NPCs and survival companions
+
+Upstream Citizens owns player bodies, skins and navigation for every scripted
+NPC, including guards, trainers and quest givers. Storm retains dialogue,
+schedules, combat rules and quest markers. `/stormnpc` owns Storm's commands;
+Citizens retains `/npc`. Legacy mannequin bodies are removed only after
+Citizens reconciliation succeeds. Citizens and CoreProtect jars are pinned
+and checksum verified in [server/plugins.json](server/plugins.json).
+
+The `companions` module provides Rowan, Juniper and Flint. Utility scoring,
+bounded recipe planning and incremental resource scans run locally. Their
+inventories hold real items; mining, crafting, crop replanting, eating and
+placement use native Paper operations and normal events. Shelters consume
+gathered materials and stay within 12×12×8 and 256 block changes. Crafting
+supports material-choice hand and workbench recipes; furnace cooking and
+arbitrary player automation are outside this action set.
+
+Availability requires the managed `the-storm-companions-enabled` flag,
+14:00–22:00 Pacific local time, and a real human online. Citizens entities do
+not count as humans or receive player join rewards. Companions defend against
+their attackers under ordinary PvP and claim rules. CoreProtect history and
+queue checks prevent changes to another player's recorded blocks.
+
+SQLite stores identity, inventory, vitals and construction progress. Each
+world or inventory effect records a pending journal entry before execution.
+An interrupted effect pauses that identity for operator reconciliation; it
+does not replay the effect or issue another starter kit. This does not make
+Minecraft world saves atomic with SQLite. Back up the world and Storm database
+together, and inspect both after an unclean shutdown.
+
+`/companion status` and `/companion reconcile` require
+`thestorm.companions.admin`. Nearby players can use `/companion <id> follow`,
+`stop` and `resume`. `resume` releases an ordinary stop, not a failed journal.
+The kill switch is the managed gameplay flag. Provider outages and chat budget
+exhaustion leave local survival running. Conversation uses the ordinary chat
+policy, responds only to nearby name mentions, and receives no action tools.
+Its contract and shared budget are documented in [storm-brain](../storm-brain/README.md).
+
+The Temporal core-hour schedule reconciles an already-running server and never
+wakes it. The module is installed while the managed production rollout remains
+disabled until live acceptance. Mineflayer
+is retained only as a real-client E2E dependency. `tests/e2e/harness/rcon.ts`
+contains the test client's control protocol.
 
 ## Modules
 

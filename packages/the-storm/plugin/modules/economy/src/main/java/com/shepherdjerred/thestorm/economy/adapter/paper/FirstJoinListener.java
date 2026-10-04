@@ -30,6 +30,7 @@ public final class FirstJoinListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     var uuid = player.getUniqueId();
     replies.whenDone(

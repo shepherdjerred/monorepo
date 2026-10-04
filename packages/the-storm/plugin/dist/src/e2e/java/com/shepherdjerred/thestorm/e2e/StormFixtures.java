@@ -29,6 +29,14 @@ public final class StormFixtures extends JavaPlugin {
       Objects.requireNonNull(
           new WorldCreator(name).type(WorldType.FLAT).generateStructures(false).createWorld());
     }
+    prepareHomes();
+    prepareArena();
+    prepareAltars();
+    prepareSeasonalDoors();
+    getLogger().info("Prepared synthetic fixtures for all Storm modules");
+  }
+
+  private void prepareHomes() {
     stand(section(yaml("essentials.yml"), "spawn"));
     for (var anchor : yaml("world.yml").getMapList("merchant.anchors")) {
       stand(

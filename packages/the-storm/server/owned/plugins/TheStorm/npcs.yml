@@ -37,10 +37,7 @@ guard:
   cooldownTicks: 20
 
 navigator:
-  # The hidden mob whose pathfinder plans NPC walks. It must be a passive mob
-  # (monsters do not exist in Peaceful) about the size of a player: a llama is
-  # 0.9 wide and 1.87 tall, so its paths fit a Mannequin.
-  entity: minecraft:llama
+  # Citizens plans paths for the player body.
   # The longest path planned at once, in blocks; longer walks re-plan.
   followRange: 48
 

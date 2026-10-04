@@ -25,3 +25,4 @@ modules:
   world: true
   tickets: true
   agent: true
+  companions: true

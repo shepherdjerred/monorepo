@@ -44,6 +44,20 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
         "e5696a6d064b9969437a8888be91b0941148a28e0c3736de1554a00254a5d142",
     },
     {
+      name: "CoreProtect",
+      version: "24.1",
+      url: "https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar",
+      sha256:
+        "a2acef7c06ef201355cef07d591a6055dfed358ad768faaaaaf4e276865ecc97",
+    },
+    {
+      name: "Citizens",
+      version: "2.0.44-b4256",
+      url: "https://ci.citizensnpcs.co/job/Citizens2/4256/artifact/dist/target/Citizens-2.0.44-b4256.jar",
+      sha256:
+        "d1f02151fd7c1ccd0b8d317249ea9cf60039711b4e3317bd6641a385878946c6",
+    },
+    {
       name: "ViaVersion",
       version: "5.12.0",
       url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",

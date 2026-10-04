@@ -46,7 +46,7 @@ final class ShippedContentTest {
   void theShippedConfigParses() {
     var config = ConfigFiles.load(OWNED.resolve("npcs.yml"), NpcsConfig.class);
     assertThat(config.movement().speed()).isLessThanOrEqualTo(MovementSettings.MAX_SPEED);
-    assertThat(config.navigator().entity()).isEqualTo("minecraft:llama");
+    assertThat(config.navigator().followRange()).isEqualTo(48.0);
     assertThat(config.markers().available()).isEqualTo("!");
     assertThat(config.markers().turnIn()).isEqualTo("?");
     assertThat(config.guard().attackReach()).isLessThan(config.guard().detectionRadius());
@@ -162,7 +162,7 @@ final class ShippedContentTest {
   void configRecordsRejectBadValues() {
     assertThatThrownBy(() -> new NpcsConfig.Animation(4, 2, 20))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new NpcsConfig.Navigator("llama", 48))
+    assertThatThrownBy(() -> new NpcsConfig.Navigator(8))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new NpcsConfig.Markers("", "?", 2.3))
         .isInstanceOf(IllegalArgumentException.class);

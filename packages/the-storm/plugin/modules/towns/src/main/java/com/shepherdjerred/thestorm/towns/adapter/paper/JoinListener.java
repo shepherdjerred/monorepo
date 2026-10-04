@@ -27,12 +27,14 @@ final class JoinListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     record(event.getPlayer());
     members.tellInvitations(event.getPlayer());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     record(event.getPlayer());
   }
 

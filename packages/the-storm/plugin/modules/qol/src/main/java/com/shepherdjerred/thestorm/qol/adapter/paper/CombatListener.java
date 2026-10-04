@@ -89,12 +89,14 @@ final class CombatListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     tracker.clear(event.getEntity().getUniqueId());
   }
 
   /** First, so the death (and its grave) happens before anything else handles the logout. */
   @EventHandler(priority = EventPriority.LOWEST)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     var id = player.getUniqueId();
     var tagged = tracker.inCombat(id);

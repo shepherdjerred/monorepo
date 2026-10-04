@@ -117,7 +117,6 @@ describe("ManagedFlagInventorySchema", () => {
       "temporal",
       "alert-dashboard",
       "the-storm",
-      "the-storm-companion",
       "storm",
     ]);
     expect(
@@ -351,36 +350,35 @@ describe("The Storm companion pilot rollout", () => {
     }
   });
 
-  test("targets Alt 1 in beta while keeping production and fallback off", () => {
-    const key = "the-storm-companion-pilot-enabled";
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === key,
-    );
-    expect(declared).toMatchObject({ default: false, rollouts: [] });
+  test.each([
+    ["the-storm-companions-enabled", "the-storm"],
+    ["storm-brain-conversation-enabled", "storm"],
+  ])(
+    "enables %s in beta while keeping production and fallback off",
+    (key, namespace) => {
+      const declared = managedFlagInventory.flags.find(
+        (flag) => flag.key === key,
+      );
+      expect(declared).toMatchObject({ default: false, rollouts: [] });
 
-    const beta = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "the-storm-companion",
-    ).find((flag) => flag.key === key);
-    expect(beta).toMatchObject({
-      default: false,
-      rollouts: [
-        {
-          segmentKey: "the-storm-companion-alt-1",
-          constraints: [{ property: "pilot", value: "alt-1" }],
-          result: true,
-        },
-      ],
-    });
+      const beta = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "beta",
+        namespace,
+      ).find((flag) => flag.key === key);
+      expect(beta).toMatchObject({
+        default: true,
+        rollouts: [],
+      });
 
-    const prod = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "the-storm-companion",
-    ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: false, rollouts: [] });
-  });
+      const prod = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        namespace,
+      ).find((flag) => flag.key === key);
+      expect(prod).toMatchObject({ default: false, rollouts: [] });
+    },
+  );
 });
 
 describe("durable iMessage ingress rollout", () => {

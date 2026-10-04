@@ -17,6 +17,22 @@ export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
       "Awaiting real-server recovery rehearsal and live plugin acceptance",
   },
   {
+    id: "the-storm-companion-core-hours",
+    workflowType: "reconcileStormCompanionsWorkflow",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "0 14,22 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "5 minutes",
+    memo: "Reconcile Citizens companions at Pacific core-hour boundaries without waking the server",
+    initialPauseNote:
+      "Awaiting Citizens survival rollout and real-server acceptance",
+  },
+  {
     id: "the-storm-mining-reset-quarterly",
     workflowType: "runMiningWorldResetWorkflow",
     args: [],

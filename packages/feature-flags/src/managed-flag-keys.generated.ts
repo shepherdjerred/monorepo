@@ -11,7 +11,6 @@ export const MANAGED_NAMESPACES = [
   "temporal",
   "alert-dashboard",
   "the-storm",
-  "the-storm-companion",
   "storm",
 ] as const;
 
@@ -47,10 +46,10 @@ export const SCOUT_FLAG_KEYS = [
   "scout-bucks-ask-model",
   "scout-consumer-player-profiles-enabled",
   "scout-explore-analysis-enabled",
-  "scout-explore-model-picker-enabled",
-  "scout-explore-spend-policy",
   "scout-explore-model",
+  "scout-explore-model-picker-enabled",
   "scout-explore-quota-limits",
+  "scout-explore-spend-policy",
   "scout-feature-tip-cooldown-hours",
   "scout-feature-tip-percent",
   "scout-report-ai-model",
@@ -108,9 +107,9 @@ export const SCOUT_VARIANT_FLAG_KEYS = [
   "llm-hourly-token-budget",
   "scout-betting-parlay-ai-model",
   "scout-bucks-ask-model",
-  "scout-explore-spend-policy",
   "scout-explore-model",
   "scout-explore-quota-limits",
+  "scout-explore-spend-policy",
   "scout-feature-tip-cooldown-hours",
   "scout-feature-tip-percent",
   "scout-report-ai-model",
@@ -177,23 +176,23 @@ export type BirmelVariantFlagKey = (typeof BIRMEL_VARIANT_FLAG_KEYS)[number];
 
 export const STREAMBOT_FLAG_KEYS = [
   "player-card-enabled",
-  "streambot-plex-posters-enabled",
-  "streambot-web-ui-enabled",
   "streambot-assistant-v2-enabled",
+  "streambot-automatic-channel-routing-enabled",
   "streambot-history-enabled",
-  "streambot-sports-streaming-enabled",
   "streambot-idle-timeout-seconds",
   "streambot-music-over-voice-enabled",
   "streambot-numbered-channels-enabled",
-  "streambot-automatic-channel-routing-enabled",
   "streambot-player-card-repost-after-messages",
   "streambot-player-card-tick-ms",
   "streambot-playlist-limit",
+  "streambot-plex-posters-enabled",
   "streambot-reconnect-delay-seconds",
   "streambot-reconnect-enabled",
   "streambot-reconnect-max-attempts",
+  "streambot-sports-streaming-enabled",
   "streambot-subtitle-languages",
   "streambot-subtitles-include-auto-generated",
+  "streambot-web-ui-enabled",
   "subtitles-enabled",
 ] as const;
 
@@ -201,16 +200,16 @@ export type StreambotFlagKey = (typeof STREAMBOT_FLAG_KEYS)[number];
 
 export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "player-card-enabled",
-  "streambot-plex-posters-enabled",
-  "streambot-web-ui-enabled",
   "streambot-assistant-v2-enabled",
+  "streambot-automatic-channel-routing-enabled",
   "streambot-history-enabled",
-  "streambot-sports-streaming-enabled",
   "streambot-music-over-voice-enabled",
   "streambot-numbered-channels-enabled",
-  "streambot-automatic-channel-routing-enabled",
+  "streambot-plex-posters-enabled",
   "streambot-reconnect-enabled",
+  "streambot-sports-streaming-enabled",
   "streambot-subtitles-include-auto-generated",
+  "streambot-web-ui-enabled",
   "subtitles-enabled",
 ] as const;
 
@@ -268,13 +267,13 @@ export type TrmnlDashboardVariantFlagKey =
   (typeof TRMNL_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
 export const TEMPORAL_FLAG_KEYS = [
-  "temporal-call-graph-tracing",
   "temporal-agent-chat-discord-claude-default-model",
   "temporal-agent-chat-discord-codex-default-model",
-  "temporal-agent-chat-photon-enabled",
-  "temporal-agent-chat-photon-owners",
   "temporal-agent-chat-imessage-claude-model",
   "temporal-agent-chat-imessage-codex-model",
+  "temporal-agent-chat-photon-enabled",
+  "temporal-agent-chat-photon-owners",
+  "temporal-call-graph-tracing",
   "woodpecker-log-retention-enabled",
   "woodpecker-log-retention-days",
 ] as const;
@@ -282,8 +281,8 @@ export const TEMPORAL_FLAG_KEYS = [
 export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
-  "temporal-call-graph-tracing",
   "temporal-agent-chat-photon-enabled",
+  "temporal-call-graph-tracing",
   "woodpecker-log-retention-enabled",
 ] as const;
 
@@ -293,9 +292,9 @@ export type TemporalBooleanFlagKey =
 export const TEMPORAL_VARIANT_FLAG_KEYS = [
   "temporal-agent-chat-discord-claude-default-model",
   "temporal-agent-chat-discord-codex-default-model",
-  "temporal-agent-chat-photon-owners",
   "temporal-agent-chat-imessage-claude-model",
   "temporal-agent-chat-imessage-codex-model",
+  "temporal-agent-chat-photon-owners",
   "woodpecker-log-retention-days",
 ] as const;
 
@@ -319,6 +318,7 @@ export type AlertDashboardVariantFlagKey =
   (typeof ALERT_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
 export const THE_STORM_FLAG_KEYS = [
+  "the-storm-companions-enabled",
   "the-storm-crier-enabled",
   "the-storm-merchant-enabled",
   "the-storm-shop-rentals-enabled",
@@ -327,6 +327,7 @@ export const THE_STORM_FLAG_KEYS = [
 export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
 
 export const THE_STORM_BOOLEAN_FLAG_KEYS = [
+  "the-storm-companions-enabled",
   "the-storm-crier-enabled",
   "the-storm-merchant-enabled",
   "the-storm-shop-rentals-enabled",
@@ -340,31 +341,14 @@ export const THE_STORM_VARIANT_FLAG_KEYS = [] as const;
 export type TheStormVariantFlagKey =
   (typeof THE_STORM_VARIANT_FLAG_KEYS)[number];
 
-export const THE_STORM_COMPANION_FLAG_KEYS = [
-  "the-storm-companion-pilot-enabled",
-] as const;
-
-export type TheStormCompanionFlagKey =
-  (typeof THE_STORM_COMPANION_FLAG_KEYS)[number];
-
-export const THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS = [
-  "the-storm-companion-pilot-enabled",
-] as const;
-
-export type TheStormCompanionBooleanFlagKey =
-  (typeof THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS)[number];
-
-export const THE_STORM_COMPANION_VARIANT_FLAG_KEYS = [] as const;
-
-export type TheStormCompanionVariantFlagKey =
-  (typeof THE_STORM_COMPANION_VARIANT_FLAG_KEYS)[number];
-
 export const STORM_FLAG_KEYS = [
   "storm-forum-registration-enabled",
   "storm-forum-season",
   "storm-brain-classify-enabled",
-  "storm-brain-triage-enabled",
+  "storm-brain-conversation-enabled",
+  "storm-brain-conversation-model",
   "storm-brain-model",
+  "storm-brain-triage-enabled",
 ] as const;
 
 export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
@@ -372,6 +356,7 @@ export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
 export const STORM_BOOLEAN_FLAG_KEYS = [
   "storm-forum-registration-enabled",
   "storm-brain-classify-enabled",
+  "storm-brain-conversation-enabled",
   "storm-brain-triage-enabled",
 ] as const;
 
@@ -379,6 +364,7 @@ export type StormBooleanFlagKey = (typeof STORM_BOOLEAN_FLAG_KEYS)[number];
 
 export const STORM_VARIANT_FLAG_KEYS = [
   "storm-forum-season",
+  "storm-brain-conversation-model",
   "storm-brain-model",
 ] as const;
 
@@ -393,7 +379,6 @@ export const MANAGED_FLAG_KEYS = [
   ...TEMPORAL_FLAG_KEYS,
   ...ALERT_DASHBOARD_FLAG_KEYS,
   ...THE_STORM_FLAG_KEYS,
-  ...THE_STORM_COMPANION_FLAG_KEYS,
   ...STORM_FLAG_KEYS,
 ] as const;
 
@@ -408,7 +393,6 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...TEMPORAL_BOOLEAN_FLAG_KEYS,
   ...ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS,
   ...THE_STORM_BOOLEAN_FLAG_KEYS,
-  ...THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS,
   ...STORM_BOOLEAN_FLAG_KEYS,
 ] as const;
 
@@ -423,7 +407,6 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   ...TEMPORAL_VARIANT_FLAG_KEYS,
   ...ALERT_DASHBOARD_VARIANT_FLAG_KEYS,
   ...THE_STORM_VARIANT_FLAG_KEYS,
-  ...THE_STORM_COMPANION_VARIANT_FLAG_KEYS,
   ...STORM_VARIANT_FLAG_KEYS,
 ] as const;
 

@@ -14,7 +14,7 @@ import {
   thirdPartyPlugins,
   type PluginPin,
 } from "./pins.ts";
-import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import { RconClient } from "#e2e/harness/rcon.ts";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -61,6 +61,7 @@ export type StartServerOptions = {
   mechanicsE2eJar?: string;
   mechanicsConfig?: string;
   fixturesJar?: string;
+  companionsE2eJar?: string;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
   /** Repository-owned plugin config directory. */
@@ -223,6 +224,7 @@ export async function stagePlugins(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "fixturesJar"
+    | "companionsE2eJar"
     | "warmCache"
   > &
     Partial<
@@ -254,6 +256,16 @@ export async function stagePlugins(
     await Bun.write(
       path.join(pluginsDir, "TheStormFixtures.jar"),
       Bun.file(options.fixturesJar),
+    );
+  }
+  if (options.companionsE2eJar !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStormCompanionsE2E", "fixture.txt"),
+      "Disposable Citizens survival acceptance world\n",
+    );
+    await Bun.write(
+      path.join(pluginsDir, "TheStormCompanionsE2E.jar"),
+      Bun.file(options.companionsE2eJar),
     );
   }
   await Bun.write(
