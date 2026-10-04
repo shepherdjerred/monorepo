@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -75,6 +76,7 @@ public class NpcsTestPlugin extends JavaPlugin {
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             db,
             new Services(),
             data,

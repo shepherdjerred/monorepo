@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -132,6 +133,7 @@ final class MobsPaperTest {
                   plugin,
                   plugin.getLifecycleManager(),
                   new PaperScheduler(plugin),
+                  new DirectComputePool(),
                   database,
                   services,
                   directory,
@@ -435,6 +437,7 @@ final class MobsPaperTest {
             plugin,
             plugin.getLifecycleManager(),
             new PaperScheduler(plugin),
+            new DirectComputePool(),
             database,
             services,
             directory,

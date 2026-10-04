@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -168,6 +169,7 @@ final class QolHarness implements AutoCloseable {
                   plugin,
                   plugin.getLifecycleManager(),
                   new PaperScheduler(plugin),
+                  new DirectComputePool(),
                   database,
                   new Services(),
                   directory,

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.testing;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -73,6 +74,7 @@ public final class PaperHarness implements AutoCloseable {
                         plugin,
                         plugin.getLifecycleManager(),
                         new PaperScheduler(plugin),
+                        new DirectComputePool(),
                         database,
                         services,
                         directory,

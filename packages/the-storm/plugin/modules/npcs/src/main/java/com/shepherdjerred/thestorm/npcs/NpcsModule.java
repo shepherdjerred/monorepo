@@ -29,7 +29,6 @@ import com.shepherdjerred.thestorm.tracks.app.TrackPurchases;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import org.bukkit.Server;
 import org.jspecify.annotations.Nullable;
@@ -76,7 +75,7 @@ public final class NpcsModule implements StormModule {
                 actions,
                 trainer,
                 () -> source(dataDirectory, rules(server)),
-                ForkJoinPool.commonPool(),
+                context.compute().executor(),
                 new JooqNpcStateStore(context.database())),
             NpcsPaper.Hooks.paper(context, config));
     running = installed.shutdown();

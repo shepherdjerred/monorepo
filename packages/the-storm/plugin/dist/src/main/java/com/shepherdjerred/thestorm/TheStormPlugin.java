@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm;
 
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
+import com.shepherdjerred.thestorm.core.compute.PlatformComputePool;
 import com.shepherdjerred.thestorm.core.config.Problem;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
@@ -31,6 +33,7 @@ public final class TheStormPlugin extends JavaPlugin {
   private final List<StormModule> enabled = new ArrayList<>();
   private final Services services = new Services();
   private @Nullable StormDatabase database;
+  private @Nullable ComputePool compute;
 
   /**
    * Enables The Storm or stops the server. Once modules replace third-party plugins (land
@@ -66,6 +69,8 @@ public final class TheStormPlugin extends JavaPlugin {
     }
     var db = StormDatabase.open(getDataPath().resolve("the-storm.db"));
     database = db;
+    var pool = PlatformComputePool.open(getComponentLogger());
+    compute = pool;
     db.migrate("core", getClass().getClassLoader());
     var players = new SqlPlayerDirectory(db);
     services.provide(PlayerDirectory.class, players);
@@ -80,6 +85,7 @@ public final class TheStormPlugin extends JavaPlugin {
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            pool,
             db,
             services,
             getDataPath(),
@@ -100,6 +106,10 @@ public final class TheStormPlugin extends JavaPlugin {
     }
     enabled.clear();
     services.clear();
+    if (compute != null) {
+      compute.close();
+      compute = null;
+    }
     if (database != null) {
       database.close();
       database = null;
