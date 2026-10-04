@@ -123,6 +123,22 @@ plays to complete silence and every layer above calls it a success.
 Two things guard against it. The send path now reports whether a frame reached the transport, and a
 watchdog fails the segment when frames stop landing while ffmpeg is still producing.
 
+## Why Go Live asks viewers to buffer
+
+A film has no use for interactive latency, but the fork's packetizer advertises one. It sends
+the RTP playout-delay extension with a minimum of 0 and, by default, a maximum of 100 ms. A
+libwebrtc receiver reads `min = 0, max <= 500 ms` as a
+[low-latency stream](https://webrtc.googlesource.com/src/+/07ea9cc4a1/modules/video_coding/timing/timing.cc)
+and renders each frame the moment it decodes. Delivery jitter or a retransmitted packet then shows
+as a hitch on screen, even when streambot sent every frame on schedule.
+
+Go Live therefore advertises a ceiling above that threshold
+([`stream.videoPlayoutDelayMaxMs`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/config/schema.ts),
+1 s by default). The receiver still sizes its buffer from measured jitter, so a clean network pays
+little extra delay, and the headroom absorbs bursts. It is also where the `readrateInitialBurst`
+pre-roll has to land to cushion slow encoder moments. The voice connection carries no video, so
+music never sets it.
+
 ## Why probing still matters
 
 Selection settles transport, but cannot create a video track that the source lacks.

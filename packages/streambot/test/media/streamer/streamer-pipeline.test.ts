@@ -36,9 +36,32 @@ type PrepareSnapshot = {
   audioVolume: number | undefined;
   playType: string | undefined;
   hasAudioSink: boolean;
+  videoPlayoutDelayMaxMs: number | undefined;
   resolve: () => void;
   reject: (error: unknown) => void;
 };
+
+type PlayerOptions = Parameters<PlayerFactory>[2];
+
+function snapshotPrepare(prepare: NonNullable<PlayerOptions>["prepare"]) {
+  return {
+    hardwareAcceleratedDecoding: prepare?.hardwareAcceleratedDecoding,
+    hardwarePipelineMode: prepare?.hardwarePipelineMode,
+    hasEncoder: prepare?.encoder !== undefined,
+    subtitleBurn: prepare?.subtitleBurn,
+    inputColor: prepare?.inputColor,
+    audioOnly: prepare?.audioOnly,
+    audioVolume: prepare?.audioVolume,
+  };
+}
+
+function snapshotPlay(play: NonNullable<PlayerOptions>["play"]) {
+  return {
+    playType: play?.type,
+    hasAudioSink: play?.audioSink !== undefined,
+    videoPlayoutDelayMaxMs: play?.videoPlayoutDelayMaxMs,
+  };
+}
 
 /**
  * Fake player factory recording the prepare options each ffmpeg attempt would receive.
@@ -57,16 +80,8 @@ function makeFakeFactory(startErrors: (Error | undefined)[] = []) {
     });
     const startError = startErrors[attempts.length];
     attempts.push({
-      hardwareAcceleratedDecoding:
-        options?.prepare?.hardwareAcceleratedDecoding,
-      hardwarePipelineMode: options?.prepare?.hardwarePipelineMode,
-      hasEncoder: options?.prepare?.encoder !== undefined,
-      subtitleBurn: options?.prepare?.subtitleBurn,
-      inputColor: options?.prepare?.inputColor,
-      audioOnly: options?.prepare?.audioOnly,
-      audioVolume: options?.prepare?.audioVolume,
-      playType: options?.play?.type,
-      hasAudioSink: options?.play?.audioSink !== undefined,
+      ...snapshotPrepare(options?.prepare),
+      ...snapshotPlay(options?.play),
       resolve,
       reject,
     });
@@ -298,6 +313,8 @@ describe("transport dispatch by media kind", () => {
     expect(attempts[0]?.hardwareAcceleratedDecoding).toBeUndefined();
     expect(attempts[0]?.subtitleBurn).toBeUndefined();
     expect(attempts[0]?.inputColor).toBeUndefined();
+    // No video track on the voice connection, so no playout ceiling to advertise.
+    expect(attempts[0]?.videoPlayoutDelayMaxMs).toBeUndefined();
 
     attempts[0]?.resolve();
     await run;
@@ -313,6 +330,9 @@ describe("transport dispatch by media kind", () => {
     expect(attempts[0]?.audioOnly).toBeUndefined();
     expect(attempts[0]?.hasEncoder).toBe(true);
     expect(attempts[0]?.subtitleBurn).toEqual({ path: SUBTITLE_PATH });
+    // Above libwebrtc's 500 ms low-latency threshold, so viewers smooth playout instead of
+    // rendering every frame on arrival.
+    expect(attempts[0]?.videoPlayoutDelayMaxMs).toBe(1000);
 
     attempts[0]?.resolve();
     await run;
