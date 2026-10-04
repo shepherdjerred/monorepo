@@ -13,6 +13,7 @@ import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
 
 export const EXPLORE_SKILL_CAPABILITIES = [
   "always",
+  "analysis",
   "bucks",
   "dares",
   "challenges",

@@ -13,6 +13,10 @@ import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 import configuration from "#src/configuration.ts";
 import {
+  DEFAULT_EXPLORE_SPEND_POLICY,
+  ExploreSpendPolicySchema,
+} from "#src/configuration/explore-spend.ts";
+import {
   DEFAULT_EXPLORE_QUOTA_LIMITS,
   ExploreQuotaLimitsInputSchema,
   type ExploreQuotaLimits,
@@ -43,6 +47,29 @@ const logger = createLogger("config-dynamic");
  * keeps the last good value rather than reverting.
  */
 const DEFINITION = {
+  exploreSpendPolicy: {
+    schema: z.union([
+      ExploreSpendPolicySchema,
+      z
+        .string()
+        .transform((raw) => ExploreSpendPolicySchema.parse(JSON.parse(raw))),
+    ]),
+    sources: ["flag", "default"],
+    default: DEFAULT_EXPLORE_SPEND_POLICY,
+    names: { flag: "scout-explore-spend-policy" },
+  },
+  exploreAnalysisEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: false,
+    names: { flag: "scout-explore-analysis-enabled" },
+  },
+  exploreModelPickerEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: false,
+    names: { flag: "scout-explore-model-picker-enabled" },
+  },
   /**
    * Discord servers allowed to use Explore in beta.
    *
@@ -190,6 +217,7 @@ function buildSnapshot(
                 exploreGuildAllowlist: "string",
                 // A JSON object arrives as a string, like the allowlist.
                 exploreQuotaLimits: "string",
+                exploreSpendPolicy: "string",
                 llmHourlyTokenBudget: "number",
                 llmDailyTokenBudget: "number",
                 reportAiModel: "string",
@@ -198,6 +226,8 @@ function buildSnapshot(
                 featureTipPercent: "number",
                 featureTipCooldownHours: "number",
                 temporalCallGraphTracing: "boolean",
+                exploreAnalysisEnabled: "boolean",
+                exploreModelPickerEnabled: "boolean",
               },
             }),
           }
@@ -213,7 +243,12 @@ function buildSnapshot(
 
   return createConfigSnapshot({
     resolver,
-    seed,
+    seed: {
+      exploreSpendPolicy: DEFAULT_EXPLORE_SPEND_POLICY,
+      exploreAnalysisEnabled: false,
+      exploreModelPickerEnabled: false,
+      ...seed,
+    },
     onRefreshError: (key, message) => {
       logger.warn(`config refresh failed for ${key}; keeping last value`, {
         message,
@@ -339,6 +374,28 @@ export function bettingParlayAiModel(): string {
 
 export function exploreModel(): string {
   return snapshot?.get("exploreModel") ?? configuration.exploreModel;
+}
+
+export const DEFAULT_EXPLORE_PICKER_MODEL = "gpt-6-luna";
+
+/** Resolve and pin the model selected for a new Explore turn. */
+export function resolveExploreModel(
+  requestedModel?: string,
+  preferredModel?: string | null,
+): string {
+  return exploreModelPickerEnabled()
+    ? (requestedModel ?? preferredModel ?? DEFAULT_EXPLORE_PICKER_MODEL)
+    : exploreModel();
+}
+
+export function exploreAnalysisEnabled(): boolean {
+  return snapshot?.get("exploreAnalysisEnabled") ?? false;
+}
+export function exploreModelPickerEnabled(): boolean {
+  return snapshot?.get("exploreModelPickerEnabled") ?? false;
+}
+export function exploreSpendPolicy() {
+  return snapshot?.get("exploreSpendPolicy") ?? DEFAULT_EXPLORE_SPEND_POLICY;
 }
 
 export async function refreshDynamicConfig(): Promise<void> {

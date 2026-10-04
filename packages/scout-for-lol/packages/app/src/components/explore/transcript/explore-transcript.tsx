@@ -1,4 +1,5 @@
 import { memo, useEffect, useState } from "react";
+import { ToolPayloadContext } from "#src/lib/explore/tool-payload-context.ts";
 import { Pencil } from "lucide-react";
 import type {
   ExploreMessage,
@@ -59,6 +60,9 @@ export function ExploreTranscript(props: {
   turnActive?: boolean;
   /** Owner-only raw tool payloads are never offered on the shared route. */
   showRawTrace?: boolean;
+  allowIntentActions?: boolean;
+  conversationId?: string | undefined;
+  shareToken?: string | null;
   actions?: ExploreTranscriptActions;
   hasError?: boolean;
 }) {
@@ -70,42 +74,55 @@ export function ExploreTranscript(props: {
       ? null
       : strandedQuestion(props.messages, turnActive);
   return (
-    <div role="log" aria-label="Conversation">
-      {/* Spacing carries the grouping: an answer sits close to the question it
+    <ToolPayloadContext.Provider
+      value={
+        props.conversationId === undefined
+          ? null
+          : {
+              conversationId: props.conversationId,
+              shareToken: props.shareToken ?? null,
+            }
+      }
+    >
+      <div role="log" aria-label="Conversation">
+        {/* Spacing carries the grouping: an answer sits close to the question it
           belongs to, and the next exchange starts well clear of it. A uniform
           gap made every message look equally (un)related to its neighbours. */}
-      {props.messages.map((message) =>
-        message.role === "user" ? (
-          <div key={message.id} className="mt-10 first:mt-0">
-            <UserTurn message={message} actions={actions} />
-          </div>
-        ) : (
-          <div key={message.id} className="mt-3">
-            <AssistantTurn
-              message={message}
-              actions={actions}
-              showRawTrace={props.showRawTrace ?? false}
-              showFollowUps={!turnActive && message.id === latestMessageId}
-            />
-          </div>
-        ),
-      )}
+        {props.messages.map((message) =>
+          message.role === "user" ? (
+            <div key={message.id} className="mt-10 first:mt-0">
+              <UserTurn message={message} actions={actions} />
+            </div>
+          ) : (
+            <div key={message.id} className="mt-3">
+              <AssistantTurn
+                message={message}
+                actions={actions}
+                showRawTrace={props.showRawTrace ?? false}
+                allowIntentActions={props.allowIntentActions ?? false}
+                showFollowUps={!turnActive && message.id === latestMessageId}
+              />
+            </div>
+          ),
+        )}
 
-      {stranded !== null && (
-        <div className="mt-3">
-          <InterruptedTurn question={stranded} actions={actions} />
-        </div>
-      )}
+        {stranded !== null && (
+          <div className="mt-3">
+            <InterruptedTurn question={stranded} actions={actions} />
+          </div>
+        )}
 
-      <PendingTurn
-        pendingQuestion={props.pendingQuestion ?? null}
-        pendingAnswer={props.pendingAnswer ?? null}
-        activity={props.activity ?? null}
-        stopping={props.stopping ?? false}
-        trace={props.pendingTrace ?? []}
-        showRawTrace={props.showRawTrace ?? false}
-      />
-    </div>
+        <PendingTurn
+          pendingQuestion={props.pendingQuestion ?? null}
+          pendingAnswer={props.pendingAnswer ?? null}
+          activity={props.activity ?? null}
+          stopping={props.stopping ?? false}
+          trace={props.pendingTrace ?? []}
+          showRawTrace={props.showRawTrace ?? false}
+          allowIntentActions={props.allowIntentActions ?? false}
+        />
+      </div>
+    </ToolPayloadContext.Provider>
   );
 }
 
@@ -167,6 +184,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
   stopping: boolean;
   trace: ExploreTraceEntry[];
   showRawTrace: boolean;
+  allowIntentActions: boolean;
 }) {
   /**
    * The status line describes work in flight, so it goes away once prose is
@@ -192,7 +210,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
       {props.pendingAnswer !== null && (
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
-      {props.showRawTrace && <ExploreIntentCards trace={props.trace} />}
+      {props.allowIntentActions && <ExploreIntentCards trace={props.trace} />}
       {/* A query result is not shown here. The agent decides whether a chart
           or table belongs on the turn, and that decision only lands with the
           persisted message. Rendering the last query the moment it returns

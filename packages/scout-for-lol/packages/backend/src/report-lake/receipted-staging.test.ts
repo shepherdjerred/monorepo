@@ -122,9 +122,9 @@ describe("receipted match staging", () => {
       objectKind: "match",
       sourceObjectKey: source.key,
       digest: source.digest,
-      fileCount: 3,
+      fileCount: 4,
     });
-    expect(result.files).toHaveLength(3);
+    expect(result.files).toHaveLength(4);
   });
 
   test("keeps local staging paths out of the receipt entirely", async () => {
@@ -187,7 +187,7 @@ describe("receipted match staging", () => {
     });
 
     expect(result.receipt).toBe("failed");
-    expect(result.files).toHaveLength(3);
+    expect(result.files).toHaveLength(4);
   });
 
   test("reports a conflicting replay as a conflict, never as a failure", async () => {
@@ -280,7 +280,7 @@ describe("receipted match staging", () => {
 });
 
 describe("receipted timeline staging", () => {
-  test("counts all four timeline tables as the projection's shape", async () => {
+  test("counts the full raw timeline and all four projection tables", async () => {
     const timeline = rawTimelineFixture("NA1_5370969615");
     const source = artifactDescriptorFixture("timeline");
 
@@ -292,12 +292,12 @@ describe("receipted timeline staging", () => {
     );
 
     expect(result.receipt).toBe("recorded");
-    expect(result.files).toHaveLength(4);
+    expect(result.files).toHaveLength(5);
     expect(parsedEvidence()).toEqual({
       objectKind: "timeline",
       sourceObjectKey: source.key,
       digest: source.digest,
-      fileCount: 4,
+      fileCount: 5,
     });
     expect(recordedReceipt().matchId).toBe("NA1_5370969615");
   });
@@ -348,7 +348,7 @@ describe("receipted prematch staging", () => {
       objectKind: "prematch",
       sourceObjectKey: source.key,
       digest: source.digest,
-      fileCount: 1,
+      fileCount: 2,
     });
   });
 });

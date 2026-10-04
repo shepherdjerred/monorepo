@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { preserveRawJson } from "./preserve-raw-json.ts";
 
 /**
  * Zod schema for Match V5 Timeline API response from Riot Games
@@ -214,10 +215,12 @@ export const RawTimelineMetadataSchema = z.object({
 /**
  * Main RawTimeline schema - represents a match timeline from Riot Games Match V5 API
  */
-export const RawTimelineSchema = z.object({
-  metadata: RawTimelineMetadataSchema,
-  info: RawTimelineInfoSchema,
-});
+export const RawTimelineSchema = preserveRawJson(
+  z.object({
+    metadata: RawTimelineMetadataSchema,
+    info: RawTimelineInfoSchema,
+  }),
+);
 
 // Export types
 export type RawTimeline = z.infer<typeof RawTimelineSchema>;

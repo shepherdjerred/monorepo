@@ -76,6 +76,7 @@ export async function rebuildTimelineParquet(options: {
   client: S3Client;
   bucket: string;
   buildDir: string;
+  rawWriter?: NdjsonFileWriter;
   foldedSources?: Set<string>;
   abortSignal: AbortSignal;
   timeoutMs: number;
@@ -92,7 +93,12 @@ export async function rebuildTimelineParquet(options: {
   const skipped = await populateTimelinesFromS3({
     client: options.client,
     bucket: options.bucket,
-    writers,
+    writers: {
+      ...writers,
+      ...(options.rawWriter === undefined
+        ? {}
+        : { rawWriter: options.rawWriter }),
+    },
     foldedIds,
     ...(options.foldedSources === undefined
       ? {}

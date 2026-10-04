@@ -8,7 +8,7 @@ import type {
   ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
 import type { ExploreSurface } from "#src/explore/surface.ts";
-import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import type { ExploreAgentResult } from "#src/explore/agent.ts";
 import type {
   ExploreRateLimitIdentity,
@@ -22,6 +22,7 @@ export type ExploreAgentRunner = (
 ) => Promise<ExploreAgentResult>;
 
 export type StartedTurn = {
+  model?: string | undefined;
   conversationId: string;
   title: string;
   messageId: string;

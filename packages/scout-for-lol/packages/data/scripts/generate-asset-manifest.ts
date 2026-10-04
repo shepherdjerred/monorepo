@@ -66,6 +66,7 @@ const assets = await Promise.all(
     }
     if (
       kind !== "champion" &&
+      kind !== "ability" &&
       kind !== "champion-loading" &&
       kind !== "champion-splash" &&
       kind !== "item" &&

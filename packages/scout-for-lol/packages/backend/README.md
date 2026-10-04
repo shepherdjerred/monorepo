@@ -123,9 +123,55 @@ Two invariants worth knowing before editing a skill:
   prompt itself stays byte-stable for provider prompt caching.
 - Tripwires are the rules that must hold even when a body is never loaded
   ("a prepared confirmation is a proposal, not an entity"); they render in
-  the core prompt for every turn where the skill is enabled. Skill body text
-  deliberately never enters persisted traces: `tool-inspection.ts` has no
-  `load_skill` branch, so share-link holders see only the tool name.
+  the core prompt for every turn where the skill is enabled. Exact loaded
+  bodies and tool inputs/outputs are persisted in `ExploreToolPayload`.
+  Stream previews remain bounded; owners can fetch complete payloads on demand.
+  Shared reads check the current token and frozen branch on every request,
+  project public analytical evidence, and redact private tool contracts.
+
+### Complete datasets and isolated analysis
+
+`scout-explore-analysis-enabled` gates the data-analysis skill and tools.
+`materialize_query_dataset` retains every selected row (up to 50,000);
+`materialize_raw_documents` reads captured match, prematch and timeline JSON
+for those match IDs. Raw documents preserve unknown fields, nested arrays,
+nulls and original identities with a separate remap. Spectator credentials
+are excluded. Source key, digest and capture time identify each capture;
+missing documents are reported explicitly, without acquiring new Riot data.
+
+Datasets belong to one run, have immutable names, and share a 64 MiB turn
+limit. Their generation identifies both the published build and committed
+staging snapshot; a change requires repeating the selection. Schema discovery
+and validated JSON paths expose nested fields without evaluating expressions.
+The JavaScript tool runs QuickJS in WebAssembly inside a terminated Bun worker:
+10 seconds, 256 MiB, 64 KiB output, four executions per turn, and two global
+leases in PostgreSQL. It exposes datasets and synchronous JSON results; no
+host functions, imports, filesystem, network or credentials are installed.
+
+The lake fingerprint includes `raw_documents`. Rebuild the lake from canonical
+storage before enabling analysis against an older build. Rebuild and compaction
+publish raw documents together with the existing projections. Version 2 staging
+receipts attest this larger projection; existing version 1 receipts keep their
+original meaning.
+
+### Model choice and spending
+
+`scout-explore-model-picker-enabled` offers GPT-6 Luna and GPT-6.1 Sol with
+high reasoning. The conversation remembers the choice; each answer records
+its model and reasoning setting. Legacy clients retain their strict SSE and
+REST contracts; version 3 transcript reads include the new metadata.
+
+The typed `scout-explore-spend-policy` defaults to $20 shared per UTC month,
+$5 per user per month and $0.50 per turn. PostgreSQL reservations in integer
+microdollars precede every provider step and repair, with retries disabled.
+Actual usage includes cached input and hidden reasoning output. Missing usage
+or an uncertain response keeps its maximum hold; stopping or restarting a run
+does not refund that hold. Quotas and active-run admission are durable: one
+active turn per user, five globally, and the same policy supplies the UI counts.
+Each call has a conservative 256,000-token input bound computed from UTF-8
+bytes of the complete prompt and tool schemas plus framing overhead; available
+spending can impose a smaller limit. Dataset contents stay outside the prompt
+unless a tool explicitly selects or summarizes them.
 
 ## Durable match facts
 

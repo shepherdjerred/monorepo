@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TRACE_PAYLOAD_MAX_BYTES,
@@ -35,6 +36,7 @@ export type ExploreStreamState = {
   /** "Writing the answer…" is announced once per turn, not once per chunk. */
   answerNarrated: boolean;
   now: () => number;
+  capture?: ToolPayloadCapture;
 };
 
 /**
@@ -76,8 +78,10 @@ export type ExploreAgentStreams = {
 export async function drainExploreStreams(
   streams: ExploreAgentStreams,
   emit: (event: ExploreStreamEvent) => void | Promise<void>,
+  capture?: ToolPayloadCapture,
 ): Promise<ExploreStreamState> {
   const streamState = createExploreStreamState();
+  if (capture !== undefined) streamState.capture = capture;
   await Promise.all([
     (async () => {
       for await (const chunk of streams.stream) {
@@ -189,6 +193,13 @@ export async function emitExploreStreamChunk(
         ),
       );
       const inspection = inspectExploreToolCall(chunk.toolName, chunk.input);
+      if (inspection.rawInput !== null)
+        await state.capture?.({
+          toolCallId: chunk.toolCallId,
+          toolName: chunk.toolName,
+          direction: "input",
+          value: inspection.rawInput,
+        });
       state.toolStartedAt.set(chunk.toolCallId, state.now());
       await emit({
         type: "tool_call",
@@ -206,6 +217,13 @@ export async function emitExploreStreamChunk(
         chunk.input,
         chunk.output,
       );
+      if (inspection.rawOutput !== null)
+        await state.capture?.({
+          toolCallId: chunk.toolCallId,
+          toolName: chunk.toolName,
+          direction: "output",
+          value: inspection.rawOutput,
+        });
       await emit({
         type: "tool_result",
         toolCallId: chunk.toolCallId,

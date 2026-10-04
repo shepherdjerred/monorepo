@@ -1,4 +1,6 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
+import { ExploreQuotaSnapshotSchema } from "@scout-for-lol/data";
+import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 import {
   prisma,
   type Db,
@@ -53,11 +55,26 @@ export async function durableExploreQuotaRejection(
       retryAfterSeconds: 30,
     };
   }
+  if (
+    (await database.scoutInteractiveRun.count({
+      where: {
+        kind: "explore",
+        ownerId: userId,
+        state: { in: ACTIVE_STATUSES },
+      },
+    })) > 0
+  ) {
+    return {
+      reason: "You already have an Explore answer running.",
+      retryAfterSeconds: 30,
+    };
+  }
+  const limits = exploreQuotaLimits();
   const rules = [
-    { durationMs: 60_000, limit: 4, label: "minute" },
-    { durationMs: 3_600_000, limit: 30, label: "hour" },
-    { durationMs: 86_400_000, limit: 100, label: "day" },
-    { durationMs: 604_800_000, limit: 300, label: "week" },
+    { durationMs: 60_000, limit: limits.userMinute, label: "minute" },
+    { durationMs: 3_600_000, limit: limits.userHour, label: "hour" },
+    { durationMs: 86_400_000, limit: limits.userDay, label: "day" },
+    { durationMs: 604_800_000, limit: limits.userWeek, label: "week" },
   ];
   for (const rule of rules) {
     const start = startOfWindow(now, rule.durationMs);
@@ -78,9 +95,9 @@ export async function durableExploreQuotaRejection(
     }
   }
   const globalRules = [
-    { durationMs: 3_600_000, limit: 120, label: "hour" },
-    { durationMs: 86_400_000, limit: 600, label: "day" },
-    { durationMs: 604_800_000, limit: 2000, label: "week" },
+    { durationMs: 3_600_000, limit: limits.globalHour, label: "hour" },
+    { durationMs: 86_400_000, limit: limits.globalDay, label: "day" },
+    { durationMs: 604_800_000, limit: limits.globalWeek, label: "week" },
   ];
   for (const rule of globalRules) {
     const start = startOfWindow(now, rule.durationMs);
@@ -96,6 +113,79 @@ export async function durableExploreQuotaRejection(
     }
   }
   return null;
+}
+
+/** The UI reads the same persistent counters and policy as reservation. */
+export async function durableExploreQuotaStatus(
+  userId: DiscordAccountId,
+  now = Date.now(),
+  database: QuotaClient = prisma,
+) {
+  const limits = exploreQuotaLimits();
+  const rules = [
+    {
+      scope: "user",
+      window: "minute",
+      durationMs: 60_000,
+      limit: limits.userMinute,
+    },
+    {
+      scope: "user",
+      window: "hour",
+      durationMs: 3_600_000,
+      limit: limits.userHour,
+    },
+    {
+      scope: "user",
+      window: "day",
+      durationMs: 86_400_000,
+      limit: limits.userDay,
+    },
+    {
+      scope: "user",
+      window: "week",
+      durationMs: 604_800_000,
+      limit: limits.userWeek,
+    },
+    {
+      scope: "global",
+      window: "hour",
+      durationMs: 3_600_000,
+      limit: limits.globalHour,
+    },
+    {
+      scope: "global",
+      window: "day",
+      durationMs: 86_400_000,
+      limit: limits.globalDay,
+    },
+    {
+      scope: "global",
+      window: "week",
+      durationMs: 604_800_000,
+      limit: limits.globalWeek,
+    },
+  ] as const;
+  const quota = await Promise.all(
+    rules.map(async (rule) => {
+      const start = startOfWindow(now, rule.durationMs);
+      const used = await countSince({
+        database,
+        kind: "explore",
+        since: start,
+        ...(rule.scope === "user" ? { ownerId: userId } : {}),
+      });
+      return ExploreQuotaSnapshotSchema.parse({
+        scope: rule.scope,
+        window: rule.window,
+        used,
+        limit: rule.limit,
+        remaining: Math.max(0, rule.limit - used),
+        resetsAt: new Date(start.getTime() + rule.durationMs).toISOString(),
+      });
+    }),
+  );
+  return { quota };
 }
 
 export async function durableReportAiQuotaRejection(

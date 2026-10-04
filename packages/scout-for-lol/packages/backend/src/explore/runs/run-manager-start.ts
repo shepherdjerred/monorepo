@@ -8,7 +8,6 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import type { DiscordChannelId } from "@scout-for-lol/data";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
-  getExploreQuotaStatus,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
   type ExploreRateLimitTicket,
@@ -22,6 +21,7 @@ import { startReservedDurableExploreRun } from "#src/explore/runs/durable-runs.t
 import {
   createDurableExploreRunReservation,
   durableExploreReservationRejection,
+  durableExploreQuotaStatus,
 } from "#src/temporal/durable-quota.ts";
 import {
   createActiveExploreRun,
@@ -31,12 +31,31 @@ import type {
   ActiveRun,
   StartedTurn,
 } from "#src/explore/runs/run-manager-types.ts";
+import {
+  exploreModelPickerEnabled,
+  resolveExploreModel,
+} from "#src/config/dynamic.ts";
+import { ExploreInvalidTurnError } from "#src/explore/store.ts";
 
 type PreparedExploreRun = {
   started: StartedTurn;
   history: ExploreMessage[];
   summary: ExploreActiveRun;
 };
+
+/** Fast local admission failures still report the durable question counts. */
+export async function refreshExploreRejectionQuota(
+  client: ExtendedPrismaClient,
+  identity: ExploreRateLimitIdentity,
+  rejection: ExploreRateLimitRejection,
+) {
+  const { quota } = await durableExploreQuotaStatus(
+    identity.userId,
+    Date.now(),
+    client,
+  );
+  return { ...rejection, quota };
+}
 
 async function prepareExploreRun(
   input: {
@@ -49,6 +68,9 @@ async function prepareExploreRun(
   },
   client: ExploreTurnStoreClient,
 ): Promise<PreparedExploreRun> {
+  if (input.request.model !== undefined && !exploreModelPickerEnabled()) {
+    throw new ExploreInvalidTurnError("Model selection is not enabled.");
+  }
   const started = await resolveTurnTarget({
     client,
     request: input.request,
@@ -56,6 +78,19 @@ async function prepareExploreRun(
     newId: input.conversationId,
     origin: input.surface,
   });
+  const conversation = await client.exploreConversation.findUniqueOrThrow({
+    where: { id: started.conversationId },
+  });
+  started.model = resolveExploreModel(
+    input.request.model,
+    conversation.preferredModel,
+  );
+  if (input.request.model !== undefined) {
+    await client.exploreConversation.update({
+      where: { id: started.conversationId },
+      data: { preferredModel: input.request.model },
+    });
+  }
   const versionCountAtStart = await client.exploreMessage.count({
     where: {
       conversationId: started.conversationId,
@@ -196,9 +231,14 @@ async function prepareDurableExploreRun(input: {
     return { status: "prepared", prepared } as const;
   });
   if (reservation.status === "rejected") {
+    const status = await durableExploreQuotaStatus(
+      input.identity.userId,
+      Date.now(),
+      input.client,
+    );
     throw input.createRateLimitedError({
       allowed: false,
-      quota: getExploreQuotaStatus(input.identity).quota,
+      quota: status.quota,
       ...reservation.rejection,
     });
   }

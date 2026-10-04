@@ -10,6 +10,8 @@ import {
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
+import { ExploreBudgetError } from "#src/explore/spending/ledger.ts";
+import { durableExploreQuotaStatus } from "#src/temporal/durable-quota.ts";
 import {
   ExploreConversationBusyError,
   getExploreQuotaStatus,
@@ -38,6 +40,7 @@ import {
 const logger = createLogger("explore-turn");
 
 export type StartedExploreTurn = {
+  model?: string | undefined;
   conversationId: string;
   title: string;
   messageId: string;
@@ -73,6 +76,36 @@ const defaultDependencies: ExploreTurnDependencies = {
   timeoutMs: EXPLORE_TIMEOUT_MS,
 };
 
+async function turnQuota(
+  input: ExploreRateLimitIdentity,
+  dependencies: ExploreTurnDependencies,
+  durable: boolean,
+) {
+  if (!durable) return getExploreQuotaStatus(input, dependencies.now()).quota;
+  const status = await durableExploreQuotaStatus(
+    input.userId,
+    dependencies.now(),
+    dependencies.client,
+  );
+  return status.quota;
+}
+
+function chosenModel(model: string | undefined) {
+  return model === undefined ? {} : { model };
+}
+function storedProvenance(model: string | undefined) {
+  return model === undefined
+    ? {}
+    : { generation: { model, reasoningEffort: "high" as const } };
+}
+function visibleError(outcome: ExploreTurnOutcome, error: unknown): string {
+  if (outcome === "stopped")
+    return "This question was stopped before an answer was produced.";
+  return error instanceof ExploreBudgetError
+    ? error.message
+    : "This answer could not be completed.";
+}
+
 /**
  * A deployed server can finish a turn in a tab whose bundle predates a new
  * persisted message field. The terminal stream remains backward compatible;
@@ -84,6 +117,8 @@ function toStreamMessage(message: ExploreMessage) {
   // the terminal event unparseable in a tab that is already open and the
   // answer never lands there.
   const {
+    generation: _generation,
+    inlineEntities: _inlineEntities,
     matchCards: _matchCards,
     loadoutCards: _loadoutCards,
     guildIds: _guildIds,
@@ -194,6 +229,7 @@ export async function runPersistedExploreTurn(
     });
     throwIfAborted(abortController.signal);
     const result = await dependencies.executeAgent({
+      ...chosenModel(input.started.model),
       runId: input.ticket.runId,
       conversationId: input.started.conversationId,
       subject: { kind: "discord_user", id: input.identity.userId },
@@ -216,6 +252,10 @@ export async function runPersistedExploreTurn(
       conversationId: input.started.conversationId,
       parentMessageId: input.started.messageId,
       answer: result.answer,
+      ...(result.inlineEntities === undefined
+        ? {}
+        : { inlineEntities: result.inlineEntities }),
+      ...storedProvenance(input.started.model),
       preview: result.preview,
       visualization: result.visualization,
       matchCards: result.matchCards,
@@ -240,7 +280,11 @@ export async function runPersistedExploreTurn(
       type: "final",
       message: persistedMessage,
       title,
-      quota: getExploreQuotaStatus(input.identity, dependencies.now()).quota,
+      quota: await turnQuota(
+        input.identity,
+        dependencies,
+        input.ticket.durable === true,
+      ),
     };
     await input.emit(toStreamTerminal(terminal));
     return { ...terminal, outcome: "succeeded" };
@@ -259,6 +303,7 @@ export async function runPersistedExploreTurn(
     let salvaged: ExploreMessage | null = null;
     try {
       salvaged = await persistPartialAnswer(dependencies.client, {
+        ...chosenModel(input.started.model),
         guildIds: input.guildIds,
         stopped: outcome === "stopped",
         conversationId: input.started.conversationId,
@@ -285,18 +330,16 @@ export async function runPersistedExploreTurn(
     }
 
     finishTicket();
-    const quota = getExploreQuotaStatus(
+    const quota = await turnQuota(
       input.identity,
-      dependencies.now(),
-    ).quota;
+      dependencies,
+      input.ticket.durable === true,
+    );
     const terminal: ExploreTurnTerminalEvent =
       salvaged === null
         ? {
             type: "error",
-            message:
-              outcome === "stopped"
-                ? "This question was stopped before an answer was produced."
-                : "This answer could not be completed.",
+            message: visibleError(outcome, error),
             retryAfterSeconds: null,
             quota,
           }

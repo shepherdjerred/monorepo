@@ -1,5 +1,11 @@
-import { readdir, unlink } from "node:fs/promises";
+import {
+  stagingDirectory,
+  listStagingEntries as listEntries,
+  listStagingFiles as listFiles,
+  removeFoldedStagingFiles as removeFiles,
+} from "#src/report-lake/staging/files.ts";
 import path from "node:path";
+import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
 import type {
   CachedLeaderboard,
   RawCurrentGameInfo,
@@ -20,9 +26,7 @@ import {
   type STAGING_TABLES,
   commitStagingGeneration,
   generationFile,
-  snapshotStagingGenerations,
   type StagingGeneration,
-  type StagingGenerationSnapshot,
   type StagingSource,
 } from "#src/report-lake/staging/generations.ts";
 import {
@@ -32,10 +36,6 @@ import {
   matchTeamsStagingDir,
   matchesStagingDir,
   prematchStagingDir,
-  timelineCoverageStagingDir,
-  timelineEventParticipantsStagingDir,
-  timelineEventsStagingDir,
-  timelineParticipantFramesStagingDir,
 } from "#src/report-lake/paths.ts";
 
 const logger = createLogger("report-lake-staging");
@@ -116,31 +116,7 @@ export function competitionRankHistoryStagingFilePath(
   );
 }
 
-function stagingDirectory(
-  lakeDir: string,
-  table: ReportLakeStagingTable,
-): string {
-  switch (table) {
-    case "matches":
-      return matchesStagingDir(lakeDir);
-    case "match_teams":
-      return matchTeamsStagingDir(lakeDir);
-    case "match_team_bans":
-      return matchTeamBansStagingDir(lakeDir);
-    case "prematch":
-      return prematchStagingDir(lakeDir);
-    case "competition_rank_history":
-      return competitionRankHistoryStagingDir(lakeDir);
-    case "timeline_events":
-      return timelineEventsStagingDir(lakeDir);
-    case "timeline_event_participants":
-      return timelineEventParticipantsStagingDir(lakeDir);
-    case "timeline_participant_frames":
-      return timelineParticipantFramesStagingDir(lakeDir);
-    case "timeline_coverage":
-      return timelineCoverageStagingDir(lakeDir);
-  }
-}
+export type StagingFileEntry = Awaited<ReturnType<typeof listEntries>>[number];
 
 export function timelineStagingFilePath(
   lakeDir: string,
@@ -181,6 +157,18 @@ export async function stageMatchGeneration(
       observedAt: new Date(),
       ...(options.source === undefined ? {} : { source: options.source }),
       files: [
+        {
+          table: "raw_documents",
+          content: toNdjson([
+            rawDocumentRow({
+              kind: "match",
+              matchId,
+              document: match,
+              capturedAt: new Date(),
+              ...options,
+            }),
+          ]),
+        },
         { table: "matches", content: toNdjson(rows) },
         { table: "match_teams", content: toNdjson(flattenMatchTeams(match)) },
         {
@@ -240,13 +228,29 @@ export async function stagePrematchGeneration(
       naturalId: stagingIdForPrematch(dedupeKey),
       observedAt,
       ...(options.source === undefined ? {} : { source: options.source }),
-      files: [{ table: "prematch", content: toNdjson(rows) }],
+      files: [
+        { table: "prematch", content: toNdjson(rows) },
+        {
+          table: "raw_documents",
+          content: toNdjson([
+            rawDocumentRow({
+              kind: "prematch",
+              matchId: `${gameInfo.platformId}_${String(gameInfo.gameId)}`,
+              document: gameInfo,
+              capturedAt: observedAt,
+              ...options,
+            }),
+          ]),
+        },
+      ],
     });
     reportLakeStagingWritesTotal.inc({ table: "prematch", status: "success" });
     return {
       success: true,
       generation,
-      files: [generationFile(generation, "prematch")],
+      files: generation.tables.map((table) =>
+        generationFile(generation, table),
+      ),
     };
   } catch (error) {
     logger.warn(`Failed to write prematch staging file for ${dedupeKey}`, {
@@ -284,6 +288,18 @@ export async function stageTimelineGeneration(
       rows: flattened.participantFrames,
     },
     { table: "timeline_coverage" as const, rows: flattened.coverage },
+    {
+      table: "raw_documents" as const,
+      rows: [
+        rawDocumentRow({
+          kind: "timeline",
+          matchId: timeline.metadata.matchId,
+          document: timeline,
+          capturedAt: observedAt,
+          ...options,
+        }),
+      ],
+    },
   ];
   try {
     await ensureLakeScaffold(lakeDir);
@@ -363,116 +379,6 @@ export async function writeCompetitionRankHistoryStagingFile(
   }
 }
 
-export type StagingFileEntry = {
-  file: string;
-  stem: string;
-  generation?: StagingGeneration;
-};
-
-function projectionKindForTable(table: ReportLakeStagingTable) {
-  switch (table) {
-    case "matches":
-    case "match_teams":
-    case "match_team_bans":
-      return "match";
-    case "prematch":
-      return "prematch";
-    case "competition_rank_history":
-      return "competition_rank_history";
-    case "timeline_events":
-    case "timeline_event_participants":
-    case "timeline_participant_frames":
-    case "timeline_coverage":
-      return "timeline";
-  }
-}
-
-/** Legacy flat files stay readable while their last publisher drains. */
-async function listLegacyStagingFiles(
-  lakeDir: string,
-  table: ReportLakeStagingTable,
-): Promise<string[]> {
-  const dir = stagingDirectory(lakeDir, table);
-  let names: string[];
-  try {
-    names = await readdir(dir);
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      return [];
-    }
-    throw error;
-  }
-  return names
-    .filter((name) => name.endsWith(".jsonl"))
-    .toSorted()
-    .map((name) => path.join(dir, name));
-}
-
-export async function listStagingEntries(
-  lakeDir: string,
-  table: ReportLakeStagingTable,
-  snapshot?: StagingGenerationSnapshot,
-): Promise<StagingFileEntry[]> {
-  const committed = snapshot ?? (await snapshotStagingGenerations(lakeDir));
-  const kind = projectionKindForTable(table);
-  const selected = committed.selected.filter(
-    (generation) => generation.projectionKind === kind,
-  );
-  const selectedIds = new Set(
-    selected.map((generation) => generation.naturalId),
-  );
-  const legacyFiles = await listLegacyStagingFiles(lakeDir, table);
-  const legacy = legacyFiles
-    .map((file) => ({ file, stem: path.basename(file, ".jsonl") }))
-    .filter(({ stem }) => !selectedIds.has(stem));
-  const generations = selected.flatMap((generation) =>
-    generation.tables.includes(table)
-      ? [
-          {
-            file: generationFile(generation, table),
-            stem: generation.naturalId,
-            generation,
-          },
-        ]
-      : [],
-  );
-  return [...legacy, ...generations];
-}
-
-/** List absolute paths of one committed generation per key, plus legacy files. */
-export async function listStagingFiles(
-  lakeDir: string,
-  table: ReportLakeStagingTable,
-  snapshot?: StagingGenerationSnapshot,
-): Promise<string[]> {
-  const entries = await listStagingEntries(lakeDir, table, snapshot);
-  return entries.map(({ file }) => file);
-}
-
-/**
- * Delete staging files whose natural ids were provably folded into a
- * published build. Ids not in the folded set are left for the next run.
- */
-export async function removeFoldedStagingFiles(
-  lakeDir: string,
-  table: ReportLakeStagingTable,
-  foldedIds: Set<string>,
-): Promise<number> {
-  const files = await listLegacyStagingFiles(lakeDir, table);
-  let removed = 0;
-  for (const file of files) {
-    const stem = file
-      .split("/")
-      .at(-1)
-      ?.replace(/\.jsonl$/, "");
-    if (stem !== undefined && foldedIds.has(stem)) {
-      await unlink(file);
-      removed += 1;
-    }
-  }
-  return removed;
-}
-
 /** The sanitized natural id a staging file would use — for fold bookkeeping. */
 export function stagingIdForMatch(matchId: string): string {
   return sanitizeFileStem(matchId);
@@ -491,4 +397,18 @@ export function stagingIdForCompetitionRankHistory(
 
 export function stagingIdForTimeline(matchId: string): string {
   return sanitizeFileStem(matchId);
+}
+
+export async function listStagingEntries(
+  ...args: Parameters<typeof listEntries>
+) {
+  return await listEntries(...args);
+}
+export async function listStagingFiles(...args: Parameters<typeof listFiles>) {
+  return await listFiles(...args);
+}
+export async function removeFoldedStagingFiles(
+  ...args: Parameters<typeof removeFiles>
+) {
+  return await removeFiles(...args);
 }

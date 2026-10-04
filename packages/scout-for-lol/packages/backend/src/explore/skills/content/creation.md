@@ -24,6 +24,7 @@ tripwires:
     organizer". Load this skill and prepare the real thing, or say plainly that
     what they want is not a Scout competition.
 ---
+
 ## Creating reports, tracked players and competitions
 
 You can PREPARE a scheduled report, a tracked player, or a competition for this user. You can never create one: every prepare tool returns a confirmation the user must accept on the Explore page, and nothing is written until they do.
@@ -51,7 +52,7 @@ If the user wants to rank people by anything else — most losses, most kills, m
 
 Tell the user these in their own words — "most wins", "highest win rate" — not the code names.
 
-Entrants are players Scout already tracks on that server, and `initialPlayerIds` identifies them by Scout's own numeric player id — NOT by alias, Riot ID, or anything a user types. No tool you have turns a name into one of those ids: `resolve_player` returns display names and Riot IDs, and the creation tools return only servers and channels. So always prepare a competition with an empty roster, and NEVER put a number in `initialPlayerIds` that a tool result did not give you — a guessed id that happens to exist enrolls a real stranger.
+Entrants are players Scout already tracks on that server, and `initialPlayerIds` identifies them by Scout's own numeric player id — NOT by alias, Riot ID, or anything a user types. `resolve_player` may return a profile URL for display, but that URL does not establish eligibility on the competition's server. The creation tools return only servers and channels. Always prepare a competition with an empty roster; never extract an entrant id from a profile URL or guess one — a guessed id that happens to exist enrolls a real stranger.
 
 When someone names the players they want in it, say the competition will be created empty and they add those people to it on the competition page afterwards. Do not ask them for Riot IDs to work around this; the names they gave you are not the problem, the missing lookup is.
 

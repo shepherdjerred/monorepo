@@ -118,6 +118,7 @@ export const ExploreTurnRequestSchema = z
     conversationId: ExploreConversationIdSchema.nullable().default(null),
     question: ExploreQuestionSchema.nullable().default(null),
     attach: ExploreAttachPointSchema.default({ kind: "leaf" }),
+    model: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).optional(),
   })
   .strict();
 
@@ -293,6 +294,26 @@ export const ExploreMessageSchema = z
     versionIndex: z.number().int().nonnegative().default(0),
     versionCount: z.number().int().positive().default(1),
     content: z.string(),
+    inlineEntities: z
+      .array(
+        z
+          .object({
+            marker: z.string(),
+            kind: z.enum(["champion", "ability", "item", "rune", "spell"]),
+            assetKey: z.string(),
+            name: z.string(),
+            description: z.string(),
+            version: z.string(),
+          })
+          .strict(),
+      )
+      .max(100)
+      .optional(),
+    generation: z
+      .object({ model: z.string().min(1), reasoningEffort: z.literal("high") })
+      .strict()
+      .nullable()
+      .optional(),
     queryText: ReportQueryTextSchema.nullable().default(null),
     caveats: z.array(z.string()).default([]),
     followUps: z.array(z.string()).default([]),
@@ -324,6 +345,8 @@ export type ExploreMessage = z.infer<typeof ExploreMessageSchema>;
  * heard of makes the terminal event unparseable and the answer never lands.
  */
 export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
+  inlineEntities: true,
+  generation: true,
   matchCards: true,
   loadoutCards: true,
   guildIds: true,
@@ -334,6 +357,7 @@ export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
     title: ExploreConversationTitleSchema,
+    preferredModel: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).nullable().optional(),
     origin: z.enum(["legacy", "web", "discord", "voice"]).default("legacy"),
     shareToken: ExploreShareTokenSchema.nullable().default(null),
     /** The leaf a share link is pinned to, if the conversation is shared. */
