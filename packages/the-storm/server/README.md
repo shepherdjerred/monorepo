@@ -182,6 +182,17 @@ therefore needs egress to `repo1.maven.org`; later boots reuse the cached
 without a warmed `lib/` fails Citizens' enable, and TheStorm, which requires
 Citizens, does not start.
 
+The Jenkins URL is a single point of failure for image rebuilds. If it is
+pruned before a newer build is accepted, the jar should be mirrored the way
+`packages/macos-cross-compiler` mirrors its SDK tarballs: a private SeaweedFS
+bucket declared in `packages/homelab/src/tofu/seaweedfs/buckets.tf` (for
+example `the-storm-artifacts`, `prevent_destroy`), the object uploaded once
+with the existing S3 client in `packages/toolkit` (`toolkit pr asset` targets
+the public `public-sjer-red` bucket and is not the right place for a jar), and
+`plugins.json`/`pins.ts` repointed at the bucket URL with the same sha256 so
+`fetch.sh` keeps verifying the bytes. Nothing has been uploaded yet; the pin
+stays on Jenkins until that mirror exists.
+
 ## Local checks
 
 ```bash
