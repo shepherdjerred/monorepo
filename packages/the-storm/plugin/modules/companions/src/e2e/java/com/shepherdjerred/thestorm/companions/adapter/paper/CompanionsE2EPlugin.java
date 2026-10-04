@@ -64,7 +64,6 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     var world =
         getServer().createWorld(new WorldCreator("storm_companions_test").type(WorldType.FLAT));
     if (world == null) throw new IllegalStateException("missing companion fixture world");
-    world.setSpawnLocation(100, -60, 100);
     prepare(world);
     var store = StormDatabase.open(getDataPath().resolve("companions-e2e.db"));
     database = store;
@@ -139,7 +138,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
         world.getBlockAt(x, -61, z).setType(Material.GRASS_BLOCK, false);
         for (var y = -60; y < -53; y++) world.getBlockAt(x, y, z).setType(Material.AIR, false);
       }
-    world.setSpawnLocation(32, -60, 32);
+    world.setSpawnLocation(100, -60, 100);
     for (var x : new int[] {30, 31, 33, 34}) {
       world.getBlockAt(x, -60, 32).setType(Material.OAK_LOG, false);
       world.getBlockAt(x, -59, 32).setType(Material.OAK_LOG, false);
