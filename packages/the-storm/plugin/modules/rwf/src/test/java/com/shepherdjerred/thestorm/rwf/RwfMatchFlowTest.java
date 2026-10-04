@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
 import com.shepherdjerred.thestorm.rwf.domain.record.MatchRecord;
@@ -25,14 +26,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
+import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -442,6 +448,51 @@ final class RwfMatchFlowTest {
               assertThat(row.deaths()).isEqualTo(1);
               assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.LOSE);
             });
+  }
+
+  @Test
+  void aBotsKillIsCreditedOnceEvenWhenTheDeathIsRaisedTwice() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.goLive(alice);
+    var attacker = botOn(enemyOf(teamOf(alice)));
+    var deaths = new ArrayList<MatchEvent.Died>();
+    harness
+        .events()
+        .subscribe(
+            notification -> {
+              if (notification.event() instanceof MatchEvent.Died died) {
+                deaths.add(died);
+              }
+            });
+    alice.teleport(new Location(harness.rwf, 31.5, 65, 20.5));
+    attacker.entity().teleport(new Location(harness.rwf, 31.5, 65, 22.5));
+
+    // The bot is not an online player: the kill must still be credited through its entity UUID.
+    // (MockBukkit's damage(amount, source) skips the by-entity event, so the hit is simulated, and
+    // it never counts down the hit window, so each hit starts from a closed window.)
+    for (var i = 0; i < 40 && harness.combatant(alice).alive(); i++) {
+      alice.setNoDamageTicks(0);
+      alice.simulateDamage(6, attacker.entity());
+      harness.tick(Duration.ofSeconds(1));
+    }
+    assertThat(harness.combatant(alice).alive()).isFalse();
+    // A player NPC can raise its death twice; the second must not count again.
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(
+            new PlayerDeathEvent(
+                alice,
+                DamageSource.builder(DamageType.GENERIC).build(),
+                new ArrayList<>(),
+                0,
+                Component.empty(),
+                false));
+
+    assertThat(deaths)
+        .singleElement()
+        .satisfies(died -> assertThat(died.killer()).contains(attacker.id()));
   }
 
   @Test

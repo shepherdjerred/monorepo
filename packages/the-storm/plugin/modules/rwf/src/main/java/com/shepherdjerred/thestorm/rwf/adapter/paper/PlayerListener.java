@@ -118,8 +118,7 @@ final class PlayerListener implements Listener {
             : last.map(CombatTracker.Last::cause).orElse(AttackType.UNKNOWN);
     var killer =
         last.flatMap(CombatTracker.Last::attacker)
-            .map(context.server()::getPlayer)
-            .or(() -> Optional.ofNullable(player.getKiller()));
+            .or(() -> Optional.ofNullable(player.getKiller()).map(Player::getUniqueId));
     runner.died(player, killer, cause);
   }
 

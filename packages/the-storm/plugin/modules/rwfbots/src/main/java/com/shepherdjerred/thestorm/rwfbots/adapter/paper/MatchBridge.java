@@ -148,6 +148,20 @@ public final class MatchBridge implements Consumer<MatchNotification> {
             });
   }
 
+  /**
+   * The rules killed {@code victim} (a bomb): no world death event will count it, so the death is
+   * tallied here.
+   */
+  private void killed(UUID victim) {
+    var bot = parts.roster().bot(victim);
+    if (bot.isEmpty()) {
+      bump(victim);
+      return;
+    }
+    bot.orElseThrow().tally(bot.orElseThrow().tally().death());
+    newLife(bot.orElseThrow());
+  }
+
   private void died(Transition.Change.Died died) {
     parts
         .roster()
@@ -186,7 +200,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
               .flatMap(BotBody::profile)
               .ifPresent(profile -> parts.loop().unregister(profile.id()));
       case Transition.Effect.StatRecorded stat -> stat(stat);
-      case Transition.Effect.Killed killed -> killed.victims().forEach(this::bump);
+      case Transition.Effect.Killed killed -> killed.victims().forEach(this::killed);
       case Transition.Effect.Equipped _ -> {}
     }
   }

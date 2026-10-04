@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.DespawnReason;
 import net.citizensnpcs.api.event.NPCDespawnEvent;
@@ -50,11 +51,13 @@ public final class CitizensBodies implements Bodies, Listener {
   private final Map<UUID, NPC> npcs = new HashMap<>();
   private final Set<UUID> known = new HashSet<>();
   private final Consumer<UUID> respawned;
+  private final Logger logger;
   private int respawns;
 
-  private CitizensBodies(NPCRegistry registry, Consumer<UUID> respawned) {
+  private CitizensBodies(NPCRegistry registry, Consumer<UUID> respawned, Logger logger) {
     this.registry = registry;
     this.respawned = respawned;
+    this.logger = logger;
   }
 
   /**
@@ -65,7 +68,9 @@ public final class CitizensBodies implements Bodies, Listener {
     if (!CitizensAPI.hasImplementation()) {
       throw new IllegalStateException("Citizens is not loaded; rwfbots needs it for bot bodies");
     }
-    var bodies = new CitizensBodies(CitizensAPI.createInMemoryNPCRegistry(REGISTRY), respawned);
+    var bodies =
+        new CitizensBodies(
+            CitizensAPI.createInMemoryNPCRegistry(REGISTRY), respawned, plugin.getLogger());
     plugin.getServer().getPluginManager().registerEvents(bodies, plugin);
     return bodies;
   }
@@ -227,17 +232,16 @@ public final class CitizensBodies implements Bodies, Listener {
 
   @EventHandler
   void onDespawn(NPCDespawnEvent event) {
-    // A PENDING_RESPAWN despawn is the skin landing: nothing to do, the entity is re-resolved
-    // every tick. Any other despawn of a living body is Citizens' doing and worth knowing about.
-    if (event.getReason() != DespawnReason.PENDING_RESPAWN
-        && event.getReason() != DespawnReason.PLUGIN
+    // A PENDING_RESPAWN despawn is the skin landing and a DEATH despawn is a body falling in the
+    // match: both expected, and the entity is re-resolved every tick. Any other despawn of a
+    // living body is Citizens' doing and worth knowing about. The entity is already gone here, so
+    // the module's logger reports it.
+    var reason = event.getReason();
+    if (reason != DespawnReason.PENDING_RESPAWN
+        && reason != DespawnReason.PLUGIN
+        && reason != DespawnReason.DEATH
         && npcs.containsKey(bodyId(event.getNPC()))) {
-      event
-          .getNPC()
-          .getEntity()
-          .getServer()
-          .getLogger()
-          .warning("rwfbots body " + event.getNPC().getName() + " despawned: " + event.getReason());
+      logger.warning("rwfbots body " + event.getNPC().getName() + " despawned: " + reason);
     }
   }
 

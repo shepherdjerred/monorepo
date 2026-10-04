@@ -686,13 +686,17 @@ final class MatchRunner implements MatchView, MatchEvents {
     return handle(new MatchEvent.BombClicked(id, bombId, now()));
   }
 
-  /** A member died in the world. */
-  void died(Player player, Optional<Player> killer, AttackType cause) {
+  /**
+   * A member died in the world. A player NPC can raise more than one death event for a single
+   * death, so only the first death of a living member counts. {@code killer} is the attacker's
+   * entity UUID: bots are not online players, so they cannot be looked up as players.
+   */
+  void died(Player player, Optional<UUID> killer, AttackType cause) {
     var victim = memberOf(player.getUniqueId());
-    if (victim.isEmpty()) {
+    if (victim.isEmpty() || !victim.orElseThrow().alive()) {
       return;
     }
-    var killerId = killer.flatMap(k -> memberOf(k.getUniqueId())).map(Combatant::id);
+    var killerId = killer.flatMap(this::memberOf).map(Combatant::id);
     tallies.computeIfAbsent(victim.orElseThrow().id(), ignored -> new Tally()).deaths++;
     killerId.ifPresent(k -> tallies.computeIfAbsent(k, ignored -> new Tally()).kills++);
     parts
@@ -962,12 +966,14 @@ final class MatchRunner implements MatchView, MatchEvents {
 
     private void kill(MatchEffect.Kill kill) {
       for (var victim : kill.victims()) {
+        // The rules already count these victims dead, so died() ignores the death event that
+        // setHealth raises: a rules kill (bomb) is tallied here, a world death there, never both.
+        tallies.computeIfAbsent(victim, ignored -> new Tally()).deaths++;
         parts.recordings().event(now(), "killed", victim, kill.cause().name());
         withEntity(
             victim,
             player -> {
               if (!player.isDead()) {
-                // The death event this raises reaches died(), which owns the death tally.
                 parts.combat().hurt(player.getUniqueId(), kill.cause());
                 player.setHealth(0);
               }
