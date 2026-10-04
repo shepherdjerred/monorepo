@@ -27,7 +27,7 @@ Content-Type: application/json
 An ingress identity is transport-specific:
 
 ```json
-{ "kind": "imessage", "conversationId": "bluebubbles-chat-guid" }
+{ "kind": "imessage", "conversationId": "photon-conversation-hash" }
 ```
 
 ```json
@@ -69,7 +69,10 @@ and an ISO-8601 `submittedAt`:
 
 ```json
 {
-  "binding": { "kind": "imessage", "conversationId": "bluebubbles-chat-guid" },
+  "binding": {
+    "kind": "imessage",
+    "conversationId": "photon-conversation-hash"
+  },
   "bindingId": "select-storage-chat-01",
   "submittedAt": "2026-09-14T22:00:00.000Z",
   "sourceSequence": "1757887200000000000"
@@ -90,10 +93,10 @@ Create a chat from iMessage:
   "model": "claude-opus-5",
   "source": {
     "kind": "imessage",
-    "conversationId": "bluebubbles-chat-guid"
+    "conversationId": "photon-conversation-hash"
   },
   "prompt": "Inspect the current alerts and summarize the likely cause.",
-  "turnId": "bluebubbles-message-01J8ABCDEF",
+  "turnId": "photon-message-01J8ABCDEF",
   "submittedAt": "2026-09-14T21:59:00.000Z",
   "sourceSequence": "1757887140000000000"
 }
@@ -105,10 +108,10 @@ Continue whichever chat is active in that iMessage conversation:
 {
   "source": {
     "kind": "imessage",
-    "conversationId": "bluebubbles-chat-guid"
+    "conversationId": "photon-conversation-hash"
   },
   "prompt": "Check whether the affected volume recovered.",
-  "turnId": "bluebubbles-message-01J8ABCDEG",
+  "turnId": "photon-message-01J8ABCDEG",
   "submittedAt": "2026-09-14T22:00:00.000Z",
   "sourceSequence": "1757887200000000000"
 }
