@@ -39,12 +39,12 @@
                       message: '{{ "{{" }} state_attr(notification_entity, "problem_detail") {{ "}}" }}'
                   - if: '{{ "{{" }} is_state(notification_latch, "off") {{ "}}" }}'
                     then:
-                      - action: notify.mobile_app_jerred_iphone
+                      - action: notify.send_message
+                        target:
+                          entity_id: notify.jerreds_iphone
                         data:
                           title: '{{ "{{" }} state_attr(notification_entity, "friendly_name") {{ "}}" }}'
                           message: '{{ "{{" }} state_attr(notification_entity, "problem_detail") {{ "}}" }}'
-                          data:
-                            tag: '{{ "{{" }} notification_entity {{ "}}" }}'
                       - action: input_boolean.turn_on
                         target:
                           entity_id: '{{ "{{" }} notification_latch {{ "}}" }}'
