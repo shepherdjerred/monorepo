@@ -9,9 +9,14 @@ import {
   type RetentionPlanInput,
   type RetentionReceipt,
   type RetentionRepo,
+  type RetentionPipeline,
 } from "#shared/woodpecker-retention.ts";
-import type { RetentionClient } from "./woodpecker-retention-client.ts";
-import { detailIsTerminal } from "./woodpecker-retention-client.ts";
+import {
+  detailIsTerminal,
+  WOODPECKER_PAGE_SIZE,
+  type RetentionClient,
+  type RetentionReferences,
+} from "./woodpecker-retention-client.ts";
 
 export type RetentionProgress = { stage: string; receipts: RetentionReceipt[] };
 export function retentionProgressFromHeartbeat(
@@ -46,38 +51,84 @@ export async function planRetentionBatch(
       scanned: 0,
       protectionReasons: new Array<string>(),
     };
-  hooks.signal.throwIfAborted();
-  const pipelines = await client.page(repo, input.cursor.page, input.cutoff);
-  const refs = pipelines.length === 0 ? null : await client.references(repo);
-  const offset = input.cursor.offset ?? 0;
-  const scannedPipelines = pipelines.slice(
-    offset,
-    offset + Math.min(input.remaining, RETENTION_BATCH_LIMIT),
-  );
-  for (const pipeline of scannedPipelines) {
+  let cursor = input.cursor;
+  let scanned = 0;
+  let refs: RetentionReferences | null = null;
+  const limit = Math.min(input.remaining, RETENTION_BATCH_LIMIT);
+  for (
+    let read = 0;
+    read < RETENTION_BATCH_LIMIT / WOODPECKER_PAGE_SIZE;
+    read++
+  ) {
     hooks.signal.throwIfAborted();
-    if (refs === null || !retentionEligible(repo, pipeline, input.cutoff, refs))
-      continue;
-    if (!detailIsTerminal(await client.detail(repo, pipeline.number))) continue;
-    const logEntries = await client.logEntries(repo, pipeline.number);
-    if (logEntries > 0) candidates.push({ repo, pipeline, logEntries });
-    hooks.onProgress({ stage: "inventory", receipts: [] });
-    if (candidates.length >= Math.min(input.remaining, RETENTION_BATCH_LIMIT))
-      break;
+    const pipelines = await client.page(repo, cursor.page, input.cutoff);
+    if (refs === null && pipelines.length > 0)
+      refs = await client.references(repo);
+    const offset = cursor.offset ?? 0;
+    const scannedPipelines = pipelines.slice(offset, offset + limit - scanned);
+    candidates.push(
+      ...(await scanRetentionPage(
+        { repo, cutoff: input.cutoff, pipelines: scannedPipelines, refs },
+        client,
+        hooks,
+      )),
+    );
+    scanned += scannedPipelines.length;
+    cursor = nextRetentionCursor(
+      cursor,
+      pipelines.length,
+      scannedPipelines.length,
+    );
+    if (cursor.repoIndex !== input.cursor.repoIndex || scanned >= limit) break;
   }
-  const cursor: RetentionCursor =
-    offset + scannedPipelines.length < pipelines.length
-      ? { ...input.cursor, offset: offset + scannedPipelines.length }
-      : pipelines.length < RETENTION_BATCH_LIMIT
-        ? { repoIndex: input.cursor.repoIndex + 1, page: 1 }
-        : { repoIndex: input.cursor.repoIndex, page: input.cursor.page + 1 };
   return {
     candidates,
     cursor: cursor.repoIndex < input.repos.length ? cursor : null,
     protectAllMain: refs?.protectAllMain ?? false,
-    scanned: scannedPipelines.length,
+    scanned,
     protectionReasons: refs?.protectionReasons ?? [],
   };
+}
+
+function nextRetentionCursor(
+  cursor: RetentionCursor,
+  pageLength: number,
+  scanned: number,
+): RetentionCursor {
+  const offset = (cursor.offset ?? 0) + scanned;
+  return offset < pageLength
+    ? { ...cursor, offset }
+    : pageLength < WOODPECKER_PAGE_SIZE
+      ? { repoIndex: cursor.repoIndex + 1, page: 1 }
+      : { repoIndex: cursor.repoIndex, page: cursor.page + 1 };
+}
+
+async function scanRetentionPage(
+  input: {
+    repo: RetentionRepo;
+    cutoff: number;
+    pipelines: RetentionPipeline[];
+    refs: RetentionReferences | null;
+  },
+  client: RetentionClient,
+  hooks: RetentionHooks,
+) {
+  const candidates: RetentionCandidate[] = [];
+  for (const pipeline of input.pipelines) {
+    hooks.signal.throwIfAborted();
+    if (
+      input.refs === null ||
+      !retentionEligible(input.repo, pipeline, input.cutoff, input.refs)
+    )
+      continue;
+    if (!detailIsTerminal(await client.detail(input.repo, pipeline.number)))
+      continue;
+    const logEntries = await client.logEntries(input.repo, pipeline.number);
+    if (logEntries > 0)
+      candidates.push({ repo: input.repo, pipeline, logEntries });
+    hooks.onProgress({ stage: "inventory", receipts: [] });
+  }
+  return candidates;
 }
 
 export async function applyRetentionBatch(

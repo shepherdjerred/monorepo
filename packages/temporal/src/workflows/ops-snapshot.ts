@@ -43,9 +43,9 @@ export const OPS_COLLECTORS: readonly (readonly [SourceId, CollectorName])[] = [
 
 // A snapshot is superseded every five minutes, so a collector gets one quick
 // retry and then reports its source as failed rather than holding the run.
-function activitiesOn(taskQueue: TaskQueue) {
+function activitiesOn(activityQueue: TaskQueue) {
   const collectors = proxyActivities<OpsActivities>({
-    taskQueue,
+    taskQueue: activityQueue,
     startToCloseTimeout: "60 seconds",
     retry: {
       maximumAttempts: 2,
@@ -55,7 +55,7 @@ function activitiesOn(taskQueue: TaskQueue) {
   });
 
   const { assembleAndPublishOpsSnapshot } = proxyActivities<OpsActivities>({
-    taskQueue,
+    taskQueue: activityQueue,
     startToCloseTimeout: "30 seconds",
     retry: {
       maximumAttempts: 3,
@@ -68,7 +68,7 @@ function activitiesOn(taskQueue: TaskQueue) {
   // The dashboard renders and sends the digest and is idempotent per period,
   // so a retried trigger never sends twice.
   const { triggerOpsDigest } = proxyActivities<OpsActivities>({
-    taskQueue,
+    taskQueue: activityQueue,
     startToCloseTimeout: "2 minutes",
     retry: {
       maximumAttempts: 3,

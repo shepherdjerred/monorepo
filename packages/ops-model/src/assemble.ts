@@ -95,10 +95,10 @@ function sectionSummary(
   if (failedSources.length > 0) {
     parts.push(`no data from ${failedSources.join(", ")}`);
   }
-  if (parts.length > 0) return parts.join(" · ");
   if (metrics.some((metric) => isAttention(metric.severity))) {
-    return "Metrics need attention";
+    parts.push("Metrics need attention");
   }
+  if (parts.length > 0) return parts.join(" · ");
   return metrics.some((metric) => metric.severity === "info")
     ? "Informational data available"
     : "All clear";

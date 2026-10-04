@@ -21,8 +21,9 @@ describe("Woodpecker retention Workflow contract", () => {
       taskQueue: TASK_QUEUES.WORKFLOWS,
       overlap: "SKIP",
       timing: { expression: "45 4 * * *", timezone: "America/Los_Angeles" },
+      initialPauseNote:
+        "Awaiting exact-candidate dry-run review and destructive retention flag approval",
     });
-    expect(WOODPECKER_RETENTION_SCHEDULE.initialPauseNote).toBeTruthy();
   });
   test.each([false, true])(
     "bounds scanned work and replays exact reviewed plans (reviewed=%s)",

@@ -30,6 +30,9 @@ const LogsSchema = z.array(
   }),
 );
 
+// Pinned v3.18.1 session.Pagination clamps every repository API page to 50.
+export const WOODPECKER_PAGE_SIZE = 50;
+
 export type RetentionRequest = (
   path: string,
   method?: "GET" | "DELETE",
@@ -43,7 +46,7 @@ export type RetentionReferences = {
 export function detailIsTerminal(
   detail: z.infer<typeof DetailSchema>,
 ): boolean {
-  const active = new Set(["pending", "running", "blocked"]);
+  const active = new Set(["pending", "running", "blocked", "created"]);
   return (
     !active.has(detail.status) &&
     detail.workflows.every(
@@ -65,11 +68,14 @@ export class RetentionClient {
     for (let page = 1; page <= 100; page++) {
       const items = z
         .array(RetentionRepoSchema)
+        .max(WOODPECKER_PAGE_SIZE)
         .parse(
-          await this.request(`/api/repos?page=${String(page)}&perPage=100`),
+          await this.request(
+            `/api/repos?page=${String(page)}&perPage=${String(WOODPECKER_PAGE_SIZE)}`,
+          ),
         );
       repos.push(...items);
-      if (items.length < 100) return repos;
+      if (items.length < WOODPECKER_PAGE_SIZE) return repos;
     }
     throw new Error(
       "Woodpecker repository inventory exceeds pagination safety bound",
@@ -83,16 +89,21 @@ export class RetentionClient {
   }
 
   async page(repo: RetentionRepo, page: number, cutoff: number) {
-    if (page > 100)
-      throw new Error(
-        "Woodpecker pipeline inventory exceeds pagination safety bound",
-      );
+    if (
+      !Number.isSafeInteger(page) ||
+      page < 1 ||
+      !Number.isSafeInteger((page - 1) * WOODPECKER_PAGE_SIZE)
+    )
+      throw new Error("Woodpecker pipeline page is not a safe positive offset");
+    // Persist numeric offsets over a fixed cutoff: log-only deletion leaves
+    // metadata in place, and timestamp keysets could skip same-second runs.
     const before = new Date(cutoff * 1000).toISOString();
     return z
       .array(RetentionPipelineSchema)
+      .max(WOODPECKER_PAGE_SIZE)
       .parse(
         await this.request(
-          `/api/repos/${String(repo.id)}/pipelines?${new URLSearchParams({ page: String(page), perPage: "100", before }).toString()}`,
+          `/api/repos/${String(repo.id)}/pipelines?${new URLSearchParams({ page: String(page), perPage: String(WOODPECKER_PAGE_SIZE), before }).toString()}`,
         ),
       );
   }

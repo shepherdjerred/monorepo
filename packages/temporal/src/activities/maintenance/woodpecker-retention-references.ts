@@ -40,6 +40,25 @@ export function artifactPipelineNumber(version: string): number | undefined {
 
 type ArtifactInventory = { numbers: Set<number>; reasons: Set<string> };
 
+function applicationRepositoryHost(identifier: string): string | undefined {
+  if (
+    identifier === "" ||
+    /[\s\\]/.test(identifier) ||
+    /^(?:https?|oci|ssh|git):(?!\/\/)/i.test(identifier)
+  )
+    return undefined;
+  // Argo Helm OCI identifiers may be registry/path without a URL scheme.
+  const normalized = /^[a-z][a-z\d+.-]*:\/\//i.test(identifier)
+    ? identifier
+    : `https://${identifier}`;
+  if (!URL.canParse(normalized)) return undefined;
+  const url = new URL(normalized);
+  return ["http:", "https:", "oci:", "ssh:", "git:"].includes(url.protocol) &&
+    url.hostname !== ""
+    ? url.hostname.toLowerCase()
+    : undefined;
+}
+
 function addArtifact(
   version: string,
   inventory: ArtifactInventory,
@@ -65,11 +84,14 @@ function observeApplication(raw: unknown, inventory: ArtifactInventory) {
     );
     return;
   }
-  if (
-    new URL(app.spec.source.repoURL).hostname !==
-    "chartmuseum.tailnet-1a49.ts.net"
-  )
+  const repositoryHost = applicationRepositoryHost(app.spec.source.repoURL);
+  if (repositoryHost === undefined) {
+    inventory.reasons.add(
+      `Application ${app.metadata.name} has an invalid repository identifier`,
+    );
     return;
+  }
+  if (repositoryHost !== "chartmuseum.tailnet-1a49.ts.net") return;
   const actual = app.status?.sync?.revision;
   if (actual === undefined)
     inventory.reasons.add(

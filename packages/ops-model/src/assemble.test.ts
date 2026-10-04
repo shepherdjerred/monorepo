@@ -200,6 +200,46 @@ describe("assembleSnapshot", () => {
   });
 });
 
+describe("assembleSnapshot mixed metric attention", () => {
+  test.each(["unknown", "warning", "error"] as const)(
+    "summarizes %s metrics alongside informational signals",
+    (severity) => {
+      const snapshot = assembleSnapshot({
+        generatedAt,
+        sources: sources(),
+        signals: [
+          {
+            id: "bugsink:historical",
+            source: "bugsink",
+            section: "errors",
+            kind: "unresolved-error",
+            severity: "info",
+            needsMe: false,
+            title: "Historical unresolved issue",
+          },
+        ],
+        metrics: [
+          {
+            section: "errors",
+            source: "bugsink",
+            id: "errors.count",
+            label: "Errors",
+            value: 1,
+            unit: "count",
+            severity,
+          },
+        ],
+      });
+      const errors = findSection(snapshot, "errors");
+      expect(errors.severity).toBe(severity);
+      expect(errors.summary).toBe(
+        "1 informational signal · Metrics need attention",
+      );
+      expect(snapshot.summary).toContain("need attention (Errors)");
+    },
+  );
+});
+
 describe("applyFreshness", () => {
   const snapshot = assembleSnapshot({
     generatedAt,
