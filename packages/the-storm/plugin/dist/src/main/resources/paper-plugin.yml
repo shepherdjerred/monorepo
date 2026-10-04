@@ -22,3 +22,8 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
+    # Shop recovery uses the installed WorldEdit clipboard API.
+    WorldEdit:
+      load: BEFORE
+      required: true
+      join-classpath: true

@@ -47,6 +47,7 @@ import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 import { miningResetActivities } from "./homelab/mining-reset.ts";
+import { stormPlotActivities } from "./homelab/storm-plots.ts";
 import { agentChatActivities } from "./agent/chat/run-agent-chat-turn.ts";
 import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-turn.ts";
 import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
@@ -89,6 +90,7 @@ export const infraActivities = {
 
 export const miningResetWorkerActivities = {
   ...miningResetActivities,
+  ...stormPlotActivities,
 };
 
 export const repoActivities = {

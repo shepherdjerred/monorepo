@@ -32,10 +32,11 @@ final class TownsModuleTest {
   private JavaPlugin plugin;
 
   @BeforeEach
-  void start() {
+  void start() throws Exception {
     MockBukkit.mock().addSimpleWorld("world");
     plugin = MockBukkit.createMockPlugin();
     database = StormDatabase.open(directory.resolve("t.db"));
+    Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
   }
 
   @AfterEach

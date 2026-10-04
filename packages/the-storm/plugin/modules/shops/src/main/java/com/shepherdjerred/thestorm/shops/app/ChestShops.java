@@ -335,6 +335,10 @@ public final class ChestShops {
 
   /** Why a shop that passed the first checks can no longer trade, if it cannot. */
   private Optional<TradeProblem> stillTrading(SignShop shop) {
+    if (!effects.tradeAllowed(shop)) {
+      return Optional.of(
+          new TradeProblem.ShopClosed("the plot lease has expired or recovery is in progress."));
+    }
     if (registry.byId(shop.id()).isEmpty()) {
       return Optional.of(new TradeProblem.ShopClosed("it was just removed."));
     }
@@ -380,6 +384,10 @@ public final class ChestShops {
   }
 
   private Optional<TradeProblem> refusal(SignShop shop, Direction direction, Customer customer) {
+    if (!effects.tradeAllowed(shop)) {
+      return Optional.of(
+          new TradeProblem.ShopClosed("the plot lease has expired or recovery is in progress."));
+    }
     var closure = registry.closure(shop.id());
     if (closure.isPresent()) {
       return Optional.of(new TradeProblem.ShopClosed(closure.orElseThrow()));

@@ -61,15 +61,22 @@ grief:
 
 # Existing Spawn Town, windmill and Colosseum. PvP and construction are denied
 # in these admin regions; doors, NPCs and gameplay teleports remain usable.
+# Every loaded world also receives full-height protection around its current
+# spawn (and the End arrival platform). Recomputed on world load/spawn changes.
+spawnRadiusBlocks: 32
 regions:
   - id: spawn
     name: Spawn Town
+    profile: SAFE
     areas:
       chunks: []
       cuboids:
         - world: world
-          from: { x: -96, y: -64, z: -70 }
-          to: { x: 163, y: 319, z: 110 }
+          from: { x: -128, y: -64, z: -272 }
+          to: { x: 163, y: 319, z: 128 }
+        - world: world
+          from: { x: 164, y: -64, z: -272 }
+          to: { x: 191, y: 319, z: -61 }
     allow:
       - action: INTERACT
         subjects:
@@ -85,6 +92,8 @@ regions:
           ]
       - action: INTERACT_ENTITY
         subjects: [VILLAGER, VEHICLE]
+      - action: OPEN_CONTAINER
+        subjects: [CONTAINER]
       - action: TELEPORT_INTO
         subjects: [LOCATION]
     mobSpawns:
@@ -92,12 +101,13 @@ regions:
       allow: [CUSTOM, COMMAND]
   - id: arena
     name: The Colosseum
+    profile: ARENA
     areas:
       chunks: []
       cuboids:
         - world: world
-          from: { x: 164, y: 30, z: -60 }
-          to: { x: 290, y: 100, z: 64 }
+          from: { x: 164, y: -64, z: -60 }
+          to: { x: 290, y: 319, z: 64 }
     allow:
       - action: INTERACT
         subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
@@ -107,6 +117,28 @@ regions:
         subjects: [CREAKING_HEART]
       - action: OPEN_CONTAINER
         subjects: [CONTAINER]
+    mobSpawns:
+      limited: true
+      allow:
+        [CUSTOM, COMMAND, SPELL, REINFORCEMENTS, SLIME_SPLIT, JOCKEY, MOUNT]
+  - id: settlement
+    name: The Storm Settlement
+    profile: ARENA
+    areas:
+      chunks: []
+      cuboids:
+        - world: world
+          from: { x: 1712, y: -64, z: 2128 }
+          to: { x: 1871, y: 319, z: 2287 }
+    allow:
+      - action: INTERACT
+        subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]
+      - action: OPEN_CONTAINER
+        subjects: [CONTAINER]
+      - action: BREAK
+        subjects: [CREAKING_HEART]
     mobSpawns:
       limited: true
       allow:

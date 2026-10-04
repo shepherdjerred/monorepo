@@ -373,6 +373,7 @@ final class TownCommands {
   private String describe(Land land) {
     return switch (land) {
       case Land.Wilderness _ -> "This is wilderness; anyone may build here.";
+      case Land.WorkLand(var region) -> "This area is reserved for " + region.name() + ".";
       case Land.TownLand(var claim) ->
           "This chunk belongs to "
               + nameOf(claim)
@@ -384,6 +385,12 @@ final class TownCommands {
                   : " " + claim.trusted().size() + " outsider(s) are trusted here.");
       case Land.RegionLand(var region) ->
           "This is " + region.name() + ", an admin region; it cannot be claimed.";
+      case Land.ParcelLand(var parcel) ->
+          "This is "
+              + parcel.definition().name()
+              + ", a preserved holding ("
+              + parcel.phase()
+              + ").";
     };
   }
 

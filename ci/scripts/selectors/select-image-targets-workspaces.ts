@@ -34,12 +34,16 @@ const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
 // runtime workspace lists a tooling helper as a development dependency.
 const NON_IMAGE_WORKSPACE_DIRS = new Set(["scripts/"]);
 
-// Temporal copies only the registry from homelab. Dependency fingerprints
+// Temporal copies only the homelab registry and The Storm's RCON contract. Dependency fingerprints
 // still use the entire closure; source selection follows the copied files.
 const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
   Record<string, Readonly<Record<string, readonly string[]>>>
 > = {
   "temporal-worker": {
+    "packages/the-storm": [
+      "packages/the-storm/package.json",
+      "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
+    ],
     "packages/homelab": [
       "packages/homelab/package.json",
       "packages/homelab/src/domain-registry.ts",
