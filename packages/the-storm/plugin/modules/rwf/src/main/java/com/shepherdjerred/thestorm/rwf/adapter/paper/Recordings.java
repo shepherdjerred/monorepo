@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.RwfMatch;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
+import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.Intent;
 import com.shepherdjerred.thestorm.rwf.domain.record.MatchRecord;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEnd;
@@ -40,12 +41,14 @@ final class Recordings {
 
   private final Recorder recorder;
   private final Optional<Pseudonyms> pseudonyms;
+  private final Inputs inputs;
   private @Nullable MatchRecording recording;
   private @Nullable Instant liveAt;
 
-  Recordings(Recorder recorder, Optional<Pseudonyms> pseudonyms) {
+  Recordings(Recorder recorder, Optional<Pseudonyms> pseudonyms, Inputs inputs) {
     this.recorder = recorder;
     this.pseudonyms = pseudonyms;
+    this.inputs = inputs;
   }
 
   boolean enabled() {
@@ -104,11 +107,21 @@ final class Recordings {
     }
   }
 
-  void frame(Instant now, Combatant member, Player player) {
+  /**
+   * Samples a living member on server tick {@code serverTick}: a frame when one is due ({@link
+   * Frame#due}), and for a human also the keys they hold and their exact rotation, every tick.
+   */
+  void sample(Instant now, long serverTick, Combatant member, Player player) {
     var current = recording;
     if (current == null) {
       return;
     }
+    var bot = member.id().isBot();
+    if (!Frame.due(bot, serverTick)) {
+      return;
+    }
+    var tick = tick(now);
+    var pseudonym = pseudonym(member.id()).orElseThrow();
     var location = Places.at(player);
     var flags =
         (player.isSneaking() ? Frame.SNEAKING : 0)
@@ -117,8 +130,8 @@ final class Recordings {
             | (player.isBlocking() ? Frame.BLOCKING : 0);
     current.frame(
         new Frame(
-            tick(now),
-            pseudonym(member.id()).orElseThrow(),
+            tick,
+            pseudonym,
             Frame.quantizePosition(location.getX()),
             Frame.quantizePosition(location.getY()),
             Frame.quantizePosition(location.getZ()),
@@ -127,6 +140,15 @@ final class Recordings {
             Frame.quantizeHealth(player.getHealth()),
             player.getInventory().getHeldItemSlot(),
             flags));
+    if (!bot) {
+      current.input(
+          new InputFrame(
+              tick,
+              pseudonym,
+              inputs.keys(player.getUniqueId()),
+              InputFrame.quantizeYaw(location.getYaw()),
+              InputFrame.quantizePitch(location.getPitch())));
+    }
   }
 
   void intent(Instant now, CombatantId who, String kind, String target) {

@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchRecording;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
+import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.Intent;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordCodec;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEnd;
@@ -37,12 +38,13 @@ import org.jspecify.annotations.Nullable;
 /**
  * Writes each match to {@code <root>/yyyy/MM/dd/<matchId>.rwfrec.gz}: {@link RecordCodec} rows, one
  * per line, gzipped. The main thread only enqueues strings; one compute-pool task at a time drains
- * them to the file. Header, event, intent and end rows are never dropped; frames are dropped and
- * counted when the writer falls more than {@link #FRAME_CAPACITY} frames behind.
+ * them to the file. Header, event, intent and end rows are never dropped; the per-tick samples
+ * (frames and human inputs) are dropped and counted when the writer falls more than {@link
+ * #FRAME_CAPACITY} samples behind.
  */
 public final class GzipRecorder implements Recorder {
 
-  /** The most frames waiting to be written before new ones are dropped. */
+  /** The most samples (frames and inputs) waiting to be written before new ones are dropped. */
   public static final int FRAME_CAPACITY = 20_000;
 
   static final String SUFFIX = ".rwfrec.gz";
@@ -123,7 +125,16 @@ public final class GzipRecorder implements Recorder {
 
     @Override
     public void frame(Frame frame) {
-      if (!frames.offer(RecordCodec.frame(frame))) {
+      sample(RecordCodec.frame(frame));
+    }
+
+    @Override
+    public void input(InputFrame input) {
+      sample(RecordCodec.input(input));
+    }
+
+    private void sample(String row) {
+      if (!frames.offer(row)) {
         dropped.incrementAndGet();
       }
       schedule();

@@ -133,7 +133,8 @@ of the two; the rest still wait for a suite.
     for a win, 0 for a loss, the bots never paid); the crash replay is not.
 17. The daily cap forfeits the excess and tells the player.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
-    with `RecordCodec`, names nobody, and holds frames at 20 Hz; `kill -9`
+    with `RecordCodec`, names nobody, and holds human frames and input rows
+    at 20 Hz and bot frames at 10 Hz; `kill -9`
     during a match leaves a truncated file the next enable prunes by age.
     **Proven** that the file exists at that path, is a non-empty gzip of the
     size `rwf_match` records, names the match and neither player, and dropped

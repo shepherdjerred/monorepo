@@ -32,6 +32,9 @@ public final class RecordCodec {
     for (var frame : record.frames()) {
       out.append(frame(frame));
     }
+    for (var input : record.inputs()) {
+      out.append(input(input));
+    }
     for (var intent : record.intents()) {
       out.append(intent(intent));
     }
@@ -86,6 +89,20 @@ public final class RecordCodec {
         String.valueOf(frame.health()),
         String.valueOf(frame.slot()),
         String.valueOf(frame.flags()));
+    return out.toString();
+  }
+
+  /** One human input row, newline-terminated. */
+  public static String input(InputFrame input) {
+    var out = new StringBuilder();
+    row(
+        out,
+        "N",
+        String.valueOf(input.tick()),
+        input.pseudonym(),
+        String.valueOf(input.keys()),
+        String.valueOf(input.yaw()),
+        String.valueOf(input.pitch()));
     return out.toString();
   }
 
@@ -201,6 +218,7 @@ public final class RecordCodec {
     private final List<RosterEntry> roster = new ArrayList<>();
     private final List<RecordEvent> events = new ArrayList<>();
     private final List<Frame> frames = new ArrayList<>();
+    private final List<InputFrame> inputs = new ArrayList<>();
     private final List<Intent> intents = new ArrayList<>();
     private Optional<RecordEnd> end = Optional.empty();
     private final Map<String, Long> payouts = new TreeMap<>();
@@ -221,6 +239,14 @@ public final class RecordCodec {
             events.add(
                 new RecordEvent(num(at(fields, 1)), at(fields, 2), at(fields, 3), at(fields, 4)));
         case "F" -> frames.add(frame(fields));
+        case "N" ->
+            inputs.add(
+                new InputFrame(
+                    num(at(fields, 1)),
+                    at(fields, 2),
+                    (int) num(at(fields, 3)),
+                    (int) num(at(fields, 4)),
+                    (int) num(at(fields, 5))));
         case "I" ->
             intents.add(
                 new Intent(num(at(fields, 1)), at(fields, 2), at(fields, 3), at(fields, 4)));
@@ -288,6 +314,7 @@ public final class RecordCodec {
               head.combatRulesVersion()),
           events,
           frames,
+          inputs,
           intents,
           new RecordEnd(tail.tick(), tail.winner(), tail.reason(), payouts));
     }

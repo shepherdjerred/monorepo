@@ -118,7 +118,8 @@ public final class RwfPaper {
     }
     var bots = new Bots(module.services());
     var tracker = new CombatTracker();
-    var recordings = new Recordings(app.recorder(), app.pseudonyms());
+    var inputs = new Inputs();
+    var recordings = new Recordings(app.recorder(), app.pseudonyms(), inputs);
     var runner =
         new MatchRunner(
             new MatchRunner.Parts(
@@ -147,7 +148,8 @@ public final class RwfPaper {
                     runner, snapshots, guard, actions, tracker, context, keys, bombs, watchers)),
             guard,
             new CombatListener(runner, tracker, context, app.hooks()),
-            new WorldListener(runner, context, bombs));
+            new WorldListener(runner, context, bombs),
+            inputs);
     listeners.forEach(
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
     var commands =
