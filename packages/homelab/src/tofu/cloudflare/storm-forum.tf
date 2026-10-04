@@ -5,8 +5,8 @@ resource "cloudflare_turnstile_widget" "storm_forum" {
   mode       = "managed"
 }
 
-# Keys travel from encrypted Tofu state into the dedicated 1Password runtime
-# items through the credential provisioning tool, never repository files.
+# Keys must be transferred from protected Tofu state into the dedicated
+# 1Password runtime items through authenticated tooling, never repository files.
 output "storm_forum_turnstile_site_key" {
   value     = cloudflare_turnstile_widget.storm_forum.sitekey
   sensitive = true
