@@ -29,7 +29,7 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
       org.opencontainers.image.version=$VERSION org.opencontainers.image.revision=$GIT_SHA
 WORKDIR /opt/storm-forum
 USER 1000:1000
-CMD ["php-fpm", "--fpm-config", "/usr/local/etc/php-fpm.conf"]
+CMD ["php-fpm", "--nodaemonize", "--force-stderr", "--fpm-config", "/usr/local/etc/php-fpm.conf"]
 
 FROM runtime AS smoke
 RUN bun scripts/runtime-smoke.ts
