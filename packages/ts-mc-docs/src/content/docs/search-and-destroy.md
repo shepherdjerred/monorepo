@@ -87,14 +87,30 @@ Matches are recorded to train the bots. A recording holds positions, actions
 and pseudonymous ids. It does not include chat, player names or IP
 addresses. You are told this when you join.
 
+## Watching
+
+Type `/rwf spectate` to watch a round without playing. Your inventory, XP,
+health and effects are saved the same way as when you join, and you watch in
+spectator mode from above the arena with the round's scoreboard. Use
+`/rwf spectate next` to follow each living player in turn. You keep watching
+from one round to the next until you type `/rwf leave`, which returns you to
+where you were with everything you had. You cannot watch while you are in the
+round, but you can join the next round's lobby straight from watching with
+`/rwf join`.
+
+Staff sometimes run a round of bots only. You can watch it, but you cannot
+join it.
+
 ## Commands
 
-| Command           | What it does                                |
-| ----------------- | ------------------------------------------- |
-| `/rwf join`       | Queue for the next round                    |
-| `/rwf leave`      | Leave the game and return to survival       |
-| `/rwf kit <name>` | Choose your kit for the next round          |
-| `/rwf who`        | List the players in the round and mark bots |
+| Command              | What it does                                      |
+| -------------------- | ------------------------------------------------- |
+| `/rwf join`          | Queue for the next round                          |
+| `/rwf leave`         | Leave the game or stop watching, back to survival |
+| `/rwf kit <name>`    | Choose your kit for the next round                |
+| `/rwf who`           | List the players in the round and mark bots       |
+| `/rwf spectate`      | Watch the round in spectator mode without playing |
+| `/rwf spectate next` | While watching, follow the next living player     |
 
 ## Transparency
 
