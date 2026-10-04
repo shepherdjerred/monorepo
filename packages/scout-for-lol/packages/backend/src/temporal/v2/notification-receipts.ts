@@ -46,9 +46,6 @@ export const SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS = {
   postmatch: ReceiptKindSchema.parse("v2-notification-render-postmatch"),
   prematch: ReceiptKindSchema.parse("v2-notification-render-prematch"),
   settlement: ReceiptKindSchema.parse("v2-notification-render-settlement"),
-  "dare-summary": ReceiptKindSchema.parse(
-    "v2-notification-render-dare-summary",
-  ),
   "hall-record-break": ReceiptKindSchema.parse(
     "v2-notification-render-hall-record-break",
   ),

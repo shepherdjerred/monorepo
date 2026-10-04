@@ -145,16 +145,12 @@ describe("flagOverridesFor", () => {
     }
   });
 
-  test("sets all three dare flags together", () => {
-    // dareExploreEnabled needs (dare_v2 || extended) && scoutql_relational.
+  test("sets the Dares flag with the dares capability", () => {
+    // dareExploreEnabled needs bucks_dares_enabled.
     const overrides = flagOverridesFor(EVERYTHING);
-    for (const flag of [
-      "dare_v2",
-      "dare_extended_contracts_enabled",
-      "scoutql_relational_enabled",
-    ]) {
-      expect(overrides.find((entry) => entry.flag === flag)?.value).toBe(true);
-    }
+    expect(
+      overrides.find((entry) => entry.flag === "bucks_dares_enabled")?.value,
+    ).toBe(true);
   });
 
   test("never reproduces on-demand Riot reads, whatever was captured", () => {

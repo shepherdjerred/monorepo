@@ -114,59 +114,6 @@ export const BucksParlayVoidReasonSchema = z.enum([
 ]);
 
 /**
- * Lifecycle of a free-text dare bounty (`BucksDare.dareState`).
- *
- * `proposed` holds no money; the challenger's confirmation debits the first
- * contribution and moves to `pending_accept`. Every listed target accepting
- * flips it `active`. The five terminal resolutions are distinct on purpose:
- * `achieved`/`unachieved` are the two house-cut outcomes, while `declined`,
- * `expired` (accept window lapsed), and `voided` refund in full with no cut.
- * `abandoned` is a `proposed` dare that was cancelled or timed out before any
- * Buck moved.
- */
-export type BucksDareState = z.infer<typeof BucksDareStateSchema>;
-export const BucksDareStateSchema = z.enum([
-  "proposed",
-  "pending_accept",
-  "active",
-  "achieved",
-  "unachieved",
-  "declined",
-  "expired",
-  "voided",
-  "abandoned",
-]);
-
-/**
- * The dare states whose escrowed contributions are still open: the pot can
- * still grow, and every contribution is still owed back until the dare
- * reaches a terminal state. The ONE definition shared by the contribution
- * claim and the refundable-headroom query, so the two can never disagree
- * about which dares hold live money.
- *
- * Declared as a `readonly BucksDareState[]` rather than inferred as a literal
- * tuple, and the difference is load-bearing. A tuple gives
- * `ReadonlyArray.includes` a parameter type of just its two members, so
- * testing a full {@link BucksDareState} against it does not compile. The
- * backend masks that with its own `ts-reset`, which widens `includes`; the
- * packages that compile the backend's sources without that ambient
- * declaration do not, so the error appears only once one of them reaches the
- * call site. The annotation still checks every member against the enum, and
- * nothing here needs the narrower type — the Prisma filters only spread it.
- */
-export const OPEN_BUCKS_DARE_STATES: readonly BucksDareState[] = [
-  "pending_accept",
-  "active",
-];
-
-/**
- * How a dare's clock is bounded: the targets' very next qualifying game, or a
- * window of days measured from activation.
- */
-export type BucksDareHorizonKind = z.infer<typeof BucksDareHorizonKindSchema>;
-export const BucksDareHorizonKindSchema = z.enum(["next_game", "window"]);
-
-/**
  * Why a pool paid nobody.
  *
  * `no_counterparty` is recorded rather than paying winners a payout that

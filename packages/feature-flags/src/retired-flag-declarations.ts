@@ -1,4 +1,4 @@
-/** Audited unused Scout keys, retired only in the environment where they exist. */
+/** Audited unused Scout keys, retired only in the environments where they exist. */
 export const retiredFlagDeclarations = [
   { environment: "beta", namespace: "scout", key: "scout-tournament-api-mode" },
   {
@@ -31,5 +31,31 @@ export const retiredFlagDeclarations = [
     environment: "prod",
     namespace: "scout",
     key: "competition_builder_v2_enabled",
+  },
+  // Dare v1/v2 retirement: Dares run only on v3 SQL contracts, so the v2
+  // funding gate, extended-contract authoring and relational ScoutQL sources
+  // have no reader. Each key was a base inventory flag, so it exists in both
+  // environments.
+  { environment: "beta", namespace: "scout", key: "dare_v2" },
+  {
+    environment: "beta",
+    namespace: "scout",
+    key: "dare_extended_contracts_enabled",
+  },
+  {
+    environment: "beta",
+    namespace: "scout",
+    key: "scoutql_relational_enabled",
+  },
+  { environment: "prod", namespace: "scout", key: "dare_v2" },
+  {
+    environment: "prod",
+    namespace: "scout",
+    key: "dare_extended_contracts_enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "scout",
+    key: "scoutql_relational_enabled",
   },
 ] as const;

@@ -16,7 +16,7 @@ import { intentRecord } from "#src/temporal/v2/notification-delivery.test-fixtur
 
 const stubs = vi.hoisted(() => ({
   requireIntentRecordV2: vi.fn(),
-  afterDareSummaryDeliveredV2: vi.fn(),
+  afterDareStatusDeliveredV2: vi.fn(),
   afterPrematchDeliveredV2: vi.fn(),
   afterPostmatchDeliveredV2: vi.fn(),
   afterHallRecordBreakDeliveredV2: vi.fn(),
@@ -31,8 +31,8 @@ vi.mock("#src/temporal/v2/notification/notification-presentation.ts", () => ({
 vi.mock("#src/temporal/v2/notification-reads.ts", () => ({
   requireIntentRecordV2: stubs.requireIntentRecordV2,
 }));
-vi.mock("#src/temporal/v2/notification/dare-summary-notification.ts", () => ({
-  afterDareSummaryDeliveredV2: stubs.afterDareSummaryDeliveredV2,
+vi.mock("#src/temporal/v2/notification/dare-status-notification.ts", () => ({
+  afterDareStatusDeliveredV2: stubs.afterDareStatusDeliveredV2,
 }));
 vi.mock("#src/temporal/v2/notification/prematch-follow-up.ts", () => ({
   afterPrematchDeliveredV2: stubs.afterPrematchDeliveredV2,
@@ -52,26 +52,35 @@ const { afterNotificationDeliveredV2 } =
 
 const ATTEMPT = {
   stage: "dev",
-  intentKey: NotificationIntentKeySchema.parse(
-    "dare-summary-discord:NA1_9301:100000000000000001",
-  ),
+  intentKey: NotificationIntentKeySchema.parse("dare-result:9301:revision:1"),
   attemptNonce: NotificationAttemptNonceSchema.parse("attempt-nonce-1"),
 } as const;
 
+/** A Dare's public result post: a Dare subject delivered to a channel. */
+const DARE_RESULT_RECORD = { dareId: 9301, intent: { kind: "dare-status" } };
+
 beforeEach(() => {
   vi.clearAllMocks();
-  stubs.requireIntentRecordV2.mockResolvedValue(
-    intentRecord("channel", "dare-summary"),
-  );
-  stubs.afterDareSummaryDeliveredV2.mockResolvedValue(undefined);
+  stubs.requireIntentRecordV2.mockResolvedValue(DARE_RESULT_RECORD);
+  stubs.afterDareStatusDeliveredV2.mockResolvedValue("refreshed");
 });
 
 describe("the post-delivery follow-up", () => {
-  test("refreshes the Dare callout for a dare-summary intent", async () => {
+  test("refreshes the Dare callout after a Dare result post", async () => {
     const result = await afterNotificationDeliveredV2(ATTEMPT);
 
     expect(result).toEqual({ outcome: "completed" });
-    expect(stubs.afterDareSummaryDeliveredV2).toHaveBeenCalledTimes(1);
+    expect(stubs.afterDareStatusDeliveredV2).toHaveBeenCalledWith(
+      DARE_RESULT_RECORD,
+    );
+  });
+
+  test("has nothing to do after a Dare DM", async () => {
+    stubs.afterDareStatusDeliveredV2.mockResolvedValue("skipped");
+
+    expect(await afterNotificationDeliveredV2(ATTEMPT)).toEqual({
+      outcome: "skipped",
+    });
   });
 
   test("hands a delivered prematch to its own follow-up and lets it throw", async () => {
@@ -94,7 +103,7 @@ describe("the post-delivery follow-up", () => {
     await expect(afterNotificationDeliveredV2(ATTEMPT)).rejects.toThrow(
       "the ref write was lost",
     );
-    expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
+    expect(stubs.afterDareStatusDeliveredV2).not.toHaveBeenCalled();
   });
 
   test("counts a delivered post-match report's core output, and reports its failure", async () => {
@@ -130,7 +139,7 @@ describe("the post-delivery follow-up", () => {
       expect(await afterNotificationDeliveredV2(ATTEMPT)).toEqual({
         outcome: "skipped",
       });
-      expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
+      expect(stubs.afterDareStatusDeliveredV2).not.toHaveBeenCalled();
     },
   );
 
@@ -150,14 +159,14 @@ describe("the post-delivery follow-up", () => {
     expect(await afterNotificationDeliveredV2(ATTEMPT)).toEqual({
       outcome: "failed",
     });
-    expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
+    expect(stubs.afterDareStatusDeliveredV2).not.toHaveBeenCalled();
   });
 
   test("reports a refresh that failed instead of throwing it", async () => {
     // A throw here would fail the Activity, and a best-effort edit is not a
     // reason to retry or to fail anything: the delivery it follows is already
     // recorded.
-    stubs.afterDareSummaryDeliveredV2.mockRejectedValue(
+    stubs.afterDareStatusDeliveredV2.mockRejectedValue(
       new Error("the edit was refused"),
     );
 

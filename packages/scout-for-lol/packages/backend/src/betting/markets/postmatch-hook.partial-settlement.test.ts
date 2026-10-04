@@ -1,23 +1,17 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-types.ts";
 
 /**
- * v1's behaviour on the partial-settlement path, pinned BEFORE the
- * announcement sink is threaded through this module.
+ * The post-match Bucks hook on the Dare paths, with every settlement step
+ * beneath it stubbed.
  *
- * This file exists to be a genuine before-and-after rather than a description
- * of code already written. `settleAndAwardBucks` runs on every v1 match and
- * moves real balances; the sink adds a parameter to it and to the settlement
- * steps beneath it, and the failure mode of getting that wrong is silent. So
- * what v1 does today is written down first, and the threading must leave every
- * assertion here untouched.
- *
- * The path pinned is the one the sink changes most: `settleDaresForMatch`
- * exhausts its retries on one Dare after others have already committed, throws
- * `DarePartialSettlementError` carrying the summaries that DID settle, and
- * this module delivers those summaries before rethrowing — because they are
- * one-shot and a retry can never reproduce them.
+ * `settleAndAwardBucks` runs on every match and moves real balances, and the
+ * announcement sink decides what it may say about them. Dares are the one
+ * family that can throw: a Dare whose capture failed is retried with the
+ * whole match, so the hook refreshes callouts for what did commit and then
+ * rethrows. The Dare summaries it returns are what the settlement receipt
+ * names as resolved Dares.
  */
 
 /** Which sink each settlement family was handed, in call order. */
@@ -38,24 +32,15 @@ const stubs = vi.hoisted(() => ({
   ),
   settleParlaysForMatch: vi.fn((): Promise<unknown[]> => Promise.resolve([])),
   awardBucksForMatch: vi.fn(() => Promise.resolve([])),
-  settleDaresV2ForMatch: vi.fn(() => Promise.resolve(undefined)),
   settleDaresForMatch: vi.fn(
     (
       _match: unknown,
       _db: unknown,
-      _now: unknown,
-      sink: unknown,
-    ): Promise<DareSettlementSummary[]> => {
-      handed.push({ family: "dare", sink });
-      return Promise.resolve([]);
-    },
-  ),
-  deliverDareSummaries: vi.fn(
-    (_summaries: readonly DareSettlementSummary[], _db?: unknown) =>
-      Promise.resolve(undefined),
+      _options?: { notify?: string },
+    ): Promise<DareSettlementSummary[]> => Promise.resolve([]),
   ),
   deliverPendingDareNotifications: vi.fn(() => Promise.resolve(undefined)),
-  refreshPendingDareV2Callouts: vi.fn(
+  refreshPendingDareCallouts: vi.fn(
     (_dependencies?: { mayPost?: () => boolean }): Promise<number[]> =>
       Promise.resolve([]),
   ),
@@ -76,14 +61,8 @@ vi.mock("#src/betting/parlays/runtime/parlay-settle.ts", () => ({
 vi.mock("#src/betting/accounts/earnings.ts", () => ({
   awardBucksForMatch: stubs.awardBucksForMatch,
 }));
-vi.mock("#src/betting/dares/settlement/dare-settle-v2.ts", () => ({
-  settleDaresV2ForMatch: stubs.settleDaresV2ForMatch,
-}));
 vi.mock("#src/betting/dares/settlement/dare-settle.ts", () => ({
   settleDaresForMatch: stubs.settleDaresForMatch,
-}));
-vi.mock("#src/betting/dares/presentation/notify/dare-delivery.ts", () => ({
-  deliverDareSummaries: stubs.deliverDareSummaries,
 }));
 vi.mock(
   "#src/betting/dares/presentation/notify/dare-notification-delivery.ts",
@@ -91,9 +70,9 @@ vi.mock(
     deliverPendingDareNotifications: stubs.deliverPendingDareNotifications,
   }),
 );
-vi.mock("#src/betting/dares/presentation/dare-callout-v2.ts", () => ({
-  refreshPendingDareV2Callouts: stubs.refreshPendingDareV2Callouts,
-  defaultDareV2CalloutDependencies: {},
+vi.mock("#src/betting/dares/presentation/dare-callout.ts", () => ({
+  refreshPendingDareCallouts: stubs.refreshPendingDareCallouts,
+  defaultDareCalloutDependencies: {},
 }));
 vi.mock("#src/betting/notify/message-refresh.ts", () => ({
   refreshClosedBucksMessages: stubs.refreshClosedBucksMessages,
@@ -112,7 +91,7 @@ vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
 const { settleAndAwardBucks } =
   await import("#src/betting/markets/postmatch-hook.ts");
 const { DarePartialSettlementError } =
-  await import("#src/betting/dares/settlement/dare-settle-shared.ts");
+  await import("#src/betting/dares/settlement/dare-settle-types.ts");
 const { announcingSettlementSink, silentSettlementSink } =
   await import("#src/betting/notify/announcement-sink.ts");
 
@@ -138,18 +117,11 @@ function summary(dareId: number): DareSettlementSummary {
     dareId,
     serverId: "guild-one",
     channelId: "channel-one",
-    messageRef: "7",
     matchId: "NA1_7001",
     resolution: "achieved",
-    horizonKind: "next_game",
-    challengerDiscordId: "1",
-    targetAliases: ["a"],
-    conditionSummary: "do a thing",
-    potTotal: 10,
-    payouts: [],
-    refunds: [],
-    voidReason: undefined,
-    leafCounts: undefined,
+    value: true,
+    finality: { value: true, final: true, reason: "monotone_success" },
+    proof: null,
   };
 }
 
@@ -158,75 +130,58 @@ beforeEach(() => {
   handed.length = 0;
 });
 
-describe("v1 on the partial-settlement path", () => {
-  test("delivers the summaries that committed, then rethrows", async () => {
-    // The whole point of the catch: those summaries are one-shot. Losing them
-    // to the throw would leave an already-terminal Dare with nothing to
-    // announce, ever.
-    const committed = [summary(1), summary(2)];
-    const cause = new Error("dare 3 exhausted its retries");
+describe("the Dare path", () => {
+  test("refreshes callouts for what committed, then rethrows", async () => {
+    // A partial failure is retried with the whole match; the Dares that did
+    // resolve still get their callouts edited before the throw.
     stubs.settleDaresForMatch.mockRejectedValueOnce(
-      new DarePartialSettlementError(committed, cause),
+      new DarePartialSettlementError([summary(1)], new Error("dare 2 failed")),
     );
 
     await expect(settleAndAwardBucks(MATCH)).rejects.toThrow(
       DarePartialSettlementError,
     );
 
-    expect(stubs.deliverDareSummaries).toHaveBeenCalledTimes(1);
-    expect(stubs.deliverDareSummaries.mock.calls[0]?.[0]).toEqual(committed);
+    expect(stubs.refreshPendingDareCallouts).toHaveBeenCalledTimes(1);
+    expect(stubs.deliverPendingDareNotifications).not.toHaveBeenCalled();
   });
 
-  test("delivers nothing extra when settlement completes normally", async () => {
-    // The ordinary path returns its summaries to the caller, which announces
-    // them; this module delivers only on the partial-failure branch.
+  test("returns the Dares this match resolved", async () => {
+    // These are what the settlement receipt names as resolved Dares.
     stubs.settleDaresForMatch.mockResolvedValueOnce([summary(1)]);
 
     const result = await settleAndAwardBucks(MATCH);
 
     expect(result.dareSettlements).toEqual([summary(1)]);
-    expect(stubs.deliverDareSummaries).not.toHaveBeenCalled();
   });
 
   test("drains the Dare notification outbox on every settled match", async () => {
-    // The third bypass, pinned as v1 behaviour so the sink can be shown to
-    // change it for V2 only: this sends queued Dare DMs, and it runs on the
-    // ordinary path with no condition on it.
-    stubs.settleDaresForMatch.mockResolvedValueOnce([]);
-
     await settleAndAwardBucks(MATCH);
 
     expect(stubs.deliverPendingDareNotifications).toHaveBeenCalledTimes(1);
   });
 
   test("refreshes pending Dare callouts on every settled match", async () => {
-    // The fourth: `ensureDareV2Callout` POSTS when a Dare has no messageRef,
-    // so this is not only an edit of something already public.
-    stubs.settleDaresForMatch.mockResolvedValueOnce([]);
-
+    // `ensureDareCallout` POSTS when a Dare has no messageRef, so this is
+    // not only an edit of something already public.
     await settleAndAwardBucks(MATCH);
 
-    expect(stubs.refreshPendingDareV2Callouts).toHaveBeenCalled();
+    expect(stubs.refreshPendingDareCallouts).toHaveBeenCalled();
   });
 });
 
 describe("a sink for a match owed no public delivery", () => {
   test("withholds every announcing path while settlement still runs", async () => {
-    // The guarantee, tested as one rule rather than four assertions about
-    // four paths: nothing new is posted and nothing is enqueued. Settlement
-    // itself is untouched — the steps below still run and still return.
-    const committed = [summary(1)];
-    stubs.settleDaresForMatch.mockRejectedValueOnce(
-      new DarePartialSettlementError(committed, new Error("exhausted")),
-    );
+    // The guarantee, tested as one rule rather than assertions about each
+    // path: nothing new is posted and nothing is enqueued. Settlement itself
+    // is untouched — the steps below still run and still return.
+    await settleAndAwardBucks(MATCH, undefined, {
+      announcementSink: silentSettlementSink,
+    });
 
-    await expect(
-      settleAndAwardBucks(MATCH, undefined, {
-        announcementSink: silentSettlementSink,
-      }),
-    ).rejects.toThrow(DarePartialSettlementError);
-
-    expect(stubs.deliverDareSummaries).not.toHaveBeenCalled();
+    expect(stubs.settleDaresForMatch.mock.calls[0]?.[2]).toEqual({
+      notify: "withhold",
+    });
     expect(stubs.deliverPendingDareNotifications).not.toHaveBeenCalled();
     // Settlement ran in full: the money paths were still called.
     expect(stubs.closeAndSettleBettingForMatch).toHaveBeenCalledTimes(1);
@@ -237,35 +192,30 @@ describe("a sink for a match owed no public delivery", () => {
     // Edits stay allowed: withholding them would leave an already-public
     // callout stale and wrong. Only the post branch is refused, and the
     // refresh is still invoked so existing messages are updated.
-    stubs.settleDaresForMatch.mockResolvedValueOnce([]);
-
     await settleAndAwardBucks(MATCH, undefined, {
       announcementSink: silentSettlementSink,
     });
 
-    expect(stubs.refreshPendingDareV2Callouts).toHaveBeenCalled();
-    const dependencies = stubs.refreshPendingDareV2Callouts.mock.calls[0]?.[0];
+    expect(stubs.refreshPendingDareCallouts).toHaveBeenCalled();
+    const dependencies = stubs.refreshPendingDareCallouts.mock.calls[0]?.[0];
     expect(dependencies?.mayPost?.()).toBe(false);
   });
 
-  test("v1's own sink still posts", async () => {
-    stubs.settleDaresForMatch.mockResolvedValueOnce([]);
-
+  test("the announcing sink still posts and enqueues", async () => {
     await settleAndAwardBucks(MATCH, undefined, {
       announcementSink: announcingSettlementSink,
     });
 
-    const dependencies = stubs.refreshPendingDareV2Callouts.mock.calls[0]?.[0];
+    const dependencies = stubs.refreshPendingDareCallouts.mock.calls[0]?.[0];
     expect(dependencies?.mayPost?.()).toBe(true);
+    expect(stubs.settleDaresForMatch.mock.calls[0]?.[2]).toEqual({
+      notify: "enqueue",
+    });
   });
 });
 
-describe("v1 on the settlement and parlay paths", () => {
-  test("still receives each family's summaries, and records nothing", async () => {
-    // The sink now reaches inside both families' transactions. v1's sink
-    // records nothing — it announces from this call stack — so what
-    // `settleAndAwardBucks` returns must be exactly what it returned before,
-    // and no recovery instruction may be written on v1's behalf.
+describe("the settlement and parlay paths", () => {
+  test("still receive each family's summaries", async () => {
     const settlement = {
       matchId: "NA1_7001",
       serverId: "guild-one",
@@ -276,34 +226,20 @@ describe("v1 on the settlement and parlay paths", () => {
       settlements: [settlement],
     });
     stubs.settleParlaysForMatch.mockResolvedValueOnce([parlay]);
-    stubs.settleDaresForMatch.mockResolvedValueOnce([]);
 
     const result = await settleAndAwardBucks(MATCH);
 
     expect(result.settlements).toEqual([settlement]);
     expect(result.parlaySettlements).toEqual([parlay]);
-    expect(announcingSettlementSink.mayPostDareCallout()).toBe(true);
   });
 
-  test("hands the same sink to every family", async () => {
-    // One sink for the whole settlement, so a family cannot be threaded with
-    // a different answer than its neighbours — which is how a bypass is born.
-    // No per-call overrides here: each family's default stub records the sink
-    // it was handed, and an override would silence one of them.
+  test("hands the caller's sink to the settlement family", async () => {
     await settleAndAwardBucks(MATCH, undefined, {
       announcementSink: silentSettlementSink,
     });
 
-    // Three families, one sink: a family threaded with a different answer
-    // than its neighbours is how a bypass is born.
-    // Parlay is not threaded yet and so records nothing; the families that
-    // ARE threaded must all have been handed the same sink.
-    expect(handed.map((entry) => entry.family).toSorted()).toEqual([
-      "dare",
-      "settlement",
+    expect(handed).toEqual([
+      { family: "settlement", sink: silentSettlementSink },
     ]);
-    expect(handed.every((entry) => entry.sink === silentSettlementSink)).toBe(
-      true,
-    );
   });
 });

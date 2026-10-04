@@ -1,6 +1,12 @@
 import type { Db } from "#src/database/index.ts";
-import { mintDareStatusIntents } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
-import type { DareNotificationEventInput } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
+import {
+  mintDareResultIntent,
+  mintDareStatusIntents,
+} from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
+import type {
+  DareNotificationEventInput,
+  DareResultAnnouncement,
+} from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 
 /**
  * Whether a settling transaction may write its Dare notification.
@@ -17,4 +23,24 @@ export async function enqueueDareNotificationInTransaction(
   input: DareNotificationEventInput,
 ): Promise<void> {
   await mintDareStatusIntents(tx, input);
+}
+
+/**
+ * Record the public result post a resolved Dare owes its own channel.
+ *
+ * Written in the settling transaction beside the DM record, so a Dare that
+ * resolved always owes exactly one channel post and a rolled-back settlement
+ * owes none. Delivery re-checks `dare_notifications_enabled` before sending.
+ */
+export async function enqueueDareResultPostInTransaction(
+  tx: Db,
+  input: {
+    dareId: number;
+    revision: number;
+    result: DareResultAnnouncement;
+    matchId?: string | undefined;
+    occurredAt: Date;
+  },
+): Promise<void> {
+  await mintDareResultIntent(tx, input);
 }

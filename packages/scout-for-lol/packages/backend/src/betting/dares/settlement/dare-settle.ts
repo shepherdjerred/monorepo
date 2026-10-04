@@ -1,477 +1,219 @@
 import * as Sentry from "@sentry/bun";
+import type { DareContract, RawMatch } from "@scout-for-lol/data";
+import type { Prisma } from "#generated/prisma/client/index.js";
+import { collectDareBatch } from "#src/betting/dares/settlement/dare-settle-batch.ts";
 import {
-  announcingSettlementSink,
-  type SettlementAnnouncementSink,
-} from "#src/betting/notify/announcement-sink.ts";
-import { resolveQueueTypeFromGame, type RawMatch } from "@scout-for-lol/data";
-import { z } from "zod";
-import { classifyMatchForBetting } from "#src/betting/outcome.ts";
-import {
-  DARE_ELIGIBLE_QUEUES,
-  DARE_EVALUATOR_VERSION,
-  evaluateDareGame,
-  evaluateDareTree,
-  parseLeafHits,
-} from "#src/betting/dares/evaluation/dare-criteria.ts";
-import {
-  dareMoneyFactsInTransaction,
-  payDareTargetsInTransaction,
-  refundDareContributionsInTransaction,
-} from "#src/betting/dares/settlement/dare-ledger.ts";
-import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
-import {
-  baseSummary,
-  dareRefundView,
-  parseDare,
-  voidDareWithFullRefund,
   DarePartialSettlementError,
-  type ActiveDareRow,
-  type ParsedDare,
-} from "#src/betting/dares/settlement/dare-settle-shared.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
-import { logBucksTransition } from "#src/betting/transition-log.ts";
+  type DareSettlementSummary,
+} from "#src/betting/dares/settlement/dare-settle-types.ts";
+import { settleDareOrVoidOnStorageOverflow } from "#src/betting/dares/settlement/dare-settle-overflow.ts";
 import {
-  prisma,
-  type Db,
-  type ExtendedPrismaClient,
-} from "#src/database/index.ts";
+  captureDareSqlForMatch,
+  settleDareSqlAtDeadline,
+} from "#src/betting/dares/settlement/dare-settle-contract.ts";
+import {
+  matchTouchesRelationalDare,
+  relationalDareMatchContext,
+} from "#src/betting/dares/evaluation/dare-match-eligibility.ts";
+import {
+  parseRelationalDareContract,
+  readableRelationalDareContract,
+} from "#src/betting/dares/dare-common.ts";
+import { voidDareWithFullRefund } from "#src/betting/dares/settlement/dare-void.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import {
-  DARE_SETTLE_ATTEMPTS,
-  withBoundedRetry,
-} from "#src/betting/dares/settlement/dare-settle-retry.ts";
-import {
-  bettingDareGamesCapturedTotal,
-  bettingDareSettlementsTotal,
-  bettingDaresTotal,
-} from "#src/metrics/betting/betting.ts";
 
 const logger = createLogger("betting-dare-settle");
 
-/**
- * Match-driven dare capture and settlement.
- *
- * Capture and evaluation share ONE transaction behind the dare-row claim: a
- * game row can never commit without the achievement check running, so an
- * early settlement cannot be lost to a crash, and contributions, sweeps, and
- * settles all serialize on the same row. The `(dareId, matchId)` unique key
- * makes ingest replays no-ops.
- *
- * The pre-transaction dare row drives eligibility and discovery only — every
- * money fact (the pot and the contribution set) is re-derived inside the
- * transaction after the claim, because a contribution can commit between the
- * discovery read and the claim.
- */
+type ActiveDareRow = Prisma.BucksDareGetPayload<{
+  include: { targets: true };
+}>;
 
-const DareQueueSchema = z.enum(DARE_ELIGIBLE_QUEUES);
-
-async function captureAndSettleDare(
-  tx: Db,
-  input: {
-    dare: ParsedDare;
-    matchData: RawMatch;
-    queueType: string;
-    leafHits: boolean[];
-    snapshot: unknown;
-    now: Date;
-  },
-): Promise<DareSettlementSummary | undefined> {
-  const { dare, matchData, now } = input;
-  const matchId = matchData.metadata.matchId;
-  // Guarded first statement: the dare-row claim serializes capture against
-  // contributions, sweeps, and any concurrent settlement of the same dare.
-  const claim = await tx.bucksDare.updateMany({
-    where: { id: dare.row.id, dareState: "active" },
-    data: { updatedAt: now },
-  });
-  if (claim.count !== 1) return undefined;
-  // Money facts re-read AFTER the claim — the discovery row is stale the
-  // moment a contribution commits behind it, and the conservation asserts
-  // compare against the fresh contribution rows.
-  const facts = await dareMoneyFactsInTransaction(tx, {
-    ...dare.facts,
-    matchId,
-  });
-
-  // Idempotent capture: an ingest replay hits the (dareId, matchId) unique
-  // key, inserts nothing, and must not re-run settlement.
-  const captured = await tx.bucksDareGame.createMany({
-    data: [
-      {
-        dareId: dare.row.id,
-        matchId,
-        gameStartAt: new Date(matchData.info.gameStartTimestamp),
-        gameEndAt: new Date(matchData.info.gameEndTimestamp),
-        queueType: input.queueType,
-        leafHits: JSON.stringify(input.leafHits),
-        snapshot: JSON.stringify(input.snapshot),
-      },
-    ],
-    skipDuplicates: true,
-  });
-  if (captured.count !== 1) return undefined;
-
-  const rows = await tx.bucksDareGame.findMany({
-    where: { dareId: dare.row.id },
-    orderBy: { id: "asc" },
-    select: { leafHits: true },
-  });
-  const tree = evaluateDareTree(
-    dare.conditions,
-    rows.map((row) => ({ leafHits: parseLeafHits(row.leafHits) })),
+function reportDareBatchFailure(
+  stage: "inspect" | "settle",
+  dare: { id: number },
+  matchId: string,
+  error: unknown,
+): void {
+  logger.error(
+    `Could not ${stage} Dare ${dare.id.toString()} for ${matchId}:`,
+    error,
   );
-
-  if (tree.achieved) {
-    await tx.bucksDare.updateMany({
-      where: { id: dare.row.id, dareState: "active" },
-      data: { dareState: "achieved", settledAt: now },
-    });
-    const payees = dare.row.targets.map((target) => {
-      if (target.bucksAccountId === null || target.acceptedAt === null) {
-        throw new Error(
-          `Active dare ${dare.row.id.toString()} has an unaccepted target ${target.id.toString()}`,
-        );
-      }
-      return {
-        id: target.id,
-        discordId: target.discordId,
-        alias: target.alias,
-        bucksAccountId: target.bucksAccountId,
-      };
-    });
-    const { payouts } = await payDareTargetsInTransaction(tx, {
-      facts,
-      targets: payees,
-    });
-    const summary = baseSummary(dare, "achieved", matchId);
-    summary.potTotal = facts.potTotal;
-    summary.payouts = payouts;
-    summary.leafCounts = tree.leafCounts;
-    return summary;
-  }
-
-  if (dare.horizonKind === "next_game") {
-    // The one bound game evaluated false, so the dare is settled unachieved
-    // in the same transaction — a next-game dare never waits for its clock.
-    //
-    // "Next game" means the first eligible game INGESTED, not the first one
-    // played: when two eligible games finish close together and the
-    // later-started one ingests first, that one binds the dare. Documented
-    // accepted tradeoff from the plan — ingest order tracks play order
-    // closely at these stakes, and re-presenting matches in play order would
-    // need a per-dare match queue the feature deliberately does not have.
-    await tx.bucksDare.updateMany({
-      where: { id: dare.row.id, dareState: "active" },
-      data: { dareState: "unachieved", settledAt: now },
-    });
-    const refunds = await refundDareContributionsInTransaction(tx, {
-      facts,
-      resolution: "unachieved",
-      withCut: true,
-    });
-    const summary = baseSummary(dare, "unachieved", matchId);
-    summary.potTotal = facts.potTotal;
-    summary.refunds = refunds;
-    summary.leafCounts = tree.leafCounts;
-    return summary;
-  }
-
-  const summary = baseSummary(dare, "captured", matchId);
-  summary.potTotal = facts.potTotal;
-  summary.leafCounts = tree.leafCounts;
-  return summary;
-}
-
-function observeDareSettlement(summary: DareSettlementSummary): void {
-  // A voided dare was already fully observed inside voidDareWithFullRefund,
-  // and no game was captured for it.
-  if (summary.resolution === "voided") {
-    return;
-  }
-  bettingDareGamesCapturedTotal.inc();
-  if (summary.resolution === "captured") {
-    logger.info(
-      `🎯 Captured ${summary.matchId ?? "a game"} against dare ${summary.dareId.toString()}`,
-    );
-    return;
-  }
-  bettingDaresTotal.inc({ result: summary.resolution });
-  bettingDareSettlementsTotal.inc({ outcome: summary.resolution });
-  logBucksTransition({
-    event:
-      summary.resolution === "achieved"
-        ? "bucks.dare.achieved"
-        : "bucks.dare.unachieved",
-    serverId: summary.serverId,
-    dareId: summary.dareId,
-    ...(summary.matchId === undefined ? {} : { matchId: summary.matchId }),
-    payout: summary.potTotal,
-    fromState: "active",
-    toState: summary.resolution,
-    surface: "postmatch",
+  Sentry.captureException(error, {
+    tags: {
+      source: `betting-dare-${stage}`,
+      matchId,
+      dareId: dare.id.toString(),
+    },
   });
 }
 
-/**
- * The one call the post-match pipeline makes into dares.
- *
- * Deliberately NOT "never throws" the way its sibling markets are — a dare's
- * capture is bound to this one specific match, and the postmatch cursor
- * never re-presents a match once it advances past it. Swallowing a genuine
- * (non-transient-recovered) failure here would silently and permanently
- * lose that dare's one chance to capture this game, which can later
- * mis-settle an actually-achieved dare as unachieved with a house cut.
- *
- * So: discovery and each dare get a short bounded retry
- * ({@link DARE_SETTLE_ATTEMPTS}) to absorb a transient blip, and if that is
- * exhausted, the error is logged, paged to Sentry, and RETHROWN. The caller
- * (`processMatchAndUpdatePlayers`) does not advance the match-history cursor
- * on a thrown error — this is the same "NOT advancing cursor; will retry
- * next poll" pattern already used for the S3 ingest gate. Every sibling
- * write this function's caller already ran (outcome/parlay settlement,
- * weekly capture, earnings) is independently idempotent on state, so
- * retrying the whole match is safe: they simply no-op on the replay, and
- * only the dares still `active` get evaluated again.
- */
+async function inspectStoredContract(
+  row: ActiveDareRow,
+  prismaClient: ExtendedPrismaClient,
+  options: {
+    now: Date;
+    matchId: string;
+    notify: DareNotificationDisposition;
+  },
+): Promise<
+  | { kind: "valid"; contract: DareContract }
+  | { kind: "invalid"; summary: DareSettlementSummary | null }
+> {
+  const contract = readableRelationalDareContract(row.contractJson);
+  if (contract !== null) return { kind: "valid", contract };
+  const voided = await voidDareWithFullRefund(
+    row,
+    "invalid_contract",
+    prismaClient,
+    options,
+  );
+  return {
+    kind: "invalid",
+    summary: voided
+      ? {
+          dareId: row.id,
+          serverId: row.serverId,
+          channelId: row.channelId,
+          resolution: "voided",
+          value: null,
+          finality: { value: null, final: true, reason: "contract_error" },
+          proof: null,
+        }
+      : null,
+  };
+}
+
 export async function settleDaresForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
-  now: Date = new Date(),
-  sink: SettlementAnnouncementSink = announcingSettlementSink,
+  options: {
+    now?: Date | undefined;
+    /** See `SettlementAnnouncementSink.mayEnqueueDareNotification`. */
+    notify?: DareNotificationDisposition | undefined;
+  } = {},
 ): Promise<DareSettlementSummary[]> {
-  const matchId = matchData.metadata.matchId;
-  const queue = DareQueueSchema.safeParse(
-    resolveQueueTypeFromGame(
-      matchData.info.queueId,
-      matchData.info.gameMode,
-      matchData.info.gameType,
-    ),
-  );
-  if (!queue.success) return [];
-  // A remake (or unreadable result) is never captured and never consumes a
-  // next-game bind — the same classification gate every other market uses.
-  if (classifyMatchForBetting(matchData).kind !== "decided") return [];
-
-  const gameStartAt = new Date(matchData.info.gameStartTimestamp);
-  const gameEndAt = new Date(matchData.info.gameEndTimestamp);
-  const dares = await (async () => {
-    try {
-      return await withBoundedRetry(
-        () =>
-          prismaClient.bucksDare.findMany({
-            where: {
-              dareState: "active",
-              OR: [
-                // The SQL image of the per-dare clock gates in
-                // settleOneDareForMatch: activated before the game started,
-                // and the game ended by the stored deadline (a next_game
-                // dare stores its timeout in windowEndsAt, so one predicate
-                // serves both horizons).
-                {
-                  activatedAt: { lt: gameStartAt },
-                  windowEndsAt: { gte: gameEndAt },
-                },
-                // An active dare with a missing clock is a broken contract.
-                // Kept in the batch so the loud per-dare throw below
-                // surfaces it — a bare SQL filter would hide the bug
-                // silently.
-                { activatedAt: null },
-                { windowEndsAt: null },
-              ],
-            },
-            // Deterministic processing order — Postgres does not guarantee
-            // one without an explicit ORDER BY, and a stable order matters
-            // for `DarePartialSettlementError` reasoning about "everything
-            // before the failure already committed".
-            orderBy: { id: "asc" },
-            include: { targets: { orderBy: { id: "asc" } } },
-          }),
-        DARE_SETTLE_ATTEMPTS,
-      );
-    } catch (error) {
-      logger.error(
-        `Could not load active dares for ${matchId} after ${DARE_SETTLE_ATTEMPTS.toString()} attempts:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: { source: "betting-dare-settle-load", matchId },
-      });
-      throw error;
-    }
-  })();
-
+  const now = options.now ?? new Date();
+  const notify = options.notify ?? "enqueue";
+  const context = relationalDareMatchContext(matchData);
+  if (context === null) return [];
+  const rows = await prismaClient.bucksDare.findMany({
+    where: {
+      dareState: "active",
+      activatedAt: { lt: context.gameStartAt },
+      deadlineAt: { gte: context.gameEndAt },
+    },
+    include: { targets: { orderBy: { id: "asc" } } },
+    orderBy: { id: "asc" },
+  });
   const summaries: DareSettlementSummary[] = [];
-  let firstFailure: unknown;
-  for (const row of dares) {
-    try {
-      const summary = await settleOneDareForMatchWithRetry(row, {
-        matchData,
-        queueType: queue.data,
-        prismaClient,
+  const contracts: {
+    row: ActiveDareRow;
+    contract: DareContract;
+  }[] = [];
+  const inspected = await collectDareBatch(
+    rows,
+    async (row) => ({
+      row,
+      outcome: await inspectStoredContract(row, prismaClient, {
         now,
-        sink,
-      });
-      if (summary !== undefined) {
-        summaries.push(summary);
-        observeDareSettlement(summary);
-      }
-    } catch (error) {
-      // Every retry attempt is exhausted for this ONE dare. Logged and
-      // paged for visibility. Deliberately NOT rethrown here — keep
-      // processing the rest of the batch (the original per-dare isolation:
-      // one bad dare must not cost its neighbours their chance at this same
-      // match) and remember only the first failure to report once the loop
-      // finishes, WITH every summary already collected. Throwing
-      // immediately here would discard those already-committed summaries —
-      // exactly the loss this function's doc comment exists to prevent.
-      logger.error(
-        `Could not settle dare ${row.id.toString()} for ${matchId} after ${DARE_SETTLE_ATTEMPTS.toString()} attempts:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: {
-          source: "betting-dare-settle",
-          matchId,
-          dareId: row.id.toString(),
-        },
-      });
-      firstFailure ??= error;
+        matchId: matchData.metadata.matchId,
+        notify,
+      }),
+    }),
+    (row, error) => {
+      reportDareBatchFailure("inspect", row, matchData.metadata.matchId, error);
+    },
+  );
+  for (const result of inspected.values) {
+    if (result.outcome.kind === "valid") {
+      contracts.push({ row: result.row, contract: result.outcome.contract });
+    } else if (result.outcome.summary !== null) {
+      summaries.push(result.outcome.summary);
     }
   }
-  if (firstFailure !== undefined) {
-    throw new DarePartialSettlementError(summaries, firstFailure);
+  const relevant = contracts.filter(({ contract }) =>
+    matchTouchesRelationalDare(matchData, contract),
+  );
+  if (relevant.length === 0) {
+    if (inspected.firstFailure !== null) {
+      throw new DarePartialSettlementError(
+        summaries,
+        inspected.firstFailure.error,
+      );
+    }
+    return summaries;
+  }
+  const captured = await collectDareBatch(
+    relevant,
+    async ({ row, contract }) =>
+      await settleDareOrVoidOnStorageOverflow(
+        {
+          dare: row,
+          prismaClient,
+          now,
+          matchId: matchData.metadata.matchId,
+          notify,
+        },
+        async () =>
+          await captureDareSqlForMatch({
+            dare: row,
+            contract,
+            matchData,
+            prismaClient,
+            now,
+            notify,
+          }),
+      ),
+    ({ row }, error) => {
+      reportDareBatchFailure("settle", row, matchData.metadata.matchId, error);
+    },
+  );
+  for (const summary of captured.values) {
+    if (summary !== undefined) summaries.push(summary);
+  }
+  const firstFailure = inspected.firstFailure ?? captured.firstFailure;
+  if (firstFailure !== null) {
+    throw new DarePartialSettlementError(summaries, firstFailure.error);
   }
   return summaries;
 }
 
-/**
- * Wraps {@link settleOneDareForMatch} with a short bounded retry.
- *
- * `captureAndSettleDare`'s transaction is atomic — Postgres either commits
- * the whole thing or none of it — so a retry after a genuine rollback (a
- * momentary connection blip, a serialization conflict) simply re-runs the
- * same guarded claim and is safe. The one theoretical exception is a commit
- * that succeeded but whose acknowledgement was lost before this function saw
- * it; a retry there would hit `BucksDareGame`'s unique `(dareId, matchId)`
- * constraint and fail like any other error, which is no worse than today's
- * un-retried behavior and is astronomically rarer than the transient
- * failures this guards against.
- */
-async function settleOneDareForMatchWithRetry(
-  row: ActiveDareRow,
-  input: {
-    matchData: RawMatch;
-    queueType: string;
-    prismaClient: ExtendedPrismaClient;
-    now: Date;
-    sink: SettlementAnnouncementSink;
-  },
+export async function settleActiveDareAtBound(
+  dare: ActiveDareRow,
+  prismaClient: ExtendedPrismaClient = prisma,
+  now: Date = new Date(),
 ): Promise<DareSettlementSummary | undefined> {
-  return withBoundedRetry(
-    () => settleOneDareForMatch(row, input),
-    DARE_SETTLE_ATTEMPTS,
+  if (dare.contractJson === null) {
+    throw new Error(`Active Dare ${dare.id.toString()} has no contract.`);
+  }
+  const contract = parseRelationalDareContract(dare.contractJson);
+  return await settleDareOrVoidOnStorageOverflow(
+    // A deadline bound delivers no match, so nothing here is owed silence.
+    { dare, prismaClient, now, notify: "enqueue" },
+    async () =>
+      await settleDareSqlAtDeadline(dare, contract, prismaClient, now),
   );
 }
 
-async function settleOneDareForMatch(
-  row: ActiveDareRow,
-  input: {
-    matchData: RawMatch;
-    queueType: string;
-    prismaClient: ExtendedPrismaClient;
-    now: Date;
-    sink: SettlementAnnouncementSink;
-  },
-): Promise<DareSettlementSummary | undefined> {
-  const { matchData, prismaClient, now } = input;
-  const matchId = matchData.metadata.matchId;
-  // Evaluator gate FIRST, before any strict conditions parse: voiding is a
-  // refund path and must work even when the stored blob no longer parses.
-  //
-  // The match id travels with it, as it does on every other resolution this
-  // function produces. A Dare summary's `matchId` names the match whose
-  // settlement resolved it, and its ABSENCE is what tells the minter the
-  // resolution came from a deadline sweep instead — a sweep's summary must
-  // not be announced under some unrelated match's id. Omitting it here made
-  // this void look like a sweep's, so the refund committed and the minter
-  // skipped it: the money came back and nobody was ever told.
-  if (row.evaluatorVersion !== DARE_EVALUATOR_VERSION) {
-    return await voidDareWithFullRefund(
-      dareRefundView(row, matchId),
-      prismaClient,
-      now,
-      {
-        voidReason: "unknown_evaluator",
-        surface: "postmatch",
-        sink: input.sink,
-      },
-    );
-  }
-  if (row.activatedAt === null || row.windowEndsAt === null) {
-    throw new Error(
-      `Active dare ${row.id.toString()} is missing its activation clock`,
-    );
-  }
-  const gameStartAt = new Date(matchData.info.gameStartTimestamp);
-  const gameEndAt = new Date(matchData.info.gameEndTimestamp);
-  // Eligibility is "played inside the window": started after activation and
-  // ended by the deadline. Ingestion time is irrelevant — the sweep's grace
-  // period exists precisely so a late ingest still lands here. (Discovery
-  // already filtered on these clocks in SQL; re-checked cheaply here so a
-  // direct caller gets identical behavior.)
-  if (gameStartAt.getTime() <= row.activatedAt.getTime()) {
-    return undefined;
-  }
-  if (gameEndAt.getTime() > row.windowEndsAt.getTime()) {
-    return undefined;
-  }
-
-  const dare = parseDare(row, matchId);
-  const evaluation = evaluateDareGame(dare.conditions, dare.targets, matchData);
-  if (evaluation === undefined) {
-    return undefined;
-  }
-
-  try {
-    return await prismaClient.$transaction(async (tx) => {
-      const summary = await captureAndSettleDare(tx, {
-        dare,
-        matchData,
-        queueType: input.queueType,
-        leafHits: evaluation.leafHits,
-        snapshot: evaluation.snapshot,
-        now,
-      });
-      // Inside the SAME transaction that settles the Dare, so the settlement
-      // and the instruction to announce it commit together. This summary is
-      // one-shot: a retry finds the Dare already terminal and returns nothing,
-      // so an instruction written after this transaction could be lost with no
-      // way to rebuild it.
-      if (summary !== undefined) {
-        await input.sink.recordAnnouncementItem(tx, {
-          family: "dare-summary",
-          itemKey: String(summary.dareId),
-          payload: summary,
-        });
-      }
-      return summary;
-    });
-  } catch (error) {
-    if (error instanceof BucksStorageOverflowError) {
-      // A payout the wallet cannot hold rolled the capture back. Stranding
-      // the dare would mis-settle it later as unachieved WITH a cut, so it
-      // is voided instead: full refunds, no cut, fresh transaction.
-      return await voidDareWithFullRefund(
-        dareRefundView(row, matchId),
-        prismaClient,
-        now,
-        {
-          voidReason: "storage_overflow",
-          surface: "postmatch",
-          sink: input.sink,
-        },
-      );
-    }
-    throw error;
-  }
+/**
+ * Every Dare a match's settlement made terminal, read from the Dares
+ * themselves.
+ *
+ * Settlement returns a summary only for the transition that committed it, so
+ * an attempt that resumes after an earlier one resolved a Dare gets nothing
+ * back for it. The settling transaction stamps `settledMatchId`, which is what
+ * lets the receipt still name that Dare.
+ */
+export async function listDareIdsSettledByMatch(
+  matchId: string,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<number[]> {
+  const rows = await prismaClient.bucksDare.findMany({
+    where: { settledMatchId: matchId },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+  return rows.map((row) => row.id);
 }

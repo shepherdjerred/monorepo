@@ -428,7 +428,7 @@ describe("explore.confirmCreationIntent — authorization", () => {
 
   test("a dare intent cannot be confirmed through the creation procedure", async () => {
     await grant({ resource: "reports", action: "create" });
-    const dare = await db.bucksDareV2.create({
+    const dare = await db.bucksDare.create({
       data: {
         serverId: GUILD,
         channelId: CHANNEL,
@@ -457,7 +457,7 @@ describe("explore.confirmCreationIntent — authorization", () => {
       where: { id: intent.id },
     });
     expect(stored.consumedAt).toBeNull();
-    await db.bucksDareV2.deleteMany();
+    await db.bucksDare.deleteMany();
   });
 
   test("revoking the feature flag blocks an already-pending intent", async () => {

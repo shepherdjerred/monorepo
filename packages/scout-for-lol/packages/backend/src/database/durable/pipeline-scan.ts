@@ -160,9 +160,9 @@ export const NOTIFICATION_INTENT_STATE_KINDS: readonly string[] =
  *
  * The others are `after-result` and must keep being driven, which is why
  * this is a per-KIND table rather than a postmatch-only filter. `settlement`
- * and `dare-summary` are minted INSIDE the fenced settlement effect, so they
- * exist only once the result is known; a filter that kept just `postmatch`
- * would strand exactly the rows that effect has already committed.
+ * is minted INSIDE the fenced settlement effect, so it exists only once the
+ * result is known; a filter that kept just `postmatch` would strand exactly
+ * the rows that effect has already committed.
  *
  * Exhaustive over the domain union for the same reason as
  * {@link INTENT_DRIVABILITY}: a fifth kind has to be classified here before
@@ -172,7 +172,6 @@ const INTENT_TRUTH_WINDOW = {
   prematch: "before-result",
   postmatch: "after-result",
   settlement: "after-result",
-  "dare-summary": "after-result",
   // A record break is a fact the finished game established; it is minted by
   // post-match progression, so it exists only once the result is known.
   "hall-record-break": "after-result",

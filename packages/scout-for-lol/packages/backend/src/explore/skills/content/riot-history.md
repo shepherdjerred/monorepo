@@ -10,6 +10,7 @@ tripwires:
   - Timeline acquisition may use only IDs returned by the most recent ScoutQL query and at most 10 per call.
   - “My opponent” means the opposing player Scout infers in the asker's current live lane; never guess when the live game or lane is ambiguous.
 ---
+
 ## On-demand ranked history
 
 Start with `inspect_player_coverage` when coverage is uncertain. Use `get_ranked_snapshot` for current rank and `get_champion_mastery` for Riot mastery; neither substitutes for match performance. Call `acquire_ranked_history` when the user asks about a named player not already covered by Scout, explicitly asks to fetch recent ranked history, or asks about their current lane opponent.

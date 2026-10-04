@@ -3,7 +3,6 @@ import {
   type PrematchV2CaptureCheck,
 } from "#src/league/tasks/prematch/active-game-detection.ts";
 import { deleteExpiredActiveGames } from "#src/league/tasks/prematch/active-game-queries.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import {
   runMaintenanceSteps,
   type MaintenanceStep,
@@ -43,12 +42,11 @@ function detectionStep(pass: PrematchPassDetection): MaintenanceStep {
   };
 }
 
-export async function checkPreMatch(pass: PrematchPassDetection): Promise<{
-  dareSummaries: DareSettlementSummary[];
-}> {
+export async function checkPreMatch(
+  pass: PrematchPassDetection,
+): Promise<void> {
   logger.info("🎯 Starting pre-match check task");
   const startTime = Date.now();
-  const dareSummaries: DareSettlementSummary[] = [];
 
   try {
     // Every step runs even when an earlier one throws, and the collected
@@ -57,7 +55,7 @@ export async function checkPreMatch(pass: PrematchPassDetection): Promise<{
     // paths run one list.
     const steps: MaintenanceStep[] = [
       detectionStep(pass),
-      ...prematchMaintenanceSteps(dareSummaries),
+      ...prematchMaintenanceSteps(),
     ];
     await runMaintenanceSteps("pre-match check", steps);
 
@@ -65,7 +63,6 @@ export async function checkPreMatch(pass: PrematchPassDetection): Promise<{
     logger.info(
       `✅ Pre-match check completed successfully in ${executionTime.toString()}ms`,
     );
-    return { dareSummaries };
   } catch (error) {
     const executionTime = Date.now() - startTime;
     logger.error(

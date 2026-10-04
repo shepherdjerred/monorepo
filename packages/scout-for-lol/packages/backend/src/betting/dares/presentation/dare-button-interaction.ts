@@ -1,6 +1,10 @@
-import type { ActionRowBuilder, ButtonBuilder } from "discord.js";
+import type {
+  ActionRowBuilder,
+  ButtonBuilder,
+  InteractionReplyOptions,
+} from "discord.js";
 
-/** Structural Discord interaction shared by both Dare contract versions. */
+/** Structural Discord interaction a Dare button handler needs. */
 export type DareButtonInteractionBase = {
   customId: string;
   guildId: string | null;
@@ -12,4 +16,9 @@ export type DareButtonInteractionBase = {
     components?: ActionRowBuilder<ButtonBuilder>[];
     embeds?: never[];
   }) => Promise<unknown>;
+};
+
+/** What the router needs on top: an ephemeral apology after a failure. */
+export type DareButtonInteraction = DareButtonInteractionBase & {
+  followUp: (options: InteractionReplyOptions) => Promise<unknown>;
 };

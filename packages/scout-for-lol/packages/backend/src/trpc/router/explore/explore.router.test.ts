@@ -47,7 +47,7 @@ async function seedUsers(): Promise<void> {
 
 beforeEach(async () => {
   await trpc.prisma.confirmationIntent.deleteMany();
-  await trpc.prisma.bucksDareV2.deleteMany();
+  await trpc.prisma.bucksDare.deleteMany();
   await trpc.prisma.exploreMessage.deleteMany();
   await trpc.prisma.exploreConversation.deleteMany();
   await seedUsers();
@@ -95,7 +95,7 @@ describe("explore router", () => {
   });
 
   test("reloads a confirmation intent's durable outcome for its actor", async () => {
-    const dare = await trpc.prisma.bucksDareV2.create({
+    const dare = await trpc.prisma.bucksDare.create({
       data: {
         serverId: ALLOWED_GUILD,
         channelId: DARE_CHANNEL,

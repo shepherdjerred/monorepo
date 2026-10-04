@@ -6,12 +6,8 @@ import {
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementAnnouncementInput } from "#src/betting/notify/announce-prepare.ts";
 import {
-  dareSettlementSummaryOf,
-  dareSummaryAnnouncementCodec,
-  dareSummaryAnnouncementEnvelope,
   settlementAnnouncementCodec,
   settlementAnnouncementEnvelope,
   settlementAnnouncementInputOf,
@@ -97,35 +93,6 @@ function settlementInput(): SettlementAnnouncementInput {
   };
 }
 
-function dareSummary(): DareSettlementSummary {
-  return {
-    dareId: 42,
-    serverId: "100000000000000001",
-    channelId: "300000000000000001",
-    messageRef: null,
-    matchId: "NA1_9301",
-    resolution: "achieved",
-    horizonKind: "next_game",
-    challengerDiscordId: "200000000000000002",
-    targetAliases: ["Bob"],
-    conditionSummary: "get a pentakill",
-    potTotal: 50,
-    payouts: [
-      {
-        bucksAccountId: 4,
-        discordId: "200000000000000003",
-        alias: "Bob",
-        grossShare: amount(50),
-        fee: amount(2),
-        net: amount(48),
-      },
-    ],
-    refunds: [],
-    voidReason: undefined,
-    leafCounts: undefined,
-  };
-}
-
 describe("the settlement announcement codec", () => {
   test("round-trips v1's announcement input through the intent envelope", () => {
     const input = settlementInput();
@@ -163,43 +130,6 @@ describe("the settlement announcement codec", () => {
         data: { ...envelope.data, postmatchMessageIds: {} },
       }),
     ).toThrow();
-  });
-});
-
-describe("the dare summary announcement codec", () => {
-  test("round-trips v1's settlement summary through the intent envelope", () => {
-    const summary = dareSummary();
-    const parsed = dareSettlementSummaryOf(
-      dareSummaryAnnouncementCodec.parse(
-        structuredClone(dareSummaryAnnouncementEnvelope(summary)),
-      ),
-    );
-    expect(parsed).toEqual(summary);
-  });
-
-  test("carries refunds and a void reason for a voided dare", () => {
-    const summary: DareSettlementSummary = {
-      ...dareSummary(),
-      resolution: "voided",
-      payouts: [],
-      refunds: [
-        {
-          bucksAccountId: 3,
-          discordId: "200000000000000002",
-          contributed: amount(50),
-          fee: amount(0),
-          refunded: amount(50),
-        },
-      ],
-      voidReason: "remake",
-      leafCounts: [1, 0],
-    };
-    const parsed = dareSettlementSummaryOf(
-      dareSummaryAnnouncementCodec.parse(
-        structuredClone(dareSummaryAnnouncementEnvelope(summary)),
-      ),
-    );
-    expect(parsed).toEqual(summary);
   });
 });
 

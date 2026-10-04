@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { dareV2DraftComponents } from "#src/betting/dares/presentation/dare-components-v2.ts";
+import { dareDraftComponents } from "#src/betting/dares/presentation/dare-components.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   getDocsUrl,
@@ -59,7 +59,7 @@ describe("stage-aware Discord links", () => {
       }),
     );
     const dareButtons = JSON.stringify(
-      dareV2DraftComponents({
+      dareDraftComponents({
         intentId: "10000000-0000-4000-8000-000000000003",
         dareId: 7,
         revision: 2,

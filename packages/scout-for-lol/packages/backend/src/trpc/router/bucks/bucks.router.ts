@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   BucksParlaySideSchema,
-  BucksDareV2StateSchema,
+  BucksDareStateSchema,
   BucksPoolRosterSchema,
   BucksStakeSchema,
   DiscordAccountIdSchema,
@@ -21,9 +21,9 @@ import {
 import { cancelBet } from "#src/betting/markets/cancel-bet.ts";
 import { bettingAnchor } from "#src/betting/components.ts";
 import {
-  inspectVisibleDareV2,
-  listVisibleDarePageV2,
-} from "#src/betting/dares/presentation/dare-view-v2.ts";
+  inspectVisibleDare,
+  listVisibleDarePage,
+} from "#src/betting/dares/presentation/dare-view.ts";
 import { cancellationHouseCut } from "#src/betting/eligibility/house-cut.ts";
 import { refreshBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { ledgerKindLabel } from "#src/betting/navigation.ts";
@@ -43,10 +43,10 @@ import { prisma } from "#src/database/index.ts";
 import {
   DareDraftEditorInputSchema,
   DareDraftPreviewInputSchema,
-  previewDareDraftEditorV2,
-  reviseDareDraftEditorV2,
-  validateDareDraftEditorV2,
-} from "#src/explore/tools/dare-editor-v2.ts";
+  previewDareDraftEditor,
+  reviseDareDraftEditor,
+  validateDareDraftEditor,
+} from "#src/explore/tools/dare-editor.ts";
 import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 import { bucksDareActionProcedures } from "#src/trpc/router/bucks/bucks-dare-action-procedures.ts";
 import { bucksNotificationProcedures } from "#src/trpc/router/bucks/bucks-notification-procedures.ts";
@@ -58,7 +58,7 @@ const MatchInput = GuildInput.extend({
 const DareListInput = GuildInput.extend({
   scope: z.enum(["mine", "guild", "needs_action"]),
   search: z.string().min(1).max(100).optional(),
-  states: z.array(BucksDareV2StateSchema).max(10).optional(),
+  states: z.array(BucksDareStateSchema).max(10).optional(),
   role: z.enum(["challenger", "target", "contributor", "involved"]).optional(),
   sort: z.enum(["needs_action", "deadline", "updated"]).optional(),
   cursor: z.string().min(1).optional(),
@@ -78,27 +78,21 @@ async function dareManagementAvailable(
   guildId: DiscordGuildId,
   viewerDiscordId: DiscordAccountId,
 ): Promise<boolean> {
-  const [dareEnabled, sqlV3Enabled, relationalEnabled, existingDare] =
-    await Promise.all([
-      isPolicyEnabled("dare_v2", { server: guildId }),
-      isPolicyEnabled("dare_extended_contracts_enabled", { server: guildId }),
-      isPolicyEnabled("scoutql_relational_enabled", { server: guildId }),
-      prisma.bucksDareV2.findFirst({
-        where: {
-          serverId: guildId,
-          dareState: { not: "deleted" },
-          OR: [
-            { dareState: { not: "draft" } },
-            { challengerDiscordId: viewerDiscordId },
-          ],
-        },
-        select: { id: true },
-      }),
-    ]);
-  return (
-    ((dareEnabled || sqlV3Enabled) && relationalEnabled) ||
-    existingDare !== null
-  );
+  const [daresEnabled, existingDare] = await Promise.all([
+    isPolicyEnabled("bucks_dares_enabled", { server: guildId }),
+    prisma.bucksDare.findFirst({
+      where: {
+        serverId: guildId,
+        dareState: { not: "deleted" },
+        OR: [
+          { dareState: { not: "draft" } },
+          { challengerDiscordId: viewerDiscordId },
+        ],
+      },
+      select: { id: true },
+    }),
+  ]);
+  return daresEnabled || existingDare !== null;
 }
 
 /**
@@ -148,7 +142,7 @@ export const bucksRouter = router({
 
   dareList: webProcedure.input(DareListInput).query(async ({ ctx, input }) => {
     await assertBucksScope(ctx.user, input.guildId);
-    return await listVisibleDarePageV2(
+    return await listVisibleDarePage(
       {
         serverId: input.guildId,
         viewerDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
@@ -168,7 +162,7 @@ export const bucksRouter = router({
     .input(DareInspectInput)
     .query(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
-      const dare = await inspectVisibleDareV2(
+      const dare = await inspectVisibleDare(
         {
           dareId: input.dareId,
           serverId: input.guildId,
@@ -190,7 +184,7 @@ export const bucksRouter = router({
     .query(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
       const { guildId, ...draft } = input;
-      return await validateDareDraftEditorV2(
+      return await validateDareDraftEditor(
         draft,
         DiscordAccountIdSchema.parse(ctx.user.discordId),
         [guildId],
@@ -202,7 +196,7 @@ export const bucksRouter = router({
     .query(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
       const { guildId, ...draft } = input;
-      return await previewDareDraftEditorV2(
+      return await previewDareDraftEditor(
         draft,
         DiscordAccountIdSchema.parse(ctx.user.discordId),
         [guildId],
@@ -214,7 +208,7 @@ export const bucksRouter = router({
     .mutation(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
       const { guildId, ...draft } = input;
-      return await reviseDareDraftEditorV2(
+      return await reviseDareDraftEditor(
         draft,
         DiscordAccountIdSchema.parse(ctx.user.discordId),
         [guildId],

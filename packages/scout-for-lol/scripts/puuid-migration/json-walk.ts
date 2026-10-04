@@ -4,7 +4,7 @@
  * Scout stores PUUIDs inside JSON at several depths: a bare array of strings
  * (`ActiveGame.trackedPuuids`), an array of objects (`BucksMatchPool.roster`),
  * a single object (`BucksLedgerEntry.context`), and nested contracts where
- * targets wrap accounts wrap puuids (`BucksDareV2.contractJson`). Writing a
+ * targets wrap accounts wrap puuids (`BucksDare.contractJson`). Writing a
  * schema per shape would break the first time one of those contracts changes,
  * so the walk is structural instead.
  *

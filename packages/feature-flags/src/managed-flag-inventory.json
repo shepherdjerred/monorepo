@@ -472,7 +472,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable Bryan Bucks free-text dare bounties.",
+      "purpose": "Enable drafting and funding SQL-contract Bryan Bucks Dares, the Explore Dare tools, and the web Dares page.",
       "type": "boolean",
       "default": false,
       "rollouts": [
@@ -603,18 +603,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "dare_extended_contracts_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Enable authoring extended Bryan Bucks Dare contracts.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "dare_notifications_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -623,33 +611,6 @@
       "type": "boolean",
       "default": false,
       "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "dare_v2",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Enable funding ScoutQL-backed Bryan Bucks Dare v2 contracts.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1073,33 +1034,6 @@
       "type": "boolean",
       "default": false,
       "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "scoutql_relational_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Enable relational and timeline ScoutQL sources.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1911,29 +1845,6 @@
           "thresholdRollouts": []
         },
         {
-          "key": "dare_extended_contracts_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [
-            {
-              "segmentKey": "scout-guild-1337623164146155593",
-              "segmentOperator": "OR_SEGMENT_OPERATOR",
-              "matchType": "ALL_SEGMENT_MATCH_TYPE",
-              "constraints": [
-                {
-                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-                  "property": "server",
-                  "operator": "eq",
-                  "value": "1337623164146155593"
-                }
-              ],
-              "result": true
-            }
-          ],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "explore_on_demand_riot_enabled",
           "type": "boolean",
           "default": false,
@@ -2188,14 +2099,6 @@
           "thresholdRollouts": []
         },
         {
-          "key": "dare_v2",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "duels_enabled",
           "type": "boolean",
           "default": false,
@@ -2264,14 +2167,6 @@
               "result": true
             }
           ]
-        },
-        {
-          "key": "scoutql_relational_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
         },
         {
           "key": "voice_assistant_enabled",

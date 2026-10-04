@@ -1,7 +1,5 @@
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 import type { SettlementAnnouncementFamily } from "#src/database/durable/settlement-announcement-repository.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
 import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 
 /**
@@ -128,19 +126,6 @@ export function checkpointFailureIn(
  */
 export type SettlementAnnouncementSink = {
   /**
-   * Deliver the summaries a PARTIAL settlement committed before it failed.
-   *
-   * These are one-shot: `settleDaresForMatch` returns a summary only for the
-   * transition that committed it, so a retry cannot reproduce them and losing
-   * them leaves an already-terminal Dare with nothing to announce, ever. v1
-   * therefore delivers them from inside the failure path before rethrowing.
-   */
-  readonly deliverPartialDareSummaries: (
-    summaries: readonly DareSettlementSummary[],
-    prismaClient: ExtendedPrismaClient,
-  ) => Promise<void>;
-
-  /**
    * Drain the Dare notification outbox.
    *
    * This sends DMs to the challenger, the targets and every contributor, from
@@ -206,9 +191,6 @@ export type SettlementAnnouncementSink = {
  * behaves exactly as it did before the sink existed.
  */
 export const announcingSettlementSink: SettlementAnnouncementSink = {
-  deliverPartialDareSummaries: async (summaries, prismaClient) => {
-    await deliverDareSummaries(summaries, prismaClient);
-  },
   drainDareNotifications: async (prismaClient) => {
     await deliverPendingDareNotifications(prismaClient);
   },
@@ -226,7 +208,6 @@ export const announcingSettlementSink: SettlementAnnouncementSink = {
  * commits and returns exactly as it would for a live match.
  */
 export const silentSettlementSink: SettlementAnnouncementSink = {
-  deliverPartialDareSummaries: () => Promise.resolve(),
   drainDareNotifications: () => Promise.resolve(),
   mayEnqueueDareNotification: () => false,
   mayPostDareCallout: () => false,

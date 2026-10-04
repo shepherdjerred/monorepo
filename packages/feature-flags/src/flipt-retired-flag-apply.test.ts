@@ -139,6 +139,12 @@ test("only the audited scout keys are retired, preserving managed targeting and 
     "beta/scout/competition_builder_v2_enabled",
     "prod/scout/scout_v2_progression_notifications_enabled",
     "prod/scout/competition_builder_v2_enabled",
+    "beta/scout/dare_v2",
+    "beta/scout/dare_extended_contracts_enabled",
+    "beta/scout/scoutql_relational_enabled",
+    "prod/scout/dare_v2",
+    "prod/scout/dare_extended_contracts_enabled",
+    "prod/scout/scoutql_relational_enabled",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(

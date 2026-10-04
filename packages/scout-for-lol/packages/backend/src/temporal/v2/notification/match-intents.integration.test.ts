@@ -15,7 +15,6 @@ import {
   prematchDeliveryKeyPrefix,
   settlementDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { BucksPoolTotalSchema, RiotTeamIdSchema } from "@scout-for-lol/data";
 
@@ -85,7 +84,6 @@ vi.mock("#src/league/tasks/notification-filters.ts", () => ({
 }));
 
 const {
-  mintDareSummaryIntentsV2,
   mintLateBindingEarningIntentsV2,
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
@@ -213,29 +211,6 @@ describe("what a post-match match mints", () => {
     expect(stored?.deliveryMode).toBe("silent-backfill");
   });
 });
-
-function dareSummary(
-  overrides: Partial<DareSettlementSummary>,
-): DareSettlementSummary {
-  return {
-    dareId: 77,
-    serverId: GUILD,
-    channelId: "100000000000000041",
-    messageRef: "7",
-    matchId: MATCH,
-    resolution: "achieved",
-    horizonKind: "next_game",
-    challengerDiscordId: "1",
-    targetAliases: ["a"],
-    conditionSummary: "do a thing",
-    potTotal: 10,
-    payouts: [],
-    refunds: [],
-    voidReason: undefined,
-    leafCounts: undefined,
-    ...overrides,
-  };
-}
 
 describe("what the settlement effect mints", () => {
   const settlement: SettlementSummary = {
@@ -404,28 +379,6 @@ describe("what the settlement effect mints", () => {
       await listIntentsForMatch(prisma, { matchId: SILENT_MATCH }),
     ).toEqual([]);
   });
-
-  test("mints one Dare summary, and none for a resolution that announces nothing", async () => {
-    await observe(MATCH, "live");
-
-    const summary = await mintDareSummaryIntentsV2(prisma, {
-      matchId: MATCH,
-      dareSettlements: [
-        dareSummary({}),
-        dareSummary({ dareId: 78, resolution: "captured" }),
-        dareSummary({ dareId: 79, resolution: "abandoned" }),
-        // Not this match's: a deadline resolution belongs to maintenance.
-        dareSummary({ dareId: 80, matchId: undefined }),
-      ],
-      gameCreation: GAME_CREATED_AT,
-      createdAt: new Date("2026-09-19T09:35:00.000Z"),
-    });
-
-    expect(summary).toMatchObject({ minted: 1 });
-    const intents = await listIntentsForMatch(prisma, { matchId: MATCH });
-    expect(intents).toHaveLength(1);
-    expect(intents[0]?.intent.kind).toBe("dare-summary");
-  });
 });
 
 describe("what the post-match fan-out drives", () => {
@@ -540,7 +493,6 @@ describe("the fold a recovered settlement announces from", () => {
           total: 3,
         },
       ],
-      dareSettlements: [dareSummary({})],
     };
   }
 
@@ -568,7 +520,6 @@ describe("the fold a recovered settlement announces from", () => {
 
     // Identical, not merely overlapping: same guilds, same order, same inputs.
     expect(recovered.settlements).toEqual(foldedLive);
-    expect(recovered.dareSummaries).toEqual(source.dareSettlements);
   });
 
   test("the fold really does carry the two cases a per-item walk would drop", async () => {
@@ -611,52 +562,15 @@ describe("the fold a recovered settlement announces from", () => {
 
 describe("a settlement killed before its receipt", () => {
   /**
-   * The acceptance criterion. A Dare settles, its instruction commits with it,
-   * and the worker dies before anything downstream runs. The takeover cannot
-   * re-settle — `settleDaresForMatch` returns a summary only for the
-   * transition that committed it — so it must announce from what the dead
-   * attempt recorded, and end with the same intents standing.
+   * The acceptance criterion. A pool settles, its instruction commits with
+   * it, and the worker dies before anything downstream runs. The takeover
+   * cannot re-settle — settlement returns a summary only for the transition
+   * that committed it — so it must announce from what the dead attempt
+   * recorded, and end with the same intents standing.
    */
-  test("the takeover mints the same intents from the recorded instructions", async () => {
-    await observe(MATCH, "live");
-    prepared.kind = "message";
-    const settled = dareSummary({});
-
-    // What the dying attempt got as far as: the Dare settled and its
-    // instruction committed in the same transaction. Nothing downstream ran.
-    await prisma.$transaction(async (tx) => {
-      await recordSettlementAnnouncementItem(tx, {
-        matchId: MATCH,
-        item: {
-          family: "dare-summary",
-          itemKey: String(settled.dareId),
-          payload: settled,
-        },
-      });
-    });
-    expect(await listIntentsForMatch(prisma, { matchId: MATCH })).toEqual([]);
-
-    // The takeover: read what stands, announce from it.
-    const recovered = recoveredAnnouncementsOf(
-      await listSettlementAnnouncementItems(prisma, { matchId: MATCH }),
-    );
-    await mintDareSummaryIntentsV2(prisma, {
-      matchId: MATCH,
-      dareSettlements: recovered.dareSummaries,
-      gameCreation: GAME_CREATED_AT,
-      createdAt: new Date("2026-09-19T10:00:00.000Z"),
-    });
-
-    const minted = await listIntentsForMatch(prisma, { matchId: MATCH });
-    expect(minted).toHaveLength(1);
-    expect(minted[0]?.intent.kind).toBe("dare-summary");
-    // The same Dare, not merely some Dare.
-    expect(recovered.dareSummaries).toEqual([settled]);
-  });
-
-  test("recovers a settlement recap the same way", async () => {
-    // Same shape as the Dare case, for the settlement family: the pool
-    // settled, its instruction committed with it, nothing downstream ran.
+  test("the takeover mints the settlement recap from the recorded instruction", async () => {
+    // The pool settled, its instruction committed with it, nothing
+    // downstream ran.
     await observe(MATCH, "live");
     prepared.kind = "message";
     const settled = {
@@ -729,18 +643,17 @@ describe("a settlement killed before its receipt", () => {
 
   test("an instruction cannot survive a settlement that rolled back", async () => {
     // The other half of "inside the transaction": if the settling transaction
-    // fails, its instruction must go with it. An instruction for a Dare that
+    // fails, its instruction must go with it. An instruction for a pool that
     // never settled would announce a result nobody reached.
-    const settled = dareSummary({ dareId: 4242 });
 
     await expect(
       prisma.$transaction(async (tx) => {
         await recordSettlementAnnouncementItem(tx, {
           matchId: MATCH,
           item: {
-            family: "dare-summary",
-            itemKey: String(settled.dareId),
-            payload: settled,
+            family: "settlement",
+            itemKey: GUILD,
+            payload: { matchId: MATCH, serverId: GUILD },
           },
         });
         throw new Error("the settling transaction failed after recording");

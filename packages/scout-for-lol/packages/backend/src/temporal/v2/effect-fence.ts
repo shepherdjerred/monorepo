@@ -94,7 +94,7 @@ import {
  * The boundaries this closes are the ones V2 owns: the entry into each
  * domain commit, the fact receipt, and the claim completion. The v1 code an
  * effect calls BETWEEN two boundaries — settlement's ledger writes inside
- * `settleBucksWithDareTimelineV2`, progression's writes under
+ * `settleBucksWithDareTimeline`, progression's writes under
  * `withChallengeProgressionLock` — is not signal-aware, so a zombie that has
  * already entered one of those calls when its fence lapses finishes that call.
  * What bounds those writes is their own design: every ledger transition is

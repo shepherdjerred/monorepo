@@ -145,7 +145,7 @@ export async function seedChannelIntent(
   const key = NotificationIntentKeySchema.parse(
     `${kind}-discord:${args.matchId}:${args.name}`,
   );
-  const announces = kind === "settlement" || kind === "dare-summary";
+  const announces = kind === "settlement";
   const outcome = await upsertIntent(prisma, {
     matchId: RiotMatchIdSchema.parse(args.matchId),
     intent: NotificationIntentSchema.parse({
