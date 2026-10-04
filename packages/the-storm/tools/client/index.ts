@@ -22,7 +22,7 @@ async function main(): Promise<void> {
   const action = parsed.positionals[0];
   if (action === undefined || parsed.values.help) {
     process.stdout.write(
-      "client preview [--world <directory>] [--vanilla] [--verify]\nclient <status|look|input|attack|use|hotbar|inventory|click|command|capture|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
+      "client preview [--world <directory>] [--vanilla] [--verify]\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
     );
     return;
   }

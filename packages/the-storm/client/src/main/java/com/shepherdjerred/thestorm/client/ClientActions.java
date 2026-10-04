@@ -54,6 +54,7 @@ final class ClientActions {
           case "look" -> look(client, args);
           case "hotbar" -> hotbar(client, args);
           case "inventory" -> inventory(client, args);
+          case "close" -> close(client, args);
           case "click" -> click(client, args);
           case "command" -> command(client, args);
           case "attack", "use" -> interact(client, request);
@@ -183,6 +184,13 @@ final class ClientActions {
     java.util.Objects.requireNonNull(client.gameMode)
         .handleContainerInput(menu.containerId, slot, button, mode, player);
     return "Container click sent";
+  }
+
+  private static Object close(Minecraft client, JsonNode args) {
+    Protocol.keys(args, Set.of());
+    var screen = client.gui.screen();
+    if (screen != null) screen.onClose();
+    return "Screen closed";
   }
 
   private static Object command(Minecraft client, JsonNode args) {

@@ -18,7 +18,7 @@ import {
   waitFor,
   type Session,
 } from "./protocol.ts";
-import { smoke } from "./scripts.ts";
+import { smoke, tour } from "./scripts.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -192,6 +192,12 @@ async function run(
   await request(session, "viewpoint", {
     name: options.vanilla ? "fixture" : "lobby",
   });
+  await request(session, "close");
+  await waitFor(
+    "closed arrival screen",
+    async () => StatusSchema.parse(await request(session, "status")),
+    (state) => state.connected && state.screen === "",
+  );
   await Bun.write(
     path.join(runState.artifacts, "session.json"),
     JSON.stringify(session, null, 2),
@@ -201,6 +207,7 @@ async function run(
   );
   if (options.verify) {
     await smoke(session);
+    if (!options.vanilla) await tour(session);
     runState.finish();
   }
   await runState.stopped;

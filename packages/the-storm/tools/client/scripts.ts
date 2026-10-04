@@ -33,6 +33,12 @@ export async function viewpoint(session: Session, name: string): Promise<void> {
 }
 
 export async function tour(session: Session): Promise<void> {
+  await request(session, "close");
+  await waitFor(
+    "closed screen",
+    () => status(session),
+    (state) => state.connected && state.screen === "",
+  );
   for (const name of ["lobby", "market", "mystery-box", "foundry"]) {
     await viewpoint(session, name);
     await request(session, "capture", { name });
@@ -107,7 +113,7 @@ export async function smoke(session: Session): Promise<void> {
   await request(session, "inventory", { open: false });
   await request(session, "inventory", { open: true });
   await request(session, "capture", { name: "inventory" });
-  await request(session, "inventory", { open: false });
+  await request(session, "close");
   await request(session, "fixture", { name: "enemy" });
   await viewpoint(session, "enemy");
   await waitFor(

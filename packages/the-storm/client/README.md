@@ -40,6 +40,7 @@ bun run client hotbar --session <session.json> --args '{"slot":0}'
 bun run client use --session <session.json>
 bun run client attack --session <session.json>
 bun run client inventory --session <session.json> --args '{"open":true}'
+bun run client close --session <session.json>
 bun run client release --session <session.json>
 bun run client command --session <session.json> --args '{"text":"arena join settlement"}'
 bun run client stop --session <session.json>
@@ -69,7 +70,8 @@ or state is rejected. Modes are `pickup` and `quick_move`; mouse buttons are
 0 (left) and 1 (right). Screenshot names contain letters, numbers, underscores,
 or hyphens, and the completed response gives the PNG path.
 
-Named viewpoints live in `tools/client/viewpoints.json`. `tour` captures the
+`close` dismisses the current screen through its ordinary close action, including
+the first-arrival dialog. Named viewpoints live in `tools/client/viewpoints.json`. `tour` captures the
 lobby, market, mystery box, and foundry. This tool supplies scripted inputs and
 inspection; it does not implement autonomous navigation or a full-match player.
 
@@ -87,6 +89,7 @@ The first two commands run Java quality checks and Java/Bun unit tests.
 world and capture its inventory screen. `preview --vanilla --verify` checks
 movement, input cancellation, hotbar selection, barrel interaction, item transfer, stale clicks, melee attacks, and
 screenshots through the actual socket bridge, then closes the preview.
+`preview --verify` also captures the four Settlement viewpoints.
 
 The wire contract is versioned newline-delimited JSON. Requests contain
 `version`, `id`, `action`, and `arguments`; responses repeat the version and ID
