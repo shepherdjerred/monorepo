@@ -26,9 +26,10 @@ final class SettlementBlocks {
   }
 
   void box(BlockPos min, BlockPos max, String material) {
-    for (var x = min.x(); x <= max.x(); x++)
-      for (var z = min.z(); z <= max.z(); z++)
-        for (var y = min.y(); y <= max.y(); y++) put(x, y, z, material);
+    var area = new Cuboid(min, max);
+    for (var x = area.min().x(); x <= area.max().x(); x++)
+      for (var z = area.min().z(); z <= area.max().z(); z++)
+        for (var y = area.min().y(); y <= area.max().y(); y++) put(x, y, z, material);
   }
 
   void shell(BlockPos min, BlockPos max, String wall) {
@@ -54,7 +55,7 @@ final class SettlementBlocks {
       var rise = Math.min(x - min.x(), max.x() - x);
       for (var z = min.z(); z <= max.z(); z++) {
         put(x, min.y() + rise, z, material);
-        if (z == min.z() || z == max.z())
+        if (rise > 0 && (z == min.z() || z == max.z()))
           box(at(x, min.y(), z), at(x, min.y() + rise - 1, z), "STRIPPED_SPRUCE_LOG");
       }
     }

@@ -141,6 +141,8 @@ final class SettlementRulesTest {
     assertThat(SettlementTerrain.elevation(1803, 2210)).isEqualTo(88);
     assertThat(SettlementTerrain.elevation(1795, 2154)).isEqualTo(104);
     assertThat(blueprint.get(new BlockPos(1788, 141, 2188))).isEqualTo("IRON_BARS");
+    assertThat(blueprint.get(new BlockPos(1803, 108, 2236))).isEqualTo("STONE_BRICKS");
+    assertThat(blueprint.get(new BlockPos(1803, 110, 2236))).isEqualTo("STONE_BRICKS");
   }
 
   @Test

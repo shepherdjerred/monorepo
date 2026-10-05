@@ -116,11 +116,25 @@ final class SettlementChurch {
     build.roof(at(1790, 112, 2183), at(1817, 112, 2236), "DEEPSLATE_TILES");
     build.roof(at(1783, 107, 2183), at(1790, 107, 2236), "DEEPSLATE_TILES");
     build.roof(at(1817, 107, 2183), at(1824, 107, 2236), "DEEPSLATE_TILES");
+    gables();
     build.box(at(1791, 109, 2185), at(1791, 111, 2234), "LIGHT_GRAY_STAINED_GLASS");
     build.box(at(1816, 109, 2185), at(1816, 111, 2234), "LIGHT_GRAY_STAINED_GLASS");
     for (var z = 2199; z <= 2214; z++)
       for (var x = 1782; x <= 1825; x++)
         build.put(x, 112 + Math.min(z - 2199, 2214 - z), z, "DEEPSLATE_TILES");
+  }
+
+  private void gables() {
+    for (var z : new int[] {2183, 2236}) {
+      var inner = z == 2183 ? 2184 : 2235;
+      build.box(
+          at(1790, 108, Math.min(z, inner)), at(1817, 108, Math.max(z, inner)), "STONE_BRICKS");
+      for (var x = 1790; x <= 1817; x++) {
+        var roof = 112 + Math.min(x - 1790, 1817 - x);
+        build.box(at(x, 109, z), at(x, roof - 1, z), "STONE_BRICKS");
+        build.put(x, roof - 1, z, "CALCITE");
+      }
+    }
   }
 
   private void bellTower() {
