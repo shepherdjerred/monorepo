@@ -59,6 +59,56 @@ function arrows(bot: Bot) {
     .reduce((sum, item) => sum + item.count, 0);
 }
 
+const RepeaterStopSchema = z.strictObject({
+  tick: z.number().int(),
+  arrows: z.number().int().nonnegative(),
+  shots: z.number().int().nonnegative(),
+});
+const RepeaterObservationSchema = z.strictObject({
+  initialArrows: z.number().int().nonnegative(),
+  elapsedMs: z.number().nonnegative(),
+  tick: z.number().int(),
+  arrows: z.number().int().nonnegative(),
+  handRaised: z.boolean(),
+  shots: z.array(
+    z.strictObject({
+      elapsedMs: z.number().nonnegative(),
+      tick: z.number().int(),
+      arrows: z.number().int().nonnegative(),
+    }),
+  ),
+  release: RepeaterStopSchema.nullable(),
+  switched: RepeaterStopSchema.nullable(),
+});
+
+async function repeaterObservation(
+  bot: Bot,
+  rcon: RconClient,
+  action = "read",
+) {
+  return RepeaterObservationSchema.parse(
+    JSON.parse(
+      await rcon.command(`storm-fixture-repeater ${action} ${bot.username}`),
+    ),
+  );
+}
+
+async function observeRepeater(
+  bot: Bot,
+  rcon: RconClient,
+  description: string,
+  ready: (value: z.infer<typeof RepeaterObservationSchema>) => boolean,
+) {
+  const deadline = performance.now() + 10_000;
+  while (true) {
+    const observation = await repeaterObservation(bot, rcon);
+    if (ready(observation)) return observation;
+    if (performance.now() > deadline)
+      throw new Error(`Timed out waiting for ${description}`);
+    await Bun.sleep(50);
+  }
+}
+
 describe("signature weapons and boss phases on native Paper", () => {
   test("a burst cannot skip the Breeze's vortex and barrage phases", async ({
     bot,
@@ -128,28 +178,60 @@ describe("signature weapons and boss phases on native Paper", () => {
       await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
       await waitUntil("bow ammunition", () => arrows(bot) === 32);
       await bot.look(0, 0, true);
+      const initial = await repeaterObservation(bot, rcon, "start");
+      expect(initial.initialArrows).toBe(32);
       bot.activateItem();
-      await bot.waitForTicks(21);
+      // Mineflayer's physics ticks are a local clock. Observe actual server
+      // launches for one monotonic second from the acknowledged first shot.
+      const firing = await observeRepeater(
+        bot,
+        rcon,
+        "one server-observed second of Repeater fire",
+        (value) => value.shots.length > 0 && value.elapsedMs >= 1000,
+      );
+      expect(firing.handRaised).toBe(true);
+      const shots = firing.shots.filter((shot) => shot.elapsedMs <= 1000);
+      expect(shots.length).toBeGreaterThanOrEqual(4);
+      expect(shots.length).toBeLessThanOrEqual(5);
+      for (const [index, shot] of firing.shots.entries())
+        expect(shot.arrows).toBe(32 - index - 1);
       bot.deactivateItem();
-      await bot.waitForTicks(2);
-      const spent = 32 - arrows(bot);
-      expect(spent).toBeGreaterThanOrEqual(4);
-      expect(spent).toBeLessThanOrEqual(5);
-      await bot.waitForTicks(12);
-      expect(arrows(bot)).toBe(32 - spent);
+      const released = await observeRepeater(
+        bot,
+        rcon,
+        "native release acknowledgement and twelve server ticks",
+        (value) =>
+          value.release !== null && value.tick - value.release.tick >= 12,
+      );
+      expect(released.handRaised).toBe(false);
+      expect(released.arrows).toBe(released.release?.arrows);
+      expect(released.shots.length).toBe(released.release?.shots);
+      await repeaterObservation(bot, rcon, "start");
       bot.activateItem();
-      await bot.waitForTicks(7);
+      await observeRepeater(
+        bot,
+        rcon,
+        "Repeater fires before the hotbar switch",
+        (value) => value.shots.length > 0,
+      );
       const sword = bot.inventory
         .items()
         .find((item) => item.name === "iron_sword");
       if (sword === undefined) throw new Error("Debug sword is missing");
       await bot.equip(sword, "hand");
-      await bot.waitForTicks(2);
-      const switched = arrows(bot);
-      await bot.waitForTicks(12);
-      expect(arrows(bot)).toBe(switched);
+      const switched = await observeRepeater(
+        bot,
+        rcon,
+        "native hotbar acknowledgement and twelve server ticks",
+        (value) =>
+          value.switched !== null && value.tick - value.switched.tick >= 12,
+      );
+      expect(switched.handRaised).toBe(false);
+      expect(switched.arrows).toBe(switched.switched?.arrows);
+      expect(switched.shots.length).toBe(switched.switched?.shots);
     } finally {
       bot.deactivateItem();
+      await rcon.command(`storm-fixture-repeater clear ${bot.username}`);
       await rcon.command("arena stop settlement");
       await rcon.command("difficulty peaceful");
     }

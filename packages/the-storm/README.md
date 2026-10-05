@@ -600,6 +600,11 @@ use), Whirlwind (two-target melee cleave with a two-second recovery), Tidebreake
 (Loyalty III trident with a two-target impact wave), and Riftblade (a four-block
 dash through open ground with a six-second recovery). Release, weapon switching,
 downing, and leaving stop Repeater fire. Releasing does not also fire a vanilla shot.
+Held-use state is checked every server tick against a single 250ms firing
+deadline. An early tick cannot postpone a shot by another complete firing period,
+and delayed ticks do not cause catch-up bursts. Real-server cadence tests observe
+native projectile launches and acknowledged release/weapon switching; Mineflayer's
+local physics ticks are not a server clock.
 Pack-a-Punch upgrades the held run weapon for 12/24/36 emeralds, fully repairs
 it, adds compatible damage and durability enchantments, and preserves stronger
 existing enchantments. Damage multipliers are 1.15/1.35/1.55;

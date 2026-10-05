@@ -48,12 +48,13 @@ final class RepeaterCombat {
             player.getInventory().getHeldItemSlot(),
             weapon.clone(),
             runner.context().time().instant()));
+    // Poll each tick: a five-tick callback can arrive just before the wall-clock deadline.
     if (task == null)
       task =
           runner
               .context()
               .scheduler()
-              .repeatOnMainThread(Duration.ofMillis(50), Duration.ofMillis(250), this::pulse);
+              .repeatOnMainThread(Duration.ofMillis(50), Duration.ofMillis(50), this::pulse);
   }
 
   private void pulse() {
