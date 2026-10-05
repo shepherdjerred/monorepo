@@ -67,7 +67,7 @@ render and getting a go-ahead when the target is a server people play on.
      second story, a wing or tower), **roof** (gable vs hip, cross gable,
      dormer) and **one detail** (chimney, porch, garden, path, flower boxes).
    - Optional second opinion: `toolkit mc build judge <render> <render>`
-     runs an order-swapped vision judge (needs a vision model credential).
+     runs an order-swapped vision judge (default `gpt-6.1-sol`; needs `OPENAI_API_KEY`).
    - Report the final scores and at least one remaining weakness. A clean
      lint is not a good-looking build; say what you actually see.
 
