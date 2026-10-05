@@ -16,6 +16,10 @@
             {
               "id": "abe78e2276664f4db588c1f675a77486",
               "name": "Mass URL Redirects Write"
+            },
+            {
+              "id": "755c05aa014b4f9ab263aa80b8167bd8",
+              "name": "Turnstile Sites Write"
             }
           ],
           "resources": {
