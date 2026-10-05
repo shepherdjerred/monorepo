@@ -3,6 +3,7 @@ import {
   RawInfoSchema,
   RawMatchSchema,
   type RawMatch,
+  type RawTimeline,
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
@@ -12,6 +13,7 @@ import {
   LOCAL_MATCH_TIMING_DRIFT_MS,
   convertLcuMatchBundle,
 } from "./canonical/lcu-match.ts";
+import { convertLcuTimeline } from "./canonical/lcu-timeline.ts";
 import {
   type IdentityMap,
   lcuUuidsIn,
@@ -126,6 +128,45 @@ export async function readSelectedLocalCanonicalMatch(
     );
   }
   return match;
+}
+
+const TimelineBundleSchema = z.object({
+  matchHistory: z.unknown(),
+  timeline: z.unknown(),
+});
+
+/**
+ * Where a match's timeline comes from. A match whose canonical payload is the
+ * client's exists because Riot can't see the game, so its timeline comes from
+ * the client too: `timeline` is the client's capture in Match-V5 shape, or
+ * `null` when the client sent none or it doesn't convert. Asking Riot instead
+ * would wait on something that never appears.
+ */
+export type TimelineSelection =
+  | { readonly source: "RIOT" }
+  | { readonly source: "SCOUT_CLIENT"; readonly timeline: RawTimeline | null };
+
+export async function readTimelineSelection(
+  riotMatchId: RiotMatchId,
+): Promise<TimelineSelection> {
+  const selected = await prisma.scoutClientCanonicalMatch.findUnique({
+    where: { riotMatchId },
+    include: { sourceObservation: true },
+  });
+  if (selected === null) return { source: "RIOT" };
+  const bundle = TimelineBundleSchema.safeParse(
+    embeddedPayload(selected.sourceObservation.payload),
+  );
+  if (!bundle.success) return { source: "SCOUT_CLIENT", timeline: null };
+  const identities = await candidateIdentities(selected.sourceObservation);
+  return {
+    source: "SCOUT_CLIENT",
+    timeline: convertLcuTimeline(
+      riotMatchId,
+      translatePayloadIdentities(bundle.data.matchHistory, identities),
+      translatePayloadIdentities(bundle.data.timeline, identities),
+    ),
+  };
 }
 
 function conflictingCandidates(riotMatchId: RiotMatchId): never {

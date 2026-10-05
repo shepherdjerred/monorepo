@@ -37,7 +37,9 @@ export const RawInfoSchema = z
     gameId: z.number(),
     gameMode: z.string(),
     gameModeMutators: z.array(z.string()).optional(),
-    gameName: z.string(),
+    // Absent from a match the Scout Client built: the League client's own
+    // match history doesn't carry it. Expected from Riot; see below.
+    gameName: z.string().optional(),
     gameStartTimestamp: z.number(),
     gameType: z.string(),
     gameVersion: z.string(),
@@ -80,7 +82,11 @@ export type RawMatch = z.infer<typeof RawMatchSchema>;
  * issue is `unrecognized_keys`; mixing a refinement issue into it would make the
  * next additive Riot field fail the whole post-match pipeline closed.
  */
-const EXPECTED_MATCH_FIELDS = ["endOfGameResult", "tournamentCode"] as const;
+const EXPECTED_MATCH_FIELDS = [
+  "endOfGameResult",
+  "gameName",
+  "tournamentCode",
+] as const;
 
 const EXPECTED_PARTICIPANT_FIELDS = [
   "eligibleForProgression",

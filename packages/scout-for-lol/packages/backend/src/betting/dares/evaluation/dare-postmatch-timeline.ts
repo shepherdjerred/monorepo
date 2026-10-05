@@ -53,19 +53,18 @@ export async function settleBucksWithDareTimeline(
     prismaClient,
   );
   // Dare SQL reads the timeline from the report lake, so a contract that needs
-  // one has it fetched (and retained) before its evidence is evaluated. A
-  // canonical client result can fill Riot's match gap but cannot make a Riot
-  // timeline exist; the contract's evidence then records missing timeline
-  // coverage rather than this retrying Riot forever and pinning the shared
-  // client-match dispatcher on a resource that cannot appear.
-  const timeline =
-    timelineRequired && input.matchDataSource === "RIOT"
-      ? await dependencies.fetchTimeline(
-          input.matchData,
-          MatchIdSchema.parse(input.matchData.metadata.matchId),
-          input.trackedPlayers,
-        )
-      : undefined;
+  // one has it fetched (and staged) before its evidence is evaluated. The
+  // fetch reads a client-sourced match's timeline from the client, never from
+  // Riot, where waiting would pin the shared client-match dispatcher on a
+  // resource that cannot appear. A client that sent none stages nothing, and
+  // the contract's evidence records missing timeline coverage.
+  const timeline = timelineRequired
+    ? await dependencies.fetchTimeline(
+        input.matchData,
+        MatchIdSchema.parse(input.matchData.metadata.matchId),
+        input.trackedPlayers,
+      )
+    : undefined;
   const rankCapture = await (
     dependencies.captureRanks ?? capturePostmatchRanksForDares
   )(

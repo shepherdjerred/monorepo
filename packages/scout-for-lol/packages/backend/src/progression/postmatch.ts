@@ -54,16 +54,12 @@ export async function processCompetitiveProgressionMatch(input: {
     if (timelineHandled) return;
     if (timeline === null || timeline === undefined) {
       // A canonical client result exists specifically because Riot cannot see
-      // this match. Its absent timeline is therefore durable evidence, not a
-      // transient fetch failure: challenge recomputation records missing
-      // timeline coverage, and duel evaluation moves the game to organizer
-      // review. Mark it handled so later rediscovery in this same pass cannot
-      // retry a Riot resource that will never exist and block managed-result
-      // finalization behind it.
-      if (input.matchDataSource === "SCOUT_CLIENT") {
-        timelineHandled = true;
-        return;
-      }
+      // this match, so the fetch reads its timeline from the client. One the
+      // client never sent is durable evidence, not a transient fetch failure:
+      // challenge recomputation records missing timeline coverage, and duel
+      // evaluation moves the game to organizer review. Either way it is
+      // handled, so later rediscovery in this same pass cannot block
+      // managed-result finalization behind a timeline that will never exist.
       timeline = required
         ? await fetchTimelineForProgression(
             input.match,
@@ -83,7 +79,10 @@ export async function processCompetitiveProgressionMatch(input: {
         input.match,
       );
     }
-    timelineHandled = required || timeline !== undefined;
+    timelineHandled =
+      required ||
+      timeline !== undefined ||
+      input.matchDataSource === "SCOUT_CLIENT";
   }
 
   const initiallyPrepared = await prepareCurrentRuns();

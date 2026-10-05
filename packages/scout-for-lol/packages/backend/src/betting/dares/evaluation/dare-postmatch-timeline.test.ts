@@ -106,14 +106,14 @@ describe("Dare post-match timeline ordering", () => {
     expect(result.prefetchedTimeline).toBeUndefined();
   });
 
-  test("settles a client-sourced match without asking Riot for a timeline", async () => {
-    let fetched = false;
+  test("settles a client-sourced match whose client sent no timeline", async () => {
     let settled = false;
     const dependencies: DarePostmatchTimelineDependencies = {
       needsTimeline: async () => true,
+      // The client sent no timeline; for a client match that's final, and
+      // Dare SQL records the missing coverage from the lake.
       fetchTimeline: async () => {
-        fetched = true;
-        return timeline;
+        await Promise.resolve();
       },
       captureRanks: async () => ({ players: [], changes: new Map() }),
       settleBucks: async () => {
@@ -127,9 +127,32 @@ describe("Dare post-match timeline ordering", () => {
       dependencies,
     );
 
-    expect(fetched).toBe(false);
     expect(settled).toBe(true);
     expect(result.prefetchedTimeline).toBeNull();
+  });
+
+  test("stages a client-sourced match's own timeline before settling", async () => {
+    const order: string[] = [];
+    const dependencies: DarePostmatchTimelineDependencies = {
+      needsTimeline: async () => true,
+      fetchTimeline: async () => {
+        order.push("fetch");
+        return timeline;
+      },
+      captureRanks: async () => ({ players: [], changes: new Map() }),
+      settleBucks: async () => {
+        order.push("settle");
+        return EMPTY_BUCKS_RESULT;
+      },
+    };
+
+    const result = await settleBucksWithDareTimeline(
+      { matchData, matchDataSource: "SCOUT_CLIENT", trackedPlayers: [] },
+      dependencies,
+    );
+
+    expect(order).toEqual(["fetch", "settle"]);
+    expect(result.prefetchedTimeline).toBe(timeline);
   });
 
   test("does not settle Dare evidence when required rank capture fails", async () => {

@@ -9,6 +9,8 @@ import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
 import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
+import { readTimelineSelection } from "#src/scout-client/canonical-match.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 
 const logger = createLogger("postmatch-match-report-standard");
 
@@ -103,6 +105,37 @@ export async function persistTimelineForProgression(
   requireTimelineStaging("required", staged, matchId);
 }
 
+/**
+ * The timeline of a match whose canonical payload is the Scout Client's,
+ * staged for the lake exactly as a Riot timeline is, so Dare SQL, challenges
+ * and Explore read it the same way.
+ *
+ * A client that sent no timeline is a conclusive miss, never a reason to
+ * retry: Riot can't see this game, so no timeline is ever coming. Callers that
+ * need one record missing coverage and move on.
+ */
+async function recordClientTimeline(
+  options: {
+    readonly persistence: TimelinePersistence;
+    readonly playersInMatch: PlayerConfigEntry[];
+    readonly matchId: MatchId;
+    readonly matchData: RawMatch;
+  },
+  timeline: RawTimeline | null,
+): Promise<RawTimeline | undefined> {
+  if (timeline === null) {
+    logger.info(
+      `[generateMatchReport] Scout Client supplied ${options.matchId} without a timeline`,
+    );
+    return undefined;
+  }
+  await stageFetchedTimeline(
+    { ...options, source: "timeline_scout_client" },
+    timeline,
+  );
+  return timeline;
+}
+
 function requireAvailableTimeline(options: {
   readonly persistence: TimelinePersistence;
   readonly matchId: MatchId;
@@ -115,7 +148,7 @@ function requireAvailableTimeline(options: {
 async function stageFetchedTimeline(
   options: {
     readonly persistence: TimelinePersistence;
-    readonly source?: "timeline_progression";
+    readonly source?: "timeline_progression" | "timeline_scout_client";
     readonly playersInMatch: PlayerConfigEntry[];
     readonly matchId: MatchId;
     readonly matchData: RawMatch;
@@ -156,6 +189,15 @@ async function fetchAndRecordTimeline(options: {
   persistence: TimelinePersistence;
   source?: "timeline_progression";
 }): Promise<RawTimeline | undefined> {
+  // Ahead of the Arena exit: the League client records Arena timelines too,
+  // and a client match never waits on Riot either way.
+  const selection = await readTimelineSelection(
+    RiotMatchIdSchema.parse(options.matchId),
+  );
+  if (selection.source === "SCOUT_CLIENT") {
+    return await recordClientTimeline(options, selection.timeline);
+  }
+
   // Don't fetch timeline for arena matches
   if (
     isArenaQueueOrMode(

@@ -5,6 +5,7 @@ import {
   LeaguePuuidSchema,
   ScoutClientObservationBatchSchema,
 } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
@@ -22,6 +23,7 @@ vi.doMock("#src/league/api/api.ts", () => ({
 }));
 
 const { ingestObservationBatch } = await import("./ingress.ts");
+const { readTimelineSelection } = await import("./canonical-match.ts");
 
 const OWNER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 const GUILD_ID = DiscordGuildIdSchema.parse("1337623164146155593");
@@ -101,6 +103,84 @@ function postGame() {
   );
 }
 
+/** One League-client timeline frame for participants 1 and 2. */
+function timelineFrame(minute: number, events: unknown[]) {
+  return {
+    timestamp: minute * 60_000,
+    participantFrames: Object.fromEntries(
+      [1, 2].map((participantId) => [
+        participantId.toString(),
+        {
+          participantId,
+          currentGold: 500,
+          totalGold: 500 + minute * 300,
+          xp: minute * 400,
+          level: 1 + minute,
+          minionsKilled: minute * 7,
+          jungleMinionsKilled: 0,
+          position: { x: 1000, y: 1000 },
+        },
+      ]),
+    ),
+    events,
+  };
+}
+
+/** A post-game bundle carrying the League client's timeline for the game. */
+function postGameWithTimeline() {
+  return observation(
+    "post_game",
+    {
+      resource: "post_game",
+      data: {
+        matchHistory: {
+          gameId: 5_653_248_720,
+          participantIdentities: [
+            {
+              participantId: 1,
+              player: {
+                puuid: SELF_UUID,
+                gameName: "sjerred",
+                tagLine: "sjerr",
+              },
+            },
+            {
+              participantId: 2,
+              player: {
+                puuid: FRIEND_UUID,
+                gameName: "Virmel",
+                tagLine: "NA1",
+              },
+            },
+          ],
+          participants: [
+            { participantId: 1, teamId: 100 },
+            { participantId: 2, teamId: 200 },
+          ],
+        },
+        timeline: {
+          frames: [
+            timelineFrame(0, []),
+            timelineFrame(1, [
+              {
+                type: "CHAMPION_KILL",
+                timestamp: 75_000,
+                killerId: 1,
+                victimId: 2,
+                assistingParticipantIds: [],
+                position: { x: 1, y: 1 },
+                buildingType: "",
+                itemId: 0,
+              },
+            ]),
+          ],
+        },
+      },
+    },
+    { gameId: "5653248720", platformId: "NA1" },
+  );
+}
+
 function batch(...observations: unknown[]) {
   return ScoutClientObservationBatchSchema.parse({ observations });
 }
@@ -124,7 +204,9 @@ beforeEach(async () => {
     },
   );
   await prisma.leagueIdentityAlias.deleteMany();
-  // An accepted profile projects a snapshot row that pins its observation.
+  // An accepted profile projects a snapshot row that pins its observation,
+  // as does a canonical selection.
+  await prisma.scoutClientCanonicalMatch.deleteMany();
   await prisma.scoutClientPlayerSnapshot.deleteMany();
   await prisma.scoutClientObservation.deleteMany();
   await prisma.scoutClientDeviceVersion.deleteMany();
@@ -390,5 +472,42 @@ describe("ingesting observations named by League-client UUID", () => {
 
     expect(first[0]?.outcome).toBe("quarantined");
     expect(second[0]?.outcome).toBe("accepted");
+  });
+});
+
+describe("client-sourced match timelines", () => {
+  test("serves a client-sourced match's timeline in Riot identities", async () => {
+    await ingestObservationBatch(
+      device,
+      batch(accountProfile(), postGameWithTimeline()),
+    );
+    const source = await prisma.scoutClientObservation.findFirstOrThrow({
+      where: { kind: "post_game" },
+    });
+    const riotMatchId = RiotMatchIdSchema.parse("NA1_5653248720");
+    await prisma.scoutClientCanonicalMatch.create({
+      data: {
+        riotMatchId,
+        sourceObservationId: source.observationId,
+        payloadDigest: source.bodyDigest,
+        selectedAt: new Date(),
+      },
+    });
+
+    const selection = await readTimelineSelection(riotMatchId);
+
+    expect(selection.source).toBe("SCOUT_CLIENT");
+    const timeline =
+      selection.source === "SCOUT_CLIENT" ? selection.timeline : null;
+    expect(timeline?.metadata.participants).toEqual([SELF_PUUID, FRIEND_PUUID]);
+    const kill = timeline?.info.frames[1]?.events[0];
+    expect(kill).toMatchObject({ killerId: 1, victimId: 2 });
+    expect(kill?.itemId).toBeUndefined();
+  });
+
+  test("leaves a match nobody selected from a client to Riot", async () => {
+    expect(
+      await readTimelineSelection(RiotMatchIdSchema.parse("NA1_5653248720")),
+    ).toEqual({ source: "RIOT" });
   });
 });

@@ -309,7 +309,8 @@ const TimelineFrameReadSchema = TimelineParticipantFrameLakeRowSchema.omit({
   position_y: LakeIntSchema,
   current_gold: LakeIntSchema,
   total_gold: LakeIntSchema,
-  gold_per_second: LakeIntSchema,
+  // Null for a timeline the Scout Client built.
+  gold_per_second: LakeIntSchema.nullable(),
   minions_killed: LakeIntSchema,
   jungle_minions_killed: LakeIntSchema,
   level: LakeIntSchema,

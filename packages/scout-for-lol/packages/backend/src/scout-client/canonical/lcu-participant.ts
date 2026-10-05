@@ -1,4 +1,8 @@
-import { RawParticipantSchema, RawPerksSchema } from "@scout-for-lol/data";
+import {
+  RawParticipantSchema,
+  RawPerksSchema,
+  getChampionKeyById,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import type {
   LegacyIdentity,
@@ -117,15 +121,21 @@ function selection(records: readonly ValueRecord[], index: number) {
   };
 }
 
+/** Stat shards, only when the source states all three. */
+function statPerksFrom(records: readonly ValueRecord[]) {
+  const offense = numberFrom(records, "statPerk0", "STAT_PERK_0");
+  const flex = numberFrom(records, "statPerk1", "STAT_PERK_1");
+  const defense = numberFrom(records, "statPerk2", "STAT_PERK_2");
+  return offense === null || flex === null || defense === null
+    ? {}
+    : { statPerks: { offense, flex, defense } };
+}
+
 function perksFrom(records: readonly ValueRecord[]) {
   const embedded = RawPerksSchema.safeParse(valueFrom(records, ["perks"]));
   if (embedded.success) return embedded.data;
   return {
-    statPerks: {
-      offense: numberFrom(records, "statPerk0", "STAT_PERK_0"),
-      flex: numberFrom(records, "statPerk1", "STAT_PERK_1"),
-      defense: numberFrom(records, "statPerk2", "STAT_PERK_2"),
-    },
+    ...statPerksFrom(records),
     styles: [
       {
         description: "primaryStyle" as const,
@@ -157,9 +167,13 @@ export function convertParticipant(
     champExperience: numberFrom(records, "champExperience", "EXP"),
     champLevel: numberFrom(records, "champLevel", "LEVEL"),
     championId: participant.championId,
+    // Match-V5 names a champion by its key ("MonkeyKing"); the end-of-game
+    // block's `championName` is the display name ("Wukong"). The key for the
+    // stated champion ID comes first.
     championName:
+      getChampionKeyById(participant.championId) ??
       source.skinName ??
-      stringFrom(records, "championName", "SKIN") ??
+      stringFrom(records, "SKIN") ??
       participant.championName,
     championTransform: numberFrom(
       records,
