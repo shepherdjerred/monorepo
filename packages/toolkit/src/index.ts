@@ -6,6 +6,7 @@ import {
 } from "#lib/credentials.ts";
 import {
   buildPassthroughInvocation,
+  isCredentialFreePassthrough,
   runPassthrough,
 } from "#lib/passthrough.ts";
 
@@ -161,7 +162,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  await resolveCommandCredentials(command, args);
+  if (!isCredentialFreePassthrough(command, args.slice(1))) {
+    await resolveCommandCredentials(command, args);
+  }
 
   const passthrough = buildPassthroughInvocation(
     command,

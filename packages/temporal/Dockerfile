@@ -42,6 +42,8 @@ RUN bun install --frozen-lockfile \
   --filter '@shepherdjerred/toolkit'
 
 # ── build: gitignored artifacts (shared dist + compiled toolkit) ────────────
+# Toolkit needs the shared daemon helpers and MC protocol exports at compile
+# time; their workspace manifests are already present in the deps stage.
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
@@ -59,6 +61,8 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
+  packages/unix-socket-daemon/src \
+  packages/mc-harness/src/protocol \
   packages/config \
   packages/ops-model \
   packages/ops-clients \

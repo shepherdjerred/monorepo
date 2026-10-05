@@ -165,6 +165,29 @@ function argsBeforeBoundary(args: readonly string[]): readonly string[] {
   return boundary === -1 ? args : args.slice(0, boundary);
 }
 
+/** Exact native metadata invocations that never need brokered credentials. */
+export function isCredentialFreePassthrough(
+  command: string,
+  args: readonly string[],
+): boolean {
+  if (!PASSTHROUGH_REGISTRY.has(command)) {
+    return false;
+  }
+  // Inspect the entire invocation: flags in a command payload or after `--`
+  // must not turn an operational command into a credential-free dispatch.
+  if (args.length === 1) {
+    return args[0] === "--help" || args[0] === "-h" || args[0] === "--version";
+  }
+  // Plain `argocd version` contacts the server; only this client-only form
+  // can bypass credential resolution.
+  return (
+    command === "argocd" &&
+    args.length === 2 &&
+    args[0] === "version" &&
+    args[1] === "--client"
+  );
+}
+
 function hasFlag(args: readonly string[], flags: readonly string[]): boolean {
   const candidates = argsBeforeBoundary(args);
   return flags.some((flag) =>
