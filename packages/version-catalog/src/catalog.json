@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:32eb02a1bfea46009e4fd0eeb71daebd8a4b02501d88ae3eb887e5c550998256",
+      "value": "2.0.0-1005566@sha256:e7ca169038182bec976fb11c21ac04be128abd732bbb4c6815f919d1fdb01193",
       "notes": [
         "not managed by renovate — built from packages/streambot and updated by CI version commit-back."
       ]
@@ -675,8 +675,10 @@
       "name": "shepherdjerred/storm-forum",
       "category": "internal-image",
       "artifactType": "image",
-      "management": { "managed": false },
-      "value": "bootstrap@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1005566@sha256:8a6ca130b6580e22996d0b0d43c155f08172cc6e82b09de22482c2b31ef35c47",
       "notes": [
         "Explicit unpublished marker for first CI publication; active forum releases reject this digest."
       ]
@@ -688,7 +690,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:6d619079f5e0a72d5734f707a343be0beac35229149f2f642da0b6b1d90742d5",
+      "value": "2.0.0-1005566@sha256:10130d8c61a5a91dc66c81324b8d74bb5941b3da0efde52c9b0ad5b2ec88eae6",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -772,7 +774,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:f3f8acfd0f8fdf307d6d2f8c6e7c61904430c937c74a1cdfbc3fe3d9e494ca6b",
+      "value": "2.0.0-1005566@sha256:a2098942c052fb40275a93c10df897325ee39ac7b9ad995e87df335071a66665",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -795,7 +797,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:93fec4a181c73099c9e5ebbf8924763e5cee02ba5113aa246bd3eddbdcd9d35f",
+      "value": "2.0.0-1005566@sha256:e1ddd40785d7e9434253f4c1ddb83e365508f1f1f7bd0b6ff2faad658b377604",
       "notes": ["not managed by renovate"]
     },
     {
@@ -805,7 +807,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004164@sha256:b04e42bfd74f87cc240fe6b5a377f19f32ae9bc06652883e4d143fe17bfb5c67",
+      "value": "2.0.0-1005566@sha256:002a1ec22f9ab34c8f677ca2d1da9aeb298c84ffcbefabbaae0f7881c59efa0b",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -819,7 +821,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:03aafe4ac1c2d77be39d5865d42f63902fdfe59ad26aedda4a8055c13bde8c47",
+      "value": "2.0.0-1005566@sha256:144ac843aa5b64ce714757728b939be8992d46a7abfa105490aec013a6bb438b",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -832,7 +834,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:c496e0b7096ee935452ea9e710e4a77f3b17e160146223db7bc74845b82f4711",
+      "value": "2.0.0-1005566@sha256:0d8308095ebace63c9afd181cb491473f636cf3185f7a029742c7b9657850dce",
       "notes": [
         "not managed by renovate — main image releases update this pin through version commit-back."
       ]
@@ -844,7 +846,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004164@sha256:e025607cdedb9fcf8b19de5f59f048b31c30303e31315e6c506b1c918a87bfbb",
+      "value": "2.0.0-1005566@sha256:2d4ae850873ed653af8767dbad031e34343c3b02b1815c0acdbb3e4ff1562c9b",
       "notes": ["not managed by renovate"]
     },
     {
@@ -854,7 +856,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004164@sha256:14d375fc4141b61223e3eaebbcfd2169b1885b4e8a4c52b44d634ab45094eff5",
+      "value": "2.0.0-1005566@sha256:abc874187eb70f57d18e2dbc6ca2e82915e9851e42a48c5090b66d082fde994f",
       "notes": [
         "not managed by renovate — CI version commit-back updates the image digest."
       ]
@@ -1549,7 +1551,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003787@sha256:dbf27b3302394f9db52ac0f600f0d14cef103cb4a0098ae1e3f9193ce71fceef",
+      "value": "2.0.0-1005566@sha256:a9158e5c64baa0be50a8d56e1e20b168a61e5d1d6f12763e70b6b74f7ba9d7b1",
       "notes": [
         "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
         "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
@@ -1575,7 +1577,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004164@sha256:3b6ec74bb736cd421ea475d2bf96f0218f717577ba83b4b0f19dd4640e18c850",
+      "value": "2.0.0-1005566@sha256:9e4d07c3d9099ba0fcb180dc8671d523c90ba8367cfb31df987ad056c1de96fe",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1637,7 +1639,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:244acdc9cf6020b80cb3262ba7384cd3fe0fd2be477eb5963d158c6dceb672ed",
+      "value": "2.0.0-1005566@sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1650,7 +1652,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004374@sha256:7d261fe015af6cdc58184df28fdb953c8962c8f466d29dd7fa9f849d33d42b35",
+      "value": "2.0.0-1005566@sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
       "notes": [
         "Candidate central Workflow Worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1676,7 +1678,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004207@sha256:8c44f1b73e8b6064feed439efdca024e3fc54d9f7d5280bb36b416ee86e9dc2d",
+      "value": "2.0.0-1005566@sha256:27d0fe0c4991f738e622fc93054be97d94b8811a1c7f87806653dcd7537ec4ad",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"
