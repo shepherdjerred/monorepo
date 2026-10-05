@@ -176,18 +176,25 @@ export function ramparts(ctx: BuildContext, spec: RampartSpec): Ramparts {
       cells,
     );
   }
+  // Towers own their footprint: no wall columns inside them (that would
+  // leave dark sealed pockets in the tower).
+  const corners = spec.closed === true ? spec.points : spec.points.slice(1, -1);
+  const towerRadius = Math.floor(thickness / 2) + 2;
+  const inTower = (cell: Cell): boolean =>
+    (spec.towers ?? true) &&
+    corners.some(([x, z]) => Math.hypot(cell.x - x, cell.z - z) <= towerRadius);
   for (const cell of cells.values()) {
-    wallColumn(ctx, spec, cell, { height, body, base, style });
+    if (!inTower(cell)) {
+      wallColumn(ctx, spec, cell, { height, body, base, style });
+    }
   }
   buttresses(ctx, spec, points, { height, thickness, outward, body });
   if (spec.towers ?? true) {
-    const corners =
-      spec.closed === true ? spec.points : spec.points.slice(1, -1);
     for (const [x, z] of corners) {
       tower(ctx, spec, {
         x,
         z,
-        radius: Math.floor(thickness / 2) + 2,
+        radius: towerRadius,
         height: height + 4,
         wall: body,
         round: true,
@@ -270,9 +277,20 @@ function tower(
 ): void {
   const { x, z } = o;
   let ground = spec.ground(x, z) ?? 0;
+  let peak = ground;
   for (let dx = -o.radius; dx <= o.radius; dx += 1) {
     for (let dz = -o.radius; dz <= o.radius; dz += 1) {
-      ground = Math.min(ground, spec.ground(x + dx, z + dz) ?? ground);
+      const here = spec.ground(x + dx, z + dz) ?? ground;
+      ground = Math.min(ground, here);
+      peak = Math.max(peak, here);
+    }
+  }
+  // Clear terrain inside the tower so uneven ground leaves no dark pockets.
+  for (let dx = -o.radius + 1; dx < o.radius; dx += 1) {
+    for (let dz = -o.radius + 1; dz < o.radius; dz += 1) {
+      for (let y = ground; y <= Math.max(peak + 1, ground + o.height); y += 1) {
+        ctx.set(x + dx, y, z + dz, "air");
+      }
     }
   }
   ctx.craft.tower({

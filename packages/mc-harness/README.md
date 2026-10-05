@@ -206,6 +206,12 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 - **Library** (`library ls|search|show|use`) browses mc-build's curated
   programs; `use` copies one over an untouched scaffold `build.ts` (an edited
   one needs `--force`).
+- **Components** (`component ls|search|show|render|propose`) browse the shared
+  helpers programs import and harvest new ones: `propose <dir> <file> --name
+n --description d` copies a self-contained build helper into
+  `packages/mc-build/components/<name>/`, writes `meta.json`, derives a demo
+  from the build program, renders `demo.png` and prints the review checklist
+  (it refuses to overwrite).
 - **Judge** (`judge <a> <b> [--model id]`) asks a vision model to compare two
   renders on the eight rubric aspects, once in each order; when the orderings
   disagree the verdict is a tie. It defaults to `gpt-6.1-sol` and needs

@@ -55,6 +55,11 @@ export type BoulderSpec = {
   satellites?: boolean;
   /** Variant; change it for a different rock at the same spot. */
   seed?: number;
+  /**
+   * Ground surface y per column; lobes overhanging lower ground get solid
+   * columns down to it instead of floating (scatterRocks passes its own).
+   */
+  ground?: (x: number, z: number) => number | null;
 };
 
 function roll(ctx: BuildContext, x: number, z: number, salt: number): number {
@@ -66,9 +71,9 @@ function lobe(
   ctx: BuildContext,
   centre: { x: number; y: number; z: number },
   radii: { x: number; y: number; z: number },
-  paint: { material: Material; salt: number },
+  paint: { material: Material; salt: number; lowest: Map<string, number> },
 ): void {
-  const { material, salt } = paint;
+  const { material, salt, lowest } = paint;
   const rx = Math.ceil(radii.x);
   const ry = Math.ceil(radii.y);
   const rz = Math.ceil(radii.z);
@@ -83,6 +88,8 @@ function lobe(
         const jitter = (roll(ctx, x * 7 + y, z, salt) - 0.5) * 0.5;
         if (d <= 1 + jitter) {
           ctx.set(x, y, z, material);
+          const column = `${x.toString()},${z.toString()}`;
+          lowest.set(column, Math.min(lowest.get(column) ?? y, y));
         }
       }
     }
@@ -98,6 +105,7 @@ export function boulder(ctx: BuildContext, spec: BoulderSpec): void {
     scale: 2,
   });
   const sink = size >= 3 ? 2 : 1;
+  const lowest = new Map<string, number>();
   const lobes =
     size <= 1 ? 1 : 2 + Math.floor(roll(ctx, spec.x, spec.z, salt) * 3);
   for (let i = 0; i < lobes; i += 1) {
@@ -117,11 +125,33 @@ export function boulder(ctx: BuildContext, spec: BoulderSpec): void {
         z: spec.z + Math.round(Math.sin(a) * spread),
       },
       { x: tall ? r * 0.7 : r, y: height, z: tall ? r * 0.7 : r * 0.85 },
-      { material, salt: salt + i },
+      { material, salt: salt + i, lowest },
     );
+  }
+  if (spec.ground !== undefined) {
+    underpin(ctx, spec.ground, lowest, material);
   }
   if (spec.satellites ?? size >= 2) {
     satellites(ctx, spec, { size, material, salt });
+  }
+}
+
+/** Fills each rock column down to the ground so no part overhangs in air. */
+function underpin(
+  ctx: BuildContext,
+  ground: (x: number, z: number) => number | null,
+  lowest: Map<string, number>,
+  material: Material,
+): void {
+  for (const [column, low] of lowest) {
+    const [x = 0, z = 0] = column.split(",").map(Number);
+    const surface = ground(x, z);
+    if (surface === null) {
+      continue;
+    }
+    for (let y = surface + 1; y < low; y += 1) {
+      ctx.set(x, y, z, material);
+    }
   }
 }
 
@@ -137,9 +167,14 @@ function satellites(
     const distance = size + 1 + Math.floor(roll(ctx, i, spec.x, salt + 11) * 2);
     const x = spec.x + Math.round(Math.cos(a) * distance);
     const z = spec.z + Math.round(Math.sin(a) * distance);
-    ctx.set(x, spec.y, z, material);
-    if (roll(ctx, x, z, salt + 12) < 0.4) {
-      ctx.set(x + 1, spec.y, z, material);
+    const pair = roll(ctx, x, z, salt + 12) < 0.4;
+    for (const sx of pair ? [x, x + 1] : [x]) {
+      // Each stone sits on its own column's ground (none there: skip it).
+      const surface =
+        spec.ground === undefined ? spec.y - 1 : spec.ground(sx, z);
+      if (surface !== null) {
+        ctx.set(sx, surface + 1, z, material);
+      }
     }
   }
 }
@@ -183,6 +218,7 @@ export function scatterRocks(
         shape: roll(ctx, x, z, 93) < 0.25 ? "tall" : "lump",
         palette: spec.palette ?? "stone",
         seed: x * 31 + z,
+        ground: spec.ground,
       });
       placed += 1;
     }

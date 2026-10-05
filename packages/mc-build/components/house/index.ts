@@ -21,6 +21,7 @@ import {
   odd,
   OPPOSITE,
   roof,
+  sealOverlap,
   step,
   storeyWalls,
   wingFootprint,
@@ -172,6 +173,7 @@ function buildWing(
     infill: p.infill,
     rhythm: 1,
     shutters: false,
+    lanterns: true,
   });
   ctx.craft.gableRoof({
     ...fp,
@@ -213,6 +215,7 @@ function storey(
     infill: level === 0 ? p.infill : p.upper,
     rhythm: (level + Math.floor(plan.roll(13) * 2)) % 2,
     shutters: plan.roll(14) < 0.5,
+    lanterns: true,
   });
   if (level > 0) {
     for (const face of Object.values(walls.faces)) {
@@ -315,6 +318,13 @@ export function house(ctx: BuildContext, spec: HouseSpec): House {
     type: plan.roofType,
     gable: p.upper,
   });
+  if (plan.wing !== null && footprints[1] !== undefined) {
+    sealOverlap(
+      ctx,
+      { main: plan.fp, wing: footprints[1] },
+      { from: plan.floorY, to: top, material: p.infill },
+    );
+  }
   const done = finish(ctx, plan, spec, { ...storeys, ridgeTop });
   return { top: Math.max(top, done.top), door: done.door, footprints };
 }

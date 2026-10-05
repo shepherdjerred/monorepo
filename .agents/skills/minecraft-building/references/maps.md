@@ -18,6 +18,11 @@ Write a short plan with coordinates before any blocks:
 - open space: plazas, fields, gardens, cliffs and water. Keep 30–40% of the
   ground unbuilt; wall-to-wall roofs read as one blob.
 
+Prefer the shared components (references/components.md): `terrain` for the
+heightfield, rivers, surfacing and paths, `house` for varied houses,
+`ramparts` for walls, `rocks` for boulders. The recipes below show what they
+do when you need something custom.
+
 ## One program, one heightfield (default)
 
 Author terrain and structures in the same `build.ts` and keep the ground in an
@@ -111,8 +116,9 @@ toolkit mc we --world world --pos1 60,-63,0 --pos2 95,-20,40 "//forest oak 4"
   outnumber houses.
 - One culture and roof style per town; vary houses by pitch, height,
   storeys, jetties, wall colour, frame pattern, chimney side, door side and
-  wings. Write helpers (`house(at, w, d, floors, roof, palette, facing)`)
-  and a layout list; never stamp the same house twice.
+  wings. Use the `house` component with a layout list (a different `seed`,
+  size and facing per plot) or write your own helper; never stamp the same
+  house twice.
 - Walls 3–4 thick at the base, towers 2–3 wider than the wall at corners and
   flanking a 4–5 tall, 3–4 wide gate; buttresses every 8–10; most farmland
   outside the walls.

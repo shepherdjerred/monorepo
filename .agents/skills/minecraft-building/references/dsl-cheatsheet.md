@@ -1,7 +1,9 @@
 # mc-build DSL cheat sheet
 
 `build.ts` exports a pure function; compile runs it in a child process and
-turns the result into a schematic paste at `anchor + min`.
+turns the result into a schematic paste at `anchor + min`. It may import
+shared components (`@shepherdjerred/mc-build/components/<name>/index.ts`,
+see components.md) and `.ts` helpers inside the build directory.
 
 ```ts
 import type { BuildProgram } from "@shepherdjerred/mc-build/dsl/context.ts";

@@ -15,6 +15,7 @@ import {
 import { compileProgram } from "#src/compile/runner.ts";
 import { scanModuleGraph } from "#src/compile/scan.ts";
 import { createBuildContext } from "#src/dsl/context.ts";
+import { lintGrid } from "#src/lint/lint.ts";
 import { loadRegistry } from "#src/registry/registry.ts";
 
 const registry = await loadRegistry();
@@ -34,6 +35,18 @@ function fresh(seed = 5) {
     };
   };
   return { ctx, read };
+}
+
+function codes(build: (ctx: ReturnType<typeof fresh>["ctx"]) => void) {
+  const { ctx, read } = fresh();
+  build(ctx);
+  const { grid } = read();
+  return lintGrid(grid, { registry }).findings.map((finding) => finding.code);
+}
+
+/** Ground 4 high on x ≥ 0, 0 high west of it: a ledge to overhang. */
+function stepGround(x: number): number {
+  return x < 0 ? 0 : 4;
 }
 
 async function buildDir(name: string, files: Record<string, string>) {
@@ -269,5 +282,76 @@ describe("ramparts", () => {
     expect([...tops].some((state) => state.includes("stone_bricks"))).toBe(
       true,
     );
+  });
+});
+
+describe("components lint clean", () => {
+  test("houses never float and a wing seals its shared wall", () => {
+    for (const seed of [3, 8, 13, 21, 36]) {
+      for (const facing of ["front", "back", "left", "right"] as const) {
+        const found = codes((ctx) => {
+          ctx.fill({ x: -8, y: 0, z: -8, w: 32, h: 1, d: 32 }, "grass_block");
+          house(ctx, { x: 0, z: 0, y: 1, seed, facing });
+        });
+        expect(found.filter((code) => code.startsWith("E_"))).toEqual([]);
+      }
+    }
+    const winged = codes((ctx) => {
+      ctx.fill({ x: -8, y: 0, z: -8, w: 32, h: 1, d: 32 }, "grass_block");
+      house(ctx, {
+        x: 0,
+        z: 0,
+        y: 1,
+        w: 9,
+        d: 7,
+        wing: "front",
+        seed: 36,
+        facing: "right",
+      });
+    });
+    expect(winged).not.toContain("W_DARK_INTERIOR");
+  });
+
+  test("boulders over lower ground are underpinned, not floating", () => {
+    const found = codes((ctx) => {
+      for (let x = -8; x <= 8; x += 1) {
+        for (let z = -8; z <= 8; z += 1) {
+          ctx.fill({ x, y: 0, z, w: 1, h: stepGround(x) + 1, d: 1 }, "stone");
+        }
+      }
+      boulder(ctx, {
+        x: 1,
+        y: 5,
+        z: 0,
+        size: 4,
+        seed: 3,
+        ground: (x) => stepGround(x),
+      });
+    });
+    expect(found).not.toContain("E_FLOATING");
+  });
+
+  test("ramparts over rolling ground lint with no findings", () => {
+    const found = codes((ctx) => {
+      const ground = (x: number, z: number) =>
+        2 + Math.round(ctx.noise(x, z, { scale: 20, octaves: 2, salt: 3 }) * 5);
+      for (let x = 0; x < 56; x += 1) {
+        for (let z = 0; z < 56; z += 1) {
+          ctx.fill({ x, y: 0, z, w: 1, h: ground(x, z) + 1, d: 1 }, "dirt");
+        }
+      }
+      ramparts(ctx, {
+        points: [
+          [8, 8],
+          [46, 10],
+          [48, 44],
+          [10, 46],
+        ],
+        closed: true,
+        ground,
+        gate: { segment: 1 },
+      });
+    });
+    expect(found).toEqual([]);
   });
 });

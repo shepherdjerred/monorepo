@@ -77,9 +77,43 @@ export type Storey = {
   /** Which alternate bays get windows (0 or 1): plain panels between. */
   rhythm: number;
   shutters: boolean;
+  /**
+   * A lantern in a blank bay of each face: lights the recessed panels
+   * (otherwise dark ledges mobs spawn on) and the walls at night.
+   */
+  lanterns: boolean;
 };
 
 export type StoreyWalls = ReturnType<BuildContext["craft"]["walls"]>;
+
+/** Windows in alternate bays of one face, and a lantern in a blank bay. */
+function dressFace(
+  ctx: BuildContext,
+  p: Palette,
+  s: Storey,
+  side: {
+    face: StoreyWalls["faces"][Dir];
+    width: number;
+    posts: readonly number[];
+    door: number | null;
+  },
+): void {
+  const slots = windowSlots(side.width, side.posts, side.door);
+  // Negative space: windows in alternate bays (at least one per face).
+  const chosen = slots.filter((_, i) => (i + s.rhythm) % 2 === 0);
+  const windows = chosen.length > 0 ? chosen : slots.slice(0, 1);
+  const shutters =
+    s.shutters && p.shutter !== null ? { shutters: p.shutter } : {};
+  for (const at of windows) {
+    ctx.craft.window(side.face, { at, w: 1, h: 2, sill: p.roof, ...shutters });
+  }
+  const blank = slots.filter((at) => !windows.includes(at));
+  const lantern = blank[Math.floor(blank.length / 2)];
+  if (lantern !== undefined && s.lanterns) {
+    const cell = side.face.cell(lantern, 1, 0);
+    ctx.set(cell.x, cell.y, cell.z, "lantern");
+  }
+}
 
 /** Timber walls with framed bays, windows in alternate bays and a lantern. */
 export function storeyWalls(
@@ -102,25 +136,13 @@ export function storeyWalls(
     infill: s.infill,
     postsAt,
   });
-  const shutters =
-    s.shutters && p.shutter !== null ? { shutters: p.shutter } : {};
   for (const dir of SIDES) {
-    const slots = windowSlots(
-      faceWidth(s.fp, dir),
-      postsAt[dir] ?? [],
-      dir === s.facing ? s.door : null,
-    );
-    // Negative space: windows in alternate bays (at least one per face).
-    const chosen = slots.filter((_, i) => (i + s.rhythm) % 2 === 0);
-    for (const at of chosen.length > 0 ? chosen : slots.slice(0, 1)) {
-      ctx.craft.window(walls.faces[dir], {
-        at,
-        w: 1,
-        h: 2,
-        sill: p.roof,
-        ...shutters,
-      });
-    }
+    dressFace(ctx, p, s, {
+      face: walls.faces[dir],
+      width: faceWidth(s.fp, dir),
+      posts: postsAt[dir] ?? [],
+      door: dir === s.facing ? s.door : null,
+    });
   }
   const room = walls.interior;
   if (room.w > 0 && room.d > 0) {
@@ -250,4 +272,31 @@ export function chimney(
     cap: "campfire",
   });
   return o.base + height + 1;
+}
+
+/**
+ * Fills empty cells in the strip where a wing overlaps the main wall, up to
+ * the wing's roof line: the main wall's recessed panels would otherwise be
+ * sealed, unlit pockets between the two walls.
+ */
+export function sealOverlap(
+  ctx: BuildContext,
+  volumes: { main: Fp; wing: Fp },
+  o: { from: number; to: number; material: Material },
+): void {
+  const { main, wing } = volumes;
+  const x0 = Math.max(main.x, wing.x);
+  const x1 = Math.min(main.x + main.w, wing.x + wing.w) - 1;
+  const z0 = Math.max(main.z, wing.z);
+  const z1 = Math.min(main.z + main.d, wing.z + wing.d) - 1;
+  for (let x = x0; x <= x1; x += 1) {
+    for (let z = z0; z <= z1; z += 1) {
+      for (let y = o.from; y < o.to; y += 1) {
+        const current = ctx.get(x, y, z);
+        if (current === ctx.KEEP || current === ctx.AIR) {
+          ctx.set(x, y, z, o.material);
+        }
+      }
+    }
+  }
 }

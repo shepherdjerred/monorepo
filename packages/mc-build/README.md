@@ -62,6 +62,20 @@ bun run scripts/render.ts test/fixtures/house.build.ts /tmp/house.png
 bun run typecheck && bun run test && bun run lint
 ```
 
+## Components
+
+`components/<name>/{index.ts, demo.ts, meta.json, demo.png}` are pure
+helpers build programs import as
+`@shepherdjerred/mc-build/components/<name>/index.ts` (the compile child maps
+that specifier with a resolver plugin, so build dirs outside the workspace
+work). `src/compile/scan.ts` walks a program's imports: only components and
+relative `.ts` files inside the build dir (or the components library) are
+allowed, and every file gets the same purity scan. `src/catalog/components.ts`
+lists them (`ComponentMetaSchema`: name, description, tags, exports). Agents
+propose new ones with `toolkit mc build component propose`; a PR with a test
+and the reviewed `demo.png` makes them shared. Re-render a demo with
+`toolkit mc build component render <name>`.
+
 ## Library
 
 Each `library/<slug>/` holds a `build.ts` program and a `meta.json` (title,
