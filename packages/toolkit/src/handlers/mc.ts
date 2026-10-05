@@ -34,6 +34,7 @@ import {
 } from "#lib/mc/live.ts";
 import { parseMcArgs } from "./mc-args.ts";
 import { handleMcClient } from "./mc-client.ts";
+import { handleMcFiles } from "./mc-files.ts";
 import { handleMcLive } from "./mc-live.ts";
 import { MC_USAGE, subcommandUsage } from "./mc-usage.ts";
 import { handleMcActor, handleMcPlaytest } from "./mc-play.ts";
@@ -439,6 +440,10 @@ export async function handleMcCommand(
       }
       case "client": {
         await handleMcClient(args);
+        return;
+      }
+      case "files": {
+        await handleMcFiles(args);
         return;
       }
     }

@@ -51,12 +51,14 @@ import { PROTOCOL_VERSION } from "#protocol/version.ts";
 import { LIVE_TARGET_ID } from "#protocol/live.ts";
 import { listRuns, readRun, runPlaytests } from "#daemon/playtests.ts";
 import type { SandboxBackend } from "#sandbox/provider.ts";
+import type { DataFiles } from "#src/files/data-files.ts";
 import { toSummary } from "#sandbox/record.ts";
 import { pasteBox } from "#src/live/paste-box.ts";
 import type { LiveService } from "#src/live/service.ts";
 import type { Target } from "#src/target.ts";
 import { dispatchClients } from "./client-routes.ts";
 import type { ClientManager } from "./clients.ts";
+import { dispatchFiles } from "./files.ts";
 import { body, DaemonError, reply } from "./http.ts";
 import {
   dispatchLive,
@@ -73,6 +75,8 @@ export type DaemonContext = {
   target: (id: string) => Promise<Target>;
   /** Real Minecraft clients joined to sandboxes (`toolkit mc client`). */
   clients: ClientManager;
+  /** A sandbox's or live's /data, read-only; needs no bridge token. */
+  files: (id: string) => Promise<DataFiles>;
   startedAt: string;
   ttlSeconds: number;
   repoRoot: string;
@@ -460,6 +464,12 @@ async function dispatch(
   }
   if (root === LIVE_TARGET_ID && id !== undefined && parts.length === 2) {
     return dispatchLive(ctx, url, request, id);
+  }
+  if (root === "files" && id !== undefined && rest.length === 1) {
+    return dispatchFiles(ctx, url, request, {
+      target: id,
+      action: rest.join("/"),
+    });
   }
   if (root === "targets" && id !== undefined && rest.length > 0) {
     return dispatchTarget(ctx, url, request, { id, action: rest.join("/") });

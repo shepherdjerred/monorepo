@@ -146,6 +146,7 @@ function context(): {
       readyTimeoutMs: 5000,
       stopTimeoutMs: 1000,
     }),
+    files: (id) => Promise.reject(new DaemonError(`No sandbox ${id}`, 404)),
     startedAt: "2026-10-03T00:00:00.000Z",
     ttlSeconds: 3600,
     repoRoot: "/repo",
@@ -205,6 +206,17 @@ describe("daemon router", () => {
     const removed = await call(ctx, "DELETE", "/sandboxes/sbx-abc123");
     expect(removed.json).toEqual({ removed: ["sbx-abc123"] });
     expect(destroyed).toEqual(["sbx-abc123"]);
+  });
+
+  it("routes file pulls through the target's data files", async () => {
+    const { ctx } = context();
+    const missing = await call(ctx, "GET", "/files/sbx-nope/ls?path=logs");
+    expect(missing).toEqual({
+      status: 404,
+      json: { error: "No sandbox sbx-nope" },
+    });
+    const nested = await call(ctx, "GET", "/files/sbx-nope/ls/extra");
+    expect(nested.status).toBe(404);
   });
 
   it("validates request bodies", async () => {
