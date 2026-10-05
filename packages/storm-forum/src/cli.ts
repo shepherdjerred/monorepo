@@ -6,7 +6,7 @@ import {
 import { z } from "zod";
 import { forumManifest, StageSchema } from "./config.ts";
 import { assembleBundle, releaseForum } from "./release.ts";
-import { maintainStormForum } from "./activities.ts";
+import { createMaintainStormForum } from "./activities.ts";
 import {
   beginStormForumBackup,
   snapshotStormForum,
@@ -49,7 +49,7 @@ switch (command) {
         namespace: env.TEMPORAL_NAMESPACE,
         taskQueue: forumManifest.stages[env.STORM_FORUM_STAGE].taskQueue,
         activities: {
-          maintainStormForum,
+          maintainStormForum: createMaintainStormForum(env.STORM_FORUM_STAGE),
           beginStormForumBackup,
           snapshotStormForum,
           endStormForumBackup,

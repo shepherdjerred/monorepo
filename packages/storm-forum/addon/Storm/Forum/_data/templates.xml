@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
+  <template type="public" title="storm_style_chooser" version_id="2000070" version_string="2.0.0"><![CDATA[
+<xf:title>Appearance and theme</xf:title>
+<xf:head option="metaNoindex"><meta name="robots" content="noindex" /></xf:head>
+<xf:form action="{{ link('misc/style') }}" ajax="true" class="block">
+  <div class="block-container">
+    <div class="block-body">
+      <xf:radiorow name="storm_mode" value="{$stormMode}" label="Appearance">
+        <xf:option value="light">Light</xf:option>
+        <xf:option value="dark">Dark</xf:option>
+      </xf:radiorow>
+      <xf:selectrow name="storm_theme" value="{$stormTheme}" label="Theme">
+        <xf:option value="auto">Follow calendar</xf:option>
+        <xf:foreach loop="$stormThemes" value="$theme">
+          <xf:option value="{$theme.id}">{$theme.name}</xf:option>
+        </xf:foreach>
+      </xf:selectrow>
+      <xf:inforow>Follow calendar currently uses <strong>{$stormEffectiveTheme}</strong>. Choosing a specific theme keeps it throughout the year.</xf:inforow>
+    </div>
+    <xf:submitrow submit="Save appearance" />
+  </div>
+  <xf:hiddenval name="t">{{ csrf_token() }}</xf:hiddenval>
+  <xf:hiddenval name="_xfRedirect">{$redirect}</xf:hiddenval>
+</xf:form>
+  ]]></template>
   <template type="public" title="storm_portal" version_id="1000070" version_string="1.0.0"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:description>A Minecraft community, brought back together.</xf:description>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<class_extensions>
+  <extension from_class="XF\Pub\Controller\MiscController" to_class="Storm\Forum\Pub\Controller\Misc" execute_order="10" active="1" />
+</class_extensions>

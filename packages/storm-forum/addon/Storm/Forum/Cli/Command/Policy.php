@@ -9,27 +9,22 @@ final class Policy extends \XF\Cli\Command\AbstractCommand
     {
         $this->setName('storm:policy')
             ->addOption('registration', null, InputOption::VALUE_REQUIRED)
-            ->addOption('season', null, InputOption::VALUE_REQUIRED);
+            ->addOption('season', null, InputOption::VALUE_REQUIRED)
+            ->addOption('selection', null, InputOption::VALUE_REQUIRED, 'Default style selection: follow or fixed.', 'fixed');
     }
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $registration = $input->getOption('registration');
         $season = $input->getOption('season');
-        if (!in_array($registration, ['enabled', 'disabled'], true) || !in_array($season, ['normal', 'halloween', 'christmas'], true)) {
+        $selection = $input->getOption('selection');
+        if (!in_array($registration, ['enabled', 'disabled'], true) || !is_string($season) || !in_array($selection, ['follow','fixed'], true)) {
             throw new \RuntimeException('Invalid operational configuration');
         }
+        // Complete appearance preflight before changing any operational state.
+        \XF::app()->service('Storm\Forum:SeasonPolicy')->apply($season, $selection === 'follow');
         $settings = \XF::options()->registrationSetup;
         $settings['enabled'] = $registration === 'enabled';
-        \XF::repository('XF:Option')->updateOption('registrationSetup', $settings);
-        \XF::app()->registry()->set('stormForumSeason', $season);
-        $styles = \XF::app()->registry()->get('stormForumStyles');
-        if ($styles) {
-            $styleId = $styles['light:' . $season] ?? null;
-            if (!$styleId || !\XF::em()->find('XF:Style', $styleId)) { throw new \RuntimeException('Configured seasonal style is missing'); }
-            if (\XF::options()->defaultStyleId != $styleId) {
-                \XF::repository('XF:Option')->updateOption('defaultStyleId', $styleId);
-            }
-        }
+        if (\XF::options()->registrationSetup !== $settings) { \XF::repository('XF:Option')->updateOption('registrationSetup', $settings); }
         $output->writeln('Operational policy applied.');
         return 0;
     }

@@ -24,13 +24,13 @@ function stormValidateStyleArchive(string $file, array $dependency): SimpleXMLEl
     }
     $templates = [];
     foreach ($document->templates->template as $template) { $templates[(string)$template['title']] = (string)$template; }
-    if (!isset($templates['storm_flexile.less'], $templates['PAGE_CONTAINER'])
+    if (!isset($templates['storm_flexile.less'], $templates['PAGE_CONTAINER'], $templates['storm_flexile_visitor'])
         || !str_contains($templates['PAGE_CONTAINER'], 'An Audentio Design design creation.')) {
         throw new RuntimeException('Private Flexile style is incomplete or missing attribution');
     }
     $properties = [];
     foreach ($document->properties->property as $property) { $properties[] = (string)$property['property_name']; }
-    if (array_diff(['chromeBg', 'contentBg', 'fontFamilyBody', 'pageWidthMax'], $properties)) {
+    if (array_diff(['chromeBg', 'contentBg', 'fontFamilyBody', 'pageWidthMax', 'flexile_show_header_content', 'flexile_header_content', 'flexile_header_content_style', 'flexile_primaryBorderColor'], $properties)) {
         throw new RuntimeException('Private Flexile style is missing its native properties');
     }
     return $document;

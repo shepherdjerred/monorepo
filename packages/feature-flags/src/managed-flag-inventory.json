@@ -70,10 +70,37 @@
       "owner": "storm",
       "namespace": "storm",
       "source": "storm-forum",
-      "purpose": "Choose the forum's seasonal accent manually.",
+      "purpose": "Follow the forum festival calendar or override it with a catalog theme.",
       "type": "variant",
-      "default": "normal",
+      "default": "auto",
       "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "storm-forum-calendar-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-forum",
+      "purpose": "Enable Pacific-time seasonal forum appearance in beta before production rollout.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "storm-forum-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
       "rules": [],
       "thresholdRollouts": []
     },

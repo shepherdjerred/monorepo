@@ -1,0 +1,405 @@
+{
+  "version": 2,
+  "timeZone": "America/Los_Angeles",
+  "scenery": {
+    "classic": {
+      "desktop": "spawn.jpg",
+      "mobile": "spawn.jpg"
+    },
+    "spring": {
+      "desktop": "scenery/spring.jpg",
+      "mobile": "scenery/spring-mobile.jpg"
+    },
+    "summer": {
+      "desktop": "scenery/summer.jpg",
+      "mobile": "scenery/summer-mobile.jpg"
+    },
+    "autumn": {
+      "desktop": "scenery/autumn.jpg",
+      "mobile": "scenery/autumn-mobile.jpg"
+    },
+    "winter": {
+      "desktop": "scenery/winter.jpg",
+      "mobile": "scenery/winter-mobile.jpg"
+    }
+  },
+  "themes": [
+    {
+      "id": "normal",
+      "name": "Classic",
+      "scenery": "classic",
+      "decoration": null,
+      "window": null,
+      "palettes": {
+        "light": {
+          "chromeBg": "#087b68",
+          "subNavBg": "#38d1a5",
+          "accent": "#087361",
+          "linkColor": "#087361",
+          "linkHoverColor": "#034635",
+          "majorHeadingBg": "#fae2bc",
+          "majorHeadingTextColor": "#654321",
+          "subNavTextColor": "#073f34"
+        },
+        "dark": {
+          "chromeBg": "#124f43",
+          "subNavBg": "#217963",
+          "accent": "#72cbb7",
+          "linkColor": "#83d9c3",
+          "linkHoverColor": "#b7f0df",
+          "majorHeadingBg": "#453725",
+          "majorHeadingTextColor": "#f2d9ae",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "spring",
+      "name": "Spring",
+      "scenery": "spring",
+      "decoration": "decorations/spring.svg",
+      "window": null,
+      "palettes": {
+        "light": {
+          "chromeBg": "#497050",
+          "subNavBg": "#5b7d47",
+          "accent": "#436147",
+          "linkColor": "#436147",
+          "linkHoverColor": "#2b482f",
+          "majorHeadingBg": "#e6eedc",
+          "majorHeadingTextColor": "#43522e",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#284b35",
+          "subNavBg": "#3a6342",
+          "accent": "#95c798",
+          "linkColor": "#a5d6a7",
+          "linkHoverColor": "#cdeacb",
+          "majorHeadingBg": "#354333",
+          "majorHeadingTextColor": "#d9ead0",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "summer",
+      "name": "Summer",
+      "scenery": "summer",
+      "decoration": "decorations/summer.svg",
+      "window": null,
+      "palettes": {
+        "light": {
+          "chromeBg": "#147b86",
+          "subNavBg": "#147785",
+          "accent": "#116570",
+          "linkColor": "#116570",
+          "linkHoverColor": "#094b57",
+          "majorHeadingBg": "#fff0c9",
+          "majorHeadingTextColor": "#695224",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#154d59",
+          "subNavBg": "#226777",
+          "accent": "#6ecdd5",
+          "linkColor": "#90dbe2",
+          "linkHoverColor": "#c3f1ef",
+          "majorHeadingBg": "#494025",
+          "majorHeadingTextColor": "#f5e5b5",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "autumn",
+      "name": "Autumn",
+      "scenery": "autumn",
+      "decoration": "decorations/autumn.svg",
+      "window": null,
+      "palettes": {
+        "light": {
+          "chromeBg": "#946030",
+          "subNavBg": "#80602e",
+          "accent": "#80522b",
+          "linkColor": "#80522b",
+          "linkHoverColor": "#5b361d",
+          "majorHeadingBg": "#f4e6cb",
+          "majorHeadingTextColor": "#65482d",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#553925",
+          "subNavBg": "#704e2c",
+          "accent": "#d9ac74",
+          "linkColor": "#e6bb86",
+          "linkHoverColor": "#ffe0af",
+          "majorHeadingBg": "#493927",
+          "majorHeadingTextColor": "#efdab5",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "winter",
+      "name": "Winter",
+      "scenery": "winter",
+      "decoration": "decorations/winter.svg",
+      "window": null,
+      "palettes": {
+        "light": {
+          "chromeBg": "#4b6988",
+          "subNavBg": "#536c82",
+          "accent": "#3d5878",
+          "linkColor": "#3d5878",
+          "linkHoverColor": "#283f5b",
+          "majorHeadingBg": "#e5edf5",
+          "majorHeadingTextColor": "#3b526b",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#283d59",
+          "subNavBg": "#3b5573",
+          "accent": "#a2c5e8",
+          "linkColor": "#b0d4f2",
+          "linkHoverColor": "#d5eaff",
+          "majorHeadingBg": "#303f50",
+          "majorHeadingTextColor": "#d1e3f5",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "newyear",
+      "name": "New Year",
+      "scenery": "winter",
+      "decoration": "decorations/newyear.svg",
+      "window": [101, 131],
+      "palettes": {
+        "light": {
+          "chromeBg": "#344b75",
+          "subNavBg": "#4d5774",
+          "accent": "#394f79",
+          "linkColor": "#394f79",
+          "linkHoverColor": "#263558",
+          "majorHeadingBg": "#f6e9c2",
+          "majorHeadingTextColor": "#6b5422",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#202d4c",
+          "subNavBg": "#384562",
+          "accent": "#e7c478",
+          "linkColor": "#bdd1ef",
+          "linkHoverColor": "#e5edff",
+          "majorHeadingBg": "#4c4026",
+          "majorHeadingTextColor": "#f2db99",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "valentines",
+      "name": "Valentine’s",
+      "scenery": "winter",
+      "decoration": "decorations/valentines.svg",
+      "window": [201, 229],
+      "palettes": {
+        "light": {
+          "chromeBg": "#994561",
+          "subNavBg": "#9b526c",
+          "accent": "#8b3d59",
+          "linkColor": "#8b3d59",
+          "linkHoverColor": "#602139",
+          "majorHeadingBg": "#f9e3e9",
+          "majorHeadingTextColor": "#70384b",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#562b40",
+          "subNavBg": "#6f384e",
+          "accent": "#e6a5bb",
+          "linkColor": "#f0b6cc",
+          "linkHoverColor": "#ffe1eb",
+          "majorHeadingBg": "#4e303e",
+          "majorHeadingTextColor": "#f2c2d1",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "easter",
+      "name": "Spring Festival",
+      "scenery": "spring",
+      "decoration": "decorations/easter.svg",
+      "window": [315, 430],
+      "palettes": {
+        "light": {
+          "chromeBg": "#5d7351",
+          "subNavBg": "#687356",
+          "accent": "#4e6344",
+          "linkColor": "#4e6344",
+          "linkHoverColor": "#364830",
+          "majorHeadingBg": "#eee5f3",
+          "majorHeadingTextColor": "#614d6f",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#334a35",
+          "subNavBg": "#4c6042",
+          "accent": "#bdd89f",
+          "linkColor": "#c6dfb0",
+          "linkHoverColor": "#e6f1d3",
+          "majorHeadingBg": "#43394e",
+          "majorHeadingTextColor": "#deceed",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "midsummer",
+      "name": "Midsummer",
+      "scenery": "summer",
+      "decoration": "decorations/midsummer.svg",
+      "window": [601, 707],
+      "palettes": {
+        "light": {
+          "chromeBg": "#0e7379",
+          "subNavBg": "#277b79",
+          "accent": "#126970",
+          "linkColor": "#126970",
+          "linkHoverColor": "#064b51",
+          "majorHeadingBg": "#fff0ce",
+          "majorHeadingTextColor": "#765226",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#174d53",
+          "subNavBg": "#286666",
+          "accent": "#79ceca",
+          "linkColor": "#97e0d7",
+          "linkHoverColor": "#cef6e8",
+          "majorHeadingBg": "#51402b",
+          "majorHeadingTextColor": "#f4d9aa",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "harvest",
+      "name": "Harvest",
+      "scenery": "autumn",
+      "decoration": "decorations/harvest.svg",
+      "window": [901, 930],
+      "palettes": {
+        "light": {
+          "chromeBg": "#82713b",
+          "subNavBg": "#7b7238",
+          "accent": "#72602b",
+          "linkColor": "#72602b",
+          "linkHoverColor": "#52451e",
+          "majorHeadingBg": "#f4ebcc",
+          "majorHeadingTextColor": "#655126",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#46472b",
+          "subNavBg": "#60613a",
+          "accent": "#d8cc8c",
+          "linkColor": "#e3d597",
+          "linkHoverColor": "#fff0be",
+          "majorHeadingBg": "#47412b",
+          "majorHeadingTextColor": "#e9dfb4",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "halloween",
+      "name": "Halloween",
+      "scenery": "autumn",
+      "decoration": "decorations/halloween.svg",
+      "window": [1001, 1031],
+      "palettes": {
+        "light": {
+          "chromeBg": "#633957",
+          "subNavBg": "#774667",
+          "accent": "#754319",
+          "linkColor": "#754319",
+          "linkHoverColor": "#542c0e",
+          "majorHeadingBg": "#f9e2c8",
+          "majorHeadingTextColor": "#724316",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#382338",
+          "subNavBg": "#55354d",
+          "accent": "#e9ac68",
+          "linkColor": "#f2be88",
+          "linkHoverColor": "#ffe1b8",
+          "majorHeadingBg": "#503629",
+          "majorHeadingTextColor": "#f7d2a4",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "thanksgiving",
+      "name": "Thanksgiving",
+      "scenery": "autumn",
+      "decoration": "decorations/thanksgiving.svg",
+      "window": [1101, 1130],
+      "palettes": {
+        "light": {
+          "chromeBg": "#845133",
+          "subNavBg": "#905f35",
+          "accent": "#754b2e",
+          "linkColor": "#754b2e",
+          "linkHoverColor": "#51321e",
+          "majorHeadingBg": "#f4e6cc",
+          "majorHeadingTextColor": "#684a2c",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#4b3024",
+          "subNavBg": "#64422c",
+          "accent": "#dab38c",
+          "linkColor": "#e6c29d",
+          "linkHoverColor": "#ffe2bb",
+          "majorHeadingBg": "#4a392b",
+          "majorHeadingTextColor": "#eddbbc",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "christmas",
+      "name": "Christmas",
+      "scenery": "winter",
+      "decoration": "decorations/christmas.svg",
+      "window": [1201, 1231],
+      "palettes": {
+        "light": {
+          "chromeBg": "#286553",
+          "subNavBg": "#36735c",
+          "accent": "#265a49",
+          "linkColor": "#265a49",
+          "linkHoverColor": "#163e30",
+          "majorHeadingBg": "#f6e2dc",
+          "majorHeadingTextColor": "#743d34",
+          "subNavTextColor": "#ffffff"
+        },
+        "dark": {
+          "chromeBg": "#183c33",
+          "subNavBg": "#285443",
+          "accent": "#92d0ad",
+          "linkColor": "#afe0c2",
+          "linkHoverColor": "#d5f1df",
+          "majorHeadingBg": "#4e302f",
+          "majorHeadingTextColor": "#efc9bc",
+          "subNavTextColor": "#ffffff"
+        }
+      }
+    }
+  ]
+}

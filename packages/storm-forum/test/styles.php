@@ -5,6 +5,7 @@ XF::start('/app/forum');
 set_exception_handler(static function (Throwable $error): void { fwrite(STDERR, (string)$error . "\n"); exit(1); });
 $app = XF::setupApp('XF\Cli\App');
 $app->start();
+$catalog = \Storm\Forum\Service\ThemeCatalog::load(true);
 $console = require '/opt/storm-forum/runtime/console.php';
 require_once '/opt/storm-forum/runtime/style-archive.php';
 $check = static function (bool $condition, string $message): void { if (!$condition) { throw new RuntimeException($message); } };
@@ -36,14 +37,46 @@ $check($before == $app->db()->fetchOne('SELECT COUNT(*) FROM xf_style'), 'Repeat
 $check($app->options()->defaultStyleId == $map['light:christmas'], 'Import lost the active season');
 $check($app->db()->fetchOne('SELECT style_id FROM xf_user WHERE user_id = ?', $author->user_id) == $map['dark:halloween'], 'Import changed a member selection');
 foreach (['light', 'dark'] as $mode) {
-    foreach (['normal', 'halloween', 'christmas'] as $season) {
+    foreach (array_column($catalog['themes'], 'id') as $season) {
         $style = $app->em()->find('XF:Style', $map[$mode . ':' . $season]);
         $check($style->parent_id === $map['flexile-parent:' . $mode] && $style->user_selectable && !$style->enable_variations, 'Selectable style hierarchy is incorrect');
         $properties = $app->repository('XF:StyleProperty')->getEffectivePropertiesInStyle($style);
         $check($properties['contentBg']->getVariationValue('default') === ($mode === 'dark' ? '#2a2a2a' : '#ffffff'), 'Appearance palette did not reach the child');
         $check($properties['publicLogoUrl']->getVariationValue('default') === 'styles/storm/logo.svg', 'Logo property did not reach the child');
+        $theme = \Storm\Forum\Service\ThemeCatalog::theme($season);
+        $check($properties['chromeBg']->getVariationValue('default') === $theme['palettes'][$mode]['chromeBg'], 'Catalog palette did not reach the child');
+        $check((bool)$properties['flexile_show_header_content']->property_value, 'Header content setting is not inherited');
     }
 }
+$check(count(array_filter(array_keys($map), fn($key) => preg_match('/^(light|dark):/', $key))) === 28, 'Managed catalog does not contain 28 selectable styles');
+foreach (['light','dark'] as $mode) {
+    $follower = $app->em()->find('XF:Style', $map[$mode . ':auto']);
+    $check(!$app->finder('XF:StyleProperty')->where('style_id', $follower->style_id)->total(), 'Follower has local property snapshots');
+    $check(!$app->finder('XF:Template')->where('style_id', $follower->style_id)->total(), 'Follower has local template snapshots');
+}
+$author->style_id = $map['dark:auto']; $author->save();
+$policy = $app->service('Storm\Forum:SeasonPolicy');
+$applyPolicy = static function (string $season, bool $follow) use ($policy): bool {
+    $changed = $policy->apply($season, $follow);
+    stormConsoleCleanup();
+    return $changed;
+};
+$check($applyPolicy('halloween', true), 'Follower did not transition');
+$check($app->options()->defaultStyleId == $map['light:auto'], 'Calendar default does not follow stable style');
+$check(!$applyPolicy('halloween', true), 'Unchanged season rebuilt the style data');
+$check($applyPolicy('thanksgiving', true), 'Next festival did not transition');
+$darkFollower = $app->em()->find('XF:Style', $map['dark:auto']);
+$check($darkFollower->parent_id === $map['dark:thanksgiving'] && $author->style_id === $map['dark:auto'], 'Follower lost dark member selection');
+$effective = $app->repository('XF:StyleProperty')->getEffectivePropertiesInStyle($darkFollower);
+$check($effective['chromeBg']->getVariationValue('default') === \Storm\Forum\Service\ThemeCatalog::theme('thanksgiving')['palettes']['dark']['chromeBg'], 'Follower palette retained previous parent values');
+$brokenMap = $map; unset($brokenMap['dark:easter']);
+$app->registry()->set('stormForumStyles', $brokenMap);
+try { $applyPolicy('easter', false); throw new LogicException('Missing style was accepted'); }
+catch (RuntimeException $error) { $check(str_contains($error->getMessage(), 'missing'), 'Wrong missing-style error'); }
+$check($darkFollower->parent_id === $map['dark:thanksgiving'] && $app->options()->defaultStyleId == $map['light:auto'], 'Failed transition changed active appearance');
+$app->registry()->set('stormForumStyles', $map);
+$applyPolicy('christmas', false);
+$author->style_id = $map['dark:halloween']; $author->save();
 $dependencies = array_values(array_filter(json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true)['vendorDependencies'], fn($dependency) => $dependency['kind'] === 'style'));
 $darkFile = '/app/forum/' . $dependencies[1]['path'];
 $original = file_get_contents($darkFile);
@@ -72,4 +105,4 @@ $author->style_id = $selection;
 $author->save();
 $app->registry()->set('stormForumSeason', 'normal');
 $run();
-echo "Native Flexile migration, six palettes/logo properties, repeat import, member selection, seasonal default, and archive preflight passed.\n";
+echo "Native Flexile migration, 28 managed styles, inherited palettes/logo/header properties, stable followers, repeat import, member selection, fail-closed transition, and archive preflight passed.\n";

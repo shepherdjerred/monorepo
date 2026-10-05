@@ -1,0 +1,48 @@
+<div class="block flexile-visitorPanel">
+  <div class="block-container">
+    <xf:if is="$xf.visitor.user_id">
+      <div class="block-row flexile-visitorIdentity">
+        <xf:avatar user="$xf.visitor" size="s" />
+        <div>
+          <strong><xf:username user="$xf.visitor" /></strong
+          ><small>{{ user_title($xf.visitor) }}</small>
+        </div>
+      </div>
+      <div class="block-row">
+        <dl class="pairs pairs--justified">
+          <dt>{{ phrase('messages') }}</dt>
+          <dd>{$xf.visitor.message_count|number}</dd>
+        </dl>
+        <dl class="pairs pairs--justified">
+          <dt>{{ phrase('reaction_score') }}</dt>
+          <dd>{$xf.visitor.reaction_score|number}</dd>
+        </dl>
+        <dl class="pairs pairs--justified">
+          <dt>{{ phrase('trophy_points') }}</dt>
+          <dd>{$xf.visitor.trophy_points|number}</dd>
+        </dl>
+      </div>
+      <div class="block-footer">
+        <a href="{{ link('account') }}">{{ phrase('your_account') }}</a>
+      </div>
+      <xf:else />
+      <div class="block-row">
+        <strong>Welcome to The Storm</strong>
+        <p>Build, explore, and catch up with the community.</p>
+        <xf:if is="$xf.options.registrationSetup.enabled"
+          ><xf:button
+            href="{{ link('register') }}"
+            class="button--cta flexile-signupButton"
+            >{{ phrase('register') }}</xf:button
+          ></xf:if
+        >
+        <xf:button
+          href="{{ link('login') }}"
+          data-xf-click="overlay"
+          class="flexile-signupButton"
+          >{{ phrase('log_in') }}</xf:button
+        >
+      </div>
+    </xf:if>
+  </div>
+</div>

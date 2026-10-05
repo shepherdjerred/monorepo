@@ -159,6 +159,7 @@ try {
       "themes",
       "scripts",
       "test",
+      "assets",
       "package.json",
     ].flatMap((name) => [
       "-v",
@@ -171,7 +172,7 @@ try {
     "cp -R /private/upload/. /app/forum/ && cp /opt/storm-forum/runtime/config.php /app/forum/src/config.php && cp -R /opt/storm-forum/addon/Storm /app/forum/src/addons/Storm && mkdir -p /var/lib/storm-forum/internal_data /tmp/storm-forum && sleep infinity",
   ]);
   let ready = false;
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 120; attempt++) {
     const probe = Bun.spawn(
       [
         "docker",
@@ -190,7 +191,9 @@ try {
     await Bun.sleep(500);
   }
   if (!ready) {
-    throw new Error("Disposable database did not become ready");
+    throw new Error(
+      `Disposable database did not become ready:\n${await run(["logs", db])}`,
+    );
   }
   process.stdout.write("Installing XenForo in disposable containers...\n");
   await run([
@@ -291,21 +294,26 @@ try {
       "/opt/storm-forum/test/theme-build.php",
     ];
     const firstBuild = await run(themeBuildCommand);
-    const repeatBuild = await run(themeBuildCommand);
-    if (firstBuild !== repeatBuild) {
-      throw new Error("Native style archives changed across repeated builds");
-    }
-    process.stdout.write(repeatBuild);
-    if (exportDirectory !== undefined) {
+    const exportStyles = async (prefix: string) => {
+      if (exportDirectory === undefined) return;
       await mkdir(path.resolve(exportDirectory), { recursive: true });
       for (const mode of ["light", "dark"]) {
         await run([
           "cp",
           `${app}:/app/forum/vendor/flexile-storm-${mode}.zip`,
-          path.resolve(exportDirectory, `flexile-storm-${mode}.zip`),
+          path.resolve(exportDirectory, `${prefix}flexile-storm-${mode}.zip`),
         ]);
       }
+    };
+    await exportStyles("first-");
+    const repeatBuild = await run(themeBuildCommand);
+    await exportStyles("");
+    if (firstBuild !== repeatBuild) {
+      throw new Error(
+        `Native style archives changed across repeated builds:\n${firstBuild}\n${repeatBuild}`,
+      );
     }
+    process.stdout.write(repeatBuild);
     process.stdout.write(
       await run([
         "exec",
@@ -334,8 +342,8 @@ try {
     ]);
     await run([
       "cp",
-      path.resolve(import.meta.dirname, "../assets/spawn.jpg"),
-      `${app}:/app/forum/styles/storm/spawn.jpg`,
+      `${path.resolve(import.meta.dirname, "../assets")}/.`,
+      `${app}:/app/forum/styles/storm/`,
     ]);
     await run([
       "exec",

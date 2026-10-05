@@ -1,6 +1,6 @@
 // Flexile adaptation for The Storm. Required vendor attribution is retained.
 html {
-  background: @xf-pageBg;
+  background: #1b1b1b;
 }
 body {
   line-height: 1.4;
@@ -21,6 +21,7 @@ body {
   padding-bottom: 0;
 }
 .p-header-content {
+  position: relative;
   min-height: 80px;
   padding: 10px 0;
 }
@@ -37,12 +38,9 @@ body {
   object-fit: contain;
 }
 .flexile-headerContent {
+  .xf-flexile_header_content_style();
   margin-left: auto;
   max-width: 410px;
-  padding: 12px;
-  background: fade(#000, 13%);
-  border-top: 1px solid fade(#fff, 20%);
-  border-radius: 6px;
   color: #fff;
   font-style: italic;
   text-shadow: 0 1px darken(@xf-chromeBg, 15%);
@@ -183,36 +181,245 @@ body {
   border-radius: 4px;
 }
 .p-footer {
-  background: transparent;
-  color: @xf-textColorDimmed;
+  background: #1b1b1b;
+  border-top: 5px solid @xf-chromeBg;
+  color: #b7b7b7;
   font-size: 12px;
 }
 .p-footer a {
-  color: @xf-linkColor;
+  color: #d5d5d5;
 }
 .p-footer-inner {
-  border-top: 1px solid @xf-borderColor;
   padding-top: 15px;
+}
+.p-footer-copyright {
+  text-align: left;
 }
 .flexile-attribution {
   margin-top: 5px;
+}
+.p-header-content::after {
+  position: absolute;
+  left: 40%;
+  top: 5px;
+  width: 280px;
+  height: 86px;
+  transform: translateX(-50%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  pointer-events: none;
+}
+.p-staffBar {
+  background: #1b1b1b;
+  color: #ccc;
+  border-bottom: 1px solid @xf-chromeBg;
+}
+.p-staffBar-link {
+  color: #ddd;
+}
+.p-staffBar-link:hover {
+  color: #fff;
+  background: #303030;
+}
+.badgeContainer::after {
+  border-radius: 3px;
+}
+.p-navgroup {
+  border-radius: 4px 4px 0 0;
+  background: fade(#000, 12%);
+  border-top: 1px solid fade(#fff, 14%);
+}
+.p-navgroup-link {
+  color: #fff;
+  border-color: fade(#000, 12%);
+}
+.p-navgroup-link:hover,
+.p-navgroup-link.is-menuOpen {
+  background: fade(#000, 20%);
+}
+.p-navEl:not(.is-selected):hover {
+  background: fade(#000, 10%);
+}
+.p-navgroup-link--logIn,
+.p-navgroup-link--register {
+  font-weight: bold;
+}
+.p-breadcrumbs > li {
+  margin-right: 8px;
+}
+.p-breadcrumbs > li:last-child {
+  color: @xf-textColorDimmed;
+}
+.p-breadcrumbs--bottom {
+  margin-top: 20px;
+}
+.node-extra {
+  border-radius: 3px;
+  margin: 10px;
+  padding: 6px 10px;
+}
+.node-icon i {
+  border-radius: 5px;
+  padding: 5px;
+  background: @xf-contentHighlightBg;
+}
+.block-filterBar {
+  border-radius: 0 0 5px 5px;
+  background: @xf-contentAltBg;
+}
+.tabs {
+  min-height: 25px;
+}
+.tabs-tab {
+  font-weight: bold;
+}
+.tabs-tab.is-active {
+  border-bottom-color: @xf-linkColor;
+}
+.message-cell--user {
+  background: @xf-contentHighlightBg;
+}
+.message-user {
+  border: 1px solid @xf-borderColorLight;
+  border-radius: 5px;
+  padding: 10px;
+}
+.message-avatar {
+  margin-bottom: 8px;
+}
+.message-name {
+  font-size: 14px;
+  font-weight: bold;
+}
+.message-userExtras {
+  font-size: 11px;
+  margin-top: 10px;
+}
+.message-userArrow {
+  display: none;
+}
+.message-attribution {
+  font-size: 11px;
+  border-color: @xf-borderColorLight;
+}
+.fr-toolbar,
+.fr-second-toolbar {
+  background: @xf-contentAltBg;
+  border-color: @xf-borderColorLight;
+}
+.fr-toolbar .fr-command.fr-btn.fr-active {
+  background: @xf-contentHighlightBg;
+  color: @xf-linkColor;
+}
+.fr-box.fr-basic .fr-wrapper {
+  border-color: @xf-borderColorLight;
+}
+.input {
+  border-radius: 4px;
+}
+.input:focus,
+.input.is-focused {
+  border-color: @xf-linkColor;
+  box-shadow: 0 0 3px fade(@xf-linkColor, 40%);
+}
+.formRow-label {
+  font-weight: bold;
+}
+.formRow-explain {
+  font-size: 12px;
+}
+.menu-content,
+.overlay {
+  border-radius: 6px;
+  border-color: @xf-borderColor;
+}
+.menu-header,
+.overlay-title {
+  font-family: Georgia, "Times New Roman", serif;
+}
+.menu-linkRow:hover {
+  background: @xf-contentHighlightBg;
+}
+.menu-linkRow.is-selected {
+  color: @xf-linkColor;
+  background: @xf-contentHighlightBg;
+}
+.flexile-visitorIdentity {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.flexile-visitorIdentity small {
+  display: block;
+  margin-top: 3px;
+}
+.flexile-signupButton {
+  width: 100%;
+  margin-top: 8px;
+}
+.flexile-visitorPanel .pairs {
+  margin: 3px 0;
+}
+.button--cta {
+  box-shadow: 1px 1px 5px fade(#000, 15%);
+}
+.memberHeader-main {
+  background: @xf-contentHighlightBg;
 }
 :focus-visible {
   outline: 2px solid @xf-linkColor;
   outline-offset: 3px;
 }
 @media (max-width: @xf-responsiveWide) {
+  .p-header-content::after {
+    left: 37%;
+    width: 220px;
+  }
   .flexile-headerContent {
     max-width: 330px;
     font-size: 12px;
   }
 }
 @media (max-width: @xf-responsiveMedium) {
-  .flexile-headerContent {
+  .p-header,
+  html.has-js .p-header {
+    display: block;
+  }
+  .p-nav-smallLogo {
     display: none;
+  }
+  .flexile-headerContent {
+    display: block;
+    order: 2;
+    margin: 8px 0 0;
+    max-width: 100%;
+    text-align: center;
   }
   .p-header-content {
     min-height: 70px;
+    flex-direction: column;
+    align-items: center;
+  }
+  .p-header-content::after {
+    position: static;
+    order: 1;
+    transform: none;
+    width: 240px;
+    height: 48px;
+  }
+  .message-user {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border: 0;
+    padding: 0;
+  }
+  .message-userDetails {
+    text-align: left;
+  }
+  .message-avatar {
+    margin-bottom: 0;
   }
   .p-header-logo img {
     max-height: 50px;

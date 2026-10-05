@@ -22,10 +22,13 @@ version, appearance, native export format, and exact XenForo base version.
 Both archives pass preflight before installation or either parent import.
 Keep the Audentio attribution in the footer when changing the adaptation.
 
-The six selectable Storm styles inherit from hidden light and dark Flexile
-parents and add the normal, Halloween, and Christmas branding. Import preserves
-their existing IDs, members' selections, and the active seasonal default. Legacy
-parents and unrelated styles are retained.
+The 26 static Storm styles inherit from hidden light and dark Flexile parents.
+`config/themes.json` owns the Classic, four seasons, and eight festival palettes,
+scenery, decorations, and Pacific calendar windows. Two stable Follow calendar
+styles inherit from the effective seasonal children without copying their values.
+The native chooser saves appearance and theme through XenForo's existing member
+preferences or guest cookies. Import preserves the original six IDs, members'
+selections, and the active default. Legacy parents and unrelated styles are retained.
 
 Private bundles live in the protected `storm-forum-releases` bucket. Each release
 references an immutable object key and SHA-256. Init downloads and verifies the
@@ -59,8 +62,13 @@ recent-thread widget query only public forums.
 ## Configuration and bootstrap
 
 Product behavior uses typed configuration and the managed `storm` feature flag
-namespace. Registration defaults closed. The season flag chooses the default
-light seasonal style; members' explicit style choices remain intact. The
+namespace. Registration defaults closed. The season flag accepts `auto` or a
+catalog ID; the calendar flag defaults off and targets beta by stage. Automatic
+selection uses long festival windows and seasonal gaps in America/Los_Angeles.
+The existing minute-by-minute Temporal housekeeping activity reparents followers
+only when the effective theme changes. A named operator override also controls
+followers; members' explicit themes remain intact. Existing live manual flag
+values are preserved until deliberately changed. The
 manifest owns native XenForo settings and the direct Minecraft service address.
 The status activity reads only the exact Minecraft StatefulSet and pings its
 backend, preserving server hibernation. Public caches contain counts, never
@@ -132,8 +140,9 @@ Docker context. The theme source and builder are version-controlled.
 The integration harness uses random credentials and isolated, disposable Docker
 containers. It exercises actual XenForo entities, repeated configuration, private
 support, new-account restrictions, and promotion criteria. Theme builds also
-exercise six palettes, parent migration, repeated imports, preserved member
-choices, seasonal defaults, and rejection of altered or incompatible archives.
+exercise all 28 managed styles, parent migration, inherited palettes, repeated
+imports, preserved member choices, follower transitions and rejection of missing
+styles or altered/incompatible archives.
 The optional preview
 binds only localhost. Ctrl-C removes its exact containers and network.
 `scripts/local-backup-test.ts` takes that harness's explicit application container

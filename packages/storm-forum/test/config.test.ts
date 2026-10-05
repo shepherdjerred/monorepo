@@ -3,6 +3,7 @@ import {
   createForumConfig,
   forumManifest,
   ManifestSchema,
+  forumFlagOptions,
 } from "#src/config.ts";
 describe("forum configuration contracts", () => {
   it("requires both appearance archives with immutable checksums", () => {
@@ -65,5 +66,41 @@ describe("forum configuration contracts", () => {
       get: () => Promise.resolve({ value: "unknown" }),
     });
     await expect(config.value("season")).rejects.toThrow();
+  });
+  it("uses safe defaults on absence or source outage, and preserves explicit false provenance", async () => {
+    const absent = createForumConfig({
+      name: "flag",
+      get: () => Promise.resolve(undefined),
+    });
+    expect(await absent.value("season")).toBe("auto");
+    expect(await absent.value("calendarEnabled")).toBe(false);
+    const outage = createForumConfig({
+      name: "flag",
+      get: () => Promise.reject(new Error("unavailable")),
+    });
+    expect(await outage.value("calendarEnabled")).toBe(false);
+    const explicit = createForumConfig({
+      name: "flag",
+      get: () => Promise.resolve({ value: false }),
+    });
+    expect(await explicit.get("calendarEnabled")).toMatchObject({
+      value: false,
+      source: "flag",
+    });
+    const invalid = createForumConfig({
+      name: "flag",
+      get: () => Promise.resolve({ value: "false" }),
+    });
+    await expect(invalid.value("calendarEnabled")).rejects.toThrow();
+  });
+  it("targets each stage while preserving the existing entity key", () => {
+    expect(forumFlagOptions("beta")).toMatchObject({
+      targetingKey: "storm-forum",
+      attributes: { stage: "beta" },
+    });
+    expect(forumFlagOptions("prod")).toMatchObject({
+      targetingKey: "storm-forum",
+      attributes: { stage: "prod" },
+    });
   });
 });

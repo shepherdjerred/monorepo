@@ -23,8 +23,24 @@ foreach (['light', 'dark'] as $mode) {
     $dark = $mode === 'dark';
     $title = 'Flexile · The Storm · ' . ucfirst($mode);
     $style = $app->finder('XF:Style')->where('title', $title)->fetchOne() ?: $app->em()->create('XF:Style');
-    $style->bulkSet(['title'=>$title,'description'=>'Private Flexile adaptation for The Storm, version 1.0.0.','parent_id'=>1,'user_selectable'=>false,'enable_variations'=>false]);
+    $style->bulkSet(['title'=>$title,'description'=>'Private Flexile adaptation for The Storm, version 2.0.0.','parent_id'=>1,'user_selectable'=>false,'enable_variations'=>false]);
     $style->save();
+    $group = $app->finder('XF:StylePropertyGroup')->where(['style_id'=>$style->style_id,'group_name'=>'flexile'])->fetchOne() ?: $app->em()->create('XF:StylePropertyGroup');
+    $group->bulkSet(['style_id'=>$style->style_id,'group_name'=>'flexile','title'=>'Flexile','display_order'=>1,'addon_id'=>'']);
+    $group->save();
+    $custom = [
+        'flexile_show_header_content'=>['Show header content','boolean',1],
+        'flexile_header_content'=>['Header content (HTML)','string','<p>A place to build, explore, and catch up.<br /><strong>Join: ts-mc.net</strong></p>'],
+        'flexile_primaryBorderColor'=>['Primary border color','color','@xf-borderColor'],
+        'flexile_header_content_style'=>['Header content box','css',['background-color'=>'fade(#000, 13%)','border-top-width'=>'1px','border-top-color'=>'fade(#fff, 20%)','border-radius'=>'6px','padding'=>'12px']],
+    ];
+    foreach ($custom as $name=>[$label,$type,$value]) {
+        $property = $app->finder('XF:StyleProperty')->where(['style_id'=>$style->style_id,'property_name'=>$name])->fetchOne() ?: $app->em()->create('XF:StyleProperty');
+        $property->bulkSet(['style_id'=>$style->style_id,'property_name'=>$name,'group_name'=>'flexile','title'=>$label,'property_type'=>$type === 'css' ? 'css' : 'value',
+            'value_type'=>$type === 'css' ? '' : $type,'css_components'=>$type === 'css' ? ['text','background','border','border_radius','padding','extra'] : [],
+            'property_value'=>$value,'has_variations'=>false,'addon_id'=>'']);
+        $property->save();
+    }
     // Native property writes require the inherited map, rebuilt asynchronously by normal ACP requests.
     $app->service('XF:StyleProperty\Rebuild')->rebuildFullPropertyMap();
     $properties = [];
@@ -51,6 +67,7 @@ foreach (['light', 'dark'] as $mode) {
         'publicSubNavPaddingV' => '8px',
         'publicNavSticky' => 'primary',
         'blockBorderRadius' => '6px',
+        'avatarBorderRadius' => '5px',
     ];
     $colors = [
         'paletteColor1' => $dark?'#c5efe6':'#f0fcf9',
@@ -92,19 +109,21 @@ foreach (['light', 'dark'] as $mode) {
     if ($unknown = array_diff(array_keys($properties), array_keys($known))) { throw new RuntimeException('Unknown native properties: ' . implode(', ', $unknown)); }
     $app->repository('XF:StyleProperty')->updatePropertyValues($style, $properties);
     $updateTemplate($style, 'storm_flexile.less', file_get_contents(__DIR__ . '/flexile.less'));
+    $updateTemplate($style, 'storm_flexile_visitor', file_get_contents(__DIR__ . '/visitor.html'));
     $old = $app->finder('XF:Template')->where(['style_id'=>$style->style_id,'type'=>'public','title'=>'extra.less'])->fetchOne();
     if ($old) { $old->delete(); }
     $page = $app->finder('XF:Template')->where(['style_id'=>0,'type'=>'public','title'=>'PAGE_CONTAINER'])->fetchOne()->template;
     $page = str_replace('</head>', '<xf:css src="storm_flexile.less" />' . "\n</head>", $page, $headCount);
-    $header = '<div class="flexile-headerContent"><p>A place to build, explore, and catch up.<br /><strong>Join: ts-mc.net</strong></p></div>';
+    $header = '<xf:if is="property(\'flexile_show_header_content\')"><div class="flexile-headerContent">{{ property(\'flexile_header_content\')|raw }}</div></xf:if>';
     $page = str_replace('<xf:ad position="container_header" />', $header . "\n\t\t\t<xf:ad position=\"container_header\" />", $page, $headerCount);
     $branding = '<div class="flexile-attribution">An Audentio Design design creation. · Adapted for The Storm</div>';
     $page = str_replace("{{ phrase('extra_copyright') }}", "{{ phrase('extra_copyright') }}\n" . $branding, $page, $footerCount);
-    if ($headCount !== 1 || $headerCount !== 1 || $footerCount !== 1) { throw new RuntimeException('Native template anchors changed'); }
+    $page = str_replace('<xf:ad position="container_sidebar_above" />', '<xf:include template="storm_flexile_visitor" />' . "\n" . '<xf:ad position="container_sidebar_above" />', $page, $sidebarCount);
+    if ($headCount !== 1 || $headerCount !== 1 || $footerCount !== 1 || $sidebarCount !== 1) { throw new RuntimeException('Native template anchors changed'); }
     $updateTemplate($style, 'PAGE_CONTAINER', $page, 'XF');
     $export = $app->service('XF:Style\Export', $style);
     $document = $export->exportToXml();
-    $document->documentElement->setAttribute('storm_flexile_version','1.0.0');
+    $document->documentElement->setAttribute('storm_flexile_version','2.0.0');
     $document->documentElement->setAttribute('storm_flexile_mode',$mode);
     $zip = new ZipArchive();
     $file = $destination . '/flexile-storm-' . $mode . '.zip';
