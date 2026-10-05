@@ -26,7 +26,7 @@ vi.mock("./match-data-fetcher.ts", () => ({
 }));
 
 const {
-  fetchTimelineForDareV2,
+  fetchTimelineForDare,
   fetchTimelineForDuelProgression,
   fetchTimelineForProgression,
   fetchTimelineIfStandardMatch,
@@ -103,7 +103,7 @@ describe("timelines for client-sourced matches", () => {
     const matchId = MatchIdSchema.parse(fixture.match.metadata.matchId);
 
     await expect(
-      fetchTimelineForDareV2(fixture.match, matchId, fixture.players),
+      fetchTimelineForDare(fixture.match, matchId, fixture.players),
     ).resolves.toBe(clientTimeline);
     expect(mocks.record).toHaveBeenCalledWith(
       expect.objectContaining({
