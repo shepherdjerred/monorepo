@@ -26,8 +26,8 @@ describe("NdjsonFileWriter", () => {
     const dir = await makeTempDir();
     const filePath = path.join(dir, "rows.ndjson");
     const writer = new NdjsonFileWriter(filePath);
-    writer.write({ id: 1 });
-    writer.write({ id: 2 });
+    await writer.write({ id: 1 });
+    await writer.write({ id: 2 });
     await writer.close();
 
     const contents = await readFile(filePath, "utf8");
@@ -44,10 +44,8 @@ describe("NdjsonFileWriter", () => {
     try {
       const writer = new NdjsonFileWriter("/dev/full");
       for (let i = 0; i < 2000; i += 1) {
-        writer.write({ id: i });
+        await writer.write({ id: i });
       }
-      // Let a backpressure rejection land before close() checks for it.
-      await new Promise((resolve) => setTimeout(resolve, 0));
       await writer.close();
     } catch (error_) {
       error = error_;
@@ -57,25 +55,65 @@ describe("NdjsonFileWriter", () => {
     );
   });
 
-  test("a synchronous flush failure throws the contextual error", () => {
-    const writer = new NdjsonFileWriter("test.ndjson", failingSink("sync"));
-    expect(() => {
-      for (let i = 0; i < 2000; i += 1) {
-        writer.write({ id: i });
-      }
-    }).toThrow(/^Report-lake NDJSON write failed \(ENOSPC\)/);
+  test.each(["sync", "async", "flush"] as const)(
+    "a %s failure aborts the awaited write with the contextual error",
+    async (mode) => {
+      const writer = new NdjsonFileWriter("test.ndjson", failingSink(mode));
+      const writeRows = async () => {
+        for (let i = 0; i < 2000; i += 1) {
+          await writer.write({ id: i });
+        }
+      };
+      await expect(writeRows()).rejects.toThrow(
+        /^Report-lake NDJSON write failed \(ENOSPC\)/,
+      );
+    },
+  );
+
+  test("large Unicode documents drain before the row limit, preserving every row", async () => {
+    const chunks: string[] = [];
+    const writer = new NdjsonFileWriter("test.ndjson", recordingSink(chunks));
+    const rows = Array.from({ length: 32 }, (_, id) => ({
+      id,
+      document_json: "界".repeat(100_000),
+    }));
+    for (const row of rows) await writer.write(row);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(
+      chunks.every((chunk) => Buffer.byteLength(chunk) <= 1024 * 1024),
+    ).toBe(true);
+    await writer.close();
+    expect(chunks.join("")).toBe(
+      rows.map((row) => `${JSON.stringify(row)}\n`).join(""),
+    );
+    expect(writer.rows).toBe(rows.length);
   });
 
-  test("a backpressure rejection surfaces once, on the next flush or close", async () => {
-    const writer = new NdjsonFileWriter("test.ndjson", failingSink("async"));
-    for (let i = 0; i < 2000; i += 1) {
-      writer.write({ id: i });
-    }
-    // Let the rejection handler run before close() checks for it.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await expect(writer.close()).rejects.toThrow(
-      /^Report-lake NDJSON write failed \(ENOSPC\)/,
-    );
+  test("an oversized document waits for disk backpressure before its producer continues", async () => {
+    const chunks: string[] = [];
+    const draining = Promise.withResolvers<number>();
+    const started = Promise.withResolvers<undefined>();
+    const sink = recordingSink(chunks);
+    sink.flush = () => {
+      started.resolve(undefined);
+      return draining.promise;
+    };
+    const writer = new NdjsonFileWriter("test.ndjson", sink);
+    await writer.write({ id: "small" });
+    const large = { document_json: "x".repeat(2 * 1024 * 1024) };
+    let continued = false;
+    const writing = (async () => {
+      await writer.write(large);
+      continued = true;
+    })();
+    await started.promise;
+    expect(continued).toBe(false);
+    expect(chunks).toEqual(['{"id":"small"}\n']);
+    draining.resolve(0);
+    await writing;
+    expect(chunks).toEqual(['{"id":"small"}\n', `${JSON.stringify(large)}\n`]);
+    expect(continued).toBe(true);
+    await writer.close();
   });
 
   test("a failing end() surfaces the contextual error on close", async () => {
@@ -83,7 +121,7 @@ describe("NdjsonFileWriter", () => {
       "test.ndjson",
       failingSink("ok", { failEnd: true }),
     );
-    writer.write({ id: 1 });
+    await writer.write({ id: 1 });
     await expect(writer.close()).rejects.toThrow(
       /^Report-lake NDJSON write failed \(ENOSPC\)/,
     );
@@ -99,7 +137,7 @@ function quilErrorMessage(error: unknown): string {
 }
 
 function failingSink(
-  mode: "sync" | "async" | "ok",
+  mode: "sync" | "async" | "flush" | "ok",
   options: { failEnd?: boolean } = {},
 ): NdjsonSink {
   const failure = Object.assign(new Error("ENOSPC: no space left on device"), {
@@ -114,12 +152,26 @@ function failingSink(
         case "async": {
           return Promise.reject(failure);
         }
+        case "flush":
         case "ok": {
           return 0;
         }
       }
     },
+    flush: () => (mode === "flush" ? Promise.reject(failure) : 0),
     end: () =>
       options.failEnd === true ? Promise.reject(failure) : Promise.resolve(0),
+  };
+}
+
+function recordingSink(chunks: string[]): NdjsonSink {
+  return {
+    write: (data) => {
+      if (typeof data !== "string") throw new Error("expected a JSON string");
+      chunks.push(data);
+      return Buffer.byteLength(data);
+    },
+    flush: () => 0,
+    end: () => 0,
   };
 }

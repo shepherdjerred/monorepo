@@ -107,6 +107,11 @@ the voice runtime and its additional memory reservation; application pods
 do not reserve that voice share again. Both roles retain their separate
 DuckDB scratch space and process memory limits.
 
+Report-lake rebuilds buffer at most 1 MiB of NDJSON per writer, except for a
+single oversized document, which is drained immediately. Every producer awaits
+disk backpressure before writing more rows, including the raw source documents
+needed to rebuild the lake.
+
 ### Durable Temporal work
 
 Community MVP votes commit a `MatchMvpTallyRefresh` row in the same database

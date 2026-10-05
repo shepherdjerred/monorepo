@@ -63,7 +63,7 @@ export async function writeFoldParquet(
     await mkdir(monthDir, { recursive: true });
     const tmpPath = path.join(buildDir, `${table}-${month}-fold.ndjson.tmp`);
     const writer = new NdjsonFileWriter(tmpPath);
-    for (const row of rows) writer.write(row);
+    for (const row of rows) await writer.write(row);
     await writer.close();
     const parquetPath = path.join(monthDir, `fold-${buildId}.parquet`);
     try {

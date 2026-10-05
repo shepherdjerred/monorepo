@@ -18,7 +18,7 @@ export async function writeAccountsParquet(
   const accounts = await prisma.account.findMany({ include: { player: true } });
   const tmpPath = path.join(buildDir, "accounts.ndjson.tmp");
   const writer = new NdjsonFileWriter(tmpPath);
-  for (const account of accounts) writer.write(accountToLakeRow(account));
+  for (const account of accounts) await writer.write(accountToLakeRow(account));
   await writer.close();
 
   const accountsDir = path.join(buildDir, "accounts");

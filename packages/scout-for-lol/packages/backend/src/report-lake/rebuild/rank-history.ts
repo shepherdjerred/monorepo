@@ -78,7 +78,7 @@ export async function populateCompetitionRankHistoryFromS3(options: {
           });
           continue;
         }
-        writeSnapshot(options, snapshot);
+        await writeSnapshot(options, snapshot);
       }
     }
 
@@ -88,12 +88,12 @@ export async function populateCompetitionRankHistoryFromS3(options: {
   return skipped;
 }
 
-function writeSnapshot(
+async function writeSnapshot(
   options: Parameters<typeof populateCompetitionRankHistoryFromS3>[0],
   snapshot: NonNullable<Awaited<ReturnType<typeof readLeaderboard>>>,
 ) {
   for (const row of flattenCompetitionRankHistory(snapshot.leaderboard))
-    options.writer.write(row);
+    await options.writer.write(row);
   options.foldedIds?.add(
     stagingIdForCompetitionRankHistory(
       snapshot.leaderboard.competitionId,

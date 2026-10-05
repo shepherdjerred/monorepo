@@ -4,6 +4,8 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("report-lake-ndjson");
 
 const ErrorCodeSchema = z.object({ code: z.string() });
+const MAX_BUFFERED_BYTES = 1024 * 1024;
+const MAX_BUFFERED_ROWS = 2000;
 
 function writeErrorCode(error: unknown): string {
   const parsed = ErrorCodeSchema.safeParse(error);
@@ -14,19 +16,17 @@ function writeErrorCode(error: unknown): string {
  * Buffered newline-delimited-JSON file writer used by the report-lake rebuild
  * to stream flattened rows to a temp file before the DuckDB COPY step.
  *
- * Write failures fail the rebuild fast with a single error. The previous
- * fire-and-forget flush turned one full disk into thousands of
- * unhandled-rejection Sentry events while the rebuild kept "writing" into
- * the void and published truncated output.
+ * Buffers are byte-bounded because raw document rows can contain entire Riot
+ * timelines. Producers await writes so disk backpressure bounds the sink's
+ * buffers too, and a write failure aborts before publishing truncated output.
  */
 /** The `Bun.FileSink` surface the writer uses; injectable for tests. */
-export type NdjsonSink = Pick<Bun.FileSink, "write" | "end">;
+export type NdjsonSink = Pick<Bun.FileSink, "write" | "flush" | "end">;
 
 export class NdjsonFileWriter {
   private readonly writer: NdjsonSink;
   private buffered: string[] = [];
-  private asyncWriteError: unknown = undefined;
-  private hasAsyncWriteError = false;
+  private bufferedBytes = 0;
   rows = 0;
 
   constructor(
@@ -34,23 +34,28 @@ export class NdjsonFileWriter {
     writer?: NdjsonSink,
   ) {
     try {
-      this.writer = writer ?? Bun.file(filePath).writer();
+      this.writer =
+        writer ??
+        Bun.file(filePath).writer({ highWaterMark: MAX_BUFFERED_BYTES });
     } catch (error) {
       throw this.describeWriteError(error);
     }
   }
 
-  write(row: object): void {
-    this.buffered.push(JSON.stringify(row));
-    this.rows += 1;
-    if (this.buffered.length >= 2000) {
-      this.flush();
+  async write(row: object): Promise<void> {
+    const data = JSON.stringify(row);
+    const bytes = Buffer.byteLength(data, "utf8") + 1;
+    if (this.bufferedBytes + bytes > MAX_BUFFERED_BYTES) {
+      await this.flush();
     }
-  }
-
-  private throwIfWriteFailed(): void {
-    if (this.hasAsyncWriteError) {
-      throw this.describeWriteError(this.asyncWriteError);
+    this.buffered.push(data);
+    this.bufferedBytes += bytes;
+    this.rows += 1;
+    if (
+      this.bufferedBytes >= MAX_BUFFERED_BYTES ||
+      this.buffered.length >= MAX_BUFFERED_ROWS
+    ) {
+      await this.flush();
     }
   }
 
@@ -65,39 +70,23 @@ export class NdjsonFileWriter {
     );
   }
 
-  private flush(): void {
-    this.throwIfWriteFailed();
+  private async flush(): Promise<void> {
     if (this.buffered.length === 0) {
       return;
     }
     const data = `${this.buffered.join("\n")}\n`;
     this.buffered = [];
-    let result: number | Promise<number>;
+    this.bufferedBytes = 0;
     try {
-      result = this.writer.write(data);
+      await this.writer.write(data);
+      await this.writer.flush();
     } catch (error) {
       throw this.describeWriteError(error);
-    }
-    if (result instanceof Promise) {
-      // Backpressure path: without a rejection handler this surfaces as an
-      // unhandled rejection per flush. Capture the first failure and rethrow
-      // it on the next flush or close so the rebuild aborts instead.
-      const pending = result;
-      void (async () => {
-        try {
-          await pending;
-        } catch (error) {
-          if (!this.hasAsyncWriteError) {
-            this.hasAsyncWriteError = true;
-            this.asyncWriteError = error;
-          }
-        }
-      })();
     }
   }
 
   async close(): Promise<void> {
-    this.flush();
+    await this.flush();
     try {
       await this.writer.end();
     } catch (error) {

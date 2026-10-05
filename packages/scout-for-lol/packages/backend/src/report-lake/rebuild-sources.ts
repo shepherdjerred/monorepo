@@ -138,15 +138,15 @@ export async function populateMatchesFromS3(
         continue;
       }
       const { match } = result;
-      options.rawWriter?.write(result.raw);
+      await options.rawWriter?.write(result.raw);
       for (const row of flattenMatch(match)) {
-        writer.write(row);
+        await writer.write(row);
       }
       for (const row of flattenMatchTeams(match)) {
-        options.teamWriter.write(row);
+        await options.teamWriter.write(row);
       }
       for (const row of flattenMatchTeamBans(match)) {
-        options.teamBanWriter.write(row);
+        await options.teamBanWriter.write(row);
       }
       foldedIds.add(stagingIdForMatch(match.metadata.matchId));
       options.foldedSources?.add(result.source);
@@ -359,16 +359,18 @@ export async function populateTimelinesFromS3(options: {
       // Candidates arrive newest-first, so the first one seen is the winner.
       if (emitted.has(result.timeline.metadata.matchId)) continue;
       emitted.add(result.timeline.metadata.matchId);
-      options.writers.rawWriter?.write(result.raw);
+      await options.writers.rawWriter?.write(result.raw);
       const flattened = flattenTimeline(result.timeline, result.observedAt);
-      for (const row of flattened.events) options.writers.events.write(row);
+      for (const row of flattened.events)
+        await options.writers.events.write(row);
       for (const row of flattened.eventParticipants) {
-        options.writers.eventParticipants.write(row);
+        await options.writers.eventParticipants.write(row);
       }
       for (const row of flattened.participantFrames) {
-        options.writers.participantFrames.write(row);
+        await options.writers.participantFrames.write(row);
       }
-      for (const row of flattened.coverage) options.writers.coverage.write(row);
+      for (const row of flattened.coverage)
+        await options.writers.coverage.write(row);
       options.foldedIds.add(
         stagingIdForTimeline(result.timeline.metadata.matchId),
       );
@@ -474,9 +476,9 @@ export async function populatePrematchFromS3(
       // belongs to. That is exactly the ambiguity qualification removed, so
       // grouping on the key would have to guess it back.
       if (foldedIds.has(stagingId)) continue;
-      options.rawWriter?.write(result.raw);
+      await options.rawWriter?.write(result.raw);
       for (const row of flattenPrematch(result.gameInfo, result.observedAt)) {
-        writer.write(row);
+        await writer.write(row);
       }
       foldedIds.add(stagingId);
       options.foldedSources?.add(result.source);
