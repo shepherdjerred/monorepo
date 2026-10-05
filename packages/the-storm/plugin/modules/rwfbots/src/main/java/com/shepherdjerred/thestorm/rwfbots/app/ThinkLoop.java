@@ -11,9 +11,10 @@ import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Tactics;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsState;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
-import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotFit;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamBrain;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPlan;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
@@ -52,6 +53,9 @@ public final class ThinkLoop {
 
   /** A layer that has never run. */
   static final long NEVER = Long.MIN_VALUE;
+
+  /** Mixed into a bot's seed for its match-long route noise and quirk timing. */
+  static final long ROUTE_SALT = 0x5EED_0F_A11L;
 
   private final ComputePool compute;
   private final ThinkRates rates;
@@ -229,7 +233,8 @@ public final class ThinkLoop {
     long lastPerceived = NEVER;
     long lastThought = NEVER;
 
-    Mind(BotProfile profile, NavArtifact nav, int epoch) {
+    Mind(BotProfile profile, Match match, int epoch) {
+      var nav = match.nav();
       this.profile = profile;
       this.epoch = epoch;
       this.perception =
@@ -240,15 +245,20 @@ public final class ThinkLoop {
               nav,
               profile.levers(),
               profile.style(),
-              profile.kit().hasGapples(),
-              profile.kit().hasAbility());
+              profile.kit(),
+              profile.archetype(),
+              profile.quirks(),
+              seed(match.seed(), profile.id().value(), ROUTE_SALT));
       this.tacticsState = TacticsState.fresh(epoch);
     }
 
-    /** A new life: the plan is dropped, what the bot remembers of the enemy is kept. */
+    /**
+     * A new life: the plan is dropped, what the bot remembers of the enemy and its Time Machine's
+     * cooldown are kept.
+     */
     void newLife(int newEpoch) {
       epoch = newEpoch;
-      tacticsState = TacticsState.fresh(newEpoch);
+      tacticsState = tacticsState.nextLife(newEpoch);
       decision = null;
     }
   }
@@ -298,7 +308,7 @@ public final class ThinkLoop {
         perceive(cycle, mind);
       }
       for (var team : teams.values()) {
-        teamStep(team, snapshot, cycle.multiplier());
+        teamStep(cycle, team);
       }
       for (var mind : active) {
         decide(cycle, mind);
@@ -312,6 +322,8 @@ public final class ThinkLoop {
       }
       var elapsed = nanoClock.getAsLong() - started;
       stats.record(elapsed);
+      var plans = new HashMap<TeamId, TeamPlan>();
+      teams.forEach((id, team) -> plans.put(id, team.board.plan()));
       var live = match;
       if (live != null && live.generation() == current.generation()) {
         outbox.set(
@@ -321,7 +333,8 @@ public final class ThinkLoop {
                 elapsed,
                 counters.perceived,
                 counters.thought,
-                counters.deferred));
+                counters.deferred,
+                plans));
       }
     }
 
@@ -337,7 +350,7 @@ public final class ThinkLoop {
         var mind = minds.get(profile.id());
         var epoch = epoch(profile.id());
         if (mind == null || !mind.profile.equals(profile)) {
-          mind = new Mind(profile, current.nav(), epoch);
+          mind = new Mind(profile, current, epoch);
           minds.put(profile.id(), mind);
         } else if (mind.epoch != epoch) {
           mind.newLife(epoch);
@@ -417,13 +430,10 @@ public final class ThinkLoop {
               randomFor(current, mind.profile.id(), snapshot.tick() + 1));
     }
 
-    private void teamStep(Team team, WorldSnapshot snapshot, int multiplier) {
-      var period = rates.teamEveryTicks() * multiplier;
-      if (!due(team.lastTick, snapshot.tick(), period)) {
-        return;
-      }
-      team.lastTick = snapshot.tick();
-      var weights = new HashMap<CombatantId, Map<Role, Double>>();
+    private void teamStep(Cycle cycle, Team team) {
+      var snapshot = cycle.snapshot();
+      var period = rates.teamEveryTicks() * cycle.multiplier();
+      var members = new HashMap<CombatantId, SlotFit.Member>();
       var views = new ArrayList<CombatantView>();
       for (var profile : profiles()) {
         if (!profile.team().equals(team.board.team())) {
@@ -432,14 +442,25 @@ public final class ThinkLoop {
         var view = snapshot.combatant(profile.id());
         if (view.isPresent() && view.orElseThrow().alive()) {
           views.add(view.orElseThrow());
-          weights.put(profile.id(), profile.roleWeights());
+          members.put(
+              profile.id(),
+              new SlotFit.Member(
+                  profile.archetype(), profile.quirks(), profile.roleWeights(), profile.kit()));
         }
       }
-      if (views.isEmpty()) {
+      // A bot that joined since the last deal must get a slot before it thinks.
+      var unassigned = !team.board.plan().assignment().keySet().containsAll(members.keySet());
+      if (views.isEmpty() || (!unassigned && !due(team.lastTick, snapshot.tick(), period))) {
         return;
       }
+      team.lastTick = snapshot.tick();
+      var current = cycle.current();
       team.board =
-          TeamBrain.tick(team.board, new TeamBrain.TeamSituation(snapshot, views, weights));
+          TeamBrain.tick(
+              team.board,
+              new TeamBrain.TeamSituation(current.nav(), snapshot, views, members),
+              new SplittableRandom(
+                  seed(current.seed(), team.board.team().value().hashCode(), snapshot.tick())));
     }
 
     private void decide(Cycle cycle, Mind mind) {
@@ -457,14 +478,16 @@ public final class ThinkLoop {
         return;
       }
       replans.remove(id);
-      var board = team(current, mind.profile.team()).board;
-      var role = board.roleOf(id).orElse(Role.PLANT);
+      var team = team(current, mind.profile.team());
+      var board = team.board;
+      var role = board.roleOf(id).orElseThrow(() -> new IllegalStateException(id + " has no role"));
       var situation = new Situation(snapshot.require(id), snapshot, percept, board, role);
       var thought =
           Tactics.think(
               mind.tacticsState, situation, mind.tacticsContext, randomFor(current, id, tick + 2));
       mind.tacticsState = thought.state();
       mind.decision = thought.decision();
+      team.board = team.board.note(id, thought.note());
       mind.lastThought = aligned(tick, mind.profile.slot(), period);
       cycle.counters().thought++;
       traces.record(thought.trace(), thought.decision());

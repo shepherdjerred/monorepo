@@ -300,7 +300,9 @@ public final class MatchBridge implements Consumer<MatchNotification> {
         kit,
         bot.drafted().levers(),
         bot.drafted().personality().style(),
-        bot.drafted().personality().roles());
+        bot.drafted().personality().roles(),
+        bot.drafted().personality().archetype(),
+        bot.drafted().personality().quirks());
   }
 
   private void ended(MatchState after) {

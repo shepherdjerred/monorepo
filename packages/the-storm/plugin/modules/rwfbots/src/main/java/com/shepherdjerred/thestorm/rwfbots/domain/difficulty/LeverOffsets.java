@@ -35,6 +35,17 @@ public record LeverOffsets(Map<Lever, Double> offsets) {
     return new LeverOffsets(map);
   }
 
+  /** These offsets with {@code z} added to {@code lever}, clamped to the allowed magnitude. */
+  public LeverOffsets plus(Lever lever, double z) {
+    if (!Double.isFinite(z)) {
+      throw new IllegalArgumentException(lever.key() + " offset must be finite: " + z);
+    }
+    var copy = new EnumMap<Lever, Double>(Lever.class);
+    copy.putAll(offsets);
+    copy.put(lever, Math.clamp(z(lever) + z, -MAX_Z, MAX_Z));
+    return new LeverOffsets(copy);
+  }
+
   public double z(Lever lever) {
     return offsets.getOrDefault(lever, 0.0);
   }

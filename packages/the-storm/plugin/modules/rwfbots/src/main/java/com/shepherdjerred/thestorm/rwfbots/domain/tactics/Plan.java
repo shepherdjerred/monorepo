@@ -40,6 +40,13 @@ public record Plan(Option option, List<PlanStep> steps, int index, long startedT
     return new Plan(option, steps, index + 1, startedTick);
   }
 
+  /**
+   * The same steps, dated from {@code tick}: a re-expanded plan keeps the age of the one it redoes.
+   */
+  public Plan since(long tick) {
+    return new Plan(option, steps, index, tick);
+  }
+
   /** The first later step of type {@code type}, if any; lets a route know what it is for. */
   public <T extends PlanStep> java.util.Optional<T> upcoming(Class<T> type) {
     for (var i = index; i < steps.size(); i++) {

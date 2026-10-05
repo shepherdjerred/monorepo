@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
+import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverOffsets;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.Draft;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.MatchShift;
@@ -139,10 +141,15 @@ public final class Director {
           new Drafted(
               personality,
               kit(personality, request.availableKits(), random),
-              LeverCurves.effective(personality.skill(), personality.leverOffsets(), shift),
+              LeverCurves.effective(personality.skill(), offsets(personality), shift),
               request.ratingOf(personality)));
     }
     return new Pick(bots, shift);
+  }
+
+  /** The personality's lever offsets with its archetype's push on aggression added. */
+  static LeverOffsets offsets(Personality personality) {
+    return personality.leverOffsets().plus(Lever.AGGRESSION, personality.archetype().aggressionZ());
   }
 
   /** How far apart the best team split of humans plus {@code drafted} would be. */

@@ -8,12 +8,13 @@ public enum Option {
   ARM,
   HELP_ARM,
   DEFUSE,
-  GUARD_CHOKE,
+  /** Go to the playbook slot, bounding from cover to cover once enemies are known. */
+  TAKE_SLOT,
+  /** Stand at the playbook slot watching its threat, in cover once enemies are known. */
+  HOLD_SLOT,
   HOLD_ANGLE,
-  ROTATE,
   RETAKE,
   HUNT,
-  ESCORT,
   ESCAPE_POISON,
   REWIND
 }

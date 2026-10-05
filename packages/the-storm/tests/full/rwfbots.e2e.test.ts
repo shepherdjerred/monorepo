@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { Bot } from "mineflayer";
 import type { Vec3 } from "vec3";
 import { describe, expect } from "vitest";
@@ -34,6 +35,12 @@ import {
   type StatsRow,
   type Team,
 } from "#e2e/harness/rwfbots.ts";
+import {
+  advance,
+  dispersion,
+  readTrails,
+  type Trails,
+} from "#e2e/harness/rwf-trails.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import { querySqlite } from "#e2e/harness/storm-data.ts";
@@ -989,3 +996,116 @@ async function eatsAndStaysUnsaved(
     expect(after).not.toContain(name);
   }
 }
+
+/** When a team's width across the yard is first taken: 8 s. */
+const SPREAD_TICKS = 160;
+/** The yardstick for crossing the own third: 10 s. */
+const BY_TICKS = 200;
+
+/*
+ * One match is one draw, so these floors sit below what single showcases
+ * measure and well above a team that bunches and beelines (median spacing
+ * about 2 blocks, 5 to 7 blocks wide, an eighth past its third). The sim's
+ * AdvanceTest holds the averages over every strategy pairing.
+ */
+/** The least median gap to the nearest teammate before first contact. */
+const MIN_SPACING = 2.5;
+/** The narrowest a team may be across the 64-block yard. */
+const MIN_WIDTH = 16;
+/** The most a team may walk for the ground it gains (circling walks a lot). */
+const MAX_WINDING = 2.5;
+/** The least share of a team past its own third by 10 s (anchors stay home). */
+const MIN_FORWARD = 1 / 4;
+
+/**
+ * How a showcase was played, from its recording: spacing and crowding before
+ * first contact, width across the yard at 8 s and at contact, the share past
+ * its own third by 10 s, and how much each team walked for the ground it
+ * gained before contact.
+ */
+function expectTeamPlay(trails: Trails): void {
+  const contact = trails.firstContact ?? trails.lastTick + 1;
+  const spread = dispersion(trails, { from: 0, until: contact });
+  expect(spread.map((team) => team.team)).toEqual(["BLUE", "RED"]);
+  for (const team of spread) {
+    expect(team.samples, `${team.team} samples`).toBeGreaterThan(0);
+    // Spawn points stand two blocks apart.
+    expect(
+      team.nearestP50,
+      `${team.team} nearest-teammate p50 before first contact`,
+    ).toBeGreaterThanOrEqual(MIN_SPACING);
+  }
+  const at8 = advance(trails, { at: SPREAD_TICKS, until: contact });
+  const atContact = advance(trails, { at: contact, until: contact });
+  const by10 = advance(trails, { at: BY_TICKS, until: BY_TICKS });
+  for (const [index, team] of at8.entries()) {
+    const name = team.team;
+    expect(team.spreadAt, `${name} width at 8 s`).toBeGreaterThanOrEqual(
+      MIN_WIDTH,
+    );
+    expect(
+      atContact[index]?.spreadAt,
+      `${name} width at first contact`,
+    ).toBeGreaterThanOrEqual(MIN_WIDTH);
+    expect(
+      atContact[index]?.winding,
+      `${name} walked over ground gained before contact`,
+    ).toBeLessThanOrEqual(MAX_WINDING);
+    expect(
+      by10[index]?.forward,
+      `${name} share past its own third by 10 s`,
+    ).toBeGreaterThanOrEqual(MIN_FORWARD);
+  }
+}
+
+describe("Search and Destroy rwfbots team play", () => {
+  test(
+    "a sixteen-bot showcase moves each team up the field spread across the yard and still finishes",
+    { timeout: 16 * 60_000 },
+    async ({ rcon, server }) => {
+      await waitForLobby(rcon);
+      const size = 16;
+      const started = plain(
+        await rcon.command(`rwf admin showcase ${size.toString()}`),
+      );
+      expect(started).toContain(`Showcase of ${size.toString()} bots started`);
+      await eventually(
+        "the showcase to go live",
+        async () => liveStatus(rcon),
+        30_000,
+      );
+      const live = await status(rcon);
+      expect([live.humans, live.bots]).toEqual([0, size]);
+      // What each bot was dealt, kept beside the recording for `rwf:trails`.
+      await Bun.sleep(4000);
+      const slots = plain(await rcon.command("rwfbots debug slots"));
+      expect(slots).toMatch(/objective/u);
+      await eventually(
+        "the showcase to end and its recording to close",
+        async () => {
+          const rows = await matchRows(server, live.matchId);
+          return (rows.match?.recording_file ?? null) !== null;
+        },
+        matchBudgetMs,
+      );
+      const settled = await matchRows(server, live.matchId);
+      expect(settled.match?.winner).toMatch(/^(?:RED|BLUE)$/u);
+      await Bun.write(path.join(settled.outDir, "slots.txt"), slots);
+      const traces = await gzipLines(
+        server,
+        `rwfbots-traces/${live.matchId}.gz`,
+        settled.outDir,
+      );
+      expect(traces.every((line) => line.startsWith("decision\t"))).toBe(true);
+      const trails = readTrails(
+        await gzipLines(
+          server,
+          settled.match?.recording_file ?? "",
+          settled.outDir,
+        ),
+      );
+      expect(trails.mapId).toBe("training-yard");
+      expectTeamPlay(trails);
+    },
+  );
+});

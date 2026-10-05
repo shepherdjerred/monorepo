@@ -1,8 +1,11 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.personality;
 
 /**
- * A small, named habit a personality has, from a fixed vocabulary so later code can act on it (a
- * chat cadence, an emote, a body habit). Nothing reads quirks yet; they are content.
+ * A small, named habit a personality has, from a fixed vocabulary so code can act on it. Three show
+ * in play: {@link #CROUCH_SPAM} taps sneak when idle or after a kill (the reflex layer), {@link
+ * #LATE_TO_EVERYTHING} stands a few seconds at the start of the match (the think step), and {@link
+ * #LOVES_NUKE} pulls the bot towards the slot that arms the nuke (the team step). The rest are for
+ * chat and stay content in play.
  */
 public enum Quirk {
   /** Says gg after every match, win or lose. */

@@ -25,6 +25,9 @@ tasks.named("compileJava") { dependsOn(verifyManagedChatFlag) }
 // The shipped personality files and rwfbots.yml are parsed by tests, so they are test inputs.
 val shippedPersonalities = file("../../../server/owned/plugins/TheStorm/rwfbots/personalities")
 val shippedConfig = file("../../../server/owned/plugins/TheStorm/rwfbots.yml")
+// The training yard's baked nav artifact: the headless sim plays on it as well as SyntheticMap.
+val trainingYardNav =
+    file("../../../server/owned/plugins/TheStorm/rwf/maps/training-yard/nav.rwfnav")
 
 tasks.test {
   inputs
@@ -36,5 +39,10 @@ tasks.test {
       .withPropertyName("shippedConfig")
       .withPathSensitivity(PathSensitivity.RELATIVE)
   systemProperty("thestorm.rwfbots.personalities", shippedPersonalities.absolutePath)
+  inputs
+      .file(trainingYardNav)
+      .withPropertyName("trainingYardNav")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
   systemProperty("thestorm.rwfbots.config", shippedConfig.absolutePath)
+  systemProperty("thestorm.rwfbots.trainingYardNav", trainingYardNav.absolutePath)
 }

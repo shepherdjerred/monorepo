@@ -3,8 +3,12 @@ package com.shepherdjerred.thestorm.rwfbots.app;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
+import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
+import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
+import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverOffsets;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.Rating;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.SkillScale;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
@@ -148,5 +152,26 @@ final class DirectorTest {
     }
 
     assertThat(played).containsExactlyInAnyOrderElementsOf(SHIPPED);
+  }
+
+  @Test
+  void anArchetypePushesTheAggressionLeverWithoutReplacingSkill() {
+    var base = Fixtures.personality("calm", "Calm", 0.5);
+    var rusher = Fixtures.withArchetype(base, Archetype.RUSHER);
+    var turtle = Fixtures.withArchetype(base, Archetype.TURTLE);
+    assertThat(Director.offsets(rusher).z(Lever.AGGRESSION))
+        .isEqualTo(Archetype.RUSHER.aggressionZ());
+    assertThat(Director.offsets(turtle).z(Lever.AGGRESSION))
+        .isEqualTo(Archetype.TURTLE.aggressionZ());
+    var fast = LeverCurves.effective(0.5, Director.offsets(rusher), 0);
+    var slow = LeverCurves.effective(0.5, Director.offsets(turtle), 0);
+    assertThat(fast.aggression()).isGreaterThan(slow.aggression());
+    assertThat(fast.aimErrorDeg()).isEqualTo(slow.aimErrorDeg());
+  }
+
+  @Test
+  void leverOffsetsStayInsideTheirRange() {
+    var pushed = LeverOffsets.NONE.plus(Lever.AGGRESSION, 2.5).plus(Lever.AGGRESSION, 2.5);
+    assertThat(pushed.z(Lever.AGGRESSION)).isEqualTo(LeverOffsets.MAX_Z);
   }
 }

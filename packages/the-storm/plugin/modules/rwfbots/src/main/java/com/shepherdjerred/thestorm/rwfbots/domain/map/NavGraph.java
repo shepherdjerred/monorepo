@@ -230,6 +230,71 @@ public final class NavGraph {
     return OptionalInt.empty();
   }
 
+  /**
+   * The walkable node whose feet are horizontally nearest {@code point}, looking up to {@code
+   * radius} blocks around it and three blocks up or down; empty when none is that close.
+   */
+  public OptionalInt nearestNodeWithin(Vec3 point, int radius) {
+    var base = BlockPos.of(point.plus(0, 0.001, 0));
+    var best = -1;
+    var bestDistance = Double.POSITIVE_INFINITY;
+    for (var dx = -radius; dx <= radius; dx++) {
+      for (var dz = -radius; dz <= radius; dz++) {
+        var column = nearestInColumn(base.offset(dx, 0, dz), point);
+        if (column >= 0 && snapDistance(column, point) < bestDistance) {
+          bestDistance = snapDistance(column, point);
+          best = column;
+        }
+      }
+    }
+    return best < 0 ? OptionalInt.empty() : OptionalInt.of(best);
+  }
+
+  /** The node within three blocks up or down of {@code cell} nearest {@code point}, or -1. */
+  private int nearestInColumn(BlockPos cell, Vec3 point) {
+    var best = -1;
+    for (var dy = -3; dy <= 3; dy++) {
+      var node = nodeAt(cell.offset(0, dy, 0));
+      if (node.isPresent()
+          && (best < 0 || snapDistance(node.getAsInt(), point) < snapDistance(best, point))) {
+        best = node.getAsInt();
+      }
+    }
+    return best;
+  }
+
+  /** Horizontal distance from {@code node}'s feet to {@code point}, with height as a tie-break. */
+  private double snapDistance(int node, Vec3 point) {
+    var feet = feet(node);
+    return feet.horizontalDistance(point) + 0.01 * Math.abs(feet.y() - point.y());
+  }
+
+  /** The path cost from {@code from} to every node, infinite where unreachable (Dijkstra). */
+  public float[] costsFrom(int from) {
+    var cost = new float[cellOfNode.length];
+    Arrays.fill(cost, INF);
+    var settled = new boolean[cellOfNode.length];
+    var open = new MinHeap(64);
+    cost[from] = 0;
+    open.push(0, from);
+    while (!open.isEmpty()) {
+      var node = open.pop();
+      if (settled[node]) {
+        continue;
+      }
+      settled[node] = true;
+      for (var edge = edgeStart[node]; edge < edgeStart[node + 1]; edge++) {
+        var next = edgeTo[edge];
+        var through = cost[node] + edgeCost[edge];
+        if (through < cost[next]) {
+          cost[next] = through;
+          open.push(through, next);
+        }
+      }
+    }
+    return cost;
+  }
+
   public int edgeStart(int node) {
     return edgeStart[node];
   }

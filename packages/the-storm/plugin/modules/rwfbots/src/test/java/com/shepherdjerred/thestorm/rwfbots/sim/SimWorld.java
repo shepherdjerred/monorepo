@@ -10,6 +10,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.SenseContext;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.TraceHash;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
@@ -20,8 +22,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Situation;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Tactics;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
-import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotFit;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamBrain;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
@@ -41,6 +43,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.function.Predicate;
 
@@ -63,6 +66,7 @@ final class SimWorld {
   record Spawn(int id, TeamId team, Kit kit, Vec3 pos) {}
 
   final NavArtifact nav;
+  final long seed;
   final SplittableRandom random;
   final Map<CombatantId, SimBody> bodies = new LinkedHashMap<>();
   final Map<BombId, SimBomb> bombs = new LinkedHashMap<>();
@@ -75,6 +79,7 @@ final class SimWorld {
 
   SimWorld(NavArtifact nav, long seed) {
     this.nav = nav;
+    this.seed = seed;
     this.random = new SplittableRandom(seed);
   }
 
@@ -83,16 +88,48 @@ final class SimWorld {
   }
 
   SimBody addBot(Spawn spawn, Levers levers, Style style) {
+    return addBot(spawn, new Persona(levers, style, Archetype.TACTICIAN, Set.of()));
+  }
+
+  /**
+   * Who a bot is.
+   *
+   * @param levers how well it plays
+   * @param style how it likes to play
+   * @param archetype what kind of player it is
+   * @param quirks its habits
+   */
+  record Persona(Levers levers, Style style, Archetype archetype, Set<Quirk> quirks) {}
+
+  /** A bot playing as {@code persona}. */
+  SimBody addBot(Spawn spawn, Persona persona) {
+    var levers = persona.levers();
+    var style = persona.style();
+    var archetype = persona.archetype();
+    var quirks = persona.quirks();
     var body = new SimBody(spawn);
     body.bot = true;
     body.levers = levers;
     body.style = style;
+    body.archetype = archetype;
+    body.quirks = Set.copyOf(quirks);
     body.perceiver =
         new Perception(new SenseContext(nav.grid(), nav.graph(), nav.regions(), body.levers));
-    body.reflexContext = new ReflexContext(nav.grid(), body.levers, Loadout.standard(spawn.kit()));
+    body.reflexContext =
+        new ReflexContext(
+            nav.grid(),
+            body.levers,
+            Loadout.standard(spawn.kit()),
+            ReflexContext.Habits.of(archetype, quirks));
     body.tacticsContext =
         new TacticsContext(
-            nav, body.levers, body.style, spawn.kit().hasGapples(), spawn.kit().hasAbility());
+            nav,
+            body.levers,
+            body.style,
+            spawn.kit(),
+            archetype,
+            quirks,
+            seed ^ (spawn.id() * 0x9E3779B97F4A7C15L));
     bodies.put(body.id, body);
     return body;
   }
@@ -107,6 +144,13 @@ final class SimWorld {
 
   SimBomb addBomb(int id, TeamId owner, BlockPos cell) {
     var bomb = new SimBomb(new BombId(id), new BombOwner.Team(owner), cell.center());
+    bombs.put(bomb.id, bomb);
+    return bomb;
+  }
+
+  /** A nuke nobody owns at {@code cell}. */
+  SimBomb addNuke(int id, BlockPos cell) {
+    var bomb = new SimBomb(new BombId(id), new BombOwner.Nuke(), cell.center());
     bombs.put(bomb.id, bomb);
     return bomb;
   }
@@ -213,17 +257,20 @@ final class SimWorld {
       var board =
           boards.computeIfAbsent(
               team, t -> Blackboard.open(t, strategies.getOrDefault(t, Strategy.RUSH)));
-      if (tick % TEAM_PERIOD == 1) {
-        var bots =
-            bodies.values().stream().filter(b -> b.bot && b.team.equals(team) && b.alive).toList();
-        if (!bots.isEmpty()) {
-          var weights = new HashMap<CombatantId, Map<Role, Double>>();
-          for (var bot : bots) {
-            weights.put(bot.id, bot.roleWeights);
-          }
-          var views = bots.stream().map(b -> b.view(tick)).toList();
-          board = TeamBrain.tick(board, new TeamBrain.TeamSituation(snapshot, views, weights));
+      var bots =
+          bodies.values().stream().filter(b -> b.bot && b.team.equals(team) && b.alive).toList();
+      var assigned = board.plan().assignment();
+      var unassigned = bots.stream().anyMatch(b -> !assigned.containsKey(b.id));
+      if ((tick % TEAM_PERIOD == 1 || unassigned) && !bots.isEmpty()) {
+        var members = new HashMap<CombatantId, SlotFit.Member>();
+        for (var bot : bots) {
+          members.put(
+              bot.id, new SlotFit.Member(bot.archetype, bot.quirks, bot.roleWeights, bot.kit));
         }
+        var views = bots.stream().map(b -> b.view(tick)).toList();
+        board =
+            TeamBrain.tick(
+                board, new TeamBrain.TeamSituation(nav, snapshot, views, members), random);
       }
       boards.put(team, board);
     }
@@ -233,12 +280,16 @@ final class SimWorld {
     var self = snapshot.require(body.id);
     var percept = body.perceiver.perceive(body.perception, self, snapshot, random);
     body.perception = percept.state();
+    body.seesEnemy = !percept.visible().isEmpty();
+    body.nearestSeen =
+        percept.nearestVisible().map(view -> view.pos().distance(self.pos())).orElse(-1.0);
     share(body, percept);
     var board = boards.get(body.team);
-    var role = board.roleOf(body.id).orElse(Role.PLANT);
+    var role = board.roleOf(body.id).orElseThrow();
     if (body.decision.isEmpty() || (tick + body.id.value()) % THINK_PERIOD == 0) {
       var situation = new Situation(self, snapshot, percept, board, role);
       var thought = Tactics.think(body.tactics, situation, body.tacticsContext, random);
+      boards.put(body.team, board.note(body.id, thought.note()));
       body.tactics = thought.state();
       body.decision = Optional.of(thought.decision());
       body.decisions.add(thought.decision());
@@ -289,6 +340,10 @@ final class SimWorld {
         body.useStart = tick;
       }
       case BodyCommand.ReleaseUse _ -> release(body);
+      case BodyCommand.CancelUse _ -> {
+        body.usingItem = false;
+        body.useStart = -1;
+      }
       case BodyCommand.ClickBomb(var bombId) -> clickBomb(body, bombId);
       case BodyCommand.UseAbility _ -> {}
     }

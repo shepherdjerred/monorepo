@@ -57,12 +57,33 @@ public final class Reflex {
 
   private static final double WAYPOINT_REACHED = 0.45;
   private static final double ALLY_SPACING = 0.9;
+
+  /** Teammates closer than this push each other apart while walking and fighting. */
+  static final double SEPARATION = 2.5;
+
+  /** The last waypoints of a path, which a bot walks straight at whoever is near. */
+  static final int FINAL_STRAIGHT = 3;
+
+  /** How hard crowding teammates bend a walking bot's heading. */
+  static final double SEPARATION_WEIGHT = 0.8;
+
+  /** A bot waits for a moving teammate with a lower id this close ahead of it. */
+  static final double YIELD = 2.2;
+
+  /** A push from teammates stronger than this means the fight is crowded. */
+  static final double CROWDED = 0.3;
+
+  /** Slower than this per tick, a teammate counts as standing. */
+  static final double MOVING = 0.05;
+
   private static final double BOW_AIM_TOLERANCE = 2.5;
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
   private static final double FUSE_SLIP_SCALE = 6;
   private static final double JUMP_CRIT_CHANCE = 0.15;
   private static final int JUMP_COOLDOWN = 10;
+  private static final long CROUCH_BURST_TICKS = 30;
+  private static final long CROUCH_TAP_TICKS = 3;
 
   private Reflex() {}
 
@@ -155,7 +176,31 @@ public final class Reflex {
         stopShooting();
         walk(Optional.empty());
       }
+      crouchSpam();
       commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
+    }
+
+    /**
+     * A crouch-spamming bot taps sneak in bursts while it stands idle, and over an enemy it has
+     * just killed; otherwise it stands up unless it is sneaking on purpose.
+     */
+    private void crouchSpam() {
+      if (!context.habits().crouchSpam()) {
+        return;
+      }
+      var decision = input.decision();
+      var killed =
+          decision
+              .target()
+              .flatMap(input.snapshot()::combatant)
+              .map(target -> !target.alive())
+              .orElse(false);
+      var idle =
+          decision.target().isEmpty() && state.waypointIndex() >= decision.waypoints().size();
+      var burst = killed || (idle && (now / CROUCH_BURST_TICKS) % 3 == 0);
+      var tap = burst && (now / CROUCH_TAP_TICKS) % 2 == 0;
+      var stealth = idle && decision.stance() == Stance.STEALTH;
+      commands.add(new BodyCommand.Sneak(tap || stealth));
     }
 
     private Levers levers() {
@@ -191,7 +236,7 @@ public final class Reflex {
         return false;
       }
       var health = self.effectiveHealth();
-      var wants = health < EAT_BELOW || (state.healing() && health < EAT_UNTIL);
+      var wants = health < context.habits().eatBelow() || (state.healing() && health < EAT_UNTIL);
       return wants && !enemyWithin(target, MELEE_ALERT);
     }
 
@@ -262,10 +307,13 @@ public final class Reflex {
       }
     }
 
-    /** Lets go of a half-drawn bow when leaving bow mode; the arrow is wasted, not held. */
+    /**
+     * Lowers a half-drawn bow when leaving bow mode, without loosing a weak arrow that would only
+     * give the bot away.
+     */
     private void stopShooting() {
       if (state.isDrawing()) {
-        commands.add(new BodyCommand.ReleaseUse());
+        commands.add(new BodyCommand.CancelUse());
         state = state.withDrawStart(-1);
       }
     }
@@ -310,9 +358,10 @@ public final class Reflex {
       }
       var radial = toTarget.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var closing = distance > SPACING_FAR ? 1.0 : distance < SPACING_NEAR ? -0.6 : 0.0;
-      var move = side.plus(radial.scale(closing));
-      var point = self.pos().plus(move.normalized());
+      var apart = apart();
+      var closing = closing(distance, apart);
+      var move = side.plus(radial.scale(closing)).plus(apart.scale(2.5));
+      var point = self.pos().plus(move.isZero() ? radial : move.normalized());
       var sprint = now >= state.wTapUntil() && closing > 0;
       commands.add(new BodyCommand.MoveToward(point, sprint));
       var critWindow = distance >= 2.5 && distance <= 3.5 && self.onGround();
@@ -342,10 +391,27 @@ public final class Reflex {
         sprint = false;
         destination = sidestep(destination);
       }
+      // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
+      if (index < waypoints.size() - FINAL_STRAIGHT) {
+        destination = bend(destination, apart());
+      }
+      if (yields(destination)) {
+        // Waiting for the teammate ahead: make room for the others while it clears.
+        var push = apart();
+        commands.add(
+            push.isZero()
+                ? new BodyCommand.Stop()
+                : new BodyCommand.MoveToward(self.pos().plus(push.normalized()), false));
+        return;
+      }
       commands.add(new BodyCommand.MoveToward(destination, sprint));
       jumpIfNeeded(waypoint);
-      var look = Facing.looking(self.eye(), destination.plus(0, CombatantView.EYE_HEIGHT, 0));
-      state = state.withAim(AimController.steer(state.aim(), look, levers()));
+      var ahead = destination.plus(0, CombatantView.EYE_HEIGHT, 0);
+      if (!ahead.minus(self.eye()).isZero()) {
+        state =
+            state.withAim(
+                AimController.steer(state.aim(), Facing.looking(self.eye(), ahead), levers()));
+      }
     }
 
     private int advanceWaypoint(List<Waypoint> waypoints, int index) {
@@ -366,6 +432,78 @@ public final class Reflex {
         case AGGRESSIVE, EVASIVE -> true;
         case CAUTIOUS, STEALTH -> false;
       };
+    }
+
+    /**
+     * How hard to close on the target: in to the strafing band, out of it when too close, and back
+     * when a teammate is already on top of the fight, to give it room rather than pile in.
+     */
+    private static double closing(double distance, Vec3 apart) {
+      if (apart.length() > CROWDED || distance < SPACING_NEAR) {
+        return -0.6;
+      }
+      return distance > SPACING_FAR ? 1.0 : 0.0;
+    }
+
+    /**
+     * A horizontal push away from teammates closer than {@link #SEPARATION}, stronger the closer
+     * they are, so a team does not bunch up in a doorway or a brawl.
+     */
+    private Vec3 apart() {
+      var push = Vec3.ZERO;
+      for (var other : input.snapshot().alive(self.team())) {
+        if (other.id().equals(self.id())) {
+          continue;
+        }
+        var away = self.pos().minus(other.pos()).horizontal();
+        var distance = away.length();
+        if (distance < SEPARATION && distance > 1.0e-3) {
+          push = push.plus(away.normalized().scale((SEPARATION - distance) / SEPARATION));
+        }
+      }
+      return push;
+    }
+
+    /**
+     * {@code destination} turned away from crowding teammates: the push bends the heading but never
+     * stops or reverses the walk.
+     */
+    private Vec3 bend(Vec3 destination, Vec3 push) {
+      var heading = destination.minus(self.pos()).horizontal();
+      if (push.isZero() || heading.isZero()) {
+        return destination;
+      }
+      var direction = heading.normalized().plus(push.scale(SEPARATION_WEIGHT));
+      if (direction.isZero()) {
+        return destination;
+      }
+      var length = Math.max(heading.length(), 1);
+      return self.pos().plus(direction.normalized().scale(length)).withY(destination.y());
+    }
+
+    /**
+     * Whether to wait a tick for a teammate just ahead walking the same way, so a team files
+     * through a doorway one at a time instead of shoulder to shoulder.
+     */
+    private boolean yields(Vec3 destination) {
+      var heading = destination.minus(self.pos()).horizontal();
+      if (heading.isZero()) {
+        return false;
+      }
+      var forward = heading.normalized();
+      for (var other : input.snapshot().alive(self.team())) {
+        // Only a teammate walking away the same way is followed; one standing or coming back is
+        // walked round, so nobody ever waits on a bot that is waiting too.
+        if (other.id().equals(self.id()) || other.vel().horizontal().dot(forward) < MOVING) {
+          continue;
+        }
+        var toAlly = other.pos().minus(self.pos()).horizontal();
+        var distance = toAlly.length();
+        if (distance <= YIELD && distance > 1.0e-3 && toAlly.normalized().dot(forward) > 0.5) {
+          return true;
+        }
+      }
+      return false;
     }
 
     private boolean allyAhead(Vec3 destination) {

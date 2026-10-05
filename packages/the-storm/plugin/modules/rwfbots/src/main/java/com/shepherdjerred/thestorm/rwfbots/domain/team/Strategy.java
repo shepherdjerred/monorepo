@@ -1,38 +1,13 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.team;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/** A team's plan for the round, chosen before it starts. */
+/** A team's plan for the round, chosen before it starts; {@link Playbook} turns it into slots. */
 public enum Strategy {
-  /** Everyone goes to plant together. */
+  /** The planter up the middle with an escort wedge, the side lanes and flanks screening. */
   RUSH,
-  /** A planting group and a defending group. */
+  /** Two groups on different lanes: the planter's and a pair with a flank. */
   SPLIT,
-  /** Hold the bomb; one planter looks for an opening. */
+  /** Anchors over distinct approaches to the own bomb; one planter goes round the far lane. */
   TURTLE,
-  /** Look for kills first, plant when the enemy is thin. */
-  HUNT;
-
-  /** The roles to hand out for a team of {@code size}, most important first. */
-  public List<Role> slots(int size) {
-    if (size < 1) {
-      throw new IllegalArgumentException("a team has at least one player");
-    }
-    var slots = new ArrayList<Role>(size);
-    slots.add(Role.PLANT);
-    while (slots.size() < size) {
-      slots.add(nth(slots.size()));
-    }
-    return slots;
-  }
-
-  private Role nth(int index) {
-    return switch (this) {
-      case RUSH -> Role.ESCORT;
-      case SPLIT -> index % 2 == 1 ? Role.DEFEND : index % 4 == 2 ? Role.ESCORT : Role.ROTATE;
-      case TURTLE -> index == 1 ? Role.RETAKE : Role.DEFEND;
-      case HUNT -> index % 3 == 0 ? Role.ROTATE : Role.HUNT;
-    };
-  }
+  /** Sweeping pairs look for kills first; a planter takes the nuke when it can. */
+  HUNT
 }

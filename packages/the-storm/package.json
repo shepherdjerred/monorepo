@@ -18,6 +18,7 @@
     "test:full": "STORM_E2E_FULL=1 bun --no-install --bun vitest run --config vitest.full.config.ts",
     "test:load": "STORM_E2E_PROFILE=load bun --no-install --bun vitest run --config vitest.load.config.ts",
     "rwf:watch": "bun scripts/rwf-watch.ts",
+    "rwf:trails": "bun scripts/rwf-trails.ts",
     "bots:generate": "bun scripts/bots/generate-personalities.ts",
     "lint": "mise exec -- gradle -p plugin spotlessCheck pmdMain pmdTest --console=plain && mise exec -- gradle -p client spotlessCheck pmdMain pmdTest --console=plain && bunx --no-install eslint --cache .",
     "typecheck": "mise exec -- gradle -p plugin compileJava compileTestJava --console=plain && mise exec -- gradle -p client compileJava compileTestJava --console=plain && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -27,6 +28,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@shepherdjerred/mc-harness": "workspace:*",
     "@types/bun": "1.4.2",

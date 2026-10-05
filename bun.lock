@@ -2204,6 +2204,7 @@
     "packages/the-storm": {
       "name": "@shepherdjerred/the-storm",
       "devDependencies": {
+        "@resvg/resvg-js": "^2.6.2",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@shepherdjerred/mc-harness": "workspace:*",
         "@types/bun": "1.4.2",
