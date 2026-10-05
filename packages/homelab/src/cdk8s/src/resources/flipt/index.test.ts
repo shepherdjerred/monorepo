@@ -220,7 +220,7 @@ describe("Flipt chart", () => {
       'git -C "$staging" init --initial-branch=main',
     );
     expect(initializationScript).toContain(
-      'git -C "$staging" add -- "scout/features.yaml"',
+      'git -C "$staging" add -- "justin/features.yaml" "scout/features.yaml"',
     );
     expect(initializationScript).toContain('if [ -e "$repo" ]');
     expect(initializationScript).not.toContain("data-beta");
@@ -241,6 +241,7 @@ describe("Flipt chart", () => {
       ["beta", "prod"]
         .flatMap((environment) =>
           [
+            "justin",
             "scout",
             "birmel",
             "streambot",

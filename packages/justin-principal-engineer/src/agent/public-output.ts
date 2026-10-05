@@ -48,10 +48,18 @@ export async function assertNoLinearContextInChanges(
 
 export async function safeOutputForPublication(
   output: AgentOutput,
-  checkout: string,
-  paths: readonly string[],
-  linearContext: string | null,
+  input: {
+    checkout: string;
+    paths: readonly string[];
+    linearContext: string | null;
+    hostVerification?: readonly string[];
+  },
 ): Promise<AgentOutput> {
+  const { checkout, paths, linearContext, hostVerification = [] } = input;
   await assertNoLinearContextInChanges(checkout, paths, linearContext);
-  return publicAgentOutput(output);
+  return {
+    ...publicAgentOutput(output),
+    summary: `Updated ${String(paths.length)} files in the task branch. Host-run verification results are listed below.`,
+    verification: [...hostVerification],
+  };
 }

@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 export const MANAGED_NAMESPACES = [
+  "justin",
   "scout",
   "birmel",
   "streambot",
@@ -15,6 +16,20 @@ export const MANAGED_NAMESPACES = [
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
+
+export const JUSTIN_FLAG_KEYS = ["justin_autonomous_devex_enabled"] as const;
+
+export type JustinFlagKey = (typeof JUSTIN_FLAG_KEYS)[number];
+
+export const JUSTIN_BOOLEAN_FLAG_KEYS = [
+  "justin_autonomous_devex_enabled",
+] as const;
+
+export type JustinBooleanFlagKey = (typeof JUSTIN_BOOLEAN_FLAG_KEYS)[number];
+
+export const JUSTIN_VARIANT_FLAG_KEYS = [] as const;
+
+export type JustinVariantFlagKey = (typeof JUSTIN_VARIANT_FLAG_KEYS)[number];
 
 export const SCOUT_FLAG_KEYS = [
   "scout_support_conversations_enabled",
@@ -379,6 +394,7 @@ export const STORM_VARIANT_FLAG_KEYS = [
 export type StormVariantFlagKey = (typeof STORM_VARIANT_FLAG_KEYS)[number];
 
 export const MANAGED_FLAG_KEYS = [
+  ...JUSTIN_FLAG_KEYS,
   ...SCOUT_FLAG_KEYS,
   ...BIRMEL_FLAG_KEYS,
   ...STREAMBOT_FLAG_KEYS,
@@ -393,6 +409,7 @@ export const MANAGED_FLAG_KEYS = [
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
 
 export const MANAGED_BOOLEAN_FLAG_KEYS = [
+  ...JUSTIN_BOOLEAN_FLAG_KEYS,
   ...SCOUT_BOOLEAN_FLAG_KEYS,
   ...BIRMEL_BOOLEAN_FLAG_KEYS,
   ...STREAMBOT_BOOLEAN_FLAG_KEYS,
@@ -407,6 +424,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
 
 export const MANAGED_VARIANT_FLAG_KEYS = [
+  ...JUSTIN_VARIANT_FLAG_KEYS,
   ...SCOUT_VARIANT_FLAG_KEYS,
   ...BIRMEL_VARIANT_FLAG_KEYS,
   ...STREAMBOT_VARIANT_FLAG_KEYS,

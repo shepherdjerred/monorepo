@@ -316,7 +316,7 @@ export type ReviewProvider = {
    * or null if it has no such signal. A matched block fails the gate — it is
    * never a pass, because no review happened.
    */
-  detectBlocked: BlockedSignalStrategy | null;
+  detectBlocked: readonly BlockedSignalStrategy[] | null;
   /**
    * How to explicitly request a head review, or `null` when the provider
    * reviews automatically. Consumers that trigger reviews (e.g. the PR-fleet

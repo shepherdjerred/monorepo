@@ -43,6 +43,7 @@ import {
   type ProviderOptions as InnerProviderOptions,
 } from "./provider-options.ts";
 import {
+  checkCodexModelAccess as innerCheckCodexModelAccess,
   createCodexConfig as innerCreateCodexConfig,
   type CodexConfig as InnerCodexConfig,
 } from "./codex.ts";
@@ -142,6 +143,12 @@ export function createCodexConfig(
   ...args: Parameters<typeof innerCreateCodexConfig>
 ): CodexConfig {
   return innerCreateCodexConfig(...args);
+}
+
+export function checkCodexModelAccess(
+  ...args: Parameters<typeof innerCheckCodexModelAccess>
+): Promise<void> {
+  return innerCheckCodexModelAccess(...args);
 }
 
 export function addTokenBreakdown(

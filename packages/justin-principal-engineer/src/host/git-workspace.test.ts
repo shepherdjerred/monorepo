@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import type { Config } from "#src/domain/schemas.ts";
-import { branchName, GitWorkspace } from "#src/host/git-workspace.ts";
+import { GitWorkspace } from "#src/host/git-workspace.ts";
+import { branchName } from "#src/host/branch-name.ts";
 import type { CommandResult, CommandRunner } from "#src/runtime/process.ts";
 
 function result(stdout = ""): CommandResult {
@@ -9,13 +10,18 @@ function result(stdout = ""): CommandResult {
 }
 
 const config: Config = {
+  autonomy: { enabledIssueIdentifiers: [] },
   repository: {
     stableCheckout: "/tmp/stable",
     slug: "example/repo",
     baseBranch: "main",
   },
   linear: { team: "SJ", apiKey: "op://test/linear/key" },
-  woodpecker: { apiToken: "op://test/woodpecker/key" },
+  woodpecker: {
+    apiToken: "op://test/woodpecker/key",
+    baseUrl: "https://woodpecker.sjer.red",
+    repoId: 1,
+  },
   pinchtab: { configPath: "/tmp/pinchtab.json" },
   github: {
     appId: "op://vault/app/id",

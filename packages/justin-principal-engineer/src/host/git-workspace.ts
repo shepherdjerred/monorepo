@@ -3,20 +3,11 @@ import path from "node:path";
 
 import type { AgentOutput, Config, TaskState } from "#src/domain/schemas.ts";
 import { safeOutputForPublication } from "#src/agent/public-output.ts";
+import { taskPullRequestBody } from "#src/host/public-metadata.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 
 function splitZero(value: string): string[] {
   return value.split("\0").filter((entry) => entry !== "");
-}
-
-export function branchName(identifier: string, title: string): string {
-  const slug = title
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-|-$/g, "")
-    .slice(0, 48)
-    .replace(/-+$/, "");
-  return `agent/${identifier.toLowerCase()}-${slug || "task"}`;
 }
 
 export class GitWorkspace {
@@ -196,12 +187,41 @@ export class GitWorkspace {
     output: AgentOutput,
     checkout: string,
     linearContext: string | null,
+    hostVerification: readonly string[] = [],
   ): Promise<readonly [AgentOutput, string[]]> {
     const paths = await this.changedPaths(checkout);
+    const publicationPaths = await this.publicationPaths(checkout);
     return [
-      await safeOutputForPublication(output, checkout, paths, linearContext),
+      await safeOutputForPublication(output, {
+        checkout,
+        paths: publicationPaths,
+        linearContext,
+        hostVerification,
+      }),
       paths,
     ];
+  }
+
+  public async publicationPaths(checkout: string): Promise<string[]> {
+    const [tracked, untracked] = await Promise.all([
+      this.command(checkout, [
+        "git",
+        "diff",
+        "--name-only",
+        "-z",
+        `origin/${this.config.repository.baseBranch}`,
+      ]),
+      this.command(checkout, [
+        "git",
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "-z",
+      ]),
+    ]);
+    return [
+      ...new Set([...splitZero(tracked), ...splitZero(untracked)]),
+    ].sort();
   }
 
   public async commitAndSubmit(input: {
@@ -444,32 +464,34 @@ export class GitWorkspace {
   }
 
   public pullRequestBody(state: TaskState, output: AgentOutput): string {
-    const verification =
-      output.verification.length === 0
-        ? "- Not reported"
-        : output.verification.map((item) => `- ${item}`).join("\n");
-    return `## Why
-
-${state.issue.description ?? state.issue.title}
-
-Linear: ${state.issue.url}
-
-## What
-
-${output.summary}
-
-## Verification
-
-${verification}
-
-## Live checks not run
-
-- Deployment and live acceptance are not implied by PR CI.
-`;
+    return taskPullRequestBody(state, output);
   }
 
   public async headSha(checkout: string): Promise<string> {
     const output = await this.command(checkout, ["git", "rev-parse", "HEAD"]);
     return output.trim();
+  }
+
+  public async confirmMerged(
+    checkout: string,
+    mergeSha: string,
+    env: Readonly<Record<string, string>>,
+  ): Promise<void> {
+    await this.command(
+      checkout,
+      ["git", "fetch", "origin", this.config.repository.baseBranch],
+      env,
+    );
+    await this.command(
+      checkout,
+      [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        mergeSha,
+        `origin/${this.config.repository.baseBranch}`,
+      ],
+      env,
+    );
   }
 }

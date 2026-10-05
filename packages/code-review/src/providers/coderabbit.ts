@@ -265,12 +265,22 @@ export const coderabbitProvider: ReviewProvider = {
   // deadline on a head that will never be reviewed. The notice names both the
   // hourly refill and the exhausted organisation credits; either one means no
   // review happened for this head.
-  detectBlocked: {
-    matches: ["rate limited by coderabbit.ai", "Review limit reached"],
-    reason: "usage-limited",
-    remediation:
-      "Wait for CodeRabbit review capacity to refill or add usage credits, then comment `@coderabbitai review`",
-  },
+  detectBlocked: [
+    {
+      matches: ["rate limited by coderabbit.ai", "Review limit reached"],
+      reason: "usage-limited",
+      remediation:
+        "Wait for CodeRabbit review capacity to refill or add usage credits, then comment `@coderabbitai review`",
+    },
+    {
+      matches: [
+        "This PR was authored by a bot without an assigned CodeRabbit review seat.",
+      ],
+      reason: "missing-seat",
+      remediation:
+        "Assign the bot a CodeRabbit review seat, then comment `@coderabbitai review`",
+    },
+  ],
   // Observed working on PR #924: a human `@coderabbitai review` comment draws
   // a "Review triggered" reply even when automatic reviews are paused.
   requestReview: { command: "@coderabbitai review" },

@@ -1,4 +1,7 @@
 {
+  "autonomy": {
+    "enabledIssueIdentifiers": []
+  },
   "repository": {
     "stableCheckout": "/Users/jerred/git/monorepo",
     "slug": "shepherdjerred/monorepo",
@@ -9,7 +12,9 @@
     "apiKey": "op://Automation/Linear/credential"
   },
   "woodpecker": {
-    "apiToken": "op://Automation/Woodpecker/credential"
+    "apiToken": "op://Automation/Woodpecker/credential",
+    "baseUrl": "https://woodpecker.sjer.red",
+    "repoId": 1
   },
   "pinchtab": {
     "configPath": "/Users/jerred/Library/Application Support/pinchtab/config.json"

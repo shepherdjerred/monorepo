@@ -268,11 +268,10 @@ describe("Linear label mutations", () => {
       }),
     );
     const query = recorded.find(
-      (args) => args[2] === "issue" && args[3] === "query",
+      (args) => args[2] === "api" && args[3]?.includes("issue(id:") === true,
     );
-    expect(query).toEqual(
-      expect.arrayContaining(["--all-teams", "--search", "XX-1"]),
-    );
+    expect(query).toBeDefined();
+    expect(query?.at(-1)).toBe(JSON.stringify({ id: "XX-1" }));
     expect(apiVariables(recorded)).toEqual({
       id: "XX-1",
       add: [],

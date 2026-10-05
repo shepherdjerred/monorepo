@@ -2,17 +2,47 @@ import {
   deliveryIsHealthy,
   deliveryIsUnhealthy,
 } from "#src/domain/delivery-health.ts";
-import type { PrHealth, TaskState } from "#src/domain/schemas.ts";
+import type { Config, PrHealth, TaskState } from "#src/domain/schemas.ts";
+import { ciOperatorBlocker } from "#src/integrations/ci.ts";
 import type { GitHubClient, PullRequest } from "#src/integrations/github.ts";
 import type { LinearClient } from "#src/integrations/linear.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
+import { AutonomousBlocker } from "#src/domain/autonomy.ts";
+import type { ReviewFindingRef } from "#src/domain/schemas.ts";
 
 type Save = (
   state: TaskState,
   phase: TaskState["phase"],
   patch?: Partial<TaskState>,
 ) => Promise<TaskState>;
+
+export async function pauseForCiOperatorBlocker(input: {
+  state: TaskState;
+  health: PrHealth;
+  pr: PullRequest;
+  config: Config["woodpecker"];
+  token: string;
+  linear: LinearClient;
+  store: TaskStore;
+}): Promise<boolean> {
+  const blocker = await ciOperatorBlocker({
+    health: input.health,
+    headSha: input.pr.headRefOid,
+    config: input.config,
+    token: input.token,
+  });
+  if (blocker === null) return false;
+  if (input.state.deliveryMode === "autonomous")
+    throw new AutonomousBlocker(blocker, true);
+  await pauseTask({
+    state: { ...input.state, latestHeadSha: input.pr.headRefOid },
+    reason: blocker,
+    linear: input.linear,
+    store: input.store,
+  });
+  return true;
+}
 
 export type WithGitHub = <T>(
   work: (
@@ -34,11 +64,40 @@ export async function queueUnhealthy(input: {
     health: input.health,
     checkout: input.state.checkoutPath,
     withGitHub: input.withGitHub,
+    headSha: input.pr.headRefOid,
   });
+  const failures =
+    input.health.checks
+      .find((check) => check.name === "CI Status")
+      ?.details.filter((detail) =>
+        /^(?:Workflow|GitHub check) "/.test(detail),
+      ) ?? [];
+  const reviewOnlyFailure =
+    failures.some((detail) =>
+      /^Workflow "(?:codex-review-gate|review-gate)" - (?:FAILURE|ERROR)$/.test(
+        detail,
+      ),
+    ) &&
+    failures.every((detail) =>
+      /^Workflow "(?:codex-review-gate|review-gate|ci-complete)" - (?:FAILURE|ERROR)$/.test(
+        detail,
+      ),
+    );
+  if (
+    reviewOnlyFailure &&
+    input.state.deliveryMode === "autonomous" &&
+    diagnostics.reviewFindings.length === 0 &&
+    diagnostics.blockedReasons.length > 0
+  )
+    throw new AutonomousBlocker(
+      `Automated review is blocked: ${diagnostics.blockedReasons.join(", ")}`,
+      true,
+    );
   await input.save(input.state, "implementing", {
     pendingHealth: input.health,
     pendingDiagnostics: diagnostics.text,
     pendingCodexFindingKeys: diagnostics.findingKeys,
+    pendingReviewFindings: diagnostics.reviewFindings,
     latestHeadSha: input.pr.headRefOid,
   });
   return true;
@@ -72,20 +131,25 @@ export async function mergeTask(input: {
   linear: LinearClient;
   save: Save;
   writeInfo: (message: string) => void;
+  ready?: () => Promise<boolean>;
+  mergeCommand?: readonly string[];
+  confirmMerged?: (
+    sha: string,
+    env: Readonly<Record<string, string>>,
+  ) => Promise<void>;
 }): Promise<void> {
   const { state } = input;
   if (state.prNumber === null || state.prUrl === null) {
     throw new Error("Merging task has no PR");
   }
   const prNumber = state.prNumber;
-  await input.withGitHub(async (github) => {
-    const pr: PullRequest = await github.pullRequest(prNumber);
+  await input.withGitHub(async (github, env) => {
+    let pr: PullRequest = await github.pullRequest(prNumber);
     if (pr.mergedAt === null) {
       const health = await github.health(pr.number, state.checkoutPath);
-      const approved = await github.hasExactHeadApproval(
-        pr.number,
-        pr.headRefOid,
-      );
+      const approved =
+        state.deliveryMode === "autonomous" ||
+        (await github.hasExactHeadApproval(pr.number, pr.headRefOid));
       if (!approved || !deliveryIsHealthy(health)) {
         await input.save(state, "awaiting_ci", {
           latestHeadSha: pr.headRefOid,
@@ -108,13 +172,36 @@ export async function mergeTask(input: {
         );
         return;
       }
-      await github.merge(pr.number, pr.headRefOid);
+      if (input.ready === undefined || input.mergeCommand === undefined)
+        throw new Error("Merge requires the host readiness hook");
+      if (!(await input.ready())) {
+        await input.save(state, "awaiting_ci", {
+          latestHeadSha: pr.headRefOid,
+        });
+        return;
+      }
+      pr = await github.merge(pr.number, state.latestHeadSha ?? pr.headRefOid, {
+        checkout: state.checkoutPath,
+        branch: state.branch,
+        readyCommand: input.mergeCommand,
+      });
     }
+    if (pr.mergeCommit === null)
+      throw new Error("Merged PR has no merge commit");
+    if (
+      state.deliveryMode === "autonomous" &&
+      input.confirmMerged === undefined
+    )
+      throw new Error(
+        "Autonomous completion requires base-branch ancestry verification",
+      );
+    await input.confirmMerged?.(pr.mergeCommit.oid, env);
     // Persist the completion phase before cleanup: if any step below
     // fails, the next run retries only completion from "completing"
     // instead of launching another agent turn against a half-done issue.
     const completing = await input.save(state, "completing", {
       latestHeadSha: pr.headRefOid,
+      mergeCommitSha: pr.mergeCommit.oid,
     });
     await completeTask({
       state: completing,
@@ -132,6 +219,12 @@ export async function completeTask(input: {
   writeInfo: (message: string) => void;
 }): Promise<void> {
   const { state } = input;
+  if (
+    state.deliveryMode === "autonomous" &&
+    state.prUrl !== null &&
+    state.mergeCommitSha === null
+  )
+    throw new Error("Autonomous completion requires a confirmed merge commit");
   // Only the merge path sets a PR URL; the agent no-change path completes
   // without one. Either way the terminal Linear state lands inside the
   // cleanup call, after the labels.
@@ -152,19 +245,32 @@ export async function collectDiagnostics(input: {
   prNumber: number;
   health: PrHealth;
   checkout: string;
+  headSha: string;
   withGitHub: <T>(
     work: (
       github: GitHubClient,
       env: Readonly<Record<string, string>>,
     ) => Promise<T>,
   ) => Promise<T>;
-}): Promise<{ text: string; findingKeys: string[] }> {
+}): Promise<{
+  text: string;
+  findingKeys: string[];
+  reviewFindings: ReviewFindingRef[];
+  blockedReasons: string[];
+}> {
   return await input.withGitHub(async (github) => {
-    const [text, findingKeys] = await Promise.all([
+    const [text, reviews] = await Promise.all([
       github.failureDiagnostics(input.prNumber, input.health, input.checkout),
-      github.openCodexFindingKeys(input.prNumber, input.checkout),
+      github.reviewDiagnostics(input.prNumber, input.checkout, input.headSha),
     ]);
-    return { text, findingKeys };
+    return {
+      text: `${text}\n\n${reviews.text}`,
+      findingKeys: reviews.findings
+        .filter((ref) => ref.provider === "codex")
+        .map((ref) => ref.key),
+      reviewFindings: reviews.findings,
+      blockedReasons: reviews.blockedReasons,
+    };
   });
 }
 

@@ -1,5 +1,8 @@
-import { describe, expect, test } from "vitest";
-import { createCodexConfig } from "@shepherdjerred/llm-runtime";
+import { describe, expect, test, vi } from "vitest";
+import {
+  checkCodexModelAccess,
+  createCodexConfig,
+} from "@shepherdjerred/llm-runtime";
 
 describe("Codex SDK configuration", () => {
   test("uses the catalog's native model id and OpenAI's own endpoint", () => {
@@ -44,5 +47,52 @@ describe("Codex SDK configuration", () => {
     expect(() =>
       createCodexConfig({ apiKey: "   ", modelId: "gpt-5.6-luna" }),
     ).toThrow("must not be empty");
+  });
+});
+
+describe("Codex native model access", () => {
+  const input = { apiKey: "fixture-credential", modelId: "gpt-5.6-luna" };
+
+  test("checks the catalog route using the explicit native credential", async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ id: input.modelId }));
+    await checkCodexModelAccess(input, request);
+    expect(request).toHaveBeenCalledWith(
+      "https://api.openai.com/v1/models/gpt-5.6-luna",
+      expect.objectContaining({
+        headers: { Authorization: "Bearer fixture-credential" },
+        signal: expect.any(AbortSignal),
+      }),
+    );
+  });
+
+  test("does not expose credential-bearing provider errors", async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(input.apiKey, { status: 401 }));
+    await expect(checkCodexModelAccess(input, request)).rejects.toThrow(
+      "OpenAI model access failed (HTTP 401)",
+    );
+    await expect(checkCodexModelAccess(input, request)).rejects.not.toThrow(
+      input.apiKey,
+    );
+  });
+
+  test("rejects a response for a different model", async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(Response.json({ id: "other-model" }));
+    await expect(checkCodexModelAccess(input, request)).rejects.toThrow(
+      "different model",
+    );
+  });
+
+  test("validates the catalog before contacting the provider", async () => {
+    const request = vi.fn<typeof fetch>();
+    await expect(
+      checkCodexModelAccess({ ...input, modelId: "claude-sonnet-5" }, request),
+    ).rejects.toThrow("routes to anthropic");
+    expect(request).not.toHaveBeenCalled();
   });
 });

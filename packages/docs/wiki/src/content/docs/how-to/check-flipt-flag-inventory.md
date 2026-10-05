@@ -28,8 +28,9 @@ Run the repository command from the monorepo root:
 bun run check-flipt-flag-inventory
 ```
 
-The command checks every environment and product namespace declared in the
-managed inventory.
+The command checks every environment and product namespace declared in
+`packages/feature-flags/src/managed-flag-inventory.json`. This includes the
+Justin namespace in both `beta` and `prod`.
 
 Filter either dimension independently:
 
@@ -40,7 +41,8 @@ bun run check-flipt-flag-inventory -- --environment beta --namespace scout
 ```
 
 `FLIPT_ENVIRONMENT` and `FLIPT_NAMESPACE` are also accepted as exact filters.
-Without filters, the command always checks the complete declared matrix.
+Without filters, the command checks every declared environment and namespace
+pair.
 
 ## 3. Create missing declared keys
 

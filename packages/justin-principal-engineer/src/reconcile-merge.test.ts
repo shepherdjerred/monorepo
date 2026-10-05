@@ -1,9 +1,19 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
-import type { LinearIssue, TaskState } from "#src/domain/schemas.ts";
+import {
+  TaskStateSchema,
+  type LinearIssue,
+  type TaskState,
+} from "#src/domain/schemas.ts";
 import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
 import { LinearClient } from "#src/integrations/linear.ts";
-import { completeTask, pauseTask } from "#src/reconcile-merge.ts";
+import {
+  completeTask,
+  pauseTask,
+  queueUnhealthy,
+} from "#src/reconcile-merge.ts";
+import { AutonomousBlocker } from "#src/domain/autonomy.ts";
+import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
 
 function state(): TaskState {
   const issue: LinearIssue = {
@@ -18,7 +28,7 @@ function state(): TaskState {
     state: { name: "In Progress", type: "started" },
     labels: { nodes: [{ name: "agent:codex" }] },
   };
-  return {
+  return TaskStateSchema.parse({
     issue,
     provider: "codex",
     phase: "implementing",
@@ -41,7 +51,7 @@ function state(): TaskState {
     lastFailureFingerprint: "abc",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
-  };
+  });
 }
 
 describe("pauseTask", () => {
@@ -145,6 +155,85 @@ function infoCollector(messages: string[]) {
     messages.push(message);
   };
 }
+
+describe("review provider outages", () => {
+  test.each([
+    {
+      failures: [
+        'Workflow "codex-review-gate" - FAILURE',
+        'Workflow "ci-complete" - FAILURE',
+      ],
+      retryableBlock: true,
+    },
+    {
+      failures: [
+        'Workflow "codex-review-gate" - FAILURE',
+        'Workflow "verify" - FAILURE',
+        'Workflow "ci-complete" - FAILURE',
+      ],
+      retryableBlock: false,
+    },
+    {
+      failures: [
+        'Workflow "codex-review-gate" - FAILURE',
+        'GitHub check "external-test" - FAILURE',
+      ],
+      retryableBlock: false,
+    },
+  ])("classifies $failures", async ({ failures, retryableBlock }) => {
+    const github = new GitHubClient(
+      "owner/repo",
+      {
+        approver: { login: "owner", id: 1 },
+        expectedBotLogin: "app/justin-principal-engineer",
+      },
+      fakeLinearRunner(),
+      {},
+    );
+    vi.spyOn(github, "failureDiagnostics").mockResolvedValue("CI logs");
+    vi.spyOn(github, "reviewDiagnostics").mockResolvedValue({
+      text: "Providers unavailable",
+      findings: [],
+      blockedReasons: ["codex: usage-limited", "coderabbit: missing-bot-seat"],
+    });
+    const saved: TaskState[] = [];
+    const pr: PullRequest = {
+      number: 7,
+      url: "https://example.com/pr/7",
+      headRefOid: "a".repeat(40),
+      headRefName: "agent/xx-1",
+      baseRefName: "main",
+      isDraft: false,
+      mergedAt: null,
+      mergeCommit: null,
+      author: { login: "app/justin-principal-engineer", is_bot: true },
+    };
+    const operation = queueUnhealthy({
+      state: { ...state(), deliveryMode: "autonomous" },
+      pr,
+      health: {
+        prNumber: pr.number,
+        prUrl: pr.url,
+        overallStatus: "UNHEALTHY",
+        nextSteps: [],
+        checks: [
+          { name: "Merge Conflicts", status: "HEALTHY", details: [] },
+          { name: "CI Status", status: "UNHEALTHY", details: failures },
+        ],
+      },
+      save: saveStub(saved),
+      withGitHub: (work) => work(github, {}),
+    });
+    if (retryableBlock) {
+      await expect(operation).rejects.toBeInstanceOf(AutonomousBlocker);
+      await expect(operation).rejects.toMatchObject({ retryable: true });
+      expect(saved).toEqual([]);
+    } else {
+      await expect(operation).resolves.toBe(true);
+      expect(saved.map(({ phase }) => phase)).toEqual(["implementing"]);
+    }
+  });
+});
 
 describe("completeTask", () => {
   test("completes the merge path and saves done", async () => {

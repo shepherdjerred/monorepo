@@ -7,6 +7,10 @@ function respond(stdout: string): Promise<CommandResult> {
   return Promise.resolve({ exitCode: 0, stdout, stderr: "", timedOut: false });
 }
 
+function apiVariables(args: readonly string[]): unknown {
+  return JSON.parse(args[args.indexOf("--variables-json") + 1] ?? "{}");
+}
+
 export function defaultTeams(): Record<string, { id: string; name: string }[]> {
   return {
     SJ: [
@@ -16,6 +20,7 @@ export function defaultTeams(): Record<string, { id: string; name: string }[]> {
     ],
     AI: [
       { id: "ai-codex-id", name: "agent:codex" },
+      { id: "ai-autonomous-id", name: "agent:autonomous" },
       { id: "ai-ready-id", name: "agent:ready" },
     ],
   };
@@ -60,15 +65,25 @@ export function fakeLinearRunner(
       return respond(JSON.stringify({ nodes: refreshNodes }));
     }
     if (args[2] === "api" && args[3]?.includes("teams(") === true) {
-      const variables = TeamKeySchema.parse(
-        JSON.parse(args[args.indexOf("--variables-json") + 1] ?? "{}"),
-      );
+      const variables = TeamKeySchema.parse(apiVariables(args));
       return respond(
         JSON.stringify({
           data: {
             teams: {
               nodes: [{ states: { nodes: states[variables.key] ?? [] } }],
             },
+          },
+        }),
+      );
+    }
+    if (args[2] === "api" && args[3]?.includes("issue(id:") === true) {
+      const variables = z.object({ id: z.string() }).parse(apiVariables(args));
+      return respond(
+        JSON.stringify({
+          data: {
+            issue:
+              refreshNodes.find((issue) => issue.identifier === variables.id) ??
+              null,
           },
         }),
       );

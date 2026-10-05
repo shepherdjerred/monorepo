@@ -290,7 +290,7 @@ describe("coderabbitProvider", () => {
   });
 
   test("detects the rate-limit notice as a usage block", () => {
-    const blocked = coderabbitProvider.detectBlocked;
+    const blocked = coderabbitProvider.detectBlocked?.[0];
     expect(blocked).not.toBeNull();
     expect(blocked?.reason).toBe("usage-limited");
     expect(matchesBlockedSignal(blocked!, RATE_LIMITED)).toBe(true);

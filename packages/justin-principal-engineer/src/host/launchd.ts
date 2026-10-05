@@ -24,6 +24,8 @@ export function renderLaunchAgent(input: {
   path: string;
   linearApiKeyReference: string;
   woodpeckerTokenReference: string;
+  woodpeckerBaseUrl: string;
+  woodpeckerRepoId: number;
   pinchtabConfigPath: string;
   stdout: string;
   stderr: string;
@@ -39,6 +41,8 @@ export function renderLaunchAgent(input: {
     <string>/usr/bin/env</string>
     <string>LINEAR_API_KEY=${escapeXml(input.linearApiKeyReference)}</string>
     <string>WOODPECKER_TOKEN=${escapeXml(input.woodpeckerTokenReference)}</string>
+    <string>WOODPECKER_URL=${escapeXml(input.woodpeckerBaseUrl)}</string>
+    <string>WOODPECKER_REPO_ID=${String(input.woodpeckerRepoId)}</string>
     <string>PINCHTAB_CONFIG=${escapeXml(input.pinchtabConfigPath)}</string>
     <string>op</string>
     <string>run</string>
@@ -121,6 +125,8 @@ export class LaunchdService {
         path: processPath,
         linearApiKeyReference: config.linear.apiKey,
         woodpeckerTokenReference: config.woodpecker.apiToken,
+        woodpeckerBaseUrl: config.woodpecker.baseUrl,
+        woodpeckerRepoId: config.woodpecker.repoId,
         pinchtabConfigPath: config.pinchtab.configPath,
         stdout: path.join(this.paths.logs, "stdout.log"),
         stderr: path.join(this.paths.logs, "stderr.log"),
