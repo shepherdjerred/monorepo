@@ -123,7 +123,9 @@ final class ShippedChatTest {
           .doesNotContain("{", "}")
           .hasSizeLessThanOrEqualTo(256);
     }
-    assertThat(heard).containsExactlyInAnyOrder(Lines.Moment.values());
+    // A match speaks every pool but the lobby one, which belongs to the pre-match lobby.
+    assertThat(heard)
+        .containsExactlyInAnyOrderElementsOf(EnumSet.complementOf(EnumSet.of(Lines.Moment.LOBBY)));
   }
 
   private static ChatScene.Member dead(ChatScene.Member member) {

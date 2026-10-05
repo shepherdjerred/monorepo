@@ -258,7 +258,8 @@ public record RwfBotsConfig(
       double onWin,
       double onLoss,
       double onLastAlive,
-      double taunt) {
+      double taunt,
+      double lobby) {
 
     public Map<Lines.Moment, Double> byMoment() {
       return Map.of(
@@ -270,7 +271,8 @@ public record RwfBotsConfig(
           Lines.Moment.ON_WIN, onWin,
           Lines.Moment.ON_LOSS, onLoss,
           Lines.Moment.ON_LAST_ALIVE, onLastAlive,
-          Lines.Moment.TAUNT, taunt);
+          Lines.Moment.TAUNT, taunt,
+          Lines.Moment.LOBBY, lobby);
     }
   }
 

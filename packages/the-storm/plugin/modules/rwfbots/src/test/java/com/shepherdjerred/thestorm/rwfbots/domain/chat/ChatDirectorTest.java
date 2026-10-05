@@ -41,7 +41,8 @@ final class ChatDirectorTest {
           List.of("gg {team}", "we did it"),
           List.of("next time", "gg wp"),
           List.of("just me now", "clutch time"),
-          List.of("come at me", "too slow", "where are you"));
+          List.of("come at me", "too slow", "where are you"),
+          List.of("ready up", "which kit?", "go {team}", "gl all"));
 
   private static final UUID ALICE = new UUID(0, 1);
   private static final UUID BOB = new UUID(0, 2);

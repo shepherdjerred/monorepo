@@ -103,6 +103,8 @@ chat:
     onLoss: 0.35
     onLastAlive: 0.6
     taunt: 0.3
+    # Pre-match small talk; read once bots spend the countdown in the lobby.
+    lobby: 0.25
   verbosity: { quiet: 0.4, normal: 1.0, chatty: 1.6 }
   rivalBoost: 2.0
   botCooldownSeconds: 20
