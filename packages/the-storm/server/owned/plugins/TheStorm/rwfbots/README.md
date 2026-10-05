@@ -38,7 +38,7 @@ voice:
   tone: [dry, hype] # 1..4 distinct tags matching [a-z][a-z0-9-]{1,23}
   verbosity: normal # quiet | normal | chatty: how often it speaks
   style: all lowercase, 2014 gamer slang # 1..120 characters
-lines: # every moment: 2..6 distinct lines, each 1..80 characters
+lines: # match moments: 2..6 distinct lines; lobby: 4..8; each 1..80 characters
   greet: ["hi {team}", "lets go"]
   onKill: ["sit, {victim}", "next"]
   onDeath: ["gg {killer}", "lag"]
@@ -48,6 +48,8 @@ lines: # every moment: 2..6 distinct lines, each 1..80 characters
   onLoss: ["rematch", "gg"]
   onLastAlive: ["clutch time", "just me"]
   taunt: ["come get it", "too slow"]
+  lobby:
+    ["anyone trooper?", "gapples ready", "lets win this {team}", "brb water"]
 quirks: [always_gg, loves_nuke] # 1..3 distinct
 rivals: [ember-7] # 0..3 other personality ids
 bio: Pushes first and asks questions later. # 1..3 sentences, at most 300 characters
@@ -62,7 +64,8 @@ generator derived from it (see `scripts/bots/traits.ts`).
 
 Placeholders, filled in by the chat layer: `{victim}` only in `onKill`,
 `{killer}` only in `onDeath`, `{bomb}` only in `onPlant` and `onDefuse`, and
-`{team}` (the speaker's team) in any moment. Any other `{` or `}` is an error.
+`{team}` (the speaker's team) in any moment. `lobby` is pre-match small talk,
+kit talk and team pep while bots wait in the lobby, and may use only `{team}`. Any other `{` or `}` is an error.
 
 Quirks: `always_gg`, `crouch_spam`, `never_eats`, `gapple_hoarder`,
 `loves_nuke`, `late_to_everything`, `calls_everything`, `says_sorry`,

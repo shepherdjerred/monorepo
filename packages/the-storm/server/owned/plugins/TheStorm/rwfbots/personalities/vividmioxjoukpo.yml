@@ -65,6 +65,13 @@ lines:
     - please don't come over here. it's scary over here.
     - i have a sword! i'll use it! sorry!
     - um. boo? sorry.
+  lobby:
+    - is it okay if i just stand near the bomb again? sorry
+    - i picked trooper because it has a lot of gapples. haha
+    - oh no, is the pumpkin one on the other team? oh no
+    - "{team}, i'll try really hard! i promise!"
+    - sorry, i'm just practising swinging. sorry
+    - does anyone else get nervous in lobbies? just me? haha
 quirks:
   - says_sorry
   - never_eats

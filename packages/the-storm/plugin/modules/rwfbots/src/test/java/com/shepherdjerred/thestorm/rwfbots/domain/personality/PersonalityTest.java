@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.personality;
 
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.lines;
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.lobby;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.personality;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.withWeights;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,17 +75,33 @@ final class PersonalityTest {
   void everyPoolHoldsTwoToSixShortLines() {
     var two = List.of("ok", "sure");
     assertThat(lines().pool(Lines.Moment.TAUNT)).containsExactly("ok", "sure");
-    assertThatThrownBy(() -> new Lines(List.of("ok"), two, two, two, two, two, two, two, two))
+    assertThatThrownBy(
+            () -> new Lines(List.of("ok"), two, two, two, two, two, two, two, two, lobby()))
         .hasMessageContaining("greet needs 2..6 lines");
     var seven = List.of("a", "b", "c", "d", "e", "f", "g");
-    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, seven))
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, seven, lobby()))
         .hasMessageContaining("taunt needs 2..6 lines");
     var long81 = List.of("ok", "x".repeat(81));
-    assertThatThrownBy(() -> new Lines(two, long81, two, two, two, two, two, two, two))
+    assertThatThrownBy(() -> new Lines(two, long81, two, two, two, two, two, two, two, lobby()))
         .hasMessageContaining("onKill lines must be 1..80");
     var repeated = List.of("gg", "gg");
-    assertThatThrownBy(() -> new Lines(two, two, two, two, two, repeated, two, two, two))
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, repeated, two, two, two, lobby()))
         .hasMessageContaining("onWin repeats a line");
+  }
+
+  @Test
+  void theLobbyPoolHoldsFourToEightLinesThatMayNameOnlyTheTeam() {
+    var two = List.of("ok", "sure");
+    assertThat(new Lines(two, two, two, two, two, two, two, two, two, lobby()).lobby()).hasSize(4);
+    var three = List.of("a", "b", "c");
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, two, three))
+        .hasMessageContaining("lobby needs 4..8 lines, has 3");
+    var nine = List.of("a", "b", "c", "d", "e", "f", "g", "h", "i");
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, two, nine))
+        .hasMessageContaining("lobby needs 4..8 lines, has 9");
+    var killer = List.of("a", "b", "c", "watch {killer}");
+    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, two, killer))
+        .hasMessageContaining("lobby lines may not use {killer}");
   }
 
   @Test
@@ -93,18 +110,21 @@ final class PersonalityTest {
     var kill = List.of("sit down, {victim}", "one for {team}");
     var death = List.of("nice shot {killer}", "ugh");
     var plant = List.of("{bomb} is lit", "go {team}");
-    var lines = new Lines(two, kill, death, plant, plant, two, two, two, two);
+    var lines = new Lines(two, kill, death, plant, plant, two, two, two, two, lobby());
     assertThat(lines.onKill()).contains("sit down, {victim}");
     assertThat(Lines.placeholdersOf("{victim} vs {team}"))
         .containsExactlyInAnyOrder(Lines.Placeholder.VICTIM, Lines.Placeholder.TEAM);
 
     assertThatThrownBy(
-            () -> new Lines(List.of("hi {victim}", "yo"), two, two, two, two, two, two, two, two))
+            () ->
+                new Lines(
+                    List.of("hi {victim}", "yo"), two, two, two, two, two, two, two, two, lobby()))
         .hasMessageContaining("greet lines may not use {victim}");
     assertThatThrownBy(
-            () -> new Lines(two, two, two, two, two, two, two, two, List.of("{me}", "x")))
+            () -> new Lines(two, two, two, two, two, two, two, two, List.of("{me}", "x"), lobby()))
         .hasMessageContaining("unknown placeholder {me}");
-    assertThatThrownBy(() -> new Lines(two, two, two, two, two, two, two, two, List.of("a {", "x")))
+    assertThatThrownBy(
+            () -> new Lines(two, two, two, two, two, two, two, two, List.of("a {", "x"), lobby()))
         .hasMessageContaining("stray brace");
   }
 

@@ -1020,7 +1020,7 @@ Configuration and content under `server/owned/plugins/TheStorm`:
   tactician) and five skill bands. The archetype is content only; play
   differs through the style, role, kit and lever values the generator
   derives from it. Each persona also carries a voice, chat lines per
-  moment, quirks, rivals and a bio, authored in `scripts/bots/enrichment/`;
+  moment (plus pre-match lobby small talk), quirks, rivals and a bio, authored in `scripts/bots/enrichment/`;
   the module validates them but does not speak them yet.
 - `rwf/maps/<id>/nav.rwfnav`: the map's baked navigation artifact
   (`NavCodec` format, from the `rwfmap` tool), next to `map.yml` and

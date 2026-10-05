@@ -1,0 +1,82 @@
+id: xxgolemhunterxx
+name: xXGolemHunterXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTcwMzAxMSwKICAicHJvZmlsZUlkIiA6ICIzMzU3MWJiY2UyMDE0MTRiYmNkMDYyMjEyZTI4MjBlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGFkb21JbmF0b3I0NzgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzcyOTBjYjhiNzI1ZTlhNTM1YjIwNjBjZWY4MDk0NDFiZjhmODFlNzc3ZmNjODIyZjk5Y2VhY2FmY2U2MmIwNiIKICAgIH0KICB9Cn0="
+  signature: "I+e7KKevTzto3VstOpupJXatedwE6MUi/ixqkwze9vaXQSaPzbGePMqXBrDtbZSSAwjTaIhStIu2E5yb3v/gB43VyeafzBVsFOg0LGW2l6Vl8gWCnpfMS2PFIk524rw7OjWESDCRH6elZlj4vxo83zgQT8DOZY3diEgaaU0iuMM5O5KYU96YJP+9ibPr+Tk0kkVClEUFJ4S8XpVjq4vVwNm6pTRflXy/I299mUD9tRt+pACTv2YRor9THmeehi2VOOaJ0Ho5M2sw3HOgu0h1xrB1/TXUmwbtYMBqQMDtkBqU+ko+I+JoQP8/YAb1Jb8sWxmBf6vHJZBtdwrG8gavrFHVWvBeNJDadR1qJLM5GMx3VwSgqx64Ja12uL0Z6qcSU6xE7rpBQSOQJh8n5eTyBasRJDRy101r5eGU7D/N0iRxiXp0plajK25BRbKuaZb1WzPTF+hGA3/SO/oGe5kpx47gTytyRTLWO2FSmwNUkac1Rdgedo/csvQVuSzQRUXPuNkAi4uhS4hRplm1S2Lj/THESOcNapTco4G/2aZIUXRncJPXR85jU8sT/OWUWNA95LIo1r1mw8A8xqsL3TKh/dopO+O+DpdqNgEMDIz93q7B7oM4F49We/SKBSOJa5q0dkBluv5j24/WuBiaXRdTMmekcsdw1WTXy9v8rJJEHvM="
+skill: 0.834
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.16
+  predictionQuality: 0.85
+  coordination: -0.56
+  technique: 1.18
+  aggression: 0.76
+kits:
+  trooper: 0.56
+  longbow: 0.3
+  shortbow: 1
+  rewind: 0.39
+  wraith: 0.53
+  spy: 0.46
+roles:
+  plant: 0.2
+  rotate: 0.92
+  hunt: 0.37
+style:
+  aggression: 0.68
+  patience: 0.4
+  teamplay: 0.22
+  risk: 0.67
+voice:
+  tone:
+    - sly
+    - smug
+    - cool
+  verbosity: normal
+  style: Cool-kid smirk, lowercase except the last word, likes saying 'round the back'
+lines:
+  greet:
+    - going round the BACK
+    - "dont wait for me {team}, im elsewhere"
+  onKill:
+    - "{victim} never checked BEHIND"
+    - "side door, {victim}"
+    - hi from the LEFT
+  onDeath:
+    - "{killer} was round the back too??"
+    - two flankers one corridor. rough
+    - ok who told them
+  onPlant:
+    - "{bomb} lit from the side entrance"
+    - nobody saw me. classic
+  onDefuse:
+    - "slipped back for {bomb}. smooth"
+    - "{bomb} cold. they never saw ME"
+  onWin:
+    - the back door always wins
+    - "gg {team}, flank diff"
+  onLoss:
+    - they locked the back door
+    - rerouting next round
+  onLastAlive:
+    - just me and the side paths
+    - time to vanish
+  taunt:
+    - check your six
+    - wrong way, friend
+    - im not where you're looking
+  lobby:
+    - picked shortbow again. the BACK route needs it
+    - still no golems. still hunting. still FLANKING
+    - who's taking the left so i can take the BACK
+    - my route rival better not be on my side of the MAP
+    - "{team} stay loud up front, i'll stay quiet round the BACK"
+quirks:
+  - stares_down
+  - late_to_everything
+rivals:
+  - skekrek-36
+  - xxvipergolemxx
+bio: Named after a golem hunt in survival that ended with zero golems. Fights Skekrek_36 for the same flank route so often they have a schedule now.
+batch: 2
+retired: false

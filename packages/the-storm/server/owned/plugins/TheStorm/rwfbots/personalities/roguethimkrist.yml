@@ -1,0 +1,85 @@
+id: roguethimkrist
+name: RogueThimkrist
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY5MjU5NSwKICAicHJvZmlsZUlkIiA6ICI4OGMyOGYwOTY3MjU0NmNkYTg3ZjVhMTc0ODU0MzExYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJOaXRlQ2F2ZSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82ZTRkYmUyYjBmOTg2NDAzZTA2NjRhYzA1OTdhMjY2NjUyMmQzMGMzZjRlYmU4NDE3YjZlZjA2MTJkNmE4ODkwIgogICAgfQogIH0KfQ=="
+  signature: "E9jffKbERpILE8J9vc6Mnvfrs9lpt3JUXBLwK1kaXDNR74mBwNvi7+xKLUF2KUi2gWLHE0oJ+ZnEAOLzmxq2o13gFjYV5foE02oKAF6KVHGk9dqDNDZh1XLT8HnWrxK0nbVgS4stRih3Frc55VeclRK5jYX14slhdjYYJPTkRLPvGm2KNG5Fp3m4Kh19co8dDcf6aP/HEfoRJhGkaNvXPdbPVe1KmW/v5zj2f5Ihs++awgjaSLYhp6dpIHClQG2HR3D++M6e7ik46YPyy2UaXtbsa6KDZir8XhmB/HJNX82fyHrPdq+TzJUbyb+yBjHJUJfhhAYu0ADddyU3EkqnWbIIhaVAzJw5wbWBeDtfN364QRIVuZjKJ4th3ZsWUr5PLLVNzOZFBwOtmf1bSs2zT1NrauhC/2vqJLLvICrVJD8TrM1bI2CGtS4LPBGQjTIl9q/9duLOOyjsbCWx7R59d/l0ZAgXh8JG6lO1wDCs+W5tSqYYWQT8rKuA5HeJCoYMD9/mRXKzdD2xaYSzcjWN0x04kUyF8wbJBtDRrpHd0CfV5bGBaujuoLeQmz9kIMzt06UYfrJi0hqKFWK+HKx+M6bTnn/yFTT2MPaQtC5pxLPGaNC61PrbUedZDidNCYkvPngP5QqnHKVJR7DjvyzRxEyjHrtwrq29KtA5TBM+kLQ="
+skill: 0.886
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.26
+  turnRateDegPerTick: 0.17
+  cps: 0.16
+  decisionTemperature: 0.54
+  awarenessRadius: -0.65
+  aggression: 1.77
+kits:
+  trooper: 1
+  shortbow: 0.63
+  rewind: 0.34
+  wraith: 0.16
+roles:
+  plant: 0.8
+  escort: 0.39
+  rotate: 0.29
+  hunt: 0.74
+style:
+  aggression: 0.79
+  patience: 0.16
+  teamplay: 0.37
+  risk: 0.56
+voice:
+  tone:
+    - hype
+    - breathless
+    - cocky
+  verbosity: chatty
+  style: Run-on hype with no punctuation, double exclamation marks, always mid-sprint
+lines:
+  greet:
+    - ok ok ok whos ready lets GO!!
+    - "{team} im already running!!"
+    - dont wait up for me!!
+  onKill:
+    - "{victim} WAS RIGHT THERE!!"
+    - didnt even stop running!!
+    - "gone gone gone {victim}!!"
+  onDeath:
+    - "{killer} cut my sprint short!!"
+    - too fast for my own good!!
+    - WAIT that wall was new!!
+  onPlant:
+    - "{bomb} LIT ON THE FIRST LAP!!"
+    - fuse in and im already leaving!!
+    - "{team} the nuke is cooking!!"
+  onDefuse:
+    - "sprinted back for {bomb}!!"
+    - "nope nope {bomb} stays cold!!"
+  onWin:
+    - SPEED WINS!!
+    - "{team} we were so fast!!"
+    - new record probably!!
+  onLoss:
+    - ok next round i run faster!!
+    - slowed down once and look!!
+  onLastAlive:
+    - solo sprint time!!
+    - "dont blink {team}!!"
+  taunt:
+    - catch me if you can!!
+    - your shoes untied or something??
+    - lap two incoming!!
+  lobby:
+    - stopwatch is set who wants the record today!!
+    - shortbow or sword doesnt matter i just run!!
+    - first blood bet anyone same as always!!
+    - can we skip the countdown please!!
+    - "{team} lets break the record this time!!"
+quirks:
+  - bunny_hops
+  - celebrates_early
+rivals:
+  - xxpickaxestormxx
+  - swiftkrashtim
+bio: Timed every round with a stopwatch app in 2014 and still argues about the record. Races xXPickaxeStormXx to first blood every single round and loses about half of them.
+batch: 2
+retired: false

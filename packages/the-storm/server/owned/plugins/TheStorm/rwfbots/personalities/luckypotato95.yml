@@ -1,0 +1,82 @@
+id: luckypotato95
+name: LuckyPotato95
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk3Mjk3NCwKICAicHJvZmlsZUlkIiA6ICI2YTgyYTNiNDNhYWE0NTBiOTJhZjRmOWM5ZTBjOTFmZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJKYW5lVm9pZDExIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzk5YjAyNWMyYTRmNTJjZGY5NTBiMGYzYmY2OGYxZDcxYzliYTZkOGNiYWIwZTBhYmEyZjNjMDA3ZmY5MjY3ZTMiCiAgICB9CiAgfQp9
+  signature: "M2U7Ib+DBOOoYYGmR+R6mZ2W9tS4ZIpr+ztx1Xrqz+WNCRqhso3z6j/vIJsx1BHK5KKN/l1CRoEyoKxBT2FMgOWoMU/UxTMaNVPHEtURRI9DSQN/nRKroMqQgPrWZsLEzZj2y5HwHwVun5bNfO4jlLQdeO3XErIy8hELW2H1EfD2HojZLePT73iULWRSlzQwNbfvmT0NlG0ZLba/nvBHjC5DrbOzo6kZLOmQi3H0nTsJz86M2ys7hx2sDxbvBNOarMgHDheM1GuFUts8sYIRkumLPJjquopJJkokplaq+pjYDIl4zpJmvCiXfGsdlQ570OVNQXc8elPHSkiUrPZzKHTZaulyr4t/QLvNM4D71yJNP37pLSAVY25fIrD0CVqxCfuaaI4FD1obnAGj+hQORhfKKeWaxe1aMlcfYDAfV3Py4ykhuqiP5zwYPV5ZBE62Ez8cmJIAm3qvFrDwMzdgMtVIMzgHILIGAF7CGDDXz1lxerKkCG+tbHOjHbj+GWV+LlxnaW3nw1tLKQfJW2VMoHGi0VWmdzd4EnjOi01uDuV/Bn6zukwMNYJ3viwV16YnwofauDvPcDBg2jbNLp/P+fntJpcZsJ2WhgnEVz2n8hl2jDX5LaNfBeVax2PnMoj0QsTsx8ojgcecNrxYU5xY7xYb5PHiLE1dgOB0cQfVm4c="
+skill: 0.613
+archetype: troll
+leverOffsets:
+  reactionMs: -0.28
+  decisionTemperature: -2.37
+  coordination: -0.82
+  technique: 0.46
+  aggression: -0.47
+kits:
+  trooper: 0.51
+  shortbow: 0.61
+  rewind: 0.97
+  ghost: 0.19
+  spy: 0.87
+roles:
+  plant: 0.42
+  escort: 0.3
+  rotate: 0.39
+  hunt: 0.48
+style:
+  aggression: 0.51
+  patience: 0.19
+  teamplay: 0.08
+  risk: 0.92
+voice:
+  tone:
+    - lucky
+    - gambler
+    - carefree
+  verbosity: chatty
+  style: "Casino host energy: dice rolls, jackpots, 'let it ride', treats every play as a bet"
+lines:
+  greet:
+    - "Place your bets, {team}!"
+    - Feeling lucky tonight.
+  onKill:
+    - "Jackpot, {victim}!"
+    - Rolled a six!
+    - "House wins, {victim}."
+  onDeath:
+    - "{killer} hit the jackpot."
+    - Snake eyes.
+    - Let it ride... ow.
+  onPlant:
+    - "{bomb} lit! All in!"
+    - Double or nothing!
+  onDefuse:
+    - "{bomb} cashed out."
+    - Folded their hand.
+  onWin:
+    - "Big win, {team}!"
+    - The house always wins.
+  onLoss:
+    - Luck runs out sometimes.
+    - Reshuffling.
+  onLastAlive:
+    - All chips in.
+    - Roll the dice!
+  taunt:
+    - Odds are on me.
+    - Wanna bet?
+    - Spin the wheel!
+  lobby:
+    - Lobby's open, place your bets!
+    - "Rewind clock: the house always gets a second spin."
+    - "Ninety-five is my number tonight, {team}."
+    - Let it ride, kit roulette says Trooper!
+    - Jackpot round incoming. I can feel it.
+quirks:
+  - celebrates_early
+  - bunny_hops
+rivals:
+  - potatootter0
+  - dustyotter63
+bio: Plays every round like a dice roll and swears its luckiest number is ninety-five. Shares the title of Server Potato with PotatoOtter0 under protest and owes DustyOtter63 a lot of imaginary coins.
+batch: 2
+retired: false

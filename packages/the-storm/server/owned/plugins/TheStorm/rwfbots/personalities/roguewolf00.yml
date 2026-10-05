@@ -1,0 +1,78 @@
+id: roguewolf00
+name: RogueWolf00
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTE3OTY3MywKICAicHJvZmlsZUlkIiA6ICJlOThhZTBlMTI5MDg0ZDA5OTk0MTg4N2Q2YTk0ZTI2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTZXh5SGF1c2VNYXN0ZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2JjZDJiYzA4YTY0N2QxOWE0MjhmMTY2NjhhY2ExODFkZWFjYTdlYTgxY2EwM2M0MzllNjFiNGZjNTVmMGY3YSIKICAgIH0KICB9Cn0="
+  signature: "qVyd3heZ6Mf8LaeB/aOcxi1ELG35Qcqr+GzJgtXIeNbNLD6GNveVyBeqzfIzpFU6g+nHQs+YXBY6uwv+Kktw4+Dv15eEyZcU0rWGqX3r6er9/vSVYOgeR0erhcNGjaJOAkVesvxZmtbeeYtfUDLqt90LhAkDMnevBYa14qs3F30Ea5lsLPHpwy0eCk/3VnMsUHIDhnD5+SVVQAuUcwUBSpAMdeWm1ZEyXre4iOFkA1rfYClFgEklls6umFjRXKtnwyWL2THiORgT+8l7hq4pNsjKjgwNcyPOcWRdu8VIS6ICfjaba1YbguYXo893oSbD8lZM4vMBVtpGJTNeLfV0WZQiiou5oa9Pcabe782MXU4IyNW09zuB40hkugHm8MM/PCnUd/ZKogvfHViJqqECWbjDEAgY+XOF7oYwEXheqrN6EwPR5SOM3PnKdzXc+JEoV5mJuQbg351IGEZLANA6/GG/TVaAfVaNSNxcApqXA5khOXa5Xwp7cqtENFoD4IsMtcmOthKFS/gUKQC6pRwYwHSNmEUivXzI/wAbXAy+0fTSGptTbbxHZxteJ1qZrQG9hEMj8vij1WkzY7sGr+JLXcIb2J6vUIpduaLXEUvIMTznhGoLz7/byYuA7GIlf4J6I9TEdkmMjuj0Q7t/h9sMLDyFjCHYOteTnFbOmuvg6nM="
+skill: 0.437
+archetype: support
+leverOffsets:
+  reactionMs: -0.35
+  awarenessRadius: 0.54
+  coordination: 1.6
+  aggression: -0.47
+kits:
+  trooper: 1
+  longbow: 0.31
+  rewind: 0.64
+roles:
+  escort: 1
+  defend: 0.38
+  retake: 0.54
+style:
+  aggression: 0.28
+  patience: 0.56
+  teamplay: 0.87
+  risk: 0.38
+voice:
+  tone:
+    - loyal
+    - protective
+    - gruff
+  verbosity: normal
+  style: "Loyal bodyguard: 'I've got your back', pack and wolf talk, short protective callouts"
+lines:
+  greet:
+    - "Pack's together, {team}."
+    - Stay close. I've got your back.
+  onKill:
+    - "Nobody touches the pack, {victim}."
+    - Covered you.
+    - Wolf bites back.
+  onDeath:
+    - "{killer} got past me. Watch out."
+    - Pack, keep going.
+    - I'll be back to guard.
+  onPlant:
+    - "{bomb} lit. Wolves, hold."
+    - Planter's safe. Fuse in.
+  onDefuse:
+    - "{bomb} safe. Pack holds."
+    - Got it. Breathe.
+  onWin:
+    - "The pack wins, {team}."
+    - Good hunting, wolves.
+  onLoss:
+    - Pack regroups.
+    - We heal and go again.
+  onLastAlive:
+    - Lone wolf now.
+    - Pack, I'll avenge you.
+  taunt:
+    - Touch my planter, meet me.
+    - The pack is watching.
+    - Wolves hunt together.
+  lobby:
+    - "I've got your back, {team}."
+    - Pack sticks together. Always.
+    - Trooper and extra gapples. For you, not me.
+    - Sleepy one, I'll walk you to the bomb again.
+    - Planter goes first. I go in front of the planter.
+quirks:
+  - holds_grudges
+  - calls_everything
+rivals:
+  - xxkronbrai
+  - grim-otter
+bio: Takes escort duty personally and has eaten more arrows for planters than anyone in 2014. Keeps xXKronbrai awake on the walk to the bomb and quietly competes with Grim_Otter over who escorts best.
+batch: 2
+retired: false

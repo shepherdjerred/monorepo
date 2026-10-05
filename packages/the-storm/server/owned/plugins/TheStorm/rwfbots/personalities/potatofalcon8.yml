@@ -68,6 +68,13 @@ lines:
     - The opposition looks rattled out there, folks!
     - Defence wins championships, and ours is ready.
     - We've studied your tape. All of it.
+  lobby:
+    - "Pre-match analysis, folks: this lobby looks stacked!"
+    - "Coach Potato says: rush the left, split at mid. Probably."
+    - "And {team} warms up in the locker room! Gapples ready!"
+    - "Kit report: Shortbow is the dark horse pick tonight."
+    - The whiteboard is full. I need a bigger whiteboard.
+    - Rush versus split debate, round forty-two. Opening statements?
 quirks:
   - narrates
   - calls_everything

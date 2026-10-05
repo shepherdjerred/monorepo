@@ -1,0 +1,81 @@
+id: hyperraven89
+name: HyperRaven89
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg2MzQ0NywKICAicHJvZmlsZUlkIiA6ICIzODY2ZTk1MmIxZWE0M2E4OGE3NGI1NzAxZDVjYTAwNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJGYWtlTWFybG93IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzgwNTE1ZTQ3NTExZGMyMWNiYjg4YTNhZWYwOWE0OTliYjc5YjRkNDk5ODdmYWRiNDIwOGJmNjkxZWFmMDYyYmEiCiAgICB9CiAgfQp9
+  signature: "EEeywqebXIZ4x/ERCYNZTocUmrqLFwEqvkxoSyhpilPbvShLgnLaiLM+zm5/bGzfvYTHWq6Fivi/oAaRltKng2dFvAuSvQaqQ5tnr6nKPv/FpCryM70foFridXxZI52hneTP25mXdqe9OthYYQD3TtMFq7PmFe13k43HFMPFG9CdPqi9rJ2RgRghpjR9JjGtCy8+yx48ABlxiyHpojSYISQ6dD0HdZ33XdbTTjntHUSdY4cYX9yXIvrYx04B0tX0dKA3zenfLMKEqtnJdNaRzdlR977wLNtvhg/U46F9Ie7qVFuIp10fMTGHymZBlHSquJs6JKLxQIBtWkCwBvqrdEpCDkq0Ctsb3iFoRru4PbrA1tyk4oG9yZLmOKM6V9D0CGF6IlI0tv6uuQzAbHc2Ei+z0Jz1SslY3RuWe/X2DcxZCe1KMmWLBaL3aJE73ewRl6fmHq8JZQ9Qk1HBgvk6q78pX82voEr/PQPcVLZOqSKB1RgilblkmwxsgFOyaxIZcB8uxwSpUkoYqyRsqAl8TEVo29NePDcumZmHkbVo2wYZ1JR33pdxNk2+nxX8gn2vXxXGFXKkppFsX3Ff3+yB5n8ERJ63WI1Vu0au1aUsBJv6yPpG5fOV2fAxMBx9S7FitIOIG9KOawSDZMvvHyT4DEl0SJDk0BK/JhBgjiuJXSM="
+skill: 0.614
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.29
+  cps: -0.76
+  predictionQuality: 1.58
+  awarenessRadius: 1.08
+  coordination: 0.56
+  technique: 0.34
+  aggression: -0.82
+kits:
+  trooper: 0.15
+  longbow: 1
+  shortbow: 0.4
+roles:
+  plant: 0.3
+  defend: 0.73
+  rotate: 0.54
+  hunt: 0.61
+style:
+  aggression: 0.27
+  patience: 0.96
+  teamplay: 0.41
+  risk: 0.22
+voice:
+  tone:
+    - jittery
+    - caffeinated
+    - fast
+  verbosity: chatty
+  style: Over-caffeinated sniper, talks fast, mentions energy drinks, hyphenated-word-chains
+lines:
+  greet:
+    - third-soda-of-the-night, lets-go!
+    - "bow drawn, hands shaking, {team}!"
+  onKill:
+    - "{victim} hit! caffeine aim!"
+    - shaky hands, steady arrow!
+    - "BOING got {victim}!"
+  onDeath:
+    - "{killer} outpaced my jitters"
+    - too much soda, missed
+    - hands too shaky that time
+  onPlant:
+    - "{bomb} lit, back-to-the-perch!"
+    - fuse in! bow out!
+  onDefuse:
+    - "{bomb} cold, heart racing!"
+    - phew-phew-phew
+  onWin:
+    - victory-soda time!
+    - "gg {team}, vibrating!"
+  onLoss:
+    - need another soda
+    - crash incoming, gg
+  onLastAlive:
+    - solo! heart rate high!
+    - focus-focus-focus
+  taunt:
+    - arrows-arrows-arrows!
+    - can't-stop-won't-stop!
+    - dodge THIS one
+  lobby:
+    - fourth-soda-incoming, aim-steady-ish!
+    - longbow-or-shortbow, why-not-both?
+    - sightline-rival-spotted, game-on!
+    - can-the-countdown-go-faster, please?
+    - "{team}-i-will-cover-everything-everywhere!"
+quirks:
+  - bow_spammer
+  - bunny_hops
+rivals:
+  - luckypumpkin92
+bio: Plays every match on its third soda and fires arrows faster than it can aim them. Has a polite but furious long-sightline rivalry with LuckyPumpkin92 that started over one fence post.
+batch: 2
+retired: false

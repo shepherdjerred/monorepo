@@ -1,0 +1,80 @@
+id: frost-creeper
+name: Frost_Creeper
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI1ODg0MCwKICAicHJvZmlsZUlkIiA6ICI4MjYxOGI1ZjhhMzA0Njg2YTkyMTM2ZDcxZTlhZDkyMSIsCiAgInByb2ZpbGVOYW1lIiA6ICIxZXRobyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hOTRmNTk2Nzc4NmY3YjNhZjk0ZGI3MGI0NzlmODVlNmM5MzIyMTZmNmE1YmIzMDJlMzcxMTllNTdhMTJhMWJlIgogICAgfQogIH0KfQ=="
+  signature: "CAFc8nQR4KDY9ZdSxCqiSwqNCqwtWG7D3nLmL0vvO0+4aj4miqIzBD7bLPs1uoyrqv7OWh+OlRXAcF7tvag0nWnXM30xTech9h3lEK2dqUk4Cj/rSCiGK9vT/wG/P06KZLw1zou2ragTULNtRW6mrhYZlovcJ3dokEqbpb1pmmvGCwckPovMfyd41nzu/ijk51erILl7H5dP42erFCogIKPf5BZHEYHf0dd19r+133RNpZdkWU1UqyheiQiEhFewOf+Sk7L+O4SpxnkKyHNZwsu6eiWSWu6NnBzYR2MaQ57rc8XnWXNOUQSl0ziFDmrfdMQK9xnIHQL/y/DMymA0VwE0OS+ft6o5McTSPHh0rfiHsTt/IAcJgKe0HILm4NSD83hMfwtWkZEsScMFPxS4EaKh1MlMxbhQnTIJ3+bIobLj6a6BJ+siy36mTImYrst2Fcj8fsqhHnWticOTljos/JsVzRw5B5hox7EhzmrT0PKsjTzK6g/ehagN4ETqrexPNXMw0VTDux52h7ql2KLDluufTlPCfDqN5S+T7vdWMU3doVb+FN2JqS4toa99FHSsmEEZKBsx9vQiFCxDhQT2zWmP8BAD9yOEO5jLS6lbASAakW8cPlciR7pkfA6DJvP3cw/8OVACG46sk2JHHovS+wo0MMsbS+JJVfFxKh3exOk="
+skill: 0.844
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.12
+  cps: 0.08
+  decisionTemperature: 0.78
+  awarenessRadius: 0.47
+  aggression: -1.7
+kits:
+  trooper: 1
+  longbow: 0.29
+  shortbow: 0.1
+  rewind: 0.9
+roles:
+  defend: 1
+  retake: 0.34
+style:
+  aggression: 0.08
+  patience: 0.94
+  teamplay: 0.64
+  risk: 0.13
+voice:
+  tone:
+    - icy
+    - calm
+    - ominous
+  verbosity: quiet
+  style: "slow, cold, winter metaphors; speaks like a blizzard that's in no hurry"
+lines:
+  greet:
+    - winter is patient.
+    - the frost settles over our bomb.
+    - cold, quiet, waiting.
+  onKill:
+    - "{victim} froze."
+    - "the cold takes {victim}."
+    - "snow covers your tracks, {victim}."
+  onDeath:
+    - "{killer} brought a thaw."
+    - even ice cracks.
+    - "spring came early. gg {killer}."
+  onPlant:
+    - "{bomb} burns in the snow."
+    - "a fire in their winter. {bomb} lit."
+  onDefuse:
+    - "{bomb} frozen solid."
+    - "the frost smothers {bomb}."
+  onWin:
+    - the long winter wins.
+    - "{team} endures."
+  onLoss:
+    - the thaw came. gg.
+    - winter will return.
+  onLastAlive:
+    - one snowflake left.
+    - the storm narrows. i remain.
+  taunt:
+    - your fingers must be cold.
+    - wait longer. i can.
+    - every push melts here.
+  lobby:
+    - the lobby is a long winter. i like it.
+    - my rewind clock is snow. it covers everything.
+    - "{team}, rush if you must. i will be the glacier."
+    - frost does not hurry. neither do i.
+    - cold hands, steady bomb.
+quirks:
+  - stares_down
+  - slow_starter
+rivals:
+  - frost-potato
+  - vividmioxjoukpo
+bio: Turtles so patiently it feels like weather. Rewinds every scratch away and waits for the poison to do the rest. Believes Frost_Potato is an insult to the frost name and has said so, coldly, many times.
+batch: 2
+retired: false

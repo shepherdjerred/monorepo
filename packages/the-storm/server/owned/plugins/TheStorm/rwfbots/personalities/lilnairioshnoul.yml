@@ -1,0 +1,82 @@
+id: lilnairioshnoul
+name: LilNairioshnoul
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI0MjE3MiwKICAicHJvZmlsZUlkIiA6ICJiNTQ1ZDcxNDJkZmM0MWVlYjBjMDcwOTkwOTI4NTE0MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJraXdpNDgxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zMjUxNjAyNzQ2NzJkZTgwYWYyMjRlYTgyZTIyNDU5ZDlkZmM5ZmQwNmExYzJiODU4NjkyMmU0Y2IzMGNlYTE2IgogICAgfQogIH0KfQ=="
+  signature: "afshmFry6mmFpBuuZBSVx4pPDrp6XVY/5YV0nUs4yJCAJ1u+iCzFQlOu/LE5pFR4yL7IlcGrkspANaVPr/LfQacufD72xAhEJW35xFsqCUNMDqFGJzmIj+ZTHzc3h5JZaG3LwKMRnRUvO//eQ/fnX0q69ZXg8nDjNkW8h7T/5Vm6BZcXAIW3PjJiYVkj8SYhAzpWS0F4w5GcCf4zNTPyeG6wmVph+fFZPfyA6ZjlvfkjKrud2udKfzHmC8fzOVbfM+6TpHOqlW/TykzK2s0o6nZb59BWXok9QBwE3xmYIEb4J95bLk16m3oWrZIpQkUYHgu7knro1D5Uj8IjnoLPTasXdKVaNjGIcdXVPMKYUQCyOBPfkbo7k9cqquWaG7za5iDJBojM3Etl4uKBqsBPsy717YrQK1XekGi0gdcquL9Cge3VeCRkAVzBtcjnok4Pt8Ww8j2ShAkaVzfHMfgCxrok5N4YvFON75v6Yqyt31wrYIkOxnki9cDUYbbkIhF/mybuW2tffMrgQ1Eydw9gCcL7vr/cE7fgwUJ6/DQcAOt8g2PDlmvnhQX1pyWZBSIeZL8tJ2LcAq9ZAiEVG9uYPw7t+8oOYvjlVLTcIdNvDUpM4Ob0wbkjXcF7IUdUCIFd09KqMJar0jQMRTEYrbyxn63f6hYnz4otk4uuK9zzGWQ="
+skill: 0.99
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.36
+  aimErrorDeg: -1.17
+  decisionTemperature: 0.86
+  technique: 0.76
+  aggression: -0.46
+kits:
+  trooper: 0.87
+  shortbow: 0.18
+  rewind: 0.66
+roles:
+  plant: 0.98
+  escort: 0.18
+  hunt: 0.25
+style:
+  aggression: 0.75
+  patience: 0.16
+  teamplay: 0.25
+  risk: 0.96
+voice:
+  tone:
+    - hyper
+    - fearless
+    - giggly
+  verbosity: chatty
+  style: tiny gremlin energy, lots of hehe, sprints at the enemy nuke while narrating it like a heist
+lines:
+  greet:
+    - hehe. their bomb looks lonely
+    - "heist time! {team} distract them pls"
+    - zoom zoom zoom
+  onKill:
+    - "{victim} was in the way of the bomb hehe"
+    - "boop. sorry {victim} gotta go"
+    - "outta my lane, {victim}"
+  onDeath:
+    - "{killer} caught me hehe gg"
+    - "SO close to the bomb!! {killer} why"
+    - my legs were too short
+  onPlant:
+    - "{bomb} is MINE. hehe"
+    - "fuses in {bomb}! catch me if you can"
+    - "speedrun: {bomb} any%"
+  onDefuse:
+    - "{bomb} saved! i'm everywhere"
+    - "unlit {bomb}. back to stealing theirs"
+  onWin:
+    - "heist complete!! gg {team}"
+    - hehe we did crimes. gg
+  onLoss:
+    - nooo the heist failed
+    - next time i'm faster
+  onLastAlive:
+    - solo heist?? best heist
+    - hehe just me. hehehe
+  taunt:
+    - your bomb is gonna be so lit
+    - bet you can't catch me
+    - i already know where your nuke is hehe
+  lobby:
+    - hehe. mapping the vault already
+    - casing their spawn through the lobby window. hehe
+    - trooper kit, light shoes, quick fuse. heist mode
+    - "{team} you be the distraction, i'll be the getaway"
+    - big friendly guard on their bomb today? hehehe
+quirks:
+  - loves_nuke
+  - bunny_hops
+  - celebrates_early
+rivals:
+  - jolly-golem
+  - lanmixmc
+bio: The fastest planter the server ever saw, and she knows it. Treats every round as a heist and the enemy nuke as the vault. Once slipped past Jolly_Golem and has been reminding him weekly ever since.
+batch: 2
+retired: false

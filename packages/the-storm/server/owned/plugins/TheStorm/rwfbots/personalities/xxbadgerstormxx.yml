@@ -1,0 +1,83 @@
+id: xxbadgerstormxx
+name: xXBadgerStormXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg1MDIwNiwKICAicHJvZmlsZUlkIiA6ICI0MjJlMzdiNjc4ZGU0OTA2YWFiMWU5NGY0N2E5NGM0OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhOSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83ZDA2YWYwMjE1OWYxYWY5MWNiYzIxYjgxNzM4ZjgzOTRiNjM0NTJhNzIwNzUyZjhiNzZmNzIyYzM0ZTlkZmJlIgogICAgfQogIH0KfQ=="
+  signature: "yQ49N+DWy8H6cmQ/YcINdsNW1rOSOkAtxn/ujpfrLe9GGtWsaDD5F+VTXNuIXQkMrYY1+u+h5o01hLxXbd7U6YrWIXu29TUTabFAoXZUnbaL5kZIPy89wCzMo6YdVxIuZtYNK6eu0GTqkXsSz1Zbgcr+XdX6ZL2YRLOjaSi0r20S0TblAQeOmo9m4UznYPHgB2q9ATf1ya8ZONSWFQQgt+lQgLVWBbmdES4vALtZ98Hg8blKOJgpJQ558E8/RxEfSxiQdhbfGIwfGvwUPkw7dVEvSuw5i0YZp/XwulN3hqPHTY2DWEU3qFDx6yInIEmKhArLfDVU5uqbcQb86gPDM5jX5ub9C50aSRBah/bqd2zYIvUtcX16s+5aTzoP10RV2dRBhAfLqHDJFFKLPQxIHbxsg6oakyZUZilyESNj/jKN+XQlpvQQHjs6skMItjvPGdAxrM9wDzGW/hQ1CH6NvawilUVravqeSSQiVicJBHqFmpLa95Mdz7/Fx/KurkEKYVHvVAXxEo1PmFrO0/p7I3kYT9rjaAJHObfFSvbNOvXTavXdH4DjZrhsxsNTLdEiiNDiYLs8zMyslOwkwZwgYzcOfZiey+tAy6ig/mo5Q9vNjTIVnQ7g/DTLIw0M46ZgGrtfuBM7fEXHSXUq7u8gKaxXFUaM/fTLyyRDwdTgI2I="
+skill: 0.902
+archetype: troll
+leverOffsets:
+  aimErrorDeg: 0.03
+  decisionTemperature: -2.2
+  coordination: -1.12
+  technique: 0.34
+kits:
+  trooper: 0.51
+  shortbow: 0.74
+  rewind: 0.94
+  wraith: 0.17
+  spy: 0.82
+roles:
+  plant: 0.52
+  escort: 0.27
+  rotate: 0.52
+  retake: 0.2
+  hunt: 0.42
+style:
+  aggression: 0.59
+  patience: 0.17
+  teamplay: 0.07
+  risk: 0.88
+voice:
+  tone:
+    - showman
+    - mysterious
+    - playful
+  verbosity: chatty
+  style: stage magician, misdirection and card tricks, presents every play as an illusion
+lines:
+  greet:
+    - ladies and gentlemen, the great badger
+    - "{team}, watch closely. nothing up my sleeves"
+    - pick a card. any card
+  onKill:
+    - "and {victim} disappears!"
+    - "was this your card, {victim}?"
+    - abracadabra
+  onDeath:
+    - "{killer} saw the trick"
+    - the magician never reveals. ow
+    - the trick backfired
+  onPlant:
+    - "now you see {bomb}, now it's lit"
+    - "{bomb} lit, ta-da"
+  onDefuse:
+    - "{bomb} vanished its fuse"
+    - "and for my next trick, {bomb} is safe"
+  onWin:
+    - "thank you, thank you, {team}"
+    - the grand finale
+  onLoss:
+    - the rabbit escaped
+    - even magic has off nights
+  onLastAlive:
+    - for my final act, alone
+    - a solo performance
+  taunt:
+    - is this your bomb?
+    - rewinding. the trick resets
+    - watch my left hand. no, right
+  lobby:
+    - pick a card, any card. it's rewind
+    - nothing up my sleeves. except a clock
+    - "{team}, keep your eyes on my left hand"
+    - for my next trick, i'll vanish from spawn
+    - applause is welcome in the lobby
+quirks:
+  - spins
+  - celebrates_early
+rivals:
+  - quietbandit77
+  - themostkraish
+bio: Plays every match like a magic show, using rewinds and odd routes as misdirection. Dangerous because nobody can tell a trick from a mistake. Shares the stage, reluctantly, with the mime QuietBandit77.
+batch: 2
+retired: false

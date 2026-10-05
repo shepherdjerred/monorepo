@@ -104,6 +104,7 @@ export const MOMENTS = {
   onLoss: ["team"],
   onLastAlive: ["team"],
   taunt: ["team"],
+  lobby: ["team"],
 } as const satisfies Record<string, readonly Placeholder[]>;
 export type Moment = keyof typeof MOMENTS;
 
@@ -121,6 +122,9 @@ export const MAX_TONE_TAGS = 4;
 export const MAX_STYLE_LENGTH = 120;
 export const MIN_LINES = 2;
 export const MAX_LINES = 6;
+/** `Lines.MIN_LOBBY_LINES` and `MAX_LOBBY_LINES` in Java. */
+export const MIN_LOBBY_LINES = 4;
+export const MAX_LOBBY_LINES = 8;
 export const MAX_LINE_LENGTH = 80;
 export const MAX_QUIRKS = 3;
 export const MAX_RIVALS = 3;
@@ -242,8 +246,8 @@ function pool(moment: Moment) {
   const allowed: readonly Placeholder[] = MOMENTS[moment];
   return z
     .array(prose(MAX_LINE_LENGTH))
-    .min(MIN_LINES)
-    .max(MAX_LINES)
+    .min(moment === "lobby" ? MIN_LOBBY_LINES : MIN_LINES)
+    .max(moment === "lobby" ? MAX_LOBBY_LINES : MAX_LINES)
     .refine((lines) => new Set(lines).size === lines.length, {
       message: `${moment} repeats a line`,
     })
@@ -275,6 +279,7 @@ export const LinesSchema = z.strictObject({
   onLoss: pool("onLoss"),
   onLastAlive: pool("onLastAlive"),
   taunt: pool("taunt"),
+  lobby: pool("lobby"),
 });
 
 const QuirksSchema = z

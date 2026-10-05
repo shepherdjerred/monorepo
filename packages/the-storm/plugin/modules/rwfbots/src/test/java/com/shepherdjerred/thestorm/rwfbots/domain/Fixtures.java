@@ -98,9 +98,14 @@ public final class Fixtures {
         base.retired());
   }
 
-  /** Two plain lines for every moment. */
+  /** Two plain lines for every match moment and four for the lobby. */
   public static Lines lines() {
     var two = List.of("ok", "sure");
-    return new Lines(two, two, two, two, two, two, two, two, two);
+    return new Lines(two, two, two, two, two, two, two, two, two, lobby());
+  }
+
+  /** Four plain lobby lines. */
+  public static List<String> lobby() {
+    return List.of("hi", "ready", "which kit", "go {team}");
   }
 }

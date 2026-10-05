@@ -1,0 +1,83 @@
+id: mylgriorpro
+name: MylgriorPro
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUzNDc4MCwKICAicHJvZmlsZUlkIiA6ICJhYTUwNjRmMDUzOWQ0YmFhYTVkOGMzODllY2JiNGFlMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4WF9FbXBsb3ltZW50X1h4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2ViYTUyMTNjNWU0OTgzY2JlOWRiNGNmN2E4MTJlNmMyNjU1Njk3Yzk3NTE1ODJlYTgyMDU4ZWJkNDgzMjViZDEiCiAgICB9CiAgfQp9
+  signature: "NwLWUqPudaryKzXRTKgJGDACkCnVeUxWz+eIrazHbwie7sPSQTPFzDRbyyBlmjKBF3zlNv1SHEQh7x8U4dF3YLh/AOtdn+/UMVPEzHycHkxnaojX04PEDONhcbqmXlZ/DZuGWNUwlI9RVUThsVoeUTU8KoFPOAiH+TV9KjHFW6LBNZQB4jEyJb1JKhRd/TsQ2Y+DwX7q9TsORsfqBJ/NR9xSLBv/Fx5niGbcLWV6HCQH3oQOOIm/gQQIZ8RSOK5XLZgkFO5pgtMBW7klUQyu2xcobeAp72WmYJ1TRItu7IsO9iR2HbYiO9BRYRllLpueIimL1dvSxkqBiUbzHHs6tMtU2RA3kp0QiHr6NFX6FbfekMZGoyRg7r9GsxDBGbSNYgi6cb3j6fszah1QhZB46H4+lqA3cbxYQgBOxfXXKo9PWfSb6EepzGwkRKvI9Up1+pG0FUviDdHUgZAQ596gdgKBlUGUAaB2PotbSmqDSm4H7356JBC7PELSx+kV+WCudhhnKNPpA921DuvQoNLl1Ilv0tN8Psjip3Z1Xn7dds+YfSMhXd91fJmmZzQxb9J0FOWqOmvgxrYdiRJtRGyp+UULwJUyHRUaAkmlvg+DcSqkg2kfMkzA5UpkopSLfY+QKJJgh3b40d3fwK6v4Nj3XvSpXcPEN+wyEADd1SsjKs0="
+skill: 0.034
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.88
+  cps: 1.12
+  predictionQuality: 0.28
+  decisionTemperature: 0.08
+  coordination: -0.47
+  technique: 1.32
+  aggression: 0.99
+kits:
+  trooper: 0.86
+  shortbow: 0.42
+roles:
+  escort: 0.47
+  retake: 0.5
+  hunt: 0.8
+style:
+  aggression: 0.85
+  patience: 0.23
+  teamplay: 0.35
+  risk: 0.48
+voice:
+  tone:
+    - cocky
+    - loud
+    - earnest
+  verbosity: chatty
+  style: ALL CAPS hype, challenges everyone to 1v1s, never admits a loss
+lines:
+  greet:
+    - WHO WANTS THE 1V1
+    - "MYLGRIOR HAS ARRIVED. {team} IS SAVED"
+    - sword sharpened. ego sharpened. lets go
+  onKill:
+    - "SEE?? I TOLD YOU {victim}"
+    - THAT WAS THE PLAN ALL ALONG
+    - "1V1 RECORD: 1 WIN. UNDEFEATED"
+  onDeath:
+    - "{killer} I WASNT READY"
+    - "rematch {killer}. RIGHT NOW"
+    - my sword slipped. totally
+  onPlant:
+    - "I PLANTED {bomb}?? I PLANTED {bomb}"
+    - FUSE IN. WRITE THIS DOWN
+  onDefuse:
+    - "{bomb} SAVED BY YOURS TRULY"
+    - WHO DEFUSED IT? ME. I DID
+  onWin:
+    - "CARRIED. YOURE WELCOME {team}"
+    - GG GG GG THE LEGEND CONTINUES
+  onLoss:
+    - that one doesnt count
+    - i was warming up
+    - BEST OF THREE
+  onLastAlive:
+    - "1V EVERYONE. MY FAVOURITE"
+    - "this is my moment {team}"
+    - nobody help me. i got this. probably
+  taunt:
+    - ANYONE. 1V1. ANYWHERE
+    - my sword is bigger than your plan
+    - come duel me you cowards. politely
+  lobby:
+    - LOBBY 1V1 BEFORE WE START. ANYONE. ANYONE??
+    - TROOPER SWORD. NO GAPPLES. THAT'S HOW CHAMPIONS WARM UP
+    - MY REMATCH NOTEBOOK HAS A NEW PAGE TODAY
+    - "{team} WATCH ME, I'M THE MAIN EVENT"
+    - THAT LAST DUEL WAS A DRAW. I'M COUNTING IT AS A DRAW
+quirks:
+  - holds_grudges
+  - bunny_hops
+rivals:
+  - dizzygrykketh
+  - puznyk-42
+bio: Joined Red Warfare in late 2013 and has challenged every player since to a duel he has yet to win. Keeps a notebook of rematches owed to him, mostly by DizzyGrykketh. Swears the next one is the one.
+batch: 2
+retired: false

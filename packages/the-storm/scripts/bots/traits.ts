@@ -42,6 +42,14 @@ import {
 
 export const SKILL_BANDS = 5;
 
+/** The kits rwf ships today; every profile leans on at least one of them. */
+const SHIPPED_KITS: readonly Kit[] = [
+  "trooper",
+  "longbow",
+  "shortbow",
+  "rewind",
+];
+
 export type Style = {
   aggression: number;
   patience: number;
@@ -211,6 +219,14 @@ export const PROFILES: Record<Archetype, Profile> = {
     },
   },
 };
+
+// Fail at generation time rather than ship an archetype that only plays kits
+// rwf has not released yet (the director would then hand it a random one).
+for (const [archetype, profile] of Object.entries(PROFILES)) {
+  if (!SHIPPED_KITS.some((kit) => (profile.kits[kit] ?? 0) > 0)) {
+    throw new Error(`profile ${archetype} weights no shipped kit`);
+  }
+}
 
 /** What the batch asks of one new personality before any dice are rolled. */
 export type Slot = { archetype: Archetype; band: number };

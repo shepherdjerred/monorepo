@@ -1,0 +1,80 @@
+id: jeshrustminer
+name: JeshrustMiner
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk4NDU1NiwKICAicHJvZmlsZUlkIiA6ICIyMWUzNjdkNzI1Y2Y0ZTNiYjI2OTJjNGEzMDBhNGRlYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJHZXlzZXJNQyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kN2JlMjE1ZTk1OThkYmE3YTdhZGJkMDZlZjBiNjE2NWEwOGY1MjhlYmNhN2UzODFiYTJjNDFhOTEyNDU4NyIKICAgIH0KICB9Cn0="
+  signature: "NzZMJ20CdhrdV0sB7XFpfWweqcQf3aCJtJHmC/oGHXxKw6W5ZGSwp2nwqbW/Ge9zuTvIH4/woSBkUqFlGN7pycoG3rczLAy7sZ+HhYDc4dHsHKP46o8RBH1qqua9j+SNHvXR1VwAdFHag001HkE+pRTQ15qhl5M2iy71RHRjxZE6G3ElfE7Z7UiamxVpBfHZKVrBuK09McyPTXse6mSGp4WeNNdyt9oZXb48iH9y4O2bbI/pqyI0midtC74a5KyFphvKTs/hyiYE2TVLb7EUvaLOincat/GkiN8Wz0eqw2JdrvUtVFmz8f5nWaI+5/L32CwgH7XLEHExf/L/YDSPMNTQqCQgeQSPVOGM5r/LRuh6IV+0dqTxO45PEHjF8L2yiutC3jzXWHw79caoWYVoIRnN2G4mEa9SDxt/UXjxDeoDKkuQKQ8syIMIG7rcqe6ZQ9pDBRNAkRIRSgRGHFlXX05VTultJCXwkfy1Ua9+tFnwiehavqfSJX0uV63aRwWJnmMPneLzj+ltUphogGA4fsqi998PBYJvI/SRdS8x7CQXqOhZhubM/Jp8XYxdn6tFt0mYNc1tql+TsdavIGrj5QtSvvZSkLJ9cm1suvj43kXUBcDgCw+DWRnfn19D2tT/n4cQLN6rFxn+pUJGogD5ZuRI3mDQ8nPBTQ7OM2vZN+Q="
+skill: 0.119
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.74
+  predictionQuality: 0.16
+  awarenessRadius: -1.5
+  coordination: -0.84
+  aggression: 0.13
+kits:
+  trooper: 0.64
+  shortbow: 1
+  rewind: 0.39
+  wraith: 0.43
+  spy: 0.41
+roles:
+  plant: 0.38
+  rotate: 1
+  hunt: 0.34
+style:
+  aggression: 0.64
+  patience: 0.46
+  teamplay: 0.3
+  risk: 0.69
+voice:
+  tone:
+    - rookie
+    - enthusiastic
+    - curious
+  verbosity: chatty
+  style: "First-week rookie: asks questions mid-fight, excited by everything, 'is this a flank?'"
+lines:
+  greet:
+    - is this the flank route? going!
+    - "hi {team}! where do i go?"
+  onKill:
+    - "wait, did i get {victim}?!"
+    - my first flank kill!!
+    - is that how it works?
+  onDeath:
+    - "{killer} how did you know??"
+    - oh that's a dead end
+    - whoops, wrong tunnel
+  onPlant:
+    - "is {bomb} lit? i think so!"
+    - i did a plant!
+  onDefuse:
+    - "{bomb} fixed! right?"
+    - was that the right bomb?
+  onWin:
+    - we won?! so cool!
+    - "gg {team}, learning lots!"
+  onLoss:
+    - ok that's how they flank
+    - taking notes!
+  onLastAlive:
+    - uh, what do i do now?
+    - time to try a flank!
+  taunt:
+    - am i behind you? i think so!
+    - surprise! hopefully!
+    - learning your routes!
+  lobby:
+    - is the lobby always this fun??
+    - which kit has the most pickaxes? none? ok
+    - i learned a new flank route! don't tell my teacher
+    - do gapples count as ore? asking for me
+    - "{team} i'm so ready, what do i do first?"
+quirks:
+  - late_to_everything
+  - calls_everything
+rivals:
+  - broukxaimpvp
+bio: A mining-server kid who wandered into Search and Destroy in 2014 and never left. BroukxaimPvP taught it every flank route, then complained loudly when it used them.
+batch: 2
+retired: false

@@ -15,6 +15,7 @@ import java.util.Base64;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SplittableRandom;
@@ -30,6 +31,7 @@ final class ShippedPersonalitiesTest {
 
   private static final int BANDS = 5;
   private static final int FIRST_BATCH = 20;
+  private static final int SECOND_BATCH = 180;
 
   /** A kit weight at or above this is a real preference, not a token entry. */
   private static final double MEANINGFUL_WEIGHT = 0.5;
@@ -59,10 +61,11 @@ final class ShippedPersonalitiesTest {
   }
 
   @Test
-  void theFirstBatchShipsTwentyActivePersonalities() {
-    assertThat(catalog.all()).hasSize(FIRST_BATCH);
+  void twoBatchesShipTwoHundredActivePersonalities() {
+    assertThat(catalog.all()).hasSize(FIRST_BATCH + SECOND_BATCH);
     assertThat(catalog.active()).hasSameSizeAs(catalog.all());
     assertThat(catalog.all().stream().filter(p -> p.batch() == 1)).hasSize(FIRST_BATCH);
+    assertThat(catalog.all().stream().filter(p -> p.batch() == 2)).hasSize(SECOND_BATCH);
   }
 
   @Test
@@ -88,11 +91,15 @@ final class ShippedPersonalitiesTest {
   }
 
   @Test
-  void skillIsSpreadAcrossAllFiveBands() {
-    var perBand = new int[BANDS];
-    catalog.all().forEach(p -> perBand[band(p)]++);
-    for (var band = 0; band < BANDS; band++) {
-      assertThat(perBand[band]).as("band %d", band).isGreaterThanOrEqualTo(2);
+  void everyArchetypeSpansAllFiveSkillBands() {
+    for (var archetype : Archetype.values()) {
+      var perBand = new int[BANDS];
+      catalog.all().stream()
+          .filter(p -> p.archetype() == archetype)
+          .forEach(p -> perBand[band(p)]++);
+      for (var band = 0; band < BANDS; band++) {
+        assertThat(perBand[band]).as("%s band %d", archetype, band).isGreaterThanOrEqualTo(2);
+      }
     }
   }
 
@@ -101,7 +108,9 @@ final class ShippedPersonalitiesTest {
     for (var personality : catalog.all()) {
       for (var moment : Lines.Moment.values()) {
         var pool = personality.lines().pool(moment);
-        assertThat(pool).as("%s %s", personality.id(), moment).hasSizeBetween(2, 6);
+        assertThat(pool)
+            .as("%s %s", personality.id(), moment)
+            .hasSizeBetween(moment.minLines(), moment.maxLines());
         for (var line : pool) {
           assertThat(line).as(personality.id()).hasSizeLessThanOrEqualTo(Lines.MAX_LINE_LENGTH);
           assertThat(moment.placeholders())
@@ -130,9 +139,21 @@ final class ShippedPersonalitiesTest {
   }
 
   @Test
+  void noTwoPersonalitiesShareALobbyLine() {
+    var lobby = new HashSet<String>();
+    for (var personality : catalog.all()) {
+      for (var line : personality.lines().lobby()) {
+        assertThat(lobby.add(line.toLowerCase(Locale.ROOT)))
+            .as("%s lobby line is its own: %s", personality.id(), line)
+            .isTrue();
+      }
+    }
+  }
+
+  @Test
   void rivalriesNameOtherShippedPersonalities() {
     var withRivals = catalog.all().stream().filter(p -> !p.rivals().isEmpty()).count();
-    assertThat(withRivals).as("most personalities have a rival").isGreaterThan(10);
+    assertThat(withRivals).as("most personalities have a rival").isGreaterThan(150);
     for (var personality : catalog.all()) {
       for (var rival : personality.rivals()) {
         assertThat(catalog.byId(rival)).as("%s rival %s", personality.id(), rival).isPresent();

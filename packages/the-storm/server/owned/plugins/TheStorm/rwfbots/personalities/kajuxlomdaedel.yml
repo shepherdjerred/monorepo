@@ -1,0 +1,84 @@
+id: kajuxlomdaedel
+name: Kajuxlomdaedel
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ3NDU0NywKICAicHJvZmlsZUlkIiA6ICJkMWU5ODViZGYyMTg0OWQwYmFlZTNlYjBiNDM2ZmExYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb3NleUNoYW40MjAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjNjZWI2NjYwZjA5MDY5YWI2NTBjZmY5YWEwNWNmYjNmYzJmOWRiMGY5MDE4MmQ0OTVlNzA1MTBjNDVlMzUzOCIKICAgIH0KICB9Cn0="
+  signature: "vQXgMflKlBDmKiDJimK5j5lK8mxA/XBTeoHwrmAS72oWb34FimSFnXz2Zb42fGHeJ0nZtTHtWko382EMaP0TivWiFT8u6fWcYp0WFeExqW38TYlUwg9cI1TyTXPfRWVZOaRGjcIrbZqREPjSQsl87We8JXwhcgF60c6MFdVZ9nN2g1Ykj+mRRWHn4vtwFFdczZxLrrp8kGzT96DPVsTeBSMLm8E2ZeXiuWyjDb8lP/D2tVN8HTNVvY1lmcaSwlcmU68VsS2vRgnlagidOYiw9RrQEmX80haN0o8WQZ6p8V0DI+A//MIZehWEbsVUaSnmaD6u+WIOvYPCqC5mo3cdN7qmhPAGnKAATGS+XdZSf6ajpgzg4S0VwAvhy9Z5zR9T8tB6OuUrReeCFX291KYh63ZqQ5+/KW4C7NBF5GWLBZXsxZEiCMz7/qeskpi25EEmLbdmQS7/Bsgel9XBUURGSXWkgJd5jKoBq1ACKKuKHb3QAemmBz4pO1ACZ+ujgpJQhRTGfoBSvcAJ5O20R6VZff5FfjMLHSwAJ5uVrKWhpbOLU9yObhkVJYbQpTuOTF5KlwJ0A9p5C6cgzd2vqA6CABt48JePwSlHmXrLqfEr3HGNVxxdk1/jJ3OFWdynxZeF50/+Ftq7Pv3u5eaT+TUGQv1pWFPfWJWAWfcCTgaQ+Xc="
+skill: 0.668
+archetype: troll
+leverOffsets:
+  turnRateDegPerTick: -0.65
+  decisionTemperature: -2.14
+  coordination: -1.3
+  technique: 0.44
+kits:
+  trooper: 0.49
+  longbow: 0.14
+  shortbow: 0.64
+  rewind: 1
+  spy: 0.83
+roles:
+  plant: 0.49
+  escort: 0.3
+  rotate: 0.38
+  retake: 0.27
+  hunt: 0.43
+style:
+  aggression: 0.66
+  patience: 0.29
+  teamplay: 0.08
+  risk: 0.97
+voice:
+  tone:
+    - mischievous
+    - theatrical
+    - scheming
+  verbosity: chatty
+  style: "cartoon villain; monologues, evil laughs, announces schemes that mostly backfire"
+lines:
+  greet:
+    - mwahaha. my scheme begins
+    - "{team}, you are my minions now"
+    - welcome to my evil lair. it's spawn
+  onKill:
+    - "{victim} fell into my trap! mwahaha"
+    - "all according to plan, {victim}"
+    - another hero defeated
+  onDeath:
+    - "curses! {killer} foiled me!"
+    - "i'll get you next time, {killer}!"
+    - this isn't the end. it's a sequel
+  onPlant:
+    - "{bomb} is lit! my doomsday device!"
+    - "phase two: {bomb} burns!"
+  onDefuse:
+    - "{bomb} defused. only i may light bombs!"
+    - nobody ruins my bomb but me
+  onWin:
+    - "the world is mine! gg {team}"
+    - evil triumphs! politely. gg
+  onLoss:
+    - my plans... ruined! gg
+    - foiled again
+  onLastAlive:
+    - at last! the villain's finale!
+    - my minions have failed me. typical
+  taunt:
+    - you've walked into my trap
+    - mwahahaha
+    - i rewound time itself! mostly by accident
+  lobby:
+    - mwahaha. the lobby is merely phase one of my scheme
+    - behold my rewind clock, the instrument of time itself
+    - "{team}, you are my minions now. lovingly"
+    - my plan has eleven steps and step one is snacks
+    - soon. soon! ...how long is this countdown
+quirks:
+  - narrates
+  - celebrates_early
+  - spins
+rivals:
+  - daxgraixbandit
+  - sirromxon
+bio: Plays a cartoon villain with schemes so elaborate they collapse before the round starts. Rewinds constantly and calls it bending time. Delights in convincing DaxgraixBandit that the Spy kit is secretly real.
+batch: 2
+retired: false

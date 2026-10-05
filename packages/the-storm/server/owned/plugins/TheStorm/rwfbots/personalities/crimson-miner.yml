@@ -1,0 +1,83 @@
+id: crimson-miner
+name: Crimson_Miner
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU0MjU4OSwKICAicHJvZmlsZUlkIiA6ICI2NGRiNmMwNTliOTk0OTM2YTY0M2QwODEwODE0ZmJkMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGVTaWx2ZXJEcmVhbXMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGFlMjkzN2EwY2I3YmY0NmJiNjZlNzI5OWU1ZjQ3ZjI1OTBjMjIxZDM4YjBkNjZjNmUyYjA0NzIyYmM2YjIwMyIKICAgIH0KICB9Cn0="
+  signature: "DSFTwDfNOAzLUS9+4ZsuYTOeWyOujz5Pfyul1F9lQ1IMaTER0tAOL0Y1TYhDNc4vEWbTJeXyQPJj+/a5O59RUe3u+rAXTWNLdVAJ8Yi3mA8K2H3ET5w/0lKiohBlkS0R7l5trqnIxVR3+2Tr/YURDwMDbe+zkSDAHehtrWgguR1SV92vwnq6xpWxnZMWI+53VfKYXoaTNDouHFHttbbF67fgmaXY6F5EznQsW1aws8LODf2WW27ang9SN05IziRdBubmj9wrWrBxKO3TCCWYUTsSwJLNIVb8DZ59tcN2J5qHVOdkR2lKRCMI/QNOk0lHgSThYpIqvoyz1w+LQNbZTSgqxpcepxiJxZgtE0npUp4NFe/lIaOY74FlXQJST/kqB90uotKE3CIGpDT64A1K+/cN4cOZC7ZGHGTUKz9dPfJvTvwADnXhLIyLUNNCmZ2ck7hfv09pNJwYBqZIQj0pGy2/Iohyg4KHwCbNvhX2HrJT2hH+HKUok1q7BkX6E1RXscAcU6gNdxTGKEMdHhoReiBkYrw82KGS7/qQ2z9heT9xxAttpGxliAI6RXwb9sXXj+O7TonxibWcizxA/tXACsIms58GUo+rhngaSleGQbigWjEabf8fEYWO3rzB23XZr66SDyTA4+1RdqW1sLy2zo0o+rdBmd1Hz0PFstGA3CY="
+skill: 0.361
+archetype: sniper
+leverOffsets:
+  reactionMs: -0.02
+  aimErrorDeg: 1.86
+  cps: -0.56
+  predictionQuality: 0.98
+  awarenessRadius: 1.22
+  coordination: 0.6
+  technique: -0.38
+  aggression: -0.5
+kits:
+  trooper: 0.16
+  longbow: 1
+  shortbow: 0.39
+roles:
+  defend: 0.62
+  rotate: 0.43
+  hunt: 0.69
+style:
+  aggression: 0.31
+  patience: 0.92
+  teamplay: 0.57
+  risk: 0.25
+voice:
+  tone:
+    - punny
+    - cheerful
+    - dusty
+  verbosity: normal
+  style: relentless mining puns, ores and pickaxes, a little proud of every bad joke
+lines:
+  greet:
+    - "ready to dig in, {team}"
+    - pickaxe swapped for a longbow. same aim, mostly
+    - let's strike it rich today
+  onKill:
+    - "struck {victim} like diamond"
+    - that shot was ore-some
+    - "mined that one clean, {victim}"
+  onDeath:
+    - "caved in by {killer}"
+    - "{killer} hit bedrock on me"
+    - should've brought a torch
+  onPlant:
+    - "{bomb} is lit. like a furnace"
+    - fuse in. now that's a blast mine
+  onDefuse:
+    - "{bomb} defused. no cave-ins today"
+    - safety first, like the mines
+  onWin:
+    - "we hit the mother lode, {team}"
+    - rich vein of wins today
+  onLoss:
+    - dug too deep that round
+    - came up with gravel. next time
+  onLastAlive:
+    - last miner in the shaft
+    - lantern's low. still digging
+  taunt:
+    - you're in my quarry now
+    - i can see your ore from here
+    - "dig a little deeper, {team}'s got arrows"
+  lobby:
+    - longbow's my pickaxe today. ready to mine some kills
+    - what do you call a lobby with no gold? a bedrock bottom
+    - "{team}, let's strike while the ore is hot"
+    - i've got gapples. they're a gold mine of healing
+    - this match is going to be a real diamond in the rough
+quirks:
+  - bow_spammer
+  - says_sorry
+rivals:
+  - vividbadger76
+  - jollyshathkrai
+bio: Spent all of 2013 strip-mining a survival world before a friend dragged her to Search and Destroy. Picked up the longbow because it felt like aiming a pickaxe. Thinks VividBadger76 is all style and no ore.
+batch: 2
+retired: false

@@ -66,6 +66,13 @@ lines:
     - Arrows inbound! Ye've been warned!
     - I can see ye from the crow's nest!
     - Every arrow I fire has yer name on it, matey.
+  lobby:
+    - Arr, the lobby! A fine harbour before the storm!
+    - Longbow polished, arrows counted! All four hundred of 'em!
+    - Who's sailing with Captain Silent today?
+    - "{team}, hoist the bows and sing with me!"
+    - The haiku poet's here again. Arr, a worthy foe!
+    - Punch bow, mateys! Knock 'em right off the plank!
 quirks:
   - bow_spammer
   - calls_everything

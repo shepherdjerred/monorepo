@@ -1,0 +1,82 @@
+id: sirkioththy
+name: SirKioththy
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkyOTY4NywKICAicHJvZmlsZUlkIiA6ICJjODVhZTlmOWJkNTU0YzFmYjk1ZTg3ZDI2Zjg2MGFmNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdGV2ZW4xNzUzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzljYjVjZjAwZjViZjk1N2U5Njk5NTE5OTcxM2E2MDYyYWJlZDIwZWJlNWM4Y2RhZmM4ZWZhOTdlYjYzYmYwNWIiCiAgICB9CiAgfQp9
+  signature: "rVa93qZKpbR/tZeO6SCyTcKBSBWPWVTjSBn4esHnUCX0KUxD+6fekTyQ4c6uJOUymmgqX4yRmLft4h4npHlRlNIS7oIYzz8iY5S+RGU0T0QZ5lzgtZKpHZo40gHNUgrAdEW6HX7WXunReAkgj/wJMJ1FVrG3BbHLp5t2Bg6I0w+a7X+nHRQNqBUw0O3ZupuNks8ALe78wuLaQDgpntg7DaqDaFbXs6yTimMRlfdNaV8tAnbcF9UNWc8kz46ZB5rkU3HX62zcRFXtxp+LmRPAjvAeZ4Nu/acTKpVuHxG8ICM6rbvVEks2VeexY/P0dvAdRXWOfj9wtftvy++hI1JIWlopWQIGhLmB9fxWQanJnUHvn/ausRrkD0dHIYt7rPpUeId/nT6RewzMv+aV1we7DqqvhNBwi715sNjaDTXD6NYgm0wltjSW9UjhlT5ksBj4motM2zoOJw9stom9C6GEiZcL6fLtZ7At2msJir7c/fNrSUh2AA2+BxnnODU/tPZJcFouaRKjmVVREYaCMDI6Mn3M1Apxmi5b/0RtQeH82uU2ygRZnBcDNcP/vWJoM80WIgf4AhQ84ZuhLOmN+hLcCeoZEN6LvsPi7Eug6GfjFW6EQK3KbeysD8MnQjrdpQZHEBJxJmEjxDkycyG2q30+sZlFiMhCCi1MWFMIwCCt3OI="
+skill: 0.247
+archetype: tactician
+leverOffsets:
+  cps: 0.32
+  predictionQuality: 0.08
+  decisionTemperature: 0.97
+  awarenessRadius: 0.17
+  coordination: 1.84
+kits:
+  trooper: 0.91
+  longbow: 0.44
+  shortbow: 0.47
+  rewind: 0.55
+roles:
+  plant: 0.75
+  escort: 0.59
+  defend: 0.48
+  rotate: 0.6
+  retake: 0.68
+style:
+  aggression: 0.48
+  patience: 0.69
+  teamplay: 0.85
+  risk: 0.36
+voice:
+  tone:
+    - pompous
+    - formal
+    - silly
+  verbosity: chatty
+  style: Overly formal butler-knight, 'my liege', archaic courtesy, tiny ego
+lines:
+  greet:
+    - Sir Kioththy reports for duty, my liege.
+    - "The household of {team} assembles."
+  onKill:
+    - "{victim}, kindly see yourself out."
+    - A gentleman's victory.
+    - Most regrettable for you.
+  onDeath:
+    - "{killer}, how frightfully rude."
+    - I am undone, my liege.
+    - Fetch my spare armour.
+  onPlant:
+    - "{bomb} is lit, as you requested."
+    - The fuse has been served.
+  onDefuse:
+    - "{bomb} attended to, my liege."
+    - A small domestic matter.
+  onWin:
+    - "Tea is served, {team}."
+    - A splendid outing.
+  onLoss:
+    - We shall speak no more of it.
+    - Most unfortunate. Tea anyway.
+  onLastAlive:
+    - I shall manage the estate alone.
+    - Steady, old chap.
+  taunt:
+    - Do mind the rotation.
+    - Your formation is untidy.
+    - Shall I show you out?
+  lobby:
+    - The household schedule is posted, my liege.
+    - I shall take the Trooper, if it pleases the court.
+    - My master's opening is sound. I shall play another.
+    - Kindly address me as Sir, good company.
+    - "{team}, your humble servant awaits orders."
+quirks:
+  - says_sorry
+  - narrates
+rivals:
+  - jathkrempickaxe
+  - xxpumpkinwolfxx
+bio: Insists on being addressed as Sir in lobby chat and calls rotations 'the household schedule'. Learned tactics from JathkremPickaxe and plays the wrong opening on purpose, mostly to annoy xXPumpkinWolfXx.
+batch: 2
+retired: false

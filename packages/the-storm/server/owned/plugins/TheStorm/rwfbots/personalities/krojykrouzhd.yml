@@ -1,0 +1,83 @@
+id: krojykrouzhd
+name: KrojykrouzHD
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMyODczMCwKICAicHJvZmlsZUlkIiA6ICIxMDJiMWQxOGFhZTg0ZjQzYWMyYTY1MjQyNzdjMDU0NiIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeXRob2xvdGwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjE1MGVlYzlkMzE3MjA4MzI3N2VjODY3ZTYyOGNjNmZjOTVmMTI1NTAxNGI1ZGViYWY5NjcwZTdjOTg0M2UyZSIKICAgIH0KICB9Cn0="
+  signature: "rVFM+ToWcmgeFhUPcOrCDlCpMaC/H6UlQGyBXqiBpe+tuv4b7qgB410x6Yqy8HnZINQDD+vXiyKgqNTWH1J4PFQSZKrbH27WWPPVcZkExxBIcLkPuMCJkXPERTDEUhkEtWRORF0GaXnbCkLGlK4LpP/0WVX5TpDvC6548Qr3/W9G7GJVjDv9xwEZuS7pX+uGvCZI1EUHX1aVwQgqEtMokJ4iwKGD49WQKyBvZiQ9atD5Fqj3jdf8YgLH9Gst6/8aeBvZ0LLtbf+jqCG23ZZF1bn49byC/sB1SYc/YY1RJLsx7e6aVNVRu+xlMr4s2o1PG06s/QRSQJhHv/KxXT9gzj4SZLd+PRjjcgpGdB0QQy3XvRVlC10WoC3SnLj4DnC/2D13ppZdXIJVeAiX/u857G3ICpNxLOLoEi5jz4S1KjX9CjVROFhWST+j8bs020/qPUYCMP80TqqJ91yUtkBap35J1ciIZ43qbfBKcwfmPIZeMrKTHIDHyRdE/ircpImsyUTeMABZ8Hc35Z6M9cvuILpCl3iHdVgcanxMmE+JAm95LCobxkp8Qg7ExLS4UYNylDeML/7ygXD0XMQA512hq1G2F1VkS6J7xMqeWDqJvZuwr1JmUniQinze9aA38hYJ33IVx0S0UPS3E8RimrLIyyuCKBmeXdf+OVExsCcN3DA="
+skill: 0.04
+archetype: troll
+leverOffsets:
+  predictionQuality: -0.31
+  decisionTemperature: -1.84
+  coordination: -1.44
+  technique: 0.3
+kits:
+  trooper: 0.43
+  shortbow: 0.61
+  rewind: 1
+  wraith: 0.34
+  spy: 0.87
+roles:
+  plant: 0.46
+  escort: 0.38
+  defend: 0.24
+  rotate: 0.45
+  hunt: 0.52
+style:
+  aggression: 0.67
+  patience: 0.3
+  teamplay: 0.11
+  risk: 0.98
+voice:
+  tone:
+    - random
+    - giddy
+    - chaotic
+  verbosity: chatty
+  style: "brand new player who found the chat key; random words, wrong game facts, pure enthusiasm"
+lines:
+  greet:
+    - HI HI HI what does this button do
+    - is this the parkour server
+    - "{team} i'm here!! what's a nuke"
+  onKill:
+    - wait did i do that
+    - "{victim} sorry i was aiming at a chicken"
+    - "WHOA i got {victim}"
+  onDeath:
+    - "{killer} how"
+    - i fell?? did i fall
+    - who turned off gravity
+  onPlant:
+    - "i clicked {bomb} a bunch and now it's beeping"
+    - "oops {bomb} is on fire. is that us"
+  onDefuse:
+    - "{bomb} stopped beeping. good dog"
+    - "i fixed {bomb}! i think"
+  onWin:
+    - WE WON?? what game was this
+    - "gg {team} you're all my best friends"
+  onLoss:
+    - we lost?? when
+    - gg can we play again
+  onLastAlive:
+    - where did everyone go
+    - hello? anyone? just me?
+  taunt:
+    - i rewound so many times i'm in last week
+    - betcha can't guess where i'm going (me neither)
+    - watch this! (don't)
+  lobby:
+    - IS THIS THE PARKOUR MAP
+    - what does the clock do. it looks cool
+    - "{team} i'm so ready i don't know what i'm ready for"
+    - which one is our bomb. the red one? they're both red??
+    - i pressed every button in the kit menu
+quirks:
+  - spins
+  - celebrates_early
+  - bunny_hops
+rivals:
+  - pixelnazvoulon
+bio: Wandered into Red Warfare from a parkour server in 2014 and never figured out where they were. Rewinds constantly to see what happens. PixelNazvoulon has adopted them as a chaos apprentice, which they think is a rivalry.
+batch: 2
+retired: false

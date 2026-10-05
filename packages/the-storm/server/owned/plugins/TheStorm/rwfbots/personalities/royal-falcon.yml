@@ -66,6 +66,13 @@ lines:
     - You really ought to check the sides, old chap.
     - I'll be along presently. From an angle.
     - Front doors are so terribly common.
+  lobby:
+    - Tea, anyone? No? One does like a civilised start.
+    - I shall be taking the long way round, as is tradition.
+    - The Shortbow is a gentleman's weapon. Range and manners.
+    - "{team}, do try to keep the front door busy for me."
+    - I hear the wide route is crowded with ruffians lately.
+    - Splendid lobby. Lovely weather for a flank.
 quirks:
   - good_sport
   - late_to_everything

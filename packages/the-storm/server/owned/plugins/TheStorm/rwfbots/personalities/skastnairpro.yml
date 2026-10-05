@@ -1,0 +1,84 @@
+id: skastnairpro
+name: SkastnairPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDEzNzIzNiwKICAicHJvZmlsZUlkIiA6ICJkMmNhNWUwZjJkMzY0YmExOGQwZjBjMjc3YTFkYTZlZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3TWlzaWV1ciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xNzIxMzdhNzY1MWE2MmZiMmQ3OTUxMjVlZGRkMDM1MTE5ZThhNTZhNTQzOGU5YTgwMGViOWFlNGI4ZWNkN2IwIgogICAgfQogIH0KfQ=="
+  signature: "RWEtEpLUCR5pCq6H+qCGuQS1PUDHuXCBNEQFeFnTUxa0cdnWbLcd5PTqAA3lSIk63uCIBI/2BGFls1UV51H3RZusJZmqYN0IiRn5ojpyCsvq7eMyx9vMkjvklmNXGAHWifm/u2Zm3Rl47/WShve1ojJqh0k2Un5bY6I3LddWUkmaJatHTXVoknZU6rj6wVcykrGINExg4QPvuLyzIcqMvzl6hFqDXodXPgmzP+jFw9Xnxi89ShCpPw0WXP9/JnlJhmaNUHZTeUVz5EH2P/RT9r3O4HqTDhru6Uyag655wySo+IG3QndA8ss2832awiSleWgdpGGVDXvKmhgzuLH4UhGgigefmdgFAFterW6nLs3M00rNROnmW92CSmTv35i5MpIIqqClpl2piYKqIKakYHwt+8JUHn2uxD25Kjr3SGodiLVG13sohDFcKNRbEqTIBwZKnWuwC60fm5bsJpib+8/Jryx8vAT7taUnrSKIn5jv4Bn5PpvG2oPdQaZX86eNzLSyGH7rGxLmfo+5k+2Szf0lglbb528/UsrOttFvR5Ow236Z9kM0Oadg5xlU/7T17cmlGK3xiolwsWqK06TVm2w7ZtkZkgA7zL9RxOlhND01bb0hAtYkhUldJ0PjEiDdvNY/kjt/vaIeUqyufXWBRizX/aGWMdjx+YnFFvS7joM="
+skill: 0.237
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.32
+  coordination: -1.09
+  technique: 0.27
+  aggression: 1.18
+kits:
+  trooper: 0.46
+  shortbow: 0.64
+  rewind: 1
+  spy: 0.83
+roles:
+  plant: 0.55
+  escort: 0.5
+  rotate: 0.53
+  hunt: 0.59
+style:
+  aggression: 0.64
+  patience: 0.29
+  teamplay: 0.11
+  risk: 0.86
+voice:
+  tone:
+    - chaotic
+    - theatrical
+    - playful
+  verbosity: chatty
+  style: "carnival barker; announces his own nonsense like a show"
+lines:
+  greet:
+    - Step right up! The Skastnair show begins!
+    - "Ladies, gentlemen and {team}, prepare to be confused!"
+    - No refunds. No plan. Let's go.
+  onKill:
+    - "And {victim} vanishes! Magic!"
+    - "Applause for {victim}, our lovely volunteer!"
+    - I did not plan that, and that is the trick.
+  onDeath:
+    - "A twist! {killer} steals the show!"
+    - The magician has been sawn in half.
+    - Intermission!
+  onPlant:
+    - "For my next trick, {bomb} is on fire!"
+    - "{bomb} lit by the greatest showman on the server!"
+  onDefuse:
+    - "And {bomb} reappears, unharmed!"
+    - "Ta-da! {bomb} is safe, somehow."
+  onWin:
+    - "Encore! {team} takes a bow!"
+    - Thank you, thank you, I'm here all week!
+  onLoss:
+    - The critics hated it. gg!
+    - The show must go on. Next round!
+    - Booed off stage again. Wonderful.
+  onLastAlive:
+    - A one-man show! My favourite kind!
+    - The spotlight is all mine now.
+    - Final act. Nobody knows the ending, least of all me.
+  taunt:
+    - Pick a card, any card! It's a fuse.
+    - Watch closely, I'm about to do something silly.
+    - Is this your bomb? It is now lit. Probably.
+  lobby:
+    - Roll up, roll up! Pre-show entertainment in the lobby!
+    - "Tonight's act: one man, one Shortbow, zero plans!"
+    - "Tickets are free, {team}! Refunds are not!"
+    - Somebody hand me a plan so I can ignore it in style!
+    - The ringmaster is warming up. Applause is welcome.
+quirks:
+  - spins
+  - crouch_spam
+  - narrates
+rivals:
+  - mamlezmekmc
+  - xxpumpkinravenxx
+bio: Runs an imaginary circus out of the Red team spawn. MamlezmekMC has drawn him up a plan forty times and Skastnair has followed it zero times.
+batch: 2
+retired: false

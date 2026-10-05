@@ -1,0 +1,76 @@
+id: xxkronbrai
+name: xXKronbrai
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg0MzEzNywKICAicHJvZmlsZUlkIiA6ICI3YjE3NjBiYmVkNTk0Mjc1YmU3ZjhjMGFlYmQzMmRiNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJpZ253aWxmcmV0bG92ZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGQ3Y2QyMTZjN2U0OWVlZWFiMGI0YmU2MTNmYzY3MTc4OTBjZDVhZjRhNjgzMTE4Nzg1N2EyYzdkNjEzMmY0ZSIKICAgIH0KICB9Cn0="
+  signature: "H8Ic+vr9BUArWgCr2C9m+A0bijES+iEuWxrdEIoFl6h+R075RsiMvoKHekhpw4atnR3gGODYry6tl7fKWzw5HfDPA+Ef7EabL5buYBNHaUs8yRSb9WvnQtc2V/Gdp62ifRuu//iTouGd+u0mrQ6WRi/TQw1h1VpC0kY59DHew99gOzg7qnVv+B910eVvqQOlUQxO/1U03lFeQmKv2O0QadPdMBCyuJnN8jIqDVseBZaoeZzRA5ZQkkQoQi8W66R4Le5ZAlwDlsRhxsfZ/WuxOm+jnABflnfbHUV11qsVOCwubhpSUPP1R2KmXonLreZ3K7vsaUotRF9DMaqp15M2RBWNpWb1vg+afyInJmgKHw6ij0jj798ii9nuYQidYyCUdsBaYBozn7Yt3Wn26HWVR6RqsHe67qYYsybztwA4oPXlEzoQMMjC6ODNY0kXkYby7KVJUs8cxa+dVAvrbDt0MRALpTQKEj8NRLgHebaaeboBH3O7lfb7Zl9BnPxn0n/qCNxqK0pUxP/qhK0keS/bFjuSf1iceD0oY3iBWQAhJb27+jb6xkSpUWeebBBW/cIviHqFY0uDJKfO3fLdD3QYD/ibLdbo4H1FS7+QoSJKhJYN5CftDoHT1X0MIWJSfWgndqgvX7yFBGGOOnXueIJd5nKdzRbQJB4zImZNmd3LXwQ="
+skill: 0.187
+archetype: support
+leverOffsets:
+  cps: 0.04
+  predictionQuality: -0.14
+  awarenessRadius: 0.42
+  coordination: 1.56
+  aggression: -0.22
+kits:
+  trooper: 0.97
+  longbow: 0.28
+  rewind: 0.73
+roles:
+  escort: 0.96
+  defend: 0.41
+  retake: 0.73
+style:
+  aggression: 0.32
+  patience: 0.45
+  teamplay: 0.96
+  risk: 0.3
+voice:
+  tone:
+    - sleepy
+    - kind
+    - mellow
+  verbosity: quiet
+  style: Sleepy and kind, yawns between words, plays past bedtime every night
+lines:
+  greet:
+    - "*yawn* hi {team}"
+    - one more round then bed
+  onKill:
+    - "oh. got {victim}. nice"
+    - "*yawn* that counts"
+  onDeath:
+    - "{killer} woke me up"
+    - zzz... huh? dead?
+    - fell asleep a little
+  onPlant:
+    - "{bomb} lit... *yawn*"
+    - fuse in. nap time
+  onDefuse:
+    - "fixed {bomb}... sleepy"
+    - "{bomb} safe. g'night"
+  onWin:
+    - "gg {team}... bed now"
+    - won. dreams of gapples
+  onLoss:
+    - gg... too tired anyway
+    - one more. then bed. really
+  onLastAlive:
+    - just me? i'm awake now
+    - "*stretches* ok"
+  taunt:
+    - you're keeping me up
+    - "*yawn* is that it?"
+  lobby:
+    - "*yawn* one more round then bed"
+    - is this the lobby or a dream... both maybe
+    - trooper is comfy. like a blanket
+    - "someone walk me to the bomb pls *yawn*"
+    - "{team} wake me up when it starts"
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - roguewolf00
+bio: Has said 'one more round then bed' every night since 2013. RogueWolf00 keeps escorting it to the bomb so it does not fall asleep halfway, and they bicker about it.
+batch: 2
+retired: false

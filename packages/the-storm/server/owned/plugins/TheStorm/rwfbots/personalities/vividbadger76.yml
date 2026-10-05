@@ -1,0 +1,84 @@
+id: vividbadger76
+name: VividBadger76
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU5Njc3OCwKICAicHJvZmlsZUlkIiA6ICIzN2VhNTQ5MTE3MTU0NDgzYmY0N2VmNGM3MzMwMWIzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJSeXV6bG4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTY0N2E2NmVjYjlhNmNlMTM1MjgxMWU3NjE4NWY1NjE5MzUyYTYzNDJkZWI5YjZhZWEwMTIzOGMwNGI5YTllYiIKICAgIH0KICB9Cn0="
+  signature: "qw5+1LB6lDhscQAGqOgDkYtoI8mKWcGi8jY7B9josu9LCdRQrg3T98/axZZlESfEEm5xzA8kUv1mz6AlmKmaxMXroCPIayGXyayNnnpNf3J1UptZ+h0/FEzrLltVX04OlgxLPYf9/8RNEkCfwAyQEJk5OZIMFGLBg+IvB/lCWEj2qsWU/B/qQncrxgJ7OgT8qL9vkFE+9fw+sLMzxBXVTZ1G8av8AIxv090b6mrWrV0seBC2zs4wWVxh1Gehr0OpPQMqnyLQGkdSR1CR8ZdkgzIh2w1wbYBZ70IGw9D/h+qbzr5PoNQ3cf84HbLsQTQbu9iCUVYe+DVZW3s4LxlmSvIvez1+epjOhbZdt4MgN4DO1d3fe13uL22E+yx41ra1fngURxlWiJEpLtKwdrFSGsElUiB3ZxyPLxdhDIGSz3qLzphZcKwanXYvriy7DxvdI5CZ2mfYARFusUJjf8nzE29SjcRKku/S3qcEcMmEhc37Mm9I0mtkbk+0sNWOJUzcoUCl1l6yiWdNdMc3V8gmMCb7kjr+gIu4JGyxjWy5WoWZy7rYFbQv7sm80om1I1wlPgwZI+FyuJn4sz3pWtIhpHDGcBvrHG4WsmHK7vZB8rBYyUbvzdX6OIzi4lDqMw75+VYV2peTtpwwuFarWuzzWLw+8i72elECyp+a4gxLapo="
+skill: 0.672
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.29
+  turnRateDegPerTick: -0.84
+  cps: -0.76
+  predictionQuality: 1.19
+  awarenessRadius: 0.5
+  technique: -0.43
+  aggression: -0.69
+kits:
+  trooper: 0.13
+  longbow: 1
+  shortbow: 0.5
+  wraith: 0.2
+roles:
+  escort: 0.1
+  defend: 0.81
+  rotate: 0.4
+  hunt: 0.46
+style:
+  aggression: 0.35
+  patience: 0.86
+  teamplay: 0.44
+  risk: 0.27
+voice:
+  tone:
+    - artsy
+    - dramatic
+    - precise
+  verbosity: normal
+  style: art student, frames every shot like a painting, talks about composition and light
+lines:
+  greet:
+    - "the light is perfect today, {team}"
+    - i'll paint from the high ground
+    - canvas ready. bow strung
+  onKill:
+    - "{victim}, perfectly composed"
+    - "rule of thirds, {victim}"
+    - a masterpiece. sign it
+  onDeath:
+    - "{killer} smudged my canvas"
+    - the critics were harsh today
+    - abstract ending. i dislike it
+  onPlant:
+    - "{bomb} adds a nice warm tone"
+    - "lit {bomb}. the palette changed"
+  onDefuse:
+    - "restored {bomb} to its original state"
+    - "{bomb} saved. like a restoration"
+  onWin:
+    - "a gallery-worthy win, {team}"
+    - frame this one
+  onLoss:
+    - a study in failure. still art
+    - back to sketching
+  onLastAlive:
+    - the final brushstroke is mine
+    - solo exhibition
+  taunt:
+    - you stand in my favourite light
+    - hold still, i'm painting you
+    - your movement lacks composition
+  lobby:
+    - the lobby lighting is honestly a masterpiece
+    - longbow is my brush. let's paint something
+    - "{team}, let's compose this round with care"
+    - please, no puns today. this is a gallery
+    - every match is a canvas. this one's blank
+quirks:
+  - stares_down
+  - bow_spammer
+rivals:
+  - crimson-miner
+  - swiftnerzash
+bio: An art student who treats every arrow like a brushstroke and every kill like a portrait. Considers Crimson_Miner's puns a crime against the gallery. Secretly studies SwiftNerzash's shots frame by frame.
+batch: 2
+retired: false

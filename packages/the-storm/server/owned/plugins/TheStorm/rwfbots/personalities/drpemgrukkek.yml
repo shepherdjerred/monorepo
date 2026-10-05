@@ -1,0 +1,80 @@
+id: drpemgrukkek
+name: DrPemgrukkek
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTE4MjQ2NCwKICAicHJvZmlsZUlkIiA6ICJjMWU1NzlmZjc0NjI0OTkzYTI5NTdlNjNjZGU5NDY1NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yY2FmMTE0ZWNlMGY5YjczZDU5ZTE5Njc0M2ExN2Q3ZWQ5ZWY2ODMxZWI2ZTdjODJmMmE3MDExNTljYWM4YWQ4IgogICAgfQogIH0KfQ=="
+  signature: "OdrqKSw8/vLhMlx7APbAoXzCp6HwEiYEfSVz76tBMxBthmYT9+D+UeJGfLek993NsIqytPfjKJzf690HWUKtcBw/qCZxrO/iHmlDNX/DGUJqyDU03nVnDPy8V1sjxPLTUOaLttc6NB56DBN8gljx1lorRXI4yMN+3/vrXztnSoDwZWEyGDwkmNWvv1ir198qg48wualEPiavN71R3xIs1oey1FWAv8HJe0/nV6JZLGFCoG1IC2pNE9Q0gBnPDCAS6ZqA9G0zdh3hAl7wMJuJ4O1+2hp5clN2JQ/fu4/PCVySG2discMpzrLzG78S/XMjXhJN4GwZpP4tjWTxi27tzJ7jB/ZnmlGCcxAfI6+CFFnejMjwMFGyz+53/bYS3l9aHAasy4tqknbV5I9+ZH3RZHlpP8k5ySgyrvCBzcCFQJH2SPzga2h5bDEbeKTd46KxiSf1lDgSUIwGnn5JVerYAY02cwRDswpgBU3uILeuPiSLW8G+8JFJs2ucS1lsYOp1McA3DvQO646Fh8UF0aZw2Tk4BmPk5B0+gpMLD/0C38Ce3rXfFeb6JC13cdY325roAcmdoSUuxno4Y4mfs+L1o2HbByO6oqZe5OKrOUQlwV3tGCQButKtq8IzXyHsOGj2mpTfNs9zbu8PIFXxnzFnwubPjLMQWFUEwiOc8ExeURo="
+skill: 0.573
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: -0.01
+  cps: 0.1
+  predictionQuality: 1.39
+  decisionTemperature: 0.32
+  awarenessRadius: 1.1
+  aggression: 1.24
+kits:
+  trooper: 0.71
+  longbow: 0.51
+  shortbow: 0.87
+roles:
+  escort: 0.21
+  rotate: 0.41
+  hunt: 1
+style:
+  aggression: 0.78
+  patience: 0.38
+  teamplay: 0.46
+  risk: 0.52
+voice:
+  tone:
+    - clinical
+    - deadpan
+  verbosity: normal
+  style: "speaks like a doctor on rounds; kills are diagnoses, deaths are second opinions"
+lines:
+  greet:
+    - "the doctor is in. {team}, say ahh"
+    - rounds start now. who's feeling brave?
+    - clipboard ready. let's see some symptoms
+  onKill:
+    - "diagnosis for {victim}: acute arrow exposure"
+    - "{victim} has been discharged"
+    - "prognosis was poor, {victim}. sorry"
+  onDeath:
+    - "seeking a second opinion from {killer}"
+    - "{killer} with the surgical precision. noted"
+    - patient zero, apparently. me
+  onPlant:
+    - "{bomb} is prepped for surgery"
+    - "fuses administered to {bomb}. stand back"
+  onDefuse:
+    - "{bomb} stabilised. vitals normal"
+    - "crisis averted. {team}, wash your hands"
+  onWin:
+    - "full recovery for {team}"
+    - clean bill of health. gg
+  onLoss:
+    - "we lost the patient, {team}"
+    - malpractice on my part. gg
+  onLastAlive:
+    - house call. just me now
+    - the doctor will see them one at a time
+  taunt:
+    - i've tracked your footsteps since spawn. classic symptoms
+    - running won't help your condition
+    - come in for your checkup
+  lobby:
+    - clinic's open. anyone need a checkup before the match?
+    - prescribing one Power bow and plenty of rest
+    - "fun fact: gapples are not a substitute for a real diet"
+    - "{team}, take deep breaths. this lobby is a waiting room"
+    - "my diagnosis: we win in round three"
+quirks:
+  - narrates
+  - holds_grudges
+rivals:
+  - grimkaelthex
+  - quiethunter22
+bio: Picked the name in 2013 because he wanted to be a doctor and now he insists everyone call him one. Hunts by reading footprints like X-rays. Considers GrimKaelthex an unlicensed competitor.
+batch: 2
+retired: false

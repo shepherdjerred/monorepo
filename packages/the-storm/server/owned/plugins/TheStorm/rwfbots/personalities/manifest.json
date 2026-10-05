@@ -10,9 +10,24 @@
       "generatedAt": "2026-10-04T06:02:22.780Z",
       "generatorVersion": "1.0.0",
       "unverifiedNames": false
+    },
+    {
+      "batch": "seed-2026-10-b",
+      "batchNumber": 2,
+      "seed": "2026-10-b",
+      "count": 180,
+      "generatedAt": "2026-10-04T23:51:45.551Z",
+      "generatorVersion": "2.0.0",
+      "unverifiedNames": false
     }
   ],
-  "enrichment": ["scripts/bots/enrichment/seed-2026-10.json"],
+  "enrichment": [
+    "scripts/bots/enrichment/seed-2026-10.json",
+    "scripts/bots/enrichment/seed-2026-10-b-1.json",
+    "scripts/bots/enrichment/seed-2026-10-b-2.json",
+    "scripts/bots/enrichment/seed-2026-10-b-3.json",
+    "scripts/bots/enrichment/seed-2026-10-b-4.json"
+  ],
   "personalities": [
     {
       "id": "zathnounpunpro",
@@ -193,6 +208,1626 @@
       "skinSha256": "a391c7eecd54784f39994f7059d179325447ed0f9f5bd2149b4def0d1364b459",
       "mineskinUuid": "a27bf4f76e254ea8951a78be1d6b7654",
       "textureUrl": "https://textures.minecraft.net/texture/e385ab0a832af2c920d5a7109067d7e049640cabc8f4ce5688e6ae3576ab2274"
+    },
+    {
+      "id": "drskizarlae",
+      "name": "DrSkizarlae",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "cd9b613172398cd16b62bb516c1c6c8230fbd8fca37601b11cb7deebb2689e9a",
+      "mineskinUuid": "d36a2bd49c3c4c64a9d3f9d495a7c500",
+      "textureUrl": "https://textures.minecraft.net/texture/b2190fdef6965eddba9183396533e31453be69dcd8a26667b5205c88f3c19cf7"
+    },
+    {
+      "id": "xxcometriderxx",
+      "name": "xXCometRiderXx",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "0bb78d68391ac9267b37adc944523d1c9adda2777115a32c9063c0c7fd867166",
+      "mineskinUuid": "99c5471b776648439c62a82589788b1e",
+      "textureUrl": "https://textures.minecraft.net/texture/e3b3c30390d550a037c8f6c84e274a607ff277ab9a3b8675d451d47d824f9cd7"
+    },
+    {
+      "id": "xxminerphantomxx",
+      "name": "xXMinerPhantomXx",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "d231fd7e4fa07a0b52a7f39691906dbefcfb041c8af472addbe682f53a47380c",
+      "mineskinUuid": "25ba133bb70d422ea92459afe2efe88d",
+      "textureUrl": "https://textures.minecraft.net/texture/cc5aab66436e7923b6fb83e8c8c4313a6fb5819ce58e396a48e48ac0bc434351"
+    },
+    {
+      "id": "pickaxenoodle4",
+      "name": "PickaxeNoodle4",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "1948bb14c19022124191fb330ee5b2befecfaa02022ac240aeebbbe5e14d984a",
+      "mineskinUuid": "53ca082043834f15ae0f1548fc9f21a7",
+      "textureUrl": "https://textures.minecraft.net/texture/bbda073bd222a30704ee9cc1464c22e28b255b762becfe9b7cd70fc232be4640"
+    },
+    {
+      "id": "skastnairpro",
+      "name": "SkastnairPro",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "455ff0065878676471c6424a8172258105f579dc854ddd6af830a5269589946c",
+      "mineskinUuid": "7344e62f9ff146b0b65aea07784763d4",
+      "textureUrl": "https://textures.minecraft.net/texture/172137a7651a62fb2d795125eddd035119e8a56a5438e9a800eb9ae4b8ecd7b0"
+    },
+    {
+      "id": "xxslimeravenxx",
+      "name": "xXSlimeRavenXx",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "e7c97a4866770e200f53d91138a2ec68075c7e8ebc551a509c931cbad1d65d61",
+      "mineskinUuid": "72e1ce2c3c4346f4b844a09420366c15",
+      "textureUrl": "https://textures.minecraft.net/texture/cb7a8b74a2e6af8bcb64e6ade437fee468114451bfed4971d3c850907ecf45be"
+    },
+    {
+      "id": "quiet-wolf",
+      "name": "Quiet_Wolf",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "ead28bc36788fe8a062f89153db1eb122cbcdf7926719c4dbfda130333d62125",
+      "mineskinUuid": "ec84a3bd3fbc459d815e905fcc726a6d",
+      "textureUrl": "https://textures.minecraft.net/texture/9fb216d442f7a340031940b1fb98f9e71f785da8cf8c617c1a25526d03f0bd46"
+    },
+    {
+      "id": "frostlelaistnaim",
+      "name": "FrostLelaistnaim",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "80bef9ca5e707fb59adcbe612e6985fce4b6c0e171f60a75ccb81a9a9bace55e",
+      "mineskinUuid": "dbb7584496304c2caf23217b24a65962",
+      "textureUrl": "https://textures.minecraft.net/texture/f48decb5a749b3932c2840f5ee8e0825f6c739583f06bb3cc225e5a2be56b16d"
+    },
+    {
+      "id": "piozliost-40",
+      "name": "Piozliost_40",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "0a876f583144f37e50ada7a56836cd467720712025f2120b1cece5d15314156c",
+      "mineskinUuid": "fee8ab06b7754fb08568d473f7c6b91a",
+      "textureUrl": "https://textures.minecraft.net/texture/f3aaf17659b083d659772e878110998a4a06f257cdce94290959c86a7ed4bac4"
+    },
+    {
+      "id": "xoljithblaze",
+      "name": "XoljithBlaze",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "8f49fec3066e8819525203f3a1a2812a6d0dbadd6d0adcc9da9624b3071ae755",
+      "mineskinUuid": "14825154981f43ce9c477bfe059fcdde",
+      "textureUrl": "https://textures.minecraft.net/texture/6cb3585c6678de2bdbc35664a049cc55754e68259eb86722aa48c3981b1154e8"
+    },
+    {
+      "id": "liltainshypok",
+      "name": "LilTainshypok",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "ee46d7ecd7f4f8c64f745419ede10012286a3d343a0174cd102690d5b2fe0f18",
+      "mineskinUuid": "d86d20cc426746f588866bf57c913f96",
+      "textureUrl": "https://textures.minecraft.net/texture/f90998d69e6b4b9982490c92511431450a934ab50ecdd0c8a105fe297d9c163"
+    },
+    {
+      "id": "mainmaiz-97",
+      "name": "Mainmaiz_97",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "b476a360ea144c8f3cd993530d70f86544d8404632275f83704b2526c4e3ed20",
+      "mineskinUuid": "785fd30192f6464b846c972713ab3c1e",
+      "textureUrl": "https://textures.minecraft.net/texture/ed4dc273070f3cd3768b4b33ef6ac37346ab5dd1c6a5a8132d12623bb3d6d398"
+    },
+    {
+      "id": "raekradyzdoum",
+      "name": "Raekradyzdoum",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "7322432f8694d8cb050f7b78ed9cd9bc9c6933e7d0e8ed2932187efd87152082",
+      "mineskinUuid": "3ff71552ecbb4ac19f64a9fed7d85c7a",
+      "textureUrl": "https://textures.minecraft.net/texture/be2801fad51cf42ff227728bf6d5ea1b92d575e7668bcc7ae1e04f3940ace68d"
+    },
+    {
+      "id": "joustshonslime",
+      "name": "JoustshonSlime",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "e03c0f1f467fd0f6c3b7a1cdb5e948fdbd964949d160b22c67158fe5a18ddd46",
+      "mineskinUuid": "4147ae9c9d1146f0b97ceaf74e7d61ec",
+      "textureUrl": "https://textures.minecraft.net/texture/4cbfff4dd8a736d674c7ed84307ba518a705eea1a5e83e38787927689c933b8c"
+    },
+    {
+      "id": "dustyfalcon48",
+      "name": "DustyFalcon48",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "10abddba015614fe0792603f408ff4788eec2f3f7ee34e4634cc002270995725",
+      "mineskinUuid": "dbd0bde8ace44fb48ffbf144e570386e",
+      "textureUrl": "https://textures.minecraft.net/texture/9b9649db7b63effd182d059b2c56eace235f99d672cee0ae5cc7fb65cbfd1d72"
+    },
+    {
+      "id": "dizzyriotux",
+      "name": "DizzyRiotux",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "baacee5b3a75c1046c6db7718b644dddf4c12517c00e48e3b2bb85934cf1b3e7",
+      "mineskinUuid": "07e21910edf546829de2212a7f73c888",
+      "textureUrl": "https://textures.minecraft.net/texture/963ee9d80893e5973df8646bb435dd30abce0103349067cad519c1170fb2c6ef"
+    },
+    {
+      "id": "cobaltmoth75",
+      "name": "CobaltMoth75",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "92d0bfbfe7bbd5e905dc666e0cf62b719250702bd31c60e5f2344f030a81d28a",
+      "mineskinUuid": "02d5fb68fcc146e2ab1bbebbab3fc956",
+      "textureUrl": "https://textures.minecraft.net/texture/ba6bcc4cf78bd86b147cf716561a7bb962fc8d126aabce09dbba3fc9b3754330"
+    },
+    {
+      "id": "dethpoumnoodle",
+      "name": "DethpoumNoodle",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "e8a6a860d735966e5ed12aaeda742189b9385efe126af2c2202924d63976b1fe",
+      "mineskinUuid": "b58f1f618b8a4bdd95615217b633732b",
+      "textureUrl": "https://textures.minecraft.net/texture/b63f677f6fb8807af763eaea4ff91326d481bf765864dfbac6c392ed10158fe"
+    },
+    {
+      "id": "ninjapickaxe7",
+      "name": "NinjaPickaxe7",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "a2ac4cbdf2bfdb13831b8e5b4aac76b385085af13821bde85b27acb90d6dffc4",
+      "mineskinUuid": "591f1d092be24ed2bd5bf37d7975f158",
+      "textureUrl": "https://textures.minecraft.net/texture/b3e8f4cec63f346cb4deeb8ec14ee1bdcb7370d779f1ec08950c585c2bd68b80"
+    },
+    {
+      "id": "pickaxeviper9",
+      "name": "PickaxeViper9",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "97721d7faeacf2754f231d157d5e244759a24491f65093f883e1d18e8a94c6c2",
+      "mineskinUuid": "2bdd43c2a3b943e5b6895815b9cd5f2b",
+      "textureUrl": "https://textures.minecraft.net/texture/168353a78644abb910f5d2a3af3ca568439b1ff05fc00d84a726907bde3a087c"
+    },
+    {
+      "id": "ember-waffle",
+      "name": "Ember_Waffle",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "f9faa79000006d91cc65ec00c22eb74c1e2be0d6f7e52bf1e4b5ab5fd3c03209",
+      "mineskinUuid": "f44405c4c85c4620b92738c2730f5250",
+      "textureUrl": "https://textures.minecraft.net/texture/635fc893900005fc24cc6a9c6728ff17dc69dd819477387acccba5acdae6b4c6"
+    },
+    {
+      "id": "epickrainvio",
+      "name": "EpicKrainvio",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "3baccbada6e15a384294a3287b25bc6e9a6a93860649ab2854c219bd1cd22003",
+      "mineskinUuid": "b41e365799ec40ce945123bc10395f10",
+      "textureUrl": "https://textures.minecraft.net/texture/d8b84a7d7ce773f4b8a5d5f5df00bdcbccc0fcff25a0f53718e91e59097d2af"
+    },
+    {
+      "id": "dustykrirthesh",
+      "name": "DustyKrirthesh",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "f0968dd1d4f713a7c6d6cdd9bb5f85bb1508f564217aaa3cc4c0b9d70aca1f94",
+      "mineskinUuid": "04224c0eea0d4f78a1d570bf7efb0b67",
+      "textureUrl": "https://textures.minecraft.net/texture/e3bc2849a01315757b8df96d5d92147d73946b631bff06b64f508059fe6f61ec"
+    },
+    {
+      "id": "maijy-52",
+      "name": "Maijy_52",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "03ce5355dca6ad4c99f7fd963c2a36e0195839bd6229cd4ee2944369277ec9e2",
+      "mineskinUuid": "618284977764403ca35a3d4f072adb67",
+      "textureUrl": "https://textures.minecraft.net/texture/f6486e39f0e22a2993104f6ea8da2efd2ac007c1863c5b326588fb42163fe8cc"
+    },
+    {
+      "id": "arrowblaze1",
+      "name": "ArrowBlaze1",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "9c73a8dcb9df18fa52cd3ba9f69d7200336834f146959464c09b0fea23141644",
+      "mineskinUuid": "154fe97f36df43d6b63793438b98bdcb",
+      "textureUrl": "https://textures.minecraft.net/texture/84780eeec45db3628e5a4e752d5b8db2c3fa627f43d91697f6d688ce6d7170c6"
+    },
+    {
+      "id": "xxstormfoxxx",
+      "name": "xXStormFoxXx",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "6f90b983a0071e894af676e6215d524b310c4d9ea8b386bbe71a9fd3543963ec",
+      "mineskinUuid": "b534ec2199be43cb8de77a4b2930f67e",
+      "textureUrl": "https://textures.minecraft.net/texture/898ec78b14088d7c49494084604811214c69f9d0dd119977d48f5f8c53bb8291"
+    },
+    {
+      "id": "dukthurblaze",
+      "name": "DukthurBlaze",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "d412e007357353546306e9b3e0292ba6c5d288abe5483017ff348aa994307e3b",
+      "mineskinUuid": "96246a59b30a41b09cfd8c046c757ad5",
+      "textureUrl": "https://textures.minecraft.net/texture/f19dcd51e67a1a0edde765b4de73f543c27470b6a9bdef80b66e2422320fa5f9"
+    },
+    {
+      "id": "mamlezmekmc",
+      "name": "MamlezmekMC",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "7dc09fdc4aff8f39de3516a8d58345b4013a592c7111c599b81054655dc1e445",
+      "mineskinUuid": "6915a9796e0142c0ad4262a22043b773",
+      "textureUrl": "https://textures.minecraft.net/texture/cd8852e401715a094aa1fd326142cb583ca9eb7dd22bb40e68738edf3500cc05"
+    },
+    {
+      "id": "nastvioxmioktain",
+      "name": "Nastvioxmioktain",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "b20ef1f30291a1b546cba3c2d7fecc52baf6cbebae66e5e71727071e36d1fd95",
+      "mineskinUuid": "2858c3085d8b46b39a0d65b2d31aea6a",
+      "textureUrl": "https://textures.minecraft.net/texture/f095f7d27d520bcb430fdb6984030bebb17efd1c67e55749d3d18830cf9b97d3"
+    },
+    {
+      "id": "lunarfuse83",
+      "name": "LunarFuse83",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "719897f80017dd773e9939339c7751a708ed88e7c9f02459c82708fc936e4db7",
+      "mineskinUuid": "e0d16b7f5ca14cdb886f50983352dd6e",
+      "textureUrl": "https://textures.minecraft.net/texture/a049fc2c1d33192b64034dc707bf4bbb09f13d3f97d0ef19655cba89bfdba6ca"
+    },
+    {
+      "id": "kranpioshraim-91",
+      "name": "Kranpioshraim_91",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "7c8deb2aee29d039de79cae431a22ec2a3d98fba04c44c089b7302e50d9a9102",
+      "mineskinUuid": "c5b8893e9e664fa9aec2750b72d67b41",
+      "textureUrl": "https://textures.minecraft.net/texture/2f872148affe419bc1171e729fd2c42951785ae3b6b6d5b9f25dd1f3e865736f"
+    },
+    {
+      "id": "xxotterbanditxx",
+      "name": "xXOtterBanditXx",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "e5b4cbab4e583b2e2aaf15af71cc347a71e7384964552c1914c10c58abd7ad08",
+      "mineskinUuid": "b2ba9738de77422bb314e8006750e837",
+      "textureUrl": "https://textures.minecraft.net/texture/1948ba39da2bf1f4ea3e460a5719d84c265fceb74a878385cb73b374f1fb34f2"
+    },
+    {
+      "id": "vustskemzionkouk",
+      "name": "Vustskemzionkouk",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "8c2a8b772cddede22f60cf8afe22ca224a1984f04251304743432c05bfc527e6",
+      "mineskinUuid": "129601385d234cb786f0f5ee2b43e10b",
+      "textureUrl": "https://textures.minecraft.net/texture/5e3f2311327bbb8c18c892a263ab4107a816c4dc0d70350e4d4bf1926df09d72"
+    },
+    {
+      "id": "xxpotatobadgerxx",
+      "name": "xXPotatoBadgerXx",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "d8c28ca680204f27d5a38b40bc14e8008afadb7fbb18b4f7390cfe25a9266c01",
+      "mineskinUuid": "5e9f7df6367447e1bfb7bf591eed8e92",
+      "textureUrl": "https://textures.minecraft.net/texture/47f4609be6116b8181e70c661760901ab2162f01978501a56c11a05ea02ea2ea"
+    },
+    {
+      "id": "hyperkoustthethy",
+      "name": "HyperKoustthethy",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "cb6bd983ae80516fa63ec794ed79dc84d6bf39e7cc9e8b825e3595304f1a0760",
+      "mineskinUuid": "45b547ac3b5f4f54967d08e472b3950b",
+      "textureUrl": "https://textures.minecraft.net/texture/2dc2b2bc6799acab1d2848648e366feaf3c191db0b23dc1700897b16fd4676ab"
+    },
+    {
+      "id": "turbostorm60",
+      "name": "TurboStorm60",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "93c74fb6dd1fd0471e79b586e93794691bbc59dc272ba2234fe9e7ec1d1a30c1",
+      "mineskinUuid": "6fb6ae53fcee4d24bfa787799a5608ef",
+      "textureUrl": "https://textures.minecraft.net/texture/5ab65b699d343d303b0313b18fad29ef8611862dccc22caaac7a0896f2db2bb0"
+    },
+    {
+      "id": "vykzithninja",
+      "name": "VykzithNinja",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "38c8eb7e5c36c8bff07a07e48063d7a22b131930379cb0da5da0b91ace67c9f3",
+      "mineskinUuid": "b8f71d0b0b8d4d6b8f06a948a270398b",
+      "textureUrl": "https://textures.minecraft.net/texture/9f9118e98072d41ca36eef588568d561f6d7dd4ee719939e948a7a8e44270d43"
+    },
+    {
+      "id": "paimshaez-73",
+      "name": "Paimshaez_73",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "63415cdb42cff94d4632a5965e739640c5a2665b3cc8f2430e1c821f49a081dd",
+      "mineskinUuid": "59927d1099d24c89a8ab7713a23ceccc",
+      "textureUrl": "https://textures.minecraft.net/texture/f228bc58f1fb914f85184148fcbf5a66aead4b5f885b459df0d7014c11788c41"
+    },
+    {
+      "id": "hunterstorm5",
+      "name": "HunterStorm5",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "84cdec1d5744f247d5889ac75d771e035754bd1c9f45c0c3a06b2413022064c8",
+      "mineskinUuid": "6fcf6f2d80ae445591ab3cc51ec0b193",
+      "textureUrl": "https://textures.minecraft.net/texture/bf6a0a3485baa5701f6a6ecdf661e4f7f58e4b8d5b30c5762bb14877351131b1"
+    },
+    {
+      "id": "vipergolem6",
+      "name": "ViperGolem6",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "ff10a972d5419fe1e73e4355610fcad7a62dfbfaf0236ebdbec96756eefb437d",
+      "mineskinUuid": "d1f375417d5147858be15f5fdf80718c",
+      "textureUrl": "https://textures.minecraft.net/texture/bd0fc4c944bd0a154ed20a66920958fdc8a1e0942fd8be2f58ef34f7cc92d1aa"
+    },
+    {
+      "id": "ziokraithpvp",
+      "name": "ZiokraithPvP",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "ee8bf79034f22ea7ef297032ed84ffaaec47f62d6f4e456040af27fc88fd5053",
+      "mineskinUuid": "5d898b9ab02b414595160b1e7fd2707a",
+      "textureUrl": "https://textures.minecraft.net/texture/ed80fe940a7a515add7d4502f54fa349528a3c0f4434a4b8ab0f014a0e8cda13"
+    },
+    {
+      "id": "kynjour-07",
+      "name": "Kynjour_07",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "ad6af94adc67a7f8b936b9f18d084108c019ff2f89921cff9afd27d3caba5e1c",
+      "mineskinUuid": "942f1fb211054c5db1fb906c3ce82227",
+      "textureUrl": "https://textures.minecraft.net/texture/75d448fb3de7bf0d70c75119bb63647d721605ebe61134bc60fae1217340303f"
+    },
+    {
+      "id": "dunjelarrow",
+      "name": "DunjelArrow",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "4a56d5068e6dee08051b17915db6b01b3740e01b2c372f5d4b7a8619bfaf0bb7",
+      "mineskinUuid": "e48bca32f17e452783ac5dc462000975",
+      "textureUrl": "https://textures.minecraft.net/texture/b9b075342c2d6f5ca3e6e2d016d0a04c9c48fef24c2ef430b0bb14ac9761ad7"
+    },
+    {
+      "id": "rionaesttaimmel",
+      "name": "Rionaesttaimmel",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "6d88be2774a9afbe714f12b5a6b9fb40a5d9942311d240e456d7f8af4f3b6a3c",
+      "mineskinUuid": "e12039549b2845f6863fec9618f82e9e",
+      "textureUrl": "https://textures.minecraft.net/texture/15578d0f7fa1bf8067017f802a6175c00dfa6b23a37e6f3a49736160ed38a6d3"
+    },
+    {
+      "id": "xxlaimmamthaist",
+      "name": "xXLaimmamthaist",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "dea1b6a7591e753efe74a67904910f270bd158b6baeb6fb1df4b77dd6e4f1142",
+      "mineskinUuid": "8c71d88b478d406a85c92ccef361d0b0",
+      "textureUrl": "https://textures.minecraft.net/texture/2fc78212f7b0a1a549b4b2073f13cc2f01b988488751952e4a4b409b700d4084"
+    },
+    {
+      "id": "epic-golem",
+      "name": "Epic_Golem",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "313a812e23086d0706ed24cc0c881154f83b6ad5c577b63ae6ecca241bfda985",
+      "mineskinUuid": "8a3d382d7e0f45e58d2b3ae056bdf44f",
+      "textureUrl": "https://textures.minecraft.net/texture/8fd71e88ba2cfb8cbb6f007ca843af32080c25cac2c660ce04e0dcb74b803e22"
+    },
+    {
+      "id": "roguethimkrist",
+      "name": "RogueThimkrist",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "1f2fa944b0a3089d47775f67c9ef1085215bd872aa3cfdae6e9bd5a384a1d588",
+      "mineskinUuid": "7aa10d215e3e4e8e9e70d7db03029f92",
+      "textureUrl": "https://textures.minecraft.net/texture/6e4dbe2b0f986403e0664ac0597a2666522d30c3f4ebe8417b6ef0612d6a8890"
+    },
+    {
+      "id": "luckypumpkin92",
+      "name": "LuckyPumpkin92",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "be8d7517330cc81478b41a3e3cd8bd769da8cccb07208b878bcd0ea8a71920a6",
+      "mineskinUuid": "5331a2f4419243359bed8c94753857db",
+      "textureUrl": "https://textures.minecraft.net/texture/f2694b6864f4227bef978e8e304d1ba887f8fa9fa12416f53087c19e4f874d10"
+    },
+    {
+      "id": "breshgrazvim-31",
+      "name": "Breshgrazvim_31",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "ec6c59d1a9d903042adde0086083f079c864ed5055270c515c588aafec5a47b3",
+      "mineskinUuid": "d88fe9017ae34e4c848bcd39442e0a40",
+      "textureUrl": "https://textures.minecraft.net/texture/afe1bfa1756883e2c9d6a3ec41175ff7aba385d2c31886712a489b3bd0ad3c20"
+    },
+    {
+      "id": "xxgolemhunterxx",
+      "name": "xXGolemHunterXx",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "3e199cdcef5f695013bb3801592a13ea0d2a142d83d6330e0181ae71b0e22b9a",
+      "mineskinUuid": "61aab8cb2fb641cc967f4caefd7a1f29",
+      "textureUrl": "https://textures.minecraft.net/texture/77290cb8b725e9a535b2060cef809441bf8f81e777fcc822f99ceacafce62b06"
+    },
+    {
+      "id": "zistdytuthrou",
+      "name": "Zistdytuthrou",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "68d36eaabfd60c132d139ad53cb0522229e4ddf9eba8795ac73ba37ff0629ba4",
+      "mineskinUuid": "54a19101ddf549d6b131b25475cb7df6",
+      "textureUrl": "https://textures.minecraft.net/texture/b81f58551b97da4ea30062adfdffe9e1c2f0b94b910207f436581729f4ae1d6"
+    },
+    {
+      "id": "juzvonxircomet",
+      "name": "JuzvonxirComet",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "4e95bf965443cfb405d6236e420de724f44f0c2e676713083cf49e189f8c3353",
+      "mineskinUuid": "18deb67025764fe29b5c1b3d5031211b",
+      "textureUrl": "https://textures.minecraft.net/texture/e576920fa37327581d4a66e605ba7e4bab4be3a45cd39fd5b4c49eda9f2926fe"
+    },
+    {
+      "id": "epicnustskur",
+      "name": "EpicNustskur",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "84fcac1850528779ff15f07a15d6e636c52923fce18260c2f6a6e73330a886ff",
+      "mineskinUuid": "5ea384b5d162460e854db3b78da71d1d",
+      "textureUrl": "https://textures.minecraft.net/texture/41e913e943b8e056554a6f4949e383acbadf9eb6c539d845a59027028e5d5284"
+    },
+    {
+      "id": "dorjaekblaze",
+      "name": "DorjaekBlaze",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "b698291e4fafdf7ebebdf4745491ccccd14656e483340200dfaf478dc04fb8e7",
+      "mineskinUuid": "86b99df992f54965bcb7f216fb6376b2",
+      "textureUrl": "https://textures.minecraft.net/texture/a85f5c85491de66275bbd5f340ff258cfe1997673dafb688b0360b6278ad48c6"
+    },
+    {
+      "id": "lystshomdethtu",
+      "name": "Lystshomdethtu",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "48eae471e28f6a8d770ee1d6824b6900c9506c41e1b0123b4fa4b2802eb64769",
+      "mineskinUuid": "085bde5571aa4badadf0bc38ffead8b3",
+      "textureUrl": "https://textures.minecraft.net/texture/f3cc9dc964c191776140cb58891822e2a305f96f0fa3a02c56c60f0a55672b2c"
+    },
+    {
+      "id": "tishshaiz-39",
+      "name": "Tishshaiz_39",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "7e873218d0b5e67de79324a33d38e6b6497033e2ac315358a18f20f46e20287d",
+      "mineskinUuid": "d613443dee4c4a25b042240b4ae054c5",
+      "textureUrl": "https://textures.minecraft.net/texture/de8ad2df82c6f2ec953a8c2a6b42f07c8dad98e5edf5b7c4161f0844b03a95a1"
+    },
+    {
+      "id": "potatootter0",
+      "name": "PotatoOtter0",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "5a0da7354f0836a47cc027b9a77e5bbe56951ab9a4fe7290b8f8a32efebc1a68",
+      "mineskinUuid": "0f482c72eaf74235bb06e93e7b6e4432",
+      "textureUrl": "https://textures.minecraft.net/texture/8b7d83fed5de2e4abbfe037eaa7327e998ad8dc2fe67181ffb312167b9628120"
+    },
+    {
+      "id": "cometotter0",
+      "name": "CometOtter0",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "c634935e6c0001428c0805333a0069891ac5e8234d2cfe2ad1cf92ddad1beb6b",
+      "mineskinUuid": "ff9643ffff95400bb558d6415e726d96",
+      "textureUrl": "https://textures.minecraft.net/texture/f9731bcbe8450cafdc37f1ac87a5bef1a4316f58ae4890a221832e7917988eb4"
+    },
+    {
+      "id": "skekrek-36",
+      "name": "Skekrek_36",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "30b3522d1ee57db85f013a2be7b0d787fd723d73ceae4bcefc38c5b808747699",
+      "mineskinUuid": "dbefa87aca5849efbeee263b414cb8ed",
+      "textureUrl": "https://textures.minecraft.net/texture/17953a0d149de061bb64a9994ffec63fed9ea51b1a92afcc6b2b33cc5c3c7967"
+    },
+    {
+      "id": "xxkronbrai",
+      "name": "xXKronbrai",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "ba271c292e46dd66bdc937b0f220d7adca42a52947da3386e50de486ba4b66b8",
+      "mineskinUuid": "ea7118e4ffc34fd7be344623f15ebdf3",
+      "textureUrl": "https://textures.minecraft.net/texture/8d7cd216c7e49eeeab0b4be613fc6717890cd5af4a6831187857a2c7d6132f4e"
+    },
+    {
+      "id": "zaezlyxyt",
+      "name": "ZaezlyxYT",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "935d110a71c645121ec3740d95eb84659079c5b001e3fd06ec1fcfb54c11dcec",
+      "mineskinUuid": "94a31a985e09442ca7b4c44c8aac3b73",
+      "textureUrl": "https://textures.minecraft.net/texture/39176225ce50fcc19c92b445512aaa39109fb23317f7c869334874caff9b1c9d"
+    },
+    {
+      "id": "swift-falcon",
+      "name": "Swift_Falcon",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "1433e0ce3c2b69fe8583fb76fd7724c20c202d23fd110038c838c9c5cfc779d6",
+      "mineskinUuid": "80fb13952ca04d9c83a6474ffd219e70",
+      "textureUrl": "https://textures.minecraft.net/texture/963f079d0e9477cd4a2069db8c652b0855569063f3b6fda76f08720e577c8908"
+    },
+    {
+      "id": "itslinthur",
+      "name": "ItsLinthur",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "24da40e91d35eca26508ba49b971629267273cd19a1b79dbd188d4be1daaa49b",
+      "mineskinUuid": "da02fa03dbfc49e5af590146982eb82e",
+      "textureUrl": "https://textures.minecraft.net/texture/e6ef305f9a2d579a6b0ce41a6b28821538e6910d88b2071875b0677d61947106"
+    },
+    {
+      "id": "xxfuseravenxx",
+      "name": "xXFuseRavenXx",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "43b8518b8fbac8737c715537a3d8547a7a867b317c3a25cf343605a1f115dab1",
+      "mineskinUuid": "98c95f8aa9a6431fa3bb16c8ba00d4ba",
+      "textureUrl": "https://textures.minecraft.net/texture/b311746a240c452bdee62614b9760739b78c262f978f4768b40c13ac3d67861"
+    },
+    {
+      "id": "xxninjariderxx",
+      "name": "xXNinjaRiderXx",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "0467ef99433fb5d507a16fae25f2f998806a84f525568c3e128ef03292fa5b76",
+      "mineskinUuid": "f2a35ca67dfa4f0b8c7e92feb93ba92a",
+      "textureUrl": "https://textures.minecraft.net/texture/1018768c077b2e22c0d201bd63e287c447c0bfaaf2d7a289e44b19585999dbe4"
+    },
+    {
+      "id": "hyperraven89",
+      "name": "HyperRaven89",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "c39a4931ca8ec29879e39fc46f159b97b451ce2be5368c9a1ec31ba711810360",
+      "mineskinUuid": "866bb08ebb4546d1b71a03da6baafb15",
+      "textureUrl": "https://textures.minecraft.net/texture/80515e47511dc21cbb88a3aef09a499bb79b4d49987fadb4208bf691eaf062ba"
+    },
+    {
+      "id": "lunarkromlyx",
+      "name": "LunarKromlyx",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "fe1777a6bd93439a2067a714e36de33551d80d5fa03675dc70565c08a8b2c380",
+      "mineskinUuid": "991ce00fcc6646ae8c2ea4bb3fc7f2da",
+      "textureUrl": "https://textures.minecraft.net/texture/53725810784088d7fda4aa5e5f5b9f3e1ec82f57ee9090faa0dcd1db656679fc"
+    },
+    {
+      "id": "xxblazeslimexx",
+      "name": "xXBlazeSlimeXx",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "4f324e7f2f670d000f02b2e8758299207e7149a78442ca03521942387c3bf953",
+      "mineskinUuid": "ebcace05e86e4ee9857189750745ba0c",
+      "textureUrl": "https://textures.minecraft.net/texture/20c0b7c91d3f7deb56dadaf63dc70c3e8b6366abdc2d61c4f1dbff61d6ba25d5"
+    },
+    {
+      "id": "theneztar",
+      "name": "TheNeztar",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "9deba1d8a1671af23c46b7c8700d225f8728206775944edfeb5a170b01dbe389",
+      "mineskinUuid": "a30c003f74214dcb8cabb4906fac2ef4",
+      "textureUrl": "https://textures.minecraft.net/texture/d57ddef6ccb2765c1df3824cdde41ef38e0efe8af54a010bfa5f2b81f6ff8956"
+    },
+    {
+      "id": "broukxaimpvp",
+      "name": "BroukxaimPvP",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "bce04af2c40af596ccd95779ef65441caebb037a3f3049ddb98670059c3b9ca8",
+      "mineskinUuid": "ca0cef218ba14aa9b51e4eac8ab667b4",
+      "textureUrl": "https://textures.minecraft.net/texture/dd56aec98df241c61c4ccbe356c3e2cb00701a3c328da3d5b3af65b88e426dfe"
+    },
+    {
+      "id": "jathkrempickaxe",
+      "name": "JathkremPickaxe",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "6df5825236a1be5031d29913cd47a0ceab23a4710076861ac503841c09460eca",
+      "mineskinUuid": "3cc7cab78d1349f7a875fe4517b7b781",
+      "textureUrl": "https://textures.minecraft.net/texture/d1b7754d7fe91ed4f00c2845fb9a43e01219fafdfa4db20b3223ffbaaff55f83"
+    },
+    {
+      "id": "meklaishloumzaek",
+      "name": "Meklaishloumzaek",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "7d082e60a44c66b75ca8d43a06ca9d410ca496ab5bf40395c4e02c2125db3bbc",
+      "mineskinUuid": "ae9da54c0faf4d4cb3c2931ce91f9882",
+      "textureUrl": "https://textures.minecraft.net/texture/efc94e99dc85f90c3ba799de20ae9fde236d7e9b551253516ac139d1fe2563d"
+    },
+    {
+      "id": "ravenotter9",
+      "name": "RavenOtter9",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "0ffcda2ea5abe86f57d3a33721dc44a852ec0d898eb56ba9d36f7c7285aebab4",
+      "mineskinUuid": "333945fb1ea84203983f36259c001821",
+      "textureUrl": "https://textures.minecraft.net/texture/4ca09b075bfa271e9e16a30019915ef2583350e7037d0be397ec22c40bd962b8"
+    },
+    {
+      "id": "piozpith-58",
+      "name": "Piozpith_58",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "9a30379fca36565678a71fe0614c4615ab393f123d7c0916f1d7da29cb045848",
+      "mineskinUuid": "4b0ed9917b9540dbb2085b98a92f187f",
+      "textureUrl": "https://textures.minecraft.net/texture/f3091b28c9466a49c8a76f899d1fd7431e5b776dba85dbcb56a44fe9bd6a05ab"
+    },
+    {
+      "id": "lerkuthblaze",
+      "name": "LerkuthBlaze",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "e075957797d6a334d23d01913f767d6b2b1f87394bc155363e5932eb68e3dd34",
+      "mineskinUuid": "d94788915ac04294b04ed9db83ef4b1d",
+      "textureUrl": "https://textures.minecraft.net/texture/b052ca63476e134f2ebb115cde5863d437dba0b969ab541a51a16009825ad1ba"
+    },
+    {
+      "id": "zukti-20",
+      "name": "Zukti_20",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "684948abfdb4554791a1df5cd8a33dd6d24b61d67117c7b096b098591cf3be43",
+      "mineskinUuid": "6f9ff4ebd81f4862a968cfbde3c5e5f0",
+      "textureUrl": "https://textures.minecraft.net/texture/a07fc9db1adcfb10e6277ba368ee28d01cfb25e81aeb279465ba7862e3c41019"
+    },
+    {
+      "id": "staticraven26",
+      "name": "StaticRaven26",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "ce47faa546deffffe790f4d771ae11868a2c91c7942411b9309ae5a55ad69893",
+      "mineskinUuid": "980717ec72654d1686f0e384aa4084e7",
+      "textureUrl": "https://textures.minecraft.net/texture/38674fc39b163e07b7499cd1ea1a1375f5f90054d30d5fb0cd2d930e2acce07c"
+    },
+    {
+      "id": "sirkioththy",
+      "name": "SirKioththy",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "078e9236d7e735c951cc04d8acf33e951ea81f2781b749835cd0e221d225eb85",
+      "mineskinUuid": "379ad888446241e88740e47717b6e13e",
+      "textureUrl": "https://textures.minecraft.net/texture/9cb5cf00f5bf957e96995199713a6062abed20ebe5c8cdafc8efa97eb63bf05b"
+    },
+    {
+      "id": "xxpumpkinwolfxx",
+      "name": "xXPumpkinWolfXx",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "3cc55f72ce307c9ea2be5627edb0c4ef3c4ce4cd092ac43a86ee21671956b545",
+      "mineskinUuid": "9fde4426b0894e54bc778a6896dcfa02",
+      "textureUrl": "https://textures.minecraft.net/texture/4f75f93c84e9c9577d9d70b0fa29739a19621dbdef9fa670529235f103cff765"
+    },
+    {
+      "id": "dustyotter63",
+      "name": "DustyOtter63",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "2f71e89ba49edbdb343a150eeaa84583e90a9a0232fcf1cecc13450f29d17de6",
+      "mineskinUuid": "5fc07321df2e466cac34161ac25b7269",
+      "textureUrl": "https://textures.minecraft.net/texture/e7ff29dbf50f076f01bb0843435e202fc85f25c8c2ca26fc0d8eb65ed04300ca"
+    },
+    {
+      "id": "otterwaffle4",
+      "name": "OtterWaffle4",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "3cf1fe532361afe84d46f5fb8254a9eb807cb1fc1cd6f9e6bf1d860ff7c0da45",
+      "mineskinUuid": "3af87423d2e74047a311e008984b86f0",
+      "textureUrl": "https://textures.minecraft.net/texture/7b2b29ecfcd6bf25ab8ebd0159590aecb6362e7894ab17ab1edc8cb719bc6761"
+    },
+    {
+      "id": "badgercomet5",
+      "name": "BadgerComet5",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "c1fa3107f844c3ef36477879fe4e8bed0a2894f18d380ac1f5a6c67762c522bf",
+      "mineskinUuid": "c1565eb338fd4cd7bab591230f2994ce",
+      "textureUrl": "https://textures.minecraft.net/texture/7de536445328da33624723c02e7f6879d7dc87e22efe9056f8d8c70a26ba30a5"
+    },
+    {
+      "id": "luckypotato95",
+      "name": "LuckyPotato95",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "629acbc2ff15512d1c4cfb7918c47a930fd9c151223d49bd93ef5767c9fdd9f6",
+      "mineskinUuid": "5e4afcc0356444b6ac03c12b18a98459",
+      "textureUrl": "https://textures.minecraft.net/texture/99b025c2a4f52cdf950b0f3bf68f1d71c9ba6d8cbab0e0aba2f3c007ff9267e3"
+    },
+    {
+      "id": "sirronnem",
+      "name": "SirRonnem",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "c8a7816bf3a3dd9735274f7d0683e25e28c5f93eff9eb83074680e1b0722b36b",
+      "mineskinUuid": "dc2b182de5494d628032ffe4c7ba827c",
+      "textureUrl": "https://textures.minecraft.net/texture/92b7615473db6d45bdd93ce05250b1b9007212a49d4f19eb079675cd10c17f7"
+    },
+    {
+      "id": "vukrak-05",
+      "name": "Vukrak_05",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "357292b8ba8e15a46b78796aa6d0121f7cbb1e548c8e10802a95219578368a01",
+      "mineskinUuid": "2ee26f9ebae846eab6ff320c669fcc40",
+      "textureUrl": "https://textures.minecraft.net/texture/8bbf4d37929bf9176b90f4d2c99993f6c2b91f948e8d1e055a9ca4394df177c6"
+    },
+    {
+      "id": "jeshrustminer",
+      "name": "JeshrustMiner",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "6d7fef84dd06d1fece5299a7b7cb8b122cbc5e49260fe394a967da99bc8dfe45",
+      "mineskinUuid": "57b9c313efc7457da1e070647f03c984",
+      "textureUrl": "https://textures.minecraft.net/texture/d7be215e9598dba7a7adbd06ef0b6165a08f528ebca7e381ba2c41a9124587"
+    },
+    {
+      "id": "xxpickaxestormxx",
+      "name": "xXPickaxeStormXx",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "102771750a50f09b190b4ed63891f86e25c2d8b335ed666257204f16c7762b5e",
+      "mineskinUuid": "f9a35a0d1f1249eba61e318456d2cfd9",
+      "textureUrl": "https://textures.minecraft.net/texture/784a58fb5ec019daf8b73a9164fbda4666f0d7e0bcd4dfa402bae50c36c769a4"
+    },
+    {
+      "id": "niokadae-83",
+      "name": "Niokadae_83",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "9e854d343b1496ca5a721694a182f2d2de15f84dd5698fff13397afabcdf5bdf",
+      "mineskinUuid": "f49b2145ac7d48cba103038743e71f25",
+      "textureUrl": "https://textures.minecraft.net/texture/b29fa34851ad2d7a79612248c655ac9eef638ce6ccb0d1f0f67ae44004ff93af"
+    },
+    {
+      "id": "dizzyblaze58",
+      "name": "DizzyBlaze58",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "512bfe9cb20e0472ee789ca186aeba21d7d871d067655631d665caba50e94275",
+      "mineskinUuid": "b5dea8a46591498a9e36c59e141a60be",
+      "textureUrl": "https://textures.minecraft.net/texture/ca953d2a98f7b8beedfb5193bc049012a0114d70c1af6f4d55f81ce891709b08"
+    },
+    {
+      "id": "roguewolf00",
+      "name": "RogueWolf00",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "3825b693d0275bf14f7a1025e1183c6d6407ab8b6b76f91b97ce5d478fedc1f9",
+      "mineskinUuid": "6ce06599eab64ac5bd137e62a546add5",
+      "textureUrl": "https://textures.minecraft.net/texture/7bcd2bc08a647d19a428f16668aca181deaca7ea81ca03c439e61b4fc55f0f7a"
+    },
+    {
+      "id": "drpemgrukkek",
+      "name": "DrPemgrukkek",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "87635d5c5761533059a197ae74b32c7e18674ec147ec3611bf0c4f61bd01468b",
+      "mineskinUuid": "135748623b9743b8a8ac0541330defc0",
+      "textureUrl": "https://textures.minecraft.net/texture/2caf114ece0f9b73d59e196743a17d7ed9ef6831eb6e7c82f2a701159cac8ad8"
+    },
+    {
+      "id": "jolly-golem",
+      "name": "Jolly_Golem",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "48fbd0e9e226b809f41f4cfdc704673ec42fdca4248bcc09425b380c62a00b89",
+      "mineskinUuid": "b6a8c79431bf4be79779c75dfa2584bd",
+      "textureUrl": "https://textures.minecraft.net/texture/1bce89e1d2dd9e644e07eb886e2ddf42dd9933c87e44a480a55e8fda4bd17571"
+    },
+    {
+      "id": "xxminerpickaxexx",
+      "name": "xXMinerPickaxeXx",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "26769cff7fddbceebc9cf9020fb3721e2e10aa165195e95dd94c6b801ad08986",
+      "mineskinUuid": "e690cde00f0b4f298ebaf4d285fc1a5d",
+      "textureUrl": "https://textures.minecraft.net/texture/4f483894fa8110a6c2c2945dec07229f1ff7c6893546677b4fe4e66cd415b986"
+    },
+    {
+      "id": "kothnoustpvp",
+      "name": "KothnoustPvP",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "7a95839894a57c5e8e13883aad2994ab5f78236c3ce85fbed92e24f9d1a755d0",
+      "mineskinUuid": "5edcb73f014049bf9ce995cdaef05402",
+      "textureUrl": "https://textures.minecraft.net/texture/454d733d6d515962cf616bc5d939bcdd2f06ea6a87f2fd3638e46884e2500e16"
+    },
+    {
+      "id": "kryxshy-80",
+      "name": "Kryxshy_80",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "2ef5e43ebd96500a178ac06b88d5f0c041651cac5e5339e12f1fb30b314a9fa8",
+      "mineskinUuid": "39066eda6fe2447a8fde86871c98dd9f",
+      "textureUrl": "https://textures.minecraft.net/texture/d53d9be15a4ea2e30f66e0f213affb36d4efc4d0a8ce6748cdc9b9e50eccec04"
+    },
+    {
+      "id": "jollybadger05",
+      "name": "JollyBadger05",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "a82e35462a52632fc09d258f8b35fd7c369e3a1d837d49d01077bd263bbdc8bf",
+      "mineskinUuid": "27fd642cae4f4370b156987e57210e74",
+      "textureUrl": "https://textures.minecraft.net/texture/3a727344a45fc752b5bc9a034e9402fafe0b35dfbd573b22e49d9d1340ee0e0e"
+    },
+    {
+      "id": "dustyninja34",
+      "name": "DustyNinja34",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "1171768213e463f1e3765da40f869b13e42bed35a6d652ca1706bbeeb1d4cf36",
+      "mineskinUuid": "cc834e491a904703b313a5302a817bfc",
+      "textureUrl": "https://textures.minecraft.net/texture/e6d106ad65381cadb48760dfaf86232eb6bcf89095173fa60e3140472dcd2b33"
+    },
+    {
+      "id": "otterbadger3",
+      "name": "OtterBadger3",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "70bd8da2dd04dcb4e65c16188544fd4f86d7d67758c4472e15113884cd46bb98",
+      "mineskinUuid": "e579058bc1cf440fae0f2c8b6edffbc3",
+      "textureUrl": "https://textures.minecraft.net/texture/eeacb58b447c258c6446c3ba4cf5d69043d4c22d40849a11eb6d2684c28eced7"
+    },
+    {
+      "id": "laimzoxyt",
+      "name": "LaimzoxYT",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "4e74014db738e8fdfee301942fcc539254cb23e6ecfa19fbb99f1052d94e3fe2",
+      "mineskinUuid": "ce29d40f92e446e3a46e191d6e9d91d2",
+      "textureUrl": "https://textures.minecraft.net/texture/e52e2e9b1d704f9dea001cf26e8874cc5879a95668889e415a075b2c49c2022"
+    },
+    {
+      "id": "lanmixmc",
+      "name": "LanmixMC",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "4b88a489371c747809d42f95d368f1fd8da002c87ffb3715e2288e9f937c666b",
+      "mineskinUuid": "764a3a365f78420997887e44fe12eea5",
+      "textureUrl": "https://textures.minecraft.net/texture/dc8345adb69a2590a8ba8aeb12fdb951c9001dd6e39ede71e371e46f88936bff"
+    },
+    {
+      "id": "lilnairioshnoul",
+      "name": "LilNairioshnoul",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "dda9e97a6d6336e0c8f5fc612715112692bcfee4b9971d5f25e57c8a2777d719",
+      "mineskinUuid": "02f28f0a1c654f108d0a38aa6ea23bb1",
+      "textureUrl": "https://textures.minecraft.net/texture/325160274672de80af224ea82e22459d9dfc9fd06a1c2b8586922e4cb30cea16"
+    },
+    {
+      "id": "ziolkrukgaming",
+      "name": "ZiolkrukGaming",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "9348d8b86ddbaea773b70e524a1e8824697074b1637459d709b1e978110114ba",
+      "mineskinUuid": "76d05808725a48e6a37ac11321c621ba",
+      "textureUrl": "https://textures.minecraft.net/texture/e1384a701590ac5daa9dff4ed5b0014639d9a9dc0457be7575b00574b72253d2"
+    },
+    {
+      "id": "xxmaelpak",
+      "name": "xXMaelpak",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "40e8553ac0fb48a317557ee09ead49ebb196b239b7ddb6a96307b98da4267f82",
+      "mineskinUuid": "26088e12c1f042139049498aac749d12",
+      "textureUrl": "https://textures.minecraft.net/texture/9c73b3fa10912ba9a203e770cd3df9277f433ffede097df5ae0b3d61d5c219d5"
+    },
+    {
+      "id": "zoukxeshrekbrae",
+      "name": "Zoukxeshrekbrae",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "10936d577f32fc47b2c259e8d8e2aff69d0c4cb6a1d6b95d9222bcf5acf6ab6c",
+      "mineskinUuid": "cc38eab01d1842ac9d832bd4e9152d4b",
+      "textureUrl": "https://textures.minecraft.net/texture/609d2f0c4613aee4bbc1616f33fae5d5814d122e002a1277fa7256ec2e1adba3"
+    },
+    {
+      "id": "tankrekroumpro",
+      "name": "TankrekroumPro",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "b1aaf58397cd8219f92376b0223e105cfc5c6f2b591551ca47cd3a02352b7d0f",
+      "mineskinUuid": "82ef572a5b5e4f7a9cc2cd0c3b56bb6e",
+      "textureUrl": "https://textures.minecraft.net/texture/a10f79bb0e10d46f79d147c8f6fe83f56227545b73eee0735d60e1fc5362a081"
+    },
+    {
+      "id": "frost-creeper",
+      "name": "Frost_Creeper",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "4726b3ebcd76f0e64bcdbdef578943ea464f1778cb8122de7e48237e7652a2ab",
+      "mineskinUuid": "c316b0598b4e45f5a93480f13f5524d0",
+      "textureUrl": "https://textures.minecraft.net/texture/a94f5967786f7b3af94db70b479f85e6c932216f6a5bb302e37119e57a12a1be"
+    },
+    {
+      "id": "noodlecomet0",
+      "name": "NoodleComet0",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "714c4a50648f791365bc9d8299a93ef29e47b9530af1bd7d51c4a52a24df5d1a",
+      "mineskinUuid": "1ba8d801d54d42e093dcd28dc9606410",
+      "textureUrl": "https://textures.minecraft.net/texture/80b8a71dffc399191ba13b09fcb8a7d3b057546dd26fe956575fbd9f7104e786"
+    },
+    {
+      "id": "swiftkikran",
+      "name": "SwiftKikran",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "b086c9380d88474615d0e6ca082bdd314e89260c0ffaa8f5dea2ad6305fdf836",
+      "mineskinUuid": "e8e65ab9d3c7444993e06a1410164f92",
+      "textureUrl": "https://textures.minecraft.net/texture/729c964fc7135e9187a1347467e0198d0b10c3130aa91a4478316dd97b9b2127"
+    },
+    {
+      "id": "jollywaffle61",
+      "name": "JollyWaffle61",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "71c9b2f48a90f20a4ef3e4c1af1f6efa1592da80b48f2f47843f5cb515d4050a",
+      "mineskinUuid": "a6e438923791464fba8a98ae904fe0b2",
+      "textureUrl": "https://textures.minecraft.net/texture/438000f1ced5962fac99087753be1b78f148ab6ca460ab29f7424b235dbd3742"
+    },
+    {
+      "id": "mrnothleshjast",
+      "name": "MrNothleshjast",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "9bbefb68579755148e310b5f03812b32689a5d6b787f9b8991dcd220f0baac5d",
+      "mineskinUuid": "b233a75f61434e86b5bc9946c1a584f3",
+      "textureUrl": "https://textures.minecraft.net/texture/e04755c7badcd41f8f4fe27fd44a81b482f3a9f128b6c12ee1e9935605100adf"
+    },
+    {
+      "id": "kythmoukpvp",
+      "name": "KythmoukPvP",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "6b0fa1d97c7feaf44dc5cf4660fae7a1d636470639c9fe20a1421c727ae3db70",
+      "mineskinUuid": "3a2ad249fc1f4867af154d1197e88824",
+      "textureUrl": "https://textures.minecraft.net/texture/e8c84f034b2452dd3d20120d2928a8750542807fcb7bb9883e3aadf76b0b829"
+    },
+    {
+      "id": "nirkathluxninja",
+      "name": "NirkathluxNinja",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "c95cbc02eb1986f49f776f5200546d980a275ca091076ef5f27c27a2342cda7e",
+      "mineskinUuid": "f2f135338089417da0c556a9b4f97517",
+      "textureUrl": "https://textures.minecraft.net/texture/f01fea414502832709beb5db27707991c6afbb9f20bc4d0b8ac101420840af21"
+    },
+    {
+      "id": "tizvurmestbandit",
+      "name": "TizvurmestBandit",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "15dba5c05acea31ac4fa0f430f4ba8ae5c2de4fbcd6f4beb6ddb98847a3944eb",
+      "mineskinUuid": "87fd84dad297491b86372003df76bb45",
+      "textureUrl": "https://textures.minecraft.net/texture/c63f079800fe65e0261c89ff2ae5d7e8c2293150d2b5ad53969af73aba98f7ef"
+    },
+    {
+      "id": "lunarthyjaest",
+      "name": "LunarThyjaest",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "a952d2ba7692ac10f02c2e610c90a70ada93052f43f8d32b6689960c1a2802e1",
+      "mineskinUuid": "9cb51e55c0124daea6ee47b72e0ace69",
+      "textureUrl": "https://textures.minecraft.net/texture/c3532d6026265706a260a5e981629ac6a445042d950f2b5d41d0af6f5e16a302"
+    },
+    {
+      "id": "luckypotato84",
+      "name": "LuckyPotato84",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "0ecdfb50ab2f5c67dd24a1718c4130344429585bc33d9ecdbf97f5eeb05175f6",
+      "mineskinUuid": "fc7bfb41b68e4692930d535f9f8d2494",
+      "textureUrl": "https://textures.minecraft.net/texture/f3d08db54ec5038588abe085d7e2baa37720e12c001d58ad9a23c59aa36198fd"
+    },
+    {
+      "id": "sirromxon",
+      "name": "SirRomxon",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "2def09f58e2e062201dcb7f4bf39275f60fd01467bf81d2407380ee242fe500e",
+      "mineskinUuid": "1b08eb08f9364948b3f17367438f728a",
+      "textureUrl": "https://textures.minecraft.net/texture/944e168973208906351f603c02d2022c5b82f979779cb78459a11f1902ea7f94"
+    },
+    {
+      "id": "pixelnazvoulon",
+      "name": "PixelNazvoulon",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "f2a7465253f8bc1fc06deacebe35da32935289499ffb9fa04aa39f059b9a17c9",
+      "mineskinUuid": "d37a0d6d4f2e4f23aadaae60394135e4",
+      "textureUrl": "https://textures.minecraft.net/texture/ee7a862d84f9ad8d26f2d2ab34dc4b055db03b65dade7b640d94924c2c3f891f"
+    },
+    {
+      "id": "drnoshzax",
+      "name": "DrNoshzax",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "976813ae8dcced91e9e74d10bb807e1737e24815393d01b7fa87b3545483f603",
+      "mineskinUuid": "b8fda13fa45a46c9b2948c3c0596d85e",
+      "textureUrl": "https://textures.minecraft.net/texture/b5e1bdb13b1d8f51f35bce3dbb2e49363bebb7e808985693e3fb001907c55789"
+    },
+    {
+      "id": "krojykrouzhd",
+      "name": "KrojykrouzHD",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "d0c7547312f0d4d823f011ba3d0142558cf3db23ed9cd1f3a8567f43ad54bba5",
+      "mineskinUuid": "2a02c661c3c64d219ab78bb38c5d693d",
+      "textureUrl": "https://textures.minecraft.net/texture/2150eec9d3172083277ec867e628cc6fc95f1255014b5debaf9670e7c9843e2e"
+    },
+    {
+      "id": "daxgraixbandit",
+      "name": "DaxgraixBandit",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "eac20ff435e00bb041c7e4666ca6c6470f0ba420be0995f7f36e1b00f5b9b1b8",
+      "mineskinUuid": "c88b738fe6ff448ca5495f1f38dedba0",
+      "textureUrl": "https://textures.minecraft.net/texture/18fd0d09d11719106c73facd70edb24c737d5f1faedc9bc7952aeff814e3a0a8"
+    },
+    {
+      "id": "solar-fuse",
+      "name": "Solar_Fuse",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "4d97bc99c49d6cfb934091317b9beb5dd6840807425571ac79e2a5b67fe4d7be",
+      "mineskinUuid": "b509a0fee1a149098c16cada6cf9dc7c",
+      "textureUrl": "https://textures.minecraft.net/texture/e7ab58056700506cb15637dd6c2683ad750d16b2382f907f577bd7ecbcff7c38"
+    },
+    {
+      "id": "jonshyth-94",
+      "name": "Jonshyth_94",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "2f66c2dd7d0e004c6e73f1e4a2963505c94e93bd02951ba54071686dcadf7bf4",
+      "mineskinUuid": "01b54a7c778140538a948b8356f8cde4",
+      "textureUrl": "https://textures.minecraft.net/texture/ab86d320db75d6fdcfa7ab5ea8362c90ad95eed99220b8372781e350daab6af4"
+    },
+    {
+      "id": "shemshiothpro",
+      "name": "ShemshiothPro",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "31aaf89e8534af3468e4d9729555175ad2f51314cd1d8a2a6a52b6ec7596f792",
+      "mineskinUuid": "e6a7b94acdd1439ca415a56de7dc05ef",
+      "textureUrl": "https://textures.minecraft.net/texture/8ac742198d0b5d653a7d15e59378275da5202449c2e7d41c8582503ffc051f5e"
+    },
+    {
+      "id": "grimkaelthex",
+      "name": "GrimKaelthex",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "a21755c3baba72545a46eb308c95d7e0b9903a1511da47dda37f8f5472853391",
+      "mineskinUuid": "937e58fbb4054ec39cd0a0ad969f28c4",
+      "textureUrl": "https://textures.minecraft.net/texture/54de608fff4a10b72c2673c1cd82715e3a8f7faa8ff68bed0dd87f78d1438d21"
+    },
+    {
+      "id": "tionki-82",
+      "name": "Tionki_82",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "0073d3f0cbe4bcc4a084a96bbaae300e81f095d604143a1c43d7714828e50e76",
+      "mineskinUuid": "9f7ca9bb1c5b40aa896207de5ac9fee0",
+      "textureUrl": "https://textures.minecraft.net/texture/6aae7aa3615db8d7be8a1fd37f671620d889748ea4814f5afa9e915623cb4407"
+    },
+    {
+      "id": "kajuxlomdaedel",
+      "name": "Kajuxlomdaedel",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "6cb9bfabae4f62105dab2b20a5856f9310389a0eca39fe12c699baa45d049ed4",
+      "mineskinUuid": "353e11e46f594a6c9236dfbba6980b25",
+      "textureUrl": "https://textures.minecraft.net/texture/b3ceb6660f09069ab650cff9aa05cfb3fc2f9db0f90182d495e70510c45e3538"
+    },
+    {
+      "id": "jixmel-54",
+      "name": "Jixmel_54",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "9e34cb9f939a839eed7ad7d7a7bc9720cdccbd67532e8e4dc65b0c2fa301332e",
+      "mineskinUuid": "fb3c0344fa114ec28adca78323612f4c",
+      "textureUrl": "https://textures.minecraft.net/texture/e6d203fd002f04286c7cf197db9a23274d57c275c126dfc8b4ecccb368a5220c"
+    },
+    {
+      "id": "xxviperslimexx",
+      "name": "xXViperSlimeXx",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "23adc6586350988872ed33a170692cdf63bcf434759ab7a677ab5a0083419c25",
+      "mineskinUuid": "dfd4d159edd54ddca95d58b4fc1e8ac8",
+      "textureUrl": "https://textures.minecraft.net/texture/ad4a48b8fef3c4d2c0e3c95b6db26e70aa69207bd7a1c74c85c19e8bfc20cc41"
+    },
+    {
+      "id": "braethvio-07",
+      "name": "Braethvio_07",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "86a0c4277adc34e735c842510cff2872f2e98b3e59cd2e9f172cee9f7486b356",
+      "mineskinUuid": "5e0e6eda99a74252852acc77f1143a39",
+      "textureUrl": "https://textures.minecraft.net/texture/489aa13e99c7915b15974e8b8ca157f7945dae743e1267f3ea4a957969955bc1"
+    },
+    {
+      "id": "huntersniper8",
+      "name": "HunterSniper8",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "5121fe609201002a2da53ad5b24e13916d273f54c2bb97ca1dc7cf605584a161",
+      "mineskinUuid": "77a000710e4343a996445232227c6120",
+      "textureUrl": "https://textures.minecraft.net/texture/7ed6b6cef42a46c9b3b650e23b1ae093c11bbba0a6c1e77a17ea8889dbefa1e9"
+    },
+    {
+      "id": "frost-potato",
+      "name": "Frost_Potato",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "68f625d8ff4fc732c156747bab6e2b59460636e1032aa3e170e99c52613f45e6",
+      "mineskinUuid": "0d519a4bd95e42708cbf854631e52d17",
+      "textureUrl": "https://textures.minecraft.net/texture/8231cf0d26fe105fcaf8dd92792016221408912a07fdf926ff49b18a189974"
+    },
+    {
+      "id": "tomvaenkriozmc",
+      "name": "TomvaenkriozMC",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "61bf75af3a12822ff0410e6c559cd7576936a68ff5c754978e88bf893caa47cf",
+      "mineskinUuid": "eda3bd4ed6a842b0a87701697cac83b1",
+      "textureUrl": "https://textures.minecraft.net/texture/6801bfcb49743db0edaa873a7ddf5ec91ae83b70221c31b4fb7f91d773065f2b"
+    },
+    {
+      "id": "naithnim-13",
+      "name": "Naithnim_13",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "18f412064ac1b4a52b397e2ad2a86e171aa4933facb10674c9890c4f94224fb8",
+      "mineskinUuid": "0b9bd20780584a0f81f18fd9a5c127c8",
+      "textureUrl": "https://textures.minecraft.net/texture/2166dc70b286a1fee6b201516363bb55b189e1f9aa60d5091e8ffb4d58d947f3"
+    },
+    {
+      "id": "kaigrokpvp",
+      "name": "KaigrokPvP",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "0fb9b1724a1c1070d28add57db8c2023b4c8c2b03b179498fb93b155a86b509a",
+      "mineskinUuid": "01c9ba0df31347488b63f5c0a8c7a278",
+      "textureUrl": "https://textures.minecraft.net/texture/68478f619a3bf3926796470a60fdcd842d66ebcd03a01e8c67d1182ed6e05d85"
+    },
+    {
+      "id": "zertaxpro",
+      "name": "ZertaxPro",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "800492c02f76c3d09213a9f0867f068277bb951f3afd51bfd4acdcb6e8420332",
+      "mineskinUuid": "f64b00de334040cd801e3ed20b9a60ce",
+      "textureUrl": "https://textures.minecraft.net/texture/3015981201b00e24639f891e77f20c37baf61aed678fefec93e39a166b6a0d03"
+    },
+    {
+      "id": "mylgriorpro",
+      "name": "MylgriorPro",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "b97550e6bd69c62be5d9633b8fe3ecd2c846772451ae702fa25272947ac372ff",
+      "mineskinUuid": "7d93d9718bd74c96b60e500b5dd7a2d3",
+      "textureUrl": "https://textures.minecraft.net/texture/eba5213c5e4983cbe9db4cf7a812e6c2655697c9751582ea82058ebd48325bd1"
+    },
+    {
+      "id": "xxbrydaen",
+      "name": "xXBrydaen",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "b58545d7ee76d642fa5957f97a974cf6203a218317b578ebf6741f46289afbc3",
+      "mineskinUuid": "8e36b2036ab24c4f979babb11ca5e2a5",
+      "textureUrl": "https://textures.minecraft.net/texture/2866fd0f210330b383fa245c7ed1fb12f10546d912be87b4b744e435d7a333ea"
+    },
+    {
+      "id": "crimson-miner",
+      "name": "Crimson_Miner",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "a122e52db3460eb708937a77ca62cda1a1e8a07eea4be0458de3a6167528f909",
+      "mineskinUuid": "58d76c6c27764ee280e2ebd6724214e8",
+      "textureUrl": "https://textures.minecraft.net/texture/dae2937a0cb7bf46bb66e7299e5f47f2590c221d38b0d66c6e2b04722bc6b203"
+    },
+    {
+      "id": "lunartulthek",
+      "name": "LunarTulthek",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "7c0168feb4f97c4169c2e801f216bfa23961138d88b5552ffc31fb2c4f1ccae8",
+      "mineskinUuid": "1be9b69a2a7b478fb3a247ed5b513d4c",
+      "textureUrl": "https://textures.minecraft.net/texture/c116d81c3594e6fe32bcef486023647db979d5fb3aa39c86e814abc3d0c1faf6"
+    },
+    {
+      "id": "namrainthevez",
+      "name": "Namrainthevez",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "3f1e97de995d9b95a3bac4d59a202effe84fb37ce68412182fc8c1dd0b963d68",
+      "mineskinUuid": "6688fc6390b14ee3b81e0824d36ad614",
+      "textureUrl": "https://textures.minecraft.net/texture/8ac955baa9f4406b5004f541667f3adc82b066b1f725d0b71158a213c6c3fe9e"
+    },
+    {
+      "id": "mothlynx8",
+      "name": "MothLynx8",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "6e8b3df298ae875a1b86b8811dac276f322ff837bd4c24f9aebf78260a44ff61",
+      "mineskinUuid": "2d4664200e25466ba76a36f6f2260b28",
+      "textureUrl": "https://textures.minecraft.net/texture/4595fa9d8c53d54922a8fce102ef530c9669060173f19b3a59925b86f642e1e4"
+    },
+    {
+      "id": "xiskaikzithskouk",
+      "name": "Xiskaikzithskouk",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "0a2ea97cb7f5293313cfb0ebc432110c6f93365694cd190b97e8a2f4aa4a52aa",
+      "mineskinUuid": "eed7fb117d3d443aac07a9ec61b4fa5d",
+      "textureUrl": "https://textures.minecraft.net/texture/b3cb99a59ebe01758d27bb426d8abaf79bccb6507b5a547cf8b3563e7bc0df6d"
+    },
+    {
+      "id": "taistluzhd",
+      "name": "TaistluzHD",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "dfe435e8286ec9be8221b681f5d297f03c35dd471849ee85321e7a29fe0699e1",
+      "mineskinUuid": "a37e9d91884249efb9d8510fe69684b8",
+      "textureUrl": "https://textures.minecraft.net/texture/cc5e4454bddfec120f8c013df759d5c32185fe806974b566fdd360d77afd64d9"
+    },
+    {
+      "id": "lirzaek-39",
+      "name": "Lirzaek_39",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "1b5cb35d213aa5ce1458bf93c1bc75526b7261b5b07d3f3e9ec5e298f222569d",
+      "mineskinUuid": "443a9ea25c8d455f9db548b40e0c1970",
+      "textureUrl": "https://textures.minecraft.net/texture/fc17070325da6ff4ce0bff85b6ea9ee852e89eb77adac45612b8572373e800fa"
+    },
+    {
+      "id": "neonskaenjuz",
+      "name": "NeonSkaenjuz",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "547055d9820c2f4332db40772931b68aa2ed764d638331c72a77336a4616ffbd",
+      "mineskinUuid": "33862dd4ae884beb85092c03d84d1547",
+      "textureUrl": "https://textures.minecraft.net/texture/1b1e5967a43c5ccfeb3128e7ae5f195f7a9eb0e8f5ec84de1d3e8725f259ae03"
+    },
+    {
+      "id": "vividbadger76",
+      "name": "VividBadger76",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "ef01cffb0a991cff867732fdd9125336da14584a38d539b74f1d88b2b5bb88a4",
+      "mineskinUuid": "e9bfa0bd6cbb4dc38de7d674f4cad0d5",
+      "textureUrl": "https://textures.minecraft.net/texture/9647a66ecb9a6ce1352811e76185f5619352a6342deb9b6aea01238c04b9a9eb"
+    },
+    {
+      "id": "puznyk-42",
+      "name": "Puznyk_42",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "e8bd9ba7dd1c9861177dd339889c82ed136c7f3801fcec4dd0636fc205722d2e",
+      "mineskinUuid": "837cc4217f2d44e9a452e5b352a63d3a",
+      "textureUrl": "https://textures.minecraft.net/texture/ffe722dcb0afabeb8f4dabcc79e117b28f25080768770a8d721ee720d6d8161"
+    },
+    {
+      "id": "mrnestzaiz",
+      "name": "MrNestzaiz",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "08ee717655d87a30390eb6b428dbe62e55e163480e9e77ff9b278ae0d8bcf087",
+      "mineskinUuid": "80e6a5a907b946fc94db959dc786b646",
+      "textureUrl": "https://textures.minecraft.net/texture/31f905ddc1e13a91eac462a552a60a29ec81b4fe2ba3c80037a90135ed56d526"
+    },
+    {
+      "id": "epicbrailpist",
+      "name": "EpicBrailpist",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "a47d527d449500db06273fe05c8afe741f9aa23144b3b4c47b0549ecb0116cdf",
+      "mineskinUuid": "732ff511475048eda8b042cfbadf249f",
+      "textureUrl": "https://textures.minecraft.net/texture/48cc8cf83b25dfbc7fc6c10777beafaa77ebd632bdfbf6fdc9caf8ccb8c4a2a4"
+    },
+    {
+      "id": "xoxvaiznex-10",
+      "name": "Xoxvaiznex_10",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "fe8bd99a82501d58a3f99a8975fecc3722f2ff20266de6bf4ca50418a0eadbbb",
+      "mineskinUuid": "980d4281813e4b48ac8aaec498169465",
+      "textureUrl": "https://textures.minecraft.net/texture/222b190831b9bc1344aaba30525badf6412b6d704bfa6fa784a809974e73a4da"
+    },
+    {
+      "id": "xxsniperslimexx",
+      "name": "xXSniperSlimeXx",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "0391c68d26f10b2ec94353929b828d82f41a5600cbfa84c33ae0e8768a79fc77",
+      "mineskinUuid": "b3a610b67333450bafb23db83de98b15",
+      "textureUrl": "https://textures.minecraft.net/texture/9362ad405cb101ab8c8713f322f28bba563b01b8af2c2c402cc5e1b7b925e3de"
+    },
+    {
+      "id": "kainskoushiyt",
+      "name": "KainskoushiYT",
+      "batchNumber": 2,
+      "archetype": "flanker",
+      "skinSha256": "503d8e8c512cf8bf5c96109e3cfc0e4e927eb85975ec635d0db050eb6109468c",
+      "mineskinUuid": "1f51165166984e23a73483cb53f7213c",
+      "textureUrl": "https://textures.minecraft.net/texture/c6c0c2813c62ff9a2dc1de9339a584ca7c74d96f896a0632c172dd80ce070e38"
+    },
+    {
+      "id": "cobalt-arrow",
+      "name": "Cobalt_Arrow",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "e4221ea9528d9e7b473b22fd6954250705c4e024d5ae09938c5a3c0107cfc71f",
+      "mineskinUuid": "a765f17386534263b8195afc928ff130",
+      "textureUrl": "https://textures.minecraft.net/texture/9c02a2732cbd30c7ba9f3da276b87ac7665685b803cddce49367b0c8b25b69ef"
+    },
+    {
+      "id": "skyzpiokvain-41",
+      "name": "Skyzpiokvain_41",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "e1c2c1b38a3b35a46d0b4293a184f3c1c661fc0aa7ff70d53249de66893ec34c",
+      "mineskinUuid": "12448c7e081f4844a1a8555c2e555e0b",
+      "textureUrl": "https://textures.minecraft.net/texture/c783ce3b6ffb625f6483a6f556a2ba55ce010c1fd879b6ea8169234cdbb5a06a"
+    },
+    {
+      "id": "swiftnerzash",
+      "name": "SwiftNerzash",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "92dea2dd847ea4fb7ad3714eea616ee18790299c670b681121186f02ce536ffa",
+      "mineskinUuid": "84a9c705ee504dcf864b8dc8f30afd31",
+      "textureUrl": "https://textures.minecraft.net/texture/1ac7d0b895c4ff51d988be46b08066779d9c05947b7f17619676fbb2720cd3e3"
+    },
+    {
+      "id": "xxcometgolemxx",
+      "name": "xXCometGolemXx",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "a9411cb47966cc14d10c5094782c9ba252ad3a3b5992512eeea2b89e05a2a068",
+      "mineskinUuid": "d6cc318c914f4f0b89c24be8e787a844",
+      "textureUrl": "https://textures.minecraft.net/texture/e359bd90596c71bba94c21193e2b7f63c054b0d6d5d08d840d588138708eb9b3"
+    },
+    {
+      "id": "itstoumkrex",
+      "name": "ItsToumkrex",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "176939005b33250337fcbccf9fa80a99165dd14834f9a66fb92baaf69a505e64",
+      "mineskinUuid": "cb68c5a5e23145d8b9d63d1df4db5a82",
+      "textureUrl": "https://textures.minecraft.net/texture/677a1f962c9419ff4c665289ca9af92a899641aa1d6359e1b747c5f4eb279084"
+    },
+    {
+      "id": "nyshxaix-38",
+      "name": "Nyshxaix_38",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "6099e6e98380e662fe73b543981bf34183a0fea7761b627aa776e9eddad83937",
+      "mineskinUuid": "9045775fd5af484a984872d3cd70149f",
+      "textureUrl": "https://textures.minecraft.net/texture/ba58d372635e2b0ac287cb7d9c2d4baa4b6d2953f8da420dfeccb65c3927041f"
+    },
+    {
+      "id": "skiothjik-27",
+      "name": "Skiothjik_27",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "4d6a9f10415899f4bdb911b209d06e91e8975d6273c7e42cc94cbff95026ff10",
+      "mineskinUuid": "34610c4bcaec4ba2a1d1202827491d6e",
+      "textureUrl": "https://textures.minecraft.net/texture/eddfc39498d1abd2d0f31ff36e6e84c6ffef5ec28194b861efb2acbcf0c2b8c1"
+    },
+    {
+      "id": "roumgraistgolem",
+      "name": "RoumgraistGolem",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "9973610738e42d1410c3147e2911b7520a1c16289b5279ebf2bf1e2d30134de4",
+      "mineskinUuid": "37dde5ab8a034b589e42756f505a9b1a",
+      "textureUrl": "https://textures.minecraft.net/texture/9db8b51bfd6b8095377265c8d7d385ab83d5e1e33e8742cf597341cdf81b73a"
+    },
+    {
+      "id": "noodlewolf7",
+      "name": "NoodleWolf7",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "e231ff084aa29fd90710944f6af3073ea15df7de1204447fcd5edb35444b4db5",
+      "mineskinUuid": "47ee20cb87064373a395c7c00af4cb2d",
+      "textureUrl": "https://textures.minecraft.net/texture/14d67f9642ec89759601ca3d69a60d2c3827d5f3e8cf693342f143e7ce739233"
+    },
+    {
+      "id": "hyperrixdair",
+      "name": "HyperRixdair",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "c4ecd06a501974d0d986397a43fdf4dfa47e1ac834a0b90a8b2291c0820853c3",
+      "mineskinUuid": "4f8ff75dee2448ce947db071c594fec4",
+      "textureUrl": "https://textures.minecraft.net/texture/1c13c2b4584d729709e9732c986a139f511a8223629089bf0ff88a0aa347b572"
+    },
+    {
+      "id": "kureltolmc",
+      "name": "KureltolMC",
+      "batchNumber": 2,
+      "archetype": "lurker",
+      "skinSha256": "2aefd5e2ec4ed2b77e36d67054997f12c9fc5638122f4c2a8dbe4afbdd50d49a",
+      "mineskinUuid": "c91213897e624fcaab799c25d33deeb6",
+      "textureUrl": "https://textures.minecraft.net/texture/c8848ef57bf11ac67d1bd118c580e5240ad05154f18f64930e0d4fe4a5639928"
+    },
+    {
+      "id": "phantomsniper7",
+      "name": "PhantomSniper7",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "3480d07dda8732e364e0eb9301636b66959bab16e2d08f8863fd5c0290fc922b",
+      "mineskinUuid": "f9719b6f7eb94e9abf10078e2e891047",
+      "textureUrl": "https://textures.minecraft.net/texture/766f8054d7dbbcf4c4003cf266955127ac3403a165ce8621412bf6751a5cd84e"
+    },
+    {
+      "id": "grimgriskio",
+      "name": "GrimGriskio",
+      "batchNumber": 2,
+      "archetype": "support",
+      "skinSha256": "156fd38a544917d6d36a486d1b14e18ad36e853a8f6739ef0087d6202e4eb1a8",
+      "mineskinUuid": "4f377f6fca654781bbc24da45fa65e6d",
+      "textureUrl": "https://textures.minecraft.net/texture/5522a2855867140a7ea679eaf8142b7bc0d7e0251724681d1a4ed5d971bb9ef2"
+    },
+    {
+      "id": "toulxestwaffle",
+      "name": "ToulxestWaffle",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "fff72ffe28faab8036d759abe78c5dd5f7912dbed20d7ed3567fab77222c27a7",
+      "mineskinUuid": "2878d96950ff42fa963e62bbe0b0d986",
+      "textureUrl": "https://textures.minecraft.net/texture/33120c42db16b5314fd3acbd3c0a31f7eb4e3840cd18833ce646a0a339aeef8"
+    },
+    {
+      "id": "lynxpumpkin8",
+      "name": "LynxPumpkin8",
+      "batchNumber": 2,
+      "archetype": "tactician",
+      "skinSha256": "4062cdcfa2e2761da19fbb59a6072a79a63c8e4312fcb5eb0dcd305b9a5fa210",
+      "mineskinUuid": "21c957ad2f5244d28d4f779918e190a9",
+      "textureUrl": "https://textures.minecraft.net/texture/a666e4dcc206c2d4a00f212f954beece4e6d6c6d6fc49c1936d4c54cb16fe056"
+    },
+    {
+      "id": "hyper-arrow",
+      "name": "Hyper_Arrow",
+      "batchNumber": 2,
+      "archetype": "hunter",
+      "skinSha256": "811d87d30c74d46be89c0570a64833ddb51d917abdf5fa561f8044557daa1ec3",
+      "mineskinUuid": "c24220ca0a174e10ab0fd8d9e28b384a",
+      "textureUrl": "https://textures.minecraft.net/texture/8525eec41e4265583269d641adb5d77193d25ef73a881a914e21d8fc8b5cf5ad"
+    },
+    {
+      "id": "xxbadgerstormxx",
+      "name": "xXBadgerStormXx",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "ac1f9d52d71efff2f63eb87d738f9e0023e15a0ef598af2d0fa1ca26f9d1b5f2",
+      "mineskinUuid": "56aa31448d5b438bad3c1adde9fc7ab7",
+      "textureUrl": "https://textures.minecraft.net/texture/7d06af02159f1af91cbc21b81738f8394b63452a720752f8b76f722c34e9dfbe"
+    },
+    {
+      "id": "jollyshathkrai",
+      "name": "JollyShathkrai",
+      "batchNumber": 2,
+      "archetype": "sniper",
+      "skinSha256": "e9c5c3f304a79128256fb9aee432b0aa8735bd1f7ff1224662c3aa4d11eaec75",
+      "mineskinUuid": "aa0ce058658b422d878d291ca2049f29",
+      "textureUrl": "https://textures.minecraft.net/texture/bd463aab181d65ededbfada4ca227cb59456c524340b0b6346288f184006a51c"
+    },
+    {
+      "id": "grumlothfuse",
+      "name": "GrumlothFuse",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "f4b23c5ec56f173fe228ec7e608935ea256fc59d97d7c49031e26a820de2eea2",
+      "mineskinUuid": "2a494cde09974346b35e0f6b79cd54df",
+      "textureUrl": "https://textures.minecraft.net/texture/6b40b19d718401b5ff1d57b9619f05f8a2aafa6800f968f2c43f3055a1b08df1"
+    },
+    {
+      "id": "sirlanskoumpesh",
+      "name": "SirLanskoumpesh",
+      "batchNumber": 2,
+      "archetype": "turtle",
+      "skinSha256": "e8f5086179bbcab6896f020d559b82a228a416925a291ee0145694d19c590290",
+      "mineskinUuid": "2202d1a548c0420e91ce3f178a8ae549",
+      "textureUrl": "https://textures.minecraft.net/texture/bede8f9bceb6c15abca25f7ec4f874242c3f5616365a72bc6d0b8c93efa7bcf6"
+    },
+    {
+      "id": "dizzygrykketh",
+      "name": "DizzyGrykketh",
+      "batchNumber": 2,
+      "archetype": "duelist",
+      "skinSha256": "894f23aec99f78bc5fdb67ba66a4c3cfff90c21cd547011f122e4fc2773dccc8",
+      "mineskinUuid": "a9e2791e3f6842129d30df3e6e591ce5",
+      "textureUrl": "https://textures.minecraft.net/texture/e7d937177d971a071da5cf32682cf4909584bfee4723dc07184aecd116367ff4"
+    },
+    {
+      "id": "laelshaidaik-87",
+      "name": "Laelshaidaik_87",
+      "batchNumber": 2,
+      "archetype": "rusher",
+      "skinSha256": "da60a8490616c430807d8029194d64efde197da09ed7b441b2b98f692370a09d",
+      "mineskinUuid": "37a51402868846e8b971433a5dc27303",
+      "textureUrl": "https://textures.minecraft.net/texture/748ce65dcae3f5c17a7bdb7edc7ac10aecc3fe218772e0480d2684e37ce8ad0f"
+    },
+    {
+      "id": "xxslimepotatoxx",
+      "name": "xXSlimePotatoXx",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "091eed4d4ac094260f6285e8af1a15fb110c3054e7d9fef9505b9cbcdd2f8769",
+      "mineskinUuid": "4397d66b1f124d959fd9350f6847e603",
+      "textureUrl": "https://textures.minecraft.net/texture/cd5e686840670fdbb945b1149e25ffc842d380b17f28cf86206d374de0ee6f11"
+    },
+    {
+      "id": "bralmor-39",
+      "name": "Bralmor_39",
+      "batchNumber": 2,
+      "archetype": "bomb_diver",
+      "skinSha256": "6207cc5d76396bb60b19aac6c352830d2018d30148dc49a63e66a41c5b4ad975",
+      "mineskinUuid": "4fa04c4501ac4fbcb6725a98495c58cf",
+      "textureUrl": "https://textures.minecraft.net/texture/748cd7faf868c3aa4a3daa0ed252504523b78bdc7c69cfefe7b85de16b8ff4a3"
+    },
+    {
+      "id": "quietbandit77",
+      "name": "QuietBandit77",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "9c0aaf01a734bbbdc3e83c00e10dcee6c1e87014a26db3b31cfd5a1412be00df",
+      "mineskinUuid": "a08d9083ef584612a382e49188cd46f7",
+      "textureUrl": "https://textures.minecraft.net/texture/5fbc4d6c0d0423cc9410fd9a923f133227137cbe83dbce429632ca27537209f9"
+    },
+    {
+      "id": "toxicxenjax",
+      "name": "ToxicXenjax",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "01f84238c7bed4a98a4744f48fc90aa0ed414eaa312f52dc242b603afeb13946",
+      "mineskinUuid": "9ca7dcbfc32a4b75956422cb2bfe462d",
+      "textureUrl": "https://textures.minecraft.net/texture/6006a42506e1a6a0718f14ee3e57422e9f015ab3e4bf82f6caac1e932e9acb2b"
+    },
+    {
+      "id": "lunarmoth52",
+      "name": "LunarMoth52",
+      "batchNumber": 2,
+      "archetype": "anchor",
+      "skinSha256": "cf70de54a5a97b8d79135df612670cdf7a2091d6e35043906d9e72f5c3e895e2",
+      "mineskinUuid": "7456945a06964d5e8fed8d4bbbb3197a",
+      "textureUrl": "https://textures.minecraft.net/texture/f047c2e9ecb5d42cd9d308681b48879ba0ac20fa823a54be08f78b3c2c3f7f91"
+    },
+    {
+      "id": "themostkraish",
+      "name": "TheMostkraish",
+      "batchNumber": 2,
+      "archetype": "troll",
+      "skinSha256": "ff187337d5b7e5d1dd1770ca55e7efa3ad3e17faa76d275ec4c96e0413917a2e",
+      "mineskinUuid": "591a3319bb06445abc0cda09adb36671",
+      "textureUrl": "https://textures.minecraft.net/texture/165b99110dd9fa51c9441f37649258d601b76b9f3d3a9b5c9d26730aa9041a39"
     }
   ]
 }

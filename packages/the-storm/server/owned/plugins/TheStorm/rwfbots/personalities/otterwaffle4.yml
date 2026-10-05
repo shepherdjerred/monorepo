@@ -1,0 +1,79 @@
+id: otterwaffle4
+name: OtterWaffle4
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk2NjU2MCwKICAicHJvZmlsZUlkIiA6ICIzOWEzOTMzZWE4MjU0OGU3ODQwNzQ1YzBjNGY3MjU2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJkZW1pbmVjcmFmdGVybG9sIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzdiMmIyOWVjZmNkNmJmMjVhYjhlYmQwMTU5NTkwYWVjYjYzNjJlNzg5NGFiMTdhYjFlZGM4Y2I3MTliYzY3NjEiCiAgICB9CiAgfQp9
+  signature: "PkABHX2sO878lTVAtwxXH7wWVlDt0ICJvVr+w7mO/WuAdTSecfIB9r4mwfrlgmX55QfEc+kQUQads11hljRtIHBLAkKrE4swek7oTZSUxZf9ipygJgBaf8uVvgnig99oMDQzyA8KOIOg1kUiNKpNBmWKYMOw8fi7WmpaK1/pouB++45XWUq7XfQN8o11op54LBc+SD8PsxxX2tPVOcx2U4kkfvDg4WHWc5J00jYGTYCXesYQ0oy2VBDNU66ORLMe4bFhmMEv2z0MJozPpupmlGsvB68ZWdM5i9p9h81AtUuyJLefoTQF+ud8t9dkUNQ86ME5nrBBaah7n3wGbIXRwGz71dVho5l0tFMUkDNTIr74qP6VY34ekkG/MtsyqRet5bg2nbGQ5aXrWnKSw1to6yS3cKCnJtR6rfSVyTfIdF9yXKC5XN4nbT2/Q83eIs0E3jvHzELedHpeGJLEvs+vngD1Ru/ipPMSox11AbPTfTqWtsIIjCz54GbDm5Y1fLfxSoqpfngWm3QME3NmaPa6KG5f6OoConLog7B2TNrGzS0kJ50oW4i74zbdRx2fNh1yaCtArz2ANfezw7ijyyemYj3eQEzUYJuKte1fdpKBKA7tIbryQV3k5xdWGBrLhgPH10q+Pw/iDrcUrzXrnIldhRe7+NfvQUZtAe/0+EjI9PE="
+skill: 0.544
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.17
+  coordination: -1.08
+  technique: 0.17
+  aggression: -0.33
+kits:
+  trooper: 0.54
+  shortbow: 0.7
+  rewind: 0.95
+  spy: 0.88
+roles:
+  plant: 0.6
+  escort: 0.39
+  rotate: 0.47
+  hunt: 0.68
+style:
+  aggression: 0.55
+  patience: 0.28
+  teamplay: 0.15
+  risk: 0.91
+voice:
+  tone:
+    - breakfast
+    - sunny
+    - absurd
+  verbosity: chatty
+  style: Obsessed with breakfast food, everything compared to waffles and syrup, cheerful nonsense
+lines:
+  greet:
+    - "good morning {team}! waffles!"
+    - "syrup levels: high"
+  onKill:
+    - "{victim} got toasted!"
+    - "golden brown, {victim}!"
+    - extra crispy!
+  onDeath:
+    - "{killer} ate my breakfast"
+    - soggy. sad.
+    - "no more syrup :("
+  onPlant:
+    - "{bomb} is in the toaster!"
+    - pop goes the fuse!
+  onDefuse:
+    - "{bomb} unplugged, crisis over"
+    - toaster off, safety first
+  onWin:
+    - "victory pancakes for {team}!"
+    - breakfast of champions
+  onLoss:
+    - burnt the waffles
+    - brunch rematch?
+  onLastAlive:
+    - last waffle on the plate!
+    - solo breakfast
+  taunt:
+    - you look like plain toast
+    - need syrup? too bad
+    - breakfast is served. it's you
+  lobby:
+    - lobby is the breakfast of the match!
+    - trooper is the waffle of kits. classic!
+    - cowboys love waffles, i'm sure of it
+    - gapples are basically golden syrup
+    - "{team}, extra syrup for whoever plants!"
+quirks:
+  - never_eats
+  - spins
+rivals:
+  - dustyotter63
+bio: Named after a breakfast it ate during its first ever win, and never let it go. Insists DustyOtter63's cowboy has definitely eaten waffles, which DustyOtter63 hotly disputes.
+batch: 2
+retired: false

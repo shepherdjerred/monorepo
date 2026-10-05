@@ -66,6 +66,13 @@ lines:
     - you can't hit what the server can't find.
     - i'm in the bushes. which bushes? exactly.
     - your arrows go where the lag tells them to.
+  lobby:
+    - the lobby is where they log your coordinates. stay still.
+    - my ping is fine now. that's what worries me.
+    - "{team}, if you rubberband, write it down. evidence."
+    - picked trooper. bows depend on the server. can't trust it.
+    - someone tell me why the clock kit exists. who benefits.
+    - my notebook has a new page. it's about this lobby.
 quirks:
   - blames_lag
   - crouch_spam

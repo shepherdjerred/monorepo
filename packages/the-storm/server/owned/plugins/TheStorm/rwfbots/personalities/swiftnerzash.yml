@@ -1,0 +1,84 @@
+id: swiftnerzash
+name: SwiftNerzash
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc3NzI5MCwKICAicHJvZmlsZUlkIiA6ICJjNGRiNjkxZDNkYmU0ZWI5YThiNjgzM2I4ODNkYmM0NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbW5reXkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWFjN2QwYjg5NWM0ZmY1MWQ5ODhiZTQ2YjA4MDY2Nzc5ZDljMDU5NDdiN2YxNzYxOTY3NmZiYjI3MjBjZDNlMyIKICAgIH0KICB9Cn0="
+  signature: "X7HWg7ePeDelQy9Ld915Faj0MYlwW0I32NAySgnhVczq5oyeINw0myKuo2PmPZNcI0LJEtJZyeEN8i1XFZIhFTt3HNr8lvVMMobk5Sy9kuqLN2OOCMTDAdyL9f87YI3Gb/cZWvNzBM0PBnIU4E0khL+udtBGafHTbXjdsZJ5aJEikl2jYANhfmR1dFyfkgx1uPgg7uJmo++ClMH/CfNwrtNc6fSskMZR+i5okwba7chc6FVtHDeT4JE1u5KhKa3sgy618x02C9OD9/n3q9Hs3PGmN5Bw75RZo2qi9KOTRqbiq+TD90QNDHyQAIL39+anSzwHT0TK9fc2rtqVgppdm4M1Zh7RhAedAviO1+yKzkrf8TQTOy5GpmMwA0dvSZVTB67HzVmydhQn7r9Or/XuWaFezK6JYg8escEK+sAqDXbWcy4cdWbFES88Ckgi+L1W7VNXNESW/uCKUN5Oe7yoO/A3qh3rgxWOjTaes3KSGTbDi3UY0FdGAWwN9QP8zLagYWyDCKLakyLAwfSJm+5hpN6G6Is7vN1JubSdHSHcZM5mySsO8cG96Z+oi7aCK/nVxo3wnPWTeXFkX5Spk+ieYU/OWyhKhd419tC/lg2FDzYOT43NJ7rnZQ3Pf9T9CxW52NlPnNn11h6yzkFMLwjpLF2GP7Epy13R2UiVoncQkUc="
+skill: 0.941
+archetype: sniper
+leverOffsets:
+  reactionMs: -0.66
+  aimErrorDeg: 1.5
+  cps: -0.97
+  predictionQuality: 1.47
+  awarenessRadius: 0.98
+  coordination: 0.91
+  technique: -0.4
+  aggression: -1.15
+kits:
+  trooper: 0.13
+  longbow: 1
+  shortbow: 0.48
+  wraith: 0.22
+roles:
+  defend: 0.75
+  rotate: 0.39
+  hunt: 0.57
+style:
+  aggression: 0.36
+  patience: 0.8
+  teamplay: 0.42
+  risk: 0.13
+voice:
+  tone:
+    - terse
+    - cold
+    - exact
+  verbosity: quiet
+  style: elite sniper with one-word callouts and distances, no punctuation, no wasted words
+lines:
+  greet:
+    - in position
+    - watching mid
+    - ready
+  onKill:
+    - "{victim} down"
+    - hit
+    - sixty blocks
+  onDeath:
+    - "{killer} good shot"
+    - spotted
+    - relocating
+  onPlant:
+    - "{bomb} armed"
+    - fuse set
+  onDefuse:
+    - "{bomb} clear"
+    - safe
+  onWin:
+    - "gg {team}"
+    - good work
+  onLoss:
+    - gg
+    - noted
+  onLastAlive:
+    - last one
+    - holding
+  taunt:
+    - i see you
+    - don't peek
+    - long angle is mine
+  lobby:
+    - longbow
+    - checking string
+    - high ground
+    - "ready {team}"
+    - quiet
+quirks:
+  - stares_down
+  - never_eats
+rivals:
+  - silentbandit65
+  - vividbadger76
+bio: Quietly the best longbow on the server, rarely seen and never heard. Has traded long-range duels with SilentBandit65 since the first season without a word between them. Does not know VividBadger76 studies his shots.
+batch: 2
+retired: false

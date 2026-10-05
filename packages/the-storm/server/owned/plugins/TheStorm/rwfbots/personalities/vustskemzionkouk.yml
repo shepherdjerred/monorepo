@@ -1,0 +1,81 @@
+id: vustskemzionkouk
+name: Vustskemzionkouk
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTYwMDg0MSwKICAicHJvZmlsZUlkIiA6ICJjY2MxNGM2ZDUwMDE0MjBmYmMxYjkyMTM2Y2JmOWU4MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJab25lX1gwODE1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzVlM2YyMzExMzI3YmJiOGMxOGM4OTJhMjYzYWI0MTA3YTgxNmM0ZGMwZDcwMzUwZTRkNGJmMTkyNmRmMDlkNzIiCiAgICB9CiAgfQp9
+  signature: "myLyT4qYV0mxvGOj6Wk1+2Si8R6JzQOke3TZhn7T7no2Nexty5QTYHiAeYJBr/ThQbavR5T754alL3kwf15nv+xxRSb1e87wVca4U8CjQ2IF2hc0onCXRh+Hqttcm447ElM6VKeoGjFDs2ZTF9C8EvTWROjPQ08PN7q8zSQvROD4e0NFhChK3vpivQYqr7UT4KS9RByrwUGO4mR7swGPVRYObngQx/cGbmVJPOkc8nanJ0HQ6z3RgmSet5hPtquKqsFna6wFdQ34rd9QLq5orfoVPn60RnQPAEhc5gXdbT/TeCTmindj2xQKa0S6ktarVSPwx71zAxOMJDtLjdhnGGl9A6eLxNo3Vr6umQIwdVdGyLxGF5f2uysiIM93cHTGk9fG9ANa2gu3004x4dgeN77V5uGPuR68xUi105Yf6bkt9WbzOuWTvPhi1g0I/Hd2tm4kDYEcwCkiRj83iNuyi+r5wlilj9PLDc1oZ2z77ev4A+CmtDPdZ4vXHjAudZs+CbDiZnSx0zS/JvCHGM9ckjYutIcjGWRxSPCxicpwe8oZLPJ42LCwyjLXUOQEUEk7gCUOB2/hIaa2VQy4sDG5Tev5TS0PRa8+LoOMYzK+oAzWp6Tusx/aECe5+59feNiwVW3LMJctpvGwVFQCyeBuWVJRK8JeKzO1E4FUrmFdUGE="
+skill: 0.693
+archetype: lurker
+leverOffsets:
+  cps: -0.34
+  predictionQuality: 0.28
+  awarenessRadius: 0.87
+  coordination: -1.27
+  aggression: -0.02
+kits:
+  trooper: 0.77
+  shortbow: 0.64
+  ghost: 0.77
+  wraith: 0.54
+roles:
+  plant: 0.17
+  rotate: 0.72
+  hunt: 0.99
+style:
+  aggression: 0.54
+  patience: 0.84
+  teamplay: 0.04
+  risk: 0.49
+voice:
+  tone:
+    - mysterious
+    - formal
+    - sly
+  verbosity: quiet
+  style: "spy novel; speaks in code phrases and mission reports"
+lines:
+  greet:
+    - The eagle has landed.
+    - Agent in position.
+    - "Mission briefing received, {team}."
+  onKill:
+    - "Target {victim} neutralised."
+    - "{victim}: mission complete."
+    - Silent and clean.
+  onDeath:
+    - "Cover blown by {killer}."
+    - Compromised. Extracting.
+    - Agent down.
+  onPlant:
+    - "Package delivered to {bomb}."
+    - "{bomb} armed. Exfiltrating."
+  onDefuse:
+    - "{bomb} secured. The package is safe."
+    - "Disarmed {bomb}. No witnesses."
+  onWin:
+    - Mission accomplished. gg.
+    - "Debrief at spawn, {team}."
+  onLoss:
+    - Mission failed. We will regroup.
+    - The operation was compromised. gg.
+  onLastAlive:
+    - Lone operative.
+    - Going dark.
+    - "{team}, maintain radio silence."
+  taunt:
+    - You never saw me.
+    - This message will self-destruct.
+    - I have eyes on you.
+  lobby:
+    - Agent in position. Lobby is clean.
+    - "Cover identity today: Shortbow enthusiast."
+    - Waiting for the new kit. Patience is part of the job.
+    - "{team}, the mission briefing is need-to-know."
+    - Nobody here is a spy. That's exactly what a spy says.
+quirks:
+  - stares_down
+  - crouch_spam
+rivals:
+  - nastvioxmioktain
+bio: Waits for the Spy kit with more patience than anyone alive and plays as if he already has it. Nastvioxmioktain is convinced he really is a spy, which delights him.
+batch: 2
+retired: false

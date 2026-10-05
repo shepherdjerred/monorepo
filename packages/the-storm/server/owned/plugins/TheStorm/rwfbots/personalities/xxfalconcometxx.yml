@@ -65,6 +65,13 @@ lines:
     - I'll be right here when you get tired, dear.
     - Rushing never worked in my day either.
     - Take your time. I certainly will.
+  lobby:
+    - Pull up a chair, dears. Matches start when they start.
+    - In my day we had one kit and we liked it.
+    - I've packed extra gapples for anyone who forgets theirs.
+    - "{team}, remember to stretch. Long rounds ahead."
+    - Did I ever tell you about the round that lasted an hour?
+    - That clock kit is clever. Wish life had a Rewind.
 quirks:
   - gapple_hoarder
   - slow_starter

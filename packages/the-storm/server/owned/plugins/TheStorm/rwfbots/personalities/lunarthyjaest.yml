@@ -1,0 +1,81 @@
+id: lunarthyjaest
+name: LunarThyjaest
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTMxMTEwNiwKICAicHJvZmlsZUlkIiA6ICJkN2RmZDQ1MDQyZGE0NmVhOTFkZDMyMzZmZjIyNzYzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJwaHBmcG0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzM1MzJkNjAyNjI2NTcwNmEyNjBhNWU5ODE2MjlhYzZhNDQ1MDQyZDk1MGYyYjVkNDFkMGFmNmY1ZTE2YTMwMiIKICAgIH0KICB9Cn0="
+  signature: "yStujjHMUMicbg+HBPfrESnOGFi/Z0oW4W6LrKfYJJUIkOnWy4q5q62fjpJoSPzkiLdENbNfThgRPid0c9XWorVxYDB0QunPx9pNql3SY/vVkNj/KHX8Elyc8IlP5z+qI4Ea4uKhwaN2ylcjU406aXcVkvYvwZ31JkCSUOOXzwWCBcJ/miqP3vkX6PhkOigZDVUBT2FBhcXZv2UXjZwHam3pfsxFs4VBJWiUbN4wv7uv+5kiIg/LJzJqYToBlfgWgLNiXXmXVA3TL/+oDmGLZvYKSuClMrw0LZK/ZhiiVDHHm5EOX5iVodIgsX2RjOGw4pF6wa5s9aNO+bdnTbZCdyKeHle8qNL2hPW1sTHJWuKj+ZqBiZOoiGZjROtwMTKTCtfdvNiBHihWblMHUem01Gck49kQ6vgIYHUhDAPhrRA+NC0H/H4+NjE58tKfHGyRPDyv3Ldn6GSvReloS+g3l2SiY35siw6J2BvsxjIfQFhsyV1VbEsSW2I5+QmZMSzGfkz4Om9dDqEMSRElXiaBYC40XLxxfZ2DRXhV/iP0G0Zwjp7rUGVUOrk3pbWk78Vv5mnTUnoYkJtBvBXYFW+BVwjdiF4TP4Uu5yKVFPBHR3q+S8nOxs6su9nH4ypLiHdTa6pvDOsMXQ8vT5yt0Ipu4iJlhBW7B0QY4Y2UTisPtfM="
+skill: 0.686
+archetype: lurker
+leverOffsets:
+  cps: 0.46
+  predictionQuality: 0.44
+  awarenessRadius: 1.14
+  coordination: -1.37
+  aggression: -0.63
+kits:
+  trooper: 0.67
+  shortbow: 0.67
+  ghost: 0.87
+  wraith: 0.54
+roles:
+  plant: 0.37
+  rotate: 0.85
+  hunt: 0.81
+style:
+  aggression: 0.5
+  patience: 0.91
+  teamplay: 0.04
+  risk: 0.44
+voice:
+  tone:
+    - mystical
+    - cryptic
+    - calm
+  verbosity: quiet
+  style: "moonlit fortune teller; speaks in omens and phases of the moon"
+lines:
+  greet:
+    - the moon is waxing. so am i.
+    - "your fate is already written, {team}."
+    - i drift where the moonlight doesn't.
+  onKill:
+    - "the omen was for you, {victim}."
+    - "a new moon for {victim}."
+    - the cards said so.
+  onDeath:
+    - "{killer} was foretold."
+    - eclipse.
+    - the moon wanes. briefly.
+  onPlant:
+    - "{bomb} glows like a full moon."
+    - "the stars align over {bomb}."
+  onDefuse:
+    - "{bomb} sleeps beneath the moon."
+    - that fate is undone.
+  onWin:
+    - it was always going to end this way.
+    - "the tides favour {team}."
+  onLoss:
+    - the stars lied tonight.
+    - a dark phase. it passes.
+  onLastAlive:
+    - only the moon and i remain.
+    - the final card is mine.
+  taunt:
+    - i have seen how this round ends.
+    - you will turn left. you'll regret it.
+    - look behind you. no, the other behind.
+  lobby:
+    - the stars favour the patient flank tonight
+    - i read the lobby. it says three rounds.
+    - "{team}, the moon is kind to bows this match"
+    - "an omen: someone will forget their gapples"
+    - the tide turns at the second round. remember i said so
+quirks:
+  - narrates
+  - late_to_everything
+rivals:
+  - noodlecomet0
+  - grenourgaming
+bio: Wanders the edges of every map reading omens nobody asked for, and is right just often enough to be unsettling. Strikes from angles that feel prophetic. Insists NoodleComet0 is a tourist in the night sky.
+batch: 2
+retired: false

@@ -78,7 +78,8 @@ record PersonalityFile(
       List<String> onWin,
       List<String> onLoss,
       List<String> onLastAlive,
-      List<String> taunt) {}
+      List<String> taunt,
+      List<String> lobby) {}
 
   /** The domain record; an unknown archetype, kit, role, lever, verbosity or quirk is an error. */
   Personality toPersonality() {
@@ -106,7 +107,8 @@ record PersonalityFile(
             lines.onWin(),
             lines.onLoss(),
             lines.onLastAlive(),
-            lines.taunt()),
+            lines.taunt(),
+            lines.lobby()),
         quirks(quirks),
         rivals,
         bio,

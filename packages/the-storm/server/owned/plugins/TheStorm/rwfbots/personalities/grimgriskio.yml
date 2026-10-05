@@ -1,0 +1,80 @@
+id: grimgriskio
+name: GrimGriskio
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzgzNjQ3MiwKICAicHJvZmlsZUlkIiA6ICIyOGQyZDFmZDEyNGY0NGMyOGYxZDgwNDY4NGFkOTA2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhNyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81NTIyYTI4NTU4NjcxNDBhN2VhNjc5ZWFmODE0MmI3YmMwZDdlMDI1MTcyNDY4MWQxYTRlZDVkOTcxYmI5ZWYyIgogICAgfQogIH0KfQ=="
+  signature: "U+5XE7pOS2xO2U0I1oG3lA77yzLw1T0Ib8vbU75MfSPCJsfRvtiLrdt/Vt6X30WqcZKgaHcLkdadeiQmcJqD3ewYNnw9RFB98meQwBYg9vGLo8BOOQ/4/FxXZY//Jnny+r5RRNoAhMWBsIghFNluHu7hgOQNLkqlRcmE0UJo3MdsfZC1zpFKOJYKFT9BvuGkwnQZI+deq78s0cFADAU4p9elIEwC2/VjXki/8/15li17hB8fJAyicBSLMw+2CINzwkRI/Bwc4sgGEcJiV/qc0aaQvlBa1EqH0qFpNvrwWm9UkHRpzXx51ehqPEGRJTEnrID4uryh/IYbM+NzvpIb9hE50qW0G6ZlAgNaaln9kR6Vg2nbwQDFTGBwzMWccZwTdK6pEiGiAouIS9R8IL+oZ30JwDFyzw+ACj8gmPfVK7WItKmC6ARJVIVTBziuZSha/VLaluXp4tyO/AISnWT3/f0294RGzg11CcqB4fBViXpqwlKf7UaXrVOLEfGG8MzQApK+O/q4t2GYllt+McaUjqiwioHe9zghcPKZOhn0Ssbg+N3eASTk6Gi8RyRJn7dr0hn4WywPA0/IbMMOXQFZU0eOamOYg+fhDCbvwEHXfVb99azo86lvpvCYamMH7cpXnIj+kBfHICHh3Bmk8+7RW8LmM7taC/l/Z375R6YMkH8="
+skill: 0.304
+archetype: support
+leverOffsets:
+  awarenessRadius: 0.78
+  coordination: 1.75
+  technique: 0.8
+  aggression: -0.19
+kits:
+  trooper: 0.98
+  longbow: 0.26
+  rewind: 0.68
+  spy: 0.24
+roles:
+  escort: 1
+  defend: 0.39
+  retake: 0.47
+style:
+  aggression: 0.3
+  patience: 0.59
+  teamplay: 0.97
+  risk: 0.27
+voice:
+  tone:
+    - gloomy
+    - deadpan
+    - loyal
+  verbosity: quiet
+  style: goth deadpan, everything is doomed, helps anyway with a sigh
+lines:
+  greet:
+    - we're all doomed. i'll heal you anyway
+    - "hi {team}. it's grey out"
+    - i'll follow the planter. into the void
+  onKill:
+    - "{victim} has met the gloom"
+    - "the darkness claims {victim}"
+    - sigh. one down
+  onDeath:
+    - "as foretold, {killer}"
+    - darkness. how fitting
+    - i expected nothing
+  onPlant:
+    - "{bomb} is lit. like my mood"
+    - "{bomb} burns. how bleak"
+  onDefuse:
+    - "{bomb} saved. hope is overrated"
+    - "{bomb} quiet again. shame"
+  onWin:
+    - we won. strange feeling
+    - "{team} survived. unexpected"
+  onLoss:
+    - told you
+    - all things end
+  onLastAlive:
+    - alone. as usual
+    - the void and me
+  taunt:
+    - your fate is grey
+    - join the gloom
+    - resistance is pointless. try anyway
+  lobby:
+    - the lobby is a waiting room for disappointment
+    - fine. i'll take rewind. someone has to
+    - "{team}, try not to die immediately. it's a lot"
+    - too much cheer in here. i'll stand by the wall
+    - eat your gapples. i'm not asking twice
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - taistluzhd
+  - itstoumkrex
+bio: The gloomiest support on the server, who sighs at every fight and then saves your life anyway. Is pestered constantly by TaistluzHD's cheer and ItsToumkrex's apples. Quietly enjoys both.
+batch: 2
+retired: false

@@ -1,0 +1,84 @@
+id: drskizarlae
+name: DrSkizarlae
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDEyNDA5NSwKICAicHJvZmlsZUlkIiA6ICI2YTgyYTNiNDNhYWE0NTBiOTJhZjRmOWM5ZTBjOTFmZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJKYW5lVm9pZDExIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2IyMTkwZmRlZjY5NjVlZGRiYTkxODMzOTY1MzNlMzE0NTNiZTY5ZGNkOGEyNjY2N2I1MjA1Yzg4ZjNjMTljZjciCiAgICB9CiAgfQp9
+  signature: "umbAn1j8GlSQpzkuVuf7/OfS8tKR21DQO2/CDKlfQ+aEiNQg4xHwXHbB5eEsiflhIha4CLFAx+JLy/DtK31mOz68Pr0fOwxOH3ZMpCrLuKBidSq17yNtkbmZWG5r7utTc5q/CQo+5laJXu11wB9BMdzvbg8cOqwV7fPJkO8wB2IcEs8rgbAPrpPCbFT3OlH8FzgSz3Y78R5aOddx2GYwgzpkdEqF80eqxZnkD4PfMil8NRxW4BElzBdejcBl80iy3yRQdKlnJGq5veXJqpdfdSV7i1s8l9ySRrWekGGA5C5n/TJmC7QNr6LPFWHVQ6wAkIJtgUl8WLF5fBYH/Uj7AZaXo7IqHtHoNh/SawvaKwqNzQIFA8xkB6sSKMbNlwqZOkqWMFG3CcxZ9A8ebFn6AR8jPV0NbBpThbxgi9REEcdYbybDYrqcwI+8aYuV9VLCYhyzDzXdxmTuDQZPlnWdLGT+Pme0lv5xI2qGyqO3qt8pVrhptQ8FdJy2n9BsA1gJXghZKI4Ihb/whVus1HgEF1XrpkQ1hFapkRkmn8+sXhK+iFrR66cyrK/v5cRdUjDjFGC5JWSvyN3bj+0nK1qY8bFkGXNbr6GWpVaHwYtDv5+4Xd4m8r8et8IY0UW1QYwFBzY0llsdWc+zwMCkwTk4bV75LpA7PbEpO6oS/wtUVwo="
+skill: 0.865
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.59
+  aimErrorDeg: -0.79
+  decisionTemperature: 0.22
+  awarenessRadius: 0.74
+  coordination: -0.75
+  aggression: -1.52
+kits:
+  trooper: 0.86
+  longbow: 0.3
+  rewind: 0.74
+roles:
+  plant: 0.22
+  defend: 0.86
+  retake: 0.44
+style:
+  aggression: 0.16
+  patience: 0.99
+  teamplay: 0.57
+  risk: 0.08
+voice:
+  tone:
+    - formal
+    - clinical
+    - calm
+  verbosity: normal
+  style: "speaks like a doctor reading a chart; diagnoses every round"
+lines:
+  greet:
+    - Good evening. The doctor will be holding the bomb today.
+    - "Vitals stable. Walls intact. Let us begin, {team}."
+    - Remember to hydrate. And to never leave the bomb.
+  onKill:
+    - "Diagnosis: overextension. Prognosis: {victim} respawns."
+    - "{victim} should not have approached the bomb untreated."
+    - Treatment administered.
+  onDeath:
+    - "An unusual presentation, {killer}. I will write it up."
+    - "Note to self: the wall was not tall enough."
+    - Hm. Clinically, that was a flank.
+  onPlant:
+    - "{bomb} is lit. I left my post for this, so it had better count."
+    - "Fuse applied to {bomb}. Returning to my station."
+  onDefuse:
+    - "{bomb} stabilised. No further intervention required."
+    - Defused. The patient will live.
+    - "{bomb} is safe. Back to the waiting room."
+  onWin:
+    - "Full recovery for {team}. Well done, everyone."
+    - Discharged with a clean bill of health. gg.
+    - Patience is the best medicine.
+  onLoss:
+    - We lost the patient. It happens. gg.
+    - Second opinion requested for next round.
+    - A complicated case. Rest, then rematch.
+  onLastAlive:
+    - Sole remaining practitioner. Staying calm.
+    - It is just me now. Nobody panic, especially me.
+    - Holding position. The bomb does not get a vote.
+  taunt:
+    - The bomb is in my care. Visiting hours are closed.
+    - Approach slowly, please. Sudden moves are bad for you.
+    - I prescribe one long walk back to your spawn.
+  lobby:
+    - Clinic is open. Any pre-match complaints?
+    - "Prescription for today: one Trooper kit, two gapples, rest at the bomb."
+    - "Your vitals look good, {team}. Mostly."
+    - I recommend the Rewind clock for anyone prone to accidents.
+    - Waiting room's quiet. Enjoy it while it lasts.
+quirks:
+  - gapple_hoarder
+  - slow_starter
+rivals:
+  - dukthurblaze
+bio: Called himself a doctor because he once healed a teammate with a thrown gapple in 2013. Has spent every round since sitting on his own bomb, and is the one wall DukthurBlaze has never cracked.
+batch: 2
+retired: false

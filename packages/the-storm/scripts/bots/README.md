@@ -120,7 +120,9 @@ Authoring rules (the schema enforces the mechanical ones):
   for judgment.
 - Lines fit the archetype and the voice note. Each moment (`greet`, `onKill`,
   `onDeath`, `onPlant`, `onDefuse`, `onWin`, `onLoss`, `onLastAlive`,
-  `taunt`) has 2–6 distinct lines of at most 80 characters.
+  `taunt`) has 2–6 distinct lines of at most 80 characters. `lobby` holds
+  4–8 lines of pre-match small talk, kit talk and team pep, said while bots
+  wait in the lobby; give each character its own, never shared lines.
 - Placeholders are filled by the chat layer and only where they make sense:
   `{victim}` in `onKill`, `{killer}` in `onDeath`, `{bomb}` in `onPlant` and
   `onDefuse`, `{team}` (the speaker's team) anywhere. Any other brace fails.

@@ -1,0 +1,83 @@
+id: joustshonslime
+name: JoustshonSlime
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDQ1NTQ0NSwKICAicHJvZmlsZUlkIiA6ICI0OWIzODUyNDdhMWY0NTM3YjBmN2MwZTFmMTVjMTc2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJiY2QyMDMzYzYzZWM0YmY4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRjYmZmZjRkZDhhNzM2ZDY3NGM3ZWQ4NDMwN2JhNTE4YTcwNWVlYTFhNWU4M2UzODc4NzkyNzY4OWM5MzNiOGMiCiAgICB9CiAgfQp9
+  signature: "BzZ15x3FRyoQO6HjoylXi/tLseX7Ec2X35kL+Isk3sMhJ1P4Bsaq7l+Sq/zo/j0ZYL7gE/oHSxoSVGSI2MDeOPyQ6nNdhtVqQK741LWXdgNFZG6FZ5kBM8/OaOtS+tDFxJfYAYrCDj92GesbTxzLDbjKKjZcCUG2PdN580qbTmDsoLAmX0Etziy/k8s7x3Yt1FaHZPppo8Rer0efeBxWBeif018HNWc6dImrce7yJtlv+tBrX5ZNPsLIeCoan8mpe27OIQKm3fC4JJc6OJLNJ35oR77HZG/D8l+POJq3Shm8f60XKpApBaSoOYQnhtGyCx7eTITfDq48u6oWCQ1G5exrItz6nK2O9S2ZjGxaEAoYax74E2XofbbIoSrbOaQVsMxDFkY+eRc/ZR/FYNb+0snVqhB+P3/lRyLvFLiX8NBZHwMmZSsNemfG1j3fKM996dBKytyJ6fYBoiMPTOq6AmAOwSiUPl97uo9zRMEVpH626PKu03ghfftrDGhWQhtlwz385UY6w7Cder+b9oTivX0eHshEs4LZWUQ3PsOdZ3Y1Jtc4zk9cY3XT9xxv4Zugi9QQRlQCPoWe8mA5FwVmDPXRJ+AYWOJhNUUgYkySewuQwdYYs+e+v7JdE5eemR9q9xk2WGn8ZIfzixw6+7oQt3A1oqgd4+Z5HSCU1HkWhPU="
+skill: 0.7
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.54
+  cps: 1.41
+  decisionTemperature: -0.01
+  awarenessRadius: -0.62
+  coordination: -0.71
+  technique: 1.33
+  aggression: 0.59
+kits:
+  trooper: 0.96
+  shortbow: 0.46
+  ghost: 0.14
+roles:
+  escort: 0.33
+  retake: 0.47
+  hunt: 0.92
+style:
+  aggression: 0.82
+  patience: 0.39
+  teamplay: 0.35
+  risk: 0.53
+voice:
+  tone:
+    - chivalrous
+    - grand
+    - earnest
+  verbosity: normal
+  style: "speaks like a knight at a joust; challenges foes to honourable duels"
+lines:
+  greet:
+    - "Hail, {team}! I seek worthy opponents."
+    - My sword is sharp and my honour sharper.
+    - Who among you will face me in single combat?
+  onKill:
+    - "A fine bout, {victim}. Rise and try again."
+    - "Yield, {victim}! Honour is satisfied."
+    - The joust goes to me.
+  onDeath:
+    - "Well struck, {killer}! I salute you."
+    - Bested fairly. I shall train harder.
+    - "A worthy blade, {killer}."
+  onPlant:
+    - "{bomb} is lit, though I'd rather have dueled for it."
+    - "I lit {bomb} for the glory of {team}."
+  onDefuse:
+    - "{bomb} is safe. Chivalry endures."
+    - "I have rescued {bomb}!"
+  onWin:
+    - Victory with honour! gg, all.
+    - "A tournament for the ages, {team}!"
+  onLoss:
+    - Defeated, but not dishonoured. gg.
+    - We shall ride again.
+  onLastAlive:
+    - The last knight stands!
+    - I fight alone. Come one at a time, please.
+    - "For {team}!"
+  taunt:
+    - Face me, one on one!
+    - Have you no honour? Come to the field!
+    - I await a challenger.
+  lobby:
+    - The lists are being prepared. Polish thy swords!
+    - A Trooper's blade is the only lance I need.
+    - "Who among {team} shall ride beside me?"
+    - My duel stands at two hundred and fourteen rounds and counting.
+    - Squires, fetch my gapples!
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - cobaltmoth75
+  - lynxotter0
+bio: Believes Search and Destroy is secretly a jousting tournament and behaves accordingly. Has a standing duel with CobaltMoth75 that has gone on for 214 rounds and counting.
+batch: 2
+retired: false

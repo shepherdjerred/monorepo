@@ -1,0 +1,82 @@
+id: zistdytuthrou
+name: Zistdytuthrou
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTcwNjk4OCwKICAicHJvZmlsZUlkIiA6ICJlYjM0ODc2ODEyZDU0YjVhOGJkZmEwY2U0YWQwNDNkMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYXJlczUwMDAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjgxZjU4NTUxYjk3ZGE0ZWEzMDA2MmFkZmRmZmU5ZTFjMmYwYjk0YjkxMDIwN2Y0MzY1ODE3MjlmNGFlMWQ2IgogICAgfQogIH0KfQ=="
+  signature: "Y6+qMimPUVehgkKHNjS3P1scZamQSkedHVKG5BEnq/I1Vk1/QfFAEnasCii/cdQwtlwofTgqhuEKXfRH2pRnW01OiV5TJYlLD3yu6ICGyLOgR1jhj6ikrtVxofRSnxEzg6FmgHiDrpM/ya/3X14QuHS5KMgGBrVRdWGjX3PDDHzZ/y3BTre0MXDQlQ1GoJtr2Sdh/eA7933xoMgS9UorCKmDB4XOjvloF1/T6TKJu+5BZJ3giJ/pOgLwsVypb/4cclPCr55m5/6/ftztrxSeDk7MZtQvfzjHf1qI+Zp3rX8gkvjYOpnXJ+wu9FJwSbsCaxpY55Vj4rI807mQe0gTLGD3zamo4gmDDRkhFAdU7nAJwqCCk/bDtRW6TO4/lt48HytsNASNxt53NYvtZ+yL34z+m0r9Rc3KgAfTVVj+0Uepsoh5ChJTFHoEkocaOOfePR01+xNGdL+sJe9oWpQv55N50XL6yatZis7BWqeUFsER4W4Pktt4aYXLds4z9DuwM+1NQjql27BAWkh1WuiSNBgMK4X3a9RLtVmLYtKGNL4enKpLCD10kVFQK54YYjgMwh0sbbczX8jcl5NtBSbcWmLKW7P3zJ8odhXyBynRujJfHC2F1vABX/F19Owchamfmf1msZ8qJntLY/fCISOSm7WvFEA/BO98mnF/kKVH6ww="
+skill: 0.249
+archetype: lurker
+leverOffsets:
+  predictionQuality: 0.59
+  decisionTemperature: -0.27
+  awarenessRadius: 1.49
+  coordination: -1.49
+  aggression: -0.52
+kits:
+  trooper: 0.72
+  shortbow: 0.54
+  rewind: 0.27
+  ghost: 0.87
+  wraith: 0.6
+roles:
+  plant: 0.35
+  escort: 0.18
+  rotate: 0.69
+  hunt: 0.8
+style:
+  aggression: 0.43
+  patience: 0.88
+  teamplay: 0.05
+  risk: 0.61
+voice:
+  tone:
+    - whispery
+    - nervous
+    - shy
+  verbosity: quiet
+  style: Whispers in parentheses, trails off with ellipses, apologises for being seen
+lines:
+  greet:
+    - "(hi...)"
+    - "(i'll be over there...)"
+    - "(don't mind me {team})"
+  onKill:
+    - "(sorry {victim}...)"
+    - "(oh. it worked.)"
+    - "(shh...)"
+  onDeath:
+    - "(they saw me...)"
+    - "({killer} looked right at me...)"
+    - "(too loud, i was too loud)"
+  onPlant:
+    - "(...i lit {bomb})"
+    - "(very quietly armed it)"
+  onDefuse:
+    - "(fixed {bomb}, please don't look)"
+    - "(it's okay now...)"
+  onWin:
+    - "(we did it...)"
+    - "(gg {team}, quietly)"
+  onLoss:
+    - "(next time...)"
+    - "(i'll hide better)"
+  onLastAlive:
+    - "(just me... oh no)"
+    - "(okay okay okay...)"
+  taunt:
+    - "(i'm not here)"
+    - "(you walked past me twice)"
+    - "(boo. sorry.)"
+  lobby:
+    - "(um... is this the lobby... sorry...)"
+    - "(i'll just... stand by this wall...)"
+    - "(trooper again... it's comfy...)"
+    - "(sorry, was i in your way...)"
+    - "(good luck {team}... quietly...)"
+quirks:
+  - says_sorry
+  - never_eats
+rivals:
+  - ravenotter9
+bio: Spent a whole season hiding in a bush that turned out to be a ladder. Idolises RavenOtter9's lurking and is too shy to say so, so it just follows them at a respectful distance.
+batch: 2
+retired: false

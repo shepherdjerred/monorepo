@@ -1,0 +1,83 @@
+id: noodlecomet0
+name: NoodleComet0
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI2MTg2OSwKICAicHJvZmlsZUlkIiA6ICIwNDZjYmJiYzEyNWI0MTlmYTg0NjY1OTQ0MGUwMjc3YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGVDdXJpb3VzTWluZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODBiOGE3MWRmZmMzOTkxOTFiYTEzYjA5ZmNiOGE3ZDNiMDU3NTQ2ZGQyNmZlOTU2NTc1ZmJkOWY3MTA0ZTc4NiIKICAgIH0KICB9Cn0="
+  signature: "bS7Otp23ZJKIIONMEoelXrWpoW+jyOmtCyVPZZbG+xGl6QjkG8y1/Bci6eroZdCbiZAJCI3i8OFaza+a6A5gwEL27azuZRGXxLiaM7zbiRD5MnCk5mcMdG7qCbfXgrUCdqs7T0llPqQ47CPJNV6NxeVnBXfv1Q0O7BMsaB/fRD6CoEkYfXUVMxvsuCf7HwrRA8JS80TcXDGCD/hrJDllrqvLvYDDzl+S2L8bSK8eLGnYsOfdrQTWpYV3v+PBuyGa2vJSrlK9QL3SF+AToMLyED/M54qvUKqLInJpSn9Xwbs3mcv5kJBVnoGckMjUZZo6rfAlduFbyGR6ehWSm3BwDSbn7DoWMlnsMpIwBTShwbnJO2ra7+5IFqEidkWZuLXQkGt1ATPsW7lf+5ANU+lgQgBG/hFB7GTuUyFVfsbxiLrA1d+pZC2mjM3D7UEoSh4BUtgr+46TfDe3nb7s6XR+LaLyZfrrgbgXrcUIJgJpMO0ayGvQucIY3bzeljT0EG61cpWvtrIgg3HzsXw0nMd4bOPRexUE9bwPzVauO2NRxshOfwsTI6EZJ4UoqmIqdGlQ/59S3g/KhAZvsa+be4FjBMo+C8HPCShKFLVvBrZ6iGbFe1/S1P4GFK+bteYXEX5kFXcKgYgsS7SAapzq+8t6jtuobxByYEuGr1Ps187MYMc="
+skill: 0.29
+archetype: lurker
+leverOffsets:
+  predictionQuality: 0.64
+  decisionTemperature: -1.11
+  awarenessRadius: 1.44
+  coordination: -1.06
+  aggression: -0.03
+kits:
+  trooper: 0.78
+  shortbow: 0.65
+  rewind: 0.13
+  ghost: 0.79
+  wraith: 0.55
+roles:
+  plant: 0.17
+  rotate: 0.71
+  retake: 0.11
+  hunt: 0.87
+style:
+  aggression: 0.43
+  patience: 0.88
+  teamplay: 0.11
+  risk: 0.72
+voice:
+  tone:
+    - whimsical
+    - spacey
+    - quiet
+  verbosity: quiet
+  style: "dreamy space kid; talks about stars and noodles, lowercase, drifts mid-sentence"
+lines:
+  greet:
+    - floating in. hi
+    - orbiting the map. don't wait
+    - the stars said go left
+  onKill:
+    - "comet strike, {victim}"
+    - "{victim} met the noodle"
+    - "orbit decayed, {victim}"
+  onDeath:
+    - "{killer} found my orbit"
+    - "back to the stars. gg {killer}"
+    - lost signal
+  onPlant:
+    - "{bomb} is a little sun now"
+    - "lit {bomb}. drifting off"
+  onDefuse:
+    - "{bomb} dimmed"
+    - no supernova today
+  onWin:
+    - the cosmos approves
+    - "gg {team}. noodles?"
+  onLoss:
+    - the universe is big. gg
+    - drifting back to spawn
+  onLastAlive:
+    - a lone comet
+    - far from home. fine
+  taunt:
+    - i'm somewhere. probably
+    - look up
+    - you're orbiting the wrong rock
+  lobby:
+    - the lobby ceiling looks like a galaxy if you squint
+    - thinking about noodles in zero gravity
+    - picked shortbow. or it picked me
+    - "{team} i'll orbit around. wave if you see me"
+    - did you know stars are just very far away gapples
+quirks:
+  - late_to_everything
+  - spins
+rivals:
+  - lunarthyjaest
+  - dustyninja34
+bio: Lurks the map edges stargazing and occasionally remembers there is a match. Gets the weirdest angles on the server because nobody can predict a drifting comet. Thinks LunarThyjaest copied the space theme.
+batch: 2
+retired: false

@@ -1,0 +1,79 @@
+id: epic-golem
+name: Epic_Golem
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY4OTc2MSwKICAicHJvZmlsZUlkIiA6ICIzN2VhNTQ5MTE3MTU0NDgzYmY0N2VmNGM3MzMwMWIzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJSeXV6bG4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGZkNzFlODhiYTJjZmI4Y2JiNmYwMDdjYTg0M2FmMzIwODBjMjVjYWMyYzY2MGNlMDRlMGRjYjc0YjgwM2UyMiIKICAgIH0KICB9Cn0="
+  signature: "uB8yGKexxFhZeeocSFO9evazNTIlP/idmPtbbrjQtB54Sle3kmEsnu6mcBWiCnFeUrGbfFNlPXQyqCxXFZPS/x0lJa00N9jZCEYrIO21nidxBX5mUs4sBbobbOL0rHjcmzZ9ayyy3OB1maV/rm2VuOaLNseR5hHESKTdODtgo9w+2KRr6JjhHFAq2TsnVFfPvFv/IdL7Ma1SgwsJpRG98OJ8HoLOXchdbO33iBaTOsibLZ43Yo1LXIfYazwRoun8O75P7i51voIpls5pq0xFgK5fw2R2sE6pxkDztIC5ISuP6Bhv67uz5GssIcbt+Ep1dpGwpP1AUF75eDCUec0vLUcEfz4JG1rLJpLY7kxTZwbv4iqJXO2UV0r4LFWJHQcaBHvPVnR/aWoeG0d54MxVy/MUfqfgAfcj7pxlGpZG7KNb3JJW+Z3U2QSPux8463WjyRDW1JRcRRebpXeaz+g1VI9Ku2vh9urd8QnBKaBFGi1DjtUn32nNN+Zw+IvvsZnqpWk779eFTaAqqGFuRkW3pugzZyj6h3JMVcj8bkVNF+UDwDjZSDsvhf9+LiPvBO55puxcLiZisQzvEKTjC21UqNYXUQ9rN4ixomxeyy1ZUq6dzd0XtJubA+yyRf1fgc+rF2jmGAcgAxp2aC8dBecy/5PvsUsuIRoGJz0NxrGN2UI="
+skill: 0.535
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.78
+  cps: -0.47
+  predictionQuality: -0.81
+  decisionTemperature: 0.19
+  awarenessRadius: -0.04
+  aggression: -1.97
+kits:
+  trooper: 0.87
+  longbow: 0.33
+  rewind: 0.77
+roles:
+  defend: 0.98
+  retake: 0.42
+style:
+  aggression: 0.07
+  patience: 0.97
+  teamplay: 0.46
+  risk: 0.1
+voice:
+  tone:
+    - stoic
+    - slow
+    - earnest
+  verbosity: quiet
+  style: "Speaks like a stone golem: short, heavy sentences, all caps on single words for emphasis"
+lines:
+  greet:
+    - Golem stands. Golem waits.
+    - I am wall now.
+    - "Bring your swords to {team}'s door."
+  onKill:
+    - "{victim} met the WALL."
+    - Rock beats sword.
+    - "Stone does not move. {victim} did."
+  onDeath:
+    - Crumble... rebuild.
+    - "{killer} chips the stone."
+    - Even mountains erode.
+  onPlant:
+    - "Golem left the wall. {bomb} lit."
+    - Slow steps. Fuse in.
+  onDefuse:
+    - "{bomb} sleeps again."
+    - Not on Golem's watch.
+  onWin:
+    - The wall held.
+    - "{team} endures."
+  onLoss:
+    - Wall cracked. Golem rebuilds.
+    - Next round, thicker wall.
+  onLastAlive:
+    - Golem alone. Golem fine.
+    - One stone is still a wall.
+  taunt:
+    - You knock. Nobody answers.
+    - Push harder. Golem is patient.
+    - Rocks have time.
+  lobby:
+    - Golem picks Trooper. Golem always picks Trooper.
+    - Golem has a block. Golem likes block.
+    - Some say move. Golem says NO.
+    - Golem eats gapple. Golem is ROCK again.
+    - "Golem ready when {team} ready."
+quirks:
+  - slow_starter
+  - gapple_hoarder
+rivals:
+  - meklaishloumzaek
+bio: Spent all of 2013 standing on the same block behind the blue bomb and swears it is the best block on the map. Meklaishloumzaek has tried to move it for three hundred rounds.
+batch: 2
+retired: false

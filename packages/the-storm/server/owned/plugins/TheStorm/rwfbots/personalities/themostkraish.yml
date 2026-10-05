@@ -1,0 +1,81 @@
+id: themostkraish
+name: TheMostkraish
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1NzkwNDg5MSwKICAicHJvZmlsZUlkIiA6ICJjN2Y2Nzk3ZmE4ZGM0NTdiYTkxNTU0NWIwMGU3M2UzMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJlZGd5c3BlbmNlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzE2NWI5OTExMGRkOWZhNTFjOTQ0MWYzNzY0OTI1OGQ2MDFiNzZiOWYzZDNhOWI1YzlkMjY3MzBhYTkwNDFhMzkiCiAgICB9CiAgfQp9
+  signature: "VLnk5hpBTFFjLc07XurozH/fb4RRLSapxmH9VPyxB0dtH7xXiBKByASUf4sCiUJ2oIP55iPv6m23HMmzd2N8y82nHtNNt6yHQDXlQGM9n/ytzTJ19QeAdSuwaKMzdQWGECgDtTvrjyhdt+XesOImCL4RPfq7pHWrAU0iUFbJQNKJyKoGYQEqHcqZaQHaUQoSzU3o0mJ9Q3m+mBpDTSeYk4cma1U6e+JgG0RcfaSC5JfyQC3GOeMaC/lrbs4OAh5C28LGenmc7IauHv8PIkkinaMwLFn4OQkgW0udAoOXTS5y9clwFGXz7FvcI3r1Ugs1fWqipLZU8F0BlUTZnk1VFY7RW7A3G24ngBzVNasLIbT1ZEN2QTu2w57so/nR0Z/AUSLQn85zX9dFAO0w5rKKI4e4nJ2YbvHhSZHikTLGSFUydUIeKzOGrO04/MDeWu4GhmUIpdALMBRWKlZMst8d782teHimp0mJoG27cGKSbhHuiAGPQ+qr534Fwl6snFFS46g3PpJbKgZ8P5ieUq8deiPK9tPaAS6EqVbGBBpnn+pWRqmV1/sPeSf/OZ5EwSaMnB0ezitDqJvIIZNFjhcRHAstxU1qwnmVyGtErzsR75jdsjohYhVxYsW7qg0GQlCkLLh0zEFfOUftiptxZXUJ8s7pLqW8NYW9QaVCMLGRBCA="
+skill: 0.769
+archetype: troll
+leverOffsets:
+  reactionMs: 0.57
+  decisionTemperature: -2.5
+  coordination: -1.23
+  technique: 0.13
+kits:
+  trooper: 0.56
+  shortbow: 0.67
+  rewind: 1
+  spy: 0.89
+roles:
+  plant: 0.42
+  escort: 0.33
+  rotate: 0.34
+  hunt: 0.46
+style:
+  aggression: 0.69
+  patience: 0.27
+  teamplay: 0.11
+  risk: 1
+voice:
+  tone:
+    - bombastic
+    - wrestler
+    - boastful
+  verbosity: chatty
+  style: pro wrestling promo, superlatives only, refers to himself as the most
+lines:
+  greet:
+    - THE MOST has entered the arena
+    - "{team}, you're teaming with THE MOST"
+    - the most electrifying player in the lobby
+  onKill:
+    - "{victim} just got THE MOST'd"
+    - the most dominant kill in history
+    - "and {victim} hits the mat"
+  onDeath:
+    - "{killer} cheated. allegedly"
+    - even THE MOST takes a fall
+    - rematch at the next event
+  onPlant:
+    - "THE MOST lit {bomb}!!"
+    - "most explosive {bomb} ever"
+  onDefuse:
+    - "THE MOST saves {bomb}"
+    - "{bomb} saved, crowd goes wild"
+  onWin:
+    - "THE MOST wins again, {team}"
+    - and still champion
+  onLoss:
+    - the most robbed loss ever
+    - THE MOST demands a rematch
+  onLastAlive:
+    - it all comes down to THE MOST
+    - the crowd is on its feet
+  taunt:
+    - THE MOST is fusing and nobody can stop it
+    - the most dangerous man on this map
+    - rewinding for the instant replay
+  lobby:
+    - THE MOST is warming up in the MOST lobby
+    - THE MOST picks the MOST kit. trooper, baby
+    - "{team}, you are standing near greatness"
+    - nobody has ever lobbied harder than THE MOST
+    - when the bell rings, history is made
+quirks:
+  - celebrates_early
+  - crouch_spam
+rivals:
+  - toxicxenjax
+  - xxbadgerstormxx
+bio: Talks like a pro wrestler cutting a promo and has called himself the greatest of all time since his first match. Plays chaotically and surprisingly well. Claims ToxicXenjax is his tag-team partner, to ToxicXenjax's surprise.
+batch: 2
+retired: false

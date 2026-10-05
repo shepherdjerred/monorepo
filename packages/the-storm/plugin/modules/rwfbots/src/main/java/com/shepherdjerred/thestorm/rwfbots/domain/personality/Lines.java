@@ -8,10 +8,10 @@ import java.util.regex.Pattern;
 
 /**
  * What a personality may say in chat, as one pool per moment; a speaker picks a line from the pool.
- * Each pool holds 2..6 lines of at most 80 characters. A line may name the people and things of its
- * moment through placeholders, and only those: {@code {victim}} in a kill line, {@code {killer}} in
- * a death line, {@code {bomb}} in a plant or defuse line, and {@code {team}} (the speaker's team)
- * anywhere. Any other brace is an error.
+ * Each match moment holds 2..6 lines and the lobby pool 4..8, every line at most 80 characters. A
+ * line may name the people and things of its moment through placeholders, and only those: {@code
+ * {victim}} in a kill line, {@code {killer}} in a death line, {@code {bomb}} in a plant or defuse
+ * line, and {@code {team}} (the speaker's team) anywhere. Any other brace is an error.
  *
  * @param greet when it joins a match
  * @param onKill after it kills someone
@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
  * @param onLoss when its team loses
  * @param onLastAlive when it becomes the last of its team alive
  * @param taunt idle chatter aimed at the other team
+ * @param lobby small talk, kit talk and team pep while waiting in the lobby before a match
  */
 public record Lines(
     List<String> greet,
@@ -32,10 +33,13 @@ public record Lines(
     List<String> onWin,
     List<String> onLoss,
     List<String> onLastAlive,
-    List<String> taunt) {
+    List<String> taunt,
+    List<String> lobby) {
 
   public static final int MIN_LINES = 2;
   public static final int MAX_LINES = 6;
+  public static final int MIN_LOBBY_LINES = 4;
+  public static final int MAX_LOBBY_LINES = 8;
   public static final int MAX_LINE_LENGTH = 80;
 
   private static final Pattern PLACEHOLDER = Pattern.compile("\\{([a-z]+)}");
@@ -67,7 +71,8 @@ public record Lines(
     ON_WIN("onWin"),
     ON_LOSS("onLoss"),
     ON_LAST_ALIVE("onLastAlive"),
-    TAUNT("taunt");
+    TAUNT("taunt"),
+    LOBBY("lobby");
 
     private final String key;
 
@@ -86,8 +91,18 @@ public record Lines(
         case ON_KILL -> EnumSet.of(Placeholder.VICTIM, Placeholder.TEAM);
         case ON_DEATH -> EnumSet.of(Placeholder.KILLER, Placeholder.TEAM);
         case ON_PLANT, ON_DEFUSE -> EnumSet.of(Placeholder.BOMB, Placeholder.TEAM);
-        case GREET, ON_WIN, ON_LOSS, ON_LAST_ALIVE, TAUNT -> EnumSet.of(Placeholder.TEAM);
+        case GREET, ON_WIN, ON_LOSS, ON_LAST_ALIVE, TAUNT, LOBBY -> EnumSet.of(Placeholder.TEAM);
       };
+    }
+
+    /** The fewest lines this moment's pool may hold. */
+    public int minLines() {
+      return this == LOBBY ? MIN_LOBBY_LINES : MIN_LINES;
+    }
+
+    /** The most lines this moment's pool may hold. */
+    public int maxLines() {
+      return this == LOBBY ? MAX_LOBBY_LINES : MAX_LINES;
     }
   }
 
@@ -101,6 +116,7 @@ public record Lines(
     onLoss = check(Moment.ON_LOSS, onLoss);
     onLastAlive = check(Moment.ON_LAST_ALIVE, onLastAlive);
     taunt = check(Moment.TAUNT, taunt);
+    lobby = check(Moment.LOBBY, lobby);
   }
 
   /** The pool for {@code moment}. */
@@ -115,6 +131,7 @@ public record Lines(
       case ON_LOSS -> onLoss;
       case ON_LAST_ALIVE -> onLastAlive;
       case TAUNT -> taunt;
+      case LOBBY -> lobby;
     };
   }
 
@@ -143,9 +160,17 @@ public record Lines(
 
   private static List<String> check(Moment moment, List<String> pool) {
     var copy = List.copyOf(pool);
-    if (copy.size() < MIN_LINES || copy.size() > MAX_LINES) {
+    if (copy.size() < moment.minLines() || copy.size() > moment.maxLines()) {
       throw new IllegalArgumentException(
-          moment.key() + " needs 2..6 lines, has " + copy.size() + ": " + copy);
+          moment.key()
+              + " needs "
+              + moment.minLines()
+              + ".."
+              + moment.maxLines()
+              + " lines, has "
+              + copy.size()
+              + ": "
+              + copy);
     }
     if (Set.copyOf(copy).size() != copy.size()) {
       throw new IllegalArgumentException(moment.key() + " repeats a line: " + copy);

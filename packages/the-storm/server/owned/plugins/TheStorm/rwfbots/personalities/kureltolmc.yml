@@ -1,0 +1,83 @@
+id: kureltolmc
+name: KureltolMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzgyOTE1NiwKICAicHJvZmlsZUlkIiA6ICIyZDUxZmI0ZmJjM2Y0MjJjOTMyYzIzMDg5NGU2YmM1MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJGR0ZTX3N0dWRpbyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jODg0OGVmNTdiZjExYWM2N2QxYmQxMThjNTgwZTUyNDBhZDA1MTU0ZjE4ZjY0OTMwZTBkNGZlNGE1NjM5OTI4IgogICAgfQogIH0KfQ=="
+  signature: "t7NHhMkxElewFeuTcISfWpv5vkioVN8+dDzspueJ3yHkSnOSIBKjFxAcojpiwc3f9Ze/nGrxNxJ3M9HRz/jCkBkBBUMwKSUgiMdveW1sU1z+p8M2FgE0AZC5XYtMGuXEKaqT5KUrENOqCFiMNpb5TOA3fR9u+06RT4k50JuKsociWaKO3magu2FW2QmxN8nx3f9/OWLLsclzFKCUx89toVFhMoJGuK6yu2R0EkrVQBxlUNsK6ueK25w9DxzjKUMfy5fGeyIZRzy1tSJ21KiCRCRR6KykRXbQPA5lQrLME2gBxUf3Uvu3zkYzM5zCB+y2xb2uaQv+sYph87fSO9pSMHtkiScDPzWjmnHo3wKg19n6jmY6QLOxHrlEqLaagnSPlMxIXLFbSkxisfdCtkWrdJMUaw37bQzv98NZW9wiF20cNfxFKCtgznw17B0Z5xFZAgshozHihmjS6FJ98dLpl8yc7loWK49y+PGCVc4ryiDAGUYe+vA7WU4jy7N6DJtBkvETuN+mIolXGgaNef1KPCETuTgofebi/ZUjWkUPuQ/fYH2MeS98nDRB9+GXtr2pDlxB+t2RPcUUm86Ce9U9OI92T7w8i5SrRJquX4WTUForNb4JcXa6iIlAVqpkuMP4JafDvTyqueYFiGSY4l8kCwPoD71CmR/wNmNPuo07KEo="
+skill: 0.335
+archetype: lurker
+leverOffsets:
+  reactionMs: 1.06
+  turnRateDegPerTick: -1.23
+  predictionQuality: -0.14
+  awarenessRadius: 1.15
+  coordination: -0.85
+  aggression: -0.14
+kits:
+  trooper: 0.6
+  shortbow: 0.63
+  ghost: 0.88
+  wraith: 0.57
+roles:
+  plant: 0.22
+  escort: 0.26
+  rotate: 0.61
+  hunt: 0.72
+style:
+  aggression: 0.48
+  patience: 0.93
+  teamplay: 0.16
+  risk: 0.7
+voice:
+  tone:
+    - dramatic
+    - ninja
+    - loud
+  verbosity: chatty
+  style: self-declared ninja who loudly announces every stealthy move, poor understanding of stealth
+lines:
+  greet:
+    - the shadow warrior has arrived
+    - "{team}, i am now invisible. in spirit"
+    - vanishing. right. now.
+  onKill:
+    - "silent strike! {victim} never knew"
+    - "{victim} met the shadow"
+    - "ninja technique: success"
+  onDeath:
+    - "{killer} saw through my shadow"
+    - i was supposed to be invisible
+    - the ninja retreats. permanently
+  onPlant:
+    - "secretly armed {bomb}. tell nobody"
+    - "{bomb} lit by the shadow"
+  onDefuse:
+    - "{bomb} silenced, like a ninja"
+    - "secret defuse on {bomb}"
+  onWin:
+    - "the shadows win, {team}"
+    - victory from the dark
+  onLoss:
+    - the dojo will hear of this
+    - i must train harder
+  onLastAlive:
+    - only the shadow remains
+    - i am one with the dark. mostly
+  taunt:
+    - you can't see me. i'm sneaking
+    - i am behind you. sneakily
+    - the shadow approaches. loudly
+  lobby:
+    - i am hiding in the lobby. you cannot see me
+    - picking the stealthiest kit. which one is that
+    - "{team}, i will move like a shadow. a loud shadow"
+    - ninjas do not need lobby chat. except me
+    - i have meditated on the map for three seconds
+quirks:
+  - narrates
+  - crouch_spam
+rivals:
+  - xiskaikzithskouk
+  - lunartulthek
+bio: Announces his stealth so loudly that enemies always know where he is. Believes Xiskaikzithskouk is a rival ninja master rather than a lost kid. Wants LunarTulthek to teach him the moon technique.
+batch: 2
+retired: false

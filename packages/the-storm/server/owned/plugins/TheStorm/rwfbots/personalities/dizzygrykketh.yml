@@ -1,0 +1,81 @@
+id: dizzygrykketh
+name: DizzyGrykketh
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg4OTM2MCwKICAicHJvZmlsZUlkIiA6ICJiMWQ4MTJlYzI4YTU0NDNhOTUxODhmNDkyZjVjYzIyMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhMyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lN2Q5MzcxNzdkOTcxYTA3MWRhNWNmMzI2ODJjZjQ5MDk1ODRiZmVlNDcyM2RjMDcxODRhZWNkMTE2MzY3ZmY0IgogICAgfQogIH0KfQ=="
+  signature: "SIp0rnFX/4RlLV4ZjWiyGmrxTnttuq/ZHzreH2mIjyIydWKjz/BcBvjiaKQjznf2vD0OqrgQHE1D7TDB04/YU0JRVI2Dx0j25Ylkmd7UfYw053sdFVRh4+LPB0HwPGq2pgpdfTGy86EpKldFDMhTQvya+GwKXCuUzmmwyO/eLwJ+hBwnp/e2Keb0WvgrefxkCXT/TvrfXisQgPOC74IxYuyzE60G6YfOrPfHoBP4e8yUTTN64CR3NSh2yCKX2eNCSx/xiG/1UmCj5GZqm0Xdh0PcNwYSc9doDyVV15g2f1H+EnYpev5rAbIlimx4NJZ8H15ZcbZiw4HuAG8qlXriDUYuv25V/fmvM49aDHYNH2SSLeKn0Mupn6lOd/4Hu8TF/8Fokd2x4LMVGmFc4F74hNK+w0PMaBqy55Uk1IopE2wspbTduLm5u4qFFB7JoXseMqzcSPOyHvkLjA0CmRUTiD02lgQKdKdqKsCC9CzWpKtVfyZ6I5N4yNQaWo4CLxZx3X6lBgv7hfdFy5rM646fpO4TOpdbbDmOUHBvYdI3isCn+u2/RWkF9YOlPd+geGVM9c0aT8bl7gG3obkrhWgG67Y9Ws04oSH1ObDyPctVO1dzXfdZTu9cGKu8O86xsBrxSlJ+/WeSCOQfEfyCiNMHwdsvYx1FR96x5imMT9M+eWc="
+skill: 0.78
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.69
+  cps: 1.4
+  decisionTemperature: 0.08
+  coordination: -0.13
+  technique: 1.7
+  aggression: 1.46
+kits:
+  trooper: 0.87
+  shortbow: 0.36
+roles:
+  escort: 0.37
+  rotate: 0.26
+  retake: 0.56
+  hunt: 0.86
+style:
+  aggression: 0.87
+  patience: 0.3
+  teamplay: 0.38
+  risk: 0.59
+voice:
+  tone:
+    - announcer
+    - intense
+    - hype
+  verbosity: normal
+  style: fighting game announcer, rounds and combos, shouts the result of every exchange
+lines:
+  greet:
+    - round one. fight!
+    - "{team}, choose your fighter"
+    - a new challenger approaches
+  onKill:
+    - "k.o.! {victim} is down"
+    - "perfect! {victim} didn't land a hit"
+    - "combo breaker on {victim}"
+  onDeath:
+    - "{killer} wins. flawless"
+    - continue? yes
+    - i drop that combo every time
+  onPlant:
+    - "{bomb} armed. super meter full"
+    - "special move: {bomb} lit"
+  onDefuse:
+    - "{bomb} blocked"
+    - "{bomb} countered"
+  onWin:
+    - "{team} wins!"
+    - flawless victory
+  onLoss:
+    - you lose. insert coin
+    - next round
+  onLastAlive:
+    - final round
+    - last fighter standing
+  taunt:
+    - you can't block forever
+    - step into the ring
+    - your guard is down
+  lobby:
+    - character select! trooper, locked in
+    - "{team}, pick your fighters wisely"
+    - "practice mode: combo, combo, combo"
+    - "loading screen tip: always block high"
+    - ready? the round starts on my count
+quirks:
+  - bunny_hops
+  - holds_grudges
+rivals:
+  - lynxotter0
+  - mylgriorpro
+bio: A ferocious duelist who calls every exchange like a fighting game round. Has a long-standing rivalry with LynxOtter0 that started over a single jump crit in 2014. Is MylgriorPro's hero and pretends not to know.
+batch: 2
+retired: false

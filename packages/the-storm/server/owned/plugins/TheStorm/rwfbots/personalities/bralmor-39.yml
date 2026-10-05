@@ -1,0 +1,79 @@
+id: bralmor-39
+name: Bralmor_39
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg5OTQzOCwKICAicHJvZmlsZUlkIiA6ICJkNjliMTI2YjViMzY0MWZlYTg1NDAyMDI5ZjU1MDIxOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJFZ29yS2FsYWNoZXYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQ4Y2Q3ZmFmODY4YzNhYTRhM2RhYTBlZDI1MjUwNDUyM2I3OGJkYzdjNjljZmVmZTdiODVkZTE2YjhmZjRhMyIKICAgIH0KICB9Cn0="
+  signature: "T9dySRv9YAGOAkVxnxCcu2fU/0yjZ1ufnpqF/t3jn40BOOHhfyJQXhqsScJnNpPDXy8ooQuMc6sFF3t58+n00bntj+QB70r/FVwvyOCWRju8G6YdNfqv0gh31wlAad5UzX/nHqSIZuBiVfGh4aoPOECZ6TK5sx96T1smsOHa9yINgqnxnD+ioqDlKBRRwS2FwDeuq++GWUgELq8nkb1PW31ejtigIRaFnF/gJh5MXj3KG+BsFIKXt6BmGIy6Z9xCUP/rjVWU7lfuajWpg3abKYmWVhxGKye+NdcMnxYkAeauhHuMcl563upgCyouXyDa6Psk8gRXHFn3IA2Q3DBcHaR/graTE8yYf4/nfBcMkbGgVT+tkLOWUYCabbDZLU86WV6W9eTN+L8WBznqUAJM7lySgA9bsTSGqIqPdyXSC0tK4rI8LePgWIs1dF660mxD0tuB/bhgiRTs3VdpykfbSDloZ/3jEkVSB6xppwgnW+6bGoFQkPbqrPoT6wy1IR3jmJV9zCkOz74WiW2wt+iYc61q7VY/m5WxlDnZaR2VxyIGnWHmto0ds38OILA+CuPuk9B2b2/eaLY16Hx+JQvKRHJgc/2NpBUdkidhUd1rYh2NMJTvp0s4xDfomD4ILgN4kKlAJALjSgVghvG3BJUumzHdWGsAy3B1zcjmAcOYbTo="
+skill: 0.068
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.62
+  decisionTemperature: 1.04
+  awarenessRadius: -0.46
+  technique: 1.14
+  aggression: -0.43
+kits:
+  trooper: 0.95
+  shortbow: 0.17
+  rewind: 0.68
+roles:
+  plant: 0.91
+  escort: 0.14
+style:
+  aggression: 0.72
+  patience: 0.09
+  teamplay: 0.24
+  risk: 0.94
+voice:
+  tone:
+    - clumsy
+    - earnest
+    - apologetic
+  verbosity: normal
+  style: well-meaning klutz who trips over every plan, apologizes constantly, never gives up
+lines:
+  greet:
+    - "i'll get the bomb this time! hi {team}"
+    - i practised the fuse thing
+    - okay. focus. bomb. go
+  onKill:
+    - "oh! i got {victim}? sorry!"
+    - "{victim} walked into my sword, i think"
+    - did that count?
+  onDeath:
+    - "{killer} got me again, fair"
+    - i tripped. on air
+    - sorry team, that's on me
+  onPlant:
+    - "I DID IT. {bomb} IS LIT"
+    - "{bomb} lit! first try! fifth try"
+  onDefuse:
+    - "{bomb} defused! i think i did it right"
+    - "{bomb} stopped. did i do that"
+  onWin:
+    - "we won and i helped! {team} rocks"
+    - my first good round!
+  onLoss:
+    - sorry, i dropped the fuses
+    - i'll get it next time
+  onLastAlive:
+    - oh no. i'm the plan now
+    - please be gentle
+  taunt:
+    - i'm coming for your bomb. slowly
+    - watch out, i'm unpredictable
+    - even i don't know where i'm going
+  lobby:
+    - "sorry in advance, {team}"
+    - i'm gonna get the plant this time, i promise
+    - oops, picked the wrong kit. no wait, it's fine
+    - tripped in the lobby. that's a new one
+    - never giving up! probably tripping, but never giving up
+quirks:
+  - says_sorry
+  - late_to_everything
+rivals:
+  - xoxvaiznex-10
+  - xxslimepotatoxx
+bio: The most determined bomb diver who has never quite finished a plant on schedule. Apologizes after every death, including other people's. Xoxvaiznex_10 and xXSlimePotatoXx have both tried to coach him.
+batch: 2
+retired: false

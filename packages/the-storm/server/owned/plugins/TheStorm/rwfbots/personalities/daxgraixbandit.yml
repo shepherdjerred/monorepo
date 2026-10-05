@@ -1,0 +1,79 @@
+id: daxgraixbandit
+name: DaxgraixBandit
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ1NDI4MSwKICAicHJvZmlsZUlkIiA6ICIxMGY1MmQ4OTk5YTg0YWQyYWJhNDAwNDViOWE5NGQ0YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBZHJpYW5Kb2VLIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzE4ZmQwZDA5ZDExNzE5MTA2YzczZmFjZDcwZWRiMjRjNzM3ZDVmMWZhZWRjOWJjNzk1MmFlZmY4MTRlM2EwYTgiCiAgICB9CiAgfQp9
+  signature: "bvizVGQw7tCmMId9aEtOv4o3q8neScSy2N+dQarb2/LDmGemdezrctKz/MdJaV6Fi8aE+/RT5/jg2ww9+OIem8gbWWSlVTithv+v+JlY/b3OtBAzuolk03gyi7dWOBKS6SmcItO1xmKrGfkdjVRhS9/HK0zt3Oj+zcnTvdOh4DNXj00EdvJM7pTf3Z78F40vHlfboKIJ4t/oOxxG1K7tyRH9tf71rTUlM2UXBE8Zn+VbuUt7lDeMhyA1iZDZp5oG/aNLlrdzRO5Le+pNNjG9x9oulHIryIVad6CZV7QsNYFSKPul8x4nPL6xaHu4qb+GlGVG7ccUDP2jBD2vky/BvQq9n7AnAcrr60/jmH+2dwJxQLgSVDwZiiU/fEsF43/q69R+fNEIppjJ179dkGrtQkO4vC8MlF2b8E3xzJcsor5KyYgTSRXU1jjfF7OnKqUTVW54Pu+VhJv7pQqVe5oGUJ23+Y8sBYDjYxI+H/2352fpOxn9v59K7qbiY21bpOZ4sRANdLX1ahcZRi/oVIbGySVgxzpxGaochhIfIy6CxV/ogeT2TKiv8nm940kR0AxEjh0QiVIm1jRcmfh4ArAcxAOkSAEu3m0YYOK1rYf8lFQRXNg9dVdvwYkQHB3+rkP8E/yKqnWx8j8BAUambonww7bgbj0NQ5vXHikF3Q7Bncc="
+skill: 0.466
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.33
+  decisionTemperature: 0.51
+  awarenessRadius: 0.27
+  coordination: 0.31
+  aggression: -1.46
+kits:
+  trooper: 0.99
+  longbow: 0.29
+  rewind: 0.86
+roles:
+  defend: 1
+  retake: 0.41
+style:
+  aggression: 0.2
+  patience: 0.89
+  teamplay: 0.59
+  risk: 0.06
+voice:
+  tone:
+    - suspicious
+    - paranoid
+    - whispery
+  verbosity: normal
+  style: "conspiracy-minded turtle; whispers, suspects everyone of being a spy, guards the bomb from imaginary threats"
+lines:
+  greet:
+    - psst. trust no one. except me
+    - i've checked the bomb for bugs. it's clean
+    - "{team}, act natural"
+  onKill:
+    - "{victim} was a spy. i knew it"
+    - "they sent {victim}. i was ready"
+    - "nice try, agent {victim}"
+  onDeath:
+    - "{killer} is in on it"
+    - it was a setup
+    - they got to me first
+  onPlant:
+    - "{bomb} lit. nobody saw anything"
+    - "i was never here. {bomb} is"
+  onDefuse:
+    - "{bomb} was a trap. defused it"
+    - "they wanted us to lose {bomb}. not today"
+  onWin:
+    - exactly as i suspected. gg
+    - "the plan held, {team}"
+  onLoss:
+    - it was rigged. obviously
+    - someone leaked our plan
+  onLastAlive:
+    - they took everyone. not me
+    - now it's personal. and secret
+  taunt:
+    - i know what you did last round
+    - your spy kit doesn't fool me
+    - i see you. i always see you
+  lobby:
+    - psst. someone in this lobby is a spy. not saying who
+    - check everyone's name tag twice. trust me
+    - "{team}, i'll guard the bomb from the inside threat"
+    - why is that player standing so still. suspicious
+    - rewinds ready, eyes open, suspicions high
+quirks:
+  - calls_everything
+  - blames_lag
+rivals:
+  - kajuxlomdaedel
+  - xxpumpkinravenxx
+bio: Convinced the Spy kit is already in the game and that half the server uses it. Guards the bomb with total vigilance against threats that are mostly imaginary. Keeps a dossier on Kajuxlomdaedel, who encourages it.
+batch: 2
+retired: false

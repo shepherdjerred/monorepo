@@ -1,0 +1,82 @@
+id: xxpotatobadgerxx
+name: xXPotatoBadgerXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTYwNDU3MiwKICAicHJvZmlsZUlkIiA6ICIyYjcyZWYyYWUzMmQ0Zjc1OGEyMThlMDI4MTViYmNjZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ2b2xrb2RhZl82MyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80N2Y0NjA5YmU2MTE2YjgxODFlNzBjNjYxNzYwOTAxYWIyMTYyZjAxOTc4NTAxYTU2YzExYTA1ZWEwMmVhMmVhIgogICAgfQogIH0KfQ=="
+  signature: "S7AK4YmQ+zzu8QyX+NyNolrL5sosrhYWMZpHEAklq7KRsBl1XbixKfXu60K7mp9YtzTgMbicaFviimAM5AVurov+h6AxGhXGCmgIjY1e76rgMkocUeRN1pcQb/pa5+D58HStzMPjP0iOPXOwRVO9PlDoO5pH4spAg7yFP0lNZuIT7c+hBgjhIREo2yhT5hxS83E4kXG98j0LjeQYV81mEmA75IvnPA82FXmhxcyayMxqxBC78y0wVAzqMvGbk7Wn6fGFQ5i7YW11fO/KOPHYbVFLtoLUIsPoUqmqPbaKGoEQNDCENy69SQjXFGue5rYeeIkZhuH85JuZgMvN9hR5vZMWTh7LJ2xN635h3qwPqGoZA+oEBEXg+kEGE272NR9SJvadLhFJQALiJ2p7cWItbf7aXAGqFoD63Eu3HAS4jfHQSBRKuvUIyqry1fRVah6zBUZLhXDSrMQC9R6dmgA1InAQ6JQ7h2PJt6eamOo2d0EVS3CUySwrkwopND+rqsaZyWeO0c0cpAfVDZ6jNROignYsX9zmeDlBqyyG+crvnzleoqBVHAZCtao+Hz1pL6WimGsfRT8xPAJWVx0Kj8zeaZ2gYQpZ/mNl+aKf0drxIZ86A0btvy+6X53JX6O22JHpde6IpIOltx8ZzxQVUtT8xd801IJXuGzSopdFAiArm4Q="
+skill: 0.504
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: 0.55
+  cps: -0.13
+  predictionQuality: 0.53
+  awarenessRadius: 1.34
+  coordination: -0.99
+  aggression: -0.18
+kits:
+  trooper: 0.68
+  shortbow: 0.68
+  ghost: 0.84
+  wraith: 0.55
+roles:
+  plant: 0.26
+  rotate: 0.99
+  hunt: 0.75
+style:
+  aggression: 0.42
+  patience: 0.75
+  teamplay: 0.08
+  risk: 0.56
+voice:
+  tone:
+    - shy
+    - silly
+    - cozy
+  verbosity: quiet
+  style: "burrowing badger; short cosy lines about hiding and snacks"
+lines:
+  greet:
+    - "*burrows*"
+    - found a nice corner
+    - "hi {team}. i'll be in my hole"
+  onKill:
+    - "boop. sorry {victim}"
+    - "{victim} came too close to my burrow"
+    - eep. got one
+  onDeath:
+    - "{killer} dug me up"
+    - aw. my burrow
+    - back to the potato patch
+  onPlant:
+    - "snuck out and lit {bomb}"
+    - "{bomb} lit, back to my hole"
+  onDefuse:
+    - "{bomb} safe. burrowing again"
+    - "defused {bomb}. snack time"
+  onWin:
+    - cozy win. gg
+    - "yay {team}. gg"
+  onLoss:
+    - gg. nap in the burrow
+    - aw. gg
+  onLastAlive:
+    - staying in my hole
+    - they'll never dig me out
+    - "{team}, i'm hiding very hard"
+  taunt:
+    - you can't see me
+    - this corner is taken
+    - "*rustling*"
+  lobby:
+    - "*looks for a comfy corner in the lobby*"
+    - trooper. gapples are just snacks with armour
+    - found a nice spot already
+    - "cosy round, {team}?"
+    - "*munch* sorry, pre-match snack"
+quirks:
+  - gapple_hoarder
+  - slow_starter
+rivals:
+  - xxotterbanditxx
+bio: Finds the coziest corner on every map and refuses to leave until someone walks by. xXOtterBanditXx has spent years hunting for her burrows, which she considers a compliment.
+batch: 2
+retired: false

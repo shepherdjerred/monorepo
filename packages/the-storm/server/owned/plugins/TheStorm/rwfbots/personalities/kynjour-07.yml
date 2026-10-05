@@ -1,0 +1,81 @@
+id: kynjour-07
+name: Kynjour_07
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY1MTYyNiwKICAicHJvZmlsZUlkIiA6ICI3YTVkYmRlNDk0NWU0YTE4Yjg2OWY1MGY1NTJjNjlkYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJCdWtraXRBUEkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzVkNDQ4ZmIzZGU3YmYwZDcwYzc1MTE5YmI2MzY0N2Q3MjE2MDVlYmU2MTEzNGJjNjBmYWUxMjE3MzQwMzAzZiIKICAgIH0KICB9Cn0="
+  signature: "vpcR6qL055yioqn+WPCROJhcTvd2PMcq1NKwSdd+9wXp2vcBQ+QbzFWYAGBjRy6Y4lGOquZxGHLimitAW11a6Y61EtIgOiS6YFB2tezeB106SC5cDA9kEbg/aPkN0/EAsFvmC+L6uvVp/b9obAa0KEejdPlOYKepxj0N+GTkYJk+GM4qI/3jfJ8Sj/gCW0bLqoh5CwZZjaCFhONnwObMP3YUNeX/1TwDeQjVP7p0DyfOTnSfkeGTsaiWRWIm65JwOTHvf2quEq3+NYsIY2yWzWJ32wYodYgGMhxGdGbDNyYu0xTDUvT4kyvWWqaKWzOhpeMj6ncGrPLkulccSGrJhUh+6n26DlQg6c1HIK1vmaIduR10p6oAaTYdkAh8eChQAwFy+XKqsTPGMN38ylplNllAjEjJDKLGhXuO2f3wnZA5Ta6grkUubZAtdbq6sNRnt+eubids4gyqPMzLxWUmwXMxrR5LY5yKO0i+4QRN+MEXagSIh+t5/pCmpcV+T1ehJI3C0PoSMMt3inF6Qw+nTpzDUBU3aDyanKDqwqXXUfqe3qAbSml7ZHl4c5Qp3bq3EWtpAIXa7Cu07gh41PCIl7nA4Sff2nEus3REz415W8HLLD4SxHziEUcw2DH+PzEQxttzLyOxxyXHwHiKFcWOdCbp0VqWIppykJ1TKJlEDzw="
+skill: 0.828
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.49
+  aimErrorDeg: 0.56
+  decisionTemperature: 0.38
+  awarenessRadius: 0.87
+  coordination: 0.28
+  aggression: -0.55
+kits:
+  trooper: 1
+  longbow: 0.51
+  rewind: 0.27
+roles:
+  defend: 1
+  retake: 0.64
+style:
+  aggression: 0.38
+  patience: 0.81
+  teamplay: 0.62
+  risk: 0.14
+voice:
+  tone:
+    - bossy
+    - confident
+    - protective
+  verbosity: normal
+  style: "castle commander; orders the defence like a siege"
+lines:
+  greet:
+    - "Man the walls, {team}!"
+    - I hold the keep. Rotate to me if they push.
+    - Defenders, to your posts!
+  onKill:
+    - "{victim} breached nothing!"
+    - "Repelled {victim} at the gate."
+    - The walls hold!
+  onDeath:
+    - The keep falls! Retake it!
+    - "{killer} scaled the walls. Respond!"
+    - Hold without me!
+  onPlant:
+    - "Sortie successful, {bomb} lit!"
+    - "{bomb} lit. Back to the walls!"
+  onDefuse:
+    - "{bomb} is defended! Siege broken!"
+    - "We saved {bomb}. Reinforce the gate."
+  onWin:
+    - "The castle stands! gg {team}."
+    - Siege repelled. gg.
+  onLoss:
+    - The walls were breached. gg.
+    - We rebuild. gg.
+  onLastAlive:
+    - Last defender of the keep!
+    - I hold alone!
+    - "{team}, the walls still stand."
+  taunt:
+    - Your siege is hopeless.
+    - Our gates are shut.
+    - Come and try the walls.
+  lobby:
+    - Sharpen your swords! The siege begins soon!
+    - Archers to the walls, swords to the gate!
+    - "{team}, report your posts before the bell!"
+    - The keep will not fall today.
+    - I expect discipline. And maybe a little shouting.
+quirks:
+  - calls_everything
+  - holds_grudges
+rivals:
+  - vykzithninja
+  - rionaesttaimmel
+bio: Runs the team bomb like a medieval castle and expects everyone to follow orders. VykzithNinja agrees on defending and disagrees on everything else, especially the shouting.
+batch: 2
+retired: false

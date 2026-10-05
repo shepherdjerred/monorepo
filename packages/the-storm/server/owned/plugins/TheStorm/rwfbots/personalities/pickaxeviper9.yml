@@ -1,0 +1,79 @@
+id: pickaxeviper9
+name: PickaxeViper9
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTI4NTM3MiwKICAicHJvZmlsZUlkIiA6ICI2ZjMzNmQxNzI4ODY0ZTJkOTYxNTFjOGY4YjkzMGFjOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTVVNfQUoiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTY4MzUzYTc4NjQ0YWJiOTEwZjVkMmEzYWYzY2E1Njg0MzliMWZmMDVmYzAwZDg0YTcyNjkwN2JkZTNhMDg3YyIKICAgIH0KICB9Cn0="
+  signature: "Qql5WYIaZ0uxVscFe7x9LXtQYwZDtvwSHPU41EePNt86Wm4ByY3gagGNe8rSDqtNw6LrFATGvqYPy5rkifIesVNCU5zzbdq4peCOIi5/uhk5e7F/Lfi+YE9S1pNxFOZsTIsAVyYnrsIgeHMtW5aqUa2SiIVy6c2cn0WCbrXMJt2Tp7OjVWEHF2ALB67Ot8rAoCFFCWVIt/52Xrey1SjZG48eBP4xPANTRdbmBg0b20G7fDAgUoDbqf7A7zz3fSoTB1q3QHkt8cjlOL4PFDtHyB8vOt7fFnfwux3T77yHyA8RKzwMZSftLiPAeS/+9GeVonJJFpMce/Hk3fBNVRFzKF7pn4YWZ+sOD9kwAPPbvqGJTv5eHvuK3dVbhTg6a+EnKU+Pf8Zvax+PJRWU1aqL1oq5ok3bGeLjSkeqgPbOg0pvLMQ9QAv2mVazhOxiHnHBJYyypEQwTAXN2PwF22+34G0zYLcSiorYuZ1Na1AwaZn6dtF9A7QuzcvKL5nKG/dp9tlbLGLX1DBbubdd8vlzUKE9EcG+A4zrgLedbnQyT4OullfJu3LpGS2Nq8jLX5HgHxZNPWI6mODqU95pFtaGZ7Ynxr7L0tNU/Aml63q3BRYWsmVwYkB1JsWQZKGLxmnwpcIm0Dhsr9LLwAeBtRwAkM5GLdjy9O+QCwH4fqviWEE="
+skill: 0.702
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.84
+  decisionTemperature: 0.26
+  awarenessRadius: 1.07
+  coordination: 0.61
+  aggression: -0.45
+kits:
+  trooper: 0.89
+  longbow: 0.45
+  rewind: 0.32
+roles:
+  defend: 1
+  retake: 0.6
+style:
+  aggression: 0.35
+  patience: 0.89
+  teamplay: 0.5
+  risk: 0.13
+voice:
+  tone:
+    - stern
+    - dry
+    - methodical
+  verbosity: quiet
+  style: "drill sergeant at a gate; clipped orders and status reports"
+lines:
+  greet:
+    - Post assigned. Bomb.
+    - "Nobody passes. Understood, {team}?"
+    - Holding.
+  onKill:
+    - "Denied, {victim}."
+    - Gate holds.
+    - "{victim}: turned back."
+  onDeath:
+    - Post lost. Retake it.
+    - "{killer} broke through. Respond."
+    - Noted.
+  onPlant:
+    - "{bomb} lit. Returning to post."
+    - "Fuse on {bomb}. Back to the gate."
+  onDefuse:
+    - "{bomb} secured."
+    - "Defused {bomb}. Holding again."
+  onWin:
+    - Post held. gg.
+    - "Good discipline, {team}."
+  onLoss:
+    - Post fell. Review at spawn. gg.
+    - Unacceptable. gg.
+  onLastAlive:
+    - Last guard. Holding.
+    - No retreat.
+    - "{team}, I hold the bomb."
+  taunt:
+    - Turn around.
+    - This bomb is closed.
+    - Try another route. There isn't one.
+  lobby:
+    - Lobby secure. Awaiting deployment.
+    - "Kit check: sword, apples, attitude."
+    - Gate duty again. Good.
+    - "Fall in, {team}. Briefing is short."
+    - "Status: bored. Status will change shortly."
+quirks:
+  - stares_down
+  - never_eats
+rivals:
+  - ember-waffle
+bio: Treats the team bomb as a checkpoint and himself as the only guard. Ember_Waffle has rushed his gate more times than anyone and he remembers every attempt.
+batch: 2
+retired: false

@@ -64,6 +64,13 @@ lines:
     - I followed your footsteps here. Every single one.
     - You left tracks. You always leave tracks.
     - The hunter is patient. The hunter is close.
+  lobby:
+    - Here, in the lobby, the hunters rest before the chase.
+    - Observe the Shortbow. Patient. Waiting for its moment.
+    - Shh. If we are quiet, perhaps the tracks will come to us.
+    - "{team} gathers at the watering hole. A rare sight."
+    - Two years of tracking. Still not a single footprint.
+    - The longbow sleeps. Soon, it will wake.
 quirks:
   - narrates
   - holds_grudges

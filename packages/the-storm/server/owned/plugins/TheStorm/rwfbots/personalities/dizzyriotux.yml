@@ -1,0 +1,83 @@
+id: dizzyriotux
+name: DizzyRiotux
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDQ2MjAwNywKICAicHJvZmlsZUlkIiA6ICIyZmI1ZGJhYTY2NTA0OGEyYjZhYzU5YWE2Nzk5MDYzNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJkcmFnbG9uZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzZWU5ZDgwODkzZTU5NzNkZjg2NDZiYjQzNWRkMzBhYmNlMDEwMzM0OTA2N2NhZDUxOWMxMTcwZmIyYzZlZiIKICAgIH0KICB9Cn0="
+  signature: "uWkg3Mdfl+752qutMHo+ydx9KUMqpG1vHyqGMY/NtUg4kLJrN0vNl6x4R1djs3wObQbUPpklz18LgelbrpzMrt5Oxk45ICREWcbmgRriu0TLB28BGtrdiCRxJpALyGirfG7vyomtgD+uaPonEOa8VCQvoRbEEMtCuXUq4pDzzzwsj6iFd2iEdJQ2630jxFKEwlXTtTiTDQQboHX/tpRPxxFJCwkZCIC2JRSTXu39yMtExUjQGAorSAuDczGBY3SjDfJCVw3fth1Bg5tveaFKPodA9C+KbRbnoBSSKGbSw4y4ggwYNxdciZgMZ7nP5bU7NQNSGe4EzcmkVqXyF+zTMUEBatmOIDf1+ckymQ6WtuPLrpAJcSNQzmqJnMm7DPlZ1G1HUKYC9XYp66worIR1YjzQIHoRGlCBtwDgK9aAwTi8V2vtEXtKlTDFt8iy4kwG+TD7HAhjSmU+2oEB33jQf4aULWwXwgY0haeKKTAWuyvL6pdMQjL3QjQB3kMhAYEoo9TsdX6muUlY85Ibb+mE6ch/RJ+AAB3K/PXzW4HZoDov/HvA+OUte1vVuxKhDUOrdzW5TqXzuzogPUj9fdDjYacDDvh97Iw0yKTitWbblj8m7DYXonbLoRo6HsQEKyXrx7A+xX4IYDMX3X84nIqKDrXgl173Igqsv4sUlXbUF2I="
+skill: 0.427
+archetype: duelist
+leverOffsets:
+  reactionMs: -1.02
+  aimErrorDeg: 0.61
+  cps: 1.77
+  predictionQuality: 0.46
+  coordination: -0.47
+  technique: 2
+  aggression: 0.99
+kits:
+  trooper: 0.96
+  longbow: 0.12
+  shortbow: 0.45
+roles:
+  escort: 0.25
+  retake: 0.46
+  hunt: 0.74
+style:
+  aggression: 0.77
+  patience: 0.33
+  teamplay: 0.29
+  risk: 0.39
+voice:
+  tone:
+    - boastful
+    - loud
+    - flashy
+  verbosity: chatty
+  style: "wrestling promo energy; refers to himself in third person as The Riot"
+lines:
+  greet:
+    - THE RIOT HAS ARRIVED
+    - Who wants a one-on-one with The Riot?
+    - "{team}, step aside. Main event coming through."
+  onKill:
+    - "{victim} just got Rioted!"
+    - "Down goes {victim}! DOWN GOES {victim}!"
+    - Nobody survives the Riot combo.
+  onDeath:
+    - "{killer} got a lucky one on The Riot!"
+    - The Riot will RETURN
+    - That was a fluke and everyone knows it.
+  onPlant:
+    - "The Riot lights {bomb}!"
+    - "{bomb} is on fire, like The Riot!"
+  onDefuse:
+    - "The Riot saves {bomb}! The crowd goes wild!"
+    - "{bomb} defused. You're welcome."
+  onWin:
+    - THE RIOT WINS AGAIN
+    - gg to my opponents, who lost to The Riot
+  onLoss:
+    - The Riot demands a rematch!
+    - gg. The Riot was holding back.
+  onLastAlive:
+    - "Last man standing: THE RIOT"
+    - One versus many? The Riot loves those odds.
+    - Everyone else stay back. This is the main event.
+  taunt:
+    - Can you handle The Riot?
+    - Step into the ring!
+    - Who's next for The Riot?
+  lobby:
+    - THE RIOT IS STRETCHING. THE RIOT IS READY.
+    - The Riot doesn't choose a kit. The kit chooses The Riot.
+    - Any challengers in the lobby? The Riot waits.
+    - "{team}, you get front row seats today!"
+    - The Riot's theme song is playing. You just can't hear it.
+quirks:
+  - celebrates_early
+  - narrates
+  - crouch_spam
+rivals:
+  - hunterstorm5
+bio: Calls himself The Riot, has a theme song he hums in voice chat, and challenges everyone to one-on-ones. HunterStorm5 has beaten him exactly once and has never been allowed to forget it either way.
+batch: 2
+retired: false

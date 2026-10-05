@@ -1,0 +1,83 @@
+id: laelshaidaik-87
+name: Laelshaidaik_87
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg5MjI2NywKICAicHJvZmlsZUlkIiA6ICJjY2MxNGM2ZDUwMDE0MjBmYmMxYjkyMTM2Y2JmOWU4MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJab25lX1gwODE1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzc0OGNlNjVkY2FlM2Y1YzE3YTdiZGI3ZWRjN2FjMTBhZWNjM2ZlMjE4NzcyZTA0ODBkMjY4NGUzN2NlOGFkMGYiCiAgICB9CiAgfQp9
+  signature: "GRt1a9e3ssk1V2TjtnYg0zc/myG2HdXc8epojsDO0Oz1CepmzXivFLOYBx7jQ3EQkHjGMrTRkGP/MGVlIQ5DlxSV3i7XKvWzREeZGxV1hTY+kphc8fPF27fEJIdZfK/aXla6TRrTFA8Y4cqWlgEVYXWJX5IL4pTL4N+xn/YcCWyw0vEW3VCs5E8crDAi/5nl3QGjL1D/sNHm4wmy1Wx0i6uALGl4Q8tOaroVEnspJnZ3G24d6Opk88U4lqDTGByCTeXUBaOFYm9vNRR9NjY7qlENtzrybeB0pdgGdbTCfNwEftVKvojYI7ME+UMMFPN9yV6FpcfZ/WL041fUSfeRynWv0/LXAbVO4v1FEx/tNKCbhhdB7ll8/Oag0ux9jL2y+8rV11n0uZ/Pla1PcJGeCLD3Z+JF+3wGtJJHOnrzVwJ3uGQr1V8kHZHgYULEmfvL5TDQJz9etWDUKtDxmyfi6lYQLrpvzUxbUTTBKZQR8AG26cCIZQk/nM6Ygybootf05CnrBteheYoETM8IDN3NeH9JyUqt+wqK4IlU8XxyMBXw9YiotnTMFPeksR6gAkVeU6juzz0VZx8Qlg6dJ1gg1askPMD/dKYJoUrgIegc9fDbwHG63xov0t49I6Hzc3LYo7A2cXh/bixjlZBwkjyvDgRJYx5ut3Ho5PghllBhjhw="
+skill: 0.414
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.46
+  cps: 0.47
+  decisionTemperature: -0.19
+  awarenessRadius: -0.61
+  technique: -0.02
+  aggression: 1.23
+kits:
+  trooper: 1
+  shortbow: 0.51
+  rewind: 0.27
+  wraith: 0.12
+roles:
+  plant: 0.88
+  escort: 0.47
+  rotate: 0.14
+  hunt: 0.74
+style:
+  aggression: 0.88
+  patience: 0.13
+  teamplay: 0.38
+  risk: 0.74
+voice:
+  tone:
+    - hyper
+    - excited
+    - young
+  verbosity: chatty
+  style: sugar-rushed kid, caps and exclamation marks, runs everywhere and says so
+lines:
+  greet:
+    - "HI HI HI {team} LETS GOOOO"
+    - i had three sodas lets RUSH
+    - RUN RUN RUN
+  onKill:
+    - "GOT {victim}!!!"
+    - "{victim} TOO SLOW"
+    - WOOOO
+  onDeath:
+    - "NOOO {killer}"
+    - "aw man {killer} got me"
+    - RESPAWN FASTER
+  onPlant:
+    - "{bomb} IS LIT WOOO"
+    - "I LIT {bomb} BEFORE ANYONE"
+  onDefuse:
+    - "{bomb} SAVED HAHA"
+    - "DEFUSED {bomb} SO FAST"
+  onWin:
+    - WE WON WE WON
+    - "GG {team} BEST TEAM EVER"
+  onLoss:
+    - aw. AGAIN AGAIN
+    - rematch pls
+  onLastAlive:
+    - ITS JUST ME AAAA
+    - ok ok ok im calm. no im not
+  taunt:
+    - CANT CATCH ME
+    - zoom zoom
+    - IM COMING
+  lobby:
+    - IS IT STARTING YET??
+    - I DID TEN LAPS OF THE LOBBY
+    - "{team} I'M SO READY I'M VIBRATING"
+    - TROOPER!! WAIT NO REWIND!! NO TROOPER!!
+    - I ATE A GAPPLE ALREADY OOPS
+quirks:
+  - bunny_hops
+  - celebrates_early
+rivals:
+  - mrnestzaiz
+  - roumgraistgolem
+bio: Plays every match on a sugar rush and has never walked anywhere on purpose. Races MrNestzaiz out of spawn every round. Thinks RoumgraistGolem is the coolest person on the server.
+batch: 2
+retired: false

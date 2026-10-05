@@ -1,0 +1,81 @@
+id: xxslimepotatoxx
+name: xXSlimePotatoXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg5NTU1MCwKICAicHJvZmlsZUlkIiA6ICIwMzBlMDA1OWQwY2M0YTZhODY3N2RkZWU3MjEzMjg1MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTbXVnRm9vZGllIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2NkNWU2ODY4NDA2NzBmZGJiOTQ1YjExNDllMjVmZmM4NDJkMzgwYjE3ZjI4Y2Y4NjIwNmQzNzRkZTBlZTZmMTEiCiAgICB9CiAgfQp9
+  signature: "cObscs+LdztCNEt64lOEKa8467wD8BGbgXotuLtQcZulspNuDOXQ2muk3PZKW/Fj5pHx7Jv9ijFUB59Vj8EB9RgvCJRmKmNKAo8mgfFckwv/a5UeeogiaDK4/rMXWTdpMrZdzcIZG68ldv++b15Qw2P/wG8Xprpf1BBngBTjZrpUydTv9uyUgfEAXXX4ACFkysRy9qAPYk3euwSkDI+DJw1FhoF2L12JKAE7l1vyHr4XaPgxBDdtBjtsEI1gyTG5ZzMiH8vJtreg6qvXJIfau82ex1SmgvH581PkQhyo0KZKTxUJze8z27yDvsR3THXRk/r4NLAqfZjPegXTOO1crTBN67N6/RyLIt88k56xjLLjW8hbM63q5Wp5C2970wPhxV2vmiYaCXOUvuv705JGDxBJfNuyiYx7gS9GHgsL9g7y9skQZiNFFnOPTHgU+Bs6w01voC0GF6dF0rCA4D4/6ks02pcKY2/ror/AUg/ZudL8dE379ot+mbLSglJdYb85hs4y0abuPT8w4UFPcIFah30qSc0Kf4Bqs3LWkykR2SdBUdxyQmpXWJldDWLu68EziAx2S+xJ3IPhGdGuU60JFISfUkoUart1318AGzLFYNijQd3p136Jmo/pmHIVmnbrwiSneNkB5VVb4rbALfmcy44A2esS0AZWpMwhbOZ+J0g="
+skill: 0.722
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.24
+  cps: 0.05
+  decisionTemperature: 0.53
+  awarenessRadius: -0.43
+  technique: 0.53
+  aggression: -0.43
+kits:
+  trooper: 0.86
+  shortbow: 0.23
+  rewind: 0.65
+  wraith: 0.2
+roles:
+  plant: 1
+  escort: 0.12
+style:
+  aggression: 0.65
+  patience: 0.14
+  teamplay: 0.3
+  risk: 0.99
+voice:
+  tone:
+    - folksy
+    - farmer
+    - patient
+  verbosity: normal
+  style: potato farmer talk, planting season and harvests, plants bombs like crops
+lines:
+  greet:
+    - "planting season, {team}"
+    - got my seeds. by seeds i mean fuses
+    - fine weather for a harvest
+  onKill:
+    - "{victim} got harvested"
+    - "pulled {victim} up by the roots"
+    - weeding the field
+  onDeath:
+    - "{killer} trampled my crops"
+    - frost got me
+    - crop failure
+  onPlant:
+    - "{bomb} planted. now it grows"
+    - "{bomb} lit. harvest soon"
+  onDefuse:
+    - "dug up the fuse on {bomb}"
+    - "{bomb} safe. no blight here"
+  onWin:
+    - "bumper crop, {team}"
+    - good harvest this year
+  onLoss:
+    - bad season
+    - the soil will be better next round
+  onLastAlive:
+    - one farmer, whole field
+    - still planting
+  taunt:
+    - your bomb's fertile ground
+    - i plant where i please
+    - don't step on my rows
+  lobby:
+    - "soil's looking good this season, {team}"
+    - trooper kit. a farmer needs good tools
+    - plant early, harvest often
+    - i've been rotating my crops. and my routes
+    - weather's right for planting fuses
+quirks:
+  - loves_nuke
+  - never_eats
+rivals:
+  - noodlewolf7
+  - bralmor-39
+bio: Treats arming the enemy bomb as planting season and talks about little else. Gives Bralmor_39 patient planting lessons that never quite stick. Argues with NoodleWolf7 about whether potatoes are cooking or farming.
+batch: 2
+retired: false
