@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { BridgeClient, BridgeRequestError } from "#bridge/client.ts";
+import { ClientManager } from "#daemon/clients.ts";
 import { DaemonError } from "#daemon/http.ts";
 import { actorPath, type DaemonContext, routeRequest } from "#daemon/router.ts";
 import { ACTOR_ACTIONS, ActorActionRequestSchemas } from "#protocol/bridge.ts";
@@ -9,6 +14,7 @@ import type { SandboxRecord } from "#sandbox/record.ts";
 import { LiveService } from "#src/live/service.ts";
 import { liveKubeTarget } from "#src/live/status.ts";
 import type { Target } from "#src/target.ts";
+import { type FakeClient, fakeClient } from "./fake-client.ts";
 
 const record: SandboxRecord = {
   id: "sbx-abc123",
@@ -75,12 +81,22 @@ class FakeBridge extends BridgeClient {
 
 const logged: string[] = [];
 
+let clientsDir: string;
+beforeAll(async () => {
+  clientsDir = await mkdtemp(path.join(os.tmpdir(), "mc-router-clients-"));
+});
+afterAll(async () => {
+  await rm(clientsDir, { recursive: true, force: true });
+});
+
 function context(): {
   ctx: DaemonContext;
   bridge: FakeBridge;
   destroyed: string[];
+  fake: FakeClient;
 } {
   const bridge = new FakeBridge();
+  const fake = fakeClient();
   const destroyed: string[] = [];
   const provider: SandboxProvider = {
     kind: "docker",
@@ -120,6 +136,16 @@ function context(): {
       id === record.id
         ? Promise.resolve(target)
         : Promise.reject(new DaemonError(`No sandbox ${id}`, 404)),
+    clients: new ClientManager({
+      repoRoot: "/repo",
+      dir: clientsDir,
+      launcher: fake.launcher,
+      log: (msg) => {
+        logged.push(msg);
+      },
+      readyTimeoutMs: 5000,
+      stopTimeoutMs: 1000,
+    }),
     startedAt: "2026-10-03T00:00:00.000Z",
     ttlSeconds: 3600,
     repoRoot: "/repo",
@@ -128,16 +154,16 @@ function context(): {
       logged.push(msg);
     },
   };
-  return { ctx, bridge, destroyed };
+  return { ctx, bridge, destroyed, fake };
 }
 
 async function call(
   ctx: DaemonContext,
   method: string,
-  path: string,
+  route: string,
   body?: unknown,
 ): Promise<{ status: number; json: unknown }> {
-  const url = new URL(`http://daemon${path}`);
+  const url = new URL(`http://daemon${route}`);
   const response = await routeRequest(
     ctx,
     url,
@@ -295,5 +321,156 @@ describe("actor routes", () => {
     expect([...ACTOR_ACTIONS].toSorted()).toEqual(
       Object.keys(ActorActionRequestSchemas).toSorted(),
     );
+  });
+});
+
+describe("client routes", () => {
+  it("starts a real client, ops it and reports its state", async () => {
+    const { ctx, bridge, fake } = context();
+    const started = await call(ctx, "POST", "/clients", {
+      target: "sbx-abc123",
+      name: "Tester",
+      op: true,
+      gameMode: "CREATIVE",
+    });
+    expect(started.status).toBe(200);
+    expect(started.json).toMatchObject({
+      client: {
+        name: "Tester",
+        target: "sbx-abc123",
+        server: "127.0.0.1:50001",
+      },
+      state: { connected: true, health: 20 },
+    });
+    expect(bridge.calls).toEqual([
+      "command:op Tester",
+      "command:gamemode creative Tester",
+    ]);
+    const [launch] = fake.launches;
+    expect(launch?.username).toBe("Tester");
+    expect(launch?.bootstrap.server).toBe("127.0.0.1:50001");
+    expect(launch?.repoRoot).toBe("/repo");
+    const listed = await call(ctx, "GET", "/clients");
+    expect(listed.json).toMatchObject({ clients: [{ name: "Tester" }] });
+    const again = await call(ctx, "POST", "/clients", {
+      target: "sbx-abc123",
+      name: "Tester",
+    });
+    expect(again.status).toBe(409);
+    await call(ctx, "DELETE", "/clients/Tester");
+  });
+
+  it("maps actions onto the client protocol", async () => {
+    const { ctx, fake } = context();
+    await call(ctx, "POST", "/clients", {
+      target: "sbx-abc123",
+      name: "Mover",
+    });
+    const look = await call(ctx, "POST", "/clients/Mover/look", {
+      yaw: 90,
+      pitch: -15,
+    });
+    expect(look.json).toEqual({ detail: "Camera updated" });
+    const status = await call(ctx, "GET", "/clients/Mover");
+    expect(status.json).toMatchObject({ state: { yaw: 90, pitch: -15 } });
+    await call(ctx, "POST", "/clients/Mover/move", {
+      buttons: ["forward", "jump"],
+      ticks: 10,
+    });
+    await call(ctx, "POST", "/clients/Mover/use", {});
+    await call(ctx, "POST", "/clients/Mover/hotbar", { slot: 3 });
+    await call(ctx, "POST", "/clients/Mover/command", { text: "time set day" });
+    expect(
+      fake.requests
+        .map((request) => request.action)
+        .filter((action) => action !== "status"),
+    ).toEqual(["look", "input", "use", "hotbar", "command"]);
+    expect(
+      fake.requests.find((request) => request.action === "input")?.arguments,
+    ).toEqual({
+      buttons: ["forward", "jump"],
+      ticks: 10,
+    });
+    const refused = await call(ctx, "POST", "/clients/Mover/attack", {});
+    expect(refused).toEqual({
+      status: 409,
+      json: { error: "client Mover: Aim at an entity" },
+    });
+    const badBody = await call(ctx, "POST", "/clients/Mover/move", {
+      buttons: ["fly"],
+      ticks: 10,
+    });
+    expect(badBody.status).toBe(400);
+    const slash = await call(ctx, "POST", "/clients/Mover/command", {
+      text: "/op me",
+    });
+    expect(slash.status).toBe(400);
+    const unknown = await call(ctx, "POST", "/clients/Mover/dance", {});
+    expect(unknown.status).toBe(404);
+    await call(ctx, "DELETE", "/clients/Mover");
+  });
+
+  it("captures to the artifacts dir or a requested path", async () => {
+    const { ctx } = context();
+    await call(ctx, "POST", "/clients", {
+      target: "sbx-abc123",
+      name: "Camera",
+    });
+    const plain = await call(ctx, "POST", "/clients/Camera/capture", {});
+    const saved = z.object({ path: z.string() }).parse(plain.json).path;
+    expect(saved.startsWith(clientsDir)).toBe(true);
+    expect(saved).toMatch(/capture-\d+\.png$/u);
+    const out = path.join(clientsDir, "copies", "view.png");
+    const copied = await call(ctx, "POST", "/clients/Camera/capture", { out });
+    expect(copied.json).toEqual({ path: out });
+    expect([...(await readFile(out))]).toEqual([0x89, 0x50, 0x4e, 0x47]);
+    const relative = await call(ctx, "POST", "/clients/Camera/capture", {
+      out: "view.png",
+    });
+    expect(relative.status).toBe(400);
+    await call(ctx, "DELETE", "/clients/Camera");
+  });
+
+  it("stops clients with their sandbox and on request", async () => {
+    const { ctx, fake } = context();
+    await call(ctx, "POST", "/clients", {
+      target: "sbx-abc123",
+      name: "Leaver",
+    });
+    await call(ctx, "DELETE", "/sandboxes/sbx-abc123");
+    expect(fake.requests.at(-1)?.action).toBe("shutdown");
+    expect(ctx.clients.list()).toEqual([]);
+    const gone = await call(ctx, "GET", "/clients/Leaver");
+    expect(gone.status).toBe(404);
+  });
+
+  it("refuses live, unknown sandboxes and bad names", async () => {
+    const { ctx } = context();
+    const live = await call(ctx, "POST", "/clients", {
+      target: "live",
+      name: "Tester",
+    });
+    expect(live.status).toBe(400);
+    const missing = await call(ctx, "POST", "/clients", {
+      target: "sbx-ffffff",
+      name: "Tester",
+    });
+    expect(missing.status).toBe(404);
+    const badName = await call(ctx, "GET", "/clients/no-dashes");
+    expect(badName.status).toBe(400);
+  });
+
+  it("reports a client that exits before joining", async () => {
+    const { ctx, fake } = context();
+    fake.crashWith = 1;
+    const started = await call(ctx, "POST", "/clients", {
+      target: "sbx-abc123",
+      name: "Crasher",
+    });
+    expect(started.status).toBe(502);
+    expect(z.object({ error: z.string() }).parse(started.json).error).toMatch(
+      /Client exited \(1\) before joining; see .*client\.log/u,
+    );
+    expect(ctx.clients.list()).toEqual([]);
   });
 });

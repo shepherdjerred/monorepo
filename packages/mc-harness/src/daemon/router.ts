@@ -55,6 +55,8 @@ import { toSummary } from "#sandbox/record.ts";
 import { pasteBox } from "#src/live/paste-box.ts";
 import type { LiveService } from "#src/live/service.ts";
 import type { Target } from "#src/target.ts";
+import { dispatchClients } from "./client-routes.ts";
+import type { ClientManager } from "./clients.ts";
 import { body, DaemonError, reply } from "./http.ts";
 import {
   dispatchLive,
@@ -69,6 +71,8 @@ export type DaemonContext = {
   live: LiveService;
   /** Resolves a ready sandbox to a target; throws DaemonError(404) otherwise. */
   target: (id: string) => Promise<Target>;
+  /** Real Minecraft clients joined to sandboxes (`toolkit mc client`). */
+  clients: ClientManager;
   startedAt: string;
   ttlSeconds: number;
   repoRoot: string;
@@ -382,6 +386,7 @@ async function dispatchSandboxes(
     if (!parsed.success) {
       throw new DaemonError(`Invalid sandbox id ${id}`);
     }
+    await ctx.clients.stopForTarget(parsed.data);
     await ctx.provider.destroy(parsed.data);
     ctx.log("sandbox removed", { id: parsed.data });
     return reply(SandboxDownResponseSchema, { removed: [parsed.data] });
@@ -446,6 +451,9 @@ async function dispatch(
   }
   if (root === "sandboxes" && parts.length <= 2) {
     return dispatchSandboxes(ctx, request, id);
+  }
+  if (root === "clients" && parts.length <= 3) {
+    return dispatchClients(ctx, request, id, rest[0]);
   }
   if (root === "playtests" && parts.length <= 2) {
     return dispatchPlaytests(ctx, request, id);
