@@ -1891,6 +1891,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-rwfbots-chat-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwfbots-chat",
+      "purpose": "Lets Search and Destroy bots speak their personality lines in the rwf world",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "voice_assistant_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -2227,6 +2239,14 @@
         },
         {
           "key": "the-storm-rwf-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwfbots-chat-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

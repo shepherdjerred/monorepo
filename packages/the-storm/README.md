@@ -1012,22 +1012,64 @@ plants, defuses, mu, sigma, last seen) is written to
 Configuration and content under `server/owned/plugins/TheStorm`:
 
 - `rwfbots.yml`: think rates, governor thresholds, the lever curve table
-  (pinned to `Lever.java`), the kits bots may draft, the LOS ray budget and
-  trace recording.
+  (pinned to `Lever.java`), the kits bots may draft, the LOS ray budget,
+  trace recording and bot chat (`chat:`, below).
 - `rwfbots/personalities/<id>.yml`: the personas (see its README): about
   two hundred, spread evenly over twelve archetypes (rusher, lurker, sniper,
   bomb diver, anchor, flanker, support, duelist, hunter, turtle, troll,
   tactician) and five skill bands. The archetype is content only; play
   differs through the style, role, kit and lever values the generator
   derives from it. Each persona also carries a voice, chat lines per
-  moment (plus pre-match lobby small talk), quirks, rivals and a bio, authored in `scripts/bots/enrichment/`;
-  the module validates them but does not speak them yet.
+  moment (plus pre-match lobby small talk), quirks, rivals and a bio, authored
+  in `scripts/bots/enrichment/`; bot chat speaks the match lines.
 - `rwf/maps/<id>/nav.rwfnav`: the map's baked navigation artifact
   (`NavCodec` format, from the `rwfmap` tool), next to `map.yml` and
   `blocks.schem`. Its `blocksSha256` must equal the map's `blocksSha256`;
   the module compares them when the match chooses the map and runs that map
   humans-only, with a logged error, when the artifact is missing, corrupt,
   unplayable or baked from other blocks.
+
+Bot chat. `BotChat` (`adapter.paper`) subscribes to rwf's `MatchEvents`,
+reads each transition as chat moments (`app.ChatMoments`: the match going
+live, a death with its killer, a bomb finishing arming or being defused, the
+end with its winner; bomb names as players read them, such as `Blue Team's
+bomb` or `the nuke`) and hands them to one pure, seeded
+`domain.chat.ChatDirector` per match, which picks who says which line and
+when. The director only runs from live to the end, so the lobby and countdown
+stay silent. Eligible speakers are bots in the match, alive or dead for at
+most `recentDeathSeconds` (end-of-match lines excepted): a greet from any bot
+at the start, a kill line from the killer or a death line from the victim
+(one of them), a plant or defuse line from a bomb worker, a line from the last
+bot standing on a team, win or loss lines from every bot at the end, and an
+idle taunt from a living bot about every `tauntEverySeconds`. Each roll is
+`chances.<moment>` times the personality's verbosity factor, small archetype
+leanings (trolls taunt 2.5x, tacticians 0.25x), tone tags (loud or quiet
+tags 1.25x or 0.75x) and chat quirks (`blames_lag`, `good_sport`,
+`says_sorry`, `celebrates_early`, `loves_nuke`, `narrates`,
+`calls_everything`), times `rivalBoost` for a kill, death or taunt aimed at a
+rival or, for `holds_grudges`, at whoever last killed the bot; capped at 1. A
+bot with `always_gg` always says a win or loss line, preferring one that says
+gg. A bot waits `botCooldownSeconds` between lines and never repeats a line
+within a match; all bots together keep `minGapMillis` between lines and say
+at most `maxLinesPerWindow` per `windowSeconds`, each line
+`reactionMinMillis`..`reactionMaxMillis` after its moment, and a line the
+limit would push past `maxDelayMillis` is dropped. Placeholders are filled
+with names as players see them (`{victim}`, `{killer}`, `{team}` as `Red
+Team`, `{bomb}`). A due line goes, as `[Name ✦]: line` (name in its team
+colour, rwf's dim `✦` marker), to the human players in the rwf world only:
+members and watchers, never Global, Discord or anyone elsewhere, and never
+the bot bodies. Lines are not recorded. A new context such as the lobby is a
+new `ChatMoment` with its own line pool; the director shares every rule.
+
+Chat is gated twice: `chat.enabled` in `rwfbots.yml` (false skips it
+entirely) and the managed Flipt flag `the-storm-rwfbots-chat-enabled`
+(namespace `the-storm`, beta on, prod off), evaluated by
+`adapter.remote.FliptChatGate` off the main thread every
+`flagRefreshSeconds` for the entity `the-storm-rwfbots-chat` with the rwf
+world as context. The cached answer gates every line; the flag off, an
+evaluation error, no answer yet or an unset `FLIPT_URL` or
+`FLIPT_ENVIRONMENT` keeps bots silent. `verifyManagedChatFlag` checks the
+client's keys against `packages/feature-flags` at build time.
 
 `/rwfbots debug [bot]` (`thestorm.rwfbots.admin`) prints the governor level,
 think and staleness percentiles, the board counters and every bot's plan, or

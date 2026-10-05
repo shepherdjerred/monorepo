@@ -158,9 +158,17 @@ export async function setBrainMode(
   }
 }
 
+/** Bot chat is one server-wide flag, evaluated with the rwf world as context. */
+const BotChatFlagSchema = z.strictObject({
+  namespace_key: z.literal("the-storm"),
+  flag_key: z.literal("the-storm-rwfbots-chat-enabled"),
+  entity_id: z.literal("the-storm-rwfbots-chat"),
+  context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
+});
+
 /**
- * The Flipt double: companions stay off, the crier, merchant and rwf gates
- * open, except rwf for the players the suite denied.
+ * The Flipt double: companions stay off; bot chat, the crier, merchant and rwf
+ * gates open, except rwf for the players the suite denied.
  */
 async function evaluateFlag(
   request: Request,
@@ -178,6 +186,9 @@ async function evaluateFlag(
     .safeParse(body);
   if (prod && companion.success) {
     return Response.json({ enabled: false });
+  }
+  if (prod && BotChatFlagSchema.safeParse(body).success) {
+    return Response.json({ enabled: true });
   }
   const evaluated = z
     .object({

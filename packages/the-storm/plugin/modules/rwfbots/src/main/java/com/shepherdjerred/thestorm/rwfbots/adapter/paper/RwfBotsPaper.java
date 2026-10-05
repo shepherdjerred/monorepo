@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.RwfBotsConfig;
 import com.shepherdjerred.thestorm.rwfbots.adapter.record.GzipTraceFiles;
+import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.app.DecisionGate;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
 import com.shepherdjerred.thestorm.rwfbots.app.NavCatalog;
@@ -26,7 +27,8 @@ import org.bukkit.event.HandlerList;
 
 /**
  * Wires the bots into Paper: the roster rwf fills matches from, the match bridge, the stimulus
- * listener, the 1-tick ticker and the debug command, over the think loop and the governor.
+ * listener, the 1-tick ticker, bot chat and the debug command, over the think loop and the
+ * governor.
  */
 public final class RwfBotsPaper {
 
@@ -40,6 +42,7 @@ public final class RwfBotsPaper {
   private final Cancellable clock;
   private final RwfBotsCommand command;
   private final Optional<GzipTraceFiles> traces;
+  private final Optional<BotChat> chat;
 
   private RwfBotsPaper(Parts parts) {
     this.context = parts.context();
@@ -50,6 +53,7 @@ public final class RwfBotsPaper {
     this.clock = parts.clock();
     this.command = parts.command();
     this.traces = parts.traces();
+    this.chat = parts.chat();
   }
 
   private record Parts(
@@ -60,7 +64,8 @@ public final class RwfBotsPaper {
       StimulusCollector stimuli,
       Cancellable clock,
       RwfBotsCommand command,
-      Optional<GzipTraceFiles> traces) {}
+      Optional<GzipTraceFiles> traces,
+      Optional<BotChat> chat) {}
 
   /**
    * What the module loaded before wiring.
@@ -73,6 +78,7 @@ public final class RwfBotsPaper {
    * @param bodies the bodies bots inhabit
    * @param world the match world
    * @param tickTimes the server's recent tick times in nanoseconds, for the governor
+   * @param chatGate the managed flag that gates bot chat; unused when chat is disabled
    */
   public record App(
       RwfBotsConfig config,
@@ -82,7 +88,8 @@ public final class RwfBotsPaper {
       PersonalityStatsStore store,
       Bodies bodies,
       World world,
-      Supplier<long[]> tickTimes) {}
+      Supplier<long[]> tickTimes,
+      ChatGate chatGate) {}
 
   /** Starts the Paper side; rwf's ports must already be published. */
   public static RwfBotsPaper start(ModuleContext module, App app) {
@@ -159,9 +166,25 @@ public final class RwfBotsPaper {
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> command.register(event.registrar()));
     var clock = module.scheduler().repeatOnMainThread(TICK, TICK, ticker::run);
+    var chatConfig = app.config().chat();
+    var chat =
+        chatConfig.enabled()
+            ? Optional.of(
+                new BotChat(
+                    new BotChat.Parts(
+                        chatConfig.toSettings(),
+                        Duration.ofSeconds(chatConfig.flagRefreshSeconds()),
+                        app.chatGate(),
+                        roster,
+                        app.world(),
+                        module.scheduler(),
+                        module.time(),
+                        module.logger())))
+            : Optional.<BotChat>empty();
+    chat.ifPresent(talk -> talk.start(events));
     services.provide(BotRoster.class, BotRoster.of(roster));
     return new RwfBotsPaper(
-        new Parts(module, roster, loop, bridge, stimuli, clock, command, traces));
+        new Parts(module, roster, loop, bridge, stimuli, clock, command, traces, chat));
   }
 
   public Roster roster() {
@@ -172,10 +195,16 @@ public final class RwfBotsPaper {
     return loop;
   }
 
+  /** Bot chat, when {@code chat.enabled}. */
+  public Optional<BotChat> chat() {
+    return chat;
+  }
+
   /** Stops the ticker and the loop, despawns every bot and closes the trace file. */
   public void stop() {
     clock.cancel();
     bridge.close();
+    chat.ifPresent(BotChat::close);
     HandlerList.unregisterAll(stimuli);
     command.unregisterPermission(context.plugin().getServer().getPluginManager());
     loop.close();

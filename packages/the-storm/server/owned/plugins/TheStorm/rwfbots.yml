@@ -69,3 +69,50 @@ traces:
   enabled: true
   directory: rwfbots-traces
   queueCapacity: 4096
+
+# Bot chat. Bots speak their personality's lines (rwfbots/personalities) to
+# the players in the match world only, members and watchers alike, never to
+# Global, Discord or anyone outside it; every line is framed like player chat
+# with the dim ✦ bot marker. Also gated by the managed Flipt flag
+# the-storm-rwfbots-chat-enabled (namespace the-storm), evaluated off the main
+# thread every flagRefreshSeconds: the flag off, an evaluation error or a
+# missing FLIPT_URL or FLIPT_ENVIRONMENT keeps bots silent. With enabled false
+# the flag is never evaluated.
+#
+# At each moment an eligible bot speaks with chance chances.<moment> times its
+# verbosity factor, times small archetype, tone and quirk leanings (trolls
+# taunt more, tacticians rarely), times rivalBoost for a line aimed at a
+# rival, capped at 1. A bot with the always_gg quirk always says a win or loss
+# line. Bots speak only while alive or for recentDeathSeconds after dying
+# (end-of-match lines excepted), wait botCooldownSeconds between lines and
+# never repeat a line within a match. All bots together keep minGapMillis
+# between lines and say at most maxLinesPerWindow per windowSeconds; each line
+# comes reactionMinMillis..reactionMaxMillis after its moment, and one the
+# limit would push past maxDelayMillis is dropped. An idle taunt chance comes
+# about every tauntEverySeconds (0.5x to 1.5x).
+chat:
+  enabled: true
+  flagRefreshSeconds: 30
+  chances:
+    greet: 0.3
+    onKill: 0.4
+    onDeath: 0.3
+    onPlant: 0.6
+    onDefuse: 0.7
+    onWin: 0.5
+    onLoss: 0.35
+    onLastAlive: 0.6
+    taunt: 0.3
+    # Pre-match small talk; read once bots spend the countdown in the lobby.
+    lobby: 0.25
+  verbosity: { quiet: 0.4, normal: 1.0, chatty: 1.6 }
+  rivalBoost: 2.0
+  botCooldownSeconds: 20
+  windowSeconds: 10
+  maxLinesPerWindow: 4
+  minGapMillis: 1500
+  reactionMinMillis: 600
+  reactionMaxMillis: 1800
+  maxDelayMillis: 5000
+  recentDeathSeconds: 8
+  tauntEverySeconds: 45

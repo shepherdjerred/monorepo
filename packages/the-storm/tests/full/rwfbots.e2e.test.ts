@@ -544,6 +544,79 @@ async function newMatch(
   };
 }
 
+/** The showcase case, with a player outside the rwf world listening. */
+async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
+  const { bot, rcon, server } = match;
+  const outside = transcript(outsider);
+  const size = 8;
+  await rcon.command(`give ${bot.username} minecraft:diamond 3`);
+  await eventually("the diamonds", async () => diamonds(bot) === 3);
+  const home = bot.entity.position.clone();
+  const statsBefore = await personalityStats(server, "showcase-before");
+
+  bot.chat("/rwf spectate");
+  await match.log.until(/You are watching Search and Destroy\./u);
+  await eventually(
+    "the watcher in spectator mode",
+    async () => bot.game.gameMode === "spectator",
+  );
+  const started = plain(
+    await rcon.command(`rwf admin showcase ${size.toString()}`),
+  );
+  expect(started).toContain(`Showcase of ${size.toString()} bots started`);
+  await eventually(
+    "the showcase to go live",
+    async () => liveStatus(rcon),
+    30_000,
+  );
+  const live = await status(rcon);
+  expect([live.humans, live.bots]).toEqual([0, size]);
+  expect(plain(await rcon.command("rwf admin status"))).toContain(
+    "Watchers: 1, showcase: yes",
+  );
+
+  // The watcher follows a living bot.
+  bot.chat("/rwf spectate next");
+  const followed = await match.log.until(/Following (?<name>\w+)\./u);
+  expect(match.catalog.has(followed.groups?.["name"] ?? "")).toBe(true);
+
+  await showcaseSettles(server, live.matchId, size, statsBefore);
+
+  // Bot chat (the-storm-rwfbots-chat-enabled is on in the fake Flipt):
+  // the watcher in the rwf world hears ✦-marked lines from the showcase's
+  // bots; the player in the main world hears none of them.
+  const botLines = match.log.all(/^\[(?<name>\w+) ✦\]: .+$/u);
+  expect(botLines.length).toBeGreaterThan(0);
+  expect(
+    botLines.every((line) => match.catalog.has(line.groups?.["name"] ?? "")),
+  ).toBe(true);
+  expect(outside.has(/✦/u)).toBe(false);
+
+  // The watcher stays through the reset; the next lobby waits for a human.
+  await waitForLobby(rcon);
+  const next = await status(rcon);
+  expect(next.bots).toBe(0);
+  expect(plain(await rcon.command("rwf admin status"))).toContain(
+    "Watchers: 1, showcase: no",
+  );
+  expect(bot.game.gameMode).toBe("spectator");
+  expect(match.log.has(/You earned/u)).toBe(false);
+  expect(await balance(bot)).toBe(startingBalance);
+
+  bot.chat("/rwf leave");
+  await eventually(
+    "the watcher restored",
+    async () =>
+      bot.game.gameMode === "survival" &&
+      diamonds(bot) === 3 &&
+      bot.entity.position.distanceTo(home) < 1,
+    20_000,
+  );
+  expect(plain(await rcon.command("rwf admin status"))).toContain(
+    "Watchers: 0",
+  );
+}
+
 describe("Search and Destroy with rwfbots", () => {
   test(
     "bots fill a lone human's match, play it to a result, are rated and only the human is paid",
@@ -611,67 +684,21 @@ describe("Search and Destroy with rwfbots", () => {
   );
 
   test(
-    "a watcher follows a bots-only showcase to its result, nobody is paid and leaving restores them",
+    "a watcher follows a bots-only showcase to its result, hears the bots talk, nobody is paid and leaving restores them",
     { timeout: 16 * 60_000 },
     async ({ bot, rcon, server }) => {
       const match = await newMatch(bot, rcon, server);
-      const size = 8;
-      await rcon.command(`give ${bot.username} minecraft:diamond 3`);
-      await eventually("the diamonds", async () => diamonds(bot) === 3);
-      const home = bot.entity.position.clone();
-      const statsBefore = await personalityStats(server, "showcase-before");
-
-      bot.chat("/rwf spectate");
-      await match.log.until(/You are watching Search and Destroy\./u);
-      await eventually(
-        "the watcher in spectator mode",
-        async () => bot.game.gameMode === "spectator",
-      );
-      const started = plain(
-        await rcon.command(`rwf admin showcase ${size.toString()}`),
-      );
-      expect(started).toContain(`Showcase of ${size.toString()} bots started`);
-      await eventually(
-        "the showcase to go live",
-        async () => liveStatus(rcon),
-        30_000,
-      );
-      const live = await status(rcon);
-      expect([live.humans, live.bots]).toEqual([0, size]);
-      expect(plain(await rcon.command("rwf admin status"))).toContain(
-        "Watchers: 1, showcase: yes",
-      );
-
-      // The watcher follows a living bot.
-      bot.chat("/rwf spectate next");
-      const followed = await match.log.until(/Following (?<name>\w+)\./u);
-      expect(match.catalog.has(followed.groups?.["name"] ?? "")).toBe(true);
-
-      await showcaseSettles(server, live.matchId, size, statsBefore);
-
-      // The watcher stays through the reset; the next lobby waits for a human.
-      await waitForLobby(rcon);
-      const next = await status(rcon);
-      expect(next.bots).toBe(0);
-      expect(plain(await rcon.command("rwf admin status"))).toContain(
-        "Watchers: 1, showcase: no",
-      );
-      expect(bot.game.gameMode).toBe("spectator");
-      expect(match.log.has(/You earned/u)).toBe(false);
-      expect(await balance(bot)).toBe(startingBalance);
-
-      bot.chat("/rwf leave");
-      await eventually(
-        "the watcher restored",
-        async () =>
-          bot.game.gameMode === "survival" &&
-          diamonds(bot) === 3 &&
-          bot.entity.position.distanceTo(home) < 1,
-        20_000,
-      );
-      expect(plain(await rcon.command("rwf admin status"))).toContain(
-        "Watchers: 0",
-      );
+      // A player who stays in the main world while the bots talk.
+      const outsider = await connectBot({
+        host: server.host,
+        port: server.gamePort,
+        username: `o_${Date.now().toString(36).slice(-6)}`,
+      });
+      try {
+        await watchShowcase(match, outsider);
+      } finally {
+        await disconnectBot(outsider);
+      }
     },
   );
 

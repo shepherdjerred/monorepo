@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.FakeBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
+import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
@@ -25,7 +26,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
 import org.bukkit.Material;
 import org.bukkit.WorldCreator;
@@ -38,8 +42,8 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
 /**
  * The rwfbots module enabled on a MockBukkit server with the shipped config and personalities, the
  * synthetic map's nav artifact under {@code rwf/maps/synthetic}, a temp SQLite database, a direct
- * compute pool, a fixed clock, fake bodies over MockBukkit players and a hand-driven fake rwf
- * match.
+ * compute pool, a fixed clock, fake bodies over MockBukkit players, a hand-driven fake rwf match
+ * and a chat flag tests flip.
  */
 public final class RwfBotsHarness implements AutoCloseable {
 
@@ -81,6 +85,9 @@ public final class RwfBotsHarness implements AutoCloseable {
   /** What the governor hears as the server's recent tick times; MockBukkit has none. */
   public long[] tickTimes = new long[0];
 
+  /** What the managed chat flag answers; read each time chat refreshes it. */
+  public final AtomicBoolean chatFlag = new AtomicBoolean(true);
+
   private RwfBotsHarness(ServerMock server, WorldMock world, StormDatabase database) {
     this.server = server;
     this.world = world;
@@ -89,11 +96,32 @@ public final class RwfBotsHarness implements AutoCloseable {
     this.module =
         new RwfBotsModule(
             new RwfBotsModule.Hooks(
-                Optional.of(ctx -> bodies), Optional.of(world), Optional.of(() -> tickTimes)));
+                Optional.of(ctx -> bodies),
+                Optional.of(world),
+                Optional.of(() -> tickTimes),
+                Optional.of(
+                    new ChatGate() {
+                      @Override
+                      public CompletableFuture<Boolean> enabled() {
+                        return CompletableFuture.completedFuture(chatFlag.get());
+                      }
+
+                      @Override
+                      public void close() {}
+                    })));
   }
 
   /** Starts the server and enables the module over {@code directory}. */
   public static RwfBotsHarness start(Path directory) {
+    return start(directory, UnaryOperator.identity(), harness -> {});
+  }
+
+  /**
+   * Starts the server with the shipped {@code rwfbots.yml} rewritten by {@code config}, lets {@code
+   * before} set the harness up, then enables the module.
+   */
+  public static RwfBotsHarness start(
+      Path directory, UnaryOperator<String> config, Consumer<RwfBotsHarness> before) {
     var server = MockBukkit.mock();
     var world = new WorldMock(new WorldCreator("rwf"));
     server.addWorld(world);
@@ -102,9 +130,10 @@ public final class RwfBotsHarness implements AutoCloseable {
         world.getBlockAt(x, 0, z).setType(Material.STONE);
       }
     }
-    copyShipped(directory);
+    copyShipped(directory, config);
     var database = StormDatabase.open(directory.resolve("t.db"));
     var harness = new RwfBotsHarness(server, world, database);
+    before.accept(harness);
     harness.enable(directory);
     return harness;
   }
@@ -159,7 +188,7 @@ public final class RwfBotsHarness implements AutoCloseable {
     }
   }
 
-  private static void copyShipped(Path directory) {
+  private static void copyShipped(Path directory, UnaryOperator<String> rewrite) {
     var personalities = System.getProperty("thestorm.rwfbots.personalities");
     var config = System.getProperty("thestorm.rwfbots.config");
     assertThat(personalities).as("the build passes the shipped personalities").isNotNull();
@@ -172,7 +201,9 @@ public final class RwfBotsHarness implements AutoCloseable {
           Files.copy(file, target.resolve(file.getFileName()));
         }
       }
-      Files.copy(Path.of(config), directory.resolve(RwfBotsModule.CONFIG));
+      Files.writeString(
+          directory.resolve(RwfBotsModule.CONFIG),
+          rewrite.apply(Files.readString(Path.of(config))));
       var maps = directory.resolve(NavFiles.MAPS_DIRECTORY).resolve(NAV.mapId());
       Files.createDirectories(maps);
       Files.write(maps.resolve(NavFiles.FILE_NAME), NavCodec.encode(NAV));
