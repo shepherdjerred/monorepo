@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
@@ -31,6 +32,9 @@ public record Situation(
 
   /** Lowest health a visible enemy may have and still count as nearly dead. */
   static final double LOW_ENEMY_HEALTH = 6;
+
+  /** A planter this close to its bomb arms it whatever the push. */
+  static final double PLANT_CLOSE = 12;
 
   /** Most teammates that chase one enemy that is not nearly dead. */
   public static final int MAX_CHASERS = 2;
@@ -150,7 +154,18 @@ public record Situation(
         .filter(slot -> slot.kind() == SlotKind.PLANT)
         .flatMap(Slot::bomb)
         .flatMap(snapshot::bomb)
-        .filter(bomb -> bomb.armableBy(self.team()) && !bomb.state().isLit());
+        .filter(bomb -> bomb.armableBy(self.team()) && !bomb.state().isLit())
+        .filter(bomb -> planterGoes(bomb));
+  }
+
+  /**
+   * Whether the planter makes for {@code bomb} now: once the team has pushed far enough up the
+   * field, when it is the last one alive, or when the bomb is right there.
+   */
+  private boolean planterGoes(BombView bomb) {
+    return board.plan().push() >= Playbook.PLANT_GO
+        || isLastAlive()
+        || bomb.pos().distance(self.pos()) <= PLANT_CLOSE;
   }
 
   /** How many blocks of extra distance each teammate already chasing an enemy counts as. */

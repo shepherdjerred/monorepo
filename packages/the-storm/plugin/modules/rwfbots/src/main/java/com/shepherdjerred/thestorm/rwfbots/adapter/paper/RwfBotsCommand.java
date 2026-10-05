@@ -154,10 +154,12 @@ public final class RwfBotsCommand {
                   sender,
                   String.format(
                       Locale.ROOT,
-                      "%s: objective %s, %d lanes, dealt at tick %d",
+                      "%s: %s, objective %s, %d lanes, push %.2f, dealt at tick %d",
                       entry.getKey().value(),
+                      plan.strategy().map(Object::toString).orElse("-"),
                       plan.objective().map(Object::toString).orElse("none"),
                       plan.lanes().size(),
+                      plan.push(),
                       plan.dealtTick()));
               plan.assignment().entrySet().stream()
                   .sorted(Map.Entry.comparingByValue())

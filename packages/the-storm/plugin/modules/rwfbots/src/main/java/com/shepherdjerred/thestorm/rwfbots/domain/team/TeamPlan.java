@@ -11,26 +11,41 @@ import java.util.Optional;
 /**
  * The positions a team's playbook dealt and who holds each.
  *
+ * @param strategy the strategy the slots were dealt for, once dealt
  * @param home where the team starts, if it has been dealt slots
  * @param objective the bomb the team is playing for this deal, if any is left to arm
  * @param lanes the lanes towards the objective (empty without one)
+ * @param push how far along the lanes, 0..1, the team has advanced
  * @param slots every slot dealt, one per living bot
  * @param assignment the slot key each bot holds
  * @param dealtTick when the slots were dealt, or -1 before the first deal
  */
 public record TeamPlan(
+    Optional<Strategy> strategy,
     Optional<Vec3> home,
     Optional<BombId> objective,
     List<Lane> lanes,
+    double push,
     List<Slot> slots,
     Map<CombatantId, String> assignment,
     long dealtTick) {
 
   public static final TeamPlan NONE =
-      new TeamPlan(Optional.empty(), Optional.empty(), List.of(), List.of(), Map.of(), -1);
+      new TeamPlan(
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          List.of(),
+          0,
+          List.of(),
+          Map.of(),
+          -1);
 
   public TeamPlan {
     lanes = List.copyOf(lanes);
+    if (!(push >= 0 && push <= 1)) {
+      throw new IllegalArgumentException("push must be 0..1: " + push);
+    }
     slots = List.copyOf(slots);
     assignment = Map.copyOf(assignment);
     var keys = new HashSet<String>();

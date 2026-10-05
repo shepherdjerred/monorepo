@@ -80,9 +80,16 @@ public final class Tactics {
       choice = Option.HOLD_ANGLE;
     }
     var chosen = choice;
+    // A refreshed slot plan keeps its age, so it still expires and still yields to a better pick
+    // once past its commitment.
     var plan =
         current
-            .filter(existing -> existing.option() == chosen && !refresh(existing))
+            .filter(existing -> existing.option() == chosen)
+            .map(
+                existing ->
+                    refresh(existing)
+                        ? Planner.expand(chosen, situation, context).since(existing.startedTick())
+                        : existing)
             .orElseGet(() -> Planner.expand(chosen, situation, context));
     var decision = Planner.decide(plan, situation, context, state.lifeEpoch());
     if (decision.ability().isPresent()) {

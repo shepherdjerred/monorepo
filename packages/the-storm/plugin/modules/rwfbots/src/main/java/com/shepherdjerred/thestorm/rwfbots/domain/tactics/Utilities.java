@@ -24,6 +24,9 @@ public final class Utilities {
   /** A sword fights an enemy about this close and holds its slot beyond. */
   static final double MELEE_ENGAGE = 7;
 
+  /** An archer this close to its slot counts as there and fights at full range. */
+  static final double ARCHER_AT_SLOT = 6;
+
   /** Only a bot this close to an armable bomb, with nobody near, arms without the plant slot. */
   static final double ARM_NEAR = 8;
 
@@ -80,9 +83,13 @@ public final class Utilities {
       return 0;
     }
     var appetite = (0.5 + 0.5 * Math.min(1, push)) * fightReady * f.nearestEnemyConfidence();
+    // An archer fights at full range from its slot; on the way there it only answers an enemy
+    // inside the near edge of its band, so it does not stop to snipe from the doorway.
+    var atSlot = !f.hasSlot() || f.slotDistance() <= ARCHER_AT_SLOT;
+    var reach = atSlot ? t.keep().max() : t.keep().min();
     var inReach =
         t.keep().ranged()
-            ? Curves.logistic(-distance, -(t.keep().max() + 4), 0.5)
+            ? Curves.logistic(-distance, -(reach + 4), 0.5)
             : Curves.logistic(-distance, -MELEE_ENGAGE, 0.6);
     var crowded = f.freeTarget() ? 1 : Curves.near(distance, 4);
     var diving = t.bias().divesPastFights() && f.plantSlot() ? 0.4 : 1;
@@ -111,6 +118,7 @@ public final class Utilities {
     var quiet = f.knownEnemies() == 0;
     var holding = f.hasSlot() && f.slotDistance() <= Features.SLOT_RADIUS;
     var taking = f.hasSlot() && !holding && !f.plantSlot();
+    // A planter waiting for the push holds its place on the line like anyone else.
     scores.put(
         Option.TAKE_SLOT, taking ? (0.45 + 0.15 * t.style().teamplay()) * t.bias().slot() : 0);
     scores.put(

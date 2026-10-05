@@ -17,12 +17,16 @@ import java.util.Set;
  *
  * <ul>
  *   <li>RUSH: the planter on the middle lane, a two-escort wedge, then the side lanes and flanks.
- *   <li>SPLIT: the planter and one escort on one lane, a pair on the other lane, a flank, then
- *       overwatch and anchors.
- *   <li>TURTLE: anchors spread over distinct approaches to the own bomb, overwatch, and a planter
- *       that goes round the far lane.
+ *   <li>SPLIT: the planter and one escort on one lane, a pair and a flank on the other, a flank on
+ *       the first, overwatch and one anchor.
+ *   <li>TURTLE: three anchors over distinct approaches to the own bomb, a planter round the far
+ *       lane, overwatch, and a lane pair and a flank screening the field.
  *   <li>HUNT: sweeping pairs towards where the enemy was seen, a planter and overwatch.
  * </ul>
+ *
+ * <p>The team moves up the field: lane and flank slots stand at the team's push, a progress along
+ * the lanes that grows every deal until the team makes contact ({@link #ADVANCE} a deal from {@link
+ * #START_PUSH}), so the side lanes advance with the planter instead of waiting at home.
  *
  * <p>The nuke is just another objective: a strategy names which bomb it plays for, it never wins by
  * being closest. Static slots keep at least {@link #SPACING} blocks apart; escorts are a wedge
@@ -34,28 +38,45 @@ public final class Playbook {
   public static final double SPACING = 4;
 
   /** How far behind the planter its escorts walk. */
-  public static final double ESCORT_BEHIND = 3;
+  public static final double ESCORT_BEHIND = 2;
 
   /** How far to either side of the planter its escorts walk. */
-  public static final double ESCORT_SIDE = 3;
+  public static final double ESCORT_SIDE = 3.5;
 
-  /** How far ahead of the planter, as lane progress, lane slots screen. */
-  static final double AHEAD = 0.2;
+  /** The push, as lane progress, at the first deal of a match. */
+  public static final double START_PUSH = 0.5;
+
+  /** How much the push grows each deal until the team makes contact. */
+  public static final double ADVANCE = 0.07;
+
+  /** Once the push reaches this the planter leaves the line and makes for the bomb. */
+  public static final double PLANT_GO = 0.6;
+
+  /** The furthest the push goes: the edge of the enemy's ground. */
+  public static final double MAX_PUSH = 0.75;
+
+  /** How far ahead of the push lane slots stand; each further rank stands a little behind. */
+  static final double AHEAD = 0.05;
+
+  static final double RANK_BEHIND = 0.12;
 
   /** Lane slots stand at least this far along their lane, clear of the team's own doorways. */
   static final double LANE_NEAREST = 0.3;
 
-  /** How far ahead of the planter, as lane progress, flanks wait. */
-  static final double FLANK_AHEAD = 0.35;
+  /** How far ahead of the push, as lane progress, flanks wait. */
+  static final double FLANK_AHEAD = 0.1;
 
   /** How much wider than the outer lane a flank stands, in blocks. */
   static final double FLANK_WIDEN = 5;
 
-  static final double OVERWATCH_MIN = 14;
+  static final double OVERWATCH_MIN = 12;
   static final double OVERWATCH_MAX = 28;
   static final double OVERWATCH_IDEAL = 20;
 
-  /** Overwatch stays on the team's side: at most this far along the way to the objective. */
+  /** Overwatch stands at least this far from home: out on the field, not in the base. */
+  static final double OVERWATCH_OUT = 16;
+
+  /** Overwatch stays on the team's side: at most this far along the way to the enemy's home. */
   static final double OVERWATCH_FURTHEST = 0.55;
 
   /** Anchors never stand in a lane this close to home: that is the team's way out. */
@@ -75,7 +96,6 @@ public final class Playbook {
 
   private static final int SNAP = 3;
   private static final int SEARCH_RINGS = 8;
-  private static final double PROGRESS_STEP = 0.1;
 
   private Playbook() {}
 
@@ -89,6 +109,7 @@ public final class Playbook {
    * @param objective the bomb the team plays for, if any is left
    * @param lanes the lanes from home to the objective
    * @param planter where the planter stands now (home before the first deal)
+   * @param push how far along the lanes, 0..1, the team has advanced
    * @param guard the bomb anchors hold: the own bomb, else home
    * @param guardClear how close to {@code guard} anchors may stand (poison pushes them out)
    * @param sightings where teammates last saw enemies, newest first
@@ -103,6 +124,7 @@ public final class Playbook {
       Optional<BombView> objective,
       List<Lane> lanes,
       Vec3 planter,
+      double push,
       Vec3 guard,
       double guardClear,
       List<Vec3> sightings,
@@ -115,6 +137,9 @@ public final class Playbook {
       watchers = Set.copyOf(watchers);
       if (size < 1) {
         throw new IllegalArgumentException("a deal is for at least one bot");
+      }
+      if (!(push >= 0 && push <= 1)) {
+        throw new IllegalArgumentException("push must be 0..1: " + push);
       }
       if (objective.isPresent() && lanes.isEmpty()) {
         throw new IllegalArgumentException("an objective needs at least one lane to it");
@@ -182,13 +207,11 @@ public final class Playbook {
       case 0 -> Want.of(SlotKind.PLANT, Lanes.Which.LEFT);
       case 1 -> Want.escort(ESCORT_SIDE);
       case 2, 3 -> Want.paired(SlotKind.LANE, Lanes.Which.RIGHT, 1);
-      case 4 -> Want.of(SlotKind.FLANK, Lanes.Which.RIGHT);
-      case 5 -> Want.of(SlotKind.OVERWATCH, Lanes.Which.MIDDLE);
-      case 6 -> Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE);
-      default ->
-          i % 2 == 0
-              ? Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE)
-              : Want.of(SlotKind.LANE, Lanes.Which.LEFT);
+      case 4 -> Want.paired(SlotKind.FLANK, Lanes.Which.RIGHT, 2);
+      case 5 -> Want.paired(SlotKind.FLANK, Lanes.Which.LEFT, 2);
+      case 6 -> Want.of(SlotKind.OVERWATCH, Lanes.Which.MIDDLE);
+      case 7 -> Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE);
+      default -> Want.of(SlotKind.LANE, cycle(i));
     };
   }
 
@@ -196,9 +219,16 @@ public final class Playbook {
     return switch (i) {
       case 0 -> new Want(SlotKind.ANCHOR, Lanes.Which.MIDDLE, -1, Role.RETAKE, 0);
       case 1 -> Want.of(SlotKind.PLANT, Lanes.Which.RIGHT);
-      case 2 -> Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE);
-      case 3 -> Want.of(SlotKind.OVERWATCH, Lanes.Which.MIDDLE);
-      default -> Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE);
+      case 2 -> Want.of(SlotKind.OVERWATCH, Lanes.Which.MIDDLE);
+      case 3 -> Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE);
+      case 4 -> Want.paired(SlotKind.LANE, Lanes.Which.LEFT, 1);
+      case 5 -> Want.paired(SlotKind.LANE, Lanes.Which.RIGHT, 2);
+      case 6 -> Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE);
+      case 7 -> Want.of(SlotKind.FLANK, Lanes.Which.LEFT);
+      default ->
+          i % 2 == 0
+              ? Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE)
+              : Want.of(SlotKind.LANE, cycle(i));
     };
   }
 
@@ -249,7 +279,7 @@ public final class Playbook {
       var direction = target().minus(setup.home()).horizontal();
       this.axis = direction.isZero() ? new Vec3(1, 0, 0) : direction.normalized();
       this.side = new Vec3(-axis.z(), 0, axis.x());
-      this.push = planterProgress();
+      this.push = setup.push();
     }
 
     /** What the team is heading for: the objective, else the latest sighting, else their home. */
@@ -259,15 +289,6 @@ public final class Playbook {
           .map(BombView::pos)
           .or(() -> setup.sightings().stream().findFirst())
           .orElseGet(setup::enemyHome);
-    }
-
-    private double planterProgress() {
-      var lane = laneIndex(Lanes.Which.MIDDLE);
-      if (lane < 0) {
-        return 0;
-      }
-      var progress = setup.lanes().get(lane).progressOf(setup.planter());
-      return Math.floor(progress / PROGRESS_STEP) * PROGRESS_STEP;
     }
 
     private int laneIndex(Lanes.Which which) {
@@ -288,16 +309,24 @@ public final class Playbook {
       };
     }
 
+    /**
+     * The planter goes with the team: it stands on its lane at the push until the push reaches
+     * {@link #PLANT_GO}, then makes for the bomb.
+     */
     private Slot plant(String key, Want want) {
       var bomb = setup.objective().orElseThrow();
-      var at = place(approach(bomb));
+      var lane = laneIndex(want.which());
+      var at =
+          push >= PLANT_GO
+              ? place(approach(bomb))
+              : place(setup.lanes().get(lane).at(Math.max(LANE_NEAREST, push + AHEAD)));
       return new Slot(
           key,
           SlotKind.PLANT,
           want.role(),
           at,
           bomb.pos(),
-          laneIndex(want.which()),
+          lane,
           want.pair(),
           Optional.of(bomb.id()),
           0);
@@ -331,7 +360,7 @@ public final class Playbook {
     private Slot lane(String key, Want want, int index) {
       var lane = laneIndex(want.which());
       var rank = index / 3;
-      var progress = Math.clamp(push + AHEAD - 0.12 * rank, LANE_NEAREST, 0.8);
+      var progress = Math.clamp(push + AHEAD - RANK_BEHIND * rank, LANE_NEAREST, MAX_PUSH);
       var chosen = setup.lanes().get(lane);
       var at = place(chosen.at(progress));
       return new Slot(
@@ -349,7 +378,7 @@ public final class Playbook {
     private Slot flank(String key, Want want) {
       var lane = laneIndex(want.which());
       var chosen = setup.lanes().get(lane);
-      var progress = Math.clamp(push + FLANK_AHEAD, 0.35, 0.85);
+      var progress = Math.clamp(push + FLANK_AHEAD, LANE_NEAREST, MAX_PUSH + FLANK_AHEAD);
       var outward = want.which() == Lanes.Which.LEFT ? side.scale(-1) : side;
       var base = chosen.at(progress).plus(outward.scale(FLANK_WIDEN));
       var at = place(hidden(base));
@@ -392,13 +421,17 @@ public final class Playbook {
       var objective = target();
       var regions = setup.nav().regions();
       var target = graph.nearestNodeWithin(objective.plus(0, -0.5, 0), SNAP);
-      var length = objective.minus(setup.home()).horizontal().length();
+      var field = setup.enemyHome().minus(setup.home()).horizontal();
+      var length = Math.max(1, field.length());
+      var forward = field.isZero() ? axis : field.normalized();
       Optional<Vec3> best = Optional.empty();
       var bestScore = Double.NEGATIVE_INFINITY;
       for (var point : setup.nav().cover().points()) {
         var feet = graph.feet(point.node());
         var distance = feet.horizontalDistance(objective);
-        var along = feet.minus(setup.home()).horizontal().dot(axis) / Math.max(1, length);
+        // Measured along the whole field, so a near objective (the nuke) does not pull the
+        // overwatch back into its own base.
+        var along = feet.minus(setup.home()).horizontal().dot(forward) / length;
         var sees =
             target.isEmpty()
                 || regions.canSee(
@@ -406,6 +439,7 @@ public final class Playbook {
         if (distance < OVERWATCH_MIN
             || distance > OVERWATCH_MAX
             || along > OVERWATCH_FURTHEST
+            || feet.horizontalDistance(setup.home()) < OVERWATCH_OUT
             || !sees) {
           continue;
         }

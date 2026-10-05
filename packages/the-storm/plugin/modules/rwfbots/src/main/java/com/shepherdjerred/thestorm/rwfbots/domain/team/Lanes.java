@@ -14,14 +14,19 @@ import java.util.Set;
 
 /**
  * Builds a team's lanes towards an objective: the baked approach routes, plus wide lanes forced
- * through points to either side of the straight line, kept only when they lie at least {@link
- * #MIN_GAP} blocks apart sideways. On an open map the baked routes hug the straight line, so the
- * wide lanes are what spread a team out.
+ * through two points to either side of the straight line (from 30% to 70% of the way), kept only
+ * when they lie at least {@link #MIN_GAP} blocks apart sideways. On an open map the baked routes
+ * hug the straight line, so the wide lanes are what spread a team out.
  */
 public final class Lanes {
 
   /** How far to either side of the midpoint the wide lanes are forced through, in blocks. */
   public static final double SPREAD = 14;
+
+  /** The wide lanes run at full width between these fractions of the way to the objective. */
+  static final double WIDE_FROM = 0.3;
+
+  static final double WIDE_TO = 0.7;
 
   /** Two lanes closer than this sideways count as the same lane. */
   public static final double MIN_GAP = 5;
@@ -56,9 +61,13 @@ public final class Lanes {
     var side = new Vec3(-axis.normalized().z(), 0, axis.normalized().x());
     var candidates = new ArrayList<List<Integer>>();
     graph.path(from.getAsInt(), to.getAsInt()).ifPresent(path -> candidates.add(path.nodes()));
-    var middle = home.lerp(goal, 0.5);
     for (var offset : new double[] {-SPREAD, SPREAD}) {
-      via(graph, from.getAsInt(), to.getAsInt(), middle.plus(side.scale(offset)))
+      var out = side.scale(offset);
+      via(
+              graph,
+              from.getAsInt(),
+              to.getAsInt(),
+              List.of(home.lerp(goal, WIDE_FROM).plus(out), home.lerp(goal, WIDE_TO).plus(out)))
           .ifPresent(candidates::add);
     }
     for (var route : baked) {
@@ -75,20 +84,28 @@ public final class Lanes {
     return List.copyOf(lanes);
   }
 
-  /** The path from {@code from} to {@code to} through the node nearest {@code through}. */
-  private static Optional<List<Integer>> via(NavGraph graph, int from, int to, Vec3 through) {
-    var middle = graph.nearestNodeWithin(through, SNAP_RADIUS);
-    if (middle.isEmpty()) {
-      return Optional.empty();
+  /** The path from {@code from} to {@code to} through the nodes nearest each of {@code through}. */
+  private static Optional<List<Integer>> via(NavGraph graph, int from, int to, List<Vec3> through) {
+    var stops = new ArrayList<Integer>();
+    stops.add(from);
+    for (var point : through) {
+      var node = graph.nearestNodeWithin(point, SNAP_RADIUS);
+      if (node.isEmpty()) {
+        return Optional.empty();
+      }
+      stops.add(node.getAsInt());
     }
-    var first = graph.path(from, middle.getAsInt());
-    var second = graph.path(middle.getAsInt(), to);
-    if (first.isEmpty() || second.isEmpty()) {
-      return Optional.empty();
+    stops.add(to);
+    var nodes = new ArrayList<Integer>();
+    nodes.add(from);
+    for (var i = 1; i < stops.size(); i++) {
+      var leg = graph.path(stops.get(i - 1), stops.get(i));
+      if (leg.isEmpty()) {
+        return Optional.empty();
+      }
+      var legNodes = leg.map(NavPath::nodes).orElseThrow();
+      nodes.addAll(legNodes.subList(1, legNodes.size()));
     }
-    var nodes = new ArrayList<>(first.map(NavPath::nodes).orElseThrow());
-    var rest = second.map(NavPath::nodes).orElseThrow();
-    nodes.addAll(rest.subList(1, rest.size()));
     return Optional.of(nodes);
   }
 

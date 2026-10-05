@@ -85,7 +85,7 @@ public final class Planner {
   static final double COVER_REACHED = 0.5;
 
   /** How much further from its goal a bot caught in the open will run to reach cover. */
-  static final double GIVE_GROUND = 6;
+  static final double GIVE_GROUND = 2;
 
   /** A bot this close to cover counts as in it. */
   static final double IN_COVER = 1.5;
@@ -111,8 +111,11 @@ public final class Planner {
    */
   static final double DOORWAY_CLEAR = 8;
 
+  /** An enemy this close pins a pair down: they take turns to move. */
+  static final double PINNED_RANGE = 12;
+
   /** An enemy within this distance turns slot moves into bounds from cover to cover. */
-  public static final double CONTACT_RANGE = 28;
+  public static final double CONTACT_RANGE = 24;
 
   /** A sword only takes a swing from cover at an enemy this close. */
   static final double CLOSE_FIGHT = 4;
@@ -330,7 +333,13 @@ public final class Planner {
           Option.HOLD_SLOT, now, new PlanStep.Hold(goal, slot.orElseThrow().watch(), stance));
     }
     var cover =
-        coverNear(situation, context, new CoverSearch(goal, threat.orElseThrow(), HOLD_SEARCH))
+        heldCover(situation, context, goal, threat.orElseThrow())
+            .or(
+                () ->
+                    coverNear(
+                        situation,
+                        context,
+                        new CoverSearch(goal, threat.orElseThrow(), HOLD_SEARCH)))
             .or(
                 () ->
                     coverNear(
@@ -363,12 +372,14 @@ public final class Planner {
    */
   private static Plan bound(Situation situation, TacticsContext context, Vec3 goal, Vec3 threat) {
     var now = situation.now();
-    var window = now / BOUND_TICKS;
     var self = situation.self().pos();
+    var remaining = goal.horizontalDistance(self);
+    // Under fire from close by, pairs take turns; further off, the bot keeps moving up but goes
+    // from one piece of cover to the next instead of across open ground.
+    var pinned = threat.horizontalDistance(self) <= PINNED_RANGE;
     var here = coverNear(situation, context, new CoverSearch(self, threat, IN_COVER));
     if (here.isEmpty()) {
       // Caught in the open: the nearest cover that does not give up ground, whoever's turn it is.
-      var remaining = goal.horizontalDistance(self);
       var nearby =
           coverWhere(
               situation,
@@ -381,20 +392,9 @@ public final class Planner {
         return toCover(now, self, nearby.orElseThrow(), threat);
       }
     }
-    if (!mover(situation, window)) {
+    var window = now / BOUND_TICKS;
+    if (pinned && !mover(situation, window)) {
       var until = (window + 1) * BOUND_TICKS;
-      if (here.isEmpty()) {
-        // The holder falls back to any cover near it rather than wait in the open.
-        var fallback =
-            coverWhere(
-                situation,
-                context,
-                new CoverSearch(self, threat, BOUND_REACH),
-                feet -> clearOfSpawn(situation, feet));
-        if (fallback.isPresent()) {
-          return toCover(now, self, fallback.orElseThrow(), threat);
-        }
-      }
       return Plan.of(
           Option.TAKE_SLOT,
           now,
@@ -410,7 +410,10 @@ public final class Planner {
     var toGoal = goal.minus(self).horizontal();
     var step =
         toGoal.length() <= BOUND_STEP ? goal : self.plus(toGoal.normalized().scale(BOUND_STEP));
-    return Plan.of(Option.TAKE_SLOT, now, new PlanStep.Route(step, Stance.CAUTIOUS));
+    return Plan.of(
+        Option.TAKE_SLOT,
+        now,
+        new PlanStep.Route(step, pinned ? Stance.CAUTIOUS : Stance.AGGRESSIVE));
   }
 
   /** A dash to {@code point}, then a beat in it. */
@@ -450,6 +453,11 @@ public final class Planner {
    */
   static Optional<Vec3> contact(Situation situation) {
     var self = situation.self().pos();
+    // Only enemies the bot saw itself: a teammate's call is no reason to go to ground.
+    var own =
+        situation.knownEnemies().stream()
+            .filter(enemy -> enemy.visible() || enemy.confidence() > Situation.SHARED_CONFIDENCE)
+            .findFirst();
     var leaving =
         situation
             .board()
@@ -457,10 +465,28 @@ public final class Planner {
             .home()
             .filter(home -> home.horizontalDistance(self) < SPAWN_CLEAR)
             .isPresent();
-    return situation
-        .nearestEnemy()
-        .map(Situation.KnownEnemy::pos)
+    return own.map(Situation.KnownEnemy::pos)
         .filter(pos -> !leaving && pos.horizontalDistance(self) <= CONTACT_RANGE);
+  }
+
+  /**
+   * The cover the bot already holds at its slot, while it still hides it from {@code threat}: a
+   * holder stays put rather than shopping for cover every few seconds.
+   */
+  private static Optional<CoverSpot> heldCover(
+      Situation situation, TacticsContext context, Vec3 goal, Vec3 threat) {
+    var nav = context.nav();
+    var node = situation.board().claimedCover().get(situation.self().id());
+    if (node == null) {
+      return Optional.empty();
+    }
+    var feet = nav.graph().feet(node);
+    return nav.cover().points().stream()
+        .filter(point -> point.node() == node)
+        .findFirst()
+        .filter(point -> point.protectsStanding(CoverPoints.sectorOf(feet, threat)))
+        .filter(point -> feet.horizontalDistance(goal) <= HOLD_SEARCH + 1)
+        .map(point -> new CoverSpot(node, feet));
   }
 
   /** A cover point and where to stand at it. */

@@ -152,8 +152,15 @@ final class UtilitiesTest {
   void aBowFightsInsideItsBandButNotAcrossTheMap() {
     var temper = temper(Role.ROTATE, Archetype.SNIPER, Kit.LONGBOW);
     var inBand = new F().enemyAt(22);
-    inBand.slotDistance = 10;
+    inBand.slotDistance = 2;
     assertThat(best(Utilities.score(inBand.build(), temper))).isEqualTo(Option.ENGAGE);
+    // On the way to its slot it walks on rather than stop to snipe from the far edge of its band.
+    var onTheWay = new F().enemyAt(22);
+    onTheWay.slotDistance = 10;
+    assertThat(best(Utilities.score(onTheWay.build(), temper))).isEqualTo(Option.TAKE_SLOT);
+    var close = new F().enemyAt(8);
+    close.slotDistance = 10;
+    assertThat(best(Utilities.score(close.build(), temper))).isEqualTo(Option.ENGAGE);
     var acrossTheMap = new F().enemyAt(46);
     acrossTheMap.slotDistance = 10;
     assertThat(best(Utilities.score(acrossTheMap.build(), temper))).isEqualTo(Option.TAKE_SLOT);

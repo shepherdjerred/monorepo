@@ -61,6 +61,9 @@ public final class Reflex {
   /** Teammates closer than this push each other apart while walking and fighting. */
   static final double SEPARATION = 2.5;
 
+  /** The last waypoints of a path, which a bot walks straight at whoever is near. */
+  static final int FINAL_STRAIGHT = 3;
+
   /** How hard crowding teammates bend a walking bot's heading. */
   static final double SEPARATION_WEIGHT = 0.8;
 
@@ -388,7 +391,10 @@ public final class Reflex {
         sprint = false;
         destination = sidestep(destination);
       }
-      destination = bend(destination, apart());
+      // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
+      if (index < waypoints.size() - FINAL_STRAIGHT) {
+        destination = bend(destination, apart());
+      }
       if (yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
         var push = apart();

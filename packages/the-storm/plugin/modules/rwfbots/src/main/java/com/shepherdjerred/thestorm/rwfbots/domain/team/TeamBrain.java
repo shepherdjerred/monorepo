@@ -46,6 +46,9 @@ public final class TeamBrain {
   /** How much random preference an erratic (troll) bot adds to every slot. */
   static final double ERRATIC = 0.5;
 
+  /** An enemy seen this close to a teammate stops the team's push. */
+  static final double CONTACT = 24;
+
   /** Anchors keep this far from the bomb they hold when there is no poison. */
   static final double ANCHOR_MIN = 3;
 
@@ -121,7 +124,7 @@ public final class TeamBrain {
     var team = board.team();
     var home = home(nav, team, alive);
     var objective = objective(board.strategy(), snapshot, team);
-    var lanes = objective.map(bomb -> lanes(board, nav, home, bomb)).orElseGet(List::of);
+    var lanes = lanes(board, nav, snapshot, home);
     if (lanes.isEmpty()) {
       objective = Optional.empty();
     }
@@ -146,6 +149,7 @@ public final class TeamBrain {
             .orElse(home);
     var poison = snapshot.poison();
     var clear = poison.active() ? poison.bombRadius() + POISON_ROOM : ANCHOR_MIN;
+    var push = push(board.plan(), alive, sightingsNear(board, snapshot.tick(), alive));
     var setup =
         new Playbook.Setup(
             nav,
@@ -155,6 +159,7 @@ public final class TeamBrain {
             objective,
             lanes,
             planter,
+            push,
             guard,
             clear,
             sightings,
@@ -164,7 +169,37 @@ public final class TeamBrain {
     var nuke = objective.map(bomb -> bomb.owner() instanceof BombOwner.Nuke).orElse(false);
     var assignment = assign(new Dealing(board.plan(), situation, alive, nuke), slots, random);
     return new TeamPlan(
-        Optional.of(home), objective.map(BombView::id), lanes, slots, assignment, snapshot.tick());
+        Optional.of(board.strategy()),
+        Optional.of(home),
+        objective.map(BombView::id),
+        lanes,
+        push,
+        slots,
+        assignment,
+        snapshot.tick());
+  }
+
+  /**
+   * How far the team has pushed up its lanes: {@link Playbook#START_PUSH} at the first deal, then
+   * {@link Playbook#ADVANCE} more each deal up to {@link Playbook#MAX_PUSH}, holding where it is
+   * once the team is in contact.
+   */
+  static double push(TeamPlan previous, List<CombatantView> alive, boolean contact) {
+    if (previous.dealtTick() < 0) {
+      return Playbook.START_PUSH;
+    }
+    return contact
+        ? previous.push()
+        : Math.min(Playbook.MAX_PUSH, previous.push() + Playbook.ADVANCE);
+  }
+
+  /** Whether a teammate saw an enemy lately within {@link #CONTACT} blocks of some teammate. */
+  private static boolean sightingsNear(Blackboard board, long now, List<CombatantView> alive) {
+    return board.visibleSightings(now).stream()
+        .filter(sighting -> now - sighting.seenTick() <= ROLE_PERIOD_TICKS)
+        .anyMatch(
+            sighting ->
+                alive.stream().anyMatch(bot -> bot.pos().distance(sighting.pos()) <= CONTACT));
   }
 
   /** The bomb the strategy plays for: the first it prefers that can still be armed. */
@@ -180,21 +215,32 @@ public final class TeamBrain {
     };
   }
 
-  private static List<Lane> lanes(Blackboard board, NavArtifact nav, Vec3 home, BombView bomb) {
+  /**
+   * The team's lanes up the field: from home to the enemy's bomb, else to the enemy's home,
+   * whatever the objective, so a team playing for the central nuke still spreads over the whole
+   * yard. Built at the first deal and kept for the match.
+   */
+  private static List<Lane> lanes(
+      Blackboard board, NavArtifact nav, WorldSnapshot snapshot, Vec3 home) {
     var team = board.team();
     var previous = board.plan();
-    if (previous.objective().equals(Optional.of(bomb.id())) && !previous.lanes().isEmpty()) {
+    if (!previous.lanes().isEmpty()) {
       return previous.lanes();
     }
-    var site = nearestSite(nav.sites().bombs(), bomb.pos());
+    var enemyBomb =
+        snapshot.bombs().stream()
+            .filter(bomb -> bomb.owner() instanceof BombOwner.Team && !bomb.belongsTo(team))
+            .findFirst();
+    var end = enemyBomb.map(BombView::pos).orElseGet(() -> enemyHome(nav, team, home));
+    var site = nearestSite(nav.sites().bombs(), end);
     var spawn = nav.sites().spawns().stream().filter(s -> ownedBy(s, team)).findFirst();
     List<ApproachRoutes.Route> baked =
         site.isPresent() && spawn.isPresent()
             ? nav.routes().between(spawn.orElseThrow().name(), site.orElseThrow().name())
             : List.of();
-    var approach = nav.graph().nearestNodeWithin(bomb.pos().plus(0, -0.5, 0), 3);
-    var goal = approach.isPresent() ? nav.graph().feet(approach.getAsInt()) : bomb.pos();
-    return Lanes.toward(nav.graph(), home, goal, baked);
+    var approach = nav.graph().nearestNodeWithin(end.plus(0, -0.5, 0), 3);
+    var goal = approach.isPresent() ? nav.graph().feet(approach.getAsInt()) : end;
+    return Lanes.toward(nav.graph(), home, goal, enemyBomb.isPresent() ? baked : List.of());
   }
 
   private static Optional<NavSites.Site> nearestSite(List<NavSites.Site> sites, Vec3 pos) {
@@ -323,8 +369,10 @@ public final class TeamBrain {
     var weights = new EnumMap<Strategy, Double>(Strategy.class);
     weights.put(Strategy.RUSH, 0.2 + aggression);
     weights.put(Strategy.SPLIT, teamSize >= 3 ? 0.6 : 0.1);
-    weights.put(Strategy.TURTLE, 0.2 + patience);
     weights.put(Strategy.HUNT, 0.1 + aggression * 0.5);
+    // A team that sits at home is dull to watch and to play against: at most one in four.
+    var others = weights.values().stream().mapToDouble(Double::doubleValue).sum();
+    weights.put(Strategy.TURTLE, Math.min(0.1 + 0.4 * patience, others / 3));
     var total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
     var draw = random.nextDouble() * total;
     for (var entry : weights.entrySet()) {
