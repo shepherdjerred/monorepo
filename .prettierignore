@@ -4,6 +4,8 @@ node_modules/
 # Build outputs
 dist/
 build/
+# Build-pipeline source, not build output.
+!packages/mc-harness/src/build/
 storybook-static/
 storybook-site/
 **/bin/

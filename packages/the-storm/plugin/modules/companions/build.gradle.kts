@@ -8,8 +8,14 @@ dependencies {
   compileOnly(libs.coreprotect) { isTransitive = false }
   testImplementation(libs.coreprotect) { isTransitive = false }
 }
+// The shared brain contract lives outside the plugin build. A missing file
+// would otherwise copy nothing and only fail when TheStorm enables.
+val companionContract = rootProject.file("../../storm-brain/contracts/companion-chat.json")
 tasks.processResources {
-  from(rootProject.file("../../storm-brain/contracts/companion-chat.json")) { into("contracts") }
+  val contract = companionContract
+  inputs.file(contract)
+  doFirst { check(contract.isFile) { "Missing shared companion contract: $contract" } }
+  from(contract) { into("contracts") }
 }
 
 // Real Paper exercises Citizens bodies and native survival; never shipped in production.
