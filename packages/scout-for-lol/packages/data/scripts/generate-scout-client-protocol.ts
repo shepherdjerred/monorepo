@@ -15,6 +15,8 @@ const ProtocolContractSchema = z.strictObject({
     maxStringBytes: PositiveIntegerSchema,
     maxKeyBytes: PositiveIntegerSchema,
     unsafeKeys: z.array(z.string().min(1)).min(1),
+    // Matched case-insensitively as substrings of a payload key; lowercase.
+    credentialKeyFragments: z.array(z.string().regex(/^[a-z]+$/)).min(1),
   }),
   envelopeStringMaxBytes: z.strictObject({
     appVersion: PositiveIntegerSchema,

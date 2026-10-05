@@ -153,6 +153,54 @@ export const ScoutClientCheckInResponseSchema = z.strictObject({
 export type ScoutClientObservation = z.infer<
   typeof ScoutClientObservationSchema
 >;
+
+type ObservationPayload = ScoutClientObservation["payload"];
+
+const CREDENTIAL_KEY_FRAGMENTS =
+  protocolContract.payload.credentialKeyFragments;
+
+/** Whether a payload key names a credential, per the shared contract. */
+export function isScoutClientCredentialKey(key: string): boolean {
+  const lowered = key.toLowerCase();
+  return CREDENTIAL_KEY_FRAGMENTS.some((fragment) =>
+    lowered.includes(fragment),
+  );
+}
+
+function payloadWithoutCredentials(
+  value: ObservationPayload,
+): ObservationPayload {
+  if (Array.isArray(value)) {
+    return value.map((item) => payloadWithoutCredentials(item));
+  }
+  return value === null || typeof value !== "object"
+    ? value
+    : Object.fromEntries(
+        Object.entries(value).flatMap(([key, child]) =>
+          isScoutClientCredentialKey(key)
+            ? []
+            : [[key, payloadWithoutCredentials(child)]],
+        ),
+      );
+}
+
+/**
+ * The observation with every credential-named key removed from its payload,
+ * however deeply nested.
+ *
+ * The League client puts chat passwords and JWTs in lobby, champion-select
+ * and end-of-game payloads. Current clients drop them before upload; this
+ * keeps one an older client sent out of storage. Removing a key is the whole
+ * treatment: nothing a credential sits beside is a credential itself.
+ */
+export function withoutScoutClientCredentials(
+  observation: ScoutClientObservation,
+): ScoutClientObservation {
+  return {
+    ...observation,
+    payload: payloadWithoutCredentials(observation.payload),
+  };
+}
 export type ScoutClientObservationBatch = z.infer<
   typeof ScoutClientObservationBatchSchema
 >;

@@ -29,6 +29,15 @@ The Riot lockfile credential stays local and is redacted by construction. The
 client is not an arbitrary LCU proxy and does not collect chat, friends, social,
 store, or purchase data. Device credentials use the OS credential store. Raw
 observations survive transient network failures in the local SQLite outbox.
+
+The League client puts chat credentials in payloads the client does collect —
+`multiUserChatPassword` and `mucJwtDto` in end-of-game blocks, a chat room
+password in champion select, a lobby password in a custom game's session.
+`ObservationEnvelope::new` removes every key whose name contains one of the
+shared contract's `credentialKeyFragments` (`protocol.contract.json`), at any
+depth, so none is queued, persisted, or sent. Fragments are specific
+(`accesstoken`, not `token`) because champion mastery's `tokensEarned` is
+gameplay data.
 Clash capture includes check-in, invitations, tournament state, rewards, and
 history; mastery capture preserves the client's season-milestone fields.
 

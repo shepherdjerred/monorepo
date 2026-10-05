@@ -497,9 +497,13 @@ every alias a batch can teach before checking it, then:
 
 - translates the observer before the ownership check, and stores the PUUID in
   `localPuuid` with the UUID beside it in `localLcuUuid`;
-- leaves the stored payload exactly as sent — it is the evidence and its digest
-  is the idempotency key — and hands a translated copy to the quarantine
-  checks, lobby binding, and match dispatch.
+- leaves the stored payload as sent — it is the evidence — except for
+  credential-named keys (`withoutScoutClientCredentials`, driven by the shared
+  contract's `credentialKeyFragments`), which an older client still sends and
+  which are never stored or read; the idempotency digest covers the observation
+  exactly as sent, so a retry still matches its first copy;
+- hands a translated copy of that payload to the quarantine checks, lobby
+  binding, and match dispatch.
 
 Every later reader of a stored payload translates its own copy the same way
 (`withRiotIdentities`): canonical match selection, replay provenance and the

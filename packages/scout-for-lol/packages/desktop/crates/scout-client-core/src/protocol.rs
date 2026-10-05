@@ -53,6 +53,10 @@ pub struct ObservationEnvelope {
 impl ObservationEnvelope {
     /// Construct and validate an observation before it enters the durable outbox.
     ///
+    /// Every credential-named key is removed from `payload` first (see
+    /// [`without_credentials`]), so no chat password or JWT the League client
+    /// returns is ever queued, persisted, or sent.
+    ///
     /// # Errors
     ///
     /// Returns [`ProtocolError`] if the supplied envelope fields or payload
@@ -63,6 +67,7 @@ impl ObservationEnvelope {
         app_version: impl Into<String>,
         payload: Value,
     ) -> Result<Self, ProtocolError> {
+        let payload = without_credentials(payload);
         let envelope = Self {
             protocol_version: PROTOCOL_VERSION,
             schema_version: OBSERVATION_SCHEMA_VERSION,
@@ -137,6 +142,37 @@ impl ObservationEnvelope {
     pub fn to_bytes(&self) -> Result<Vec<u8>, ProtocolError> {
         self.validate()?;
         serde_json::to_vec(self).map_err(ProtocolError::Serialize)
+    }
+}
+
+/// Whether a payload key names a credential, per the shared contract's
+/// case-insensitive fragments.
+#[must_use]
+pub fn is_credential_key(key: &str) -> bool {
+    let lowered = key.to_ascii_lowercase();
+    CREDENTIAL_KEY_FRAGMENTS
+        .iter()
+        .any(|fragment| lowered.contains(fragment))
+}
+
+/// `value` with every credential-named key removed, however deeply nested.
+///
+/// The League client puts chat passwords and JWTs (`multiUserChatPassword`,
+/// `mucJwtDto`, `chatRoomPassword`) in lobby, champion-select and end-of-game
+/// payloads beside the gameplay facts Scout wants. Removing the key is the
+/// whole treatment: nothing beside a credential is one.
+#[must_use]
+pub fn without_credentials(value: Value) -> Value {
+    match value {
+        Value::Object(object) => Value::Object(
+            object
+                .into_iter()
+                .filter(|(key, _)| !is_credential_key(key))
+                .map(|(key, child)| (key, without_credentials(child)))
+                .collect(),
+        ),
+        Value::Array(items) => Value::Array(items.into_iter().map(without_credentials).collect()),
+        other => other,
     }
 }
 
@@ -409,6 +445,52 @@ mod tests {
             json!({ "phase": "Lobby" }),
         )?;
         observation.validate()
+    }
+
+    #[test]
+    fn never_queues_a_league_chat_credential() -> Result<(), ProtocolError> {
+        // The shape the League client's end-of-game block actually has.
+        let observation = ObservationEnvelope::new(
+            1,
+            ObservationKind::PostGame,
+            "0.1.0",
+            json!({
+                "resource": "post_game",
+                "data": {
+                    "endOfGame": {
+                        "gameId": 1,
+                        "multiUserChatId": "1-eog",
+                        "multiUserChatPassword": "chat-password",
+                        "mucJwtDto": { "jwt": "header.claims.signature" },
+                        "teams": [{ "players": [{ "stats": { "ASSISTS": 3 } }] }],
+                    },
+                    "lobby": { "chatDetails": { "chatRoomPassword": "lobby-password" } },
+                },
+            }),
+        )?;
+
+        assert_eq!(
+            observation.payload,
+            json!({
+                "resource": "post_game",
+                "data": {
+                    "endOfGame": {
+                        "gameId": 1,
+                        "multiUserChatId": "1-eog",
+                        "teams": [{ "players": [{ "stats": { "ASSISTS": 3 } }] }],
+                    },
+                    "lobby": { "chatDetails": {} },
+                },
+            })
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn keeps_fields_that_only_resemble_credentials() {
+        // Champion mastery reports `tokensEarned`; it is not a credential.
+        assert!(!super::is_credential_key("tokensEarned"));
+        assert!(super::is_credential_key("MultiUserChatJWT"));
     }
 
     #[test]
