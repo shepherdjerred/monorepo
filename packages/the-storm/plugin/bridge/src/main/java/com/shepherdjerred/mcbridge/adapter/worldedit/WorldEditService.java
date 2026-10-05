@@ -162,7 +162,7 @@ public final class WorldEditService {
     }
   }
 
-  /** Pastes a clipboard with its origin at {@code at}, recording it in the session's history. */
+  /** Pastes a clipboard with its origin at {@code at} (see {@link PastePlacement#remember}). */
   public PasteResult paste(
       SessionName name, String worldName, Clipboard clipboard, PastePlacement placement) {
     AgentActor actor = sessions.actor(name);
@@ -175,8 +175,12 @@ public final class WorldEditService {
    * @param at where the clipboard origin lands
    * @param rotation rotation around Y, as WorldEdit's {@code //rotate}
    * @param ignoreAir whether air in the clipboard leaves the world untouched
+   * @param remember whether the paste joins the session's history (undoable with {@code we-undo});
+   *     without it the change set is dropped, so multi-million-block pastes journaled by snapshots
+   *     do not accumulate in memory
    */
-  public record PastePlacement(BlockPos at, Rotation rotation, boolean ignoreAir) {}
+  public record PastePlacement(
+      BlockPos at, Rotation rotation, boolean ignoreAir, boolean remember) {}
 
   private PasteResult pasteOnMain(
       AgentActor actor, String worldName, Clipboard clipboard, PastePlacement placement)
@@ -195,7 +199,9 @@ public final class WorldEditService {
           holder.createPaste(editSession).to(at).ignoreAirBlocks(placement.ignoreAir()).build();
       Operations.complete(operation);
     } finally {
-      session.remember(editSession);
+      if (placement.remember()) {
+        session.remember(editSession);
+      }
     }
     BlockPos[] bounds = bounds(clipboard, transform, at);
     return new PasteResult(actor.changed(), bounds[0], bounds[1], actor.historySize());

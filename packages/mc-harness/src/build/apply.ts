@@ -1,5 +1,5 @@
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
-import { BUILD_FILES, type BuildManifest } from "#protocol/build.ts";
+import type { BuildManifest } from "#protocol/build.ts";
 import { Journal, type JournalEntry } from "./journal.ts";
 import {
   diffGrids,
@@ -53,16 +53,14 @@ async function planFor(
   const { ops } = await workspace.oplog();
   const current = await readGrid(env.client, target, box);
   const siteHash = manifest.site?.siteHash ?? "";
-  const frozen = new Uint8Array(
-    await Bun.file(workspace.file(BUILD_FILES.expectedSchematic)).arrayBuffer(),
-  );
+  const frozen = await workspace.frozenParts("expected", box);
   const planHash = sha(
     JSON.stringify({
       target,
       siteHash,
       ops,
       expected: gridHash(expected),
-      frozen: sha(frozen),
+      frozen: frozen.map((part) => ({ at: part.at, sha: sha(part.bytes) })),
     }),
   );
   return {
@@ -120,7 +118,7 @@ export async function promoteBuild(
     );
   }
   const applyId = Journal.newId();
-  const snapshot = await env.client.snapshot(
+  const snapshot = await env.client.snapshotParts(
     options.target,
     plan.box,
     `undo:${applyId}`,
@@ -143,14 +141,17 @@ export async function promoteBuild(
     updatedAt: now,
   };
   await env.journal.write(entry);
-  await env.client.paste(options.target, {
-    session: BuildWorkspace.session(manifest),
-    world: plan.box.world,
-    schematic: Buffer.from(plan.frozen).toString("base64"),
-    at: plan.box.min,
-    rotate: 0,
-    ignoreAir: false,
-  });
+  for (const part of plan.frozen) {
+    await env.client.paste(options.target, {
+      session: BuildWorkspace.session(manifest),
+      world: plan.box.world,
+      schematic: Buffer.from(part.bytes).toString("base64"),
+      at: part.at,
+      rotate: 0,
+      ignoreAir: false,
+      history: false,
+    });
+  }
   const diff = diffGrids(
     plan.expected,
     await readGrid(env.client, options.target, plan.box),

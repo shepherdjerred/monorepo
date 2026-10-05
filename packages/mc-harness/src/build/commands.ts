@@ -3,6 +3,7 @@ import path from "node:path";
 import { compileProgram } from "@shepherdjerred/mc-build/compile/runner.ts";
 import {
   gridFromRegionRead,
+  type BlockGrid,
   type Vec3,
 } from "@shepherdjerred/mc-build/core/grid.ts";
 import {
@@ -19,7 +20,8 @@ import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
 import { DEFAULT_SANDBOX_TTL_SECONDS } from "#protocol/paths.ts";
 import { readGrid, resetToSite, runOps } from "./ops.ts";
-import { BuildWorkspace } from "./workspace.ts";
+import { boxSize, cropGrid, emptyGrid, placeGrid, tileBox } from "./tiles.ts";
+import { BuildWorkspace, type FrozenPart } from "./workspace.ts";
 import {
   PROGRAM_TEMPLATE,
   type Env,
@@ -62,23 +64,37 @@ export async function captureSite(
 }> {
   const workspace = new BuildWorkspace(dir);
   const manifest = await workspace.manifest();
-  const snapshot = await env.client.snapshot(
+  const parts = await snapshotFrozen(
+    env,
     options.target,
     options.box,
     `site:${manifest.name}`,
   );
-  const bytes = await env.client.snapshotBytes(options.target, snapshot.id);
   const region = await env.client.regionRead(options.target, options.box);
   const grid = gridFromRegionRead(region);
-  const schematic = await readSchematic(bytes);
-  if (schematic.grid.diff(grid).count > 0) {
+  const snapshotted = emptyGrid(grid.size);
+  let dataVersion = 0;
+  for (const part of parts) {
+    const schematic = await readSchematic(part.bytes);
+    dataVersion = schematic.dataVersion;
+    placeGrid(snapshotted, schematic.grid, {
+      x: part.at.x - options.box.min.x,
+      y: part.at.y - options.box.min.y,
+      z: part.at.z - options.box.min.z,
+    });
+  }
+  if (snapshotted.diff(grid).count > 0) {
     throw new Error(
       "The site snapshot and region read disagree; the area changed during capture. Retry.",
     );
   }
   const info = analyzeSite(grid, options.box.world, region.min);
   await mkdir(workspace.file(BUILD_FILES.siteDir), { recursive: true });
-  await Bun.write(workspace.file(BUILD_FILES.siteSchematic), bytes);
+  await workspace.writeFrozen(
+    "site",
+    parts,
+    parts.length > 1 ? writeSchematic(grid, dataVersion) : undefined,
+  );
   await Bun.write(
     workspace.file(BUILD_FILES.siteInfo),
     `${JSON.stringify(info)}\n`,
@@ -116,6 +132,48 @@ export async function createCanvas(
   return { canvas };
 }
 
+/**
+ * The program's paste ops: the whole schematic, or (map-scale output over the
+ * bridge volume limit) one schematic per column tile so each paste stays small.
+ */
+async function programPastes(
+  workspace: BuildWorkspace,
+  grid: BlockGrid,
+  options: {
+    digest: string;
+    whole: string;
+    at: BlockPos;
+    world: string;
+    dataVersion: number;
+  },
+): Promise<{ schematic: string; at: BlockPos }[]> {
+  const local = {
+    world: options.world,
+    min: { x: 0, y: 0, z: 0 },
+    max: { x: grid.size.x - 1, y: grid.size.y - 1, z: grid.size.z - 1 },
+  };
+  const tiles = tileBox(local);
+  if (tiles.length === 1) {
+    return [{ schematic: options.whole, at: options.at }];
+  }
+  const pastes = [];
+  for (const [n, tile] of tiles.entries()) {
+    const schematic = path.join(
+      BUILD_FILES.schematicsDir,
+      `program-${options.digest}-${n.toString()}.schem`,
+    );
+    await Bun.write(
+      workspace.file(schematic),
+      writeSchematic(
+        cropGrid(grid, tile.min, boxSize(tile)),
+        options.dataVersion,
+      ),
+    );
+    pastes.push({ schematic, at: plus(options.at, tile.min) });
+  }
+  return pastes;
+}
+
 export async function compileBuild(dir: string): Promise<{
   schematic: string;
   at: BlockPos;
@@ -150,6 +208,13 @@ export async function compileBuild(dir: string): Promise<{
   await Bun.write(workspace.file(schematic), bytes);
   const source = `program:${digest}`;
   const at = plus(manifest.anchor, compiled.min);
+  const pastes = await programPastes(workspace, compiled.grid, {
+    digest,
+    whole: schematic,
+    at,
+    world: manifest.world,
+    dataVersion: registry.dataVersion,
+  });
   const programOps: Op[] = [
     ...compiled.clears.map((box): Op => ({
       kind: "we",
@@ -163,15 +228,15 @@ export async function compileBuild(dir: string): Promise<{
       }),
       source,
     })),
-    {
+    ...pastes.map((paste): Op => ({
       kind: "paste",
       world: manifest.world,
-      schematic,
-      at,
+      schematic: paste.schematic,
+      at: paste.at,
       rotate: 0,
       ignoreAir: true,
       source,
-    },
+    })),
   ];
   const log = await workspace.oplog();
   const firstProgram = log.ops.findIndex((op) =>
@@ -194,6 +259,24 @@ export async function compileBuild(dir: string): Promise<{
   };
 }
 
+/** Snapshots `box` (in tiles when it exceeds the bridge limit) as pasteable parts. */
+async function snapshotFrozen(
+  env: Env,
+  target: string,
+  box: Box,
+  label: string,
+): Promise<FrozenPart[]> {
+  const { parts } = await env.client.snapshotParts(target, box, label);
+  const frozen: FrozenPart[] = [];
+  for (const part of parts) {
+    frozen.push({
+      at: part.box.min,
+      bytes: await env.client.snapshotBytes(target, part.id),
+    });
+  }
+  return frozen;
+}
+
 export async function runBuild(
   env: Env,
   dir: string,
@@ -209,14 +292,9 @@ export async function runBuild(
   await runOps(run, ops);
   // Freeze the result: promote pastes exactly this (block entities included),
   // so random WorldEdit patterns cannot drift between canvas and target.
-  const snapshot = await env.client.snapshot(
-    target,
-    box,
-    `expected:${manifest.name}`,
-  );
-  await Bun.write(
-    workspace.file(BUILD_FILES.expectedSchematic),
-    await env.client.snapshotBytes(target, snapshot.id),
+  await workspace.writeFrozen(
+    "expected",
+    await snapshotFrozen(env, target, box, `expected:${manifest.name}`),
   );
   await workspace.writeExpected(await env.client.regionRead(target, box));
   return { target, ops: ops.length };

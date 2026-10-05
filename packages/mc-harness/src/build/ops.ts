@@ -69,6 +69,7 @@ async function runSingle(
     at: op.at,
     rotate: op.rotate,
     ignoreAir: op.ignoreAir,
+    history: false,
   });
 }
 
@@ -107,14 +108,17 @@ export async function resetToSite(
   context: RunContext,
   box: Box,
 ): Promise<void> {
-  await context.client.paste(context.target, {
-    session: context.session,
-    world: box.world,
-    schematic: await context.workspace.siteSchematicBase64(),
-    at: box.min,
-    rotate: 0,
-    ignoreAir: false,
-  });
+  for (const part of await context.workspace.frozenParts("site", box)) {
+    await context.client.paste(context.target, {
+      session: context.session,
+      world: box.world,
+      schematic: Buffer.from(part.bytes).toString("base64"),
+      at: part.at,
+      rotate: 0,
+      ignoreAir: false,
+      history: false,
+    });
+  }
 }
 
 export async function readGrid(
