@@ -193,16 +193,25 @@ export class DaemonClient {
 
   /** Restores a snapshot, or every tile of a composite id from `snapshotParts`. */
   async restore(id: string, snapshotId: string) {
+    const parts = splitSnapshotIds(snapshotId);
     const results = [];
-    for (const part of splitSnapshotIds(snapshotId)) {
-      results.push(
-        await this.request(
-          SnapshotRestoreResponseSchema,
-          "POST",
-          this.target(id, "snapshot-restore"),
-          { id: part },
-        ),
-      );
+    for (const [n, part] of parts.entries()) {
+      try {
+        results.push(
+          await this.request(
+            SnapshotRestoreResponseSchema,
+            "POST",
+            this.target(id, "snapshot-restore"),
+            { id: part },
+          ),
+        );
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `Partial restore: ${n.toString()} of ${parts.length.toString()} snapshot tile(s) restored before ${part} failed (${reason}); the box is mixed. Restoring is idempotent, so retry to finish.`,
+          { cause: error },
+        );
+      }
     }
     return results;
   }

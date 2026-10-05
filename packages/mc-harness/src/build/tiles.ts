@@ -16,6 +16,13 @@ export const TILE_VOLUME = Math.floor(
   Math.min(BRIDGE_LIMITS.maxReadVolume, BRIDGE_LIMITS.maxSnapshotVolume) * 0.9,
 );
 
+/**
+ * Widest tile side: a box spanning N blocks touches at most ceil(N/16)+1
+ * chunks per axis, and the bridge reads at most 4,096 chunk columns (64×64),
+ * so 62 chunks of 16 keeps any alignment within the limit.
+ */
+export const MAX_TILE_SIDE = 62 * 16;
+
 export function boxSize(box: Pick<Box, "min" | "max">): BlockPos {
   return {
     x: box.max.x - box.min.x + 1,
@@ -35,10 +42,17 @@ export function boxVolume(box: Pick<Box, "min" | "max">): number {
  */
 export function tileBox(box: Box, maxVolume = TILE_VOLUME): Box[] {
   const size = boxSize(box);
-  if (size.x * size.y * size.z <= maxVolume) {
+  if (
+    size.x * size.y * size.z <= maxVolume &&
+    Math.max(size.x, size.z) <= MAX_TILE_SIDE
+  ) {
     return [box];
   }
-  const side = Math.floor(Math.sqrt(maxVolume / size.y));
+  // Also stay within the bridge's chunk-column limit for short, wide boxes.
+  const side = Math.min(
+    Math.floor(Math.sqrt(maxVolume / size.y)),
+    MAX_TILE_SIDE,
+  );
   if (side < 1) {
     throw new Error(
       `A ${size.y.toString()}-block-tall column exceeds the ${maxVolume.toString()}-cell tile volume`,

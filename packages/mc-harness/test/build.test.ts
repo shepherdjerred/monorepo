@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { compileBuild, initBuild, regionInSite } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal, type JournalEntry } from "#build/journal.ts";
@@ -50,7 +51,7 @@ class FakeClient extends DaemonClient {
 
   override paste(id: string, request: Parameters<DaemonClient["paste"]>[1]) {
     this.calls.push(
-      `paste:${id}:${request.at.x.toString()},${request.at.y.toString()},${request.at.z.toString()}:${request.ignoreAir.toString()}`,
+      `paste:${id}:${request.at.x.toString()},${request.at.y.toString()},${request.at.z.toString()}:${request.ignoreAir.toString()}:history=${String(request.history)}`,
     );
     return Promise.resolve({
       changed: 1,
@@ -134,6 +135,42 @@ describe("runOps", () => {
         [weOp("//fail now")],
       ),
     ).rejects.toThrow(/WorldEdit op failed: \/\/fail now/u);
+  });
+});
+
+function pasteOp(schematic: string): Op {
+  return {
+    kind: "paste",
+    world: "world",
+    schematic,
+    at: { x: 0, y: 0, z: 0 },
+    rotate: 0,
+    ignoreAir: true,
+    source: "manual",
+  };
+}
+
+describe("runOps pastes", () => {
+  it("keeps ordinary pastes in we-undo history and skips it for map-scale ones", async () => {
+    const workspace = new BuildWorkspace(temp);
+    const small = new BlockGrid({ x: 3, y: 3, z: 3 });
+    small.set(1, 1, 1, "minecraft:stone");
+    const big = new BlockGrid({ x: 101, y: 100, z: 100 });
+    big.set(0, 0, 0, "minecraft:stone");
+    await Bun.write(
+      path.join(temp, "small.schem"),
+      writeSchematic(small, 4903),
+    );
+    await Bun.write(path.join(temp, "big.schem"), writeSchematic(big, 4903));
+    const client = new FakeClient();
+    await runOps({ client, target: "sbx-000001", workspace, session: "s" }, [
+      pasteOp("small.schem"),
+      pasteOp("big.schem"),
+    ]);
+    expect(client.calls).toEqual([
+      "paste:sbx-000001:0,0,0:true:history=true",
+      "paste:sbx-000001:0,0,0:true:history=false",
+    ]);
   });
 });
 

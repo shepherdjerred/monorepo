@@ -1,7 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterAll, describe, expect, it } from "vitest";
+import { z as zod } from "zod";
+import { DaemonClient } from "#build/daemon-client.ts";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import type { Box, RegionReadResponse } from "#protocol/bridge.ts";
 import {
+  MAX_TILE_SIDE,
   boxVolume,
   cropGrid,
   joinSnapshotIds,
@@ -78,6 +84,69 @@ describe("tileBox", () => {
       expect(boxVolume(tile)).toBeLessThanOrEqual(3_000_000);
       expect(tile.min.y).toBe(big.min.y);
       expect(tile.max.y).toBe(big.max.y);
+    }
+  });
+});
+
+describe("tileBox chunk columns", () => {
+  it("splits a short, wide box so no tile exceeds the bridge's chunk-column limit", () => {
+    const flat: Box = {
+      world: "world",
+      min: { x: -3, y: 0, z: 5 },
+      max: { x: 2400, y: 0, z: 40 },
+    };
+    const tiles = tileBox(flat);
+    expect(tiles.length).toBeGreaterThan(1);
+    for (const tile of tiles) {
+      const chunksX = (tile.max.x >> 4) - (tile.min.x >> 4) + 1;
+      const chunksZ = (tile.max.z >> 4) - (tile.min.z >> 4) + 1;
+      expect(chunksX * chunksZ).toBeLessThanOrEqual(4096);
+      expect(tile.max.x - tile.min.x + 1).toBeLessThanOrEqual(MAX_TILE_SIDE);
+    }
+    expect(tiles.reduce((sum, tile) => sum + boxVolume(tile), 0)).toBe(
+      boxVolume(flat),
+    );
+  });
+});
+
+const RestoreBodySchema = zod.strictObject({ id: zod.string() });
+
+describe("DaemonClient.restore", () => {
+  const dirs: string[] = [];
+  afterAll(async () => {
+    await Promise.all(
+      dirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+  });
+
+  it("reports how many tiles were restored when one fails", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "mc-restore-"));
+    dirs.push(dir);
+    const socket = path.join(dir, "daemon.sock");
+    const seen: string[] = [];
+    const server = Bun.serve({
+      unix: socket,
+      fetch: async (request) => {
+        const body = RestoreBodySchema.parse(await request.json());
+        seen.push(body.id);
+        return body.id === "snap-b"
+          ? Response.json({ error: "bridge down" }, { status: 502 })
+          : Response.json({ changed: 4 });
+      },
+    });
+    try {
+      const client = new DaemonClient(socket);
+      await expect(
+        client.restore(
+          "sbx-000001",
+          joinSnapshotIds(["snap-a", "snap-b", "snap-c"]),
+        ),
+      ).rejects.toThrow(
+        /Partial restore: 1 of 3 .*snap-b failed .*bridge down/u,
+      );
+      expect(seen).toEqual(["snap-a", "snap-b"]);
+    } finally {
+      await server.stop(true);
     }
   });
 });

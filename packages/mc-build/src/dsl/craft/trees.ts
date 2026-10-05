@@ -80,13 +80,17 @@ type Grower = {
   /** Deterministic [0, 1) for draw `i` of this tree. */
   draw: (i: number) => number;
   leafAt: (p: Vec3) => string;
+  /** Places `material` unless the cell is taken, tracking the highest cell. */
+  place: (p: Vec3, material: string) => void;
 };
 
-function placeIfFree(kit: CraftKit, p: Vec3, material: string): void {
+function placeIfFree(kit: CraftKit, p: Vec3, material: string): boolean {
   const current = kit.canvas.get(p.x, p.y, p.z);
-  if (current === KEEP || current === AIR) {
-    kit.put(p, material);
+  if (current !== KEEP && current !== AIR) {
+    return false;
   }
+  kit.put(p, material);
+  return true;
 }
 
 /** A kinked trunk (2×2 at the base of large trees); returns its top cell. */
@@ -103,9 +107,9 @@ function trunk(g: Grower): Vec3 {
   for (let h = 0; h < height; h += 1) {
     const offset = size !== "small" && h >= kinkAt ? kink : { x: 0, z: 0 };
     const cell = { x: x + offset.x, y: y + h, z: z + offset.z };
-    g.kit.put(cell, g.wood);
+    g.place(cell, g.wood);
     if (h === kinkAt) {
-      g.kit.put({ x, y: y + h, z }, g.wood);
+      g.place({ x, y: y + h, z }, g.wood);
     }
     if (h < thick) {
       for (const [dx, dz] of [
@@ -113,7 +117,7 @@ function trunk(g: Grower): Vec3 {
         [0, 1],
         [1, 1],
       ] as const) {
-        g.kit.put({ x: cell.x + dx, y: cell.y, z: cell.z + dz }, g.wood);
+        g.place({ x: cell.x + dx, y: cell.y, z: cell.z + dz }, g.wood);
       }
     }
     top = cell;
@@ -136,7 +140,7 @@ function roots(g: Grower): void {
   sides.forEach(([dx, dz], i) => {
     const tall = g.draw(10 + i) < 0.5 ? 1 : 2;
     for (let h = 0; h < tall; h += 1) {
-      placeIfFree(g.kit, { x: x + dx, y: y + h, z: z + dz }, g.wood);
+      g.place({ x: x + dx, y: y + h, z: z + dz }, g.wood);
     }
   });
 }
@@ -158,7 +162,7 @@ function branches(g: Grower, top: Vec3): Vec3[] {
         y: startY + Math.floor(s / (flat ? 3 : 2)),
         z: top.z + Math.round(Math.sin(angle) * s),
       };
-      g.kit.put(tip, g.wood);
+      g.place(tip, g.wood);
     }
     tips.push(tip);
   }
@@ -203,7 +207,7 @@ function canopy(
       ) {
         const p = { x: centre.x + dx, y: centre.y + dy, z: centre.z + dz };
         if (inCanopy(g, p, { x: dx, y: dy, z: dz }, shape)) {
-          placeIfFree(g.kit, p, g.leafAt(p));
+          g.place(p, g.leafAt(p));
         }
       }
     }
@@ -218,9 +222,10 @@ function coniferRing(g: Grower, y: number, radius: number): void {
       const p = { x: x + dx, y, z: z + dz };
       const edge = dx * dx + dz * dz;
       const roll = hash01(p.x, p.y, p.z, g.spec.seed);
-      const ragged = edge >= radius * radius - 1 && roll < 0.3;
+      const centre = dx === 0 && dz === 0;
+      const ragged = !centre && edge >= radius * radius - 1 && roll < 0.3;
       if (!ragged && edge <= radius * radius + 0.5) {
-        placeIfFree(g.kit, p, g.leafAt(p));
+        g.place(p, g.leafAt(p));
       }
     }
   }
@@ -236,15 +241,14 @@ function coniferRadius(height: number, h: number): number {
 }
 
 /** Spruce: jagged conical layers of leaves around a straight trunk. */
-function conifer(g: Grower): number {
+function conifer(g: Grower): void {
   const { x, y, z, height } = g.spec;
   for (let h = 0; h < height; h += 1) {
-    g.kit.put({ x, y: y + h, z }, g.wood);
+    g.place({ x, y: y + h, z }, g.wood);
   }
   for (let h = Math.max(2, Math.floor(height / 4)); h <= height + 1; h += 1) {
     coniferRing(g, y + h, coniferRadius(height, h));
   }
-  return y + height + 1;
 }
 
 export function treeParts(kit: CraftKit) {
@@ -253,7 +257,8 @@ export function treeParts(kit: CraftKit) {
      * A natural tree: kinked trunk of six-sided wood, branches first, domed
      * mixed-leaf canopies at the branch tips (spruce: jagged cone; acacia:
      * flat crowns). Leaves are persistent. Vary species, size and seed so
-     * no two trees match → `{ top }`.
+     * no two trees match → `{ top }`, the first free y above the highest
+     * block it placed.
      */
     tree(spec: TreeSpec): { top: number } {
       const species = spec.species ?? "oak";
@@ -272,6 +277,7 @@ export function treeParts(kit: CraftKit) {
         state: kit.mat.block(id, { persistent: "true" }),
         weight: weight / total,
       }));
+      let highest = spec.y - 1;
       const g: Grower = {
         kit,
         spec: { ...spec, species, size, seed, height },
@@ -287,9 +293,15 @@ export function treeParts(kit: CraftKit) {
           }
           return leaves[0]?.state ?? kit.mat.block(`${species}_leaves`);
         },
+        place: (p, material) => {
+          if (placeIfFree(kit, p, material)) {
+            highest = Math.max(highest, p.y);
+          }
+        },
       };
       if (species === "spruce") {
-        return { top: conifer(g) };
+        conifer(g);
+        return { top: highest + 1 };
       }
       const top = trunk(g);
       const tips = branches(g, top);
@@ -299,7 +311,7 @@ export function treeParts(kit: CraftKit) {
         canopy(g, { ...tip, y: tip.y + 1 }, crown, flatten);
       }
       canopy(g, { ...top, y: top.y + 1 }, crown + 0.6, flatten);
-      return { top: top.y + Math.ceil((crown + 0.6) * flatten) + 1 };
+      return { top: highest + 1 };
     },
   };
 }
