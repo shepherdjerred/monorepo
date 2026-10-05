@@ -6,7 +6,7 @@ import { test } from "#e2e/fixtures.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
-/** The 23 modules the shipped config enables, of the 25 it registers. */
+/** The modules the shipped config enables: all 25 it registers. */
 const modules = [
   "agent",
   "arena",
@@ -22,6 +22,8 @@ const modules = [
   "npcs",
   "qol",
   "quests",
+  "rwf",
+  "rwfbots",
   "seasonal",
   "shards",
   "shops",
@@ -45,14 +47,13 @@ const ownedConfig = path.join(
 );
 
 describe("all modules together", () => {
-  test("boots the 23 shipped modules plus rwf and rwfbots with the shipped content", async ({
+  test("boots all 25 shipped modules with the shipped content", async ({
     server,
     rcon,
   }) => {
-    // The shipped config is the contract: every registered module listed, the
-    // same 23 switched on, and only rwf and rwfbots off. The full lane stages
-    // it with those two switched on as well, so Search and Destroy and its
-    // bots run beside everything else.
+    // The shipped config is the contract: every registered module listed and
+    // switched on, so Search and Destroy and its bots run beside everything
+    // else.
     const owned = OwnedConfigSchema.parse(
       Bun.YAML.parse(await Bun.file(ownedConfig).text()),
     );
@@ -63,17 +64,9 @@ describe("all modules together", () => {
         .map(([module]) => module)
         .toSorted(),
     ).toEqual(modules);
-    expect(
-      Object.entries(owned.modules)
-        .filter(([, on]) => !on)
-        .map(([module]) => module)
-        .toSorted(),
-    ).toEqual(["rwf", "rwfbots"]);
     const logs = await serverLogs(server);
     const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
-    expect(enabled?.[1]?.split(", ").toSorted()).toEqual(
-      [...modules, "rwf", "rwfbots"].toSorted(),
-    );
+    expect(enabled?.[1]?.split(", ").toSorted()).toEqual(modules);
     expect(logs).toContain(
       "Prepared synthetic fixtures for Storm modules [world, essentials, npcs, arena, shards, seasonal, rwf]",
     );

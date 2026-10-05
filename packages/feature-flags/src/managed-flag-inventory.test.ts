@@ -386,7 +386,7 @@ describe("The Storm companion pilot rollout", () => {
 });
 
 describe("Red Warfare Search and Destroy rollout", () => {
-  test("gates /rwf join on in beta while production and fallback stay off", () => {
+  test("opens /rwf join in beta and production while the fallback stays off", () => {
     const key = "the-storm-rwf-enabled";
     expect(
       managedFlagInventory.flags.find((flag) => flag.key === key),
@@ -409,10 +409,10 @@ describe("Red Warfare Search and Destroy rollout", () => {
       "prod",
       "the-storm",
     ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: false, rollouts: [] });
+    expect(prod).toMatchObject({ default: true, rollouts: [] });
   });
 
-  test("lets bots talk in beta while production and fallback stay silent", () => {
+  test("lets bots talk in beta and production while the fallback stays silent", () => {
     const key = "the-storm-rwfbots-chat-enabled";
     expect(
       managedFlagInventory.flags.find((flag) => flag.key === key),
@@ -436,7 +436,7 @@ describe("Red Warfare Search and Destroy rollout", () => {
       "prod",
       "the-storm",
     ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: false, rollouts: [] });
+    expect(prod).toMatchObject({ default: true, rollouts: [] });
   });
 });
 

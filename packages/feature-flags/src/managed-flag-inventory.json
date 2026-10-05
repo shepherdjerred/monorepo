@@ -2491,6 +2491,22 @@
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwfbots-chat-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     }
