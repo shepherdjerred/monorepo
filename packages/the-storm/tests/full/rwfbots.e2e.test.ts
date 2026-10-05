@@ -119,6 +119,21 @@ async function liveStatus(rcon: RconClient) {
   return now.phase === "Live";
 }
 
+async function startShowcase(rcon: RconClient, size: number) {
+  const started = plain(
+    await rcon.command(`rwf admin showcase ${size.toString()}`),
+  );
+  expect(started).toContain(`Showcase of ${size.toString()} bots started`);
+  await eventually(
+    "the showcase to go live",
+    async () => liveStatus(rcon),
+    30_000,
+  );
+  const live = await status(rcon);
+  expect([live.humans, live.bots]).toEqual([0, size]);
+  return live;
+}
+
 /** One lone-human match and what the human's client saw of it. */
 type Match = {
   bot: Bot;
@@ -681,17 +696,7 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
     "the watcher in spectator mode",
     async () => bot.game.gameMode === "spectator",
   );
-  const started = plain(
-    await rcon.command(`rwf admin showcase ${size.toString()}`),
-  );
-  expect(started).toContain(`Showcase of ${size.toString()} bots started`);
-  await eventually(
-    "the showcase to go live",
-    async () => liveStatus(rcon),
-    30_000,
-  );
-  const live = await status(rcon);
-  expect([live.humans, live.bots]).toEqual([0, size]);
+  const live = await startShowcase(rcon, size);
   expect(plain(await rcon.command("rwf admin status"))).toContain(
     "Watchers: 1, showcase: yes",
   );
@@ -1065,17 +1070,7 @@ describe("Search and Destroy rwfbots team play", () => {
     async ({ rcon, server }) => {
       await waitForLobby(rcon);
       const size = 16;
-      const started = plain(
-        await rcon.command(`rwf admin showcase ${size.toString()}`),
-      );
-      expect(started).toContain(`Showcase of ${size.toString()} bots started`);
-      await eventually(
-        "the showcase to go live",
-        async () => liveStatus(rcon),
-        30_000,
-      );
-      const live = await status(rcon);
-      expect([live.humans, live.bots]).toEqual([0, size]);
+      const live = await startShowcase(rcon, size);
       // What each bot was dealt, kept beside the recording for `rwf:trails`.
       await Bun.sleep(4000);
       const slots = plain(await rcon.command("rwfbots debug slots"));

@@ -81,6 +81,28 @@ function verifySportsGuildRollout(): void {
   ).toBe(true);
 }
 
+function expectTheStormFlagEnabled(key: string, source?: string): void {
+  const flag = managedFlagInventory.flags.find(
+    (candidate) => candidate.key === key,
+  );
+  expect(flag).toMatchObject({
+    namespace: "the-storm",
+    ...(source === undefined ? {} : { source }),
+    type: "boolean",
+    default: false,
+    rollouts: [],
+  });
+
+  for (const environment of ["beta", "prod"] as const) {
+    const resolved = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "the-storm",
+    ).find((candidate) => candidate.key === key);
+    expect(resolved).toMatchObject({ default: true, rollouts: [] });
+  }
+}
+
 describe("ManagedFlagInventorySchema", () => {
   test("Scout report support action is enabled in beta only", () => {
     const flag = managedFlagInventory.flags.find(
@@ -387,56 +409,14 @@ describe("The Storm companion pilot rollout", () => {
 
 describe("Red Warfare Search and Destroy rollout", () => {
   test("opens /rwf join in beta and production while the fallback stays off", () => {
-    const key = "the-storm-rwf-enabled";
-    expect(
-      managedFlagInventory.flags.find((flag) => flag.key === key),
-    ).toMatchObject({
-      namespace: "the-storm",
-      type: "boolean",
-      default: false,
-      rollouts: [],
-    });
-
-    const beta = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(beta).toMatchObject({ default: true, rollouts: [] });
-
-    const prod = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: true, rollouts: [] });
+    expectTheStormFlagEnabled("the-storm-rwf-enabled");
   });
 
   test("lets bots talk in beta and production while the fallback stays silent", () => {
-    const key = "the-storm-rwfbots-chat-enabled";
-    expect(
-      managedFlagInventory.flags.find((flag) => flag.key === key),
-    ).toMatchObject({
-      namespace: "the-storm",
-      source: "the-storm-rwfbots-chat",
-      type: "boolean",
-      default: false,
-      rollouts: [],
-    });
-
-    const beta = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(beta).toMatchObject({ default: true, rollouts: [] });
-
-    const prod = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: true, rollouts: [] });
+    expectTheStormFlagEnabled(
+      "the-storm-rwfbots-chat-enabled",
+      "the-storm-rwfbots-chat",
+    );
   });
 });
 
