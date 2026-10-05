@@ -14,6 +14,10 @@
 
 import { createSignedS3Request } from "@shepherdjerred/s3-signed-request";
 import {
+  CiObjectStoreHttpError,
+  withCiObjectStoreRetry,
+} from "./ci-object-store-retry.ts";
+import {
   ciHandoffConfigFromEnv,
   type CiHandoffConfig,
   type HandoffFetch,
@@ -73,22 +77,27 @@ export async function putCiArtifact(
   if (paths.length === 0) {
     throw new Error(`refusing to publish an empty CI artifact for ${key}`);
   }
+  const objectKey = artifactObjectKey(config.pipelineNumber, key);
   const archive = `${Bun.env["TMPDIR"] ?? "/tmp"}/ci-artifact-${key}.tar.gz`;
   await run(["tar", "-czf", archive, ...paths]);
 
   const body = await Bun.file(archive).bytes();
-  const request = createSignedS3Request(signingConfig(config), {
-    method: "PUT",
-    key: artifactObjectKey(config.pipelineNumber, key),
-    body,
-    contentType: "application/gzip",
+  await withCiObjectStoreRetry(async () => {
+    const request = createSignedS3Request(signingConfig(config), {
+      method: "PUT",
+      key: objectKey,
+      body,
+      contentType: "application/gzip",
+    });
+    const response = await fetchImpl(request);
+    if (!response.ok) {
+      throw new CiObjectStoreHttpError(
+        `could not publish CI artifact ${key} (HTTP ${response.status.toString()})`,
+        response.status,
+      );
+    }
+    await response.body?.cancel();
   });
-  const response = await fetchImpl(request);
-  if (!response.ok) {
-    throw new Error(
-      `could not publish CI artifact ${key} (${response.status.toString()})`,
-    );
-  }
 }
 
 /**
@@ -103,18 +112,22 @@ export async function getCiArtifact(
   config: CiHandoffConfig = ciHandoffConfigFromEnv(),
   fetchImpl: HandoffFetch = fetch,
 ): Promise<void> {
-  const request = createSignedS3Request(signingConfig(config), {
-    method: "GET",
-    key: artifactObjectKey(config.pipelineNumber, key),
+  const objectKey = artifactObjectKey(config.pipelineNumber, key);
+  const body = await withCiObjectStoreRetry(async () => {
+    const request = createSignedS3Request(signingConfig(config), {
+      method: "GET",
+      key: objectKey,
+    });
+    const response = await fetchImpl(request);
+    if (!response.ok) {
+      throw new CiObjectStoreHttpError(
+        `could not restore required CI artifact ${key} (HTTP ${response.status.toString()})`,
+        response.status,
+      );
+    }
+    return response.bytes();
   });
-  const response = await fetchImpl(request);
-  if (!response.ok) {
-    throw new Error(
-      `required CI artifact ${key} is missing (${response.status.toString()}); ` +
-        "the producing step did not publish it",
-    );
-  }
   const archive = `${Bun.env["TMPDIR"] ?? "/tmp"}/ci-artifact-${key}.tar.gz`;
-  await Bun.write(archive, await response.bytes());
+  await Bun.write(archive, body);
   await run(["tar", "-xzf", archive]);
 }
