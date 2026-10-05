@@ -34,3 +34,21 @@ change: chimney on the right wall, flower boxes under the front windows
 - Untouched theme defaults (one box, one gable, no details) cap silhouette and
   detail at 1. Vary the massing, the roof type, and add a detail.
 - The final report lists the scores and at least one weakness that remains.
+
+## Procedural tells
+
+Fix these before scoring; each caps the aspect in brackets at 1.
+
+- One box with one ridge, square footprint [silhouette]; flat walls with
+  flush openings or no eaves [depth]; full `glass` blocks in walls [depth].
+- One block per surface, confetti noise, stripes, rainbow palettes or
+  isolated colour blobs [palette/texture].
+- Detail on every surface, or only on the front [detail].
+- Dirt showing under walls, a flattened site, perfect slopes, straight
+  7+ block edges, spherical boulders [site fit].
+- Lollipop or identical pasted trees, flowers in many colours scattered
+  evenly [site fit/detail].
+- Grid streets of identical houses, single-block straight roads, torch
+  spam [maps: variety, edges, life].
+
+See craft.md, palettes.md and landscape.md for the fixes.

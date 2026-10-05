@@ -97,17 +97,52 @@ toolkit mc we --world world --pos1 60,-63,0 --pos2 95,-20,40 "//forest oak 4"
 - `//forest <type> <density%>` (2–6 looks natural) and `//flora <density%>`
   plant only on grass inside the box.
 
-## Variety at scale
+## Settlements
 
-- Write small helpers (`house(at, w, d, floors, roof, palette, facing)`,
-  `tower(...)`, `wallRun(...)`) and a layout list; give each entry its own
-  size, floor count, roof type (gable, hip, mansard, conical), facing,
-  palette and details. Never stamp the same house twice.
-- Streets follow contours with slab or stair steps; mix `dirt_path`, `gravel`,
-  `cobblestone` and `mossy_cobblestone` with `mat.noise`; lamps every ~8.
-- Walls trace the terrain with towers at turns and a gatehouse on the main
-  street. Landscaping is half the result: gardens, hedges, fields, docks,
-  boats, carts, stalls (`library use market-stall`), wells (`plaza-well`).
+- Purpose first: why the town exists (port, crossing, mine, fort, farms)
+  shows in its site, props and farms. Forts sit at passes, capes and hills
+  over rivers; harbours on real coast.
+- Build order: landmark → road network → plots along roads → houses → walls
+  last. One main street (5–7 wide) runs to the square; lanes 3–4, alleys
+  1–2; a road 7+ wide never turns 90°. Plazas sit at junctions.
+- Density falls off outward: an attached 2–4-storey core, a ring of
+  detached houses with yards, scattered farmsteads beyond. About 60% of
+  buildings are housing; landmarks are 2–3× the eave height and never
+  outnumber houses.
+- One culture and roof style per town; vary houses by pitch, height,
+  storeys, jetties, wall colour, frame pattern, chimney side, door side and
+  wings. Write helpers (`house(at, w, d, floors, roof, palette, facing)`)
+  and a layout list; never stamp the same house twice.
+- Walls 3–4 thick at the base, towers 2–3 wider than the wall at corners and
+  flanking a 4–5 tall, 3–4 wide gate; buttresses every 8–10; most farmland
+  outside the walls.
+- Docks first (the shore is fixed): timber deck at water level, stone quay
+  above, `dark_oak_log` piles; cranes, crates, ships of several sizes.
+- Farms: many small fields with contour hedgerows and trees, terraces on
+  slopes, farmhouses among them.
+- Storytelling props in moderation: carts, stalls, barrels, hay, window
+  boxes, banners, a laundry line, one construction site.
+- Light entrances, the main road and the square with lantern posts every
+  8–10; leave deliberate dark between, hide other sources.
+- Use `craft.tree` for every tree and see landscape.md for paths, banks and
+  planting; craft.md for building shape, depth and roofs; palettes.md for
+  blocks.
+
+## Composition
+
+- Macro → meso → micro: terrain and water, roads and zoning, foundations,
+  the largest buildings, infill, then hedges, trees and props.
+- Leading lines (roads, rivers, walls) point at the landmark; it is visible
+  from every main approach.
+- Calm areas (meadow, water, plaza) between dense clusters so detail reads;
+  texture strips between roads and buildings lightly rather than leaving
+  bare grass.
+- Clear size tiers: landmark > civic and commercial > houses > sheds; vary
+  the skyline across each district.
+- Transitions are gradients: vegetation densest along water, thinning into
+  plains and near settlements; districts and biomes blend over 10–30 blocks.
+- Repeats get edits: any prop seen 10+ times needs ~10 variants; rotate and
+  mirror tree and house variants.
 
 ## Large maps (150–500 blocks)
 
