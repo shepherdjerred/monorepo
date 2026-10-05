@@ -34,6 +34,7 @@ import {
   type StatsRow,
   type Team,
 } from "#e2e/harness/rwfbots.ts";
+import { dispersion, readTrails } from "#e2e/harness/rwf-trails.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import { querySqlite } from "#e2e/harness/storm-data.ts";
@@ -989,3 +990,58 @@ async function eatsAndStaysUnsaved(
     expect(after).not.toContain(name);
   }
 }
+
+describe("Search and Destroy rwfbots team play", () => {
+  test(
+    "a sixteen-bot showcase spreads each team out before first contact and still finishes",
+    { timeout: 16 * 60_000 },
+    async ({ rcon, server }) => {
+      await waitForLobby(rcon);
+      const size = 16;
+      const started = plain(
+        await rcon.command(`rwf admin showcase ${size.toString()}`),
+      );
+      expect(started).toContain(`Showcase of ${size.toString()} bots started`);
+      await eventually(
+        "the showcase to go live",
+        async () => liveStatus(rcon),
+        30_000,
+      );
+      const live = await status(rcon);
+      expect([live.humans, live.bots]).toEqual([0, size]);
+      await eventually(
+        "the showcase to end and its recording to close",
+        async () => {
+          const rows = await matchRows(server, live.matchId);
+          return (rows.match?.recording_file ?? null) !== null;
+        },
+        matchBudgetMs,
+      );
+      const settled = await matchRows(server, live.matchId);
+      expect(settled.match?.winner).toMatch(/^(?:RED|BLUE)$/u);
+      const trails = readTrails(
+        await gzipLines(
+          server,
+          settled.match?.recording_file ?? "",
+          settled.outDir,
+        ),
+      );
+      expect(trails.mapId).toBe("training-yard");
+      // Teams start on spawn points two blocks apart; before the first sword
+      // blow lands or anyone dies, each team's median gap to the nearest
+      // teammate is at least three blocks.
+      const spread = dispersion(trails, {
+        from: 0,
+        until: trails.firstContact ?? trails.lastTick + 1,
+      });
+      expect(spread.map((team) => team.team)).toEqual(["BLUE", "RED"]);
+      for (const team of spread) {
+        expect(team.samples, `${team.team} samples`).toBeGreaterThan(0);
+        expect(
+          team.nearestP50,
+          `${team.team} nearest-teammate p50 before first contact`,
+        ).toBeGreaterThanOrEqual(3);
+      }
+    },
+  );
+});

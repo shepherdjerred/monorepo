@@ -58,9 +58,12 @@ retired: false # kept for history but never drafted when true
 ```
 
 Archetypes: `rusher`, `lurker`, `sniper`, `bomb_diver`, `anchor`, `flanker`,
-`support`, `duelist`, `hunter`, `turtle`, `troll`, `tactician`. The runtime
-never reads the archetype; it reads the style, roles, kits and levers the
-generator derived from it (see `scripts/bots/traits.ts`).
+`support`, `duelist`, `hunter`, `turtle`, `troll`, `tactician`. The generator
+derives the style, roles, kits and levers from it (see
+`scripts/bots/traits.ts`), and the bots also read it in play: it decides which
+playbook slots a bot is dealt (a sniper takes overwatch, an anchor anchors, a
+hunter sweeps), bends its utilities, decision temperature and fighting range,
+and adds a push to the aggression lever on top of the personality's offset.
 
 Placeholders, filled in by the chat layer: `{victim}` only in `onKill`,
 `{killer}` only in `onDeath`, `{bomb}` only in `onPlant` and `onDefuse`, and
@@ -71,7 +74,10 @@ Quirks: `always_gg`, `crouch_spam`, `never_eats`, `gapple_hoarder`,
 `loves_nuke`, `late_to_everything`, `calls_everything`, `says_sorry`,
 `blames_lag`, `holds_grudges`, `celebrates_early`, `bunny_hops`,
 `bow_spammer`, `slow_starter`, `narrates`, `good_sport`, `stares_down`,
-`spins`. Nothing acts on them yet.
+`spins`. Three show in play: `crouch_spam` taps sneak while idle and over a
+fresh kill, `late_to_everything` stands two to five seconds at the start of a
+match, and `loves_nuke` pulls the bot to the slot that arms the nuke. The rest
+are for chat.
 
 Lever keys: `reactionMs`, `aimErrorDeg`, `turnRateDegPerTick`, `cps`,
 `predictionQuality`, `decisionTemperature`, `awarenessRadius`,

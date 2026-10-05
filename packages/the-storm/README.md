@@ -1067,11 +1067,12 @@ Configuration and content under `server/owned/plugins/TheStorm`:
 - `rwfbots/personalities/<id>.yml`: the personas (see its README): about
   two hundred, spread evenly over twelve archetypes (rusher, lurker, sniper,
   bomb diver, anchor, flanker, support, duelist, hunter, turtle, troll,
-  tactician) and five skill bands. The archetype is content only; play
-  differs through the style, role, kit and lever values the generator
-  derives from it. Each persona also carries a voice, chat lines per
-  moment (plus pre-match lobby small talk), quirks, rivals and a bio, authored
-  in `scripts/bots/enrichment/`; bot chat speaks the match and lobby lines.
+  tactician) and five skill bands. Play differs through the style, role,
+  kit and lever values the generator derives from the archetype, and
+  through the archetype itself (see Team play below). Each persona also
+  carries a voice, chat lines per moment (plus pre-match lobby small talk),
+  quirks, rivals and a bio, authored in `scripts/bots/enrichment/`; bot chat
+  speaks the match and lobby lines, and three quirks also act in play.
 - `rwf/lobby/nav.rwfnav`: the lobby's baked navigation, its places (spawn,
   team sides, kit alcoves, balcony) as sites; required, so a missing or
   unusable one stops the module (`NavFiles.loadLobby`, checked by
@@ -1154,9 +1155,45 @@ graph, and `LobbySteering` turns each plan into the same `BodyCommand`s
 hurt in the lobby. When the match goes live the lobby loop stops and the
 think loop takes over.
 
+Team play. Every couple of seconds the team step deals a `Playbook`: one
+slot per living bot for the team's strategy, at least four blocks apart.
+RUSH puts the planter up the middle with a two-escort wedge behind it and
+the side lanes and flanks screening; SPLIT sends the planter and an escort
+down one lane and a pair with a flank down the other; TURTLE spreads anchors
+over distinct approaches to the own bomb with overwatch and a planter round
+the far lane; HUNT sends sweeping pairs towards the latest sightings. Lanes
+come from the baked approach routes plus wide lanes forced through points
+either side of the straight line, which is what spreads a team on an open
+map such as the training yard. The strategy names the objective, so the nuke
+is played for, not walked into because it is nearest. Slots go to bots by
+the Hungarian algorithm over archetype, role and kit fit, path distance and
+a bonus for the slot already held, so assignments stick. Tactics then take
+and hold the slot (ARM is for the plant slot, a bot beside an unwatched bomb
+or the last survivor); once an enemy is within 28 blocks bots bound from
+cover to cover, pairs alternating mover and holder, and hold their slot from
+cover, claiming cover on the blackboard so teammates do not share it. At
+most two bots chase one enemy unless it is nearly dead; bows keep their
+kit's band (longbow and snipers 15 to 30 blocks) and shoot from the edge of
+cover; the Rewind kit uses its clock only when a model of rwf's Rewinder says
+it is ready and lands away from the threat. Every path a bot walks pays a
+per-bot penalty: seeded noise over patches of the map, a toll on teammates'
+current paths and one for leaving its lane, so teammates with one goal still
+take different ways. Archetypes bend the utilities, the decision temperature
+and the fighting range, and add a push to the aggression lever at the draft;
+`crouch_spam`, `late_to_everything` and `loves_nuke` act in play.
+
 `/rwfbots debug [bot]` (`thestorm.rwfbots.admin`) prints the governor level,
 think and staleness percentiles, the board counters and every bot's plan, or
-one bot's levers, decision and refusals.
+one bot's levers, decision and refusals. `/rwfbots debug slots` lists each
+team's objective and every bot's slot, and draws them for the sender for ten
+seconds: a dust ring at each slot and a trail along each bot's route, in team
+colours.
+
+`bun run rwf:trails <recording.gz> --out <trails.png>` draws a match recording
+from above: every combatant's path, solid until first contact (the first
+landed sword blow or death), with each team's nearest-teammate distance before
+first contact and over the first 20 s. The full-lane suite keeps its
+recordings under `.cache/e2e/rwf/<matchId>/`.
 
 Decision traces: with `traces.enabled`, every think step appends one
 tab-separated `decision` line (tick, bot, epoch, option, plan label,

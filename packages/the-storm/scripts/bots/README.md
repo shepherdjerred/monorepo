@@ -147,3 +147,5 @@ and is the check that the two agree. The YAML shape is documented in
 
 - Slim-model skins and second-layer (hat, jacket) detail.
 - Runtime chat: the lines are content only until the chat layer speaks them.
+  Archetypes and three quirks already act in play (see the rwfbots content
+  README).
