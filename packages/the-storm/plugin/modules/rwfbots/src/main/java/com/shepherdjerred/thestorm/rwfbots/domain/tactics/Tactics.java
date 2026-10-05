@@ -44,9 +44,6 @@ public final class Tactics {
           Option.RETAKE,
           Option.HELP_ARM);
 
-  /** How far apart, in ticks, teammates leave spawn at the start of the match. */
-  public static final long DEPARTURE_GAP_TICKS = 7;
-
   /** A rewind must land at least this much further from the threat than the bot stands. */
   static final double REWIND_GAIN = 5;
 
@@ -79,7 +76,7 @@ public final class Tactics {
             context.levers().decisionTemperature() * context.bias().temperature());
     var pick = Softmax.select(candidates, temperature, random);
     var choice = choose(pick.choice(), current, now);
-    if (state.lifeEpoch() == 0 && now - born < departure(situation, context)) {
+    if (state.lifeEpoch() == 0 && now - born < context.lateStartTicks()) {
       choice = Option.HOLD_ANGLE;
     }
     var chosen = choice;
@@ -105,17 +102,6 @@ public final class Tactics {
         decision,
         trace,
         note(plan, decision, situation, context));
-  }
-
-  /**
-   * How long the bot stands at the start of the match: teammates file out of spawn one after
-   * another in playbook order, {@link #DEPARTURE_GAP_TICKS} apart, and a late bot waits longer.
-   */
-  static long departure(Situation situation, TacticsContext context) {
-    var plan = situation.board().plan();
-    var order =
-        situation.slot().map(slot -> plan.slots().indexOf(slot)).filter(i -> i >= 0).orElse(0);
-    return Math.max((long) order * DEPARTURE_GAP_TICKS, context.lateStartTicks());
   }
 
   /** The softmax's pick, unless a young plan is under way and the pick is not urgent. */

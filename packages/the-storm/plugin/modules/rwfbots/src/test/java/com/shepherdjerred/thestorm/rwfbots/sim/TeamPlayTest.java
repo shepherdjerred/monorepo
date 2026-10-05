@@ -99,8 +99,11 @@ final class TeamPlayTest {
   void botsThatSeeTheEnemyGetIntoCoverTheyClaimed() {
     var saw = 0;
     var covered = 0;
-    for (var seed : SEEDS) {
-      var world = Arenas.yard(seed, 8, Strategy.SPLIT, Strategy.RUSH);
+    // Twelve matches, splits and hunts against rushes: a bot sees an enemy within 28 blocks
+    // once out of its spawn, and has 3 s to stand in cover it claimed.
+    for (var seed = 1L; seed <= 12; seed++) {
+      var world =
+          Arenas.yard(seed, 8, seed % 2 == 0 ? Strategy.SPLIT : Strategy.HUNT, Strategy.RUSH);
       var watch = play(world, 1200);
       var tally = watch.cover(world.tick);
       saw += tally.saw();
@@ -117,7 +120,7 @@ final class TeamPlayTest {
    * output: a deliberate change to how bots play moves it, and the new value is pasted here in the
    * same change; an accidental one fails here.
    */
-  private static final String PINNED_YARD_HASH = "2321a112564732ce";
+  private static final String PINNED_YARD_HASH = "06a8343a673e579f";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

@@ -17,7 +17,7 @@ import java.util.Set;
  * Measures how a sim match is played, tick by tick: how far each bot is from its nearest teammate,
  * how many teammates crowd one spot, how wide each team spreads across its line of advance, which
  * lanes its slots use, whether bots that see an enemy get into claimed cover, and at what range
- * each archetype fights.
+ * each archetype turns to fight.
  */
 final class Watch {
 
@@ -47,6 +47,7 @@ final class Watch {
   private final Map<CombatantId, Long> firstSeen = new HashMap<>();
   private final Set<CombatantId> tookCover = new HashSet<>();
   private final Map<Archetype, List<Double>> ranges = new EnumMap<>(Archetype.class);
+  private final Set<CombatantId> engaged = new HashSet<>();
   private int maxCrowd;
   private int teamTicks;
   private int crowdedTeamTicks;
@@ -68,13 +69,7 @@ final class Watch {
     }
     for (var body : alive) {
       cover(body, tick);
-      body.decision
-          .filter(decision -> decision.option() == Option.ENGAGE && body.nearestSeen >= 0)
-          .ifPresent(
-              decision ->
-                  ranges
-                      .computeIfAbsent(body.archetype, a -> new ArrayList<>())
-                      .add(body.nearestSeen));
+      engagement(body);
     }
     world.boards.forEach(
         (team, board) ->
@@ -84,6 +79,19 @@ final class Watch {
                 .forEach(
                     slot -> lanes.computeIfAbsent(team, t -> new HashSet<>()).add(slot.lane())));
     return false;
+  }
+
+  /** The range to the nearest enemy each time a bot turns to fight, by its new decision. */
+  private void engagement(SimBody body) {
+    var fighting = body.decision.map(decision -> decision.option() == Option.ENGAGE).orElse(false);
+    if (fighting && !engaged.contains(body.id) && body.nearestSeen >= 0) {
+      ranges.computeIfAbsent(body.archetype, a -> new ArrayList<>()).add(body.nearestSeen);
+    }
+    if (fighting) {
+      engaged.add(body.id);
+    } else {
+      engaged.remove(body.id);
+    }
   }
 
   private void spread(List<SimBody> alive) {

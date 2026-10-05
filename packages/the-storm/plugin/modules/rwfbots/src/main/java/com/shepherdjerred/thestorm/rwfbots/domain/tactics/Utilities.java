@@ -74,7 +74,9 @@ public final class Utilities {
   /** How much the bot wants to fight the nearest enemy it may take on. */
   static double engage(Features f, Temper t, double push, double fightReady) {
     var distance = f.nearestEnemyDistance();
-    if (!Double.isFinite(distance)) {
+    // An archer only opens a fight with an enemy it can see; a remembered one is the slot's
+    // business (bounding towards it from cover).
+    if (!Double.isFinite(distance) || (t.keep().ranged() && f.visibleEnemies() == 0)) {
       return 0;
     }
     var appetite = (0.5 + 0.5 * Math.min(1, push)) * fightReady * f.nearestEnemyConfidence();

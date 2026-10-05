@@ -340,6 +340,10 @@ final class SimWorld {
         body.useStart = tick;
       }
       case BodyCommand.ReleaseUse _ -> release(body);
+      case BodyCommand.CancelUse _ -> {
+        body.usingItem = false;
+        body.useStart = -1;
+      }
       case BodyCommand.ClickBomb(var bombId) -> clickBomb(body, bombId);
       case BodyCommand.UseAbility _ -> {}
     }

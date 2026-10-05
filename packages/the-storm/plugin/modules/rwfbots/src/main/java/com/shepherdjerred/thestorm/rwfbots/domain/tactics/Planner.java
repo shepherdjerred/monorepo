@@ -103,7 +103,13 @@ public final class Planner {
   static final double WALK_PER_TICK = 0.2;
 
   /** A bot this close to its team's spawn is still leaving it. */
-  public static final double SPAWN_CLEAR = 10;
+  public static final double SPAWN_CLEAR = 12;
+
+  /**
+   * Bounds never end within this distance of the team's spawn: its doorway and the cover just
+   * outside.
+   */
+  static final double DOORWAY_CLEAR = 8;
 
   /** An enemy within this distance turns slot moves into bounds from cover to cover. */
   public static final double CONTACT_RANGE = 28;
@@ -368,13 +374,27 @@ public final class Planner {
               situation,
               context,
               new CoverSearch(self, threat, BOUND_REACH),
-              feet -> feet.horizontalDistance(goal) <= remaining + GIVE_GROUND);
+              feet ->
+                  feet.horizontalDistance(goal) <= remaining + GIVE_GROUND
+                      && clearOfSpawn(situation, feet));
       if (nearby.isPresent()) {
         return toCover(now, self, nearby.orElseThrow(), threat);
       }
     }
     if (!mover(situation, window)) {
       var until = (window + 1) * BOUND_TICKS;
+      if (here.isEmpty()) {
+        // The holder falls back to any cover near it rather than wait in the open.
+        var fallback =
+            coverWhere(
+                situation,
+                context,
+                new CoverSearch(self, threat, BOUND_REACH),
+                feet -> clearOfSpawn(situation, feet));
+        if (fallback.isPresent()) {
+          return toCover(now, self, fallback.orElseThrow(), threat);
+        }
+      }
       return Plan.of(
           Option.TAKE_SLOT,
           now,
@@ -511,14 +531,31 @@ public final class Planner {
             situation,
             context,
             new CoverSearch(probe, threat, BOUND_SEARCH),
-            feet -> feet.horizontalDistance(goal) < remaining - 1.5 || remaining < 2)
+            feet ->
+                (feet.horizontalDistance(goal) < remaining - 1.5 || remaining < 2)
+                    && clearOfSpawn(situation, feet))
         .or(
             () ->
                 coverWhere(
                     situation,
                     context,
                     new CoverSearch(self, threat, BOUND_REACH),
-                    feet -> feet.horizontalDistance(goal) < remaining - 1.5));
+                    feet ->
+                        feet.horizontalDistance(goal) < remaining - 1.5
+                            && clearOfSpawn(situation, feet)));
+  }
+
+  /**
+   * Whether {@code feet} is clear of the team's own spawn and its doorway: bounds never stop there,
+   * so a team does not queue for the cover just outside its door.
+   */
+  private static boolean clearOfSpawn(Situation situation, Vec3 feet) {
+    return situation
+        .board()
+        .plan()
+        .home()
+        .map(home -> home.horizontalDistance(feet) >= DOORWAY_CLEAR)
+        .orElse(true);
   }
 
   // ---- safety ----------------------------------------------------------------------------------
@@ -795,6 +832,18 @@ public final class Planner {
               Optional.of(target), List.of(), Stance.AGGRESSIVE, Optional.empty(), label));
     }
     var enemy = known.orElseThrow();
+    if (!enemy.visible() && context.keep().ranged()) {
+      // An archer does not run at an enemy it cannot see: it takes up its band and waits.
+      var archer = new Archer(situation, context, enemy.pos(), label);
+      var wait =
+          new Engagement(
+              Optional.empty(),
+              List.of(),
+              Stance.CAUTIOUS,
+              Optional.of(enemy.pos()),
+              label + "-wait");
+      return fightDecision(scene, plan, archer.close().or(archer::back).orElse(wait));
+    }
     if (!enemy.visible()) {
       return fightDecision(
           scene,

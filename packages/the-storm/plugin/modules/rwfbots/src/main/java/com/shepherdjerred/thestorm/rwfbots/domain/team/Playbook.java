@@ -58,6 +58,9 @@ public final class Playbook {
   /** Overwatch stays on the team's side: at most this far along the way to the objective. */
   static final double OVERWATCH_FURTHEST = 0.55;
 
+  /** Anchors never stand in a lane this close to home: that is the team's way out. */
+  static final double WAY_OUT = 14;
+
   /** Anchors stand at most this far from the bomb they hold. */
   static final double ANCHOR_MAX = 14;
 
@@ -446,7 +449,8 @@ public final class Playbook {
         var distance = offset.length();
         if (distance < setup.guardClear()
             || distance > ANCHOR_MAX
-            || nearestPlaced(feet) < SPACING) {
+            || nearestPlaced(feet) < SPACING
+            || onWayOut(point.node(), feet)) {
           continue;
         }
         var direction = offset.normalized();
@@ -470,6 +474,15 @@ public final class Playbook {
           want.pair(),
           Optional.empty(),
           0);
+    }
+
+    /**
+     * Whether {@code node} lies on the team's way out of its spawn: in a lane's corridor near home,
+     * where an anchor would stand in everyone's path (a base doorway).
+     */
+    private boolean onWayOut(int node, Vec3 feet) {
+      return feet.horizontalDistance(setup.home()) < WAY_OUT
+          && setup.lanes().stream().anyMatch(lane -> lane.corridor().contains(node));
     }
 
     /** The smallest angle between {@code direction} and the anchors already dealt, in radians. */

@@ -42,6 +42,9 @@ public sealed interface BodyCommand {
   /** Release right click: fire a bow, stop eating. */
   record ReleaseUse() implements BodyCommand {}
 
+  /** Let go of right click without firing: a half-drawn bow is lowered, no arrow leaves. */
+  record CancelUse() implements BodyCommand {}
+
   /** Right click {@code bomb} with the fuse. */
   record ClickBomb(BombId bomb) implements BodyCommand {}
 

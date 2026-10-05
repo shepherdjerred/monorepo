@@ -304,10 +304,13 @@ public final class Reflex {
       }
     }
 
-    /** Lets go of a half-drawn bow when leaving bow mode; the arrow is wasted, not held. */
+    /**
+     * Lowers a half-drawn bow when leaving bow mode, without loosing a weak arrow that would only
+     * give the bot away.
+     */
     private void stopShooting() {
       if (state.isDrawing()) {
-        commands.add(new BodyCommand.ReleaseUse());
+        commands.add(new BodyCommand.CancelUse());
         state = state.withDrawStart(-1);
       }
     }
@@ -387,7 +390,12 @@ public final class Reflex {
       }
       destination = bend(destination, apart());
       if (yields(destination)) {
-        commands.add(new BodyCommand.Stop());
+        // Waiting for the teammate ahead: make room for the others while it clears.
+        var push = apart();
+        commands.add(
+            push.isZero()
+                ? new BodyCommand.Stop()
+                : new BodyCommand.MoveToward(self.pos().plus(push.normalized()), false));
         return;
       }
       commands.add(new BodyCommand.MoveToward(destination, sprint));

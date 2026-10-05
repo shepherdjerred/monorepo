@@ -90,6 +90,10 @@ public final class BodyDriver {
           frame.ids().uuid(target).ifPresent(victim -> record(bot, actions.melee(id, victim)));
       case BodyCommand.StartUse _ -> startUse(bot, frame.tick());
       case BodyCommand.ReleaseUse _ -> releaseUse(bot, frame);
+      case BodyCommand.CancelUse _ -> {
+        bodies.stopUsing(bot.uuid(), false);
+        bot.drawStart(-1);
+      }
       case BodyCommand.ClickBomb(var bomb) ->
           frame.ids().bombName(bomb).ifPresent(name -> record(bot, actions.clickBomb(id, name)));
       case BodyCommand.UseAbility(var name) -> ability(bot, name);
