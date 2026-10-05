@@ -9,6 +9,7 @@ import type { ProcessSpawner } from "#providers/kubernetes/port-forward.ts";
 import type { SandboxProvider } from "#sandbox/provider.ts";
 import type { LiveGuardConfig } from "#src/live/guard.ts";
 import type { LiveJournal } from "#src/live/journal.ts";
+import { ClientManager } from "#daemon/clients.ts";
 import { LiveService } from "#src/live/service.ts";
 import { liveKubeTarget, StatefulSetSchema } from "#src/live/status.ts";
 
@@ -106,6 +107,14 @@ export function liveContext(options: {
       id === "live"
         ? live.target()
         : Promise.reject(new DaemonError(`No sandbox ${id}`, 404)),
+    clients: new ClientManager({
+      repoRoot: "/repo",
+      dir: "/nonexistent",
+      launcher: () => {
+        throw new Error("live harness never starts a client");
+      },
+      log: ignore,
+    }),
     startedAt: "2026-10-04T00:00:00Z",
     ttlSeconds: 3600,
     repoRoot: "/repo",

@@ -13,6 +13,12 @@ export const CACHE_DIR = path.join(MC_DIR, "cache");
 /** One directory per playtest run: report.json, events.jsonl, server.log, schematics. */
 export const RUNS_DIR = path.join(MC_DIR, "runs");
 
+/** One directory per real-client session: captures, client.log, commands.jsonl. */
+export const CLIENTS_DIR = path.join(MC_DIR, "clients");
+
+/** The Fabric preview client's Gradle project relative to the repository root. */
+export const CLIENT_PROJECT = path.join("packages", "the-storm", "client");
+
 /** Path of the playtest child entry point relative to the repository root. */
 export const PLAYTEST_CHILD_ENTRY = path.join(
   "packages",

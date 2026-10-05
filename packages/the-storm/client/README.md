@@ -8,8 +8,10 @@ control sockets in a private temporary directory.
 
 Run commands from `packages/the-storm`. Java 25, the repository's Gradle and Bun
 pins, Docker, and an available graphical desktop are required. The dedicated
-development client uses the offline name `StormPreview`; no launcher account
-or normal Prism instance is read or changed.
+development client uses the offline name `StormPreview` (Gradle property
+`previewUsername` overrides it); no launcher account or normal Prism instance is
+read or changed. The mc-harness daemon also runs this client against its
+sandboxes as `toolkit mc client` (see `packages/mc-harness/README.md`).
 
 ## Start a preview
 

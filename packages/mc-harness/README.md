@@ -5,22 +5,22 @@ for the MCBridge Paper plugin, and the session daemon that holds them.
 
 ## Layout
 
-| Path                        | What it is                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------------ |
-| `src/protocol/`             | Zod-only contracts: the MCBridge wire API, daemon IPC, paths, protocol version             |
-| `src/bridge/client.ts`      | `BridgeClient` — bearer-authenticated, every response validated against the contract       |
-| `src/pins.ts`               | Pinned itzg image, Paper 26.2 build and plugin jars (url + sha256, as server/plugins.json) |
-| `src/providers/docker/`     | Docker CLI wrapper, reusable Paper-container helpers, and the Docker sandbox provider      |
-| `src/providers/kubernetes/` | Cluster sandbox provider: scoped kubectl, pod manifest, port-forward supervisor            |
-| `src/sandbox/`              | Sandbox records (0600, hold secrets), profiles, staging, and the provider contract         |
-| `src/playtest/`             | Scenario API (`define.ts`), the per-run child process, expectations and run reports        |
-| `src/target.ts`             | `Target`: one server the harness acts on (bridge client + log tail)                        |
-| `src/live/`                 | Live tsmc: cluster status, port-forward, write guard, Velero backups, journal and undo     |
-| `src/daemon/`               | Unix-socket daemon: idle TTL, JSONL logs, sandbox lifecycle, target and playtest routes    |
-| `src/protocol/build.ts`     | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)    |
-| `src/build/`                | `toolkit mc build` CLI: capture, canvas, compile, run, render, lint, replay, promote, undo |
-| `playtests/`                | The harness smoke scenario                                                                 |
-| `evals/`                    | Agent eval suite (Codex/Claude tasks, graders, runner); manual, see `evals/README.md`      |
+| Path                        | What it is                                                                                      |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `src/protocol/`             | Zod-only contracts: the MCBridge wire API, daemon IPC, paths, protocol version                  |
+| `src/bridge/client.ts`      | `BridgeClient` — bearer-authenticated, every response validated against the contract            |
+| `src/pins.ts`               | Pinned itzg image, Paper 26.2 build and plugin jars (url + sha256, as server/plugins.json)      |
+| `src/providers/docker/`     | Docker CLI wrapper, reusable Paper-container helpers, and the Docker sandbox provider           |
+| `src/providers/kubernetes/` | Cluster sandbox provider: scoped kubectl, pod manifest, port-forward supervisor                 |
+| `src/sandbox/`              | Sandbox records (0600, hold secrets), profiles, staging, and the provider contract              |
+| `src/playtest/`             | Scenario API (`define.ts`), the per-run child process, expectations and run reports             |
+| `src/target.ts`             | `Target`: one server the harness acts on (bridge client + log tail)                             |
+| `src/live/`                 | Live tsmc: cluster status, port-forward, write guard, Velero backups, journal and undo          |
+| `src/daemon/`               | Unix-socket daemon: idle TTL, JSONL logs, sandbox lifecycle, target, playtest and client routes |
+| `src/protocol/build.ts`     | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)         |
+| `src/build/`                | `toolkit mc build` CLI: capture, canvas, compile, run, render, lint, replay, promote, undo      |
+| `playtests/`                | The harness smoke scenario                                                                      |
+| `evals/`                    | Agent eval suite (Codex/Claude tasks, graders, runner); manual, see `evals/README.md`           |
 
 `toolkit` is compiled to a single binary and may import only `src/protocol/*`;
 an architecture boundary keeps that directory free of daemon, provider, and
@@ -117,8 +117,39 @@ Paper 26.2 with Citizens 2.0.44:
 Citizens discards messages sent to an actor, so scenarios assert on world state
 and the event stream. A `use` that a listener denies still answers `ok: true`:
 plugins also cancel clicks they handled (Storm's sign mechanisms do). Flows that
-need a real client (dialogs, join, chat rendering) stay in the-storm's
-Mineflayer E2E suite.
+need a real client (dialogs, join, chat rendering) use the real client below
+or the-storm's E2E suite.
+
+## Real client
+
+`toolkit mc client` runs the-storm's Fabric preview client
+(`packages/the-storm/client`, Minecraft 26.2) against a sandbox. The daemon
+owns each client: it spawns `mise exec -- gradle runClient` from the
+repository with a private bootstrap (control socket, artifacts dir, server
+address) and a throwaway game dir, waits until the player is in the world,
+then speaks the client's newline-delimited JSON protocol for `status`, `look`,
+`move` (the protocol's `input`), `hotbar`, `use`, `attack`, `release`,
+`command`, and `capture`. The harness never imports the-storm; it only starts
+the process.
+
+|          | Citizens actor (`toolkit mc actor`)          | Real client (`toolkit mc client`)                             |
+| -------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Is       | Server-side NPC driven through MCBridge      | A rendered game client that joins over the network            |
+| Joins    | Never (no `PlayerJoinEvent`, not in players) | Yes, as an offline-mode player named with `--name`            |
+| Acts by  | Server API calls (`place`, `break`, `goto`)  | Keyboard-style input on the crosshair, as a player would      |
+| Sees     | Observation JSON                             | `capture` screenshots of the rendered frame plus `status`     |
+| Cost     | Milliseconds; any number; headless           | ~15–30s to join, a JVM each; needs a desktop session and Java |
+| Targets  | Sandboxes and live (guarded)                 | Sandboxes only; tsmc is online-mode                           |
+| Best for | Scripted playtests, block-level assertions   | What players see: HUD, dialogs, rendering, client-side flows  |
+
+The client accepts only a `127.0.0.1` server, which matches Docker sandboxes
+and cluster sandboxes (through the daemon's port-forward). `--op` and
+`--game-mode` apply through the bridge console after it joins. Stopping a
+sandbox stops its clients, and so does stopping the daemon. Each session writes
+`client.log`, `commands.jsonl`, and captures under
+`~/.toolkit/mc/clients/<name>-<started>/`; `capture --out f.png` copies the PNG
+out. Verify world effects with `toolkit mc region read` rather than trusting a
+screenshot alone.
 
 Actors are Citizens NPCs, so Storm's `Humans.isHuman()` (no `NPC` metadata)
 filters them out of most Storm listeners: towns, economy, shops, quests,

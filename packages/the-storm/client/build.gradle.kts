@@ -29,7 +29,9 @@ loom {
       if (System.getProperty("os.name").startsWith("Mac")) jvmArguments.add("-XstartOnFirstThread")
       val session = providers.gradleProperty("previewSession")
       if (session.isPresent) systemProperties.put("storm.client.session", session.get())
-      programArguments.addAll("--username", "StormPreview", "--width", "1280", "--height", "720")
+      // The mc-harness daemon names each client (`toolkit mc client start --name`).
+      val username = providers.gradleProperty("previewUsername").getOrElse("StormPreview")
+      programArguments.addAll("--username", username, "--width", "1280", "--height", "720")
     }
   }
 }
