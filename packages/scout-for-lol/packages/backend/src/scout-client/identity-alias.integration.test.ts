@@ -422,6 +422,21 @@ describe("ingesting observations named by League-client UUID", () => {
     ).toEqual({ puuid: SELF_PUUID });
   });
 
+  test("survives a failed lookup and retries on the next observation", async () => {
+    mocks.byRiotId.mockRejectedValueOnce(new Error("connection reset"));
+
+    const first = await ingestObservationBatch(device, batch(accountProfile()));
+    const second = await ingestObservationBatch(
+      device,
+      batch(accountProfile()),
+    );
+
+    expect(first[0]?.outcome).toBe("quarantined");
+    expect(second[0]?.outcome).toBe("accepted");
+  });
+});
+
+describe("client-sourced match timelines", () => {
   test("serves a client-sourced match's timeline in Riot identities", async () => {
     await ingestObservationBatch(
       device,
@@ -455,18 +470,5 @@ describe("ingesting observations named by League-client UUID", () => {
     expect(
       await readTimelineSelection(RiotMatchIdSchema.parse("NA1_5653248720")),
     ).toEqual({ source: "RIOT" });
-  });
-
-  test("survives a failed lookup and retries on the next observation", async () => {
-    mocks.byRiotId.mockRejectedValueOnce(new Error("connection reset"));
-
-    const first = await ingestObservationBatch(device, batch(accountProfile()));
-    const second = await ingestObservationBatch(
-      device,
-      batch(accountProfile()),
-    );
-
-    expect(first[0]?.outcome).toBe("quarantined");
-    expect(second[0]?.outcome).toBe("accepted");
   });
 });
