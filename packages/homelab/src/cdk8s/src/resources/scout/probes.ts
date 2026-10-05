@@ -37,8 +37,11 @@ export function scoutRuntimeProbes() {
   };
 }
 
-/** Shared image, HTTP port, probes, and resource envelope for admin-only pods. */
-export function scoutAdminRoleContainerBase(imageVersion: string) {
+/** Shared admin surface, with voice memory reserved only by its owning role. */
+export function scoutAdminRoleContainerBase(
+  imageVersion: string,
+  role: "gateway" | "activity-worker",
+) {
   return {
     image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
     ports: [{ name: "port-3000", number: 3000, protocol: Protocol.TCP }],
@@ -48,7 +51,10 @@ export function scoutAdminRoleContainerBase(imageVersion: string) {
     },
     resources: {
       cpu: { request: Cpu.millis(50) },
-      memory: { request: Size.gibibytes(3), limit: Size.gibibytes(8) },
+      memory: {
+        request: Size.gibibytes(role === "gateway" ? 3 : 2),
+        limit: Size.gibibytes(8),
+      },
     },
     ...scoutRuntimeProbes(),
   };

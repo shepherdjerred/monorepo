@@ -78,7 +78,7 @@ export function createScoutActivityWorkerDeployment(
 
   deployment.addContainer(
     withCommonProps({
-      ...scoutAdminRoleContainerBase(options.imageVersion),
+      ...scoutAdminRoleContainerBase(options.imageVersion, "activity-worker"),
       volumeMounts: [
         {
           path: "/data",

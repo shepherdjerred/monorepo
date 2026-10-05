@@ -171,26 +171,31 @@ describe("Scout activity worker topology", () => {
   });
 
   test("worker has bounded resources and admin health probes", () => {
-    const worker = deployment("beta", "scout-activity-worker");
-    const container = worker.spec.template.spec.containers[0];
-    expect(container?.["resources"]).toEqual({
-      requests: { cpu: "50m", memory: "3072Mi" },
-      limits: { memory: "8192Mi" },
-    });
-    expect(container?.["startupProbe"]).toEqual(
-      expect.objectContaining({
-        httpGet: { path: "/ping", port: 3000, scheme: "HTTP" },
-      }),
-    );
-    expect(container?.["livenessProbe"]).toEqual(
-      expect.objectContaining({
-        httpGet: { path: "/livez", port: 3000, scheme: "HTTP" },
-      }),
-    );
-    expect(container?.["readinessProbe"]).toEqual(
-      expect.objectContaining({
-        httpGet: { path: "/healthz", port: 3000, scheme: "HTTP" },
-      }),
-    );
+    for (const stage of ["beta", "prod"] as const) {
+      const worker = deployment(stage, "scout-activity-worker");
+      const container = worker.spec.template.spec.containers[0];
+      expect(container?.["resources"]).toEqual({
+        requests: { cpu: "50m", memory: "2048Mi" },
+        limits: { memory: "8192Mi" },
+      });
+      expect(
+        container?.env.some((entry) => entry.name === "VOICE_ASSETS_DIR"),
+      ).toBe(false);
+      expect(container?.["startupProbe"]).toEqual(
+        expect.objectContaining({
+          httpGet: { path: "/ping", port: 3000, scheme: "HTTP" },
+        }),
+      );
+      expect(container?.["livenessProbe"]).toEqual(
+        expect.objectContaining({
+          httpGet: { path: "/livez", port: 3000, scheme: "HTTP" },
+        }),
+      );
+      expect(container?.["readinessProbe"]).toEqual(
+        expect.objectContaining({
+          httpGet: { path: "/healthz", port: 3000, scheme: "HTTP" },
+        }),
+      );
+    }
   });
 });

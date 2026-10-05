@@ -223,7 +223,7 @@ export function createScoutGatewayDeployment(
       // serves /ping, /livez, /healthz and /metrics on the same port 3000 as
       // the full server (backend src/http/admin-server.ts) — the surface that
       // is missing here is the product's, not the operator's.
-      ...scoutAdminRoleContainerBase(options.imageVersion),
+      ...scoutAdminRoleContainerBase(options.imageVersion, "gateway"),
       volumeMounts: [
         {
           path: "/data",

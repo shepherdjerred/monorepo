@@ -102,10 +102,10 @@ bun run smoke            # Smoke-test the built image
 bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 ```
 
-Hosted application pods reserve the report-lake baseline. The gateway owns
-the voice runtime and its additional memory reservation; application pods
-do not reserve that voice share again. Both roles retain their separate
-DuckDB scratch space and process memory limits.
+Hosted application and activity-worker pods reserve the report-lake baseline.
+Activity workers reserve 2 GiB; the gateway reserves 3 GiB because it also owns
+the voice runtime. Each role has an 8 GiB process limit and its own DuckDB
+scratch space.
 
 Report-lake rebuilds buffer at most 1 MiB of NDJSON per writer, except for a
 single oversized document, which is drained immediately. Every producer awaits

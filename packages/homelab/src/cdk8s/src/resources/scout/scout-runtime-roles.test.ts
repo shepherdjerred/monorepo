@@ -310,8 +310,15 @@ describe("Scout gateway report-lake sharing", () => {
         "scout-beta-scout-gateway",
       ).spec,
     );
+    const activityWorker = DuckDbRuntimeDeploymentSchema.parse(
+      findResource(
+        scoutResources("beta"),
+        "Deployment",
+        "scout-beta-scout-activity-worker",
+      ).spec,
+    );
 
-    for (const deployment of [app, gateway]) {
+    for (const deployment of [app, gateway, activityWorker]) {
       const container = deployment.template.spec.containers[0];
       expect(container?.env).toEqual(
         expect.arrayContaining([
@@ -336,6 +343,12 @@ describe("Scout gateway report-lake sharing", () => {
       requests: { memory: "3072Mi" },
       limits: { memory: "8192Mi" },
     });
+    expect(activityWorker.template.spec.containers[0]?.resources).toMatchObject(
+      {
+        requests: { memory: "2048Mi" },
+        limits: { memory: "8192Mi" },
+      },
+    );
   });
 });
 
