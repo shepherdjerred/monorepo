@@ -69,35 +69,38 @@ function accountProfile() {
   });
 }
 
+/** Match history naming both players by League-client UUID. */
+function matchHistory() {
+  return {
+    gameId: 5_653_248_720,
+    participantIdentities: [
+      {
+        participantId: 1,
+        player: {
+          puuid: SELF_UUID,
+          gameName: "sjerred",
+          tagLine: "sjerr",
+        },
+      },
+      {
+        participantId: 2,
+        player: {
+          puuid: FRIEND_UUID,
+          gameName: "Virmel",
+          tagLine: "NA1",
+        },
+      },
+    ],
+  };
+}
+
 /** A post-game bundle whose match history names both players by UUID. */
 function postGame() {
   return observation(
     "post_game",
     {
       resource: "post_game",
-      data: {
-        matchHistory: {
-          gameId: 5_653_248_720,
-          participantIdentities: [
-            {
-              participantId: 1,
-              player: {
-                puuid: SELF_UUID,
-                gameName: "sjerred",
-                tagLine: "sjerr",
-              },
-            },
-            {
-              participantId: 2,
-              player: {
-                puuid: FRIEND_UUID,
-                gameName: "Virmel",
-                tagLine: "NA1",
-              },
-            },
-          ],
-        },
-      },
+      data: { matchHistory: matchHistory() },
     },
     { gameId: "5653248720", platformId: "NA1" },
   );
@@ -134,25 +137,7 @@ function postGameWithTimeline() {
       resource: "post_game",
       data: {
         matchHistory: {
-          gameId: 5_653_248_720,
-          participantIdentities: [
-            {
-              participantId: 1,
-              player: {
-                puuid: SELF_UUID,
-                gameName: "sjerred",
-                tagLine: "sjerr",
-              },
-            },
-            {
-              participantId: 2,
-              player: {
-                puuid: FRIEND_UUID,
-                gameName: "Virmel",
-                tagLine: "NA1",
-              },
-            },
-          ],
+          ...matchHistory(),
           participants: [
             { participantId: 1, teamId: 100 },
             { participantId: 2, teamId: 200 },
