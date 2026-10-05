@@ -125,31 +125,29 @@ final class TeleportFlow implements TeleportTravel {
   @Override
   public CompletableFuture<Status> status(Player player) {
     var permissions = exemptions(player);
-    var firstSeen = java.util.Objects.requireNonNull(rtpFirstSeen, "RTP policy is required");
-    return legacyRecovery
-        .thenCompose(ready -> firstSeen.apply(player.getUniqueId()))
-        .thenCombine(
-            services.payments().history(player.getUniqueId()),
-            (seen, history) -> {
-              var rules = services.payments().pricing();
-              var freeUntil = seen.plus(rules.rtpFreeFor());
-              var now = runtime.time().instant();
-              var quotes = new EnumMap<TeleportKind, Quote>(TeleportKind.class);
-              for (var kind : TeleportKind.values()) {
-                var free =
-                    permissions.free() || (kind == TeleportKind.RTP && now.isBefore(freeUntil));
-                quotes.put(
-                    kind,
-                    services
-                        .payments()
-                        .preview(
-                            kind,
-                            history,
-                            new Exemptions(free, permissions.ignoresCooldown()),
-                            now));
-              }
-              return new Status(rules, history, quotes, now, freeUntil);
-            });
+    var firstSeen = rtpFirstSeen;
+    var seen =
+        firstSeen == null
+            ? CompletableFuture.completedFuture(Instant.EPOCH)
+            : legacyRecovery.thenCompose(ready -> firstSeen.apply(player.getUniqueId()));
+    return seen.thenCombine(
+        services.payments().history(player.getUniqueId()),
+        (rtpSeen, history) -> {
+          var rules = services.payments().pricing();
+          var freeUntil = firstSeen == null ? Instant.EPOCH : rtpSeen.plus(rules.rtpFreeFor());
+          var now = runtime.time().instant();
+          var quotes = new EnumMap<TeleportKind, Quote>(TeleportKind.class);
+          for (var kind : TeleportKind.values()) {
+            var free = permissions.free() || (kind == TeleportKind.RTP && now.isBefore(freeUntil));
+            quotes.put(
+                kind,
+                services
+                    .payments()
+                    .preview(
+                        kind, history, new Exemptions(free, permissions.ignoresCooldown()), now));
+          }
+          return new Status(rules, history, quotes, now, freeUntil);
+        });
   }
 
   private CompletableFuture<Exemptions> exemptionsFor(Player player, TeleportKind kind) {

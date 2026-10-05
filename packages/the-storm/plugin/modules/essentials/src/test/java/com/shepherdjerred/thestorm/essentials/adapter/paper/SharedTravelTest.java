@@ -92,6 +92,19 @@ final class SharedTravelTest {
     return shared;
   }
 
+  private TeleportFlow buildWithoutRtp() {
+    return new TeleportFlow(
+        runtime,
+        new TeleportFlow.Services(
+            payments,
+            new GuardRegistry(),
+            new AllowAllProtection(),
+            new BackRecorder(runtime, new JooqBackStore(harness.database), 5, harness.sealed),
+            harness.sealed),
+        Duration.ofSeconds(3),
+        (player, target) -> CompletableFuture.completedFuture(player.teleport(target)));
+  }
+
   @AfterEach
   void close() {
     harness.close();
@@ -172,6 +185,16 @@ final class SharedTravelTest {
     assertThat(status.quote(TeleportKind.RTP).cost()).isEqualTo(25);
     assertThat(payments.history(alice.getUniqueId()).join()).isEqualTo(before);
     assertThat(wallets.receipts()).isEmpty();
+  }
+
+  @Test
+  void statusWorksWhenTheQolModuleDidNotInstallRtp() {
+    flow = buildWithoutRtp();
+
+    var status = flow.status(alice).join();
+
+    assertThat(status.quote(TeleportKind.RTP).cost()).isEqualTo(25);
+    assertThat(status.rtpFreeUntil()).isEqualTo(Instant.EPOCH);
   }
 
   @Test
