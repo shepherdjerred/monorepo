@@ -71,7 +71,8 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   judge <a> <b> [--model id]            Pairwise vision judge of two renders (PNG or build dir), order-swapped
 
 Live tsmc: promote/undo with --target live also need --reason "<why>" (journaled), and
---allow-players when a human is near the box. See toolkit mc live --help.
+--allow-players when a human is near the box, and --allow-protected inside a protected
+region (e.g. the zombies settlement). See toolkit mc live --help.
 
 Record manual edits with: toolkit mc we|paste|cmd … --record <dir>
 All commands accept --json. Exit code 2 = lint errors, replay mismatch, or failed verification.
@@ -90,6 +91,7 @@ const OPTIONS = {
   keep: { type: "boolean", default: false },
   reason: { type: "string" },
   "allow-players": { type: "boolean", default: false },
+  "allow-protected": { type: "boolean", default: false },
   "confirm-dangerous": { type: "boolean", default: false },
   model: { type: "string" },
   tag: { type: "string", multiple: true },
@@ -426,6 +428,7 @@ async function main(): Promise<number> {
     client: new DaemonClient(undefined, {
       reason: values.reason,
       allowPlayers: values["allow-players"],
+      allowProtected: values["allow-protected"],
       confirmDangerous: values["confirm-dangerous"],
     }),
     journal: new Journal(),

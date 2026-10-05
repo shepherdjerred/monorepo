@@ -80,6 +80,7 @@ export async function dispatchLive(
       await ctx.live.undo(undo.id, {
         reason: undo.reason,
         allowPlayers: undo.allowPlayers,
+        allowProtected: undo.allowProtected,
       }),
     );
   }

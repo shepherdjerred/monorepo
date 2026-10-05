@@ -24,6 +24,7 @@ export const LIVE_DAEMON_START_HINT = `${LIVE_TOKEN_ENV}=$(op read '${LIVE_TOKEN
 export const LIVE_HEADERS = {
   reason: "x-mc-reason",
   allowPlayers: "x-mc-allow-players",
+  allowProtected: "x-mc-allow-protected",
   confirmDangerous: "x-mc-confirm-dangerous",
   affects: "x-mc-affects",
 } as const;
@@ -33,6 +34,8 @@ export type LiveWriteFlags = {
   reason?: string | undefined;
   /** Proceed although a human player is near (never inside) the box. */
   allowPlayers?: boolean | undefined;
+  /** Proceed although the box intersects a protected region (mcLiveProtectedRegions). */
+  allowProtected?: boolean | undefined;
   /** Required for dangerous commands (stop, kill @e, co rollback, ...). */
   confirmDangerous?: boolean | undefined;
   /** The box a WorldEdit op changes when its selection does not bound it. */
@@ -50,6 +53,9 @@ export function liveWriteHeaders(
   }
   if (flags.allowPlayers === true) {
     headers[LIVE_HEADERS.allowPlayers] = "1";
+  }
+  if (flags.allowProtected === true) {
+    headers[LIVE_HEADERS.allowProtected] = "1";
   }
   if (flags.confirmDangerous === true) {
     headers[LIVE_HEADERS.confirmDangerous] = "1";
@@ -72,6 +78,7 @@ export function readLiveWriteFlags(headers: Headers): LiveWriteFlags {
         ? undefined
         : decodeURIComponent(reason).trim() || undefined,
     allowPlayers: headers.get(LIVE_HEADERS.allowPlayers) === "1",
+    allowProtected: headers.get(LIVE_HEADERS.allowProtected) === "1",
     confirmDangerous: headers.get(LIVE_HEADERS.confirmDangerous) === "1",
     affects:
       affects === null
@@ -173,6 +180,8 @@ export const LiveUndoRequestSchema = z.strictObject({
   reason: z.string().min(1),
   /** Restore although a human player is near (never inside) the box. */
   allowPlayers: z.boolean().optional(),
+  /** Restore although the box intersects a protected region. */
+  allowProtected: z.boolean().optional(),
 });
 export const LiveUndoResponseSchema = z.strictObject({
   entry: LiveJournalEntrySchema,

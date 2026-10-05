@@ -37,15 +37,6 @@ const fixtures = path.join(import.meta.dirname, "fixtures", "live");
 const fixture = async (name: string): Promise<unknown> =>
   Bun.file(path.join(fixtures, name)).json();
 
-const config: LiveGuardConfig = {
-  writes: true,
-  worlds: ["world", "wilds", "peaks"],
-  maxRegionVolume: 1000,
-  backupMaxAgeHours: 24,
-  nearPlayerRadius: 32,
-  maxSnapshotVolume: 100_000,
-};
-
 const box = (
   min: [number, number, number],
   max: [number, number, number],
@@ -55,6 +46,18 @@ const box = (
   min: { x: min[0], y: min[1], z: min[2] },
   max: { x: max[0], y: max[1], z: max[2] },
 });
+
+const arena = box([100, -64, 100], [120, 319, 120]);
+
+const config: LiveGuardConfig = {
+  writes: true,
+  worlds: ["world", "wilds", "peaks"],
+  maxRegionVolume: 1000,
+  backupMaxAgeHours: 24,
+  nearPlayerRadius: 32,
+  maxSnapshotVolume: 100_000,
+  protectedRegions: [{ name: "arena", box: arena }],
+};
 
 function player(
   name: string,
@@ -373,6 +376,73 @@ describe("authorizeLiveWrite", () => {
     ).toBe("test");
   });
 
+  it.each([
+    ["inside", box([105, 64, 105], [110, 70, 110]), true],
+    ["straddling the edge", box([95, 64, 95], [100, 70, 100]), true],
+    ["one block outside", box([95, 64, 95], [99, 70, 99]), false],
+    [
+      "same x/z in another world",
+      box([105, 64, 105], [110, 70, 110], "wilds"),
+      false,
+    ],
+  ] as const)(
+    "protects a region from a block write %s",
+    (_label, target, protectedHit) => {
+      const write = assessLiveWrite(
+        { kind: "paste", world: target.world, box: target },
+        config,
+      );
+      const run = (allowProtected: boolean) =>
+        authorizeLiveWrite({
+          ...base,
+          assessment: write,
+          flags: { reason: "test", allowProtected },
+        });
+      if (protectedHit) {
+        expect(() => run(false)).toThrow(/protected arena.*--allow-protected/u);
+      } else {
+        expect(run(false).reason).toBe("test");
+      }
+      expect(run(true).reason).toBe("test");
+    },
+  );
+
+  it("still needs a reason and a clear box with --allow-protected", () => {
+    const write = assessLiveWrite(
+      {
+        kind: "paste",
+        world: "world",
+        box: box([105, 64, 105], [106, 65, 106]),
+      },
+      config,
+    );
+    expect(() =>
+      authorizeLiveWrite({
+        ...base,
+        assessment: write,
+        flags: { allowProtected: true },
+      }),
+    ).toThrow(/--reason/u);
+    expect(() =>
+      authorizeLiveWrite({
+        ...base,
+        assessment: write,
+        players: [player("Steve", 105, 105)],
+        flags: { reason: "test", allowProtected: true },
+      }),
+    ).toThrow(/Steve is inside/u);
+  });
+
+  it("ignores protected regions for writes without a box", () => {
+    const command = assessLiveWrite(
+      { kind: "command", command: "time set day" },
+      config,
+    );
+    expect(authorizeLiveWrite({ ...base, assessment: command }).reason).toBe(
+      "test",
+    );
+  });
+
   it("measures distance to a box from float positions", () => {
     const b = box([0, 60, 0], [4, 64, 4]);
     expect(distanceToBox(b, { x: 4.9, y: 64.5, z: 0.1 })).toBe(0);
@@ -392,20 +462,24 @@ describe("live write headers", () => {
       liveWriteHeaders({
         reason: "fix Ömer's roof",
         allowPlayers: true,
+        allowProtected: true,
         confirmDangerous: true,
         affects: parseAffects("world", "3,70,3", "-3,61,-3"),
       }),
     );
     expect(headers.get(LIVE_HEADERS.allowPlayers)).toBe("1");
+    expect(headers.get(LIVE_HEADERS.allowProtected)).toBe("1");
     expect(readLiveWriteFlags(headers)).toEqual({
       reason: "fix Ömer's roof",
       allowPlayers: true,
+      allowProtected: true,
       confirmDangerous: true,
       affects: box([-3, 61, -3], [3, 70, 3]),
     });
     expect(readLiveWriteFlags(new Headers())).toEqual({
       reason: undefined,
       allowPlayers: false,
+      allowProtected: false,
       confirmDangerous: false,
       affects: undefined,
     });

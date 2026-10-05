@@ -17,8 +17,9 @@ export const LIVE_USAGE = `Live minecraft-tsmc (--target live; the daemon needs 
   toolkit mc live status [--json]        Read-only cluster view; refuses when asleep or mining-reset locked
   toolkit mc live backup --reason <why> [--wait]   Velero backup of minecraft-tsmc (needed for tier-2 writes)
   toolkit mc live journal [--since 1d]   Every live write, undo and backup
-  toolkit mc live undo <journal-id> --reason <why> [--allow-players]   Restore the pre-write snapshot (LIFO)
+  toolkit mc live undo <journal-id> --reason <why> [--allow-players] [--allow-protected]   Restore the pre-write snapshot (LIFO)
 Live writes need --reason "<why>"; --allow-players when a human is near the box (never inside);
+--allow-protected for a box inside a protected region (mcLiveProtectedRegions, e.g. the zombies settlement);
 --confirm-dangerous plus a backup from the last 24h for stop, kill, op/deop, co rollback, //regen, …;
 --affects x1,y1,z1:x2,y2,z2 for WorldEdit ops whose change is not bounded by --pos1/--pos2.`;
 
@@ -67,6 +68,7 @@ export async function handleMcLive(args: string[]): Promise<void> {
         id: requireString(positionals[0], "<journal-id>"),
         reason: requireString(values.reason, "--reason"),
         allowPlayers: values["allow-players"],
+        allowProtected: values["allow-protected"],
         json: values.json,
       });
       return;

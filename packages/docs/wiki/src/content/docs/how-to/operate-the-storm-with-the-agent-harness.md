@@ -96,7 +96,10 @@ The guard refuses outright:
   `paste` so the change can be undone);
 - the `mining` world and any world outside `mcLiveWorlds`;
 - regions over the snapshot limit;
-- any write while a human player stands inside the box.
+- any write while a human player stands inside the box;
+- block writes intersecting a protected region (`mcLiveProtectedRegions`, by
+  default the Zombies settlement in `world`, x 1712-1871, z 2128-2287) unless
+  you pass `--allow-protected`.
 
 A human within 32 blocks needs `--allow-players`. Citizens NPCs never count.
 WorldEdit shapes that reach beyond the selection, such as `//sphere`, need
@@ -110,8 +113,8 @@ toolkit mc live backup --wait --reason "before regenerating the north field"
 ```
 
 Set `mcLiveWrites = false` in `~/.toolkit/config.toml` to refuse every live
-write. `mcLiveWorlds`, `mcLiveMaxRegionVolume`, `mcLiveBackupMaxAgeHours` and
-`mcLiveNearPlayerRadius` tune the other limits.
+write. `mcLiveWorlds`, `mcLiveMaxRegionVolume`, `mcLiveBackupMaxAgeHours`,
+`mcLiveNearPlayerRadius` and `mcLiveProtectedRegions` tune the other limits.
 
 ## If a live call fails
 

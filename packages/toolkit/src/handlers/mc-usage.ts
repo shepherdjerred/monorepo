@@ -47,7 +47,7 @@ Playtests (scenario files; sandbox-only):
   toolkit mc playtest ls | show <run-id>
   toolkit mc playtest new <name> [--dir playtests]
 
-Common options: --target <id|live>, --session <name> (WorldEdit session, default "agent"), --json, --reason <why>, --allow-players, --confirm-dangerous
+Common options: --target <id|live>, --session <name> (WorldEdit session, default "agent"), --json, --reason <why>, --allow-players, --allow-protected, --confirm-dangerous
 --record <buildDir> on cmd, we and paste appends the op to that build's op log on success.
 Use "cmd -- <command>" for negative coordinates, and --pos1=x,y,z when a value starts with "-".
 

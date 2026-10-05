@@ -11,12 +11,14 @@ import type {
 export const LIVE_WRITE_OPTIONS = {
   reason: { type: "string" },
   "allow-players": { type: "boolean", default: false },
+  "allow-protected": { type: "boolean", default: false },
   "confirm-dangerous": { type: "boolean", default: false },
 } as const satisfies ParseArgsOptionsConfig;
 
 export type LiveWriteValues = {
   reason?: string | undefined;
   "allow-players"?: boolean | undefined;
+  "allow-protected"?: boolean | undefined;
   "confirm-dangerous"?: boolean | undefined;
 };
 
@@ -24,6 +26,7 @@ export function liveWriteFlags(values: LiveWriteValues): LiveWriteFlags {
   return {
     reason: values.reason,
     allowPlayers: values["allow-players"] === true,
+    allowProtected: values["allow-protected"] === true,
     confirmDangerous: values["confirm-dangerous"] === true,
   };
 }
