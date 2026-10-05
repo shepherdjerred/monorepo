@@ -64,7 +64,10 @@ export type JudgeVerdict = {
 };
 
 /** Asks the model about two images in the given order. */
-export type AskJudge = (first: LlmImageInput, second: LlmImageInput) => Promise<ModelVerdict>;
+export type AskJudge = (
+  first: LlmImageInput,
+  second: LlmImageInput,
+) => Promise<ModelVerdict>;
 
 const JUDGE_PROMPT = `You are judging two Minecraft builds from their contact sheets (four isometric views, two elevations, a top view, and block stats). The first image is build FIRST, the second is build SECOND.
 
@@ -81,12 +84,19 @@ Score each build 0–2 on every rubric dimension:
 Then pick the better build overall (or "tie" only if they are genuinely equal), give your confidence 0–1, and list up to six short, concrete critique points naming which build each applies to. Judge only what is visible.`;
 
 function totalOf(scores: DimensionScores): number {
-  return RUBRIC_DIMENSIONS.reduce((sum, dimension) => sum + scores[dimension], 0);
+  return RUBRIC_DIMENSIONS.reduce(
+    (sum, dimension) => sum + scores[dimension],
+    0,
+  );
 }
 
-function averageScores(x: DimensionScores, y: DimensionScores): DimensionScores {
+function averageScores(
+  x: DimensionScores,
+  y: DimensionScores,
+): DimensionScores {
   const entries = RUBRIC_DIMENSIONS.map(
-    (dimension) => [dimension, Math.round((x[dimension] + y[dimension]) / 2)] as const,
+    (dimension) =>
+      [dimension, Math.round((x[dimension] + y[dimension]) / 2)] as const,
   );
   return DimensionScoresSchema.parse(Object.fromEntries(entries));
 }
@@ -103,8 +113,18 @@ export async function judgePair(
 ): Promise<JudgeVerdict> {
   const forward = await ask(a, b);
   const reverse = await ask(b, a);
-  const forwardWinner = forward.winner === "first" ? "a" : forward.winner === "second" ? "b" : "tie";
-  const reverseWinner = reverse.winner === "first" ? "b" : reverse.winner === "second" ? "a" : "tie";
+  const forwardWinner =
+    forward.winner === "first"
+      ? "a"
+      : forward.winner === "second"
+        ? "b"
+        : "tie";
+  const reverseWinner =
+    reverse.winner === "first"
+      ? "b"
+      : reverse.winner === "second"
+        ? "a"
+        : "tie";
   const agreed = forwardWinner === reverseWinner;
   const scores = {
     a: averageScores(forward.first, reverse.second),
@@ -175,7 +195,10 @@ export async function resolveRender(target: string): Promise<string> {
 }
 
 export async function pngInput(file: string): Promise<LlmImageInput> {
-  return { data: new Uint8Array(await Bun.file(file).arrayBuffer()), mediaType: "image/png" };
+  return {
+    data: new Uint8Array(await Bun.file(file).arrayBuffer()),
+    mediaType: "image/png",
+  };
 }
 
 /** CLI entry: resolves both renders and judges them with the given model. */
@@ -186,6 +209,11 @@ export async function judgeRenders(
 ): Promise<JudgeVerdict & { renders: { a: string; b: string } }> {
   const renders = { a: await resolveRender(a), b: await resolveRender(b) };
   const ask = options.ask ?? llmJudge(options.model);
-  const verdict = await judgePair(await pngInput(renders.a), await pngInput(renders.b), ask, options.model);
+  const verdict = await judgePair(
+    await pngInput(renders.a),
+    await pngInput(renders.b),
+    ask,
+    options.model,
+  );
   return { ...verdict, renders };
 }

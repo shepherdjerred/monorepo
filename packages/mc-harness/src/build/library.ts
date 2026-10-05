@@ -9,7 +9,7 @@ import {
   type LibraryEntry,
 } from "@shepherdjerred/mc-build/library/library.ts";
 import { BUILD_FILES } from "#protocol/build.ts";
-import { PROGRAM_TEMPLATE } from "./commands.ts";
+import { PROGRAM_TEMPLATE } from "./helpers.ts";
 import { BuildWorkspace } from "./workspace.ts";
 
 export type LibraryRow = {
@@ -66,7 +66,11 @@ export async function libraryUse(
   const target = new BuildWorkspace(dir).file(BUILD_FILES.program);
   const existing = Bun.file(target);
   const present = await existing.exists();
-  if (present && !options.force && (await existing.text()) !== PROGRAM_TEMPLATE) {
+  if (
+    present &&
+    !options.force &&
+    (await existing.text()) !== PROGRAM_TEMPLATE
+  ) {
     throw new Error(
       `${target} has edits; pass --force to replace it with library/${slug}`,
     );

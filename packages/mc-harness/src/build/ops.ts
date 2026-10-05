@@ -1,6 +1,9 @@
 import { withoutNeighborDerived } from "@shepherdjerred/mc-build/core/block-state.ts";
-import type { BlockGrid} from "@shepherdjerred/mc-build/core/grid.ts";
-import { gridFromRegionRead, type Vec3 } from "@shepherdjerred/mc-build/core/grid.ts";
+import type { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import {
+  gridFromRegionRead,
+  type Vec3,
+} from "@shepherdjerred/mc-build/core/grid.ts";
 import type { Box, WeOp } from "#protocol/bridge.ts";
 import type { Op } from "#protocol/build.ts";
 import type { DaemonClient } from "./daemon-client.ts";
@@ -25,23 +28,40 @@ function weOp(op: Extract<Op, { kind: "we" }>): WeOp {
   };
 }
 
-async function runWeBatch(context: RunContext, world: string, batch: WeOp[]): Promise<void> {
-  const response = await context.client.we(context.target, { session: context.session, world, ops: batch });
+async function runWeBatch(
+  context: RunContext,
+  world: string,
+  batch: WeOp[],
+): Promise<void> {
+  const response = await context.client.we(context.target, {
+    session: context.session,
+    world,
+    ops: batch,
+  });
   const failed = response.results.find((result) => !result.ok);
   if (failed !== undefined) {
-    throw new Error(`WorldEdit op failed: ${failed.command}\n  ${[...failed.errors, ...failed.messages].join("\n  ")}`);
+    throw new Error(
+      `WorldEdit op failed: ${failed.command}\n  ${[...failed.errors, ...failed.messages].join("\n  ")}`,
+    );
   }
 }
 
-async function runSingle(context: RunContext, op: Exclude<Op, { kind: "we" }>): Promise<void> {
+async function runSingle(
+  context: RunContext,
+  op: Exclude<Op, { kind: "we" }>,
+): Promise<void> {
   if (op.kind === "command") {
     const result = await context.client.command(context.target, op.command);
     if (!result.success) {
-      throw new Error(`Command failed: ${op.command}\n  ${result.output.join("\n  ")}`);
+      throw new Error(
+        `Command failed: ${op.command}\n  ${result.output.join("\n  ")}`,
+      );
     }
     return;
   }
-  const bytes = await Bun.file(context.workspace.file(op.schematic)).arrayBuffer();
+  const bytes = await Bun.file(
+    context.workspace.file(op.schematic),
+  ).arrayBuffer();
   await context.client.paste(context.target, {
     session: context.session,
     world: op.world,
@@ -53,7 +73,10 @@ async function runSingle(context: RunContext, op: Exclude<Op, { kind: "we" }>): 
 }
 
 /** Runs ops in order, batching consecutive WorldEdit ops in the same world. */
-export async function runOps(context: RunContext, ops: readonly Op[]): Promise<number> {
+export async function runOps(
+  context: RunContext,
+  ops: readonly Op[],
+): Promise<number> {
   let batch: WeOp[] = [];
   let batchWorld: string | null = null;
   const flush = async () => {
@@ -80,7 +103,10 @@ export async function runOps(context: RunContext, ops: readonly Op[]): Promise<n
 }
 
 /** Pastes the captured site back over its box (air included): a clean canvas. */
-export async function resetToSite(context: RunContext, box: Box): Promise<void> {
+export async function resetToSite(
+  context: RunContext,
+  box: Box,
+): Promise<void> {
   await context.client.paste(context.target, {
     session: context.session,
     world: box.world,
@@ -91,7 +117,11 @@ export async function resetToSite(context: RunContext, box: Box): Promise<void> 
   });
 }
 
-export async function readGrid(client: DaemonClient, target: string, box: Box): Promise<BlockGrid> {
+export async function readGrid(
+  client: DaemonClient,
+  target: string,
+  box: Box,
+): Promise<BlockGrid> {
   return gridFromRegionRead(await client.regionRead(target, box));
 }
 
@@ -105,13 +135,21 @@ export type GridDiff = {
  * neighbor-derived state (pane/fence/wall connections, stair shape, leaf
  * distance) that the server recomputes after a paste.
  */
-export function diffGrids(expected: BlockGrid, actual: BlockGrid, origin: Vec3): GridDiff {
+export function diffGrids(
+  expected: BlockGrid,
+  actual: BlockGrid,
+  origin: Vec3,
+): GridDiff {
   const result = expected.diff(actual, 10, withoutNeighborDerived);
   return {
     mismatches: result.count,
     samples: result.mismatches.map((mismatch) => ({
       ...mismatch,
-      at: { x: mismatch.at.x + origin.x, y: mismatch.at.y + origin.y, z: mismatch.at.z + origin.z },
+      at: {
+        x: mismatch.at.x + origin.x,
+        y: mismatch.at.y + origin.y,
+        z: mismatch.at.z + origin.z,
+      },
     })),
   };
 }

@@ -7,28 +7,43 @@ import { parseArgs } from "node:util";
 import type { LintReport } from "@shepherdjerred/mc-build/lint/lint.ts";
 import { z } from "zod";
 import { PALETTE_NAMES } from "@shepherdjerred/mc-build/import/palette.ts";
-import { BoxSchema, RotationSchema, SessionNameSchema } from "#protocol/bridge.ts";
+import {
+  BoxSchema,
+  RotationSchema,
+  SessionNameSchema,
+} from "#protocol/bridge.ts";
 import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
 import { normalizeArgv, wantsHelp } from "#protocol/argv.ts";
 import { parseBlockPos } from "#protocol/ipc.ts";
 import {
   buildStatus,
+  promoteBuild,
+  replayBuild,
+  undoApply,
+  verifyApply,
+} from "./apply.ts";
+import {
   captureSite,
   compileBuild,
   createCanvas,
-  importBuild,
   initBuild,
   lintBuild,
-  promoteBuild,
   renderBuild,
-  replayBuild,
   runBuild,
-  undoApply,
-  verifyApply,
-  type Env,
 } from "./commands.ts";
-import { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } from "./judge.ts";
-import { libraryList, libraryShow, libraryUse, type LibraryRow } from "./library.ts";
+import type { Env } from "./helpers.ts";
+import { importBuild } from "./import-build.ts";
+import {
+  DEFAULT_JUDGE_MODEL,
+  judgeRenders,
+  RUBRIC_DIMENSIONS,
+} from "./judge.ts";
+import {
+  libraryList,
+  libraryShow,
+  libraryUse,
+  type LibraryRow,
+} from "./library.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
 
@@ -96,7 +111,9 @@ const FIRST_POSITIONAL: Record<string, string> = {
 };
 const PaletteNameSchema = z.enum(PALETTE_NAMES);
 
-type Values = ReturnType<typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>>["values"];
+type Values = ReturnType<
+  typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>
+>["values"];
 
 function required(value: string | undefined, name: string): string {
   if (value === undefined || value.length === 0) {
@@ -113,7 +130,9 @@ function lintSummary(report: LintReport): string {
   const lines = report.findings.map(
     (finding) =>
       `  ${finding.severity.toUpperCase().padEnd(5)} ${finding.code}: ${finding.message}${
-        finding.at.length > 0 ? ` @ ${finding.at.map((p) => `${p.x.toString()},${p.y.toString()},${p.z.toString()}`).join(" ")}` : ""
+        finding.at.length > 0
+          ? ` @ ${finding.at.map((p) => `${p.x.toString()},${p.y.toString()},${p.z.toString()}`).join(" ")}`
+          : ""
       }\n        ${finding.hint}`,
   );
   return [
@@ -122,7 +141,12 @@ function lintSummary(report: LintReport): string {
   ].join("\n");
 }
 
-type Handler = (env: Env, dir: string, values: Values, rest: string[]) => Promise<number>;
+type Handler = (
+  env: Env,
+  dir: string,
+  values: Values,
+  rest: string[],
+) => Promise<number>;
 
 function libraryTable(rows: LibraryRow[]): string {
   return rows
@@ -141,7 +165,11 @@ const HANDLERS: Record<string, Handler> = {
       anchor: parseBlockPos(required(values.anchor, "--anchor")),
       seed: Number(values.seed ?? "1"),
     });
-    print(values.json, result, `initialized ${result.dir} (${result.created.join(", ")})`);
+    print(
+      values.json,
+      result,
+      `initialized ${result.dir} (${result.created.join(", ")})`,
+    );
     return 0;
   },
   capture: async (env, dir, values, rest) => {
@@ -151,7 +179,10 @@ const HANDLERS: Record<string, Handler> = {
       min: parseBlockPos(required(a, "<x1,y1,z1>")),
       max: parseBlockPos(required(b, "<x2,y2,z2>")),
     });
-    const result = await captureSite(env, dir, { target: required(values.target, "--target"), box });
+    const result = await captureSite(env, dir, {
+      target: required(values.target, "--target"),
+      box,
+    });
     print(
       values.json,
       result,
@@ -160,8 +191,16 @@ const HANDLERS: Record<string, Handler> = {
     return 0;
   },
   canvas: async (env, dir, values) => {
-    const result = await createCanvas(env, dir, values.ttl === undefined ? {} : { ttlSeconds: parseTtl(values.ttl) });
-    print(values.json, result, `canvas ${result.canvas} ready (site pasted); it is now the build's default target`);
+    const result = await createCanvas(
+      env,
+      dir,
+      values.ttl === undefined ? {} : { ttlSeconds: parseTtl(values.ttl) },
+    );
+    print(
+      values.json,
+      result,
+      `canvas ${result.canvas} ready (site pasted); it is now the build's default target`,
+    );
     return 0;
   },
   compile: async (_env, dir, values) => {
@@ -199,8 +238,16 @@ const HANDLERS: Record<string, Handler> = {
     return result.lint.ok ? 0 : 2;
   },
   run: async (env, dir, values) => {
-    const result = await runBuild(env, dir, values.target === undefined ? {} : { target: values.target });
-    print(values.json, result, `replayed ${result.ops.toString()} op(s) on ${result.target}; expected.json updated`);
+    const result = await runBuild(
+      env,
+      dir,
+      values.target === undefined ? {} : { target: values.target },
+    );
+    print(
+      values.json,
+      result,
+      `replayed ${result.ops.toString()} op(s) on ${result.target}; expected.json updated`,
+    );
     return 0;
   },
   render: async (env, dir, values) => {
@@ -256,7 +303,11 @@ const HANDLERS: Record<string, Handler> = {
   },
   verify: async (env, applyId, values) => {
     const result = await verifyApply(env, applyId);
-    print(values.json, result, `${applyId}: ${result.entry.status} (${result.mismatches.toString()} mismatch(es))`);
+    print(
+      values.json,
+      result,
+      `${applyId}: ${result.entry.status} (${result.mismatches.toString()} mismatch(es))`,
+    );
     return result.mismatches === 0 ? 0 : 2;
   },
   undo: async (env, applyId, values) => {
@@ -274,19 +325,35 @@ const HANDLERS: Record<string, Handler> = {
         tags: values.tag ?? [],
         ...(values.text === undefined ? {} : { text: values.text }),
       });
-      print(values.json, rows, rows.length === 0 ? "no matching library entries" : libraryTable(rows));
+      print(
+        values.json,
+        rows,
+        rows.length === 0 ? "no matching library entries" : libraryTable(rows),
+      );
       return 0;
     }
     if (sub === "show") {
       const entry = await libraryShow(required(rest[0], "<slug>"));
-      print(values.json, entry, `${libraryTable([entry])}\n\n${entry.notes}\n\nprogram: ${entry.program}\n\n${entry.source}`);
+      print(
+        values.json,
+        entry,
+        `${libraryTable([entry])}\n\n${entry.notes}\n\nprogram: ${entry.program}\n\n${entry.source}`,
+      );
       return 0;
     }
     if (sub === "use") {
-      const result = await libraryUse(required(rest[0], "<slug>"), required(rest[1], "<dir>"), {
-        force: values.force,
-      });
-      print(values.json, result, `copied library/${result.slug} → ${result.program}; adapt it, then toolkit mc build compile`);
+      const result = await libraryUse(
+        required(rest[0], "<slug>"),
+        required(rest[1], "<dir>"),
+        {
+          force: values.force,
+        },
+      );
+      print(
+        values.json,
+        result,
+        `copied library/${result.slug} → ${result.program}; adapt it, then toolkit mc build compile`,
+      );
       return 0;
     }
     throw new Error(`unknown library command "${sub}"\n${BUILD_USAGE}`);
@@ -322,7 +389,9 @@ const HANDLERS: Record<string, Handler> = {
         `  site: ${site === undefined ? "not captured" : `${site.min.x.toString()},${site.min.y.toString()},${site.min.z.toString()} → ${site.max.x.toString()},${site.max.y.toString()},${site.max.z.toString()}`}`,
         `  canvas: ${result.manifest.canvas ?? "none"}`,
         `  ops: ${result.ops.manual.toString()} manual, ${result.ops.program.toString()} from build.ts`,
-        ...result.applies.map((entry) => `  ${entry.applyId} → ${entry.target}: ${entry.status}`),
+        ...result.applies.map(
+          (entry) => `  ${entry.applyId} → ${entry.target}: ${entry.status}`,
+        ),
       ].join("\n"),
     );
     return 0;
@@ -331,7 +400,13 @@ const HANDLERS: Record<string, Handler> = {
 
 async function main(): Promise<number> {
   const [action, ...args] = Bun.argv.slice(2);
-  if (action === undefined || action === "help" || action === "--help" || action === "-h" || wantsHelp(args)) {
+  if (
+    action === undefined ||
+    action === "help" ||
+    action === "--help" ||
+    action === "-h" ||
+    wantsHelp(args)
+  ) {
     process.stdout.write(BUILD_USAGE);
     return 0;
   }
@@ -339,7 +414,12 @@ async function main(): Promise<number> {
   if (handler === undefined) {
     throw new Error(`unknown build action "${action}"\n${BUILD_USAGE}`);
   }
-  const { values, positionals } = parseArgs({ args: normalizeArgv(args, OPTIONS), options: OPTIONS, allowPositionals: true, strict: true });
+  const { values, positionals } = parseArgs({
+    args: normalizeArgv(args, OPTIONS),
+    options: OPTIONS,
+    allowPositionals: true,
+    strict: true,
+  });
   const [dir, ...rest] = positionals;
   const env: Env = {
     // Only live writes read these; sandbox targets ignore them.
@@ -353,7 +433,12 @@ async function main(): Promise<number> {
       console.error(message);
     },
   };
-  return handler(env, required(dir, FIRST_POSITIONAL[action] ?? "<dir>"), values, rest);
+  return handler(
+    env,
+    required(dir, FIRST_POSITIONAL[action] ?? "<dir>"),
+    values,
+    rest,
+  );
 }
 
 try {

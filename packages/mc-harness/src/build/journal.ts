@@ -5,7 +5,12 @@ import { BlockPosSchema } from "#protocol/bridge.ts";
 import { JOURNAL_DIR } from "#protocol/paths.ts";
 import { boxesOverlap } from "#src/box.ts";
 
-export const ApplyStatusSchema = z.enum(["applying", "verified", "failed", "undone"]);
+export const ApplyStatusSchema = z.enum([
+  "applying",
+  "verified",
+  "failed",
+  "undone",
+]);
 
 export const JournalEntrySchema = z.strictObject({
   version: z.literal(1),
@@ -35,23 +40,37 @@ export class Journal {
   }
 
   static newId(now = new Date()): string {
-    return `apply-${now.getTime().toString(36)}-${Math.floor(Math.random() * 36 ** 4)
+    return `apply-${now.getTime().toString(36)}-${Math.floor(
+      Math.random() * 36 ** 4,
+    )
       .toString(36)
       .padStart(4, "0")}`;
   }
 
   async write(entry: JournalEntry): Promise<void> {
     await mkdir(path.join(this.root, entry.target), { recursive: true });
-    await Bun.write(this.file(entry.target, entry.applyId), `${JSON.stringify(JournalEntrySchema.parse(entry), null, 2)}\n`);
+    await Bun.write(
+      this.file(entry.target, entry.applyId),
+      `${JSON.stringify(JournalEntrySchema.parse(entry), null, 2)}\n`,
+    );
   }
 
   async list(target?: string): Promise<JournalEntry[]> {
-    const targets = target === undefined ? await readdir(this.root).catch(() => []) : [target];
+    const targets =
+      target === undefined
+        ? await readdir(this.root).catch(() => [])
+        : [target];
     const entries: JournalEntry[] = [];
     for (const name of targets) {
       const files = await readdir(path.join(this.root, name)).catch(() => []);
-      for (const file of files.filter((candidate) => candidate.endsWith(".json"))) {
-        entries.push(JournalEntrySchema.parse(await Bun.file(path.join(this.root, name, file)).json()));
+      for (const file of files.filter((candidate) =>
+        candidate.endsWith(".json"),
+      )) {
+        entries.push(
+          JournalEntrySchema.parse(
+            await Bun.file(path.join(this.root, name, file)).json(),
+          ),
+        );
       }
     }
     return entries.toSorted((a, b) => a.createdAt.localeCompare(b.createdAt));

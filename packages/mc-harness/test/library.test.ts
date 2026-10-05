@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { PROGRAM_TEMPLATE } from "#build/commands.ts";
+import { PROGRAM_TEMPLATE } from "#build/helpers.ts";
 import { libraryList, libraryShow, libraryUse } from "#build/library.ts";
 
 describe("build library", () => {
