@@ -6,19 +6,25 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.PluginManager;
 
 /**
  * {@code /rwfbots debug [bot]}: the governor level, think and staleness percentiles and every bot's
- * plan, or one bot's details. For operators.
+ * plan, or one bot's details; {@code /rwfbots debug slots}: each team's playbook slots and who
+ * holds them, drawn for the sender with particles. For operators.
  */
 public final class RwfBotsCommand {
 
@@ -32,14 +38,28 @@ public final class RwfBotsCommand {
   private final ThinkLoop loop;
   private final Governor governor;
   private final BotTicker ticker;
+  private final SlotOverlay overlay;
   private final Permission permission =
       new Permission(PERMISSION, "Inspect the Search and Destroy bots", PermissionDefault.OP);
 
-  public RwfBotsCommand(Roster roster, ThinkLoop loop, Governor governor, BotTicker ticker) {
-    this.roster = roster;
-    this.loop = loop;
-    this.governor = governor;
-    this.ticker = ticker;
+  /**
+   * What the command reads and draws with.
+   *
+   * @param roster the bots
+   * @param loop their think loop, whose board carries the team plans
+   * @param governor the load governor
+   * @param ticker the main-thread driver
+   * @param overlay draws the slots for a viewer
+   */
+  record Parts(
+      Roster roster, ThinkLoop loop, Governor governor, BotTicker ticker, SlotOverlay overlay) {}
+
+  RwfBotsCommand(Parts parts) {
+    this.roster = parts.roster();
+    this.loop = parts.loop();
+    this.governor = parts.governor();
+    this.ticker = parts.ticker();
+    this.overlay = parts.overlay();
   }
 
   public void register(Commands commands) {
@@ -61,6 +81,7 @@ public final class RwfBotsCommand {
         .then(
             Commands.literal("debug")
                 .executes(ctx -> overview(ctx.getSource().getSender()))
+                .then(Commands.literal("slots").executes(ctx -> slots(ctx.getSource().getSender())))
                 .then(
                     Commands.argument("bot", StringArgumentType.word())
                         .suggests(
@@ -109,6 +130,57 @@ public final class RwfBotsCommand {
     }
     for (var bot : bots) {
       info(to, line(bot));
+    }
+    return OK;
+  }
+
+  /** Each team's strategy slots and holders; a player sender also sees them drawn. */
+  private int slots(CommandSender sender) {
+    var plans = loop.board().plans();
+    if (plans.isEmpty()) {
+      info(sender, "no team has been dealt slots yet");
+      return OK;
+    }
+    var names = new HashMap<CombatantId, String>();
+    for (var bot : roster.live()) {
+      bot.profile().ifPresent(profile -> names.put(profile.id(), bot.name()));
+    }
+    plans.entrySet().stream()
+        .sorted(Map.Entry.comparingByKey((a, b) -> a.value().compareTo(b.value())))
+        .forEach(
+            entry -> {
+              var plan = entry.getValue();
+              info(
+                  sender,
+                  String.format(
+                      Locale.ROOT,
+                      "%s: objective %s, %d lanes, dealt at tick %d",
+                      entry.getKey().value(),
+                      plan.objective().map(Object::toString).orElse("none"),
+                      plan.lanes().size(),
+                      plan.dealtTick()));
+              plan.assignment().entrySet().stream()
+                  .sorted(Map.Entry.comparingByValue())
+                  .forEach(
+                      held -> {
+                        var slot = plan.slot(held.getValue()).orElseThrow();
+                        info(
+                            sender,
+                            String.format(
+                                Locale.ROOT,
+                                "  %s holds %s (%s) at %.0f %.0f %.0f, lane %d",
+                                names.getOrDefault(held.getKey(), held.getKey().toString()),
+                                slot.key(),
+                                slot.role().name().toLowerCase(Locale.ROOT),
+                                slot.pos().x(),
+                                slot.pos().y(),
+                                slot.pos().z(),
+                                slot.lane()));
+                      });
+            });
+    if (sender instanceof Player player) {
+      overlay.show(player);
+      info(sender, "drawing slots (rings) and routes (trails) for 10 s");
     }
     return OK;
   }

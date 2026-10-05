@@ -181,7 +181,14 @@ public final class RwfBotsPaper {
                 lobby));
     module.plugin().getServer().getPluginManager().registerEvents(stimuli, module.plugin());
     bridge.subscribe(events);
-    var command = new RwfBotsCommand(roster, loop, governor, ticker);
+    var command =
+        new RwfBotsCommand(
+            new RwfBotsCommand.Parts(
+                roster,
+                loop,
+                governor,
+                ticker,
+                new SlotOverlay(loop, module.scheduler(), app.world())));
     command.registerPermission(module.plugin().getServer().getPluginManager());
     module
         .lifecycle()

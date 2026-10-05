@@ -228,6 +228,16 @@ final class RwfBotsFlowTest {
     assertThat(lines).anyMatch(line -> line.contains("governor level 0"));
     assertThat(lines).anyMatch(line -> line.contains("plan "));
 
+    operator.performCommand("rwfbots debug slots");
+    var slots = new ArrayList<String>();
+    for (var message = operator.nextMessage(); message != null; message = operator.nextMessage()) {
+      slots.add(message);
+    }
+    assertThat(slots).anyMatch(line -> line.contains("objective"));
+    assertThat(slots).anyMatch(line -> line.contains(" holds ") && line.contains(", lane "));
+    assertThat(slots).anyMatch(line -> line.contains("drawing slots"));
+    harness.ticks(30);
+
     harness.match.phase(MatchSnapshot.PhaseKind.ENDED);
     harness.match.outcome(new Outcome.Winner(TeamColor.RED));
     harness.match.fireTick();
