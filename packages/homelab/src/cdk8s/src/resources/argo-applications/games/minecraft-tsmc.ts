@@ -113,13 +113,17 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // Candidate publication must not activate an unprepared production volume.
       tag: versions["shepherdjerred/the-storm-server/prod"],
     },
-    // Sized for the Search and Destroy world: up to ~100 ticking Citizens bot
-    // players share this server with survival, so the heap and the CPU
-    // reservation grew with it. CPU stays unlimited so bursts are not throttled.
+    // Sized for the Search and Destroy world: up to 100 ticking Citizens bot
+    // players share this server with survival. The rwfbots load profile
+    // (packages/the-storm/plugin/modules/rwfbots/LOAD.md) found 100 bots add
+    // under one core and that 6 CPUs tick no faster than 4, since the tick is
+    // one main thread: survival's earlier 2 cores plus one for the bots. The
+    // heap was not measured and keeps its headroom. CPU stays unlimited so
+    // bursts are not throttled.
     resources: {
       requests: {
         memory: "8Gi",
-        cpu: "4",
+        cpu: "3",
       },
       limits: {
         memory: "10Gi",

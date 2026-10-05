@@ -121,8 +121,9 @@ command and its failure modes.
    name.
 2. Join as a human with `/rwf join`. The lobby must fill with bots and start
    a round with you as the only person.
-3. Watch the pod while the round runs. The chart requests 4 CPU and limits
-   memory to 10 Gi, so the server must stay inside both:
+3. Watch the pod while the round runs. The chart requests 3 CPU (sized from
+   the rwfbots load profile) and limits memory to 10 Gi; CPU above the
+   request is burst, and memory must stay inside the limit:
 
    ```bash
    kubectl -n minecraft-tsmc top pod minecraft-tsmc-0
