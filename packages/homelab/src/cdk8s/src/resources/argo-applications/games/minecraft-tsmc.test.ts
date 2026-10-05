@@ -22,7 +22,12 @@ const ManifestSchema = z.object({
 });
 
 const HelmValues = z.record(z.string(), z.unknown());
-const HelmSource = z.object({ helm: z.object({ valuesObject: HelmValues }) });
+const HelmSource = z.object({
+  helm: z.object({
+    valuesObject: HelmValues,
+    parameters: z.array(z.object({ name: z.string(), value: z.string() })),
+  }),
+});
 const OpItemSchema = z
   .object({
     kind: z.literal("OnePasswordItem"),
@@ -43,10 +48,14 @@ function envValue(text: string, name: string): string {
   return match[1];
 }
 
-function tsmcValues(): Record<string, unknown> {
+function tsmcHelm() {
   const application = createMinecraftTsmcApp(Testing.chart()).toJson();
   return z.object({ spec: z.object({ source: HelmSource }) }).parse(application)
-    .spec.source.helm.valuesObject;
+    .spec.source.helm;
+}
+
+function tsmcValues(): Record<string, unknown> {
+  return tsmcHelm().valuesObject;
 }
 
 function synthTsmc(): unknown[] {
@@ -91,6 +100,14 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     expect(versions["shepherdjerred/the-storm-server/prod"]).toMatch(
       /@sha256:[a-f\d]{64}$/,
     );
+    // Helm parameters take precedence over valuesObject. The effective image
+    // must follow the catalog even after an operational image override.
+    expect(tsmcHelm().parameters).toEqual([
+      {
+        name: "image.tag",
+        value: versions["shepherdjerred/the-storm-server/prod"],
+      },
+    ]);
   });
 
   test("leaves plugins and config delivery to the image", () => {

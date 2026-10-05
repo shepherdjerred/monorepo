@@ -11,6 +11,11 @@ the candidate first, complete the selected stopped-server progression archive
 below, then promote its exact digest into the production pin through a PR.
 Candidate publication cannot restart production with an unprepared volume.
 
+The Application declares both the image value and Helm's higher-precedence
+`image.tag` parameter from that same production pin. A release replaces
+operational parameter overrides with the declared list; recording credentials
+remain supplied by the chart's `extraEnv` secret references.
+
 ## Plugin and configuration ownership
 
 `owned/plugins/TheStorm/config.yml` registers and enables all 25 Storm modules,

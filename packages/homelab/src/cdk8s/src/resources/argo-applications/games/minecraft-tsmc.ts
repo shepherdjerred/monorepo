@@ -253,6 +253,14 @@ export function createMinecraftTsmcApp(chart: Chart) {
         targetRevision: versions.minecraft,
         chart: "minecraft",
         helm: {
+          // Own the higher-precedence parameter too: an earlier operational
+          // override must not keep the StatefulSet on an ad hoc image.
+          parameters: [
+            {
+              name: "image.tag",
+              value: versions["shepherdjerred/the-storm-server/prod"],
+            },
+          ],
           valuesObject: minecraftValues,
         },
       },
