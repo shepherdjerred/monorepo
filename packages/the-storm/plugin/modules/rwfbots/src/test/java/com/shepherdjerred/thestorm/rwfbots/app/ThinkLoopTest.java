@@ -10,6 +10,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.DecisionTrace;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
@@ -28,6 +30,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -119,7 +122,9 @@ final class ThinkLoopTest {
         Kit.TROOPER,
         Fixtures.levers(0.7),
         new Style(0.5, 0.5, 0.6, 0.5),
-        Map.of(Role.PLANT, 1.0, Role.ESCORT, 0.8));
+        Map.of(Role.PLANT, 1.0, Role.ESCORT, 0.8),
+        Archetype.TACTICIAN,
+        Set.of(Quirk.ALWAYS_GG));
   }
 
   private static WorldSnapshot snapshot(long tick) {

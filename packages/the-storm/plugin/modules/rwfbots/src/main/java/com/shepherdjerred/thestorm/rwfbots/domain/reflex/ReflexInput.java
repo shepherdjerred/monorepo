@@ -30,8 +30,8 @@ public record ReflexInput(
 
   /**
    * The input for {@code self} given what it perceives, with {@code gapplesLeft} apples: the
-   * decided target when visible, otherwise the nearest visible enemy unless the decision is to
-   * avoid fights, in which case only an enemy already in reach is fought.
+   * decided target when visible, otherwise only an enemy close enough to hit back at. Whether to
+   * fight anyone further away is the think step's call, so a bot holding its slot never charges.
    */
   public static ReflexInput of(
       CombatantView self, WorldSnapshot snapshot, Decision decision, Percept percept) {
@@ -45,13 +45,12 @@ public record ReflexInput(
     if (decided.isPresent()) {
       return decided;
     }
-    return switch (decision.stance()) {
-      case AGGRESSIVE, CAUTIOUS -> percept.nearestVisible();
-      case STEALTH, EVASIVE ->
-          percept
-              .nearestVisible()
-              .filter(enemy -> enemy.pos().distance(self.pos()) <= Reflex.REACH);
-    };
+    var reach =
+        switch (decision.stance()) {
+          case AGGRESSIVE, CAUTIOUS -> Reflex.MELEE_ALERT;
+          case STEALTH, EVASIVE -> Reflex.REACH;
+        };
+    return percept.nearestVisible().filter(enemy -> enemy.pos().distance(self.pos()) <= reach);
   }
 
   public ReflexInput withGapples(int count) {

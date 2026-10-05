@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPlan;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,6 +16,7 @@ import java.util.Optional;
  * @param perceived how many bots perceived this job
  * @param thought how many bots ran tactics this job
  * @param deferred how many due perceptions the ray budget pushed to the next job
+ * @param plans each team's playbook slots and who holds them, for debugging
  */
 public record DecisionBoard(
     long tick,
@@ -21,13 +24,15 @@ public record DecisionBoard(
     long thinkNanos,
     int perceived,
     int thought,
-    int deferred) {
+    int deferred,
+    Map<TeamId, TeamPlan> plans) {
 
   /** The board before any job has run. */
-  public static final DecisionBoard EMPTY = new DecisionBoard(0, Map.of(), 0, 0, 0, 0);
+  public static final DecisionBoard EMPTY = new DecisionBoard(0, Map.of(), 0, 0, 0, 0, Map.of());
 
   public DecisionBoard {
     thoughts = Map.copyOf(thoughts);
+    plans = Map.copyOf(plans);
     if (tick < 0 || thinkNanos < 0 || perceived < 0 || thought < 0 || deferred < 0) {
       throw new IllegalArgumentException("board counters must not be negative");
     }

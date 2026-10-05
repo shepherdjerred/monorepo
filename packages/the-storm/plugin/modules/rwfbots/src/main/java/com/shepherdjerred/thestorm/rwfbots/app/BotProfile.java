@@ -1,12 +1,15 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * One bot as the think loop needs it for a match: who it is, which team and kit it plays, how well,
@@ -20,6 +23,8 @@ import java.util.Map;
  * @param levers its effective levers for this match
  * @param style its play style
  * @param roleWeights its role preferences
+ * @param archetype its personality's archetype, which shapes its slots and utilities
+ * @param quirks its personality's habits, some of which show in play
  */
 public record BotProfile(
     CombatantId id,
@@ -29,7 +34,9 @@ public record BotProfile(
     Kit kit,
     Levers levers,
     Style style,
-    Map<Role, Double> roleWeights) {
+    Map<Role, Double> roleWeights,
+    Archetype archetype,
+    Set<Quirk> quirks) {
 
   public BotProfile {
     if (slot < 0) {
@@ -39,6 +46,7 @@ public record BotProfile(
       throw new IllegalArgumentException("personality id must not be blank");
     }
     roleWeights = Map.copyOf(roleWeights);
+    quirks = Set.copyOf(quirks);
     if (roleWeights.isEmpty()) {
       throw new IllegalArgumentException("a bot needs at least one role weight");
     }

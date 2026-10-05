@@ -5,6 +5,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexState;
@@ -22,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /** One combatant in the sim: a body with simple physics and, for bots, the three brain layers. */
 final class SimBody {
@@ -55,6 +58,8 @@ final class SimBody {
   Levers levers;
   Style style;
   Map<Role, Double> roleWeights = Map.of(Role.PLANT, 1.0, Role.ESCORT, 0.8, Role.DEFEND, 0.6);
+  Archetype archetype = Archetype.TACTICIAN;
+  Set<Quirk> quirks = Set.of();
   Perception perceiver;
   ReflexContext reflexContext;
   TacticsContext tacticsContext;
@@ -62,6 +67,11 @@ final class SimBody {
   TacticsState tactics = TacticsState.fresh(0);
   ReflexState reflex = ReflexState.initial(Facing.SOUTH);
   Optional<Decision> decision = Optional.empty();
+
+  /** Whether the bot saw an enemy this tick, and how far the nearest was (-1 when none). */
+  boolean seesEnemy;
+
+  double nearestSeen = -1;
 
   final List<BodyCommand> lastCommands = new ArrayList<>();
   final Map<CombatantId, Integer> attacksOn = new HashMap<>();

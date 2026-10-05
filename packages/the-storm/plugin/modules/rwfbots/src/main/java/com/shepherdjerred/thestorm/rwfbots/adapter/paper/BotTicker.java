@@ -186,7 +186,12 @@ public final class BotTicker {
         ReflexInput.of(self.orElseThrow(), snapshot, decision, percept).withGapples(gapples(bot));
     input = freshTarget(input);
     var match = frame.match();
-    var context = new ReflexContext(match.nav().grid(), profile.levers(), bot.loadout());
+    var context =
+        new ReflexContext(
+            match.nav().grid(),
+            profile.levers(),
+            bot.loadout(),
+            ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());
     bot.reflex(step.state());
     driver.apply(bot, step.commands(), match.ids(), tick);

@@ -98,6 +98,28 @@ public final class Fixtures {
         base.retired());
   }
 
+  /** {@code base} as another archetype. */
+  public static Personality withArchetype(Personality base, Archetype archetype) {
+    return new Personality(
+        base.id(),
+        base.name(),
+        base.skinValue(),
+        base.skinSignature(),
+        base.skill(),
+        archetype,
+        base.leverOffsets(),
+        base.kits(),
+        base.roles(),
+        base.style(),
+        base.voice(),
+        base.lines(),
+        base.quirks(),
+        base.rivals(),
+        base.bio(),
+        base.batch(),
+        base.retired());
+  }
+
   /** Two plain lines for every match moment and four for the lobby. */
   public static Lines lines() {
     var two = List.of("ok", "sure");

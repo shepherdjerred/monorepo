@@ -7,6 +7,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
@@ -26,6 +28,15 @@ public record Situation(
 
   /** Confidence given to a teammate's report. */
   static final double SHARED_CONFIDENCE = 0.5;
+
+  /** Lowest health a visible enemy may have and still count as nearly dead. */
+  static final double LOW_ENEMY_HEALTH = 6;
+
+  /** Most teammates that chase one enemy that is not nearly dead. */
+  public static final int MAX_CHASERS = 2;
+
+  /** An enemy this close is always fair game, however many teammates chase it. */
+  static final double POINT_BLANK = 4;
 
   /**
    * An enemy the bot knows about.
@@ -121,6 +132,51 @@ public record Situation(
 
   public boolean isLastAlive() {
     return livingAllies().isEmpty();
+  }
+
+  /** The playbook slot the bot holds, if one has been dealt. */
+  public Optional<Slot> slot() {
+    return board.slotOf(self.id());
+  }
+
+  /** Whether the bot holds the slot that arms the team's objective. */
+  public boolean holdsPlantSlot() {
+    return slot().map(slot -> slot.kind() == SlotKind.PLANT).orElse(false);
+  }
+
+  /** The bomb the bot's plant slot names, while it can still be armed. */
+  public Optional<BombView> plantTarget() {
+    return slot()
+        .filter(slot -> slot.kind() == SlotKind.PLANT)
+        .flatMap(Slot::bomb)
+        .flatMap(snapshot::bomb)
+        .filter(bomb -> bomb.armableBy(self.team()) && !bomb.state().isLit());
+  }
+
+  /** How many blocks of extra distance each teammate already chasing an enemy counts as. */
+  static final double CHASER_DISTANCE = 6;
+
+  /**
+   * Known enemies the bot may take on, the nearest and least chased first: those fewer than {@link
+   * #MAX_CHASERS} teammates already chase, those nearly dead, and any at point-blank range.
+   */
+  public List<KnownEnemy> chaseableEnemies() {
+    return knownEnemies().stream()
+        .sorted(
+            comparingDouble(
+                enemy ->
+                    enemy.pos().distance(self.pos())
+                        + CHASER_DISTANCE * board.chasers(enemy.id(), self.id())))
+        .filter(
+            enemy ->
+                board.chasers(enemy.id(), self.id()) < MAX_CHASERS
+                    || enemy.pos().distance(self.pos()) <= POINT_BLANK
+                    || (enemy.visible()
+                        && snapshot
+                            .combatant(enemy.id())
+                            .map(view -> view.effectiveHealth() <= LOW_ENEMY_HEALTH)
+                            .orElse(false)))
+        .toList();
   }
 
   /** The teammate holding {@link Role#PLANT}, if alive. */
