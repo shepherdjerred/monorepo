@@ -3,7 +3,7 @@ You are being evaluated on how well you use this repository's Minecraft agent ha
 Environment:
 
 - Your working directory is a checkout of the monorepo. `toolkit` on PATH runs this checkout's toolkit; use `toolkit mc …` for everything Minecraft.
-- Read the skill(s) before acting: `packages/toolkit/skills/minecraft-harness/SKILL.md`, and for building also `packages/toolkit/skills/minecraft-building/SKILL.md` plus its `references/`. Package READMEs (`packages/mc-harness/README.md`, `packages/mc-build/README.md`) have more detail.
+- Read the skill(s) before acting: `.agents/skills/minecraft-harness/SKILL.md` (and the `references/` it routes to), and for building also `.agents/skills/minecraft-building/SKILL.md` plus its `references/`. Package READMEs (`packages/mc-harness/README.md`, `packages/mc-build/README.md`) have more detail.
 - MCBridge.jar is already built. Docker is available. Sandboxes boot in ~20–60 s.
 
 Rules:

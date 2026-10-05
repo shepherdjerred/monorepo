@@ -33,7 +33,7 @@ layout, layering table and commands.
 
 - Gameplay that a player triggers through world interaction can be proven with
   `toolkit mc playtest run playtests/` (Citizens actors on the `storm-dev`
-  sandbox; see the toolkit `minecraft-harness` skill). Client-only flows stay in
+  sandbox; see the repository `minecraft-harness` skill). Client-only flows stay in
   `tests/e2e`.
 
 ```bash
