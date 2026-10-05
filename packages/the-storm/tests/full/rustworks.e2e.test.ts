@@ -73,7 +73,7 @@ async function runItems(
   count: number,
 ) {
   const itemData = await rcon.command(
-    `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data"`,
+    `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
   );
   const run = z.guid().parse(/[a-f0-9-]{36}/u.exec(itemData)?.[0]);
   await rcon.command(

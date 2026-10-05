@@ -25,9 +25,11 @@ async function start(bot: Bot, rcon: RconClient, round: number) {
 
 async function click(bot: Bot, rcon: RconClient, pos: Vec3) {
   const approach = new Vec3(pos.x + 0.5, 73, pos.z + 1.5);
+  const moved = new Promise<void>((resolve) => bot.once("forcedMove", resolve));
   await rcon.command(
     `tp ${bot.username} ${approach.x.toString()} ${approach.y.toString()} ${approach.z.toString()}`,
   );
+  await moved;
   await waitUntil(
     "fixture approach",
     () =>
@@ -258,7 +260,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
   try {
     expect(
       await rcon.command(
-        "execute if block 1834 73 2189 minecraft:copper_block",
+        "execute if block 1834 73 2189 minecraft:waxed_copper_block",
       ),
     ).toBe("Test passed");
     expect(
@@ -302,11 +304,11 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before);
     await click(bot, rcon, new Vec3(1829, 74, 2187));
-    const replaced = waitForMessage(bot, /Equipped Emberweave/u);
     await waitUntil(
       "replacement menu reopened",
       () => bot.currentWindow !== null,
     );
+    const replaced = waitForMessage(bot, /Equipped Emberweave/u);
     await bot.clickWindow(0, 0, 0);
     await replaced;
     await close(bot);
@@ -326,11 +328,11 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before - 32);
     await click(bot, rcon, new Vec3(1765, 74, 2185));
-    const swapped = waitForMessage(bot, /Equipped Stoneward/u);
     await waitUntil(
       "owned boon menu reopened",
       () => bot.currentWindow !== null,
     );
+    const swapped = waitForMessage(bot, /Equipped Stoneward/u);
     await bot.clickWindow(0, 0, 0);
     await swapped;
     await close(bot);
