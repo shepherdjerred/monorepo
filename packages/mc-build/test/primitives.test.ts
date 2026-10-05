@@ -107,6 +107,38 @@ describe("roofs", () => {
     expect(roof.top).toBe(9);
   });
 
+  test("a hip roof over a cleared interior still rests on its undersides", () => {
+    const plain = freshContext();
+    plain.ctx.craft.hipRoof({
+      x: 0,
+      z: 0,
+      w: 9,
+      d: 7,
+      y: 4,
+      stairs: "oak_stairs",
+    });
+    const cleared = freshContext();
+    cleared.ctx.clear({ x: 0, y: 0, z: 0, w: 9, h: 10, d: 7 });
+    cleared.ctx.craft.hipRoof({
+      x: 0,
+      z: 0,
+      w: 9,
+      d: 7,
+      y: 4,
+      stairs: "oak_stairs",
+    });
+    const plainAt = plain.read();
+    const clearedAt = cleared.read();
+    for (const [x, y] of [
+      [0, 4],
+      [1, 5],
+      [2, 6],
+    ] as const) {
+      expect(plainAt(x, y, 3)).toMatch(/^minecraft:oak_stairs\[.*half=top/u);
+      expect(clearedAt(x, y, 3)).toBe(plainAt(x, y, 3));
+    }
+  });
+
   test("a dormer carves the roof and frames a window", () => {
     const { ctx, read } = freshContext();
     ctx.craft.hipRoof({ x: 0, z: 0, w: 9, d: 7, y: 4, stairs: "oak_stairs" });
