@@ -5,20 +5,7 @@ import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
-
-async function practice(bot: Bot, rcon: RconClient, round: number) {
-  await rcon.command(`op ${bot.username}`);
-  const joined = waitForMessage(bot, /Survival: Fighter/u);
-  bot.chat(`/arena join settlement ${round.toString()}`);
-  await joined;
-  await rcon.command("difficulty normal");
-  const started = waitForMessage(
-    bot,
-    new RegExp(`Round ${round.toString()}:`, "u"),
-  );
-  await rcon.command("arena start settlement");
-  await started;
-}
+import { startSettlementRound } from "#e2e/harness/survival.ts";
 
 async function stand(bot: Bot, rcon: RconClient, at: Vec3) {
   await rcon.command(
@@ -40,7 +27,7 @@ describe("Settlement iteration on native Paper", () => {
     bot,
     rcon,
   }) => {
-    await practice(bot, rcon, 8);
+    await startSettlementRound(bot, rcon, 8);
     try {
       await rcon.command(
         `effect give ${bot.username} minecraft:resistance infinite 255 true`,
@@ -91,7 +78,7 @@ describe("Settlement iteration on native Paper", () => {
     bot,
     rcon,
   }) => {
-    await practice(bot, rcon, 8);
+    await startSettlementRound(bot, rcon, 8);
     try {
       await rcon.command(
         `effect give ${bot.username} minecraft:resistance infinite 255 true`,
@@ -183,7 +170,7 @@ describe("Settlement iteration on native Paper", () => {
       bot,
       rcon,
     }) => {
-      await practice(bot, rcon, 5);
+      await startSettlementRound(bot, rcon, 5);
       try {
         await rcon.command(
           `storm-fixture-survival hungry ${bot.username} none`,

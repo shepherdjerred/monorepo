@@ -5,22 +5,13 @@ import type { Bot } from "mineflayer";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
+import { startSettlementRound } from "#e2e/harness/survival.ts";
 
 const boss =
   '@e[type=minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},limit=1]';
 
 async function begin(bot: Bot, rcon: RconClient, round: number) {
-  await rcon.command(`op ${bot.username}`);
-  const joined = waitForMessage(bot, /Survival: Fighter/u);
-  bot.chat(`/arena join settlement ${round.toString()}`);
-  await joined;
-  await rcon.command("difficulty normal");
-  const started = waitForMessage(
-    bot,
-    new RegExp(`Round ${round.toString()}:`, "u"),
-  );
-  await rcon.command("arena start settlement");
-  await started;
+  await startSettlementRound(bot, rcon, round);
   await rcon.command(
     `effect give ${bot.username} minecraft:resistance infinite 255 true`,
   );

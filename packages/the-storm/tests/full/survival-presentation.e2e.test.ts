@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
+import { startSettlementRound } from "#e2e/harness/survival.ts";
 
 const ParticleSchema = z.object({
   x: z.number(),
@@ -16,14 +17,7 @@ test("nearby generator and cache particles arrive repeatedly above their blocks"
   bot,
   rcon,
 }) => {
-  await rcon.command(`op ${bot.username}`);
-  const joined = waitForMessage(bot, /Survival: Fighter/u);
-  bot.chat("/arena join settlement 8");
-  await joined;
-  await rcon.command("difficulty normal");
-  const started = waitForMessage(bot, /Round 8:/u);
-  await rcon.command("arena start settlement");
-  await started;
+  await startSettlementRound(bot, rcon, 8);
   await rcon.command(
     `effect give ${bot.username} minecraft:resistance infinite 255 true`,
   );
