@@ -101,7 +101,7 @@ export default async function setup(project: TestProject) {
     warmCache: Bun.env["STORM_E2E_COLD"] !== "1",
     stormJar,
     ...(await gameplayFixtures(packageRoot, profile)),
-    ...(profile === "load" ? { resources: loadResources } : {}),
+    ...(profile === "load" ? { resources: loadResources() } : {}),
     ownedConfigDir,
     env: {
       // The managed-flag gates (rwf join here; crier and merchant in the full

@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { loadavg } from "node:os";
 import path from "node:path";
 import { describe, expect } from "vitest";
 import { z } from "zod";
@@ -8,6 +9,7 @@ import { test } from "#e2e/fixtures.ts";
 import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { packageRoot } from "#e2e/harness/paths.ts";
+import { loadResources } from "#e2e/gameplay-fixtures.ts";
 import {
   eventually,
   status,
@@ -39,6 +41,11 @@ const settleMs = 20_000;
 const measureMs = 150_000;
 /** Plan bars: added p95 tick time at 100 bots, decision staleness, governor. */
 const bars = { addedP95Ms: 8, stalenessP95Ticks: 3, governorLevel: 0 };
+/**
+ * A think job slower than one tick (50 ms) is an overrun: the next snapshot
+ * waits for it and decisions go stale. The plan allows none at level 0.
+ */
+const overrunMs = 50;
 
 type Window = {
   p95: number;
@@ -50,6 +57,16 @@ type Window = {
   stalenessP95: number;
   sectionsP95: number;
   alive: number;
+  /**
+   * Server ticks between the newest published board's snapshot and now: how
+   * far the think loop trails the game, apart from the tactics cadence that
+   * dominates decision staleness.
+   */
+  boardLag: number;
+  /** Bots the last think job deferred for want of line-of-sight rays. */
+  deferred: number;
+  /** The workstation's one-minute load average: other work on the host. */
+  hostLoad: number;
 };
 type Phase = {
   bots: number;
@@ -146,7 +163,8 @@ async function window(server: ServerInfo): Promise<Window> {
     (seen) =>
       seen.some((line) => sparkTicks.test(line)) &&
       seen.some((line) => line.includes("(process)")) &&
-      seen.some((line) => line.includes("governor level")),
+      seen.some((line) => line.includes("governor level")) &&
+      seen.some((line) => line.includes("board tick")),
   );
   // spark answers asynchronously, so its lines interleave with the others:
   // the 10 s and 1 m durations are the only "a/b/c/d;" line it prints.
@@ -170,7 +188,22 @@ async function window(server: ServerInfo): Promise<Window> {
   const alive = fighters.filter(
     (fighter) => fighter.includes("✦") && !fighter.includes("(out)"),
   ).length;
-  return { ...ticks, cpu, ...overview, alive };
+  const boardLine = lines.findLast((line) => line.includes("board tick")) ?? "";
+  const deferred = Number(
+    /(?<deferred>\d+) deferred/u.exec(boardLine)?.groups?.["deferred"] ??
+      Number.NaN,
+  );
+  const boardTick = Number(
+    /board tick (?<tick>\d+)/u.exec(boardLine)?.groups?.["tick"] ?? Number.NaN,
+  );
+  const tickerTick = Number(
+    /; tick (?<tick>\d+)/u.exec(
+      lines.findLast((line) => line.includes("governor level")) ?? "",
+    )?.groups?.["tick"] ?? Number.NaN,
+  );
+  const boardLag = tickerTick - boardTick;
+  const [hostLoad = Number.NaN] = loadavg();
+  return { ...ticks, cpu, ...overview, alive, boardLag, deferred, hostLoad };
 }
 
 const MsptSchema = z.string().transform((text, context) => {
@@ -299,6 +332,10 @@ function summarise(phase: Phase) {
     sectionsP95: max(phase.windows.map((w) => w.sectionsP95)),
     stalenessP95: max(phase.windows.map((w) => w.stalenessP95)),
     level: max(phase.windows.map((w) => w.level)),
+    boardLagMax: max(phase.windows.map((w) => w.boardLag)),
+    deferredMax: max(phase.windows.map((w) => w.deferred)),
+    overruns: phase.windows.filter((w) => w.thinkP95 > overrunMs).length,
+    hostLoad: mean(phase.windows.map((w) => w.hostLoad)),
     windows: phase.windows.length,
   };
 }
@@ -332,10 +369,11 @@ describe("rwfbots load", () => {
       }
 
       const rows = phases.map((phase) => summarise(phase));
+      const { cpus } = loadResources();
       const base = rows[0]?.p95 ?? 0;
       const table = [
-        "| Bots | Matches | Alive (mean) | MSPT avg | MSPT p95 | Added p95 | Worst 10 s p95 | MSPT max | CPU % | Think p95 ms | Bot sections p95 ms | Staleness p95 ticks | Governor |",
-        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Bots | Matches | Alive (mean) | MSPT avg | MSPT p95 | Added p95 | Worst 10 s p95 | MSPT max | CPU % | Think p95 ms | Overrun windows | Deferred max | Bot sections p95 ms | Staleness p95 ticks | Board lag max ticks | Governor | Host load |",
+        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
         ...rows
           .map((row) =>
             [
@@ -349,19 +387,26 @@ describe("rwfbots load", () => {
               fixed(row.msptMax),
               fixed(row.cpu),
               row.thinkP95.toFixed(2),
+              row.overruns,
+              row.deferredMax,
               row.sectionsP95.toFixed(2),
               fixed(row.stalenessP95),
+              row.boardLagMax,
               row.level,
+              fixed(row.hostLoad),
             ].join(" | "),
           )
           .map((line) => `| ${line} |`),
       ].join("\n");
-      console.warn(`\n${table}\n`);
+      console.warn(`\n${cpus.toString()} CPUs\n${table}\n`);
       const outDir = path.join(packageRoot, ".cache", "e2e", "load");
       await mkdir(outDir, { recursive: true });
       await Bun.write(
-        path.join(outDir, `rwf-load-${new Date().toISOString()}.json`),
-        JSON.stringify({ rows, phases, table }, null, 2),
+        path.join(
+          outDir,
+          `rwf-load-${cpus.toString()}cpu-${new Date().toISOString()}.json`,
+        ),
+        JSON.stringify({ cpus, rows, phases, table }, null, 2),
       );
 
       // The plan's bars; every one is checked so the table is complete even
@@ -377,6 +422,14 @@ describe("rwfbots load", () => {
         .soft(hundred?.level, "governor level at 100 bots")
         .toBe(bars.governorLevel);
       for (const row of rows.filter((candidate) => candidate.bots > 0)) {
+        if (row.level === bars.governorLevel) {
+          expect
+            .soft(
+              row.overruns,
+              `think jobs over one tick at ${row.bots.toString()} bots`,
+            )
+            .toBe(0);
+        }
         expect
           .soft(
             row.stalenessP95,
