@@ -221,21 +221,58 @@ export async function runBuild(
   return { target, ops: ops.length };
 }
 
+export function regionInSite(
+  site: Box,
+  region: { min: BlockPos; max: BlockPos },
+): Box {
+  const min = {
+    x: Math.min(region.min.x, region.max.x),
+    y: Math.min(region.min.y, region.max.y),
+    z: Math.min(region.min.z, region.max.z),
+  };
+  const max = {
+    x: Math.max(region.min.x, region.max.x),
+    y: Math.max(region.min.y, region.max.y),
+    z: Math.max(region.min.z, region.max.z),
+  };
+  const inside = (["x", "y", "z"] as const).every(
+    (axis) => min[axis] >= site.min[axis] && max[axis] <= site.max[axis],
+  );
+  if (!inside) {
+    throw new Error(
+      `render region ${fmtPos(min)} → ${fmtPos(max)} is outside the site ${fmtPos(site.min)} → ${fmtPos(site.max)}`,
+    );
+  }
+  return { world: site.world, min, max };
+}
+
+function fmtPos(pos: BlockPos): string {
+  return `${pos.x.toString()},${pos.y.toString()},${pos.z.toString()}`;
+}
+
 export async function renderBuild(
   env: Env,
   dir: string,
-  options: { target?: string; expected?: boolean; name?: string },
+  options: {
+    target?: string;
+    expected?: boolean;
+    name?: string;
+    /** A close-up inside the site box (maps: one district at a time). */
+    region?: { min: BlockPos; max: BlockPos };
+  },
 ): Promise<{ render: string }> {
   const workspace = new BuildWorkspace(dir);
   const manifest = await workspace.manifest();
+  const site = workspace.siteBox(manifest);
+  if (options.region !== undefined && options.expected === true) {
+    throw new Error("render a region from the canvas, not --expected");
+  }
+  const box =
+    options.region === undefined ? site : regionInSite(site, options.region);
   const grid =
     options.expected === true
       ? await workspace.expected()
-      : await readGrid(
-          env.client,
-          canvasOf(manifest, options.target),
-          workspace.siteBox(manifest),
-        );
+      : await readGrid(env.client, canvasOf(manifest, options.target), box);
   const name = options.name ?? `render-${Date.now().toString(36)}`;
   return { render: await renderGrid(workspace, grid, name, manifest.name) };
 }

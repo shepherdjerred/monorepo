@@ -92,6 +92,13 @@ render and getting a go-ahead when the target is a server people play on.
    restores block entities such as chest contents). `toolkit mc build status
    <dir>` lists applies.
 
+## Maps
+
+For a town, island or landscape (60–128 blocks), read references/maps.md
+first: layout plan, one heightfield shared by terrain and buildings,
+variety at scale, and district close-ups with
+`toolkit mc build render <dir> <x1,y1,z1> <x2,y2,z2>`.
+
 ## Rules
 
 - Never hand-place block-by-block when a WorldEdit op or DSL primitive fits.

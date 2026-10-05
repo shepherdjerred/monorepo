@@ -32,12 +32,8 @@ import {
   runBuild,
 } from "./commands.ts";
 import type { Env } from "./helpers.ts";
+import type * as JudgeModule from "./judge.ts";
 import { importBuild } from "./import-build.ts";
-import {
-  DEFAULT_JUDGE_MODEL,
-  judgeRenders,
-  RUBRIC_DIMENSIONS,
-} from "./judge.ts";
 import {
   libraryList,
   libraryShow,
@@ -46,6 +42,35 @@ import {
 } from "./library.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
+
+/**
+ * The judge pulls in llm-runtime and the built model catalog; load it only for
+ * `judge` so every other build command works in a fresh checkout.
+ */
+async function loadJudge(): Promise<typeof JudgeModule> {
+  try {
+    return await import("./judge.ts");
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("@shepherdjerred/llm-models")) {
+      throw new Error(
+        "toolkit mc build judge needs the built model catalog; run `bunx turbo run build --filter=@shepherdjerred/llm-models` once, then retry",
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+}
+
+function buildName(raw: string): string {
+  const parsed = SessionNameSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `--name must be 1-32 lowercase letters, digits or hyphens (got "${raw}")`,
+    );
+  }
+  return parsed.data;
+}
 
 export const BUILD_USAGE = `
 toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
@@ -59,7 +84,7 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   import <dir> <model.obj> --height <n> [--solid] [--palette default|wool|concrete|terracotta]
                                         OBJ mesh (MTL colors/textures) → voxels → nearest blocks
   run <dir> [--target id]               Reset canvas to the site, replay all ops, record expected
-  render <dir> [--target id | --expected] [--name n]
+  render <dir> [x1,y1,z1 x2,y2,z2] [--target id | --expected] [--name n]
   lint <dir> [--target id | --expected]
   replay <dir> [--target id] [--keep]   Fresh seeded sandbox: replay ops and diff against expected
   promote <dir> --target <id> [--confirm <planHash>]   Dry run, then snapshot + apply + verify
@@ -162,7 +187,7 @@ function libraryTable(rows: LibraryRow[]): string {
 const HANDLERS: Record<string, Handler> = {
   init: async (_env, dir, values) => {
     const result = await initBuild(dir, {
-      name: SessionNameSchema.parse(required(values.name, "--name")),
+      name: buildName(required(values.name, "--name")),
       world: required(values.world, "--world"),
       anchor: parseBlockPos(required(values.anchor, "--anchor")),
       seed: Number(values.seed ?? "1"),
@@ -252,10 +277,19 @@ const HANDLERS: Record<string, Handler> = {
     );
     return 0;
   },
-  render: async (env, dir, values) => {
+  render: async (env, dir, values, rest) => {
+    const [a, b] = rest;
     const result = await renderBuild(env, dir, {
       ...(values.target === undefined ? {} : { target: values.target }),
       ...(values.name === undefined ? {} : { name: values.name }),
+      ...(a === undefined
+        ? {}
+        : {
+            region: {
+              min: parseBlockPos(a),
+              max: parseBlockPos(required(b, "<x2,y2,z2>")),
+            },
+          }),
       expected: values.expected,
     });
     print(values.json, result, `render: ${result.render}`);
@@ -361,6 +395,8 @@ const HANDLERS: Record<string, Handler> = {
     throw new Error(`unknown library command "${sub}"\n${BUILD_USAGE}`);
   },
   judge: async (_env, a, values, rest) => {
+    const { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } =
+      await loadJudge();
     const verdict = await judgeRenders(a, required(rest[0], "<b>"), {
       model: values.model ?? DEFAULT_JUDGE_MODEL,
     });
@@ -447,6 +483,12 @@ async function main(): Promise<number> {
 try {
   process.exitCode = await main();
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(
+    error instanceof z.ZodError
+      ? z.prettifyError(error)
+      : error instanceof Error
+        ? error.message
+        : String(error),
+  );
   process.exitCode = 1;
 }

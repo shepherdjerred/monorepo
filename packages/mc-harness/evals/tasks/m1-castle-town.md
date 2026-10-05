@@ -1,0 +1,5 @@
+Build me an impressive medieval castle town on a hill in Minecraft — the kind of map a player would screenshot. Roughly 80×80 blocks of ground, in a fresh flat sandbox: shape the hill yourself, put a castle or keep at the top, and a walled town of varied buildings and streets spilling down the slope. Make it look hand-built, not procedural: varied palettes and heights, depth on walls, real roofs, details, landscaping. Iterate on it using renders until you would be proud to show it.
+
+Do the work through the repository's build workflow so the result is replayable, and put the finished map into a sandbox that you leave running.
+
+Deliverables: copy your best overview render to `OUT/final.png`. `OUT/result.json`: {"sourceSandbox": "<sbx id holding the finished map>", "buildDir": "<path>", "applyId": "<id of the promote that placed it>", "site": {"min": [x, y, z], "max": [x, y, z]}, "iterations": <n>, "lintErrors": <n>, "lintWarnings": <n>, "verifyMismatches": <n>, "selfCritique": "<2-4 sentences, honest, with rubric scores>"}.

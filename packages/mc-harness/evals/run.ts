@@ -83,9 +83,12 @@ const runId = `ev-${stamp}-${randomBytes(2).toString("hex")}`;
 const runDir = path.join(realHome, ".toolkit", "mc", "evals", runId);
 await mkdir(runDir, { recursive: true });
 const evalsDir = path.join(repoRoot, "packages", "mc-harness", "evals");
-const preamble = await Bun.file(
-  path.join(evalsDir, "tasks", "_preamble.md"),
-).text();
+const preambles = {
+  guided: await Bun.file(path.join(evalsDir, "tasks", "_preamble.md")).text(),
+  natural: await Bun.file(
+    path.join(evalsDir, "tasks", "_preamble-natural.md"),
+  ).text(),
+};
 
 console.warn(
   `eval ${runId}: ${agent}, tasks ${tasks.map((task) => task.id).join(",")}, HEAD ${head.slice(0, 10)}`,
@@ -180,7 +183,7 @@ async function runAgent(prepared: Prepared): Promise<AgentRun> {
   const taskText = await Bun.file(
     path.join(evalsDir, "tasks", task.file),
   ).text();
-  const prompt = `${preamble}\nOUT directory: ${outDir}\n\n${taskText}`;
+  const prompt = `${preambles[task.preamble]}\nOUT directory: ${outDir}\n\n${taskText}`;
   await Bun.write(path.join(taskDir, "prompt.md"), prompt);
   const lastMessagePath = path.join(taskDir, "last.md");
   const invocation = agentInvocation({

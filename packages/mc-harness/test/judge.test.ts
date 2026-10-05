@@ -74,3 +74,13 @@ describe("resolveRender", () => {
     await expect(resolveRender(path.join(dir, "missing"))).rejects.toThrow();
   });
 });
+
+describe("build CLI loading", () => {
+  it("imports the judge lazily so other commands work without the built model catalog", async () => {
+    const source = await Bun.file(
+      path.join(import.meta.dir, "..", "src", "build", "cli.ts"),
+    ).text();
+    expect(source).not.toMatch(/^import (?!type )[^;]*from "\.\/judge\.ts";/mu);
+    expect(source).toContain('await import("./judge.ts")');
+  });
+});

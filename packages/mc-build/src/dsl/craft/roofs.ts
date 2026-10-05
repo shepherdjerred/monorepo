@@ -242,7 +242,8 @@ export function roofParts(kit: CraftKit) {
 
   /** Upside-down stair or block under a roof cell, connecting it downward. */
   function underside(p: Vec3, material: string): void {
-    if (canvas.get(p.x, p.y - 1, p.z) === KEEP) {
+    const below = canvas.get(p.x, p.y - 1, p.z);
+    if (below === KEEP || below === AIR) {
       put({ ...p, y: p.y - 1 }, material);
     }
   }

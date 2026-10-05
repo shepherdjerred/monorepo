@@ -26,18 +26,18 @@ toolkit mc we --target <canvas> --record <dir> --world world --at 15,-50,14 "//s
 
 ## Region commands (selection = pos1..pos2)
 
-| Command                             | Use                                                       |
-| ----------------------------------- | --------------------------------------------------------- |
-| `//set <pattern>`                   | Fill the box (floors, slabs of terrain, clear with `air`) |
-| `//walls <pattern>`                 | Four side walls of the box                                |
-| `//faces <pattern>`                 | All six faces (hollow box)                                |
-| `//replace <mask> <pattern>`        | Swap materials (weathering, paths)                        |
-| `//overlay <pattern>`               | Ground cover on the top surface                           |
-| `//smooth [iterations]`             | Soften terrain heightmap in the box                       |
-| `//naturalize`                      | Grass on top, dirt below, stone deeper                    |
-| `//stack <count> [direction]`       | Repeat the selection (colonnades, fences, windows)        |
-| `//move <count> [direction]`        | Shift the selection                                       |
-| `//generate <pattern> <expression>` | Math shapes, e.g. arches/domes (`y < 3*sin(x/4)`)         |
+| Command                          | Use                                                       |
+| -------------------------------- | --------------------------------------------------------- |
+| `//set <pattern>`                | Fill the box (floors, slabs of terrain, clear with `air`) |
+| `//walls <pattern>`              | Four side walls of the box                                |
+| `//faces <pattern>`              | All six faces (hollow box)                                |
+| `//replace <mask> <pattern>`     | Swap materials (weathering, paths)                        |
+| `//overlay <pattern>`            | Ground cover on the top surface                           |
+| `//smooth [iterations]`          | Soften terrain heightmap in the box                       |
+| `//naturalize`                   | Grass on top, dirt below, stone deeper                    |
+| `//stack <count> [direction]`    | Repeat the selection (colonnades, fences, windows)        |
+| `//move <count> [direction]`     | Shift the selection                                       |
+| `//generate -r <pattern> <expr>` | Math shapes in block coords (`-r`), e.g. `y < 3*sin(x/4)` |
 
 ## Shape commands (placement = `--at`)
 

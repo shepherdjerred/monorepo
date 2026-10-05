@@ -134,3 +134,6 @@ packages/streambot/scratch/
 # transient bun-publish auth indirection (scripts/release/publish-npm.ts writes + removes it)
 .npmrc
 **/.eslintcache-ci-scripts
+
+# toolkit mc build working directories (minecraft-building skill examples)
+/builds/

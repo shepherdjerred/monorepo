@@ -10,6 +10,11 @@ export type TaskDef = {
   /** File under evals/tasks/. */
   file: string;
   timeoutMinutes: number;
+  /**
+   * `guided` names the skills and steps; `natural` is a plain user request,
+   * so the agent must discover the repository guidance on its own.
+   */
+  preamble: "guided" | "natural";
   grade: Grader;
 };
 
@@ -19,6 +24,7 @@ export const TASKS: readonly TaskDef[] = [
     title: "precise WorldEdit tower",
     file: "e1-tower.md",
     timeoutMinutes: 30,
+    preamble: "guided",
     grade: towerGrader(E1_SPEC),
   },
   {
@@ -26,6 +32,7 @@ export const TASKS: readonly TaskDef[] = [
     title: "cottage through the build pipeline",
     file: "e2-cottage.md",
     timeoutMinutes: 60,
+    preamble: "guided",
     grade: buildGrader("cottage"),
   },
   {
@@ -33,6 +40,7 @@ export const TASKS: readonly TaskDef[] = [
     title: "write and run a playtest",
     file: "e3-playtest.md",
     timeoutMinutes: 30,
+    preamble: "guided",
     grade: playtestGrader,
   },
   {
@@ -40,6 +48,7 @@ export const TASKS: readonly TaskDef[] = [
     title: "validate furnace/hopper mechanics",
     file: "e4-validate.md",
     timeoutMinutes: 30,
+    preamble: "guided",
     grade: mechanicsGrader,
   },
   {
@@ -47,6 +56,7 @@ export const TASKS: readonly TaskDef[] = [
     title: "two-story hillside house",
     file: "e5-hillside-house.md",
     timeoutMinutes: 75,
+    preamble: "guided",
     grade: buildGrader("nordic-two-story"),
   },
   {
@@ -54,7 +64,24 @@ export const TASKS: readonly TaskDef[] = [
     title: "negative-quadrant WorldEdit tower",
     file: "e6-negative-quadrant.md",
     timeoutMinutes: 30,
+    preamble: "guided",
     grade: towerGrader(E6_SPEC),
+  },
+  {
+    id: "m1",
+    title: "castle town on a hill (natural request)",
+    file: "m1-castle-town.md",
+    timeoutMinutes: 150,
+    preamble: "natural",
+    grade: buildGrader("small-chapel"),
+  },
+  {
+    id: "m2",
+    title: "harbor island (natural request)",
+    file: "m2-harbor-island.md",
+    timeoutMinutes: 150,
+    preamble: "natural",
+    grade: buildGrader("stone-bridge"),
   },
 ];
 
