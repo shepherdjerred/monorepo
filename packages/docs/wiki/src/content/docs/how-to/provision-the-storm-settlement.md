@@ -14,7 +14,7 @@ Provision the settlement with admission disabled, then activate it through the r
 4. Inspect the placement and run `/settlement apply <preview-token>`.
    The immutable database backup commits before the first block changes.
    Wait for the `APPLIED` result and retain its token.
-5. Inspect buildings, cross routes, entrances, crafting stations, the mine, and towers.
+5. Inspect buildings, rising streets, entrances, crafting stations, the church galleries, crypt, and towers.
    Release the enabled placement and target the managed survival flag for the intended players.
 6. Verify joining, pursuit, crafting, teammate revival, boss casts, and inventory restoration.
    Startup keeps admission closed when the authored map is missing or changed.
@@ -33,14 +33,19 @@ The coastal fortress occupies the 100 chunks at chunk X 107–116 and Z 133–14
 adds chunk 106,133. All 101 records are in overworld region `r.3.4.mca`. Merge those records
 into a fresh copy of the stopped server's region file; compare every remaining record byte
 for byte with that fresh copy. Do not copy the entire region from the disposable world.
+Within each changed chunk, replace only X1712–1871, Y62–142, Z2128–2287 and the
+three exit cells at X1710, Y72–74, Z2140. Preserve all other block states, block entities,
+biomes, and pending block or fluid ticks. Invalidate lighting and heightmap caches after
+the merge so Paper recomputes them from the installed blocks.
 
 1. Inspect the current image, admission settings, ArgoCD application policy, and online players.
    Prepare the matching code artifact before starting maintenance.
 2. Stop Paper cleanly and verify that no process holds the world's `session.lock`.
 3. Archive the current region and create a SQLite backup of The Storm's database. Check the
    database backup's integrity. Keep the original settlement archive unchanged.
-4. Merge the 101 reviewed chunk records. Record the source and merged SHA-256 hashes and
-   verify that all 923 other records retain their original bytes.
+4. Merge the 101 reviewed chunk records. Record the source and merged SHA-256 hashes,
+   verify that all 923 other records retain their original bytes, and compare every block
+   outside the authored volume inside the changed records.
 5. Verify the live source hash again while holding the world lock. Transfer the merged region
    to a temporary sibling file, verify its hash, and atomically replace the region.
 6. Restart with the matching plugin, survival content, and arena configuration. Preserve the

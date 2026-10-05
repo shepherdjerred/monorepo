@@ -36,18 +36,15 @@ final class RustworksRulesTest {
     assertThat(content.zones()).hasSize(24);
     assertThat(area(content.arena().region()))
         .isEqualTo((int) (area(settlement.arena().region()) * 1.5));
-    var oldCombat =
-        settlement.zones().stream()
-            .flatMap(z -> z.areas().stream())
-            .mapToInt(RustworksRulesTest::area)
-            .sum();
+    // Rustworks was sized against the original ten-district Settlement, before its redesign.
+    var oldCombat = 14_592;
     var newCombat =
         content.zones().stream()
             .flatMap(z -> z.areas().stream())
             .mapToInt(RustworksRulesTest::area)
             .sum();
     assertThat((double) newCombat / oldCombat).isBetween(1.5, 1.6);
-    var average = (double) oldCombat / settlement.zones().size();
+    var average = (double) oldCombat / 10;
     assertThat(content.zones().stream().filter(z -> z.emeralds() > 0))
         .allSatisfy(
             zone ->

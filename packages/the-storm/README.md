@@ -422,9 +422,13 @@ damage scaling still apply. Food and healing consumables remain available.
 ### Settlement survival
 
 The Colosseum retains its finite 72-wave game. Settlement is a separate,
-endless, one-to-four-player crafting survival game. Its ten connected
-districts occupy a compact 112 × 112 ruined coastal fortress, inside the original
-160 × 160 protected footprint. A separate staging dock holds the lobby; an
+endless, one-to-four-player crafting survival game. Its fourteen connected
+districts form a coastal fortress town on three terraces at Y72, Y88, and Y104,
+inside the original 160 × 160 protected footprint. Broad rising streets connect
+the harbor and market to a central cathedral, then the upper barracks and ramparts.
+The cathedral is an early eight-emerald unlock, with a large nave, walkable galleries,
+stained glass, and a separately gated crypt. Three banks serve the three levels.
+A separate staging dock holds the lobby; an
 offshore forge is reached by plane. Permanent buildings are protected; purchased
 routes, barricades, charged traps, and personal gathering budgets reset each run.
 
@@ -642,7 +646,7 @@ See the wiki's **How to provision The Storm settlement** for placement and recov
 
 `/arena join rustworks` enters a separate one-to-four-player Zombies run. Its
 192 × 200 protected footprint is 1.5 times Settlement's, with 23,040 combat
-blocks across 24 districts. Paid districts are 53–75% of Settlement's average
+blocks across 24 districts. Paid districts are 53–75% of the original Settlement's average
 district area. Interlocking loading bays connect rail yards, workshops, copper mills,
 boiler courts, planted yards, a slag vault, and an airship hangar. Ground rises
 eight blocks across long slopes; doors and combat routes remain on those slopes.
