@@ -24,6 +24,12 @@ import {
   type ProcessSpawner,
   portForwardArgs,
 } from "#providers/kubernetes/port-forward.ts";
+import {
+  type DataFiles,
+  ExecDataFiles,
+  kubectlExecArgv,
+  type Spawn,
+} from "#src/files/data-files.ts";
 import type { Target } from "#src/target.ts";
 import { LiveBackups } from "./backup.ts";
 import {
@@ -35,6 +41,7 @@ import {
 import { LiveJournal, newLiveJournalId, undoBlocker } from "./journal.ts";
 import {
   LIVE_BRIDGE_PORT,
+  LIVE_CONTAINER,
   LIVE_POD,
   type LiveClusterStatus,
   liveRefusal,
@@ -67,6 +74,8 @@ export type LiveServiceOptions = {
   statusTtlMs?: number;
   /** Builds the bridge client for the forwarded port (tests inject a fake). */
   bridge?: (endpoint: BridgeEndpoint) => BridgeClient;
+  /** Spawns the `kubectl exec` reads behind `files()` (tests inject a fake). */
+  execSpawn?: Spawn;
 };
 
 const LOG_EVENT_LIMIT = 2000;
@@ -198,6 +207,24 @@ export class LiveService {
         },
       },
     };
+  }
+
+  /**
+   * tsmc's /data for read-only pulls. Needs a running pod but no bridge
+   * token; the mining-reset lock does not block reads.
+   */
+  async files(): Promise<DataFiles> {
+    const status = await this.clusterStatus(false);
+    if (!status.podReady) {
+      throw new LiveError(
+        `live tsmc has no ready pod (phase ${status.podPhase ?? "none"}); it is probably asleep`,
+      );
+    }
+    const { kubectl, execSpawn } = this.options;
+    return new ExecDataFiles(
+      (command) => kubectlExecArgv(kubectl, LIVE_POD, LIVE_CONTAINER, command),
+      execSpawn,
+    );
   }
 
   stop(): void {

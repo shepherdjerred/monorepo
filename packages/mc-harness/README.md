@@ -16,6 +16,7 @@ for the MCBridge Paper plugin, and the session daemon that holds them.
 | `src/playtest/`             | Scenario API (`define.ts`), the per-run child process, expectations and run reports             |
 | `src/target.ts`             | `Target`: one server the harness acts on (bridge client + log tail)                             |
 | `src/live/`                 | Live tsmc: cluster status, port-forward, write guard, Velero backups, journal and undo          |
+| `src/files/`                | Read-only `/data` access over `docker exec` / scoped `kubectl exec` (`toolkit mc files`)        |
 | `src/daemon/`               | Unix-socket daemon: idle TTL, JSONL logs, sandbox lifecycle, target, playtest and client routes |
 | `src/protocol/build.ts`     | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)         |
 | `src/build/`                | `toolkit mc build` CLI: capture, canvas, compile, run, render, lint, replay, promote, undo      |
@@ -253,6 +254,28 @@ last-in-first-out over overlapping boxes. `live backup` creates a Velero
 `Backup` shaped like the mining reset's.
 
 Operator steps: the wiki how-to "Operate The Storm with the agent harness".
+
+## Plugin data
+
+`toolkit mc files` pulls files off a sandbox or live tsmc without touching the
+server: `ls` and `get` for any allowlisted path, and `rwf ls|get` for rwf match
+recordings (`plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz`)
+and rwfbots decision traces (`plugins/TheStorm/rwfbots-traces/<matchId>.gz`),
+with `--gunzip` to decompress while saving.
+
+- Paths are relative to `/data` and confined to `plugins/TheStorm/**`,
+  `logs/**` and region folders: `<world>/dimensions/<ns>/<dim>/region/**`
+  (Minecraft 26.x, e.g. `world/dimensions/minecraft/overworld/region`) and the
+  legacy `<world>/region/**`. Absolute paths and `..` are rejected; the daemon
+  also resolves the path inside the server and refuses a symlink that leads
+  elsewhere.
+- Only `test`, `realpath`, `find` and `cat` run in the server, through
+  `docker exec` or `kubectl exec` as the scoped mc-harness ServiceAccount
+  (`pods/exec` on the sandbox pod or `minecraft-tsmc-0`, container
+  `minecraft-tsmc`). Live reads need a running pod but no bridge token, and
+  the mining-reset lock does not block them.
+- The daemon writes the file itself (absolute `--out`, never overwritten
+  without `--force`) and returns its size and sha256.
 
 ## Commands
 

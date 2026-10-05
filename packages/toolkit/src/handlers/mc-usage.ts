@@ -1,4 +1,5 @@
 // Usage text for `toolkit mc`; `--help` on a subcommand prints its lines.
+import { FILES_USAGE } from "./mc-files.ts";
 import { LIVE_USAGE } from "./mc-live.ts";
 
 export const MC_USAGE = `
@@ -53,6 +54,8 @@ mode, so never live; needs a desktop session and Java 25; the first start compil
 --name picks the client when several run (default: the only one).
 
 ${LIVE_USAGE}
+
+${FILES_USAGE}
 
 Playtests (scenario files; sandbox-only):
   toolkit mc playtest run <file|dir…> [--target <id> | --profile paper|storm-dev] [--grep s] [--keep]

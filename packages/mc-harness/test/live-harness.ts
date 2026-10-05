@@ -115,6 +115,10 @@ export function liveContext(options: {
       },
       log: ignore,
     }),
+    files: (id) =>
+      id === "live"
+        ? live.files()
+        : Promise.reject(new DaemonError(`No sandbox ${id}`, 404)),
     startedAt: "2026-10-04T00:00:00Z",
     ttlSeconds: 3600,
     repoRoot: "/repo",

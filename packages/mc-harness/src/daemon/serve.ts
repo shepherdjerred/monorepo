@@ -16,11 +16,28 @@ import { DaemonError } from "./http.ts";
 import { type DaemonContext, routeRequest } from "./router.ts";
 import { LIVE_TARGET_ID } from "#protocol/live.ts";
 import type { SandboxBackend } from "#sandbox/provider.ts";
+import type { SandboxRecord } from "#sandbox/record.ts";
+import { sandboxDataFiles } from "#src/files/data-files.ts";
 import type { LiveService } from "#src/live/service.ts";
 import { sandboxTarget } from "#src/target.ts";
 
 /** One JSONL line per event under ~/.toolkit/mc/logs. Never pass secrets. */
 export const logLine = jsonlLogger(LOGS_DIR);
+
+async function readySandbox(
+  provider: SandboxBackend,
+  id: string,
+): Promise<SandboxRecord> {
+  const records = await provider.list();
+  const record = records.find((candidate) => candidate.id === id);
+  if (record === undefined) {
+    throw new DaemonError(`No sandbox ${id}`, 404);
+  }
+  if (record.status !== "ready") {
+    throw new DaemonError(`Sandbox ${id} is ${record.status}`, 409);
+  }
+  return record;
+}
 
 async function reapExpired(
   provider: SandboxBackend,
@@ -56,20 +73,14 @@ export async function startDaemon(options: {
   const ctx: DaemonContext = {
     provider,
     live,
-    target: async (id) => {
-      if (id === LIVE_TARGET_ID) {
-        return live.target();
-      }
-      const records = await provider.list();
-      const record = records.find((candidate) => candidate.id === id);
-      if (record === undefined) {
-        throw new DaemonError(`No sandbox ${id}`, 404);
-      }
-      if (record.status !== "ready") {
-        throw new DaemonError(`Sandbox ${id} is ${record.status}`, 409);
-      }
-      return sandboxTarget(record, provider);
-    },
+    target: async (id) =>
+      id === LIVE_TARGET_ID
+        ? live.target()
+        : sandboxTarget(await readySandbox(provider, id), provider),
+    files: async (id) =>
+      id === LIVE_TARGET_ID
+        ? live.files()
+        : sandboxDataFiles(await readySandbox(provider, id)),
     clients,
     startedAt: new Date().toISOString(),
     ttlSeconds,

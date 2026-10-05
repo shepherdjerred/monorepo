@@ -12,6 +12,8 @@ import {
 export const LIVE_NAMESPACE = "minecraft-tsmc";
 export const LIVE_STATEFULSET = "minecraft-tsmc";
 export const LIVE_POD = "minecraft-tsmc-0";
+/** The itzg chart names the server container after the release fullname. */
+export const LIVE_CONTAINER = "minecraft-tsmc";
 export const LIVE_BRIDGE_PORT = 25_580;
 /** Set by the Temporal mining-reset workflow while it owns the server. */
 export const MINING_RESET_LOCK_ANNOTATION = "sjer.red/mining-reset-lock";
