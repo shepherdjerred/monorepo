@@ -305,7 +305,8 @@ final class RwfWatchTest {
     harness.enter(bob);
 
     assertThat(bob.getGameMode()).isEqualTo(GameMode.SURVIVAL);
-    assertThat(bob.getLocation().getY()).as("the lobby").isEqualTo(78);
+    assertThat(bob.getLocation().getY()).as("the lobby").isEqualTo(65);
+    assertThat(bob.getLocation().getX()).as("the lobby").isEqualTo(143.5);
     assertThat(hasAttackSpeed(bob)).isTrue();
     assertThat(stored())
         .singleElement()

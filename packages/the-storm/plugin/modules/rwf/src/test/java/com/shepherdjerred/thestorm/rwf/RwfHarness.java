@@ -71,7 +71,9 @@ public final class RwfHarness implements AutoCloseable {
           "rwf.yml",
           "rwf/kits.yml",
           "rwf/maps/training-yard/map.yml",
-          "rwf/maps/training-yard/blocks.schem");
+          "rwf/maps/training-yard/blocks.schem",
+          "rwf/lobby/lobby.yml",
+          "rwf/lobby/blocks.schem");
 
   private static Consumer<JavaPlugin> enabling = plugin -> {};
 

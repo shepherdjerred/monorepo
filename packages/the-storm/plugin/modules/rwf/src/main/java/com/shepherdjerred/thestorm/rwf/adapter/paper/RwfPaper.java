@@ -37,6 +37,8 @@ public final class RwfPaper {
   private final Watchers watchers;
   private final PaperCombatantActions actions;
   private final List<MapWorld> maps;
+  private final LobbyRoom lobby;
+  private final LobbyDisplays displays;
   private final List<Listener> listeners;
   private final Cancellable clock;
   private final RwfPermissions permissions;
@@ -48,6 +50,8 @@ public final class RwfPaper {
     this.watchers = parts.watchers();
     this.actions = parts.actions();
     this.maps = parts.maps();
+    this.lobby = parts.lobby();
+    this.displays = parts.displays();
     this.listeners = parts.listeners();
     this.clock = parts.clock();
     this.permissions = parts.permissions();
@@ -60,6 +64,8 @@ public final class RwfPaper {
       Watchers watchers,
       PaperCombatantActions actions,
       List<MapWorld> maps,
+      LobbyRoom lobby,
+      LobbyDisplays displays,
       List<Listener> listeners,
       Cancellable clock,
       RwfPermissions permissions,
@@ -111,11 +117,15 @@ public final class RwfPaper {
     var kits = KitFactory.build(keys, content.kits());
     var snapshots = new Snapshots(context, app.snapshots());
     var boards = new Scoreboards(context.server());
-    var bombs = new BombMarkers(context, keys, app.hooks().hologramStyle());
+    var bombs = new BombMarkers(context, keys, app.hooks().displayStyle());
     var maps = new ArrayList<MapWorld>();
     for (var map : content.maps()) {
       maps.add(new MapWorld(context, map, app.hooks().chunks()));
     }
+    var lobby = new LobbyRoom(context, content.lobby(), app.hooks().chunks());
+    var displays =
+        new LobbyDisplays(
+            new LobbyDisplays.Parts(context, keys, lobby, kits, app.hooks().displayStyle()));
     var bots = new Bots(module.services());
     var tracker = new CombatTracker();
     var inputs = new Inputs();
@@ -134,7 +144,10 @@ public final class RwfPaper {
                 tracker,
                 app.payouts(),
                 app.store(),
-                recordings));
+                recordings,
+                lobby,
+                new LobbyHud(context.server()),
+                displays));
     var actions =
         new PaperCombatantActions(
             new PaperCombatantActions.Parts(runner, tracker, recordings, keys, app.hooks()));
@@ -171,6 +184,8 @@ public final class RwfPaper {
                 watchers,
                 actions,
                 List.copyOf(maps),
+                lobby,
+                displays,
                 listeners,
                 clock,
                 permissions,
@@ -194,14 +209,25 @@ public final class RwfPaper {
     world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
   }
 
-  /** Pastes or verifies every map in turn, then opens the lobby on the first. */
+  /**
+   * Pastes or verifies the lobby room, then every map in turn, then dresses the lobby and opens it
+   * on the first map.
+   */
   private void prepareMaps() {
-    prepare(0);
+    lobby.prepare(
+        ok -> {
+          if (!ok) {
+            context.logger().error("rwf: the lobby could not be prepared; admission stays closed");
+            return;
+          }
+          prepare(0);
+        });
   }
 
   private void prepare(int index) {
     if (index >= maps.size()) {
-      context.logger().info("rwf: {} maps ready; the lobby is open", maps.size());
+      context.logger().info("rwf: the lobby and {} maps are ready; the lobby is open", maps.size());
+      displays.open();
       runner.open(maps.getFirst());
       return;
     }
@@ -241,6 +267,8 @@ public final class RwfPaper {
     listeners.forEach(HandlerList::unregisterAll);
     permissions.unregister();
     maps.forEach(MapWorld::release);
+    displays.clear();
+    lobby.release();
     sealed.unseal(context.world().getName());
   }
 }

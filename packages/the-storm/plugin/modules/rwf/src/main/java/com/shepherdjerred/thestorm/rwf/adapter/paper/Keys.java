@@ -9,8 +9,9 @@ import org.bukkit.plugin.Plugin;
 
 /**
  * The persistent-data tags that mark what belongs to a match: every kit item, the Bomb Fuse in
- * particular, and the primed TNT and holograms that stand for bombs. Tagged items never leave the
- * match; tagged entities are removed when a match resets or turn up after a crash.
+ * particular, the primed TNT and holograms that stand for bombs, and the lobby's display entities.
+ * Tagged items never leave the match; tagged entities are removed when a match resets, when the
+ * lobby is dressed again, or when they turn up after a crash.
  */
 final class Keys {
 
@@ -20,11 +21,13 @@ final class Keys {
   private final NamespacedKey item;
   private final NamespacedKey fuse;
   private final NamespacedKey bomb;
+  private final NamespacedKey lobby;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "rwf_item");
     this.fuse = new NamespacedKey(plugin, "rwf_fuse");
     this.bomb = new NamespacedKey(plugin, "rwf_bomb");
+    this.lobby = new NamespacedKey(plugin, "rwf_lobby");
   }
 
   /** Marks {@code stack} as a kit item. */
@@ -61,5 +64,16 @@ final class Keys {
   Optional<String> bombOf(Entity target) {
     return Optional.ofNullable(
         target.getPersistentDataContainer().get(bomb, PersistentDataType.STRING));
+  }
+
+  /** Marks {@code target} as one of the lobby's displays, named {@code part}. */
+  void tagLobby(Entity target, String part) {
+    target.getPersistentDataContainer().set(lobby, PersistentDataType.STRING, part);
+  }
+
+  /** The lobby display part {@code target} is, if it is one. */
+  Optional<String> lobbyPart(Entity target) {
+    return Optional.ofNullable(
+        target.getPersistentDataContainer().get(lobby, PersistentDataType.STRING));
   }
 }

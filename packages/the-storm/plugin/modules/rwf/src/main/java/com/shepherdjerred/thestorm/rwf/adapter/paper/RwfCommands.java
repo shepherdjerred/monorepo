@@ -274,6 +274,8 @@ final class RwfCommands {
       var map = runner.currentMap();
       Texts.info(sender, "Map busy: " + map.busy() + ", cratered blocks: " + map.crateredBlocks());
     }
+    var lobby = runner.lobbyRoom();
+    Texts.info(sender, "Lobby ready: " + lobby.ready() + ", busy: " + lobby.busy());
     return OK;
   }
 
@@ -283,16 +285,23 @@ final class RwfCommands {
       return OK;
     }
     var map = runner.currentMap();
-    if (map.busy()) {
-      Texts.error(sender, "The map is already being verified or pasted.");
+    var lobby = runner.lobbyRoom();
+    if (map.busy() || lobby.busy()) {
+      Texts.error(sender, "The map or the lobby is already being verified or pasted.");
       return OK;
     }
-    Texts.info(sender, "Verifying " + map.map().id() + "...");
+    Texts.info(sender, "Verifying " + map.map().id() + " and the lobby...");
     map.verifyAndRepair(
-        ok ->
-            Texts.info(
-                sender,
-                ok ? "Map " + map.map().id() + " is intact." : "Repair failed; see the log."));
+        ok -> {
+          Texts.info(
+              sender,
+              ok ? "Map " + map.map().id() + " is intact." : "Map repair failed; see the log.");
+          lobby.verifyAndRepair(
+              intact ->
+                  Texts.info(
+                      sender,
+                      intact ? "The lobby is intact." : "Lobby repair failed; see the log."));
+        });
     return OK;
   }
 

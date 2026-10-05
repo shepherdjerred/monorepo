@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyBuild;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -78,13 +79,37 @@ final class ShippedContentTest {
   }
 
   @Test
-  void theLobbyStandsOnTheGlassPlatform() {
-    var map = content.maps().getFirst();
-    var lobby = content.config().lobby();
-    var below = map.blocks().at(map.definition().lobbyPoint().position().toBlock().plus(0, -1, 0));
+  void theLobbyIsTheGeneratedRoomWithAnAlcovePerKit() {
+    var lobby = content.lobby();
+    var generated = generatedLobby();
 
-    assertThat(below.getAsString()).isEqualTo("minecraft:glass");
-    assertThat(lobby.toSpawn()).isEqualTo(map.definition().lobbyPoint());
+    assertThat(lobby.layout()).isEqualTo(LobbyBuild.layout());
+    assertThat(lobby.layout().kits())
+        .isEqualTo(KitBook.MILESTONE_ONE.stream().map(kit -> kit.id()).toList());
+    assertThat(lobby.blocksSha256()).isEqualTo(generated.sha256());
+    assertThat(lobby.blocks().schematic().sha256()).isEqualTo(generated.sha256());
+    assertThat(read(SHIPPED.resolve("rwf/lobby/blocks.schem")))
+        .isEqualTo(SchematicWriter.write(generated));
+  }
+
+  @Test
+  void theLobbySpawnStandsOnTheGoldPadAwayFromEveryMap() {
+    var lobby = content.lobby();
+    var feet = lobby.layout().spawn().position().toBlock();
+
+    assertThat(lobby.blocks().at(feet.plus(0, -1, 0)).getAsString())
+        .isEqualTo("minecraft:gold_block");
+    assertThat(
+            lobby.layout().region().contains(content.maps().getFirst().definition().border().min()))
+        .isFalse();
+  }
+
+  /** The schematic the lobby generator builds. */
+  static Schematic generatedLobby() {
+    return new Schematic(
+        new Schematic.Dimensions(LobbyBuild.WIDTH, LobbyBuild.HEIGHT, LobbyBuild.LENGTH),
+        LobbyBuild.PALETTE,
+        LobbyBuild.generate().indices());
   }
 
   private static byte[] read(Path file) {

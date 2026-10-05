@@ -12,8 +12,7 @@ author: The Storm
 region:
   min: { x: 0, y: 64, z: 0 }
   max: { x: 63, y: 79, z: 63 }
-# The glass platform under the open ceiling.
-lobby: { x: 31.5, y: 78.0, z: 31.5, yaw: 0.0, pitch: 0.0 }
+# Where the dead and watchers look down from.
 spectator: { x: 31.5, y: 76.0, z: 31.5, yaw: 0.0, pitch: 45.0 }
 teams:
   # Red holds the west base and faces east.

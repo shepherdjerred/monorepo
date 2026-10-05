@@ -136,6 +136,12 @@ final class PlayerListener implements Listener {
       context.scheduler().runOnMainThread(() -> runner.respawned(player));
       return;
     }
+    if (runner.waiting(player.getUniqueId())) {
+      // Nothing hurts in the lobby, but a /kill still lands: back to the lobby, ready again.
+      event.setRespawnLocation(runner.lobby());
+      context.scheduler().runOnMainThread(() -> runner.respawnedInLobby(player));
+      return;
+    }
     if (snapshots.waitsForRespawn(player.getUniqueId())) {
       event.setRespawnLocation(runner.lobby());
       context.scheduler().runOnMainThread(() -> snapshots.respawned(player));

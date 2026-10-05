@@ -8,7 +8,8 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * Writes a {@link Schematic} as a Sponge v3 schematic: gzipped NBT with the same layout {@link
- * SchematicReader} reads. Test-only: the plugin never writes maps.
+ * SchematicReader} reads, into memory. The plugin never calls it: the tests and the {@code rwfmap}
+ * tool use it to write and check the generated maps and lobby the repository ships.
  */
 public final class SchematicWriter {
 

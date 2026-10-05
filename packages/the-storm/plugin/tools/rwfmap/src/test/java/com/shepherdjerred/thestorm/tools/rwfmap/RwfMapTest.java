@@ -60,6 +60,43 @@ final class RwfMapTest {
   }
 
   @Test
+  void verifyLobbyPassesOnTheShippedLobbyAndBakeLobbyRewritesItIdentically() throws IOException {
+    assertThat(run("verify-lobby", ShippedLobbyTest.LOBBY.toString()))
+        .as(err())
+        .isEqualTo(RwfMap.OK);
+    assertThat(out.toString(UTF_8)).contains("verified the lobby");
+
+    var folder = temp.resolve("lobby");
+    Files.createDirectories(folder);
+    Files.copy(
+        ShippedLobbyTest.LOBBY.resolve(LobbyFolder.LOBBY_FILE),
+        folder.resolve(LobbyFolder.LOBBY_FILE));
+    assertThat(run("bake-lobby", folder.toString())).as(err()).isEqualTo(RwfMap.OK);
+    for (var name :
+        new String[] {MapFolder.BLOCKS_FILE, MapFolder.NAV_FILE, MapFolder.SUMMARY_FILE}) {
+      assertThat(Files.readAllBytes(folder.resolve(name)))
+          .as(name)
+          .isEqualTo(Files.readAllBytes(ShippedLobbyTest.LOBBY.resolve(name)));
+    }
+    assertThat(run("verify-lobby", folder.toString(), "extra")).isEqualTo(RwfMap.USAGE);
+  }
+
+  @Test
+  void bakeLobbyNamesTheHashWhenLobbyYmlDisagrees() throws IOException {
+    var folder = temp.resolve("lobby");
+    Files.createDirectories(folder);
+    var yaml = Files.readString(ShippedLobbyTest.LOBBY.resolve(LobbyFolder.LOBBY_FILE));
+    Files.writeString(
+        folder.resolve(LobbyFolder.LOBBY_FILE),
+        yaml.replaceAll("blocksSha256: [0-9a-f]{64}", "blocksSha256: " + "0".repeat(64)));
+
+    assertThat(run("bake-lobby", folder.toString())).isEqualTo(RwfMap.FAILED);
+    assertThat(err()).contains("set blocksSha256").contains(LobbyFolder.generated().sha256());
+    assertThat(Files.exists(folder.resolve(MapFolder.BLOCKS_FILE))).isTrue();
+    assertThat(Files.exists(folder.resolve(MapFolder.NAV_FILE))).isFalse();
+  }
+
+  @Test
   void verifyFailsOnAMisnamedFolder() throws IOException {
     var shipped = ShippedMapsTest.MAPS.resolve("training-yard");
     var folder = temp.resolve("not-the-training-yard");

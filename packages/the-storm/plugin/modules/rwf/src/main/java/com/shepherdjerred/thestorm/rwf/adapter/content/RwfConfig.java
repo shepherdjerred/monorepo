@@ -11,12 +11,11 @@ import java.time.zone.ZoneRulesException;
 import java.util.regex.Pattern;
 
 /**
- * {@code rwf.yml}: the world matches run in, where players wait, how matches fill and start, the
- * ported rule constants (pinned, so the file documents them and the module refuses a file that
- * disagrees with the code), rewards, recording and the load test switch.
+ * {@code rwf.yml}: the world matches run in, where players stand outside a match, how matches fill
+ * and start, the ported rule constants (pinned, so the file documents them and the module refuses a
+ * file that disagrees with the code), rewards, recording and the load test switch.
  *
  * @param world the loaded world matches run in; the module seals it
- * @param lobby where players wait before a match
  * @param spectator where players stand when no match places them elsewhere
  * @param match how matches fill and start
  * @param rules the ported Red Warfare constants this build plays by
@@ -26,7 +25,6 @@ import java.util.regex.Pattern;
  */
 public record RwfConfig(
     String world,
-    PointEntry lobby,
     PointEntry spectator,
     Match match,
     Rules rules,

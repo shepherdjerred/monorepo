@@ -64,11 +64,48 @@ const yard = {
   besideNuke: new Vec3(30.5, 66, 31.5),
   /** A floor block in the red base's corner. */
   floor: new Vec3(2, 64, 2),
-  /** The glass platform under the open ceiling. */
-  lobby: new Vec3(31.5, 78, 31.5),
+  /** The yard's region, both corners included. */
+  region: { min: new Vec3(0, 64, 0), max: new Vec3(63, 79, 63) },
   /** Where the dead and watchers look down from. */
   spectator: new Vec3(31.5, 76, 31.5),
 } as const;
+
+/** The lobby room (rwf/lobby/lobby.yml): its region and the gold spawn pad. */
+const lobby = {
+  region: { min: new Vec3(128, 64, 16), max: new Vec3(158, 72, 46) },
+  spawn: new Vec3(143.5, 65, 31.5),
+} as const;
+
+type Region = { min: Vec3; max: Vec3 };
+
+/** Whether a player's feet stand inside `region`, both corners' blocks included. */
+function inside(at: Vec3, region: Region): boolean {
+  return (
+    at.x >= region.min.x &&
+    at.x < region.max.x + 1 &&
+    at.y >= region.min.y &&
+    at.y < region.max.y + 1 &&
+    at.z >= region.min.z &&
+    at.z < region.max.z + 1
+  );
+}
+
+/** Every boss bar and title a player is shown, as plain text, in order. */
+type Screen = { bars: string[]; titles: string[] };
+
+function screen(bot: Bot): Screen {
+  const seen: Screen = { bars: [], titles: [] };
+  const bar = (shown: { title: { toString: () => string } }) => {
+    seen.bars.push(shown.title.toString());
+  };
+  bot.on("bossBarCreated", bar);
+  bot.on("bossBarUpdated", bar);
+  // The title arrives as a chat component, not plain text, on this protocol.
+  bot.on("title", (text: unknown) => {
+    seen.titles.push(JSON.stringify(text));
+  });
+  return seen;
+}
 
 // Trooper's Sharpness I iron sword on full iron: (6 + 1.25) x (1 - 15/25).
 const trooperHit = 2.9;
@@ -284,6 +321,17 @@ function enemy(team: Team): Team {
   return team === "Red" ? "Blue" : "Red";
 }
 
+/**
+ * `other`'s entity as `bot` sees it. Mineflayer sets it to null while the
+ * entity is out of view (a player arriving from the lobby is respawned on
+ * every client that sees the yard), so null counts as unseen.
+ */
+function inView(bot: Bot, other: Bot): Bot["entity"] | undefined {
+  const entity: Bot["entity"] | null | undefined =
+    bot.players[other.username]?.entity;
+  return entity ?? undefined;
+}
+
 /** Back where they stood, with what they held, and nothing of the match. */
 function expectRestored(bot: Bot, home: Vec3): void {
   expect(count(bot, "diamond")).toBe(3);
@@ -345,14 +393,14 @@ async function duel(
     await teleport(rcon, victim, yard.duel[1]);
     await waitUntil(
       "the attacker sees the victim",
-      () => attacker.players[victim.username]?.entity !== undefined,
+      () => inView(attacker, victim) !== undefined,
     );
     attacker.setQuickBarSlot(1);
     await waitUntil(
       "the sword is in hand",
       () => attacker.heldItem?.name === "iron_sword",
     );
-    const target = attacker.players[victim.username]?.entity;
+    const target = inView(attacker, victim);
     if (target === undefined) {
       throw new Error("the victim entity vanished");
     }
@@ -668,19 +716,47 @@ describe("Search and Destroy with humans only", () => {
       await giveDiamonds(rcon, secondBot);
       const home = bot.entity.position.clone();
       const homeB = secondBot.entity.position.clone();
+      const shown = screen(bot);
 
       await join(a);
       await a.log.until(/Matches are recorded/u);
-      // Emptied onto the lobby platform: nothing but what the match gives.
+      // Emptied onto the lobby room's spawn pad: nothing but what the match gives.
       expect(count(bot, "diamond")).toBe(0);
       await waitUntil(
-        "the lobby platform",
-        () => bot.entity.position.distanceTo(yard.lobby) < 1.5,
+        "the lobby's spawn pad",
+        () => bot.entity.position.distanceTo(lobby.spawn) < 1.5,
       );
+      expect(inside(bot.entity.position, lobby.region)).toBe(true);
+      // The room is dressed: rules, the match board and a name per kit alcove
+      // as text, and each kit's item.
+      const room = `x=128,y=64,z=16,dx=30,dy=8,dz=30`;
+      expect(
+        await inRwf(
+          rcon,
+          `execute if entity @e[type=minecraft:text_display,${room}]`,
+        ),
+      ).toContain("Count: 6");
+      expect(
+        await inRwf(
+          rcon,
+          `execute if entity @e[type=minecraft:item_display,${room}]`,
+        ),
+      ).toContain("Count: 4");
       await a.log.until(/The game will begin in \d+ seconds\./u);
+      await waitUntil("the countdown boss bar", () =>
+        shown.bars.some((title) => /Match starts in \d+ seconds?/u.test(title)),
+      );
       await join(b);
       await a.log.until(/The game has begun!/u, 30_000);
       await b.log.until(/The game has begun!/u, 30_000);
+      // The start takes both from the lobby to the yard, under a title.
+      await waitUntil("the yard", () =>
+        inside(bot.entity.position, yard.region),
+      );
+      expect(inside(secondBot.entity.position, yard.region)).toBe(true);
+      await waitUntil("the start title", () =>
+        shown.titles.some((title) => title.includes("Fight!")),
+      );
       const [teamA, teamB] = await Promise.all([teamOf(a.log), teamOf(b.log)]);
       expect(teamA).not.toBe(teamB);
 

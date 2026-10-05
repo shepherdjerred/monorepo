@@ -40,6 +40,8 @@ final class ContentFilesTest {
     copy("rwf/kits.yml");
     copy("rwf/maps/training-yard/map.yml");
     copy("rwf/maps/training-yard/blocks.schem");
+    copy("rwf/lobby/lobby.yml");
+    copy("rwf/lobby/blocks.schem");
     return directory;
   }
 

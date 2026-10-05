@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
  * @param teams the teams it fields, in scoreboard order
  * @param bombs every bomb and nuke
  * @param border the playable region
- * @param lobbyPoint where players wait before the match
  * @param spectatorPoint where the dead watch from
  * @param blocksSha256 a hex SHA-256 of the map's blocks, so recordings name the exact terrain
  */
@@ -39,7 +38,6 @@ public record MapDefinition(
     List<MapTeam> teams,
     List<BombSite> bombs,
     Cuboid border,
-    Spawn lobbyPoint,
     Spawn spectatorPoint,
     String blocksSha256) {
 

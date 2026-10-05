@@ -2,7 +2,6 @@ package com.shepherdjerred.thestorm.tools.rwfmap;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
-import com.shepherdjerred.thestorm.rwfbots.domain.map.NavProblem;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,7 @@ final class Summary {
   static String of(
       NavArtifact artifact,
       SchematicClassification classification,
-      List<NavProblem> problems,
+      List<String> problems,
       byte[] bytes) {
     var json = new Json();
     json.open("{");
@@ -37,7 +36,7 @@ final class Summary {
     json.field("chokepoints", artifact.chokepoints().points().size());
     routes(json, artifact);
     json.field("distanceFields", artifact.distanceFields().size());
-    json.rawField("problems", strings(problems.stream().map(NavProblem::toString).toList()));
+    json.rawField("problems", strings(problems));
     json.field("bytes", bytes.length);
     json.close("}");
     return json.toString();

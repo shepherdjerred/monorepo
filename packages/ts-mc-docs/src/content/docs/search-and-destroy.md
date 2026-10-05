@@ -7,6 +7,23 @@ Search and Destroy is a team minigame played in its own world on The Storm.
 It is a port of the 2013–2014 Red Warfare game. Type `/rwf join` to queue
 for the next round and `/rwf leave` to go back to survival.
 
+## The lobby
+
+Joining takes you to the lobby, a stone room where everyone waits for the
+round to start. Nothing can hurt you there, and if you fall out of it you are
+put back on the gold spawn pad.
+
+- The **rules** hang on the north wall.
+- The **match board** on the south wall shows the map, how many players and
+  bots have joined, and how long until the round starts.
+- Each **kit alcove** along the east wall shows a kit's weapon, name and
+  contents, with the command to pick it.
+- The **balcony** on the west side looks out of a window towards the maps.
+
+A bar at the top of your screen says how many more players the round is
+waiting for, then counts down to the start. The last five seconds and the
+start appear in the middle of your screen.
+
 Your survival inventory, XP, health and effects are saved when you enter and
 restored when you leave. If the server crashes mid-round, they are restored
 the next time you log in.

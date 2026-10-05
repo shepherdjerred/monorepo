@@ -107,7 +107,8 @@ final class RwfPaperTest {
     assertThat(harness.rwf.getBlockAt(8, 65, 31).getType()).isEqualTo(Material.TNT);
     assertThat(harness.rwf.getBlockAt(0, 64, 0).getType()).isEqualTo(Material.STONE_BRICKS);
     assertThat(harness.rwf.getBlockAt(31, 77, 31).getType()).isEqualTo(Material.GLASS);
-    assertThat(harness.chunks.held).isEqualTo(16);
+    // The training yard's 16 chunks and the lobby's 4.
+    assertThat(harness.chunks.held).isEqualTo(20);
     assertThat(harness.snapshot().phase()).isEqualTo(MatchSnapshot.PhaseKind.LOBBY);
     assertThat(harness.snapshot().mapId()).contains("training-yard");
   }
@@ -124,8 +125,9 @@ final class RwfPaperTest {
         .satisfies(s -> assertThat(s.player()).isEqualTo(alice.getUniqueId()));
     assertThat(alice.getLevel()).isZero();
     assertThat(alice.getActivePotionEffects()).isEmpty();
-    assertThat(alice.getLocation().getX()).isEqualTo(31.5);
-    assertThat(alice.getLocation().getY()).isEqualTo(78);
+    // The lobby room's spawn pad.
+    assertThat(alice.getLocation().getX()).isEqualTo(143.5);
+    assertThat(alice.getLocation().getY()).isEqualTo(65);
     assertThat(hasAttackSpeed(alice)).isTrue();
     assertThat(alice.getScoreboard())
         .isNotEqualTo(harness.server.getScoreboardManager().getMainScoreboard());
