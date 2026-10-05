@@ -10,6 +10,7 @@ import {
   waitForMessage,
   waitUntil,
 } from "#e2e/harness/bot.ts";
+import { travelToRuneforge } from "#e2e/harness/settlement.ts";
 
 async function join(bot: Bot, round?: number) {
   const joined = waitForMessage(bot, /Survival: Fighter/u);
@@ -412,16 +413,7 @@ describe("legendary gear and local feedback on real Paper", () => {
     bot._client.on("sound_effect", heard);
     try {
       await start(bot, rcon, 15);
-      await rcon.command(`tp ${bot.username} 1853.5 105 2158.5`);
-      await waitUntil(
-        "airstrip loaded",
-        () => bot.blockAt(new Vec3(1852, 105, 2157)) !== null,
-      );
-      const airstrip = bot.blockAt(new Vec3(1852, 105, 2157));
-      if (airstrip === null) throw new Error("Airstrip missing");
-      const landed = waitForMessage(bot, /Offshore Runeforge/u, 15_000);
-      await bot.activateBlock(airstrip);
-      await landed;
+      await travelToRuneforge(bot, rcon);
       await rcon.command(`tp ${bot.username} 1727.5 73 2211.5`);
       for (const [id, material] of [
         ["STORMCALLER", "bow"],

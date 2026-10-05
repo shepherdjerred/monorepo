@@ -76,7 +76,8 @@ public record Situation(
     for (var shared : board.visibleSightings(now())) {
       var existing = known.get(shared.enemy());
       var age = now() - shared.seenTick();
-      var confidence = SHARED_CONFIDENCE * Math.exp(-age / Perception.TAU_TICKS);
+      // Shared memory must produce the same raw decision scores when a seeded match replays.
+      var confidence = SHARED_CONFIDENCE * StrictMath.exp(-age / Perception.TAU_TICKS);
       if ((existing == null || existing.confidence() < confidence) && isAlive(shared.enemy())) {
         known.put(shared.enemy(), new KnownEnemy(shared.enemy(), shared.pos(), confidence, false));
       }

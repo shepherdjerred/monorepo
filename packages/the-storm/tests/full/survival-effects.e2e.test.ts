@@ -5,19 +5,10 @@ import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+import { startProtectedSettlementRound } from "#e2e/harness/settlement.ts";
 
 async function start(bot: Bot, rcon: RconClient) {
-  await rcon.command(`op ${bot.username}`);
-  const joined = waitForMessage(bot, /Survival: Fighter/u);
-  bot.chat("/arena join settlement 8");
-  await joined;
-  await rcon.command("difficulty normal");
-  const started = waitForMessage(bot, /Round 8:/u);
-  await rcon.command("arena start settlement");
-  await started;
-  await rcon.command(
-    `effect give ${bot.username} minecraft:resistance infinite 255 true`,
-  );
+  await startProtectedSettlementRound(bot, rcon, 8);
   await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
   await waitUntil(
     "safe test ground",

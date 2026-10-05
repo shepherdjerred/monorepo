@@ -5,23 +5,10 @@ import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
-
-async function start(bot: Bot, rcon: RconClient, round: number) {
-  await rcon.command(`op ${bot.username}`);
-  const joined = waitForMessage(bot, /Survival: Fighter/u);
-  bot.chat(`/arena join settlement ${round.toString()}`);
-  await joined;
-  await rcon.command("difficulty normal");
-  const started = waitForMessage(
-    bot,
-    new RegExp(`Round ${round.toString()}:`, "u"),
-  );
-  await rcon.command("arena start settlement");
-  await started;
-  await rcon.command(
-    `effect give ${bot.username} minecraft:resistance infinite 255 true`,
-  );
-}
+import {
+  startProtectedSettlementRound as start,
+  travelToRuneforge,
+} from "#e2e/harness/settlement.ts";
 
 async function click(bot: Bot, rcon: RconClient, pos: Vec3) {
   const approach = new Vec3(pos.x + 0.5, pos.y, pos.z + 1.5);
@@ -193,16 +180,7 @@ test("enchanting and Runeforge preserve independent rarity, armor and shield sig
       throw new Error("Armor fixture missing");
     await bot.equip(chest, "torso");
     await bot.equip(shield, "off-hand");
-    await rcon.command(`tp ${bot.username} 1853.5 105 2158.5`);
-    await waitUntil(
-      "airstrip loaded",
-      () => bot.blockAt(new Vec3(1852, 105, 2157)) !== null,
-    );
-    const airstrip = bot.blockAt(new Vec3(1852, 105, 2157));
-    if (airstrip === null) throw new Error("Airstrip missing");
-    const landed = waitForMessage(bot, /Offshore Runeforge/u, 15_000);
-    await bot.activateBlock(airstrip);
-    await landed;
+    await travelToRuneforge(bot, rcon);
     await click(bot, rcon, new Vec3(1727, 73, 2209));
     await waitUntil("equipment selection", () => bot.currentWindow !== null);
     for (const slot of [0, 1, 3]) {

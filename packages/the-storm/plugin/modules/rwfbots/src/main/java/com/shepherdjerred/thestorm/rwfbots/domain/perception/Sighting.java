@@ -25,7 +25,8 @@ public record Sighting(Vec3 pos, Vec3 vel, long tick, double confidence, boolean
   /** The confidence decayed to {@code now} with time constant {@code tauTicks}. */
   public double confidenceAt(long now, double tauTicks) {
     var dt = Math.max(0, now - tick);
-    return confidence * Math.exp(-dt / tauTicks);
+    // Decayed confidence feeds replayed utility scores; keep it identical on every CPU.
+    return confidence * StrictMath.exp(-dt / tauTicks);
   }
 
   /** Where the enemy would be at {@code now} if it kept its velocity, capped at two seconds. */

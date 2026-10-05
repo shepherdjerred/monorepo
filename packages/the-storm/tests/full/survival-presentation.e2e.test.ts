@@ -3,6 +3,10 @@ import { z } from "zod";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
+import {
+  startProtectedSettlementRound,
+  startSettlementRound,
+} from "#e2e/harness/settlement.ts";
 
 const ParticleSchema = z.object({
   x: z.number(),
@@ -16,17 +20,7 @@ test("nearby generator and cache particles arrive repeatedly above their blocks"
   bot,
   rcon,
 }) => {
-  await rcon.command(`op ${bot.username}`);
-  const joined = waitForMessage(bot, /Survival: Fighter/u);
-  bot.chat("/arena join settlement 8");
-  await joined;
-  await rcon.command("difficulty normal");
-  const started = waitForMessage(bot, /Round 8:/u);
-  await rcon.command("arena start settlement");
-  await started;
-  await rcon.command(
-    `effect give ${bot.username} minecraft:resistance infinite 255 true`,
-  );
+  await startProtectedSettlementRound(bot, rcon, 8);
   await rcon.command(
     `attribute ${bot.username} minecraft:knockback_resistance base set 1`,
   );
@@ -71,14 +65,7 @@ test("boss danger marks remain above the terrain throughout a native channel", a
   bot,
   rcon,
 }) => {
-  await rcon.command(`op ${bot.username}`);
-  const joined = waitForMessage(bot, /Survival: Fighter/u);
-  bot.chat("/arena join settlement 5");
-  await joined;
-  await rcon.command("difficulty normal");
-  const started = waitForMessage(bot, /Round 5:/u);
-  await rcon.command("arena start settlement");
-  await started;
+  await startSettlementRound(bot, rcon, 5);
   const boss =
     '@e[type=minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},limit=1]';
   const particles: z.infer<typeof ParticleSchema>[] = [];
