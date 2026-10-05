@@ -32,12 +32,8 @@ import {
   runBuild,
 } from "./commands.ts";
 import type { Env } from "./helpers.ts";
+import type * as JudgeModule from "./judge.ts";
 import { importBuild } from "./import-build.ts";
-import {
-  DEFAULT_JUDGE_MODEL,
-  judgeRenders,
-  RUBRIC_DIMENSIONS,
-} from "./judge.ts";
 import {
   libraryList,
   libraryShow,
@@ -46,6 +42,25 @@ import {
 } from "./library.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
+
+/**
+ * The judge pulls in llm-runtime and the built model catalog; load it only for
+ * `judge` so every other build command works in a fresh checkout.
+ */
+async function loadJudge(): Promise<typeof JudgeModule> {
+  try {
+    return await import("./judge.ts");
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("@shepherdjerred/llm-models")) {
+      throw new Error(
+        "toolkit mc build judge needs the built model catalog; run `bunx turbo run build --filter=@shepherdjerred/llm-models` once, then retry",
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+}
 
 export const BUILD_USAGE = `
 toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
@@ -361,6 +376,8 @@ const HANDLERS: Record<string, Handler> = {
     throw new Error(`unknown library command "${sub}"\n${BUILD_USAGE}`);
   },
   judge: async (_env, a, values, rest) => {
+    const { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } =
+      await loadJudge();
     const verdict = await judgeRenders(a, required(rest[0], "<b>"), {
       model: values.model ?? DEFAULT_JUDGE_MODEL,
     });
