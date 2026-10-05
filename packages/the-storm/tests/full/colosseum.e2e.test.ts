@@ -1,4 +1,5 @@
 import { describe, expect } from "vitest";
+import type { Bot } from "mineflayer";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
@@ -25,6 +26,32 @@ async function start(rcon: RconClient) {
   throw new Error("Colosseum chunks never became ready");
 }
 
+async function withKnightWave(
+  bot: Bot,
+  rcon: RconClient,
+  run: () => Promise<void>,
+) {
+  const joined = waitForMessage(bot, /entered The Colosseum/u);
+  bot.chat("/arena join colosseum");
+  await joined;
+  const selected = waitForMessage(bot, /You are a Knight/u);
+  bot.chat("/arena class knight");
+  await selected;
+  await rcon.command("difficulty normal");
+  try {
+    const started = waitForMessage(bot, /Wave 1!/u);
+    await start(rcon);
+    await started;
+    await rcon.command(
+      `effect give ${bot.username} minecraft:resistance infinite 255 true`,
+    );
+    await run();
+  } finally {
+    await rcon.command("arena stop colosseum");
+    await rcon.command("difficulty peaceful");
+  }
+}
+
 describe("Colosseum chest access on real Paper", () => {
   test("fighters can open and withdraw from every authored arena chest", async ({
     bot,
@@ -48,20 +75,7 @@ describe("Colosseum chest access on real Paper", () => {
       [269, 48, 2],
       [275, 48, 2],
     ];
-    const joined = waitForMessage(bot, /entered The Colosseum/u);
-    bot.chat("/arena join colosseum");
-    await joined;
-    const selected = waitForMessage(bot, /You are a Knight/u);
-    bot.chat("/arena class knight");
-    await selected;
-    await rcon.command("difficulty normal");
-    try {
-      const started = waitForMessage(bot, /Wave 1!/u);
-      await start(rcon);
-      await started;
-      await rcon.command(
-        `effect give ${bot.username} minecraft:resistance infinite 255 true`,
-      );
+    await withKnightWave(bot, rcon, async () => {
       for (const coordinates of positions) {
         const [x, y, z] = coordinates;
         if (x === undefined || y === undefined || z === undefined)
@@ -99,10 +113,7 @@ describe("Colosseum chest access on real Paper", () => {
         }
         await bot.waitForTicks(5);
       }
-    } finally {
-      await rcon.command("arena stop colosseum");
-      await rcon.command("difficulty peaceful");
-    }
+    });
   }, 120_000);
 });
 
@@ -111,20 +122,7 @@ describe("Colosseum on real Paper", () => {
     bot,
     rcon,
   }) => {
-    const joined = waitForMessage(bot, /entered The Colosseum/u);
-    bot.chat("/arena join colosseum");
-    await joined;
-    const selected = waitForMessage(bot, /You are a Knight/u);
-    bot.chat("/arena class knight");
-    await selected;
-    await rcon.command("difficulty normal");
-    try {
-      const started = waitForMessage(bot, /Wave 1!/u);
-      await start(rcon);
-      await started;
-      await rcon.command(
-        `effect give ${bot.username} minecraft:resistance infinite 255 true`,
-      );
+    await withKnightWave(bot, rcon, async () => {
       await rcon.command(`tp ${bot.username} 200.5 42 2.5`);
       await rcon.command(
         "tp @e[type=minecraft:zombie,x=164,y=30,z=-60,dx=126,dy=70,dz=124] 250.5 42 2.5",
@@ -158,10 +156,7 @@ describe("Colosseum on real Paper", () => {
           ),
         40_000,
       );
-    } finally {
-      await rcon.command("arena stop colosseum");
-      await rcon.command("difficulty peaceful");
-    }
+    });
   }, 90_000);
 
   test("caches replenish, class gear grows and party bosses warn before casting", async ({

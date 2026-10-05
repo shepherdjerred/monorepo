@@ -1,30 +1,12 @@
-import { createConnection } from "node:net";
 import { appendFile, lstat } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
-
-export const RequestSchema = z.strictObject({
-  version: z.literal(1),
-  id: z.string().min(1).max(100),
-  action: z.string().min(1).max(32),
-  arguments: z.record(z.string(), z.unknown()),
-});
-
-export const ResponseSchema = z.discriminatedUnion("ok", [
-  z.strictObject({
-    version: z.literal(1),
-    id: z.string(),
-    ok: z.literal(true),
-    result: z.unknown(),
-  }),
-  z.strictObject({
-    version: z.literal(1),
-    id: z.string(),
-    ok: z.literal(false),
-    error: z.string(),
-  }),
-]);
+import {
+  exchangeClientSocket,
+  ConnectedClientStateShape,
+} from "@shepherdjerred/mc-harness/protocol/client-socket.ts";
+import type { RequestSchema } from "@shepherdjerred/mc-harness/protocol/client-socket.ts";
 
 export const SessionSchema = z.strictObject({
   socket: z.string().min(1),
@@ -45,24 +27,13 @@ const ItemSchema = z.object({
 export const StatusSchema = z.discriminatedUnion("connected", [
   z.object({ connected: z.literal(false), screen: z.string() }),
   z.object({
+    ...ConnectedClientStateShape,
     connected: z.literal(true),
-    position: z.tuple([z.number(), z.number(), z.number()]),
-    yaw: z.number(),
-    pitch: z.number(),
-    health: z.number(),
-    food: z.number(),
-    world: z.string(),
-    hotbar: z.number().int(),
-    screen: z.string(),
     containerId: z.number().int(),
     stateId: z.number().int(),
     cursor: ItemSchema,
     inventory: z.array(ItemSchema),
     slots: z.array(ItemSchema),
-    target: z.looseObject({ kind: z.enum(["block", "entity", "miss"]) }),
-    fps: z.number(),
-    heldInputs: z.array(z.string()),
-    pid: z.number().int(),
   }),
 ]);
 
@@ -87,45 +58,7 @@ export function exchange(
   socketPath: string,
   message: z.infer<typeof RequestSchema>,
 ): Promise<unknown> {
-  RequestSchema.parse(message);
-  return new Promise((resolve, reject) => {
-    const socket = createConnection(socketPath);
-    let buffer = "";
-    socket.setEncoding("utf8");
-    socket.setTimeout(15_000);
-    socket.once("connect", () => {
-      socket.write(`${JSON.stringify(message)}\n`);
-    });
-    socket.once("error", reject);
-    socket.once("timeout", () => {
-      socket.destroy(new Error("Preview command timed out"));
-    });
-    socket.once("end", () => {
-      reject(new Error("Preview connection ended before its response"));
-    });
-    socket.on("data", (chunk: string) => {
-      buffer += chunk;
-      if (buffer.length > 1_048_576) {
-        socket.destroy(new Error("Preview response too large"));
-        return;
-      }
-      const newline = buffer.indexOf("\n");
-      if (newline === -1) return;
-      try {
-        const reply = ResponseSchema.parse(
-          JSON.parse(buffer.slice(0, newline)),
-        );
-        if (reply.id !== message.id)
-          throw new Error("Preview response ID mismatch");
-        if (!reply.ok) throw new Error(reply.error);
-        resolve(reply.result);
-        socket.destroy();
-      } catch (error) {
-        reject(error instanceof Error ? error : new Error(String(error)));
-        socket.destroy();
-      }
-    });
-  });
+  return exchangeClientSocket(socketPath, message);
 }
 
 export async function request(

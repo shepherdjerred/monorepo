@@ -8,6 +8,8 @@ const PAPER_SERVER_IMAGE =
   "itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749";
 const PAPER_WORKSPACE =
   "/woodpecker/src/github.com/shepherdjerred/monorepo/packages/the-storm/.cache/e2e/woodpecker";
+const SHARED_PLUGINS =
+  "/woodpecker/src/github.com/shepherdjerred/monorepo/packages/the-storm/.cache/e2e/sidecar-plugins";
 const RCON_PASSWORD = "storm-e2e-ci-rcon-password";
 // Test-only pseudonymisation salt: the rwf module refuses to enable with
 // recording on and no salt, and the owned rwf.yml ships with recording on.
@@ -56,9 +58,9 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
       STORM_E2E_LOG_FILE: `${dataDir}/logs/latest.log`,
       STORM_E2E_PLUGIN_DIR: pluginDir,
       STORM_E2E_DATA_DIR: dataDir,
-      // The Paper service links its plugin data dir here so the suite can read
-      // rwf's SQLite tables and match recordings the same way it reads logs.
-      STORM_E2E_STORM_DATA_DIR: `${dataDir}/storm`,
+      // Paper and the suite share the selected plugin root, including rwf's
+      // SQLite tables and match recordings.
+      STORM_E2E_STORM_DATA_DIR: `${SHARED_PLUGINS}/TheStorm`,
       STORM_E2E_FULL: full ? "1" : "0",
       STORM_E2E_BRAIN_HOST: BRAIN_HOST,
       STORM_E2E_BRAIN_PORT: BRAIN_PORT,
@@ -72,7 +74,7 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
         name: "paper",
         image: PAPER_SERVER_IMAGE,
         commands: [
-          `mkdir -p ${dataDir}/logs ${dataDir}/storm /data/plugins; rm -rf /data/logs /data/plugins/TheStorm; ln -s ${dataDir}/logs /data/logs; ln -s ${dataDir}/storm /data/plugins/TheStorm; until test -f ${pluginDir}/.ready; do sleep 1; done; exec /start`,
+          `mkdir -p ${dataDir}/logs; rm -rf /data/logs; ln -s ${dataDir}/logs /data/logs; until test -f ${pluginDir}/.ready; do sleep 1; done; exec /start`,
         ],
         environment: {
           EULA: "TRUE",
@@ -98,7 +100,7 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
           FLIPT_URL: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
           FLIPT_ENVIRONMENT: "prod",
           RWF_RECORDING_SALT,
-          COPY_PLUGINS_SRC: pluginDir,
+          EXTRA_ARGS: `--plugins ${SHARED_PLUGINS}`,
           COPY_CONFIG_SRC: `${dataDir}/config`,
           COPY_CONFIG_DEST: "/data",
           ...(full

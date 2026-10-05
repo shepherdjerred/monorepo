@@ -50,12 +50,13 @@ bot pipeline. The image delivery path below promotes that reviewed policy.
 
 ## Image delivery
 
-The Paper E2E service copies the staged workspace plugins through
-`COPY_PLUGINS_SRC` and the staged Bukkit configuration through `COPY_CONFIG_SRC`
-into `/data`. The preparation step assigns the shared log directory to Paper's
-UID/GID 1000 before writing its startup marker. These paths are part of the
-service contract; an empty plugin directory or unreadable shared log is a
-fixture failure.
+The Paper E2E service loads the staged workspace plugin tree directly through
+`EXTRA_ARGS=--plugins .../sidecar-plugins` and copies Bukkit configuration through
+`COPY_CONFIG_SRC` into `/data`. The preparation step assigns the plugin tree and
+shared log directory to Paper's UID/GID 1000 before writing its startup marker.
+The runner reads databases and recordings from the same `TheStorm` folder named
+by `STORM_E2E_STORM_DATA_DIR`. These paths are part of the service contract; an
+empty plugin directory or unreadable shared file is a fixture failure.
 
 The config extension is an application image in `docker-bake.hcl` and
 `ci/scripts/images/image-targets.ts`. A main image release builds and smokes its

@@ -1,4 +1,12 @@
-import { chmod, chown, cp, mkdir, rm } from "node:fs/promises";
+import {
+  chmod,
+  chown,
+  cp,
+  mkdir,
+  readdir,
+  rm,
+  symlink,
+} from "node:fs/promises";
 import path from "node:path";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stagePlugins } from "./harness/server.ts";
@@ -68,6 +76,25 @@ await rm(dataVolume, { recursive: true, force: true });
 await mkdir(pluginVolume, { recursive: true });
 await mkdir(dataVolume, { recursive: true });
 await cp(stagedPlugins, pluginVolume, { recursive: true });
+// Paper loads this shared tree directly. Keep its writable data and remapped
+// jars beside the staged inputs so the runner observes the same files.
+async function assignPaperOwnership(directory: string): Promise<void> {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const target = path.join(directory, entry.name);
+    if (!entry.isDirectory() && !entry.isFile())
+      throw new Error(
+        `Staged plugin input must be a file or directory: ${target}`,
+      );
+    if (entry.isDirectory()) await assignPaperOwnership(target);
+    else await chown(target, 1000, 1000);
+  }
+  await chown(directory, 1000, 1000);
+  await chmod(directory, 0o770);
+}
+await assignPaperOwnership(pluginVolume);
+const sharedPlugins = path.join(cacheDir, "sidecar-plugins");
+await rm(sharedPlugins, { force: true });
+await symlink(pluginVolume, sharedPlugins, "dir");
 await mkdir(path.join(dataVolume, "logs"), { recursive: true });
 // The runner creates this shared directory as root; Paper writes as uid 1000.
 await chown(path.join(dataVolume, "logs"), 1000, 1000);

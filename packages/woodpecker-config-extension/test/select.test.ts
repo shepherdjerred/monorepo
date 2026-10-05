@@ -388,7 +388,7 @@ describe("Paper acceptance lanes", () => {
   });
 
   test.each([false, true])(
-    "Paper lane full=%s copies staged plugins and config",
+    "Paper lane full=%s loads shared plugins and copies config",
     (full) => {
       const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
       const lane = full ? "paper-full-e2e-pr" : "paper-e2e-pr";
@@ -405,8 +405,15 @@ describe("Paper acceptance lanes", () => {
       const dataDir = candidate.environment["STORM_E2E_DATA_DIR"];
       if (typeof dataDir !== "string")
         throw new Error(`missing data path for ${lane}`);
-      expect(paper.environment["COPY_PLUGINS_SRC"]).toBe(
-        candidate.environment["STORM_E2E_PLUGIN_DIR"],
+      const sharedData = candidate.environment["STORM_E2E_STORM_DATA_DIR"];
+      if (typeof sharedData !== "string")
+        throw new Error(`missing shared plugin data path for ${lane}`);
+      expect(sharedData.endsWith("/TheStorm")).toBe(true);
+      expect(paper.environment["EXTRA_ARGS"]).toBe(
+        `--plugins ${sharedData.slice(0, -"/TheStorm".length)}`,
+      );
+      expect(paper.environment["RWF_RECORDING_SALT"]).toBe(
+        "storm-e2e-ci-recording-salt",
       );
       expect(paper.environment["COPY_CONFIG_SRC"]).toBe(`${dataDir}/config`);
       expect(paper.environment["COPY_CONFIG_DEST"]).toBe("/data");
@@ -449,7 +456,7 @@ describe("Paper acceptance lanes", () => {
     expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
   });
 
-  test("Paper copies staged plugins and Bukkit configuration into its data directory", () => {
+  test("Paper loads the shared plugin tree and copies Bukkit configuration", () => {
     const paperStep = buildPipelineSteps({
       images: IMAGES,
       changedBase: "x",
@@ -460,8 +467,8 @@ describe("Paper acceptance lanes", () => {
     const dataDir = paperStep?.environment?.["STORM_E2E_DATA_DIR"];
     if (dataDir === undefined)
       throw new Error("Paper data directory is required");
-    expect(paperService?.environment?.["COPY_PLUGINS_SRC"]).toBe(
-      paperStep?.environment?.["STORM_E2E_PLUGIN_DIR"],
+    expect(paperService?.environment?.["EXTRA_ARGS"]).toContain(
+      "--plugins /woodpecker/src/",
     );
     expect(paperService?.environment?.["COPY_CONFIG_SRC"]).toBe(
       `${dataDir}/config`,

@@ -16,7 +16,8 @@ import {
   type ClientSummary,
 } from "#protocol/client.ts";
 import { CLIENT_PROJECT } from "#protocol/paths.ts";
-import { ClientRefusedError, clientRequest } from "./client-socket.ts";
+import { ClientRefusedError } from "#protocol/client-socket.ts";
+import { clientRequest } from "./client-socket.ts";
 import { DaemonError } from "./http.ts";
 
 /**
