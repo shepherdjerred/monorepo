@@ -81,6 +81,17 @@ function verifySportsGuildRollout(): void {
   ).toBe(true);
 }
 
+function verifyRwfEnabledEnvironments(key: string): void {
+  for (const environment of ["beta", "prod"]) {
+    const flag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "the-storm",
+    ).find((candidate) => candidate.key === key);
+    expect(flag).toMatchObject({ default: true, rollouts: [] });
+  }
+}
+
 describe("ManagedFlagInventorySchema", () => {
   test("Scout report support action is enabled in beta only", () => {
     const flag = managedFlagInventory.flags.find(
@@ -397,19 +408,7 @@ describe("Red Warfare Search and Destroy rollout", () => {
       rollouts: [],
     });
 
-    const beta = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(beta).toMatchObject({ default: true, rollouts: [] });
-
-    const prod = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: true, rollouts: [] });
+    verifyRwfEnabledEnvironments(key);
   });
 
   test("lets bots talk in beta and production while the fallback stays silent", () => {
@@ -424,19 +423,7 @@ describe("Red Warfare Search and Destroy rollout", () => {
       rollouts: [],
     });
 
-    const beta = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(beta).toMatchObject({ default: true, rollouts: [] });
-
-    const prod = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "the-storm",
-    ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: true, rollouts: [] });
+    verifyRwfEnabledEnvironments(key);
   });
 });
 

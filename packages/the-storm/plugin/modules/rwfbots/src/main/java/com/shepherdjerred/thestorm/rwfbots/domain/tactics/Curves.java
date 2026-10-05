@@ -16,7 +16,8 @@ public final class Curves {
 
   /** A logistic rising through 0.5 at {@code mid} with steepness {@code k} per unit. */
   public static double logistic(double x, double mid, double k) {
-    return 1 / (1 + Math.exp(-k * (x - mid)));
+    // Utilities enter raw-bit replay hashes, so their exponentials must reproduce across CPUs.
+    return 1 / (1 + StrictMath.exp(-k * (x - mid)));
   }
 
   /** 1 at zero distance falling to 0 at {@code range}, quadratically eased. */
