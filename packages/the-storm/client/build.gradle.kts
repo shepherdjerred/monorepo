@@ -1,3 +1,16 @@
+import net.fabricmc.loom.configuration.processors.JarProcessor
+import net.fabricmc.loom.util.ZipReprocessorUtil
+import org.gradle.api.tasks.bundling.ZipEntryCompression
+import java.io.File
+
+class ReproducibleMinecraftJarProcessor : JarProcessor {
+  override fun getId() = "storm:reproducible-minecraft-archive:v1:stored"
+  override fun setup() = Unit
+  override fun process(file: File) {
+    ZipReprocessorUtil.reprocessZip(file.toPath(), true, false, ZipEntryCompression.STORED)
+  }
+}
+
 plugins {
   alias(libs.plugins.fabric.loom)
   id("storm.java-conventions")
@@ -5,6 +18,14 @@ plugins {
 
 version = "1.0.0"
 group = "com.shepherdjerred.thestorm"
+
+// Fabric includes this bridge only in macOS client libraries. Keep its lock on macOS,
+// where it resolves, while ignoring that absent platform-specific entry elsewhere.
+if (!System.getProperty("os.name").startsWith("Mac")) {
+  dependencyLocking {
+    ignoredDependencies.add("ca.weblite:java-objc-bridge")
+  }
+}
 
 dependencies {
   minecraft(libs.client.minecraft)
@@ -20,11 +41,8 @@ dependencies {
 
 pmd { ruleSetFiles = files("../plugin/config/pmd/ruleset.xml") }
 
-// Minecraft's version manifest adds java-objc-bridge only on macOS, so a lock
-// written on a Mac names a module Linux CI never resolves.
-dependencyLocking { ignoredDependencies.add("ca.weblite:java-objc-bridge") }
-
 loom {
+  addJarProcessor(ReproducibleMinecraftJarProcessor())
   runs {
     named("client") {
       val gameDir = providers.gradleProperty("previewGameDir")

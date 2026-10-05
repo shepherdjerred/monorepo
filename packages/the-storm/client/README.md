@@ -79,6 +79,19 @@ inspection; it does not implement autonomous navigation or a full-match player.
 
 ## Verify the helper
 
+The pinned Loom build merges the verified Minecraft inputs into a local dependency.
+The final archive processor sorts its entries, fixes timestamps, removes ZIP
+metadata, and stores entries without compression so that macOS and Linux produce
+the same checksum. Locks and strict verification metadata include that generated
+dependency alongside the upstream artifacts.
+
+Loom 1.17.21's public `addJarProcessor` compatibility hook is deliberately used
+because it runs after the built-in processors; the newer processor hook runs
+before built-ins that rewrite archive metadata. Check this ordering and API when
+upgrading Loom, and change the processor ID when changing the archive recipe.
+Refresh the generated dependency lock and checksum only after fresh builds on
+both platforms produce identical archives with unchanged file contents.
+
 ```sh
 bun run check:client
 bun run test:client
