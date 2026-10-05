@@ -437,7 +437,10 @@ function booleanState(
 function sumOptional(values: (number | null)[]): number | null {
   return values.some((value) => value == null)
     ? null
-    : values.reduce<number>((sum, value) => sum + (value ?? 0), 0);
+    : values.reduce<number>(
+        (sum, value) => (value === null ? sum : sum + value),
+        0,
+      );
 }
 
 function resultOrNull<T>(

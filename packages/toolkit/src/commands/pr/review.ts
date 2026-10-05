@@ -93,8 +93,8 @@ function requireToken(): string {
   return token;
 }
 
-function requirePr(prNumber: string | undefined): number {
-  const parsed = Number.parseInt(prNumber ?? "", 10);
+function requirePr(prNumber: string | undefined = ""): number {
+  const parsed = Number.parseInt(prNumber, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new Error("A pull request number is required");
   }

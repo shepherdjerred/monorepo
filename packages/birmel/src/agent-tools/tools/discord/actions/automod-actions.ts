@@ -1,6 +1,8 @@
 import {
   AutoModerationRuleTriggerType,
   AutoModerationActionType,
+  AutoModerationRuleEventType,
+  AutoModerationRuleKeywordPresetType,
   type Guild,
 } from "discord.js";
 
@@ -94,13 +96,13 @@ export async function handleCreateRule(
     MENTION_SPAM: AutoModerationRuleTriggerType.MentionSpam,
   };
   const presetMap = {
-    PROFANITY: 1,
-    SEXUAL_CONTENT: 2,
-    SLURS: 3,
+    PROFANITY: AutoModerationRuleKeywordPresetType.Profanity,
+    SEXUAL_CONTENT: AutoModerationRuleKeywordPresetType.SexualContent,
+    SLURS: AutoModerationRuleKeywordPresetType.Slurs,
   } as const;
   const rule = await guild.autoModerationRules.create({
     name,
-    eventType: 1,
+    eventType: AutoModerationRuleEventType.MessageSend,
     triggerType: triggerTypeMap[triggerType],
     triggerMetadata: {
       ...(keywords != null && { keywordFilter: keywords }),

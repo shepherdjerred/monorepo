@@ -31,7 +31,7 @@
     "debug-level": "^4.1.1",
     "node-av": "^6.1.1",
     "p-debounce": "^5.1.0",
-    "sharp": "^0.35.0",
+    "sharp": "^0.35.5",
     "zeromq": "^6.5.0"
   },
   "peerDependencies": {

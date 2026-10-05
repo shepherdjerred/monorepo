@@ -37,8 +37,16 @@ import { writeOpencodeFixture } from "./history-fixtures/opencode.ts";
 let fixtureRoot = "";
 let paths: HistoryPaths;
 
+function stringValue(value: string | null): string {
+  if (value === null) {
+    // Missing fixture keys sort alongside empty keys.
+    return "";
+  }
+  return value;
+}
+
 function compareStrings(a: string | null, b: string | null): number {
-  return (a ?? "").localeCompare(b ?? "");
+  return stringValue(a).localeCompare(stringValue(b));
 }
 
 async function scanGrokTurnCompletedFixture(

@@ -20,15 +20,21 @@ type ScheduleAnnouncementOptions = {
 export async function scheduleAnnouncement(
   options: ScheduleAnnouncementOptions,
 ): Promise<number> {
-  const { guildId, channelId, message, scheduledAt, createdBy, repeat } =
-    options;
+  const {
+    guildId,
+    channelId,
+    message,
+    scheduledAt,
+    createdBy,
+    repeat = null,
+  } = options;
   const result = await prisma.scheduledAnnouncement.create({
     data: {
       guildId,
       channelId,
       message,
       scheduledAt,
-      repeat: repeat ?? null,
+      repeat: repeat,
       createdBy,
     },
   });

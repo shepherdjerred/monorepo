@@ -3,7 +3,7 @@ terraform {
   required_providers {
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 5.25.0"
+      version = "~> 5.27.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -269,7 +269,7 @@ resource "cloudflare_ct_alerting" "ct" {
   zone_id = var.zone_id
   enabled = true
   emails  = [var.ct_alert_recipient]
-  # Provider 5.25 sends only changed fields on Update, but the API requires
+  # Provider 5.27 sends only changed fields on Update, but the API requires
   # enabled even for an email-only update. Create sends the complete payload;
   # this provider's Delete is a no-op, so replacement never disables alerts.
   lifecycle {

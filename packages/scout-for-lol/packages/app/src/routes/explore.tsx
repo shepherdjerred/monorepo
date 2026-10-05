@@ -62,8 +62,8 @@ function conversationLayout(empty: boolean, composerHeight: number) {
 }
 
 export function Explore() {
-  const { conversationId: routeConversationId } = useExploreParams();
-  const conversationId = routeConversationId ?? null;
+  const { conversationId: routeConversationId = null } = useExploreParams();
+  const conversationId = routeConversationId;
   const [composerElement, setComposerElement] = useState<HTMLDivElement | null>(
     null,
   );

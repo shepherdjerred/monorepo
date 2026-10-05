@@ -15,7 +15,7 @@ export function classifyVacuumStartEvidence(
 ): VacuumStartEvidence {
   const requested = Date.parse(requestedAt);
   if (!Number.isFinite(requested))
-    throw new Error("Invalid vacuum request time");
+    throw new TypeError("Invalid vacuum request time");
   const cleaningTimes = history.flat().flatMap((state) => {
     const changed = Date.parse(state.last_changed ?? "");
     return state.entity_id === entityId &&

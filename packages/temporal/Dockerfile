@@ -115,11 +115,11 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
 # renovate: datasource=github-releases depName=kubernetes/kubectl
-ARG KUBECTL_VERSION=v1.37.0
+ARG KUBECTL_VERSION=v1.37.1
 # renovate: datasource=github-releases depName=github/github-mcp-server
 ARG GITHUB_MCP_SERVER_VERSION=1.3.0
 # renovate: datasource=github-releases depName=siderolabs/talos
-ARG TALOSCTL_VERSION=v1.14.1
+ARG TALOSCTL_VERSION=v1.14.2
 # renovate: datasource=github-releases depName=opentofu/opentofu
 ARG TOFU_VERSION=1.12.3
 # renovate: datasource=github-releases depName=argoproj/argo-cd
@@ -133,7 +133,7 @@ ARG TEMPORAL_CLI_VERSION=1.7.3
 # renovate: datasource=github-releases depName=grafana/gcx
 ARG GCX_VERSION=1.0.0
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.3
+ARG UV_VERSION=0.12.23
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 ARG TRIVY_VERSION=0.72.0
 # lychee tags carry a `lychee-v` prefix, so the pinned value is the full tag.

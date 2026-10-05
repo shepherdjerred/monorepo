@@ -74,7 +74,7 @@ function isElectionStartTime(): boolean {
     return false;
   }
 
-  const [targetHour, targetMinute] = config.elections.startTime
+  const [targetHour = 0, targetMinute = 0] = config.elections.startTime
     .split(":")
     .map(Number);
   const current = getCurrentTimeInTimezone(config.elections.timezone);
@@ -86,7 +86,7 @@ function isElectionStartTime(): boolean {
 
   // Allow a 5-minute window for the scheduler
   const currentMinutes = current.hours * 60 + current.minutes;
-  const targetMinutes = (targetHour ?? 0) * 60 + (targetMinute ?? 0);
+  const targetMinutes = targetHour * 60 + targetMinute;
 
   return currentMinutes >= targetMinutes && currentMinutes < targetMinutes + 5;
 }

@@ -11,7 +11,7 @@ export type ScheduleReconciliationMode = z.infer<
 >;
 
 export function parseScheduleReconciliationMode(
-  value: string | undefined,
+  value: string | undefined = "enabled",
 ): ScheduleReconciliationMode {
-  return ScheduleReconciliationModeSchema.parse(value ?? "enabled");
+  return ScheduleReconciliationModeSchema.parse(value);
 }

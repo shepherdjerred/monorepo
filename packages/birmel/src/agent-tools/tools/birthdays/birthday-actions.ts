@@ -60,8 +60,14 @@ type SetBirthdayOptions = {
 export async function handleSetBirthday(
   options: SetBirthdayOptions,
 ): Promise<BirthdayResult> {
-  const { guildId, userId, birthMonth, birthDay, birthYear, timezone } =
-    options;
+  const {
+    guildId,
+    userId,
+    birthMonth,
+    birthDay,
+    birthYear,
+    timezone = "UTC",
+  } = options;
   if (
     birthMonth == null ||
     birthDay == null ||
@@ -79,7 +85,7 @@ export async function handleSetBirthday(
     birthMonth,
     birthDay,
     ...(birthYear !== undefined && { birthYear }),
-    timezone: timezone ?? "UTC",
+    timezone: timezone,
   });
   logger.info("Birthday set", { guildId, userId });
   return {

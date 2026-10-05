@@ -111,8 +111,8 @@ async function copyRedactedTable(
       redactionCheckStatement(table, redactions),
     ),
   );
-  const [row] = counts;
-  const values = (row ?? "").split("|").map(Number);
+  const [row = ""] = counts;
+  const values = row.split("|").map(Number);
   assertRedacted(
     table,
     Object.fromEntries(

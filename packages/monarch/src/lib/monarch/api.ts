@@ -59,10 +59,7 @@ const TransactionSplitTxnSchema = z.object({
   merchant: z.object({ id: z.string(), name: z.string() }),
   category: z.object({ id: z.string(), name: z.string() }),
   amount: z.number(),
-  notes: z
-    .string()
-    .nullable()
-    .transform((v) => v ?? ""),
+  notes: z.string().or(z.null().transform(() => "")),
 });
 
 const TransactionSplitsResponseSchema = z.object({

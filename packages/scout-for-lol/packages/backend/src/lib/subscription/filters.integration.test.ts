@@ -121,7 +121,7 @@ async function createTestSubscription(
   playerId: PlayerId,
   channelId: DiscordChannelId,
   serverId: DiscordGuildId,
-  filters?: SerializedSubscriptionFilters | null,
+  filters: SerializedSubscriptionFilters | null = null,
 ) {
   return await testPrisma.subscription.create({
     data: {
@@ -131,7 +131,7 @@ async function createTestSubscription(
       creatorDiscordId: testAccountId("testcreator"),
       createdTime: new Date(),
       updatedTime: new Date(),
-      filters: filters ?? null,
+      filters,
     },
   });
 }

@@ -38,7 +38,7 @@ const LakeClashRowSchema = z.object({
   win: z
     .boolean()
     .nullish()
-    .transform((value) => value ?? null),
+    .transform((value = null) => value),
   source: z.enum(["prematch", "match"]),
 });
 

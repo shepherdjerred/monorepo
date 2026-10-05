@@ -181,9 +181,9 @@ export function assertCompletedBackup(
 
 function hasReportedFailures(
   errors: number | undefined,
-  warnings: number | undefined,
+  warnings: number | undefined = 0,
 ): boolean {
-  return (errors ?? 0) !== 0 || (warnings ?? 0) !== 0;
+  return (errors ?? 0) !== 0 || warnings !== 0;
 }
 
 function hasExpectedJobContainer(

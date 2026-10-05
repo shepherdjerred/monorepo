@@ -328,7 +328,7 @@ type GetMessagesOptions = {
 export async function handleGetMessages(
   options: GetMessagesOptions,
 ): Promise<MessageResult> {
-  const { client, channelId, limit, before, signal } = options;
+  const { client, channelId, limit = 20, before, signal } = options;
   if (channelId == null || channelId.length === 0) {
     return { success: false, message: "channelId is required for get" };
   }

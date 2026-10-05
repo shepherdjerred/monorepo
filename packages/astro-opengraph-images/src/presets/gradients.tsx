@@ -2,7 +2,7 @@ import type { RenderFunctionInput } from "#src/types.js";
 
 export function gradients({
   title,
-  description,
+  description = "",
 }: RenderFunctionInput): React.ReactNode {
   return (
     <div
@@ -38,7 +38,7 @@ export function gradients({
           color: "transparent",
         }}
       >
-        {description ?? ""}
+        {description}
       </div>
     </div>
   );

@@ -229,10 +229,12 @@ export abstract class GameStreamerBase {
           await this.afterLeaveVoice();
         }),
       onFailure: ({ attempt, maxRetries, error }) => {
+        let message = error;
+        message ??= "unknown";
         this.logger.error(
           `stream failed (attempt ${String(attempt)} of ${String(
             maxRetries,
-          )}): ${error ?? "unknown"}`,
+          )}): ${message}`,
         );
       },
     };

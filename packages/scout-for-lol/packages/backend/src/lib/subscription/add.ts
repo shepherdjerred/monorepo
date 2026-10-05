@@ -45,7 +45,7 @@ async function commitSubscription(params: {
     region,
     riotId,
     alias,
-    discordUserId,
+    discordUserId = null,
     creatorDiscordId,
     filters,
   } = input;
@@ -98,7 +98,7 @@ async function commitSubscription(params: {
           where: { serverId_alias: { serverId: guildId, alias } },
           create: {
             alias,
-            discordId: discordUserId ?? null,
+            discordId: discordUserId,
             createdTime: now,
             updatedTime: now,
             creatorDiscordId,

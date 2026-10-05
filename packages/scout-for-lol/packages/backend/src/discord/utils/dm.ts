@@ -289,14 +289,14 @@ async function finalizeDeliveryRow(
     errorMessage?: string | undefined;
   },
 ): Promise<void> {
-  const { id, status, recipientTag, errorMessage } = outcome;
+  const { id, status, recipientTag = null, errorMessage = null } = outcome;
   try {
     await db.dmAuditLog.update({
       where: { id },
       data: {
         deliveryStatus: status,
-        recipientTag: recipientTag ?? null,
-        errorMessage: errorMessage ?? null,
+        recipientTag,
+        errorMessage,
       },
     });
   } catch (error) {

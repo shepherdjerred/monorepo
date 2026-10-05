@@ -177,8 +177,8 @@ function scalarCall(
     .with("least", () => extremum(args, -1))
     .with("date_trunc", () => unsupported("DATE_TRUNC"))
     .with("round", () => {
-      const [value, digits] = args;
-      const numeric = asNumber(value ?? null, "ROUND");
+      const [value = null, digits] = args;
+      const numeric = asNumber(value, "ROUND");
       if (numeric === null) return null;
       const precision = digits === undefined ? 0 : asNumber(digits, "ROUND");
       if (

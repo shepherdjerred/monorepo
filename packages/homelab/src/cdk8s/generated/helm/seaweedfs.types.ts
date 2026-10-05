@@ -384,6 +384,8 @@ export type SeaweedfsHelmValuesMaster = {
   podLabels?: SeaweedfsHelmValuesMasterPodLabels;
   /**
    * Annotations to be added to the master pods
+   * The chart sets checksum/master-config on master pods; other checksum/* keys
+   * can be used for custom rollouts.
    *
    * @default {}
    */
@@ -1348,6 +1350,8 @@ export type SeaweedfsHelmValuesFiler = {
   podLabels?: SeaweedfsHelmValuesFilerPodLabels;
   /**
    * Annotations to be added to the filer pods
+   * The chart sets checksum/s3config on filer pods; other checksum/* keys can be
+   * used for custom rollouts.
    *
    * @default {}
    */
@@ -1965,6 +1969,8 @@ export type SeaweedfsHelmValuesS3 = {
   podLabels?: SeaweedfsHelmValuesS3PodLabels;
   /**
    * Annotations to be added to the s3 pods
+   * The chart sets checksum/s3config on s3 pods; other checksum/* keys can be
+   * used for custom rollouts.
    *
    * @default {}
    */
@@ -2738,10 +2744,11 @@ export type SeaweedfsHelmValuesAdmin = {
    * kubelet's httpGet readiness/liveness probes (which dial the pod IP) to ever
    * succeed. "0.0.0.0" restores the pre-4.46 behaviour of listening on all
    * interfaces. A non-loopback address requires authentication: set
-   * admin.secret.adminPassword or admin.secret.existingSecret, or supply
+   * admin.secret.adminPassword or admin.secret.existingSecret, supply
    * WEED_ADMIN_PASSWORD via admin.extraEnvironmentVars /
-   * admin.secretExtraEnvironmentVars; otherwise the admin container will exit
-   * with a clear error rather than silently staying unready. The whole
+   * admin.secretExtraEnvironmentVars, or opt out with admin.allowInsecureBind;
+   * otherwise the admin container will exit with a clear error rather than
+   * silently staying unready. The whole
    * 127.0.0.0/8 range and ::1 are treated as loopback (matching weed admin).
    * Set to a loopback address only if you also replace the httpGet probes.
    * Note: the -ip flag requires SeaweedFS 4.46 or newer; pinning
@@ -2751,6 +2758,10 @@ export type SeaweedfsHelmValuesAdmin = {
    */
   ip?: string;
   loggingOverrideLevel?: unknown;
+  /**
+   * @default false
+   */
+  allowInsecureBind?: boolean;
   /**
    * Admin authentication
    *
@@ -3719,6 +3730,8 @@ export type SeaweedfsHelmValuesAllInOne = {
    */
   annotations?: SeaweedfsHelmValuesAllInOneAnnotations;
   /**
+   * The chart sets checksum/master-config and checksum/s3config on all-in-one
+   * pods; other checksum/* keys can be used for custom rollouts.
    * Annotations for the pods
    *
    * @default {}
@@ -4418,7 +4431,7 @@ export type SeaweedfsHelmValues = {
    */
   sftp?: SeaweedfsHelmValuesSftp;
   /**
-   * @default {...} (40 keys)
+   * @default {...} (41 keys)
    */
   admin?: SeaweedfsHelmValuesAdmin;
   /**
@@ -4451,6 +4464,9 @@ export type SeaweedfsHelmValues = {
   podLabels?: SeaweedfsHelmValuesPodLabels;
   /**
    * Annotations to be added to all the created pods
+   * The chart sets checksum/master-config and checksum/s3config on pods whose
+   * rendered ConfigMaps or Secrets should trigger rollouts. Other checksum/* keys
+   * can be used for custom rollout annotations.
    *
    * @default {}
    */
@@ -4866,6 +4882,7 @@ export type SeaweedfsHelmParameters = {
   "admin.grpcPort"?: string;
   "admin.ip"?: string;
   "admin.loggingOverrideLevel"?: string;
+  "admin.allowInsecureBind"?: string;
   "admin.secret.existingSecret"?: string;
   "admin.secret.userKey"?: string;
   "admin.secret.pwKey"?: string;

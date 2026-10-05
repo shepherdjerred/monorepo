@@ -41,7 +41,7 @@ test.each(["runVacuumIfNotHome", "leavingHome"])(
         ) => {
           const entityId = data["entity_id"];
           if (typeof entityId !== "string")
-            throw new Error("Missing fixture entity_id");
+            throw new TypeError("Missing fixture entity_id");
           if (domain === "vacuum" && service === "start")
             states.set(entityId, "cleaning");
           else if (domain === "light" && service === "turn_off")

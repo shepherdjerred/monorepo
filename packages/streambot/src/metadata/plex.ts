@@ -288,7 +288,7 @@ export class PlexArtwork implements LibraryArtworkProvider {
         if (next.done) break;
         const chunk: unknown = next.value;
         if (!(chunk instanceof Uint8Array))
-          throw new Error("Plex returned invalid poster bytes");
+          throw new TypeError("Plex returned invalid poster bytes");
         size += chunk.byteLength;
         if (size > MAX_IMAGE_BYTES) {
           await reader.cancel();

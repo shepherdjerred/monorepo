@@ -116,9 +116,17 @@ function getResolver(): ReturnType<typeof buildResolver> {
   return resolver;
 }
 
+function guildTargetingKey(guildId: string | null): string {
+  if (guildId === null) {
+    // Direct messages use bot-wide targeting rather than a guild key.
+    return "starlight-karma-bot";
+  }
+  return guildId;
+}
+
 export async function karmaEmoji(guildId: string | null): Promise<string> {
   return getResolver().value("karmaEmoji", {
-    targetingKey: guildId ?? "starlight-karma-bot",
+    targetingKey: guildTargetingKey(guildId),
   });
 }
 
@@ -126,7 +134,7 @@ export async function karmaAdminUserId(
   guildId: string | null,
 ): Promise<string> {
   return getResolver().value("karmaAdminUserId", {
-    targetingKey: guildId ?? "starlight-karma-bot",
+    targetingKey: guildTargetingKey(guildId),
   });
 }
 

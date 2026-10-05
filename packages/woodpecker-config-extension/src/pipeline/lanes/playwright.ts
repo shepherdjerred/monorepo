@@ -19,17 +19,14 @@ import {
  * pipeline-level guard decides whether the LANE runs at all, and the in-step
  * selector decides which of the seven Playwright projects inside it do.
  */
-export function playwrightSteps(
-  images: CiImages,
-  changedBase: string | undefined,
-): CiStep[] {
+export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
   return [
     {
       key: "playwright-e2e",
       label: "playwright e2e",
       image: images.playwright,
       environment: {
-        CI_CHANGED_BASE: changedBase ?? "",
+        CI_CHANGED_BASE: changedBase,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
       },
       commands: [

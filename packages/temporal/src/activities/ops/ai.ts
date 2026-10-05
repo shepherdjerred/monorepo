@@ -213,7 +213,10 @@ export function mapAi(samples: AiSamples, now: Date): OpsCollection {
   const tokens = [total(samples.macTokens24h), total(samples.clusterTokens24h)];
   const tokenTotal = tokens.every((value) => value === null)
     ? null
-    : tokens.reduce<number>((sum, value) => sum + (value ?? 0), 0);
+    : tokens.reduce<number>(
+        (sum, value) => (value === null ? sum : sum + value),
+        0,
+      );
   const quotaRatios = samples.quotas.map((sample) => sample.value);
   const maxQuota = quotaRatios.length === 0 ? null : Math.max(...quotaRatios);
   return {

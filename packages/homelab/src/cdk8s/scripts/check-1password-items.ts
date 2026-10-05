@@ -79,8 +79,8 @@ const HelmRconSchema = z.object({
   secretKey: z.string().min(1),
 });
 
-function nsKey(namespace: string | undefined): string {
-  return namespace ?? "";
+function nsKey(namespace = ""): string {
+  return namespace;
 }
 
 function addKey(

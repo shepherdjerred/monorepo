@@ -366,7 +366,9 @@ export async function runPersistedExploreTurn(
 function resolveCancellationOutcome(
   outcome: Extract<ExploreTurnOutcome, "stopped" | "interrupted"> | null,
 ): Extract<ExploreTurnOutcome, "stopped" | "interrupted"> {
-  return outcome ?? "interrupted";
+  let resolved = outcome;
+  resolved ??= "interrupted";
+  return resolved;
 }
 
 function throwIfAborted(signal: AbortSignal): void {

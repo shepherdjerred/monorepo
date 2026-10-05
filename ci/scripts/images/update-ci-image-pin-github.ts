@@ -11,14 +11,14 @@ export async function openOrUpdatePullRequest(options: {
   readonly env: Record<string, string>;
   readonly expectedRemoteSha: string | undefined;
 }): Promise<void> {
-  const { cloneDir, definition, state, env, expectedRemoteSha } = options;
+  const { cloneDir, definition, state, env, expectedRemoteSha = "" } = options;
   await run(
     [
       "git",
       "-C",
       cloneDir,
       "push",
-      `--force-with-lease=refs/heads/${definition.branch}:${expectedRemoteSha ?? ""}`,
+      `--force-with-lease=refs/heads/${definition.branch}:${expectedRemoteSha}`,
       "-u",
       "origin",
       definition.branch,

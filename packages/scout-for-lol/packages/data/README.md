@@ -9,6 +9,10 @@ re-exported from here. This package owns everything those contracts must not
 know about: Prisma's storage domain, Discord and Riot shapes, and the static
 snapshot below.
 
+Data Dragon URL getters can run in browsers. Cached-image validation and base64
+helpers require Bun and load Node's file-URL conversion when reading local
+assets, so importing the shared module does not initialize server-only code.
+
 ## Raw Riot captures and ability icons
 
 Raw match, spectator and timeline schemas validate known fields while retaining

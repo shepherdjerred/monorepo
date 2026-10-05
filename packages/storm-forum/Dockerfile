@@ -6,7 +6,7 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/storm-f
 COPY packages/storm-theme /app/packages/storm-theme
 RUN bun /app/packages/storm-theme/scripts/generate.ts --check && bun build /app/packages/storm-theme/src/browser.ts --target browser --minify --outdir /app/packages/storm-theme/dist
 
-FROM php:8.3.35-fpm-bookworm@sha256:536a1188a926efe7e6f927b7ca01f3a043c63d0a527567c6d4d3bf9fbd637866 AS runtime
+FROM php:8.5.9-fpm-bookworm@sha256:0fed012de2202d7ef0314744ccfa274b870f07cd6a91f88b78f74a849bb03f02 AS runtime
 # Distribution packages receive security updates when the pinned base is rebuilt.
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev libicu-dev unzip mariadb-client ca-certificates \

@@ -61,10 +61,10 @@ function isBinary(key: string): boolean {
 export async function listRawObjects(
   client: S3Client,
   bucket: string,
-  prefix?: string,
+  prefix = "",
 ): Promise<RawObject[]> {
   const objects: RawObject[] = [];
-  for await (const ref of enumerateRawObjects(client, bucket, prefix ?? "")) {
+  for await (const ref of enumerateRawObjects(client, bucket, prefix)) {
     if (isBinary(ref.key)) {
       continue;
     }

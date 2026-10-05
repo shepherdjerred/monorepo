@@ -254,11 +254,12 @@ function depMap(
 ): Record<string, string> {
   const value = raw[field];
   if (value === undefined) return {};
-  if (!isRecord(value)) throw new Error(`lockfile ${field} must be an object`);
+  if (!isRecord(value))
+    throw new TypeError(`lockfile ${field} must be an object`);
   const deps: Record<string, string> = {};
   for (const [name, spec] of Object.entries(value)) {
     if (typeof spec !== "string")
-      throw new Error(`lockfile ${field} entry ${name} must be a string`);
+      throw new TypeError(`lockfile ${field} entry ${name} must be a string`);
     deps[name] = spec;
   }
   return deps;
@@ -269,10 +270,11 @@ function parseLockfileWorkspaces(
 ): Lockfile["workspaces"] {
   const workspaces: Lockfile["workspaces"] = new Map();
   for (const [dir, entry] of Object.entries(workspacesRaw)) {
-    if (!isRecord(entry)) throw new Error(`workspace ${dir} must be an object`);
+    if (!isRecord(entry))
+      throw new TypeError(`workspace ${dir} must be an object`);
     const name = entry["name"];
     if (typeof name !== "string")
-      throw new Error(`workspace ${dir} must have a string name`);
+      throw new TypeError(`workspace ${dir} must have a string name`);
     const merged: Record<string, { spec: string; required: boolean }> = {};
     for (const { field, required } of WORKSPACE_DEP_FIELDS) {
       for (const [depName, spec] of Object.entries(depMap(entry, field))) {

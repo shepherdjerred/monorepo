@@ -493,7 +493,7 @@ test("extracts identical Emscripten tag and digest pins from both sources", asyn
     "packages/discord-plays-mario-kart/Dockerfile",
   ]);
   expect(pins).toEqual([
-    "6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65",
-    "6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65",
+    "6.0.11@sha256:cdefec943f04fd4b2b2fe23b0a1a346be9fc560ef5784a83faa27dd351381372",
+    "6.0.11@sha256:cdefec943f04fd4b2b2fe23b0a1a346be9fc560ef5784a83faa27dd351381372",
   ]);
 });

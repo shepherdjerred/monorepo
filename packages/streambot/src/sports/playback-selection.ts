@@ -22,11 +22,10 @@ export type SportsPlaybackSelection = {
 
 type PlaySource = "auto" | "history" | "local" | "youtube";
 
-function hasSportsCue(query: string, utterance: string | undefined): boolean {
+function hasSportsCue(query: string, utterance = ""): boolean {
   return (
-    /\b(?:sports|nfl|nba|wnba|nhl|mlb)\b/i.test(
-      `${query} ${utterance ?? ""}`,
-    ) || /\b[\w.-]+\s+(?:vs\.?|versus)\s+[\w.-]+\b/i.test(query)
+    /\b(?:sports|nfl|nba|wnba|nhl|mlb)\b/i.test(`${query} ${utterance}`) ||
+    /\b[\w.-]+\s+(?:vs\.?|versus)\s+[\w.-]+\b/i.test(query)
   );
 }
 

@@ -64,7 +64,7 @@ export async function addParticipant(options: {
   status: ParticipantStatus;
   invitedBy?: DiscordAccountId;
 }): Promise<CompetitionParticipant> {
-  const { prisma, competitionId, playerId, status, invitedBy } = options;
+  const { prisma, competitionId, playerId, status, invitedBy = null } = options;
   const now = new Date();
 
   // Get competition to check limits and status
@@ -123,7 +123,7 @@ export async function addParticipant(options: {
       competitionId,
       playerId,
       status,
-      invitedBy: status === "INVITED" ? (invitedBy ?? null) : null,
+      invitedBy: status === "INVITED" ? invitedBy : null,
       invitedAt: status === "INVITED" ? now : null,
       joinedAt: status === "JOINED" ? now : null,
       leftAt: null,

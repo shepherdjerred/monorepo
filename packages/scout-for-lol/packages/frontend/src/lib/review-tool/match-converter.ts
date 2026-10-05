@@ -54,9 +54,11 @@ const baseMatchTypeByQueueType: Record<
  * Get the base example match structure for a given queue type
  */
 function getBaseMatch(
-  queueType: Exclude<QueueType, "classic" | "classic aram mayhem"> | undefined,
+  queueType:
+    | Exclude<QueueType, "classic" | "classic aram mayhem">
+    | undefined = "custom",
 ): CompletedMatch | ArenaMatch {
-  return getExampleMatch(baseMatchTypeByQueueType[queueType ?? "custom"]);
+  return getExampleMatch(baseMatchTypeByQueueType[queueType]);
 }
 
 /**

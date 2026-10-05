@@ -2405,12 +2405,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
    * @default ""
    */
   dnsPolicy?: string;
-  /**
-   * Enable hostNetwork for Alertmanager.
-   *
-   * @default false
-   */
-  hostNetwork?: boolean;
+  hostNetwork?: unknown;
   /**
    * ListenLocal makes the Alertmanager server listen on loopback, so that it does not bind against the Pod IP.
    * Note this is only for the Alertmanager UI, not the gossip communication.
@@ -5095,6 +5090,13 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporter = {
    */
   [key: string]: unknown;
   /**
+   * Enable scraping via kubernetes-service-endpoints
+   * Disabled by default as service monitor is enabled below
+   *
+   * @default false
+   */
+  prometheusScrape?: boolean;
+  /**
    * @default ""
    */
   namespaceOverride?: string;
@@ -5225,6 +5227,9 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusMonitor
      */
     [key: string]: unknown;
     /**
+     * Enable scraping via service monitor
+     * Disable to prevent duplication if you have enabled prometheusScrape above
+     *
      * @default true
      */
     enabled?: boolean;
@@ -6325,7 +6330,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.8"
+     * @default "1.8.9"
      */
     tag?: string;
     /**
@@ -9022,7 +9027,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.14.0-distroless"
+   * @default "v3.15.0-distroless"
    */
   tag?: string;
   /**
@@ -10365,7 +10370,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Configuration for prometheus-node-exporter subchart
    *
-   * @default {...} (8 keys)
+   * @default {...} (9 keys)
    */
   "prometheus-node-exporter"?: KubeprometheusstackHelmValuesPrometheusnodeexporter;
   /**
@@ -10963,6 +10968,7 @@ export type KubeprometheusstackHelmParameters = {
   "nodeExporter.operatingSystems.aix.enabled"?: string;
   "nodeExporter.operatingSystems.darwin.enabled"?: string;
   "nodeExporter.forceDeployDashboards"?: string;
+  "prometheus-node-exporter.prometheusScrape"?: string;
   "prometheus-node-exporter.namespaceOverride"?: string;
   "prometheus-node-exporter.podLabels.jobLabel"?: string;
   "prometheus-node-exporter.releaseLabel"?: string;

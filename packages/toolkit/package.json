@@ -28,6 +28,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "devDependencies": {
+    "@opentelemetry/core": "^2.7.1",
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@shepherdjerred/mc-harness": "workspace:*",
@@ -51,7 +52,7 @@
     "debug": "^4.4.3",
     "discord.js": "^14",
     "discord.js-selfbot-v13": "^3.7",
-    "ink": "7.1.1",
+    "ink": "8.0.0",
     "react": "19.3.0",
     "zod": "^4.4.3",
     "@shepherdjerred/ops-model": "workspace:*",

@@ -23,7 +23,7 @@
 ########################
 # Matches upstream Dockerfile.ubuntu's RUST_BUILDER_VERSION=slim-bookworm.
 # renovate: datasource=docker depName=rust
-FROM rust:slim-bookworm@sha256:ff521445a372125ed4f76e1453a1f8098f2d05332d1601d30db1c1f62757e730 AS builder
+FROM rust:slim-bookworm@sha256:452176c0cefca88c0b3184ce85a4eb03e3d4fa05d2afb5366abcba853221019e AS builder
 
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
@@ -54,7 +54,7 @@ RUN cargo build --release --locked --bin redlib \
 ########################
 # Renovate-managed Ubuntu 26.04 release base.
 # renovate: datasource=docker depName=ubuntu
-FROM ubuntu:26.04@sha256:da6fc2be547864451aa253836dd926da33623312df4a9a243e35dc877c378a78 AS release
+FROM ubuntu:26.04@sha256:f144425ff09be612d6d9ad965196e9cdc23dae1f42110a8a11a3e9a8198759f7 AS release
 
 # wget powers both the HEALTHCHECK below and the in-image `smoke` stage's
 # /settings probe. The minimal Ubuntu image does not ship wget, so install it

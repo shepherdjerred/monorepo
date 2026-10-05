@@ -112,14 +112,14 @@ export type PipelineInputs = {
 
 export function buildPipelineSteps({
   images,
-  changedBase,
+  changedBase = "",
   verifyBase,
-  imageReleaseBase,
+  imageReleaseBase = "",
   platformOperation,
 }: PipelineInputs): CiStep[] {
   const sharedEnvironment = {
-    CI_CHANGED_BASE: changedBase ?? "",
-    CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase ?? "",
+    CI_CHANGED_BASE: changedBase,
+    CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase,
   };
 
   const steps: CiStep[] = [
@@ -131,7 +131,7 @@ export function buildPipelineSteps({
       environment: {
         ...sharedEnvironment,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
-        CI_CHANGED_BASE: verifyBase ?? changedBase ?? "",
+        CI_CHANGED_BASE: verifyBase ?? changedBase,
       },
       // A first run in a new trust domain must rebuild every cache entry rather
       // than accepting unsigned output from the former shared cache. Keep the
@@ -176,7 +176,7 @@ export function buildPipelineSteps({
   return steps.map((step) => ({
     ...step,
     environment: {
-      CI_CHANGED_BASE: changedBase ?? "",
+      CI_CHANGED_BASE: changedBase,
       ...step.environment,
     },
   }));
