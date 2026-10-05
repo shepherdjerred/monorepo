@@ -10,6 +10,18 @@ import org.junit.jupiter.api.Test;
 
 final class PursuitWatchTest {
   @Test
+  void walkingInSmallStepsNeverLooksStalledAtFourTicksPerSecond() {
+    var watch = new PursuitWatch();
+    var id = UUID.randomUUID();
+    for (var tick = 0; tick <= 160; tick++) {
+      assertThat(
+              watch.observe(
+                  id, new Point(tick * .1, 42, 1), Instant.EPOCH.plusMillis(tick * 250L), false))
+          .isEqualTo(PursuitWatch.Action.NONE);
+    }
+  }
+
+  @Test
   void stallsRetryThenRecoverOnceEvenWhenTicksAreLate() {
     var watch = new PursuitWatch();
     var id = UUID.randomUUID();

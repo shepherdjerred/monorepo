@@ -122,19 +122,19 @@ describe("run bank on native Paper", () => {
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={${tags(run)}}] 12`,
       );
-      await clickAt(bot, rcon, new Vec3(1760, 73, 2148));
+      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
       await bot.clickWindow(0, 0, 0);
       await close(bot);
       expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 12 });
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={${tags(run)}}] 4`,
       );
-      await rcon.command(`tp ${bot.username} 1793.5 73 2175.5`);
-      const box = new Vec3(1793, 73, 2173);
+      await rcon.command(`tp ${bot.username} 1790.5 73 2272.5`);
+      const box = new Vec3(1790, 73, 2270);
       await waitUntil(
         "active box loaded",
         () =>
-          bot.entity.position.distanceTo(new Vec3(1793.5, 73, 2175.5)) < 0.6 &&
+          bot.entity.position.distanceTo(new Vec3(1790.5, 73, 2272.5)) < 0.6 &&
           bot.blockAt(box) !== null,
       );
       const fixture = bot.blockAt(box);
@@ -185,7 +185,7 @@ describe("run bank on native Paper", () => {
       ]) {
         await rcon.command(`clear ${secondBot.username} minecraft:${material}`);
       }
-      await clickAt(bot, rcon, new Vec3(1760, 73, 2148));
+      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
       const deposited = waitForMessage(bot, /Deposited 40 supplies/u);
       await bot.clickWindow(0, 0, 0);
       await deposited;
@@ -197,14 +197,14 @@ describe("run bank on native Paper", () => {
         stone: 4,
         locker: 0,
       });
-      await clickAt(secondBot, rcon, new Vec3(1763, 73, 2148));
+      await clickAt(secondBot, rcon, new Vec3(1765, 73, 2260));
       await secondBot.clickWindow(18, 0, 0);
       await waitUntil("weapon crafted using team materials", () =>
         secondBot.inventory.items().some((i) => i.name === "stone_sword"),
       );
       expect(await inspect(bot, rcon)).toMatchObject({ wood: 6, stone: 0 });
       await close(secondBot);
-      await clickAt(secondBot, rcon, new Vec3(1818, 73, 2187));
+      await clickAt(secondBot, rcon, new Vec3(1856, 89, 2209));
       const oldWindow = secondBot.currentWindow?.id;
       await secondBot.clickWindow(1, 0, 0);
       await waitUntil(
@@ -256,7 +256,7 @@ describe("run bank on native Paper", () => {
           `data get entity ${bot.username} Inventory[{id:"minecraft:diamond_sword"}].components`,
         );
       const before = await components();
-      await clickAt(bot, rcon, new Vec3(1760, 73, 2148));
+      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
       const weapon = bot.inventory
         .items()
         .find((i) => i.name === "diamond_sword");

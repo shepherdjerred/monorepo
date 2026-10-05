@@ -541,13 +541,14 @@ after a charge. Special encounters use illager, trial, mounted, pale, and Nether
 rosters as their required districts become available.
 
 Market wheat nodes give nine wheat per harvest, twice per player per round;
-the food counter sells three bread for two emeralds. Shared routes cost quarry
-12, foundry 20, infirmary 12, barracks 16, ramparts 20 and crypt 24 emeralds.
+the food counter sells three bread for two emeralds. Shared routes cost wharf 8,
+quarry 10, church 8, cloister 8, infirmary 10, foundry 14, gardens 10,
+barracks 12, ramparts 16, bluff 12, crypt 14 and airstrip 16 emeralds.
 Click the same sign twice, 200 milliseconds to three seconds apart, to confirm.
 
-Smugglers' Wharf and Signal Bluff each cost 20 emeralds after unlocking ramparts.
-Both have two connections back to ramparts. Wharf docks and tunnels descend to Y 66/63;
-bluff terraces and a rampart gallery rise to Y 85/88. The protected footprint remains unchanged.
+The harbor occupies Y 73, the cathedral and middle town rise to Y 89,
+and the upper town and airstrip reach Y 105. Church Crypt descends to Y 77.
+Authored stairs connect the terraces; route gates control district access.
 Machines use barrels, vertical shrine stacks, a copper generator with a lodestone above,
 and a Runeforge. Both blocks of a shrine or generator are clickable. Two permanent
 holograms identify the generator and active cache; pickup, downed and reveal labels
@@ -558,8 +559,8 @@ A look-at prompt identifies the current interaction. Powered shrines play their 
 music disc quietly in the RECORDS category: Relic, Otherside, Pigstep, or Creator Music Box.
 Only the nearest shrine plays within twelve blocks; leaving, downing or losing power stops it.
 
-Fifteen gathering nodes cover twelve materials: wood, stone, wheat, iron, flint,
-redstone, bone, glowstone, copper, string, nether wart, and blaze powder. Wood, stone,
+Fourteen gathering nodes cover twelve materials: wood, stone, wheat, iron, flint,
+redstone, bone, glowstone, copper, string, nether wart, and blaze powder. Wood
 and wheat each have two nodes; duplicates share two harvests per player per round.
 Opening foundry permits an eight-emerald upgrade to 1.5× yield, and opening crypt
 permits a sixteen-emerald upgrade to 2×. Upgrades affect everyone and reset per run.
@@ -613,7 +614,7 @@ have signatures. Cache animation lasts three seconds and reserves the exact reve
 for its buyer for fifteen seconds. Unclaimed purchases refund their original payment sources.
 Full-inventory equipment rewards use the private locker; full inventory and locker refuse
 delivery without losing the purchase. After six claims the cache moves to another authored
-site. Follow the magenta beacon to market, quarry, barracks, wharf or bluff.
+site. Follow the magenta beacon to market, wharf, church, foundry, barracks or bluff.
 Bows include arrows; Graviton includes redstone. Every item keeps its identity through
 reveals, claims, enchanting, augmentation, lockers and trident returns.
 

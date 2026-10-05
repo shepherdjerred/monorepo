@@ -45,12 +45,12 @@ describe("Settlement iteration on native Paper", () => {
       await rcon.command(
         `effect give ${bot.username} minecraft:resistance infinite 255 true`,
       );
-      await stand(bot, rcon, new Vec3(1763.5, 73, 2150.5));
+      await stand(bot, rcon, new Vec3(1765.5, 73, 2262.5));
       await waitUntil(
         "workbench loaded",
-        () => bot.blockAt(new Vec3(1763, 73, 2148)) !== null,
+        () => bot.blockAt(new Vec3(1765, 73, 2260)) !== null,
       );
-      const block = bot.blockAt(new Vec3(1763, 73, 2148));
+      const block = bot.blockAt(new Vec3(1765, 73, 2260));
       if (block === null) throw new Error("Workbench missing");
       await bot.activateBlock(block);
       await waitUntil("shop opened", () => bot.currentWindow !== null);
@@ -96,7 +96,7 @@ describe("Settlement iteration on native Paper", () => {
       await rcon.command(
         `effect give ${bot.username} minecraft:resistance infinite 255 true`,
       );
-      await stand(bot, rcon, new Vec3(1806.5, 85, 2272.5));
+      await stand(bot, rcon, new Vec3(1815.5, 105, 2167.5));
       await rcon.command(
         `storm-fixture-survival legendary ${bot.username} TIDEBREAKER`,
       );
@@ -127,13 +127,13 @@ describe("Settlement iteration on native Paper", () => {
         Object.values(bot.entities).some(
           (entity) =>
             entity.name === "zombie" &&
-            entity.position.distanceTo(new Vec3(1802.5, 85, 2272.5)) < 1,
+            entity.position.distanceTo(new Vec3(1811.5, 105, 2167.5)) < 1,
         ),
       );
       const target = Object.values(bot.entities).find(
         (entity) =>
           entity.name === "zombie" &&
-          entity.position.distanceTo(new Vec3(1802.5, 85, 2272.5)) < 1,
+          entity.position.distanceTo(new Vec3(1811.5, 105, 2167.5)) < 1,
       );
       if (target === undefined) throw new Error("Trident target missing");
       const emeralds = bot.inventory
@@ -188,7 +188,7 @@ describe("Settlement iteration on native Paper", () => {
         await rcon.command(
           `storm-fixture-survival hungry ${bot.username} none`,
         );
-        await stand(bot, rcon, new Vec3(1799.5, 73, 2170.5));
+        await stand(bot, rcon, new Vec3(1790.5, 73, 2261.5));
         const boss =
           '@e[type=minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},limit=1]';
         await waitUntil("boss spawned", () =>
@@ -196,7 +196,7 @@ describe("Settlement iteration on native Paper", () => {
             (entity) => entity.name === "breeze",
           ),
         );
-        await rcon.command(`tp ${boss} 1796.5 73 2170.5`);
+        await rcon.command(`tp ${boss} 1787.5 73 2261.5`);
         await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
         for (const slot of ["head", "chest", "legs", "feet", "offhand"])
           await rcon.command(

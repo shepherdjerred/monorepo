@@ -18,10 +18,10 @@ async function start(bot: Bot, rcon: RconClient) {
   await rcon.command(
     `effect give ${bot.username} minecraft:resistance infinite 255 true`,
   );
-  await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
+  await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
   await waitUntil(
     "safe test ground",
-    () => bot.entity.position.distanceTo(new Vec3(1806.5, 85, 2272.5)) < 0.6,
+    () => bot.entity.position.distanceTo(new Vec3(1844.5, 105, 2177.5)) < 0.6,
   );
 }
 
@@ -67,12 +67,12 @@ test("run food and healing potions finish faster with their native effects intac
     await rcon.command(
       `give ${bot.username} minecraft:wheat[minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"}}] 4`,
     );
-    await rcon.command(`tp ${bot.username} 1757.5 73 2186.5`);
+    await rcon.command(`tp ${bot.username} 1761.5 89 2189.5`);
     await waitUntil(
       "infirmary loaded",
-      () => bot.blockAt(new Vec3(1757, 73, 2185)) !== null,
+      () => bot.blockAt(new Vec3(1761, 89, 2188)) !== null,
     );
-    const infirmary = bot.blockAt(new Vec3(1757, 73, 2185));
+    const infirmary = bot.blockAt(new Vec3(1761, 89, 2188));
     if (infirmary === null) throw new Error("Infirmary missing");
     await bot.activateBlock(infirmary);
     await waitUntil("healing recipes", () => bot.currentWindow !== null);
@@ -83,10 +83,10 @@ test("run food and healing potions finish faster with their native effects intac
     if (bot.currentWindow !== null) await bot.closeWindow(bot.currentWindow);
     bot.deactivateItem();
     await bot.waitForTicks(2);
-    await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
+    await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
     await waitUntil(
       "open air for drinking",
-      () => bot.entity.position.distanceTo(new Vec3(1806.5, 85, 2272.5)) < 0.6,
+      () => bot.entity.position.distanceTo(new Vec3(1844.5, 105, 2177.5)) < 0.6,
     );
     const potion = bot.inventory.items().find((item) => item.name === "potion");
     if (potion === undefined) throw new Error("Healing potion missing");
@@ -160,8 +160,8 @@ describe("Settlement relic effects on native Paper", () => {
           .filter((item) => item.name === "redstone")
           .reduce((sum, item) => sum + item.count, 0),
       ).toBe(before - 2);
-      await rcon.command(`tp ${bot.username} 1809.5 85 2272.5`);
-      await waitUntil("away from anchor", () => bot.entity.position.x > 1809);
+      await rcon.command(`tp ${bot.username} 1847.5 105 2177.5`);
+      await waitUntil("away from anchor", () => bot.entity.position.x > 1847);
       await bot.look(0, -Math.PI / 3, true);
       bot.activateItem();
       await waitUntil(
@@ -235,23 +235,23 @@ describe("Settlement relic effects on native Paper", () => {
         ["COPPER_PULSE", "Copper Pulse"],
         ["MASONS_ECHO", "Mason's Echo"],
       ] as const) {
-        await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
-        await waitUntil("pickup approach", () => bot.entity.position.x > 1806);
+        await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
+        await waitUntil("pickup approach", () => bot.entity.position.x > 1844);
         await rcon.command(`storm-fixture-survival drop ${bot.username} ${id}`);
         expect(
           await rcon.command(
-            'data get entity @e[type=minecraft:text_display,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},sort=nearest,limit=1,x=1802.5,y=86,z=2272.5] text',
+            'data get entity @e[type=minecraft:text_display,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},sort=nearest,limit=1,x=1840.5,y=106,z=2177.5] text',
           ),
         ).toContain(title);
         const collected = waitForMessage(
           bot,
           new RegExp(title.replace("'", ".?"), "u"),
         );
-        await rcon.command(`tp ${bot.username} 1802.5 85 2272.5`);
+        await rcon.command(`tp ${bot.username} 1840.5 105 2177.5`);
         await collected;
         expect(
           await rcon.command(
-            'execute if entity @e[type=minecraft:item_display,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},distance=..6,x=1802.5,y=86,z=2272.5]',
+            'execute if entity @e[type=minecraft:item_display,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},distance=..6,x=1840.5,y=106,z=2177.5]',
           ),
         ).toContain("Test failed");
       }

@@ -36,12 +36,12 @@ test("nearby generator and cache particles arrive repeatedly above their blocks"
   };
   bot._client.on("world_particles", heard);
   try {
-    for (const [x, positionZ, height] of [
-      [1834.5, 2189.5, 75],
-      [1793.5, 2173.5, 74],
+    for (const [x, baseY, positionZ, height] of [
+      [1850.5, 89, 2210.5, 91],
+      [1790.5, 73, 2270.5, 74],
     ] as const) {
       await rcon.command(
-        `tp ${bot.username} ${x.toString()} 73 ${(positionZ + 4).toString()}`,
+        `tp ${bot.username} ${x.toString()} ${baseY.toString()} ${(positionZ + 4).toString()}`,
       );
       await waitUntil(
         "particle viewpoint",
@@ -90,8 +90,9 @@ test("boss danger marks remain above the terrain throughout a native channel", a
     await rcon.command(
       `effect give ${bot.username} minecraft:resistance infinite 255 true`,
     );
-    await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
-    await rcon.command(`tp ${boss} 1802.5 85 2272.5`);
+    await rcon.command(`storm-fixture-survival terrain ${bot.username} none`);
+    await rcon.command(`tp ${bot.username} 1815.5 105 2167.5`);
+    await rcon.command(`tp ${boss} 1811.5 105 2167.5`);
     await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
     await waitForMessage(bot, /Breeze Sovereign casts.*marked ground/u, 15_000);
     particles.length = 0;
@@ -99,8 +100,8 @@ test("boss danger marks remain above the terrain throughout a native channel", a
     const ground = particles.filter(
       (p) =>
         ["flame", "soul_fire_flame"].includes(p.particle.type) &&
-        p.y > 84 &&
-        p.y < 86,
+        p.y > 104 &&
+        p.y < 106,
     );
     expect(ground.length).toBeGreaterThan(6);
     for (const particle of ground) {

@@ -24,7 +24,7 @@ async function start(bot: Bot, rcon: RconClient, round: number) {
 }
 
 async function click(bot: Bot, rcon: RconClient, pos: Vec3) {
-  const approach = new Vec3(pos.x + 0.5, 73, pos.z + 1.5);
+  const approach = new Vec3(pos.x + 0.5, pos.y, pos.z + 1.5);
   const moved = new Promise<void>((resolve) => bot.once("forcedMove", resolve));
   await rcon.command(
     `tp ${bot.username} ${approach.x.toString()} ${approach.y.toString()} ${approach.z.toString()}`,
@@ -154,7 +154,7 @@ test("enchanting and Runeforge preserve independent rarity, armor and shield sig
       `data get entity ${bot.username} SelectedItem.components."minecraft:custom_data"`,
     );
     expect(initial).toContain("COMMON");
-    await click(bot, rcon, new Vec3(1763, 73, 2148));
+    await click(bot, rcon, new Vec3(1765, 73, 2260));
     await waitUntil("enchanting menu", () => bot.currentWindow !== null);
     await bot.clickWindow(46, 0, 0);
     await bot.waitForTicks(3);
@@ -193,12 +193,12 @@ test("enchanting and Runeforge preserve independent rarity, armor and shield sig
       throw new Error("Armor fixture missing");
     await bot.equip(chest, "torso");
     await bot.equip(shield, "off-hand");
-    await rcon.command(`tp ${bot.username} 1757.5 81 2242.5`);
+    await rcon.command(`tp ${bot.username} 1853.5 105 2158.5`);
     await waitUntil(
       "airstrip loaded",
-      () => bot.blockAt(new Vec3(1756, 81, 2241)) !== null,
+      () => bot.blockAt(new Vec3(1852, 105, 2157)) !== null,
     );
-    const airstrip = bot.blockAt(new Vec3(1756, 81, 2241));
+    const airstrip = bot.blockAt(new Vec3(1852, 105, 2157));
     if (airstrip === null) throw new Error("Airstrip missing");
     const landed = waitForMessage(bot, /Offshore Runeforge/u, 15_000);
     await bot.activateBlock(airstrip);
@@ -260,18 +260,18 @@ test("vertical shrines play local music and require an explicit third-boon repla
   try {
     expect(
       await rcon.command(
-        "execute if block 1834 73 2189 minecraft:waxed_copper_block",
+        "execute if block 1850 89 2210 minecraft:waxed_copper_block",
       ),
     ).toBe("Test passed");
     expect(
-      await rcon.command("execute if block 1834 74 2189 minecraft:lodestone"),
+      await rcon.command("execute if block 1850 90 2210 minecraft:lodestone"),
     ).toBe("Test passed");
-    await click(bot, rcon, new Vec3(1834, 74, 2189));
-    for (const [x, positionZ, name] of [
-      [1765, 2185, "Stoneward"],
-      [1787, 2163, "Galestride"],
+    await click(bot, rcon, new Vec3(1850, 90, 2210));
+    for (const [x, height, positionZ, name] of [
+      [1764, 90, 2189, "Stoneward"],
+      [1813, 90, 2231, "Galestride"],
     ] as const) {
-      await click(bot, rcon, new Vec3(x, 74, positionZ));
+      await click(bot, rcon, new Vec3(x, height, positionZ));
       await waitUntil("boon menu", () => bot.currentWindow !== null);
       const equipped = waitForMessage(bot, new RegExp(`Equipped ${name}`, "u"));
       await bot.clickWindow(0, 0, 0);
@@ -287,7 +287,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         cause: error,
       });
     }
-    await click(bot, rcon, new Vec3(1829, 74, 2187));
+    await click(bot, rcon, new Vec3(1798, 106, 2163));
     await waitUntil(
       "replacement choices",
       () => bot.currentWindow?.slots[1]?.name === "amethyst_shard",
@@ -303,7 +303,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .filter((item) => item.name === "emerald")
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before);
-    await click(bot, rcon, new Vec3(1829, 74, 2187));
+    await click(bot, rcon, new Vec3(1798, 106, 2163));
     await waitUntil(
       "replacement menu reopened",
       () => bot.currentWindow !== null,
@@ -327,7 +327,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .filter((item) => item.name === "emerald")
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before - 32);
-    await click(bot, rcon, new Vec3(1765, 74, 2185));
+    await click(bot, rcon, new Vec3(1764, 90, 2189));
     await waitUntil(
       "owned boon menu reopened",
       () => bot.currentWindow !== null,
@@ -342,7 +342,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .filter((item) => item.name === "emerald")
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before - 32);
-    await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
+    await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
     await waitUntil(
       "record stopped outside shrine radius",
       () => stopped.length > 0,
