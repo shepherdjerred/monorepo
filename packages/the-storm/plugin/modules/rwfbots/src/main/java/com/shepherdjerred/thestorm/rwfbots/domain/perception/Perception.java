@@ -82,7 +82,9 @@ public final class Perception {
     }
     memory = hear(memory, new Frame(self, snapshot, suspicion), random);
     memory = memory.prune(now, TAU_TICKS);
-    visible.sort(comparingDouble(other -> other.pos().distanceSquared(self.pos())));
+    visible.sort(
+        comparingDouble((CombatantView other) -> other.pos().distanceSquared(self.pos()))
+            .thenComparing(CombatantView::id));
     return new Percept(new PerceptionState(memory, suspicion), visible, now);
   }
 

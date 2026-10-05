@@ -82,7 +82,9 @@ public record Situation(
       }
     }
     var list = new ArrayList<>(known.values());
-    list.sort(comparingDouble(enemy -> enemy.pos().distanceSquared(self.pos())));
+    list.sort(
+        comparingDouble((KnownEnemy enemy) -> enemy.pos().distanceSquared(self.pos()))
+            .thenComparing(KnownEnemy::id));
     return list;
   }
 
@@ -179,9 +181,10 @@ public record Situation(
     return knownEnemies().stream()
         .sorted(
             comparingDouble(
-                enemy ->
-                    enemy.pos().distance(self.pos())
-                        + CHASER_DISTANCE * board.chasers(enemy.id(), self.id())))
+                    (KnownEnemy enemy) ->
+                        enemy.pos().distance(self.pos())
+                            + CHASER_DISTANCE * board.chasers(enemy.id(), self.id()))
+                .thenComparing(KnownEnemy::id))
         .filter(
             enemy ->
                 board.chasers(enemy.id(), self.id()) < MAX_CHASERS
