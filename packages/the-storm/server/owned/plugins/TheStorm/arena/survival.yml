@@ -3850,8 +3850,8 @@ machines:
       y: 89
       z: 2210
     interactions:
-      - x: 1851
-        y: 89
+      - x: 1850
+        y: 90
         z: 2210
   - type: MYSTERY_BOX
     block:
@@ -3859,43 +3859,43 @@ machines:
       y: 73
       z: 2270
     interactions: []
-  - type: JUGGERNOG
+  - type: STONEWARD
     block:
       x: 1764
       y: 89
       z: 2189
     interactions:
-      - x: 1765
-        y: 89
+      - x: 1764
+        y: 90
         z: 2189
-  - type: STAMIN_UP
+  - type: GALESTRIDE
     block:
       x: 1813
       y: 89
       z: 2231
     interactions:
-      - x: 1814
-        y: 89
+      - x: 1813
+        y: 90
         z: 2231
-  - type: DOUBLE_TAP
+  - type: EMBERWEAVE
     block:
       x: 1798
       y: 105
       z: 2163
     interactions:
-      - x: 1799
-        y: 105
+      - x: 1798
+        y: 106
         z: 2163
-  - type: QUICK_REVIVE
+  - type: SOULBOND
     block:
       x: 1765
       y: 73
       z: 2258
     interactions:
-      - x: 1766
-        y: 73
+      - x: 1765
+        y: 74
         z: 2258
-  - type: PACK_A_PUNCH
+  - type: RUNEFORGE
     block:
       x: 1727
       y: 73
@@ -4338,7 +4338,7 @@ recipes:
     material: TRIDENT
     amount: 1
     potion: NONE
-    enchantments: { LOYALTY: 1 }
+    enchantments: {}
     ingredients:
       IRON_INGOT: 6
       COPPER_INGOT: 4
@@ -4577,7 +4577,7 @@ classes:
         name: "Piercer"
         description: "Next 3 arrows pierce up to 3 enemies; expires in 12 seconds."
   - role: MEDIC
-    passive: "Normal revive takes 4 seconds; Quick Revive takes 3."
+    passive: "Revive teammates in four seconds instead of five."
     ability: "Heal nearby standing teammates for 6 HP."
     specializations:
       - id: FIELD_SURGEON
@@ -4651,4 +4651,39 @@ legendaries:
     name: Riftblade
     material: DIAMOND_SWORD
     description: "Right-click to dash up to four blocks through open ground; six-second recovery."
+    weight: 1
+  - id: COPPERGUARD
+    name: Copperguard
+    material: SHIELD
+    description: "Successful blocks arc 3 damage to two nearby foes; six-second recharge."
+    weight: 1
+  - id: BRIARPLATE
+    name: Briarplate
+    material: DIAMOND_CHESTPLATE
+    description: "Taking damage slows three nearby foes for two seconds; eight-second recharge."
+    weight: 1
+  - id: TRAILWARDEN
+    name: Trailwarden Boots
+    material: DIAMOND_BOOTS
+    description: "Sprinting leaves a brief slowing trail; three-second recharge."
+    weight: 1
+  - id: STORMGLASS
+    name: Stormglass
+    material: BOW
+    description: "Three fully drawn hits charge a storm shot: two redstone, up to five targets, ten-second recharge."
+    weight: 1
+  - id: WAYFARER
+    name: Wayfarer
+    material: DIAMOND_SWORD
+    description: "Right-click to anchor for five seconds; return with an 8-damage burst. Two redstone; twenty-second recharge."
+    weight: 1
+  - id: ECHOHEART
+    name: Echoheart
+    material: DIAMOND_CHESTPLATE
+    description: "Store up to 12 HP of damage. Your next class ability shares up to 6 absorption HP with nearby teammates."
+    weight: 1
+  - id: FAULTLINE
+    name: Faultline
+    material: SHIELD
+    description: "Blocks store charge. Releasing strikes up to six foes in a cone; twelve-second recharge."
     weight: 1

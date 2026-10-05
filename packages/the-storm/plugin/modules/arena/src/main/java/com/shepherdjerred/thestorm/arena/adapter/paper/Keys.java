@@ -20,6 +20,8 @@ final class Keys {
   private final NamespacedKey gear;
   private final NamespacedKey upgrade;
   private final NamespacedKey legendary;
+  private final NamespacedKey rarity;
+  private final NamespacedKey identity;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "arena_item");
@@ -28,6 +30,38 @@ final class Keys {
     this.gear = new NamespacedKey(plugin, "arena_gear");
     this.upgrade = new NamespacedKey(plugin, "survival_upgrade");
     this.legendary = new NamespacedKey(plugin, "survival_legendary");
+    this.rarity = new NamespacedKey(plugin, "survival_rarity");
+    this.identity = new NamespacedKey(plugin, "survival_equipment_id");
+  }
+
+  void rarity(ItemStack stack, com.shepherdjerred.thestorm.arena.domain.survival.GearRarity value) {
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer().set(rarity, PersistentDataType.STRING, value.name()));
+  }
+
+  com.shepherdjerred.thestorm.arena.domain.survival.GearRarity rarity(ItemStack stack) {
+    return com.shepherdjerred.thestorm.arena.domain.survival.GearRarity.valueOf(
+        java.util.Objects.requireNonNull(
+            stack.getItemMeta().getPersistentDataContainer().get(rarity, PersistentDataType.STRING),
+            "Run equipment has no rarity"));
+  }
+
+  void identity(ItemStack stack, java.util.UUID value) {
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer()
+                .set(identity, PersistentDataType.STRING, value.toString()));
+  }
+
+  java.util.UUID identity(ItemStack stack) {
+    return java.util.UUID.fromString(
+        java.util.Objects.requireNonNull(
+            stack
+                .getItemMeta()
+                .getPersistentDataContainer()
+                .get(identity, PersistentDataType.STRING),
+            "Run equipment has no identity"));
   }
 
   void legendary(

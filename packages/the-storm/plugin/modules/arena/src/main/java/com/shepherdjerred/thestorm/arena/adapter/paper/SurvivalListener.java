@@ -73,20 +73,12 @@ final class SurvivalListener implements Listener {
                       : event.getDamager() instanceof Wolf wolf && r.world().isFriendlyWolf(wolf)
                           ? r.talents().companionDamage(player.getUniqueId())
                           : heldDamage(r, player);
-              var instant = r.drops().instaKill() && !r.combat().bossEntity(target);
-              event.setDamage(instant ? 10000 : event.getDamage() * factor);
+              event.setDamage(event.getDamage() * factor);
             });
   }
 
   private static double heldDamage(SurvivalRunner runner, Player player) {
-    return runner.items().multiplier(player.getInventory().getItemInMainHand())
-        * (runner
-                .actions()
-                .has(
-                    player,
-                    com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.DOUBLE_TAP)
-            ? 1.25
-            : 1);
+    return runner.items().multiplier(player.getInventory().getItemInMainHand());
   }
 
   private void incoming(EntityDamageByEntityEvent event) {
@@ -150,11 +142,8 @@ final class SurvivalListener implements Listener {
     if (runner.game().player(player.getUniqueId()).orElseThrow().role()
         == com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass.RANGER) factor *= 1.1;
     factor *= runner.talents().shot(player, trident);
-    if (runner
-        .actions()
-        .has(player, com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.DOUBLE_TAP))
-      factor *= 1.25;
     runner.combat().projectile(trident, factor);
+    runner.tridents().launched(player, trident);
     runner.legendary().launched(trident, trident.getItemStack());
   }
 
@@ -182,6 +171,13 @@ final class SurvivalListener implements Listener {
                   event.setCancelled(true);
                   return;
                 }
+                var armor =
+                    java.util.Arrays.stream(player.getInventory().getArmorContents())
+                        .filter(java.util.Objects::nonNull)
+                        .filter(runner.items()::equipment)
+                        .mapToInt(runner.items()::tier)
+                        .sum();
+                event.setDamage(event.getDamage() * (1 - Math.min(.2, armor * .02)));
                 var lethal = event.getFinalDamage() >= player.getHealth();
                 if (lethal) {
                   event.setCancelled(true);
@@ -214,27 +210,22 @@ final class SurvivalListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void hit(EntityDamageByEntityEvent event) {
-    Player player =
-        switch (event.getDamager()) {
-          case Player direct -> direct;
-          case Projectile projectile when projectile.getShooter() instanceof Player shooter ->
-              shooter;
-          case Wolf wolf when wolf.getOwner() instanceof Player owner -> owner;
-          default -> null;
-        };
-    if (player != null && event.getEntity() instanceof LivingEntity enemy) {
-      of(player)
-          .ifPresent(
-              runner -> {
-                runner.interrupted(player.getUniqueId());
-                runner.combat().hit(enemy, player);
-                if (event.getFinalDamage() > 0
-                    && event.getDamager() instanceof Projectile projectile)
-                  runner.legendary().hit(player, enemy, projectile);
-                else if (event.getFinalDamage() > 0 && event.getDamager() instanceof Player)
-                  runner.legendary().melee(player, enemy);
-              });
-    }
+    var player = attacker(event.getDamager());
+    if (player == null || !(event.getEntity() instanceof LivingEntity enemy)) return;
+    of(player).ifPresent(runner -> hit(runner, event, player, enemy));
+  }
+
+  private static void hit(
+      SurvivalRunner runner, EntityDamageByEntityEvent event, Player player, LivingEntity enemy) {
+    runner.interrupted(player.getUniqueId());
+    runner.combat().hit(enemy, player);
+    if (event.getFinalDamage() <= 0) return;
+    runner.boons().hit(player, enemy, event.getDamager() instanceof Projectile);
+    runner.drops().hit(player, enemy);
+    if (event.getDamager() instanceof Projectile projectile) {
+      runner.relics().hit(player, enemy, projectile);
+      runner.legendary().hit(player, enemy, projectile);
+    } else if (event.getDamager() instanceof Player) runner.legendary().melee(player, enemy);
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -300,7 +291,9 @@ final class SurvivalListener implements Listener {
       return;
     }
     if (event.getAction() == Action.RIGHT_CLICK_AIR
-        && (runner.legendary().staff(player) || runner.legendary().dash(player))) {
+        && (runner.relics().anchor(player)
+            || runner.legendary().staff(player)
+            || runner.legendary().dash(player))) {
       event.setCancelled(true);
       return;
     }
@@ -386,8 +379,9 @@ final class SurvivalListener implements Listener {
         && runner.map().station(pos).isEmpty()
         && runner.map().resource(pos).isEmpty()
         && runner.map().defense(pos).isEmpty()
-        && (runner.legendary().staff(player) || runner.legendary().dash(player)))
-      event.setCancelled(true);
+        && (runner.relics().anchor(player)
+            || runner.legendary().staff(player)
+            || runner.legendary().dash(player))) event.setCancelled(true);
   }
 
   private static void interruptInteraction(SurvivalRunner runner, PlayerInteractEvent event) {
@@ -401,33 +395,46 @@ final class SurvivalListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGHEST)
   void click(InventoryClickEvent event) {
-    if (!(event.getWhoClicked() instanceof Player player)) {
+    if (event.getWhoClicked() instanceof Player player)
+      of(player).ifPresent(runner -> click(runner, event, player));
+  }
+
+  private static void click(SurvivalRunner runner, InventoryClickEvent event, Player player) {
+    if (protectedSlot(runner, event, player)) {
+      event.setCancelled(true);
       return;
     }
-    of(player)
-        .ifPresent(
-            runner -> {
-              if (runner.classMenus().isMenu(event.getView().getTopInventory())) {
-                event.setCancelled(true);
-                runner
-                    .classMenus()
-                    .click(player, event.getView().getTopInventory(), event.getRawSlot());
-              } else if (runner.menus().isMenu(event.getView().getTopInventory())) {
-                event.setCancelled(true);
-                if (player.getInventory().equals(event.getClickedInventory()))
-                  runner.menus().store(player, event.getView().getTopInventory(), event.getSlot());
-                else if (event.getClickedInventory() != null)
-                  runner
-                      .menus()
-                      .click(player, event.getView().getTopInventory(), event.getRawSlot());
-              } else if (runner.downed(player.getUniqueId())
-                  || (player.getInventory().equals(event.getClickedInventory())
-                      && event.getSlot() == 8)
-                  || event.getHotbarButton() == 8
-                  || (event.getCursor() != null && runner.items().ability(event.getCursor()))) {
-                event.setCancelled(true);
-              }
-            });
+    var top = event.getView().getTopInventory();
+    if (!runner.classMenus().isMenu(top) && !runner.menus().isMenu(top)) return;
+    if (player.getInventory().equals(event.getClickedInventory())) {
+      rearrange(runner, event, player);
+      return;
+    }
+    event.setCancelled(true);
+    if (event.getClick() != org.bukkit.event.inventory.ClickType.LEFT
+        && event.getClick() != org.bukkit.event.inventory.ClickType.RIGHT) return;
+    if (runner.classMenus().isMenu(top)) runner.classMenus().click(player, top, event.getRawSlot());
+    else if (event.getClickedInventory() != null)
+      runner.menus().click(player, top, event.getRawSlot());
+  }
+
+  private static boolean protectedSlot(
+      SurvivalRunner runner, InventoryClickEvent event, Player player) {
+    var item = event.getCurrentItem();
+    return runner.downed(player.getUniqueId())
+        || (player.getInventory().equals(event.getClickedInventory()) && event.getSlot() == 8)
+        || event.getHotbarButton() == 8
+        || runner.items().ability(event.getCursor())
+        || (item != null && runner.items().ability(item));
+  }
+
+  private static void rearrange(SurvivalRunner runner, InventoryClickEvent event, Player player) {
+    if (event.isShiftClick()) {
+      event.setCancelled(true);
+      var top = event.getView().getTopInventory();
+      if (runner.menus().isMenu(top)) runner.menus().store(player, top, event.getSlot());
+    } else if (event.getAction() == org.bukkit.event.inventory.InventoryAction.COLLECT_TO_CURSOR)
+      event.setCancelled(true);
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)
@@ -436,11 +443,14 @@ final class SurvivalListener implements Listener {
       of(player)
           .filter(
               r ->
-                  r.menus().isMenu(event.getView().getTopInventory())
-                      || r.classMenus().isMenu(event.getView().getTopInventory())
+                  ((r.menus().isMenu(event.getView().getTopInventory())
+                              || r.classMenus().isMenu(event.getView().getTopInventory()))
+                          && event.getRawSlots().stream()
+                              .anyMatch(slot -> slot < event.getView().getTopInventory().getSize()))
                       || event
                           .getRawSlots()
                           .contains(event.getView().getTopInventory().getSize() + 27 + 8)
+                      || r.items().ability(event.getOldCursor())
                       || r.downed(player.getUniqueId()))
           .ifPresent(_ -> event.setCancelled(true));
     }
@@ -473,14 +483,11 @@ final class SurvivalListener implements Listener {
     var factor = weapon == null ? 1 : runner.items().multiplier(weapon);
     if (runner.game().player(player.getUniqueId()).orElseThrow().role()
         == com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass.RANGER) factor *= 1.1;
-    if (runner
-        .actions()
-        .has(player, com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.DOUBLE_TAP))
-      factor *= 1.25;
     if (event.getProjectile() instanceof Projectile projectile) {
       factor *= runner.talents().shot(player, projectile);
       runner.combat().projectile(projectile, factor);
       if (weapon != null) runner.legendary().launched(projectile, weapon);
+      if (weapon != null) runner.relics().shot(player, projectile, weapon, event.getForce());
     }
     if (event.getProjectile() instanceof org.bukkit.entity.AbstractArrow arrow)
       arrow.setPickupStatus(org.bukkit.entity.AbstractArrow.PickupStatus.DISALLOWED);
@@ -489,7 +496,11 @@ final class SurvivalListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   void stopUsing(io.papermc.paper.event.player.PlayerStopUsingItemEvent event) {
     of(event.getPlayer())
-        .ifPresent(runner -> runner.legendary().repeater().stop(event.getPlayer().getUniqueId()));
+        .ifPresent(
+            runner -> {
+              runner.legendary().repeater().stop(event.getPlayer().getUniqueId());
+              runner.relics().release(event.getPlayer());
+            });
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -513,5 +524,58 @@ final class SurvivalListener implements Listener {
                 r.items().ability(event.getMainHandItem())
                     || r.items().ability(event.getOffHandItem()))
         .ifPresent(_ -> event.setCancelled(true));
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  void pickup(org.bukkit.event.player.PlayerPickupArrowEvent event) {
+    if (event.getArrow() instanceof org.bukkit.entity.Trident trident)
+      of(event.getPlayer())
+          .filter(r -> r.tridents().pickup(event.getPlayer(), trident))
+          .ifPresent(_ -> event.setCancelled(true));
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void blocked(EntityDamageByEntityEvent event) {
+    if (event.getEntity() instanceof Player player
+        && player.isBlocking()
+        && event.getFinalDamage() == 0)
+      of(player)
+          .filter(r -> r.world().isWaveMob(damageSource(event.getDamager())))
+          .ifPresent(
+              r -> {
+                r.boons().block(player);
+                r.relics().block(player, event.getDamage());
+              });
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  void shieldDisabled(io.papermc.paper.event.player.PlayerShieldDisableEvent event) {
+    of(event.getPlayer())
+        .ifPresent(
+            r -> {
+              var player = event.getPlayer();
+              var held = player.getInventory().getItemInMainHand();
+              var shield =
+                  held.getType() == org.bukkit.Material.SHIELD
+                      ? held
+                      : player.getInventory().getItemInOffHand();
+              if (r.items().equipment(shield))
+                event.setCooldown(
+                    (int) Math.ceil(event.getCooldown() * (1 - .1 * r.items().tier(shield))));
+            });
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void healed(org.bukkit.event.entity.EntityRegainHealthEvent event) {
+    if (event.getEntity() instanceof Player player && event.getAmount() > 0)
+      of(player)
+          .filter(r -> r.isFighter(player.getUniqueId()))
+          .ifPresent(r -> r.boons().healing(player));
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void suffered(EntityDamageEvent event) {
+    if (event.getEntity() instanceof Player player && event.getFinalDamage() > 0)
+      of(player).ifPresent(r -> r.relics().suffered(player));
   }
 }

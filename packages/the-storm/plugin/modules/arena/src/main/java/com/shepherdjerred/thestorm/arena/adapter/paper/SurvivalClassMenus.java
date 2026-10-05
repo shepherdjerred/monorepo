@@ -62,7 +62,11 @@ final class SurvivalClassMenus {
       profile.specializations().forEach(s -> lore.add(s.name() + ": " + s.description()));
       lore.add("Choose specialization after round 4; upgrades after 9 and 14.");
       lore.add(
-          role.unlocked(runner.xp(player.getUniqueId()))
+          "Required XP: " + role.requiredXp() + " · Your XP: " + runner.xp(player.getUniqueId()));
+      if (runner.game().player(player.getUniqueId()).orElseThrow().role() == role)
+        lore.add("Currently selected");
+      lore.add(
+          (runner.game().debug() || role.unlocked(runner.xp(player.getUniqueId())))
               ? "Unlocked · select in lobby"
               : "Locked · " + runner.xp(player.getUniqueId()) + " / " + role.requiredXp() + " XP");
       choices.add(
@@ -80,6 +84,12 @@ final class SurvivalClassMenus {
               }));
     }
     open(player, false, "Classes · XP " + runner.xp(player.getUniqueId()), choices);
+    runner
+        .tips()
+        .encounter(
+            player,
+            com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.of(
+                com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.CLASSES));
   }
 
   void upgrades(Player player) {

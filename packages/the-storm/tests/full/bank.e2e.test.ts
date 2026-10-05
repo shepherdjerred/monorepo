@@ -1,4 +1,5 @@
 import { describe, expect } from "vitest";
+import { randomUUID } from "node:crypto";
 import { Vec3 } from "vec3";
 import { z } from "zod";
 import type { Bot } from "mineflayer";
@@ -61,22 +62,28 @@ async function clickAt(bot: Bot, rcon: RconClient, pos: Vec3) {
   const block = bot.blockAt(pos);
   if (block === null) throw new Error("Bank fixture is missing");
   await bot.activateBlock(block);
-  await waitUntil("bank or crafting window", () => bot.currentWindow !== null);
+  await waitUntil(
+    "bank or crafting window contents",
+    () => bot.currentWindow?.slots[0] != null,
+  );
 }
 
 async function close(bot: Bot) {
   if (bot.currentWindow !== null) await bot.closeWindow(bot.currentWindow);
+  await bot.waitForTicks(2);
 }
 
 async function runTag(bot: Bot, rcon: RconClient) {
   const data = await rcon.command(
-    `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data"`,
+    `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
   );
   return z.guid().parse(/[a-f0-9-]{36}/u.exec(data)?.[0]);
 }
 
 function tags(run: string, upgraded = false) {
-  const upgrade = upgraded ? ',"thestorm:survival_upgrade":2' : "";
+  const upgrade = upgraded
+    ? `,"thestorm:survival_upgrade":2,"thestorm:survival_rarity":"COMMON","thestorm:survival_equipment_id":"${randomUUID()}"`
+    : "";
   return `PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"${upgrade}}`;
 }
 
@@ -115,24 +122,24 @@ describe("run bank on native Paper", () => {
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={${tags(run)}}] 12`,
       );
-      await clickAt(bot, rcon, new Vec3(1760, 73, 2148));
+      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
       await bot.clickWindow(0, 0, 0);
       await close(bot);
       expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 12 });
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={${tags(run)}}] 4`,
       );
-      await rcon.command(`tp ${bot.username} 1793.5 73 2175.5`);
-      const box = new Vec3(1793, 73, 2173);
+      await rcon.command(`tp ${bot.username} 1790.5 73 2272.5`);
+      const box = new Vec3(1790, 73, 2270);
       await waitUntil(
         "active box loaded",
         () =>
-          bot.entity.position.distanceTo(new Vec3(1793.5, 73, 2175.5)) < 0.6 &&
+          bot.entity.position.distanceTo(new Vec3(1790.5, 73, 2272.5)) < 0.6 &&
           bot.blockAt(box) !== null,
       );
       const fixture = bot.blockAt(box);
-      if (fixture === null) throw new Error("Mystery box is missing");
-      const rolling = waitForMessage(bot, /Mystery box rolling/u);
+      if (fixture === null) throw new Error("Runic cache is missing");
+      const rolling = waitForMessage(bot, /Runic cache rolling/u);
       const refunded = waitForMessage(bot, /Unclaimed box.*refunded/u, 25_000);
       await bot.activateBlock(fixture);
       await rolling;
@@ -178,7 +185,7 @@ describe("run bank on native Paper", () => {
       ]) {
         await rcon.command(`clear ${secondBot.username} minecraft:${material}`);
       }
-      await clickAt(bot, rcon, new Vec3(1760, 73, 2148));
+      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
       const deposited = waitForMessage(bot, /Deposited 40 supplies/u);
       await bot.clickWindow(0, 0, 0);
       await deposited;
@@ -190,14 +197,14 @@ describe("run bank on native Paper", () => {
         stone: 4,
         locker: 0,
       });
-      await clickAt(secondBot, rcon, new Vec3(1763, 73, 2148));
-      await secondBot.clickWindow(3, 0, 0);
+      await clickAt(secondBot, rcon, new Vec3(1765, 73, 2260));
+      await secondBot.clickWindow(18, 0, 0);
       await waitUntil("weapon crafted using team materials", () =>
         secondBot.inventory.items().some((i) => i.name === "stone_sword"),
       );
       expect(await inspect(bot, rcon)).toMatchObject({ wood: 6, stone: 0 });
       await close(secondBot);
-      await clickAt(secondBot, rcon, new Vec3(1818, 73, 2187));
+      await clickAt(secondBot, rcon, new Vec3(1856, 89, 2209));
       const oldWindow = secondBot.currentWindow?.id;
       await secondBot.clickWindow(1, 0, 0);
       await waitUntil(
@@ -249,14 +256,14 @@ describe("run bank on native Paper", () => {
           `data get entity ${bot.username} Inventory[{id:"minecraft:diamond_sword"}].components`,
         );
       const before = await components();
-      await clickAt(bot, rcon, new Vec3(1760, 73, 2148));
+      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
       const weapon = bot.inventory
         .items()
         .find((i) => i.name === "diamond_sword");
       const window = bot.currentWindow;
       if (weapon === undefined || window === null)
         throw new Error("Locker source missing");
-      await bot.clickWindow(window.inventoryStart + weapon.slot - 9, 0, 0);
+      await bot.clickWindow(window.inventoryStart + weapon.slot - 9, 0, 1);
       await waitUntil(
         "weapon stored",
         () => !bot.inventory.items().some((i) => i.name === "diamond_sword"),

@@ -19,6 +19,29 @@ final class SurvivalCommands {
         Commands.literal("survival")
             .requires(source -> source.getSender().hasPermission(ArenaPermissions.PLAY))
             .then(
+                Commands.literal("tips")
+                    .then(
+                        Commands.literal("on")
+                            .executes(
+                                c ->
+                                    player(
+                                        c.getSource().getSender(),
+                                        p -> runner(p, r -> r.tips().setting(p, "on")))))
+                    .then(
+                        Commands.literal("off")
+                            .executes(
+                                c ->
+                                    player(
+                                        c.getSource().getSender(),
+                                        p -> runner(p, r -> r.tips().setting(p, "off")))))
+                    .then(
+                        Commands.literal("reset")
+                            .executes(
+                                c ->
+                                    player(
+                                        c.getSource().getSender(),
+                                        p -> runner(p, r -> r.tips().setting(p, "reset"))))))
+            .then(
                 Commands.literal("guide")
                     .executes(
                         c ->

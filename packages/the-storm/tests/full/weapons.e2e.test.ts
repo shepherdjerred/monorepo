@@ -167,7 +167,7 @@ describe("signature weapons and boss phases on native Paper", () => {
     await begin(bot, rcon, 15);
     try {
       const data = await rcon.command(
-        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data"`,
+        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
       );
       const run = z.guid().parse(/[a-f0-9-]{36}/u.exec(data)?.[0]);
       await rcon.command(`clear ${bot.username} minecraft:arrow`);
@@ -175,7 +175,7 @@ describe("signature weapons and boss phases on native Paper", () => {
         `give ${bot.username} minecraft:arrow[minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"}}] 32`,
       );
       await weapon(bot, rcon, "REPEATER", "bow");
-      await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
+      await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
       await waitUntil("bow ammunition", () => arrows(bot) === 32);
       await bot.look(0, 0, true);
       const initial = await repeaterObservation(bot, rcon, "start");
@@ -240,11 +240,11 @@ describe("signature weapons and boss phases on native Paper", () => {
   test("Whirlwind cleaves once per recovery", async ({ bot, rcon }) => {
     await begin(bot, rcon, 15);
     try {
-      await rcon.command(`tp ${bot.username} 1806.5 85 2272.5`);
+      await rcon.command(`tp ${bot.username} 1815.5 105 2167.5`);
       await waitUntil(
         "combat terrace",
         () =>
-          bot.entity.position.distanceTo(new Vec3(1806.5, 85, 2272.5)) < 0.6,
+          bot.entity.position.distanceTo(new Vec3(1815.5, 105, 2167.5)) < 0.6,
       );
       await rcon.command(`storm-fixture-survival targets ${bot.username} none`);
       await weapon(bot, rcon, "WHIRLWIND", "iron_axe");
@@ -281,16 +281,16 @@ describe("signature weapons and boss phases on native Paper", () => {
     await begin(bot, rcon, 1);
     try {
       await weapon(bot, rcon, "RIFTBLADE", "diamond_sword");
-      const approach = new Vec3(1808.5, 73, 2156.5);
-      await rcon.command(`tp ${bot.username} 1808.5 73 2156.5`);
+      const approach = new Vec3(1812.5, 73, 2273.5);
+      await rcon.command(`tp ${bot.username} 1812.5 73 2273.5`);
       await waitUntil(
-        "closed quarry approach",
+        "closed wharf approach",
         () => bot.entity.position.distanceTo(approach) < 0.6,
       );
-      await bot.lookAt(new Vec3(1814.5, 74.6, 2156.5));
+      await bot.lookAt(new Vec3(1818.5, 74.6, 2273.5));
       bot.activateItem();
       await bot.waitForTicks(5);
-      expect(bot.entity.position.x).toBeLessThan(1810);
+      expect(bot.entity.position.x).toBeLessThan(1815);
       expect(bot.entity.position.distanceTo(approach)).toBeLessThan(4.5);
     } finally {
       await rcon.command("arena stop settlement");

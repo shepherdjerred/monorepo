@@ -51,7 +51,7 @@ export async function preview(options: {
     path.join(packageRoot, "plugin"),
     options.vanilla
       ? [":dist:shadowJar"]
-      : [":dist:shadowJar", ":dist:fixturesJar"],
+      : [":dist:shadowJar", ":dist:fixturesJar", ":companions:e2eJar"],
   );
   const privateDir = await mkdtemp(path.join(os.tmpdir(), "storm-client-"));
   await chmod(privateDir, 0o700);

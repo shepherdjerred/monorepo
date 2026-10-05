@@ -1,30 +1,31 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
+import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalDrop;
 import java.time.Instant;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Material;
+import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.jspecify.annotations.Nullable;
 
-/** One team pickup at a time, with bounded lifetimes and shared temporary buffs. */
+/** One visible team pickup, with local bounded effects and a first-encounter inspection delay. */
 final class ZombiesDrops {
-  enum Kind {
-    MAX_AMMO,
-    DOUBLE_EMERALDS,
-    INSTA_KILL,
-    NUKE,
-    CARPENTER
-  }
+  private record Field(SurvivalDrop kind, Location at, UUID owner, Instant until) {}
 
   private final SurvivalRunner runner;
-  private final Map<Kind, Instant> buffs = new EnumMap<>(Kind.class);
+  private final Map<UUID, Integer> surge = new HashMap<>();
+  private final Map<UUID, Instant> approached = new HashMap<>();
+  private final java.util.List<Field> fields = new java.util.ArrayList<>();
   private Instant nextDrop = Instant.MIN;
   private Instant expires = Instant.MIN;
-  private @Nullable Kind kind;
+  private Instant nextField = Instant.MIN;
+  private @Nullable SurvivalDrop kind;
   private @Nullable ItemDisplay display;
   private @Nullable TextDisplay label;
 
@@ -32,26 +33,28 @@ final class ZombiesDrops {
     this.runner = runner;
   }
 
-  boolean instaKill() {
-    return runner
-        .context()
-        .time()
-        .instant()
-        .isBefore(buffs.getOrDefault(Kind.INSTA_KILL, Instant.MIN));
-  }
-
   void died(LivingEntity enemy) {
     var now = runner.context().time().instant();
     if (display != null || now.isBefore(nextDrop) || runner.context().random().nextInt(100) >= 8)
       return;
-    kind = Kind.values()[runner.context().random().nextInt(Kind.values().length)];
-    var location = enemy.getLocation().add(0, 1, 0);
-    display = enemy.getWorld().spawn(location, ItemDisplay.class);
-    display.setItemStack(org.bukkit.inventory.ItemStack.of(icon(kind)));
+    var kinds = java.util.List.of(SurvivalDrop.values());
+    drop(
+        kinds.get(runner.context().random().nextInt(kinds.size())),
+        enemy.getLocation().add(0, 1, 0));
+  }
+
+  void drop(SurvivalDrop drop, Location at) {
+    if (display != null) throw new IllegalStateException("A field pickup is already outstanding");
+    kind = drop;
+    var now = runner.context().time().instant();
+    display = at.getWorld().spawn(at, ItemDisplay.class);
+    display.setItemStack(
+        org.bukkit.inventory.ItemStack.of(SurvivalItems.material(kind.material())));
     display.setPersistent(false);
     runner.tag(display);
-    label = enemy.getWorld().spawn(location.clone().add(0, .6, 0), TextDisplay.class);
-    label.text(Component.text(name(kind)));
+    label = at.getWorld().spawn(at.clone().add(0, .6, 0), TextDisplay.class);
+    label.text(Component.text(kind.title() + "\n" + kind.description()));
+    label.setLineWidth(220);
     label.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
     label.setPersistent(false);
     runner.tag(label);
@@ -59,90 +62,127 @@ final class ZombiesDrops {
     nextDrop = now.plusSeconds(30);
   }
 
-  private static Material icon(Kind kind) {
-    return switch (kind) {
-      case MAX_AMMO -> Material.ARROW;
-      case DOUBLE_EMERALDS -> Material.EMERALD;
-      case INSTA_KILL -> Material.DIAMOND_SWORD;
-      case NUKE -> Material.TNT;
-      case CARPENTER -> Material.OAK_PLANKS;
-    };
-  }
-
-  private static String name(Kind kind) {
-    return switch (kind) {
-      case MAX_AMMO -> "Max Ammo";
-      case DOUBLE_EMERALDS -> "Double Emeralds";
-      case INSTA_KILL -> "Insta-Kill";
-      case NUKE -> "Nuke";
-      case CARPENTER -> "Carpenter";
-    };
-  }
-
-  private static String effect(Kind kind) {
-    return switch (kind) {
-      case MAX_AMMO -> "32 arrows for each ranged survivor";
-      case DOUBLE_EMERALDS -> "Double kill rewards · 30 seconds";
-      case INSTA_KILL -> "One-hit ordinary enemies · 15 seconds";
-      case NUKE -> "Ordinary enemies cleared";
-      case CARPENTER -> "Barricades restored + 2 hearts healed";
-    };
-  }
-
   void tick() {
     var now = runner.context().time().instant();
-    runner
-        .combat()
-        .doubleEmeralds(now.isBefore(buffs.getOrDefault(Kind.DOUBLE_EMERALDS, Instant.MIN)));
+    if (!now.isBefore(nextField)) {
+      nextField = now.plusSeconds(1);
+      fields.removeIf(field -> !now.isBefore(field.until()));
+      fields.forEach(this::field);
+    }
     var pickup = display;
     if (pickup == null) return;
     if (!pickup.isValid() || !now.isBefore(expires)) {
       clear();
       return;
     }
-    if (runner.fighters().stream()
-        .noneMatch(p -> Places.at(p).distanceSquared(pickup.getLocation()) <= 4)) return;
     var drop = java.util.Objects.requireNonNull(kind);
-    switch (drop) {
-      case MAX_AMMO ->
-          runner
-              .fighters()
-              .forEach(
-                  p -> {
-                    if (java.util.Arrays.stream(p.getInventory().getStorageContents())
-                        .anyMatch(
-                            i ->
-                                i != null
-                                    && runner.items().owns(i)
-                                    && (i.getType() == Material.BOW
-                                        || i.getType() == Material.CROSSBOW)))
-                      runner.items().give(p, Material.ARROW, 32);
-                  });
-      case DOUBLE_EMERALDS -> buffs.put(drop, now.plusSeconds(30));
-      case INSTA_KILL -> buffs.put(drop, now.plusSeconds(15));
-      case NUKE -> runner.combat().nuke();
-      case CARPENTER -> {
-        runner.map().repairAll();
-        runner.fighters().forEach(p -> SurvivalItems.heal(p, 4));
+    for (var player : runner.fighters()) {
+      if (Places.at(player).distanceSquared(pickup.getLocation()) > 64) continue;
+      if (!approached.containsKey(player.getUniqueId())) {
+        approached.put(player.getUniqueId(), now);
+        runner
+            .tips()
+            .encounter(
+                player,
+                new com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey(
+                    com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.DROP,
+                    drop.name()));
       }
+      var familiar =
+          runner
+              .tips()
+              .seen(
+                  player,
+                  new com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey(
+                      com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.DROP,
+                      drop.name()));
+      if (Places.at(player).distanceSquared(pickup.getLocation()) <= 4
+          && (familiar
+              || !now.isBefore(
+                  java.util.Objects.requireNonNull(approached.get(player.getUniqueId()))
+                      .plusSeconds(2)))) {
+        collect(player, drop, pickup.getLocation(), now);
+        clear();
+        return;
+      }
+    }
+    if (pickup.getTicksLived() % 5 == 0)
+      pickup.getWorld().spawnParticle(Particle.END_ROD, pickup.getLocation(), 4, .4, .3, .4, .01);
+  }
+
+  private void collect(Player player, SurvivalDrop drop, Location at, Instant now) {
+    switch (drop) {
+      case WILDGROWTH, MASONS_ECHO ->
+          fields.add(new Field(drop, at.clone(), player.getUniqueId(), now.plusSeconds(8)));
+      case REDSTONE_SURGE -> runner.fighters().forEach(ally -> surge.put(ally.getUniqueId(), 3));
+      case RESONANT_SHARD -> runner.fighters().forEach(ally -> runner.talents().resonate(ally));
+      case COPPER_PULSE ->
+          runner.world().enemies().stream()
+              .filter(
+                  enemy ->
+                      enemy.getLocation().distanceSquared(at) <= 100
+                          && player.hasLineOfSight(enemy))
+              .limit(8)
+              .forEach(
+                  enemy -> {
+                    runner.combat().damage(enemy, player, 6);
+                    if (!runner.combat().bossEntity(enemy))
+                      enemy.addPotionEffect(
+                          new org.bukkit.potion.PotionEffect(
+                              org.bukkit.potion.PotionEffectType.SLOWNESS, 40, 2));
+                  });
     }
     runner
         .online()
         .forEach(
-            p -> {
-              var sound =
-                  switch (drop) {
-                    case MAX_AMMO -> org.bukkit.Sound.ITEM_ARMOR_EQUIP_IRON;
-                    case DOUBLE_EMERALDS -> org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
-                    case INSTA_KILL -> org.bukkit.Sound.ENTITY_WITHER_SPAWN;
-                    case NUKE -> org.bukkit.Sound.ENTITY_GENERIC_EXPLODE;
-                    case CARPENTER -> org.bukkit.Sound.BLOCK_ANVIL_USE;
-                  };
-              p.playSound(Places.at(p), sound, .65f, 1.2f);
-              Texts.info(p, name(drop) + " · " + effect(drop));
-              runner.hud().hint(p, name(drop) + " · " + effect(drop), 4);
+            ally -> {
+              ally.playSound(at, org.bukkit.Sound.BLOCK_AMETHYST_BLOCK_CHIME, .65f, 1.2f);
+              Texts.info(ally, drop.title() + " · " + drop.description());
+              runner.hud().hint(ally, drop.title(), 4);
             });
-    clear();
+  }
+
+  private void field(Field field) {
+    var particle =
+        field.kind() == SurvivalDrop.WILDGROWTH ? Particle.HAPPY_VILLAGER : Particle.WAX_ON;
+    for (var angle = 0; angle < 16; angle++) {
+      var radians = angle * Math.PI / 8;
+      field
+          .at()
+          .getWorld()
+          .spawnParticle(
+              particle,
+              field.at().clone().add(Math.cos(radians) * 4, -.5, Math.sin(radians) * 4),
+              1,
+              0,
+              0,
+              0,
+              0);
+    }
+    if (field.kind() == SurvivalDrop.WILDGROWTH)
+      runner.fighters().stream()
+          .filter(player -> Places.at(player).distanceSquared(field.at()) <= 25)
+          .forEach(player -> SurvivalItems.heal(player, 1));
+    else runner.map().restoreNearby(field.at(), field.owner());
+  }
+
+  void hit(Player player, LivingEntity target) {
+    if (runner.combat().scriptedDamage() || !runner.world().isWaveMob(target)) return;
+    var charges = surge.getOrDefault(player.getUniqueId(), 0);
+    if (charges == 0) return;
+    surge.put(player.getUniqueId(), charges - 1);
+    runner.world().enemies().stream()
+        .filter(
+            enemy ->
+                !enemy.equals(target)
+                    && enemy.getLocation().distanceSquared(target.getLocation()) <= 16
+                    && target.hasLineOfSight(enemy)
+                    && player.hasLineOfSight(enemy))
+        .limit(2)
+        .forEach(enemy -> runner.combat().damage(enemy, player, 3));
+    player.spawnParticle(
+        Particle.ELECTRIC_SPARK, target.getLocation().add(0, 1, 0), 12, .4, .4, .4, .03);
+    runner.hud().hint(player, "Redstone Surge · " + (charges - 1) + " attacks remain", 2);
   }
 
   private void clear() {
@@ -151,11 +191,13 @@ final class ZombiesDrops {
     display = null;
     label = null;
     kind = null;
+    approached.clear();
   }
 
   void reset() {
     clear();
-    buffs.clear();
+    fields.clear();
+    surge.clear();
     nextDrop = Instant.MIN;
   }
 }

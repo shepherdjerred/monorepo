@@ -311,6 +311,21 @@ final class SettlementMap {
             });
   }
 
+  void restoreNearby(Location at, UUID owner) {
+    open().stream()
+        .flatMap(zone -> zone.defenses().stream())
+        .filter(
+            defense ->
+                Places.location(world.world(), defense.block().center()).distanceSquared(at) <= 144)
+        .forEach(
+            defense -> {
+              if (defense.type() == SurvivalContent.DefenseType.BARRICADE) {
+                if (state.strength(defense.id()) < 5) state.repair(defense.id());
+                barricade(defense, Material.OAK_FENCE);
+              } else if (state.strength(defense.id()) == 0) arm(defense, owner);
+            });
+  }
+
   void tick(java.util.function.BiConsumer<org.bukkit.entity.LivingEntity, UUID> credit) {
     for (var zone : open()) zone.defenses().forEach(d -> tickDefense(d, credit));
   }

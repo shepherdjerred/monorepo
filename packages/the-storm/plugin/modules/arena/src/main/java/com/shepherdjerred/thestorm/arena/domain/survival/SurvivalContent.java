@@ -45,11 +45,11 @@ public record SurvivalContent(
     FOOD,
     POWER,
     MYSTERY_BOX,
-    JUGGERNOG,
-    STAMIN_UP,
-    DOUBLE_TAP,
-    QUICK_REVIVE,
-    PACK_A_PUNCH
+    STONEWARD,
+    GALESTRIDE,
+    EMBERWEAVE,
+    SOULBOND,
+    RUNEFORGE
   }
 
   public record Station(BlockPos block, StationType type) {}

@@ -56,15 +56,24 @@ final class SurvivalBank {
   }
 
   static boolean insert(@Nullable ItemStack[] storage, java.util.List<ItemStack> bundle) {
+    return insert(storage, bundle, _ -> true);
+  }
+
+  static boolean insert(
+      @Nullable ItemStack[] storage,
+      java.util.List<ItemStack> bundle,
+      java.util.function.IntPredicate allowed) {
     for (var item : bundle) {
-      if (!insert(storage, item)) return false;
+      if (!insert(storage, item, allowed)) return false;
     }
     return true;
   }
 
-  private static boolean insert(@Nullable ItemStack[] storage, ItemStack item) {
+  private static boolean insert(
+      @Nullable ItemStack[] storage, ItemStack item, java.util.function.IntPredicate allowed) {
     var left = item.getAmount();
     for (var slot = 0; slot < storage.length && left > 0; slot++) {
+      if (!allowed.test(slot)) continue;
       var existing = storage[slot];
       if (existing != null && !existing.isEmpty() && !existing.isSimilar(item)) continue;
       var count = existing == null || existing.isEmpty() ? 0 : existing.getAmount();

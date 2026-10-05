@@ -17,8 +17,8 @@ final class MysteryBoxTest {
   @Test
   void purchaseIsExclusiveAndOnlyBuyerCanClaimDuringRevealWindow() {
     var box = box();
-    assertThat(box.start(ALICE, "STORMCALLER", T0)).isTrue();
-    assertThat(box.start(BOB, "BOW", T0)).isFalse();
+    assertThat(box.start(ALICE, BoxReward.signature(LegendaryWeapon.STORMCALLER), T0)).isTrue();
+    assertThat(box.start(BOB, BoxReward.ordinary("BOW", GearRarity.COMMON), T0)).isFalse();
     assertThat(box.claim(ALICE, T0.plusMillis(2999))).isFalse();
     assertThat(box.claim(BOB, T0.plusSeconds(3))).isFalse();
     assertThat(box.claim(ALICE, T0.plusSeconds(3))).isTrue();
@@ -29,7 +29,7 @@ final class MysteryBoxTest {
   @Test
   void expiryReturnsOneRefundTokenAndCannotBeClaimedAtTheDeadline() {
     var box = box();
-    box.start(ALICE, "BOW", T0);
+    box.start(ALICE, BoxReward.ordinary("BOW", GearRarity.COMMON), T0);
     assertThat(box.expire(T0.plusMillis(17999))).isEmpty();
     assertThat(box.claim(ALICE, T0.plusSeconds(18))).isFalse();
     assertThat(box.expire(T0.plusSeconds(18)))
@@ -40,7 +40,7 @@ final class MysteryBoxTest {
   @Test
   void departureCancelsOnlyOwnersPurchaseExactlyOnce() {
     var box = box();
-    box.start(ALICE, "BOW", T0);
+    box.start(ALICE, BoxReward.ordinary("BOW", GearRarity.COMMON), T0);
     assertThat(box.cancel(BOB)).isEmpty();
     assertThat(box.cancel(ALICE)).isPresent();
     assertThat(box.cancel(ALICE)).isEmpty();
@@ -50,15 +50,15 @@ final class MysteryBoxTest {
   @Test
   void resetDiscardsPreviousRunRollAndClaimProgress() {
     var box = box();
-    box.start(ALICE, "BOW", T0);
+    box.start(ALICE, BoxReward.ordinary("BOW", GearRarity.COMMON), T0);
     box.claim(ALICE, T0.plusSeconds(3));
-    box.start(ALICE, "GRAVITON", T0);
+    box.start(ALICE, BoxReward.signature(LegendaryWeapon.GRAVITON), T0);
     box.reset();
     assertThat(box.roll()).isEmpty();
     assertThat(box.site()).isEqualTo("market");
     assertThat(box.claim(ALICE, T0.plusSeconds(3))).isFalse();
     assertThat(box.expire(T0.plusSeconds(18))).isEmpty();
-    assertThat(box.start(BOB, "FROSTBITE", T0)).isTrue();
+    assertThat(box.start(BOB, BoxReward.signature(LegendaryWeapon.FROSTBITE), T0)).isTrue();
   }
 
   @Test
@@ -66,7 +66,7 @@ final class MysteryBoxTest {
     var box = box();
     for (var claim = 0; claim < 6; claim++) {
       assertThat(box.relocate(2)).isFalse();
-      box.start(ALICE, "BOW", T0);
+      box.start(ALICE, BoxReward.ordinary("BOW", GearRarity.COMMON), T0);
       assertThat(box.relocate(2)).isFalse();
       assertThat(box.claim(ALICE, T0.plusSeconds(3))).isTrue();
     }

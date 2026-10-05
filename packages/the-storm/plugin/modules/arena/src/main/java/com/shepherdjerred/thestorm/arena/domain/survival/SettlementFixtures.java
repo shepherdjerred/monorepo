@@ -34,27 +34,41 @@ final class SettlementFixtures {
   }
 
   private void machine(SurvivalContent.Machine machine) {
-    var type =
-        switch (machine.type()) {
-          case FOOD -> "BARREL";
-          case POWER -> "LODESTONE";
-          case MYSTERY_BOX -> "CHEST";
-          case PACK_A_PUNCH -> "ANVIL";
-          case JUGGERNOG, STAMIN_UP, DOUBLE_TAP, QUICK_REVIVE -> "JUKEBOX";
-        };
-    fixture(machine.block(), type);
-    var color =
-        switch (machine.type()) {
-          case JUGGERNOG -> "RED_CONCRETE";
-          case STAMIN_UP -> "LIME_CONCRETE";
-          case DOUBLE_TAP -> "ORANGE_CONCRETE";
-          case QUICK_REVIVE -> "CYAN_CONCRETE";
-          case FOOD -> "BARREL";
-          case POWER -> "COPPER_BLOCK";
-          case PACK_A_PUNCH -> "SMITHING_TABLE";
-          case MYSTERY_BOX -> "CHEST";
-        };
-    machine.interactions().forEach(p -> absolute(p.x(), p.y(), p.z(), color));
+    var type = functional(machine.type());
+    var color = color(machine.type());
+    var stacked =
+        java.util.Set.of(
+                SurvivalContent.MachineType.POWER,
+                SurvivalContent.MachineType.STONEWARD,
+                SurvivalContent.MachineType.GALESTRIDE,
+                SurvivalContent.MachineType.EMBERWEAVE,
+                SurvivalContent.MachineType.SOULBOND)
+            .contains(machine.type());
+    fixture(machine.block(), stacked ? color : type);
+    machine.interactions().forEach(p -> absolute(p.x(), p.y(), p.z(), stacked ? type : color));
+  }
+
+  private static String functional(SurvivalContent.MachineType type) {
+    return switch (type) {
+      case FOOD -> "BARREL";
+      case POWER -> "LODESTONE";
+      case MYSTERY_BOX -> "CHEST";
+      case RUNEFORGE -> "ANVIL";
+      case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> "JUKEBOX";
+    };
+  }
+
+  private static String color(SurvivalContent.MachineType type) {
+    return switch (type) {
+      case STONEWARD -> "RED_CONCRETE";
+      case GALESTRIDE -> "LIME_CONCRETE";
+      case EMBERWEAVE -> "ORANGE_CONCRETE";
+      case SOULBOND -> "CYAN_CONCRETE";
+      case FOOD -> "BARREL";
+      case POWER -> "WAXED_COPPER_BLOCK";
+      case RUNEFORGE -> "SMITHING_TABLE";
+      case MYSTERY_BOX -> "CHEST";
+    };
   }
 
   private void mysterySite(SurvivalContent.BoxSite site) {

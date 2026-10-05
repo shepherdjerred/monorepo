@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.app.store.SurvivalProgress;
 import com.shepherdjerred.thestorm.arena.domain.survival.EncounterDirector;
+import com.shepherdjerred.thestorm.arena.domain.wave.PursuitWatch;
 import com.shepherdjerred.thestorm.arena.domain.wave.SpawnUnit;
 import com.shepherdjerred.thestorm.arena.domain.wave.WaveTable;
 import java.time.Instant;
@@ -29,11 +30,10 @@ final class SurvivalCombat {
       SurvivalProgress progress,
       UUID run,
       SurvivalItems items,
-      Consumer<SurvivalProgress.Credit> credit) {}
+      Consumer<SurvivalProgress.Credit> credit,
+      Consumer<org.bukkit.entity.Trident> returnTrident) {}
 
   private record Hit(UUID player, Instant at) {}
-
-  private record Movement(Location at, int still) {}
 
   private final ArenaWorld world;
   private final SettlementMap map;
@@ -46,7 +46,7 @@ final class SurvivalCombat {
   private int total;
   private final Set<UUID> bounties = new HashSet<>();
   private final Map<UUID, Map<UUID, Hit>> hits = new HashMap<>();
-  private final Map<UUID, Movement> movement = new HashMap<>();
+  private final PursuitWatch pursuit = new PursuitWatch();
   private @Nullable SurvivalBoss boss;
   private EncounterDirector.@Nullable Encounter encounter;
   private int round;
@@ -61,6 +61,10 @@ final class SurvivalCombat {
 
   Optional<SurvivalBoss> boss() {
     return Optional.ofNullable(boss);
+  }
+
+  Optional<EncounterDirector.Event> encounter() {
+    return Optional.ofNullable(encounter).map(EncounterDirector.Encounter::event);
   }
 
   int active() {
@@ -200,6 +204,10 @@ final class SurvivalCombat {
     projectiles.keySet().removeIf(id -> services.context().server().getEntity(id) == null);
     spawnQueued();
     world.think(fighters);
+    pursuit.retain(
+        world.enemies().stream()
+            .map(org.bukkit.entity.Entity::getUniqueId)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet()));
     if (!fighters.isEmpty()) {
       world.enemies().forEach(enemy -> recover(enemy, fighters));
     }
@@ -255,6 +263,10 @@ final class SurvivalCombat {
         - (round == 5 && boss().filter(SurvivalBoss::alive).isEmpty() ? 1 : 0);
   }
 
+  void probeTarget(LivingEntity entity) {
+    register("zombie", List.of(entity));
+  }
+
   private void register(String type, List<LivingEntity> entities) {
     units.put(entities.getLast().getUniqueId(), entities);
     for (var entity : entities) {
@@ -303,9 +315,15 @@ final class SurvivalCombat {
       return;
     }
     var at = enemy.getLocation();
-    var last = movement.get(enemy.getUniqueId());
-    var still = last != null && last.at().distanceSquared(at) < 0.1 ? last.still() + 1 : 0;
-    movement.put(enemy.getUniqueId(), new Movement(at.clone(), still));
+    var target =
+        fighters.stream()
+            .min(java.util.Comparator.comparingDouble(p -> Places.at(p).distanceSquared(at)))
+            .orElseThrow();
+    var fighting = at.distanceSquared(Places.at(target)) <= 36 && enemy.hasLineOfSight(target);
+    var stalled =
+        pursuit.observe(
+            enemy.getUniqueId(), Places.point(at), services.context().time().instant(), fighting);
+    if (stalled == PursuitWatch.Action.NONE) return;
     var occupied =
         fighters.stream()
             .anyMatch(
@@ -324,23 +342,14 @@ final class SurvivalCombat {
                       && (area.isPresent()
                           || map.content().expedition().area().contains(Places.point(at)));
                 });
-    if (!occupied && still >= 5) {
+    if (!occupied || stalled == PursuitWatch.Action.RELOCATE) {
       enemy.teleport(entrance());
-      movement.remove(enemy.getUniqueId());
       return;
     }
-    if (!(enemy instanceof Mob mob) || still < 5) {
+    if (!(enemy instanceof Mob mob)) {
       return;
     }
-    var target =
-        fighters.stream()
-            .min(java.util.Comparator.comparingDouble(p -> Places.at(p).distanceSquared(at)))
-            .orElseThrow();
     mob.getPathfinder().moveTo(target, 1.0);
-    if (still >= 20 && at.distanceSquared(Places.at(target)) > 36) {
-      enemy.teleport(entrance());
-      movement.remove(enemy.getUniqueId());
-    }
   }
 
   void hit(LivingEntity enemy, Player player) {
@@ -354,7 +363,6 @@ final class SurvivalCombat {
   }
 
   void died(LivingEntity enemy, Set<UUID> fighters) {
-    movement.remove(enemy.getUniqueId());
     types.remove(enemy.getUniqueId());
     nextShot.remove(enemy.getUniqueId());
     var unit = units.remove(enemy.getUniqueId());
@@ -420,11 +428,8 @@ final class SurvivalCombat {
     for (var id : List.copyOf(projectiles.keySet())) {
       var entity = services.context().server().getEntity(id);
       if (entity instanceof org.bukkit.entity.Trident trident) {
-        if (trident.getShooter() instanceof Player owner
-            && services.items().deliver(owner, List.of(trident.getItemStack()))) {
-          trident.remove();
-          projectiles.remove(id);
-        }
+        services.returnTrident().accept(trident);
+        projectiles.remove(id);
       } else {
         if (entity != null) entity.remove();
         projectiles.remove(id);
@@ -440,7 +445,7 @@ final class SurvivalCombat {
     queue.clear();
     bounties.clear();
     hits.clear();
-    movement.clear();
+    pursuit.reset();
     units.clear();
     types.clear();
     nextShot.clear();

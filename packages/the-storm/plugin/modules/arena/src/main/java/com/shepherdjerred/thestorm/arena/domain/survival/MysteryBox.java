@@ -7,7 +7,7 @@ import java.util.UUID;
 
 /** One buyer, one reveal, one claim. Timed-out purchases return exactly one refund token. */
 public final class MysteryBox {
-  public record Roll(UUID owner, String reward, Instant reveal, Instant expires) {}
+  public record Roll(UUID owner, BoxReward reward, Instant reveal, Instant expires) {}
 
   private final List<String> sites;
   private int active;
@@ -34,7 +34,7 @@ public final class MysteryBox {
     return roll;
   }
 
-  public boolean start(UUID owner, String reward, Instant now) {
+  public boolean start(UUID owner, BoxReward reward, Instant now) {
     if (roll.isPresent()) return false;
     roll = Optional.of(new Roll(owner, reward, now.plusSeconds(3), now.plusSeconds(18)));
     return true;

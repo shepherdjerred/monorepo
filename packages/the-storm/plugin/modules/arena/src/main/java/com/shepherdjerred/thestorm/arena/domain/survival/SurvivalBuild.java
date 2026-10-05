@@ -14,6 +14,17 @@ public final class SurvivalBuild {
   private int cleared;
   private int potency;
   private int tempo;
+  private boolean resonant;
+
+  public SurvivalBuild empowered() {
+    var copy = new SurvivalBuild(role);
+    copy.specialization = specialization;
+    copy.cleared = cleared;
+    copy.potency = potency;
+    copy.tempo = tempo;
+    copy.resonant = true;
+    return copy;
+  }
 
   public SurvivalBuild(SurvivalClass role) {
     this.role = role;
@@ -64,11 +75,11 @@ public final class SurvivalBuild {
   }
 
   public double magnitude(double base) {
-    return base * (1 + potency * .25);
+    return base * (1 + potency * .25) * (resonant ? 1.25 : 1);
   }
 
   public int utilitySeconds(int base) {
-    return base + potency * 2;
+    return base + potency * 2 + (resonant ? 2 : 0);
   }
 
   public int cooldownSeconds() {
