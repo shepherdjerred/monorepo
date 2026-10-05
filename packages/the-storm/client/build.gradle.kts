@@ -6,6 +6,14 @@ plugins {
 version = "1.0.0"
 group = "com.shepherdjerred.thestorm"
 
+// Fabric includes this bridge only in macOS client libraries. Keep its lock on macOS,
+// where it resolves, while ignoring that absent platform-specific entry elsewhere.
+if (!System.getProperty("os.name").startsWith("Mac")) {
+  dependencyLocking {
+    ignoredDependencies.add("ca.weblite:java-objc-bridge")
+  }
+}
+
 dependencies {
   minecraft(libs.client.minecraft)
   implementation(libs.fabric.loader)
