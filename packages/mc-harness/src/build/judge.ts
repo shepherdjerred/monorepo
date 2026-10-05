@@ -15,8 +15,11 @@ import {
 import { z } from "zod";
 import { BUILD_FILES } from "#protocol/build.ts";
 
-/** Different family from the Codex agents being evaluated, to limit self-preference. */
-export const DEFAULT_JUDGE_MODEL = "claude-sonnet-5";
+/**
+ * OpenAI's flagship vision model (image input, structured outputs). Override
+ * with --model; llm-runtime resolves the provider credential.
+ */
+export const DEFAULT_JUDGE_MODEL = "gpt-6.1-sol";
 
 export const RUBRIC_DIMENSIONS = [
   "silhouette",

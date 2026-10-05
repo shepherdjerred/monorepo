@@ -201,9 +201,9 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   one needs `--force`).
 - **Judge** (`judge <a> <b> [--model id]`) asks a vision model to compare two
   renders on the eight rubric aspects, once in each order; when the orderings
-  disagree the verdict is a tie. It defaults to a non-OpenAI model so it does
-  not share the build agent's biases, and needs that provider's credential in
-  the environment. The E2/E5 eval graders add its verdict against a library
+  disagree the verdict is a tie. It defaults to `gpt-6.1-sol` and needs
+  `OPENAI_API_KEY` in the environment (another provider's model needs that
+  provider's key). The E2/E5 eval graders add its verdict against a library
   reference as a note when a credential is present; it never affects pass or
   fail.
 

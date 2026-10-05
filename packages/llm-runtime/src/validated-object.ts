@@ -143,8 +143,8 @@ function promptOrMessages(
         content: [
           { type: "text" as const, text },
           ...images.map((image) => ({
-            type: "image" as const,
-            image: image.data,
+            type: "file" as const,
+            data: image.data,
             mediaType: image.mediaType,
           })),
         ],
