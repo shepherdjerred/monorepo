@@ -3,16 +3,15 @@ import path from "node:path";
 import type { S3Client } from "@aws-sdk/client-s3";
 import type { DuckDbColumnType } from "@scout-for-lol/data";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { populateTimelinesFromS3 } from "#src/report-lake/rebuild-sources.ts";
 import {
-  duckDbColumnsSpec,
   TIMELINE_COVERAGE_LAKE_COLUMNS,
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "#src/report-lake/schema.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 
 type TimelineWriter = {
   table: string;
@@ -116,10 +115,12 @@ export async function rebuildTimelineParquet(options: {
       async (session) => {
         for (const entry of writers.entries) {
           if (entry.writer.rows === 0) continue;
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(entry.columns)})) TO '${path.join(options.buildDir, entry.table)}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-            [entry.path],
-          );
+          await copyNdjsonToParquet(session, {
+            sourcePath: entry.path,
+            outputDirectory: path.join(options.buildDir, entry.table),
+            columns: entry.columns,
+            partitionByMonth: true,
+          });
         }
       },
       { timeoutMs: options.timeoutMs },

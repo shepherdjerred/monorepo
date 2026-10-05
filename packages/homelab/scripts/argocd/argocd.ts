@@ -68,7 +68,7 @@ import {
 import { autoSyncPolicyDivergences } from "./argocd-auto-sync-policy.ts";
 import { childSyncTimeoutSeconds } from "./argocd-child-sync-timeout.ts";
 import { TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS } from "../../src/cdk8s/src/temporal-release-budgets.ts";
-import { SCOUT_CHILD_SYNC_TIMEOUT_SECONDS } from "../../src/cdk8s/src/scout-release-budgets.ts";
+import { SCOUT_CHILD_SYNC_TIMEOUT_FLOORS } from "../../src/cdk8s/src/scout-release-budgets.ts";
 import {
   appliedVerifiedReleaseResult,
   HOMELAB_RELEASE_RESULT_FILE,
@@ -2956,8 +2956,7 @@ async function assertReleaseInventoryIsComplete(
  */
 const CHILD_SYNC_TIMEOUT_FLOORS: ReadonlyMap<string, number> = new Map([
   ["temporal", TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS],
-  ["scout", SCOUT_CHILD_SYNC_TIMEOUT_SECONDS],
-  ["scout-beta", SCOUT_CHILD_SYNC_TIMEOUT_SECONDS],
+  ...SCOUT_CHILD_SYNC_TIMEOUT_FLOORS,
 ]);
 
 async function reconcileRelease(

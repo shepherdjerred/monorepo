@@ -2,6 +2,7 @@ import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
@@ -12,11 +13,9 @@ import {
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
-  duckDbColumnsSpec,
 } from "#src/report-lake/schema.ts";
 import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 
@@ -66,14 +65,16 @@ export async function writeFoldParquet(
     const writer = new NdjsonFileWriter(tmpPath);
     for (const row of rows) await writer.write(row);
     await writer.close();
-    const parquetPath = path.join(monthDir, `fold-${buildId}.parquet`);
     try {
       await withDuckDBConnection(
         async (session) => {
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(columns)})) TO '${parquetPath}' (${PARQUET_COPY_OPTIONS})`,
-            [tmpPath],
-          );
+          await copyNdjsonToParquet(session, {
+            sourcePath: tmpPath,
+            outputDirectory: monthDir,
+            columns,
+            partitionByMonth: false,
+            fileNamePrefix: `fold-${buildId}`,
+          });
         },
         { timeoutMs: COMPACTION_TIMEOUT_MS },
       );

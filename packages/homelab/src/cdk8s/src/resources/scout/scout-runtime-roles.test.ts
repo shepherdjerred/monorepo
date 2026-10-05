@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { App, Chart } from "cdk8s";
 import { z } from "zod";
 import {
   findResource,
@@ -8,7 +9,9 @@ import {
 import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 import { SCOUT_GATEWAY_OWNER_BY_STAGE } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
 import { scoutGatewayClientIngress } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
-import { SCOUT_CHILD_SYNC_TIMEOUT_SECONDS } from "@shepherdjerred/homelab/cdk8s/src/scout-release-budgets.ts";
+import { SCOUT_CHILD_SYNC_TIMEOUT_FLOORS } from "@shepherdjerred/homelab/cdk8s/src/scout-release-budgets.ts";
+import { createScoutBetaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/scout-beta.ts";
+import { createScoutProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/scout-prod.ts";
 
 const EnvEntrySchema = z
   .object({
@@ -544,7 +547,7 @@ describe("Scout gateway observability", () => {
    * Every role serves the same admin surface on the same port, so the probe
    * paths are shared rather than role-specific.
    */
-  test("gateway probes the admin HTTP surface", () => {
+  test("admin probes and release waits cover both Scout applications", () => {
     const ProbeSchema = z.object({
       template: z.object({
         spec: z.object({
@@ -582,10 +585,30 @@ describe("Scout gateway observability", () => {
     });
     expect(container).toBeDefined();
     if (container === undefined) throw new Error("gateway container missing");
-    expect(SCOUT_CHILD_SYNC_TIMEOUT_SECONDS).toBeGreaterThan(
-      container.startupProbe.periodSeconds *
-        container.startupProbe.failureThreshold,
-    );
+    for (const [stage, createApplication] of [
+      ["beta", createScoutBetaApp],
+      ["prod", createScoutProdApp],
+    ] as const) {
+      const application = z
+        .object({ metadata: z.object({ name: z.string() }) })
+        .parse(
+          createApplication(
+            new Chart(new App(), `scout-${stage}-release-budget`),
+          ).toJson(),
+        );
+      const backend = ProbeSchema.parse(
+        findResource(
+          scoutResources(stage),
+          "Deployment",
+          `${application.metadata.name}-scout-backend`,
+        ).spec,
+      );
+      const probe = backend.template.spec.containers[0]?.startupProbe;
+      if (probe === undefined) throw new Error("backend startup probe missing");
+      expect(
+        SCOUT_CHILD_SYNC_TIMEOUT_FLOORS.get(application.metadata.name),
+      ).toBeGreaterThan(probe.periodSeconds * probe.failureThreshold);
+    }
     expect(container?.livenessProbe.httpGet).toEqual({
       path: "/livez",
       port: 3000,

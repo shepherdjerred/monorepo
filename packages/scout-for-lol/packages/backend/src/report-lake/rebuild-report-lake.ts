@@ -11,6 +11,7 @@ import {
 } from "#src/report-lake/compaction-publish.ts";
 type CompactionSummary = PublishedCompactionSummary;
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import {
   loadPuuidRemap,
@@ -33,7 +34,6 @@ import {
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
-import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { removeFoldedStagingFiles } from "#src/report-lake/staging.ts";
 import {
   reclaimAbandonedPendingGenerations,
@@ -41,7 +41,6 @@ import {
   snapshotStagingGenerations,
 } from "#src/report-lake/staging/generations.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
 import type { ReportLakeProgress } from "#src/report-lake/compaction-types.ts";
@@ -161,34 +160,44 @@ async function rebuildLocked(
       await withDuckDBConnection(
         async (session) => {
           if (rawWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(RAW_DOCUMENT_LAKE_COLUMNS)})) TO '${path.join(buildDir, "raw_documents")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [rawTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: rawTmp,
+              outputDirectory: path.join(buildDir, "raw_documents"),
+              columns: RAW_DOCUMENT_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
           if (matchWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "matches")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [matchesTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: matchesTmp,
+              outputDirectory: path.join(buildDir, "matches"),
+              columns: MATCH_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
           if (matchTeamWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_teams")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [matchTeamsTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: matchTeamsTmp,
+              outputDirectory: path.join(buildDir, "match_teams"),
+              columns: MATCH_TEAM_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
           if (matchTeamBanWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_BAN_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_team_bans")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [matchTeamBansTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: matchTeamBansTmp,
+              outputDirectory: path.join(buildDir, "match_team_bans"),
+              columns: MATCH_TEAM_BAN_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
           if (prematchWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREMATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prematch")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [prematchTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: prematchTmp,
+              outputDirectory: path.join(buildDir, "prematch"),
+              columns: PREMATCH_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
         },
         { timeoutMs: remainingTimeoutMs() },

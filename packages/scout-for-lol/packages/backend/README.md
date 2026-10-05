@@ -111,9 +111,12 @@ Report-lake rebuilds buffer at most 1 MiB of NDJSON per writer, except for a
 single oversized document, which is drained immediately. Every producer awaits
 disk backpressure before writing more rows, including the raw source documents
 needed to rebuild the lake.
-Parquet COPY flushes partition buffers every 2,048 rows, keeps at most four
-output writers open, and targets 8 MB row groups. These bounds keep wide raw
-documents and interleaved month partitions within the existing DuckDB budget.
+Rebuilds and incremental folds feed Parquet COPY at most 64 MiB of encoded
+NDJSON per batch, except for a single oversized record. Input batches preserve
+record boundaries, UTF-8, and numeric precision. COPY appends unique Parquet
+files, flushes partition buffers every 2,048 rows, keeps at most four output
+writers open, and targets 8 MB row groups. Bounding both the input reader and
+output writers keeps wide documents within the existing DuckDB budget.
 
 The GitOps child sync wait covers the same 40-minute cold-start budget as the
 startup probe, plus five minutes for readiness and subsequent sync waves.
