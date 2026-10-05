@@ -235,12 +235,17 @@ final class CombatListener implements Listener {
     }
   }
 
-  /** Steak never goes through the eating animation; it heals at once on right-click. */
-  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  /**
+   * Steak never goes through the eating animation; it heals at once on right-click. Bukkit raises a
+   * right-click into the air already cancelled (there is no block to use), so the handler reads
+   * whether the item may be used instead of skipping cancelled events.
+   */
+  @EventHandler(priority = EventPriority.HIGH)
   void onSteak(PlayerInteractEvent event) {
     var player = event.getPlayer();
     var item = event.getItem();
-    if (item == null
+    if (event.useItemInHand() == Event.Result.DENY
+        || item == null
         || item.getType() != Material.COOKED_BEEF
         || !inWorld(player)
         || (event.getAction() != Action.RIGHT_CLICK_AIR
