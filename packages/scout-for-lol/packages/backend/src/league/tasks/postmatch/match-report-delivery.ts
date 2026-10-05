@@ -8,7 +8,7 @@ import {
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
-import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
+import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { decorateWithFeatureTip } from "#src/tips/index.ts";
 import { withSupportAction } from "#src/support/discord.ts";

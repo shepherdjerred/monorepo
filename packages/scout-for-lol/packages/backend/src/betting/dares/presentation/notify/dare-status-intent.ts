@@ -1,6 +1,7 @@
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import {
@@ -19,6 +20,7 @@ import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import {
   dareStatusAnnouncementCodec,
   type DareNotificationEventInput,
+  type DareResultAnnouncement,
 } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 
 const DARE_STATUS_FRESHNESS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -75,7 +77,7 @@ export async function mintDareStatusIntents(
     return;
   }
 
-  const dare = await db.bucksDareV2.findUniqueOrThrow({
+  const dare = await db.bucksDare.findUniqueOrThrow({
     where: { id: input.dareId },
     select: {
       serverId: true,
@@ -104,7 +106,6 @@ export async function mintDareStatusIntents(
       ...dare.contributions.map((contribution) => contribution.discordId),
     ]),
   ].map((discordId) => DiscordAccountIdSchema.parse(discordId));
-  const stage = configuration.temporalNamespace;
   const createdAt = toIsoInstant(input.occurredAt);
   const freshnessDeadline = toIsoInstant(
     new Date(input.occurredAt.getTime() + DARE_STATUS_FRESHNESS_MS),
@@ -126,27 +127,102 @@ export async function mintDareStatusIntents(
         state: { kind: "pending" },
       },
     };
-    const created = await upsertSubjectIntent(db, expected);
-    if (created.outcome === "conflict") {
-      throw new Error(
-        `Dare notification intent ${key} raced with different facts`,
-      );
-    }
-    if (created.outcome === "already-applied") continue;
-    const requested = await requestWorkflowStart(db, {
-      requestedWorkflowId: scoutNotificationV2WorkflowId(stage, key),
-      workflowType: SCOUT_WORKFLOW_NAMES.notificationV2,
-      requestedBy: null,
-      requestSource: `dare-status:${input.kind}`,
-      inputPayload: {
-        kind: SCOUT_WORKFLOW_NAMES.notificationV2,
-        version: 1,
-        data: { stage, intentKey: key },
-      },
-      requestedAt: createdAt,
-    });
-    if (requested.outcome === "conflict") {
-      throw new Error(`Dare notification workflow start for ${key} conflicts`);
-    }
+    await mintAndStart(db, expected, `dare-status:${input.kind}`);
   }
+}
+
+/**
+ * Write one Dare intent and request its notification Workflow, in the
+ * caller's transaction, so the decision to notify and the request to deliver
+ * commit together.
+ */
+async function mintAndStart(
+  db: Db,
+  expected: DareNotificationIntentRecord,
+  requestSource: string,
+): Promise<void> {
+  const key = expected.intent.key;
+  const created = await upsertSubjectIntent(db, expected);
+  if (created.outcome === "conflict") {
+    throw new Error(
+      `Dare notification intent ${key} raced with different facts`,
+    );
+  }
+  if (created.outcome === "already-applied") return;
+  const stage = configuration.temporalNamespace;
+  const requested = await requestWorkflowStart(db, {
+    requestedWorkflowId: scoutNotificationV2WorkflowId(stage, key),
+    workflowType: SCOUT_WORKFLOW_NAMES.notificationV2,
+    requestedBy: null,
+    requestSource,
+    inputPayload: {
+      kind: SCOUT_WORKFLOW_NAMES.notificationV2,
+      version: 1,
+      data: { stage, intentKey: key },
+    },
+    requestedAt: expected.intent.createdAt,
+  });
+  if (requested.outcome === "conflict") {
+    throw new Error(`Dare notification workflow start for ${key} conflicts`);
+  }
+}
+
+/**
+ * Mint the public result post a terminal settlement owes the Dare's channel.
+ *
+ * One per resolved revision, keyed by the Dare and revision alone: the
+ * settlement that makes a Dare terminal commits exactly once, so a second
+ * mint for the same revision is a replay of the same facts or a broken
+ * contract, and `upsertSubjectIntent` tells those apart.
+ */
+export async function mintDareResultIntent(
+  db: Db,
+  input: {
+    dareId: number;
+    revision: number;
+    result: DareResultAnnouncement;
+    matchId?: string | undefined;
+    occurredAt: Date;
+  },
+): Promise<void> {
+  const dare = await db.bucksDare.findUniqueOrThrow({
+    where: { id: input.dareId },
+    select: { serverId: true, channelId: true },
+  });
+  const key = NotificationIntentKeySchema.parse(
+    `dare-result:${input.dareId.toString()}:revision:${input.revision.toString()}`,
+  );
+  const kind =
+    input.result.resolution === "unachieved"
+      ? "failed"
+      : input.result.resolution;
+  const expected: DareNotificationIntentRecord = {
+    dareId: input.dareId,
+    intent: {
+      key,
+      kind: "dare-status",
+      origin: { kind: "live" },
+      target: {
+        kind: "channel",
+        channelId: DiscordChannelIdSchema.parse(dare.channelId),
+      },
+      freshnessDeadline: toIsoInstant(
+        new Date(input.occurredAt.getTime() + DARE_STATUS_FRESHNESS_MS),
+      ),
+      createdAt: toIsoInstant(input.occurredAt),
+      attemptCount: 0,
+      announcement: dareStatusAnnouncementCodec.serialize({
+        dareId: input.dareId,
+        revision: input.revision,
+        guildId: DiscordGuildIdSchema.parse(dare.serverId),
+        category: "lifecycle",
+        kind,
+        summary: input.result.plainLanguage,
+        ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
+        result: input.result,
+      }),
+      state: { kind: "pending" },
+    },
+  };
+  await mintAndStart(db, expected, `dare-result:${input.result.resolution}`);
 }

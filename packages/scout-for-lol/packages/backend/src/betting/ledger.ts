@@ -3,7 +3,6 @@ import {
   BucksLedgerContextSchema,
   BucksStorageOverflowError,
   OPEN_BUCKS_DARE_STATES,
-  OPEN_BUCKS_DARE_V2_STATES,
   storableDelta,
   type BucksDelta,
   type BucksLedgerContext,
@@ -126,57 +125,44 @@ export async function refundableBucksHeldForAccounts(
         .map((account) => account.serverId),
     ),
   ];
-  const [
-    outcomeRows,
-    humanParlayRows,
-    houseParlayRows,
-    humanDareRows,
-    humanDareV2Rows,
-  ] = await Promise.all([
-    tx.bucksBet.findMany({
-      where: {
-        bucksAccountId: { in: accountIds },
-        betOutcome: "pending",
-      },
-      select: { bucksAccountId: true, stake: true, matchedStake: true },
-    }),
-    tx.bucksParlayBet.groupBy({
-      by: ["bucksAccountId"],
-      where: {
-        bucksAccountId: { in: humanAccountIds },
-        betOutcome: "pending",
-      },
-      _sum: { stake: true },
-    }),
-    tx.bucksParlayBet.findMany({
-      where: {
-        betOutcome: "pending",
-        market: { serverId: { in: houseServerIds } },
-      },
-      select: {
-        houseReserve: true,
-        market: { select: { serverId: true } },
-      },
-    }),
-    // Open dare escrow. Only human accounts hold it: contributors fund the
-    // pot from their own wallets and the house reserves nothing for a dare.
-    tx.bucksDareContribution.groupBy({
-      by: ["bucksAccountId"],
-      where: {
-        bucksAccountId: { in: humanAccountIds },
-        dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } },
-      },
-      _sum: { amount: true },
-    }),
-    tx.bucksDareV2Contribution.groupBy({
-      by: ["bucksAccountId"],
-      where: {
-        bucksAccountId: { in: humanAccountIds },
-        dare: { dareState: { in: [...OPEN_BUCKS_DARE_V2_STATES] } },
-      },
-      _sum: { amount: true },
-    }),
-  ]);
+  const [outcomeRows, humanParlayRows, houseParlayRows, humanDareRows] =
+    await Promise.all([
+      tx.bucksBet.findMany({
+        where: {
+          bucksAccountId: { in: accountIds },
+          betOutcome: "pending",
+        },
+        select: { bucksAccountId: true, stake: true, matchedStake: true },
+      }),
+      tx.bucksParlayBet.groupBy({
+        by: ["bucksAccountId"],
+        where: {
+          bucksAccountId: { in: humanAccountIds },
+          betOutcome: "pending",
+        },
+        _sum: { stake: true },
+      }),
+      tx.bucksParlayBet.findMany({
+        where: {
+          betOutcome: "pending",
+          market: { serverId: { in: houseServerIds } },
+        },
+        select: {
+          houseReserve: true,
+          market: { select: { serverId: true } },
+        },
+      }),
+      // Open dare escrow. Only human accounts hold it: contributors fund the
+      // pot from their own wallets and the house reserves nothing for a dare.
+      tx.bucksDareContribution.groupBy({
+        by: ["bucksAccountId"],
+        where: {
+          bucksAccountId: { in: humanAccountIds },
+          dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
 
   const outcomeByAccount = new Map<number, bigint>();
   for (const row of outcomeRows) {
@@ -191,9 +177,6 @@ export async function refundableBucksHeldForAccounts(
   );
   const dareByAccount = new Map(
     humanDareRows.map((row) => [row.bucksAccountId, row._sum.amount ?? 0]),
-  );
-  const dareV2ByAccount = new Map(
-    humanDareV2Rows.map((row) => [row.bucksAccountId, row._sum.amount ?? 0]),
   );
   const reserveByServer = new Map<string, bigint>();
   for (const row of houseParlayRows) {
@@ -211,8 +194,7 @@ export async function refundableBucksHeldForAccounts(
         (account.isHouse
           ? (reserveByServer.get(account.serverId) ?? 0n)
           : BigInt(parlayByAccount.get(account.id) ?? 0) +
-            BigInt(dareByAccount.get(account.id) ?? 0) +
-            BigInt(dareV2ByAccount.get(account.id) ?? 0)),
+            BigInt(dareByAccount.get(account.id) ?? 0)),
     ]),
   );
 }
@@ -249,7 +231,7 @@ export async function refundableBucksHeld(
     });
     return outcomeHeld + BigInt(parlay._sum.houseReserve ?? 0);
   }
-  const [parlay, dare, dareV2] = await Promise.all([
+  const [parlay, dare] = await Promise.all([
     tx.bucksParlayBet.aggregate({
       where: { bucksAccountId, betOutcome: "pending" },
       _sum: { stake: true },
@@ -264,19 +246,9 @@ export async function refundableBucksHeld(
       },
       _sum: { amount: true },
     }),
-    tx.bucksDareV2Contribution.aggregate({
-      where: {
-        bucksAccountId,
-        dare: { dareState: { in: [...OPEN_BUCKS_DARE_V2_STATES] } },
-      },
-      _sum: { amount: true },
-    }),
   ]);
   return (
-    outcomeHeld +
-    BigInt(parlay._sum.stake ?? 0) +
-    BigInt(dare._sum.amount ?? 0) +
-    BigInt(dareV2._sum.amount ?? 0)
+    outcomeHeld + BigInt(parlay._sum.stake ?? 0) + BigInt(dare._sum.amount ?? 0)
   );
 }
 

@@ -1,7 +1,5 @@
 import { describe, expect, test } from "vitest";
 import {
-  BucksDareHorizonKindSchema,
-  BucksDareStateSchema,
   BucksLedgerContextSchema,
   BucksLedgerKindSchema,
   BucksMatchingSummarySchema,
@@ -29,36 +27,6 @@ describe("BucksLedgerKindSchema dare kinds", () => {
 
   test("rejects an unknown dare kind", () => {
     expect(BucksLedgerKindSchema.safeParse("dare_bonus").success).toBe(false);
-  });
-});
-
-describe("BucksDareStateSchema", () => {
-  test.each([
-    "proposed",
-    "pending_accept",
-    "active",
-    "achieved",
-    "unachieved",
-    "declined",
-    "expired",
-    "voided",
-    "abandoned",
-  ] as const)("accepts %s", (state) => {
-    expect(BucksDareStateSchema.parse(state)).toBe(state);
-  });
-
-  test("rejects an unknown state", () => {
-    expect(BucksDareStateSchema.safeParse("settled").success).toBe(false);
-  });
-});
-
-describe("BucksDareHorizonKindSchema", () => {
-  test.each(["next_game", "window"] as const)("accepts %s", (kind) => {
-    expect(BucksDareHorizonKindSchema.parse(kind)).toBe(kind);
-  });
-
-  test("rejects an unknown horizon", () => {
-    expect(BucksDareHorizonKindSchema.safeParse("season").success).toBe(false);
   });
 });
 

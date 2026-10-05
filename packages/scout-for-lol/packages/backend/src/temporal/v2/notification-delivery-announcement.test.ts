@@ -11,24 +11,21 @@ import {
 } from "#src/temporal/v2/notification-delivery.test-fixtures.ts";
 
 /**
- * The delivery boundary for the two announcement kinds.
+ * The delivery boundary for the match-subject announcement kinds.
  *
  * The postmatch/prematch suite pins the ambiguity boundary; this one pins
- * what a `settlement` and a `dare-summary` intent do at the send: no
- * artifact, no report generator, the reply-target fallback v1 makes, the DM
- * refusal, and the post-delivery callout refresh that can never change an
- * outcome. The arms themselves are mocked — their own suites cover them —
- * so what is asserted here is only the delivery contract around them. The DM
- * chokepoint is not stubbed: both kinds are refused before it could be
- * reached, and the refusal test asserts that no send of any shape happened.
+ * what a `settlement` intent does at the send: no artifact, no report
+ * generator, the reply-target fallback v1 makes, and the DM refusal. The arms
+ * themselves are mocked — their own suites cover them — so what is asserted
+ * here is only the delivery contract around them. The DM chokepoint is not
+ * stubbed: the kind is refused before it could be reached, and the refusal
+ * test asserts that no send of any shape happened.
  */
 
 const stubs = vi.hoisted(() => ({
   requireIntentRecordV2: vi.fn(),
   resolveNotificationGateV2: vi.fn(),
   buildSettlementNotificationMessageV2: vi.fn(),
-  buildDareSummaryNotificationMessageV2: vi.fn(),
-  afterDareSummaryDeliveredV2: vi.fn(),
   readAttestedReportArtifactV2: vi.fn(),
   readAttestedPrematchArtifactV2: vi.fn(),
   resolveScoutV2ObservedMatchContext: vi.fn(),
@@ -56,11 +53,6 @@ vi.mock("#src/temporal/v2/notification/notification-policy.ts", () => ({
 vi.mock("#src/temporal/v2/notification/settlement-notification.ts", () => ({
   buildSettlementNotificationMessageV2:
     stubs.buildSettlementNotificationMessageV2,
-}));
-vi.mock("#src/temporal/v2/notification/dare-summary-notification.ts", () => ({
-  buildDareSummaryNotificationMessageV2:
-    stubs.buildDareSummaryNotificationMessageV2,
-  afterDareSummaryDeliveredV2: stubs.afterDareSummaryDeliveredV2,
 }));
 vi.mock("#src/temporal/v2/notification/prematch-notification.ts", () => ({
   buildPrematchNotificationMessageV2: vi.fn(),
@@ -120,11 +112,6 @@ beforeEach(() => {
     allowedMentions: { parse: [] },
     reply: { messageReference: "400000000000000777", failIfNotExists: false },
   });
-  stubs.buildDareSummaryNotificationMessageV2.mockReturnValue({
-    content: "the dare resolved",
-    allowedMentions: { parse: [], users: ["200000000000000002"] },
-  });
-  stubs.afterDareSummaryDeliveredV2.mockResolvedValue(undefined);
 });
 
 /** A permission failure `send` HANDLED on a reply, exactly as v1 raises it. */
@@ -138,10 +125,7 @@ function replyRefused(): InstanceType<typeof ChannelSendError> {
   );
 }
 
-function gateFor(
-  kind: "settlement" | "dare-summary",
-  target: "channel" | "dm",
-) {
+function gateFor(kind: "settlement", target: "channel" | "dm") {
   stubs.requireIntentRecordV2.mockResolvedValue(intentRecord(target, kind));
   stubs.resolveNotificationGateV2.mockResolvedValue({
     kind,
@@ -210,28 +194,22 @@ describe("the settlement-shaped path", () => {
     expect(stubs.send).toHaveBeenCalledTimes(1);
   });
 
-  test.each(["settlement", "dare-summary"] as const)(
-    "refuses a DM target for a %s intent as terminal without building anything",
-    async (kind) => {
-      gateFor(kind, "dm");
+  test("refuses a DM target for a settlement intent as terminal without building anything", async () => {
+    gateFor("settlement", "dm");
 
-      const result = await deliverNotificationV2(attemptRef());
+    const result = await deliverNotificationV2(attemptRef());
 
-      expect(result).toEqual({
-        outcome: "failed",
-        failure: { classification: "terminal", reason: "target-not-found" },
-      });
-      expect(stubs.buildSettlementNotificationMessageV2).not.toHaveBeenCalled();
-      expect(
-        stubs.buildDareSummaryNotificationMessageV2,
-      ).not.toHaveBeenCalled();
-      expect(stubs.send).not.toHaveBeenCalled();
-    },
-  );
+    expect(result).toEqual({
+      outcome: "failed",
+      failure: { classification: "terminal", reason: "target-not-found" },
+    });
+    expect(stubs.buildSettlementNotificationMessageV2).not.toHaveBeenCalled();
+    expect(stubs.send).not.toHaveBeenCalled();
+  });
 });
 
 describe("an announcement whose payload cannot produce a message", () => {
-  test.each(["settlement", "dare-summary"] as const)(
+  test.each(["settlement"] as const)(
     "parks a malformed %s intent as terminal, not retryable",
     async (kind) => {
       // The same laundering the render-receipt finding named, on the other
@@ -244,13 +222,7 @@ describe("an announcement whose payload cannot produce a message", () => {
         intentKey,
         detail: "the test says so",
       });
-      if (kind === "settlement") {
-        stubs.buildSettlementNotificationMessageV2.mockRejectedValue(malformed);
-      } else {
-        stubs.buildDareSummaryNotificationMessageV2.mockImplementation(() => {
-          throw malformed;
-        });
-      }
+      stubs.buildSettlementNotificationMessageV2.mockRejectedValue(malformed);
 
       const result = await deliverNotificationV2(attemptRef());
 
@@ -261,45 +233,6 @@ describe("an announcement whose payload cannot produce a message", () => {
       expect(stubs.send).not.toHaveBeenCalled();
     },
   );
-});
-
-describe("the dare-summary-shaped path", () => {
-  test("delivers the result with its mention allowlist", async () => {
-    gateFor("dare-summary", "channel");
-    stubs.send.mockResolvedValue({ id: "100000000000000780" });
-
-    const result = await deliverNotificationV2(attemptRef());
-
-    expect(result).toMatchObject({ outcome: "delivered" });
-    const sent = SentOptionsSchema.parse(stubs.send.mock.calls[0]?.[0]);
-    expect(sent.content).toBe("the dare resolved");
-    expect(sent.allowedMentions).toEqual({
-      parse: [],
-      users: ["200000000000000002"],
-    });
-    expect(stubs.generateMatchReport).not.toHaveBeenCalled();
-  });
-
-  test("refreshes no callout of its own, whatever the send did", async () => {
-    // The finding this closes: the refresh ran at the tail of THIS Activity,
-    // where it waits behind its serialized queue and then edits a Discord
-    // message. Either wait can outlive the ten-second heartbeat timeout, and
-    // that timeout fires at the Temporal server — outside every try/catch this
-    // process can write — so the already-decided `delivered` result never
-    // reached the Workflow and a message Discord accepted was recorded as an
-    // ambiguous send. It is `afterNotificationDeliveredV2`'s work now, after
-    // the outcome is durably recorded.
-    gateFor("dare-summary", "channel");
-    stubs.send.mockResolvedValue({ id: "100000000000000781" });
-
-    const result = await deliverNotificationV2(attemptRef());
-
-    expect(result).toEqual({
-      outcome: "delivered",
-      messageId: "100000000000000781",
-    });
-    expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
-  });
 });
 
 const HALL_INTENT_KEY = NotificationIntentKeySchema.parse(

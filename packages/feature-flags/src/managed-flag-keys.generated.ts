@@ -45,9 +45,7 @@ export const SCOUT_FLAG_KEYS = [
   "challenge_runs_enabled",
   "clash_surface",
   "custom_nights_enabled",
-  "dare_extended_contracts_enabled",
   "dare_notifications_enabled",
-  "dare_v2",
   "debug",
   "duels_enabled",
   "explore-guild-allowlist",
@@ -75,7 +73,6 @@ export const SCOUT_FLAG_KEYS = [
   "scout_operations_console_enabled",
   "scout_v2_postmatch_ownership_enabled",
   "scout_v2_prematch_ownership_enabled",
-  "scoutql_relational_enabled",
   "voice_assistant_enabled",
 ] as const;
 
@@ -95,9 +92,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "challenge_runs_enabled",
   "clash_surface",
   "custom_nights_enabled",
-  "dare_extended_contracts_enabled",
   "dare_notifications_enabled",
-  "dare_v2",
   "debug",
   "duels_enabled",
   "explore_creation_enabled",
@@ -114,7 +109,6 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout_operations_console_enabled",
   "scout_v2_postmatch_ownership_enabled",
   "scout_v2_prematch_ownership_enabled",
-  "scoutql_relational_enabled",
   "voice_assistant_enabled",
 ] as const;
 

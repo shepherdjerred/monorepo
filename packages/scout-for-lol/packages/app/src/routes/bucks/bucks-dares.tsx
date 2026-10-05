@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
 import type {
-  DareDeadlineSpecV2,
+  DareDeadlineSpec,
   DarePollHealth,
   DareProgress,
 } from "@scout-for-lol/data";
@@ -306,7 +306,7 @@ export function DareDetail(props: {
     evaluatorVersion: string;
     scoutQlPlanHash: string | null;
     originalText: string;
-    deadlineSpec: DareDeadlineSpecV2;
+    deadlineSpec: DareDeadlineSpec;
     targetAliases: string[];
     openingStake: number;
     potTotal: number;
@@ -393,17 +393,11 @@ export function DareDetail(props: {
         )}
       </dl>
       <section className="space-y-2">
-        <h2 className="text-sm font-medium">
-          {props.dare.compilerVersion === "dare-scoutql-3"
-            ? "Binding SQL contract"
-            : "ScoutQL"}
-        </h2>
-        {props.dare.compilerVersion === "dare-scoutql-3" && (
-          <p className="text-xs text-scout-subtle">
-            This canonical SQL is authoritative; the readable summary is
-            explanatory.
-          </p>
-        )}
+        <h2 className="text-sm font-medium">Binding SQL contract</h2>
+        <p className="text-xs text-scout-subtle">
+          This canonical SQL is authoritative; the readable summary is
+          explanatory.
+        </p>
         <ScoutQlCode queryText={props.dare.canonicalScoutQl} />
         {props.dare.scoutQlPlanHash !== null && (
           <p className="font-mono text-xs text-scout-subtle">

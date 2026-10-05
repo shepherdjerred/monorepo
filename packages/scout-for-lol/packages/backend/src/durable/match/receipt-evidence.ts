@@ -52,7 +52,7 @@ export const MATCH_RECEIPT_KINDS = {
   progression: ReceiptKindSchema.parse("progression"),
 } as const satisfies Record<string, ReceiptKind>;
 
-/** A BucksBet or BucksDareV2 primary key — the ledger's own row identity. */
+/** A BucksBet or BucksDare primary key — the ledger's own row identity. */
 const LedgerRowIdSchema = z.int().positive();
 
 /**

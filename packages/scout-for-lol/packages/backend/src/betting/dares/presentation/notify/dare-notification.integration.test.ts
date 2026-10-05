@@ -24,7 +24,7 @@ const LATE_TARGET = bucksTestDiscordId(63);
 const NOW = new Date("2026-09-03T00:00:00.000Z");
 
 async function seedDare(): Promise<number> {
-  const dare = await db.bucksDareV2.create({
+  const dare = await db.bucksDare.create({
     data: {
       serverId: SERVER,
       channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
@@ -32,7 +32,7 @@ async function seedDare(): Promise<number> {
       openingStake: 10,
     },
   });
-  await db.bucksDareV2Target.createMany({
+  await db.bucksDareTarget.createMany({
     data: [
       {
         dareId: dare.id,
@@ -102,8 +102,8 @@ beforeEach(async () => {
   await db.bucksDareNotificationDelivery.deleteMany();
   await db.bucksDareNotificationEvent.deleteMany();
   await db.bucksNotificationPreference.deleteMany();
-  await db.bucksDareV2Target.deleteMany();
-  await db.bucksDareV2.deleteMany();
+  await db.bucksDareTarget.deleteMany();
+  await db.bucksDare.deleteMany();
 });
 
 afterAll(async () => {
@@ -115,7 +115,7 @@ describe("Dare notification outbox", () => {
     const dareId = await seedDare();
     await enqueue(dareId);
     await enqueue(dareId);
-    await db.bucksDareV2Target.create({
+    await db.bucksDareTarget.create({
       data: {
         dareId,
         targetKey: "late-target",

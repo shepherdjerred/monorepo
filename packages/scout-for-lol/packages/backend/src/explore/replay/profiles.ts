@@ -152,18 +152,15 @@ export function chipExpectation(
  *
  * Derived from the set rather than stored beside it, so a pin cannot carry
  * flags that disagree with the capabilities they are supposed to produce.
- * Dares need all three of their flags because `dareExploreEnabled` requires
- * `(dare_v2 || dare_extended_contracts_enabled) && scoutql_relational_enabled`
- * on top of a bucks capability.
+ * Dares need `bucks_dares_enabled`, which `dareExploreEnabled` requires on top
+ * of a bucks capability.
  */
 export function flagOverridesFor(
   capabilities: ExploreCapabilitySet,
 ): readonly ExploreReplayFlagOverride[] {
   return [
     { flag: "betting_enabled", value: capabilities.bucks },
-    { flag: "dare_v2", value: capabilities.dares },
-    { flag: "dare_extended_contracts_enabled", value: capabilities.dares },
-    { flag: "scoutql_relational_enabled", value: capabilities.dares },
+    { flag: "bucks_dares_enabled", value: capabilities.dares },
     { flag: "challenge_runs_enabled", value: capabilities.challenges },
     { flag: "mvp_votes_enabled", value: capabilities.mvpVotes },
     { flag: "clash_surface", value: capabilities.clash },

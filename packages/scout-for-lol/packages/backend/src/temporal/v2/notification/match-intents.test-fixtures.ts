@@ -2,7 +2,6 @@ import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
 
 /**
@@ -25,7 +24,7 @@ import type { SettlementAnnouncementItem } from "#src/database/durable/settlemen
  * The items one settlement produced, each ready to be recorded on its own.
  *
  * One entry per thing that committed separately, because that is the unit the
- * checkpoint has to survive at: a match whose third Dare fails after two
+ * checkpoint has to survive at: a match whose third pool fails after two
  * settled keeps those two. Earnings are keyed by guild for the same reason the
  * fold filters them by guild — a guild's awards are only that guild's business.
  */
@@ -34,7 +33,6 @@ export function settlementAnnouncementItemsOf(input: {
   settlements: readonly SettlementSummary[];
   parlaySettlements: readonly ParlaySettlementSummary[];
   earnings: readonly EarnedAward[];
-  dareSettlements: readonly DareSettlementSummary[];
 }): readonly SettlementAnnouncementItem[] {
   const earningsByGuild = new Map<string, EarnedAward[]>();
   for (const award of input.earnings) {
@@ -63,11 +61,6 @@ export function settlementAnnouncementItemsOf(input: {
       family: "earnings" as const,
       itemKey: serverId,
       payload: awards,
-    })),
-    ...input.dareSettlements.map((dare) => ({
-      family: "dare-summary" as const,
-      itemKey: String(dare.dareId),
-      payload: dare,
     })),
   ];
 }

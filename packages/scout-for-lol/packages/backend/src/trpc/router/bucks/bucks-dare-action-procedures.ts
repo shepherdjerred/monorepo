@@ -6,14 +6,14 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import { tryEnsureDareV2Callout } from "#src/betting/dares/presentation/dare-callout-v2.ts";
-import { deleteDareDraftV2 } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
-import { listDareEvidenceV2 } from "#src/betting/dares/presentation/dare-evidence-view-v2.ts";
-import { consumeDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume-v2.ts";
+import { tryEnsureDareCallout } from "#src/betting/dares/presentation/dare-callout.ts";
+import { deleteDareDraft } from "#src/betting/dares/lifecycle/dare-draft.ts";
+import { listDareEvidence } from "#src/betting/dares/presentation/dare-evidence-view.ts";
+import { consumeDareConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume.ts";
 import {
-  createDareV2ConfirmationIntent,
-  dareV2IntentAction,
-} from "#src/betting/dares/lifecycle/dare-intent-v2.ts";
+  createDareConfirmationIntent,
+  dareIntentAction,
+} from "#src/betting/dares/lifecycle/dare-intent.ts";
 import { assertBucksScope } from "#src/consumer/bucks-access.ts";
 import { prisma } from "#src/database/index.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
@@ -108,7 +108,7 @@ export const bucksDareActionProcedures = {
     .input(DareEvidenceInput)
     .query(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
-      const page = await listDareEvidenceV2(
+      const page = await listDareEvidence(
         {
           dareId: input.dareId,
           serverId: input.guildId,
@@ -128,7 +128,7 @@ export const bucksDareActionProcedures = {
     .input(DarePrepareActionInput)
     .mutation(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
-      const outcome = await createDareV2ConfirmationIntent({
+      const outcome = await createDareConfirmationIntent({
         dareId: input.dareId,
         serverId: input.guildId,
         actorDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
@@ -137,7 +137,7 @@ export const bucksDareActionProcedures = {
         idempotencyKey: input.idempotencyKey,
       });
       if (outcome.kind !== "intent_created") return outcome;
-      const dare = await prisma.bucksDareV2.findUniqueOrThrow({
+      const dare = await prisma.bucksDare.findUniqueOrThrow({
         where: { id: input.dareId },
         select: {
           openingStake: true,
@@ -151,7 +151,7 @@ export const bucksDareActionProcedures = {
           : input.payload.kind === "dare_fund"
             ? `${dare.openingStake.toString()} BB`
             : null;
-      const action = dareV2IntentAction(input.payload.kind);
+      const action = dareIntentAction(input.payload.kind);
       return {
         ...outcome,
         confirmation: {
@@ -171,7 +171,7 @@ export const bucksDareActionProcedures = {
         where: { id: input.intentId },
         select: { dareId: true },
       });
-      const outcome = await consumeDareV2ConfirmationIntent({
+      const outcome = await consumeDareConfirmationIntent({
         intentId: input.intentId,
         serverId: input.guildId,
         actorDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
@@ -185,7 +185,7 @@ export const bucksDareActionProcedures = {
       ].includes(outcome.kind);
       const dareId = intent?.dareId ?? null;
       const callout =
-        dareId === null || failed ? null : await tryEnsureDareV2Callout(dareId);
+        dareId === null || failed ? null : await tryEnsureDareCallout(dareId);
       return { ...outcome, callout };
     }),
 
@@ -193,7 +193,7 @@ export const bucksDareActionProcedures = {
     .input(DareDeleteDraftInput)
     .mutation(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
-      return await deleteDareDraftV2({
+      return await deleteDareDraft({
         dareId: input.dareId,
         serverId: input.guildId,
         challengerDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),

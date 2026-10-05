@@ -7,7 +7,7 @@ import {
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
 import { formatParlayCustomId } from "#src/betting/parlays/parlay-custom-id.ts";
-import { formatDareV2CustomId } from "#src/betting/dares/lifecycle/dare-custom-id-v2.ts";
+import { formatDareCustomId } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
 import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
@@ -76,7 +76,7 @@ describe("routeButton", () => {
     expect(malformed.calls).toEqual(["deferUpdate"]);
 
     const valid = fakeInteraction(
-      formatDareV2CustomId({
+      formatDareCustomId({
         kind: "delete",
         dareId: 42,
         revision: 1,

@@ -168,6 +168,12 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
     "beta/temporal/temporal-agent-chat-imessage-owners",
     "prod/temporal/temporal-agent-chat-imessage-enabled",
     "prod/temporal/temporal-agent-chat-imessage-owners",
+    "beta/scout/dare_v2",
+    "beta/scout/dare_extended_contracts_enabled",
+    "beta/scout/scoutql_relational_enabled",
+    "prod/scout/dare_v2",
+    "prod/scout/dare_extended_contracts_enabled",
+    "prod/scout/scoutql_relational_enabled",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(

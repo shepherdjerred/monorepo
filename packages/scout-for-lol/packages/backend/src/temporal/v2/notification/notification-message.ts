@@ -5,7 +5,6 @@ import { freezeNotificationMessage } from "#src/temporal/v2/notification/notific
 import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { buildDuelStatusNotificationMessageV2 } from "#src/temporal/v2/notification/duel-status-notification.ts";
 import { buildDareStatusNotificationMessageV2 } from "#src/temporal/v2/notification/dare-status-notification.ts";
-import { buildDareSummaryNotificationMessageV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
 import { buildHallRecordBreakNotificationMessageV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 import {
   readAttestedPrematchArtifactV2,
@@ -63,8 +62,6 @@ export async function buildAttestedMessageV2(
     // `text-only`, and their message is built from the intent's own payload.
     case "settlement":
       return await buildSettlementNotificationMessageV2(record);
-    case "dare-summary":
-      return buildDareSummaryNotificationMessageV2(record);
     case "hall-record-break":
       return buildHallRecordBreakNotificationMessageV2(record);
     case "postmatch":

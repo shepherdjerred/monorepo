@@ -31,10 +31,11 @@ import {
  * delivered. A `prematch` intent announces a game that has started and is
  * rendered from the archived spectator snapshot; a `postmatch` intent reports
  * a finished game from its MatchV5 payload; a `settlement` intent tells one
- * guild channel how its Bryan Bucks pool and parlay settled; a `dare-summary`
- * intent tells a channel how one Dare resolved; a `hall-record-break` intent
- * tells one guild's Hall of Fame channel which records a match broke. The
- * kind is a property of the
+ * guild channel how its Bryan Bucks pool and parlay settled; a
+ * `hall-record-break` intent tells one guild's Hall of Fame channel which
+ * records a match broke; a `duel-status` intent reports a Duel series; a
+ * `dare-status` intent tells a Dare participant by DM, or the Dare's own
+ * channel, how a Dare progressed or resolved. The kind is a property of the
  * decision to notify, fixed at mint, so a consumer never has to infer it from
  * the key or from whatever payload happens to be available when it runs.
  *
@@ -49,7 +50,6 @@ export const NotificationIntentKindSchema = z.enum([
   "postmatch",
   "prematch",
   "settlement",
-  "dare-summary",
   "hall-record-break",
   "duel-status",
   "dare-status",
@@ -59,7 +59,6 @@ export const NotificationIntentKindSchema = z.enum([
 export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
   new Set<NotificationIntentKind>([
     "settlement",
-    "dare-summary",
     "hall-record-break",
     "duel-status",
     "dare-status",
@@ -321,6 +320,6 @@ export const NotificationIntentSchema = z
       (intent.announcement !== undefined),
     {
       message:
-        "an announcement payload is carried by exactly the settlement, dare-summary, hall-record-break and duel-status kinds",
+        "an announcement payload is carried by exactly the settlement, hall-record-break, duel-status and dare-status kinds",
     },
   );

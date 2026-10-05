@@ -7,6 +7,8 @@ import {
   dareStatusAnnouncementCodec,
   renderDareStatus,
 } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
+import { renderDareResult } from "#src/betting/dares/presentation/dare-callout-content.ts";
+import { refreshDareCallout } from "#src/betting/dares/presentation/dare-callout.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { MalformedAnnouncementIntentError } from "#src/temporal/v2/notification/announcement-codecs.ts";
 
@@ -27,10 +29,16 @@ export function dareStatusAnnouncementOf(record: DareNotificationIntentRecord) {
       detail: `its Dare announcement does not parse (${error instanceof Error ? error.message : String(error)})`,
     });
   }
-  if (announcement.dareId !== record.dareId || intent.target.kind !== "dm") {
+  // A DM carries a participant's status line; the channel carries the public
+  // result post, and only the channel does.
+  const isResultPost = intent.target.kind === "channel";
+  if (
+    announcement.dareId !== record.dareId ||
+    isResultPost !== (announcement.result !== undefined)
+  ) {
     throw new MalformedAnnouncementIntentError({
       intentKey: intent.key,
-      detail: "the Dare subject or DM target disagrees with its announcement",
+      detail: "the Dare subject or target disagrees with its announcement",
     });
   }
   return announcement;
@@ -40,7 +48,7 @@ export async function dareStatusSuppressionV2(
   record: DareNotificationIntentRecord,
 ): Promise<NotificationPolicySuppressionReason | undefined> {
   const announcement = dareStatusAnnouncementOf(record);
-  const dare = await prisma.bucksDareV2.findUnique({
+  const dare = await prisma.bucksDare.findUnique({
     where: { id: record.dareId },
     select: { serverId: true },
   });
@@ -57,9 +65,9 @@ export async function dareStatusSuppressionV2(
   ) {
     return "feature-disabled";
   }
-  if (record.intent.target.kind !== "dm") {
-    throw new Error("Dare status requires a DM target");
-  }
+  // The public result post answers to the guild's flag alone; DM
+  // preferences are about a participant's inbox, not the Dare's channel.
+  if (record.intent.target.kind === "channel") return undefined;
   const preferences = await getBucksNotificationPreferences({
     serverId: announcement.guildId,
     discordId: record.intent.target.accountId,
@@ -75,8 +83,30 @@ export function buildDareStatusNotificationMessageV2(
   record: DareNotificationIntentRecord,
 ): MessageCreateOptions {
   const announcement = dareStatusAnnouncementOf(record);
+  if (announcement.result !== undefined) {
+    const message = renderDareResult(announcement.dareId, announcement.result);
+    return {
+      content: message.content,
+      allowedMentions: { parse: [], users: message.mentionUserIds },
+    };
+  }
   return {
     content: renderDareStatus(announcement),
     allowedMentions: { parse: [] },
   };
+}
+
+/**
+ * Edit the Dare's callout to its final state once the result post is out.
+ *
+ * Runs only after Discord accepted the result post, so the channel reads in
+ * order: the result, then the callout it resolves. Only a channel post has
+ * one; a DM has nothing public to follow.
+ */
+export async function afterDareStatusDeliveredV2(
+  record: DareNotificationIntentRecord,
+): Promise<"refreshed" | "skipped"> {
+  if (record.intent.target.kind !== "channel") return "skipped";
+  await refreshDareCallout(record.dareId);
+  return "refreshed";
 }

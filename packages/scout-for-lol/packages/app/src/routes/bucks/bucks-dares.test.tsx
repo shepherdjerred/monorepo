@@ -384,7 +384,7 @@ describe("DareList", () => {
 });
 
 describe("DareDetail", () => {
-  test("renders contract metadata, ScoutQL, evidence, and proof", () => {
+  test("renders contract metadata, SQL, evidence, and proof", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <DareDetail
@@ -396,10 +396,11 @@ describe("DareDetail", () => {
             currentRevision: 2,
             fundedRevision: 1,
             plainLanguage: "Virmel wins three games",
-            canonicalScoutQl: "FROM matches RETURN count(*) >= 3",
+            canonicalScoutQl:
+              "SELECT COUNT(*) >= 3 AS achieved FROM T1 p WHERE p.win",
             semanticProofPlan: "Count qualifying wins.",
-            compilerVersion: "2",
-            evaluatorVersion: "2",
+            compilerVersion: "dare-scoutql-3",
+            evaluatorVersion: "dare-evaluator-3",
             scoutQlPlanHash: "a".repeat(64),
             originalText: "Virmel wins three games",
             deadlineSpec: { kind: "relative", days: 7 },
@@ -439,7 +440,7 @@ describe("DareDetail", () => {
     expect(html).not.toContain("Revise in Explore");
   });
 
-  test("identifies canonical standard SQL as the binding v3 contract", () => {
+  test("identifies canonical standard SQL as the binding contract", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <DareDetail

@@ -29,8 +29,6 @@ const PRODUCTION_DENIED_FLAGS = [
   "betting_settlement_dm_enabled",
   "bucks_transfers_enabled",
   "bucks_dares_enabled",
-  "dare_v2",
-  "dare_extended_contracts_enabled",
   "dare_notifications_enabled",
   "custom_nights_enabled",
   "duels_enabled",
@@ -51,7 +49,6 @@ const PRODUCTION_ALLOWED_FLAGS = [
   "explore_on_demand_riot_enabled",
   "hall_of_fame_enabled",
   "mvp_votes_enabled",
-  "scoutql_relational_enabled",
 ] as const;
 
 beforeEach(() => {
@@ -98,8 +95,6 @@ describe("production hard-disable policy", () => {
         betting_settlement_dm_enabled: true,
         bucks_transfers_enabled: true,
         bucks_dares_enabled: true,
-        dare_v2: true,
-        dare_extended_contracts_enabled: true,
         dare_notifications_enabled: true,
         custom_nights_enabled: true,
         duels_enabled: true,
@@ -164,7 +159,6 @@ describe("production hard-disable policy", () => {
         explore_on_demand_riot_enabled: true,
         hall_of_fame_enabled: true,
         mvp_votes_enabled: true,
-        scoutql_relational_enabled: true,
       }),
     });
 

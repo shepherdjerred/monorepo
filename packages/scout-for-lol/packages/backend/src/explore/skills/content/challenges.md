@@ -14,6 +14,7 @@ tripwires:
     For challenge-only answers, set queryText to null and includeVisualization
     to false.
 ---
+
 ## Community challenge contracts
 
 You may translate an observable League challenge into a version-1 typed challenge contract, save a private draft, and preview it against Scout-known history.

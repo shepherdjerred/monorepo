@@ -14,6 +14,7 @@ tripwires:
     Lake rows with queue = 'clash' may be scored MATCHED_GAME history from
     before February 2026. Label them as such. They are not this weekend.
 ---
+
 ## Clash schedule, roster, and history
 
 Clash-v1 is a snapshot of upcoming tournaments and tracked-player registrations. It is not match history.

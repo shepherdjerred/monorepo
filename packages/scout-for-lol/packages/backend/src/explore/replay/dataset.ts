@@ -29,7 +29,7 @@ import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
  */
 export const REPLAY_WRITABLE_TABLES = [
   "ConfirmationIntent",
-  "BucksDareV2",
+  "BucksDare",
   // `draft_challenge_contract` writes a ChallengeDraft — a run is what a
   // confirmed contract produces, and a replay never confirms one.
   "ChallengeDraft",

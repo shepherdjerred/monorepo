@@ -26,14 +26,14 @@ export function createDareExploreTools(input: DareExploreToolsInput) {
     }),
     validate_dare_contract: tool({
       description:
-        "Validate and historically preview the active Dare contract format without saving it. In v3, canonical standard SQL is binding.",
+        "Validate and historically preview a Dare contract without saving it. Canonical standard SQL is binding.",
       inputSchema: DareDefinitionToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.validate(raw),
     }),
     validate_dare_scoutql: tool({
       description:
-        "Parse, validate, and canonically format a Dare query. V3 uses standard SQL over normalized relations and T1-T5, with no custom Dare functions.",
+        "Parse, validate, and canonically format a Dare query. Dares use standard SQL over normalized relations and T1-T5, with no custom Dare functions.",
       inputSchema: DareScoutQlToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.validateScoutQl(raw),
@@ -47,7 +47,7 @@ export function createDareExploreTools(input: DareExploreToolsInput) {
     }),
     create_dare_draft: tool({
       description:
-        "Save a private, unfunded Dare draft after validation and historical execution. Requires displayTitle and statusPhrases for the Dares list. In v3, one-game wording belongs in one game-set CTE.",
+        "Save a private, unfunded Dare draft after validation and historical execution. Requires displayTitle and statusPhrases for the Dares list. One-game wording belongs in one game-set CTE.",
       inputSchema: DareDefinitionToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.create(raw),

@@ -165,19 +165,6 @@ export function lateBindingEarningsDeliveryKeyPrefix(matchId: string): string {
   return `late-earnings-discord:${matchId}`;
 }
 
-/**
- * The shared prefix of one DARE's summary key.
- *
- * Keyed by the Dare rather than by the match, because a Dare resolves exactly
- * once and that resolution is the decision to notify. The intent row is still
- * match-bound — `listIntentsForMatch` is how the fan-out finds it — but the
- * match is context for the resolution, not its identity, and keying by it
- * would let one Dare be announced twice if it were ever summarised under two.
- */
-export function dareSummaryDeliveryKeyPrefix(dareId: string): string {
-  return `dare-summary-discord:${dareId}`;
-}
-
 /** One channel's intent key under a delivery prefix. */
 export function deliveryIntentKey(
   keyPrefix: string,

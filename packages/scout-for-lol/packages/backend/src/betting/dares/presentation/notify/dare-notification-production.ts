@@ -1,9 +1,7 @@
-import type { DareContractV2, DareContractV3 } from "@scout-for-lol/data";
-import type { DareMatchEvidenceV2 } from "#src/betting/dares/evaluation/dare-evidence-v2.ts";
-import type { DareFinalityV2 } from "#src/betting/dares/evaluation/dare-proof-v2.ts";
+import type { DareContract } from "@scout-for-lol/data";
+import type { DareFinality } from "#src/betting/dares/settlement/dare-settle-types.ts";
 import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
-import { deriveDareProgressV2 } from "#src/betting/dares/presentation/dare-progress-v2.ts";
-import { deriveDareProgressV3 } from "#src/betting/dares/presentation/dare-progress-v3.ts";
+import { deriveDareProgress } from "#src/betting/dares/presentation/dare-progress.ts";
 import type { Db } from "#src/database/index.ts";
 
 type TerminalResolution = "achieved" | "unachieved" | "voided";
@@ -79,46 +77,8 @@ async function enqueueProgressNotification(
   });
 }
 
-export async function enqueueMaterialDareProgressNotification(
-  tx: Db,
-  input: {
-    dareId: number;
-    contract: DareContractV2;
-    evidence: readonly DareMatchEvidenceV2[];
-    matchId: string;
-    finality: DareFinalityV2;
-    now: Date;
-  },
-): Promise<void> {
-  const progress = deriveDareProgressV2({
-    plan: input.contract.compiledPlan,
-    evidence: input.evidence,
-    targetKeys: input.contract.targets.map((target) => target.key),
-    final: false,
-    finalityReason: input.finality.reason,
-  });
-  if (
-    progress.latestMaterialChange?.matchId !== input.matchId ||
-    !["advance", "regression"].includes(progress.latestMaterialChange.kind)
-  ) {
-    return;
-  }
-  const kind =
-    progress.latestMaterialChange.kind === "regression"
-      ? "regressed"
-      : "advanced";
-  await enqueueProgressNotification(tx, {
-    dareId: input.dareId,
-    revision: input.contract.revision,
-    kind,
-    matchId: input.matchId,
-    summary: progress.summary,
-    now: input.now,
-  });
-}
-
 function specializedProgressKind(
-  contract: DareContractV3,
+  contract: DareContract,
 ): ProgressNotificationKind | null {
   if (contract.activation.kind === "rank") return "rank_changed";
   if (
@@ -135,11 +95,11 @@ function specializedProgressKind(
   return names.includes("sequence") ? "sequence_changed" : null;
 }
 
-export async function enqueueMaterialDareProgressNotificationV3(
+export async function enqueueMaterialDareProgressNotification(
   tx: Db,
   input: {
     dareId: number;
-    contract: DareContractV3;
+    contract: DareContract;
     evidence: readonly {
       matchId: string;
       gameEndAt: Date;
@@ -148,11 +108,11 @@ export async function enqueueMaterialDareProgressNotificationV3(
       coverageState: string;
     }[];
     matchId: string;
-    finality: DareFinalityV2;
+    finality: DareFinality;
     now: Date;
   },
 ): Promise<void> {
-  const progress = deriveDareProgressV3({
+  const progress = deriveDareProgress({
     compilation: {
       compilerVersion: input.contract.compilerVersion,
       canonicalSql: input.contract.canonicalSql,

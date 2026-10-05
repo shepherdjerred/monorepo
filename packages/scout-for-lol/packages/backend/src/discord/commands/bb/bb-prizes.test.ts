@@ -247,19 +247,13 @@ describe("/bb command contract", () => {
     expect(rendered).toContain("both teams have a tracked player");
   });
 
-  test("rules explain the active Dare v2 lifecycle without v1 horizons", () => {
-    const rendered = JSON.stringify(buildBbRulesEmbed(2).toJSON());
+  test("rules explain the Dare lifecycle with standard SQL as the binding contract", () => {
+    const rendered = JSON.stringify(buildBbRulesEmbed().toJSON());
     expect(rendered).toContain("private Explore draft");
-    expect(rendered).toContain("same-game/cross-game scope");
-    expect(rendered).toContain("single-use **10 minute** confirmation");
-    expect(rendered).toContain("Missing required timeline evidence");
-    expect(rendered).not.toContain("next-game dare");
-  });
-
-  test("rules identify standard SQL as the binding v3 contract", () => {
-    const rendered = JSON.stringify(buildBbRulesEmbed(3).toJSON());
     expect(rendered).toContain("canonical standard SQL");
     expect(rendered).toContain("binding contract");
+    expect(rendered).toContain("single-use **10 minute** confirmation");
+    expect(rendered).toContain("Missing required timeline evidence");
     expect(rendered).not.toContain("next-game dare");
   });
 

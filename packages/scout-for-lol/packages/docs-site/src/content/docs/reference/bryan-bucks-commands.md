@@ -18,7 +18,7 @@ Most of what `/bb` does — except `/bb ask` — is also available on the
 | `/bb history`       | Paged transaction ledger with running balances        | Private                        |
 | `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt |
 | `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                        |
-| `/bb dare`          | Draft a ScoutQL-backed challenge from plain language  | Private preview, then public   |
+| `/bb dare`          | Draft a SQL-contract challenge from plain language    | Private preview, then public   |
 | `/bb rules`         | The complete rulebook                                 | **Public**                     |
 | `/bb prizes`        | The joke prize catalogue                              | **Public**                     |
 
@@ -37,9 +37,9 @@ are saved to your private Explore conversation in the web app, where you can
 continue, publish, or share them.
 
 `/bb dare` also starts a new private Explore conversation. Scout translates the
-request into a versioned contract, saves an unfunded draft, and returns a
-preview that spells out same-game or cross-game scope, target relationships,
-queues, game and time bounds, stake, and generated contract ScoutQL. Funding is
+request into a standard SQL contract, saves an unfunded draft, and returns a
+preview that spells out the original wording, targets, game and time bounds,
+stake, and the binding canonical SQL. Funding is
 never automatic: use **Confirm and fund**, **Revise in Explore**, or **Cancel
 draft** from that preview.
 
