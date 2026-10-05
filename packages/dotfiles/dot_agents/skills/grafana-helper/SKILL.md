@@ -32,8 +32,11 @@ Prefer `--agent` or `-o json` for machine-readable evidence. Use `--json list`
 where offered to discover selectable fields. Never enable
 `--insecure-log-http-payload`; it can expose authorization material.
 
-The Fish configuration and 1Password-backed setup own credentials and the
-`homelab` context. Do not run `gcx login`, print tokens, add credentials to
+Toolkit resolves `GRAFANA_API_KEY` automatically from the environment, a
+toolkit config locator, or its registered 1Password service-account backend.
+The tracked GCX configuration owns the `homelab` context; credential setup is
+documented in `packages/toolkit/README.md`.
+Do not run `gcx login`, print tokens, add credentials to
 arguments, or create another config store during normal repository work.
 
 ## Query observability data

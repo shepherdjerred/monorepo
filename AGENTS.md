@@ -81,6 +81,9 @@ and feature-flag packages. Load the `feature-flags` skill before changing that
 boundary.
 
 Never print, paste, or persist secrets. Use existing 1Password-backed commands.
+Use toolkit for its supported platform commands; it resolves registered
+credentials automatically. Run the command directly before fetching tokens by
+hand. Credential backends and setup belong in `packages/toolkit/README.md`.
 On macOS, `op whoami` may be false while Desktop-authorized operations work;
 probe with the exact read or `op vault list`. An empty `cf auth list` is normal
 for environment-token authentication; use `cf auth whoami` or a read-only API
@@ -118,8 +121,11 @@ bunx lefthook run pre-commit
 ```
 
 Woodpecker is the exhaustive gate and the CI source of truth. Use
-`toolkit woodpecker` or `toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
-reproducing CI or changing verification machinery.
+`toolkit ci wait <PR>` for merge readiness, `toolkit ci explain <PR>` for
+blockers, and `toolkit ci load` for capacity. Use `toolkit woodpecker` for
+native CI operations and `toolkit pr health` for a one-shot combined report.
+Run `bun run verify` locally only when reproducing CI or changing verification
+machinery.
 
 Verify claims from the live tree before reporting them. Preserve unrelated
 worktree changes. Do not call an issue "pre-existing" when the task explicitly

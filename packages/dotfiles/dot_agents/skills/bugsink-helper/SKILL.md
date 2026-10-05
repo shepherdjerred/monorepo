@@ -9,13 +9,17 @@ description: |
 
 ## Overview
 
-Bugsink is a self-hosted error tracking service compatible with Sentry SDKs. It provides a REST API for managing teams, projects, issues, events, and releases. There is no CLI tool; all operations use `curl` against the REST API.
+Bugsink is a self-hosted error tracking service compatible with Sentry SDKs.
+Use `toolkit bugsink` for supported reads; the REST API covers additional
+operations.
 
 ## Authentication
 
 Prefer `toolkit bugsink` — it resolves `BUGSINK_TOKEN` itself (env, then
-`~/.toolkit/config.toml` `[credentials]`, then macOS Keychain, then the
-1Password service account), so no token handling is needed:
+`~/.toolkit/config.toml` `[credentials]`, then its registered macOS Keychain
+entry), so no token handling is needed. There is no automatic 1Password
+fallback after Keychain. An explicit config override can select a 1Password
+reference; backend setup is documented in `packages/toolkit/README.md`:
 
 ```bash
 # Verify authentication by listing issues

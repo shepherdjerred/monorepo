@@ -19,9 +19,21 @@ description: |
 
 This agent helps you work with the 1Password CLI (`op`) for secure secret retrieval, credential management, and secret injection into your applications and scripts.
 
+## Toolkit credential lookup in the monorepo
+
+Use supported `toolkit` commands directly before retrieving tokens yourself.
+They resolve registered credentials from the environment, config locators,
+then the declared backend. Homelab platform tokens use a 1Password service
+account; Bugsink and Discord use macOS Keychain by default. A missing Keychain
+entry does not automatically fall through to 1Password. See
+`packages/toolkit/README.md` for enrollment, overrides, and the separate `ci`
+authentication path. Never print or persist credential values.
+
 ## IMPORTANT: Minimize `op` Invocations
 
-Every `op` CLI invocation requires the human operator to authenticate (biometric/password). This is expensive in terms of user friction. **Use as few `op` calls as possible:**
+Desktop-authenticated `op` calls can prompt for biometric/password approval.
+Toolkit's enrolled service-account backend uses its token instead. **Use as
+few direct desktop-authenticated `op` calls as possible:**
 
 - Retrieve multiple fields in one call using `--format json` instead of separate calls per field
 - Combine lookups when possible (e.g. get the full item once, then extract fields from the JSON)
@@ -69,8 +81,8 @@ op item get "<item>" --vault "<vault>" --format json
 
 ## Cloudflare environment-token integration
 
-On the local macOS setup, the shell already exposes the Cloudflare credential as
-`CF_API_TOKEN`; the tracked `~/.local/bin/cf` wrapper maps it to
+Use `toolkit cf` to resolve `CF_API_TOKEN` automatically. The tracked
+`~/.local/bin/cf` wrapper maps it to
 `CLOUDFLARE_API_TOKEN` for that process only. Never print, paste, or persist the
 value. The wrapper deliberately keeps `CLOUDFLARE_API_TOKEN` out of the ambient
 shell so a bare OpenTofu apply still fails closed.
@@ -81,9 +93,9 @@ is authenticated from the environment. Use `cf auth whoami`, which reports the
 environment-token source and validity, or the exact read-only operation needed:
 
 ```bash
-cf auth whoami
-cf accounts list
-cf zones list
+toolkit cf auth whoami
+toolkit cf accounts list
+toolkit cf zones list
 ```
 
 Treat a successful `cf auth whoami` or API read as proof that Cloudflare
@@ -248,7 +260,8 @@ op whoami
 2. **Separate Service Accounts per Environment**:
    - Production deployments: Read-only access to Production vault
    - CI/CD testing: Read-only access to Staging vault
-   - Local development: Use personal accounts, not service accounts
+   - Local toolkit commands: Use the configured enrolled service account or
+     registered Keychain entry; direct desktop operations use personal auth
 
 3. **Rotate Tokens Regularly**: Set up automated rotation policies
 

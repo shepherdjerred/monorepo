@@ -386,6 +386,47 @@ daemon log each scan until Brim rewrites it.
 
 Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
 
+## Credentials
+
+Run supported toolkit commands directly; they resolve their registered
+credentials before dispatch. Each credential uses the first available source:
+
+1. A non-empty environment variable.
+2. Its entry in `~/.toolkit/config.toml` under `[credentials]`, containing an
+   `op://` reference or `keychain:<service>` locator.
+3. Its registered backend below.
+
+| Commands                                                                                    | Registered backend        |
+| ------------------------------------------------------------------------------------------- | ------------------------- |
+| `woodpecker`, `pr`, `linear`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo` | 1Password service account |
+| `bugsink`, `discord`                                                                        | macOS Keychain            |
+
+The registry in `src/lib/credentials.ts` owns the variable names and secret
+locators. Backend failures are errors; a missing Keychain secret does not
+automatically fall through to 1Password. A config override selects a different
+backend explicitly. Toolkit logs credential names and backends, never values.
+
+For the 1Password backend, `OP_SERVICE_ACCOUNT_TOKEN` wins. Otherwise, on
+macOS, toolkit reads the enrolled service account from Keychain and invokes
+`op` with that token. If the command reports missing enrollment, use the
+repository's existing setup from its root:
+
+```bash
+swift scripts/onepassword/enroll-service-account.swift
+```
+
+Outside macOS, supply `OP_SERVICE_ACCOUNT_TOKEN` through the existing secret
+manager integration. For Bugsink and Discord, a missing credential error names
+the exact workstation-secret enrollment command. Never paste tokens into chat,
+CLI arguments, or the toolkit config file; the config stores locators only.
+
+`ci` uses the separate Woodpecker lookup described above: an existing
+`WOODPECKER_TOKEN`, then the default connection's 1Password item through the
+current `op` authentication. It does not bootstrap the service account through
+the credential broker. GitHub access uses `GH_TOKEN` or `gh auth token`.
+Commands such as `gh`, `temporal`, and `tailscale` retain native authentication;
+S3 workflows retain the AWS credential chain.
+
 ## Configuration
 
 Toolkit behavior settings resolve `environment -> ~/.toolkit/config.toml ->
@@ -403,8 +444,9 @@ its keys in the TOML file. It reads them once at start.
 
 ## Environment variables
 
-Toolkit-owned workflows use these variables. Native passthrough credentials
-remain owned by their native CLIs and shell configuration.
+Toolkit-owned workflows use these variables. The credential broker supplies
+registered token variables automatically; native authentication and AWS
+profiles remain owned by their respective clients.
 
 | Variable              | Purpose                                     |
 | --------------------- | ------------------------------------------- |
