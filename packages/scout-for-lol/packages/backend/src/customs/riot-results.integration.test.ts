@@ -236,6 +236,32 @@ describe("managed Customs results", () => {
     ).resolves.toBe(0);
   });
 
+  test("evidence missing a bound player fails non-retryably", async () => {
+    // A selected local payload can name only part of the roster. It never
+    // changes, so retrying can't help — and the client match dispatcher
+    // retries a plain error forever, holding up every match behind it.
+    const seeded = await seedPendingResult();
+    const [, ...withoutFirst] = fixture.info.participants;
+    const partial = RawMatchSchema.parse({
+      ...fixture,
+      metadata: {
+        ...fixture.metadata,
+        participants: withoutFirst.map((participant) => participant.puuid),
+      },
+      info: { ...fixture.info, participants: withoutFirst },
+    });
+
+    await expect(
+      finalizeManagedCustomResult(testPrisma, partial),
+    ).rejects.toMatchObject({
+      nonRetryable: true,
+      type: "ManagedCustomResultIncomplete",
+    });
+    await expect(
+      testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
+    ).resolves.toMatchObject({ state: "RESULT_PENDING" });
+  });
+
   test("preserves an ended night while recording its authoritative result", async () => {
     const seeded = await seedPendingResult({ nightState: "ENDED" });
     await testPrisma.customActiveNight.delete({ where: { guildId: GUILD_ID } });

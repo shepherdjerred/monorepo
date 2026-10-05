@@ -11,6 +11,8 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import { clientRosterCompletion } from "#src/league/tasks/prematch/client-bot-roster.ts";
+import { isStartedCustomRosterFinal } from "#src/league/tasks/prematch/spectator-roster.ts";
+import { prematchRosterCompletionsTotal } from "#src/metrics/index.ts";
 
 /**
  * What every V2 prematch Activity needs before it can do anything: the live
@@ -48,34 +50,59 @@ const STANDARD_PARTICIPANT_COUNT = 10;
  * the first run that takes the game, so a run that archived a half-filled
  * roster would own that ID with a snapshot missing tracked players, and every
  * later poll would be deduplicated against it.
+ *
+ * A started custom is the exception both pipelines share: a 1v1 or 2v2 is
+ * short by design, and once play begins its roster is final
+ * (`isStartedCustomRosterFinal`).
  */
 export function isPrematchRosterComplete(
   gameInfo: RawCurrentGameInfo,
 ): boolean {
   return (
     isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
-    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT
+    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT ||
+    isStartedCustomRosterFinal(gameInfo)
   );
 }
 
+/** Why a game's roster counts as final, or `null` while it is still filling. */
+export type PrematchRosterCompletion =
+  "listed" | "custom_roster_final" | "client_bots";
+
 /**
- * Whether a game is ready to capture: complete as Riot reports it, or
- * completed by the bots a tracked player's local client saw in its lobby.
+ * Why a game is ready to capture, if it is: complete as Riot lists it, a
+ * started custom whose short roster is its whole roster, or completed by the
+ * bots a tracked player's local client saw in its lobby.
  *
  * Riot omits bots from the spectator roster, so a game against them looks like
  * a lobby still loading in for as long as it lasts — {@link
  * isPrematchRosterComplete} alone would retry it until the Activity gave up.
- * Discovery and capture must agree for the reason given there, so both ask
- * this, scoped to the account the game was surfaced by.
+ */
+export async function prematchRosterCompletion(
+  gameInfo: RawCurrentGameInfo,
+  puuid: string,
+): Promise<PrematchRosterCompletion | null> {
+  if (
+    isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
+    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT
+  ) {
+    return "listed";
+  }
+  if (isStartedCustomRosterFinal(gameInfo)) return "custom_roster_final";
+  const bots = await clientRosterCompletion(gameInfo, new Set([puuid]));
+  return bots === null ? null : "client_bots";
+}
+
+/**
+ * Whether a game is ready to capture. Discovery and capture must agree for the
+ * reason given on {@link isPrematchRosterComplete}, so both ask this, scoped to
+ * the account the game was surfaced by.
  */
 export async function isPrematchRosterReady(
   gameInfo: RawCurrentGameInfo,
   puuid: string,
 ): Promise<boolean> {
-  return (
-    isPrematchRosterComplete(gameInfo) ||
-    (await clientRosterCompletion(gameInfo, new Set([puuid]))) !== null
-  );
+  return (await prematchRosterCompletion(gameInfo, puuid)) !== null;
 }
 
 /**
@@ -149,11 +176,15 @@ export async function resolveScoutV2PrematchContext(
     // game's, and the next poll starts it there.
     return null;
   }
-  if (!(await isPrematchRosterReady(gameInfo, gameRef.puuid))) {
+  const completion = await prematchRosterCompletion(gameInfo, gameRef.puuid);
+  if (completion === null) {
     throw new Error(
       `Spectator payload for ${gameRef.platform}_${gameRef.gameId} still reports ${gameInfo.participants.length.toString()} participants; retrying until the roster fills`,
     );
   }
+  // Counted at capture, which runs once per game, rather than in discovery,
+  // which asks the same question of every in-game account every 30 seconds.
+  prematchRosterCompletionsTotal.inc({ reason: completion });
   return prematchContextFrom(
     gameInfo,
     configs,
