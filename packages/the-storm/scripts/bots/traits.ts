@@ -42,14 +42,6 @@ import {
 
 export const SKILL_BANDS = 5;
 
-/** The kits rwf ships today; every profile leans on at least one of them. */
-export const SHIPPED_KITS: readonly Kit[] = [
-  "trooper",
-  "longbow",
-  "shortbow",
-  "rewind",
-];
-
 export type Style = {
   aggression: number;
   patience: number;
