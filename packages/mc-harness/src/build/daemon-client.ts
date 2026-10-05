@@ -62,7 +62,11 @@ export class DaemonClient {
     const json: unknown = await response.json();
     if (!response.ok) {
       const parsed = ErrorResponseSchema.safeParse(json);
-      throw new Error(parsed.success ? `mc daemon: ${parsed.data.error}` : `mc daemon HTTP ${response.status.toString()}`);
+      throw new Error(
+        parsed.success
+          ? `mc daemon: ${parsed.data.error}`
+          : `mc daemon HTTP ${response.status.toString()}`,
+      );
     }
     return schema.parse(json);
   }
@@ -80,26 +84,57 @@ export class DaemonClient {
   }
 
   destroySandbox(id: string) {
-    return this.request(SandboxDownResponseSchema, "DELETE", `/sandboxes/${encodeURIComponent(id)}`);
+    return this.request(
+      SandboxDownResponseSchema,
+      "DELETE",
+      `/sandboxes/${encodeURIComponent(id)}`,
+    );
   }
 
   command(id: string, command: string) {
-    return this.request(CommandResponseSchema, "POST", this.target(id, "command"), { command });
+    return this.request(
+      CommandResponseSchema,
+      "POST",
+      this.target(id, "command"),
+      { command },
+    );
   }
 
   we(id: string, request: { session: string; world: string; ops: WeOp[] }) {
-    return this.request(WeRunResponseSchema, "POST", this.target(id, "we"), request);
+    return this.request(
+      WeRunResponseSchema,
+      "POST",
+      this.target(id, "we"),
+      request,
+    );
   }
 
   paste(
     id: string,
-    request: { session: string; world: string; schematic: string; at: BlockPos; rotate: 0 | 90 | 180 | 270; ignoreAir: boolean },
+    request: {
+      session: string;
+      world: string;
+      schematic: string;
+      at: BlockPos;
+      rotate: 0 | 90 | 180 | 270;
+      ignoreAir: boolean;
+    },
   ) {
-    return this.request(WePasteResponseSchema, "POST", this.target(id, "paste"), request);
+    return this.request(
+      WePasteResponseSchema,
+      "POST",
+      this.target(id, "paste"),
+      request,
+    );
   }
 
   regionRead(id: string, box: Box) {
-    return this.request(RegionReadResponseSchema, "POST", this.target(id, "region-read"), box);
+    return this.request(
+      RegionReadResponseSchema,
+      "POST",
+      this.target(id, "region-read"),
+      box,
+    );
   }
 
   snapshot(id: string, box: Box, label?: string) {
@@ -119,6 +154,11 @@ export class DaemonClient {
   }
 
   restore(id: string, snapshotId: string) {
-    return this.request(SnapshotRestoreResponseSchema, "POST", this.target(id, "snapshot-restore"), { id: snapshotId });
+    return this.request(
+      SnapshotRestoreResponseSchema,
+      "POST",
+      this.target(id, "snapshot-restore"),
+      { id: snapshotId },
+    );
   }
 }

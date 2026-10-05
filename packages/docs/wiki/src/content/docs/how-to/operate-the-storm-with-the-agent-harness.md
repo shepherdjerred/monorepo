@@ -7,7 +7,8 @@ Use `--target live` when an agent should change the real server: promote a
 build, run a console command, or move an actor. The harness reaches tsmc's
 MCBridge through a `kubectl port-forward` as the `mc-sandbox:mc-harness`
 ServiceAccount. Every live write needs a reason, passes a guard and is journaled.
-The "Live minecraft-tsmc" section of `packages/mc-harness/README.md` explains
+The "Live minecraft-tsmc" section of the
+[mc-harness README](https://github.com/shepherdjerred/monorepo/blob/main/packages/mc-harness/README.md#live-minecraft-tsmc) explains
 how the guard decides.
 
 Before you start, you need:
