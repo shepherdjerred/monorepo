@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { house } from "@shepherdjerred/mc-build/components/house/index.ts";
+import rampartsDemo from "@shepherdjerred/mc-build/components/ramparts/demo.ts";
 import { ramparts } from "@shepherdjerred/mc-build/components/ramparts/index.ts";
 import { boulder } from "@shepherdjerred/mc-build/components/rocks/index.ts";
 import {
@@ -331,26 +332,9 @@ describe("components lint clean", () => {
     expect(found).not.toContain("E_FLOATING");
   });
 
-  test("ramparts over rolling ground lint with no findings", () => {
+  test("the ramparts demo (walls over rolling ground) lints with no findings", () => {
     const found = codes((ctx) => {
-      const ground = (x: number, z: number) =>
-        2 + Math.round(ctx.noise(x, z, { scale: 20, octaves: 2, salt: 3 }) * 5);
-      for (let x = 0; x < 56; x += 1) {
-        for (let z = 0; z < 56; z += 1) {
-          ctx.fill({ x, y: 0, z, w: 1, h: ground(x, z) + 1, d: 1 }, "dirt");
-        }
-      }
-      ramparts(ctx, {
-        points: [
-          [8, 8],
-          [46, 10],
-          [48, 44],
-          [10, 46],
-        ],
-        closed: true,
-        ground,
-        gate: { segment: 1 },
-      });
+      rampartsDemo(ctx);
     });
     expect(found).toEqual([]);
   });
