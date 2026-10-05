@@ -984,6 +984,20 @@ sections' own time with hysteresis: level 1 halves the think rates and makes
 bots with no human within 48 blocks reflex every other tick; level 2 also
 drafts fewer bots next match. It never removes a bot from a running round.
 
+Load. `bun run test:load` (`STORM_E2E_LOAD_CPUS` sets the CPU cap, 4 when
+unset) measures 20, 50 and 100 bots against the plan's bars in
+`tests/load/load-bars.ts`:
+
+- an added tick p95 of at most 8 ms at 100 bots;
+- staleness (the think loop's lag from snapshot to published decision) at a
+  p95 of 3 ticks or less;
+- no think job longer than a tick while the governor is at level 0.
+
+The age of the decision a bot follows, which `/rwfbots debug` calls
+staleness, is about `tacticsEveryTicks` (5) by design; it is reported, not
+judged. `plugin/modules/rwfbots/LOAD.md` holds the measured runs: 4 CPUs is
+the tested shape.
+
 Filling a match: the `Director` drafts personalities from
 `rwfbots/personalities/*.yml` (never one whose name an online human uses),
 keeps the most balanceable of a few drafts, shifts every bot's skill so the

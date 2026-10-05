@@ -21,6 +21,10 @@ match:
   # Bots fill the match up to this many combatants when the rwfbots module is
   # enabled; without it matches are humans only.
   targetCombatants: 8
+  # The most combatants in a match. 101 (one human, 100 bots) held the bots'
+  # governor at level 0 and the added tick p95 under 8 ms on the production
+  # pod's 4 CPUs in the load profile (plugin/modules/rwfbots/LOAD.md);
+  # nothing measured supports more.
   maxCombatants: 100
   # From enough humans to going live, as Red Warfare had it.
   countdown: PT90S

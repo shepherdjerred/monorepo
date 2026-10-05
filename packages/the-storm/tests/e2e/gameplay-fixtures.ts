@@ -25,13 +25,20 @@ export function e2eProfile(): E2eProfile {
 /**
  * The load profile mirrors the production pod (minecraft-tsmc): a 4-CPU
  * request, an 8G heap and a 10Gi memory limit. The CPU is capped here so the
- * numbers do not depend on the workstation's spare cores.
+ * numbers do not depend on the workstation's spare cores;
+ * `STORM_E2E_LOAD_CPUS` measures another cap (6 to size the pod).
  */
-export const loadResources: ServerResources = {
-  cpus: 4,
-  heap: "8G",
-  memoryLimit: "10g",
-};
+export function loadResources(): ServerResources {
+  const cpus = Bun.env["STORM_E2E_LOAD_CPUS"];
+  return {
+    cpus:
+      cpus === undefined
+        ? 4
+        : z.coerce.number().int().min(1).max(16).parse(cpus),
+    heap: "8G",
+    memoryLimit: "10g",
+  };
+}
 
 const OwnedModulesSchema = z
   .object({ modules: z.record(z.string(), z.boolean()) })

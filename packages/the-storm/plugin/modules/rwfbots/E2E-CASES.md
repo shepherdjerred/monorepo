@@ -17,10 +17,8 @@ cases need the real server with Citizens installed. Each is a pass/fail check.
 shipped module plus rwf and rwfbots, Citizens with its owned config, and the
 owned rwf.yml under the suite's short countdown. A case marked **proven** is
 asserted there; the load cases belong to the manual load profile
-(`bun run test:load`, `tests/load/rwf-load.e2e.test.ts`). That profile has
-not been run yet: its 20, 50 and 100 bot numbers are pending, and the cases
-it covers are not proven until they are recorded in a `LOAD.md` beside this
-file.
+(`bun run test:load`, `tests/load/rwf-load.e2e.test.ts`), whose 20, 50 and
+100 bot numbers at 4 and 6 CPUs are recorded in `LOAD.md` beside this file.
 
 ## Bodies
 
@@ -90,9 +88,20 @@ file.
     `/debug` or an artificial stall) for two seconds moves it to level 1,
     bots far from every human update every other tick, and calm ticks bring
     it back one level at a time. **Proven** for level 0 with 7 bots
-    (staleness p95 within `maxDecisionAgeTicks`). The load profile that
-    measures 20, 50 and 100 bots is written but **pending** (not yet run);
-    the forced stall and the recovery are not proven.
+    (staleness p95 within `maxDecisionAgeTicks`), and by the load profile
+    (`LOAD.md`) for level 0 at 20, 50 and 100 bots on 4 and 6 CPUs against
+    the plan's bars:
+    - no think job over a tick;
+    - staleness, the think loop's lag from snapshot to published decision,
+      at a p95 of 0 to 1 tick against the 3-tick bar;
+    - bot sections p95 at most 6.4 ms at 100 bots;
+    - the added tick p95 at 100 bots 3.8 and 6.1 ms on 4 CPUs, the tested
+      shape. It is marginal on 6 CPUs: 8.3 ms in one run, over the 8 ms bar.
+
+    The age of the decision each bot follows is about 5 ticks by design (4 Hz
+    tactics); it is reported, not judged. The forced stall and the recovery
+    are not proven.
+
 11. A match whose map folder has no `nav.rwfnav`, or one baked from other
     blocks, logs the problem at enable or map choice and runs humans-only;
     `/rwf join` still works.

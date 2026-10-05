@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { loadavg } from "node:os";
 import path from "node:path";
 import { describe, expect } from "vitest";
 import { z } from "zod";
@@ -8,6 +9,8 @@ import { test } from "#e2e/fixtures.ts";
 import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { packageRoot } from "#e2e/harness/paths.ts";
+import { loadResources } from "#e2e/gameplay-fixtures.ts";
+import { type Phase, summarise, verdicts, type Window } from "./load-bars.ts";
 import {
   eventually,
   status,
@@ -37,27 +40,6 @@ const botCounts = [20, 50, 100] as const;
 const baselineMs = 90_000;
 const settleMs = 20_000;
 const measureMs = 150_000;
-/** Plan bars: added p95 tick time at 100 bots, decision staleness, governor. */
-const bars = { addedP95Ms: 8, stalenessP95Ticks: 3, governorLevel: 0 };
-
-type Window = {
-  p95: number;
-  median: number;
-  max: number;
-  cpu: number;
-  level: number;
-  thinkP95: number;
-  stalenessP95: number;
-  sectionsP95: number;
-  alive: number;
-};
-type Phase = {
-  bots: number;
-  mspt: number[];
-  windows: Window[];
-  matches: number;
-};
-
 function containerId(server: ServerInfo): string {
   if (server.kind !== "container") {
     throw new Error(
@@ -146,7 +128,8 @@ async function window(server: ServerInfo): Promise<Window> {
     (seen) =>
       seen.some((line) => sparkTicks.test(line)) &&
       seen.some((line) => line.includes("(process)")) &&
-      seen.some((line) => line.includes("governor level")),
+      seen.some((line) => line.includes("governor level")) &&
+      seen.some((line) => line.includes("board tick")),
   );
   // spark answers asynchronously, so its lines interleave with the others:
   // the 10 s and 1 m durations are the only "a/b/c/d;" line it prints.
@@ -170,7 +153,22 @@ async function window(server: ServerInfo): Promise<Window> {
   const alive = fighters.filter(
     (fighter) => fighter.includes("✦") && !fighter.includes("(out)"),
   ).length;
-  return { ...ticks, cpu, ...overview, alive };
+  const boardLine = lines.findLast((line) => line.includes("board tick")) ?? "";
+  const deferred = Number(
+    /(?<deferred>\d+) deferred/u.exec(boardLine)?.groups?.["deferred"] ??
+      Number.NaN,
+  );
+  const boardTick = Number(
+    /board tick (?<tick>\d+)/u.exec(boardLine)?.groups?.["tick"] ?? Number.NaN,
+  );
+  const tickerTick = Number(
+    /; tick (?<tick>\d+)/u.exec(
+      lines.findLast((line) => line.includes("governor level")) ?? "",
+    )?.groups?.["tick"] ?? Number.NaN,
+  );
+  const boardLag = tickerTick - boardTick;
+  const [hostLoad = Number.NaN] = loadavg();
+  return { ...ticks, cpu, ...overview, alive, boardLag, deferred, hostLoad };
 }
 
 const MsptSchema = z.string().transform((text, context) => {
@@ -279,35 +277,11 @@ async function measure(
   return phase;
 }
 
-const mean = (values: number[]) =>
-  values.length === 0
-    ? 0
-    : values.reduce((total, value) => total + value, 0) / values.length;
-const max = (values: number[]) => Math.max(0, ...values);
-
-function summarise(phase: Phase) {
-  return {
-    bots: phase.bots,
-    matches: phase.matches,
-    aliveMean: mean(phase.windows.map((w) => w.alive)),
-    msptAvg: mean(phase.mspt),
-    p95: mean(phase.windows.map((w) => w.p95)),
-    p95Worst: max(phase.windows.map((w) => w.p95)),
-    msptMax: max(phase.windows.map((w) => w.max)),
-    cpu: mean(phase.windows.map((w) => w.cpu)),
-    thinkP95: max(phase.windows.map((w) => w.thinkP95)),
-    sectionsP95: max(phase.windows.map((w) => w.sectionsP95)),
-    stalenessP95: max(phase.windows.map((w) => w.stalenessP95)),
-    level: max(phase.windows.map((w) => w.level)),
-    windows: phase.windows.length,
-  };
-}
-
 const fixed = (value: number) => value.toFixed(1);
 
 describe("rwfbots load", () => {
   test(
-    "added tick time, decision staleness and the governor at 20, 50 and 100 bots",
+    "added tick time, think-loop lag and the governor at 20, 50 and 100 bots",
     { timeout: 45 * 60_000 },
     async ({ bot, rcon, server }) => {
       // The baseline has a player online, as every phase does.
@@ -332,10 +306,11 @@ describe("rwfbots load", () => {
       }
 
       const rows = phases.map((phase) => summarise(phase));
+      const { cpus } = loadResources();
       const base = rows[0]?.p95 ?? 0;
       const table = [
-        "| Bots | Matches | Alive (mean) | MSPT avg | MSPT p95 | Added p95 | Worst 10 s p95 | MSPT max | CPU % | Think p95 ms | Bot sections p95 ms | Staleness p95 ticks | Governor |",
-        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Bots | Matches | Alive (mean) | MSPT avg | MSPT p95 | Added p95 | Worst 10 s p95 | MSPT max | CPU % | Think p95 ms | Overrun windows | Deferred max | Bot sections p95 ms | Decision age p95 ticks | Board lag p95 ticks | Board lag max ticks | Governor | Host load |",
+        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
         ...rows
           .map((row) =>
             [
@@ -349,40 +324,33 @@ describe("rwfbots load", () => {
               fixed(row.msptMax),
               fixed(row.cpu),
               row.thinkP95.toFixed(2),
+              row.overruns,
+              row.deferredMax,
               row.sectionsP95.toFixed(2),
               fixed(row.stalenessP95),
+              row.boardLagP95,
+              row.boardLagMax,
               row.level,
+              fixed(row.hostLoad),
             ].join(" | "),
           )
           .map((line) => `| ${line} |`),
       ].join("\n");
-      console.warn(`\n${table}\n`);
+      console.warn(`\n${cpus.toString()} CPUs\n${table}\n`);
       const outDir = path.join(packageRoot, ".cache", "e2e", "load");
       await mkdir(outDir, { recursive: true });
       await Bun.write(
-        path.join(outDir, `rwf-load-${new Date().toISOString()}.json`),
-        JSON.stringify({ rows, phases, table }, null, 2),
+        path.join(
+          outDir,
+          `rwf-load-${cpus.toString()}cpu-${new Date().toISOString()}.json`,
+        ),
+        JSON.stringify({ cpus, rows, phases, table }, null, 2),
       );
 
-      // The plan's bars; every one is checked so the table is complete even
-      // when one fails.
-      const hundred = rows.find((row) => row.bots === 100);
-      expect
-        .soft(
-          (hundred?.p95 ?? Number.POSITIVE_INFINITY) - base,
-          "added p95 MSPT at 100 bots",
-        )
-        .toBeLessThanOrEqual(bars.addedP95Ms);
-      expect
-        .soft(hundred?.level, "governor level at 100 bots")
-        .toBe(bars.governorLevel);
-      for (const row of rows.filter((candidate) => candidate.bots > 0)) {
-        expect
-          .soft(
-            row.stalenessP95,
-            `decision staleness p95 at ${row.bots.toString()} bots`,
-          )
-          .toBeLessThanOrEqual(bars.stalenessP95Ticks);
+      // The plan's bars (load-bars.ts); every one is checked so the table is
+      // complete even when one fails. Decision age is reported, not judged.
+      for (const verdict of verdicts(rows)) {
+        expect.soft(verdict.pass, verdict.check).toBe(true);
       }
     },
   );
