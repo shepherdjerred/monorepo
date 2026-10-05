@@ -82,14 +82,7 @@ describe("settlement opening on real Paper", () => {
         const emeralds = bot.inventory
           .items()
           .find((item) => item.name === "emerald")?.count;
-        const nuke = messages.some((m) => m.includes("Nuke ·"));
-        const double = messages.some((m) => m.includes("Double Emeralds ·"));
-        if (!nuke && !double) expect(emeralds).toBe(12);
-        else {
-          expect(emeralds).toBeGreaterThanOrEqual(nuke ? 2 : 12);
-          expect(emeralds).toBeLessThanOrEqual(double ? 24 : 12);
-          expect((emeralds ?? 0) % 2).toBe(0);
-        }
+        expect(emeralds).toBe(12);
       } finally {
         bot.deactivateItem();
         bot.off("messagestr", listen);
@@ -173,7 +166,7 @@ describe("settlement survival on real Paper", () => {
       () =>
         bot.currentWindow !== null && bot.currentWindow.id !== weaponsWindow,
     );
-    await bot.clickWindow(3, 0, 0);
+    await bot.clickWindow(18, 0, 0);
     await waitUntil("crafted arrows", () =>
       bot.inventory.items().some((i) => i.name === "arrow" && i.count === 40),
     );

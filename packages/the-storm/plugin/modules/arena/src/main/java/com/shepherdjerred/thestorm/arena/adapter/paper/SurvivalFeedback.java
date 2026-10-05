@@ -46,10 +46,10 @@ final class SurvivalFeedback {
   void perk(Player player, com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk perk) {
     var pitches =
         switch (perk) {
-          case JUGGERNOG -> new float[] {.7f, .9f, 1.2f};
-          case STAMIN_UP -> new float[] {1.2f, 1.5f, 1.8f};
-          case DOUBLE_TAP -> new float[] {1, 1, 1.5f};
-          case QUICK_REVIVE -> new float[] {.8f, 1.2f, 1};
+          case STONEWARD -> new float[] {.7f, .9f, 1.2f};
+          case GALESTRIDE -> new float[] {1.2f, 1.5f, 1.8f};
+          case EMBERWEAVE -> new float[] {1, 1, 1.5f};
+          case SOULBOND -> new float[] {.8f, 1.2f, 1};
         };
     for (var i = 0; i < pitches.length; i++) {
       var pitch = pitches[i];

@@ -167,7 +167,7 @@ describe("signature weapons and boss phases on native Paper", () => {
     await begin(bot, rcon, 15);
     try {
       const data = await rcon.command(
-        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data"`,
+        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
       );
       const run = z.guid().parse(/[a-f0-9-]{36}/u.exec(data)?.[0]);
       await rcon.command(`clear ${bot.username} minecraft:arrow`);

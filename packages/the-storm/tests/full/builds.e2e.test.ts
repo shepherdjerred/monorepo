@@ -152,7 +152,7 @@ describe("run class builds on real Paper", () => {
   }
 });
 
-describe("animated mystery box on real Paper", () => {
+describe("animated runic cache on real Paper", () => {
   test("rolls reserve the buyer, reveal after three seconds, relocate after six claims and refund expiry", async ({
     bot,
     secondBot,
@@ -173,7 +173,7 @@ describe("animated mystery box on real Paper", () => {
         () => bot.blockAt(new Vec3(1793, 73, 2173)) !== null,
       );
       const data = await rcon.command(
-        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data"`,
+        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
       );
       const run = z.guid().parse(/[a-f0-9-]{36}/u.exec(data)?.[0]);
       await rcon.command(
@@ -182,7 +182,7 @@ describe("animated mystery box on real Paper", () => {
       const count = async () =>
         await rcon.command(`clear ${bot.username} minecraft:emerald 0`);
       const before = await count();
-      const rolling = waitForMessage(bot, /Mystery box rolling/u);
+      const rolling = waitForMessage(bot, /Runic cache rolling/u);
       await clickBox(bot);
       await rolling;
       const reserved = waitForMessage(
@@ -200,11 +200,11 @@ describe("animated mystery box on real Paper", () => {
       await refund;
       expect(await count()).toBe(before);
       for (let claim = 0; claim < 6; claim++) {
-        const nextRoll = waitForMessage(bot, /Mystery box rolling/u);
+        const nextRoll = waitForMessage(bot, /Runic cache rolling/u);
         await clickBox(bot);
         await nextRoll;
         await Bun.sleep(3100);
-        const reward = waitForMessage(bot, /Mystery box reward:/u);
+        const reward = waitForMessage(bot, /Runic cache reward:/u);
         await clickBox(bot);
         await reward;
       }
@@ -304,6 +304,17 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
   }
 });
 
+async function upgradeMessage(bot: Bot, rcon: RconClient) {
+  try {
+    return await waitForMessage(bot, /Runeforge augmentation 1/u);
+  } catch (error) {
+    throw new Error(
+      `Forge at ${bot.entity.position.toString()}, held ${String(bot.heldItem?.name)}, selected ${bot.quickBarSlot.toString()}, ${await rcon.command(`storm-fixture-survival inspect ${bot.username} none`)}: ${String(error)}`,
+      { cause: error },
+    );
+  }
+}
+
 async function upgradeLegendary(
   bot: Bot,
   rcon: RconClient,
@@ -327,11 +338,19 @@ async function upgradeLegendary(
   );
   const forge = bot.blockAt(new Vec3(1727, 73, 2209));
   if (forge === null) throw new Error("Forge missing");
-  const upgraded = waitForMessage(bot, /Pack-a-Punch 1/u);
+  const upgraded = upgradeMessage(bot, rcon);
   await bot.activateBlock(forge);
+  await waitUntil("equipment selection", () => bot.currentWindow !== null);
+  const previous = bot.currentWindow?.id;
+  await bot.clickWindow(0, 0, 0);
   await upgraded;
+  await waitUntil(
+    "refreshed forge choices",
+    () => bot.currentWindow !== null && bot.currentWindow.id !== previous,
+  );
+  if (bot.currentWindow !== null) await bot.closeWindow(bot.currentWindow);
   const metadata = await rcon.command(
-    `data get entity ${bot.username} SelectedItem.components."minecraft:custom_data"`,
+    `data get entity ${bot.username} SelectedItem.components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_legendary"`,
   );
   expect(metadata).toContain(id);
   expect(
@@ -376,7 +395,7 @@ async function legendaryEffects(bot: Bot, rcon: RconClient) {
 }
 
 describe("legendary gear and local feedback on real Paper", () => {
-  test("all legendary identities survive Pack-a-Punch and Graviton consumes ammunition once per recharge", async ({
+  test("all legendary identities survive Runeforge and Graviton consumes ammunition once per recharge", async ({
     bot,
     rcon,
   }) => {
@@ -396,7 +415,7 @@ describe("legendary gear and local feedback on real Paper", () => {
       );
       const airstrip = bot.blockAt(new Vec3(1756, 81, 2241));
       if (airstrip === null) throw new Error("Airstrip missing");
-      const landed = waitForMessage(bot, /Offshore forge/u, 15_000);
+      const landed = waitForMessage(bot, /Offshore Runeforge/u, 15_000);
       await bot.activateBlock(airstrip);
       await landed;
       await rcon.command(`tp ${bot.username} 1727.5 73 2211.5`);

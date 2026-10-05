@@ -17,6 +17,20 @@ final class SurvivalHud {
   private final BossBar rounds;
   private final Set<UUID> viewers = new HashSet<>();
   private final Map<UUID, Instant> hints = new HashMap<>();
+  private final Map<UUID, String> messages = new HashMap<>();
+
+  String message(Player player) {
+    return messages.getOrDefault(player.getUniqueId(), "");
+  }
+
+  boolean busy(Player player) {
+    return runner
+        .context()
+        .time()
+        .instant()
+        .isBefore(hints.getOrDefault(player.getUniqueId(), Instant.MIN));
+  }
+
   private final Map<UUID, org.bukkit.entity.TextDisplay> downed = new HashMap<>();
 
   SurvivalHud(SurvivalRunner runner) {
@@ -31,6 +45,7 @@ final class SurvivalHud {
   }
 
   void hint(Player player, String message, int seconds) {
+    messages.put(player.getUniqueId(), message);
     hints.put(player.getUniqueId(), runner.context().time().instant().plusSeconds(seconds));
     player.sendActionBar(Component.text(message));
   }
@@ -123,6 +138,7 @@ final class SurvivalHud {
     player.hideBossBar(rounds);
     viewers.remove(player.getUniqueId());
     hints.remove(player.getUniqueId());
+    messages.remove(player.getUniqueId());
     removeLabel(player.getUniqueId());
   }
 }

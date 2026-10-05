@@ -451,7 +451,7 @@ routes, barricades, charged traps, and personal gathering budgets reset each run
 | Lobby lectern / `/survival guide`               | Reads public rules without taking a book or exposing secrets              |
 | Click a route sign twice within three seconds   | Confirms its displayed emerald price and opens a shared route             |
 | Right-click a defense                           | Repairs a barricade or charges a trap with materials                      |
-| Sneak within three blocks with line of sight    | Revives after five uninterrupted seconds, or three with Quick Revive      |
+| Sneak within three blocks with line of sight    | Revives after five uninterrupted seconds, or four as Medic                |
 | `/arena leave`                                  | Restores pre-run belongings                                               |
 
 Fighter has an area knockback attack; Ranger supplies arrows and a speed burst;
@@ -519,7 +519,12 @@ a potion effect. Food regeneration, potions, and class healing can heal above
 that ceiling. Downed players and spectators do not receive passive recovery.
 
 Every fifth round has a phased boss with three-second marked casts, line-of-sight
-checks and recovery windows. Native boss attacks are replaced by authored spells.
+checks and recovery windows. Native boss attacks are replaced by controlled basics and authored spells. Basics have
+a two-second recharge, deal 2–6 raw HP as rounds advance, and pause during casts and recovery.
+Gale and Hex bosses attack at range; physical bosses need melee reach. Countdown bars,
+channel particles, imminent warnings, marked ground, impact bursts, and accepted-hit
+cues distinguish each stage. Secondary spell effects require accepted damage. Locked
+cast origin, target, height and terrain checks govern both markings and hits.
 Boss health is `(100 + 20 × round) × (1 + 0.65 × extra players)`, capped at 1,000;
 round five therefore has 200/330/460/590 HP for one through four players, with
 six/eight/ten-HP spells before armor across its three phases. Party size increases health and support
@@ -543,13 +548,15 @@ Click the same sign twice, 200 milliseconds to three seconds apart, to confirm.
 Smugglers' Wharf and Signal Bluff each cost 20 emeralds after unlocking ramparts.
 Both have two connections back to ramparts. Wharf docks and tunnels descend to Y 66/63;
 bluff terraces and a rampart gallery rise to Y 85/88. The protected footprint remains unchanged.
-Machines use barrels, jukeboxes, a generator and an anvil. Permanent interaction
-holograms are absent. A single contextual action appears when looking at a fixture
-within four blocks; unrelated class and plane status stays off the action bar.
-Personal gathering glints appear only within six blocks while that material's
-harvest budget remains. Purchased route signs disappear and return when the run resets.
-Crafting, route unlocks, generator activation, and Pack-a-Punch play sounds and short
-particle animations. Pickup cues name the team effect and its duration.
+Machines use barrels, vertical shrine stacks, a copper generator with a lodestone above,
+and a Runeforge. Both blocks of a shrine or generator are clickable. Two permanent
+holograms identify the generator and active cache; pickup, downed and reveal labels
+are temporary. Nearby gathering, station and machine particles update every 250 ms
+within twelve blocks, capped at 128 ambient particles per survivor per second.
+Depleted and unpowered fixtures have subdued cues; boss markings have a separate budget.
+A look-at prompt identifies the current interaction. Powered shrines play their native
+music disc quietly in the RECORDS category: Relic, Otherside, Pigstep, or Creator Music Box.
+Only the nearest shrine plays within twelve blocks; leaving, downing or losing power stops it.
 
 Fifteen gathering nodes cover twelve materials: wood, stone, wheat, iron, flint,
 redstone, bone, glowstone, copper, string, nether wart, and blaze powder. Wood, stone,
@@ -559,7 +566,7 @@ permits a sixteen-emerald upgrade to 2×. Upgrades affect everyone and reset per
 
 The starting district and two later workshops have bank terminals. Materials and
 emeralds use a shared run-local ledger; exact gear stacks use a private 54-slot locker.
-Station crafting, machines, perks, and route purchases spend carried supplies first,
+Station crafting, machines, boons, and route purchases spend carried supplies first,
 then shared supplies. The complete price is checked before any withdrawal. Reserved
 box payments track their sources and refund at most once. Full-inventory material
 rewards go to the shared bank; equipment bundles go to the private locker. A full
@@ -578,44 +585,71 @@ weapon or equipped armor and offer compatible held-weapon enchantments. Recipes 
 at most three material kinds plus emeralds; their outputs use the same tagged item
 and payment paths as box rewards.
 
-Restore power at the foundry with four iron and four redstone. Physical machines
-sell Juggernog (24 emeralds, eight extra max HP), Stamin-Up (20, Speed I), Double
-Tap (32, 25% extra weapon damage), and Quick Revive (16, three-second channels).
-Quick Revive works before power and can grant a solo replacement self-revive,
-after the current charge is used, at most twice per run. All perks disappear
-immediately when downed, including a self-revive.
+Restore power at the foundry with four iron and four redstone. Shrines offer four
+conditional rune boons. Purchase a boon once per run, equip at most two, and freely
+swap previously purchased boons at their shrines. Select a replacement before paying.
+Cooldowns survive swaps; boons suspend while downed and resume on revival.
 
-Plain arrows are shared bank supplies and can be withdrawn before using a bow.
-The powered mystery box costs 16 emeralds: basic equipment 35%, enchanted
-equipment 40%, special weapons 17%, and legendaries 8%. It starts in the market,
-animates for three seconds, and reserves the revealed reward for its buyer for 15 seconds.
-Unclaimed purchases refund to the original carried and banked sources; carried refunds
-that cannot fit return to shared supplies. Rewards can be delivered to the private locker.
-After six claims it moves to another authored site, including unopened districts.
-Follow the magenta beacon to market, quarry, barracks, wharf or bluff. The beacon grants no buffs.
-Ranged rewards include arrows; the Graviton includes redstone ammunition.
+| Boon       | Cost        | Effect                                                                                                                     |
+| ---------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Stoneward  | 24 emeralds | Blocking grants four absorption HP for four seconds; ten-second recharge                                                   |
+| Galestride | 20 emeralds | Sprint eight blocks to arm a knockback hit and speed burst; eight-second recharge                                          |
+| Emberweave | 32 emeralds | Alternate melee and ranged hits within four seconds for a bounded cinder burst; six-second recharge                        |
+| Soulbond   | 16 emeralds | Healing or reviving shares two HP with a nearby ally, or gives two solo absorption HP for ten seconds; ten-second recharge |
 
-Legendary choices are equally weighted: Stormcaller chains damage to two nearby enemies;
-Frostbite slows up to four ordinary enemies; Graviton spends one redstone to pull up to
-five ordinary enemies every five seconds. Pack-a-Punch increases legendary strength.
-Effects require line of sight and respect boss protections; native Breeze ranged deflection remains.
-Special weapons are the Repeater (four carried arrows per second while holding
-use), Whirlwind (two-target melee cleave with a two-second recovery), Tidebreaker
-(Loyalty III trident with a two-target impact wave), and Riftblade (a four-block
-dash through open ground with a six-second recovery). Release, weapon switching,
-downing, and leaving stop Repeater fire. Releasing does not also fire a vanilla shot.
+Solo runs begin with one free Echo Totem revival charge. The infirmary sells replacements
+for sixteen emeralds and four bone, with one outstanding charge and at most two purchases per run.
+Food takes one second to consume; potions and milk take 0.8 seconds, preserving native effects.
+
+Equipment has independent material, rarity, signature, identity and augmentation metadata.
+Common crafted gear starts unenchanted. Enchant held Common gear to Uncommon for four glowstone
+and four emeralds, then to Epic for eight glowstone, four redstone and twelve emeralds.
+Enchantments remain compatible and within vanilla limits; stronger existing enchantments survive.
+Weapons, armor and shields use the same system. Consumable supplies do not have rarity.
+
+The powered runic cache costs sixteen emeralds: Common 25%, Uncommon 30%, Epic 25%,
+Legendary 16%, Mythic 4%. Rarity controls enchantment strength; Legendary and Mythic rewards
+have signatures. Cache animation lasts three seconds and reserves the exact revealed item
+for its buyer for fifteen seconds. Unclaimed purchases refund their original payment sources.
+Full-inventory equipment rewards use the private locker; full inventory and locker refuse
+delivery without losing the purchase. After six claims the cache moves to another authored
+site. Follow the magenta beacon to market, quarry, barracks, wharf or bluff.
+Bows include arrows; Graviton includes redstone. Every item keeps its identity through
+reveals, claims, enchanting, augmentation, lockers and trident returns.
+
+Legendary signatures include Stormcaller, Frostbite, Graviton, Repeater, Whirlwind,
+Tidebreaker and Riftblade. Copperguard arcs three HP to two nearby enemies when blocking
+(six-second recharge). Briarplate slows three nearby ordinary enemies after taking damage
+(eight-second recharge). Trailwarden leaves slowing patches while sprinting (three-second recharge).
+Mythic signatures introduce additional play loops:
+
+| Equipment            | Mechanic                                                                                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stormglass bow       | Three fully drawn hits charge the next storm shot: two redstone, twelve HP to at most five targets, ten-second recharge                               |
+| Wayfarer sword       | Set a five-second anchor, then return with an eight-HP burst: two redstone, twenty-second recharge; obstructed or dangerous destinations are rejected |
+| Echoheart chestplate | Store up to twelve actual HP damage; the next class ability grants up to six absorption HP to nearby teammates for eight seconds                      |
+| Faultline shield     | Store up to twelve blocked HP; releasing the shield erupts in a cone hitting at most six targets, twelve-second recharge                              |
+
 Held-use state is checked every server tick against a single 250ms firing
 deadline. An early tick cannot postpone a shot by another complete firing period,
 and delayed ticks do not cause catch-up bursts. Real-server cadence tests observe
 native projectile launches and acknowledged release/weapon switching; Mineflayer's
 local physics ticks are not a server clock.
-Pack-a-Punch upgrades the held run weapon for 12/24/36 emeralds, fully repairs
-it, adds compatible damage and durability enchantments, and preserves stronger
-existing enchantments. Damage multipliers are 1.15/1.35/1.55;
-projectiles retain the upgrade and Double Tap strength at firing time.
-Tier two adds a short cleave to melee weapons, piercing to arrows, and an impact
-wave to thrown tridents. Returning tridents are delivered back to their owner
-when the round clears; run projectiles are removed when their owner leaves.
+
+Signature damage uses normal ownership and boss protections, requires line of sight, and
+cannot recursively trigger itself. Swapping equipment retains recharge timers.
+The Runeforge explicitly selects held, offhand or equipped armor. Augmentations I–III cost
+12/24/36 emeralds, repair equipment and preserve its rarity and signature. Weapons gain
+1.15/1.35/1.55 damage multipliers plus compatible augmentation effects; armor reduces incoming
+damage by 2/4/6% per piece, capped at 20% total; shields reduce disable cooldown by 10/20/30%.
+Returning tridents reserve their original slot against automatic rewards. Manual occupants
+move safely to another inventory slot or the locker; a full inventory and locker leave the
+return pending. Loyalty, ordinary pickup and round-end recovery share one return path.
+
+Station menus put categories in the first row, a divider in the second, recipes below,
+and maintenance actions in the footer. The lower inventory allows ordinary rearrangement;
+menu icons, the ability compass, and transfers across menu boundaries remain protected.
+Private locker deposits require an explicit shift-click.
 
 Three plane parts are scattered through quarry, foundry and ramparts.
 Each player carries one part and installs it at the airstrip. Leaving
@@ -625,14 +659,28 @@ and enemies redeploy toward occupied areas with their health and counts intact.
 A return station operates independently. Later departures require three fuel
 pickups and at least one cleared round since the previous departure.
 
-Defeated enemies can drop Max Ammo, Double Emeralds (30 seconds), Insta-Kill
-(15 seconds), Nuke, or Carpenter. Drops have an 8% chance, a shared 30-second
-cooldown, and at most one pickup outstanding for 20 seconds. Nuke and Insta-Kill
-exclude bosses. Carpenter repairs barricades and supplies modest team healing.
+Defeated enemies drop field salvage at an eight-percent chance, with a shared thirty-second
+cooldown, a twenty-second lifetime, and at most one outstanding pickup. Wildgrowth creates
+an eight-second healing grove. Redstone Surge chains the next three attacks. Resonant Shard
+halves remaining class recharge and empowers the next ability within fifteen seconds.
+Copper Pulse deals bounded local damage and staggers ordinary enemies. Mason's Echo gradually
+restores nearby barricades and charges nearby traps. Drops are introduced within eight blocks;
+a first encounter waits two seconds before collection.
+
+First-encounter tips use a validated dependency DAG covering gathering, crafting, enchanting,
+banking, route unlocks, defenses, power, boons, the cache, rarity, travel, augmentation, classes,
+revival, every encounter family, boss, cast shape, field drop and equipment signature.
+When several contexts apply, one earliest unseen prerequisite is taught. Tips appear in chat
+and the action bar for six seconds, with twelve seconds between tips. Boss casts, downing and
+other priority feedback interrupt without marking the tip complete. Completed topics and
+preferences persist through asynchronous idempotent database writes; debug practice uses
+session-only changes. `/survival tips on|off|reset` controls delivery, and `/survival guide`
+keeps the catalog browsable. All six classes show XP thresholds, current progress, selection
+and specialization details; debug lobbies permit all classes without granting persistent XP.
 
 Debug rounds 1–1,000 use the ordinary shared lobby and ready countdown. Teammates
 join without debug permission. Presets use starter equipment at 1–3, iron at
-4–7, Pack-a-Punch I at 8–14, II at 15–24 and III at 25+, with matching supplies,
+4–7, augmentation I at 8–14, II at 15–24 and III at 25+, with matching supplies,
 routes, power and plane progress. Debug play writes no XP or leaderboard results.
 An active run or conflicting lobby cannot be fast-forwarded.
 

@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 
-/** Dependable station maintenance complements the random mystery box rewards. */
+/** Dependable station maintenance complements the random runic cache rewards. */
 final class SurvivalEquipment {
   private final SurvivalRunner runner;
 
@@ -42,26 +42,36 @@ final class SurvivalEquipment {
 
   void enchant(Player player) {
     var weapon = player.getInventory().getItemInMainHand();
-    if (!runner.items().weapon(weapon)) {
-      Texts.error(player, "Hold a run weapon first.");
+    if (!runner.items().equipment(weapon)) {
+      Texts.error(player, "Hold run equipment first.");
       return;
     }
-    var enchantment = primary(weapon);
-    if (!enchantment.canEnchantItem(weapon)
-        || weapon.getItemMeta().hasConflictingEnchant(enchantment)) {
-      Texts.info(player, "Use Pack-a-Punch to enhance this weapon.");
+    var rarity = runner.items().rarity(weapon);
+    if (rarity.enchantNext().isEmpty()) {
+      Texts.info(player, "This rarity cannot be improved by enchanting.");
       return;
     }
-    var level = Math.min(2, enchantment.getMaxLevel());
-    if (weapon.getEnchantmentLevel(enchantment) >= level) {
-      Texts.info(player, "This weapon already has that enchantment.");
-      return;
-    }
-    if (!runner.items().spend(player, Map.of("GLOWSTONE_DUST", 4, "EMERALD", 4))) return;
-    weapon.addEnchantment(enchantment, level);
+    if (!runner.items().spend(player, rarity.enchantPrice())) return;
+    runner.items().rarity(weapon, rarity.enchantNext().orElseThrow());
     player.getInventory().setItemInMainHand(weapon);
     runner.feedback().play(player, SurvivalFeedback.Cue.UPGRADE);
-    runner.hud().hint(player, "Weapon enchanted", 2);
+    runner.hud().hint(player, "Equipment enchanted · " + runner.items().rarity(weapon), 2);
+  }
+
+  void augment(Player player, org.bukkit.inventory.EquipmentSlot slot, java.util.UUID identity) {
+    var gear = player.getInventory().getItem(slot);
+    if (!runner.machines().powered()
+        || !runner.items().equipment(gear)
+        || !runner.items().identity(gear).equals(identity)) return;
+    var tier = runner.items().tier(gear);
+    if (tier == 3 || !runner.items().spend(player, Map.of("EMERALD", 12 * (tier + 1)))) return;
+    runner.items().upgrade(gear, tier + 1);
+    player.getInventory().setItem(slot, gear);
+    runner.feedback().play(player, SurvivalFeedback.Cue.UPGRADE);
+    Texts.info(
+        player,
+        "Runeforge augmentation " + (tier + 1) + ": repaired; rarity and signature preserved.");
+    runner.menus().augment(player);
   }
 
   static Enchantment primary(ItemStack weapon) {

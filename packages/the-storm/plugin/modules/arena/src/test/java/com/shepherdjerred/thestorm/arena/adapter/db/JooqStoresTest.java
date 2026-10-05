@@ -76,6 +76,26 @@ final class JooqStoresTest {
   }
 
   @Test
+  void tutorialCompletionAndPreferencesPersistIndependentlyOfXp() {
+    var store = new JooqSurvivalProgress(database);
+    var entry =
+        com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.of(
+            com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.ENTRY);
+    assertThat(store.tips(ALICE).join().seen()).isEmpty();
+    assertThat(store.tips(ALICE).join().enabled()).isTrue();
+    store.tip(ALICE, entry).join();
+    store.tip(ALICE, entry).join();
+    store.tipsEnabled(ALICE, false).join();
+    assertThat(new JooqSurvivalProgress(database).tips(ALICE).join().seen()).containsExactly(entry);
+    assertThat(store.tips(ALICE).join().enabled()).isFalse();
+    assertThat(store.tips(BOB).join().seen()).isEmpty();
+    store.resetTips(ALICE).join();
+    assertThat(store.tips(ALICE).join().seen()).isEmpty();
+    assertThat(store.tips(ALICE).join().enabled()).isFalse();
+    assertThat(store.xp(ALICE).join()).isZero();
+  }
+
+  @Test
   void settlementBackupsRoundTripWithoutOverwritingTheirRecoveryPoint() {
     var store = new JooqSettlementStore(database);
     var backup =

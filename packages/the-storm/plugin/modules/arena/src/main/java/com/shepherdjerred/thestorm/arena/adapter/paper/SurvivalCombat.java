@@ -29,7 +29,8 @@ final class SurvivalCombat {
       SurvivalProgress progress,
       UUID run,
       SurvivalItems items,
-      Consumer<SurvivalProgress.Credit> credit) {}
+      Consumer<SurvivalProgress.Credit> credit,
+      Consumer<org.bukkit.entity.Trident> returnTrident) {}
 
   private record Hit(UUID player, Instant at) {}
 
@@ -61,6 +62,10 @@ final class SurvivalCombat {
 
   Optional<SurvivalBoss> boss() {
     return Optional.ofNullable(boss);
+  }
+
+  Optional<EncounterDirector.Event> encounter() {
+    return Optional.ofNullable(encounter).map(EncounterDirector.Encounter::event);
   }
 
   int active() {
@@ -255,6 +260,10 @@ final class SurvivalCombat {
         - (round == 5 && boss().filter(SurvivalBoss::alive).isEmpty() ? 1 : 0);
   }
 
+  void probeTarget(LivingEntity entity) {
+    register("zombie", List.of(entity));
+  }
+
   private void register(String type, List<LivingEntity> entities) {
     units.put(entities.getLast().getUniqueId(), entities);
     for (var entity : entities) {
@@ -420,11 +429,8 @@ final class SurvivalCombat {
     for (var id : List.copyOf(projectiles.keySet())) {
       var entity = services.context().server().getEntity(id);
       if (entity instanceof org.bukkit.entity.Trident trident) {
-        if (trident.getShooter() instanceof Player owner
-            && services.items().deliver(owner, List.of(trident.getItemStack()))) {
-          trident.remove();
-          projectiles.remove(id);
-        }
+        services.returnTrident().accept(trident);
+        projectiles.remove(id);
       } else {
         if (entity != null) entity.remove();
         projectiles.remove(id);

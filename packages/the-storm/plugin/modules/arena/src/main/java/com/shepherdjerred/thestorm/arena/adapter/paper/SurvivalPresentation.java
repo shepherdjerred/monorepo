@@ -10,31 +10,96 @@ import org.bukkit.entity.Player;
 final class SurvivalPresentation {
   private final SurvivalRunner runner;
   private Instant next = Instant.MIN;
+  private final SurvivalAmbience ambience;
 
   SurvivalPresentation(SurvivalRunner runner) {
     this.runner = runner;
+    ambience = new SurvivalAmbience(runner);
   }
 
   void tick() {
     var now = runner.context().time().instant();
     if (now.isBefore(next)) return;
-    next = now.plusSeconds(1);
-    for (var player : runner.fighters()) {
-      for (var zone : runner.map().open()) {
-        for (var resource : zone.resources()) {
-          if (runner.map().state().available(player.getUniqueId(), resource))
-            particle(player, resource.block(), Particle.HAPPY_VILLAGER);
-        }
-        for (var station : zone.stations()) particle(player, station.block(), Particle.ENCHANT);
-      }
-      hint(player);
+    next = now.plusMillis(250);
+    ambience.tick();
+    runner.fighters().forEach(this::present);
+  }
+
+  private record Marker(BlockPos block, Particle particle, double height) {
+    Marker(BlockPos block, Particle particle) {
+      this(block, particle, 1.2);
     }
   }
 
-  private static void particle(Player player, BlockPos pos, Particle particle) {
-    var at = Places.location(player.getWorld(), pos.center()).add(0, .7, 0);
-    if (at.distanceSquared(Places.at(player)) <= 36)
-      player.spawnParticle(particle, at, 1, .2, .15, .2, 0);
+  private void present(Player player) {
+    var markers = new java.util.ArrayList<Marker>();
+    for (var zone : runner.map().open()) {
+      for (var resource : zone.resources())
+        markers.add(
+            new Marker(
+                resource.block(),
+                runner.map().state().available(player.getUniqueId(), resource)
+                    ? Particle.HAPPY_VILLAGER
+                    : Particle.ASH));
+      for (var station : zone.stations())
+        markers.add(new Marker(station.block(), Particle.ENCHANT));
+    }
+    for (var machine : runner.map().content().machines())
+      if (machine.type() != SurvivalContent.MachineType.MYSTERY_BOX)
+        markers.add(
+            new Marker(
+                machine.block(), machineParticle(machine.type()), machineHeight(machine.type())));
+    runner.map().content().boxSites().stream()
+        .filter(site -> site.id().equals(runner.machines().box().active()))
+        .forEach(
+            site ->
+                markers.add(
+                    new Marker(
+                        site.block(),
+                        runner.machines().powered() ? Particle.END_ROD : Particle.ASH)));
+    markers.stream()
+        .filter(marker -> distance(player, marker) <= 144)
+        .sorted(java.util.Comparator.comparingDouble(marker -> distance(player, marker)))
+        .limit(8)
+        .forEach(
+            marker ->
+                player.spawnParticle(
+                    marker.particle(),
+                    Places.location(player.getWorld(), marker.block().center())
+                        .add(0, marker.height(), 0),
+                    4,
+                    .4,
+                    .35,
+                    .4,
+                    .01));
+    hint(player);
+  }
+
+  private static double distance(Player player, Marker marker) {
+    return Places.at(player)
+        .distanceSquared(Places.location(player.getWorld(), marker.block().center()));
+  }
+
+  private static double machineHeight(SurvivalContent.MachineType type) {
+    return switch (type) {
+      case POWER, STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> 2.1;
+      case RUNEFORGE, FOOD, MYSTERY_BOX -> 1.2;
+    };
+  }
+
+  private Particle machineParticle(SurvivalContent.MachineType type) {
+    if (type != SurvivalContent.MachineType.FOOD && !runner.machines().powered())
+      return Particle.ASH;
+    return switch (type) {
+      case POWER -> Particle.ELECTRIC_SPARK;
+      case STONEWARD -> Particle.WAX_ON;
+      case GALESTRIDE -> Particle.CLOUD;
+      case EMBERWEAVE -> Particle.SMALL_FLAME;
+      case SOULBOND -> Particle.HEART;
+      case RUNEFORGE -> Particle.ENCHANT;
+      case MYSTERY_BOX -> Particle.END_ROD;
+      case FOOD -> Particle.HAPPY_VILLAGER;
+    };
   }
 
   private void hint(Player player) {
@@ -76,7 +141,7 @@ final class SurvivalPresentation {
               player,
               runner.machines().powered()
                   ? runner.machines().box().status(site.orElseThrow())
-                  : "Mystery box · needs power");
+                  : "Runic cache · needs power");
       return;
     }
     runner
@@ -106,12 +171,12 @@ final class SurvivalPresentation {
     return switch (type) {
       case FOOD -> "Food counter";
       case POWER -> "Power generator";
-      case MYSTERY_BOX -> "Mystery box";
-      case PACK_A_PUNCH -> "Pack-a-Punch";
-      case JUGGERNOG -> "Juggernog";
-      case STAMIN_UP -> "Stamin-Up";
-      case DOUBLE_TAP -> "Double Tap";
-      case QUICK_REVIVE -> "Quick Revive";
+      case MYSTERY_BOX -> "Runic cache";
+      case RUNEFORGE -> "Runeforge";
+      case STONEWARD -> "Stoneward shrine";
+      case GALESTRIDE -> "Galestride shrine";
+      case EMBERWEAVE -> "Emberweave shrine";
+      case SOULBOND -> "Soulbond shrine";
     };
   }
 
@@ -119,21 +184,16 @@ final class SurvivalPresentation {
     var name = machineName(type);
     if (type == SurvivalContent.MachineType.POWER)
       return runner.machines().powered() ? "Power on" : name + " · 4 iron + 4 redstone";
-    if (type != SurvivalContent.MachineType.FOOD
-        && type != SurvivalContent.MachineType.QUICK_REVIVE
-        && !runner.machines().powered()) return name + " · needs power";
+    if (type != SurvivalContent.MachineType.FOOD && !runner.machines().powered())
+      return name + " · needs power";
     return name
         + " · "
         + switch (type) {
           case FOOD -> "3 bread for 2 emeralds";
-          case PACK_A_PUNCH -> {
-            var weapon = player.getInventory().getItemInMainHand();
-            var tier = runner.items().tier(weapon);
-            yield !runner.items().weapon(weapon)
-                ? "hold a weapon"
-                : tier == 3 ? "fully upgraded" : 12 * (tier + 1) + " emeralds";
+          case RUNEFORGE -> {
+            yield "select equipment · augment I–III";
           }
-          case JUGGERNOG, STAMIN_UP, DOUBLE_TAP, QUICK_REVIVE -> {
+          case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> {
             var perk =
                 com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.valueOf(type.name());
             yield runner.actions().has(player, perk) ? "owned" : perk.price() + " emeralds";
@@ -144,5 +204,10 @@ final class SurvivalPresentation {
 
   void reset() {
     next = Instant.MIN;
+    ambience.reset();
+  }
+
+  void leave(Player player) {
+    ambience.stop(player);
   }
 }

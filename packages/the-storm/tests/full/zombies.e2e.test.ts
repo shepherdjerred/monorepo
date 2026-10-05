@@ -111,9 +111,8 @@ describe("settlement resources and expeditions on real Paper", () => {
             ?.count === 2,
       );
       const runData = await rcon.command(
-        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data"`,
+        `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
       );
-      expect(runData).toContain('"thestorm:survival_run"');
       const run = z.guid().parse(/[a-f0-9-]{36}/u.exec(runData)?.[0]);
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"}}] 24`,
@@ -208,7 +207,7 @@ describe("settlement expeditions on real Paper", () => {
     }
   }, 75_000);
 
-  test("power, perks, plane cargo, offshore upgrades and independent return preserve combat", async ({
+  test("power, boons, plane cargo, offshore upgrades and independent return preserve combat", async ({
     bot,
     secondBot,
     rcon,
@@ -240,16 +239,18 @@ describe("settlement expeditions on real Paper", () => {
         await installed;
       }
       await travel(bot, rcon, new Vec3(1765.5, 73, 2186.5));
-      const perk = waitForMessage(bot, /Purchased JUGGERNOG/u);
+      const perk = waitForMessage(bot, /Equipped Stoneward/u);
       await click(bot, new Vec3(1765, 73, 2185));
+      await waitUntil("boon menu", () => bot.currentWindow !== null);
+      await bot.clickWindow(0, 0, 0);
       await perk;
       expect(
         await rcon.command(
           `attribute ${bot.username} minecraft:max_health get`,
         ),
-      ).toContain("28");
+      ).toContain("20");
       await travel(bot, rcon, new Vec3(1757.5, 81, 2242.5));
-      const landed = waitForMessage(bot, /Offshore forge/u, 15_000);
+      const landed = waitForMessage(bot, /Offshore Runeforge/u, 15_000);
       await click(bot, new Vec3(1756, 81, 2241));
       await landed;
       expect(secondBot.entity.position.x).toBeGreaterThan(1740);
@@ -257,14 +258,17 @@ describe("settlement expeditions on real Paper", () => {
       const weapon = bot.inventory.items().find((i) => i.name === "iron_sword");
       if (weapon === undefined) throw new Error("Practice weapon missing");
       await bot.equip(weapon, "hand");
-      const upgrade = waitForMessage(bot, /Pack-a-Punch 2/u);
+      const upgrade = waitForMessage(bot, /Runeforge augmentation 2/u);
       await click(bot, new Vec3(1727, 73, 2209));
+      await waitUntil("equipment selection", () => bot.currentWindow !== null);
+      await bot.clickWindow(0, 0, 0);
       await upgrade;
+      if (bot.currentWindow !== null) await bot.closeWindow(bot.currentWindow);
       expect(
         await rcon.command(
-          `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data"`,
+          `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_upgrade"`,
         ),
-      ).toContain('"thestorm:survival_upgrade": 2');
+      ).toMatch(/: 2$/u);
       await travel(bot, rcon, new Vec3(1727.5, 73, 2224.5));
       const returned = waitForMessage(bot, /Back at the fortress/u, 15_000);
       await click(bot, new Vec3(1727, 73, 2225));

@@ -2,7 +2,6 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
-import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import java.time.Duration;
 import java.util.HashMap;
@@ -92,7 +91,6 @@ final class RepeaterCombat {
     var factor = runner.items().multiplier(weapon);
     if (runner.game().player(player.getUniqueId()).orElseThrow().role() == SurvivalClass.RANGER)
       factor *= 1.1;
-    if (runner.actions().has(player, SurvivalPerk.DOUBLE_TAP)) factor *= 1.25;
     factor *= runner.talents().shot(player, arrow);
     runner.combat().projectile(arrow, factor);
     runner.legendary().launched(arrow, weapon);

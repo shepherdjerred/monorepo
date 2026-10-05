@@ -2,7 +2,6 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.domain.survival.Specialization;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBuild;
-import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -10,8 +9,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -22,8 +19,6 @@ import org.bukkit.potion.PotionEffectType;
 final class SurvivalTalents {
   private record Shots(Specialization type, int remaining, double factor, Instant until) {}
 
-  private record Barrier(double baseline, AttributeModifier modifier, Instant until) {}
-
   private record Trap(Location at, double damage, Instant until) {}
 
   private record Corrosion(
@@ -32,8 +27,19 @@ final class SurvivalTalents {
   private final SurvivalRunner runner;
   private final Map<UUID, SurvivalBuild> builds = new HashMap<>();
   private final Map<UUID, Instant> cooldowns = new HashMap<>();
+  private final Map<UUID, Instant> resonance = new HashMap<>();
+  private final Map<UUID, Double> companionFactors = new HashMap<>();
+
+  void resonate(Player player) {
+    var now = runner.context().time().instant();
+    var due = cooldowns.getOrDefault(player.getUniqueId(), now);
+    if (now.isBefore(due))
+      cooldowns.put(
+          player.getUniqueId(), now.plus(java.time.Duration.between(now, due).dividedBy(2)));
+    resonance.put(player.getUniqueId(), now.plusSeconds(15));
+  }
+
   private final Map<UUID, Shots> shots = new HashMap<>();
-  private final Map<UUID, Barrier> barriers = new HashMap<>();
   private final Map<UUID, Trap> traps = new HashMap<>();
   private final Map<UUID, Corrosion> corrosion = new HashMap<>();
 
@@ -91,21 +97,26 @@ final class SurvivalTalents {
       return;
     }
     var build = build(id);
-    if (!activate(player, build, now)) {
+    var resonant = now.isBefore(resonance.getOrDefault(id, Instant.MIN));
+    if (!activate(player, resonant ? build.empowered() : build, now)) {
       Texts.error(player, "No valid target or room for this ability.");
       runner.feedback().play(player, SurvivalFeedback.Cue.FAILURE);
       return;
     }
     cooldowns.put(id, now.plusSeconds(build.cooldownSeconds()));
+    resonance.remove(id);
+    runner.relics().ability(player);
+    if (build.role() == com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass.MEDIC)
+      runner.boons().healing(player);
     runner.feedback().play(player, SurvivalFeedback.Cue.ABILITY);
     Texts.info(player, "Ability used · " + build.cooldownSeconds() + " second recharge.");
   }
 
   private boolean activate(Player player, SurvivalBuild build, Instant now) {
-    if (build.specialization().isEmpty()) return base(player, build.role());
+    if (build.specialization().isEmpty()) return base(player, build);
     return switch (build.specialization().orElseThrow()) {
       case GUARDIAN -> {
-        barrier(player, build.magnitude(8), build.utilitySeconds(8), now);
+        barrier(player, build.magnitude(8), build.utilitySeconds(8));
         yield true;
       }
       case VANGUARD -> {
@@ -119,9 +130,8 @@ final class SurvivalTalents {
       }
       case RESCUER -> rescue(player, build.magnitude(4));
       case FORTIFIER -> {
-        repair(player, true);
-        allies(player, 6)
-            .forEach(p -> barrier(p, build.magnitude(4), build.utilitySeconds(8), now));
+        repair(player, 8);
+        allies(player, 6).forEach(p -> barrier(p, build.magnitude(4), build.utilitySeconds(8)));
         yield true;
       }
       case SAPPER -> {
@@ -148,36 +158,40 @@ final class SurvivalTalents {
         yield true;
       }
       case PACKLEADER -> {
-        companions(player, 2);
+        companions(player, 2, build);
         yield true;
       }
       case WARDEN -> {
-        companions(player, 1);
-        barrier(player, build.magnitude(8), build.utilitySeconds(8), now);
+        companions(player, 1, build);
+        barrier(player, build.magnitude(8), build.utilitySeconds(8));
         yield true;
       }
     };
   }
 
-  private boolean base(Player player, SurvivalClass role) {
-    switch (role) {
-      case FIGHTER -> sweep(player, 4);
+  private boolean base(Player player, SurvivalBuild build) {
+    switch (build.role()) {
+      case FIGHTER -> sweep(player, build.magnitude(4));
       case RANGER -> {
-        if (!runner.items().give(player, org.bukkit.Material.ARROW, 8)) return false;
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1));
+        if (!runner
+            .items()
+            .give(player, org.bukkit.Material.ARROW, (int) Math.ceil(build.magnitude(8))))
+          return false;
+        player.addPotionEffect(
+            new PotionEffect(PotionEffectType.SPEED, build.utilitySeconds(5) * 20, 1));
       }
-      case MEDIC -> allies(player, 8).forEach(p -> SurvivalItems.heal(p, 6));
+      case MEDIC -> allies(player, 8).forEach(p -> SurvivalItems.heal(p, build.magnitude(6)));
       case ENGINEER -> {
-        return repair(player, false);
+        return repair(player, (int) Math.ceil(build.magnitude(1)));
       }
       case ALCHEMIST ->
           enemies(player, 10)
               .forEach(
                   e -> {
-                    effect(e, PotionEffectType.SLOWNESS, 6, 1);
-                    effect(e, PotionEffectType.WEAKNESS, 6, 0);
+                    effect(e, PotionEffectType.SLOWNESS, build.utilitySeconds(6), 1);
+                    effect(e, PotionEffectType.WEAKNESS, build.utilitySeconds(6), 0);
                   });
-      case BEASTMASTER -> companions(player, 1);
+      case BEASTMASTER -> companions(player, 1, build);
     }
     return true;
   }
@@ -206,14 +220,16 @@ final class SurvivalTalents {
   }
 
   double companionDamage(UUID owner) {
-    var build = build(owner);
-    return 1.2
-        * (build.specialization().filter(s -> s == Specialization.PACKLEADER).isPresent()
-            ? build.magnitude(1)
-            : 1);
+    return 1.2 * companionFactors.getOrDefault(owner, 1.0);
+  }
+
+  private void companions(Player player, int count, SurvivalBuild build) {
+    companions(player, count);
+    companionFactors.put(player.getUniqueId(), build.magnitude(1));
   }
 
   void companions(Player player, int count) {
+    companionFactors.remove(player.getUniqueId());
     runner.world().removeWolves(player.getUniqueId());
     var population = runner.world().alive() + runner.world().companions();
     if (population + count > runner.map().content().entityCap())
@@ -266,7 +282,7 @@ final class SurvivalTalents {
             });
   }
 
-  private boolean repair(Player player, boolean all) {
+  private boolean repair(Player player, int limit) {
     var defenses =
         runner.map().open().stream()
             .flatMap(z -> z.defenses().stream())
@@ -280,7 +296,7 @@ final class SurvivalTalents {
                     Places.location(player.getWorld(), d.block().center())
                             .distanceSquared(Places.at(player))
                         <= 64)
-            .limit(all ? 8 : 1)
+            .limit(limit)
             .toList();
     defenses.forEach(
         d -> {
@@ -295,25 +311,12 @@ final class SurvivalTalents {
       enemy.addPotionEffect(new PotionEffect(type, seconds * 24, amplifier));
   }
 
-  private void barrier(Player player, double amount, int seconds, Instant now) {
-    removeBarrier(player.getUniqueId());
-    var attribute = java.util.Objects.requireNonNull(player.getAttribute(Attribute.MAX_ABSORPTION));
-    var modifier =
-        new AttributeModifier(
-            new org.bukkit.NamespacedKey(runner.context().plugin(), "survival_barrier"),
-            amount,
-            AttributeModifier.Operation.ADD_NUMBER,
-            org.bukkit.inventory.EquipmentSlotGroup.ANY);
-    var baseline = player.getAbsorptionAmount();
-    attribute.addTransientModifier(modifier);
-    player.setAbsorptionAmount(baseline + amount);
-    barriers.put(player.getUniqueId(), new Barrier(baseline, modifier, now.plusSeconds(seconds)));
+  private void barrier(Player player, double amount, int seconds) {
+    runner.wards().grant(player, SurvivalWards.Source.CLASS, amount, seconds);
   }
 
   void tick() {
     var now = runner.context().time().instant();
-    for (var entry : List.copyOf(barriers.entrySet()))
-      if (!now.isBefore(entry.getValue().until())) removeBarrier(entry.getKey());
     for (var entry : List.copyOf(traps.entrySet())) tickTrap(entry.getKey(), entry.getValue(), now);
     for (var entry : List.copyOf(corrosion.entrySet()))
       tickCorrosion(entry.getKey(), entry.getValue(), now);
@@ -362,17 +365,9 @@ final class SurvivalTalents {
               dot.owner(), dot.target(), dot.damage(), dot.remaining() - 1, now.plusSeconds(1)));
   }
 
-  private void removeBarrier(UUID id) {
-    var barrier = barriers.remove(id);
-    var player = runner.context().server().getPlayer(id);
-    if (barrier == null || player == null) return;
-    player.setAbsorptionAmount(Math.min(player.getAbsorptionAmount(), barrier.baseline()));
-    java.util.Objects.requireNonNull(player.getAttribute(Attribute.MAX_ABSORPTION))
-        .removeModifier(barrier.modifier());
-  }
-
   void interrupt(UUID id) {
-    removeBarrier(id);
+    var player = runner.context().server().getPlayer(id);
+    if (player != null) runner.wards().remove(player, SurvivalWards.Source.CLASS);
     shots.remove(id);
     traps.remove(id);
     corrosion.entrySet().removeIf(e -> e.getValue().owner().equals(id));
@@ -382,5 +377,7 @@ final class SurvivalTalents {
     interrupt(id);
     builds.remove(id);
     cooldowns.remove(id);
+    resonance.remove(id);
+    companionFactors.remove(id);
   }
 }

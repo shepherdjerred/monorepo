@@ -45,12 +45,12 @@ final class PaperContext {
     return scheduler;
   }
 
-  Executor mainThread() {
-    return scheduler.mainThread();
-  }
-
   ComputePool compute() {
     return compute;
+  }
+
+  Executor mainThread() {
+    return scheduler.mainThread();
   }
 
   InstantSource time() {

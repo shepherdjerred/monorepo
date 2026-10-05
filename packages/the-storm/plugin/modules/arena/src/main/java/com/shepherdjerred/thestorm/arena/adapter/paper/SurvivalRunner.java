@@ -65,6 +65,14 @@ final class SurvivalRunner implements ArenaRunner {
   private final LegendaryCombat legendary;
   private final SurvivalGuide guide;
   private final SurvivalAnnouncements announcements;
+  private final SurvivalBoons boons;
+  private final SurvivalWards wards;
+  private final SurvivalTridents tridents;
+  private final RelicCombat relics;
+  private final SurvivalTips tips;
+
+  private record Progress(long xp, SurvivalProgress.Tips tips) {}
+
   private boolean prepared;
   private boolean stopping;
   private @Nullable Cancellable startupTask;
@@ -85,6 +93,11 @@ final class SurvivalRunner implements ArenaRunner {
     legendary = new LegendaryCombat(this);
     guide = new SurvivalGuide(this);
     announcements = new SurvivalAnnouncements(this);
+    boons = new SurvivalBoons(this);
+    wards = new SurvivalWards(this);
+    tridents = new SurvivalTridents(this);
+    relics = new RelicCombat(this);
+    tips = new SurvivalTips(this, services.progress());
     items = new SurvivalItems(services.keys(), run, feedback, content);
     combat = newCombat();
     actions = new SurvivalActions(this);
@@ -103,7 +116,13 @@ final class SurvivalRunner implements ArenaRunner {
         world,
         map,
         new SurvivalCombat.Services(
-            services.context(), services.waves(), services.progress(), run, items, this::credit));
+            services.context(),
+            services.waves(),
+            services.progress(),
+            run,
+            items,
+            this::credit,
+            tridents::force));
   }
 
   PaperContext context() {
@@ -132,6 +151,26 @@ final class SurvivalRunner implements ArenaRunner {
 
   SurvivalActions actions() {
     return actions;
+  }
+
+  SurvivalBoons boons() {
+    return boons;
+  }
+
+  SurvivalWards wards() {
+    return wards;
+  }
+
+  SurvivalTridents tridents() {
+    return tridents;
+  }
+
+  RelicCombat relics() {
+    return relics;
+  }
+
+  SurvivalTips tips() {
+    return tips;
   }
 
   ZombiesMachines machines() {
@@ -325,6 +364,7 @@ final class SurvivalRunner implements ArenaRunner {
                   services
                       .progress()
                       .xp(id)
+                      .thenCombine(services.progress().tips(id), Progress::new)
                       .whenCompleteAsync(
                           (total, failure) -> {
                             if (failure != null) {
@@ -339,7 +379,8 @@ final class SurvivalRunner implements ArenaRunner {
                                 .isEmpty()) {
                               return;
                             }
-                            xp.put(id, total);
+                            xp.put(id, total.xp());
+                            tips.loaded(id, total.tips());
                             admitted(id);
                           },
                           context().mainThread());
@@ -379,7 +420,7 @@ final class SurvivalRunner implements ArenaRunner {
     } catch (IllegalArgumentException error) {
       return Optional.of(GameError.UNKNOWN_CLASS);
     }
-    var refusal = game.select(id, role, xp(id));
+    var refusal = game.select(id, role, game.debug() ? Long.MAX_VALUE : xp(id));
     if (refusal.isEmpty()) {
       var player = context().server().getPlayer(id);
       if (player != null) {
@@ -437,6 +478,10 @@ final class SurvivalRunner implements ArenaRunner {
       machines.tick();
       talents.tick();
       legendary.tick();
+      boons.tick();
+      wards.tick();
+      tridents.tick();
+      relics.tick();
       drops.tick();
       revive();
       fighters().forEach(this::recover);
@@ -449,6 +494,7 @@ final class SurvivalRunner implements ArenaRunner {
     }
     hud.tick();
     presentation.tick();
+    tips.tick();
   }
 
   @Override
@@ -581,7 +627,6 @@ final class SurvivalRunner implements ArenaRunner {
       }
       if (prior.filter(old -> old.status() == Survivor.Status.WAITING).isPresent()) {
         items.equip(player, survivor.role(), true);
-        actions.applyPerks(player);
         player.teleport(
             Places.location(
                 world.world(),
@@ -664,12 +709,7 @@ final class SurvivalRunner implements ArenaRunner {
         continue;
       }
       var downed = target.orElseThrow();
-      var seconds =
-          actions.has(
-                  rescuer,
-                  com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.QUICK_REVIVE)
-              ? 3
-              : game.player(id).orElseThrow().role() == SurvivalClass.MEDIC ? 4 : 5;
+      var seconds = game.player(id).orElseThrow().role() == SurvivalClass.MEDIC ? 4 : 5;
       var complete = revival.channel(id, downed.getUniqueId(), context().time().instant(), seconds);
       var percent =
           (int) Math.round(revival.progress(id, context().time().instant(), seconds) * 100);
@@ -677,6 +717,7 @@ final class SurvivalRunner implements ArenaRunner {
       hud.hint(downed, rescuer.getName() + " is reviving you · " + percent + "%", 2);
       if (complete) {
         revivePlayer(downed, 8);
+        boons.healing(rescuer);
         revival.interrupt(id);
         Texts.info(downed, "You were revived.");
       }
@@ -719,7 +760,6 @@ final class SurvivalRunner implements ArenaRunner {
       return;
     }
     var self = game.down(player.getUniqueId(), context().time().instant());
-    actions.losePerks(player);
     legendary.repeater().stop(player.getUniqueId());
     talents.interrupt(player.getUniqueId());
     machines.interrupt(player.getUniqueId());
@@ -787,7 +827,15 @@ final class SurvivalRunner implements ArenaRunner {
     context()
         .onMain(
             services.progress().credit(credit),
-            total -> xp.merge(credit.player(), total, Math::max),
+            total -> {
+              var before = xp.getOrDefault(credit.player(), 0L);
+              xp.merge(credit.player(), total, Math::max);
+              var player = context().server().getPlayer(credit.player());
+              if (player != null)
+                for (var role : SurvivalClass.values())
+                  if (!role.unlocked(before) && role.unlocked(total))
+                    Texts.info(player, "Class unlocked: " + role.name() + " · /survival classes");
+            },
             "credit survival XP");
   }
 
@@ -797,6 +845,11 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   private void leave(UUID id) {
+    tridents.leave(id);
+    boons.leave(id);
+    wards.leave(id);
+    relics.leave(id);
+    tips.leave(id);
     machines.leave(id);
     talents.leave(id);
     legendary.leave(id);
@@ -809,9 +862,9 @@ final class SurvivalRunner implements ArenaRunner {
     world.removeWolves(id);
     var player = context().server().getPlayer(id);
     if (player != null) {
-      actions.losePerks(player);
       player.setGlowing(false);
       hud.leave(player);
+      presentation.leave(player);
       services.snapshots().restore(player);
     }
     actions.leave(id);
@@ -833,6 +886,9 @@ final class SurvivalRunner implements ArenaRunner {
       drops.reset();
       machines.reset();
       legendary.reset();
+      boons.reset();
+      wards.reset();
+      relics.reset();
       presentation.reset();
       if (prepared && world.chunksReady()) {
         map.reset();

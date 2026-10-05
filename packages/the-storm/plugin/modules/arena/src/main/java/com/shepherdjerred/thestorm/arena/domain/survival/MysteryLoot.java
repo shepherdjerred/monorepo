@@ -1,20 +1,14 @@
 package com.shepherdjerred.thestorm.arena.domain.survival;
 
-/** Four disjoint reward pools keep useful equipment common and signature weapons scarce. */
+/** Explicit rarity odds keep dependable crafting alongside exciting signature equipment. */
 public final class MysteryLoot {
-  public enum Pool {
-    BASIC,
-    ENCHANTED,
-    SPECIAL,
-    LEGENDARY
-  }
-
   private MysteryLoot() {}
 
-  public static Pool pool(int roll) {
+  public static GearRarity rarity(int roll) {
     if (roll < 0 || roll >= 100) throw new IllegalArgumentException("Invalid box roll");
-    if (roll < 35) return Pool.BASIC;
-    if (roll < 75) return Pool.ENCHANTED;
-    return roll < 92 ? Pool.SPECIAL : Pool.LEGENDARY;
+    if (roll < 25) return GearRarity.COMMON;
+    if (roll < 55) return GearRarity.UNCOMMON;
+    if (roll < 80) return GearRarity.EPIC;
+    return roll < 96 ? GearRarity.LEGENDARY : GearRarity.MYTHIC;
   }
 }

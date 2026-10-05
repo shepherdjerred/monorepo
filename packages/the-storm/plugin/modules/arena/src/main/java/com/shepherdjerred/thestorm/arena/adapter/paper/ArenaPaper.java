@@ -29,7 +29,7 @@ import org.bukkit.event.Listener;
 /** Wires the arenas into Paper: runners, commands, listeners, permissions and the game clock. */
 public final class ArenaPaper {
 
-  private static final Duration TICK = Duration.ofSeconds(1);
+  private static final Duration TICK = Duration.ofMillis(250);
 
   private final Arenas arenas;
   private final List<Listener> listeners;

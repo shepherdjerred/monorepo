@@ -6474,7 +6474,10 @@ machines:
       y: 78
       z: 2178
     type: POWER
-    interactions: []
+    interactions:
+      - x: 2098
+        y: 79
+        z: 2178
   - block:
       x: 2062
       y: 76
@@ -6485,31 +6488,43 @@ machines:
       x: 2025
       y: 76
       z: 2178
-    type: JUGGERNOG
-    interactions: []
+    type: STONEWARD
+    interactions:
+      - x: 2025
+        y: 77
+        z: 2178
   - block:
       x: 2064
       y: 77
       z: 2206
-    type: STAMIN_UP
-    interactions: []
+    type: GALESTRIDE
+    interactions:
+      - x: 2064
+        y: 78
+        z: 2206
   - block:
       x: 2098
       y: 79
       z: 2231
-    type: DOUBLE_TAP
-    interactions: []
+    type: EMBERWEAVE
+    interactions:
+      - x: 2098
+        y: 80
+        z: 2231
   - block:
       x: 1991
       y: 74
       z: 2207
-    type: QUICK_REVIVE
-    interactions: []
+    type: SOULBOND
+    interactions:
+      - x: 1991
+        y: 75
+        z: 2207
   - block:
       x: 2062
       y: 79
       z: 2258
-    type: PACK_A_PUNCH
+    type: RUNEFORGE
     interactions: []
 planeParts:
   - id: engine

@@ -130,22 +130,23 @@ final class ZombiesMachines {
             .forEach(
                 p ->
                     Texts.info(
-                        p, "The fortress has power. Perks, mystery box and the forge are active."));
+                        p,
+                        "The fortress has power. Rune shrines, the runic cache and the Runeforge are active."));
       }
       return;
     }
-    if (!powered() && type != SurvivalContent.MachineType.QUICK_REVIVE) {
+    if (!powered()) {
       Texts.error(
           player,
           "Restore power at " + runner.map().powerDistrict() + ": four iron and four redstone.");
       return;
     }
     switch (type) {
-      case JUGGERNOG, STAMIN_UP, DOUBLE_TAP, QUICK_REVIVE ->
+      case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND ->
           runner.actions().perk(player, SurvivalPerk.valueOf(type.name()));
       case MYSTERY_BOX ->
           throw new IllegalStateException("Mystery site interaction was not handled");
-      case PACK_A_PUNCH -> punch(player);
+      case RUNEFORGE -> runner.menus().augment(player);
       case FOOD, POWER -> throw new IllegalStateException("Machine already handled");
     }
   }
@@ -156,31 +157,6 @@ final class ZombiesMachines {
       runner.items().give(player, Material.BREAD, 3);
       Texts.info(player, "Bought three bread for two emeralds.");
       runner.feedback().play(player, SurvivalFeedback.Cue.PURCHASE);
-    }
-  }
-
-  private void punch(Player player) {
-    var weapon = player.getInventory().getItemInMainHand();
-    var tier = runner.items().tier(weapon);
-    if (!runner.items().weapon(weapon) || tier >= 3) {
-      Texts.error(player, "Hold a run weapon with fewer than three upgrades.");
-      return;
-    }
-    if (runner.items().spend(player, Map.of("EMERALD", 12 * (tier + 1)))) {
-      runner.items().upgrade(weapon, tier + 1);
-      runner.feedback().play(player, SurvivalFeedback.Cue.UPGRADE);
-      runner
-          .feedback()
-          .animate(
-              player,
-              runner.map().content().machines().stream()
-                  .filter(m -> m.type() == SurvivalContent.MachineType.PACK_A_PUNCH)
-                  .findFirst()
-                  .orElseThrow()
-                  .block(),
-              SurvivalFeedback.Cue.UPGRADE);
-      player.getInventory().setItemInMainHand(weapon);
-      Texts.info(player, "Weapon upgraded and repaired to Pack-a-Punch " + (tier + 1) + ".");
     }
   }
 
@@ -256,7 +232,7 @@ final class ZombiesMachines {
         player,
         trip.returning()
             ? "Back at the fortress."
-            : "Offshore forge: Pack-a-Punch your held weapon, then use the return sign.");
+            : "Offshore Runeforge: choose equipment to augment, then use the return sign.");
   }
 
   void interrupt(UUID id) {

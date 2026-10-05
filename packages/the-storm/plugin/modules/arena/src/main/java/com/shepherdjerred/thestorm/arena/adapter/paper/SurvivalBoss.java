@@ -32,6 +32,9 @@ final class SurvivalBoss {
   private final java.util.function.IntConsumer adds;
   private final int round;
   private final Set<Integer> phases = new HashSet<>();
+  private Instant nextBasic;
+  private Instant nextVisual = Instant.MIN;
+  private java.util.List<Player> audience = java.util.List.of();
 
   record Spawn(String id, LivingEntity entity, BlockPos objective, int round) {}
 
@@ -42,6 +45,7 @@ final class SurvivalBoss {
     this.objective = spawn.objective();
     this.adds = adds;
     this.round = spawn.round();
+    nextBasic = now.plusSeconds(2);
     mechanics = new BossMechanics(id, now);
     entity.customName(Component.text(name()));
     entity.setCustomNameVisible(true);
@@ -51,6 +55,10 @@ final class SurvivalBoss {
 
   LivingEntity entity() {
     return entity;
+  }
+
+  String id() {
+    return id;
   }
 
   boolean alive() {
@@ -95,6 +103,7 @@ final class SurvivalBoss {
   }
 
   void tick(Instant now, Collection<Player> fighters, Collection<Player> audience) {
+    this.audience = java.util.List.copyOf(audience);
     charged = false;
     var max = entity.getAttribute(Attribute.MAX_HEALTH);
     if (max == null) {
@@ -105,7 +114,22 @@ final class SurvivalBoss {
     var immunity = id.equals("gale-sovereign") ? " · Deflects ranged shots; use melee" : "";
     var recovery = now.isBefore(vulnerableUntil) ? " · Recovery window" : "";
     var phase = mechanics.phase(fraction);
-    bar.name(Component.text(name() + " · Phase " + phase + immunity + recovery));
+    var casting =
+        mechanics
+            .cast()
+            .map(
+                c ->
+                    " · "
+                        + c.shape().label()
+                        + " "
+                        + String.format(
+                            java.util.Locale.ROOT,
+                            "%.1fs",
+                            Math.max(
+                                0,
+                                java.time.Duration.between(now, c.impact()).toMillis() / 1000.0)))
+            .orElse("");
+    bar.name(Component.text(name() + " · Phase " + phase + immunity + recovery + casting));
     audience.forEach(this::show);
     if (!alive() || fighters.isEmpty()) {
       return;
@@ -131,20 +155,23 @@ final class SurvivalBoss {
             player.playSound(entity.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1, 0.6f);
           });
     }
-    mechanics.cast().ifPresent(this::telegraph);
-    mechanics.impact(now).ifPresent(cast -> impact(cast, fighters, now));
-    if (id.equals("heartwood") || (id.equals("hexmaster") && mechanics.cast().isPresent())) {
-      world
-          .world()
-          .spawnParticle(
-              Particle.END_ROD,
-              Places.location(world.world(), objective.center()),
-              20,
-              0.5,
-              1,
-              0.5,
-              0);
+    if (!now.isBefore(nextVisual)) {
+      nextVisual = now.plusMillis(250);
+      mechanics.cast().ifPresent(cast -> telegraph(cast, now));
+      if (id.equals("heartwood") || (id.equals("hexmaster") && mechanics.cast().isPresent()))
+        world
+            .world()
+            .spawnParticle(
+                Particle.END_ROD,
+                Places.location(world.world(), objective.center()),
+                8,
+                .5,
+                1,
+                .5,
+                0);
     }
+    mechanics.impact(now).ifPresent(cast -> impact(cast, fighters, now));
+    basic(target, now);
   }
 
   private void show(Player player) {
@@ -156,10 +183,36 @@ final class SurvivalBoss {
           "Breeze Sovereign deflects arrows and tridents. Dodge the wind lanes, then attack in melee during recovery.");
   }
 
-  private void telegraph(BossMechanics.Cast cast) {
+  private void telegraph(BossMechanics.Cast cast, Instant now) {
     var marked = new HashSet<BlockPos>();
+    var imminent = !now.isBefore(cast.impact().minusSeconds(1));
     telegraphAt(cast, cast.origin(), 28, marked);
     telegraphAt(cast, cast.aim(), 12, marked);
+    for (var player : audience) {
+      var particles =
+          marked.stream()
+              .map(p -> Places.location(world.world(), p.center()).add(0, .12, 0))
+              .filter(at -> at.distanceSquared(Places.at(player)) <= 900)
+              .sorted(
+                  java.util.Comparator.comparingDouble(at -> at.distanceSquared(Places.at(player))))
+              .limit(64)
+              .toList();
+      particles.forEach(
+          at ->
+              player.spawnParticle(
+                  imminent ? Particle.SOUL_FIRE_FLAME : Particle.FLAME, at, 2, .12, .05, .12, 0));
+      player.spawnParticle(
+          Particle.ENCHANT,
+          Places.location(world.world(), cast.origin()).add(0, 1.3, 0),
+          12,
+          .6,
+          .8,
+          .6,
+          .02);
+      if (imminent)
+        player.playSound(
+            Places.location(world.world(), cast.origin()), Sound.BLOCK_NOTE_BLOCK_HAT, .45f, 1.5f);
+    }
   }
 
   private void telegraphAt(
@@ -175,11 +228,8 @@ final class SurvivalBoss {
         var surface = surface(point);
         if (surface.isPresent()
             && cast.hits(Places.point(surface.orElseThrow()))
-            && marked.add(Places.pos(surface.orElseThrow().getBlock()))) {
-          world
-              .world()
-              .spawnParticle(Particle.FLAME, surface.orElseThrow().add(0, 0.1, 0), 1, 0, 0, 0, 0);
-        }
+            && visible(cast.origin(), surface.orElseThrow()))
+          marked.add(Places.pos(surface.orElseThrow().getBlock()));
       }
     }
   }
@@ -201,6 +251,16 @@ final class SurvivalBoss {
   }
 
   private void impact(BossMechanics.Cast cast, Collection<Player> fighters, Instant now) {
+    world
+        .world()
+        .spawnParticle(
+            Particle.EXPLOSION,
+            Places.location(world.world(), cast.aim()).add(0, .3, 0),
+            8,
+            2,
+            .2,
+            2,
+            0);
     for (var player : fighters) {
       strike(cast, player);
     }
@@ -219,19 +279,65 @@ final class SurvivalBoss {
       entity.setVelocity(new Vector());
     }
     vulnerableUntil = now.plusSeconds(cast.shape() == BossMechanics.Shape.CHARGE ? 5 : 4);
+    audience.forEach(p -> Texts.info(p, name() + " · recovery: attack now!"));
   }
 
   private void strike(BossMechanics.Cast cast, Player player) {
-    if (!cast.hits(Places.point(Places.at(player))) || !entity.hasLineOfSight(player)) {
+    if (!cast.hits(Places.point(Places.at(player))) || !visible(cast.origin(), Places.at(player))) {
       return;
     }
+    if (!damage(player, BossMechanics.damage(round, cast.phase()))) {
+      player.playSound(Places.at(player), Sound.ITEM_SHIELD_BLOCK, .6f, .8f);
+      Texts.info(player, "Cast absorbed or blocked.");
+      return;
+    }
+    effects(cast, player);
+    player.spawnParticle(
+        Particle.DAMAGE_INDICATOR, Places.at(player).add(0, 1, 0), 12, .35, .4, .35, .1);
+    Texts.info(player, "Hit by " + cast.shape().label() + ".");
+  }
+
+  private boolean damage(Player player, double amount) {
+    var health = player.getHealth();
+    var absorption = player.getAbsorptionAmount();
+    var mode = player.getGameMode();
     striking = true;
     try {
-      player.damage(BossMechanics.damage(round, cast.phase()), entity);
+      player.damage(amount, entity);
     } finally {
       striking = false;
     }
-    effects(cast, player);
+    return player.getHealth() != health
+        || player.getAbsorptionAmount() < absorption
+        || player.getGameMode() != mode;
+  }
+
+  private boolean visible(
+      com.shepherdjerred.thestorm.arena.domain.geometry.Point origin, org.bukkit.Location target) {
+    var from = Places.location(world.world(), origin).add(0, 1, 0);
+    var to = target.clone().add(0, 1, 0);
+    var direction = to.toVector().subtract(from.toVector());
+    var length = direction.length();
+    return length < .01
+        || world
+                .world()
+                .rayTraceBlocks(
+                    from, direction.normalize(), length, org.bukkit.FluidCollisionMode.NEVER, true)
+            == null;
+  }
+
+  private void basic(Player target, Instant now) {
+    if (mechanics.cast().isPresent() || now.isBefore(vulnerableUntil) || now.isBefore(nextBasic))
+      return;
+    var ranged = id.equals("gale-sovereign") || id.equals("hexmaster");
+    if (entity.getLocation().distanceSquared(Places.at(target)) > (ranged ? 144 : 10)
+        || !entity.hasLineOfSight(target)) return;
+    nextBasic = now.plusSeconds(2);
+    if (damage(target, Math.min(6, 2 + Math.max(0, round - 5) / 10.0))) {
+      target.spawnParticle(
+          Particle.DAMAGE_INDICATOR, Places.at(target).add(0, 1, 0), 6, .2, .3, .2, .05);
+      target.playSound(Places.at(target), Sound.ENTITY_PLAYER_HURT, .5f, .8f);
+    }
   }
 
   private void effects(BossMechanics.Cast cast, Player player) {
@@ -244,7 +350,9 @@ final class SurvivalBoss {
               ? Places.location(world.world(), cast.aim())
                   .toVector()
                   .subtract(Places.at(player).toVector())
-              : Places.at(player).toVector().subtract(entity.getLocation().toVector());
+              : Places.at(player)
+                  .toVector()
+                  .subtract(Places.location(world.world(), cast.origin()).toVector());
       if (push.lengthSquared() > 0.01) {
         player.setVelocity(push.normalize().multiply(1.2).setY(0.5));
       }
@@ -272,6 +380,17 @@ final class SurvivalBoss {
         credit.run();
         vulnerableUntil = now.plusSeconds(8);
         Texts.info(player, "Ritual interrupted. The commander is exposed!");
+        world
+            .world()
+            .spawnParticle(
+                Particle.WAX_OFF,
+                Places.location(world.world(), block.center()),
+                24,
+                .7,
+                .7,
+                .7,
+                .05);
+        player.playSound(entity.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_BREAK, .8f, 1.2f);
       } else {
         Texts.info(player, "Interrupt the glowing ritual node while the commander is casting.");
       }

@@ -194,7 +194,7 @@ final class GameRunner implements ArenaRunner {
         && lobby.stream().allMatch(Member.InLobby::ready);
   }
 
-  /** One second of the arena: containment, custom AI, the boss, then the game's clock. */
+  /** Arena pulse: containment, custom AI, the boss, then the game's clock. */
   @Override
   public void tick() {
     if (world.preloadFailed()) {

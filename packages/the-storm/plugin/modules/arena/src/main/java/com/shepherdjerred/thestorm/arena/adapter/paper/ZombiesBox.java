@@ -27,6 +27,7 @@ final class ZombiesBox {
   private @Nullable Cancellable animation;
   private int frame;
   private boolean revealed;
+  private List<ItemStack> rewardBundle = List.of();
 
   ZombiesBox(SurvivalRunner runner) {
     this.runner = runner;
@@ -40,8 +41,8 @@ final class ZombiesBox {
   }
 
   String status(SurvivalContent.BoxSite site) {
-    if (!site.id().equals(active())) return "Dormant mystery box";
-    return box.roll().isPresent() ? "Mystery box · reserved" : "ACTIVE · 16 emeralds · right-click";
+    if (!site.id().equals(active())) return "Dormant runic cache";
+    return box.roll().isPresent() ? "Runic cache · reserved" : "ACTIVE · 16 emeralds · right-click";
   }
 
   private SurvivalContent.BoxSite site() {
@@ -83,10 +84,11 @@ final class ZombiesBox {
     if (payment.isEmpty()) return true;
     payments.put(player.getUniqueId(), payment.orElseThrow());
     if (!box.start(player.getUniqueId(), reward(), runner.context().time().instant()))
-      throw new IllegalStateException("Charged a busy mystery box");
+      throw new IllegalStateException("Charged a busy runic cache");
+    rewardBundle = bundle(box.roll().orElseThrow().reward());
     revealed = false;
     frame = 0;
-    var at = Places.location(player.getWorld(), site().block().center()).add(0, 1.2, 0);
+    var at = Places.location(player.getWorld(), site().block().center()).add(0, 1.9, 0);
     display =
         player
             .getWorld()
@@ -104,31 +106,35 @@ final class ZombiesBox {
             .context()
             .scheduler()
             .repeatOnMainThread(Duration.ZERO, Duration.ofMillis(100), this::animate);
-    Texts.info(player, "Mystery box rolling… right-click again to claim after the reveal.");
+    Texts.info(player, "Runic cache rolling… right-click again to claim after the reveal.");
     return true;
   }
 
-  private String reward() {
-    var pool = MysteryLoot.pool(runner.context().random().nextInt(100));
-    return switch (pool) {
-      case BASIC -> equipment(false);
-      case ENCHANTED -> "enchanted:" + equipment(true);
-      case SPECIAL, LEGENDARY -> signature(pool == MysteryLoot.Pool.SPECIAL);
-    };
-  }
-
-  private String equipment(boolean enchanted) {
+  private com.shepherdjerred.thestorm.arena.domain.survival.BoxReward reward() {
+    var rarity = MysteryLoot.rarity(runner.context().random().nextInt(100));
+    if (rarity.signature()) return signature(rarity);
     var materials =
-        enchanted
-            ? List.of("DIAMOND_SWORD", "DIAMOND_AXE", "BOW", "CROSSBOW", "TRIDENT", "IRON_SPEAR")
-            : List.of("IRON_SWORD", "IRON_AXE", "BOW", "CROSSBOW", "COPPER_SPEAR");
-    return materials.get(runner.context().random().nextInt(materials.size()));
+        List.of(
+            "IRON_SWORD",
+            "IRON_AXE",
+            "BOW",
+            "CROSSBOW",
+            "TRIDENT",
+            "IRON_SPEAR",
+            "SHIELD",
+            "IRON_HELMET",
+            "IRON_CHESTPLATE",
+            "IRON_LEGGINGS",
+            "IRON_BOOTS");
+    return com.shepherdjerred.thestorm.arena.domain.survival.BoxReward.ordinary(
+        materials.get(runner.context().random().nextInt(materials.size())), rarity);
   }
 
-  private String signature(boolean special) {
+  private com.shepherdjerred.thestorm.arena.domain.survival.BoxReward signature(
+      com.shepherdjerred.thestorm.arena.domain.survival.GearRarity rarity) {
     var rewards =
         runner.map().content().legendaries().stream()
-            .filter(reward -> reward.id().special() == special)
+            .filter(reward -> reward.id().rarity() == rarity)
             .toList();
     var pick =
         runner
@@ -137,28 +143,20 @@ final class ZombiesBox {
             .nextInt(rewards.stream().mapToInt(SurvivalContent.LegendaryReward::weight).sum());
     for (var reward : rewards) {
       pick -= reward.weight();
-      if (pick < 0) return "legendary:" + reward.id();
+      if (pick < 0)
+        return com.shepherdjerred.thestorm.arena.domain.survival.BoxReward.signature(reward.id());
     }
     throw new IllegalStateException("Legendary weights did not resolve");
   }
 
-  private List<ItemStack> bundle(String reward) {
+  private List<ItemStack> bundle(
+      com.shepherdjerred.thestorm.arena.domain.survival.BoxReward reward) {
     var weapon =
-        reward.startsWith("legendary:")
-            ? runner
-                .items()
-                .legendary(LegendaryWeapon.valueOf(reward.substring("legendary:".length())))
-            : runner.items().stack(SurvivalItems.material(reward.replace("enchanted:", "")), 1);
-    if (reward.startsWith("enchanted:")) {
-      var primary = SurvivalEquipment.primary(weapon);
-      if (!primary.canEnchantItem(weapon))
-        throw new IllegalStateException("Incompatible box enchantment");
-      weapon.addEnchantment(primary, Math.min(2, primary.getMaxLevel()));
-      weapon.addEnchantment(org.bukkit.enchantments.Enchantment.UNBREAKING, 2);
-    }
-    if (weapon.getType() == Material.BOW
-        && !weapon.containsEnchantment(org.bukkit.enchantments.Enchantment.POWER))
-      weapon.addEnchantment(org.bukkit.enchantments.Enchantment.POWER, 1);
+        reward
+            .effect()
+            .map(runner.items()::legendary)
+            .orElseGet(() -> runner.items().stack(SurvivalItems.material(reward.material()), 1));
+    runner.items().rarity(weapon, reward.rarity());
     if (weapon.getType() == Material.BOW || weapon.getType() == Material.CROSSBOW)
       return List.of(weapon, runner.items().stack(Material.ARROW, 32));
     if (runner.items().legendary(weapon).filter(id -> id == LegendaryWeapon.GRAVITON).isPresent())
@@ -176,7 +174,7 @@ final class ZombiesBox {
       tick();
       return;
     }
-    if (!runner.items().deliver(player, bundle(roll.reward()))) {
+    if (!runner.items().deliver(player, rewardBundle)) {
       Texts.error(player, "Make room, then claim before the reveal expires.");
       return;
     }
@@ -185,7 +183,7 @@ final class ZombiesBox {
     runner.items().commit(java.util.Objects.requireNonNull(payments.remove(player.getUniqueId())));
     clearDisplay();
     runner.feedback().play(player, SurvivalFeedback.Cue.PURCHASE);
-    Texts.info(player, "Mystery box reward: " + rewardName(roll.reward()));
+    Texts.info(player, "Runic cache reward: " + rewardName(roll.reward()));
     if (box.relocate(
         runner.context().random().nextInt(1, runner.map().content().boxSites().size()))) {
       beams();
@@ -195,23 +193,30 @@ final class ZombiesBox {
               p ->
                   Texts.info(
                       p,
-                      "The mystery box moved to "
+                      "The runic cache moved to "
                           + site().zone()
                           + ". Follow the magenta beacon; open its route if needed."));
     }
   }
 
-  private String rewardName(String reward) {
-    if (reward.startsWith("legendary:")) {
-      var id = LegendaryWeapon.valueOf(reward.substring("legendary:".length()));
-      return runner.map().content().legendaries().stream()
-          .filter(r -> r.id() == id)
-          .findFirst()
-          .orElseThrow()
-          .name();
-    }
-    return (reward.startsWith("enchanted:") ? "Enchanted " : "")
-        + SurvivalItems.name(SurvivalItems.material(reward.replace("enchanted:", "")));
+  String landmark() {
+    if (revealed) return "Cache reward · " + rewardName(box.roll().orElseThrow().reward());
+    return "Runic cache · 16 emeralds";
+  }
+
+  private String rewardName(com.shepherdjerred.thestorm.arena.domain.survival.BoxReward reward) {
+    return reward.rarity().name()
+        + " · "
+        + reward
+            .effect()
+            .map(
+                id ->
+                    runner.map().content().legendaries().stream()
+                        .filter(r -> r.id() == id)
+                        .findFirst()
+                        .orElseThrow()
+                        .name())
+            .orElseGet(() -> SurvivalItems.name(SurvivalItems.material(reward.material())));
   }
 
   private void animate() {
@@ -223,7 +228,7 @@ final class ZombiesBox {
     }
     var now = runner.context().time().instant();
     if (!now.isBefore(roll.orElseThrow().reveal())) {
-      item.setItemStack(bundle(roll.orElseThrow().reward()).getFirst());
+      item.setItemStack(rewardBundle.getFirst());
       if (!revealed) {
         revealed = true;
         var buyer = runner.context().server().getPlayer(roll.orElseThrow().owner());
@@ -290,6 +295,8 @@ final class ZombiesBox {
   }
 
   private void clearDisplay() {
+    revealed = false;
+    rewardBundle = List.of();
     if (animation != null) {
       animation.cancel();
       animation = null;

@@ -27,7 +27,9 @@ final class SurvivalMenus {
     CRAFT,
     BANK,
     LOCKER,
-    NODE
+    NODE,
+    BOON,
+    AUGMENT
   }
 
   private static final class Menu implements InventoryHolder {
@@ -63,9 +65,11 @@ final class SurvivalMenus {
     return inventory.getHolder() instanceof Menu menu
         && menu.owner.equals(id)
         && runner.isFighter(id)
-        && (menu.page == Page.NODE
-            ? runner.map().resource(menu.station).isPresent()
-            : runner.map().station(menu.station).isPresent());
+        && switch (menu.page) {
+          case NODE -> runner.map().resource(menu.station).isPresent();
+          case BOON, AUGMENT -> runner.map().machine(menu.station).isPresent();
+          case CRAFT, BANK, LOCKER -> runner.map().station(menu.station).isPresent();
+        };
   }
 
   void open(Player player, SurvivalContent.Station station) {
@@ -120,16 +124,28 @@ final class SurvivalMenus {
               () -> new SurvivalEquipment(runner).repair(player, false)));
       choices.add(
           new Choice(
-              "Enchant held weapon · 4 glowstone + 4 emeralds",
+              "Enchant held equipment · Common → Uncommon → Epic",
               Material.ENCHANTED_BOOK,
               () -> new SurvivalEquipment(runner).enchant(player)));
-    } else if (tab == Tab.ARMOR)
+    } else if (tab == Tab.ARMOR) {
       choices.add(
           new Choice(
               "Repair armor · 4 iron + 4 emeralds",
               Material.ANVIL,
               () -> new SurvivalEquipment(runner).repair(player, true)));
-    if (choices.size() > 27) {
+      choices.add(
+          new Choice(
+              "Enchant held equipment · Common → Uncommon → Epic",
+              Material.ENCHANTED_BOOK,
+              () -> new SurvivalEquipment(runner).enchant(player)));
+    }
+    if (station.type() == SurvivalContent.StationType.INFIRMARY && tab == Tab.SUPPLIES)
+      choices.add(
+          new Choice(
+              "Echo Totem · 16 emeralds + 4 bone · solo revival",
+              Material.TOTEM_OF_UNDYING,
+              () -> runner.actions().echoTotem(player)));
+    if (choices.size() > 30) {
       throw new IllegalStateException("Station has too many choices");
     }
     var menu = new Menu(player.getUniqueId(), station.block(), choices, Page.CRAFT);
@@ -138,14 +154,28 @@ final class SurvivalMenus {
             .context()
             .server()
             .createInventory(
-                menu, 27, Component.text(SurvivalPresentation.stationName(station.type())));
+                menu,
+                54,
+                Component.text(
+                    SurvivalPresentation.stationName(station.type()) + " · " + tab.name()));
     menu.inventory = inventory;
     for (var i = 0; i < choices.size(); i++) {
       var choice = choices.get(i);
       var icon = ItemStack.of(choice.icon());
       icon.editMeta(meta -> meta.displayName(Component.text(choice.label())));
-      inventory.setItem(i, icon);
+      inventory.setItem(choiceSlot(menu, i), icon);
     }
+    var separator = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE);
+    separator.editMeta(meta -> meta.displayName(Component.text("Categories above · Items below")));
+    for (var slot = 9; slot < 18; slot++) inventory.setItem(slot, separator);
+    var selected =
+        inventory.getItem(
+            switch (tab) {
+              case WEAPONS -> 0;
+              case ARMOR -> 1;
+              case SUPPLIES -> 2;
+            });
+    if (selected != null) selected.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
     player.openInventory(inventory);
   }
 
@@ -176,7 +206,7 @@ final class SurvivalMenus {
               }));
       choices.add(
           new Choice(
-              "Private locker · click inventory items to store",
+              "Private locker · shift-click inventory items to store",
               Material.ENDER_CHEST,
               () -> bank(player, station, Page.LOCKER)));
       var resources =
@@ -281,8 +311,13 @@ final class SurvivalMenus {
     if (menu.page == Page.LOCKER) {
       if (!runner.items().withdraw(player, slot))
         Texts.error(player, "Make room in your inventory first.");
-    } else if (slot >= 0 && slot < menu.choices.size()) {
-      menu.choices.get(slot).buy().run();
+    } else {
+      for (var index = 0; index < menu.choices.size(); index++) {
+        if (choiceSlot(menu, index) == slot) {
+          menu.choices.get(index).buy().run();
+          break;
+        }
+      }
     }
     if ((menu.page == Page.BANK || menu.page == Page.LOCKER)
         && player.getOpenInventory().getTopInventory().equals(inventory))
@@ -303,5 +338,95 @@ final class SurvivalMenus {
       return false;
     }
     return true;
+  }
+
+  private static boolean utility(Choice choice) {
+    return choice.label().startsWith("Repair ") || choice.label().startsWith("Enchant ");
+  }
+
+  void boon(Player player, com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk boon) {
+    var machine =
+        runner.map().content().machines().stream()
+            .filter(m -> m.type().name().equals(boon.name()))
+            .findFirst()
+            .orElseThrow();
+    var loadout = runner.actions().loadout(player);
+    if (loadout.has(boon)) {
+      Texts.info(player, boon.title() + " is equipped. " + boon.description());
+      return;
+    }
+    var choices = new ArrayList<Choice>();
+    var price = loadout.purchased(boon) ? "Free swap" : boon.price() + " emeralds";
+    if (loadout.equipped().size() < 2)
+      choices.add(
+          new Choice(
+              "Equip " + boon.title() + " · " + price,
+              Material.AMETHYST_SHARD,
+              () -> runner.actions().equip(player, boon, java.util.Optional.empty())));
+    else
+      for (var old : com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.values())
+        if (loadout.has(old))
+          choices.add(
+              new Choice(
+                  "Replace " + old.title() + " · " + price,
+                  Material.AMETHYST_SHARD,
+                  () -> runner.actions().equip(player, boon, java.util.Optional.of(old))));
+    simple(
+        player,
+        new Menu(player.getUniqueId(), machine.block(), choices, Page.BOON),
+        boon.title() + " · choose a slot");
+    Texts.info(player, boon.description() + " · Equip two boons; owned boons can be swapped free.");
+  }
+
+  void augment(Player player) {
+    var machine =
+        runner.map().content().machines().stream()
+            .filter(m -> m.type() == SurvivalContent.MachineType.RUNEFORGE)
+            .findFirst()
+            .orElseThrow();
+    var choices = new ArrayList<Choice>();
+    for (var slot :
+        List.of(
+            org.bukkit.inventory.EquipmentSlot.HAND,
+            org.bukkit.inventory.EquipmentSlot.OFF_HAND,
+            org.bukkit.inventory.EquipmentSlot.HEAD,
+            org.bukkit.inventory.EquipmentSlot.CHEST,
+            org.bukkit.inventory.EquipmentSlot.LEGS,
+            org.bukkit.inventory.EquipmentSlot.FEET)) {
+      var gear = player.getInventory().getItem(slot);
+      if (!runner.items().equipment(gear)) continue;
+      var identity = runner.items().identity(gear);
+      var tier = runner.items().tier(gear);
+      choices.add(
+          new Choice(
+              slot.name()
+                  + " · "
+                  + runner.items().rarity(gear)
+                  + " "
+                  + SurvivalItems.name(gear.getType())
+                  + " · "
+                  + (tier == 3 ? "Maximum III" : 12 * (tier + 1) + " emeralds"),
+              gear.getType(),
+              () -> new SurvivalEquipment(runner).augment(player, slot, identity)));
+    }
+    simple(
+        player,
+        new Menu(player.getUniqueId(), machine.block(), choices, Page.AUGMENT),
+        "Runeforge · select equipment");
+  }
+
+  private void simple(Player player, Menu menu, String title) {
+    var inventory = runner.context().server().createInventory(menu, 9, Component.text(title));
+    menu.inventory = inventory;
+    fillBank(player, inventory, menu.page, menu.choices);
+    player.openInventory(inventory);
+  }
+
+  private static int choiceSlot(Menu menu, int index) {
+    if (menu.page != Page.CRAFT || index < 3) return index;
+    var before = menu.choices.subList(3, index);
+    return utility(menu.choices.get(index))
+        ? 45 + (int) before.stream().filter(SurvivalMenus::utility).count()
+        : 18 + (int) before.stream().filter(c -> !utility(c)).count();
   }
 }

@@ -5,14 +5,11 @@ import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 /** Purchases, explicitly donated resources and modest class abilities. Main thread only. */
 final class SurvivalActions {
@@ -20,7 +17,8 @@ final class SurvivalActions {
   private final SurvivalRunner runner;
   private final PurchaseConfirmation purchases = new PurchaseConfirmation();
   private final Map<UUID, Integer> selfPurchases = new HashMap<>();
-  private final Map<UUID, Set<SurvivalPerk>> perks = new HashMap<>();
+  private final Map<UUID, com.shepherdjerred.thestorm.arena.domain.survival.BoonLoadout> perks =
+      new HashMap<>();
 
   SurvivalActions(SurvivalRunner runner) {
     this.runner = runner;
@@ -135,54 +133,53 @@ final class SurvivalActions {
   }
 
   boolean has(Player player, SurvivalPerk perk) {
-    return perks.getOrDefault(player.getUniqueId(), Set.of()).contains(perk);
+    return runner.isFighter(player.getUniqueId()) && loadout(player).has(perk);
   }
 
   String perks(Player player) {
-    return perks.getOrDefault(player.getUniqueId(), Set.of()).toString();
+    return loadout(player).equipped().stream()
+        .map(SurvivalPerk::title)
+        .sorted()
+        .collect(java.util.stream.Collectors.joining(", "));
+  }
+
+  com.shepherdjerred.thestorm.arena.domain.survival.BoonLoadout loadout(Player player) {
+    return perks.computeIfAbsent(
+        player.getUniqueId(),
+        _ -> new com.shepherdjerred.thestorm.arena.domain.survival.BoonLoadout());
   }
 
   void perk(Player player, SurvivalPerk perk) {
-    var id = player.getUniqueId();
-    var owned = perks.computeIfAbsent(id, _ -> new HashSet<>());
-    if (owned.contains(perk)) {
-      Texts.info(player, "You already have that perk.");
+    runner.menus().boon(player, perk);
+  }
+
+  void equip(Player player, SurvivalPerk perk, Optional<SurvivalPerk> replace) {
+    var loadout = loadout(player);
+    if (!runner.machines().powered() || !loadout.canEquip(perk, replace)) return;
+    if (!loadout.purchased(perk) && !runner.items().spend(player, Map.of("EMERALD", perk.price())))
       return;
-    }
-    var solo = runner.game().participants().size() == 1;
-    if (perk == SurvivalPerk.QUICK_REVIVE
-        && solo
-        && (selfPurchases.getOrDefault(id, 0) >= 2
-            || runner.game().player(id).orElseThrow().selfRevive())) {
-      Texts.info(player, "Use your existing self-revive first. At most two extra charges per run.");
-      return;
-    }
-    if (!runner.items().spend(player, Map.of("EMERALD", perk.price()))) return;
-    owned.add(perk);
-    if (perk == SurvivalPerk.QUICK_REVIVE && solo) {
-      if (!runner.game().purchaseSelfRevive(id))
-        throw new IllegalStateException("Self-revive purchase rejected");
-      selfPurchases.merge(id, 1, Integer::sum);
-    }
-    applyPerks(player);
+    loadout.equip(perk, replace);
     runner.feedback().perk(player, perk);
-    Texts.info(player, "Purchased " + perk + ". Perks are lost when downed.");
+    Texts.info(player, "Equipped " + perk.title() + ". " + perk.description());
+    player.closeInventory();
   }
 
-  void applyPerks(Player player) {
-    if (has(player, SurvivalPerk.JUGGERNOG))
-      player.addPotionEffect(
-          new PotionEffect(PotionEffectType.HEALTH_BOOST, PotionEffect.INFINITE_DURATION, 1));
-    if (has(player, SurvivalPerk.STAMIN_UP))
-      player.addPotionEffect(
-          new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0));
-  }
-
-  void losePerks(Player player) {
-    perks.remove(player.getUniqueId());
-    player.removePotionEffect(PotionEffectType.SPEED);
-    player.removePotionEffect(PotionEffectType.HEALTH_BOOST);
-    if (player.getHealth() > 20) player.setHealth(20);
+  void echoTotem(Player player) {
+    var id = player.getUniqueId();
+    if (runner.game().participants().size() != 1
+        || selfPurchases.getOrDefault(id, 0) >= 2
+        || runner.game().player(id).orElseThrow().selfRevive()) {
+      Texts.info(
+          player,
+          "Solo only: use your current Echo Totem first. Two additional purchases per run.");
+      return;
+    }
+    if (!runner.items().spend(player, Map.of("EMERALD", 16, "BONE", 4))) return;
+    if (!runner.game().purchaseSelfRevive(id))
+      throw new IllegalStateException("Echo Totem purchase rejected");
+    selfPurchases.merge(id, 1, Integer::sum);
+    runner.feedback().play(player, SurvivalFeedback.Cue.PURCHASE);
+    Texts.info(player, "Echo Totem ready. It restores you once when downed.");
   }
 
   void leave(UUID id) {

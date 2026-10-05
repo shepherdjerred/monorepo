@@ -26,6 +26,29 @@ final class SurvivalItems {
   private final SurvivalBank bank = new SurvivalBank();
   private final Map<Long, Payment> reserved = new java.util.HashMap<>();
   private long serial;
+  private final Map<UUID, Map<Integer, Integer>> returnSlots = new java.util.HashMap<>();
+
+  void reserveSlot(UUID player, int slot) {
+    returnSlots
+        .computeIfAbsent(player, _ -> new java.util.HashMap<>())
+        .merge(slot, 1, Integer::sum);
+  }
+
+  void releaseSlot(UUID player, int slot) {
+    var slots = returnSlots.get(player);
+    if (slots == null) throw new IllegalStateException("Missing trident slot reservation");
+    slots.compute(
+        slot,
+        (_, count) -> {
+          if (count == null) throw new IllegalStateException("Missing trident slot reservation");
+          return count == 1 ? null : count - 1;
+        });
+    if (slots.isEmpty()) returnSlots.remove(player);
+  }
+
+  private boolean availableSlot(UUID player, int slot) {
+    return !returnSlots.getOrDefault(player, Map.of()).containsKey(slot);
+  }
 
   SurvivalItems(Keys keys, UUID run, SurvivalFeedback feedback, SurvivalContent content) {
     this.keys = keys;
@@ -139,17 +162,8 @@ final class SurvivalItems {
     if (id == com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon.TIDEBREAKER)
       weapon.addEnchantment(org.bukkit.enchantments.Enchantment.LOYALTY, 3);
     keys.legendary(weapon, id);
-    weapon.editMeta(
-        meta -> {
-          meta.displayName(
-              net.kyori.adventure.text.Component.text(
-                  reward.name(),
-                  id.special()
-                      ? net.kyori.adventure.text.format.NamedTextColor.AQUA
-                      : net.kyori.adventure.text.format.NamedTextColor.GOLD));
-          meta.lore(
-              java.util.List.of(net.kyori.adventure.text.Component.text(reward.description())));
-        });
+    if (weapon.getType() == Material.BLAZE_ROD) identify(weapon);
+    rarity(weapon, id.rarity());
     return weapon;
   }
 
@@ -255,14 +269,16 @@ final class SurvivalItems {
     return SurvivalBank.insert(
         SurvivalBank.copy(
             java.util.Objects.requireNonNull(player.getInventory().getStorageContents())),
-        bundle);
+        bundle,
+        slot -> availableSlot(player.getUniqueId(), slot));
   }
 
   boolean deliverInventory(Player player, java.util.List<ItemStack> bundle) {
     var storage =
         SurvivalBank.copy(
             java.util.Objects.requireNonNull(player.getInventory().getStorageContents()));
-    if (!SurvivalBank.insert(storage, bundle)) return false;
+    if (!SurvivalBank.insert(storage, bundle, slot -> availableSlot(player.getUniqueId(), slot)))
+      return false;
     player.getInventory().setStorageContents(storage);
     return true;
   }
@@ -270,7 +286,143 @@ final class SurvivalItems {
   ItemStack stack(Material material, int amount) {
     var result = ItemStack.of(material, amount);
     keys.tag(result, run);
+    if (equipmentMaterial(material)) {
+      identify(result);
+      rarity(result, com.shepherdjerred.thestorm.arena.domain.survival.GearRarity.COMMON);
+    }
+    var consumable = result.getData(io.papermc.paper.datacomponent.DataComponentTypes.CONSUMABLE);
+    if (consumable != null)
+      result.setData(
+          io.papermc.paper.datacomponent.DataComponentTypes.CONSUMABLE,
+          consumable.toBuilder()
+              .consumeSeconds(
+                  material == Material.POTION || material == Material.MILK_BUCKET ? .8f : 1f)
+              .build());
     return result;
+  }
+
+  private void identify(ItemStack item) {
+    keys.identity(
+        item, new UUID(run.getMostSignificantBits(), run.getLeastSignificantBits() ^ ++serial));
+    keys.upgrade(item, 0);
+  }
+
+  static boolean equipmentMaterial(Material material) {
+    var name = material.name();
+    return armorSlot(material).isPresent()
+        || name.endsWith("_SWORD")
+        || name.endsWith("_AXE")
+        || name.endsWith("_SPEAR")
+        || java.util.Set.of(
+                Material.BOW, Material.CROSSBOW, Material.TRIDENT, Material.MACE, Material.SHIELD)
+            .contains(material);
+  }
+
+  boolean equipment(ItemStack item) {
+    return owns(item) && (equipmentMaterial(item.getType()) || legendary(item).isPresent());
+  }
+
+  UUID identity(ItemStack item) {
+    if (!equipment(item)) throw new IllegalArgumentException("Not run equipment");
+    return keys.identity(item);
+  }
+
+  com.shepherdjerred.thestorm.arena.domain.survival.GearRarity rarity(ItemStack item) {
+    if (!equipment(item)) throw new IllegalArgumentException("Not run equipment");
+    return keys.rarity(item);
+  }
+
+  void rarity(ItemStack item, com.shepherdjerred.thestorm.arena.domain.survival.GearRarity rarity) {
+    keys.rarity(item, rarity);
+    if (rarity != com.shepherdjerred.thestorm.arena.domain.survival.GearRarity.COMMON)
+      enchantRarity(item, rarity);
+    describe(item);
+  }
+
+  private static void enchantRarity(
+      ItemStack item, com.shepherdjerred.thestorm.arena.domain.survival.GearRarity rarity) {
+
+    var primary =
+        armorSlot(item.getType()).isPresent()
+            ? org.bukkit.enchantments.Enchantment.PROTECTION
+            : SurvivalEquipment.primary(item);
+    if (primary.canEnchantItem(item) && !item.getItemMeta().hasConflictingEnchant(primary))
+      item.addEnchantment(
+          primary,
+          Math.max(
+              item.getEnchantmentLevel(primary),
+              Math.min(primary.getMaxLevel(), rarity.primaryLevel())));
+    if (org.bukkit.enchantments.Enchantment.UNBREAKING.canEnchantItem(item))
+      item.addEnchantment(
+          org.bukkit.enchantments.Enchantment.UNBREAKING,
+          Math.max(
+              item.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.UNBREAKING),
+              rarity == com.shepherdjerred.thestorm.arena.domain.survival.GearRarity.UNCOMMON
+                  ? 1
+                  : 3));
+    if (item.getType() == Material.TRIDENT)
+      item.addEnchantment(
+          org.bukkit.enchantments.Enchantment.LOYALTY,
+          Math.max(
+              item.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.LOYALTY),
+              rarity == com.shepherdjerred.thestorm.arena.domain.survival.GearRarity.UNCOMMON
+                  ? 1
+                  : 3));
+    if (item.getType() == Material.CROSSBOW)
+      item.addEnchantment(
+          org.bukkit.enchantments.Enchantment.PIERCING,
+          Math.max(
+              item.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.PIERCING),
+              rarity == com.shepherdjerred.thestorm.arena.domain.survival.GearRarity.UNCOMMON
+                  ? 1
+                  : 4));
+  }
+
+  private void describe(ItemStack item) {
+    var rarity = keys.rarity(item);
+    var effect =
+        legendary(item)
+            .map(
+                id ->
+                    content.legendaries().stream()
+                        .filter(r -> r.id() == id)
+                        .findFirst()
+                        .orElseThrow());
+    var title =
+        rarity.name().substring(0, 1)
+            + rarity.name().substring(1).toLowerCase(java.util.Locale.ROOT);
+    var level = tier(item);
+    var suffix = level == 0 ? "" : " " + java.util.List.of("", "I", "II", "III").get(level);
+    var color =
+        switch (rarity) {
+          case COMMON -> net.kyori.adventure.text.format.NamedTextColor.WHITE;
+          case UNCOMMON -> net.kyori.adventure.text.format.NamedTextColor.GREEN;
+          case EPIC -> net.kyori.adventure.text.format.NamedTextColor.LIGHT_PURPLE;
+          case LEGENDARY -> net.kyori.adventure.text.format.NamedTextColor.GOLD;
+          case MYTHIC -> net.kyori.adventure.text.format.NamedTextColor.AQUA;
+        };
+    item.editMeta(
+        meta -> {
+          meta.displayName(
+              net.kyori.adventure.text.Component.text(
+                  title
+                      + suffix
+                      + " · "
+                      + effect
+                          .map(SurvivalContent.LegendaryReward::name)
+                          .orElseGet(() -> name(item.getType())),
+                  color));
+          var lore = new java.util.ArrayList<net.kyori.adventure.text.Component>();
+          lore.add(
+              net.kyori.adventure.text.Component.text(
+                  "Rarity: "
+                      + title
+                      + " · Augmentation: "
+                      + (level == 0 ? "None" : suffix.trim())));
+          effect.ifPresent(
+              value -> lore.add(net.kyori.adventure.text.Component.text(value.description())));
+          meta.lore(lore);
+        });
   }
 
   boolean owns(ItemStack item) {
@@ -412,7 +564,13 @@ final class SurvivalItems {
             || stack.getType() == Material.BOW
             || stack.getType() == Material.CROSSBOW
             || stack.getType() == Material.TRIDENT
-            || legendary(stack).isPresent());
+            || legendary(stack)
+                .filter(
+                    id ->
+                        id
+                            == com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon
+                                .GRAVITON)
+                .isPresent());
   }
 
   int tier(ItemStack stack) {
@@ -431,25 +589,11 @@ final class SurvivalItems {
   }
 
   void upgrade(ItemStack stack, int tier) {
-    if (!weapon(stack) || tier < 1 || tier > 3)
+    if (!equipment(stack) || tier < 1 || tier > 3)
       throw new IllegalArgumentException("Invalid upgrade");
     keys.upgrade(stack, tier);
     stack.editMeta(
         meta -> {
-          meta.displayName(
-              net.kyori.adventure.text.Component.text(
-                  "Pack-a-Punch "
-                      + tier
-                      + " · "
-                      + legendary(stack)
-                          .map(
-                              id ->
-                                  content.legendaries().stream()
-                                      .filter(r -> r.id() == id)
-                                      .findFirst()
-                                      .orElseThrow()
-                                      .name())
-                          .orElseGet(() -> name(stack.getType()))));
           if (meta instanceof org.bukkit.inventory.meta.Damageable damageable)
             damageable.setDamage(0);
         });
@@ -462,6 +606,7 @@ final class SurvivalItems {
           org.bukkit.enchantments.Enchantment.UNBREAKING,
           Math.max(
               stack.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.UNBREAKING), tier));
+    describe(stack);
   }
 
   void debug(Player player, int round) {

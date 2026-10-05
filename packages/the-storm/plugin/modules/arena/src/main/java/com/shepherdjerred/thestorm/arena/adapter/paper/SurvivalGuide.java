@@ -17,45 +17,48 @@ final class SurvivalGuide {
 
   private org.bukkit.inventory.ItemStack book() {
     var book = runner.items().stack(Material.WRITTEN_BOOK, 1);
-    var pages =
-        new ArrayList<String>(
-            List.of(
-                "Survive together\n\nChoose a class with your compass or /survival classes. Click the iron ready block or use /arena ready to toggle readiness. Everyone must be ready. Joining, changing class, or becoming unready cancels the ten-second countdown.",
-                "Waves and revives\n\nDefeat every enemy to finish a round. The bar shows how many remain. Eight seconds separate rounds. Bosses arrive every five rounds. Solo runs grant one self-revive. In a team, hold sneak within three blocks of a downed survivor for five seconds. Keep line of sight.",
-                "Gather and grow\n\nA nearby glint marks a resource you can harvest. Right-click it. Each material has two harvests per player per round, shared across its nodes. Sneak and right-click to upgrade a node for everyone after opening "
-                    + district("foundry")
-                    + " or "
-                    + district("crypt")
-                    + ". Upgrades cost 8 then 16 emeralds.",
-                "Equipment and supplies\n\nWorkbenches and forges offer weapon, armor and supply tabs. Craft all four armor pieces, repair equipment, or enchant a held weapon. Supply stations offer varied food and potions. Repair barricades with planks and charge traps with iron and redstone.",
-                "Your bank\n\nRight-click an ender chest terminal. Deposit supplies with one click: materials, arrows and emeralds belong to the team. Purchases spend carried supplies first, then the bank. Withdraw arrows to fire bows. Click inventory gear to store it privately. Your locker holds 54 slots and survives downs.",
-                "Bank withdrawals\n\nSelect a team supply to withdraw up to one stack. The private locker holds your exact items, including enchantments and upgrades. Click a locker item to withdraw it. Rewards go to your locker if your inventory is full. Everything in the bank resets when the run ends; your private items disappear if you leave.",
-                "Routes and power\n\nLocked route signs show the price. Click twice within three seconds to buy. Every player gains access. Restore power at "
-                    + runner.map().powerDistrict()
-                    + " with four iron and four redstone to enable most perk machines and the mystery box. The magenta beacon marks the active box.",
-                "Perks and upgrades\n\nJuggernog increases health; Stamin-Up improves speed; Double Tap increases damage. Quick Revive speeds team revives or buys a solo self-revive. Perks are lost when downed. Pack-a-Punch repairs and upgrades a held weapon for 12, 24, then 36 emeralds.",
-                "Power-ups\n\nWalk near a floating pickup to help the team. Max Ammo supplies 32 arrows to ranged survivors. Double Emeralds doubles kill rewards for 30 seconds. Insta-Kill defeats ordinary enemies in one hit for 15 seconds. Nuke clears ordinary enemies. Carpenter repairs barricades and heals two hearts.",
-                "Bosses and travel\n\nMove away from marked ground before a spell lands. The Breeze Sovereign deflects ranged attacks: use melee during recovery. Watch glowing objectives during ritual and heart encounters. Find and install three plane parts to reach the offshore forge; later trips need fuel. Rounds continue while you travel.",
-                "Leaving and watching\n\nUse /arena leave to exit. Your normal inventory is restored. Leaving does not bring run items home. Use /arena spec "
-                    + runner.id()
-                    + " to watch an active run. Class experience persists across normal games; debug games award no persistent progression."));
-    for (var profile : runner.map().content().classes()) {
-      pages.add(
-          profile.role().name().toLowerCase(java.util.Locale.ROOT)
-              + "\n\n"
-              + profile.passive()
-              + "\n\n"
-              + profile.ability()
-              + "\n\nUpgrades follow rounds 4, 9, and 14. Sneak and right-click your class compass to choose.");
+    var entries =
+        com.shepherdjerred.thestorm.arena.domain.survival.SurvivalTutorials.catalog()
+            .tips()
+            .stream()
+            .map(
+                tip ->
+                    new Chapter(title(tip.key()), paginate(title(tip.key()) + "\n\n" + tip.text())))
+            .toList();
+    var pages = new ArrayList<Component>();
+    var indexPages = Math.ceilDiv(entries.size(), 7);
+    var destination = indexPages + 1;
+    for (var start = 0; start < entries.size(); start += 7) {
+      var index = Component.text("Survivor's handbook\nClick a topic to read\n\n");
+      for (var chapter : entries.subList(start, Math.min(start + 7, entries.size()))) {
+        index =
+            index.append(
+                Component.text(
+                        chapter.title() + "\n",
+                        net.kyori.adventure.text.format.NamedTextColor.DARK_BLUE)
+                    .clickEvent(net.kyori.adventure.text.event.ClickEvent.changePage(destination)));
+        destination += chapter.pages().size();
+      }
+      pages.add(index);
     }
+    entries.forEach(chapter -> pages.addAll(chapter.pages()));
+    if (pages.size() > 100)
+      throw new IllegalStateException("Survivor handbook exceeds native book capacity");
     book.editMeta(
         meta -> {
           var written = (BookMeta) meta;
           written.title(Component.text("Survivor's handbook"));
           written.author(Component.text("The Storm"));
-          written.pages(pages.stream().flatMap(page -> paginate(page).stream()).toList());
+          written.pages(pages);
         });
     return book;
+  }
+
+  private record Chapter(String title, List<Component> pages) {}
+
+  private static String title(com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey key) {
+    var raw = key.variant().isEmpty() ? key.topic().name() : key.variant();
+    return raw.toLowerCase(java.util.Locale.ROOT).replace('_', ' ').replace('-', ' ');
   }
 
   private static List<Component> paginate(String text) {
@@ -71,14 +74,6 @@ final class SurvivalGuide {
     }
     if (!page.isEmpty()) pages.add(Component.text(page.toString()));
     return pages;
-  }
-
-  private String district(String id) {
-    return runner.map().content().zones().stream()
-        .filter(zone -> zone.id().equals(id))
-        .findFirst()
-        .orElseThrow()
-        .name();
   }
 
   void prepare() {

@@ -37,6 +37,11 @@ public final class ArenaNativeProbe {
             .forEach(runner.map()::unlock);
         yield "Opened test terrain routes";
       }
+      case "hungry" -> {
+        player.setSaturation(0);
+        player.setFoodLevel(10);
+        yield "Prepared native food consumption";
+      }
       case "targets" -> {
         for (var index = 0; index < 3; index++) {
           var target =
@@ -44,11 +49,12 @@ public final class ArenaNativeProbe {
                   .world()
                   .spawnAt(
                       new com.shepherdjerred.thestorm.arena.domain.wave.SpawnUnit(
-                          "zombie", 5, 1, 1),
+                          "zombie", 100, 1, 1),
                       Places.at(player).clone().add(-4, 0, (index - 1) * 2),
-                      false)
+                      true)
                   .orElseThrow()
                   .getFirst();
+          runner.combat().probeTarget(target);
           target.setAI(false);
           target.customName(net.kyori.adventure.text.Component.text("Legendary target " + index));
           target.setCustomNameVisible(true);
@@ -60,6 +66,11 @@ public final class ArenaNativeProbe {
         if (!runner.items().deliver(player, java.util.List.of(runner.items().legendary(id))))
           throw new IllegalStateException("Probe reward does not fit");
         yield "Granted test legendary " + id;
+      }
+      case "drop" -> {
+        var drop = com.shepherdjerred.thestorm.arena.domain.survival.SurvivalDrop.valueOf(value);
+        runner.drops().drop(drop, Places.at(player).clone().add(-4, 1, 0));
+        yield "Prepared field salvage " + drop;
       }
       case "inspect" -> {
         var build = runner.talents().build(player.getUniqueId());
@@ -77,6 +88,20 @@ public final class ArenaNativeProbe {
             + runner.machines().box().active()
             + " "
             + runner.talents().status(player);
+      }
+      case "cast" -> {
+        var boss = runner.combat().boss().orElseThrow();
+        var cast = boss.cast().orElseThrow();
+        yield String.format(
+            java.util.Locale.ROOT,
+            "{\"shape\":\"%s\",\"origin\":[%.4f,%.4f,%.4f],\"aim\":[%.4f,%.4f,%.4f]}",
+            cast.shape().name(),
+            cast.origin().x(),
+            cast.origin().y(),
+            cast.origin().z(),
+            cast.aim().x(),
+            cast.aim().y(),
+            cast.aim().z());
       }
       case "bank" -> {
         var bank = runner.items().bank();
