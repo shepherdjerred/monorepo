@@ -62,6 +62,16 @@ async function loadJudge(): Promise<typeof JudgeModule> {
   }
 }
 
+function buildName(raw: string): string {
+  const parsed = SessionNameSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `--name must be 1-32 lowercase letters, digits or hyphens (got "${raw}")`,
+    );
+  }
+  return parsed.data;
+}
+
 export const BUILD_USAGE = `
 toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
 
@@ -177,7 +187,7 @@ function libraryTable(rows: LibraryRow[]): string {
 const HANDLERS: Record<string, Handler> = {
   init: async (_env, dir, values) => {
     const result = await initBuild(dir, {
-      name: SessionNameSchema.parse(required(values.name, "--name")),
+      name: buildName(required(values.name, "--name")),
       world: required(values.world, "--world"),
       anchor: parseBlockPos(required(values.anchor, "--anchor")),
       seed: Number(values.seed ?? "1"),
@@ -473,6 +483,12 @@ async function main(): Promise<number> {
 try {
   process.exitCode = await main();
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(
+    error instanceof z.ZodError
+      ? z.prettifyError(error)
+      : error instanceof Error
+        ? error.message
+        : String(error),
+  );
   process.exitCode = 1;
 }
