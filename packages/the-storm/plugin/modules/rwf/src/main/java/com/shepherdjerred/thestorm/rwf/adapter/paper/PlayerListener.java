@@ -18,11 +18,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * Players and the match: restoring on join, leaving on quit (members and watchers), dying,
- * respawning as a spectator, teleport refusals, and the right-clicks that arm bombs and use the
- * Time Machine.
+ * respawning as a spectator, teleport refusals, and the right-clicks that arm bombs, use the Time
+ * Machine, open the kit menu and leave from the lobby.
  */
 final class PlayerListener implements Listener {
 
@@ -187,6 +188,9 @@ final class PlayerListener implements Listener {
       return;
     }
     var item = event.getItem();
+    if (item != null && rightClick(event) && lobbyItem(event, player, item)) {
+      return;
+    }
     var block = event.getClickedBlock();
     if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && item != null) {
       var site = bombs.siteAt(Places.pos(block));
@@ -208,6 +212,26 @@ final class PlayerListener implements Listener {
           .useRewind(member.orElseThrow().id())
           .ifPresent(refusal -> Texts.error(player, refusal));
     }
+  }
+
+  /**
+   * The lobby's selector opens the kit menu and its leave item leaves, as {@code /rwf leave} does.
+   * Returns whether {@code item} was one of them.
+   */
+  private boolean lobbyItem(PlayerInteractEvent event, Player player, ItemStack item) {
+    if (keys.isSelector(item)) {
+      event.setUseItemInHand(Event.Result.DENY);
+      event.setUseInteractedBlock(Event.Result.DENY);
+      runner.openKitMenu(player).ifPresent(refusal -> Texts.error(player, refusal));
+      return true;
+    }
+    if (keys.isLeave(item)) {
+      event.setUseItemInHand(Event.Result.DENY);
+      event.setUseInteractedBlock(Event.Result.DENY);
+      runner.leave(player).ifPresent(refusal -> Texts.error(player, refusal));
+      return true;
+    }
+    return false;
   }
 
   private static boolean rightClick(PlayerInteractEvent event) {

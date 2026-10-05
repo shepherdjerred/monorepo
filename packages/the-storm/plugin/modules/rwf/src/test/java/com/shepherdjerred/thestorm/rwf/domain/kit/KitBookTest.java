@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 final class KitBookTest {
 
+  private static final KitSpec.Menu MENU = new KitSpec.Menu("STONE", List.of("A stone"));
+
   @Nested
   final class Kits {
 
@@ -75,6 +77,20 @@ final class KitBookTest {
     }
 
     @Test
+    void everyKitHasAMenuIconAndASummaryThatFitsATooltip() {
+      assertThat(KitBook.MILESTONE_ONE)
+          .extracting(kit -> kit.menu().icon())
+          .containsExactly("IRON_SWORD", "BOW", "ARROW", "CLOCK");
+      for (var kit : KitBook.MILESTONE_ONE) {
+        assertThat(kit.menu().summary()).isNotEmpty().allMatch(line -> line.length() <= 40);
+      }
+      assertThatThrownBy(() -> new KitSpec.Menu("bow", List.of("x"))).hasMessageContaining("icon");
+      assertThatThrownBy(() -> new KitSpec.Menu("BOW", List.of())).hasMessageContaining("1 to 4");
+      assertThatThrownBy(() -> new KitSpec.Menu("BOW", List.of("x".repeat(41))))
+          .hasMessageContaining("40 characters");
+    }
+
+    @Test
     void kitsAreFoundById() {
       assertThat(KitBook.byId("shortbow")).contains(KitBook.SHORTBOW);
       assertThat(KitBook.byId("ninja")).isEmpty();
@@ -93,7 +109,8 @@ final class KitBookTest {
                       Optional.empty(),
                       List.of(),
                       List.of(),
-                      Optional.empty()))
+                      Optional.empty(),
+                      MENU))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("PURCHASE");
       assertThatThrownBy(
@@ -109,7 +126,8 @@ final class KitBookTest {
                       List.of(
                           ItemSpec.armor("IRON_BOOTS", ArmorSlot.BOOTS),
                           ItemSpec.armor("GOLDEN_BOOTS", ArmorSlot.BOOTS)),
-                      Optional.empty()))
+                      Optional.empty(),
+                      MENU))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("two pieces");
     }

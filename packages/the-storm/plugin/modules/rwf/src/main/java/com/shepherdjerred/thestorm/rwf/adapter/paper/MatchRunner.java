@@ -85,6 +85,7 @@ final class MatchRunner implements MatchView, MatchEvents {
    * @param lobby the lobby room
    * @param hud the countdown boss bar and titles
    * @param displays the lobby's rules, match board and kit alcoves
+   * @param menus opens the kit menu
    */
   record Parts(
       PaperContext context,
@@ -101,7 +102,8 @@ final class MatchRunner implements MatchView, MatchEvents {
       Recordings recordings,
       LobbyRoom lobby,
       LobbyHud hud,
-      LobbyDisplays displays) {}
+      LobbyDisplays displays,
+      KitMenu.Opener menus) {}
 
   /** A member's running tally. */
   private static final class Tally {
@@ -387,6 +389,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     pendingPay.clear();
     poisoned.clear();
     parts.hud().hideAll();
+    humanEntities().forEach(KitMenu::close);
     parts.hud().fight(humanEntities());
     parts.bombs().place(currentMap().definition());
     parts.recordings().start(match, currentMap().definition(), now());
@@ -871,10 +874,40 @@ final class MatchRunner implements MatchView, MatchEvents {
       return;
     }
     effects.enterLobby(member.orElseThrow().id());
-    member
-        .orElseThrow()
-        .kit()
-        .ifPresent(kit -> parts.kits().equip(player, parts.kits().require(kit)));
+    member.orElseThrow().kit().ifPresent(kit -> effects.equip(member.orElseThrow().id(), kit));
+  }
+
+  /** {@code player} picks {@code kit}, as {@code /rwf kit} and the kit menu do; why not, if not. */
+  Optional<String> pickKit(Player player, String kit) {
+    var member = memberOf(player.getUniqueId());
+    if (member.isEmpty()) {
+      return Optional.of(Texts.describe(MatchError.NOT_A_MEMBER));
+    }
+    return handle(new MatchEvent.PickKit(member.orElseThrow().id(), kit)).map(Texts::describe);
+  }
+
+  /**
+   * {@code player} leaves the match, as {@code /rwf leave} and the leave item do; why not, if not.
+   */
+  Optional<String> leave(Player player) {
+    var member = memberOf(player.getUniqueId());
+    if (member.isEmpty()) {
+      return Optional.of(Texts.describe(MatchError.NOT_A_MEMBER));
+    }
+    return handle(new MatchEvent.Leave(member.orElseThrow().id(), now())).map(Texts::describe);
+  }
+
+  /** Opens the kit menu for a member waiting for the start, marking the kit they picked. */
+  Optional<String> openKitMenu(Player player) {
+    var member = memberOf(player.getUniqueId());
+    if (member.isEmpty()) {
+      return Optional.of(Texts.describe(MatchError.NOT_A_MEMBER));
+    }
+    if (!match.phase().preGame()) {
+      return Optional.of(Texts.describe(MatchError.NOT_PRE_GAME));
+    }
+    var _ = parts.menus().open(player, member.orElseThrow().kit());
+    return Optional.empty();
   }
 
   private void spectate(Player player, Spawn at) {
@@ -963,10 +996,7 @@ final class MatchRunner implements MatchView, MatchEvents {
             withEntity(
                 teleport.id(),
                 player -> player.teleport(Places.location(parts.context().world(), teleport.to())));
-        case MatchEffect.Equip equip ->
-            withEntity(
-                equip.id(),
-                player -> parts.kits().equip(player, parts.kits().require(equip.kitId())));
+        case MatchEffect.Equip equip -> equip(equip.id(), equip.kitId());
         case MatchEffect.GiveFuse fuse ->
             withEntity(fuse.id(), player -> parts.kits().giveFuse(player, fuse.bonus()));
         case MatchEffect.Tell tell ->
@@ -1007,6 +1037,21 @@ final class MatchRunner implements MatchView, MatchEvents {
         case MatchEffect.RevertCraters _ -> revert();
         default -> throw new IllegalStateException("unhandled effect " + effect);
       }
+    }
+
+    /**
+     * Gives {@code id} the kit; a human still waiting for the start also gets the lobby's selector
+     * and leave item back, which equipping takes away.
+     */
+    void equip(CombatantId id, String kitId) {
+      withEntity(
+          id,
+          player -> {
+            parts.kits().equip(player, parts.kits().require(kitId));
+            if (!id.isBot() && match.phase().preGame()) {
+              parts.kits().giveLobbyItems(player);
+            }
+          });
     }
 
     private void withEntity(CombatantId id, Consumer<Player> action) {
@@ -1053,6 +1098,7 @@ final class MatchRunner implements MatchView, MatchEvents {
             return;
           }
           removeAttackSpeed(player);
+          KitMenu.close(player);
           parts.boards().hide(player);
           parts.hud().hide(player);
           parts.snapshots().restore(player);
@@ -1069,8 +1115,12 @@ final class MatchRunner implements MatchView, MatchEvents {
             addAttackSpeed(player);
             parts.boards().show(player);
             if (!id.isBot()) {
+              parts.kits().giveLobbyItems(player);
               parts.hud().show(player);
-              Texts.info(player, "Pick a kit with /rwf kit <id>; leave with /rwf leave.");
+              Texts.info(
+                  player,
+                  "Right-click the nether star to choose a kit (or /rwf kit <id>); leave with the"
+                      + " red dye or /rwf leave.");
               if (parts.recordings().enabled()) {
                 Texts.info(player, Texts.RECORDING_DISCLOSURE);
               }

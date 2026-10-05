@@ -825,8 +825,10 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   the 30 s no-humans abort), the ported rule constants pinned to the code,
   rewards (3 win / 1 lose scaled by the human share, a daily cap, the minimum
   match length), recording and the load-test switch.
-- `rwf/kits.yml`: the kits as the operator sees them; it must describe
-  `KitBook` kit for kit or the module refuses to start.
+- `rwf/kits.yml`: the kits as the operator sees them, each with the `icon`
+  material and the one to four `summary` lines the kit menu and the lobby's
+  alcoves show; it must describe `KitBook` kit for kit or the module refuses
+  to start.
 - `rwf/maps/<id>/map.yml` and `blocks.schem`: a map's teams, spawns, bombs,
   nukes, region and the SHA-256 of its Sponge v3 schematic. The module pastes
   every map at enable and whenever the world's blocks stop matching the hash,
@@ -951,12 +953,23 @@ falling out of it, say) is put back. Nothing hurts there and nothing can be
 broken. Display entities dress it, because the schematic carries no block
 entities: the rules in front of the north wall, a live match board (map,
 players and bots, and the wait or the countdown) in front of the south wall,
-and in each kit alcove the kit's item with its name and contents. They are
+and in each kit alcove the kit's menu icon with its name and summary. They are
 tagged, never saved with the world, swept and respawned when the lobby opens
 and removed on disable, so none is ever duplicated. A boss bar shared by the
 humans waiting says how many more players the match needs or counts it down,
 the last five seconds and the start show as titles, and the bar goes when the
 match goes live, ends, or the player leaves.
+
+Every human in the lobby carries two items: a nether star ("Choose kit") in
+the last hotbar slot and red dye ("Leave match") beside it, given on entering
+and again after every pick, since equipping empties the inventory. Both are
+kit items, so they never leave the match, and the start's equip takes them
+away. Right-clicking the star opens `KitMenu`, a read-only 27-slot chest with
+one icon per shipped kit (the picked one glints); a click picks that kit
+through the same `MatchEvent.PickKit` path as `/rwf kit` and closes the menu.
+Every click and drag while it is open is cancelled, members may open no other
+container, and the menu closes when the match goes live or the player leaves.
+The dye leaves through the `/rwf leave` path.
 
 ### Watch a bot match locally
 

@@ -22,10 +22,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * Keeps kit items in the match and the Bomb Fuse in slot 0. A member opens only their own
- * inventory, drops nothing, places nothing, picks up only kit items, and cannot move, swap or drop
- * the fuse. Anyone outside who somehow holds a kit item loses it the moment they open, click, close
- * or pick it up.
+ * Keeps kit items in the match and the Bomb Fuse in slot 0. A member opens only their own inventory
+ * and the kit menu, drops nothing, places nothing, picks up only kit items, and cannot move, swap
+ * or drop the fuse. Anyone outside who somehow holds a kit item loses it the moment they open,
+ * click, close or pick it up.
  */
 final class ItemGuard implements Listener {
 
@@ -77,7 +77,9 @@ final class ItemGuard implements Listener {
     var player = event.getPlayer();
     if (member(player.getUniqueId())) {
       var type = event.getInventory().getType();
-      if (type != InventoryType.PLAYER && type != InventoryType.CRAFTING) {
+      if (type != InventoryType.PLAYER
+          && type != InventoryType.CRAFTING
+          && !(event.getInventory().getHolder() instanceof KitMenu)) {
         event.setCancelled(true);
       }
       return;

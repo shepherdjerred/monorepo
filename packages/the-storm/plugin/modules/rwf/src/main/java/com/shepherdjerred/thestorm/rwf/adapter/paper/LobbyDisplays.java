@@ -1,12 +1,8 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
-import com.shepherdjerred.thestorm.rwf.domain.kit.ItemSpec;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyStatus;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Consumer;
@@ -23,7 +19,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * The lobby's dressing, as display entities because the room's schematic carries no block entities:
  * the rules in front of the north wall, a live match board in front of the south wall, and in each
- * kit alcove the kit's item over its pedestal with its name and contents above. Every entity is
+ * kit alcove the kit's menu icon over its pedestal with its name and summary above. Every entity is
  * tagged, not saved with the world, and swept before the room is dressed again, so they are never
  * duplicated. Main thread only.
  */
@@ -48,8 +44,8 @@ final class LobbyDisplays {
           "An armed bomb explodes after 60 seconds and kills its team.",
           "The nuke in the middle kills everyone but the team that armed it.",
           "After about ten minutes the poison ends the round.",
-          "Pick a kit at the alcoves with /rwf kit <name>.",
-          "Leave at any time with /rwf leave.");
+          "Right-click the nether star to choose a kit (or /rwf kit <name>).",
+          "Right-click the red dye (or /rwf leave) to go back to survival.");
 
   private final PaperContext context;
   private final Keys keys;
@@ -159,7 +155,7 @@ final class LobbyDisplays {
                 at,
                 ItemDisplay.class,
                 display -> {
-                  display.setItemStack(items.kitItem(signature(kit)));
+                  display.setItemStack(items.icon(kit, false));
                   decorate(display, ITEM + kit.id());
                 },
                 SpawnReason.CUSTOM);
@@ -169,11 +165,6 @@ final class LobbyDisplays {
     style.accept(display);
     display.setPersistent(false);
     keys.tagLobby(display, part);
-  }
-
-  /** The item a kit is shown by: the first of its hotbar after the fuse. */
-  static ItemSpec signature(KitSpec kit) {
-    return kit.hotbar().getFirst();
   }
 
   private static Component rules() {
@@ -186,51 +177,11 @@ final class LobbyDisplays {
 
   private static Component label(KitSpec kit) {
     var text = Component.text(kit.name(), NamedTextColor.GOLD, TextDecoration.BOLD);
-    for (var line : contents(kit)) {
+    for (var line : kit.menu().summary()) {
       text = text.appendNewline().append(Component.text(line, NamedTextColor.GRAY));
     }
     return text.appendNewline()
         .append(Component.text("/rwf kit " + kit.id(), NamedTextColor.YELLOW));
-  }
-
-  /** What a kit carries, a line per hotbar item and one for its armour. */
-  static List<String> contents(KitSpec kit) {
-    var lines = new ArrayList<String>();
-    for (var item : kit.hotbar()) {
-      lines.add(describe(item));
-    }
-    var tiers = new LinkedHashSet<String>();
-    for (var piece : kit.armor()) {
-      var material = piece.material();
-      tiers.add(words(material.substring(0, material.lastIndexOf('_'))).toLowerCase(Locale.ROOT));
-    }
-    lines.add("Armour: " + String.join(" and ", tiers));
-    return List.copyOf(lines);
-  }
-
-  static String describe(ItemSpec item) {
-    var name = item.name().orElseGet(() -> words(item.material()));
-    var out = new StringBuilder();
-    if (item.amount() > 1) {
-      out.append(item.amount()).append(' ');
-    }
-    out.append(name);
-    if (!item.enchantments().isEmpty()) {
-      var enchantments = new ArrayList<String>();
-      new TreeMap<>(item.enchantments())
-          .forEach((key, level) -> enchantments.add(words(key) + " " + KitFactory.roman(level)));
-      out.append(" (").append(String.join(", ", enchantments)).append(')');
-    }
-    return out.toString();
-  }
-
-  /** {@code IRON_SWORD} or {@code fire_aspect} as {@code Iron Sword} or {@code Fire Aspect}. */
-  static String words(String id) {
-    var out = new ArrayList<String>();
-    for (var word : id.toLowerCase(Locale.ROOT).split("_", -1)) {
-      out.add(word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1));
-    }
-    return String.join(" ", out);
   }
 
   /** The board's lines: a title, then the map, who is in, and what the match is doing. */

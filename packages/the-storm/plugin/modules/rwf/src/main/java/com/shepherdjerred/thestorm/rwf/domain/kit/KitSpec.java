@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
  * @param hotbar the items after the fuse, in slot order
  * @param armor the armor worn, at most one piece per slot
  * @param ability the pure ability the kit carries, if any; see the module's KITS.md
+ * @param menu how the kit menu and the lobby's alcove show it
  */
 public record KitSpec(
     String id,
@@ -33,7 +34,8 @@ public record KitSpec(
     Optional<FuseBonus> fuseBonus,
     List<ItemSpec> hotbar,
     List<ItemSpec> armor,
-    Optional<String> ability) {
+    Optional<String> ability,
+    Menu menu) {
 
   /** The fuse every kit carries in slot 0. */
   public static final ItemSpec FUSE = ItemSpec.of("BLAZE_POWDER").named("Bomb Fuse");
@@ -66,6 +68,37 @@ public record KitSpec(
               .orElseThrow(() -> new IllegalArgumentException("armor must name its slot: " + id));
       if (!slots.add(slot)) {
         throw new IllegalArgumentException(id + " wears two pieces in " + slot);
+      }
+    }
+  }
+
+  /**
+   * How a kit is shown in the kit menu and its lobby alcove.
+   *
+   * @param icon the material of its menu icon and alcove item, such as {@code BOW}
+   * @param summary one to four short lines of what it carries and does, shown as the icon's lore
+   */
+  public record Menu(String icon, List<String> summary) {
+
+    /** The longest summary line, in characters, so the lore fits a tooltip. */
+    public static final int LINE_LENGTH = 40;
+
+    private static final int MAX_LINES = 4;
+    private static final Pattern MATERIAL = Pattern.compile("[A-Z][A-Z0-9_]*");
+
+    public Menu {
+      if (!MATERIAL.matcher(icon).matches()) {
+        throw new IllegalArgumentException("icon must be a material such as BOW: " + icon);
+      }
+      summary = List.copyOf(summary);
+      if (summary.isEmpty() || summary.size() > MAX_LINES) {
+        throw new IllegalArgumentException("a kit summary has 1 to " + MAX_LINES + " lines");
+      }
+      for (var line : summary) {
+        if (line.isBlank() || line.length() > LINE_LENGTH) {
+          throw new IllegalArgumentException(
+              "summary lines must be 1 to " + LINE_LENGTH + " characters: " + line);
+        }
       }
     }
   }

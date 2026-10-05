@@ -2,28 +2,15 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyStatus;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/** The words the lobby shows: kit contents on the alcoves, the match board and the boss bar. */
+/** The words the lobby shows: the match board and the boss bar. */
 final class LobbyTextsTest {
 
   private static LobbyStatus status(LobbyStatus.Stage stage, int needed, int seconds) {
     return new LobbyStatus(stage, Optional.of("Training Yard"), 1, 7, needed, seconds, 0.5);
-  }
-
-  @Test
-  void anAlcoveListsItsKitsItemsAndArmour() {
-    assertThat(LobbyDisplays.contents(KitBook.TROOPER))
-        .containsExactly("Iron Sword (Sharpness I)", "3 Golden Apple", "Armour: iron");
-    assertThat(LobbyDisplays.contents(KitBook.LONGBOW))
-        .containsExactly(
-            "Stone Sword", "Bow (Infinity I, Punch III)", "Arrow", "Armour: chainmail and iron");
-    assertThat(LobbyDisplays.contents(KitBook.REWIND))
-        .containsExactly("Iron Sword", "Time Machine", "Armour: iron and chainmail");
-    assertThat(LobbyDisplays.signature(KitBook.SHORTBOW).material()).isEqualTo("WOODEN_SWORD");
   }
 
   @Test

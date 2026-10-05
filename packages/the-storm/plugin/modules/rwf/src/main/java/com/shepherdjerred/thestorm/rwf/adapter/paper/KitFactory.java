@@ -23,6 +23,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -35,6 +36,12 @@ final class KitFactory {
 
   /** The hotbar slot the Bomb Fuse is locked into. */
   static final int FUSE_SLOT = 0;
+
+  /** The hotbar slot of the lobby's kit selector. */
+  static final int SELECTOR_SLOT = 8;
+
+  /** The hotbar slot of the lobby's leave item. */
+  static final int LEAVE_SLOT = 7;
 
   private static final String[] ROMAN = {
     "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"
@@ -65,6 +72,12 @@ final class KitFactory {
     for (var spec : specs) {
       if (!templates.containsKey(spec)) {
         stack(spec, problems).ifPresent(stack -> templates.put(spec, stack));
+      }
+    }
+    for (var kit : kits) {
+      var icon = Material.matchMaterial(kit.menu().icon());
+      if (icon == null || !icon.isItem()) {
+        problems.add(kit.id() + "'s menu icon " + kit.menu().icon() + " is not an item");
       }
     }
     if (!problems.isEmpty()) {
@@ -98,6 +111,83 @@ final class KitFactory {
       inventory.setItem(equipmentSlot(piece.slot().orElseThrow()), kitItem(piece));
     }
     inventory.setHeldItemSlot(FUSE_SLOT + 1);
+  }
+
+  /**
+   * The lobby's two items: the kit selector (a nether star) in the last hotbar slot and the leave
+   * item (red dye) beside it. Given on entering the lobby and after every pick there, since
+   * equipping empties the inventory; never once the match is live.
+   */
+  void giveLobbyItems(Player player) {
+    var inventory = player.getInventory();
+    inventory.setItem(SELECTOR_SLOT, selector());
+    inventory.setItem(LEAVE_SLOT, leaveItem());
+  }
+
+  ItemStack selector() {
+    var stack =
+        named(
+            Material.NETHER_STAR,
+            Component.text("Choose kit", NamedTextColor.YELLOW),
+            "Right-click to choose your kit");
+    keys.tagSelector(stack);
+    return stack;
+  }
+
+  ItemStack leaveItem() {
+    var stack =
+        named(
+            Material.RED_DYE,
+            Component.text("Leave match", NamedTextColor.RED),
+            "Right-click to go back to survival");
+    keys.tagLeave(stack);
+    return stack;
+  }
+
+  /**
+   * {@code kit}'s icon in the kit menu: its icon material, its name, its summary as lore and what a
+   * click does; the kit a player has picked glints.
+   */
+  ItemStack icon(KitSpec kit, boolean picked) {
+    var material = Material.matchMaterial(kit.menu().icon());
+    if (material == null) {
+      throw new IllegalStateException("kit icons are checked at enable: " + kit.menu().icon());
+    }
+    var stack = ItemStack.of(material);
+    var lore = new ArrayList<Component>();
+    for (var line : kit.menu().summary()) {
+      lore.add(plain(line, NamedTextColor.GRAY));
+    }
+    lore.add(Component.empty());
+    lore.add(
+        picked
+            ? plain("Your kit", NamedTextColor.GREEN)
+            : plain("Click to choose", NamedTextColor.YELLOW));
+    stack.editMeta(
+        meta -> {
+          meta.displayName(
+              Component.text(kit.name(), NamedTextColor.GOLD)
+                  .decoration(TextDecoration.ITALIC, false)
+                  .decoration(TextDecoration.BOLD, true));
+          meta.lore(lore);
+          meta.setEnchantmentGlintOverride(picked);
+          meta.addItemFlags(ItemFlag.values());
+        });
+    return stack;
+  }
+
+  private static ItemStack named(Material material, Component name, String hint) {
+    var stack = ItemStack.of(material);
+    stack.editMeta(
+        meta -> {
+          meta.displayName(name.decoration(TextDecoration.ITALIC, false));
+          meta.lore(List.of(plain(hint, NamedTextColor.GRAY)));
+        });
+    return stack;
+  }
+
+  private static Component plain(String text, NamedTextColor color) {
+    return Component.text(text, color).decoration(TextDecoration.ITALIC, false);
   }
 
   /** {@code level} in Roman numerals, as enchantment levels are shown; 1 to 10. */

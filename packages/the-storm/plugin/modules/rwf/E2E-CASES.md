@@ -12,7 +12,12 @@ disabling removes them; join snapshots and clears a player onto the lobby's
 spawn pad with the attack-speed modifier, the countdown boss bar and the
 recording disclosure; nothing hurts or breaks in the lobby and a member who
 falls out of it is put back; going live takes everyone to the map and the bar
-away, as leaving does; leave, disconnect and a crash's snapshot all restore exactly; the
+away, as leaving does; the nether star and red dye are in the hotbar after
+joining and after every pick, the star opens a read-only kit menu of the four
+shipped kits with the picked one glinting, clicking Longbow picks it, keeps
+the star and closes the menu, nothing can be taken from or dragged into the
+menu, other chests stay closed to members, the dye leaves, and going live
+closes the menu and takes both items away; leave, disconnect and a crash's snapshot all restore exactly; the
 fuse cannot be dropped or moved out of slot 0; hunger never drops; members
 cannot teleport out and outsiders cannot teleport in; bots fill the countdown
 and leave when the last human does; a human arms a bomb through the real
@@ -220,3 +225,12 @@ next`, the bots-only match outlives the no-humans abort and ends with a
     displays, the client receives the `Match starts in N seconds` boss bar
     and the `Fight!` title, and the start puts both players inside the
     training yard. How the displays look is not inspected.
+
+25. A player right-clicks the lobby's nether star, the kit menu opens as a
+    chest on the client, clicking the Longbow icon picks it, and the match
+    starts with the Longbow loadout and no lobby items. **Proven**: a
+    mineflayer player opens the menu, sees the four kits' icons in their
+    slots, clicks Longbow, reads `Now using kit Longbow.`, keeps the star
+    while the menu closes, and at the start holds the fuse, a stone sword,
+    the bow and an arrow (the armour checked on the server) with no star or
+    dye; Bedrock's rendering of the chest is not.

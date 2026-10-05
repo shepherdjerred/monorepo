@@ -147,7 +147,8 @@ public final class RwfPaper {
                 recordings,
                 lobby,
                 new LobbyHud(context.server()),
-                displays));
+                displays,
+                new KitMenu.Opener(context.server(), kits, content.kits())));
     var actions =
         new PaperCombatantActions(
             new PaperCombatantActions.Parts(runner, tracker, recordings, keys, app.hooks()));
@@ -160,6 +161,7 @@ public final class RwfPaper {
                 new PlayerListener.Parts(
                     runner, snapshots, guard, actions, tracker, context, keys, bombs, watchers)),
             guard,
+            new KitMenuListener(runner, context),
             new CombatListener(runner, tracker, context, app.hooks()),
             new WorldListener(runner, context, bombs),
             inputs);

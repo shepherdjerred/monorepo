@@ -9,7 +9,9 @@
 # fuseBonus (type BOMB_ARMING, BOMB_DEFUSING or BOMB_SPEED with a level, or
 # null) is written on the fuse. hotbar items follow the fuse in slot order;
 # armor names its slot (HELMET, CHESTPLATE, LEGGINGS, BOOTS). Prices are
-# credits; a kit is PURCHASE exactly when it has a price.
+# credits; a kit is PURCHASE exactly when it has a price. icon is the material
+# the kit menu and the lobby alcove show it by; summary is one to four lines of
+# at most 40 characters, the icon's lore and the alcove's label.
 kits:
   - id: trooper
     name: Trooper
@@ -32,6 +34,11 @@ kits:
       - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
       - { material: IRON_HELMET, slot: HELMET, enchantments: {} }
     ability: null
+    icon: IRON_SWORD
+    summary:
+      - Iron sword with Sharpness I
+      - 3 golden apples to recover
+      - Full iron armour
   - id: longbow
     name: Longbow
     description: A supporting archer, this kit receives a bow that will send enemies flying.
@@ -53,6 +60,11 @@ kits:
       - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
       - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
     ability: null
+    icon: BOW
+    summary:
+      - Bow with Punch III and Infinity
+      - Stone sword
+      - Iron and chainmail armour
   - id: shortbow
     name: Shortbow
     description: A powerful archer, this kit receives a bow with which it deals precise damage.
@@ -79,6 +91,11 @@ kits:
       - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
       - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
     ability: null
+    icon: ARROW
+    summary:
+      - Bow with Power II and Infinity
+      - Wooden sword with Knockback I
+      - Iron and chainmail armour
   - id: rewind
     name: Rewind
     description: >-
@@ -99,3 +116,8 @@ kits:
         }
       - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
     ability: rewind
+    icon: CLOCK
+    summary:
+      - "Time Machine: back 30 seconds"
+      - Iron sword
+      - Iron and chainmail armour

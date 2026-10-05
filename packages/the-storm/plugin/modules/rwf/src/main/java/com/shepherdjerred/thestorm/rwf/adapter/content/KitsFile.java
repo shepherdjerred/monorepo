@@ -56,6 +56,8 @@ public record KitsFile(List<KitEntry> kits) {
    * @param hotbar the items after the fuse, in slot order
    * @param armor the armor worn
    * @param ability the pure ability id, or null
+   * @param icon the material of the kit's menu icon and lobby alcove item
+   * @param summary one to four short lore lines shown on the icon and the alcove
    */
   public record KitEntry(
       String id,
@@ -66,11 +68,14 @@ public record KitsFile(List<KitEntry> kits) {
       Optional<FuseEntry> fuseBonus,
       List<ItemEntry> hotbar,
       List<ArmorEntry> armor,
-      Optional<String> ability) {
+      Optional<String> ability,
+      String icon,
+      List<String> summary) {
 
     public KitEntry {
       hotbar = List.copyOf(hotbar);
       armor = List.copyOf(armor);
+      summary = List.copyOf(summary);
       // Compact constructors run before the fields exist: validate from the parameters.
       var _ =
           new KitSpec(
@@ -82,7 +87,8 @@ public record KitsFile(List<KitEntry> kits) {
               fuseBonus.map(FuseEntry::toBonus),
               hotbar.stream().map(ItemEntry::toSpec).toList(),
               armor.stream().map(ArmorEntry::toSpec).toList(),
-              ability);
+              ability,
+              new KitSpec.Menu(icon, summary));
     }
 
     KitSpec toSpec() {
@@ -95,7 +101,8 @@ public record KitsFile(List<KitEntry> kits) {
           fuseBonus.map(FuseEntry::toBonus),
           hotbar.stream().map(ItemEntry::toSpec).toList(),
           armor.stream().map(ArmorEntry::toSpec).toList(),
-          ability);
+          ability,
+          new KitSpec.Menu(icon, summary));
     }
   }
 
