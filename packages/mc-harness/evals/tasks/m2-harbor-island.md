@@ -1,0 +1,5 @@
+Make me an impressive small island map in Minecraft, about 96×96 blocks, in a fresh flat sandbox: sculpt the island out of the sea yourself with a rocky peak, a beach, and a stream or waterfall running to the coast, then settle it with a harbor village (docks, boats or a pier, a handful of distinct houses, paths) and a lighthouse on a headland. Make it look hand-built, not procedural: natural terrain shapes, varied palettes, vegetation, details. Iterate on it using renders until you would be proud to show it.
+
+Do the work through the repository's build workflow so the result is replayable, and put the finished map into a sandbox that you leave running.
+
+Deliverables: copy your best overview render to `OUT/final.png`. `OUT/result.json`: {"sourceSandbox": "<sbx id holding the finished map>", "buildDir": "<path>", "applyId": "<id of the promote that placed it>", "site": {"min": [x, y, z], "max": [x, y, z]}, "iterations": <n>, "lintErrors": <n>, "lintWarnings": <n>, "verifyMismatches": <n>, "selfCritique": "<2-4 sentences, honest, with rubric scores>"}.

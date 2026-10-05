@@ -79,7 +79,11 @@ describe("parseUsage", () => {
 describe("selectTasks and renderReport", () => {
   it("selects tasks and rejects unknown ids", () => {
     expect(selectTasks("e1, e4").map((task) => task.id)).toEqual(["e1", "e4"]);
-    expect(selectTasks("all")).toHaveLength(6);
+    expect(selectTasks("all")).toHaveLength(8);
+    expect(selectTasks("m1,m2").map((task) => task.preamble)).toEqual([
+      "natural",
+      "natural",
+    ]);
     expect(() => selectTasks("e9")).toThrow(/Unknown task "e9"/u);
   });
 
