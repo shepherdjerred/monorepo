@@ -22,6 +22,7 @@ import {
   debug,
   diamonds,
   escaped,
+  expectSampleCadence,
   gzipLines,
   ownedYaml,
   type Personality,
@@ -443,6 +444,88 @@ async function showcaseSettles(
   expect(rated).toHaveLength(size);
 }
 
+/** An entity selector for a bot's Citizens player body. */
+function body(name: string): string {
+  return `@e[name=${name},limit=1]`;
+}
+
+const AbsorptionSchema = z.string().transform((text, context) => {
+  const value = /: (?<value>-?[\d.]+)f$/u.exec(text.trim())?.groups?.["value"];
+  if (value === undefined) {
+    context.addIssue({ code: "custom", message: `no absorption in ${text}` });
+    return z.NEVER;
+  }
+  return Number(value);
+});
+
+/** Quirks that change when, or whether, a bot eats a golden apple. */
+const pickyEaters = new Set(["never_eats", "gapple_hoarder"]);
+
+/** A live match found by {@link liveWithEater}, and the human playing it. */
+type EaterMatch = {
+  human: Bot;
+  names: string[];
+  eaters: string[];
+  matchId: string;
+};
+
+/** The bots in the live match that carry golden apples and eat normally. */
+async function eatersIn(
+  rcon: RconClient,
+  catalog: Map<string, Personality>,
+  names: string[],
+): Promise<string[]> {
+  const eaters: string[] = [];
+  for (const name of names) {
+    // The whole inventory overflows one RCON reply; ask for the apple alone.
+    const apples = await rcon.command(
+      `execute if data entity ${body(name)} Inventory[{id:"minecraft:golden_apple"}]`,
+    );
+    const quirks = catalog.get(name)?.quirks ?? [];
+    if (
+      apples.includes("Test passed") &&
+      !quirks.some((quirk) => pickyEaters.has(quirk))
+    ) {
+      eaters.push(name);
+    }
+  }
+  return eaters;
+}
+
+/**
+ * A lone human's live match with a bot that carries golden apples (a Trooper)
+ * and eats normally. Kits are the drafted personalities' own choice, so a
+ * draft without one is abandoned: that human disconnects (the match stops)
+ * and a fresh one, with no restore to confirm, tries a new draft.
+ */
+async function liveWithEater(
+  rcon: RconClient,
+  server: ServerInfo,
+  catalog: Map<string, Personality>,
+  target: number,
+): Promise<EaterMatch> {
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    await waitForLobby(rcon);
+    const human = await connectBot({
+      host: server.host,
+      port: server.gamePort,
+      username: `e_${Date.now().toString(36).slice(-6)}`,
+    });
+    const log = transcript(human);
+    human.chat("/rwf join");
+    const names = await joinedBots(log, human.username, target - 1);
+    await log.until(/The game has begun!/u, 30_000);
+    const live = await status(rcon);
+    expect(live.phase).toBe("Live");
+    const eaters = await eatersIn(rcon, catalog, names);
+    if (eaters.length > 0) {
+      return { human, names, eaters, matchId: live.matchId };
+    }
+    await disconnectBot(human);
+  }
+  throw new Error("four drafts in a row had no Trooper that eats");
+}
+
 async function newMatch(
   bot: Bot,
   rcon: RconClient,
@@ -506,6 +589,7 @@ describe("Search and Destroy with rwfbots", () => {
         ),
       );
       expectPlayed(recording, match.view);
+      expectSampleCadence(recording);
       const recorded = recording.events.flat().join(" ");
       for (const name of [bot.username, ...names]) {
         expect(recorded).not.toContain(name);
@@ -664,3 +748,101 @@ describe("Search and Destroy with rwfbots", () => {
     },
   );
 });
+
+describe("rwfbots bodies and reflexes", () => {
+  test(
+    "a hurt Trooper with no enemy near eats a golden apple, and bots never enter Citizens' saved NPCs",
+    { timeout: 240_000 },
+    async ({ rcon, server }) => {
+      const { match: settings } = await ownedYaml("rwf.yml", OwnedRwfSchema);
+      const { human, names, eaters, matchId } = await liveWithEater(
+        rcon,
+        server,
+        await personalities(),
+        settings.targetCombatants,
+      );
+      try {
+        await eatsAndStaysUnsaved(rcon, server, {
+          human,
+          names,
+          eaters,
+          matchId,
+        });
+      } finally {
+        await disconnectBot(human);
+      }
+    },
+  );
+});
+
+/**
+ * Citizens' saved registry never lists a bot, and a hurt Trooper with no
+ * enemy near eats a golden apple, which its recording keeps.
+ */
+async function eatsAndStaysUnsaved(
+  rcon: RconClient,
+  server: ServerInfo,
+  { human, names, eaters, matchId }: EaterMatch,
+): Promise<void> {
+  // Bodies live in rwfbots' in-memory registry: Citizens' own (saved)
+  // registry lists none of them, before or after a forced save.
+  await rcon.command("citizens save");
+  const listed = plain(await rcon.command("npc list"));
+  // An empty listing still prints its page header.
+  expect(listed).toMatch(/\[ NPCs \d+\/\d+ \]/u);
+  for (const name of names) {
+    expect(listed, `${name} in Citizens' registry`).not.toContain(name);
+  }
+
+  // At live the teams stand at their bases, forty blocks apart: well
+  // below ten health and with no enemy within four blocks, a Trooper
+  // eats (32 ticks) and gains the apple's absorption.
+  for (const name of eaters) {
+    await rcon.command(`damage ${body(name)} 12 minecraft:out_of_world`);
+  }
+  const absorbing = async () =>
+    Promise.all(
+      eaters.map(async (name) =>
+        AbsorptionSchema.parse(
+          await rcon.command(`data get entity ${body(name)} AbsorptionAmount`),
+        ),
+      ),
+    );
+  await eventually(
+    "a hurt Trooper to eat a golden apple",
+    async () => {
+      const amounts = await absorbing();
+      return amounts.some((amount) => amount > 0);
+    },
+    15_000,
+  );
+
+  // Absorption comes only from a finished bite, which used one of three.
+  const amounts = await absorbing();
+  const ate = eaters.filter((_, index) => (amounts[index] ?? 0) > 0);
+  expect(ate.length).toBeGreaterThan(0);
+  for (const name of ate) {
+    expect(
+      await rcon.command(
+        `execute if data entity ${body(name)} Inventory[{id:"minecraft:golden_apple",count:2}]`,
+      ),
+      `${name} has two golden apples left`,
+    ).toContain("Test passed");
+  }
+
+  // Leaving stops the match, and nothing of the bots is left behind.
+  human.chat("/rwf leave");
+  await eventually(
+    "the stopped match's recording",
+    async () => {
+      const rows = await matchRows(server, matchId);
+      return (rows.match?.recording_file ?? null) !== null;
+    },
+    30_000,
+  );
+  await waitForLobby(rcon);
+  const after = plain(await rcon.command("npc list"));
+  for (const name of names) {
+    expect(after).not.toContain(name);
+  }
+}

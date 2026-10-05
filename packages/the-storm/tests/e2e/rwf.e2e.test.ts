@@ -10,7 +10,10 @@ import {
   waitForMessage,
   waitUntil,
 } from "./harness/bot.ts";
+import { setRwfDenied } from "./harness/fake-brain.ts";
 import { rwfTestSettings } from "./harness/rwf-settings.ts";
+import { expectSampleCadence, readRecording } from "./harness/rwfbots.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { ServerInfo } from "./harness/server.ts";
 import {
   eventually,
@@ -56,6 +59,11 @@ const yard = {
     },
   },
   duel: [new Vec3(24.5, 65, 30.5), new Vec3(25.5, 65, 30.5)],
+  /** The nuke's TNT on its 3x3 gold pedestal, and a spot on the pedestal beside it. */
+  nuke: new Vec3(31, 66, 31),
+  besideNuke: new Vec3(30.5, 66, 31.5),
+  /** A floor block in the red base's corner. */
+  floor: new Vec3(2, 64, 2),
   /** The glass platform under the open ceiling. */
   lobby: new Vec3(31.5, 78, 31.5),
   /** Where the dead and watchers look down from. */
@@ -67,6 +75,8 @@ const trooperHit = 2.9;
 // CombatRules.ATTACK_SPEED_MODIFIER: added so the 1.9 cooldown never applies.
 const attackSpeedModifierValue = 200;
 const startingBalance = 500;
+/** The suite's daily cap: one win's 3 credits. */
+const rwfDailyCap = z.number().int().positive().parse(rwfTestSettings.dailyCap);
 
 /** A player and their transcript. */
 type Human = { bot: Bot; log: Transcript };
@@ -203,6 +213,33 @@ async function join({ bot, log }: Human): Promise<void> {
   await log.until(new RegExp(`${bot.username} joined the match`, "u"));
 }
 
+/**
+ * Joins once the player's last restore is confirmed: a fresh login retires it
+ * a moment after joining the server, and until then `/rwf join` is refused.
+ */
+async function joinRecovered({ bot, log }: Human): Promise<void> {
+  const joined = new RegExp(`${bot.username} joined the match`, "u");
+  const pending =
+    /Your restored belongings must be saved before another match/u;
+  const deadline = Date.now() + 15_000;
+  for (;;) {
+    const refusals = log.all(pending).length;
+    bot.chat("/rwf join");
+    await eventually(
+      `${bot.username}'s join to be answered`,
+      async () => log.has(joined) || log.all(pending).length > refusals,
+      10_000,
+    );
+    if (log.has(joined)) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`${bot.username}'s restore never finished`);
+    }
+    await Bun.sleep(500);
+  }
+}
+
 /** Both join and the match goes live; returns their teams, which differ. */
 async function startMatch(
   rcon: RconClient,
@@ -218,6 +255,24 @@ async function startMatch(
   const teams = await Promise.all([teamOf(a.log), teamOf(b.log)]);
   expect(teams[0]).not.toBe(teams[1]);
   return teams;
+}
+
+/**
+ * Everyone joins one countdown (inside its six seconds) and the match goes
+ * live; returns their teams in order. Transcripts start afresh, so a second
+ * match reads only its own lines.
+ */
+async function playTogether(humans: Human[]): Promise<Team[]> {
+  for (const { log } of humans) {
+    log.lines.length = 0;
+  }
+  for (const one of humans) {
+    await joinRecovered(one);
+  }
+  for (const { log } of humans) {
+    await log.until(/The game has begun!/u, 30_000);
+  }
+  return Promise.all(humans.map(async ({ log }) => teamOf(log)));
 }
 
 async function teamOf(log: Transcript): Promise<Team> {
@@ -412,6 +467,68 @@ async function defuseBomb(
   );
 }
 
+/** A member climbs the gold pedestal and clicks the nuke with the fuse until it arms. */
+async function armNuke(
+  rcon: RconClient,
+  { bot, log }: Human,
+  team: Team,
+): Promise<void> {
+  await teleport(rcon, bot, yard.besideNuke);
+  await waitUntil(
+    "the nuke is in view",
+    () => bot.blockAt(yard.nuke)?.name === "tnt",
+  );
+  await holdFuse(bot, yard.nuke.offset(0.5, 0.5, 0.5));
+  await clickUntil(
+    log,
+    new RegExp(`${team} Team just armed a nuke!`, "u"),
+    async () => {
+      const block = bot.blockAt(yard.nuke);
+      if (block !== null && block.name === "tnt") {
+        await bot.activateBlock(block);
+      }
+    },
+    20_000,
+  );
+}
+
+const AbsorptionSchema = numberAfter(/: (?<value>-?[\d.]+)f$/u, "absorption");
+
+async function absorption(rcon: RconClient, bot: Bot): Promise<number> {
+  return AbsorptionSchema.parse(
+    await rcon.command(`data get entity ${bot.username} AbsorptionAmount`),
+  );
+}
+
+/** The hotbar slot (0-8) holding `item`. */
+function hotbarSlotOf(bot: Bot, item: string): number {
+  const slot = [0, 1, 2, 3, 4, 5, 6, 7, 8].find(
+    (index) => hotbar(bot, index) === item,
+  );
+  if (slot === undefined) {
+    throw new Error(`${bot.username} has no ${item} in the hotbar`);
+  }
+  return slot;
+}
+
+/** Holds `item` from the hotbar. */
+async function hold(bot: Bot, item: string): Promise<void> {
+  bot.setQuickBarSlot(hotbarSlotOf(bot, item));
+  await waitUntil(`${item} in hand`, () => bot.heldItem?.name === item);
+}
+
+/** One right click into the air with what is in hand. */
+function rightClick(bot: Bot): void {
+  bot.activateItem();
+  bot.deactivateItem();
+}
+
+/** How often the server log says the yard was found damaged and pasted again. */
+function pastes(logs: string): number {
+  return logs.split("Map training-yard differs from its schematic; pasting it")
+    .length;
+}
+
 // ---- the database and recordings --------------------------------------------
 
 /** The recording is a non-empty gzip whose rows name the match and nobody else. */
@@ -444,6 +561,14 @@ async function expectRecording(
     expect(text).not.toContain(name);
   }
   expect(match.dropped_frames).toBe(0);
+  // Version 2: each human's frames come with an input row every tick.
+  const recording = readRecording(
+    text.split("\n").filter((line) => line !== ""),
+  );
+  expect(
+    [...recording.roster.values()].filter((entry) => !entry.bot),
+  ).toHaveLength(names.length);
+  expectSampleCadence(recording);
 }
 
 /** The outbox paid the win and the loss, and the recording was written. */
@@ -824,6 +949,340 @@ describe("Watching Search and Destroy", () => {
         () => bot.game.gameMode === "survival",
       );
       expect(await rcon.command("rwf admin status")).toContain("Watchers: 0");
+    },
+  );
+});
+
+describe("Healing in Search and Destroy", () => {
+  test(
+    "steak heals eight at once and is refused at full health, and a golden apple eats as vanilla",
+    { timeout: 120_000 },
+    async ({ bot, secondBot, rcon }) => {
+      await waitForLobby(rcon);
+      const a = human(bot);
+      const b = human(secondBot);
+      const home = bot.entity.position.clone();
+      const homeB = secondBot.entity.position.clone();
+      const [teamA, teamB] = await startMatch(rcon, a, b);
+      await expectKitted(rcon, bot);
+      // Regeneration is paused so every health change is the food's own.
+      await inRwf(rcon, "gamerule minecraft:natural_health_regeneration false");
+      try {
+        await rcon.command(`give ${bot.username} minecraft:cooked_beef 2`);
+        await waitUntil("the steak", () => count(bot, "cooked_beef") === 2);
+        await hold(bot, "cooked_beef");
+        expect(await health(rcon, bot)).toBe(20);
+        rightClick(bot);
+        await a.log.until(/You are too healthy to eat that\./u);
+        expect(count(bot, "cooked_beef")).toBe(2);
+
+        await rcon.command(`damage ${bot.username} 10 minecraft:out_of_world`);
+        await eventually(
+          "the damage",
+          async () => (await health(rcon, bot)) === 10,
+        );
+        rightClick(bot);
+        await eventually(
+          "one steak to heal eight",
+          async () => (await health(rcon, bot)) === 18,
+          5000,
+        );
+        await waitUntil(
+          "one steak eaten",
+          () => count(bot, "cooked_beef") === 1,
+        );
+
+        await hold(bot, "golden_apple");
+        expect(await absorption(rcon, bot)).toBe(0);
+        await bot.consume();
+        await waitUntil(
+          "one golden apple eaten",
+          () => count(bot, "golden_apple") === 2,
+        );
+        expect(await absorption(rcon, bot)).toBe(4);
+      } finally {
+        await inRwf(
+          rcon,
+          "gamerule minecraft:natural_health_regeneration true",
+        );
+      }
+
+      bot.chat("/rwf leave");
+      await waitRestored(bot, home);
+      expect(count(bot, "cooked_beef")).toBe(0);
+      await b.log.until(new RegExp(`${teamA} Team was defeated!`, "u"));
+      await b.log.until(new RegExp(`${teamB} Team wins!`, "u"));
+      await waitRestored(secondBot, homeB);
+      await waitForLobby(rcon);
+    },
+  );
+});
+
+describe("Repairing the Search and Destroy map", () => {
+  test(
+    "/rwf admin repair reports an intact yard and pastes broken blocks back",
+    { timeout: 90_000 },
+    async ({ bot, rcon, server }) => {
+      await waitForLobby(rcon);
+      const log = transcript(bot);
+      const intact = /Map training-yard is intact\./u;
+      const bomb = coords(yard.bombs.Red);
+      const floor = coords(yard.floor);
+      await rcon.command(`op ${bot.username}`);
+      try {
+        const before = pastes(await serverLogs(server));
+        bot.chat("/rwf admin repair");
+        await log.until(/Verifying training-yard\.\.\./u);
+        await log.until(intact, 30_000);
+        expect(pastes(await serverLogs(server))).toBe(before);
+
+        // An operator's edits: the red bomb broken, a floor block swapped.
+        expect(
+          await inRwf(rcon, `execute if block ${bomb} minecraft:tnt`),
+        ).toContain("Test passed");
+        expect(
+          await inRwf(rcon, `execute if block ${floor} minecraft:air`),
+        ).toContain("Test failed");
+        await inRwf(rcon, `setblock ${bomb} minecraft:air`);
+        await inRwf(rcon, `setblock ${floor} minecraft:diamond_block`);
+
+        bot.chat("/rwf admin repair");
+        await eventually(
+          "the second repair to finish",
+          async () => log.all(intact).length === 2,
+          30_000,
+        );
+        expect(pastes(await serverLogs(server))).toBe(before + 1);
+        expect(
+          await inRwf(rcon, `execute if block ${bomb} minecraft:tnt`),
+        ).toContain("Test passed");
+        expect(
+          await inRwf(
+            rcon,
+            `execute if block ${floor} minecraft:diamond_block`,
+          ),
+        ).toContain("Test failed");
+        expect(
+          await inRwf(rcon, `execute if block ${floor} minecraft:air`),
+        ).toContain("Test failed");
+        const after = await status(rcon);
+        expect([after.ready, after.phase]).toEqual([true, "Lobby"]);
+      } finally {
+        await rcon.command(`deop ${bot.username}`);
+      }
+    },
+  );
+});
+
+describe("The Search and Destroy rollout flag", () => {
+  test(
+    "/rwf join and /rwf spectate are refused while the flag is off for the player",
+    { timeout: 60_000 },
+    async ({ bot, rcon, brain }) => {
+      await waitForLobby(rcon);
+      const log = transcript(bot);
+      const closed = /Search and Destroy is not open to you yet\./u;
+      await setRwfDenied(brain.port, [z.uuid().parse(bot.player.uuid)]);
+      try {
+        bot.chat("/rwf join");
+        await log.until(closed);
+        bot.chat("/rwf spectate");
+        await eventually(
+          "both refusals",
+          async () => log.all(closed).length === 2,
+        );
+        const refused = await status(rcon);
+        expect([refused.phase, refused.humans]).toEqual(["Lobby", 0]);
+        expect(await rcon.command("rwf admin status")).toContain("Watchers: 0");
+        expect(log.has(/joined the match/u)).toBe(false);
+      } finally {
+        await setRwfDenied(brain.port, []);
+      }
+
+      // Once the flag opens for them, the same command admits them.
+      bot.chat("/rwf join");
+      await log.until(new RegExp(`${bot.username} joined the match`, "u"));
+      bot.chat("/rwf leave");
+      await waitForLobby(rcon);
+    },
+  );
+});
+
+/** Counts each player's deaths as their own client sees them. */
+function deathCounter(humans: Human[]): Map<string, number> {
+  const deaths = new Map<string, number>();
+  for (const { bot: player } of humans) {
+    deaths.set(player.username, 0);
+    player.on("death", () => {
+      deaths.set(player.username, (deaths.get(player.username) ?? 0) + 1);
+    });
+  }
+  return deaths;
+}
+
+/** The settled row of `player` in a match. */
+function rowOf(settled: Awaited<ReturnType<typeof settledMatch>>, player: Bot) {
+  return settled.players.find((row) => row.player === player.player.uuid);
+}
+
+/**
+ * Three humans split two against one; one of the pair arms the nuke, which
+ * kills the lone enemy and spares the armer's mate. Returns the armer's name
+ * and what each player earned.
+ */
+async function nukeMatch(
+  rcon: RconClient,
+  server: ServerInfo,
+  humans: Human[],
+): Promise<{ armer: string; earned: Map<string, number> }> {
+  const deaths = deathCounter(humans);
+  const teams = await playTogether(humans);
+  const live = await status(rcon);
+  expect([live.phase, live.humans]).toEqual(["Live", 3]);
+  const pairTeam =
+    teams.filter((team) => team === "Red").length === 2 ? "Red" : "Blue";
+  const pair = humans.filter((_, index) => teams[index] === pairTeam);
+  const [armer, mate] = pair;
+  const lone = humans.find((_, index) => teams[index] !== pairTeam);
+  if (armer === undefined || mate === undefined || pair.length !== 2) {
+    throw new Error("the teams did not split two against one");
+  }
+  if (lone === undefined) {
+    throw new Error("nobody stands alone");
+  }
+  await armNuke(rcon, armer, pairTeam);
+  await lone.log.until(new RegExp(`${pairTeam} Team just armed a nuke!`, "u"));
+  await armer.log.until(
+    new RegExp(
+      `${pairTeam} Team's nuke exploded! Everyone but them was annihilated!`,
+      "u",
+    ),
+    75_000,
+  );
+  await armer.log.until(
+    new RegExp(`${enemy(pairTeam)} Team was defeated!`, "u"),
+  );
+  await armer.log.until(new RegExp(`${pairTeam} Team wins!`, "u"));
+  expect(humans.map(({ bot: player }) => deaths.get(player.username))).toEqual(
+    humans.map((one) => (one === lone ? 1 : 0)),
+  );
+
+  const settled = await settledMatch(server, live.matchId);
+  expect(settled.match.winner).toBe(pairTeam.toUpperCase());
+  const earned = new Map<string, number>();
+  for (const one of humans) {
+    const won = one !== lone;
+    const row = rowOf(settled, one.bot);
+    expect(
+      [row?.result, row?.deaths, row?.credits_owed, row?.credits_paid],
+      one.bot.username,
+    ).toEqual(won ? ["WIN", 0, 3, 3] : ["LOSE", 1, 1, 1]);
+    earned.set(one.bot.username, won ? 3 : 1);
+  }
+  await waitForLobby(rcon);
+  return { armer: armer.bot.username, earned };
+}
+
+/**
+ * A second paid match the same day: it lasts past the minimum length, then
+ * everyone off the armer's team is killed. Each payout is cut to what is
+ * left of the day's cap, and whoever was cut is told so.
+ */
+async function cappedMatch(
+  rcon: RconClient,
+  server: ServerInfo,
+  humans: Human[],
+  { armer, earned }: { armer: string; earned: Map<string, number> },
+): Promise<void> {
+  const teams = await playTogether(humans);
+  const begun = Date.now();
+  const live = await status(rcon);
+  expect([live.phase, live.humans]).toEqual(["Live", 3]);
+  const armerIndex = humans.findIndex(({ bot: one }) => one.username === armer);
+  const winners = teams[armerIndex];
+  const announcer = humans[armerIndex];
+  if (winners === undefined || announcer === undefined) {
+    throw new Error("the armer is not in the second match");
+  }
+  await Bun.sleep(Math.max(0, 62_000 - (Date.now() - begun)));
+  for (const [index, { bot: player }] of humans.entries()) {
+    if (teams[index] !== winners) {
+      await rcon.command(`kill ${player.username}`);
+    }
+  }
+  await announcer.log.until(new RegExp(`${winners} Team wins!`, "u"), 15_000);
+  const settled = await settledMatch(server, live.matchId);
+  for (const [index, { bot: player, log }] of humans.entries()) {
+    const owed = teams[index] === winners ? 3 : 1;
+    const before = earned.get(player.username) ?? 0;
+    const paid = Math.min(owed, rwfDailyCap - before);
+    const row = rowOf(settled, player);
+    expect(
+      [row?.credits_owed, row?.payout_status, row?.credits_paid],
+      player.username,
+    ).toEqual([owed, "PAID", paid]);
+    if (paid < owed) {
+      await log.until(
+        new RegExp(
+          String.raw`You reached today's match earnings cap; ${paid.toString()} of ${owed.toString()} credits were paid\.`,
+          "u",
+        ),
+        20_000,
+      );
+    }
+    earned.set(player.username, before + paid);
+  }
+  await waitForLobby(rcon);
+}
+
+/** Connects `names` afresh, each with a new transcript. */
+async function connectAll(
+  server: ServerInfo,
+  names: string[],
+): Promise<Human[]> {
+  const humans: Human[] = [];
+  for (const name of names) {
+    humans.push(human(await connect(server, name)));
+  }
+  return humans;
+}
+
+async function disconnectAll(humans: Human[]): Promise<void> {
+  for (const { bot: player } of humans) {
+    await disconnectBot(player);
+  }
+}
+
+describe("The nuke and the daily cap", () => {
+  test(
+    "a nuke kills everyone off the arming team, and the daily cap stops a second payout",
+    { timeout: 330_000 },
+    async ({ rcon, server }) => {
+      await waitForLobby(rcon);
+      const names = ["n", "m", "o"].map(
+        (prefix) => `${prefix}_${randomBytes(4).toString("hex")}`,
+      );
+      let humans = await connectAll(server, names);
+      try {
+        const first = await nukeMatch(rcon, server, humans);
+        // Every restore is confirmed by the next login, as players do.
+        await disconnectAll(humans);
+        humans = [];
+        humans = await connectAll(server, names);
+        // The armer and their mate earned the cap (3) in the first match.
+        await cappedMatch(rcon, server, humans, first);
+        for (const { bot: player } of humans) {
+          const total = first.earned.get(player.username) ?? 0;
+          expect(total).toBeLessThanOrEqual(rwfDailyCap);
+          await eventually(
+            `${player.username}'s balance`,
+            async () => (await balance(player)) === startingBalance + total,
+            20_000,
+          );
+        }
+      } finally {
+        await disconnectAll(humans);
+      }
     },
   );
 });

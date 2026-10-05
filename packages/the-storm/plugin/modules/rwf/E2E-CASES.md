@@ -34,8 +34,9 @@ behaviour on its own. These cases need the real server in
 
 `tests/e2e/rwf.e2e.test.ts` runs humans only (rwfbots off) on the shared e2e
 server, whose fixtures plugin creates the flat void `rwf` world before TheStorm
-enables. `tests/full/rwfbots.e2e.test.ts` runs the bot cases (14, 15, 16's
-human share, 23) on the full lane, where every shipped module plus rwf and
+enables; it runs under a daily cap of 3 (`rwf-settings.ts`) so a second paid
+match reaches it. `tests/full/rwfbots.e2e.test.ts` runs the bot cases (14,
+15, 16's human share, 18's bot cadence, 23) on the full lane, where every shipped module plus rwf and
 rwfbots boots with Citizens. A case marked **proven** below is asserted in one
 of the two; the rest still wait for a suite.
 
@@ -50,8 +51,14 @@ of the two; the rest still wait for a suite.
    world is not.
 2. Break a block inside the yard as an operator, then restart: the verifier
    hashes the region, logs the mismatch and re-pastes it before admission opens.
+   **Proven** without the restart: an operator's `setblock` edits (the red
+   bomb's TNT broken, a floor block swapped for diamond) are found by
+   `/rwf admin repair` (case 3), which logs the mismatch once and puts both
+   blocks back; the restart path is not.
 3. `/rwf admin repair` between matches reports an intact map, or re-pastes a
-   damaged one.
+   damaged one. **Proven**: on the intact yard it reports `Map training-yard
+is intact.` with no paste logged, and after the edits above it pastes once
+   and reports intact again, with the lobby still ready.
 4. Game rules hold: no mob spawning, no fire spread, time and weather frozen,
    no death messages, immediate respawn, no advancement messages, TNT does not
    explode.
@@ -75,6 +82,11 @@ of the two; the rest still wait for a suite.
    and keeps 0.6 of their speed; Knockback I and Punch III arrows push further.
 9. Steak heals eight at once on right-click and is refused within a point of
    full health; golden apples eat as vanilla; the poison takes both away.
+   **Proven** for the food (regeneration paused): a right-click into the air
+   at full health is refused with `You are too healthy to eat that.` and
+   keeps the steak, at 10 health one steak heals to 18 at once and is used
+   up, and a Trooper's golden apple is eaten to completion (absorption 4, two
+   apples left). The poison's confiscation is not.
 10. Deaths: no drops, no death message, the victim respawns at once at the
     spectator point in spectator mode, the killer and cause are attributed in
     the recording. **Proven** for a bomb's victim being in spectator mode
@@ -95,6 +107,10 @@ of the two; the rest still wait for a suite.
     explosion, the owner's death into spectator mode and the lobby reopening
     on an intact map; the crater's blocks are not inspected.
 13. The nuke in the middle is armed by either team and kills everyone else.
+    **Proven** with three humans split two against one: one of the pair arms
+    the nuke from its pedestal with fuse clicks, everyone hears it armed, and
+    after the fuse it explodes, the lone enemy dies once while the armer and
+    their mate live, the arming team wins and both are paid as winners.
 14. With rwfbots enabled, the countdown fills to `targetCombatants` with
     Citizens NPCs: they show `✦` after their names, carry the modifier, fight
     only through `CombatantActions`, and are never paid; without rwfbots the
@@ -131,14 +147,26 @@ of the two; the rest still wait for a suite.
     rows end `PAID`; a match shorter than `minMatchLength` pays nobody), and
     with bots for the human share (one human in eight: `round(3 x 0.34)` = 1
     for a win, 0 for a loss, the bots never paid); the crash replay is not.
-17. The daily cap forfeits the excess and tells the player.
+17. The daily cap forfeits the excess and tells the player. **Proven** under
+    the suite's cap of 3: the nuke's three players play a second match past
+    `minMatchLength` the same day (reconnecting first, as a restore requires)
+    and everyone off the armer's team is killed; each row owes the full
+    payout and is `PAID` only what was left of the cap (`min(owed, 3 -
+earned)`; the armer, who earned 3, wins again for 0), each cut player is
+    told `You reached today's
+match earnings cap; <paid> of <owed> credits were paid.`, and every
+    balance ends at most 3 up.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds human frames and input rows
-    at 20 Hz and bot frames at 10 Hz; `kill -9`
-    during a match leaves a truncated file the next enable prunes by age.
-    **Proven** that the file exists at that path, is a non-empty gzip of the
-    size `rwf_match` records, names the match and neither player, and dropped
-    no frames; decoding and the crash prune are not.
+    at 20 Hz and bot frames at 10 Hz; `kill -9` during a match leaves a
+    truncated file the next enable prunes by age. **Proven** that the file
+    exists at that path, is a non-empty gzip of the size `rwf_match` records,
+    names the match and neither player, and dropped no frames; that it is
+    format version 2, every human has one `N` input row for each of their
+    `F` frames and bots have none; and with rwfbots that a bot has 0.4 to 0.6
+    frames per human frame over the ticks both lived. Decoding with
+    `RecordCodec` itself (the suites parse the rows) and the crash prune are
+    not.
 19. With `recording.enabled: true` and `RWF_RECORDING_SALT` unset, enabling
     fails loudly; with it set, every joining human reads the disclosure.
     **Proven** for the disclosure with the salt set; the missing salt is not.
@@ -149,7 +177,11 @@ of the two; the rest still wait for a suite.
     player in the configured Flipt environment, and admitted once it is true;
     with `FLIPT_URL` unset the command stays closed to everyone. **Proven** for
     admission (the fake brain's Flipt double answers `enabled: true` for the
-    `rwf` world in `prod`); the refusals are not.
+    `rwf` world in `prod`) and for the per-player refusal: with the double
+    answering `false` for one player, their `/rwf join` and `/rwf spectate`
+    are both refused with `Search and Destroy is not open to you yet.` and
+    the lobby counts no human or watcher, and the same `/rwf join` admits
+    them once the flag opens. A server without `FLIPT_URL` is not.
 21. Bedrock (Geyser): holograms, the sidebar and messages render.
 
 ## Watching
