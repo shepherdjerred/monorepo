@@ -28,6 +28,7 @@ import {
   context,
   canvasOf,
   renderGrid,
+  renderHero,
   seededSandbox,
 } from "./helpers.ts";
 
@@ -260,7 +261,7 @@ export async function renderBuild(
     /** A close-up inside the site box (maps: one district at a time). */
     region?: { min: BlockPos; max: BlockPos };
   },
-): Promise<{ render: string }> {
+): Promise<{ render: string; hero: string | null }> {
   const workspace = new BuildWorkspace(dir);
   const manifest = await workspace.manifest();
   const site = workspace.siteBox(manifest);
@@ -274,7 +275,10 @@ export async function renderBuild(
       ? await workspace.expected()
       : await readGrid(env.client, canvasOf(manifest, options.target), box);
   const name = options.name ?? `render-${Date.now().toString(36)}`;
-  return { render: await renderGrid(workspace, grid, name, manifest.name) };
+  return {
+    render: await renderGrid(workspace, grid, name, manifest.name),
+    hero: await renderHero(workspace, grid, name),
+  };
 }
 
 export async function lintBuild(

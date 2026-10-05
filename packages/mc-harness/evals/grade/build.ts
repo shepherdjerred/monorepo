@@ -178,6 +178,7 @@ export const buildGrader =
     );
     const schem = path.join(ctx.taskDir, "promoted-site.schem");
     const png = path.join(ctx.taskDir, "promoted-site.png");
+    const hero = path.join(ctx.taskDir, "promoted-hero.png");
     await Bun.write(schem, Buffer.from(bytes.base64, "base64"));
     const render = await ctx.exec([
       process.execPath,
@@ -185,14 +186,18 @@ export const buildGrader =
       path.join(ctx.worktree, "packages", "mc-build", "scripts", "render.ts"),
       schem,
       png,
+      "--hero",
+      hero,
     ]);
     checks.push({
       name: "grader rendered the promoted site",
       pass: render.exitCode === 0 && (await Bun.file(png).exists()),
       detail: render.exitCode === 0 ? png : render.stderr.slice(0, 300),
     });
-    if (await Bun.file(png).exists()) {
-      artifacts.push(png);
+    for (const file of [png, hero]) {
+      if (await Bun.file(file).exists()) {
+        artifacts.push(file);
+      }
     }
     const critique = ctx.result?.["selfCritique"];
     if (typeof critique === "string") {

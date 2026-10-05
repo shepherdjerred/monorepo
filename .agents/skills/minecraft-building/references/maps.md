@@ -21,18 +21,34 @@ Write a short plan with coordinates before any blocks:
 ## One program, one heightfield (default)
 
 Author terrain and structures in the same `build.ts` and keep the ground in an
-array, so buildings sit on the terrain you generated:
+array, so buildings sit on the terrain you generated. Build heights from
+`ctx.noise(x, z, { scale, octaves, ridged, salt })` (deterministic fractal
+noise in [0, 1)), not summed sine waves, which repeat and band:
 
 ```ts
 const N = 96;
+const SEA = 6;
 const height: number[][] = []; // local y of the ground surface per (x, z)
 for (let x = 0; x < N; x++) {
   height[x] = [];
   for (let z = 0; z < N; z++) {
-    const d = Math.hypot((x - 48) / 34, (z - 46) / 36); // island mask
-    const ripple =
-      1.6 * Math.sin(x * 0.21 + z * 0.13) + Math.cos(z * 0.37 - x * 0.09);
-    height[x]![z] = Math.floor(d < 1 ? (1 - d) * 18 + ripple : -4);
+    // island mask: radial falloff with a noisy, indented coastline
+    const r = Math.hypot((x - 48) / 42, (z - 48) / 38);
+    const coast =
+      r + (ctx.noise(x, z, { scale: 22, octaves: 3, salt: 1 }) - 0.5) * 0.7;
+    const land = Math.max(0, Math.min(1, (1 - coast) * 2.2));
+    // a ridged peak off-centre, rolling hills elsewhere
+    const focus = Math.exp(-((x - 36) ** 2 + (z - 34) ** 2) / 500);
+    const ridge = ctx.noise(x, z, {
+      scale: 26,
+      octaves: 3,
+      ridged: true,
+      salt: 2,
+    });
+    const hills = ctx.noise(x, z, { scale: 20, octaves: 2, salt: 3 });
+    height[x]![z] = Math.round(
+      SEA - 3 + land * (4 + hills * 6 + focus * ridge ** 1.5 * 34),
+    );
   }
 }
 const occupied = new Set<string>(); // "x,z" cells taken by buildings/streets
@@ -46,14 +62,14 @@ const occupied = new Set<string>(); // "x,z" cells taken by buildings/streets
   than floating floors.
 - Mark streets and footprints in `occupied`, then scatter trees, flowers and
   boulders with `ctx.rng()` only on free cells.
-- Break up contour stripes: a smooth heightfield floored to integers draws
-  regular one-block bands on every slope. Add a small high-frequency term
-  (±1) to `height`, cap some steps with slabs or stairs, and vary the surface
-  (grass, coarse dirt, moss, gravel, stone outcrops) by slope and height.
+- Pick surface blocks by slope and height, not only by layer: rock where a
+  column is 2+ blocks above a neighbour, coarse dirt, moss and gravel patches
+  from a second `ctx.noise` field, sand near sea level. Uniform grass on a
+  smooth field reads as regular one-block stripes.
 - Shape terrain on purpose: add cliffs, buttresses, scree and a second peak
   to break a smooth cone; carve a valley or harbor; vary beach width.
-- `Math.sin`, `Math.hypot` and friends are fine; `Math.random` is not (use
-  `ctx.rng()`).
+- `Math.hypot`, `Math.exp` and friends are fine; `Math.random` is not (use
+  `ctx.noise` for fields and `ctx.rng()` for scatter).
 
 `ctx.site.heightAt` reads the **captured** site, not terrain your program or
 earlier ops create, so use your own `height` array for anything you
@@ -95,11 +111,26 @@ toolkit mc we --world world --pos1 60,-63,0 --pos2 95,-20,40 "//forest oak 4"
 
 ## Reviewing a map
 
-The full contact sheet shows composition: relief, focal point, districts, open
-space. Then render each district up close and critique it with the rubric:
+`build render` also writes `<name>-hero.png`, one large isometric view, for
+sites 48+ blocks wide. Judge composition there, then render each district up
+close and critique it with the building rubric:
 
 ```bash
 toolkit mc build render <dir> 30,-64,40 60,-20,70 --name harbor
 ```
 
-Report the composition and the weakest district in the self-critique.
+Score the map itself 0–2 on each of these, and fix the lowest first:
+
+| Aspect      | 2 looks like                                                             |
+| ----------- | ------------------------------------------------------------------------ |
+| Relief      | Terrain reads in the hero view: a clear high point, slopes, edges        |
+| Focal point | One landmark dominates and the eye travels to it along streets or coast  |
+| Variety     | Buildings differ in size, height, roof and palette; 2–3 large landmarks  |
+| Open space  | 30–40% unbuilt ground: plazas, gardens, fields, cliffs, water            |
+| Palette     | Warm roofs and greenery balance stone; walls are not the dominant colour |
+| Terrain     | Irregular coast and contours, rock on steep ground, no regular bands     |
+| Edges       | Walls, docks and paths meet the ground and water cleanly                 |
+| Life        | Trees, crops, boats, stalls, lamps and paths make it feel inhabited      |
+
+Report the map scores, the composition and the weakest district in the
+self-critique.

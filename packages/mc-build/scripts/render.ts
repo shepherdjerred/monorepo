@@ -1,6 +1,6 @@
 /**
  * Renders a build program (`*.ts`) or schematic (`*.schem`) to a contact
- * sheet PNG: bun run scripts/render.ts <input> <out.png> [--seed n]
+ * sheet PNG: bun run scripts/render.ts <input> <out.png> [--seed n] [--hero <hero.png>]
  */
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -12,13 +12,16 @@ import { encodePng, Renderer } from "#src/render/index.ts";
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
-  options: { seed: { type: "string", default: "1" } },
+  options: {
+    seed: { type: "string", default: "1" },
+    hero: { type: "string" },
+  },
   allowPositionals: true,
 });
 const [input, out] = positionals;
 if (input === undefined || out === undefined) {
   console.error(
-    "usage: bun run scripts/render.ts <build.ts|file.schem> <out.png> [--seed n]",
+    "usage: bun run scripts/render.ts <build.ts|file.schem> <out.png> [--seed n] [--hero <hero.png>]",
   );
   process.exit(1);
 }
@@ -46,6 +49,10 @@ const image = await renderer.sheet(grid, {
   subtitle: "MC-BUILD PREVIEW",
 });
 await Bun.write(out, await encodePng(image));
+if (values.hero !== undefined) {
+  await Bun.write(values.hero, await encodePng(await renderer.hero(grid)));
+  process.stdout.write(`wrote ${values.hero}\n`);
+}
 process.stdout.write(
   `wrote ${out} (${image.width.toString()}×${image.height.toString()}) in ${Math.round(performance.now() - started).toString()} ms\n`,
 );

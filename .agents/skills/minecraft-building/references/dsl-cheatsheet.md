@@ -21,12 +21,13 @@ export default ((ctx) => {
 
 ## Core
 
-| Call                                                                                         | Notes                                                    |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `ctx.set(x, y, z, mat)` / `ctx.fill(regionOrBox, mat)` / `ctx.clear(box)`                    | `mat` = state string or `(x,y,z) => state`               |
-| `ctx.geo.box / hollowBox / outline / cylinder / union / subtract / intersect / face / edges` | Regions                                                  |
-| `ctx.site?.heightAt(x, z)`                                                                   | First free y above terrain (local), with a captured site |
-| `ctx.rng()`                                                                                  | Deterministic random in [0,1)                            |
+| Call                                                                                         | Notes                                                         |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `ctx.set(x, y, z, mat)` / `ctx.fill(regionOrBox, mat)` / `ctx.clear(box)`                    | `mat` = state string or `(x,y,z) => state`                    |
+| `ctx.geo.box / hollowBox / outline / cylinder / union / subtract / intersect / face / edges` | Regions                                                       |
+| `ctx.site?.heightAt(x, z)`                                                                   | First free y above terrain (local), with a captured site      |
+| `ctx.rng()`                                                                                  | Deterministic random in [0,1)                                 |
+| `ctx.noise(x, z, { scale?, octaves?, ridged?, salt? })`                                      | Deterministic 2D fractal noise in [0,1) for terrain and masks |
 
 ## Materials (`ctx.mat`)
 

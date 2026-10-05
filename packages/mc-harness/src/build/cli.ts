@@ -292,7 +292,13 @@ const HANDLERS: Record<string, Handler> = {
           }),
       expected: values.expected,
     });
-    print(values.json, result, `render: ${result.render}`);
+    print(
+      values.json,
+      result,
+      result.hero === null
+        ? `render: ${result.render}`
+        : `render: ${result.render}\n  hero:   ${result.hero}`,
+    );
     return 0;
   },
   lint: async (env, dir, values) => {
