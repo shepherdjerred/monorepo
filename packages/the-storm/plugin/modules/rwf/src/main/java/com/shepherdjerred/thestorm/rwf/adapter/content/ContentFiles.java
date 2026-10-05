@@ -13,9 +13,9 @@ import java.util.function.Function;
 import org.bukkit.block.data.BlockData;
 
 /**
- * Loads {@code rwf.yml}, {@code rwf/kits.yml} and every {@code rwf/maps/<id>/} from {@code
- * plugins/TheStorm}. Any missing, invalid or disagreeing file stops the module, naming what is
- * wrong.
+ * Loads {@code rwf.yml}, {@code rwf/kits.yml}, every {@code rwf/maps/<id>/} and the {@code
+ * rwf/lobby/} room from {@code plugins/TheStorm}. Any missing, invalid or disagreeing file stops
+ * the module, naming what is wrong.
  */
 public final class ContentFiles {
 
@@ -24,6 +24,8 @@ public final class ContentFiles {
   static final String MAPS = "rwf/maps";
   static final String MAP_FILE = "map.yml";
   static final String BLOCKS_FILE = "blocks.schem";
+  static final String LOBBY = "rwf/lobby";
+  static final String LOBBY_FILE = "lobby.yml";
 
   private ContentFiles() {}
 
@@ -36,8 +38,9 @@ public final class ContentFiles {
     var kits = ConfigFiles.load(directory.resolve(KITS), KitsFile.class);
     kits.mustMatch(KitBook.MILESTONE_ONE);
     var maps = maps(directory.resolve(MAPS), blockData);
+    var lobby = lobby(directory.resolve(LOBBY), blockData);
     try {
-      return new RwfContent(config, KitBook.MILESTONE_ONE, maps);
+      return new RwfContent(config, KitBook.MILESTONE_ONE, maps, lobby);
     } catch (IllegalArgumentException e) {
       throw new IllegalStateException("rwf content does not agree: " + e.getMessage(), e);
     }
@@ -60,6 +63,19 @@ public final class ContentFiles {
     return List.copyOf(maps);
   }
 
+  /** Loads the {@code rwf/lobby/} folder: {@code lobby.yml} and its {@code blocks.schem}. */
+  public static LoadedLobby lobby(Path folder, Function<String, BlockData> blockData) {
+    var file = ConfigFiles.load(folder.resolve(LOBBY_FILE), LobbyFile.class);
+    var layout = file.toLayout();
+    var schematic = schematic(folder.resolve(BLOCKS_FILE));
+    try {
+      var blocks = MapBlocks.resolve(schematic, layout.region(), blockData);
+      return new LoadedLobby(layout, blocks, file.blocksSha256());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalStateException("Invalid " + folder + ": " + e.getMessage(), e);
+    }
+  }
+
   /** Loads one {@code rwf/maps/<id>/} folder. */
   public static LoadedMap map(Path folder, Function<String, BlockData> blockData) {
     var file = ConfigFiles.load(folder.resolve(MAP_FILE), MapFile.class);
@@ -69,20 +85,22 @@ public final class ContentFiles {
           folder + " defines map " + expected + "; name it " + expected);
     }
     var definition = file.toDefinition();
-    var blocksFile = folder.resolve(BLOCKS_FILE);
-    Schematic schematic;
-    try (InputStream in = Files.newInputStream(blocksFile)) {
-      schematic = SchematicReader.read(in);
-    } catch (IOException e) {
-      throw new UncheckedIOException("Required file " + blocksFile + " could not be read", e);
-    } catch (IllegalArgumentException | UncheckedIOException e) {
-      throw new IllegalStateException("Invalid " + blocksFile + ": " + e.getMessage(), e);
-    }
+    var schematic = schematic(folder.resolve(BLOCKS_FILE));
     try {
       var blocks = MapBlocks.resolve(schematic, definition.border(), blockData);
       return new LoadedMap(definition, blocks);
     } catch (IllegalArgumentException e) {
       throw new IllegalStateException("Invalid " + folder + ": " + e.getMessage(), e);
+    }
+  }
+
+  private static Schematic schematic(Path blocksFile) {
+    try (InputStream in = Files.newInputStream(blocksFile)) {
+      return SchematicReader.read(in);
+    } catch (IOException e) {
+      throw new UncheckedIOException("Required file " + blocksFile + " could not be read", e);
+    } catch (IllegalArgumentException | UncheckedIOException e) {
+      throw new IllegalStateException("Invalid " + blocksFile + ": " + e.getMessage(), e);
     }
   }
 }

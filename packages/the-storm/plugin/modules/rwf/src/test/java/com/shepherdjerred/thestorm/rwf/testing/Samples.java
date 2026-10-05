@@ -85,7 +85,6 @@ public final class Samples {
         teams,
         bombs,
         BORDER,
-        Spawn.at(new BlockPos(0, 80, 0)),
         Spawn.at(new BlockPos(0, 72, 0)),
         SHA);
   }

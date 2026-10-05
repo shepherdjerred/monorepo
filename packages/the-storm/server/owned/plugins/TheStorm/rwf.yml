@@ -2,7 +2,8 @@
 # writes it. Every key is required, unknown keys are errors, durations are
 # ISO-8601 (PT90S, PT10M).
 #
-# Kits live in rwf/kits.yml and maps in rwf/maps/<id>/ (map.yml + blocks.schem).
+# Kits live in rwf/kits.yml, maps in rwf/maps/<id>/ (map.yml + blocks.schem)
+# and the lobby room players wait in before a match in rwf/lobby/.
 
 # The world matches run in. An operator provisions it through Multiverse (a
 # flat or void world is fine; the maps bring their own terrain) and it must be
@@ -10,9 +11,8 @@
 # leaves it alone.
 world: rwf
 
-# Where players wait before a match (the training-yard lobby platform) and
-# where a player stands when no match places them elsewhere.
-lobby: { x: 31.5, y: 78.0, z: 31.5, yaw: 0.0, pitch: 0.0 }
+# Where a player stands when no map places them elsewhere; once a map is
+# chosen its own spectator point is used.
 spectator: { x: 31.5, y: 76.0, z: 31.5, yaw: 0.0, pitch: 45.0 }
 
 match:

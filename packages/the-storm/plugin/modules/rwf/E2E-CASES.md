@@ -5,9 +5,14 @@ poison, combat formulas and kits; content loading and every refusal; the
 schematic reader; snapshot, match and payout storage; the payout outbox with
 its daily cap and replay; the recorder (decodable with `RecordCodec`,
 pseudonymous, pruned by age and size); and on MockBukkit: enabling pastes and
-verifies the training yard and seals the world; join snapshots and clears a
-player into the lobby with the attack-speed modifier and the recording
-disclosure; leave, disconnect and a crash's snapshot all restore exactly; the
+verifies the training yard and seals the world; enabling pastes and dresses
+the lobby room once (rules, match board, an item and a label per kit alcove,
+none persistent) and sweeps displays a crash left so none is duplicated, and
+disabling removes them; join snapshots and clears a player onto the lobby's
+spawn pad with the attack-speed modifier, the countdown boss bar and the
+recording disclosure; nothing hurts or breaks in the lobby and a member who
+falls out of it is put back; going live takes everyone to the map and the bar
+away, as leaving does; leave, disconnect and a crash's snapshot all restore exactly; the
 fuse cannot be dropped or moved out of slot 0; hunger never drops; members
 cannot teleport out and outsiders cannot teleport in; bots fill the countdown
 and leave when the last human does; a human arms a bomb through the real
@@ -43,8 +48,8 @@ of the two; the rest still wait for a suite.
 ## World and maps
 
 1. With `rwf` provisioned through Multiverse (any flat or void world) the
-   module enables, seals the world, holds its 16 chunks, pastes the training
-   yard at `0,64,0` and opens the lobby; with the world missing, TheStorm
+   module enables, seals the world, holds its 20 chunks, pastes the lobby room
+   at `128,64,16` and the training yard at `0,64,0` and opens the lobby; with the world missing, TheStorm
    refuses to enable and the server stops. **Proven** (the happy path: the
    module enables on the fixture world, `/rwf admin status` reports the
    training yard ready, the TNT blocks stand at the bomb sites); the missing
@@ -55,8 +60,8 @@ of the two; the rest still wait for a suite.
    bomb's TNT broken, a floor block swapped for diamond) are found by
    `/rwf admin repair` (case 3), which logs the mismatch once and puts both
    blocks back; the restart path is not.
-3. `/rwf admin repair` between matches reports an intact map, or re-pastes a
-   damaged one. **Proven**: on the intact yard it reports `Map training-yard
+3. `/rwf admin repair` between matches reports an intact map and lobby, or
+   re-pastes a damaged one. **Proven**: on the intact yard it reports `Map training-yard
 is intact.` with no paste logged, and after the edits above it pastes once
    and reports intact again, with the lobby still ready.
 4. Game rules hold: no mob spawning, no fire spread, time and weather frozen,
@@ -203,3 +208,15 @@ next`, the bots-only match outlives the no-humans abort and ends with a
     recording's roster is all bots, all eight personalities are rated, the
     next lobby has no bots, and `/rwf leave` restores the watcher; following
     every fighter in turn is not.
+
+## Lobby
+
+24. A joining player stands on the lobby's gold spawn pad inside its region,
+    sees the countdown boss bar, the rules, the match board and the four kit
+    alcoves' items and labels render (billboarded displays), the last five
+    seconds and the start show as titles, and going live puts them on a map
+    spawn with the bar gone. **Proven**: the joiner stands on the spawn pad
+    inside the lobby region, the room holds six text displays and four item
+    displays, the client receives the `Match starts in N seconds` boss bar
+    and the `Fight!` title, and the start puts both players inside the
+    training yard. How the displays look is not inspected.

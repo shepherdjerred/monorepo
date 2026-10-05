@@ -17,7 +17,6 @@ import java.util.List;
  * @param name the display name
  * @param author who built it
  * @param region the box the schematic fills, both corners included
- * @param lobby where players wait before the match, once this map is chosen
  * @param spectator where the dead watch from
  * @param teams the teams it fields, in scoreboard order
  * @param bombs each team's bombs
@@ -29,7 +28,6 @@ public record MapFile(
     String name,
     String author,
     Region region,
-    PointEntry lobby,
     PointEntry spectator,
     List<TeamEntry> teams,
     List<BombEntry> bombs,
@@ -44,7 +42,7 @@ public record MapFile(
     var _ =
         definition(
             new MapFile.Fields(
-                id, name, author, region, lobby, spectator, teams, bombs, nukes, blocksSha256));
+                id, name, author, region, spectator, teams, bombs, nukes, blocksSha256));
   }
 
   /** The components again, so validation can run before the record exists. */
@@ -53,7 +51,6 @@ public record MapFile(
       String name,
       String author,
       Region region,
-      PointEntry lobby,
       PointEntry spectator,
       List<TeamEntry> teams,
       List<BombEntry> bombs,
@@ -62,7 +59,7 @@ public record MapFile(
 
   public MapDefinition toDefinition() {
     return definition(
-        new Fields(id, name, author, region, lobby, spectator, teams, bombs, nukes, blocksSha256));
+        new Fields(id, name, author, region, spectator, teams, bombs, nukes, blocksSha256));
   }
 
   private static MapDefinition definition(Fields f) {
@@ -80,7 +77,6 @@ public record MapFile(
         f.teams().stream().map(TeamEntry::toTeam).toList(),
         sites,
         f.region().toCuboid(),
-        f.lobby().toSpawn(),
         f.spectator().toSpawn(),
         f.blocksSha256());
   }

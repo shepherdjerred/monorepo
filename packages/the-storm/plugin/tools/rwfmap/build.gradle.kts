@@ -1,7 +1,8 @@
 // rwfmap: the offline map analysis for Search and Destroy bots. It bakes every
 // rwf map (map.yml + blocks.schem) into the nav.rwfnav artifact rwfbots loads
 // and verifies the committed artifacts byte for byte, so CI catches a stale or
-// non-deterministic bake. It is a tool, not a gameplay module: dist never
+// non-deterministic bake. It also writes the generated lobby (rwf/lobby) and
+// bakes and verifies it the same way. It is a tool, not a gameplay module: dist never
 // shades it and the architecture project never puts it on its classpath.
 plugins {
   id("storm.java-conventions")
@@ -28,6 +29,9 @@ application { mainClass = mainClassName }
 
 /** The maps the server ships, each in its own `<id>/` folder. */
 val mapsRoot = rootProject.file("../server/owned/plugins/TheStorm/rwf/maps")
+
+/** The generated lobby room: lobby.yml, blocks.schem and its nav files. */
+val lobbyFolder = rootProject.file("../server/owned/plugins/TheStorm/rwf/lobby")
 
 val mapFolders =
     (mapsRoot.listFiles { file -> file.isDirectory } ?: emptyArray()).sortedBy { it.name }
@@ -73,10 +77,44 @@ mapFolders.forEach { folder ->
   verifyRwfMaps { dependsOn(verify) }
 }
 
+val bakeRwfLobby =
+    tasks.register<JavaExec>("bakeRwfLobby") {
+      group = "rwf"
+      description = "Writes the generated lobby's blocks.schem and bakes its nav files."
+      classpath = sourceSets.main.get().runtimeClasspath
+      mainClass = mainClassName
+      args("bake-lobby", lobbyFolder.absolutePath)
+      inputs.file(lobbyFolder.resolve("lobby.yml"))
+      outputs.files(
+          lobbyFolder.resolve("blocks.schem"),
+          lobbyFolder.resolve("nav.rwfnav"),
+          lobbyFolder.resolve("nav.summary.json"))
+    }
+
+val verifyRwfLobby =
+    tasks.register<JavaExec>("verifyRwfLobby") {
+      group = "rwf"
+      description = "Verifies the committed lobby against its generator and a fresh bake."
+      classpath = sourceSets.main.get().runtimeClasspath
+      mainClass = mainClassName
+      args("verify-lobby", lobbyFolder.absolutePath)
+      inputs.dir(lobbyFolder)
+      mustRunAfter(bakeRwfLobby)
+    }
+
+bakeRwfMaps { dependsOn(bakeRwfLobby) }
+
+verifyRwfMaps { dependsOn(verifyRwfLobby) }
+
 tasks.check { dependsOn(verifyRwfMaps) }
 
 // The end-to-end tests bake the shipped maps and compare them with the committed artifacts.
 tasks.test {
   inputs.dir(mapsRoot).withPropertyName("shippedMaps").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs
+      .dir(lobbyFolder)
+      .withPropertyName("shippedLobby")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
   systemProperty("thestorm.rwf.maps", mapsRoot.absolutePath)
+  systemProperty("thestorm.rwf.lobby", lobbyFolder.absolutePath)
 }

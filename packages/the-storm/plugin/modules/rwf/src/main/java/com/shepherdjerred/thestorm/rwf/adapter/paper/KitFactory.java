@@ -100,6 +100,11 @@ final class KitFactory {
     inventory.setHeldItemSlot(FUSE_SLOT + 1);
   }
 
+  /** {@code level} in Roman numerals, as enchantment levels are shown; 1 to 10. */
+  static String roman(int level) {
+    return ROMAN[level - 1];
+  }
+
   /** Replaces the fuse in slot 0 with one carrying {@code bonus}. */
   void giveFuse(Player player, FuseBonus bonus) {
     player.getInventory().setItem(FUSE_SLOT, fuse(Optional.of(bonus)));
@@ -112,7 +117,7 @@ final class KitFactory {
         b ->
             stack.lore(
                 List.of(
-                    Component.text(b.type().loreName() + " " + ROMAN[b.level() - 1])
+                    Component.text(b.type().loreName() + " " + roman(b.level()))
                         .color(NamedTextColor.GRAY)
                         .decoration(TextDecoration.ITALIC, false))));
     keys.tagFuse(stack);

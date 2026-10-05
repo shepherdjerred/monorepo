@@ -210,6 +210,16 @@ final class CombatListener implements Listener {
     tracker.hurt(victim.getUniqueId(), cause(event));
   }
 
+  /** Nothing hurts a member before the match starts: the lobby has no damage. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onLobbyDamage(EntityDamageEvent event) {
+    if (event.getEntity() instanceof Player victim
+        && inWorld(victim)
+        && runner.waiting(victim.getUniqueId())) {
+      event.setCancelled(true);
+    }
+  }
+
   /** The server never pushes a member on its own account; the rules did above. */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onKnockback(EntityKnockbackEvent event) {

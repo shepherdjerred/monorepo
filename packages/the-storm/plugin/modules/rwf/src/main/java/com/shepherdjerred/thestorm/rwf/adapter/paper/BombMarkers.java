@@ -14,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.TextDisplay;
@@ -34,12 +35,12 @@ final class BombMarkers {
 
   private final PaperContext context;
   private final Keys keys;
-  private final Consumer<TextDisplay> style;
+  private final Consumer<Display> style;
   private final Map<String, TNTPrimed> primed = new HashMap<>();
   private final Map<String, TextDisplay> holograms = new HashMap<>();
   private final Map<String, BombSite> sites = new HashMap<>();
 
-  BombMarkers(PaperContext context, Keys keys, Consumer<TextDisplay> style) {
+  BombMarkers(PaperContext context, Keys keys, Consumer<Display> style) {
     this.context = context;
     this.keys = keys;
     this.style = style;

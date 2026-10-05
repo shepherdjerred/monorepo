@@ -124,7 +124,6 @@ final class MapDefinitionTest {
                       List.of(Samples.red(), Samples.blue()),
                       List.of(Samples.nuke("nuke-1", Samples.NUKE)),
                       Samples.BORDER,
-                      Samples.twoTeams().lobbyPoint(),
                       Samples.twoTeams().spectatorPoint(),
                       Samples.SHA))
           .isInstanceOf(IllegalArgumentException.class)
@@ -138,7 +137,6 @@ final class MapDefinitionTest {
                       List.of(Samples.red(), Samples.blue()),
                       List.of(Samples.nuke("nuke-1", Samples.NUKE)),
                       Samples.BORDER,
-                      Samples.twoTeams().lobbyPoint(),
                       Samples.twoTeams().spectatorPoint(),
                       "abc"))
           .isInstanceOf(IllegalArgumentException.class)

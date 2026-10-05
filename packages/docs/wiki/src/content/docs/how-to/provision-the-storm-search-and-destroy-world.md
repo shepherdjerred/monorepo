@@ -82,6 +82,13 @@ Place each map under
 been played. The image delivers the whole owned directory on every boot, so
 nothing is copied to the volume by hand.
 
+The lobby room ships the same way from
+`server/owned/plugins/TheStorm/rwf/lobby/` (`lobby.yml`, `blocks.schem` and its
+nav files). It is generated, so there is nothing to build by hand: the module
+pastes it at `128,64,16` in the same world, east of the maps, and keeps that
+area free of maps. Place new maps so their regions do not overlap it; the
+module refuses to enable if one does.
+
 ## 4. Enable the modules
 
 In [config.yml](packages/the-storm/server/owned/plugins/TheStorm/config.yml),
@@ -119,8 +126,10 @@ command and its failure modes.
    check the rwf command registration under
    [the plugin modules](packages/the-storm/plugin/modules/) for its current
    name.
-2. Join as a human with `/rwf join`. The lobby must fill with bots and start
-   a round with you as the only person.
+2. Join as a human with `/rwf join`. You must land on the gold spawn pad of
+   the lobby room, with the rules, the match board and four kit alcoves
+   around you and a countdown bar at the top of the screen. The lobby must
+   fill with bots and start a round with you as the only person.
 3. Watch the pod while the round runs. The chart requests 3 CPU (sized from
    the rwfbots load profile) and limits memory to 10 Gi; CPU above the
    request is burst, and memory must stay inside the limit:

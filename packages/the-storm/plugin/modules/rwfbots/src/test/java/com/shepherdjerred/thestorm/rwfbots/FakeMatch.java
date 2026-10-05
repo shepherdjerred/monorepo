@@ -78,7 +78,6 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
             new BombSite(RED_BOMB, new BombOwner.Team(TeamColor.RED), new BlockPos(4, 1, 16)),
             new BombSite(BLUE_BOMB, new BombOwner.Team(TeamColor.BLUE), new BlockPos(28, 1, 16))),
         new Cuboid(new BlockPos(0, 0, 0), new BlockPos(31, 7, 31)),
-        Spawn.at(new BlockPos(16, 2, 16)),
         Spawn.at(new BlockPos(16, 3, 16)),
         blocksSha256);
   }

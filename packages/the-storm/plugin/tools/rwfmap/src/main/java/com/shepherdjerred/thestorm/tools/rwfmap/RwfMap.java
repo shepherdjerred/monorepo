@@ -15,7 +15,10 @@ import java.util.Optional;
  * The command line: {@code rwfmap bake <mapDir> [--out <file>]} writes {@code nav.rwfnav} and
  * {@code nav.summary.json} next to the map (or the artifact to {@code --out} and the summary beside
  * it); {@code rwfmap verify <mapDir>} re-bakes in memory and fails when the committed files differ.
- * Exit codes: 0 success, 1 usage, 2 the map or its artifacts are wrong.
+ * {@code rwfmap bake-lobby <lobbyDir>} writes the generated lobby's {@code blocks.schem}, then its
+ * nav files once {@code lobby.yml} declares the schematic's hash; {@code rwfmap verify-lobby
+ * <lobbyDir>} fails when any of the four lobby files is not what the generator and a fresh bake
+ * produce. Exit codes: 0 success, 1 usage, 2 the map or its artifacts are wrong.
  */
 public final class RwfMap {
 
@@ -28,6 +31,8 @@ public final class RwfMap {
       usage:
         rwfmap bake <mapDir> [--out <file>]   bake nav.rwfnav and nav.summary.json
         rwfmap verify <mapDir>                 fail if the committed nav files are stale
+        rwfmap bake-lobby <lobbyDir>           write the generated lobby and bake its nav files
+        rwfmap verify-lobby <lobbyDir>         fail if the committed lobby files are stale
       """;
 
   private RwfMap() {}
@@ -47,6 +52,9 @@ public final class RwfMap {
       return switch (args[0]) {
         case "bake" -> bake(Path.of(args[1]), rest, out, err);
         case "verify" -> rest.isEmpty() ? verify(Path.of(args[1]), out, err) : usage(err);
+        case "bake-lobby" -> rest.isEmpty() ? bakeLobby(Path.of(args[1]), out, err) : usage(err);
+        case "verify-lobby" ->
+            rest.isEmpty() ? verifyLobby(Path.of(args[1]), out, err) : usage(err);
         default -> usage(err);
       };
     } catch (IllegalArgumentException | IllegalStateException | UncheckedIOException e) {
@@ -99,6 +107,49 @@ public final class RwfMap {
       return OK;
     }
     err.println("rwfmap: " + map.id() + " failed verification:");
+    failures.forEach(failure -> err.println("  " + failure));
+    return FAILED;
+  }
+
+  private static int bakeLobby(Path folder, PrintStream out, PrintStream err) {
+    var generated = LobbyFolder.generated();
+    write(folder.resolve(MapFolder.BLOCKS_FILE), LobbyFolder.generatedBytes());
+    out.println("wrote the generated lobby: blocksSha256 " + generated.sha256());
+    var lobby = LobbyFolder.load(folder);
+    if (!lobby.file().blocksSha256().equals(generated.sha256())) {
+      err.println(
+          "rwfmap: set blocksSha256 in "
+              + folder.resolve(LobbyFolder.LOBBY_FILE)
+              + " to "
+              + generated.sha256()
+              + " and bake again");
+      return FAILED;
+    }
+    var baked = Baker.bake(lobby);
+    write(lobby.navFile(), baked.bytes());
+    write(lobby.summaryFile(), baked.summary().getBytes(UTF_8));
+    out.println(
+        "baked the lobby: "
+            + baked.artifact().graph().nodeCount()
+            + " walkable cells, "
+            + baked.bytes().length
+            + " bytes -> "
+            + lobby.navFile());
+    if (!baked.playable()) {
+      err.println("rwfmap: the lobby is not usable:");
+      baked.problems().forEach(problem -> err.println("  " + problem));
+      return FAILED;
+    }
+    return OK;
+  }
+
+  private static int verifyLobby(Path folder, PrintStream out, PrintStream err) {
+    var failures = Verifier.verify(LobbyFolder.load(folder));
+    if (failures.isEmpty()) {
+      out.println("verified the lobby: its files match the generator and a fresh bake");
+      return OK;
+    }
+    err.println("rwfmap: the lobby failed verification:");
     failures.forEach(failure -> err.println("  " + failure));
     return FAILED;
   }

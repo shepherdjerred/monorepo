@@ -1,0 +1,108 @@
+{
+  "mapId": "lobby",
+  "formatVersion": 1,
+  "generatorVersion": 1,
+  "blocksSha256": "63d4513bab8df532597dbabd5a49abe32ffcbb64f186f1ef14111000c4cf78a3",
+  "classificationSha256": "3a325be74030c8f4c3fa7688831db9cc7233b42db8bc76fd257fdff1f1cc9cb3",
+  "bounds": {
+    "origin": { "x": 128, "y": 64, "z": 16 },
+    "sizeX": 31,
+    "sizeY": 9,
+    "sizeZ": 31
+  },
+  "palette": [
+    {
+      "state": "minecraft:air",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 5457
+    },
+    {
+      "state": "minecraft:stone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1733
+    },
+    {
+      "state": "minecraft:polished_andesite",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 622
+    },
+    {
+      "state": "minecraft:red_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 153
+    },
+    {
+      "state": "minecraft:blue_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 153
+    },
+    {
+      "state": "minecraft:gold_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 9
+    },
+    {
+      "state": "minecraft:glowstone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 25
+    },
+    {
+      "state": "minecraft:glass",
+      "shape": "FULL",
+      "blocksSight": false,
+      "blocks": 59
+    },
+    {
+      "state": "minecraft:chiseled_stone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 88
+    },
+    {
+      "state": "minecraft:quartz_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 28
+    },
+    {
+      "state": "minecraft:sea_lantern",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 4
+    },
+    {
+      "state": "minecraft:smooth_stone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 318
+    }
+  ],
+  "cells": {
+    "total": 8649,
+    "walkable": 865
+  },
+  "edges": {
+    "total": 6036,
+    "CLIMB": 0,
+    "DROP": 50,
+    "JUMP": 46,
+    "WALK": 5940
+  },
+  "regions": 26,
+  "coverPoints": 189,
+  "chokepoints": 10,
+  "routes": {
+    "count": 0,
+    "spawnToBomb": []
+  },
+  "distanceFields": 8,
+  "problems": [],
+  "bytes": 17990
+}

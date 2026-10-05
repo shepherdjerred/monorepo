@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
+import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyStatus;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchError;
@@ -81,6 +82,9 @@ final class MatchRunner implements MatchView, MatchEvents {
    * @param payouts the payout use case
    * @param store finished matches
    * @param recordings match recordings
+   * @param lobby the lobby room
+   * @param hud the countdown boss bar and titles
+   * @param displays the lobby's rules, match board and kit alcoves
    */
   record Parts(
       PaperContext context,
@@ -94,7 +98,10 @@ final class MatchRunner implements MatchView, MatchEvents {
       CombatTracker combat,
       PayoutService payouts,
       MatchStore store,
-      Recordings recordings) {}
+      Recordings recordings,
+      LobbyRoom lobby,
+      LobbyHud hud,
+      LobbyDisplays displays) {}
 
   /** A member's running tally. */
   private static final class Tally {
@@ -122,6 +129,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private @Nullable RwfMatch cachedFor;
   private OptionalInt showcase = OptionalInt.empty();
   private @Nullable UUID keepingSnapshot;
+  private int lastTitle;
 
   MatchRunner(Parts parts) {
     this.parts = parts;
@@ -378,6 +386,8 @@ final class MatchRunner implements MatchView, MatchEvents {
     tallies.clear();
     pendingPay.clear();
     poisoned.clear();
+    parts.hud().hideAll();
+    parts.hud().fight(humanEntities());
     parts.bombs().place(currentMap().definition());
     parts.recordings().start(match, currentMap().definition(), now());
     for (var member : match.members()) {
@@ -520,6 +530,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     parts.combat().clear();
     parts.boards().reset();
     parts.bombs().clear();
+    parts.hud().hideAll();
     match =
         RwfMatch.open(
             parts.config().matchSettings(), UUID.randomUUID(), parts.context().random().nextLong());
@@ -576,6 +587,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     if (!(match.phase() instanceof Phase.Resetting)) {
       handle(new MatchEvent.Stop());
     }
+    parts.hud().hideAll();
     ready = false;
   }
 
@@ -592,10 +604,44 @@ final class MatchRunner implements MatchView, MatchEvents {
     handle(new MatchEvent.Tick(now, vitals()));
     if (live()) {
       liveTick(now);
+    } else if (match.phase().preGame()) {
+      lobbyTick(now);
     }
     if (ticks % DISPLAY_EVERY_TICKS == 0) {
       current().ifPresent(parts.boards()::render);
+      var status = LobbyStatus.of(match, now);
+      parts.hud().update(status);
+      parts.displays().update(status);
     }
+  }
+
+  /**
+   * Before the start: members who leave the room (falling below its floor, say) are put back at its
+   * spawn, and the last five seconds of the countdown are shown as titles.
+   */
+  private void lobbyTick(Instant now) {
+    for (var member : match.members()) {
+      entity(member.id())
+          .filter(player -> !player.isDead() && !parts.lobby().contains(Places.at(player)))
+          .ifPresent(player -> player.teleport(lobby()));
+    }
+    var status = LobbyStatus.of(match, now);
+    var seconds = status.stage() == LobbyStatus.Stage.COUNTDOWN ? status.secondsLeft() : 0;
+    if (seconds != lastTitle && seconds > 0) {
+      parts.hud().countdown(humanEntities(), seconds);
+    }
+    lastTitle = seconds;
+  }
+
+  /** The online human members. */
+  private List<Player> humanEntities() {
+    var out = new ArrayList<Player>();
+    for (var member : match.members()) {
+      if (!member.id().isBot()) {
+        entity(member.id()).ifPresent(out::add);
+      }
+    }
+    return out;
   }
 
   /**
@@ -810,13 +856,38 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
   }
 
+  /** Whether {@code player} is a member waiting for the match to start. */
+  boolean waiting(UUID player) {
+    return match.phase().preGame() && memberOf(player).isPresent();
+  }
+
+  /**
+   * A member died before the start and respawned in the lobby: they are made ready again, with the
+   * kit they picked.
+   */
+  void respawnedInLobby(Player player) {
+    var member = memberOf(player.getUniqueId());
+    if (member.isEmpty() || !match.phase().preGame()) {
+      return;
+    }
+    effects.enterLobby(member.orElseThrow().id());
+    member
+        .orElseThrow()
+        .kit()
+        .ifPresent(kit -> parts.kits().equip(player, parts.kits().require(kit)));
+  }
+
   private void spectate(Player player, Spawn at) {
     PlayerStates.wipe(player, GameMode.SPECTATOR);
     player.teleport(Places.location(parts.context().world(), at));
   }
 
   Location lobby() {
-    return Places.location(parts.context().world(), parts.config().lobby().toSpawn());
+    return parts.lobby().spawn();
+  }
+
+  LobbyRoom lobbyRoom() {
+    return parts.lobby();
   }
 
   Location spectatorPoint() {
@@ -983,12 +1054,13 @@ final class MatchRunner implements MatchView, MatchEvents {
           }
           removeAttackSpeed(player);
           parts.boards().hide(player);
+          parts.hud().hide(player);
           parts.snapshots().restore(player);
         }
       }
     }
 
-    private void enterLobby(CombatantId id) {
+    void enterLobby(CombatantId id) {
       withEntity(
           id,
           player -> {
@@ -997,6 +1069,7 @@ final class MatchRunner implements MatchView, MatchEvents {
             addAttackSpeed(player);
             parts.boards().show(player);
             if (!id.isBot()) {
+              parts.hud().show(player);
               Texts.info(player, "Pick a kit with /rwf kit <id>; leave with /rwf leave.");
               if (parts.recordings().enabled()) {
                 Texts.info(player, Texts.RECORDING_DISCLOSURE);
