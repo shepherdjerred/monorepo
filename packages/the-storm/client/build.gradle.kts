@@ -1,7 +1,7 @@
+import java.io.File
 import net.fabricmc.loom.configuration.processors.JarProcessor
 import net.fabricmc.loom.util.ZipReprocessorUtil
 import org.gradle.api.tasks.bundling.ZipEntryCompression
-import java.io.File
 
 class ReproducibleMinecraftJarProcessor : JarProcessor {
   override fun getId() = "storm:reproducible-minecraft-archive:v1:stored"

@@ -81,7 +81,7 @@ inspection; it does not implement autonomous navigation or a full-match player.
 
 The pinned Loom build merges the verified Minecraft inputs into a local dependency.
 The final archive processor sorts its entries, fixes timestamps, removes ZIP
-metadata, and stores entries without compression so that macOS and Linux produce
+extras and comments, and stores entries without compression so that macOS and Linux produce
 the same checksum. Locks and strict verification metadata include that generated
 dependency alongside the upstream artifacts.
 
