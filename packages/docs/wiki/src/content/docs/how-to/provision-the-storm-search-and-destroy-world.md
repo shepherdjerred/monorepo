@@ -41,25 +41,23 @@ enabled, so the world would fail to load on every later boot. For the same
 reason the world is not listed in `world.yml`; the `rwf` module checks and
 seals it itself.
 
-## 2. Wire the recording salt
+## 2. Create the recording salt
 
-Match recordings pseudonymise players with a salt that the server reads from
-`RWF_RECORDING_SALT`. Provision it the way
-[the chart](packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts)
-already injects `STORM_BRAIN_BEARER_TOKEN`: a 1Password item synced into a
-Kubernetes Secret, then an `extraEnv` entry with `valueFrom.secretKeyRef`.
+Match recordings pseudonymise players with an HMAC over a salt that the server
+reads from `RWF_RECORDING_SALT`; `rwf` refuses to enable without it while
+recording is on.
+[The chart](packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts)
+already declares a `OnePasswordItem` named `minecraft-tsmc-rwf-recording` and
+the `RWF_RECORDING_SALT` `extraEnv` entry that reads it. Only the 1Password
+item is left to create.
 
-1. In the Homelab (Kubernetes) vault, add a concealed `RWF_RECORDING_SALT`
-   field to a 1Password item that the chart projects only into the
-   `minecraft-tsmc` namespace, or create a new item and declare a matching
-   `OnePasswordItem` in the chart. Generate the value in 1Password and never
-   copy it into Git, a terminal, or chat. Do not reuse the `storm-brain`
-   item; the chart also projects that item into the agent's namespace.
-2. Add `RWF_RECORDING_SALT` to the chart's `extraEnv`, mirroring the
-   `STORM_BRAIN_BEARER_TOKEN` entry, and extend
-   [the chart test](packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.test.ts)
-   with the same expectation shape.
-3. Refresh the hash-only vault snapshot and run the offline reference check
+1. In the Homelab (Kubernetes) vault, create an item titled
+   `the-storm-rwf-recording` with one concealed field labelled
+   `RWF_RECORDING_SALT`. Generate the value in 1Password (32 or more random
+   characters) and never copy it into Git, a terminal, or chat. Keep it a
+   separate item: the chart projects it only into the `minecraft-tsmc`
+   namespace, while `storm-brain` is also projected into the agent's.
+2. Refresh the hash-only vault snapshot and run the offline reference check
    from `packages/homelab/src/cdk8s`:
 
    ```bash
@@ -67,7 +65,13 @@ Kubernetes Secret, then an `extraEnv` entry with `valueFrom.secretKeyRef`.
    bun run check:1password
    ```
 
-   Commit the refreshed snapshot with the chart change.
+   Until the item exists, `check:1password` fails with
+   `1Password item not found in vault: "the-storm-rwf-recording"`, and the
+   pod cannot start because its Secret is missing. Commit the refreshed
+   snapshot before the chart change is released.
+
+Changing the salt later re-keys every pseudonym, so recordings made before and
+after the change no longer link the same player.
 
 ## 3. Ship the map
 
@@ -117,8 +121,9 @@ command and its failure modes.
    name.
 2. Join as a human with `/rwf join`. The lobby must fill with bots and start
    a round with you as the only person.
-3. Watch the pod while the round runs. The chart requests 4 CPU and limits
-   memory to 10 Gi, so the server must stay inside both:
+3. Watch the pod while the round runs. The chart requests 3 CPU (sized from
+   the rwfbots load profile) and limits memory to 10 Gi; CPU above the
+   request is burst, and memory must stay inside the limit:
 
    ```bash
    kubectl -n minecraft-tsmc top pod minecraft-tsmc-0

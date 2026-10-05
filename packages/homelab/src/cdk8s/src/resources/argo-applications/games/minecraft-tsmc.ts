@@ -19,6 +19,7 @@ const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
+const RWF_RECORDING_SECRET_NAME = "minecraft-tsmc-rwf-recording";
 // MCBridge agent API (packages/the-storm/plugin/bridge); port-forward only.
 const MC_BRIDGE_PORT = 25_580;
 
@@ -65,6 +66,14 @@ export function createMinecraftTsmcApp(chart: Chart) {
     metadata: { name: BRAIN_SECRET_NAME, namespace: NAMESPACE },
   });
 
+  // Search and Destroy recordings pseudonymise players with an HMAC over this
+  // salt. Its own item so it is projected only into the game namespace.
+  // Required field (concealed, UPPERCASE_SNAKE label): RWF_RECORDING_SALT.
+  new OnePasswordItem(chart, "minecraft-tsmc-rwf-recording-1p", {
+    spec: { itemPath: vaultItemPath("the-storm-rwf-recording") },
+    metadata: { name: RWF_RECORDING_SECRET_NAME, namespace: NAMESPACE },
+  });
+
   createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
     namespace: "minecraft-tsmc",
     service: "minecraft-tsmc-bluemap",
@@ -104,13 +113,17 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // Candidate publication must not activate an unprepared production volume.
       tag: versions["shepherdjerred/the-storm-server/prod"],
     },
-    // Sized for the Search and Destroy world: up to ~100 ticking Citizens bot
-    // players share this server with survival, so the heap and the CPU
-    // reservation grew with it. CPU stays unlimited so bursts are not throttled.
+    // Sized for the Search and Destroy world: up to 100 ticking Citizens bot
+    // players share this server with survival. The rwfbots load profile
+    // (packages/the-storm/plugin/modules/rwfbots/LOAD.md) found 100 bots add
+    // under one core and that 6 CPUs tick no faster than 4, since the tick is
+    // one main thread: survival's earlier 2 cores plus one for the bots. The
+    // heap was not measured and keeps its headroom. CPU stays unlimited so
+    // bursts are not throttled.
     resources: {
       requests: {
         memory: "8Gi",
-        cpu: "4",
+        cpu: "3",
       },
       limits: {
         memory: "10Gi",
@@ -204,6 +217,15 @@ export function createMinecraftTsmcApp(chart: Chart) {
         },
       },
       MC_BRIDGE_BIND: "0.0.0.0",
+      // rwf refuses to enable with recording on and no salt.
+      RWF_RECORDING_SALT: {
+        valueFrom: {
+          secretKeyRef: {
+            name: RWF_RECORDING_SECRET_NAME,
+            key: "RWF_RECORDING_SALT",
+          },
+        },
+      },
       DISCORD_BOT_TOKEN: {
         valueFrom: {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
