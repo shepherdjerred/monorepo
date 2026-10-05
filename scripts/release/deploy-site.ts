@@ -236,6 +236,8 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     target: "s3",
     // Astro's hashed output dir.
     immutablePrefixes: ["_astro/"],
+    // Independently published world archives are not part of Astro's dist.
+    extraExcludes: ["world-archive/*"],
   },
 ];
 

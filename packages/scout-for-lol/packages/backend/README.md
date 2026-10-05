@@ -102,6 +102,11 @@ bun run smoke            # Smoke-test the built image
 bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 ```
 
+Hosted application pods reserve the report-lake baseline. The gateway owns
+the voice runtime and its additional memory reservation; application pods
+do not reserve that voice share again. Both roles retain their separate
+DuckDB scratch space and process memory limits.
+
 ### Durable Temporal work
 
 Community MVP votes commit a `MatchMvpTallyRefresh` row in the same database

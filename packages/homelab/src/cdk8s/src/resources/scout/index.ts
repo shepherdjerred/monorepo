@@ -94,13 +94,11 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
         cpuRequest: Cpu.millis(50),
-        // 3Gi, up from 2Gi: beta is the only stage that loads the Hey Scout
-        // voice runtime (three sherpa int8 graphs, silero VAD, and the
-        // openWakeWord cascade) on top of the report lake. Sized from
-        // streambot's 2Gi request for a comparable pipeline plus Scout's
-        // existing baseline; re-tune from observed usage under a live session
-        // rather than guessing again.
-        memoryRequest: Size.gibibytes(3),
+        // The isolated application keeps its pre-voice 2Gi baseline. The
+        // gateway owns the voice runtime and its separate 3Gi reservation;
+        // reserving that voice share here too prevents the application from
+        // scheduling when the production node is near its request budget.
+        memoryRequest: Size.gibibytes(2),
       };
     })
     .with("prod", () => {

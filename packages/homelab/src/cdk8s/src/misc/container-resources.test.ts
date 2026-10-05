@@ -346,7 +346,7 @@ describe("Container resource requests backstop", () => {
       [
         "scout-beta-scout-backend/main",
         {
-          requests: { cpu: "50m", memory: "3072Mi" },
+          requests: { cpu: "50m", memory: "2048Mi" },
           limits: { memory: "8192Mi" },
         },
       ],

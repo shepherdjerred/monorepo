@@ -46,3 +46,8 @@ bun run lint
 
 Deploys via `bun run deploy` (SeaweedFS `ts-mc-docs` bucket) and the
 `sites` CI lane on `main`.
+
+The bucket's `world-archive/` prefix holds independently published world
+downloads and viewers. It is outside this site's build output; the site
+deployment excludes it from uploads and pruning. Archive publication and
+retirement must target that prefix explicitly.
