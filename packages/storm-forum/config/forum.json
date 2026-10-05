@@ -104,19 +104,19 @@
   "vendorDependencies": [
     {
       "key": "flexile-light",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "kind": "style",
       "path": "vendor/flexile-storm-light.zip",
       "mode": "light",
-      "sha256": "e3ab0784db35c64dbc3fae902905a7388d4b647ef4a1ab594917a98fdc7568d0"
+      "sha256": "5dcc832a82bdb584083f35c6ba34f2208b3de7d7839d5dd7e33268b1b6175770"
     },
     {
       "key": "flexile-dark",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "kind": "style",
       "path": "vendor/flexile-storm-dark.zip",
       "mode": "dark",
-      "sha256": "909d0509f1ca1b535896e7677b3865aa90f10d696aada2c2e28465fb4196d611"
+      "sha256": "e989ffb388ec8f5faaf2b88a80859e60391663a0a9fceaa7fa555e75989162bb"
     },
     {
       "key": "xon-library",

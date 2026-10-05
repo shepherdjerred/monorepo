@@ -18,6 +18,9 @@ final class Styles extends \XF\Cli\Command\AbstractCommand
         }
         // Validate both archives before importing either one.
         foreach ($dependencies as $dependency) { stormValidateStyleArchive('/app/forum/' . $dependency['path'], $dependency); }
+        \Storm\Forum\Service\ThemeCatalog::load(true);
+        $season = $app->registry()->get('stormForumSeason') ?: 'normal';
+        \Storm\Forum\Service\ThemeCatalog::theme($season);
         $map = $app->registry()->get('stormForumStyles') ?: [];
         foreach ($dependencies as $dependency) {
             $mode = $dependency['mode'];
@@ -45,9 +48,7 @@ final class Styles extends \XF\Cli\Command\AbstractCommand
             $app->service('XF:StyleProperty\Rebuild')->rebuildFullPropertyMap();
             $app->service('Storm\Forum:OwnedStyles')->apply($parent, $mode, $map);
         }
-        $season = $app->registry()->get('stormForumSeason') ?: 'normal';
-        if (!in_array($season, ['normal', 'halloween', 'christmas'], true)) { throw new \RuntimeException('Managed season is invalid'); }
-        $app->repository('XF:Option')->updateOption('defaultStyleId', $map['light:' . $season]);
+        $app->service('Storm\Forum:SeasonPolicy')->apply($season, (bool)$app->registry()->get('stormForumFollowCalendar'));
         $app->repository('XF:Style')->triggerStyleDataRebuild();
         $output->writeln('Private Flexile parents and owned Storm styles imported.');
         return 0;
