@@ -112,7 +112,7 @@ final class SettlementProvisioner {
     busy = true;
     preview = Optional.empty();
     complete(
-        CompletableFuture.supplyAsync(() -> SurvivalBlueprint.blocks(content)),
+        context.compute().submit(() -> SurvivalBlueprint.blocks(content)),
         sender,
         blocks -> load(sender, () -> inspect(sender, blocks)));
   }

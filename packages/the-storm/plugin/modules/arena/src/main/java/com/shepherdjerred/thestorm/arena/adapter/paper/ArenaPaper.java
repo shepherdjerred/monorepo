@@ -91,8 +91,7 @@ public final class ArenaPaper {
 
   public static ArenaPaper start(ModuleContext module, Content data, App app, ServerHooks hooks) {
     var content = data.colosseum();
-    var context =
-        new PaperContext(module.plugin(), module.scheduler(), module.time(), module.random());
+    var context = new PaperContext(module);
     var keys = new Keys(module.plugin());
     var settings = content.settings();
     var texts = new Texts(settings.messages());

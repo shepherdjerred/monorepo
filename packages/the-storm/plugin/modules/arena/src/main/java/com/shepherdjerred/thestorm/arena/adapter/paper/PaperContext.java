@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
+import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import java.time.InstantSource;
 import java.util.UUID;
@@ -18,15 +20,17 @@ final class PaperContext {
 
   private final Plugin plugin;
   private final Scheduler scheduler;
+  private final ComputePool compute;
   private final InstantSource time;
   private final RandomGenerator random;
   private @Nullable ArenaPresence presence;
 
-  PaperContext(Plugin plugin, Scheduler scheduler, InstantSource time, RandomGenerator random) {
-    this.plugin = plugin;
-    this.scheduler = scheduler;
-    this.time = time;
-    this.random = random;
+  PaperContext(ModuleContext module) {
+    this.plugin = module.plugin();
+    this.scheduler = module.scheduler();
+    this.compute = module.compute();
+    this.time = module.time();
+    this.random = module.random();
   }
 
   Plugin plugin() {
@@ -43,6 +47,10 @@ final class PaperContext {
 
   Executor mainThread() {
     return scheduler.mainThread();
+  }
+
+  ComputePool compute() {
+    return compute;
   }
 
   InstantSource time() {

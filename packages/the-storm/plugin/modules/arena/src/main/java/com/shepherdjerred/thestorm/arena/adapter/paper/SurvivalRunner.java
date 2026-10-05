@@ -455,7 +455,9 @@ final class SurvivalRunner implements ArenaRunner {
   public java.util.concurrent.CompletableFuture<Void> prepareStartup() {
     world.cleanUp();
     var _ =
-        java.util.concurrent.CompletableFuture.supplyAsync(
+        context()
+            .compute()
+            .submit(
                 () ->
                     com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(
                         map.content()))
