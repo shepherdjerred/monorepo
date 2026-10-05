@@ -9,7 +9,7 @@ for the MCBridge Paper plugin, and the session daemon that holds them.
 | --------------------------- | ------------------------------------------------------------------------------------------ |
 | `src/protocol/`             | Zod-only contracts: the MCBridge wire API, daemon IPC, paths, protocol version             |
 | `src/bridge/client.ts`      | `BridgeClient` — bearer-authenticated, every response validated against the contract       |
-| `src/pins.ts`               | Pinned itzg image, Paper 26.2 build, WorldEdit and Citizens jars (url + sha256)            |
+| `src/pins.ts`               | Pinned itzg image, Paper 26.2 build and plugin jars (url + sha256, as server/plugins.json) |
 | `src/providers/docker/`     | Docker CLI wrapper, reusable Paper-container helpers, and the Docker sandbox provider      |
 | `src/providers/kubernetes/` | Cluster sandbox provider: scoped kubectl, pod manifest, port-forward supervisor            |
 | `src/sandbox/`              | Sandbox records (0600, hold secrets), profiles, staging, and the provider contract         |
@@ -81,15 +81,18 @@ annotations; records whose pod disappeared are dropped.
 
 `storm-prod` and `storm-candidate` boot `ghcr.io/shepherdjerred/the-storm-server`
 at the version catalog's `/prod` and candidate pins with fixture credentials,
-staging nothing: the image bakes Paper, every plugin and the owned config. It
-needs an image that bakes MCBridge; earlier images never answer the bridge
-health check.
+staging nothing: the image bakes Paper, every plugin and the owned config. Like
+the image's own boot check, they set an unreachable Flipt bootstrap
+(`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`): companions refuse to
+enable without one, which stops the server. It needs an image that bakes
+MCBridge; earlier images never answer the bridge health check.
 
 The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
-`bunx turbo run build --filter=@shepherdjerred/the-storm`), its required
-LuckPerms and Multiverse, the repository-owned config with only the economy,
-chat, tracks, towns and tickets modules on (agent, discord and world need
-external services), and `TheStormMechanicsE2E.jar`, which runs the production
+`bunx turbo run build --filter=@shepherdjerred/the-storm`), the plugins
+its `paper-plugin.yml` requires (LuckPerms, CoreProtect, Multiverse; Citizens
+is already staged), the repository-owned TheStorm and Citizens config with
+only the economy, mail, chat, tracks, towns and tickets modules on (agent,
+discord and world need external services), and `TheStormMechanicsE2E.jar`, which runs the production
 mechanics module and builds its bridge and super-push fixtures at x 400-415.
 
 ## Actors
@@ -116,6 +119,12 @@ and the event stream. A `use` that a listener denies still answers `ok: true`:
 plugins also cancel clicks they handled (Storm's sign mechanisms do). Flows that
 need a real client (dialogs, join, chat rendering) stay in the-storm's
 Mineflayer E2E suite.
+
+Actors are Citizens NPCs, so Storm's `Humans.isHuman()` (no `NPC` metadata)
+filters them out of most Storm listeners: towns, economy, shops, quests,
+tracks, arena and similar flows ignore an actor exactly as they ignore story NPCs. `rwf` only excludes
+its own `rwfbots` registry, so it counts harness actors as players. Test those
+listener paths with a real client, not an actor.
 
 ## Playtests
 
@@ -184,7 +193,7 @@ from bridge `log` events, because the ServiceAccount has no `pods/log` there.
 Every write route goes through `guarded()` (`src/daemon/live-routes.ts`).
 Sandbox writes run directly. Live writes are assessed and authorized by the
 pure guard (`src/live/guard.ts`) from the `x-mc-*` request headers (reason,
-allow-players, confirm-dangerous, affects):
+allow-players, allow-protected, confirm-dangerous, affects):
 
 - **Tier 0**: commands and actor moves, journaled only.
 - **Tier 1**: WorldEdit, paste, snapshot restore and actor block actions. The
@@ -202,7 +211,9 @@ The guard refuses outright:
 - boxes over the snapshot limit, and selection-less WorldEdit shapes without
   `--affects`;
 - humans inside the box. Humans within `mcLiveNearPlayerRadius` need
-  `--allow-players`; NPCs are ignored.
+  `--allow-players`; NPCs are ignored;
+- boxes intersecting `mcLiveProtectedRegions` (by default the Zombies
+  settlement in `world`, x 1712-1871, z 2128-2287) without `--allow-protected`.
 
 Each attempt that passes the guard is appended to
 `~/.toolkit/mc/journal/live/<date>.jsonl` with its reason, tier, box, humans

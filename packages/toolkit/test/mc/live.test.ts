@@ -29,8 +29,12 @@ describe("live helpers", () => {
     ).toEqual({
       reason: "fix roof",
       allowPlayers: true,
+      allowProtected: false,
       confirmDangerous: false,
     });
+    expect(
+      liveWriteFlags({ reason: "arena fix", "allow-protected": true }),
+    ).toMatchObject({ allowPlayers: false, allowProtected: true });
   });
 
   test("renders an unusable status with its refusal", () => {

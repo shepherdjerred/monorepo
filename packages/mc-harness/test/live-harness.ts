@@ -30,6 +30,16 @@ export const liveConfig: LiveGuardConfig = {
   backupMaxAgeHours: 24,
   nearPlayerRadius: 32,
   maxSnapshotVolume: 100_000,
+  protectedRegions: [
+    {
+      name: "arena",
+      box: {
+        world: "world",
+        min: { x: 500, y: -64, z: 500 },
+        max: { x: 520, y: 319, z: 520 },
+      },
+    },
+  ],
 };
 
 export const LIVE_TEST_TOKEN = "t".repeat(48);

@@ -65,6 +65,7 @@ export async function mcLiveUndoCommand(options: {
   id: string;
   reason: string;
   allowPlayers: boolean;
+  allowProtected: boolean;
   json: boolean;
 }): Promise<void> {
   const result = await daemonRequest(
@@ -75,6 +76,7 @@ export async function mcLiveUndoCommand(options: {
       id: options.id,
       reason: options.reason,
       ...(options.allowPlayers ? { allowPlayers: true } : {}),
+      ...(options.allowProtected ? { allowProtected: true } : {}),
     },
   );
   print(

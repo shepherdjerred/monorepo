@@ -11,7 +11,13 @@
  */
 import type { BlockPos, Box, Player } from "#protocol/bridge.ts";
 import type { LiveTier, LiveWriteFlags } from "#protocol/live.ts";
-import { boxOf, boxVolume, describeBox, distanceToBox } from "#src/box.ts";
+import {
+  boxesOverlap,
+  boxOf,
+  boxVolume,
+  describeBox,
+  distanceToBox,
+} from "#src/box.ts";
 
 export type LiveGuardConfig = {
   /** Kill switch: false refuses every live write. */
@@ -26,7 +32,14 @@ export type LiveGuardConfig = {
   nearPlayerRadius: number;
   /** Snapshot limit; larger block writes could not be undone and are refused. */
   maxSnapshotVolume: number;
+  /**
+   * Regions block writes must not touch without `--allow-protected` (e.g. the
+   * Zombies settlement, whose startup map check a stray edit would break).
+   */
+  protectedRegions: readonly ProtectedRegion[];
 };
+
+export type ProtectedRegion = { name: string; box: Box };
 
 export class LiveGuardRefusal extends Error {
   constructor(message: string) {
@@ -440,6 +453,23 @@ function checkPlayers(
   }
 }
 
+/** Refuses a box that intersects a protected region unless --allow-protected. */
+function checkProtected(
+  box: Box,
+  regions: readonly ProtectedRegion[],
+  allowProtected: boolean,
+): void {
+  if (allowProtected) {
+    return;
+  }
+  const hit = regions.filter((region) => boxesOverlap(box, region.box));
+  if (hit.length > 0) {
+    throw new LiveGuardRefusal(
+      `${describeBox(box)} intersects protected ${hit.map((region) => `${region.name} (${describeBox(region.box)})`).join(", ")}; pass --allow-protected with a --reason only if the edit is meant for it`,
+    );
+  }
+}
+
 /** Throws LiveGuardRefusal unless the write may proceed. */
 export function authorizeLiveWrite(
   input: LiveAuthorizationInput,
@@ -458,6 +488,11 @@ export function authorizeLiveWrite(
   }
   const humans = input.players.filter((player) => !player.npc);
   if (assessment.box !== null) {
+    checkProtected(
+      assessment.box,
+      config.protectedRegions,
+      flags.allowProtected === true,
+    );
     checkPlayers(
       assessment.box,
       humans,

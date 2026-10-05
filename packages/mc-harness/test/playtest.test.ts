@@ -145,6 +145,7 @@ describe("profiles and staging", () => {
     expect(storm.plugins.map((pin) => pin.name)).toEqual([
       "WorldEdit",
       "Citizens",
+      "CoreProtect",
       "LuckPerms",
       "Multiverse-Core",
     ]);
@@ -152,11 +153,24 @@ describe("profiles and staging", () => {
       "MCBridge.jar",
       "TheStorm.jar",
       "TheStorm",
+      "Citizens",
       path.join("TheStorm", "config.yml"),
       "TheStormMechanicsE2E.jar",
       path.join("TheStormMechanicsE2E", "mechanics.yml"),
     ]);
   });
+
+  it.each(["storm-prod", "storm-candidate"] as const)(
+    "gives %s the inert Flipt bootstrap companions need to enable",
+    (profile) => {
+      const image = resolveProfile({ profile, world: "flat" }, secrets);
+      expect(image.env).toMatchObject({
+        FLIPT_URL: "http://127.0.0.1:9",
+        FLIPT_ENVIRONMENT: "beta",
+      });
+      expect(image.staged).toEqual([]);
+    },
+  );
 
   it("fails with the build command when an output is missing", async () => {
     await expect(

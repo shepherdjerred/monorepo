@@ -86,6 +86,17 @@ export const luckPerms: PluginPin = PluginPinSchema.parse({
 });
 
 /**
+ * TheStorm's paper-plugin.yml requires CoreProtect since the Citizens move;
+ * same build as the production server image (server/plugins.json).
+ */
+export const coreProtect: PluginPin = PluginPinSchema.parse({
+  name: "CoreProtect",
+  version: "24.1",
+  url: "https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar",
+  sha256: "a2acef7c06ef201355cef07d591a6055dfed358ad768faaaaaf4e276865ecc97",
+});
+
+/**
  * The world module requires Multiverse to load before TheStorm, even when the
  * module is switched off.
  */

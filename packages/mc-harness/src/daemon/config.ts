@@ -4,9 +4,9 @@ import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config";
 import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";
 import { createFileSource } from "@shepherdjerred/config/sources/file.ts";
-import { BRIDGE_LIMITS } from "#protocol/bridge.ts";
+import { BoxSchema, BRIDGE_LIMITS } from "#protocol/bridge.ts";
 import { DEFAULT_KUBE_CONTEXT } from "#providers/kubernetes/kubectl.ts";
-import type { LiveGuardConfig } from "#src/live/guard.ts";
+import type { LiveGuardConfig, ProtectedRegion } from "#src/live/guard.ts";
 
 const BooleanSettingSchema = z.union([z.boolean(), z.stringbool()]);
 const WorldListSchema = z.union([
@@ -21,6 +21,34 @@ const WorldListSchema = z.union([
         .filter((world) => world.length > 0),
     ),
 ]);
+
+const ProtectedRegionSchema = z.strictObject({
+  name: z.string().min(1),
+  box: BoxSchema,
+});
+const ProtectedRegionListSchema = z.union([
+  z.array(ProtectedRegionSchema),
+  z
+    .string()
+    .min(1)
+    .transform((raw) => z.array(ProtectedRegionSchema).parse(JSON.parse(raw))),
+]);
+
+/**
+ * The Zombies settlement arena (TheStorm arena/survival.yml region, x/z
+ * bounds) across the full world height: its startup check validates the map,
+ * so a stray live edit there breaks the arena.
+ */
+export const DEFAULT_PROTECTED_REGIONS: readonly ProtectedRegion[] = [
+  {
+    name: "zombies settlement",
+    box: {
+      world: "world",
+      min: { x: 1712, y: -64, z: 2128 },
+      max: { x: 1871, y: 319, z: 2287 },
+    },
+  },
+];
 
 /**
  * Daemon settings, layered `env -> ~/.toolkit/config.toml -> default` like the
@@ -66,6 +94,15 @@ export const MC_DAEMON_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: 32,
   },
+  /**
+   * Regions live block writes may not touch without --allow-protected, as a
+   * list of `{ name, box: { world, min, max } }` (JSON in the environment).
+   */
+  mcLiveProtectedRegions: {
+    schema: ProtectedRegionListSchema,
+    sources: ["env", "file", "default"],
+    default: DEFAULT_PROTECTED_REGIONS,
+  },
 } as const;
 
 export async function loadMcDaemonConfig() {
@@ -99,5 +136,6 @@ export async function liveGuardConfig(
     backupMaxAgeHours: await config.value("mcLiveBackupMaxAgeHours"),
     nearPlayerRadius: await config.value("mcLiveNearPlayerRadius"),
     maxSnapshotVolume: BRIDGE_LIMITS.maxSnapshotVolume,
+    protectedRegions: await config.value("mcLiveProtectedRegions"),
   };
 }

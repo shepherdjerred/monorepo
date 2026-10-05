@@ -21,16 +21,19 @@ export const STORM_PATHS = {
     "TheStormMechanicsE2E.jar",
   ),
   ownedConfigDir: path.join(STORM, "server", "owned", "plugins", "TheStorm"),
+  /** Keeps Citizens NPCs (story NPCs, companions, bots) off the tab list. */
+  ownedCitizensDir: path.join(STORM, "server", "owned", "plugins", "Citizens"),
 } as const;
 
 /**
  * Modules `storm-dev` switches on: playable gameplay without external
  * services. `agent` needs storm-brain, `discord` a bot token and `world`
- * Flipt, so they stay off. Mechanics runs inside TheStormMechanicsE2E, which
- * also prepares its fixture geometry.
+ * Flipt, so they stay off. Towns requires the mail service. Mechanics runs
+ * inside TheStormMechanicsE2E, which also prepares its fixture geometry.
  */
 export const STORM_DEV_MODULES = [
   "economy",
+  "mail",
   "chat",
   "tracks",
   "towns",

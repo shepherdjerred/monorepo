@@ -1,6 +1,7 @@
 import path from "node:path";
 import {
   citizens,
+  coreProtect,
   luckPerms,
   multiverseCore,
   serverImage,
@@ -135,7 +136,7 @@ function stormDevProfile(
   return {
     image: serverImage,
     env: serverEnv(world, secrets),
-    plugins: [worldEdit, citizens, luckPerms, multiverseCore],
+    plugins: [worldEdit, citizens, coreProtect, luckPerms, multiverseCore],
     staged: [
       bridgeJar,
       {
@@ -148,6 +149,11 @@ function stormDevProfile(
         kind: "repo-dir",
         source: STORM_PATHS.ownedConfigDir,
         target: "TheStorm",
+      },
+      {
+        kind: "repo-dir",
+        source: STORM_PATHS.ownedCitizensDir,
+        target: "Citizens",
       },
       {
         kind: "storm-config",
@@ -197,6 +203,10 @@ function stormImageProfile(image: string) {
       STORM_BRAIN_BEARER_TOKEN: "storm-sandbox-brain-token",
       DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
       DISCORD_CHANNEL_ID: "1",
+      // Inert Flipt bootstrap (as boot-check.sh): companions refuse to enable
+      // without it, which stops the server; flags then resolve as unreachable.
+      FLIPT_URL: "http://127.0.0.1:9",
+      FLIPT_ENVIRONMENT: "beta",
       ...bridgeAndRconEnv(secrets),
     },
     plugins: [],
