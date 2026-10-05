@@ -13,6 +13,8 @@ reference.
 - Missing executables return a clear failure. Never silently skip a required
   platform tool.
 - Do not print tokens while diagnosing configuration or child environments.
+- Resolve registered credentials through `src/lib/credentials.ts`; preserve
+  environment and config overrides and each credential's declared backend.
 
 ## Repository workflows
 
