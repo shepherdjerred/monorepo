@@ -396,6 +396,12 @@ credentials before dispatch. Each credential uses the first available source:
    `op://` reference or `keychain:<service>` locator.
 3. Its registered backend below.
 
+Native passthroughs invoked with exactly `--help`, `-h`, or `--version`, plus
+the exact invocation `toolkit argocd version --client`, run without credential
+resolution. Their arguments, native output, and exit status are preserved.
+Other invocations still resolve credentials, including `argocd version` and
+commands carrying metadata flags as arguments or after `--`.
+
 | Commands                                                                                    | Registered backend        |
 | ------------------------------------------------------------------------------------------- | ------------------------- |
 | `woodpecker`, `pr`, `linear`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo` | 1Password service account |
