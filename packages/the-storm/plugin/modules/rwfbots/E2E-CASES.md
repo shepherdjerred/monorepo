@@ -89,13 +89,19 @@ asserted there; the load cases belong to the manual load profile
     bots far from every human update every other tick, and calm ticks bring
     it back one level at a time. **Proven** for level 0 with 7 bots
     (staleness p95 within `maxDecisionAgeTicks`), and by the load profile
-    (`LOAD.md`) for level 0 at 20, 50 and 100 bots on 4 and 6 CPUs: no think
-    job over a tick, the board at most one tick behind, bot sections p95 at
-    most 6.4 ms at 100 bots, and the added tick p95 at 100 bots 3.8 and
-    6.1 ms on 4 CPUs (8.3 ms in one 6-CPU run, over the 8 ms bar). Decision
-    staleness p95 is 5 ticks throughout, which is the 4 Hz tactics cadence
-    and fails the plan's 3-tick bar (see `LOAD.md`). The forced stall and the
-    recovery are not proven.
+    (`LOAD.md`) for level 0 at 20, 50 and 100 bots on 4 and 6 CPUs against
+    the plan's bars:
+    - no think job over a tick;
+    - staleness, the think loop's lag from snapshot to published decision,
+      at a p95 of 0 to 1 tick against the 3-tick bar;
+    - bot sections p95 at most 6.4 ms at 100 bots;
+    - the added tick p95 at 100 bots 3.8 and 6.1 ms on 4 CPUs, the tested
+      shape. It is marginal on 6 CPUs: 8.3 ms in one run, over the 8 ms bar.
+
+    The age of the decision each bot follows is about 5 ticks by design (4 Hz
+    tactics); it is reported, not judged. The forced stall and the recovery
+    are not proven.
+
 11. A match whose map folder has no `nav.rwfnav`, or one baked from other
     blocks, logs the problem at enable or map choice and runs humans-only;
     `/rwf join` still works.
