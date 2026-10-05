@@ -20,7 +20,7 @@ final class ModulesTest {
   private static final Path SHIPPED_CONFIG =
       Path.of("../../server/owned/plugins/TheStorm/config.yml");
 
-  /** The modules the shipped config enables: 23 of the 25 registered. */
+  /** The modules the shipped config enables: all 25 registered. */
   private static final Set<String> SHIPPED_ENABLED =
       Set.of(
           "agent",
@@ -37,6 +37,8 @@ final class ModulesTest {
           "npcs",
           "qol",
           "quests",
+          "rwf",
+          "rwfbots",
           "seasonal",
           "shards",
           "shops",
@@ -46,9 +48,6 @@ final class ModulesTest {
           "towns",
           "tracks",
           "world");
-
-  /** Registered but off until the rwf world is provisioned. */
-  private static final Set<String> SHIPPED_DISABLED = Set.of("rwf", "rwfbots");
 
   @Test
   void everyModuleOnTheClasspathIsRegisteredOnce() {
@@ -82,11 +81,7 @@ final class ModulesTest {
                 .filter(entry -> entry.getValue())
                 .map(entry -> entry.getKey()))
         .containsExactlyInAnyOrderElementsOf(SHIPPED_ENABLED);
-    assertThat(
-            config.modules().entrySet().stream()
-                .filter(entry -> !entry.getValue())
-                .map(entry -> entry.getKey()))
-        .containsExactlyInAnyOrderElementsOf(SHIPPED_DISABLED);
+    assertThat(config.modules().values()).allMatch(on -> on);
 
     var selected =
         switch (ModuleRegistry.select(Modules.all(), config.toggles())) {

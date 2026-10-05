@@ -36,9 +36,8 @@ fixtures_jar=$repo/packages/the-storm/plugin/dist/build/libs/TheStormFixtures.ja
 manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json)
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
 plugins+=(TheStorm MCBridge)
-# The modules owned/plugins/TheStorm/config.yml enables: 23 of the 25 registered
-# (rwf and rwfbots stay off until the rwf world is provisioned).
-enabled_modules=(agent arena chat companions discord economy essentials mail mechanics messages mobs npcs qol quests seasonal shards shops skills spells tickets towns tracks world)
+# The modules owned/plugins/TheStorm/config.yml enables: all 25 registered.
+enabled_modules=(agent arena chat companions discord economy essentials mail mechanics messages mobs npcs qol quests rwf rwfbots seasonal shards shops skills spells tickets towns tracks world)
 # Non-secret fixture: MCBridge disables itself without a token of >= 32 chars.
 bridge_token=storm-boot-check-bridge-fixture-token
 
@@ -84,6 +83,7 @@ boot() { # label [docker run args...]
     -e DISCORD_BOT_TOKEN=invalid-storm-fixture-token -e DISCORD_CHANNEL_ID=1 \
     -e MC_BRIDGE_TOKEN="$bridge_token" -e MC_BRIDGE_BIND=127.0.0.1 \
     -e FLIPT_URL=http://127.0.0.1:9 -e FLIPT_ENVIRONMENT=beta \
+    -e RWF_RECORDING_SALT=storm-boot-check-recording-salt \
     "$image" >/dev/null
   local started=$SECONDS
   for _ in $(seq 1 600); do
@@ -118,7 +118,7 @@ boot() { # label [docker run args...]
   enabled=$(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr -d ' ' | tr ',' '\n' | sort | tr '\n' ' ')
   expected=$(printf '%s\n' "${enabled_modules[@]}" | sort | tr '\n' ' ')
   [[ "$enabled" == "$expected" ]] ||
-    fail "$label: expected the 23 enabled Storm modules (of 25 registered): $expected; got: $enabled"
+    fail "$label: expected all 25 Storm modules enabled: $expected; got: $enabled"
   if grep -E 'Could not prepare arenas|Could not validate shard altars|Spawn preparation failed' "$log"; then
     fail "$label: required world fixtures failed"
   fi

@@ -111,8 +111,8 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-The shipped `config.yml` registers 25 modules and enables 23 of them: `rwf`
-and `rwfbots` stay off until the rwf world is provisioned. The boot check, the
+The shipped `config.yml` registers 25 modules and enables all of them,
+including `rwf` and `rwfbots` (the rwf world is provisioned on live). The boot check, the
 full E2E lane and `dist`'s `ModulesTest` verify that exact enabled set, not a
 count, so a production module replaced by a scaffold is caught. Existing
 volumes must satisfy the one-time archive contract in
