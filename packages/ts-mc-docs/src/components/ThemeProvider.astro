@@ -1,0 +1,64 @@
+---
+import { themeCatalog, resolveTheme } from "@shepherdjerred/storm-theme";
+const data = JSON.stringify({
+  catalog: themeCatalog,
+  current: resolveTheme("auto", true, new Date()),
+});
+---
+
+<script is:inline define:vars={{ stormInitial: data }}>
+  const initial = JSON.parse(stormInitial);
+  const saved = document.cookie
+    .split("; ")
+    .find((part) => part.startsWith("storm_preferences="));
+  let prefs = { appearance: "system", theme: "auto" };
+  if (saved) {
+    try {
+      const value = JSON.parse(
+        decodeURIComponent(saved.slice("storm_preferences=".length)),
+      );
+      if (
+        value.version === 1 &&
+        ["system", "light", "dark"].includes(value.appearance)
+      )
+        prefs = value;
+    } catch {
+      /* Ignore malformed external cookies. */
+    }
+  }
+  const mode =
+    prefs.appearance === "system"
+      ? matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+      : prefs.appearance;
+  const theme =
+    initial.catalog.themes.find(
+      (theme) =>
+        theme.id === (prefs.theme === "auto" ? initial.current : prefs.theme),
+    ) || initial.catalog.themes.find((theme) => theme.id === initial.current);
+  const html = document.documentElement;
+  html.dataset.theme = mode;
+  html.dataset.stormSurface = "docs";
+  html.dataset.stormTheme = theme.id;
+  html.style.colorScheme = mode;
+  for (const [name, value] of Object.entries(theme.palettes[mode]))
+    html.style.setProperty(
+      "--storm-" +
+        name.replace(/[A-Z]/g, (letter) => "-" + letter.toLowerCase()),
+      value,
+    );
+  const scenery = initial.catalog.scenery[theme.scenery];
+  html.style.setProperty(
+    "--storm-scenery",
+    'url("/storm/' + scenery.desktop + '")',
+  );
+  html.style.setProperty(
+    "--storm-scenery-mobile",
+    'url("/storm/' + scenery.mobile + '")',
+  );
+  html.style.setProperty(
+    "--storm-decoration",
+    theme.decoration ? 'url("/storm/' + theme.decoration + '")' : "none",
+  );
+</script>

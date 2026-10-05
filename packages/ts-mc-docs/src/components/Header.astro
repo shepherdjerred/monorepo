@@ -1,0 +1,70 @@
+---
+import Search from "@astrojs/starlight/components/Search.astro";
+import { themeCatalog, resolveTheme } from "@shepherdjerred/storm-theme";
+const id = resolveTheme("auto", true, new Date());
+const theme = themeCatalog.themes.find((theme) => theme.id === id);
+if (!theme) throw new Error("Missing Storm theme");
+const api = import.meta.env.DEV
+  ? "http://127.0.0.1:18796/storm-theme/"
+  : "https://ts-mc.net/storm-theme/";
+---
+
+<div
+  class="stormDocsHeader"
+  id="storm-theme-root"
+  data-storm-surface="docs"
+  data-storm-base="/storm/"
+  data-storm-api={api}
+>
+  <div class="stormDocsTop">
+    <a href="https://ts-mc.net" aria-label="The Storm community">
+      <img
+        class="stormDocsLogo"
+        data-storm-logo
+        src={`/storm/${theme.logos.light}`}
+        width="270"
+        height="83"
+        alt="The Storm"
+      />
+    </a>
+    <Search />
+    <details class="stormThemeControl">
+      <summary>Appearance</summary>
+      <form data-storm-preferences>
+        <label>
+          Appearance
+          <select name="storm_mode">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <label>
+          Theme
+          <select name="storm_theme">
+            <option value="auto">Follow calendar</option>
+            {themeCatalog.themes.map((theme) => (
+              <option value={theme.id}>{theme.name}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <input type="checkbox" name="storm_effects" checked /> Holiday effects
+        </label>
+        <p>Effects respect reduced motion.</p>
+        <button type="submit">Save appearance</button>
+        <p role="status" data-storm-status></p>
+      </form>
+    </details>
+  </div>
+  <nav class="stormDocsNav" aria-label="The Storm">
+    <a href="https://ts-mc.net">Community</a>
+    <a href="https://ts-mc.net/forums/">Forums</a>
+    <a href="/">Docs</a>
+    <a href="https://bluemap.ts-mc.net">LiveMap</a>
+  </nav>
+  <div class="stormDocsGarland" aria-hidden="true"></div>
+</div>
+<script>
+  import "@shepherdjerred/storm-theme/browser";
+</script>

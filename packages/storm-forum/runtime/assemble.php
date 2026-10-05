@@ -55,7 +55,8 @@ $copy = static function (string $source, string $target) use (&$copy): void {
     } elseif (!copy($source, $target)) { throw new RuntimeException('Cannot copy owned application file'); }
 };
 $copy('/opt/storm-forum/addon/Storm', '/app/forum/src/addons/Storm');
-$copy('/opt/storm-forum/assets', '/app/forum/styles/storm');
+$copy('/opt/storm-theme/assets', '/app/forum/styles/storm');
+$copy('/opt/storm-theme/dist/browser.js', '/app/forum/styles/storm/browser.js');
 $copy('/opt/storm-forum/runtime/config.php', '/app/forum/src/config.php');
 foreach (['data', 'internal_data'] as $directory) {
     $target = '/var/lib/storm-forum/' . $directory;
@@ -67,5 +68,6 @@ $remove('/app/forum/data');
 if (!symlink('/var/lib/storm-forum/data', '/app/forum/data')) {
     throw new RuntimeException('Cannot link attachment storage');
 }
+$copy('/opt/storm-forum/assets/history', '/var/lib/storm-forum/data/storm-history');
 if (file_put_contents($marker . '.tmp', $argv[2] . "\n", LOCK_EX) === false || !rename($marker . '.tmp', $marker)) { throw new RuntimeException('Cannot commit assembly marker'); }
 echo "Private application assembled.\n";

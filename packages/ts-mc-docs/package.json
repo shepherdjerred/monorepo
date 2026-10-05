@@ -16,6 +16,7 @@
     "test:report": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/storm-theme": "workspace:*",
     "@astrojs/check": "^0.9.10",
     "@astrojs/sitemap": "^3.7.3",
     "@astrojs/starlight": "^0.42.0",

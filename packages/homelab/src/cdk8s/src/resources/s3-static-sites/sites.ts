@@ -1,4 +1,5 @@
 import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
+import { forumReleases } from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.ts";
 
 /**
  * CSP for the Scout release bucket (`/`, `/app/`, and `/docs/`).
@@ -102,7 +103,8 @@ const wikiCsp = [
 /**
  * CSP for the Storm docs site. Same shape as `wikiCsp`: Starlight's Pagefind
  * search loads a same-origin WASM module in a web worker, and the only
- * third party is PostHog through the managed proxy host.
+ * third party is PostHog through the managed proxy host. Preferences sync with
+ * the forum at the apex through its credentialed, origin-scoped theme API.
  */
 const tsMcDocsCsp = [
   "default-src 'self'",
@@ -110,7 +112,7 @@ const tsMcDocsCsp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://j.sjer.red",
+  "connect-src 'self' https://j.sjer.red https://ts-mc.net",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -248,7 +250,10 @@ export const staticSites: StaticSiteConfig[] = [
   // applied after ArgoCD, so removing the binding here first would create a
   // window where the old CNAME reaches a tunnel with no route.
   { hostname: "clauderon.com", bucket: "clauderon" },
-  { hostname: "ts-mc.net", bucket: "ts-mc" },
+  // Retain the homepage until an accepted production forum release owns the apex.
+  ...(forumReleases.some((release) => release.stage === "prod")
+    ? []
+    : [{ hostname: "ts-mc.net", bucket: "ts-mc" }]),
   {
     hostname: "docs.ts-mc.net",
     bucket: "ts-mc-docs",

@@ -12,7 +12,7 @@
       "taskQueue": "storm-forum-beta"
     },
     "prod": {
-      "url": "https://forum.ts-mc.net",
+      "url": "https://ts-mc.net",
       "taskQueue": "storm-forum-prod"
     }
   },
@@ -104,19 +104,19 @@
   "vendorDependencies": [
     {
       "key": "flexile-light",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "kind": "style",
       "path": "vendor/flexile-storm-light.zip",
       "mode": "light",
-      "sha256": "5dcc832a82bdb584083f35c6ba34f2208b3de7d7839d5dd7e33268b1b6175770"
+      "sha256": "e07fb502c67bbd06f7fd71429d438521b0ae150d90b2d3299ea74f09a66bd923"
     },
     {
       "key": "flexile-dark",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "kind": "style",
       "path": "vendor/flexile-storm-dark.zip",
       "mode": "dark",
-      "sha256": "e989ffb388ec8f5faaf2b88a80859e60391663a0a9fceaa7fa555e75989162bb"
+      "sha256": "55be4777e6b0b27a670fb952392d003801b0a246f270d9ebbf499adf6d730c1b"
     },
     {
       "key": "xon-library",

@@ -20,6 +20,7 @@
     "start": "bun src/cli.ts"
   },
   "dependencies": {
+    "@shepherdjerred/storm-theme": "workspace:*",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@temporalio/activity": "1.24.0",

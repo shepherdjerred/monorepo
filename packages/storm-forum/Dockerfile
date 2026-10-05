@@ -3,6 +3,8 @@ FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1
 WORKDIR /app
 COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/storm-forum'
+COPY packages/storm-theme /app/packages/storm-theme
+RUN bun /app/packages/storm-theme/scripts/generate.ts --check && bun build /app/packages/storm-theme/src/browser.ts --target browser --minify --outdir /app/packages/storm-theme/dist
 
 FROM php:8.3.35-fpm-bookworm@sha256:536a1188a926efe7e6f927b7ca01f3a043c63d0a527567c6d4d3bf9fbd637866 AS runtime
 # Distribution packages receive security updates when the pinned base is rebuilt.
@@ -19,8 +21,8 @@ COPY --from=bun /app/packages /app/packages
 COPY packages/config/src /app/packages/config/src
 COPY packages/feature-flags/src /app/packages/feature-flags/src
 COPY packages/storm-forum /opt/storm-forum
-RUN ln -s /app/packages/storm-forum/node_modules /opt/storm-forum/node_modules
-COPY packages/ts-mc/public/logo.svg /opt/storm-forum/assets/logo.svg
+RUN ln -s /app/packages/storm-forum/node_modules /opt/storm-forum/node_modules \
+    && ln -s /app/packages/storm-theme /opt/storm-theme
 COPY packages/storm-forum/runtime/php.ini /usr/local/etc/php/conf.d/storm.ini
 COPY packages/storm-forum/runtime/fpm.conf /usr/local/etc/php-fpm.conf
 ARG VERSION=dev

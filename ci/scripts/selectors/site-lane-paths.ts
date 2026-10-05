@@ -86,6 +86,7 @@ export const sitePaths = {
   "site-ts-mc-docs": [
     ...workspacePaths,
     "packages/ts-mc-docs",
+    "packages/storm-theme",
     // Registry corrections must rebuild every static tracker consumer.
     "config/analytics-sites.json",
     ...deployScripts,

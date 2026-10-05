@@ -1,14 +1,67 @@
-/* Storm brand accents for Starlight. */
 :root {
-  --sl-color-accent-low: #003b38;
-  --sl-color-accent: #00d0c6;
-  --sl-color-accent-high: #a8fffb;
+  --sl-nav-height: 10rem;
 }
-
-:root[data-theme="light"] {
-  --sl-color-accent-low: #c2f5f2;
-  --sl-color-accent: #007a74;
-  --sl-color-accent-high: #06302e;
+.stormDocsHeader {
+  height: 100%;
+}
+.stormDocsTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.stormDocsLogo {
+  display: block;
+  width: 270px;
+  max-width: 100%;
+  height: auto;
+}
+.stormDocsHeader .stormDocsNav {
+  background: var(--storm-chrome-bg);
+}
+.stormDocsHeader .stormDocsGarland {
+  height: 48px;
+  background-size: auto 46px;
+}
+.stormDocsHeader .stormThemeControl {
+  z-index: 100;
+}
+.stormDocsHeader .stormThemeControl form {
+  max-width: calc(100vw - 32px);
+}
+.stormDocsHeader button[data-open-modal] {
+  background: var(--storm-content-bg);
+  color: var(--storm-text-color);
+  border-color: var(--storm-border-color-heavy);
+}
+html[data-storm-surface="docs"] .sidebar a[aria-current="page"] {
+  color: var(--storm-selected-item-color);
+  background: var(--storm-selected-item-bg-color);
+}
+html[data-storm-surface="docs"] .right-sidebar {
+  background: var(--storm-content-bg);
+}
+html[data-storm-surface="docs"] .sidebar a:hover {
+  color: var(--storm-link-hover-color);
+}
+@media (max-width: 50rem) {
+  :root {
+    --sl-nav-height: 11rem;
+  }
+  .stormDocsTop {
+    padding-right: 32px;
+    gap: 8px;
+  }
+  .stormDocsTop > a {
+    width: min(50vw, 270px);
+  }
+  .stormDocsTop > :nth-child(2) {
+    display: none;
+  }
+  .stormDocsNav {
+    gap: 12px;
+    font-size: 14px;
+  }
 }
 
 .archive-previews {

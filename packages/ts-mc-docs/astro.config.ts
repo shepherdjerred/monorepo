@@ -3,13 +3,19 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
+  devToolbar: { enabled: false },
   build: {
     format: "directory",
   },
   integrations: [
     sitemap(),
     starlight({
-      customCss: ["./src/styles/custom.css"],
+      customCss: ["../storm-theme/src/styles.css", "./src/styles/custom.css"],
+      components: {
+        Head: "./src/components/Head.astro",
+        Header: "./src/components/Header.astro",
+        ThemeProvider: "./src/components/ThemeProvider.astro",
+      },
       description: "Documentation for The Storm Minecraft server.",
       editLink: {
         baseUrl:
@@ -20,13 +26,6 @@ export default defineConfig({
         {
           tag: "script",
           attrs: { src: "/posthog.js", defer: true },
-        },
-        {
-          tag: "meta",
-          attrs: {
-            property: "og:image",
-            content: "https://docs.ts-mc.net/social.png",
-          },
         },
         {
           tag: "meta",
@@ -47,7 +46,7 @@ export default defineConfig({
           label: "Survival",
           items: [
             { label: "Overview", link: "/survival/" },
-            { label: "Live Map", link: "/survival/livemap/" },
+            { label: "LiveMap", link: "/survival/livemap/" },
             { label: "Worlds", link: "/survival/worlds/" },
             { label: "Transparency", link: "/survival/transparency/" },
           ],

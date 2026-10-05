@@ -7,6 +7,7 @@
   <div class="block-container">
     <div class="block-body">
       <xf:radiorow name="storm_mode" value="{$stormMode}" label="Appearance">
+        <xf:option value="system">System</xf:option>
         <xf:option value="light">Light</xf:option>
         <xf:option value="dark">Dark</xf:option>
       </xf:radiorow>
@@ -16,6 +17,8 @@
           <xf:option value="{$theme.id}">{$theme.name}</xf:option>
         </xf:foreach>
       </xf:selectrow>
+      <xf:checkboxrow label="Holiday effects"><xf:option name="storm_effects" selected="{$stormEffects}">Show falling holiday decorations</xf:option></xf:checkboxrow>
+      <xf:inforow>Effects respect your device’s reduced-motion setting and appear only on holiday themes.</xf:inforow>
       <xf:inforow>Follow calendar currently uses <strong>{$stormEffectiveTheme}</strong>. Choosing a specific theme keeps it throughout the year.</xf:inforow>
     </div>
     <xf:submitrow submit="Save appearance" />
@@ -24,12 +27,17 @@
   <xf:hiddenval name="_xfRedirect">{$redirect}</xf:hiddenval>
 </xf:form>
   ]]></template>
+  <template type="public" title="storm_theme_bootstrap" version_id="3000070" version_string="3.0.0"><![CDATA[
+<div id="storm-theme-root" data-storm-surface="forum" data-storm-base="{{ base_url('styles/storm/') }}" data-storm-api="{{ link('storm-theme') }}"></div>
+<link rel="stylesheet" href="{{ base_url('styles/storm/effects.css') }}" />
+<script type="module" src="{{ base_url('styles/storm/browser.js') }}"></script>
+  ]]></template>
   <template type="public" title="storm_portal" version_id="1000070" version_string="1.0.0"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:description>A Minecraft community, brought back together.</xf:description>
 <xf:css src="storm_forum.less" />
 <section class="stormWelcome">
-  <img src="{{ base_url('styles/storm/logo.svg') }}" alt="The Storm" width="180" height="120" />
+  <img src="{{ base_url('styles/storm/logo.svg') }}" alt="The Storm" width="270" height="83" />
   <div><h1>Welcome to The Storm</h1><p>A place to build, explore, and catch up.</p>
     <a class="button button--primary" href="{{ link('forums') }}">Visit the forums</a>
     <a class="button" href="https://docs.ts-mc.net">Getting started</a>
@@ -39,7 +47,7 @@
   <article class="block stormArticle"><div class="block-container">
     <h2 class="block-header"><a href="{{ link('threads', $thread) }}">{$thread.title}</a></h2>
     <div class="block-body"><div class="block-row">{{ bb_code($thread.FirstPost.message, 'post', $thread.FirstPost) }}</div></div>
-    <div class="block-footer"><xf:date time="$thread.post_date" /> · <xf:username user="$thread.User" /> · <a href="{{ link('threads', $thread) }}">Join the discussion</a></div>
+    <div class="block-footer"><xf:date time="$thread.post_date" /> · {$thread.username} · <a href="{{ link('threads', $thread) }}">Join the discussion</a></div>
   </div></article>
 </xf:foreach>
 <xf:sidebar>

@@ -670,6 +670,11 @@
       "steps": [{ "runner": "vitest", "args": ["test/"] }]
     },
     {
+      "package": "@shepherdjerred/storm-theme",
+      "directory": "packages/storm-theme",
+      "steps": [{ "runner": "vitest", "args": ["test/"] }]
+    },
+    {
       "package": "@shepherdjerred/storm-brain",
       "directory": "packages/storm-brain",
       "steps": [

@@ -269,6 +269,9 @@ test("other lanes retain global CI inputs", () => {
 });
 
 test("release lanes include their complete imported helper closure", () => {
+  expect(selectorPathsForLane("site-ts-mc-docs")).toContain(
+    "packages/storm-theme",
+  );
   expect(lanePaths["helm"]).toContain(
     "packages/homelab/scripts/helm/helm-release-core.ts",
   );

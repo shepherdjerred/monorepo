@@ -1,7 +1,7 @@
 import { heartbeat } from "@temporalio/activity";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { createForumConfig, forumFlagOptions, type Stage } from "./config.ts";
-import { resolveTheme } from "./themes.ts";
+import { resolveTheme } from "@shepherdjerred/storm-theme";
 import { refreshMinecraftStatus, writeMinecraftStatus } from "./minecraft.ts";
 import { runPhp } from "./process.ts";
 export function createMaintainStormForum(stage: Stage) {

@@ -181,7 +181,7 @@ final class Configuration extends \XF\Service\AbstractService
 
     private function navigation(): void
     {
-        foreach (['stormHome' => ['Home', '{{ link(\'storm-home\') }}'], 'stormDocs' => ['Docs', 'https://docs.ts-mc.net'], 'stormMap' => ['Live Map', 'https://bluemap.ts-mc.net']] as $key => [$title, $link]) {
+        foreach (['stormHome' => ['Home', '{{ link(\'storm-home\') }}'], 'stormDocs' => ['Docs', 'https://docs.ts-mc.net'], 'stormMap' => ['LiveMap', 'https://bluemap.ts-mc.net']] as $key => [$title, $link]) {
             $nav = $this->em()->find('XF:Navigation', $key) ?: $this->em()->create('XF:Navigation');
             $nav->navigation_id = $key;
             $nav->parent_navigation_id = '';

@@ -359,7 +359,7 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
     });
   } else {
     createCloudflareTunnelBinding(chart, "public-forum", {
-      fqdn: "forum.ts-mc.net",
+      fqdn: "ts-mc.net",
       serviceName: service.name,
       port: 8080,
       probePath: "/readyz",
@@ -420,7 +420,7 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
                   value:
                     release.stage === "beta"
                       ? "https://storm-forum-beta.tailnet-1a49.ts.net"
-                      : "https://forum.ts-mc.net",
+                      : "https://ts-mc.net",
                 },
               ],
             },

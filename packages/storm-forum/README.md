@@ -2,7 +2,7 @@
 
 The Storm's XenForo integration owns repeatable forum configuration, its portal,
 independently authored child styles, Minecraft status, and coordinated backups.
-The forum starts with fresh discussions and clearly attributed editorial history.
+Reviewed public historical discussions retain original names and dates, with new replies enabled.
 
 ## Licensed inputs and image boundary
 
@@ -22,10 +22,11 @@ version, appearance, native export format, and exact XenForo base version.
 Both archives pass preflight before installation or either parent import.
 Keep the Audentio attribution in the footer when changing the adaptation.
 
-The 26 static Storm styles inherit from hidden light and dark Flexile parents.
-`config/themes.json` owns the Classic, four seasons, and eight festival palettes,
-scenery, decorations, and Pacific calendar windows. Two stable Follow calendar
-styles inherit from the effective seasonal children without copying their values.
+The shared `@shepherdjerred/storm-theme` catalog owns Classic, four seasons, eight
+festivals, scenery, holiday logos, decorations, and Pacific calendar windows.
+The 42 selectable styles offer System, light, and dark appearances, each with
+13 explicit themes and a stable Follow calendar choice. System uses native
+XenForo variations; followers inherit effective seasonal values.
 The native chooser saves appearance and theme through XenForo's existing member
 preferences or guest cookies. Import preserves the original six IDs, members'
 selections, and the active default. Legacy parents and unrelated styles are retained.
@@ -58,6 +59,16 @@ editorial threads retain stable IDs. Configuration never deletes unrelated
 content. Existing editorial text remains editable by staff and is preserved on
 releases. Private support is readable by its author and staff. The portal and
 recent-thread widget query only public forums.
+
+`storm:history` imports the reviewed `config/history.json` corpus as guest posts
+without recreating accounts. Its transactional ID map makes repeat releases
+preserve edits and new replies. Provenance and reconstruction decisions remain
+internal to the corpus. `scripts/prepare-history.ts` reads an explicit archive
+directory without modifying it and copies only referenced public images.
+
+The theme API shares native preferences with player docs. Public social cards
+use the effective calendar theme, check guest visibility, and cache by content
+and renderer/artwork revision. Personal appearance choices do not change cards.
 
 ## Configuration and bootstrap
 
@@ -140,7 +151,7 @@ Docker context. The theme source and builder are version-controlled.
 The integration harness uses random credentials and isolated, disposable Docker
 containers. It exercises actual XenForo entities, repeated configuration, private
 support, new-account restrictions, and promotion criteria. Theme builds also
-exercise all 28 managed styles, parent migration, inherited palettes, repeated
+exercise all 42 managed styles, parent migration, inherited palettes, repeated
 imports, preserved member choices, follower transitions and rejection of missing
 styles or altered/incompatible archives.
 The optional preview
