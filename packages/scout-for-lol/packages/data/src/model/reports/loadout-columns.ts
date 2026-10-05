@@ -15,11 +15,14 @@ export const MatchRunePageSchema = z.object({
     PositiveGameAssetIdSchema,
     PositiveGameAssetIdSchema,
   ]),
-  statShardIds: z.object({
-    offense: PositiveGameAssetIdSchema,
-    flex: PositiveGameAssetIdSchema,
-    defense: PositiveGameAssetIdSchema,
-  }),
+  // Null for a match the Scout Client built, which reports no stat shards.
+  statShardIds: z
+    .object({
+      offense: PositiveGameAssetIdSchema,
+      flex: PositiveGameAssetIdSchema,
+      defense: PositiveGameAssetIdSchema,
+    })
+    .nullable(),
 });
 
 export type MatchRunePage = z.infer<typeof MatchRunePageSchema>;

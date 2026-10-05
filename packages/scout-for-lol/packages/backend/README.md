@@ -520,8 +520,11 @@ participant — beside the end-of-game block, and its `game-timelines/{id}`.
 `canonical/lcu-match.ts` converts the first two into a Match-V5 match and
 `canonical/lcu-timeline.ts` the timeline into a Match-V5 timeline, both tagged
 `dataVersion: "local-1"`. What the League client doesn't report stays absent
-rather than appearing as a zero: `gameName`; item, skill and ward events; per-frame
-champion and damage stats; gold per second; and crowd-control time. The League
+rather than appearing as a zero: `gameName`; rune stat shards (`perks.statPerks`,
+so the Explore loadout shows no shard list); item, skill and ward events;
+per-frame champion and damage stats; gold per second; and crowd-control time.
+`championName` is the champion key for the stated ID (`MonkeyKing`), since the
+end-of-game block's own value is the display name (`Wukong`). The League
 client stamps every timeline event with every field, so each event type keeps
 only the fields Match-V5 gives it. A "first" objective the payload doesn't state
 is derived only when provable — from kill counts, or the timeline's first kill

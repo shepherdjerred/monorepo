@@ -89,9 +89,13 @@ function runePageFromParticipant(
       style.style,
       ...style.selections.map((selection) => selection.perk),
     ]),
-    participant.perks.statPerks.offense,
-    participant.perks.statPerks.flex,
-    participant.perks.statPerks.defense,
+    ...(participant.perks.statPerks === undefined
+      ? []
+      : [
+          participant.perks.statPerks.offense,
+          participant.perks.statPerks.flex,
+          participant.perks.statPerks.defense,
+        ]),
   ];
   if (rawValues.every((value) => value === 0)) return null;
   if (
@@ -110,7 +114,8 @@ function runePageFromParticipant(
     primaryRuneIds: primary.selections.map((selection) => selection.perk),
     secondaryStyleId: runeStyleId(secondary, participant.participantId),
     secondaryRuneIds: secondary.selections.map((selection) => selection.perk),
-    statShardIds: participant.perks.statPerks,
+    // A Scout Client match has no stat shards to state.
+    statShardIds: participant.perks.statPerks ?? null,
   });
 }
 
@@ -237,11 +242,16 @@ export function matchLoadoutFromLakeRow(
         ],
         secondaryStyleId: row.secondary_rune_style_id,
         secondaryRuneIds: [row.secondary_rune_0_id, row.secondary_rune_1_id],
-        statShardIds: {
-          offense: row.stat_perk_offense_id,
-          flex: row.stat_perk_flex_id,
-          defense: row.stat_perk_defense_id,
-        },
+        statShardIds:
+          row.stat_perk_offense_id === null &&
+          row.stat_perk_flex_id === null &&
+          row.stat_perk_defense_id === null
+            ? null
+            : {
+                offense: row.stat_perk_offense_id,
+                flex: row.stat_perk_flex_id,
+                defense: row.stat_perk_defense_id,
+              },
       };
   return MatchLoadoutSchema.parse({
     itemIds: [
