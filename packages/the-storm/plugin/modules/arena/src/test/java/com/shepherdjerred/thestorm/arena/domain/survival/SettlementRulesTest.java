@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -14,6 +16,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 final class SettlementRulesTest {
   private static SurvivalContent shipped() {
@@ -39,12 +44,12 @@ final class SettlementRulesTest {
   void unlocksAreSharedAndResetWithDefenseCharges() {
     var content = shipped();
     var settlement = new Settlement(content);
-    var quarry =
-        content.zones().stream().filter(z -> z.id().equals("quarry")).findFirst().orElseThrow();
     var foundry =
         content.zones().stream().filter(z -> z.id().equals("foundry")).findFirst().orElseThrow();
     assertThatThrownBy(() -> settlement.unlock(foundry)).isInstanceOf(IllegalStateException.class);
-    settlement.unlock(quarry);
+    for (var id : java.util.List.of("wharf", "quarry", "church"))
+      settlement.unlock(
+          content.zones().stream().filter(z -> z.id().equals(id)).findFirst().orElseThrow());
     settlement.unlock(foundry);
     assertThat(settlement.open()).contains("foundry");
     settlement.arm("market-trap");
@@ -83,7 +88,7 @@ final class SettlementRulesTest {
   void suppliesAndRecipesOfferProgressionWithoutMultiplyingHarvestSites() {
     var content = shipped();
     var nodes = content.zones().stream().flatMap(z -> z.resources().stream()).toList();
-    assertThat(nodes).hasSize(15);
+    assertThat(nodes).hasSize(14);
     assertThat(nodes.stream().map(SurvivalContent.Resource::material).distinct()).hasSize(12);
     assertThat(
             content.zones().stream()
@@ -106,12 +111,14 @@ final class SettlementRulesTest {
   }
 
   @Test
-  void blueprintHasTenReachableDistrictsAndFitsItsDeclaredBudget() {
+  void blueprintHasFourteenDistrictsThreeTerracesAndClearsTheWholeOwnedVolume() {
     var content = shipped();
     var blueprint = new SettlementBlueprint(content).blocks();
-    assertThat(content.zones()).hasSize(10);
+    assertThat(content.zones()).hasSize(14);
+    assertThat(content.zones().stream().mapToInt(SurvivalContent.Zone::emeralds).sum())
+        .isEqualTo(138);
     assertThat(blueprint.size())
-        .isEqualTo(532_765)
+        .isEqualTo(2_073_603)
         .isLessThanOrEqualTo(SettlementBlueprint.BLOCK_BUDGET);
     var exit = content.arena().exit().point().block();
     assertThat(blueprint.keySet())
@@ -135,6 +142,12 @@ final class SettlementRulesTest {
     }
     assertThat(content.arena().region().max().x() - content.arena().region().min().x() + 1)
         .isEqualTo(160);
+    assertThat(SettlementTerrain.elevation(1790, 2261)).isEqualTo(72);
+    assertThat(SettlementTerrain.elevation(1803, 2210)).isEqualTo(88);
+    assertThat(SettlementTerrain.elevation(1795, 2154)).isEqualTo(104);
+    assertThat(blueprint.get(new BlockPos(1788, 141, 2188))).isEqualTo("IRON_BARS");
+    assertThat(blueprint.get(new BlockPos(1803, 108, 2236))).isEqualTo("STONE_BRICKS");
+    assertThat(blueprint.get(new BlockPos(1803, 110, 2236))).isEqualTo("STONE_BRICKS");
   }
 
   @Test
@@ -152,6 +165,22 @@ final class SettlementRulesTest {
     content.zones().stream()
         .flatMap(zone -> zone.safePoints().stream())
         .forEach(point -> assertThat(blueprint.get(point.block())).isEqualTo("AIR"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {130, 144})
+  void failedBuildsCannotPublishPartialOrOverBudgetMaps(int ceiling, @TempDir Path directory)
+      throws IOException {
+    var source = Path.of("../../../server/owned/plugins/TheStorm/arena/survival.yml");
+    var yaml = Files.readString(source);
+    assertThat(yaml).contains("y: 142");
+    var changed = directory.resolve("survival.yml");
+    Files.writeString(changed, yaml.replace("y: 142", "y: " + ceiling));
+    var blueprint = new SettlementBlueprint(ConfigFiles.load(changed, SurvivalContent.class));
+    for (var attempt = 0; attempt < 2; attempt++)
+      assertThatThrownBy(blueprint::blocks)
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining(ceiling == 144 ? "block budget" : "footprint");
   }
 
   @Test
@@ -180,14 +209,39 @@ final class SettlementRulesTest {
             .isTrue();
       }
     }
-    assertThat(reachable).contains(new BlockPos(1834, 67, 2165));
-    assertThat(reachable).contains(new BlockPos(1800, 88, 2244));
+    assertThat(reachable).contains(new BlockPos(1804, 89, 2214));
+    assertThat(reachable).contains(new BlockPos(1800, 77, 2212));
+    assertThat(reachable).contains(new BlockPos(1787, 101, 2204));
     assertThat(content.boxSites())
         .allSatisfy(
             site ->
                 assertThat(neighbors(site.block()).stream().anyMatch(reachable::contains))
                     .as("Reach box %s", site.id())
                     .isTrue());
+  }
+
+  @Test
+  void everyPurchaseSignIsReachableBeforeOpeningItsDistrict() {
+    var content = shipped();
+    var blocks = new HashMap<>(new SettlementBlueprint(content).blocks());
+    var settlement = new Settlement(content);
+    var start = content.arena().playerSpawns().getFirst().point().block();
+    for (var zone : content.zones()) {
+      if (zone.emeralds() == 0) continue;
+      var before = reachable(blocks, start);
+      assertThat(before)
+          .as("Locked district %s has no bypass", zone.id())
+          .doesNotContain(zone.entrance().block());
+      for (var sign : zone.purchaseSigns())
+        assertThat(neighbors(sign).stream().anyMatch(before::contains))
+            .as("Buy %s from an accessible route at %s", zone.id(), sign)
+            .isTrue();
+      settlement.unlock(zone);
+      zone.gate().forEach(pos -> blocks.put(pos, "AIR"));
+      assertThat(reachable(blocks, start))
+          .as("Enter %s after purchase", zone.id())
+          .contains(zone.entrance().block());
+    }
   }
 
   private static Set<BlockPos> reachable(Map<BlockPos, String> blocks, BlockPos start) {

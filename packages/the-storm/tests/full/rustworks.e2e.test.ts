@@ -131,7 +131,7 @@ test(
       );
       expect(
         await rcon.command(
-          `execute positioned 1764.5 73 2161.5 if entity @a[name=${secondBot.username},distance=..8]`,
+          `execute positioned 1758.5 73 2271.5 if entity @a[name=${secondBot.username},distance=..8]`,
         ),
       ).toContain("Test passed");
     } finally {
