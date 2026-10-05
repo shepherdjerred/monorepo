@@ -74,7 +74,7 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   import <dir> <model.obj> --height <n> [--solid] [--palette default|wool|concrete|terracotta]
                                         OBJ mesh (MTL colors/textures) → voxels → nearest blocks
   run <dir> [--target id]               Reset canvas to the site, replay all ops, record expected
-  render <dir> [--target id | --expected] [--name n]
+  render <dir> [x1,y1,z1 x2,y2,z2] [--target id | --expected] [--name n]
   lint <dir> [--target id | --expected]
   replay <dir> [--target id] [--keep]   Fresh seeded sandbox: replay ops and diff against expected
   promote <dir> --target <id> [--confirm <planHash>]   Dry run, then snapshot + apply + verify
@@ -267,10 +267,19 @@ const HANDLERS: Record<string, Handler> = {
     );
     return 0;
   },
-  render: async (env, dir, values) => {
+  render: async (env, dir, values, rest) => {
+    const [a, b] = rest;
     const result = await renderBuild(env, dir, {
       ...(values.target === undefined ? {} : { target: values.target }),
       ...(values.name === undefined ? {} : { name: values.name }),
+      ...(a === undefined
+        ? {}
+        : {
+            region: {
+              min: parseBlockPos(a),
+              max: parseBlockPos(required(b, "<x2,y2,z2>")),
+            },
+          }),
       expected: values.expected,
     });
     print(values.json, result, `render: ${result.render}`);

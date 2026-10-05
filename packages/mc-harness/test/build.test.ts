@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
-import { compileBuild, initBuild } from "#build/commands.ts";
+import { compileBuild, initBuild, regionInSite } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal, type JournalEntry } from "#build/journal.ts";
 import { diffGrids, runOps } from "#build/ops.ts";
@@ -220,5 +220,35 @@ describe("diffGrids", () => {
         },
       ],
     });
+  });
+});
+
+describe("regionInSite", () => {
+  const site = {
+    world: "world",
+    min: { x: 0, y: -64, z: 0 },
+    max: { x: 95, y: -20, z: 95 },
+  };
+
+  it("normalizes corners inside the site", () => {
+    expect(
+      regionInSite(site, {
+        min: { x: 40, y: -30, z: 10 },
+        max: { x: 20, y: -64, z: 30 },
+      }),
+    ).toEqual({
+      world: "world",
+      min: { x: 20, y: -64, z: 10 },
+      max: { x: 40, y: -30, z: 30 },
+    });
+  });
+
+  it("refuses a region that leaves the site", () => {
+    expect(() =>
+      regionInSite(site, {
+        min: { x: 80, y: -64, z: 80 },
+        max: { x: 100, y: -40, z: 90 },
+      }),
+    ).toThrow(/outside the site 0,-64,0 → 95,-20,95/u);
   });
 });
