@@ -2,6 +2,7 @@ import type * as DuckDBModuleNamespace from "@duckdb/node-api";
 import type { DuckDBInstance, DuckDBValue } from "@duckdb/node-api";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
+import { PARQUET_WRITE_SETTINGS } from "./writes/parquet.ts";
 
 const logger = createLogger("duckdb");
 
@@ -146,6 +147,7 @@ async function getInstance(): Promise<DuckDBInstance> {
       threads,
       memory_limit: memoryLimit,
       preserve_insertion_order: "false",
+      ...PARQUET_WRITE_SETTINGS,
       ...spill,
     });
   })();

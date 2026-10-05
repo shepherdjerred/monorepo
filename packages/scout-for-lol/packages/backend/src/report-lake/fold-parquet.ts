@@ -16,6 +16,7 @@ import {
 } from "#src/report-lake/schema.ts";
 import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 
@@ -70,7 +71,7 @@ export async function writeFoldParquet(
       await withDuckDBConnection(
         async (session) => {
           await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(columns)})) TO '${parquetPath}' (FORMAT PARQUET)`,
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(columns)})) TO '${parquetPath}' (${PARQUET_COPY_OPTIONS})`,
             [tmpPath],
           );
         },

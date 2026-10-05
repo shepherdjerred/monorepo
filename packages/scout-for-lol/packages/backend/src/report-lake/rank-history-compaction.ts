@@ -9,6 +9,7 @@ import {
   duckDbEmptySelect,
 } from "#src/report-lake/schema.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 
 const REBUILD_TIMEOUT_MS = 30 * 60 * 1000;
@@ -53,12 +54,12 @@ export async function writeCompetitionRankHistoryParquet(options: {
       async (session) => {
         if (writer.rows === 0) {
           await session.run(
-            `COPY (${duckDbEmptySelect(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)}) TO '${parquetPath}' (FORMAT PARQUET)`,
+            `COPY (${duckDbEmptySelect(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)}) TO '${parquetPath}' (${PARQUET_COPY_OPTIONS})`,
           );
           return;
         }
         await session.run(
-          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
+          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (${PARQUET_COPY_OPTIONS})`,
           [tmpPath],
         );
       },

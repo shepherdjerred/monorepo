@@ -41,6 +41,7 @@ import {
   snapshotStagingGenerations,
 } from "#src/report-lake/staging/generations.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
 import type { ReportLakeProgress } from "#src/report-lake/compaction-types.ts";
@@ -161,31 +162,31 @@ async function rebuildLocked(
         async (session) => {
           if (rawWriter.rows > 0) {
             await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(RAW_DOCUMENT_LAKE_COLUMNS)})) TO '${path.join(buildDir, "raw_documents")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(RAW_DOCUMENT_LAKE_COLUMNS)})) TO '${path.join(buildDir, "raw_documents")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
               [rawTmp],
             );
           }
           if (matchWriter.rows > 0) {
             await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "matches")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "matches")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
               [matchesTmp],
             );
           }
           if (matchTeamWriter.rows > 0) {
             await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_teams")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_teams")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
               [matchTeamsTmp],
             );
           }
           if (matchTeamBanWriter.rows > 0) {
             await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_BAN_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_team_bans")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_BAN_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_team_bans")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
               [matchTeamBansTmp],
             );
           }
           if (prematchWriter.rows > 0) {
             await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREMATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prematch")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREMATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prematch")}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
               [prematchTmp],
             );
           }

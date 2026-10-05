@@ -12,6 +12,7 @@ import {
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "#src/report-lake/schema.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 
 type TimelineWriter = {
   table: string;
@@ -116,7 +117,7 @@ export async function rebuildTimelineParquet(options: {
         for (const entry of writers.entries) {
           if (entry.writer.rows === 0) continue;
           await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(entry.columns)})) TO '${path.join(options.buildDir, entry.table)}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(entry.columns)})) TO '${path.join(options.buildDir, entry.table)}' (${PARQUET_COPY_OPTIONS}, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
             [entry.path],
           );
         }
