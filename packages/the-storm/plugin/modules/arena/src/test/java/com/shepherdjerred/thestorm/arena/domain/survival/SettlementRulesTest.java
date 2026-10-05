@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -14,6 +16,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 final class SettlementRulesTest {
   private static SurvivalContent shipped() {
@@ -162,6 +167,22 @@ final class SettlementRulesTest {
         .forEach(point -> assertThat(blueprint.get(point.block())).isEqualTo("AIR"));
   }
 
+  @ParameterizedTest
+  @ValueSource(ints = {130, 144})
+  void failedBuildsCannotPublishPartialOrOverBudgetMaps(int ceiling, @TempDir Path directory)
+      throws IOException {
+    var source = Path.of("../../../server/owned/plugins/TheStorm/arena/survival.yml");
+    var yaml = Files.readString(source);
+    assertThat(yaml).contains("y: 142");
+    var changed = directory.resolve("survival.yml");
+    Files.writeString(changed, yaml.replace("y: 142", "y: " + ceiling));
+    var blueprint = new SettlementBlueprint(ConfigFiles.load(changed, SurvivalContent.class));
+    for (var attempt = 0; attempt < 2; attempt++)
+      assertThatThrownBy(blueprint::blocks)
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining(ceiling == 144 ? "block budget" : "footprint");
+  }
+
   @Test
   void unlockedRoutesReachEveryEntranceStationAndTheMineFloor() {
     var content = shipped();
@@ -208,6 +229,9 @@ final class SettlementRulesTest {
     for (var zone : content.zones()) {
       if (zone.emeralds() == 0) continue;
       var before = reachable(blocks, start);
+      assertThat(before)
+          .as("Locked district %s has no bypass", zone.id())
+          .doesNotContain(zone.entrance().block());
       for (var sign : zone.purchaseSigns())
         assertThat(neighbors(sign).stream().anyMatch(before::contains))
             .as("Buy %s from an accessible route at %s", zone.id(), sign)

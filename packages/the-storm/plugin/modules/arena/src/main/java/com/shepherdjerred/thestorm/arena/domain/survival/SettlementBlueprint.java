@@ -11,7 +11,7 @@ import java.util.Map;
 public final class SettlementBlueprint {
   public static final int BLOCK_BUDGET = 2_100_000;
   private final SurvivalContent content;
-  private final Map<BlockPos, String> blocks = new LinkedHashMap<>();
+  private Map<BlockPos, String> blocks = Map.of();
 
   public SettlementBlueprint(SurvivalContent content) {
     if (!content.arena().id().equals("settlement"))
@@ -19,26 +19,28 @@ public final class SettlementBlueprint {
     this.content = content;
   }
 
-  public Map<BlockPos, String> blocks() {
+  public synchronized Map<BlockPos, String> blocks() {
     if (blocks.isEmpty()) {
-      var build = new SettlementBlocks(content.arena().region(), blocks);
+      var built = new LinkedHashMap<BlockPos, String>();
+      var build = new SettlementBlocks(content.arena().region(), built);
       new SettlementTerrain(content, build).apply();
       new SettlementTown(build).apply();
       new SettlementChurch(build).apply();
       new SettlementTerrain(content, build).arrivals();
-      new SettlementFixtures(content, blocks).apply();
+      new SettlementFixtures(content, built).apply();
       new SettlementTerrain(content, build).supports();
       boxHousings(build);
-      blocks.replaceAll(
+      built.replaceAll(
           (pos, material) -> material.equals("COPPER_BLOCK") ? "WAXED_COPPER_BLOCK" : material);
       var exit = content.arena().exit().point().block();
-      blocks.put(new BlockPos(exit.x(), exit.y() - 1, exit.z()), "STONE_BRICKS");
-      blocks.put(exit, "AIR");
-      blocks.put(new BlockPos(exit.x(), exit.y() + 1, exit.z()), "AIR");
-      if (blocks.size() > BLOCK_BUDGET)
+      built.put(new BlockPos(exit.x(), exit.y() - 1, exit.z()), "STONE_BRICKS");
+      built.put(exit, "AIR");
+      built.put(new BlockPos(exit.x(), exit.y() + 1, exit.z()), "AIR");
+      if (built.size() > BLOCK_BUDGET)
         throw new IllegalArgumentException("Settlement exceeds its reviewed block budget");
+      blocks = unmodifiableMap(built);
     }
-    return unmodifiableMap(blocks);
+    return blocks;
   }
 
   private void boxHousings(SettlementBlocks build) {
