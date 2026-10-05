@@ -109,6 +109,23 @@ toolkit mc we --world world --pos1 60,-63,0 --pos2 95,-20,40 "//forest oak 4"
   street. Landscaping is half the result: gardens, hedges, fields, docks,
   boats, carts, stalls (`library use market-stall`), wells (`plaza-well`).
 
+## Large maps (150–500 blocks)
+
+- Keep the site box tight vertically (lowest ground to the tallest spire plus
+  a few blocks); volume drives every read, render and paste.
+- Plan zones on a coarse grid (about 50-block cells): mountains, river,
+  forest, farmland, each settlement, the landmark. Write terrain as one
+  heightfield first, then settlements as functions placed by a layout list.
+- Rivers run downhill: carve a channel whose bed drops steadily from source
+  to mouth, widen it near the end, and bridge every road that crosses it.
+- Roads follow contours between settlements; switchback up steep ridges.
+- Spend detail where the eye goes (villages, castle, harbor) and keep the
+  land between them simpler: forests, fields, meadows and rock.
+- Reads, snapshots, compile pastes and promote split into tiles
+  automatically past ~3.6M blocks; nothing changes in the commands. The
+  whole-site sheet and hero are overviews at this size; critique districts
+  with close-up renders.
+
 ## Reviewing a map
 
 `build render` also writes `<name>-hero.png`, one large isometric view, for

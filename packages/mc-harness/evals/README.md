@@ -50,6 +50,10 @@ homes, sandboxes and daemons for debugging).
 | e6   | Repeat e1 entirely in negative x/z                                    | Same as e1, shifted (regression for negative-coordinate parsing)                                                                          |
 | m1   | Natural request: an impressive ~80×80 castle town on a hill           | Same as e2                                                                                                                                |
 | m2   | Natural request: an impressive ~96×96 harbor island                   | Same as e2                                                                                                                                |
+| m3   | Natural request: a ~50×50, ~60-tall mountain temple                   | Same as e2                                                                                                                                |
+| m4   | Natural request: a ~160×160 river valley village                      | Same as e2                                                                                                                                |
+| m5   | Natural request: a ~250×250 walled port city                          | Same as e2                                                                                                                                |
+| m6   | Natural request: a ~500×500×50 region map                             | Same as e2                                                                                                                                |
 
 `e*` tasks use the guided preamble (`tasks/_preamble.md`), which names the
 skills and steps. `m*` tasks use `tasks/_preamble-natural.md`: a plain user

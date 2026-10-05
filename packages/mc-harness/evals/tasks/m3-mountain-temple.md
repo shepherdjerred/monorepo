@@ -1,0 +1,5 @@
+Build me an impressive mountain temple in Minecraft, roughly 50×50 blocks of ground and up to about 60 blocks tall, in a fresh flat sandbox: a steep rocky crag you shape yourself, with a temple complex climbing it — a main hall or pagoda at the summit, smaller shrines and gates on the way up, a stair path that winds up the rock, and trees and gardens clinging to the ledges. Make it look hand-built and dramatic from every side: real cliffs, depth, layered roofs, details. Iterate on it using renders until you would be proud to show it.
+
+Do the work through the repository's build workflow so the result is replayable, and put the finished build into a sandbox that you leave running.
+
+Deliverables: copy your best overview render to `OUT/final.png`. `OUT/result.json`: {"sourceSandbox": "<sbx id holding the finished map>", "buildDir": "<path>", "applyId": "<id of the promote that placed it>", "site": {"min": [x, y, z], "max": [x, y, z]}, "iterations": <n>, "lintErrors": <n>, "lintWarnings": <n>, "verifyMismatches": <n>, "selfCritique": "<2-4 sentences, honest, with rubric scores>"}.

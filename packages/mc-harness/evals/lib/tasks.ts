@@ -83,6 +83,38 @@ export const TASKS: readonly TaskDef[] = [
     preamble: "natural",
     grade: buildGrader("stone-bridge"),
   },
+  {
+    id: "m3",
+    title: "mountain temple, ~50×50×60 (natural request)",
+    file: "m3-mountain-temple.md",
+    timeoutMinutes: 150,
+    preamble: "natural",
+    grade: buildGrader("watchtower"),
+  },
+  {
+    id: "m4",
+    title: "river valley village, ~160×160 (natural request)",
+    file: "m4-river-valley.md",
+    timeoutMinutes: 180,
+    preamble: "natural",
+    grade: buildGrader("plaza-well"),
+  },
+  {
+    id: "m5",
+    title: "walled port city, ~250×250 (natural request)",
+    file: "m5-port-city.md",
+    timeoutMinutes: 210,
+    preamble: "natural",
+    grade: buildGrader("market-stall"),
+  },
+  {
+    id: "m6",
+    title: "region map, ~500×500×50 (natural request)",
+    file: "m6-region.md",
+    timeoutMinutes: 240,
+    preamble: "natural",
+    grade: buildGrader("stone-bridge"),
+  },
 ];
 
 /** `all` or a comma list of ids (`e1,e3`); unknown ids fail loudly. */
