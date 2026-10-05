@@ -53,31 +53,27 @@ set -gx TESSDATA_PREFIX /opt/homebrew/share/tessdata
 
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
 
-# CLI tool credentials (via 1Password) - only set if op CLI is available
+# CLI tool credentials (via 1Password) - only set if op CLI is available.
+# Brokered secrets (Grafana/Linear/PostHog/ArgoCD/Discord/Bugsink/Cloudflare
+# tokens) resolve via `toolkit` at call time and are scrubbed from agent
+# shells (see __agent_exec); nothing is exported for them here.
 {{ if lookPath "op" -}}
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
-set -gx GRAFANA_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password" }}'
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
-set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential" }}'
-set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_AUTH_TOKEN" }}'
 set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
-set -gx LINEAR_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/LINEAR_API_KEY" }}'
 # Dedicated local agent identities for toolkit discord. The user identity can
 # invoke other bots and join voice; the bot identity provides reliable message
 # content and voice-state access.
-set -gx DISCORD_USER_TOKEN '{{ onepasswordRead "op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN" }}'
-set -gx DISCORD_BOT_TOKEN '{{ onepasswordRead "op://Personal/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN" }}'
 # posthog-cli reads POSTHOG_CLI_*, not the POSTHOG_API_KEY label the value is
 # stored under. The dedicated item also supplies the encrypted state passphrase.
-set -gx POSTHOG_CLI_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/POSTHOG_API_KEY" }}'
 set -gx POSTHOG_CLI_PROJECT_ID '549883'
 set -gx POSTHOG_TOFU_STATE_PASSPHRASE '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/POSTHOG_TOFU_STATE_PASSPHRASE" }}'
-# Deliberately NOT named CLOUDFLARE_API_TOKEN. src/tofu/cloudflare authenticates
-# from that name ambiently, so exporting it globally would let a bare `tofu apply`
-# with no `op run` authenticate and apply instead of failing closed. ~/.local/bin/cf
-# maps this to CLOUDFLARE_API_TOKEN for its own process only.
-set -gx CF_API_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/vp4l6tpe2cly6q4w5aremgvnbe/credential" }}'
+# Deliberately NOT exported here. src/tofu/cloudflare authenticates from
+# CLOUDFLARE_API_TOKEN ambiently, so a global export would let a bare
+# `tofu apply` with no `op run` authenticate and apply instead of failing
+# closed. `toolkit cf` resolves CF_API_TOKEN via the credential broker for
+# its own child process only.
 # Loki and Prometheus are tailnet-only with no auth (loki runs auth_enabled:
 # false), so logcli and promtool need an address but no credential.
 set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
@@ -131,6 +127,15 @@ if status is-interactive
       env -u (string join "" ANTHROPIC _API_KEY) \
           -u (string join "" OPENAI _API_KEY) \
           -u (string join "" CODEX _API_KEY) \
+          -u BUGSINK_TOKEN \
+          -u GRAFANA_API_KEY \
+          -u LINEAR_API_KEY \
+          -u DISCORD_USER_TOKEN \
+          -u DISCORD_BOT_TOKEN \
+          -u POSTHOG_CLI_API_KEY \
+          -u ARGOCD_AUTH_TOKEN \
+          -u WOODPECKER_TOKEN \
+          -u CF_API_TOKEN \
           EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
           GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig" \
           GH_CONFIG_DIR="$HOME/.config/gh-agent" \

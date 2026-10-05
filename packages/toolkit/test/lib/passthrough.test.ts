@@ -181,12 +181,18 @@ async function runToolkit(
   directory: string,
   args: readonly string[],
   stdin: string,
-  includeSystemPath = true,
+  options: {
+    readonly includeSystemPath?: boolean;
+    readonly extraEnv?: Record<string, string>;
+  } = {},
 ): Promise<ToolkitResult> {
+  const includeSystemPath = options.includeSystemPath ?? true;
+  const extraEnv = options.extraEnv ?? {};
   const entrypoint = path.resolve(import.meta.dir, "../../src/index.ts");
   const child = Bun.spawn([process.execPath, entrypoint, ...args], {
     env: {
       ...Bun.env,
+      ...extraEnv,
       PATH: includeSystemPath ? `${directory}:/usr/bin:/bin` : directory,
       FAKE_MARKER: "from-environment",
       FAKE_EXIT_CODE: "23",
@@ -236,7 +242,12 @@ exit "$FAKE_EXIT_CODE"
 
   test("reports a missing executable with exit 127", async () => {
     const directory = await fakePath();
-    const result = await runToolkit(directory, ["cf"], "", false);
+    // `cf` resolves CF_API_TOKEN before dispatch; stub it ambient so the
+    // broker never shells out (turbo strips ambient secrets from test env).
+    const result = await runToolkit(directory, ["cf"], "", {
+      includeSystemPath: false,
+      extraEnv: { CF_API_TOKEN: "test-token" },
+    });
     expect(result.code).toBe(127);
     expect(result.stderr).toBe("toolkit: required executable not found: cf\n");
   });
@@ -300,11 +311,14 @@ setInterval(() => {}, 1000);
     expect(exitCode).toBe(0);
     expect(child.signalCode).toBeNull();
   });
-
   for (const args of [["gf"], ["pr", "logs"], ["pr", "detect"]]) {
     test(`rejects removed command ${args.join(" ")}`, async () => {
       const directory = await fakePath();
-      const result = await runToolkit(directory, args, "");
+      // `pr` resolves WOODPECKER_TOKEN before dispatch; the dummy value
+      // satisfies the broker so the handler's own rejection surfaces.
+      const result = await runToolkit(directory, args, "", {
+        extraEnv: { WOODPECKER_TOKEN: "test-token" },
+      });
       expect(result.code).toBe(1);
       expect(result.stderr).toContain("Unknown");
     });
@@ -316,6 +330,7 @@ setInterval(() => {}, 1000);
       directory,
       ["pr", "health", "--repo", "owner/repo"],
       "",
+      { extraEnv: { WOODPECKER_TOKEN: "test-token" } },
     );
     expect(result.code).toBe(1);
     expect(result.stderr).toContain("Unknown option '--repo'");

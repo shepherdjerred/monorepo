@@ -62,7 +62,7 @@ export async function daemonStartCommand(options: {
     (userToken == null || userToken.length === 0)
   ) {
     console.error(
-      "Set DISCORD_BOT_TOKEN and/or DISCORD_USER_TOKEN in the environment before starting the daemon.\nAsk the user which 1Password item holds the right tokens, then load them with one batched op call wrapping this command.",
+      "toolkit could not resolve DISCORD_BOT_TOKEN or DISCORD_USER_TOKEN (env, ~/.toolkit/config.toml [credentials], macOS Keychain).\nEnroll each token in the Keychain, then retry:\nswift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-bot-token --ref op://Personal/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN\nswift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-user-token --ref op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN",
     );
     process.exit(1);
   }

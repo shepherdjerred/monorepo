@@ -1,6 +1,10 @@
 #!/usr/bin/env bun
 
 import {
+  requiredCredentialsFor,
+  resolveCredentials,
+} from "#lib/credentials.ts";
+import {
   buildPassthroughInvocation,
   runPassthrough,
 } from "#lib/passthrough.ts";
@@ -102,6 +106,42 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   ],
 ]);
 
+/**
+ * Brokered credentials resolve into Bun.env just in time; passthrough
+ * children inherit exactly the assembled env. Discord proceeds when either
+ * identity resolves since bot and user tokens serve different commands.
+ * `daemon status`/`stop` never resolve: they only read daemon state.
+ */
+async function resolveCommandCredentials(
+  command: string,
+  args: readonly string[],
+): Promise<void> {
+  const subcommand = args[1];
+  if (
+    command === "discord" &&
+    subcommand === "daemon" &&
+    (args[2] === "status" || args[2] === "stop")
+  ) {
+    return;
+  }
+  if (command !== "discord") {
+    await resolveCredentials(requiredCredentialsFor(command, subcommand));
+    return;
+  }
+  const names = requiredCredentialsFor(command, subcommand);
+  const failures: string[] = [];
+  for (const name of names) {
+    try {
+      await resolveCredentials([name]);
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  if (failures.length === names.length) {
+    throw new Error(failures.join("\n"));
+  }
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
@@ -120,6 +160,8 @@ async function main(): Promise<void> {
     console.log(`toolkit ${TOOLKIT_VERSION}`);
     return;
   }
+
+  await resolveCommandCredentials(command, args);
 
   const passthrough = buildPassthroughInvocation(
     command,

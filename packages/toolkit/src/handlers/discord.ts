@@ -22,7 +22,7 @@ import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
 const USAGE = `
 toolkit discord — act on Discord through a session daemon
 
-Daemon (start once per session; tokens from env, one op call):
+Daemon (start once per session; tokens resolved by toolkit from Keychain):
   toolkit discord daemon start [--ttl 4h]   Needs DISCORD_BOT_TOKEN and/or DISCORD_USER_TOKEN
   toolkit discord daemon status [--json]
   toolkit discord daemon stop

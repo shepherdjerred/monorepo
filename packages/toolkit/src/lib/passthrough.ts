@@ -228,13 +228,19 @@ export function buildPassthroughInvocation(
   };
 }
 
-function resolveExecutable(invocation: PassthroughInvocation): string | null {
-  const pathValue = invocation.env["PATH"];
+function lookupExecutable(
+  executable: string,
+  pathValue: string | undefined,
+): string | null {
   const options =
     pathValue === undefined
       ? { cwd: process.cwd() }
       : { cwd: process.cwd(), PATH: pathValue };
-  return Bun.which(invocation.executable, options);
+  return Bun.which(executable, options);
+}
+
+function resolveExecutable(invocation: PassthroughInvocation): string | null {
+  return lookupExecutable(invocation.executable, invocation.env["PATH"]);
 }
 
 export function runPassthrough(
@@ -259,4 +265,26 @@ export function runPassthrough(
         [invocation.executable, ...invocation.args],
         invocation.env,
       );
+}
+
+/**
+ * Run a passthrough child in place without replacing this process.
+ *
+ * Unlike {@link runPassthrough} (execve, for CLI dispatch), this awaits exit
+ * so library callers can react to the code. Streams inherit the terminal.
+ */
+export async function spawnPassthroughInvocation(
+  invocation: PassthroughInvocation,
+): Promise<number> {
+  const executable = resolveExecutable(invocation);
+  if (executable === null) {
+    throw new Error(
+      `toolkit: required executable not found: ${invocation.executable}`,
+    );
+  }
+  const child = Bun.spawn([executable, ...invocation.args], {
+    env: { ...invocation.env },
+    stdio: ["inherit", "inherit", "inherit"],
+  });
+  return child.exited;
 }
