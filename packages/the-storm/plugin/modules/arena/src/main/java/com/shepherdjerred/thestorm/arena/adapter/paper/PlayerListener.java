@@ -27,6 +27,7 @@ final class PlayerListener implements Listener {
   private final Snapshots snapshots;
   private final ArenaCommands commands;
   private final ItemGuard items;
+  private final Map<java.util.UUID, java.time.Instant> readyClicks = new java.util.HashMap<>();
 
   PlayerListener(PaperContext context, Arenas arenas, ArenaCommands commands, ItemGuard items) {
     this.context = context;
@@ -55,6 +56,7 @@ final class PlayerListener implements Listener {
   void onQuit(PlayerQuitEvent event) {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var id = event.getPlayer().getUniqueId();
+    readyClicks.remove(id);
     arenas.all().stream()
         .filter(runner -> runner.awaitsRespawn(id))
         .forEach(runner -> runner.quitWhileDead(id));
@@ -145,6 +147,7 @@ final class PlayerListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH)
   void onInteract(PlayerInteractEvent event) {
+    if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
     var id = event.getPlayer().getUniqueId();
     if (arenas.joining(id)) {
       event.setCancelled(true);
@@ -186,7 +189,12 @@ final class PlayerListener implements Listener {
       commands.pickClass(player, kit.orElseThrow());
     } else if (definition.readyBlock().equals(pos)) {
       event.setUseInteractedBlock(Event.Result.DENY);
-      commands.ready(player);
+      var now = context.time().instant();
+      var previous = readyClicks.get(player.getUniqueId());
+      if (previous == null || !now.isBefore(previous.plusMillis(250))) {
+        readyClicks.put(player.getUniqueId(), now);
+        commands.ready(player);
+      }
     } else if (block.getState() instanceof Container
         && !LootAccess.allowed(runner, player.getUniqueId(), block)) {
       event.setUseInteractedBlock(Event.Result.DENY);

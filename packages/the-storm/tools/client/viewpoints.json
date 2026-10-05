@@ -1,8 +1,44 @@
 {
-  "lobby": { "position": [1726.5, 73, 2140.5], "yaw": -45, "pitch": 5 },
-  "market": { "position": [1774.5, 73, 2166.5], "yaw": -70, "pitch": 5 },
-  "mystery-box": { "position": [1793.5, 73, 2175.5], "yaw": 180, "pitch": 29 },
-  "foundry": { "position": [1834.5, 73, 2191.5], "yaw": 180, "pitch": 20 },
-  "fixture": { "position": [1600.5, 73, 2103.5], "yaw": 180, "pitch": 29 },
-  "enemy": { "position": [1610.5, 73, 2103.5], "yaw": 180, "pitch": 0 }
+  "lobby": {
+    "position": [-65.5, 73, -67.5],
+    "yaw": -45,
+    "pitch": 5,
+    "world": "settlement"
+  },
+  "market": {
+    "position": [-17.5, 73, 61.5],
+    "yaw": -70,
+    "pitch": 5,
+    "world": "settlement"
+  },
+  "mystery-box": {
+    "position": [-0.5, 73, 64.5],
+    "yaw": 180,
+    "pitch": 29,
+    "world": "settlement"
+  },
+  "foundry": {
+    "position": [48.5, 89, -10.5],
+    "yaw": 180,
+    "pitch": 20,
+    "world": "settlement"
+  },
+  "fixture": {
+    "position": [1600.5, 73, 2103.5],
+    "yaw": 180,
+    "pitch": 29,
+    "world": "world"
+  },
+  "enemy": {
+    "position": [1610.5, 73, 2103.5],
+    "yaw": 180,
+    "pitch": 0,
+    "world": "world"
+  },
+  "rustworks-lobby": {
+    "world": "rustworks",
+    "position": [-78.5, 73, -79.5],
+    "yaw": -45,
+    "pitch": 5
+  }
 }

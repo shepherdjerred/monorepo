@@ -52,6 +52,7 @@ final class SurvivalCombat {
   private int round;
   private Instant nextSpawn = Instant.MIN;
   private boolean scriptedDamage;
+  private com.shepherdjerred.thestorm.arena.domain.survival.@Nullable ScaledBounties rewards;
 
   SurvivalCombat(ArenaWorld world, SettlementMap map, Services services) {
     this.world = world;
@@ -141,7 +142,7 @@ final class SurvivalCombat {
   }
 
   double incoming(org.bukkit.entity.Entity source, double damage) {
-    if (round <= 7 && ranged(source)) return Math.min(4, damage);
+    if (round <= 7 && ranged(source)) return Math.min(4, damage) * .60;
     return damage * java.util.Objects.requireNonNull(encounter).damage();
   }
 
@@ -151,6 +152,9 @@ final class SurvivalCombat {
     nextSpawn = services.context().time().instant();
     encounter = EncounterDirector.plan(number, players, map.state().open());
     var plan = encounter;
+    rewards =
+        new com.shepherdjerred.thestorm.arena.domain.survival.ScaledBounties(
+            EncounterDirector.originalCount(number, players), plan.count());
     for (var i = 0; i < plan.count(); i++) {
       var id =
           i < plan.specialBudget()
@@ -219,6 +223,8 @@ final class SurvivalCombat {
                 map.charge(b.entity().getLocation());
               }
             });
+    var highlight = remaining() > 0 && remaining() < 3;
+    world.enemies().forEach(enemy -> enemy.setGlowing(highlight));
     map.tick(
         (enemy, id) -> {
           var player = services.context().server().getPlayer(id);
@@ -235,16 +241,11 @@ final class SurvivalCombat {
     while (!queue.isEmpty()
         && !now.isBefore(nextSpawn)
         && active() < activeLimit(plan)
-        && world.alive() + world.companions() + queue.getFirst().entities()
-            <= map.content().entityCap()
-        && (!EncounterDirector.ranged(queue.getFirst().mob())
-            || types.entrySet().stream()
-                    .filter(e -> EncounterDirector.ranged(e.getValue()))
-                    .filter(e -> services.context().server().getEntity(e.getKey()) != null)
-                    .count()
-                < plan.rangedLimit())
         && spawnedThisTick < plan.spawnBatch()) {
-      var unit = queue.removeFirst();
+      var eligible = nextUnit(plan);
+      if (eligible.isEmpty()) break;
+      var unit = eligible.orElseThrow();
+      queue.remove(unit);
       var spawned = world.spawnAt(unit, entrance(), false);
       if (spawned.isEmpty()) {
         throw new IllegalStateException("Survival mob spawn refused");
@@ -256,6 +257,20 @@ final class SurvivalCombat {
     if (spawnedThisTick > 0) {
       nextSpawn = now.plusSeconds(plan.spawnIntervalSeconds());
     }
+  }
+
+  /** A capped ranged unit must not hold the eligible melee units behind it. */
+  private Optional<SpawnUnit> nextUnit(EncounterDirector.Encounter plan) {
+    var available = map.content().entityCap() - world.alive() - world.companions();
+    var ranged =
+        types.entrySet().stream()
+            .filter(e -> EncounterDirector.ranged(e.getValue()))
+            .filter(e -> services.context().server().getEntity(e.getKey()) != null)
+            .count();
+    return queue.stream()
+        .filter(unit -> unit.entities() <= available)
+        .filter(unit -> !EncounterDirector.ranged(unit.mob()) || ranged < plan.rangedLimit())
+        .findFirst();
   }
 
   private int activeLimit(EncounterDirector.Encounter plan) {
@@ -301,11 +316,11 @@ final class SurvivalCombat {
       }
       java.util.Objects.requireNonNull(
               zombie.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH))
-          .setBaseValue(6 + round * 2);
-      zombie.setHealth(6 + round * 2);
+          .setBaseValue((6 + round * 2) * .65);
+      zombie.setHealth((6 + round * 2) * .65);
       java.util.Objects.requireNonNull(
               zombie.getAttribute(org.bukkit.attribute.Attribute.ATTACK_DAMAGE))
-          .setBaseValue(.5 + round * .5);
+          .setBaseValue((.5 + round * .5) * .60);
     }
     bounties.add(enemy.getUniqueId());
   }
@@ -320,9 +335,15 @@ final class SurvivalCombat {
             .min(java.util.Comparator.comparingDouble(p -> Places.at(p).distanceSquared(at)))
             .orElseThrow();
     var fighting = at.distanceSquared(Places.at(target)) <= 36 && enemy.hasLineOfSight(target);
+    var progress = world.cubeProgress(enemy);
+    var tracked =
+        progress.isPresent()
+            ? new com.shepherdjerred.thestorm.arena.domain.geometry.Point(
+                progress.orElseThrow(), 0, 0)
+            : Places.point(at);
     var stalled =
         pursuit.observe(
-            enemy.getUniqueId(), Places.point(at), services.context().time().instant(), fighting);
+            enemy.getUniqueId(), tracked, services.context().time().instant(), fighting);
     if (stalled == PursuitWatch.Action.NONE) return;
     var occupied =
         fighters.stream()
@@ -390,13 +411,25 @@ final class SurvivalCombat {
     if (player == null) {
       return;
     }
-    services.items().give(player, Material.EMERALD, (isBoss ? 12 : 2) * emeraldMultiplier);
-    services.items().give(player, round % 3 == 0 ? Material.IRON_INGOT : Material.OAK_PLANKS, 1);
+    var bounty =
+        isBoss
+            ? new com.shepherdjerred.thestorm.arena.domain.survival.ScaledBounties.Reward(12, 1, 50)
+            : java.util.Objects.requireNonNull(rewards).next(hit.player());
+    if (bounty.emeralds() > 0)
+      services.items().give(player, Material.EMERALD, bounty.emeralds() * emeraldMultiplier);
+    if (bounty.materials() > 0)
+      services
+          .items()
+          .give(
+              player,
+              round % 3 == 0 ? Material.IRON_INGOT : Material.OAK_PLANKS,
+              bounty.materials());
+    if (bounty.experience() == 0) return;
     services
         .credit()
         .accept(
             new SurvivalProgress.Credit(
-                hit.player(), services.run(), "kill:" + enemy.getUniqueId(), isBoss ? 50 : 2));
+                hit.player(), services.run(), "kill:" + enemy.getUniqueId(), bounty.experience()));
   }
 
   private int emeraldMultiplier = 1;

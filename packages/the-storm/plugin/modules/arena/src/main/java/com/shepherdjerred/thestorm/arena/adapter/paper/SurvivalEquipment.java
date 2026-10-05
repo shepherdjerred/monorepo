@@ -24,7 +24,11 @@ final class SurvivalEquipment {
     var damaged =
         candidates.stream()
             .filter(runner.items()::owns)
-            .filter(item -> armor || runner.items().weapon(item))
+            .filter(
+                item ->
+                    armor
+                        || runner.items().weapon(item)
+                        || item.getType() == org.bukkit.Material.SHIELD)
             .filter(item -> item.getItemMeta() instanceof Damageable meta && meta.getDamage() > 0)
             .toList();
     if (damaged.isEmpty()) {

@@ -5,47 +5,53 @@ description: Prepare, inspect, apply, and recover the authored survival settleme
 
 Provision the settlement with admission disabled, then activate it through the repository release path.
 
-1. Set `enabled: false` in `arena/survival.yml` and release that configuration.
+1. Set `enabled: false` in `arena/survival.yml` and `arena/rustworks.yml`, then release that configuration.
    Keep the authored footprint and blueprint in the reviewed repository revision.
-2. Inspect the selected site in a local world copy and check current claims.
+2. Create separate NORMAL superflat void worlds named `settlement` and `rustworks` through Multiverse.
+   Use one air layer, the void biome, and no generated structures. Rehearse the pinned
+   Multiverse command syntax in a disposable server before using it live.
+   Persist both worlds in Multiverse's runtime catalog so they load before The Storm.
+   Set each world spawn to its configured arena lobby after installing its safe platform.
+   Set both worlds to NORMAL difficulty so native hostile spawns are permitted.
+   Keep arena worlds outside the resource-world and random-teleport registry.
+3. Inspect the selected site in a local world copy and check current claims.
    Keep an immutable copy of the original region files.
-3. Run `/settlement preview` as an administrator. The preview checks ownership,
+4. Run `/settlement preview` as an administrator. The preview checks ownership,
    existing blocks, and the exact bounded footprint. Resolve every reported conflict.
-4. Inspect the placement and run `/settlement apply <preview-token>`.
+5. Inspect the placement and run `/settlement apply <preview-token>`.
    The immutable database backup commits before the first block changes.
    Wait for the `APPLIED` result and retain its token.
-5. Inspect buildings, rising streets, entrances, crafting stations, the church galleries, crypt, and towers.
+6. Repeat the preview and apply procedure with `/rustworks` for its own world.
+   Inspect buildings, rising streets, entrances, crafting stations, the church galleries, crypt, and towers.
    Release the enabled placement and target the managed survival flag for the intended players.
-6. Verify joining, pursuit, crafting, teammate revival, boss casts, and inventory restoration.
+7. Verify both maps together: joining, pursuit, crafting, teammate revival, boss casts, and inventory restoration.
    Startup keeps admission closed when the authored map is missing or changed.
 
 For an offline map build, copy only reviewed region changes while the destination server is stopped.
 Compare the original region hashes first and keep the originals for restoration.
 Do not replace level metadata, inventories, or plugin databases with disposable test fixtures.
 
-## Replace an existing settlement offline
+## Move an existing arena offline
 
 Build the authored map in a disposable copy of the local world using the exact plugin and
 configuration intended for release. Check the map from above and at street level, then run
 the native arena tests against that copy before changing the live world.
 
-The coastal fortress occupies the 100 chunks at chunk X 107–116 and Z 133–142. Its exit
-adds chunk 106,133. All 101 records are in overworld region `r.3.4.mca`. Merge those records
-into a fresh copy of the stopped server's region file; compare every remaining record byte
-for byte with that fresh copy. Do not copy the entire region from the disposable world.
-Within each changed chunk, replace only X1712–1871, Y62–142, Z2128–2287 and the
-three exit cells at X1710, Y72–74, Z2140. Preserve all other block states, block entities,
-biomes, and pending block or fluid ticks. Invalidate lighting and heightmap caches after
-the merge so Paper recomputes them from the installed blocks.
+Use the configured world and footprint for each map. The blueprint preserves its
+authored layout under translation, including negative chunk boundaries and floor patterns.
+For the move from the main world, Settlement translates X by −1792 and Z by −2208;
+Rustworks translates X by −2016 and Z by −2212. Height stays unchanged.
+Copy permanent geometry and block entities after draining runs and resetting temporary
+fixtures. Preserve character progression, saved inventories, and all plugin databases.
 
 1. Inspect the current image, admission settings, ArgoCD application policy, and online players.
    Prepare the matching code artifact before starting maintenance.
 2. Stop Paper cleanly and verify that no process holds the world's `session.lock`.
 3. Archive the current region and create a SQLite backup of The Storm's database. Check the
    database backup's integrity. Keep the original settlement archive unchanged.
-4. Merge the 101 reviewed chunk records. Record the source and merged SHA-256 hashes,
-   verify that all 923 other records retain their original bytes, and compare every block
-   outside the authored volume inside the changed records.
+4. Prepare each named arena world from the reviewed geometry. Record source and
+   destination hashes and validate every permanent block against the released blueprint.
+   Translate block-entity coordinates and invalidate lighting and heightmaps for changed chunks.
 5. Verify the live source hash again while holding the world lock. Transfer the merged region
    to a temporary sibling file, verify its hash, and atomically replace the region.
 6. Restart with the matching plugin, survival content, and arena configuration. Preserve the
@@ -60,7 +66,14 @@ artifact identity, configuration hashes, and installation receipt so restoration
 
 Disable the placement through the repository release path.
 Run `/settlement restore <backup-token>` for an online provisioned placement,
-or restore the original region files with the server stopped for an offline placement.
+or merge the exact original cells with the server stopped for an offline placement.
+For relocated arenas, first accept both new worlds through the native player flow.
+Then use verified pre-build archives to restore only the original map footprints and
+historical exit cells in the main world. Preserve every block, block entity, biome,
+and pending tick outside those cells, even inside a changed chunk. Compare unaffected
+chunk records byte for byte, and invalidate lighting and heightmaps in changed chunks.
+Stop restoration when archive coverage or an intervening edit is uncertain; retain
+the old site and its protection until a verified restoration source is available.
 The online restore refuses changed ownership, foreign footprints, and conflicting block edits.
 It can resume a partially applied backup.
 

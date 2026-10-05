@@ -223,9 +223,9 @@ public record SurvivalContent(
     boxSites = List.copyOf(boxSites);
     classes = List.copyOf(classes);
     legendaries = List.copyOf(legendaries);
-    if (entityCap < 8 || entityCap > 40 || arena.maxPlayers() != 4 || zones.isEmpty())
+    if (entityCap < 8 || entityCap > 64 || arena.maxPlayers() != 4 || zones.isEmpty())
       throw new IllegalArgumentException(
-          "Survival needs authored districts, four slots and an entity cap of 8..40");
+          "Survival needs authored districts, four slots and an entity cap of 8..64");
     var ids = new HashSet<String>();
     var fixtures = new HashSet<BlockPos>();
     for (var zone : zones) {

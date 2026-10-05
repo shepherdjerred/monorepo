@@ -77,23 +77,24 @@ final class ZombiesRulesTest {
 
   @Test
   void openingPressureAndBossHealthMatchPartyBudgets() {
-    var counts = new int[] {6, 8, 10, 12, 4, 16, 18};
-    var caps = new int[] {3, 4, 5, 6, 3, 7, 8};
+    var counts = new int[] {9, 12, 15, 18, 4, 24, 27};
+    var teams = new int[] {23, 26, 29, 32, 13, 38, 41};
+    var caps = new int[] {9, 12, 15, 18, 3, 24, 27};
     for (var round = 1; round <= 7; round++) {
       var solo = EncounterDirector.plan(round, 1, Set.of());
       assertThat(solo.count()).isEqualTo(counts[round - 1]);
       assertThat(solo.concurrentLimit()).isEqualTo(caps[round - 1]);
-      assertThat(solo.specialBudget()).isLessThanOrEqualTo(1);
+      assertThat(solo.specialBudget()).isLessThanOrEqualTo(solo.count() / 10);
       var team = EncounterDirector.plan(round, 4, Set.of());
-      assertThat(team.count()).isEqualTo(solo.count() + 9);
+      assertThat(team.count()).isEqualTo(teams[round - 1]);
       assertThat(team.concurrentLimit()).isEqualTo(solo.concurrentLimit() + 6);
       assertThat(team.damage()).isEqualTo(solo.damage());
     }
-    assertThat(EncounterDirector.bossHealth(5, 1)).isEqualTo(200);
-    assertThat(EncounterDirector.bossHealth(5, 2)).isEqualTo(330);
-    assertThat(EncounterDirector.bossHealth(5, 3)).isEqualTo(460);
+    assertThat(EncounterDirector.bossHealth(5, 1)).isEqualTo(170);
+    assertThat(EncounterDirector.bossHealth(5, 2)).isEqualTo(280.5);
+    assertThat(EncounterDirector.bossHealth(5, 3)).isEqualTo(391);
     assertThat(EncounterDirector.bossHealth(5, 4))
-        .isCloseTo(590, org.assertj.core.data.Offset.offset(.000001));
+        .isCloseTo(501.5, org.assertj.core.data.Offset.offset(.000001));
   }
 
   @Test

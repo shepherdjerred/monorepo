@@ -19,10 +19,14 @@ export async function stageWorld(
   source: string,
   stagingDir: string,
   containerId: string,
+  world = "world",
 ): Promise<void> {
-  const copy = path.join(stagingDir, "world");
+  if (!/^[a-z][a-z0-9-]*$/u.test(world))
+    throw new Error("Invalid staged world name");
+  const copy = path.join(stagingDir, world);
   await cp(source, copy, { recursive: true });
   await writableWorld(copy);
   // Warm-cache containers already have /data/world; copy contents rather than nesting world/world.
-  await docker(["cp", `${copy}/.`, `${containerId}:/data/world`]);
+  await docker(["exec", containerId, "mkdir", "-p", `/data/${world}`]);
+  await docker(["cp", `${copy}/.`, `${containerId}:/data/${world}`]);
 }

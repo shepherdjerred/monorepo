@@ -19,6 +19,7 @@ export type RconConnectOptions = {
   port: number;
   password: string;
   timeoutMs?: number;
+  world?: string;
 };
 
 export class RconClient {
@@ -32,6 +33,7 @@ export class RconClient {
   private constructor(
     private readonly socket: net.Socket,
     private readonly timeoutMs: number,
+    private readonly world?: string,
   ) {
     socket.on("data", (data) => {
       this.onData(Buffer.isBuffer(data) ? data : Buffer.from(data));
@@ -49,6 +51,12 @@ export class RconClient {
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) {
       throw new Error("invalid RCON timeout");
     }
+    if (
+      options.world !== undefined &&
+      !/^[a-z][a-z0-9-]*$/u.test(options.world)
+    ) {
+      throw new Error("Invalid command world");
+    }
     const socket = await new Promise<net.Socket>((resolve, reject) => {
       const connection = net.createConnection(
         { host: options.host, port: options.port },
@@ -63,7 +71,7 @@ export class RconClient {
       });
     });
     socket.setTimeout(0);
-    const client = new RconClient(socket, timeoutMs);
+    const client = new RconClient(socket, timeoutMs, options.world);
     try {
       await client.authenticate(options.password);
     } catch (error) {
@@ -90,7 +98,12 @@ export class RconClient {
     const previous = this.queue;
     const run = (async () => {
       await previous;
-      return this.send(packetType.command, command);
+      return this.send(
+        packetType.command,
+        this.world === undefined
+          ? command
+          : `execute in ${this.world} run ${command}`,
+      );
     })();
     this.queue = (async () => {
       try {

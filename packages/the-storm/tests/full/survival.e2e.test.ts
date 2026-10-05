@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
 import { Vec3 } from "vec3";
-import { test } from "#e2e/fixtures.ts";
+import { test } from "#e2e/arena-fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
 const at = (x: number, y: number, z: number) => new Vec3(x, y, z);
@@ -24,23 +24,23 @@ describe("settlement opening on real Paper", () => {
         await rcon.command("arena start settlement");
         await round;
         // Use the open market route also exercised by the pursuit test.
-        await rcon.command(`tp ${bot.username} 1783.5 73 2266.5`);
+        await rcon.command(`tp ${bot.username} -8.5 73 58.5`);
         await Bun.sleep(8000);
         const enemies =
           '@e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}]';
         const adults = await rcon.command(
           `execute as ${enemies} run data get entity @s IsBaby`,
         );
-        expect(adults.match(/0b/gu)).toHaveLength(3);
+        expect(adults.match(/0b/gu)).toHaveLength(9);
         expect(adults).not.toContain("1b");
         const health = await rcon.command(
           `execute as ${enemies} run data get entity @s Health`,
         );
-        expect(health.match(/8\.0f/gu)).toHaveLength(3);
+        expect(health.match(/5\.2f/gu)).toHaveLength(9);
         const reinforcements = await rcon.command(
           `execute as ${enemies} run attribute @s minecraft:spawn_reinforcements base get`,
         );
-        expect(reinforcements.match(/is 0\.0/gu)).toHaveLength(3);
+        expect(reinforcements.match(/is 0\.0/gu)).toHaveLength(9);
         const sword = bot.inventory
           .items()
           .find((item) => item.name === "wooden_sword");
@@ -131,31 +131,31 @@ describe("settlement survival on real Paper", () => {
       if (node === null) throw new Error("Node is missing");
       await bot.activateBlock(node);
     }
-    await travel(1763.5, 2258.5);
-    await gather(at(1763, 73, 2257));
+    await travel(-28.5, 50.5);
+    await gather(at(-29, 73, 49));
     await waitUntil("first wood harvest", () =>
       bot.inventory
         .items()
         .some((i) => i.name === "oak_planks" && i.count === 4),
     );
-    await gather(at(1763, 73, 2257));
+    await gather(at(-29, 73, 49));
     await waitUntil("second wood harvest", () =>
       bot.inventory
         .items()
         .some((i) => i.name === "oak_planks" && i.count === 8),
     );
     const depleted = waitForMessage(bot, /Depleted for you this round/u);
-    await gather(at(1763, 73, 2257));
+    await gather(at(-29, 73, 49));
     await depleted;
-    await travel(1771.5, 2274.5);
-    await gather(at(1771, 73, 2273));
+    await travel(-20.5, 66.5);
+    await gather(at(-21, 73, 65));
     await waitUntil("stone harvest", () =>
       bot.inventory
         .items()
         .some((i) => i.name === "cobblestone" && i.count === 4),
     );
-    await travel(1765.5, 2261.5);
-    const station = bot.blockAt(at(1765, 73, 2260));
+    await travel(-26.5, 53.5);
+    const station = bot.blockAt(at(-27, 73, 52));
     if (station === null) throw new Error("Workbench is missing");
     await bot.activateBlock(station);
     await waitUntil("crafting menu", () => bot.currentWindow !== null);
@@ -203,7 +203,7 @@ describe("settlement survival on real Paper", () => {
     const round = waitForMessage(bot, /Round 1:/u);
     await rcon.command("arena start settlement");
     await round;
-    await rcon.command(`tp ${bot.username} 1783.5 73 2266.5`);
+    await rcon.command(`tp ${bot.username} -8.5 73 58.5`);
     await waitUntil(
       "horde becomes visible",
       () =>
@@ -253,8 +253,8 @@ describe("cooperative survival and bosses on real Paper", () => {
     const round = waitForMessage(bot, /Round 1:/u);
     await rcon.command("arena start settlement");
     await round;
-    await rcon.command(`tp ${bot.username} 1783.5 73 2266.5`);
-    await rcon.command(`tp ${secondBot.username} 1785.5 73 2266.5`);
+    await rcon.command(`tp ${bot.username} -8.5 73 58.5`);
+    await rcon.command(`tp ${secondBot.username} -6.5 73 58.5`);
     const downed = waitForMessage(bot, /Downed!/u);
     await rcon.command(`damage ${bot.username} 100 minecraft:generic`);
     await downed;
@@ -275,19 +275,19 @@ describe("cooperative survival and bosses on real Paper", () => {
     // The imported world also contains ordinary mobs. Credit only an entity
     // tagged by the arena, rather than the first zombie the client can see.
     const damage = await rcon.command(
-      `damage @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},x=1712,y=62,z=2128,dx=159,dy=80,dz=159,limit=1] 100 minecraft:player_attack by ${bot.username}`,
+      `damage @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},x=-80,y=62,z=-80,dx=159,dy=80,dz=159,limit=1] 100 minecraft:player_attack by ${bot.username}`,
     );
     expect(damage).toMatch(/Applied .* damage/u);
     await waitUntil("credited emerald currency", () =>
-      bot.inventory.items().some((i) => i.name === "emerald" && i.count === 2),
+      bot.inventory.items().some((i) => i.name === "emerald" && i.count === 1),
     );
-    const donation = waitForMessage(bot, /Donated 2 EMERALD/u);
-    bot.chat(`/survival give ${secondBot.username} EMERALD 2`);
+    const donation = waitForMessage(bot, /Donated 1 EMERALD/u);
+    bot.chat(`/survival give ${secondBot.username} EMERALD 1`);
     await donation;
     await waitUntil("teammate received tagged emeralds", () =>
       secondBot.inventory
         .items()
-        .some((i) => i.name === "emerald" && i.count === 2),
+        .some((i) => i.name === "emerald" && i.count === 1),
     );
     expect(bot.inventory.items().some((i) => i.name === "emerald")).toBe(false);
     for (const player of [bot, secondBot]) player.chat("/arena leave");
@@ -331,7 +331,7 @@ describe("cooperative survival and bosses on real Paper", () => {
             if (Date.now() > deadline)
               throw new Error(`Round ${round.toString()} did not clear`);
             await rcon.command(
-              "kill @e[type=!minecraft:player,x=1712,y=62,z=2128,dx=159,dy=80,dz=159]",
+              "kill @e[type=!minecraft:player,x=-80,y=62,z=-80,dx=159,dy=80,dz=159]",
             );
             await Bun.sleep(1000);
           }

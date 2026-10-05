@@ -45,7 +45,12 @@ final class SurvivalPresentation {
         markers.add(new Marker(station.block(), Particle.ENCHANT));
     }
     for (var machine : runner.map().content().machines())
-      if (machine.type() != SurvivalContent.MachineType.MYSTERY_BOX)
+      if (machine.type() != SurvivalContent.MachineType.MYSTERY_BOX
+          && runner
+              .map()
+              .zone(Places.location(runner.world().world(), machine.block().center()))
+              .filter(z -> runner.map().state().accessible(z.id()))
+              .isPresent())
         markers.add(
             new Marker(
                 machine.block(), machineParticle(machine.type()), machineHeight(machine.type())));
@@ -117,8 +122,12 @@ final class SurvivalPresentation {
       runner.hud().context(player, stationName(station.orElseThrow().type()) + " · right-click");
       return;
     }
-    var route = runner.map().gate(pos).filter(runner.map().state()::unlockable);
+    var route = runner.map().gate(pos);
     if (route.isPresent()) {
+      if (!runner.map().state().unlockable(route.orElseThrow())) {
+        runner.hud().context(player, runner.actions().routeRequirement(route.orElseThrow()));
+        return;
+      }
       runner
           .hud()
           .context(
@@ -185,7 +194,7 @@ final class SurvivalPresentation {
     if (type == SurvivalContent.MachineType.POWER)
       return runner.machines().powered() ? "Power on" : name + " · 4 iron + 4 redstone";
     if (type != SurvivalContent.MachineType.FOOD && !runner.machines().powered())
-      return name + " · needs power";
+      return name + " · needs power" + perkDescription(type);
     return name
         + " · "
         + switch (type) {
@@ -196,10 +205,22 @@ final class SurvivalPresentation {
           case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> {
             var perk =
                 com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.valueOf(type.name());
-            yield runner.actions().has(player, perk) ? "owned" : perk.price() + " emeralds";
+            yield (runner.actions().has(player, perk) ? "owned" : perk.price() + " emeralds")
+                + " · "
+                + perk.description();
           }
           case MYSTERY_BOX, POWER -> throw new IllegalStateException("Already handled machine");
         };
+  }
+
+  private static String perkDescription(SurvivalContent.MachineType type) {
+    return switch (type) {
+      case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND ->
+          " · "
+              + com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.valueOf(type.name())
+                  .description();
+      default -> "";
+    };
   }
 
   void reset() {

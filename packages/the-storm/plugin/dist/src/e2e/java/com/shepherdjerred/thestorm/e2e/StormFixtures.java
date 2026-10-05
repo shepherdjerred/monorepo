@@ -183,11 +183,23 @@ public final class StormFixtures extends JavaPlugin {
 
   private void prepareSurvival(
       com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent survival) {
+    var arenaWorld =
+        Objects.requireNonNull(
+            new WorldCreator(survival.arena().world())
+                .type(WorldType.FLAT)
+                .generatorSettings(VOID_PRESET)
+                .generateStructures(false)
+                .createWorld());
+    arenaWorld.setSpawnLocation(
+        (int) Math.floor(survival.arena().lobby().x()),
+        (int) survival.arena().lobby().y(),
+        (int) Math.floor(survival.arena().lobby().z()));
+    arenaWorld.setDifficulty(org.bukkit.Difficulty.NORMAL);
     com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(survival)
         .forEach(
             (pos, material) -> {
-              world.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);
-              world
+              arenaWorld.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);
+              arenaWorld
                   .getBlockAt(pos.x(), pos.y(), pos.z())
                   .setBlockData(
                       material.startsWith("minecraft:")

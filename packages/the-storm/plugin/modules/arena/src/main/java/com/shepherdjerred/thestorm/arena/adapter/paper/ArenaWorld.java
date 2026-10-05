@@ -52,6 +52,14 @@ final class ArenaWorld {
   private final Parts parts;
   private final List<LivingEntity> mobs = new ArrayList<>();
   private final Map<UUID, MobArchetype> brains = new HashMap<>();
+  private final Map<UUID, CubePursuitGoal> cubeGoals = new HashMap<>();
+
+  OptionalDouble cubeProgress(LivingEntity enemy) {
+    cubeGoals.keySet().removeIf(id -> world.getEntity(id) == null);
+    var goal = cubeGoals.get(enemy.getUniqueId());
+    return goal == null ? OptionalDouble.empty() : OptionalDouble.of(goal.progress());
+  }
+
   private final Map<UUID, List<Wolf>> wolves = new HashMap<>();
   private @Nullable BossFight boss;
   private boolean prepared;
@@ -368,11 +376,9 @@ final class ArenaWorld {
     var archetype = parts.table().mob(mob);
     for (var entity : spawned) {
       if (entity instanceof org.bukkit.entity.AbstractCubeMob cube) {
-        parts
-            .context()
-            .server()
-            .getMobGoals()
-            .addGoal(cube, 0, new CubePursuitGoal(cube, parts.context().time()));
+        var goal = new CubePursuitGoal(cube, parts.context().time());
+        cubeGoals.put(cube.getUniqueId(), goal);
+        parts.context().server().getMobGoals().addGoal(cube, 0, goal);
       }
       pursuitRange(entity);
       if (archetype.behavior() != Behavior.VANILLA) {

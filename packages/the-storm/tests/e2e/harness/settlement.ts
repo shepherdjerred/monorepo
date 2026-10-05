@@ -38,12 +38,14 @@ export async function travelToRuneforge(
   bot: Bot,
   rcon: RconClient,
 ): Promise<void> {
-  await rcon.command(`tp ${bot.username} 1853.5 105 2158.5`);
+  await rcon.command(
+    `execute in settlement run tp ${bot.username} 61.5 105 -49.5`,
+  );
   await waitUntil(
     "airstrip loaded",
-    () => bot.blockAt(new Vec3(1852, 105, 2157)) !== null,
+    () => bot.blockAt(new Vec3(60, 105, -51)) !== null,
   );
-  const airstrip = bot.blockAt(new Vec3(1852, 105, 2157));
+  const airstrip = bot.blockAt(new Vec3(60, 105, -51));
   if (airstrip === null) throw new Error("Airstrip missing");
   const landed = waitForMessage(bot, /Offshore Runeforge/u, 15_000);
   await bot.activateBlock(airstrip);

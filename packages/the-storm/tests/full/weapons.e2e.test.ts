@@ -3,7 +3,7 @@ import { Vec3 } from "vec3";
 import { z } from "zod";
 import type { Bot } from "mineflayer";
 import type { RconClient } from "#e2e/harness/rcon.ts";
-import { test } from "#e2e/fixtures.ts";
+import { test } from "#e2e/arena-fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import { startProtectedSettlementRound as begin } from "#e2e/harness/settlement.ts";
 
@@ -104,18 +104,18 @@ describe("signature weapons and boss phases on native Paper", () => {
       await rcon.command(
         `damage ${boss} 999 minecraft:player_attack by ${bot.username}`,
       );
-      expect(await health(rcon, boss)).toBeCloseTo(132);
+      expect(await health(rcon, boss)).toBeCloseTo(112.2);
       await rcon.command(
         `damage ${boss} 999 minecraft:player_attack by ${bot.username}`,
       );
-      expect(await health(rcon, boss)).toBeCloseTo(132);
+      expect(await health(rcon, boss)).toBeCloseTo(112.2);
       await lanes;
       const vortex = waitForMessage(bot, /casts Vortex.*Phase 2/u, 15_000);
       await vortex;
       await rcon.command(
         `damage ${boss} 999 minecraft:player_attack by ${bot.username}`,
       );
-      expect(await health(rcon, boss)).toBeCloseTo(66);
+      expect(await health(rcon, boss)).toBeCloseTo(56.1);
       const barrage = waitForMessage(
         bot,
         /casts Wind barrage.*Phase 3/u,
@@ -159,7 +159,7 @@ describe("signature weapons and boss phases on native Paper", () => {
         `give ${bot.username} minecraft:arrow[minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"}}] 32`,
       );
       await weapon(bot, rcon, "REPEATER", "bow");
-      await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
+      await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
       await waitUntil("bow ammunition", () => arrows(bot) === 32);
       await bot.look(0, 0, true);
       const initial = await repeaterObservation(bot, rcon, "start");
@@ -224,11 +224,10 @@ describe("signature weapons and boss phases on native Paper", () => {
   test("Whirlwind cleaves once per recovery", async ({ bot, rcon }) => {
     await begin(bot, rcon, 15);
     try {
-      await rcon.command(`tp ${bot.username} 1815.5 105 2167.5`);
+      await rcon.command(`tp ${bot.username} 23.5 105 -40.5`);
       await waitUntil(
         "combat terrace",
-        () =>
-          bot.entity.position.distanceTo(new Vec3(1815.5, 105, 2167.5)) < 0.6,
+        () => bot.entity.position.distanceTo(new Vec3(23.5, 105, -40.5)) < 0.6,
       );
       await rcon.command(`storm-fixture-survival targets ${bot.username} none`);
       await weapon(bot, rcon, "WHIRLWIND", "iron_axe");
@@ -265,16 +264,16 @@ describe("signature weapons and boss phases on native Paper", () => {
     await begin(bot, rcon, 1);
     try {
       await weapon(bot, rcon, "RIFTBLADE", "diamond_sword");
-      const approach = new Vec3(1812.5, 73, 2273.5);
-      await rcon.command(`tp ${bot.username} 1812.5 73 2273.5`);
+      const approach = new Vec3(20.5, 73, 65.5);
+      await rcon.command(`tp ${bot.username} 20.5 73 65.5`);
       await waitUntil(
         "closed wharf approach",
         () => bot.entity.position.distanceTo(approach) < 0.6,
       );
-      await bot.lookAt(new Vec3(1818.5, 74.6, 2273.5));
+      await bot.lookAt(new Vec3(26.5, 74.6, 65.5));
       bot.activateItem();
       await bot.waitForTicks(5);
-      expect(bot.entity.position.x).toBeLessThan(1815);
+      expect(bot.entity.position.x).toBeLessThan(23);
       expect(bot.entity.position.distanceTo(approach)).toBeLessThan(4.5);
     } finally {
       await rcon.command("arena stop settlement");

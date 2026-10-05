@@ -39,7 +39,7 @@ final class SurvivalActions {
       SurvivalContent.Zone zone,
       com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos sign) {
     if (!runner.map().state().unlockable(zone)) {
-      Texts.error(player, "Open the connecting routes first, or this route is already open.");
+      Texts.error(player, routeRequirement(zone));
       return;
     }
     if (!purchases.confirm(
@@ -68,6 +68,23 @@ final class SurvivalActions {
                           + zone.name()
                           + ". New enemy entrances are active."));
     }
+  }
+
+  String routeRequirement(SurvivalContent.Zone zone) {
+    if (runner.map().state().accessible(zone.id())) return zone.name() + " is already open.";
+    var missing =
+        zone.requires().stream()
+            .filter(id -> !runner.map().state().accessible(id))
+            .sorted()
+            .map(
+                id ->
+                    runner.map().content().zones().stream()
+                        .filter(z -> z.id().equals(id))
+                        .findFirst()
+                        .orElseThrow()
+                        .name())
+            .collect(java.util.stream.Collectors.joining(" + "));
+    return "Open " + missing + " first to connect " + zone.name() + ".";
   }
 
   void repair(Player player, SurvivalContent.Defense defense) {

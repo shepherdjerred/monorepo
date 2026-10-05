@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 import { z } from "zod";
 import { Vec3 } from "vec3";
-import { test } from "#e2e/fixtures.ts";
+import { test } from "#e2e/arena-fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import {
   startProtectedSettlementRound,
@@ -31,8 +31,8 @@ test("nearby generator and cache particles arrive repeatedly above their blocks"
   bot._client.on("world_particles", heard);
   try {
     for (const [x, baseY, positionZ, height] of [
-      [1850.5, 89, 2210.5, 91],
-      [1790.5, 73, 2270.5, 74],
+      [58.5, 89, 2.5, 91],
+      [-1.5, 73, 62.5, 74],
     ] as const) {
       await rcon.command(
         `tp ${bot.username} ${x.toString()} ${baseY.toString()} ${(positionZ + 4).toString()}`,
@@ -78,8 +78,8 @@ test("boss danger marks remain above the terrain throughout a native channel", a
       `effect give ${bot.username} minecraft:resistance infinite 255 true`,
     );
     await rcon.command(`storm-fixture-survival terrain ${bot.username} none`);
-    await rcon.command(`tp ${bot.username} 1815.5 105 2167.5`);
-    await rcon.command(`tp ${boss} 1811.5 105 2167.5`);
+    await rcon.command(`tp ${bot.username} 23.5 105 -40.5`);
+    await rcon.command(`tp ${boss} 19.5 105 -40.5`);
     await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
     await waitForMessage(bot, /Breeze Sovereign casts.*marked ground/u, 15_000);
     particles.length = 0;

@@ -81,8 +81,11 @@ export type StartServerOptions = {
   survivalConfig?: string;
   /** Optional local world copy for terrain acceptance; copied into the disposable server. */
   worldDir?: string;
+  /** Named arena worlds copied into the disposable server. */
+  worldDirs?: Record<string, string>;
   /** Save the stopped disposable world's files for local inspection or map provisioning. */
   exportWorldDir?: string;
+  exportWorldDirs?: Record<string, string>;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
   /**
@@ -348,10 +351,23 @@ export async function startServer(
   ]);
   const id = containerId.trim();
   const stop = async () => {
-    if (options.exportWorldDir !== undefined) {
+    if (
+      options.exportWorldDir !== undefined ||
+      options.exportWorldDirs !== undefined
+    ) {
       await docker(["stop", "--time", "30", id]);
-      await mkdir(options.exportWorldDir, { recursive: true });
-      await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
+      const exports = {
+        ...options.exportWorldDirs,
+        ...(options.exportWorldDir === undefined
+          ? {}
+          : { world: options.exportWorldDir }),
+      };
+      for (const [world, directory] of Object.entries(exports)) {
+        if (!/^[a-z][a-z0-9-]*$/u.test(world))
+          throw new Error("Invalid exported world name");
+        await mkdir(directory, { recursive: true });
+        await docker(["cp", `${id}:/data/${world}/.`, directory]);
+      }
     }
     await docker(["rm", "-f", "-v", id]);
     await rm(stagingDir, { recursive: true, force: true });
@@ -360,6 +376,8 @@ export async function startServer(
     if (options.worldDir !== undefined) {
       await stageWorld(options.worldDir, stagingDir, id);
     }
+    for (const [world, directory] of Object.entries(options.worldDirs ?? {}))
+      await stageWorld(directory, stagingDir, id, world);
     await docker(["cp", bukkitYml, `${id}:/data/bukkit.yml`]);
     if (options.warmCache) {
       await docker(["cp", paperJar, `${id}:/data/${path.basename(paperJar)}`]);

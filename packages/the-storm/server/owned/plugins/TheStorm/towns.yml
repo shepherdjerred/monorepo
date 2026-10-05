@@ -127,9 +127,38 @@ regions:
     areas:
       chunks: []
       cuboids:
+        - world: settlement
+          from: { x: -82, y: -64, z: -80 }
+          to: { x: 79, y: 319, z: 79 }
+        # Retain protection at the source until bounded terrain restoration is verified.
         - world: world
-          from: { x: 1712, y: -64, z: 2128 }
+          from: { x: 1710, y: -64, z: 2128 }
           to: { x: 1871, y: 319, z: 2287 }
+    allow:
+      - action: INTERACT
+        subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]
+      - action: OPEN_CONTAINER
+        subjects: [CONTAINER]
+      - action: BREAK
+        subjects: [CREAKING_HEART]
+    mobSpawns:
+      limited: true
+      allow:
+        [CUSTOM, COMMAND, SPELL, REINFORCEMENTS, SLIME_SPLIT, JOCKEY, MOUNT]
+  - id: rustworks
+    name: Rustworks
+    profile: ARENA
+    areas:
+      chunks: []
+      cuboids:
+        - world: rustworks
+          from: { x: -98, y: -64, z: -100 }
+          to: { x: 95, y: 319, z: 99 }
+        - world: world
+          from: { x: 1918, y: -64, z: 2112 }
+          to: { x: 2111, y: 319, z: 2311 }
     allow:
       - action: INTERACT
         subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
