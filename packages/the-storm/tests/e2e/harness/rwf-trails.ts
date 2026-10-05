@@ -238,3 +238,109 @@ export function dispersion(
     })
     .toSorted((a, b) => a.team.localeCompare(b.team));
 }
+
+/** How far from its spawn a combatant has crossed its own third of the yard. */
+export const THIRD = 20;
+
+/** Path length is sampled this often, so standing jitter is not counted as walking. */
+const WALK_SAMPLE_TICKS = 10;
+
+export type TeamAdvance = {
+  team: string;
+  /** The team's z-range (its members' last positions) at {@code at}, in blocks. */
+  spreadAt: number;
+  /** The share of members that got {@link THIRD} blocks from spawn along x by {@code until}. */
+  forward: number;
+  /** Summed path length over summed displacement from spawn, before {@code until}. */
+  winding: number;
+};
+
+/** The last point of {@code path} at or before {@code tick}, if any. */
+function pointAt(path: TrailPoint[], tick: number): TrailPoint | undefined {
+  let found: TrailPoint | undefined;
+  for (const point of path) {
+    if (point.tick > tick) {
+      break;
+    }
+    found = point;
+  }
+  return found;
+}
+
+/** Path length (sampled), displacement and furthest x gain of a path before {@code until}. */
+function walk(
+  path: TrailPoint[],
+  until: number,
+): { walked: number; gained: number; furthest: number } {
+  const first = path[0];
+  if (first === undefined) {
+    return { walked: 0, gained: 0, furthest: 0 };
+  }
+  let walked = 0;
+  let furthest = 0;
+  let last = first;
+  for (const point of path) {
+    if (point.tick >= until) {
+      break;
+    }
+    furthest = Math.max(furthest, Math.abs(point.x - first.x));
+    if (point.tick - last.tick >= WALK_SAMPLE_TICKS) {
+      walked += Math.hypot(point.x - last.x, point.z - last.z);
+      last = point;
+    }
+  }
+  return {
+    walked,
+    gained: Math.hypot(last.x - first.x, last.z - first.z),
+    furthest,
+  };
+}
+
+/** One team's advance over {@code window}. */
+function teamAdvance(
+  trails: Trails,
+  team: string,
+  members: string[],
+  window: { at: number; until: number },
+): TeamAdvance {
+  const zs: number[] = [];
+  let crossed = 0;
+  let walked = 0;
+  let gained = 0;
+  for (const member of members) {
+    const path = trails.paths.get(member) ?? [];
+    const here = pointAt(path, window.at);
+    if (here !== undefined) {
+      zs.push(here.z);
+    }
+    const moved = walk(path, window.until);
+    crossed += moved.furthest >= THIRD ? 1 : 0;
+    walked += moved.walked;
+    gained += moved.gained;
+  }
+  return {
+    team,
+    spreadAt: zs.length === 0 ? 0 : Math.max(...zs) - Math.min(...zs),
+    forward: crossed / members.length,
+    winding: gained === 0 ? Number.POSITIVE_INFINITY : walked / gained,
+  };
+}
+
+/**
+ * Whether each team moved up the field like a side before {@code until}:
+ * its width across the yard at {@code at}, the share of its members that
+ * crossed their own third, and how much it walked for the ground it gained
+ * (circling walks a lot and gains nothing).
+ */
+export function advance(
+  trails: Trails,
+  window: { at: number; until: number },
+): TeamAdvance[] {
+  const teams = new Map<string, string[]>();
+  for (const [pseudonym, entry] of trails.roster) {
+    teams.set(entry.team, [...(teams.get(entry.team) ?? []), pseudonym]);
+  }
+  return [...teams.entries()]
+    .map(([team, members]) => teamAdvance(trails, team, members, window))
+    .toSorted((a, b) => a.team.localeCompare(b.team));
+}

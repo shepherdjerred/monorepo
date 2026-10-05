@@ -16,9 +16,12 @@ import { Resvg } from "@resvg/resvg-js";
 import { z } from "zod";
 import { ownedConfigDir } from "#e2e/harness/paths.ts";
 import {
+  advance,
   dispersion,
   readTrails,
+  type TeamAdvance,
   type TeamDispersion,
+  THIRD,
   type Trails,
 } from "#e2e/harness/rwf-trails.ts";
 
@@ -51,7 +54,11 @@ type MapInfo = z.infer<typeof MapSchema>;
 
 const PX = 10;
 const MARGIN = 24;
-const PANEL = 154;
+const PANEL = 220;
+/** When the width of each team is first taken: 8 s. */
+const SPREAD_TICKS = 160;
+/** The second yardstick for crossing the own third: 10 s. */
+const BY_TICKS = 200;
 /** The opening the headless sim measures dispersion over: 20 s. */
 const OPENING_TICKS = 400;
 const TEAM_HUES: Record<string, [number, number]> = {
@@ -177,10 +184,44 @@ function statsLines(stats: TeamDispersion[], contactSeconds: string): string[] {
   ];
 }
 
+/** Dashed lines where each team's own third ends: {@link THIRD} blocks out from its spawns. */
+function thirdLayer(map: MapInfo, frame: Frame): string[] {
+  const { min, max } = map.region;
+  return map.teams.map((team) => {
+    const spawnX =
+      team.spawns.reduce((sum, spawn) => sum + spawn.x, 0) / team.spawns.length;
+    const middle = (min.x + max.x + 1) / 2;
+    const x = spawnX < middle ? spawnX + THIRD : spawnX - THIRD;
+    return `<line x1="${frame.x(x).toFixed(1)}" y1="${frame.y(min.z).toFixed(1)}" x2="${frame.x(x).toFixed(1)}" y2="${frame.y(max.z + 1).toFixed(1)}" stroke="${teamColor(team.color, 0, 1)}" stroke-width="1" stroke-dasharray="6 6" stroke-opacity="0.6"/>`;
+  });
+}
+
+function percent(share: number | undefined): string {
+  return `${((share ?? 0) * 100).toFixed(0)}%`;
+}
+
+function advanceLines(
+  at8: TeamAdvance[],
+  atContact: TeamAdvance[],
+  by10: TeamAdvance[],
+): string[] {
+  return at8.map((team) => {
+    const contact = atContact.find((other) => other.team === team.team);
+    const later = by10.find((other) => other.team === team.team);
+    return `${team.team}: ${team.spreadAt.toFixed(0)} wide at 8 s, ${(contact?.spreadAt ?? 0).toFixed(0)} at contact; past own third ${percent(contact?.forward)} at contact, ${percent(later?.forward)} by 10 s; walked ${(contact?.winding ?? 0).toFixed(2)}x the ground gained`;
+  });
+}
+
 function render(
   trails: Trails,
   map: MapInfo,
-  stats: { contact: TeamDispersion[]; opening: TeamDispersion[] },
+  stats: {
+    contact: TeamDispersion[];
+    opening: TeamDispersion[];
+    at8: TeamAdvance[];
+    atContact: TeamAdvance[];
+    by10: TeamAdvance[];
+  },
   contact: number,
 ): string {
   const { min, max } = map.region;
@@ -198,6 +239,7 @@ function render(
   const title = `${args.label} · ${map.name} · ${trails.roster.size.toString()} combatants`;
   const lines = [
     ...statsLines(stats.contact, contactSeconds),
+    ...advanceLines(stats.at8, stats.atContact, stats.by10),
     ...stats.opening.map(
       (team) =>
         `${team.team} over the first 20 s: p50 ${team.nearestP50.toFixed(2)}, mean ${team.nearestMean.toFixed(2)} blocks; most within 2 blocks ${team.maxCrowd.toString()}`,
@@ -208,12 +250,13 @@ function render(
     `<rect width="100%" height="100%" fill="#ffffff"/>`,
     `<text x="${MARGIN.toString()}" y="${(MARGIN + 6).toString()}" font-family="sans-serif" font-size="18" font-weight="bold" fill="#111">${escapeXml(title)}</text>`,
     ...mapLayer(map, frame),
+    ...thirdLayer(map, frame),
     ...trailLayer(trails, frame, contact),
     ...lines.map(
       (line, index) =>
         `<text x="${MARGIN.toString()}" y="${(mapHeight + 10 + index * 22).toString()}" font-family="sans-serif" font-size="14" fill="#222">${escapeXml(line)}</text>`,
     ),
-    `<text x="${MARGIN.toString()}" y="${(height - 12).toString()}" font-family="sans-serif" font-size="11" fill="#666">Solid: before first contact. Faint: the rest of the match. Dots: positions at first contact. North is up.</text>`,
+    `<text x="${MARGIN.toString()}" y="${(height - 12).toString()}" font-family="sans-serif" font-size="11" fill="#666">Solid: to first contact; faint: after. Dots: at first contact. Dashed: end of each team's own third.</text>`,
     `</svg>`,
   ].join("\n");
 }
@@ -223,7 +266,15 @@ const map = await mapInfo(trails.mapId);
 const contact = trails.firstContact ?? trails.lastTick + 1;
 const stats = dispersion(trails, { from: 0, until: contact });
 const opening = dispersion(trails, { from: 0, until: OPENING_TICKS });
-const svg = render(trails, map, { contact: stats, opening }, contact);
+const at8 = advance(trails, { at: SPREAD_TICKS, until: contact });
+const atContact = advance(trails, { at: contact, until: contact });
+const by10 = advance(trails, { at: BY_TICKS, until: BY_TICKS });
+const svg = render(
+  trails,
+  map,
+  { contact: stats, opening, at8, atContact, by10 },
+  contact,
+);
 const png = new Resvg(svg, { font: { loadSystemFonts: true } }).render();
 await Bun.write(args.out, png.asPng());
 await Bun.write(
@@ -236,6 +287,9 @@ await Bun.write(
       lastTick: trails.lastTick,
       beforeContact: stats,
       firstTwentySeconds: opening,
+      advanceAt8s: at8,
+      advanceAtContact: atContact,
+      advanceBy10s: by10,
     },
     undefined,
     2,

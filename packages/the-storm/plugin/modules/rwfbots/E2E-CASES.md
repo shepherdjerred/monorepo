@@ -3,7 +3,8 @@
 Unit and MockBukkit tests cover the pure think stack (perception, tactics,
 team, reflex, the headless sim on the synthetic arena and on the shipped
 training yard's nav artifact, including the team-play metrics: spread over
-the opening, crowding, lanes used, cover taken on contact and archetype
+the opening, crowding, lanes used, width across the yard, progress past the
+own third, path over displacement, cover taken on contact and archetype
 fighting ranges), the think loop (coalescing, staggering,
 epochs, the ray budget, a real worker thread), the governor's hysteresis, the
 director's draft and shift, OpenSkill settlement, config and nav artifact
@@ -165,12 +166,18 @@ asserted there; the load cases belong to the manual load profile
 
 ## Team play
 
-18. In a sixteen-bot showcase on the training yard each team's median
-    distance to its nearest teammate, over every frame from the start of the
-    match to first contact (the first landed sword blow or death in the
-    recording; archers loose arrows from 30 blocks, which is not contact),
-    is at least three blocks, and the match still ends with a
-    winner. `bun run rwf:trails` draws the recording.
+18. In a sixteen-bot showcase on the training yard, measured from the
+    recording up to first contact (the first landed sword blow or death;
+    archers loose arrows from 30 blocks, which is not contact), each team's
+    median distance to its nearest teammate is at least 2.5 blocks, it spans
+    at least 16 of the yard's 64 blocks across at 8 s and at contact, a
+    quarter of it is 20 blocks past its spawn by 10 s, and it walks at most
+    2.5 times the ground it gains; the match still ends with a winner. One
+    match is one draw, so these floors sit under what single showcases
+    measure and above a team that bunches and beelines; the sim's
+    `AdvanceTest` holds the averages over every strategy pairing. The test
+    keeps `/rwfbots debug slots` and the decision trace beside the recording,
+    and `bun run rwf:trails` draws it.
 19. `/rwfbots debug slots` lists every bot's slot and draws the slots and
     routes for the sender. The listing is covered on MockBukkit; the
     particles are not inspected.
