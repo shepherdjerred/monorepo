@@ -668,7 +668,7 @@ final class MatchRunner implements MatchView, MatchEvents {
       }
       var player = entity.orElseThrow();
       keepInside(player, border);
-      parts.recordings().frame(now, member, player);
+      parts.recordings().sample(now, ticks, member, player);
       if (ticks % TRAIL_EVERY_TICKS == 0) {
         sampleTrail(member.id(), player, now);
       }

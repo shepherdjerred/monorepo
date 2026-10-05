@@ -42,7 +42,11 @@ export type FakeBrain = {
 
 export type FakeBrainMode = "ok" | "down";
 
-type BrainState = { mode: FakeBrainMode };
+type BrainState = {
+  mode: FakeBrainMode;
+  /** Players the Flipt double answers `the-storm-rwf-enabled: false` for. */
+  rwfDenied: Set<string>;
+};
 
 // Test-only control hook (no auth): the specs fail and heal the brain to
 // prove the sweep redrives. Never present on the real service.
@@ -61,6 +65,25 @@ async function control(request: Request, state: BrainState): Promise<Response> {
   }
   state.mode = seen.data.mode;
   return Response.json({ mode: state.mode });
+}
+
+// Test-only control hook (no auth): the rwf suite closes the join flag for
+// chosen players to prove the refusal. Never present on the real service.
+async function controlRwf(
+  request: Request,
+  state: BrainState,
+): Promise<Response> {
+  if (request.method !== "POST") {
+    return new Response("not found\n", { status: 404 });
+  }
+  const seen = z
+    .strictObject({ denied: z.array(z.uuid()) })
+    .safeParse(await request.json().catch(() => null));
+  if (!seen.success) {
+    return new Response("invalid request\n", { status: 400 });
+  }
+  state.rwfDenied = new Set(seen.data.denied);
+  return Response.json({ denied: [...state.rwfDenied] });
 }
 
 function classify(body: unknown): Response {
@@ -94,6 +117,28 @@ function triage(body: unknown): Response {
   });
 }
 
+/**
+ * Closes `the-storm-rwf-enabled` for exactly `denied` (player UUIDs) through
+ * the Flipt double's test-only control hook; an empty list opens it again.
+ */
+export async function setRwfDenied(
+  port: number,
+  denied: string[],
+): Promise<void> {
+  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
+  const response = await fetch(
+    `http://${host}:${port.toString()}/v1/__control/rwf`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ denied }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`rwf flag control failed: ${response.status.toString()}`);
+  }
+}
+
 /** Fails or heals the fake brain through its test-only control hook. */
 export async function setBrainMode(
   port: number,
@@ -113,8 +158,55 @@ export async function setBrainMode(
   }
 }
 
+/**
+ * The Flipt double: companions stay off, the crier, merchant and rwf gates
+ * open, except rwf for the players the suite denied.
+ */
+async function evaluateFlag(
+  request: Request,
+  state: BrainState,
+): Promise<Response> {
+  const body: unknown = await request.json();
+  const prod = request.headers.get("x-flipt-environment") === "prod";
+  const companion = z
+    .strictObject({
+      namespace_key: z.literal("the-storm"),
+      flag_key: z.literal("the-storm-companions-enabled"),
+      entity_id: z.literal("the-storm-companions"),
+      context: z.strictObject({}),
+    })
+    .safeParse(body);
+  if (prod && companion.success) {
+    return Response.json({ enabled: false });
+  }
+  const evaluated = z
+    .object({
+      namespace_key: z.literal("the-storm"),
+      flag_key: z.enum([
+        "the-storm-crier-enabled",
+        "the-storm-merchant-enabled",
+        "the-storm-rwf-enabled",
+        "the-storm-survival-enabled",
+      ]),
+      entity_id: z.uuid(),
+      // The crier and merchant evaluate in the main world; rwf in its own.
+      context: z
+        .object({ world: z.enum(["world", rwfTestSettings.world]) })
+        .strict(),
+    })
+    .strict()
+    .safeParse(body);
+  if (!prod || !evaluated.success) {
+    return new Response("invalid evaluation", { status: 400 });
+  }
+  const denied =
+    evaluated.data.flag_key === "the-storm-rwf-enabled" &&
+    state.rwfDenied.has(evaluated.data.entity_id);
+  return Response.json({ enabled: !denied });
+}
+
 export function startFakeBrain(token: string, port = 0): FakeBrain {
-  const state: BrainState = { mode: "ok" };
+  const state: BrainState = { mode: "ok", rwfDenied: new Set() };
   const server = Bun.serve({
     hostname: "0.0.0.0",
     port,
@@ -124,44 +216,13 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
         url.pathname === "/evaluate/v1/boolean" &&
         request.method === "POST"
       ) {
-        const body: unknown = await request.json();
-        const companion = z
-          .strictObject({
-            namespace_key: z.literal("the-storm"),
-            flag_key: z.literal("the-storm-companions-enabled"),
-            entity_id: z.literal("the-storm-companions"),
-            context: z.strictObject({}),
-          })
-          .safeParse(body);
-        if (
-          companion.success &&
-          request.headers.get("x-flipt-environment") === "prod"
-        )
-          return Response.json({ enabled: false });
-        const evaluated = z
-          .object({
-            namespace_key: z.literal("the-storm"),
-            flag_key: z.enum([
-              "the-storm-crier-enabled",
-              "the-storm-merchant-enabled",
-              "the-storm-rwf-enabled",
-              "the-storm-survival-enabled",
-            ]),
-            entity_id: z.uuid(),
-            // The crier and merchant evaluate in the main world; rwf in its own.
-            context: z
-              .object({ world: z.enum(["world", rwfTestSettings.world]) })
-              .strict(),
-          })
-          .strict()
-          .safeParse(body);
-        return !evaluated.success ||
-          request.headers.get("x-flipt-environment") !== "prod"
-          ? new Response("invalid evaluation", { status: 400 })
-          : Response.json({ enabled: true });
+        return evaluateFlag(request, state);
       }
       if (url.pathname === "/v1/__control") {
         return control(request, state);
+      }
+      if (url.pathname === "/v1/__control/rwf") {
+        return controlRwf(request, state);
       }
       if (request.method !== "POST" || !url.pathname.startsWith("/v1/")) {
         return new Response("not found\n", { status: 404 });

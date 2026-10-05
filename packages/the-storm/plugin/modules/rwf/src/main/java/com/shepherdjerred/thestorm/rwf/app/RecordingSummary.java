@@ -7,7 +7,7 @@ import java.util.Optional;
  *
  * @param file the written file, relative to the plugin data folder; empty when recording is off
  * @param bytes the compressed size
- * @param droppedFrames frames the writer could not keep up with
+ * @param droppedFrames per-tick samples (frames and human inputs) the writer could not keep up with
  */
 public record RecordingSummary(Optional<String> file, long bytes, int droppedFrames) {
 

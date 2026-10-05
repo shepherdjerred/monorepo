@@ -3,7 +3,9 @@ package com.shepherdjerred.thestorm.rwf.domain.record;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 
 /**
- * One combatant's state in one tick, quantised so a long match stays small.
+ * One combatant's state in one tick, quantised so a long match stays small. Humans are sampled
+ * every tick (20 Hz) and bots every {@link #BOT_EVERY_TICKS} ticks (10 Hz): bots outnumber humans
+ * and their intents already say what they were doing.
  *
  * @param tick ticks since the match went live
  * @param pseudonym who
@@ -34,6 +36,12 @@ public record Frame(
   /** Health is kept to quarter points. */
   public static final int HEALTH_SCALE = 4;
 
+  /** Humans are sampled every tick. */
+  public static final int HUMAN_EVERY_TICKS = 1;
+
+  /** Bots are sampled every other tick. */
+  public static final int BOT_EVERY_TICKS = 2;
+
   public static final int SNEAKING = 1;
   public static final int SPRINTING = 2;
   public static final int ON_FIRE = 4;
@@ -52,6 +60,11 @@ public record Frame(
     if (health < 0 || slot < 0 || slot > 8 || flags < 0 || flags > 15) {
       throw new IllegalArgumentException("health >= 0, slot 0-8, flags 0-15");
     }
+  }
+
+  /** Whether a combatant is sampled on server tick {@code serverTick}. */
+  public static boolean due(boolean bot, long serverTick) {
+    return serverTick % (bot ? BOT_EVERY_TICKS : HUMAN_EVERY_TICKS) == 0;
   }
 
   public static int quantizePosition(double coordinate) {

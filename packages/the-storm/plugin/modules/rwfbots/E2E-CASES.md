@@ -68,7 +68,12 @@ file.
    are not inspected.
 7. A Trooper below ten health with no enemy within four blocks eats a golden
    apple to completion (32 ticks) and gains absorption; an enemy arriving
-   mid-bite interrupts it.
+   mid-bite interrupts it. **Proven** for the bite: at live, while the teams
+   stand at their bases, every drafted Trooper without the `never_eats` or
+   `gapple_hoarder` quirk is dropped to 8 health, and within 15 s one gains
+   absorption and holds two of its three apples (a draft without such a
+   Trooper is abandoned for a fresh one, up to four times). The interruption
+   is not.
 8. Bots arm an enemy bomb with fuse clicks about 300 ms apart, stack on the
    fuse, and defuse their own armed bomb through the same port; the planter's
    `Armed` stat reaches the personality record. **Proven** in part: in every
@@ -100,4 +105,9 @@ file.
     the direction of `mu` is not asserted. A bots-only showcase rates all
     eight of its personalities, and a stopped match rates nobody.
 13. `/stop` during a live match despawns every NPC, closes the trace file,
-    and the in-memory registry leaves nothing in Citizens' saves.
+    and the in-memory registry leaves nothing in Citizens' saves. **Proven**
+    for the registry: during a live match with seven bots, after
+    `citizens save`, Citizens' own (saved) registry lists none of them in
+    `npc list`, nor after the match. `/stop` itself is not run: both the local
+    and the CI lane share one server across every suite file, so stopping it
+    would end the run for the files after it.

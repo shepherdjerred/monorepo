@@ -46,6 +46,8 @@ export type RwfOverlay = {
   maxCombatants?: number;
   /** Whether `/rwf admin loadtest <n>` is allowed; the owned value (off) when absent. */
   loadtest?: boolean;
+  /** The most match credits one player earns a day; the owned value when absent. */
+  dailyCap?: number;
 };
 
 export async function overlayRwf(
@@ -65,6 +67,11 @@ export async function overlayRwf(
       ? {}
       : { maxCombatants: rwf.maxCombatants }),
   });
+  if (rwf.dailyCap !== undefined) {
+    await overlaySection(stagedRwfYml, "rewards", {
+      dailyCap: rwf.dailyCap,
+    });
+  }
   if (rwf.loadtest !== undefined) {
     await overlaySection(stagedRwfYml, "loadtest", {
       enabled: rwf.loadtest.toString(),

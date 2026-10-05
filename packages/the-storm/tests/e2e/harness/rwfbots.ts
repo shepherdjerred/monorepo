@@ -22,6 +22,7 @@ const PersonalitySchema = z.object({
   id: z.string(),
   name: z.string(),
   skin: z.object({ value: z.string(), signature: z.string() }),
+  quirks: z.array(z.string()),
 });
 export type Personality = z.infer<typeof PersonalitySchema>;
 
@@ -229,18 +230,51 @@ export async function gzipLines(
 }
 
 export type Recording = {
+  /** The format version from the `H` row. */
+  version: number;
   roster: Map<string, { team: string; bot: boolean }>;
-  intents: { pseudonym: string; kind: string; target: string }[];
+  intents: { tick: number; pseudonym: string; kind: string; target: string }[];
   events: string[][];
+  frames: { tick: number; pseudonym: string }[];
+  inputs: { tick: number; pseudonym: string; keys: number }[];
 };
 
-/** A match recording's roster (`R`), bot intents (`I`) and events (`E`). */
+/**
+ * A match recording's version (`H`), roster (`R`), intents (`I`), events
+ * (`E`), frame ticks (`F`) and human inputs (`N`).
+ */
 export function readRecording(lines: string[]): Recording {
-  const recording: Recording = { roster: new Map(), intents: [], events: [] };
+  const recording: Recording = {
+    version: 0,
+    roster: new Map(),
+    intents: [],
+    events: [],
+    frames: [],
+    inputs: [],
+  };
   for (const line of lines) {
     const fields = line.split("\t");
     const field = (index: number) => fields[index] ?? "";
     switch (field(0)) {
+      case "H": {
+        recording.version = Number(field(1));
+        break;
+      }
+      case "F": {
+        recording.frames.push({
+          tick: Number(field(1)),
+          pseudonym: field(2),
+        });
+        break;
+      }
+      case "N": {
+        recording.inputs.push({
+          tick: Number(field(1)),
+          pseudonym: field(2),
+          keys: Number(field(3)),
+        });
+        break;
+      }
       case "R": {
         recording.roster.set(field(1), {
           team: field(2),
@@ -250,6 +284,7 @@ export function readRecording(lines: string[]): Recording {
       }
       case "I": {
         recording.intents.push({
+          tick: Number(field(1)),
           pseudonym: field(2),
           kind: field(3),
           target: field(4),
@@ -261,10 +296,67 @@ export function readRecording(lines: string[]): Recording {
         break;
       }
       default: {
-        // Other record kinds (ticks, positions) are not asserted on.
+        // The end and payout rows are read from the database instead.
         break;
       }
     }
   }
   return recording;
+}
+
+/** The ticks of `who`'s rows. */
+function ticksOf(
+  rows: { tick: number; pseudonym: string }[],
+  who: string,
+): number[] {
+  return rows.filter((row) => row.pseudonym === who).map((row) => row.tick);
+}
+
+/** How many of `ticks` fall in `from`..`to`. */
+function countWithin(ticks: number[], from: number, to: number): number {
+  return ticks.filter((tick) => tick >= from && tick <= to).length;
+}
+
+/**
+ * The per-tick samples: every human has one input row (`N`) for each of its
+ * frames, bots have none, and over any stretch both were alive a bot has
+ * half as many frames as a human (10 Hz against 20 Hz).
+ */
+export function expectSampleCadence(recording: Recording): void {
+  expect(recording.version).toBe(2);
+  const humans = [...recording.roster]
+    .filter(([, entry]) => !entry.bot)
+    .map(([pseudonym]) => pseudonym);
+  const bots = [...recording.roster]
+    .filter(([, entry]) => entry.bot)
+    .map(([pseudonym]) => pseudonym);
+  for (const human of humans) {
+    const frames = ticksOf(recording.frames, human);
+    expect(frames.length, `${human} has frames`).toBeGreaterThan(0);
+    expect(ticksOf(recording.inputs, human), `${human}'s inputs`).toEqual(
+      frames,
+    );
+  }
+  for (const bot of bots) {
+    expect(ticksOf(recording.inputs, bot), `${bot} has no inputs`).toEqual([]);
+  }
+  const [human] = humans;
+  if (human === undefined || bots.length === 0) {
+    return;
+  }
+  const humanFrames = ticksOf(recording.frames, human);
+  const compared = bots.flatMap((bot) => {
+    const botFrames = ticksOf(recording.frames, bot);
+    const from = Math.max(humanFrames[0] ?? 0, botFrames[0] ?? 0);
+    const to = Math.min(humanFrames.at(-1) ?? 0, botFrames.at(-1) ?? 0);
+    const humanCount = countWithin(humanFrames, from, to);
+    return humanCount < 100
+      ? []
+      : [{ bot, ratio: countWithin(botFrames, from, to) / humanCount }];
+  });
+  expect(compared.length, "bots alive beside the human").toBeGreaterThan(0);
+  for (const { bot, ratio } of compared) {
+    expect(ratio, `${bot}'s frames per human frame`).toBeGreaterThan(0.4);
+    expect(ratio, `${bot}'s frames per human frame`).toBeLessThan(0.6);
+  }
 }

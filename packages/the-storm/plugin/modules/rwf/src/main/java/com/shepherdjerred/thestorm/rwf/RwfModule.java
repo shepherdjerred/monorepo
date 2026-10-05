@@ -23,6 +23,7 @@ import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
+import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.Intent;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEnd;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEvent;
@@ -257,6 +258,9 @@ public final class RwfModule implements StormModule {
 
         @Override
         public void frame(Frame frame) {}
+
+        @Override
+        public void input(InputFrame input) {}
 
         @Override
         public void intent(Intent intent) {}

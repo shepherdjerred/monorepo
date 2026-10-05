@@ -808,6 +808,16 @@ Multiverse and loaded before TheStorm enables; a flat or void world is fine
 because each map brings its own terrain. A missing world stops the server, like
 the world module's worlds. The module never generates terrain itself.
 
+The world is a vanilla superflat world with a single air layer and the
+`the_void` biome (the same settings the e2e fixture plugin creates), not a
+TheStorm `ChunkGenerator`, and it is not listed in `world.yml`. Multiverse
+loads its worlds before TheStorm enables, and Bukkit refuses a plugin
+generator whose plugin is not enabled yet, so a generator of ours would leave
+Multiverse unable to load the world on every boot. `world.yml` lists only the
+survival worlds the world module validates and offers to random teleport; the
+rwf module already requires and seals its own world, and listing it there
+would make the world module refuse to start while `rwf` is off.
+
 Configuration and content live under `server/owned/plugins/TheStorm`:
 
 - `rwf.yml`: the world, the lobby and spectator points, how matches fill and
@@ -879,6 +889,29 @@ Matches are recorded under pseudonyms (positions, actions, results) to
 bot training; every joining human is told so on entry. Pseudonyms are
 HMAC-SHA256 over the salt in `RWF_RECORDING_SALT`, which must be set when
 `recording.enabled` is true. Recordings are pruned by age and size at enable.
+
+A recording is gzipped UTF-8 text, one tab-separated row per line, written by
+`RecordCodec` (format version 2; `RecordCodecTest` holds a golden copy). Tabs,
+newlines and backslashes inside a field are escaped with a backslash. Ticks
+count from the moment the match went live, at 50 ms each.
+
+| Tag | Row                                                                                                                                                          | When                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| `H` | version, match id, map id, map block SHA-256, seed, rules version                                                                                            | once, first                                              |
+| `R` | pseudonym, team, kit, bot (`true`/`false`)                                                                                                                   | once per combatant, after `H`                            |
+| `E` | tick, kind, subject, detail                                                                                                                                  | each match event                                         |
+| `F` | tick, pseudonym, x, y, z (1/32 block), yaw (0-255), pitch (-64..64), health (1/4 point), held slot, flags (sneak 1, sprint 2, fire 4, block 8)               | humans every tick (20 Hz), bots every other tick (10 Hz) |
+| `N` | tick, pseudonym, keys (forward 1, back 2, left 4, right 8, jump 16, sneak 32, sprint 64), yaw (0-35999), pitch (-9000..9000), both in hundredths of a degree | humans only, every tick                                  |
+| `I` | tick, pseudonym, kind, target                                                                                                                                | each bot intent                                          |
+| `X` | tick, winner or `-`, reason                                                                                                                                  | once, at the end                                         |
+| `P` | pseudonym, credits                                                                                                                                           | once per paid human, after `X`                           |
+
+`N` keys are the movement keys the client last reported through Paper's
+`PlayerInputEvent`; a player who has reported nothing since logging in holds
+nothing. `F` and `N` rows are per-tick samples: when the writer falls more
+than 20,000 samples behind, new ones are dropped and counted in
+`rwf_match.dropped_frames`. Every other row is always written. A reader
+refuses any version other than its own instead of guessing at old rows.
 
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
