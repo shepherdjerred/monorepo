@@ -1,26 +1,18 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
-import static com.mojang.brigadier.arguments.StringArgumentType.word;
-import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
-import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore;
 import com.shepherdjerred.thestorm.essentials.domain.config.KitSettings;
-import com.shepherdjerred.thestorm.essentials.domain.kit.KitError;
-import com.shepherdjerred.thestorm.essentials.domain.place.DurationText;
 import io.papermc.paper.command.brigadier.Commands;
-import java.time.Instant;
-import java.util.List;
 import net.kyori.adventure.inventory.Book;
 import org.bukkit.entity.Player;
 
-/** {@code /kit}, {@code /rules} and {@code /afk}. */
+/** {@code /rules} and {@code /afk}; starter supplies are delivered by the join listener. */
 final class PlayerCommands {
 
   private final PaperRuntime runtime;
-  private final Kits kits;
   private final Book rules;
   private final AfkTracker afk;
 
@@ -33,27 +25,13 @@ final class PlayerCommands {
    */
   record Kits(KitSettings settings, KitClaimStore claims, KitDeliveries deliveries) {}
 
-  PlayerCommands(PaperRuntime runtime, Kits kits, Book rules, AfkTracker afk) {
+  PlayerCommands(PaperRuntime runtime, Book rules, AfkTracker afk) {
     this.runtime = runtime;
-    this.kits = kits;
     this.rules = rules;
     this.afk = afk;
   }
 
   void register(Commands commands) {
-    commands.register(
-        literal("kit")
-            .requires(Cmd.permission(EssentialsPermissions.KIT))
-            .executes(context -> Cmd.asPlayer(context, this::listKits))
-            .then(
-                argument("name", word())
-                    .suggests(Cmd.suggest(() -> kits.settings().kits().keySet()))
-                    .executes(
-                        context ->
-                            Cmd.asPlayer(
-                                context, player -> claim(player, Cmd.string(context, "name")))))
-            .build(),
-        "Claim a kit");
     commands.register(
         literal("rules")
             .requires(Cmd.permission(EssentialsPermissions.RULES))
@@ -76,51 +54,5 @@ final class PlayerCommands {
 
   private void toggleAfk(Player player) {
     announceAfk(player, afk.toggle(player.getUniqueId()));
-  }
-
-  private void listKits(Player player) {
-    var available = available(player);
-    if (available.isEmpty()) {
-      Say.info(player, Say.KITS, "There are no kits for you.");
-    } else {
-      Say.info(player, Say.KITS, "Kits: " + String.join(", ", available));
-    }
-  }
-
-  private void claim(Player player, String name) {
-    var kit = kits.settings().kits().get(name);
-    if (kit == null || !player.hasPermission(EssentialsPermissions.kit(name))) {
-      Say.error(player, Say.KITS, "There is no kit called " + name + " for you.");
-      return;
-    }
-    var claim = new KitClaimStore.KitClaim(name, kit, runtime.time().instant());
-    runtime.onMainCommand(
-        kits.claims().claim(player.getUniqueId(), claim),
-        "claiming a kit",
-        player,
-        result -> {
-          switch (result) {
-            case Result.Ok<Instant, KitError> _ -> {
-              kits.deliveries().deliver(player.getUniqueId());
-            }
-            case Result.Err<Instant, KitError>(var error) ->
-                Say.error(player, Say.KITS, describe(error));
-          }
-        });
-  }
-
-  private List<String> available(Player player) {
-    return kits.settings().kits().keySet().stream()
-        .filter(name -> player.hasPermission(EssentialsPermissions.kit(name)))
-        .sorted()
-        .toList();
-  }
-
-  private static String describe(KitError error) {
-    return switch (error) {
-      case KitError.OnCooldown(var remaining) ->
-          "You can claim that kit again in " + DurationText.format(remaining) + ".";
-      case KitError.AlreadyClaimed() -> "You have already claimed that kit.";
-    };
   }
 }

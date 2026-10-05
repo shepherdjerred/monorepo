@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -41,6 +42,7 @@ export const THE_STORM_PAPER_VERSION = "26.2";
  * URLs, config ConfigMaps or copy init containers here.
  */
 export function createMinecraftTsmcApp(chart: Chart) {
+  createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
   // the env-var refs below): DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID.
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
@@ -164,6 +166,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
             type: "NodePort",
             port: 19_132,
             nodePort: 30_004,
+            externalTrafficPolicy: "Local",
           },
           protocol: "UDP",
           containerPort: 19_132,

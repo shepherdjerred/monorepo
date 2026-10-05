@@ -72,6 +72,17 @@ public final class PaperHarness implements AutoCloseable {
     services.provide(Wallets.class, wallets);
     services.provide(Protection.class, new AllowAllProtection());
     services.provide(SealedWorlds.class, harness.sealed);
+    services.provide(
+        com.shepherdjerred.thestorm.core.expansion.ExpansionSettings.class,
+        new com.shepherdjerred.thestorm.core.expansion.ExpansionSettings(
+            2000, 10, 100, 64, 32, 16, 30));
+    services.provide(
+        com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class,
+        new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
+            (key, actor) ->
+                java.util.concurrent.CompletableFuture.completedFuture(
+                    !key.equals(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.IP)),
+            () -> {}));
     enabling =
         plugin ->
             new EssentialsModule()
@@ -96,6 +107,8 @@ public final class PaperHarness implements AutoCloseable {
       var moderation = services.require(ModerationService.class);
       harness.until(() -> moderation.loaded().isDone());
       moderation.loaded().join();
+      var staff = services.require(com.shepherdjerred.thestorm.essentials.app.StaffState.class);
+      harness.until(() -> staff.ready());
     } catch (RuntimeException e) {
       harness.close();
       throw e;

@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.essentials.domain.back.BackEntry;
-import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,7 +22,7 @@ final class TeleportListener implements Listener {
   private final TeleportFlow flow;
   private final BackRecorder back;
   private final SafeTracker safe;
-  private final Position spawn;
+  private final com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn;
 
   /**
    * Where deaths are recorded and respawns go.
@@ -32,7 +31,10 @@ final class TeleportListener implements Listener {
    * @param safe last safe spots
    * @param spawn where bedless players respawn
    */
-  record Places(BackRecorder back, SafeTracker safe, Position spawn) {}
+  record Places(
+      BackRecorder back,
+      SafeTracker safe,
+      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn) {}
 
   TeleportListener(PaperRuntime runtime, TeleportFlow flow, Places places) {
     this.runtime = runtime;
@@ -81,6 +83,6 @@ final class TeleportListener implements Listener {
         || event.isAnchorSpawn()) {
       return;
     }
-    Positions.toLocation(runtime.server(), spawn).ifPresent(event::setRespawnLocation);
+    Positions.toLocation(runtime.server(), spawn.spawn()).ifPresent(event::setRespawnLocation);
   }
 }

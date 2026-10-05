@@ -68,7 +68,9 @@ public final class SealedPlayers implements Listener {
   /** {@code relay}, skipping lines from players in sealed worlds. */
   public Consumer<ChatLine> guarding(Consumer<ChatLine> relay) {
     return line -> {
-      if (!inSealedWorld(line)) {
+      if (!inSealedWorld(line)
+          && !(line.author() instanceof ChatAuthor.InGame(var id, var _)
+              && com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(id))) {
         relay.accept(line);
       }
     };

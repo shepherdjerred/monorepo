@@ -158,6 +158,31 @@ export async function setBrainMode(
   }
 }
 
+function expansionEvaluation(
+  body: unknown,
+  request: Request,
+): Response | undefined {
+  const expansion = z
+    .strictObject({
+      namespace_key: z.literal("the-storm"),
+      flag_key: z.enum([
+        "the-storm-staff-tools-enabled",
+        "the-storm-identity-enabled",
+        "the-storm-letters-enabled",
+        "the-storm-ip-enforcement-enabled",
+      ]),
+      entity_id: z.uuid(),
+      context: z.strictObject({}),
+    })
+    .safeParse(body);
+  return expansion.success &&
+    request.headers.get("x-flipt-environment") === "prod"
+    ? Response.json({
+        enabled: expansion.data.flag_key !== "the-storm-ip-enforcement-enabled",
+      })
+    : undefined;
+}
+
 /** Bot chat is one server-wide flag, evaluated with the rwf world as context. */
 const BotChatFlagSchema = z.strictObject({
   namespace_key: z.literal("the-storm"),
@@ -175,6 +200,8 @@ async function evaluateFlag(
   state: BrainState,
 ): Promise<Response> {
   const body: unknown = await request.json();
+  const expanded = expansionEvaluation(body, request);
+  if (expanded !== undefined) return expanded;
   const prod = request.headers.get("x-flipt-environment") === "prod";
   const companion = z
     .strictObject({

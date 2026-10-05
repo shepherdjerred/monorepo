@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
@@ -32,6 +33,7 @@ const DYNMAP_MOD_URL =
   "https://github.com/webbukkit/dynmap/releases/download/v3.3-beta-2/Dynmap-3.3-beta-2-forge-1.12.2.jar";
 
 export function createMinecraftSjerredApp(chart: Chart) {
+  createMinecraftProxyTrust(chart, NAMESPACE, 25_566);
   new KubePersistentVolumeClaim(chart, "minecraft-sjerred-rlcraft-data", {
     metadata: {
       name: DATA_PVC_NAME,
@@ -102,6 +104,8 @@ export function createMinecraftSjerredApp(chart: Chart) {
     // Include mc.sjer.red because SRV record redirects there and some clients send that hostname
     serviceAnnotations: {
       "mc-router.itzg.me/externalServerName": "sjer.red,mc.sjer.red",
+      "mc-router.itzg.me/proxyServerName":
+        "minecraft-sjerred-proxy.minecraft-sjerred.svc.cluster.local:25566",
     },
     image: {
       tag: versions["itzg/minecraft-server-java8"],
@@ -169,10 +173,40 @@ export function createMinecraftSjerredApp(chart: Chart) {
       },
     },
     extraDeploy: [
+      {
+        apiVersion: "v1",
+        kind: "ConfigMap",
+        metadata: { name: "minecraft-sjerred-proxy", namespace: NAMESPACE },
+        data: {
+          "haproxy.cfg":
+            "global\n  maxconn 128\ndefaults\n  mode tcp\n  timeout connect 5s\n  timeout client 1h\n  timeout server 1h\nfrontend minecraft\n  bind :25566 accept-proxy\n  default_backend forge\nbackend forge\n  server local 127.0.0.1:25565\n",
+        },
+      },
+      {
+        apiVersion: "v1",
+        kind: "Service",
+        metadata: { name: "minecraft-sjerred-proxy", namespace: NAMESPACE },
+        spec: {
+          type: "ClusterIP",
+          selector: {
+            "app.kubernetes.io/name": "minecraft",
+            "app.kubernetes.io/instance": "minecraft-sjerred",
+          },
+          ports: [
+            {
+              name: "proxy",
+              port: 25_566,
+              targetPort: 25_566,
+              protocol: "TCP",
+            },
+          ],
+        },
+      },
       getDynmapConfigMapManifest(NAMESPACE),
       getDiscordIntegrationConfigMapManifest(NAMESPACE),
     ],
     extraVolumes: [
+      { name: "proxy-config", configMap: { name: "minecraft-sjerred-proxy" } },
       ...getDynmapExtraVolumes(NAMESPACE),
       ...getDiscordIntegrationExtraVolumes(NAMESPACE),
     ],
@@ -180,6 +214,31 @@ export function createMinecraftSjerredApp(chart: Chart) {
       ALLOW_FLIGHT: "TRUE",
       ENABLE_WHITELIST: "TRUE",
     },
+    sidecarContainers: [
+      {
+        name: "proxy-header-adapter",
+        image: `haproxy:${versions.haproxy}`,
+        ports: [{ containerPort: 25_566, name: "proxy" }],
+        volumeMounts: [
+          {
+            name: "proxy-config",
+            mountPath: "/usr/local/etc/haproxy",
+            readOnly: true,
+          },
+        ],
+        resources: {
+          requests: { cpu: "10m", memory: "16Mi" },
+          limits: { memory: "64Mi" },
+        },
+        readinessProbe: { tcpSocket: { port: 25_566 }, periodSeconds: 10 },
+        securityContext: {
+          allowPrivilegeEscalation: false,
+          capabilities: { drop: ["ALL"] },
+          runAsNonRoot: true,
+          runAsUser: 99,
+        },
+      },
+    ],
     initContainers: [
       getDynmapConfigInitContainer(),
       getDiscordIntegrationConfigInitContainer(DISCORD_SECRET_NAME),

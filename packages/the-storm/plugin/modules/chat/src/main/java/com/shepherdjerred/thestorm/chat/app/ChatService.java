@@ -51,6 +51,8 @@ public final class ChatService {
   private final Map<UUID, RecentMessage> recent = new ConcurrentHashMap<>();
   private final Map<UUID, Correspondent> lastCorrespondent = new ConcurrentHashMap<>();
   private volatile boolean ready;
+  private java.util.function.Function<UUID, com.shepherdjerred.thestorm.chat.domain.Identity>
+      identities = player -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh();
 
   public ChatService(
       ChatConfig config, ChatStore store, InstantSource time, ChatExtensions extensions) {
@@ -82,6 +84,61 @@ public final class ChatService {
   /** Whether stored mutes, ignores and channel preferences are ready for use. */
   public boolean ready() {
     return ready;
+  }
+
+  public void identities(
+      java.util.function.Function<UUID, com.shepherdjerred.thestorm.chat.domain.Identity>
+          provider) {
+    identities = provider;
+  }
+
+  public Result<String, String> letter(MessagingPolicy.Attempt attempt) {
+    if (!ready) return Result.err("Chat state is loading.");
+    if (attempt.sender().equals(attempt.recipient()))
+      return Result.err("You cannot mail yourself.");
+    if (attempt.text().codePointCount(0, attempt.text().length()) > attempt.maxLength())
+      return Result.err("Your letter is longer than " + attempt.maxLength() + " characters.");
+    if (!identities.apply(attempt.recipient()).messages()
+        || profile(attempt.recipient()).ignores(attempt.sender()))
+      return Result.err("That player cannot receive this letter.");
+    var sender =
+        new Speaker(attempt.sender(), attempt.realName(), attempt.staff(), attempt.bypass());
+    var rules =
+        new MessageValidator(
+            List.of(
+                new com.shepherdjerred.thestorm.chat.domain.MessageRules.MuteRule(),
+                new com.shepherdjerred.thestorm.chat.domain.MessageRules.BlankRule(),
+                new com.shepherdjerred.thestorm.chat.domain.MessageRules.RepeatRule(
+                    config.filter().repeatCooldown())),
+            config.filter().maxCapsWords());
+    var now = time.instant();
+    var checked =
+        rules.validate(
+            new ChatAttempt(sender, attempt.text(), now),
+            new ChatFacts(mutes.get(sender.id()), recent.get(sender.id())));
+    return switch (checked) {
+      case Result.Ok<AcceptedMessage, List<ChatDenial>>(var accepted) -> Result.ok(accepted.text());
+      case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) ->
+          Result.err(letterDenial(denials.getFirst()));
+    };
+  }
+
+  /** {@code player}'s preferences. */
+  private static String letterDenial(ChatDenial denial) {
+    return switch (denial) {
+      case ChatDenial.Blank() -> "Write some text for your letter.";
+      case ChatDenial.TooLong(var max) -> "Your letter is longer than " + max + " characters.";
+      case ChatDenial.Repeated(var remaining) ->
+          "Wait " + remaining.toSeconds() + " seconds before repeating that letter.";
+      case ChatDenial.Muted(var remaining, var reason) ->
+          "You are muted for " + remaining.toSeconds() + " seconds: " + reason;
+      case ChatDenial.Undeliverable(), ChatDenial.NoAccess _, ChatDenial.ToSelf() ->
+          "That letter cannot be delivered.";
+    };
+  }
+
+  public void letterDelivered(UUID sender, String text) {
+    recent.put(sender, RecentMessage.of(text, time.instant()));
   }
 
   /** {@code player}'s preferences. */
@@ -193,6 +250,8 @@ public final class ChatService {
    */
   public Result<PrivateLine, List<ChatDenial>> preparePrivate(
       Speaker sender, Correspondent recipient, String rawText) {
+    if (!identities.apply(recipient.id()).messages())
+      return Result.err(List.of(new ChatDenial.Undeliverable()));
     if (recipient.id().equals(sender.id())) {
       return Result.err(List.of(new ChatDenial.ToSelf()));
     }
@@ -214,8 +273,9 @@ public final class ChatService {
                 outcome.set(Result.err(List.of(new ChatDenial.Undeliverable())));
                 yield previous;
               }
-              lastCorrespondent.put(id, recipient);
-              lastCorrespondent.put(recipient.id(), new Correspondent(id, sender.name()));
+              if (identities.apply(id).replies()) lastCorrespondent.put(id, recipient);
+              if (identities.apply(recipient.id()).replies())
+                lastCorrespondent.put(recipient.id(), new Correspondent(id, sender.name()));
               outcome.set(Result.ok(new PrivateLine(sender, recipient, message)));
               yield RecentMessage.of(message.text(), now);
             }
@@ -226,6 +286,7 @@ public final class ChatService {
 
   /** Who {@code player} last messaged or was messaged by this session, for {@code /r}. */
   public Optional<Correspondent> replyTarget(UUID player) {
+    if (!identities.apply(player).replies()) return Optional.empty();
     return Optional.ofNullable(lastCorrespondent.get(player));
   }
 
@@ -281,20 +342,26 @@ public final class ChatService {
   /** {@code line} as MiniMessage in its channel's format, or the emote format for {@code /me}. */
   public String render(OutgoingLine line) {
     var prefix = extensions.prefix(line.speaker().id());
+    var name =
+        identities.apply(line.speaker().id()).nickname().orElseGet(() -> line.speaker().name());
     if (line.emote()) {
       return ChatFormat.emoteLine(
-          emoteTemplate,
-          line.channel(),
-          new ChatFormat.Speech(prefix, line.speaker().name(), line.text()));
+          emoteTemplate, line.channel(), new ChatFormat.Speech(prefix, name, line.text()));
     }
-    return ChatFormat.channelLine(
-        template(line.channel()), prefix, line.speaker().name(), line.text());
+    return ChatFormat.channelLine(template(line.channel()), prefix, name, line.text());
   }
 
   /** {@code line} as MiniMessage in the private message format. */
   public String renderPrivate(PrivateLine line) {
     return ChatFormat.privateLine(
-        privateTemplate, line.sender().name(), line.recipient().name(), line.message().text());
+        privateTemplate,
+        identities.apply(line.sender().id()).nickname().orElseGet(() -> line.sender().name()),
+        identities.apply(line.recipient().id()).nickname().orElseGet(() -> line.recipient().name()),
+        line.message().text());
+  }
+
+  public boolean socialSpy(UUID player) {
+    return identities.apply(player).socialSpy();
   }
 
   /** A relayed line as MiniMessage; every value is cleaned and escaped. */

@@ -70,7 +70,7 @@ faq:
   entries:
     - id: starter-kit
       keywords: [starter kit, starting kit, starting items, how do I start]
-      reply: "New players get the starter kit automatically on first join: an iron sword, stone tools, and bread. Run /kit to see the kits."
+      reply: "New players receive an iron sword, stone tools, bread and a welcome book automatically on first join. Read /rules before building."
       link: ""
     - id: server-rules
       keywords: [server rules, what are the rules, read the rules]
@@ -88,7 +88,7 @@ onboarding:
   enabled: true
   lines:
     - "Welcome to The Storm! A few tips to start:"
-    - "New players get a starter kit on first join: sword, tools, and bread. Run /kit to see the kits."
+    - "Your welcome book explains how to get started. Your starting supplies arrive automatically."
     - "Run /rules to read the server rules."
     - "Need staff? File a ticket: /ticket <what happened>."
 

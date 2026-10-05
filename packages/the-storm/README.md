@@ -71,6 +71,98 @@ running the Minecraft client. Sandbox gameplay scenarios use
 `toolkit mc playtest run packages/the-storm/playtests/` against `storm-dev`;
 follow the repository's `minecraft-harness` skill for sandbox ownership and
 cleanup. These checks are also committer-run.
+## Essentials command surface
+## Essentials command surface
+
+The Storm implements the selected EssentialsX-style surface inside its own
+Essentials, Chat and Mail modules. Commands resolve players by real username
+and UUID; nicknames never become command identifiers. `/help` shows the
+sender's permitted commands, and `/help <command>` shows usage.
+
+| Audience                       | Commands                                                                                                                                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Players, existing travel       | `spawn`, `home`, `homes`, `sethome`, `delhome`, `warp`, `back`, `rtp`, `tpa`, `tpahere`, `tpaccept`, `tpdeny`, `tptoggle`                                                                     |
+| Players, identity              | `nick`, `realname`, `msgtoggle`, `rtoggle`                                                                                                                                                    |
+| Players, communication         | `msg`, `r`, `ignore`, `mail`                                                                                                                                                                  |
+| Staff, destinations            | `setwarp`, `delwarp`, `setspawn`, `settpr`, `warpinfo`, `renamehome`                                                                                                                          |
+| Staff, visibility              | `seen`, `whois`, `near`, `invsee`, `enderchest`, `socialspy`, `vanish`                                                                                                                        |
+| Staff, teleport administration | `tp`, `tphere`, `tpo`, `tpohere`, `tppos`, `tpall`, `tpoffline`, `world`                                                                                                                      |
+| Staff, additional travel       | `tpacancel`, `tpauto`, `tpaall`, `top`, `bottom`, `jump`                                                                                                                                      |
+| Staff, jail and IP moderation  | `setjail`, `deljail`, `jails`, `jailedplayers`, `jail`, `unjail`, `togglejail`, `banip`, `tempbanip`, `unbanip`                                                                               |
+| Staff, player administration   | `fly`, `speed`, `god`, `heal`, `feed`, `gamemode`, `rest`, `ptime`, `pweather`, `suicide`                                                                                                     |
+| Staff, server administration   | `time`, `weather`, `thunder`, `broadcast`, `broadcastworld`, `kickall`, `give`, `spawnmob`, `spawner`, `remove`, `kill`, `sudo`, `unlimited`, `powertool`, `powertoollist`, `powertooltoggle` |
+| Staff, bounded world effects   | `tree`, `bigtree`, `break`, `burn`, `ext`, `ice`, `lightning`, `fireball`, `firework`, `antioch`, `nuke`, `beezooka`, `kittycannon`                                                           |
+| Staff, diagnostics             | `gc`, `ping`, `list`, `playtime`, `getpos`, `compass`, `depth`, `essentials status`                                                                                                           |
+
+There is no registered `/kit` command. First join silently delivers the
+once-only starter supplies and welcome book, retaining durable delivery
+receipts and recovery. Players can visit named warps; creating and deleting
+warps requires staff permission. Kit administration, virtual workstations and
+item utility commands are outside this surface.
+
+New staff permissions are `thestorm.essentials.<command>`, defaulting to OP.
+Player identity nodes default to everyone. Acting on another player with a
+player administration command requires its `.others` node. Changing someone
+else's nickname requires `thestorm.essentials.nick.others`.
+Inventory inspection defaults to viewing: `/invsee <username> edit` and
+`/enderchest <username> edit` additionally require the corresponding `.edit`
+node. Left clicks swap actual items only after the audit commits and both
+players, permissions, cursor and slot are checked again. Shift clicks and
+drags cannot extract the displayed copies.
+
+`thestorm.essentials.vanish.see` permits seeing vanished staff. Vanish persists
+across restarts and hides players from ordinary tab lists, suggestions,
+private-message lookup and Discord join/quit and online-player output.
+Removing vanish permission or disabling the staff gate reveals online staff.
+`tpo` and `tpohere` also require `thestorm.essentials.teleport.override` to
+bypass registered teleport guards and land entry checks. Sealed worlds,
+world borders and safe landing checks still apply. Ordinary administrative
+teleports are immediate and free, with guards and protection retained.
+`sudo` dispatches with the target player's existing permissions.
+Console and RCON keep the vanilla syntax for commands shared with Minecraft;
+in-game staff use the usages shown by `/help`.
+
+Mass operations and destructive effects require repeating the identical
+command within the configured confirmation interval. Changed targets require
+another confirmation. Staff actions and identity changes have durable audit
+rows. Spawn and RTP origins, jail sentences, IP bans, logout locations and
+vanish state live in SQLite; commands never rewrite repository-owned YAML.
+Jail sentences preserve the return location, survive restart and expire
+through the online enforcement sweep. Jailed players retain communication
+commands while travel and item/world interactions are blocked.
+
+`/mail` lists reward deliveries and player letters separately. Existing reward
+claims remain `/mail claim <reward-id> <choice>`. Letters use
+`/mail send <username> <text>`, `/mail read <letter-id>`,
+`/mail reply <letter-id> <text>` and `/mail delete <letter-id>`.
+Reading opens a virtual book with literal text, without adding an item.
+Only the recipient can read or delete a letter. Sending commits before
+notification and respects ignores, mutes, message preferences and repeat
+filtering. A full inbox refuses new letters without evicting existing ones.
+
+Owned limits are in `server/owned/plugins/TheStorm/expansion.yml`: 2,000 Unicode
+code points per letter, ten seconds between sends, 100 active letters per
+inbox, 64 entities per operation, 32 blocks of effect radius, 16 blocks of jail
+radius and 30 seconds for confirmation. Managed rollout declarations live in
+`packages/feature-flags/src/managed-flag-inventory.json`:
+
+| Flag in namespace `the-storm`      | Production/fallback | Beta |
+| ---------------------------------- | ------------------- | ---- |
+| `the-storm-staff-tools-enabled`    | false               | true |
+| `the-storm-identity-enabled`       | false               | true |
+| `the-storm-letters-enabled`        | false               | true |
+| `the-storm-ip-enforcement-enabled` | false               | true |
+
+IP enforcement additionally requires a verified public address forwarded by
+a trusted private PROXY-protocol peer. Private, loopback, link-local,
+multicast and shared carrier addresses cannot become ban targets. An enabled
+IP gate rejects unverified connections and unavailable login checks. The
+server image accepts PROXY protocol; mc-router supplies it, Geyser forwards
+Bedrock addresses, and the RLCraft HAProxy sidecar strips the header for Forge.
+NodePort services preserve source addresses with `externalTrafficPolicy: Local`.
+Backend gameplay ingress is restricted to the router, with Bedrock UDP and
+existing management ports preserved. Roll out router and backends together;
+the staff and IP flags are independent of that network change.
 
 ## Skills
 

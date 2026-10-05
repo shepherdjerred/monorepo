@@ -1,0 +1,6 @@
+{
+  "file": "/data/config/paper-global.yml",
+  "ops": [
+    { "$put": { "path": "$.proxies", "key": "proxy-protocol", "value": true } }
+  ]
+}

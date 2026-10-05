@@ -20,4 +20,7 @@ public interface HomeStore {
 
   /** Deletes a home; false if it did not exist. */
   CompletableFuture<Boolean> delete(UUID player, PlaceName name);
+
+  /** Atomically rename, refusing to overwrite an existing name. */
+  CompletableFuture<Boolean> rename(UUID player, PlaceName from, PlaceName to);
 }

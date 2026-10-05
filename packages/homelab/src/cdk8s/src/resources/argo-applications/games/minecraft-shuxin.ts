@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -20,6 +21,7 @@ import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homel
 const NAMESPACE = "minecraft-shuxin";
 
 export function createMinecraftShuxinApp(chart: Chart) {
+  createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
   createMinecraftConfigMaps(chart, "shuxin", NAMESPACE);
 
@@ -95,6 +97,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
             type: "NodePort",
             port: 19_132,
             nodePort: 30_003,
+            externalTrafficPolicy: "Local",
           },
           protocol: "UDP",
           containerPort: 19_132,

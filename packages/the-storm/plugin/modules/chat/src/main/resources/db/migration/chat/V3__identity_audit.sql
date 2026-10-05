@@ -1,0 +1,7 @@
+CREATE TABLE chat_identity_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  actor TEXT NOT NULL,
+  target TEXT NOT NULL,
+  action TEXT NOT NULL,
+  at TEXT NOT NULL
+);

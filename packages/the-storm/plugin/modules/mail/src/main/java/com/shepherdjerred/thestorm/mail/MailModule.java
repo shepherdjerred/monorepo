@@ -19,7 +19,13 @@ public final class MailModule implements StormModule {
     context.database().migrate(id(), MailModule.class.getClassLoader());
     var mail = new JooqMail(context.database());
     context.services().provide(Mail.class, mail);
-    var commands = new MailCommands(context, mail);
+    var letters = new com.shepherdjerred.thestorm.mail.adapter.db.JooqLetters(context.database());
+    context.services().provide(com.shepherdjerred.thestorm.mail.app.Letters.class, letters);
+    var commands =
+        new MailCommands(
+            context,
+            mail,
+            new com.shepherdjerred.thestorm.mail.adapter.paper.LetterCommands(context, letters));
     context.plugin().getServer().getPluginManager().registerEvents(commands, context.plugin());
     context
         .lifecycle()

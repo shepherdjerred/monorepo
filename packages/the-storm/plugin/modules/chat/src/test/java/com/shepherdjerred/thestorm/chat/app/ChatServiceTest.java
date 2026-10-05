@@ -33,6 +33,40 @@ final class ChatServiceTest {
   private final ChatExtensions extensions = new ChatExtensions();
   private final ChatService service = new ChatService(CONFIG, store, clock, extensions);
 
+  @Test
+  void lettersRespectIgnoresMutesPreferencesAndUnicodeLength() {
+    service.load().join();
+    var text = "😀".repeat(2000);
+    var attempt = new MessagingPolicy.Attempt(ALICE, "Alice", false, false, BOB, text, 2000);
+    assertThat(service.letter(attempt).isOk()).isTrue();
+    service.letterDelivered(ALICE, text);
+    assertThat(service.letter(attempt).isOk()).isFalse();
+    service.ignore(BOB, new ChatProfile.IgnoreTarget(ALICE, "Alice", false));
+    assertThat(
+            service
+                .letter(
+                    new MessagingPolicy.Attempt(
+                        ALICE, "Alice", true, true, BOB, "staff letter", 2000))
+                .isOk())
+        .isFalse();
+    service.unignore(BOB, ALICE);
+    service.mute(ALICE, Duration.ofMinutes(5), "spam", "Carol");
+    assertThat(
+            service
+                .letter(
+                    new MessagingPolicy.Attempt(
+                        ALICE, "Alice", false, false, BOB, "different letter", 2000))
+                .isOk())
+        .isFalse();
+    service.unmute(ALICE);
+    service.identities(
+        id ->
+            id.equals(BOB)
+                ? com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages()
+                : com.shepherdjerred.thestorm.chat.domain.Identity.fresh());
+    assertThat(service.letter(attempt).isOk()).isFalse();
+  }
+
   private OutgoingLine sent(Result<OutgoingLine, List<ChatDenial>> result) {
     return switch (result) {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> line;

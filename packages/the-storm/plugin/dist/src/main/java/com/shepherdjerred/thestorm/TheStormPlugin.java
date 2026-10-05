@@ -35,6 +35,7 @@ public final class TheStormPlugin extends JavaPlugin {
   private final Services services = new Services();
   private @Nullable StormDatabase database;
   private @Nullable ComputePool compute;
+  private com.shepherdjerred.thestorm.core.expansion.@Nullable ManagedGameplay gameplay;
 
   /**
    * Enables The Storm or stops the server. Once modules replace third-party plugins (land
@@ -94,6 +95,15 @@ public final class TheStormPlugin extends JavaPlugin {
             InstantSource.system(),
             RandomGenerator.getDefault(),
             getComponentLogger());
+    var rollout =
+        com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.remote(
+            requiredEnvironment("FLIPT_URL"), requiredEnvironment("FLIPT_ENVIRONMENT"));
+    gameplay = rollout;
+    services.provide(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class, rollout);
+    services.provide(
+        com.shepherdjerred.thestorm.core.expansion.ExpansionSettings.class,
+        context.loadConfig(
+            "expansion.yml", com.shepherdjerred.thestorm.core.expansion.ExpansionSettings.class));
     for (var module : selected) {
       module.enable(context);
       enabled.add(module);
@@ -108,6 +118,10 @@ public final class TheStormPlugin extends JavaPlugin {
     }
     enabled.clear();
     services.clear();
+    if (gameplay != null) {
+      gameplay.close();
+      gameplay = null;
+    }
     if (compute != null) {
       compute.close();
       compute = null;
@@ -138,5 +152,12 @@ public final class TheStormPlugin extends JavaPlugin {
               "Invalid config.yml: "
                   + String.join("; ", problems.stream().map(Problem::toString).toList()));
     };
+  }
+
+  private static String requiredEnvironment(String key) {
+    var value = System.getenv(key);
+    if (value == null || value.isBlank())
+      throw new IllegalStateException("Missing bootstrap " + key);
+    return value;
   }
 }

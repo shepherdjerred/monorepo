@@ -136,6 +136,7 @@ describe("minecraft-tsmc runs The Storm's image", () => {
         type: "NodePort",
         port: 19_132,
         nodePort: 30_004,
+        externalTrafficPolicy: "Local",
       },
       protocol: "UDP",
       containerPort: 19_132,
@@ -143,7 +144,9 @@ describe("minecraft-tsmc runs The Storm's image", () => {
       ingress: { enabled: false },
     });
   });
+});
 
+describe("minecraft-tsmc image configuration", () => {
   test("bakes the verified Geyser and Floodgate builds", async () => {
     const manifest = z
       .object({
