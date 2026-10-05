@@ -11,10 +11,10 @@ public interface QolStore {
   /** The player's row, inserting {@code now} as first seen when they have none. */
   CompletableFuture<Ensured> ensure(UUID player, Instant now);
 
-  /** Records an RTP search or completed teleport for the cooldown. */
+  /** Records the last wilderness search for its independent search throttle. */
   CompletableFuture<Void> setLastRtp(UUID player, Instant when);
 
-  /** Saves an RTP entitlement before its keyed charge is attempted. */
+  /** Legacy RTP entitlement storage retained for recovery; new charges use Essentials. */
   CompletableFuture<Void> insertRtpAttempt(RtpAttempt attempt);
 
   /** RTP entitlements that still need delivery or compensation. */

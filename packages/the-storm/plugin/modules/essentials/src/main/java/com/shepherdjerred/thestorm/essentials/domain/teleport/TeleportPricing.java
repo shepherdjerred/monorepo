@@ -2,46 +2,30 @@ package com.shepherdjerred.thestorm.essentials.domain.teleport;
 
 import java.time.Duration;
 
-/**
- * How teleports are priced, as in stTeleports (2017): each use raises that kind's multiplier by
- * {@code multiplierGrowth}, and every {@code decayEvery} without a use lowers it by {@code
- * multiplierDecay}, never below ×1 or above {@code maxMultiplier}. Cost and cooldown are both the
- * base value times the multiplier in force when the teleport is taken.
- *
- * @param prices base cost and cooldown per kind
- * @param multiplierGrowth added to the multiplier per use, for example {@code 0.5}
- * @param multiplierDecay removed from the multiplier per elapsed {@code decayEvery}
- * @param decayEvery how often the multiplier decays
- * @param maxMultiplier the ceiling, for example {@code 4.0}
- */
+/** One rolling allowance and escalation policy for every command teleport. */
 public record TeleportPricing(
     TeleportPrices prices,
-    double multiplierGrowth,
-    double multiplierDecay,
-    Duration decayEvery,
-    double maxMultiplier) {
+    Duration window,
+    double allowance,
+    double maxMultiplier,
+    Duration rtpFreeFor) {
 
   public TeleportPricing {
-    Multiplier.hundredthsOf(multiplierGrowth);
-    Multiplier.hundredthsOf(multiplierDecay);
-    Multiplier.of(maxMultiplier);
-    if (decayEvery.isNegative() || decayEvery.isZero()) {
-      throw new IllegalArgumentException("decayEvery must be positive: " + decayEvery);
+    if (window.isZero() || window.isNegative() || rtpFreeFor.isNegative()) {
+      throw new IllegalArgumentException(
+          "window must be positive and RTP free period non-negative");
     }
+    if (!Double.isFinite(allowance)
+        || allowance < 0
+        || allowance * 2 != Math.rint(allowance * 2)
+        || allowance > Integer.MAX_VALUE / 2.0) {
+      throw new IllegalArgumentException(
+          "allowance must be a non-negative multiple of half a point");
+    }
+    Multiplier.of(maxMultiplier);
   }
 
-  /** {@link #multiplierGrowth} in hundredths. */
-  public long growthStep() {
-    return Multiplier.hundredthsOf(multiplierGrowth);
-  }
-
-  /** {@link #multiplierDecay} in hundredths. */
-  public long decayStep() {
-    return Multiplier.hundredthsOf(multiplierDecay);
-  }
-
-  /** {@link #maxMultiplier} as a multiplier. */
-  public Multiplier cap() {
-    return Multiplier.of(maxMultiplier);
+  public int allowanceHalfPoints() {
+    return (int) (allowance * 2);
   }
 }

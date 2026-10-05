@@ -33,8 +33,7 @@ final class RtpSearchTest {
                   }
                   throw new AssertionError("Unexpected world call: " + method.getName());
                 });
-    var config =
-        new QolConfig("PT1H", "PT1H", "PT0S", "PT1H", 25, 1, 0, 100, 0, 100, List.of("plains"));
+    var config = new QolConfig("PT15S", "PT1H", 1, 0, 100, 0, 100, List.of("plains"));
     var search = new RtpSearch(config, new ImmediateScheduler());
     var origin = new BlockPoint(0, 0);
     var request =

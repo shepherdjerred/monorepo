@@ -105,6 +105,9 @@ public final class EssentialsPaper {
             new TeleportFlow.Services(
                 app.payments(), app.guards(), app.protection(), back, app.sealed()),
             teleports.warmup());
+    context
+        .services()
+        .provide(com.shepherdjerred.thestorm.essentials.app.TeleportTravel.class, flow);
     var tpa = new TpaDesk(context.time(), teleports.tpaRules());
     var safe = new SafeTracker();
 
@@ -120,6 +123,7 @@ public final class EssentialsPaper {
                 app.sealed()),
             config);
     var tpaCommands = new TpaCommands(runtime, flow, tpa, teleports.tpaTimeout());
+    var teleportInfo = new TeleportInfoCommands(runtime, flow);
     var playerCommands =
         new PlayerCommands(runtime, kits, KitItems.readable(config.rules()), app.afk());
     var moderationCommands = new ModerationCommands(runtime, app.moderation(), app.players());
@@ -131,6 +135,7 @@ public final class EssentialsPaper {
               var commands = event.registrar();
               teleportCommands.register(commands);
               tpaCommands.register(commands);
+              teleportInfo.register(commands);
               playerCommands.register(commands);
               moderationCommands.register(commands);
             });

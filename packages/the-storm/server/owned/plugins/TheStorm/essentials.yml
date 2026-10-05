@@ -24,32 +24,40 @@ teleports:
   tpaInterval: PT10S
   # How many places /back remembers (teleports and deaths).
   backHistorySize: 5
-  # As in 2017's stTeleports: every use raises that kind's multiplier by
-  # multiplierGrowth, and every decayEvery without a use lowers it by
-  # multiplierDecay, between x1 and maxMultiplier. Cost and cooldown are the
-  # base values times the multiplier. Elytra, happy ghasts and lodestones are
-  # the free way to travel; teleports stay a paid convenience.
+  # Every command shares a rolling allowance and one cooldown. A successful
+  # trip leaves the history after window. Include the next trip's weight:
+  # each point above allowance doubles both price and cooldown, up to the cap.
+  # Elytra, happy ghasts and lodestones make ordinary journeys without crystals.
   pricing:
-    multiplierGrowth: 0.5
-    multiplierDecay: 0.5
-    decayEvery: PT10M
-    maxMultiplier: 4.0
+    window: PT1H
+    allowance: 4.0
+    maxMultiplier: 32.0
+    rtpFreeFor: P7D
     prices:
       spawn:
         cost: 10
         cooldown: PT30S
+        weight: 0.5
       home:
         cost: 25
         cooldown: PT1M
+        weight: 1.0
       tpa:
         cost: 25
         cooldown: PT1M
+        weight: 2.0
       back:
         cost: 25
         cooldown: PT1M
+        weight: 1.0
       warp:
         cost: 15
         cooldown: PT30S
+        weight: 0.5
+      rtp:
+        cost: 25
+        cooldown: PT1M
+        weight: 1.0
 
 # How many homes each player may set.
 homeLimit: 3
@@ -102,7 +110,7 @@ kits:
               /sethome and /home save a place to come back to.
               /tpa asks to visit a friend.
 
-              Teleports cost crystals, and more if you use them often. Elytra and happy ghasts are free.
+              /tpinfo explains prices and your shared cooldown. Occasional trips are affordable; frequent trips cost more and take longer. Elytra and happy ghasts are free.
             - |-
               <dark_aqua><b>Before you build</b></dark_aqua>
 

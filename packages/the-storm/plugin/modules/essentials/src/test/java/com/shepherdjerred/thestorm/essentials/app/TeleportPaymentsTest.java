@@ -36,17 +36,26 @@ final class TeleportPaymentsTest {
 
   /** Usage kept in memory. */
   static final class MemoryUsage implements TeleportUsageStore {
-    final Map<TeleportKind, TeleportUsage> usage = new HashMap<>();
+    final Map<UUID, TeleportUsage> usage = new HashMap<>();
+    final java.util.Set<UUID> confirmed = new java.util.HashSet<>();
+    final MemoryAttempts attempts;
 
-    @Override
-    public CompletableFuture<Optional<TeleportUsage>> find(UUID player, TeleportKind kind) {
-      return completedFuture(Optional.ofNullable(usage.get(kind)));
+    MemoryUsage(MemoryAttempts attempts) {
+      this.attempts = attempts;
     }
 
     @Override
-    public CompletableFuture<Void> save(UUID player, TeleportKind kind, TeleportUsage next) {
-      usage.put(kind, next);
-      return completedFuture(null);
+    public CompletableFuture<Optional<TeleportUsage>> find(UUID player, java.time.Instant since) {
+      return completedFuture(Optional.ofNullable(usage.get(player)));
+    }
+
+    @Override
+    public CompletableFuture<Void> confirm(
+        UUID player, UUID operation, TeleportKind kind, TeleportUsage next) {
+      if (confirmed.add(operation)) {
+        usage.put(player, next);
+      }
+      return attempts.delete(operation);
     }
   }
 
@@ -73,8 +82,8 @@ final class TeleportPaymentsTest {
 
   final FakeClock clock = FakeClock.at("2026-09-25T12:00:00Z");
   final FakeWallets wallets = new FakeWallets();
-  final MemoryUsage usage = new MemoryUsage();
   final MemoryAttempts attempts = new MemoryAttempts();
+  final MemoryUsage usage = new MemoryUsage(attempts);
   final TeleportPayments payments =
       new TeleportPayments(
           new TeleportPricer(pricing()),
@@ -83,13 +92,19 @@ final class TeleportPaymentsTest {
           clock);
 
   static TeleportPricing pricing() {
-    var price = new TeleportPrice(25, Duration.ofMinutes(1));
+    var price = new TeleportPrice(25, Duration.ofMinutes(1), 1);
     return new TeleportPricing(
-        new TeleportPrices(new TeleportPrice(0, Duration.ZERO), price, price, price, price),
-        0.5,
-        0.5,
-        Duration.ofMinutes(10),
-        4);
+        new TeleportPrices(
+            new TeleportPrice(0, Duration.ZERO, .5),
+            price,
+            new TeleportPrice(25, Duration.ofMinutes(1), 2),
+            price,
+            price,
+            price),
+        Duration.ofHours(1),
+        4,
+        32,
+        Duration.ofDays(7));
   }
 
   Result<Quote, TeleportRefusal> charge(TeleportKind kind, Exemptions exemptions) {
@@ -133,7 +148,7 @@ final class TeleportPaymentsTest {
     assertThat(wallets.balanceOf(WALLET)).isEqualTo(75);
     assertThat(usage.usage).isEmpty();
     payments.confirm(PLAYER, charge).join();
-    assertThat(usage.usage).containsKey(TeleportKind.HOME);
+    assertThat(usage.usage).containsKey(PLAYER);
     assertThat(attempts.attempts).isEmpty();
   }
 
@@ -172,19 +187,19 @@ final class TeleportPaymentsTest {
               assertThat(receipt.to()).isEqualTo(new AccountId.Server());
               assertThat(receipt.reason()).isEqualTo("teleport:home");
             });
-    assertThat(usage.usage.get(TeleportKind.HOME))
-        .extracting(TeleportUsage::multiplier)
-        .isEqualTo(Multiplier.of(1.5));
+    assertThat(usage.usage.get(PLAYER)).extracting(value -> value.trips().size()).isEqualTo(1);
   }
 
   @Test
-  void theSecondTeleportCostsMore() {
-    wallets.deposit(WALLET, 100);
-    pay(TeleportKind.HOME, Exemptions.NONE);
-    clock.advance(Duration.ofMinutes(1));
-
-    assertThat(pay(TeleportKind.HOME, Exemptions.NONE).map(Quote::cost)).isEqualTo(Result.ok(38L));
-    assertThat(wallets.balanceOf(WALLET)).isEqualTo(37);
+  void theFifthNormalTeleportCostsMore() {
+    wallets.deposit(WALLET, 500);
+    for (var i = 0; i < 4; i++) {
+      assertThat(pay(TeleportKind.HOME, Exemptions.NONE).map(Quote::cost))
+          .isEqualTo(Result.ok(25L));
+      clock.advance(Duration.ofMinutes(1));
+    }
+    assertThat(pay(TeleportKind.HOME, Exemptions.NONE).map(Quote::cost)).isEqualTo(Result.ok(50L));
+    assertThat(wallets.balanceOf(WALLET)).isEqualTo(350);
   }
 
   @Test
@@ -216,11 +231,15 @@ final class TeleportPaymentsTest {
   }
 
   @Test
-  void cooldownsArePerKind() {
+  void cooldownsAreSharedAcrossKinds() {
     wallets.deposit(WALLET, 100);
     pay(TeleportKind.HOME, Exemptions.NONE);
 
-    assertThat(pay(TeleportKind.WARP, Exemptions.NONE).isOk()).isTrue();
+    assertThat(pay(TeleportKind.WARP, Exemptions.NONE))
+        .isEqualTo(
+            Result.err(
+                new TeleportRefusal.Cooldown(
+                    new OnCooldown(TeleportKind.WARP, Duration.ofMinutes(1)))));
   }
 
   @Test
@@ -231,7 +250,10 @@ final class TeleportPaymentsTest {
     assertThat(paid.map(Quote::cost)).isEqualTo(Result.ok(0L));
     assertThat(exempt.map(Quote::cost)).isEqualTo(Result.ok(0L));
     assertThat(wallets.receipts()).isEmpty();
-    assertThat(usage.usage).containsKeys(TeleportKind.SPAWN, TeleportKind.HOME);
+    assertThat(usage.usage.get(PLAYER))
+        .isNotNull()
+        .extracting(value -> value.trips().size())
+        .isEqualTo(2);
   }
 
   @Test
