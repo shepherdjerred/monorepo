@@ -574,6 +574,7 @@ final class ArenaWorld {
     mobs.forEach(Entity::remove);
     mobs.clear();
     brains.clear();
+    cubeGoals.clear();
     wolves.values().forEach(pack -> pack.forEach(Entity::remove));
     wolves.clear();
     for (var entity : world.getEntities()) {

@@ -636,7 +636,8 @@ and the first boss. Rounds six and seven have 24 and 27 enemies with matching so
 Ordinary counts are 1.5× the original party budget, rounded upward. Active pressure is
 `min(48, 9 + 3 × (round − 1) + 2 × extra players)`, bounded by 64 physical entities
 including mounts and companions. Ordinary health and damage are 65% and 60% of
-their original values. Cumulative kill rewards preserve the original round income
+their original values. Boss phase adds keep their original full bounties.
+Cumulative ordinary-wave kill rewards preserve the original round income
 for each eligible contributor; boss and round-clear rewards retain their amounts. Special
 mobs spend 10–25% of the wave budget; ranged mobs begin at round six, have a
 wind-up, at least three seconds between shots and limited concurrent slots.

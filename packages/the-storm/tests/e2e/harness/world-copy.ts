@@ -26,7 +26,7 @@ export async function stageWorld(
   const copy = path.join(stagingDir, world);
   await cp(source, copy, { recursive: true });
   await writableWorld(copy);
-  // Warm-cache containers already have /data/world; copy contents rather than nesting world/world.
-  await docker(["exec", containerId, "mkdir", "-p", `/data/${world}`]);
-  await docker(["cp", `${copy}/.`, `${containerId}:/data/${world}`]);
+  // Copy the named directory into the existing /data parent. Docker merges an
+  // existing world and creates a missing world while the container is stopped.
+  await docker(["cp", copy, `${containerId}:/data/`]);
 }

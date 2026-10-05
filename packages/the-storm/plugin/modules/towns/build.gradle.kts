@@ -2,6 +2,12 @@ plugins { id("storm.jooq-conventions") }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
+// TownsConfigTest reads this shipped file directly, outside the test classpath.
+tasks.test {
+  inputs.file(rootProject.file("../server/owned/plugins/TheStorm/towns.yml"))
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
 dependencies {
   // Town treasuries are economy accounts, paid through the Wallets port.
   implementation(project(":economy"))

@@ -8,6 +8,14 @@ import org.junit.jupiter.api.Test;
 
 final class ScaledBountiesTest {
   @Test
+  void unchangedBossEscortsAndPhaseAddsKeepTheirOriginalFullRewards() {
+    var bounties = new ScaledBounties(8, 8);
+    for (var kill = 0; kill < 14; kill++) {
+      assertThat(bounties.next(ALICE)).isEqualTo(new ScaledBounties.Reward(2, 1, 2));
+    }
+  }
+
+  @Test
   void enlargedSoloAndTeamRoundsKeepOriginalIncomeAndIndependentContributionCounts() {
     for (var counts : new int[][] {{6, 9}, {15, 23}, {25, 38}, {160, 240}}) {
       var bounties = new ScaledBounties(counts[0], counts[1]);

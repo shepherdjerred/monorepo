@@ -59,18 +59,26 @@ async function prepareWindCast(bot: Bot, rcon: RconClient): Promise<void> {
       BossPresenceSchema.parse(await rcon.command(`execute if entity ${boss}`)),
     10_000,
   );
-  const casting = waitForMessage(
-    bot,
-    /Breeze Sovereign casts Wind lanes/u,
-    15_000,
-  );
-  await rcon.command(`tp ${boss} -4.5 73 53.5`);
+  const casting = (async () => {
+    try {
+      await waitForMessage(bot, /Breeze Sovereign casts Wind lanes/u, 15_000);
+      return { ok: true } as const;
+    } catch (error: unknown) {
+      return { ok: false, error } as const;
+    }
+  })();
+  await rcon.command(`tp ${boss} 19.5 105 -40.5`);
   await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
+  // Escorts must not obscure the damage caused by the locked boss cast.
+  await rcon.command(
+    'execute as @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run attribute @s minecraft:attack_damage base set 0',
+  );
   await waitUntil("boss tracked by the client", () =>
     Object.values(bot.entities).some((entity) => entity.name === "breeze"),
   );
   await removeArmor(rcon, bot.username);
-  await casting;
+  const announced = await casting;
+  if (!announced.ok) throw announced.error;
 }
 
 describe("Settlement iteration on native Paper", () => {
@@ -78,8 +86,8 @@ describe("Settlement iteration on native Paper", () => {
     bot,
     rcon,
   }) => {
-    await practice(bot, rcon, 8);
     try {
+      await practice(bot, rcon, 8);
       await rcon.command(
         `effect give ${bot.username} minecraft:resistance infinite 255 true`,
       );
@@ -129,8 +137,8 @@ describe("Settlement iteration on native Paper", () => {
     bot,
     rcon,
   }) => {
-    await practice(bot, rcon, 8);
     try {
+      await practice(bot, rcon, 8);
       await rcon.command(
         `effect give ${bot.username} minecraft:resistance infinite 255 true`,
       );
@@ -195,7 +203,7 @@ describe("Settlement iteration on native Paper", () => {
             .items()
             .filter((item) => item.name === "emerald")
             .reduce((total, item) => total + item.count, 0) >=
-          emeralds + 2,
+          emeralds + 1,
         10_000,
       );
       await waitUntil(
@@ -222,12 +230,15 @@ describe("Settlement iteration on native Paper", () => {
       bot,
       rcon,
     }) => {
-      await practice(bot, rcon, 5);
       try {
+        await practice(bot, rcon, 5);
         await rcon.command(
           `storm-fixture-survival hungry ${bot.username} none`,
         );
-        await stand(bot, rcon, new Vec3(-1.5, 73, 53.5));
+        await rcon.command(
+          `storm-fixture-survival terrain ${bot.username} none`,
+        );
+        await stand(bot, rcon, new Vec3(23.5, 105, -40.5));
         await prepareWindCast(bot, rcon);
         await rcon.command(
           'execute as @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run data merge entity @s {NoAI:1b}',
