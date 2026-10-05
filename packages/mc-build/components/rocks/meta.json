@@ -1,0 +1,9 @@
+{
+  "name": "rocks",
+  "description": "Natural rocks: lumpy boulders and tall outcrops from jittered overlapping lobes (never spheres), sunk into the ground with satellite stones, in stone, mossy, granite, sandstone or dark palettes; plus area scattering.",
+  "tags": ["rocks", "boulder", "landscape", "terrain"],
+  "exports": [
+    "boulder(ctx, { x, y, z, size?: 1-6, shape?: lump|tall, palette?, satellites?, seed? }) — y is the first free cell above ground",
+    "scatterRocks(ctx, { x, z, w, d, ground(x, z), density?, maxSize?, palette?, skip? }) → { placed }"
+  ]
+}

@@ -4,56 +4,9 @@ import path from "node:path";
 import { BlockGrid, type Vec3 } from "#src/core/grid.ts";
 import type { Box } from "#src/dsl/types.ts";
 import { CompileResultSchema, type CompileJob } from "./job.ts";
+import { BuildProgramError, scanModuleGraph } from "./scan.ts";
 
 const CHILD = path.join(import.meta.dirname, "child.ts");
-
-/** Identifiers a build program may not touch: it is pure geometry. */
-const FORBIDDEN = [
-  /\bprocess\b/u,
-  /\bBun\b/u,
-  /\bfetch\s*\(/u,
-  /\brequire\s*\(/u,
-  /\bMath\.random\b/u,
-  /\bDate\b/u,
-  /\beval\s*\(/u,
-  /\bnew\s+Function\b/u,
-  /\bglobalThis\b/u,
-];
-
-export class BuildProgramError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "BuildProgramError";
-  }
-}
-
-function stripComments(source: string): string {
-  return source
-    .replaceAll(/\/\*[\s\S]*?\*\//gu, "")
-    .replaceAll(/\/\/.*$/gmu, "");
-}
-
-/**
- * Rejects programs with runtime imports or ambient escape hatches. This is
- * for determinism and to contain accidents, not a security boundary.
- */
-export function scanProgram(source: string): void {
-  const imports = new Bun.Transpiler({ loader: "ts" }).scanImports(source);
-  if (imports.length > 0) {
-    throw new BuildProgramError(
-      `Build programs may only use \`import type\`; found runtime imports of ${imports.map((entry) => entry.path).join(", ")}. Everything you need is on ctx (ctx.geo, ctx.mat, ctx.craft, ctx.site).`,
-    );
-  }
-  const code = stripComments(source);
-  for (const pattern of FORBIDDEN) {
-    const match = pattern.exec(code);
-    if (match !== null) {
-      throw new BuildProgramError(
-        `Build programs must be deterministic and self-contained; \`${match[0].trim()}\` is not allowed (use ctx.rng() for randomness).`,
-      );
-    }
-  }
-}
 
 export type CompileOutput = {
   /** Local position of grid cell (0,0,0). */
@@ -74,7 +27,7 @@ export async function compileProgram(options: {
   timeoutMs?: number;
 }): Promise<CompileOutput> {
   const program = path.resolve(options.program);
-  scanProgram(await Bun.file(program).text());
+  await scanModuleGraph(program);
   const work = await mkdtemp(path.join(os.tmpdir(), "mc-build-"));
   try {
     const jobPath = path.join(work, "job.json");
