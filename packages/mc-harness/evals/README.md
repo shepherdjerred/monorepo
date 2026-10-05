@@ -48,6 +48,13 @@ homes, sandboxes and daemons for debugging).
 | e4   | Answer a furnace/hopper timing question by experiment                 | Claimed numbers are right (2–3 ingots in the chest, 5 raw iron, top hopper → input) and the frozen world at the reported positions agrees |
 | e5   | Build a two-story hip-roofed house with a chimney on a sculpted slope | Same as e2                                                                                                                                |
 | e6   | Repeat e1 entirely in negative x/z                                    | Same as e1, shifted (regression for negative-coordinate parsing)                                                                          |
+| m1   | Natural request: an impressive ~80×80 castle town on a hill           | Same as e2                                                                                                                                |
+| m2   | Natural request: an impressive ~96×96 harbor island                   | Same as e2                                                                                                                                |
+
+`e*` tasks use the guided preamble (`tasks/_preamble.md`), which names the
+skills and steps. `m*` tasks use `tasks/_preamble-natural.md`: a plain user
+request with only the environment rules and deliverables, so they also measure
+whether the agent discovers the repository guidance on its own.
 
 Looks are not auto-graded: e2/e5 artifacts include the grader's own render
 of the promoted site and the agent's `final.png`; judge them against the
@@ -57,4 +64,5 @@ building skill's rubric.
 
 Round 1 with Codex `gpt-6-luna` (high reasoning): e1 ≈ 7 min / 1.3M input
 tokens (mostly cached), e2 ≈ 7 min / 1.4M, e3 ≈ 4 min / 0.6M, e4 ≈ 4 min /
-0.6M. Grading adds 1–2 minutes per task (e3 boots its own sandbox).
+0.6M. Grading adds 1–2 minutes per task (e3 boots its own sandbox). Map tasks (m1, m2) with
+Codex `gpt-6-luna`: 22–26 min and 3–5M input tokens (mostly cached) each.

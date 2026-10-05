@@ -46,6 +46,10 @@ const occupied = new Set<string>(); // "x,z" cells taken by buildings/streets
   than floating floors.
 - Mark streets and footprints in `occupied`, then scatter trees, flowers and
   boulders with `ctx.rng()` only on free cells.
+- Break up contour stripes: a smooth heightfield floored to integers draws
+  regular one-block bands on every slope. Add a small high-frequency term
+  (±1) to `height`, cap some steps with slabs or stairs, and vary the surface
+  (grass, coarse dirt, moss, gravel, stone outcrops) by slope and height.
 - Shape terrain on purpose: add cliffs, buttresses, scree and a second peak
   to break a smooth cone; carve a valley or harbor; vary beach width.
 - `Math.sin`, `Math.hypot` and friends are fine; `Math.random` is not (use
