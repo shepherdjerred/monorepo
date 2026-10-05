@@ -49,7 +49,8 @@ final class SurvivalSidebar {
         java.util.Objects.requireNonNull(runner.context().server().getScoreboardManager())
             .getNewScoreboard();
     var objective =
-        board.registerNewObjective("settlement", Criteria.DUMMY, Component.text("Settlement"));
+        board.registerNewObjective(
+            runner.id(), Criteria.DUMMY, Component.text(runner.world().definition().name()));
     objective.setDisplaySlot(DisplaySlot.SIDEBAR);
     player.setScoreboard(board);
     return new Board(original, board, objective);

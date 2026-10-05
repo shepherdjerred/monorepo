@@ -178,7 +178,7 @@ public record SurvivalContent(
           || areas.isEmpty()
           || spawns.isEmpty()
           || safePoints.isEmpty()
-          || purchaseSigns.isEmpty()
+          || (emeralds > 0 && purchaseSigns.isEmpty())
           || areas.stream().noneMatch(a -> a.contains(entrance)))
         throw new IllegalArgumentException("Invalid zone " + id);
     }

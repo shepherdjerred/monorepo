@@ -266,6 +266,19 @@ final class SettlementMap {
     return content.machines().stream().filter(m -> m.contains(pos)).findFirst();
   }
 
+  String powerDistrict() {
+    var generator =
+        content.machines().stream()
+            .filter(machine -> machine.type() == SurvivalContent.MachineType.POWER)
+            .findFirst()
+            .orElseThrow();
+    return content.zones().stream()
+        .filter(zone -> zone.contains(generator.block()))
+        .findFirst()
+        .orElseThrow()
+        .name();
+  }
+
   BlockPos objective() {
     return content.bossObjective();
   }

@@ -117,7 +117,7 @@ public final class Arenas implements ArenaPresence {
   void joinDebug(Player player, ArenaRunner runner, int round) {
     if (!admit(player)) return;
     if (!(runner instanceof SurvivalRunner survival) || !survival.game().debugStart(round)) {
-      Texts.error(player, "Debug joins require settlement and an empty or matching debug lobby.");
+      Texts.error(player, "Debug joins require a survival arena and an empty or matching lobby.");
       return;
     }
     runner

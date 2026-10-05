@@ -118,7 +118,7 @@ final class SurvivalCommands {
                                                                                   c, "amount"));
                                                                 })))))))
             .build(),
-        "Settlement survival: classes, upgrades, ability, status, give <player> <item> <amount>");
+        "Survival arenas: classes, upgrades, ability, status, give <player> <item> <amount>");
   }
 
   private static int player(org.bukkit.command.CommandSender sender, Consumer<Player> action) {
@@ -136,6 +136,7 @@ final class SurvivalCommands {
         .filter(SurvivalRunner.class::isInstance)
         .map(SurvivalRunner.class::cast)
         .ifPresentOrElse(
-            action, () -> Texts.error(player, "Join the settlement with /arena join settlement."));
+            action,
+            () -> Texts.error(player, "Join a survival map: /arena join settlement or rustworks."));
   }
 }

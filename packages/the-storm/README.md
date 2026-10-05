@@ -422,7 +422,7 @@ damage scaling still apply. Food and healing consumables remain available.
 ### Settlement survival
 
 The Colosseum retains its finite 72-wave game. Settlement is a separate,
-endless, one-to-four-player crafting survival game. Its eight connected
+endless, one-to-four-player crafting survival game. Its ten connected
 districts occupy a compact 112 × 112 ruined coastal fortress, inside the original
 160 × 160 protected footprint. A separate staging dock holds the lobby; an
 offshore forge is reached by plane. Permanent buildings are protected; purchased
@@ -632,6 +632,43 @@ the managed `the-storm-survival-enabled` flag for the player. Missing Flipt
 bootstrap or failed evaluations keep admission closed. Startup validates the
 authored blueprint and resets gates and defenses before opening admission.
 See the wiki's **How to provision The Storm settlement** for placement and recovery.
+
+### Rustworks survival
+
+`/arena join rustworks` enters a separate one-to-four-player Zombies run. Its
+192 × 200 protected footprint is 1.5 times Settlement's, with 23,040 combat
+blocks across 24 districts. Paid districts are 53–75% of Settlement's average
+district area. Interlocking loading bays connect rail yards, workshops, copper mills,
+boiler courts, planted yards, a slag vault, and an airship hangar. Ground rises
+eight blocks across long slopes; doors and combat routes remain on those slopes.
+
+Railhead and Workers' Canteen are open initially. Signs charge 6–11 emeralds
+per district; districts with two connecting routes require both neighbors.
+Power is in Generator House, Pack-a-Punch in Blast Furnace, and the mystery box
+rotates between Freight Sidings, Glassworks, and Airship Hangar. Three banks
+serve Railhead, Copper Foundry, and Slag Vault. Six barricades and six traps
+provide repair and defense opportunities. Sixteen gathering nodes cover the
+same twelve material kinds, with no more than two nodes per material.
+
+Plane parts are in Boiler Court, Textile Mill, and Control Room. Assemble them
+at the hangar to reach the remote salvage forge. The station, lobby handbook,
+ready controls, classes, gear recipes, boss scaling, and debug-round behavior
+use the same survival rules as Settlement. `/arena join rustworks <round>`
+requires `thestorm.arena.debug`; `/arena spec rustworks` watches its run.
+
+`arena/rustworks.yml` owns its geometry and fixtures; `arena/survival.yml` owns
+the shared classes, recipes, and loot rules. Each enabled map has an independent
+runner, gates, enemies, bank, and run inventory. Character progression is shared.
+Both maps use the existing survival admission flag. Startup checks every enabled
+map before opening arena admissions: install the authored world geometry before
+enabling a new map in production.
+
+Rustworks occupies x=1920–2111, z=2112–2311, y=68–103; its exit pad is x=1918,
+z=2132, y=72–74. Provisioning targets use the map ID: `/rustworks preview`,
+`/rustworks apply <token>`, and `/rustworks restore <token>`. Disable Rustworks
+in its own configuration before provisioning. Previews retain the same wilderness,
+block-budget, backup, and ownership checks as Settlement; do not enable it until
+the map has been installed and verified. Its region does not overlap Settlement.
 
 Arena startup loads its configured region chunks asynchronously before checking
 loot chest blocks or clearing remnants of an interrupted game. Admission stays

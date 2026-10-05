@@ -135,7 +135,9 @@ final class ZombiesMachines {
       return;
     }
     if (!powered() && type != SurvivalContent.MachineType.QUICK_REVIVE) {
-      Texts.error(player, "Restore power at the foundry: four iron and four redstone.");
+      Texts.error(
+          player,
+          "Restore power at " + runner.map().powerDistrict() + ": four iron and four redstone.");
       return;
     }
     switch (type) {

@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
 import com.shepherdjerred.thestorm.arena.app.RewardPayer;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
+import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalMapContent;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
@@ -59,6 +60,10 @@ public final class ArenaModule implements StormModule {
     var survival =
         ConfigFiles.load(
             context.dataDirectory().resolve("arena/survival.yml"), SurvivalContent.class);
+    var rustworks =
+        ConfigFiles.load(
+                context.dataDirectory().resolve("arena/rustworks.yml"), SurvivalMapContent.class)
+            .withRules(survival);
     context.database().migrate(id(), getClass().getClassLoader());
     var database = context.database();
     var leaderboard = new JooqLeaderboardStore(database);
@@ -86,7 +91,10 @@ public final class ArenaModule implements StormModule {
             new com.shepherdjerred.thestorm.arena.adapter.db.JooqSettlementStore(database));
     var started =
         ArenaPaper.start(
-            context, new ArenaPaper.Content(content, survival), app, hooks.apply(context));
+            context,
+            new ArenaPaper.Content(content, java.util.List.of(survival, rustworks)),
+            app,
+            hooks.apply(context));
     paper = started;
     context.services().provide(ArenaPresence.class, started.presence());
     context.services().provide(ArenaRecords.class, leaderboard);

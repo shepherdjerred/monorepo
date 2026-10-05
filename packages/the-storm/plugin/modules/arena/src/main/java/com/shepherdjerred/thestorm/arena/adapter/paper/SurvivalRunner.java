@@ -292,7 +292,8 @@ final class SurvivalRunner implements ArenaRunner {
                   if (failure != null || !enabled) {
                     game.leave(id);
                     spectators.remove(id);
-                    Texts.error(player, "Settlement survival is not available to you yet.");
+                    Texts.error(
+                        player, world.definition().name() + " is not available to you yet.");
                     if (failure != null) {
                       context().logger().error("Could not evaluate survival rollout", failure);
                     }
@@ -454,11 +455,12 @@ final class SurvivalRunner implements ArenaRunner {
   public java.util.concurrent.CompletableFuture<Void> prepareStartup() {
     world.cleanUp();
     var _ =
-        java.util.concurrent.CompletableFuture.supplyAsync(
+        context()
+            .compute()
+            .submit(
                 () ->
-                    new com.shepherdjerred.thestorm.arena.domain.survival.SettlementBlueprint(
-                            map.content())
-                        .blocks())
+                    com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(
+                        map.content()))
             .whenCompleteAsync(
                 (blueprint, failure) -> {
                   if (startup.isDone()) {
@@ -496,7 +498,7 @@ final class SurvivalRunner implements ArenaRunner {
                                   palette.computeIfAbsent(
                                       entry.getValue(), BlueprintBlock::parse))) {
                         throw new IllegalStateException(
-                            "Settlement blueprint is missing or changed at " + entry.getKey());
+                            id() + " blueprint is missing or changed at " + entry.getKey());
                       }
                     }
                     if (!entries.hasNext()) {

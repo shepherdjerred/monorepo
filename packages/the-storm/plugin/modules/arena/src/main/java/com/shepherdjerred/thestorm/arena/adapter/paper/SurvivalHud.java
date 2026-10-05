@@ -14,9 +14,7 @@ import org.bukkit.entity.Player;
 final class SurvivalHud {
   private final SurvivalRunner runner;
   private final SurvivalSidebar sidebar;
-  private final BossBar rounds =
-      BossBar.bossBar(
-          Component.text("Settlement"), 0, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
+  private final BossBar rounds;
   private final Set<UUID> viewers = new HashSet<>();
   private final Map<UUID, Instant> hints = new HashMap<>();
   private final Map<UUID, org.bukkit.entity.TextDisplay> downed = new HashMap<>();
@@ -24,6 +22,12 @@ final class SurvivalHud {
   SurvivalHud(SurvivalRunner runner) {
     this.runner = runner;
     sidebar = new SurvivalSidebar(runner);
+    rounds =
+        BossBar.bossBar(
+            Component.text(runner.world().definition().name()),
+            0,
+            BossBar.Color.GREEN,
+            BossBar.Overlay.PROGRESS);
   }
 
   void hint(Player player, String message, int seconds) {

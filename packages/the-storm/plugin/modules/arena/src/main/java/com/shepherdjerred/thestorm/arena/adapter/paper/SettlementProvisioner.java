@@ -2,7 +2,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.app.store.SettlementStore;
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
-import com.shepherdjerred.thestorm.arena.domain.survival.SettlementBlueprint;
+import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
@@ -106,13 +106,13 @@ final class SettlementProvisioner {
 
   void preview(CommandSender sender) {
     if (busy || content.enabled()) {
-      Texts.error(sender, "Provision only a disabled, idle settlement.");
+      Texts.error(sender, "Disable " + content.arena().id() + " before provisioning.");
       return;
     }
     busy = true;
     preview = Optional.empty();
     complete(
-        CompletableFuture.supplyAsync(() -> new SettlementBlueprint(content).blocks()),
+        context.compute().submit(() -> SurvivalBlueprint.blocks(content)),
         sender,
         blocks -> load(sender, () -> inspect(sender, blocks)));
   }
@@ -169,7 +169,7 @@ final class SettlementProvisioner {
 
   private void inspect(CommandSender sender, Map<BlockPos, String> blueprint) {
     var land = services.require(LandRead.class);
-    if (blueprint.size() > SettlementBlueprint.BLOCK_BUDGET) {
+    if (blueprint.size() > SurvivalBlueprint.budget(content)) {
       throw new IllegalStateException("Blueprint exceeds its block budget");
     }
     var changes = new ArrayList<SettlementStore.Change>();
@@ -218,7 +218,9 @@ final class SettlementProvisioner {
                                 + changes.size()
                                 + " block changes in "
                                 + content.arena().region()
-                                + ". Inspect the site visually before /settlement apply "
+                                + ". Inspect the site before /"
+                                + content.arena().id()
+                                + " apply "
                                 + token);
                       }
                       release();

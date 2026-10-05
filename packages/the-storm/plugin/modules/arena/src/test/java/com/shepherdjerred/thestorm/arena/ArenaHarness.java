@@ -54,6 +54,7 @@ public final class ArenaHarness implements AutoCloseable {
           "arena/classes.yml",
           "arena/waves.yml",
           "arena/survival.yml",
+          "arena/rustworks.yml",
           "arena/arenas/colosseum.yml");
 
   private static Consumer<JavaPlugin> enabling = plugin -> {};
@@ -176,7 +177,7 @@ public final class ArenaHarness implements AutoCloseable {
                 ? Path.of("src/test/resources/colosseum.yml")
                 : SHIPPED.resolve(file);
         Files.copy(source, target);
-        if (file.equals("arena/survival.yml")) {
+        if (file.equals("arena/survival.yml") || file.equals("arena/rustworks.yml")) {
           // Native Paper tests own survival geometry; this fixture covers legacy lifecycle.
           Files.writeString(
               target, Files.readString(target).replace("enabled: true", "enabled: false"));
