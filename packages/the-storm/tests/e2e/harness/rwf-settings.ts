@@ -1,5 +1,8 @@
 import type { RwfOverlay } from "./config-overlays.ts";
 
+/** Full-profile bots arrive during this countdown, rather than the six-second basic one. */
+export const rwfFullCountdownSeconds = 25;
+
 /**
  * The rwf.yml overrides the e2e server plays with: the fixture world, a lone
  * human starts a match, a short countdown and end screen, and a daily cap of

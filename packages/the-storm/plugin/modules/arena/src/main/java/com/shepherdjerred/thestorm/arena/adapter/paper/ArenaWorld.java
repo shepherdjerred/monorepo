@@ -490,7 +490,8 @@ final class ArenaWorld {
     // Let close-range ranged combat keep its native strafing and attack behavior.
     var navigator = hunter.getVehicle() instanceof Mob mount ? mount : hunter;
     if (distance > 16 || (distance > 4 && !navigator.getPathfinder().hasPath())) {
-      navigator.getPathfinder().moveTo(target, 1.0);
+      // Cross-map routes include long stair runs; close combat retains native movement.
+      navigator.getPathfinder().moveTo(target, distance > 16 ? 1.2 : 1.0);
     }
   }
 

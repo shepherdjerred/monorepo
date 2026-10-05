@@ -531,6 +531,8 @@ wear out between checkpoints. Full caches and inventories keep their contents;
 supplies that do not fit are not dropped into the world.
 
 Hostiles acquire fighters across the arena and explicitly start navigation.
+Cross-map path requests beyond sixteen blocks use a 1.2 movement multiplier;
+close-range native combat goals still control attacking and strafing.
 Stalled mobs retry after five seconds; after twenty seconds without progress,
 they return to a floor entrance. Mobs already in combat keep their native attack
 behavior. Boss waves require a clear and cannot time out into the next wave.
