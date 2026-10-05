@@ -264,8 +264,17 @@ public final class RwfHarness implements AutoCloseable {
   public void goLive(PlayerMock player) {
     enter(player);
     until(() -> snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    letBotsArrive();
     tick(Duration.ofSeconds(91));
     until(() -> snapshot().phase() == MatchSnapshot.PhaseKind.LIVE);
+  }
+
+  /**
+   * Moves the clock past the first 60% of the 90 s countdown, the window drafted bots walk into the
+   * lobby in, so every one has arrived.
+   */
+  public void letBotsArrive() {
+    tick(Duration.ofSeconds(55));
   }
 
   /** Simulates a new login after Paper saved player data; MockBukkit does not persist NBT. */

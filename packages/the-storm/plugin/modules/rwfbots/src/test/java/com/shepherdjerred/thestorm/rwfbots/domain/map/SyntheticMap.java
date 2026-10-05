@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
+import com.shepherdjerred.thestorm.rwfbots.domain.lobby.LobbyNav;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,28 @@ public final class SyntheticMap implements BlockClassification {
 
   public static NavArtifact bake() {
     return MapBaker.bake("synthetic", open(), sites());
+  }
+
+  /** The lobby's places on the west half: the spawn, both sides, four alcoves and a balcony. */
+  public static NavSites lobbySites() {
+    return new NavSites(
+        List.of(
+            new NavSites.Site(LobbyNav.SPAWN, Optional.empty(), new BlockPos(6, 1, 12)),
+            new NavSites.Site(LobbyNav.side("red"), Optional.of("red"), new BlockPos(6, 1, 3)),
+            new NavSites.Site(LobbyNav.side("blue"), Optional.of("blue"), new BlockPos(6, 1, 26)),
+            new NavSites.Site(LobbyNav.alcove("trooper"), Optional.empty(), new BlockPos(13, 1, 4)),
+            new NavSites.Site(
+                LobbyNav.alcove("longbow"), Optional.empty(), new BlockPos(13, 1, 10)),
+            new NavSites.Site(
+                LobbyNav.alcove("shortbow"), Optional.empty(), new BlockPos(13, 1, 18)),
+            new NavSites.Site(LobbyNav.alcove("rewind"), Optional.empty(), new BlockPos(13, 1, 24)),
+            new NavSites.Site(LobbyNav.BALCONY, Optional.empty(), new BlockPos(2, 1, 20))),
+        List.of());
+  }
+
+  /** The synthetic map baked as the lobby. */
+  public static NavArtifact bakeLobby() {
+    return MapBaker.bake(LobbyNav.ID, open(), lobbySites());
   }
 
   private BlockShape classify(int x, int y, int z) {

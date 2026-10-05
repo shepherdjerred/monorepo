@@ -215,11 +215,16 @@ final class RwfCommands {
             + ", "
             + view.combatants().size()
             + " combatants");
+    // Teams are dealt when the match goes live; before that everyone is in the lobby.
+    var waiting =
+        view.phase() == MatchSnapshot.PhaseKind.LOBBY
+            || view.phase() == MatchSnapshot.PhaseKind.COUNTDOWN;
+    if (waiting || view.teams().isEmpty()) {
+      Texts.info(sender, "In the lobby: " + names(view, Optional.empty()));
+      return OK;
+    }
     for (var team : view.teams()) {
       Texts.info(sender, team.displayName() + ": " + names(view, Optional.of(team)));
-    }
-    if (view.teams().isEmpty() || view.phase() == MatchSnapshot.PhaseKind.LOBBY) {
-      Texts.info(sender, "In the lobby: " + names(view, Optional.empty()));
     }
     return OK;
   }
@@ -232,6 +237,7 @@ final class RwfCommands {
                 c ->
                     c.name()
                         + (c.id().isBot() ? Scoreboards.BOT_SUFFIX : "")
+                        + c.kit().map(kit -> " [" + kit + "]").orElse("")
                         + (c.alive() ? "" : " (out)"))
             .toList();
     return joined.isEmpty() ? "nobody" : String.join(", ", joined);
@@ -254,7 +260,12 @@ final class RwfCommands {
             + (bots.roster().isPresent() ? "present" : "absent"));
     Texts.info(
         sender,
-        "Watchers: " + watchers.count() + ", showcase: " + (runner.showcase() ? "yes" : "no"));
+        "Watchers: "
+            + watchers.count()
+            + ", showcase: "
+            + (runner.showcase() ? "yes" : "no")
+            + ", bots arriving: "
+            + runner.arriving());
     if (runner.ready()) {
       var map = runner.currentMap();
       Texts.info(sender, "Map busy: " + map.busy() + ", cratered blocks: " + map.crateredBlocks());

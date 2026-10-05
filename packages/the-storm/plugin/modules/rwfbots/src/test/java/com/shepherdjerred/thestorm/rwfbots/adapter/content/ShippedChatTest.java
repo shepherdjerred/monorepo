@@ -88,6 +88,23 @@ final class ShippedChatTest {
     for (var seed = 0; seed < 3; seed++) {
       var director = new ChatDirector(settings, new SplittableRandom(seed), T0);
       var now = T0;
+      // The lobby first: nobody has a team yet.
+      var waiting =
+          new ChatScene(
+              members.stream()
+                  .map(
+                      member ->
+                          new ChatScene.Member(
+                              member.uuid(), member.name(), member.bot(), Optional.empty(), false))
+                  .toList());
+      for (var member : members) {
+        lines.addAll(director.on(new ChatMoment.Arrived(member.uuid()), waiting, now));
+      }
+      lines.addAll(director.on(new ChatMoment.HumanSaid(new UUID(9, 9), "hi"), waiting, now));
+      lines.addAll(director.on(new ChatMoment.HumanSaid(new UUID(9, 9), "gl"), waiting, now));
+      lines.addAll(director.on(new ChatMoment.CountdownCall(), waiting, now));
+      lines.addAll(director.on(new ChatMoment.Idle(), waiting, now.plusSeconds(1)));
+      now = now.plusSeconds(2);
       lines.addAll(director.on(new ChatMoment.Started(), new ChatScene(members), now));
       var alive = new ArrayList<>(members);
       for (var k = 0; k + 1 < members.size(); k++) {
@@ -123,9 +140,8 @@ final class ShippedChatTest {
           .doesNotContain("{", "}")
           .hasSizeLessThanOrEqualTo(256);
     }
-    // A match speaks every pool but the lobby one, which belongs to the pre-match lobby.
-    assertThat(heard)
-        .containsExactlyInAnyOrderElementsOf(EnumSet.complementOf(EnumSet.of(Lines.Moment.LOBBY)));
+    // A lobby and a match together speak every pool.
+    assertThat(heard).containsExactlyInAnyOrderElementsOf(EnumSet.allOf(Lines.Moment.class));
   }
 
   private static ChatScene.Member dead(ChatScene.Member member) {

@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
+import com.shepherdjerred.thestorm.rwf.domain.lobby.Arrivals;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyStatus;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
@@ -66,6 +67,22 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** How often holograms and the sidebar are redrawn. */
   static final int DISPLAY_EVERY_TICKS = 5;
+
+  /**
+   * Drafted bots all arrive within this share of the countdown, so they are in before the start.
+   */
+  static final double ARRIVAL_SHARE = 0.6;
+
+  /** Mixed into the match seed for the arrival schedule, so it differs from the other rolls. */
+  private static final long ARRIVAL_SALT = 0x6C6F6262795F696EL;
+
+  /**
+   * A drafted bot on its way into the lobby.
+   *
+   * @param bot the bot
+   * @param at when it walks in
+   */
+  private record Arrival(CombatantId.Bot bot, Instant at) {}
 
   /**
    * What the runner works with.
@@ -120,6 +137,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private final Map<CombatantId, Long> pendingPay = new HashMap<>();
   private final Set<UUID> awaitingSpectate = new HashSet<>();
   private final Set<UUID> poisoned = new HashSet<>();
+  private final ArrayDeque<Arrival> arriving = new ArrayDeque<>();
   private RwfMatch match;
   private @Nullable MapWorld current;
   private boolean applying;
@@ -357,27 +375,74 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
   }
 
+  /**
+   * The countdown started: bots are drafted now, to fill the match up to its target, and walk into
+   * the lobby one by one over the first part of the countdown.
+   */
   private void fillWithBots() {
     var target = showcase.orElse(parts.config().match().targetCombatants());
-    joinBots(target - match.members().size());
+    var drafted = parts.bots().fill(match.matchId(), target - match.members().size());
+    var now = now();
+    var budget =
+        match.phase() instanceof Phase.Countdown countdown
+            ? Duration.ofMillis(
+                Math.round(Duration.between(now, countdown.startsAt()).toMillis() * ARRIVAL_SHARE))
+            : Duration.ZERO;
+    var offsets = Arrivals.offsets(drafted.size(), match.seed() ^ ARRIVAL_SALT, budget);
+    for (var i = 0; i < drafted.size(); i++) {
+      arriving.add(new Arrival(drafted.get(i), now.plus(offsets.get(i))));
+    }
+  }
+
+  /** Bots whose time has come walk into the lobby, while the countdown runs. */
+  private void arrive(Instant now) {
+    if (arriving.isEmpty()) {
+      return;
+    }
+    if (!(match.phase() instanceof Phase.Countdown)) {
+      releaseArrivals();
+      return;
+    }
+    while (!arriving.isEmpty() && !arriving.peek().at().isAfter(now)) {
+      var _ = joinBot(arriving.poll().bot());
+    }
+  }
+
+  /** Drafted bots that have not walked in yet go back to the roster: the countdown stopped. */
+  private void releaseArrivals() {
+    while (!arriving.isEmpty()) {
+      parts.bots().despawn(arriving.poll().bot());
+    }
+  }
+
+  /** How many drafted bots are still on their way in. */
+  int arriving() {
+    return arriving.size();
   }
 
   /** Up to {@code count} bots join the lobby now. Returns how many did. */
   private int joinBots(int count) {
     var joined = 0;
     for (var bot : parts.bots().fill(match.matchId(), count)) {
-      var spawned = parts.bots().spawn(bot, lobby());
-      if (spawned.isEmpty()) {
-        parts.context().logger().error("Bot {} did not spawn; skipping it", bot);
-        continue;
-      }
-      if (handle(new MatchEvent.Join(bot, spawned.orElseThrow().getName(), now())).isEmpty()) {
+      if (joinBot(bot)) {
         joined++;
-      } else {
-        parts.bots().despawn(bot);
       }
     }
     return joined;
+  }
+
+  /** {@code bot} appears at the lobby spawn and joins; whether it did. */
+  private boolean joinBot(CombatantId.Bot bot) {
+    var spawned = parts.bots().spawn(bot, lobby());
+    if (spawned.isEmpty()) {
+      parts.context().logger().error("Bot {} did not spawn; skipping it", bot);
+      return false;
+    }
+    if (handle(new MatchEvent.Join(bot, spawned.orElseThrow().getName(), now())).isEmpty()) {
+      return true;
+    }
+    parts.bots().despawn(bot);
+    return false;
   }
 
   private void wentLive() {
@@ -388,6 +453,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     tallies.clear();
     pendingPay.clear();
     poisoned.clear();
+    releaseArrivals();
     parts.hud().hideAll();
     humanEntities().forEach(KitMenu::close);
     parts.hud().fight(humanEntities());
@@ -590,6 +656,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     if (!(match.phase() instanceof Phase.Resetting)) {
       handle(new MatchEvent.Stop());
     }
+    releaseArrivals();
     parts.hud().hideAll();
     ready = false;
   }
@@ -604,6 +671,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     var now = now();
     keepHumansRule(now);
+    arrive(now);
     handle(new MatchEvent.Tick(now, vitals()));
     if (live()) {
       liveTick(now);
@@ -658,6 +726,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     var minHumans = parts.config().match().minHumans();
     if (match.phase() instanceof Phase.Countdown && humans() < minHumans) {
+      releaseArrivals();
       for (var member : match.members()) {
         if (member.id().isBot()) {
           handle(new MatchEvent.Leave(member.id(), now));

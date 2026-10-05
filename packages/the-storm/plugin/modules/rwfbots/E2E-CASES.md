@@ -12,14 +12,20 @@ command and despawn on disable. Bot chat's director (moments, chances,
 cooldowns, the rate limit, no repeats, placeholders, determinism) is unit
 tested, and on MockBukkit a bot's kill is said once, from its own kill lines
 with the `✦` marker, to the players in the rwf world only, and not at all with
-the flag off.
+the flag off. Lobby life is unit tested (temperament weights by archetype,
+voice and quirk; kit plans that end on the drafted kit with at most three
+switches 5 s apart; planning that stays on the lobby's nav graph and replays
+from a seed; steering, sneak taps and their release) and on MockBukkit bots
+switch kits through the pick path and end on their drafted kit, move about
+the lobby until the match goes live, greet as they walk in, and answer a
+human's hello with exactly one greeting heard only in the rwf world.
 
 MockBukkit cannot run Citizens, and the fake match stands in for rwf. These
 cases need the real server with Citizens installed. Each is a pass/fail check.
 
 `tests/full/rwfbots.e2e.test.ts` runs them on the full lane, which boots every
 shipped module plus rwf and rwfbots, Citizens with its owned config, and the
-owned rwf.yml under the suite's short countdown. A case marked **proven** is
+owned rwf.yml under the suite's 25 s countdown. A case marked **proven** is
 asserted there; the load cases belong to the manual load profile
 (`bun run test:load`, `tests/load/rwf-load.e2e.test.ts`), whose 20, 50 and
 100 bot numbers at 4 and 6 CPUs are recorded in `LOAD.md` beside this file.
@@ -138,3 +144,18 @@ asserted there; the load cases belong to the manual load profile
 15. Turning the flag off in Flipt silences the bots within
     `flagRefreshSeconds` without a restart, and turning it back on brings
     them back; a Flipt outage keeps them silent and logs a warning.
+
+## Lobby
+
+16. During a lone human's countdown the drafted bots walk into the lobby room
+    one by one, stay inside it, move about it, at least one taps sneak (seen
+    by the human's client as a crouch) and at least one changes kit (seen in
+    `/rwf who`) before ending on its drafted kit; when the match goes live
+    every bot plays from a map spawn. **Proven**: sampled twice a second
+    from the human's client and `/rwf who` (which lists each combatant's
+    kit) until the start, every bot seen stays inside the lobby region, some
+    bot moves more than a block, some bot crouches, and some bot's kit
+    changes; the match then plays to a result as before.
+17. With chat on, a human's "hi" in the lobby gets at most one bot greeting
+    back, heard in the rwf world only. Proven on MockBukkit; not inspected on
+    the real server.

@@ -145,6 +145,7 @@ final class RwfShowcaseTest {
     assertThat(bob.getWorld()).isEqualTo(harness.rwf);
     harness.enter(alice);
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.letBotsArrive();
     assertThat(harness.bots.spawned()).as("a normal match fills to its target").hasSize(7);
   }
 

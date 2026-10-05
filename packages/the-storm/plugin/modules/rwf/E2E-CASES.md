@@ -17,7 +17,10 @@ joining and after every pick, the star opens a read-only kit menu of the four
 shipped kits with the picked one glinting, clicking Longbow picks it, keeps
 the star and closes the menu, nothing can be taken from or dragged into the
 menu, other chests stay closed to members, the dye leaves, and going live
-closes the menu and takes both items away; leave, disconnect and a crash's snapshot all restore exactly; the
+closes the menu and takes both items away; drafted bots walk into the lobby
+one by one during the countdown, at several different moments, all before
+the start, and bots still on their way are released when the countdown
+stops; leave, disconnect and a crash's snapshot all restore exactly; the
 fuse cannot be dropped or moved out of slot 0; hunger never drops; members
 cannot teleport out and outsiders cannot teleport in; bots fill the countdown
 and leave when the last human does; a human arms a bomb through the real

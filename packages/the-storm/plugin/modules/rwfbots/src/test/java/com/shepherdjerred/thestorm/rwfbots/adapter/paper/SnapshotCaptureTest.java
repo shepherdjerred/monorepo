@@ -108,6 +108,7 @@ final class SnapshotCaptureTest {
                     Optional.of(
                         new MatchState.Status.Working("blue", 0.5, List.of(bob.getUniqueId())))))),
         poison,
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -204,6 +205,7 @@ final class SnapshotCaptureTest {
                     Optional.empty(),
                     true)),
             List.of(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty());
 

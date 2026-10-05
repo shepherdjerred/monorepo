@@ -49,6 +49,9 @@ public final class RwfBotsHarness implements AutoCloseable {
 
   public static final NavArtifact NAV = SyntheticMap.bake();
 
+  /** The synthetic map's west half baked as a lobby: the bots' lobby places on its open floor. */
+  public static final NavArtifact LOBBY = SyntheticMap.bakeLobby();
+
   private static Consumer<JavaPlugin> enabling = plugin -> {};
 
   /** A plugin whose enable runs the harness, so lifecycle registration is allowed. */
@@ -208,6 +211,9 @@ public final class RwfBotsHarness implements AutoCloseable {
       Files.createDirectories(maps);
       Files.write(maps.resolve(NavFiles.FILE_NAME), NavCodec.encode(NAV));
       Files.createDirectories(directory.resolve(NavFiles.MAPS_DIRECTORY).resolve("unbaked"));
+      var lobby = directory.resolve(NavFiles.LOBBY_DIRECTORY);
+      Files.createDirectories(lobby);
+      Files.write(lobby.resolve(NavFiles.FILE_NAME), NavCodec.encode(LOBBY));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

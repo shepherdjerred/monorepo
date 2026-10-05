@@ -108,12 +108,14 @@ async function profileFixtures(
   switch (profile) {
     case "full": {
       // Every shipped module plus Search and Destroy with its bots, which
-      // fill each countdown to the owned targetCombatants (8).
+      // fill each countdown to the owned targetCombatants (8). The countdown
+      // is long enough for the bots to walk in, wander and try kits in the
+      // lobby before the match.
       return {
         stormConfig: withBots(owned),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
-        rwf: rwfTestSettings,
+        rwf: { ...rwfTestSettings, countdown: "PT25S" },
       };
     }
     case "load": {

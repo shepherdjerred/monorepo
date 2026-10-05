@@ -5,7 +5,6 @@ import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwf.app.view.Transition;
-import com.shepherdjerred.thestorm.rwfbots.adapter.content.RwfBotsConfig;
 import com.shepherdjerred.thestorm.rwfbots.adapter.record.GzipTraceFiles;
 import com.shepherdjerred.thestorm.rwfbots.app.BotProfile;
 import com.shepherdjerred.thestorm.rwfbots.app.MatchSettlement;
@@ -58,6 +57,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
    * @param stimuli where fuse clicks are reported
    * @param time the clock
    * @param logger the module logger
+   * @param lobby plans each bot's kits in the lobby
    */
   public record Parts(
       Roster roster,
@@ -70,7 +70,8 @@ public final class MatchBridge implements Consumer<MatchNotification> {
       World world,
       StimulusCollector stimuli,
       InstantSource time,
-      ComponentLogger logger) {}
+      ComponentLogger logger,
+      LobbyTicker lobby) {}
 
   public MatchBridge(Parts parts) {
     this.parts = parts;
@@ -109,7 +110,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
                       parts
                           .logger()
                           .error("rwfbots: map {} runs humans-only: {}", chosen.mapId(), problem));
-      case Transition.Change.Joined joined -> joined(joined.uuid());
+      case Transition.Change.Joined joined -> joined(joined.uuid(), after);
       case Transition.Change.Died died -> died(died);
       case Transition.Change.BombClicked click -> clicked(click, after);
       case Transition.Change.Left left ->
@@ -126,13 +127,14 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     }
   }
 
-  private void joined(UUID uuid) {
+  /** A bot walked into the lobby: it picks the first kit of its lobby plan. */
+  private void joined(UUID uuid, MatchState after) {
     parts
         .roster()
         .bot(uuid)
         .ifPresent(
             bot -> {
-              var kit = RwfBotsConfig.kitId(bot.drafted().kit());
+              var kit = parts.lobby().arrived(bot, after);
               parts
                   .actions()
                   .pickKit(uuid, kit)

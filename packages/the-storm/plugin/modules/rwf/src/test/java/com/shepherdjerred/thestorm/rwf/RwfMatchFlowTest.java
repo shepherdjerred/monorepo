@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf;
 
+import static com.shepherdjerred.thestorm.rwf.RwfHarness.messages;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -343,6 +344,7 @@ final class RwfMatchFlowTest {
     var alice = harness.loadedPlayer("Alice");
     harness.enter(alice);
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.letBotsArrive();
     assertThat(harness.bots.spawned()).hasSize(7);
 
     alice.performCommand("rwf leave");
@@ -351,6 +353,47 @@ final class RwfMatchFlowTest {
     assertThat(harness.snapshot().phase()).isEqualTo(MatchSnapshot.PhaseKind.LOBBY);
     assertThat(harness.snapshot().combatants()).isEmpty();
     assertThat(harness.bots.spawned()).isEmpty();
+  }
+
+  @Test
+  void draftedBotsWalkInOneByOneDuringTheCountdown() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+
+    assertThat(harness.bots.spawned()).as("nobody is in at once").isEmpty();
+    assertThat(harness.bots.drafted()).isEqualTo(7);
+    var counts = new ArrayList<Integer>();
+    for (var second = 0; second < 54; second++) {
+      harness.tick(Duration.ofSeconds(1));
+      counts.add(harness.bots.spawned().size());
+    }
+
+    assertThat(counts).isSorted();
+    assertThat(counts.getLast()).isEqualTo(7);
+    assertThat(counts.stream().distinct().count())
+        .as("they arrive at several different moments")
+        .isGreaterThan(3);
+    assertThat(harness.snapshot().phase()).isEqualTo(MatchSnapshot.PhaseKind.COUNTDOWN);
+    assertThat(messages(alice)).anyMatch(message -> message.contains("Bot1 joined the match"));
+  }
+
+  @Test
+  void botsStillOnTheirWayAreReleasedWhenTheCountdownStops() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.tick(Duration.ofSeconds(1));
+
+    alice.performCommand("rwf leave");
+    harness.ticks(2);
+    harness.tick(Duration.ofSeconds(60));
+
+    assertThat(harness.bots.spawned()).isEmpty();
+    assertThat(harness.bots.drafted()).isZero();
+    assertThat(harness.snapshot().combatants()).isEmpty();
   }
 
   @Test

@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.app.view;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import java.util.UUID;
  * @param bombs every bomb and nuke; empty before the match is live
  * @param poison the end-of-game poison while live
  * @param winner the winning team once ended with a winner
+ * @param startsAt when the match goes live, while the countdown runs
  */
 public record MatchState(
     UUID matchId,
@@ -30,7 +32,8 @@ public record MatchState(
     List<Fighter> combatants,
     List<Bomb> bombs,
     Optional<Poison> poison,
-    Optional<String> winner) {
+    Optional<String> winner,
+    Optional<Instant> startsAt) {
 
   public MatchState {
     teams = List.copyOf(teams);
@@ -148,7 +151,8 @@ public record MatchState(
             .map(
                 poison ->
                     new Poison(poison.untilDamage().isZero(), poison.untilDamage().toMillis())),
-        snapshot.outcome().flatMap(outcome -> outcome.winner()).map(MatchState::teamName));
+        snapshot.outcome().flatMap(outcome -> outcome.winner()).map(MatchState::teamName),
+        snapshot.startsAt());
   }
 
   private static Fighter fighter(MatchSnapshot.CombatantView view) {

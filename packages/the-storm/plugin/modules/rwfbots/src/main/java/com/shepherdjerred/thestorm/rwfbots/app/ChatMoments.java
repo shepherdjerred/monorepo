@@ -16,9 +16,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Reads rwf's match transitions as chat moments: the match going live, deaths with their killer,
- * bombs finishing arming or being defused, and the end with its winner. Names come out as players
- * read them in game: combatant names, {@code Red Team}, {@code Blue Team's bomb}, {@code the nuke}.
+ * Reads rwf's match transitions as chat moments: a bot walking into the lobby, the match going
+ * live, deaths with their killer, bombs finishing arming or being defused, and the end with its
+ * winner. Names come out as players read them in game: combatant names, {@code Red Team}, {@code
+ * Blue Team's bomb}, {@code the nuke}.
  */
 public final class ChatMoments {
 
@@ -33,6 +34,10 @@ public final class ChatMoments {
       moments.add(new ChatMoment.Started());
     }
     if (!wasLive) {
+      if (transition.change() instanceof Transition.Change.Joined joined
+          && after.combatant(joined.uuid()).filter(MatchState.Fighter::bot).isPresent()) {
+        moments.add(new ChatMoment.Arrived(joined.uuid()));
+      }
       return moments;
     }
     if (transition.change() instanceof Transition.Change.Died died) {

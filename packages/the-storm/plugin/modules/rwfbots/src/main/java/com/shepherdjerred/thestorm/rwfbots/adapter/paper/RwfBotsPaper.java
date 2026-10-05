@@ -12,11 +12,13 @@ import com.shepherdjerred.thestorm.rwfbots.adapter.record.GzipTraceFiles;
 import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.app.DecisionGate;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
+import com.shepherdjerred.thestorm.rwfbots.app.LobbyLoop;
 import com.shepherdjerred.thestorm.rwfbots.app.NavCatalog;
 import com.shepherdjerred.thestorm.rwfbots.app.PersonalityStatsStore;
 import com.shepherdjerred.thestorm.rwfbots.app.StatsCache;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
 import com.shepherdjerred.thestorm.rwfbots.app.TraceSink;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
@@ -43,6 +45,7 @@ public final class RwfBotsPaper {
   private final RwfBotsCommand command;
   private final Optional<GzipTraceFiles> traces;
   private final Optional<BotChat> chat;
+  private final Optional<LobbyChatListener> heard;
 
   private RwfBotsPaper(Parts parts) {
     this.context = parts.context();
@@ -54,6 +57,7 @@ public final class RwfBotsPaper {
     this.command = parts.command();
     this.traces = parts.traces();
     this.chat = parts.chat();
+    this.heard = parts.heard();
   }
 
   private record Parts(
@@ -65,7 +69,8 @@ public final class RwfBotsPaper {
       Cancellable clock,
       RwfBotsCommand command,
       Optional<GzipTraceFiles> traces,
-      Optional<BotChat> chat) {}
+      Optional<BotChat> chat,
+      Optional<LobbyChatListener> heard) {}
 
   /**
    * What the module loaded before wiring.
@@ -79,6 +84,7 @@ public final class RwfBotsPaper {
    * @param world the match world
    * @param tickTimes the server's recent tick times in nanoseconds, for the governor
    * @param chatGate the managed flag that gates bot chat; unused when chat is disabled
+   * @param lobby the lobby's baked navigation
    */
   public record App(
       RwfBotsConfig config,
@@ -89,7 +95,8 @@ public final class RwfBotsPaper {
       Bodies bodies,
       World world,
       Supplier<long[]> tickTimes,
-      ChatGate chatGate) {}
+      ChatGate chatGate,
+      NavArtifact lobby) {}
 
   /** Starts the Paper side; rwf's ports must already be published. */
   public static RwfBotsPaper start(ModuleContext module, App app) {
@@ -129,6 +136,19 @@ public final class RwfBotsPaper {
                 module.random(),
                 module.logger()));
     var stimuli = new StimulusCollector();
+    // Lobby bodies never use a kit ability, so nothing reports a Rewind landing from here.
+    var lobby =
+        new LobbyTicker(
+            new LobbyTicker.Parts(
+                roster,
+                new LobbyLoop(module.compute()),
+                app.lobby(),
+                new BodyDriver(
+                    new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bot -> {})),
+                actions,
+                app.config(),
+                module.time(),
+                module.logger()));
     var bridge =
         new MatchBridge(
             new MatchBridge.Parts(
@@ -142,7 +162,8 @@ public final class RwfBotsPaper {
                 app.world(),
                 stimuli,
                 module.time(),
-                module.logger()));
+                module.logger(),
+                lobby));
     var driver =
         new BodyDriver(
             new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bridge::rewound));
@@ -156,7 +177,8 @@ public final class RwfBotsPaper {
                 driver,
                 view,
                 app.tickTimes(),
-                System::nanoTime));
+                System::nanoTime,
+                lobby));
     module.plugin().getServer().getPluginManager().registerEvents(stimuli, module.plugin());
     bridge.subscribe(events);
     var command = new RwfBotsCommand(roster, loop, governor, ticker);
@@ -182,9 +204,17 @@ public final class RwfBotsPaper {
                         module.logger())))
             : Optional.<BotChat>empty();
     chat.ifPresent(talk -> talk.start(events));
+    var heard = chat.map(talk -> new LobbyChatListener(talk, module.scheduler()));
+    heard.ifPresent(
+        listener ->
+            module
+                .plugin()
+                .getServer()
+                .getPluginManager()
+                .registerEvents(listener, module.plugin()));
     services.provide(BotRoster.class, BotRoster.of(roster));
     return new RwfBotsPaper(
-        new Parts(module, roster, loop, bridge, stimuli, clock, command, traces, chat));
+        new Parts(module, roster, loop, bridge, stimuli, clock, command, traces, chat, heard));
   }
 
   public Roster roster() {
@@ -204,6 +234,7 @@ public final class RwfBotsPaper {
   public void stop() {
     clock.cancel();
     bridge.close();
+    heard.ifPresent(HandlerList::unregisterAll);
     chat.ifPresent(BotChat::close);
     HandlerList.unregisterAll(stimuli);
     command.unregisterPermission(context.plugin().getServer().getPluginManager());

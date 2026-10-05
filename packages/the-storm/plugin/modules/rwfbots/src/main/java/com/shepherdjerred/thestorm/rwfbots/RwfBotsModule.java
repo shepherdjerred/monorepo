@@ -22,9 +22,9 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Bot combatants for Red Warfare Search and Destroy. Requires Citizens for the bodies and the rwf
- * module for the match; loads {@code rwfbots.yml}, the personalities and every map's nav artifact,
- * migrates its table, reads the personality records back, then wires the Paper side and provides
- * the {@code BotRoster} rwf fills matches from.
+ * module for the match; loads {@code rwfbots.yml}, the personalities, every map's nav artifact and
+ * the lobby's, migrates its table, reads the personality records back, then wires the Paper side
+ * and provides the {@code BotRoster} rwf fills matches from.
  */
 public final class RwfBotsModule implements StormModule {
 
@@ -73,6 +73,7 @@ public final class RwfBotsModule implements StormModule {
     var personalities = PersonalityFiles.load(context.dataDirectory());
     var nav = new NavCatalog();
     var loaded = NavFiles.load(context.dataDirectory());
+    var lobby = NavFiles.loadLobby(context.dataDirectory());
     loaded.artifacts().values().forEach(nav::add);
     loaded
         .problems()
@@ -115,7 +116,8 @@ public final class RwfBotsModule implements StormModule {
                 bodies,
                 world,
                 hooks.tickTimes().orElseGet(() -> context.plugin().getServer()::getTickTimes),
-                chatGate));
+                chatGate,
+                lobby));
     context
         .logger()
         .info(

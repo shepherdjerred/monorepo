@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import org.jspecify.annotations.Nullable;
 
 /**
  * rwf's app ports over a hand-driven match on the synthetic map: tests set the phase and the
@@ -60,6 +61,7 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   private Optional<Outcome> outcome = Optional.empty();
   private boolean redArmed;
   private boolean blueArmed;
+  private @Nullable Instant startsAt;
 
   public FakeMatch(String blocksSha256) {
     this.map = map(blocksSha256);
@@ -94,6 +96,11 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
 
   public void outcome(Outcome result) {
     outcome = Optional.of(result);
+  }
+
+  /** The countdown ends at {@code at}; null when no countdown runs. */
+  public void startsAt(@Nullable Instant at) {
+    startsAt = at;
   }
 
   public void redArmed(boolean armed) {
@@ -181,7 +188,8 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
                         ? new MatchSnapshot.BombView.State.Armed(40, Optional.empty())
                         : new MatchSnapshot.BombView.State.Idle())),
         Optional.empty(),
-        outcome);
+        outcome,
+        Optional.ofNullable(startsAt));
   }
 
   @Override

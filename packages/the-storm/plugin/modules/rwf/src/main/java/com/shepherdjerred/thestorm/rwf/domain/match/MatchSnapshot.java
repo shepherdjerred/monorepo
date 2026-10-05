@@ -29,6 +29,7 @@ import java.util.UUID;
  * @param bombs every bomb and nuke; empty before the match is live
  * @param poison the end-of-game poison while live
  * @param outcome the result once ended
+ * @param startsAt when the match goes live, while the countdown runs
  */
 public record MatchSnapshot(
     UUID matchId,
@@ -39,7 +40,8 @@ public record MatchSnapshot(
     List<CombatantView> combatants,
     List<BombView> bombs,
     Optional<PoisonView> poison,
-    Optional<Outcome> outcome) {
+    Optional<Outcome> outcome,
+    Optional<Instant> startsAt) {
 
   public MatchSnapshot {
     teams = List.copyOf(teams);
@@ -70,6 +72,9 @@ public record MatchSnapshot(
             : Optional.empty(),
         match.phase() instanceof Phase.Ended ended
             ? Optional.of(ended.outcome())
+            : Optional.empty(),
+        match.phase() instanceof Phase.Countdown countdown
+            ? Optional.of(countdown.startsAt())
             : Optional.empty());
   }
 
