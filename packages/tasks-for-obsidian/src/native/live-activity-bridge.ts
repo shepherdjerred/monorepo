@@ -28,14 +28,14 @@ function getBridge(): Bridge | undefined {
 export async function startTimeTracking(
   taskId: string,
   title: string,
-  project?: string,
+  project: string | null = null,
 ): Promise<string | undefined> {
   const bridge = getBridge();
   if (!bridge) return undefined;
   const result: unknown = await bridge.startTimeTracking(
     taskId,
     title,
-    project ?? null,
+    project,
   );
   return typeof result === "string" ? result : undefined;
 }

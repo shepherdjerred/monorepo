@@ -29,6 +29,6 @@ export async function derivedDataTargets(home: string): Promise<string[]> {
   ];
 }
 
-export function outputPath(argument?: string): string {
-  return argument ?? "/tmp/device.log";
+export function outputPath(argument = "/tmp/device.log"): string {
+  return argument;
 }

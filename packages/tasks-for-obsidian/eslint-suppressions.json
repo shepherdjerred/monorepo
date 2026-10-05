@@ -4,11 +4,6 @@
       "count": 1
     }
   },
-  "scripts/xcode-cloud-logs.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/components/input/FilterSortBar.tsx": {
     "sonarjs/cognitive-complexity": {
       "count": 1

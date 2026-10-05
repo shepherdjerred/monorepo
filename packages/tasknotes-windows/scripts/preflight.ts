@@ -91,10 +91,13 @@ if (await Bun.file(vswhere).exists()) {
         "the x64 MSVC linker",
       ],
     ];
-    for (const [pattern, label] of toolQueries) {
+    for (const [
+      pattern = "",
+      label = "A required Visual Studio tool",
+    ] of toolQueries) {
       requireValue(
-        run([vswhere, "-latest", "-products", "*", "-find", pattern ?? ""]),
-        `${label ?? "A required Visual Studio tool"} is missing. Reapply dev/winui-configuration.winget as administrator.`,
+        run([vswhere, "-latest", "-products", "*", "-find", pattern]),
+        `${label} is missing. Reapply dev/winui-configuration.winget as administrator.`,
       );
     }
   }

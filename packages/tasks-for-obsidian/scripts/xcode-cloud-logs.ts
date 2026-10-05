@@ -332,19 +332,24 @@ async function downloadLogs(creds: Creds, buildRunId: string, outDir: string) {
     ).data;
 
     for (const art of artifacts) {
-      const { downloadUrl, fileName, fileType, fileSize } = art.attributes;
+      const { downloadUrl, fileType } = art.attributes;
       if (!downloadUrl) continue;
       const actionName = (action.attributes.name ?? action.id).replaceAll(
         /[^\w.-]+/g,
         "_",
       );
-      const safeFileName = (fileName ?? art.id).replaceAll(/[^\w.-]+/g, "_");
+      const safeFileName = (art.attributes.fileName ?? art.id).replaceAll(
+        /[^\w.-]+/g,
+        "_",
+      );
       const safeFileType = (fileType ?? "artifact").replaceAll(
         /[^\w.-]+/g,
         "_",
       );
       const safeName = `${actionName}__${safeFileType}__${safeFileName}`;
-      console.log(`Downloading ${safeName} (${fileSize ?? "?"} bytes)...`);
+      console.log(
+        `Downloading ${safeName} (${art.attributes.fileSize ?? "?"} bytes)...`,
+      );
       const bin = await fetch(downloadUrl);
       if (!bin.ok) {
         if (fileType === "LOG_BUNDLE") {
@@ -364,6 +369,31 @@ async function downloadLogs(creds: Creds, buildRunId: string, outDir: string) {
   console.log(
     `\nSaved to ${outDir}\nLog bundles are .zip — unzip and look for "Command PhaseScriptExecution failed" or "error:".`,
   );
+}
+
+async function printRunStatus(creds: Creds, selector: string) {
+  // A raw build-run UUID is used directly (no list call). Any other selector
+  // (latest / latest-failed / a build number) MUST resolve via pickRun —
+  // falling back to the literal string would send e.g. "latest-failed" as a
+  // build-run id and produce a confusing API error.
+  const isUuid = /^[0-9a-f-]{36}$/i.test(selector);
+  const runs = isUuid ? [] : await listRuns(creds);
+  const target = isUuid ? undefined : pickRun(runs, selector);
+  const buildRunId = target?.id ?? (isUuid ? selector : undefined);
+  if (!buildRunId)
+    throw new Error(
+      `Could not resolve build run for "${selector}" among the last ${String(runs.length)} runs. ` +
+        "Pass a build number (62 / #62), a build-run UUID, latest, or latest-failed.",
+    );
+  if (target) {
+    const a = target.attributes;
+    console.log(
+      `#${String(a.number)}  ${overallStatus(a)}  started ${ageSince(a.createdDate)}  ${target.id}`,
+    );
+  } else {
+    console.log(`Build run ${buildRunId}`);
+  }
+  printActions(await fetchActions(creds, buildRunId));
 }
 
 async function main() {
@@ -387,29 +417,7 @@ async function main() {
   }
 
   if (cmd === "status") {
-    const selector = arg ?? "latest";
-    // A raw build-run UUID is used directly (no list call). Any other selector
-    // (latest / latest-failed / a build number) MUST resolve via pickRun —
-    // falling back to the literal string would send e.g. "latest-failed" as a
-    // build-run id and produce a confusing API error.
-    const isUuid = /^[0-9a-f-]{36}$/i.test(selector);
-    const runs = isUuid ? [] : await listRuns(creds);
-    const target = isUuid ? undefined : pickRun(runs, selector);
-    const buildRunId = target?.id ?? (isUuid ? selector : undefined);
-    if (!buildRunId)
-      throw new Error(
-        `Could not resolve build run for "${selector}" among the last ${String(runs.length)} runs. ` +
-          "Pass a build number (62 / #62), a build-run UUID, latest, or latest-failed.",
-      );
-    if (target) {
-      const a = target.attributes;
-      console.log(
-        `#${String(a.number)}  ${overallStatus(a)}  started ${ageSince(a.createdDate)}  ${target.id}`,
-      );
-    } else {
-      console.log(`Build run ${buildRunId}`);
-    }
-    printActions(await fetchActions(creds, buildRunId));
+    await printRunStatus(creds, arg ?? "latest");
     return;
   }
 

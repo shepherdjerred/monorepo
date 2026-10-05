@@ -92,7 +92,7 @@ uses the mechanism Xcode itself uses:
   SDK's.
 - **Linker.** Apple's open-source `ld64` from
   [cctools-port](https://github.com/tpoechtrager/cctools-port), with Apple's
-  libtapi to read the SDK's `.tbd` stubs and LLVM 22's libLTO to read rustc's
+  libtapi to read the SDK's `.tbd` stubs and LLVM 23's libLTO to read rustc's
   bitcode. Clang reads a configuration file per target triple
   (`/usr/bin/<triple>.cfg`) that supplies the SDK and `ld64`. It therefore
   records the real SDK version in `LC_BUILD_VERSION`, however it is invoked.

@@ -77,7 +77,7 @@ RUN case "${TARGETARCH}" in \
     && dotnet --version | grep -Fx "${DOTNET_SDK_VERSION}"
 
 # Must match the rust pin in the repo's .mise.toml.
-ARG RUST_VERSION=1.98.1
+ARG RUST_VERSION=1.99.0
 # renovate: datasource=github-tags depName=rust-lang/rustup
 ARG RUSTUP_VERSION=1.29.1
 ARG RUSTUP_INIT_SHA256_AMD64=dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71
