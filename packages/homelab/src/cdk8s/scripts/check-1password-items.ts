@@ -29,6 +29,7 @@ import {
 } from "@shepherdjerred/homelab/scripts/platform-desired-state.ts";
 import {
   hash,
+  OnePasswordManifestSchema as ManifestSchema,
   SnapshotSchema,
   SNAPSHOT_PATH,
   VAULT_ID,
@@ -73,21 +74,6 @@ const HelmRconSchema = z.object({
   withGeneratedPassword: z.boolean().optional(),
   existingSecret: z.string().min(1),
   secretKey: z.string().min(1),
-});
-const ManifestSchema = z.object({
-  apiVersion: z.string().optional(),
-  kind: z.string().optional(),
-  metadata: z
-    .object({ name: z.string().optional(), namespace: z.string().optional() })
-    .optional(),
-  spec: z
-    .object({
-      itemPath: z.string().optional(),
-      // ArgoCD Application: the workload (and its consumed secrets) lives in the
-      // destination namespace, not the Application's own metadata.namespace.
-      destination: z.object({ namespace: z.string().optional() }).optional(),
-    })
-    .optional(),
 });
 
 function nsKey(namespace: string | undefined): string {

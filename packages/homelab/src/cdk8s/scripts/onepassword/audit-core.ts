@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   VAULT_ID,
+  OnePasswordManifestSchema as ManifestSchema,
   type OpItem,
 } from "homelab/src/cdk8s/scripts/onepassword-lib.ts";
 import { jsonCredential } from "homelab/scripts/tofu/application-secrets.ts";
@@ -19,18 +20,6 @@ export type AuditReference = {
 };
 export type AuditCoverage = { inspected: string[]; gaps: string[] };
 const RecordSchema = z.record(z.string(), z.unknown());
-const ManifestSchema = z.object({
-  kind: z.string().optional(),
-  metadata: z
-    .object({ namespace: z.string().optional(), name: z.string().optional() })
-    .optional(),
-  spec: z
-    .object({
-      itemPath: z.string().optional(),
-      destination: z.object({ namespace: z.string().optional() }).optional(),
-    })
-    .optional(),
-});
 const VolumeSchema = z.object({
   secretName: z.string().optional(),
   name: z.string().optional(),

@@ -33,6 +33,22 @@ export function hash(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
+/** Binding and destination metadata shared by the offline linter and vault audit. */
+export const OnePasswordManifestSchema = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: z
+    .object({ name: z.string().optional(), namespace: z.string().optional() })
+    .optional(),
+  spec: z
+    .object({
+      itemPath: z.string().optional(),
+      // ArgoCD consumers live in the destination, rather than the Application namespace.
+      destination: z.object({ namespace: z.string().optional() }).optional(),
+    })
+    .optional(),
+});
+
 // --- 1Password operator field-label -> secret-key transform ---------------------
 // Faithful port of formatSecretDataName / createValidSecretDataName from
 // github.com/1Password/onepassword-operator pkg/kubernetessecrets/kubernetes_secrets_builder.go
