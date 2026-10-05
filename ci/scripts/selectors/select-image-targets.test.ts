@@ -170,12 +170,6 @@ describe("selectImageTargets", () => {
     }
   });
 
-  test("selects toolkit's transitive image consumer", async () => {
-    expect(await select(["packages/toolkit/src/commands/pr.ts"])).toEqual([
-      "temporal-worker",
-    ]);
-  });
-
   test("selects only applications for shared application image inputs", async () => {
     for (const path of [
       "ci/application-image-smoke.Dockerfile",
@@ -288,6 +282,18 @@ describe("selectImageTargets", () => {
     expect(result.report.globalReason).toContain(
       "unpublished pin inspection failed",
     );
+  });
+});
+
+describe("toolkit image closure", () => {
+  test("selects the temporal worker for toolkit and workspace dependencies", async () => {
+    for (const path of [
+      "packages/toolkit/src/commands/pr.ts",
+      "packages/mc-harness/src/protocol/argv.ts",
+      "packages/unix-socket-daemon/src/index.ts",
+    ]) {
+      expect(await select([path])).toEqual(["temporal-worker"]);
+    }
   });
 });
 

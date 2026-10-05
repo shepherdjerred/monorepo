@@ -59,6 +59,8 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
+  packages/mc-harness \
+  packages/unix-socket-daemon \
   packages/config \
   packages/ops-model \
   packages/ops-clients \
