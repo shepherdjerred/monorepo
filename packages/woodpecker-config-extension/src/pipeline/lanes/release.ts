@@ -185,7 +185,9 @@ export function releaseChainSteps(
         "helm-push",
         "tofu-apply-arr",
       ],
-      timeoutMinutes: 60,
+      // Sequential cold Scout starts can each consume 45 minutes, Temporal's
+      // migration 20, and the remaining root waves need apply/health time.
+      timeoutMinutes: 120,
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
       concurrency: RELEASE_GROUP,

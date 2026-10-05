@@ -111,6 +111,8 @@ Report-lake rebuilds buffer at most 1 MiB of NDJSON per writer, except for a
 single oversized document, which is drained immediately. Every producer awaits
 disk backpressure before writing more rows, including the raw source documents
 needed to rebuild the lake.
+The GitOps child sync wait covers the same 40-minute cold-start budget as the
+startup probe, plus five minutes for readiness and subsequent sync waves.
 
 ### Durable Temporal work
 

@@ -1,5 +1,9 @@
 import { Duration, Size } from "cdk8s";
 import { Cpu, Probe, Protocol } from "cdk8s-plus-31";
+import {
+  SCOUT_STARTUP_PROBE_PERIOD_SECONDS,
+  SCOUT_STARTUP_PROBE_FAILURE_THRESHOLD,
+} from "@shepherdjerred/homelab/cdk8s/src/scout-release-budgets.ts";
 
 /** The port every Scout runtime role serves its HTTP surface on. */
 export const SCOUT_HTTP_PORT = 3000;
@@ -17,8 +21,8 @@ export function scoutRuntimeProbes() {
   return {
     startup: Probe.fromHttpGet("/ping", {
       port: SCOUT_HTTP_PORT,
-      periodSeconds: Duration.seconds(10),
-      failureThreshold: 240,
+      periodSeconds: Duration.seconds(SCOUT_STARTUP_PROBE_PERIOD_SECONDS),
+      failureThreshold: SCOUT_STARTUP_PROBE_FAILURE_THRESHOLD,
     }),
     liveness: Probe.fromHttpGet("/livez", {
       port: SCOUT_HTTP_PORT,

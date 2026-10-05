@@ -68,6 +68,7 @@ import {
 import { autoSyncPolicyDivergences } from "./argocd-auto-sync-policy.ts";
 import { childSyncTimeoutSeconds } from "./argocd-child-sync-timeout.ts";
 import { TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS } from "../../src/cdk8s/src/temporal-release-budgets.ts";
+import { SCOUT_CHILD_SYNC_TIMEOUT_SECONDS } from "../../src/cdk8s/src/scout-release-budgets.ts";
 import {
   appliedVerifiedReleaseResult,
   HOMELAB_RELEASE_RESULT_FILE,
@@ -2950,12 +2951,13 @@ async function assertReleaseInventoryIsComplete(
 
 /**
  * Minimum sync wait budgets for children whose operation outlasts the
- * pipeline `--timeout`. Only temporal qualifies: its operation runs the
- * schema-migration hook, budgeted in `temporal-release-budgets.ts` next to
- * the chart's own deadline.
+ * pipeline `--timeout`: Temporal's schema migration and Scout's cold report-lake
+ * startup. Each floor shares its budget with the workload's own deadline.
  */
 const CHILD_SYNC_TIMEOUT_FLOORS: ReadonlyMap<string, number> = new Map([
   ["temporal", TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS],
+  ["scout", SCOUT_CHILD_SYNC_TIMEOUT_SECONDS],
+  ["scout-beta", SCOUT_CHILD_SYNC_TIMEOUT_SECONDS],
 ]);
 
 async function reconcileRelease(

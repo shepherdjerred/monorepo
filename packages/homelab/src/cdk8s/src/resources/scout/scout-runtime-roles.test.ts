@@ -8,6 +8,7 @@ import {
 import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 import { SCOUT_GATEWAY_OWNER_BY_STAGE } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
 import { scoutGatewayClientIngress } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
+import { SCOUT_CHILD_SYNC_TIMEOUT_SECONDS } from "@shepherdjerred/homelab/cdk8s/src/scout-release-budgets.ts";
 
 const EnvEntrySchema = z
   .object({
@@ -552,6 +553,8 @@ describe("Scout gateway observability", () => {
               .object({
                 startupProbe: z.looseObject({
                   httpGet: z.object({ path: z.string(), port: z.number() }),
+                  periodSeconds: z.number(),
+                  failureThreshold: z.number(),
                 }),
                 livenessProbe: z.looseObject({
                   httpGet: z.object({ path: z.string(), port: z.number() }),
@@ -577,6 +580,12 @@ describe("Scout gateway observability", () => {
       path: "/ping",
       port: 3000,
     });
+    expect(container).toBeDefined();
+    if (container === undefined) throw new Error("gateway container missing");
+    expect(SCOUT_CHILD_SYNC_TIMEOUT_SECONDS).toBeGreaterThan(
+      container.startupProbe.periodSeconds *
+        container.startupProbe.failureThreshold,
+    );
     expect(container?.livenessProbe.httpGet).toEqual({
       path: "/livez",
       port: 3000,

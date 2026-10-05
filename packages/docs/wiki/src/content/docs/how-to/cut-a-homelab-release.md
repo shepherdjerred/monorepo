@@ -100,6 +100,12 @@ same-source drift into this release.
 So a stuck child usually clears on the next release rather than needing a hand
 sync.
 
+Scout child syncs allow the same 40-minute cold report-lake startup budget as
+their Kubernetes probes, plus five minutes for readiness and later sync waves.
+Temporal child syncs cover the schema-migration deadline. The root CI lane
+allows two hours for these sequential waits and the remaining release work;
+every child must still apply successfully and pass the scoped health gate.
+
 ## If pruning looks wrong
 
 Root pruning does not trust ArgoCD's cached `OutOfSync` or `requiresPruning`
