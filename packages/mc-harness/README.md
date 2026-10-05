@@ -187,6 +187,9 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
   `expected.schem` + `expected.json`.
+- **Render** draws a contact sheet of the canvas site, or of a region inside
+  it (`render <dir> <x1,y1,z1> <x2,y2,z2>`) so map-scale builds can be
+  reviewed one district at a time.
 - **Import** turns a `.litematic`, `.schem` or OBJ mesh into a schematic
   under `schematics/`, appends a paste op (`source` `import:<sha>`), lints it
   and renders a preview.
