@@ -33,19 +33,24 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Lets the bots talk. Listens to rwf's match transitions, reads them as chat moments, asks one
- * {@link ChatDirector} per match (seeded from the match) who says what, and shows each line when it
- * is due to the human players in the match world: members and watchers, never Global, Discord or
- * anyone elsewhere. A line reads like player chat with rwf's dim {@code ✦} bot marker after the
- * name, the name in the bot's team colour. Every second it offers the director an idle taunt and,
- * every {@code flagRefresh}, evaluates the managed Flipt flag off the main thread; the cached
- * answer gates every line, so the flag off, an evaluation failure or no answer yet keeps bots
- * silent. Main thread only.
+ * {@link ChatDirector} per match (seeded from the match, alive from its lobby to its end) who says
+ * what, and shows each line when it is due to the human players in the match world: members and
+ * watchers, never Global, Discord or anyone elsewhere. A line reads like player chat with rwf's dim
+ * {@code ✦} bot marker after the name, the name in the bot's team colour (white in the lobby,
+ * before teams exist). In the lobby bots greet as they walk in, answer a human who chats there,
+ * make small talk and remark on the countdown's last seconds. Every second it offers the director
+ * an idle moment and, every {@code flagRefresh}, evaluates the managed Flipt flag off the main
+ * thread; the cached answer gates every line, so the flag off, an evaluation failure or no answer
+ * yet keeps bots silent. Main thread only.
  */
 public final class BotChat implements Consumer<MatchNotification> {
 
   static final String MARKER = " ✦";
   private static final Duration IDLE_EVERY = Duration.ofSeconds(1);
   private static final long CHAT_SALT = 0x63686174L;
+
+  /** The countdown's last seconds a bot may remark on. */
+  static final Duration COUNTDOWN_CALL = Duration.ofSeconds(10);
 
   private final Parts parts;
   private final List<Cancellable> pending = new ArrayList<>();
@@ -54,6 +59,8 @@ public final class BotChat implements Consumer<MatchNotification> {
   private @Nullable Cancellable clock;
   private @Nullable MatchState previous;
   private @Nullable ChatDirector director;
+  private @Nullable UUID directorMatch;
+  private boolean countdownCalled;
   private boolean enabled;
   private boolean checking;
   private boolean closed;
@@ -113,22 +120,53 @@ public final class BotChat implements Consumer<MatchNotification> {
     var now = parts.time().instant();
     var lines = new ArrayList<Utterance>();
     for (var moment : ChatMoments.of(before, transition)) {
-      if (moment instanceof ChatMoment.Started) {
-        director =
-            new ChatDirector(
-                parts.settings(),
-                new SplittableRandom(MatchSession.seedOf(after.matchId()) ^ CHAT_SALT),
-                now);
-      }
-      var current = director;
-      if (current != null) {
-        lines.addAll(current.on(moment, scene(after), now));
-      }
+      lines.addAll(director(after, now).on(moment, scene(after), now));
     }
-    if (after.phase() != MatchState.Phase.LIVE && after.phase() != MatchState.Phase.ENDED) {
+    if (after.phase() == MatchState.Phase.RESETTING) {
       director = null;
+      directorMatch = null;
     }
     lines.forEach(line -> say(line, now));
+  }
+
+  /** The match's director, made the first time the match (its lobby, or its start) needs one. */
+  private ChatDirector director(MatchState state, Instant now) {
+    var current = director;
+    if (current != null && state.matchId().equals(directorMatch)) {
+      return current;
+    }
+    var made =
+        new ChatDirector(
+            parts.settings(),
+            new SplittableRandom(MatchSession.seedOf(state.matchId()) ^ CHAT_SALT),
+            now);
+    director = made;
+    directorMatch = state.matchId();
+    countdownCalled = false;
+    return made;
+  }
+
+  /**
+   * A human said {@code text} in chat; when they wait in this match's lobby, one bot may answer.
+   * Called on the main thread.
+   */
+  public void heard(UUID human, String text) {
+    var state = previous;
+    if (closed || state == null || !lobby(state)) {
+      return;
+    }
+    var speaker = state.combatant(human);
+    if (speaker.isEmpty() || speaker.orElseThrow().bot()) {
+      return;
+    }
+    var now = parts.time().instant();
+    director(state, now)
+        .on(new ChatMoment.HumanSaid(human, text), scene(state), now)
+        .forEach(line -> say(line, now));
+  }
+
+  private static boolean lobby(MatchState state) {
+    return state.phase() == MatchState.Phase.LOBBY || state.phase() == MatchState.Phase.COUNTDOWN;
   }
 
   /** Once a second: refresh the flag when due and offer an idle taunt during a live match. */
@@ -137,9 +175,25 @@ public final class BotChat implements Consumer<MatchNotification> {
     if (!now.isBefore(nextCheck)) {
       refresh();
     }
-    var current = director;
     var state = previous;
-    if (current == null || state == null || state.phase() != MatchState.Phase.LIVE) {
+    if (state == null) {
+      return;
+    }
+    if (lobby(state) && state.combatants().stream().anyMatch(MatchState.Fighter::bot)) {
+      var lobbyDirector = director(state, now);
+      var callDue =
+          state.startsAt().filter(start -> !now.isBefore(start.minus(COUNTDOWN_CALL))).isPresent();
+      if (callDue && !countdownCalled) {
+        countdownCalled = true;
+        lobbyDirector
+            .on(new ChatMoment.CountdownCall(), scene(state), now)
+            .forEach(line -> say(line, now));
+      }
+      lobbyDirector.on(new ChatMoment.Idle(), scene(state), now).forEach(line -> say(line, now));
+      return;
+    }
+    var current = director;
+    if (current == null || state.phase() != MatchState.Phase.LIVE) {
       return;
     }
     current.on(new ChatMoment.Idle(), scene(state), now).forEach(line -> say(line, now));
@@ -204,7 +258,7 @@ public final class BotChat implements Consumer<MatchNotification> {
     if (closed || !enabled) {
       return;
     }
-    var message = render(line, color(line.team()));
+    var message = render(line, line.team().map(this::color).orElse(NamedTextColor.WHITE));
     for (var player : parts.world().getPlayers()) {
       if (!parts.roster().isBot(player.getUniqueId())) {
         player.sendMessage(message);
@@ -252,6 +306,7 @@ public final class BotChat implements Consumer<MatchNotification> {
     List.copyOf(pending).forEach(Cancellable::cancel);
     pending.clear();
     director = null;
+    directorMatch = null;
     parts.gate().close();
   }
 }

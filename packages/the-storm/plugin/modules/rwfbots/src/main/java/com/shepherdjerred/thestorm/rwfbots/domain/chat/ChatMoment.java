@@ -3,7 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.chat;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Something in a live match a bot might react to in chat. */
+/** Something in the lobby or a live match a bot might react to in chat. */
 public sealed interface ChatMoment {
 
   /** The match went live: bots may greet. */
@@ -41,6 +41,28 @@ public sealed interface ChatMoment {
    */
   record Ended(Optional<String> winner) implements ChatMoment {}
 
-  /** Nothing happened for a while: a chance for an idle taunt when one is due. */
+  /**
+   * Nothing happened for a while: a chance for an idle taunt when one is due, or before the match a
+   * little lobby small talk.
+   */
   record Idle() implements ChatMoment {}
+
+  /**
+   * A bot walked into the lobby: it may say hello.
+   *
+   * @param bot the bot
+   */
+  record Arrived(UUID bot) implements ChatMoment {}
+
+  /**
+   * A human in the lobby said something in chat: one bot may answer, in kind when it was a
+   * greeting.
+   *
+   * @param human who spoke
+   * @param text what they said, as plain text
+   */
+  record HumanSaid(UUID human, String text) implements ChatMoment {}
+
+  /** The countdown is nearly over: one bot may say something about it. */
+  record CountdownCall() implements ChatMoment {}
 }

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.content;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.rwfbots.domain.lobby.LobbyNav;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
 import java.io.IOException;
@@ -29,6 +30,9 @@ public final class NavFiles {
   /** The artifact's file name inside a map folder. */
   public static final String FILE_NAME = "nav.rwfnav";
 
+  /** The rwf lobby folder inside the plugin data folder. */
+  public static final String LOBBY_DIRECTORY = "rwf/lobby";
+
   private NavFiles() {}
 
   /**
@@ -43,6 +47,35 @@ public final class NavFiles {
       artifacts = Map.copyOf(artifacts);
       problems = Map.copyOf(problems);
     }
+  }
+
+  /**
+   * Loads the lobby's artifact from {@code plugins/TheStorm/rwf/lobby/nav.rwfnav}. The lobby ships
+   * with rwf and its artifact is verified by the build, so a missing, corrupt or unusable one stops
+   * the module, naming why.
+   */
+  public static NavArtifact loadLobby(Path dataDirectory) {
+    var file = dataDirectory.resolve(LOBBY_DIRECTORY).resolve(FILE_NAME);
+    if (!Files.isRegularFile(file)) {
+      throw new IllegalStateException(file + " is missing; bake it with gradle bakeRwfLobby");
+    }
+    byte[] bytes;
+    try {
+      bytes = Files.readAllBytes(file);
+    } catch (IOException e) {
+      throw new UncheckedIOException("Required file " + file + " could not be read", e);
+    }
+    var artifact =
+        switch (NavCodec.decode(bytes)) {
+          case Result.Ok<NavArtifact, NavCodec.CodecError>(var decoded) -> decoded;
+          case Result.Err<NavArtifact, NavCodec.CodecError>(var error) ->
+              throw new IllegalStateException(file + " does not decode: " + error.message());
+        };
+    var problems = LobbyNav.problems(artifact);
+    if (!problems.isEmpty()) {
+      throw new IllegalStateException(file + " is unusable: " + String.join("; ", problems));
+    }
+    return artifact;
   }
 
   /** Loads every map folder under {@code dataDirectory}, which is {@code plugins/TheStorm}. */

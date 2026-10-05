@@ -43,7 +43,8 @@ final class ChatMomentsTest {
                 true)),
         bombs,
         Optional.empty(),
-        winner);
+        winner,
+        Optional.empty());
   }
 
   private static MatchState.Bomb bomb(String id, boolean nuke, String team, MatchState.Status s) {

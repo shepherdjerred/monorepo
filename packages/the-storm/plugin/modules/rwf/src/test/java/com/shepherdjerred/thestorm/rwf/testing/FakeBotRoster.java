@@ -58,6 +58,7 @@ public final class FakeBotRoster implements BotRoster {
 
   @Override
   public void despawn(CombatantId.Bot id) {
+    pending.remove(id);
     var player = spawned.remove(id);
     if (player != null && player.isOnline()) {
       player.disconnect();
@@ -77,6 +78,11 @@ public final class FakeBotRoster implements BotRoster {
   /** The bots in the world now. */
   public List<PlayerMock> spawned() {
     return List.copyOf(spawned.values());
+  }
+
+  /** Bots drafted but neither spawned nor released yet. */
+  public int drafted() {
+    return pending.size();
   }
 
   /** Every bot ever handed out. */

@@ -21,11 +21,14 @@ import java.util.random.RandomGenerator;
 import java.util.regex.Pattern;
 
 /**
- * Decides who says what in one match. Given a moment and the match after it, it picks which bots
- * (if any) speak and which of their lines, and when: a greet from any bot when the match goes live,
- * a brag from the killer or a reaction from the victim, a plant or defuse line from the bomb
- * worker, a line from the last bot standing on a team, a win or loss line from any bot at the end,
- * and now and then an idle taunt from a living bot.
+ * Decides who says what in one match, from its lobby to its end. Given a moment and the match after
+ * it, it picks which bots (if any) speak and which of their lines, and when: in the lobby a greet
+ * from a bot as it walks in, a reply from one bot when a human chats (a greet for a greeting, small
+ * talk otherwise), now and then small talk or a jab at a rival, and one remark as the countdown
+ * ends; then a greet from any bot when the match goes live, a brag from the killer or a reaction
+ * from the victim, a plant or defuse line from the bomb worker, a line from the last bot standing
+ * on a team, a win or loss line from any bot at the end, and now and then an idle taunt from a
+ * living bot.
  *
  * <p>Only bots in the match speak, and outside the end of the match only while alive or for {@code
  * recentDeath} after dying. Each bot waits {@code botCooldown} between lines and never repeats a
@@ -120,9 +123,15 @@ public final class ChatDirector {
       case ChatMoment.Idle _ -> {
         if (!now.isBefore(nextTaunt)) {
           nextTaunt = now.plus(tauntWait());
-          lines.addAll(speak(taunters(scene), false, now));
+          lines.addAll(
+              speak(scene.teams().isEmpty() ? lobbyTalk(scene) : taunters(scene), false, now));
         }
       }
+      case ChatMoment.Arrived arrived ->
+          lines.addAll(speak(lobbyBot(required(scene, arrived.bot()), Moment.GREET), false, now));
+      case ChatMoment.HumanSaid said -> lines.addAll(speak(replies(scene, said), false, now));
+      case ChatMoment.CountdownCall _ ->
+          lines.addAll(speak(lobbyBots(scene, Moment.LOBBY), false, now));
     }
     lines.addAll(speak(lastAlive(scene), false, now));
     return List.copyOf(lines);
@@ -247,6 +256,57 @@ public final class ChatDirector {
     return candidates;
   }
 
+  /** A greeting is answered in kind: hi, hey, hello, yo, sup, o/ and their stretched spellings. */
+  static final Pattern GREETING =
+      Pattern.compile("(?i)^\\W*(h+i+|h+e+y+|hel+o+|y+o+|sup|hiya|heya|howdy)\\b.*|^\\W*o/.*");
+
+  /** {@code member}, a bot, saying a line from {@code moment}'s pool before teams exist. */
+  private static List<Candidate> lobbyBot(ChatScene.Member member, Moment moment) {
+    if (member.bot().isEmpty()) {
+      return List.of();
+    }
+    return List.of(
+        new Candidate(
+            member, member.bot().orElseThrow(), moment, Chattiness.Context.PLAIN, Map.of()));
+  }
+
+  /** Every bot in the lobby, for {@code moment}'s pool. */
+  private static List<Candidate> lobbyBots(ChatScene scene, Moment moment) {
+    var candidates = new ArrayList<Candidate>();
+    for (var member : scene.members()) {
+      candidates.addAll(lobbyBot(member, moment));
+    }
+    return candidates;
+  }
+
+  /** One bot answers a human: a greet for a greeting, small talk otherwise. */
+  private static List<Candidate> replies(ChatScene scene, ChatMoment.HumanSaid said) {
+    var moment = GREETING.matcher(said.text()).matches() ? Moment.GREET : Moment.LOBBY;
+    return lobbyBots(scene, moment).stream()
+        .filter(candidate -> !candidate.member().uuid().equals(said.human()))
+        .toList();
+  }
+
+  /** Lobby small talk, or a jab at a rival who is in the lobby too. */
+  private static List<Candidate> lobbyTalk(ChatScene scene) {
+    var candidates = new ArrayList<Candidate>();
+    for (var member : scene.members()) {
+      if (member.bot().isEmpty()) {
+        continue;
+      }
+      var bot = member.bot().orElseThrow();
+      var aimed = scene.members().stream().anyMatch(other -> rival(bot, other));
+      candidates.add(
+          new Candidate(
+              member,
+              bot,
+              aimed ? Moment.TAUNT : Moment.LOBBY,
+              new Chattiness.Context(aimed, false),
+              Map.of()));
+    }
+    return candidates;
+  }
+
   private static boolean rival(Personality bot, ChatScene.Member other) {
     return other.personalityId().filter(bot.rivals()::contains).isPresent();
   }
@@ -295,7 +355,8 @@ public final class ChatDirector {
     var member = candidate.member();
     var always = Chattiness.alwaysSpeaks(candidate.bot(), candidate.moment());
     var atEnd = candidate.moment() == Moment.ON_WIN || candidate.moment() == Moment.ON_LOSS;
-    if (!atEnd && !member.alive()) {
+    // Before the match nobody has a team and nobody is fighting yet, so nobody is dead either.
+    if (!atEnd && member.team().isPresent() && !member.alive()) {
       var died = diedAt.get(member.uuid());
       if (died == null || now.isAfter(died.plus(settings.recentDeath()))) {
         return false;
@@ -349,7 +410,7 @@ public final class ChatDirector {
         new Utterance(
             member.uuid(),
             member.name(),
-            member.team().orElseThrow(),
+            member.team(),
             candidate.moment(),
             template,
             fill(template, candidate.values()),

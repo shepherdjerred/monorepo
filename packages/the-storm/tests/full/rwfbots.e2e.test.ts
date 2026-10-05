@@ -167,6 +167,120 @@ async function fillsWithBots(match: Match): Promise<string[]> {
   return names;
 }
 
+/** The lobby room (rwf/lobby/lobby.yml), both corners' blocks included. */
+const lobbyRoom = { min: [128, 64, 16], max: [158, 72, 46] } as const;
+
+function inLobby(at: Vec3): boolean {
+  return (
+    at.x >= lobbyRoom.min[0] &&
+    at.x < lobbyRoom.max[0] + 1 &&
+    at.y >= lobbyRoom.min[1] &&
+    at.y < lobbyRoom.max[1] + 1 &&
+    at.z >= lobbyRoom.min[2] &&
+    at.z < lobbyRoom.max[2] + 1
+  );
+}
+
+/** What the human's client and `/rwf who` showed of the bots during the countdown. */
+type LobbyWatch = {
+  /** Every kit `/rwf who` listed for each bot, in the order seen. */
+  kits: Map<string, string[]>;
+  /** Where the human's client saw each bot, sample by sample. */
+  positions: Map<string, Vec3[]>;
+  /** Bots the human's client saw crouch. */
+  crouched: Set<string>;
+  /** Stops sampling. */
+  stop: () => Promise<void>;
+};
+
+/** Samples the lobby twice a second from before the human joins until the match goes live. */
+function watchLobby(match: Match): LobbyWatch {
+  const { bot, rcon } = match;
+  let running = true;
+  let sampler: Promise<void> = Promise.resolve();
+  const watch: LobbyWatch = {
+    kits: new Map(),
+    positions: new Map(),
+    crouched: new Set(),
+    stop: async () => {
+      running = false;
+      await sampler;
+    },
+  };
+  bot.on("entityCrouch", (entity) => {
+    if (entity.username !== undefined && entity.username !== bot.username) {
+      watch.crouched.add(entity.username);
+    }
+  });
+  sampler = (async () => {
+    while (running && !match.log.has(/The game has begun!/u)) {
+      const who = plain(await rcon.command("rwf who"));
+      for (const seen of who.matchAll(/(?<name>\w+) ✦ \[(?<kit>[a-z-]+)\]/gu)) {
+        const name = seen.groups?.["name"] ?? "";
+        const kit = seen.groups?.["kit"] ?? "";
+        const kits = watch.kits.get(name) ?? [];
+        if (kits.at(-1) !== kit) {
+          kits.push(kit);
+        }
+        watch.kits.set(name, kits);
+      }
+      const begun = match.log.has(/The game has begun!/u);
+      for (const seen of Object.values(bot.entities)) {
+        const name = seen.username;
+        if (!begun && name !== undefined && name !== bot.username) {
+          const samples = watch.positions.get(name) ?? [];
+          samples.push(seen.position.clone());
+          watch.positions.set(name, samples);
+        }
+      }
+      await Bun.sleep(500);
+    }
+  })();
+  return watch;
+}
+
+/**
+ * (a2) During the countdown the bots stay in the lobby room, move about it, at
+ * least one taps sneak at someone, and at least one changes kit through the
+ * same pick path `/rwf kit` uses before settling on its drafted kit.
+ */
+async function liveInTheLobby(
+  match: Match,
+  watch: LobbyWatch,
+  names: string[],
+): Promise<void> {
+  await match.log.until(/The game has begun!/u, 60_000);
+  await watch.stop();
+  expect(
+    names.filter((name) => (watch.positions.get(name)?.length ?? 0) > 0),
+    "the human's client sees the bots in the lobby",
+  ).not.toHaveLength(0);
+  for (const name of names) {
+    const samples = watch.positions.get(name) ?? [];
+    for (const at of samples) {
+      expect(inLobby(at), `${name} at ${at.toString()} is in the lobby`).toBe(
+        true,
+      );
+    }
+  }
+  const travelled = names.map((name) => {
+    const samples = watch.positions.get(name) ?? [];
+    const first = samples[0];
+    return first === undefined
+      ? 0
+      : Math.max(0, ...samples.map((at) => at.distanceTo(first)));
+  });
+  expect(
+    Math.max(...travelled),
+    "some bot moves about the lobby",
+  ).toBeGreaterThan(1);
+  expect(watch.crouched.size, "some bot taps sneak").toBeGreaterThan(0);
+  const switched = [...watch.kits.values()].filter((kits) => kits.length > 1);
+  expect(switched.length, "some bot changes kit in the lobby").toBeGreaterThan(
+    0,
+  );
+}
+
 /** The match goes live and every bot wears rwf's dim marker. */
 async function goesLiveMarked(match: Match, names: string[]) {
   const { bot, rcon, log, view } = match;
@@ -632,7 +746,9 @@ describe("Search and Destroy with rwfbots", () => {
       expect(await balance(bot)).toBe(startingBalance);
       const statsBefore = await personalityStats(server, "stats-before");
 
+      const lobby = watchLobby(match);
       const names = await fillsWithBots(match);
+      await liveInTheLobby(match, lobby, names);
       const { team, matchId } = await goesLiveMarked(match, names);
       await leaveSpawns(match.view, names);
       await thinkAtLevelZero(rcon, names, think.maxDecisionAgeTicks);

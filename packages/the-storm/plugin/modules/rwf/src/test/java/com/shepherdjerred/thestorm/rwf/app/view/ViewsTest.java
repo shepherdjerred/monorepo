@@ -67,7 +67,8 @@ final class ViewsTest {
                 Samples.NUKE,
                 new MatchSnapshot.BombView.State.Idle())),
         Optional.of(new MatchSnapshot.PoisonView(PoisonClock.Stage.WARNED, Duration.ofSeconds(30))),
-        Optional.of(new Outcome.Winner(TeamColor.BLUE)));
+        Optional.of(new Outcome.Winner(TeamColor.BLUE)),
+        Optional.empty());
   }
 
   @Test

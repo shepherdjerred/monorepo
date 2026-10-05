@@ -55,11 +55,12 @@ const server = await startServer({
   warmCache: true,
   stormJar,
   ...fixtures,
-  // Close to production pacing for watching: a 15 s countdown, the owned
+  // Close to production pacing for watching: a 45 s countdown (time to watch
+  // the bots walk in, wander, try kits and talk in the lobby), the owned
   // targetCombatants (8), a readable end screen, and no load test.
   rwf: {
     ...rwfTestSettings,
-    countdown: "PT15S",
+    countdown: "PT45S",
     endLinger: "PT15S",
     noHumansAbort: "PT30S",
   },

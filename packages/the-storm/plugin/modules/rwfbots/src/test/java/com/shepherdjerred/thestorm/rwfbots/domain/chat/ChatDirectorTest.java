@@ -174,7 +174,7 @@ final class ChatDirectorTest {
     var line = lines.getFirst();
     assertThat(line.speaker()).isEqualTo(REDBOT);
     assertThat(line.name()).isEqualTo("Red_Bot");
-    assertThat(line.team()).isEqualTo(RED);
+    assertThat(line.team()).contains(RED);
     assertThat(line.moment()).isEqualTo(Moment.ON_KILL);
     assertThat(line.text()).isIn(filled(LINES.onKill(), "{victim}", "Alice"));
     assertThat(line.text()).doesNotContain("{");

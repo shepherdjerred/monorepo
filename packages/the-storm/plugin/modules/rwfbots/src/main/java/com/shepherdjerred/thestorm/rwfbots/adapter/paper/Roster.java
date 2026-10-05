@@ -11,9 +11,11 @@ import com.shepherdjerred.thestorm.rwfbots.app.NavCatalog;
 import com.shepherdjerred.thestorm.rwfbots.app.StatsCache;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.Rating;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -107,7 +109,15 @@ public final class Roster implements BotBodies {
             Math.max(2, state.orElseThrow().teams().size()));
     var pick = Director.pick(request, parts.random());
     var handles = new ArrayList<BotHandle>();
-    for (var drafted : pick.bots()) {
+    // rwf walks bots into the lobby in this order: the ones always late come last.
+    var order =
+        pick.bots().stream()
+            .sorted(
+                Comparator.comparing(
+                    (Director.Drafted drafted) ->
+                        drafted.personality().quirks().contains(Quirk.LATE_TO_EVERYTHING)))
+            .toList();
+    for (var drafted : order) {
       var uuid = parts.bodies().create(drafted.personality());
       bots.put(uuid, new BotBody(uuid, drafted));
       handles.add(new BotHandle(drafted.personality().id(), uuid));

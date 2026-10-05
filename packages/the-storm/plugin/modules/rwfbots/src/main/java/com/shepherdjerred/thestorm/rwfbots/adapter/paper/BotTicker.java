@@ -43,6 +43,8 @@ public final class BotTicker {
   private final MatchView view;
   private final Supplier<long[]> tickTimes;
   private final LongSupplier nanoClock;
+  private final LobbyTicker lobby;
+  private boolean inLobby;
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
   private long tick;
@@ -58,6 +60,7 @@ public final class BotTicker {
    * @param view rwf's read model
    * @param tickTimes the server's recent tick times in nanoseconds
    * @param nanoClock a monotonic clock
+   * @param lobby drives the bots before the match
    */
   public record Parts(
       Roster roster,
@@ -67,7 +70,8 @@ public final class BotTicker {
       BodyDriver driver,
       MatchView view,
       Supplier<long[]> tickTimes,
-      LongSupplier nanoClock) {}
+      LongSupplier nanoClock,
+      LobbyTicker lobby) {}
 
   public BotTicker(Parts parts) {
     this.roster = parts.roster();
@@ -78,6 +82,7 @@ public final class BotTicker {
     this.view = parts.view();
     this.tickTimes = parts.tickTimes();
     this.nanoClock = parts.nanoClock();
+    this.lobby = parts.lobby();
   }
 
   /** The ticks run so far; the snapshot clock. */
@@ -98,6 +103,9 @@ public final class BotTicker {
   /** One server tick. */
   public void run() {
     tick++;
+    if (lobbyTick()) {
+      return;
+    }
     var session = roster.session();
     if (session.isEmpty() || !loop.inMatch()) {
       return;
@@ -122,6 +130,26 @@ public final class BotTicker {
     var elapsed = nanoClock.getAsLong() - started;
     sections.record(elapsed);
     governor.observe(new Governor.Sample(msptP95(tickTimes.get()), elapsed / 1_000_000.0));
+  }
+
+  /**
+   * Before the match the {@link LobbyTicker} drives the bots; once the lobby closes it is told so.
+   * Returns whether this tick was a lobby tick.
+   */
+  private boolean lobbyTick() {
+    var state = view.current().map(MatchState::of);
+    var phase = state.map(MatchState::phase);
+    var waiting = phase.filter(p -> p == MatchState.Phase.LOBBY || p == MatchState.Phase.COUNTDOWN);
+    if (waiting.isPresent()) {
+      inLobby = true;
+      lobby.run(tick, state.orElseThrow());
+      return true;
+    }
+    if (inLobby) {
+      inLobby = false;
+      lobby.leave();
+    }
+    return false;
   }
 
   /** Whether {@code match} is still the session in play; it ends when rwf settles the match. */

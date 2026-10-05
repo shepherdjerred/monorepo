@@ -53,7 +53,15 @@ final class BotChatTest {
     var out = yaml;
     for (var moment :
         List.of(
-            "greet", "onDeath", "onPlant", "onDefuse", "onWin", "onLoss", "onLastAlive", "taunt")) {
+            "greet",
+            "onDeath",
+            "onPlant",
+            "onDefuse",
+            "onWin",
+            "onLoss",
+            "onLastAlive",
+            "taunt",
+            "lobby")) {
       out = out.replaceFirst("(?m)^    " + moment + ": [0-9.]+$", "    " + moment + ": 0.0");
     }
     return out.replaceFirst("(?m)^    onKill: [0-9.]+$", "    onKill: 1.0")

@@ -1048,7 +1048,13 @@ keeps the most balanceable of a few drafts, shifts every bot's skill so the
 median bot sits a little under the median human (`MatchShift`), and gives
 each a kit from its weights over `draft.kits`; a personality whose weights
 name none of those kits (its favourites ship later) still drafts and plays one
-of them, chosen uniformly. Each bot picks that kit when it joins. Ratings are OpenSkill; after a match with a result every team goes
+of them, chosen uniformly. The draft happens when the countdown starts, but
+rwf walks the drafted bots into the lobby one by one, a seeded 1 to 8 seconds
+apart (`rwf.domain.lobby.Arrivals`, squeezed into the first 60% of the
+countdown so all are in before the start; personalities with the
+`late_to_everything` quirk come last), each with the usual join message;
+bots still on their way are released if the countdown stops. Ratings are
+OpenSkill; after a match with a result every team goes
 through one update and each bot's record (matches, wins, kills, deaths,
 plants, defuses, mu, sigma, last seen) is written to
 `rwfbots_personality_stats`. Humans play at the default rating.
@@ -1065,7 +1071,11 @@ Configuration and content under `server/owned/plugins/TheStorm`:
   differs through the style, role, kit and lever values the generator
   derives from it. Each persona also carries a voice, chat lines per
   moment (plus pre-match lobby small talk), quirks, rivals and a bio, authored
-  in `scripts/bots/enrichment/`; bot chat speaks the match lines.
+  in `scripts/bots/enrichment/`; bot chat speaks the match and lobby lines.
+- `rwf/lobby/nav.rwfnav`: the lobby's baked navigation, its places (spawn,
+  team sides, kit alcoves, balcony) as sites; required, so a missing or
+  unusable one stops the module (`NavFiles.loadLobby`, checked by
+  `LobbyNav.problems`).
 - `rwf/maps/<id>/nav.rwfnav`: the map's baked navigation artifact
   (`NavCodec` format, from the `rwfmap` tool), next to `map.yml` and
   `blocks.schem`. Its `blocksSha256` must equal the map's `blocksSha256`;
@@ -1074,13 +1084,18 @@ Configuration and content under `server/owned/plugins/TheStorm`:
   unplayable or baked from other blocks.
 
 Bot chat. `BotChat` (`adapter.paper`) subscribes to rwf's `MatchEvents`,
-reads each transition as chat moments (`app.ChatMoments`: the match going
-live, a death with its killer, a bomb finishing arming or being defused, the
+reads each transition as chat moments (`app.ChatMoments`: a bot walking into
+the lobby, the match going live, a death with its killer, a bomb finishing arming or being defused, the
 end with its winner; bomb names as players read them, such as `Blue Team's
 bomb` or `the nuke`) and hands them to one pure, seeded
-`domain.chat.ChatDirector` per match, which picks who says which line and
-when. The director only runs from live to the end, so the lobby and countdown
-stay silent. Eligible speakers are bots in the match, alive or dead for at
+`domain.chat.ChatDirector` per match, from its lobby to its end, which picks
+who says which line and when. In the lobby a bot may greet as it walks in;
+`LobbyChatListener` hands a human's chat there to the director on the main
+thread and one bot may answer (a greet for a greeting such as hi, hey or o/,
+a `lobby` line otherwise); idle time brings `lobby` small talk or a taunt at
+a rival who is there too; and once, in the countdown's last 10 seconds, a bot
+may remark on it. Lobby lines name no team (there are none yet), so lines
+with `{team}` wait for the match. Eligible speakers are bots in the match, alive or dead for at
 most `recentDeathSeconds` (end-of-match lines excepted): a greet from any bot
 at the start, a kill line from the killer or a death line from the victim
 (one of them), a plant or defuse line from a bomb worker, a line from the last
@@ -1102,8 +1117,9 @@ with names as players see them (`{victim}`, `{killer}`, `{team}` as `Red
 Team`, `{bomb}`). A due line goes, as `[Name ✦]: line` (name in its team
 colour, rwf's dim `✦` marker), to the human players in the rwf world only:
 members and watchers, never Global, Discord or anyone elsewhere, and never
-the bot bodies. Lines are not recorded. A new context such as the lobby is a
-new `ChatMoment` with its own line pool; the director shares every rule.
+the bot bodies; in the lobby the name is white. Lines are not recorded. A new
+context is a new `ChatMoment` with its own line pool; the director shares
+every rule.
 
 Chat is gated twice: `chat.enabled` in `rwfbots.yml` (false skips it
 entirely) and the managed Flipt flag `the-storm-rwfbots-chat-enabled`
@@ -1114,6 +1130,29 @@ world as context. The cached answer gates every line; the flag off, an
 evaluation error, no answer yet or an unset `FLIPT_URL` or
 `FLIPT_ENVIRONMENT` keeps bots silent. `verifyManagedChatFlag` checks the
 client's keys against `packages/feature-flags` at build time.
+
+Lobby life. Before the match the bots act like players waiting for it.
+`LobbyTicker` (`adapter.paper`, driven by `BotTicker` while rwf's phase is
+lobby or countdown) gives each bot a `KitPlan` as it walks in: it picks a
+first kit, then makes 0 to 3 switches at least 5 s apart through the same
+`BotActions.pickKit` path humans use, the last switch always to the kit the
+director drafted, so balance never changes (eager temperaments switch more;
+a bot with no time left just picks its drafted kit). Twice a second the
+lobby goes to the `LobbyLoop` (`app`), which runs the pure
+`domain.lobby.LobbyLife` planner for every bot on the compute pool, seeded
+per match, bot and tick: wander to a random cell, walk up to someone (a
+human, a rival, anyone) and stop 1.5 to 4 blocks short facing them, browse
+the alcove of the next kit it will switch to, look around, tap sneak (often
+the first thing a bot does is walk up to a human and tap sneak at them, the
+Minecraft hello), hop, or hang out at a side of the room it favours.
+`LobbyTemperament` weighs those from the archetype (trolls jump, sneak and
+crowd people; tacticians browse kits and stand still; supports walk up to
+others), the voice (chatty bots seek company) and the quirks
+(`crouch_spam`, `bunny_hops`, `spins`). Walks follow the lobby's baked nav
+graph, and `LobbySteering` turns each plan into the same `BodyCommand`s
+(move, jump up steps, look, sneak) the match's reflexes use. Nothing can be
+hurt in the lobby. When the match goes live the lobby loop stops and the
+think loop takes over.
 
 `/rwfbots debug [bot]` (`thestorm.rwfbots.admin`) prints the governor level,
 think and staleness percentiles, the board counters and every bot's plan, or

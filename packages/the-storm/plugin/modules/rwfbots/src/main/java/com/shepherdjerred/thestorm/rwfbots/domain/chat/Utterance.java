@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.chat;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -9,7 +10,7 @@ import java.util.UUID;
  *
  * @param speaker the bot
  * @param name the bot's name as players see it
- * @param team the bot's team display name
+ * @param team the bot's team display name; empty in the lobby, before teams exist
  * @param moment which pool the line came from
  * @param template the line as authored, placeholders intact
  * @param text the line with its placeholders filled
@@ -18,7 +19,7 @@ import java.util.UUID;
 public record Utterance(
     UUID speaker,
     String name,
-    String team,
+    Optional<String> team,
     Lines.Moment moment,
     String template,
     String text,
