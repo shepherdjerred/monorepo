@@ -248,8 +248,8 @@ append the op to a build's op log once it succeeds.
 `toolkit mc build …` runs the mc-harness build CLI from the checkout (it needs
 the `@shepherdjerred/mc-build` registry, renderer and compile child, which stay
 out of the compiled binary). A build directory holds `build.json`, the op log,
-the captured site and renders; the `minecraft-building` skill describes the
-loop.
+the captured site and renders; the repository `minecraft-building` skill
+(`.agents/skills/minecraft-building`) describes the loop.
 
 ```bash
 toolkit mc build init ./cottage --name cottage --world world --anchor 26,-60,26

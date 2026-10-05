@@ -157,6 +157,7 @@ review gate observes both the code and thread state.
 ## Task-specific guidance
 
 Use the matching repository skill in `.agents/skills/` for repeatable delivery,
-homelab, Scout, Temporal, TaskNotes, docs, Linear, PostHog, Discord, or report
-rendering work. Package-local runtime skills remain application assets and do
-not replace repository workflow guidance.
+homelab, Scout, Temporal, TaskNotes, Minecraft harness and building, docs,
+Linear, PostHog, Discord, or report rendering work. Package-local runtime
+skills remain application assets and do not replace repository workflow
+guidance.
