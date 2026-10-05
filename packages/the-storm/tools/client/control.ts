@@ -1,8 +1,9 @@
 import { createServer, type Socket } from "node:net";
 import { chmod } from "node:fs/promises";
 import { z } from "zod";
+import { RequestSchema } from "@shepherdjerred/mc-harness/protocol/client-socket.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
-import { RequestSchema, waitFor } from "./protocol.ts";
+import { waitFor } from "./protocol.ts";
 
 export const ViewpointsSchema = z.record(
   z.string(),

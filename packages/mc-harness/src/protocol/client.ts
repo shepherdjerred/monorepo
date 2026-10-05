@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ConnectedClientStateShape } from "./client-socket.ts";
 import { GameModeSchema } from "./bridge.ts";
 import { SandboxIdSchema } from "./ipc.ts";
 
@@ -68,20 +69,9 @@ const ItemSchema = z.object({
 export const ClientStateSchema = z.discriminatedUnion("connected", [
   z.looseObject({ connected: z.literal(false), screen: z.string() }),
   z.looseObject({
+    ...ConnectedClientStateShape,
     connected: z.literal(true),
-    position: z.tuple([z.number(), z.number(), z.number()]),
-    yaw: z.number(),
-    pitch: z.number(),
-    health: z.number(),
-    food: z.number(),
-    world: z.string(),
-    hotbar: z.number().int(),
-    screen: z.string(),
     inventory: z.array(ItemSchema),
-    target: z.looseObject({ kind: z.enum(["block", "entity", "miss"]) }),
-    fps: z.number(),
-    heldInputs: z.array(z.string()),
-    pid: z.number().int(),
   }),
 ]);
 export type ClientState = z.infer<typeof ClientStateSchema>;

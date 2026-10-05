@@ -4,7 +4,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { z } from "zod";
-import { exchange, RequestSchema, socketReady, waitFor } from "./protocol.ts";
+import { RequestSchema } from "@shepherdjerred/mc-harness/protocol/client-socket.ts";
+import { exchange, socketReady, waitFor } from "./protocol.ts";
 
 describe("preview wire protocol", () => {
   test("shares Java's valid and invalid boundary fixtures", async () => {

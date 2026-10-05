@@ -1,5 +1,5 @@
-import path from "node:path";
 import { describe, expect, test } from "vitest";
+import { runMcCommand } from "./command.ts";
 import {
   captureOut,
   hotbarBody,
@@ -8,26 +8,6 @@ import {
   renderClients,
   renderClientStatus,
 } from "#lib/mc/game-client.ts";
-
-const entry = path.resolve(import.meta.dirname, "../../src/index.ts");
-
-async function run(args: string[]) {
-  const child = Bun.spawn([process.execPath, "run", entry, "mc", ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    env: {
-      ...Bun.env,
-      HOME: "/nonexistent-toolkit-mc-test",
-      TOOLKIT_MC_NO_AUTOSTART: "1",
-    },
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  return { stdout, stderr, exitCode };
-}
 
 const client = {
   name: "HarnessClient",
@@ -118,21 +98,21 @@ describe("client rendering", () => {
 
 describe("toolkit mc client", () => {
   test("--help prints the client usage", async () => {
-    const { stdout, exitCode } = await run(["client", "--help"]);
+    const { stdout, exitCode } = await runMcCommand(["client", "--help"]);
     expect(exitCode).toBe(0);
     expect(stdout).toContain("toolkit mc client capture [--out f.png]");
   });
 
   test("validates arguments before contacting the daemon", async () => {
-    const { stderr, exitCode } = await run(["client", "move", "fly"]);
+    const { stderr, exitCode } = await runMcCommand(["client", "move", "fly"]);
     expect(exitCode).toBe(1);
     expect(stderr).toContain('unknown button "fly"');
-    const unknown = await run(["client", "dance"]);
+    const unknown = await runMcCommand(["client", "dance"]);
     expect(unknown.stderr).toContain('unknown client action "dance"');
   });
 
   test("never starts against live tsmc", async () => {
-    const { stderr, exitCode } = await run([
+    const { stderr, exitCode } = await runMcCommand([
       "client",
       "start",
       "--target",
@@ -143,7 +123,12 @@ describe("toolkit mc client", () => {
   });
 
   test("negative look angles reach the daemon", async () => {
-    const { stderr, exitCode } = await run(["client", "look", "-90", "-30"]);
+    const { stderr, exitCode } = await runMcCommand([
+      "client",
+      "look",
+      "-90",
+      "-30",
+    ]);
     expect(exitCode).toBe(1);
     expect(stderr).not.toContain("Unknown option");
     expect(stderr).toContain("toolkit mc daemon start");
