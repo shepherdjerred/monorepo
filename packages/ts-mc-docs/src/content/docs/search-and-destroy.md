@@ -16,9 +16,14 @@ put back on the gold spawn pad.
 - The **rules** hang on the north wall.
 - The **match board** on the south wall shows the map, how many players and
   bots have joined, and how long until the round starts.
-- Each **kit alcove** along the east wall shows a kit's weapon, name and
-  contents, with the command to pick it.
+- Each **kit alcove** along the east wall shows a kit's icon, name and what
+  it carries, with the command to pick it.
 - The **balcony** on the west side looks out of a window towards the maps.
+
+Your hotbar holds two lobby items. Right-click the **nether star** to open
+the kit menu and click a kit to pick it; your current kit glints. Right-click
+the **red dye** to leave and go back to survival. Both disappear when the
+round starts.
 
 A bar at the top of your screen says how many more players the round is
 waiting for, then counts down to the start. The last five seconds and the
@@ -66,8 +71,9 @@ way to wait it out.
 
 ## Kits
 
-Pick a kit with `/rwf kit <name>` before the round starts. All launch kits
-are free.
+Pick a kit from the kit menu (right-click the nether star in the lobby) or
+with `/rwf kit <name>` before the round starts. If you pick nothing you play
+Trooper. All launch kits are free.
 
 | Kit      | Loadout                                                          |
 | -------- | ---------------------------------------------------------------- |

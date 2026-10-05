@@ -26,7 +26,13 @@ public final class KitBook {
           List.of(
               ItemSpec.of("IRON_SWORD").enchanted("sharpness", 1), ItemSpec.of("GOLDEN_APPLE", 3)),
           fullSet("IRON"),
-          Optional.empty());
+          Optional.empty(),
+          new KitSpec.Menu(
+              "IRON_SWORD",
+              List.of(
+                  "Iron sword with Sharpness I",
+                  "3 golden apples to recover",
+                  "Full iron armour")));
 
   public static final KitSpec LONGBOW =
       new KitSpec(
@@ -41,7 +47,11 @@ public final class KitBook {
               ItemSpec.of("BOW").enchanted("infinity", 1).enchanted("punch", 3),
               ItemSpec.of("ARROW")),
           archerArmor(),
-          Optional.empty());
+          Optional.empty(),
+          new KitSpec.Menu(
+              "BOW",
+              List.of(
+                  "Bow with Punch III and Infinity", "Stone sword", "Iron and chainmail armour")));
 
   public static final KitSpec SHORTBOW =
       new KitSpec(
@@ -56,7 +66,13 @@ public final class KitBook {
               ItemSpec.of("BOW").enchanted("infinity", 1).enchanted("power", 2),
               ItemSpec.of("ARROW")),
           archerArmor(),
-          Optional.empty());
+          Optional.empty(),
+          new KitSpec.Menu(
+              "ARROW",
+              List.of(
+                  "Bow with Power II and Infinity",
+                  "Wooden sword with Knockback I",
+                  "Iron and chainmail armour")));
 
   public static final KitSpec REWIND =
       new KitSpec(
@@ -74,7 +90,10 @@ public final class KitBook {
               ItemSpec.armor("IRON_LEGGINGS", ArmorSlot.LEGGINGS),
               ItemSpec.armor("IRON_CHESTPLATE", ArmorSlot.CHESTPLATE).enchanted("protection", 1),
               ItemSpec.armor("CHAINMAIL_HELMET", ArmorSlot.HELMET)),
-          Optional.of(Rewinder.ABILITY));
+          Optional.of(Rewinder.ABILITY),
+          new KitSpec.Menu(
+              "CLOCK",
+              List.of("Time Machine: back 30 seconds", "Iron sword", "Iron and chainmail armour")));
 
   /** The milestone-1 kits, in Red Warfare's menu order. */
   public static final List<KitSpec> MILESTONE_ONE = List.of(TROOPER, LONGBOW, SHORTBOW, REWIND);

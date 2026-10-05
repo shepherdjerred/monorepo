@@ -8,10 +8,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 /**
- * The persistent-data tags that mark what belongs to a match: every kit item, the Bomb Fuse in
- * particular, the primed TNT and holograms that stand for bombs, and the lobby's display entities.
- * Tagged items never leave the match; tagged entities are removed when a match resets, when the
- * lobby is dressed again, or when they turn up after a crash.
+ * The persistent-data tags that mark what belongs to a match: every kit item, the Bomb Fuse and the
+ * lobby's kit selector and leave item in particular, the primed TNT and holograms that stand for
+ * bombs, and the lobby's display entities. Tagged items never leave the match; tagged entities are
+ * removed when a match resets, when the lobby is dressed again, or when they turn up after a crash.
  */
 final class Keys {
 
@@ -22,12 +22,16 @@ final class Keys {
   private final NamespacedKey fuse;
   private final NamespacedKey bomb;
   private final NamespacedKey lobby;
+  private final NamespacedKey selector;
+  private final NamespacedKey leave;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "rwf_item");
     this.fuse = new NamespacedKey(plugin, "rwf_fuse");
     this.bomb = new NamespacedKey(plugin, "rwf_bomb");
     this.lobby = new NamespacedKey(plugin, "rwf_lobby");
+    this.selector = new NamespacedKey(plugin, "rwf_selector");
+    this.leave = new NamespacedKey(plugin, "rwf_leave");
   }
 
   /** Marks {@code stack} as a kit item. */
@@ -41,6 +45,34 @@ final class Keys {
     tag(stack);
     stack.editMeta(
         meta -> meta.getPersistentDataContainer().set(fuse, PersistentDataType.BOOLEAN, true));
+  }
+
+  /** Marks {@code stack} as the lobby's kit selector (a kit item too, so it never leaves). */
+  void tagSelector(ItemStack stack) {
+    tag(stack);
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(selector, PersistentDataType.BOOLEAN, true));
+  }
+
+  /** Marks {@code stack} as the lobby's leave item (a kit item too, so it never leaves). */
+  void tagLeave(ItemStack stack) {
+    tag(stack);
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(leave, PersistentDataType.BOOLEAN, true));
+  }
+
+  boolean isSelector(ItemStack stack) {
+    return has(stack, selector);
+  }
+
+  boolean isLeave(ItemStack stack) {
+    return has(stack, leave);
+  }
+
+  private static boolean has(ItemStack stack, NamespacedKey key) {
+    return !stack.isEmpty()
+        && stack.hasItemMeta()
+        && stack.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.BOOLEAN);
   }
 
   boolean isKitItem(ItemStack stack) {

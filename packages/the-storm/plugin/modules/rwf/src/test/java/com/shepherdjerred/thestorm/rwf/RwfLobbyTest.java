@@ -101,7 +101,7 @@ final class RwfLobbyTest {
     assertThat(harness.rwf.getEntitiesByClass(ItemDisplay.class))
         .extracting(display -> display.getItemStack().getType())
         .containsExactlyInAnyOrder(
-            Material.IRON_SWORD, Material.STONE_SWORD, Material.WOODEN_SWORD, Material.IRON_SWORD);
+            Material.IRON_SWORD, Material.BOW, Material.ARROW, Material.CLOCK);
     assertThat(harness.rwf.getEntities()).allMatch(entity -> !entity.isPersistent());
   }
 

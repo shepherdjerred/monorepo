@@ -9,7 +9,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
-import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -194,25 +193,11 @@ final class RwfCommands {
     if (watchers.leave(player)) {
       return;
     }
-    var member = runner.memberOf(player.getUniqueId());
-    if (member.isEmpty()) {
-      Texts.error(player, "You are not in the match.");
-      return;
-    }
-    runner
-        .handle(new MatchEvent.Leave(member.orElseThrow().id(), runner.now()))
-        .ifPresent(error -> Texts.error(player, error));
+    runner.leave(player).ifPresent(error -> Texts.error(player, error));
   }
 
   private void pickKit(Player player, String kit) {
-    var member = runner.memberOf(player.getUniqueId());
-    if (member.isEmpty()) {
-      Texts.error(player, "You are not in the match.");
-      return;
-    }
-    runner
-        .handle(new MatchEvent.PickKit(member.orElseThrow().id(), kit))
-        .ifPresent(error -> Texts.error(player, error));
+    runner.pickKit(player, kit).ifPresent(error -> Texts.error(player, error));
   }
 
   private int who(CommandSender sender) {

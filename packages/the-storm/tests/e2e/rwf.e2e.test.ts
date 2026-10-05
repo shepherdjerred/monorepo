@@ -894,6 +894,113 @@ describe("Search and Destroy with humans only", () => {
   );
 });
 
+/**
+ * The kit menu: the four kits a slot apart across the chest's middle row,
+ * each shown by its icon item.
+ */
+const kitMenu = {
+  trooper: { slot: 10, icon: "iron_sword", name: "Trooper" },
+  longbow: { slot: 12, icon: "bow", name: "Longbow" },
+  shortbow: { slot: 14, icon: "arrow", name: "Shortbow" },
+  rewind: { slot: 16, icon: "clock", name: "Rewind" },
+} as const;
+
+/** The lobby's hotbar items: the kit selector last, the leave item beside it. */
+const selectorSlot = 8;
+const leaveSlot = 7;
+
+/** Right-clicks the selector and picks `kit` in the chest that opens. */
+async function pickFromMenu(
+  { bot, log }: Human,
+  kit: keyof typeof kitMenu,
+): Promise<void> {
+  const { slot, icon, name } = kitMenu[kit];
+  bot.setQuickBarSlot(selectorSlot);
+  await waitUntil(
+    "the selector is in hand",
+    () => bot.heldItem?.name === "nether_star",
+  );
+  const opened = new Promise<void>((resolve) => {
+    bot.once("windowOpen", () => {
+      resolve();
+    });
+  });
+  bot.activateItem();
+  await opened;
+  const window = bot.currentWindow;
+  if (window === null) {
+    throw new Error("the kit menu did not open");
+  }
+  expect(
+    Object.values(kitMenu).map((entry) => window.slots[entry.slot]?.name),
+  ).toEqual(Object.values(kitMenu).map((entry) => entry.icon));
+  expect(window.slots[slot]?.name).toBe(icon);
+  await bot.clickWindow(slot, 0, 0);
+  await log.until(new RegExp(String.raw`Now using kit ${name}\.`, "u"));
+}
+
+describe("Choosing a kit from the lobby", () => {
+  test(
+    "the selector's menu picks Longbow, which the player carries once the match starts",
+    { timeout: 120_000 },
+    async ({ bot, secondBot, rcon }) => {
+      await waitForLobby(rcon);
+      const a = human(bot);
+      const b = human(secondBot);
+      await join(a);
+      await waitUntil(
+        "the lobby items",
+        () =>
+          hotbar(bot, selectorSlot) === "nether_star" &&
+          hotbar(bot, leaveSlot) === "red_dye",
+      );
+
+      await pickFromMenu(a, "longbow");
+      // Equipping empties the inventory; the lobby items come straight back.
+      await waitUntil(
+        "the Longbow kit with the selector kept",
+        () =>
+          hotbar(bot, 2) === "bow" &&
+          hotbar(bot, selectorSlot) === "nether_star",
+      );
+      await waitUntil("the menu closed", () => bot.currentWindow === null);
+
+      await join(b);
+      await a.log.until(/The game has begun!/u, 30_000);
+      await teamOf(a.log);
+      // Longbow at the start: the fuse, a stone sword, the bow and an arrow,
+      // and no lobby items.
+      await waitUntil(
+        "the Longbow loadout",
+        () => hotbar(bot, 0) === "blaze_powder" && hotbar(bot, 2) === "bow",
+      );
+      expect(hotbar(bot, 1)).toBe("stone_sword");
+      expect(hotbar(bot, 3)).toBe("arrow");
+      expect(count(bot, "nether_star")).toBe(0);
+      expect(count(bot, "red_dye")).toBe(0);
+      // The armour, as the server holds it.
+      for (const [slot, item] of [
+        ["armor.head", "chainmail_helmet"],
+        ["armor.chest", "iron_chestplate"],
+        ["armor.legs", "iron_leggings"],
+        ["armor.feet", "chainmail_boots"],
+      ] as const) {
+        expect(
+          await rcon.command(
+            `execute if items entity ${bot.username} ${slot} minecraft:${item}`,
+          ),
+          `${slot} ${item}; the client sees ${armor(bot).join(",")}`,
+        ).toContain("Test passed");
+      }
+
+      // Leaving hands the other team the win and the lobby reopens.
+      bot.chat("/rwf leave");
+      await b.log.until(/wins!/u);
+      await waitForLobby(rcon);
+    },
+  );
+});
+
 describe("Search and Destroy without enough humans", () => {
   test(
     "a lone human's match ends at once unpaid with no bots, and a disconnect cancels the countdown",
