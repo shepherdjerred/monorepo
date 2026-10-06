@@ -83,12 +83,20 @@ describe("stopDaemonPid", () => {
 
   test("terminates the daemon when it ignores shutdown", async () => {
     const daemon = Bun.spawn(["sleep", "30"]);
-    expect(await daemonRunning(daemon.pid, "sleep 30")).toBe(true);
-    expect(
-      await stopDaemonPid(daemon.pid, { marker: "sleep 30", waitMs: 100 }),
-    ).toBe("terminated");
-    await daemon.exited;
-    expect(pidAlive(daemon.pid)).toBe(false);
+    try {
+      // Linux can expose the PID before the child's command line is ready.
+      await expect.poll(() => daemonRunning(daemon.pid, "sleep 30")).toBe(true);
+      expect(
+        await stopDaemonPid(daemon.pid, { marker: "sleep 30", waitMs: 100 }),
+      ).toBe("terminated");
+      await daemon.exited;
+      expect(pidAlive(daemon.pid)).toBe(false);
+    } finally {
+      if (daemon.exitCode === null) {
+        daemon.kill();
+      }
+      await daemon.exited;
+    }
   });
 
   test("reports not-running for missing or dead PIDs", async () => {
