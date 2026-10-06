@@ -79,6 +79,7 @@ const commands: Record<
       WOODPECKER_URL: "https://woodpecker.sjer.red",
       CI_REPO_SLUG: "monorepo",
       WOODPECKER_API_TOKEN: "smoke-test-token",
+      GITHUB_APPROVAL_READ_TOKEN: "smoke-test-approval-token",
     },
   },
   "alert-dashboard": {
