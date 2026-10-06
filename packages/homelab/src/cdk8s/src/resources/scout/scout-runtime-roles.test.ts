@@ -635,7 +635,7 @@ describe("Scout gateway observability", () => {
 
 describe("Hosted Scout roles", () => {
   test.each(SCOUT_STAGES)(
-    "runs one gateway and activity worker in %s",
+    "keeps the declared gateway and activity worker replicas in %s",
     (stage) => {
       const resources = scoutResources(stage);
       for (const name of ["scout-gateway", "scout-activity-worker"]) {
@@ -646,7 +646,7 @@ describe("Hosted Scout roles", () => {
         );
         expect(
           z.object({ replicas: z.number() }).parse(resource.spec).replicas,
-        ).toBe(1);
+        ).toBe(stage === "beta" ? 0 : 1);
         expect(resource.metadata["annotations"]).toEqual(
           expect.objectContaining({ "argocd.argoproj.io/sync-wave": "1" }),
         );
@@ -658,6 +658,40 @@ describe("Hosted Scout roles", () => {
       ).toBe(false);
     },
   );
+  test("Beta data maintenance fences all five application writers, not the database or Prod", () => {
+    const beta = scoutResources("beta");
+    const deployments = beta.filter(
+      (resource) => resource.kind === "Deployment",
+    );
+    expect(
+      deployments.map((resource) => resource.metadata.name).sort(),
+    ).toEqual([
+      "scout-beta-scout-activity-worker",
+      "scout-beta-scout-backend",
+      "scout-beta-scout-gateway",
+      "scout-beta-scout-workflow-worker-candidate",
+      "scout-beta-scout-workflow-worker-stable",
+    ]);
+    for (const resource of deployments) {
+      expect(
+        z.object({ replicas: z.number() }).parse(resource.spec).replicas,
+      ).toBe(0);
+    }
+    const database = findResource(beta, "postgresql", "scout-beta-postgresql");
+    expect(
+      z.object({ numberOfInstances: z.number() }).parse(database.spec)
+        .numberOfInstances,
+    ).toBe(1);
+    const prod = scoutResources("prod").filter(
+      (resource) => resource.kind === "Deployment",
+    );
+    expect(prod).toHaveLength(5);
+    for (const resource of prod) {
+      expect(
+        z.object({ replicas: z.number() }).parse(resource.spec).replicas,
+      ).toBe(1);
+    }
+  });
   test("monitoring names the deployed gateway owner", () => {
     expect(SCOUT_GATEWAY_OWNER_BY_STAGE).toEqual(
       SCOUT_STAGES.map((environment) => ({ environment, role: "gateway" })),
