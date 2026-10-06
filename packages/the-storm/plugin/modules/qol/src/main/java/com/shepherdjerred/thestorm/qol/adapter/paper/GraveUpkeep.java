@@ -157,6 +157,7 @@ final class GraveUpkeep {
       return false;
     }
     if (expired.contains(id)) {
+      if (clear(contents.grave())) maybeRemove(id);
       return true;
     }
     if (contents.isEmpty()) {
@@ -320,6 +321,11 @@ final class GraveUpkeep {
       return;
     }
     var chunk = world.getChunkAt(chunkX, chunkZ);
+    if (protection.isPreserved(
+        Blocks.block(runtime.server(), grave.pos()).orElseThrow().getLocation())) {
+      registry.unlock(grave.id());
+      return;
+    }
     runtime.onMain(
         store.beginExpiry(
             grave.id(), new GraveStore.Notice(grave.owner(), message, runtime.time().instant())),
@@ -347,19 +353,15 @@ final class GraveUpkeep {
         failure -> registry.unlock(grave.id()));
   }
 
-  private void clear(Grave grave) {
+  private boolean clear(Grave grave) {
     if (!Blocks.isLoaded(runtime.server(), grave.pos())) {
-      return;
+      return false;
     }
-    Blocks.block(runtime.server(), grave.pos())
-        .filter(block -> !protection.isPreserved(block.getLocation()))
-        .ifPresent(
-            block ->
-                GraveBlocks.clear(
-                    block,
-                    grave.id(),
-                    runtime.server().createBlockData(grave.replaced()),
-                    changes));
+    var block = Blocks.block(runtime.server(), grave.pos()).orElseThrow();
+    if (protection.isPreserved(block.getLocation())) return false;
+    GraveBlocks.clear(
+        block, grave.id(), runtime.server().createBlockData(grave.replaced()), changes);
+    return true;
   }
 
   /**
@@ -379,7 +381,10 @@ final class GraveUpkeep {
     }
     // Clearing first is retryable if SQLite fails. Deleting first could strand a head in
     // an unloaded chunk with no durable grave row left to find it.
-    clear(grave);
+    if (!clear(grave)) {
+      registry.unlock(id);
+      return;
+    }
     runtime.onMain(
         store.deleteEmpty(id),
         "removing an emptied grave",

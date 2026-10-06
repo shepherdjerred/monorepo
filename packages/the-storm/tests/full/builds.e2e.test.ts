@@ -22,6 +22,37 @@ async function join(bot: Bot, round?: number) {
   await joined;
 }
 
+const PursuitPositionsSchema = z.array(
+  z.object({ id: z.guid(), x: z.number(), y: z.number(), z: z.number() }),
+);
+
+async function middleTerrace(
+  rcon: RconClient,
+  player: string,
+  cohort: Set<string>,
+  timeoutMs: number,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    const enemies = PursuitPositionsSchema.parse(
+      JSON.parse(
+        await rcon.command(`storm-fixture-survival positions ${player} none`),
+      ),
+    );
+    if (
+      enemies.some(
+        (enemy) => cohort.has(enemy.id) && enemy.y > 87 && enemy.y < 91,
+      )
+    )
+      return;
+    if (Date.now() > deadline)
+      throw new Error(
+        "Timed out waiting for the upper horde descends to the middle terrace",
+      );
+    await Bun.sleep(50);
+  }
+}
+
 async function start(bot: Bot, rcon: RconClient, round: number) {
   await rcon.command("difficulty normal");
   const started = waitForMessage(
@@ -261,6 +292,7 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
         `round ${round.toString()} pursues ${count.toString()} survivors across elevated terrain`,
         async ({ bot, server, rcon }) => {
           const teammates: Bot[] = [];
+          const upperCohort = new Set<string>();
           await rcon.command(`op ${bot.username}`);
           await join(bot, round);
           try {
@@ -304,9 +336,8 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               pursuitLegMs,
             );
             // UUIDs survive the client unloading and reloading the distant horde.
-            const upperCohort = new Set(
-              upperHorde().map((entity) => z.guid().parse(entity.uuid)),
-            );
+            for (const entity of upperHorde())
+              upperCohort.add(z.guid().parse(entity.uuid));
             for (const player of [bot, ...teammates])
               await rcon.command(
                 `minecraft:tp ${player.username} 27.5 73 65.5`,
@@ -315,19 +346,9 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               "lower wharf arrival",
               () => bot.entity.position.y < 74 && bot.entity.position.x > 26,
             );
-            // The expanded map has two stair legs between its three terraces.
-            await waitUntil(
-              "the upper horde descends to the middle terrace",
-              () =>
-                Object.values(bot.entities).some(
-                  (entity) =>
-                    entity.uuid !== undefined &&
-                    upperCohort.has(entity.uuid) &&
-                    entity.position.y > 87 &&
-                    entity.position.y < 91,
-                ),
-              pursuitLegMs,
-            );
+            // Distant mobs can leave the client's tracking range on the middle
+            // terrace. Observe the same UUIDs on Paper through both stair legs.
+            await middleTerrace(rcon, bot.username, upperCohort, pursuitLegMs);
             await waitUntil(
               "horde traverses dock routes",
               () =>
@@ -344,7 +365,10 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
             const pursuit = await rcon.command(
               `storm-fixture-survival pursuit ${bot.username} none`,
             );
-            throw new Error(`${String(error)}; ${pursuit}`, { cause: error });
+            throw new Error(
+              `${String(error)}; cohort=${[...upperCohort].join(",")}; ${pursuit}`,
+              { cause: error },
+            );
           } finally {
             await rcon.command("arena stop settlement");
             await rcon.command("difficulty peaceful");

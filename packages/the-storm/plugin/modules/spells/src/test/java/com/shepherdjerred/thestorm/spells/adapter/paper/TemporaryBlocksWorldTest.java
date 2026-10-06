@@ -190,8 +190,9 @@ final class TemporaryBlocksWorldTest {
   @Test
   void staleRecoveryRowsAndMarkersCannotRewritePreservedTerrain() {
     var block = air(0);
-    place(List.of(block), 10);
-    // A restored block can match an old temporary placement by coincidence.
+    blocks.place(List.of(block), Material.GLASS.createBlockData(), Duration.ofSeconds(10));
+    // Restored terrain replaced the old spell block; its stale marker cannot overwrite it.
+    block.setType(Material.DEEPSLATE_BRICKS);
     harness.protection.preserveClaim = true;
     var restarted = newBlocks();
     restarted.recover(
@@ -205,6 +206,56 @@ final class TemporaryBlocksWorldTest {
     assertThat(store.rows).isEmpty();
     assertThat(ChunkMarkers.entries(block.getChunk())).isEmpty();
     assertThat(harness.recordedChanges).hasSize(1);
+  }
+
+  @Test
+  void preservationDefersExpiryWithoutDiscardingTheRecoveryRowOrMarker() {
+    var block = air(0);
+    place(List.of(block), 10);
+    harness.protection.preserveClaim = true;
+    harness.clock.advance(Duration.ofSeconds(11));
+    blocks.sweep();
+
+    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
+    assertThat(store.rows).hasSize(1);
+    assertThat(ChunkMarkers.entries(block.getChunk())).hasSize(1);
+    assertThat(blocks.holds(block)).isTrue();
+    assertThat(harness.recordedChanges).hasSize(1);
+
+    harness.protection.preserveClaim = false;
+    blocks.sweep();
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(store.rows).isEmpty();
+    assertThat(ChunkMarkers.entries(block.getChunk())).isEmpty();
+    assertThat(blocks.holds(block)).isFalse();
+    assertThat(harness.recordedChanges).hasSize(2);
+  }
+
+  @Test
+  void aPreservedMarkerWithoutADatabaseRowCanResumeRecoveryAfterRestart() {
+    var block = air(0);
+    place(List.of(block), 10);
+    store.rows.clear();
+    harness.protection.preserveClaim = true;
+    harness.clock.advance(Duration.ofSeconds(11));
+    var restarted = newBlocks();
+    restarted.recover(
+        () -> {},
+        failure -> {
+          throw new AssertionError(failure);
+        });
+
+    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
+    assertThat(ChunkMarkers.entries(block.getChunk())).hasSize(1);
+    assertThat(restarted.holds(block)).isTrue();
+    assertThat(harness.recordedChanges).hasSize(1);
+
+    harness.protection.preserveClaim = false;
+    restarted.sweep();
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(ChunkMarkers.entries(block.getChunk())).isEmpty();
+    assertThat(restarted.holds(block)).isFalse();
+    assertThat(harness.recordedChanges).hasSize(2);
   }
 
   @Test

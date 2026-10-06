@@ -19,11 +19,13 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
 import java.util.List;
@@ -203,6 +205,44 @@ final class ReflexTest {
     assertThat(started).isEqualTo(2);
     assertThat(self.health()).isGreaterThanOrEqualTo(Reflex.EAT_UNTIL);
     assertThat(state.isEating()).isFalse();
+  }
+
+  @Test
+  void walkingLeavesAResponseMarginBeyondTheMeleeSpacingBand() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, new Vec3(5.5, 1, 8.25));
+    var path =
+        java.util.stream.IntStream.rangeClosed(1, 5)
+            .mapToObj(step -> new Waypoint(self.pos().plus(step * 2, 0, 0), Hop.WALK))
+            .toList();
+    var decision =
+        new Decision(
+            self.id(),
+            Option.TAKE_SLOT,
+            Optional.empty(),
+            path,
+            Stance.CAUTIOUS,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "take_slot:route",
+            1,
+            0);
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, ally), List.of()), decision, Optional.empty(), 0),
+            context(levers(1)),
+            new SplittableRandom(4));
+    var move =
+        step.commands().stream()
+            .filter(BodyCommand.MoveToward.class::isInstance)
+            .map(BodyCommand.MoveToward.class::cast)
+            .findFirst()
+            .orElseThrow();
+    assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
+    assertThat(move.waypoint().z()).isLessThan(self.pos().z());
   }
 
   @Test

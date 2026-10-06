@@ -256,6 +256,59 @@ final class GravesPaperTest {
   }
 
   @Test
+  void anEmptiedPreservedGraveRetainsItsMarkerAndRowUntilCleanupCanResume() {
+    var alice = aliceDies();
+    alice.respawn();
+    harness.land.preserved = location -> true;
+    rightClick(alice, graveBlock());
+    harness.until(
+        () -> harness.graves.all().size() == 1 && harness.graves.all().getFirst().isEmpty());
+
+    assertThat(alice.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.DIAMOND_SWORD));
+    assertThat(GraveBlocks.idAt(graveBlock())).isPresent();
+    assertThat(harness.store.loadAll().join())
+        .singleElement()
+        .satisfies(contents -> assertThat(contents.items()).isEmpty());
+
+    harness.land.preserved = location -> false;
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.until(() -> harness.graves.all().isEmpty());
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(harness.store.loadAll().join()).isEmpty();
+  }
+
+  @Test
+  void preservationDefersGraveExpiryAndItsItemProjection() {
+    aliceDies();
+    harness.land.preserved = location -> true;
+    harness.clock.advance(Duration.ofDays(7));
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.server.getScheduler().performTicks(20);
+
+    assertThat(GraveBlocks.idAt(graveBlock())).isPresent();
+    assertThat(harness.store.pendingDrops().join()).isEmpty();
+    assertThat(harness.store.loadAll().join())
+        .singleElement()
+        .satisfies(contents -> assertThat(contents.items()).hasSize(3));
+
+    harness.land.preserved = location -> false;
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.until(() -> harness.store.pendingDrops().join().size() == 3);
+    harness.until(() -> graveBlock().getType() == Material.AIR);
+    harness.until(() -> harness.world.getEntitiesByClass(ItemDisplay.class).size() == 3);
+    assertThat(harness.world.getEntitiesByClass(ItemDisplay.class)).hasSize(3);
+  }
+
+  @Test
   void strangersAreLockedOutUntilTheLockEnds() {
     aliceDies();
     var bob = harness.playerAt("Bob", 2, 0);

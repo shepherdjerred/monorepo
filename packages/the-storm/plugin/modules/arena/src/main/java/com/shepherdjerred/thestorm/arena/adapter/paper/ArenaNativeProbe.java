@@ -42,25 +42,7 @@ public final class ArenaNativeProbe {
         player.setFoodLevel(10);
         yield "Prepared native food consumption";
       }
-      case "targets" -> {
-        for (var index = 0; index < 3; index++) {
-          var target =
-              runner
-                  .world()
-                  .spawnAt(
-                      new com.shepherdjerred.thestorm.arena.domain.wave.SpawnUnit(
-                          "zombie", 100, 1, 1),
-                      Places.at(player).clone().add(-4, 0, (index - 1) * 2),
-                      true)
-                  .orElseThrow()
-                  .getFirst();
-          runner.combat().probeTarget(target);
-          target.setAI(false);
-          target.customName(net.kyori.adventure.text.Component.text("Legendary target " + index));
-          target.setCustomNameVisible(true);
-        }
-        yield "Prepared three native legendary targets";
-      }
+      case "targets" -> targets(runner, player);
       case "legendary" -> {
         var id = com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon.valueOf(value);
         if (!runner.items().deliver(player, java.util.List.of(runner.items().legendary(id))))
@@ -89,6 +71,20 @@ public final class ArenaNativeProbe {
             + " "
             + runner.talents().status(player);
       }
+      case "positions" ->
+          runner.world().enemies().stream()
+              .map(
+                  enemy -> {
+                    var at = enemy.getLocation();
+                    return String.format(
+                        java.util.Locale.ROOT,
+                        "{\"id\":\"%s\",\"x\":%s,\"y\":%s,\"z\":%s}",
+                        enemy.getUniqueId(),
+                        at.getX(),
+                        at.getY(),
+                        at.getZ());
+                  })
+              .collect(java.util.stream.Collectors.joining(",", "[", "]"));
       case "pursuit" ->
           "Fighter "
               + Places.at(player)
@@ -99,6 +95,8 @@ public final class ArenaNativeProbe {
                   .map(
                       enemy ->
                           enemy.getType()
+                              + " id="
+                              + enemy.getUniqueId()
                               + " at="
                               + enemy.getLocation()
                               + " target="
@@ -140,6 +138,25 @@ public final class ArenaNativeProbe {
       }
       default -> throw new IllegalArgumentException("Unknown native probe action " + action);
     };
+  }
+
+  private static String targets(SurvivalRunner runner, Player player) {
+    for (var index = 0; index < 3; index++) {
+      var target =
+          runner
+              .world()
+              .spawnAt(
+                  new com.shepherdjerred.thestorm.arena.domain.wave.SpawnUnit("zombie", 100, 1, 1),
+                  Places.at(player).clone().add(-4, 0, (index - 1) * 2),
+                  true)
+              .orElseThrow()
+              .getFirst();
+      runner.combat().probeTarget(target);
+      target.setAI(false);
+      target.customName(net.kyori.adventure.text.Component.text("Legendary target " + index));
+      target.setCustomNameVisible(true);
+    }
+    return "Prepared three native legendary targets";
   }
 
   public static void pursue(AbstractCubeMob cube, Player target) {

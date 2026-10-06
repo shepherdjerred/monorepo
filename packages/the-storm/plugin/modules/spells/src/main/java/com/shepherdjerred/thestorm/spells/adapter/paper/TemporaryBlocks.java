@@ -329,7 +329,9 @@ public final class TemporaryBlocks {
     try {
       for (var marker : ChunkMarkers.entries(chunk)) {
         if (!ledger.holds(marker.key())) {
-          revert(marker, blockIn(chunk, marker.key()));
+          if (!revert(marker, blockIn(chunk, marker.key()))) {
+            ledger.restore(List.of(marker));
+          }
         }
       }
     } catch (RuntimeException failure) {
@@ -433,7 +435,8 @@ public final class TemporaryBlocks {
   private boolean revert(TemporaryBlock record, Block current) {
     var action =
         RevertRule.decide(record, current.getBlockData().getAsString(), current.getType().isAir());
-    if (action == RevertRule.Action.RESTORE && !protection.isPreserved(current.getLocation())) {
+    if (action == RevertRule.Action.RESTORE) {
+      if (protection.isPreserved(current.getLocation())) return false;
       changes.set(
           "#storm-spells-revert", current, server.createBlockData(record.original()), false);
     }

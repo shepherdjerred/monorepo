@@ -59,8 +59,11 @@ public final class Reflex {
   private static final double WAYPOINT_REACHED = 0.45;
   private static final double ALLY_SPACING = 0.9;
 
-  /** Teammates closer than this push each other apart while walking and fighting. */
+  /** Teammates closer than this push each other apart while fighting. */
   static final double SEPARATION = 2.5;
+
+  /** Moving formations leave another half block for teammates closing the gap. */
+  static final double WALK_SEPARATION = 3.0;
 
   /** The last waypoints of a path, which a bot walks straight at whoever is near. */
   static final int FINAL_STRAIGHT = 3;
@@ -359,7 +362,7 @@ public final class Reflex {
       }
       var radial = toTarget.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var apart = apart();
+      var apart = apart(SEPARATION);
       var closing = closing(distance, apart);
       var move = side.plus(radial.scale(closing)).plus(apart.scale(2.5));
       var point = self.pos().plus(move.isZero() ? radial : move.normalized());
@@ -398,11 +401,11 @@ public final class Reflex {
       }
       // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
       if (index < waypoints.size() - FINAL_STRAIGHT) {
-        destination = bend(destination, apart());
+        destination = bend(destination, apart(WALK_SEPARATION));
       }
       if (yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
-        var push = apart();
+        var push = apart(WALK_SEPARATION);
         commands.add(
             push.isZero()
                 ? new BodyCommand.Stop()
@@ -451,10 +454,10 @@ public final class Reflex {
     }
 
     /**
-     * A horizontal push away from teammates closer than {@link #SEPARATION}, stronger the closer
+     * A horizontal push away from teammates closer than the supplied spacing, stronger the closer
      * they are, so a team does not bunch up in a doorway or a brawl.
      */
-    private Vec3 apart() {
+    private Vec3 apart(double spacing) {
       var push = Vec3.ZERO;
       for (var other : input.snapshot().alive(self.team())) {
         if (other.id().equals(self.id())) {
@@ -462,8 +465,8 @@ public final class Reflex {
         }
         var away = self.pos().minus(other.pos()).horizontal();
         var distance = away.length();
-        if (distance < SEPARATION && distance > 1.0e-3) {
-          push = push.plus(away.normalized().scale((SEPARATION - distance) / SEPARATION));
+        if (distance < spacing && distance > 1.0e-3) {
+          push = push.plus(away.normalized().scale((spacing - distance) / spacing));
         }
       }
       return push;
@@ -471,7 +474,7 @@ public final class Reflex {
 
     /** Holding a slot or drawing a bow still leaves room for crowding teammates. */
     private void standApart() {
-      var push = apart();
+      var push = apart(WALK_SEPARATION);
       commands.add(
           push.isZero()
               ? new BodyCommand.Stop()

@@ -98,6 +98,7 @@ final class QolHarness implements AutoCloseable {
   static final class Land implements Protection {
     Predicate<Location> noContainers = location -> false;
     Predicate<Location> noBuilding = location -> false;
+    Predicate<Location> preserved = location -> false;
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
@@ -120,7 +121,7 @@ final class QolHarness implements AutoCloseable {
 
     @Override
     public boolean isPreserved(Location location) {
-      return false;
+      return preserved.test(location);
     }
 
     @Override
