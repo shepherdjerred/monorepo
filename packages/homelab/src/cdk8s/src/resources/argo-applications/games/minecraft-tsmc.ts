@@ -241,6 +241,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
         },
       },
     },
+    // Paper expects HAProxy's PROXY header when connecting. mc-health normally
+    // speaks raw Minecraft, so its probes must use the PROXY-aware mode too.
+    livenessProbe: { command: ["mc-health", "--use-proxy"] },
+    readinessProbe: { command: ["mc-health", "--use-proxy"] },
   };
 
   // DNS records are now managed by mc-router

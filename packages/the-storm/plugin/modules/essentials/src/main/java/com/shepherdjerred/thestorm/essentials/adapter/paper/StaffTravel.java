@@ -28,12 +28,12 @@ final class StaffTravel {
     for (var name : List.of("tphere", "tpohere"))
       tools.add(
           name + " <player>",
-          request ->
-              tools.teleport(
-                  request,
-                  tools.player(request.actor(), request.word(0)),
-                  Positions.current(request.self()),
-                  "tpohere".equals(name)));
+          request -> {
+            var target = tools.player(request.actor(), request.word(0));
+            request.others(target);
+            tools.teleport(
+                request, target, Positions.current(request.self()), "tpohere".equals(name));
+          });
     tools.add("tppos <x> <y> <z> [world]", this::coordinates);
     tools.add(
         "tpall",
