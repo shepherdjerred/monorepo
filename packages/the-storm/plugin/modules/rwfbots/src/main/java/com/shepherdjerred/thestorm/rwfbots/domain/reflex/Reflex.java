@@ -296,8 +296,11 @@ public final class Reflex {
       }
       var yaw = Facing.looking(self.eye(), aimPoint).yaw();
       var desired = new Facing(yaw, pitch.getAsDouble());
-      state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
-      standApart();
+      // Keep approaching the claimed slot or cover while drawing, at walking
+      // speed. Route steering must not turn the bow away from its target.
+      var previousAim = state.aim();
+      walk(Optional.of(false));
+      state = state.withAim(AimController.aim(previousAim, desired, levers(), random));
       if (!state.isDrawing()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().bowSlot()));
         commands.add(new BodyCommand.StartUse());

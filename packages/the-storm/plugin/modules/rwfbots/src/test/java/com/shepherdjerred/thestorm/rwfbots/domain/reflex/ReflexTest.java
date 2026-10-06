@@ -208,6 +208,36 @@ final class ReflexTest {
   }
 
   @Test
+  void drawingABowKeepsApproachingTheClaimedPositionWithoutSprinting() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var enemy = combatant(2, BLUE, self.pos().plus(15, 0, 0));
+    var destination = self.pos().plus(0, 0, 2);
+    var decision =
+        new Decision(
+            self.id(),
+            Option.TAKE_SLOT,
+            Optional.of(enemy.id()),
+            List.of(new Waypoint(destination, Hop.WALK)),
+            Stance.AGGRESSIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "take_slot:route",
+            1,
+            0);
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, enemy), List.of()), decision, Optional.of(enemy), 0),
+            new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.LONGBOW)),
+            new SplittableRandom(4));
+    assertThat(step.state().isDrawing()).isTrue();
+    assertThat(step.commands()).contains(new BodyCommand.MoveToward(destination, false));
+    assertThat(step.state().aim().look().yaw()).isLessThan(0);
+  }
+
+  @Test
   void walkingCorrectionGrowsAsTheGapToATeammateShrinks() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var near = combatant(2, RED, self.pos().plus(0, 0, 2));
