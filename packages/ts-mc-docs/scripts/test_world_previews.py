@@ -138,7 +138,7 @@ class PreviewTests(unittest.TestCase):
 
         missing = previews[0]["url"].removeprefix(f"{ORIGIN}/")
 
-        def check(key, size=None):
+        def check(key: str, size: int | None = None) -> None:
             if key == missing:
                 raise RuntimeError("Missing preview")
 
