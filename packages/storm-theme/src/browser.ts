@@ -2,6 +2,7 @@ import { z } from "zod";
 import { resolveTheme, themeCatalog, ThemeIdSchema } from "./catalog.ts";
 import {
   defaultPreferences,
+  localPreferenceCookie,
   PreferencesSchema,
   readPreferences,
   preferenceCookie,
@@ -38,7 +39,9 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
   if (docs && api) startViewer(root, api);
   const media = matchMedia("(prefers-color-scheme: dark)"),
     reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  let preferences = readPreferences(document.cookie) ?? {
+  const cookieName =
+    sync === "local" ? localPreferenceCookie : preferenceCookie;
+  let preferences = readPreferences(document.cookie, cookieName) ?? {
     ...defaultPreferences,
   };
   let publicTheme = resolveTheme("auto", true, new Date()),
@@ -93,7 +96,7 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
   }
   async function save(next: StormPreferences) {
     if (!api) {
-      document.cookie = `${preferenceCookie}=${encodeURIComponent(JSON.stringify(next))}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+      document.cookie = `${cookieName}=${encodeURIComponent(JSON.stringify(next))}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
       preferences = next;
       apply();
       if (status) status.textContent = "Saved.";

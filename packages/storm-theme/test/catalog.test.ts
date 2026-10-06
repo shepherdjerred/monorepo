@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { themeCatalog } from "#src/catalog.ts";
 import { contrast } from "#src/colors.ts";
-import { readPreferences } from "#src/preferences.ts";
+import { localPreferenceCookie, readPreferences } from "#src/preferences.ts";
 
 describe("shared palettes", () => {
   for (const theme of themeCatalog.themes) {
@@ -63,5 +63,29 @@ describe("shared palettes", () => {
           ),
       ),
     ).toBeUndefined();
+  });
+  test("local docs and forum preferences use distinct cookies", () => {
+    const forum = encodeURIComponent(
+      JSON.stringify({
+        version: 1,
+        appearance: "dark",
+        theme: "halloween",
+        effects: true,
+      }),
+    );
+    const local = encodeURIComponent(
+      JSON.stringify({
+        version: 1,
+        appearance: "light",
+        theme: "normal",
+        effects: false,
+      }),
+    );
+    const cookies = `storm_preferences=${forum}; ${localPreferenceCookie}=${local}`;
+    expect(readPreferences(cookies)?.theme).toBe("halloween");
+    expect(readPreferences(cookies, localPreferenceCookie)).toMatchObject({
+      theme: "normal",
+      effects: false,
+    });
   });
 });
