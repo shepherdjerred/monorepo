@@ -168,6 +168,45 @@ come from `packages/version-catalog/src/catalog.json`; verify that the
 real bake target has an exact image entry there and that the publisher is
 reading that structured catalog rather than the generated runtime projection.
 
+## Bootstrap a configuration-extension graph change
+
+The deployed Woodpecker configuration extension selects the workflows for its
+own pull request. The
+[`GLOBAL_SELECTOR_INPUTS` definition](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/inputs.ts)
+makes changes under `packages/woodpecker-config-extension` inputs to every
+workflow. If a graph change retires a failing lane, the old extension selects
+that lane for the replacement PR and prevents the ordinary merge gate from
+passing. The
+[`images` release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
+and
+[`version-commit-back` lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts)
+run only on `main`, so those jobs cannot break the cycle before merge. The
+[PR-only repository administrator bypass](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/github/rulesets.tf)
+provides the narrow landing path for this recovery.
+
+Use this exceptional path only when the new graph removes or replaces the
+blocking workflow:
+
+1. Get explicit repository-owner authorization for an admin merge exception.
+2. Keep the graph change in its Git-Spice PR. Run the configuration extension's
+   focused build, typecheck, tests, and lint locally.
+3. Wait for the exact PR head's automated review, `verify`, and every unaffected
+   required check. Inspect the failed workflow logs and confirm that each
+   failure belongs only to a lane removed or replaced by the new graph.
+4. Have the repository owner merge that reviewed PR with the forge's admin
+   branch-protection override. This is the supported landing mechanism for the
+   bootstrap; do not mark the failing retired lane successful or modify its
+   required-check result.
+5. Monitor the resulting exact `main` pipeline through `images` and
+   `version-commit-back`. Wait for ArgoCD to reconcile
+   `woodpecker-woodpecker-config-extension`, then confirm that its running image
+   digest changed to the newly committed pin.
+6. Retry the affected PR and confirm that the replacement graph is selected.
+
+Never patch the live Deployment or image pin to break this cycle. The exception
+lands reviewed source; the ordinary image release, pin commit, and ArgoCD
+reconciliation still provide the deployment evidence.
+
 ## If GHCR rejects a workload pull
 
 The
