@@ -128,13 +128,13 @@ public final class Reflex {
    */
   public static int fuseGap(Levers levers, RandomGenerator random) {
     var meanSlip = (1 - levers.technique()) * FUSE_SLIP_SCALE;
-    var slip = meanSlip <= 0 ? 0 : -Math.log(1 - random.nextDouble()) * meanSlip;
+    var slip = meanSlip <= 0 ? 0 : -StrictMath.log(1 - random.nextDouble()) * meanSlip;
     return FUSE_BASE_GAP + (int) Math.round(slip);
   }
 
   /** The gap until the next melee click: never under the CPS floor, log-normally above it. */
   public static double clickGap(Levers levers, RandomGenerator random) {
-    var factor = Math.exp(CLICK_GAP_LOG_MEAN + CLICK_GAP_LOG_SIGMA * random.nextGaussian());
+    var factor = StrictMath.exp(CLICK_GAP_LOG_MEAN + CLICK_GAP_LOG_SIGMA * random.nextGaussian());
     return levers.minClickGapTicks() * Math.max(1, factor);
   }
 

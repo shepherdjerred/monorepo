@@ -337,8 +337,13 @@ Only Kubernetes' harmless empty selector defaults are normalized.
 Its `acquire` operation verifies an empty server, closes all four Service routes,
 disables router wake, stops Paper through its normal grace period, and acquires
 the request-owned offline lease. Updates use resource-version comparisons.
-Live dry-run probes must demonstrate that both StatefulSet and scale requests
-are denied. A failed or interrupted acquisition resumes from its private journal
+Live dry-run probes must demonstrate that StatefulSet, scale and deletion requests
+are denied, together with attempts to reopen or delete each of the four Services.
+Service admission binds the parent lease, requires closed selectors and the same
+request owner, and refuses replacement until the parent lease is released.
+Before that parent exists, normal Service creation is allowed for bootstrap;
+a leased parent cannot disappear because its deletion guard remains active.
+A failed or interrupted acquisition resumes from its private journal
 and retains closed admission. Ordinary live harness access refuses and the mining
 reset defers while the restoration lease is held.
 
@@ -429,6 +434,9 @@ with Java wake last. The controller requires unchanged verification, removed
 helpers, a stopped owned volume and the reconciled original image at both Helm
 precedence levels. Recovery release resumes after an interrupted route reopening.
 Creating another writer invalidates both candidate and rollback acceptance.
+It also revokes the prior installation authorization before granting write access.
+Only a newly verified installation can authorize candidate startup again; a
+whole-volume recovery primitive cannot leave a stale candidate start permission.
 Do not restart an old image against the activation database or restore only
 the overworld after other plugins have run.
 

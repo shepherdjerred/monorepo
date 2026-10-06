@@ -147,4 +147,96 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
     },
     spec: { policyName: deletePolicyName, validationActions: ["Deny"] },
   });
+
+  // Services are the private admission barrier. A replacement must not expose
+  // the validating pod by restoring the chart's ordinary selectors.
+  const servicePriorLeased = `oldObject != null && (${priorLeased})`;
+  const closed = `has(object.spec.selector) && '${RESTORE_ACCESS_SELECTOR}' in object.spec.selector && object.spec.selector['${RESTORE_ACCESS_SELECTOR}'] == 'closed' && object.spec.type == (request.name == 'minecraft-tsmc-bedrock' ? 'NodePort' : 'ClusterIP')`;
+  for (const operation of ["write", "delete"] as const) {
+    const servicePolicyName = `minecraft-tsmc-world-restoration-service-${operation}.sjer.red`;
+    const validations =
+      operation === "write"
+        ? [
+            {
+              expression: `!(${parentLeased}) || ((${leased}) && ${annotations}['${RESTORE_LEASE_ANNOTATION}'] == ${parentAnnotations}['${RESTORE_LEASE_ANNOTATION}'] && (${closed}))`,
+              message:
+                "Keep restoration Services closed under the parent lease owner",
+              reason: "Forbidden",
+            },
+            {
+              expression: `!(${servicePriorLeased}) || ((${leased}) && ${annotations}['${RESTORE_LEASE_ANNOTATION}'] == ${priorAnnotations}['${RESTORE_LEASE_ANNOTATION}'] && (${closed})) || (!(${parentLeased}) && params.spec.replicas == 0 && !(${leased}))`,
+              message:
+                "Release a restoration Service only after stopping and releasing its parent",
+              reason: "Forbidden",
+            },
+          ]
+        : [
+            {
+              expression: `!(${parentLeased}) && (!(${priorLeased}) || params.spec.replicas == 0)`,
+              message:
+                "Release the restoration lease before deleting its Service",
+              reason: "Forbidden",
+            },
+          ];
+    new ApiObject(
+      chart,
+      `minecraft-tsmc-restoration-service-${operation}-policy`,
+      {
+        apiVersion: "admissionregistration.k8s.io/v1",
+        kind: "ValidatingAdmissionPolicy",
+        metadata: {
+          name: servicePolicyName,
+          annotations: { "argocd.argoproj.io/sync-wave": "-30" },
+        },
+        spec: {
+          failurePolicy: "Fail",
+          paramKind: { apiVersion: "apps/v1", kind: "StatefulSet" },
+          matchConstraints: {
+            matchPolicy: "Equivalent",
+            resourceRules: [
+              {
+                apiGroups: [""],
+                apiVersions: ["v1"],
+                operations:
+                  operation === "write" ? ["CREATE", "UPDATE"] : ["DELETE"],
+                resources: ["services"],
+                scope: "Namespaced",
+              },
+            ],
+          },
+          matchConditions: [
+            {
+              name: "the-storm-routes",
+              expression:
+                "request.namespace == 'minecraft-tsmc' && request.name in ['minecraft-tsmc', 'minecraft-tsmc-bedrock', 'minecraft-tsmc-bluemap', 'minecraft-tsmc-rcon']",
+            },
+          ],
+          validations,
+        },
+      },
+    );
+    new ApiObject(
+      chart,
+      `minecraft-tsmc-restoration-service-${operation}-binding`,
+      {
+        apiVersion: "admissionregistration.k8s.io/v1",
+        kind: "ValidatingAdmissionPolicyBinding",
+        metadata: {
+          name: servicePolicyName,
+          annotations: { "argocd.argoproj.io/sync-wave": "-29" },
+        },
+        spec: {
+          policyName: servicePolicyName,
+          validationActions: ["Deny"],
+          paramRef: {
+            name: "minecraft-tsmc",
+            namespace: "minecraft-tsmc",
+            // Bootstrap creates Services before the parent. Once leased, the
+            // parent deletion guard guarantees this parameter cannot disappear.
+            parameterNotFoundAction: "Allow",
+          },
+        },
+      },
+    );
+  }
 }

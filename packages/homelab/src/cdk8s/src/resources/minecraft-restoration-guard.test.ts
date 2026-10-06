@@ -44,7 +44,7 @@ describe("world restoration maintenance guard", () => {
     const resources = parseAllDocuments(app.synthYaml()).map((document) =>
       Resource.parse(document.toJS()),
     );
-    expect(resources).toHaveLength(6);
+    expect(resources).toHaveLength(10);
     const policy = z
       .object({
         failurePolicy: z.literal("Fail"),
@@ -155,6 +155,71 @@ describe("world restoration maintenance guard", () => {
         },
       ],
     });
+  });
+});
+
+describe("restoration route admission", () => {
+  test("keeps all four Services closed and blocks replacement under the parent lease", () => {
+    const app = new App();
+    createMinecraftRestorationGuard(new Chart(app, "apps"));
+    const resources = parseAllDocuments(app.synthYaml()).map((document) =>
+      Resource.parse(document.toJS()),
+    );
+    const policies = resources.filter(
+      (resource) => resource.kind === "ValidatingAdmissionPolicy",
+    );
+    expect(policies[3]?.spec).toMatchObject({
+      failurePolicy: "Fail",
+      paramKind: { apiVersion: "apps/v1", kind: "StatefulSet" },
+      matchConstraints: {
+        resourceRules: [
+          {
+            apiGroups: [""],
+            resources: ["services"],
+            operations: ["CREATE", "UPDATE"],
+          },
+        ],
+      },
+      matchConditions: [
+        {
+          expression:
+            "request.namespace == 'minecraft-tsmc' && request.name in ['minecraft-tsmc', 'minecraft-tsmc-bedrock', 'minecraft-tsmc-bluemap', 'minecraft-tsmc-rcon']",
+        },
+      ],
+    });
+    const validations = z
+      .object({ validations: z.array(z.object({ expression: z.string() })) })
+      .parse(policies[3]?.spec).validations;
+    expect(validations[0]?.expression).toContain("params.metadata.annotations");
+    expect(validations[0]?.expression).toContain("object.spec.selector");
+    expect(validations[0]?.expression).toContain("== 'closed'");
+    expect(validations[1]?.expression).toContain("oldObject != null");
+    expect(validations[1]?.expression).toContain("params.spec.replicas == 0");
+    expect(policies[4]?.spec).toMatchObject({
+      failurePolicy: "Fail",
+      matchConstraints: {
+        resourceRules: [{ resources: ["services"], operations: ["DELETE"] }],
+      },
+      validations: [
+        {
+          expression: `!(has(params.metadata.annotations) && '${RESTORE_LEASE_ANNOTATION}' in params.metadata.annotations) && (!(has(oldObject.metadata.annotations) && '${RESTORE_LEASE_ANNOTATION}' in oldObject.metadata.annotations) || params.spec.replicas == 0)`,
+        },
+      ],
+    });
+    for (const binding of resources
+      .filter(
+        (resource) => resource.kind === "ValidatingAdmissionPolicyBinding",
+      )
+      .slice(3)) {
+      expect(binding.spec).toMatchObject({
+        validationActions: ["Deny"],
+        paramRef: {
+          name: "minecraft-tsmc",
+          namespace: "minecraft-tsmc",
+          parameterNotFoundAction: "Allow",
+        },
+      });
+    }
   });
 
   test("preserves operator-owned restore annotations through Argo reconciliation", () => {

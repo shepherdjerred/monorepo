@@ -24,8 +24,11 @@ public record Facing(double yaw, double pitch) {
   public Vec3 direction() {
     var yawRad = Math.toRadians(yaw);
     var pitchRad = Math.toRadians(pitch);
-    var cosPitch = Math.cos(pitchRad);
-    return new Vec3(-Math.sin(yawRad) * cosPitch, -Math.sin(pitchRad), Math.cos(yawRad) * cosPitch);
+    var cosPitch = StrictMath.cos(pitchRad);
+    return new Vec3(
+        -StrictMath.sin(yawRad) * cosPitch,
+        -StrictMath.sin(pitchRad),
+        StrictMath.cos(yawRad) * cosPitch);
   }
 
   /** The facing that looks along {@code direction}, which must be non-zero. */
@@ -34,8 +37,9 @@ public record Facing(double yaw, double pitch) {
     if (horizontal < 1.0e-9 && Math.abs(direction.y()) < 1.0e-9) {
       throw new IllegalArgumentException("a zero direction has no facing");
     }
-    var yaw = horizontal < 1.0e-9 ? 0 : Math.toDegrees(Math.atan2(-direction.x(), direction.z()));
-    var pitch = -Math.toDegrees(Math.atan2(direction.y(), horizontal));
+    var yaw =
+        horizontal < 1.0e-9 ? 0 : Math.toDegrees(StrictMath.atan2(-direction.x(), direction.z()));
+    var pitch = -Math.toDegrees(StrictMath.atan2(direction.y(), horizontal));
     return new Facing(yaw, Math.clamp(pitch, -90, 90));
   }
 

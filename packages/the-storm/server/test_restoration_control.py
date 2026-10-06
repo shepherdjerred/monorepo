@@ -31,11 +31,13 @@ class Cluster:
         self.late_join = False
         self.stale_patch = False
         for resource in json.loads(Path(__file__).with_name("restoration-guards.json").read_text()):
-            self.objects[resource["kind"].lower(), resource["name"]] = JsonObject({
-                "metadata": {"generation": 1},
-                "status": {"observedGeneration": 1, "typeChecking": {}},
-                "spec": resource["spec"],
-            })
+            self.objects[resource["kind"].lower(), resource["name"]] = JsonObject(
+                {
+                    "metadata": {"generation": 1},
+                    "status": {"observedGeneration": 1, "typeChecking": {}},
+                    "spec": resource["spec"],
+                }
+            )
         self.objects["statefulset", control.SERVER] = JsonObject(
             {
                 "metadata": {"uid": "server-uid", "resourceVersion": "1", "annotations": {}},
@@ -145,11 +147,14 @@ class RestorationControlTest(unittest.TestCase):
         self.cluster = Cluster()
         self.addCleanup(patch.stopall)
         patch.object(
-            control, "read",
+            control,
+            "read",
             side_effect=lambda kind, name, namespace=control.NAMESPACE: self.cluster.read(kind, name, namespace),
         ).start()
         patch.object(
-            control, "run", side_effect=lambda arguments, timeout=30: self.cluster.run(arguments, timeout),
+            control,
+            "run",
+            side_effect=lambda arguments, timeout=30: self.cluster.run(arguments, timeout),
         ).start()
         self.guard_probe = control.assert_denied
         self.probes = patch.object(control, "assert_denied").start()
@@ -196,10 +201,14 @@ class RestorationControlTest(unittest.TestCase):
                 "metadata": {"uid": "accepted-pod", "ownerReferences": [{"uid": "server-uid", "controller": True}]},
                 "spec": {"containers": [{"name": control.SERVER, "image": IMAGE}]},
                 "status": {
-                    "containerStatuses": [{
-                        "ready": True, "imageID": "docker-pullable://" + IMAGE,
-                        "containerID": "containerd://accepted-instance", "restartCount": 0,
-                    }],
+                    "containerStatuses": [
+                        {
+                            "ready": True,
+                            "imageID": "docker-pullable://" + IMAGE,
+                            "containerID": "containerd://accepted-instance",
+                            "restartCount": 0,
+                        }
+                    ],
                 },
             }
         )
@@ -231,21 +240,32 @@ class RestorationControlTest(unittest.TestCase):
         journal["readersRemoved"] = True
         journal["backup"] = {"uid": "backup-uid"}
         proof = self.path.parent / "whole-proof.json"
-        control.save(proof, {
-            "schemaVersion": 1, "status": "VERIFIED", "requestId": REQUEST,
-            "backupUid": "backup-uid", "sourceVolumeUid": "volume-uid",
-            "restoredVolumeUid": "restored-volume-uid",
-            "files": {"world/level.dat": "d" * 64, "plugins/TheStorm/the-storm.db": "e" * 64},
-        })
+        control.save(
+            proof,
+            {
+                "schemaVersion": 1,
+                "status": "VERIFIED",
+                "requestId": REQUEST,
+                "backupUid": "backup-uid",
+                "sourceVolumeUid": "volume-uid",
+                "restoredVolumeUid": "restored-volume-uid",
+                "files": {"world/level.dat": "d" * 64, "plugins/TheStorm/the-storm.db": "e" * 64},
+            },
+        )
         journal["restore"] = {
-            "byteVerification": "VERIFIED", "proofPath": str(proof),
-            "proofSha256": control.restoration_files.digest(proof), "volumeUid": "restored-volume-uid",
+            "byteVerification": "VERIFIED",
+            "proofPath": str(proof),
+            "proofSha256": control.restoration_files.digest(proof),
+            "volumeUid": "restored-volume-uid",
         }
-        transaction = JsonObject({
-            "requestId": REQUEST, "phase": "WHOLE_VOLUME_RESTORED",
-            "wholeRollback": {"phase": "RESTORED"},
-            "original": {"world/level.dat": "d" * 64, "plugins/TheStorm/the-storm.db": "e" * 64},
-        })
+        transaction = JsonObject(
+            {
+                "requestId": REQUEST,
+                "phase": "WHOLE_VOLUME_RESTORED",
+                "wholeRollback": {"phase": "RESTORED"},
+                "original": {"world/level.dat": "d" * 64, "plugins/TheStorm/the-storm.db": "e" * 64},
+            }
+        )
         return journal, transaction
 
     def verify_rollback_fixture(self, journal: JsonObject, transaction: JsonObject, changed: bool = False) -> None:
@@ -266,7 +286,9 @@ class RestorationControlTest(unittest.TestCase):
             patch.object(control, "ensure_resource", return_value=reader),
             patch.object(control, "run", side_effect=run),
             patch.object(
-                control, "remote_fingerprint", return_value={} if changed else transaction.strings("original"),
+                control,
+                "remote_fingerprint",
+                return_value={} if changed else transaction.strings("original"),
             ),
         ):
             control.verify_rollback(self.path, journal)
@@ -288,10 +310,13 @@ class RestorationControlTest(unittest.TestCase):
         self.declare_image(journal.string("rollbackImage"))
         before = len(self.cluster.mutations)
         control.release_rollback(self.path, journal)
-        self.assertEqual(self.cluster.mutations[before:], [
-            ("statefulset", control.SERVER),
-            *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])],
-        ])
+        self.assertEqual(
+            self.cluster.mutations[before:],
+            [
+                ("statefulset", control.SERVER),
+                *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])],
+            ],
+        )
         self.assertEqual(journal.string("phase"), "REOPENED")
         before = len(self.cluster.mutations)
         self.cluster.server.object("spec")["replicas"] = 1
@@ -368,7 +393,15 @@ class RestorationControlTest(unittest.TestCase):
         pod = self.cluster.objects["pod", control.SERVER + "-0"]
         original = copy.deepcopy(pod)
         for change in (
-            "image", "digest", "owner", "ready", "podUid", "containerId", "restartCount", "missing", "synthetic",
+            "image",
+            "digest",
+            "owner",
+            "ready",
+            "podUid",
+            "containerId",
+            "restartCount",
+            "missing",
+            "synthetic",
         ):
             with self.subTest(change=change):
                 evidence = self.acceptance_evidence()
@@ -581,6 +614,79 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(journal["writerUid"], "recovery-writer")
         self.assertIs(journal["writerRemoved"], False)
 
+    def test_recovery_writer_revokes_candidate_start_before_any_rollback_receipt(self):
+        journal = self.installation_fixture()
+        journal["privateStartup"] = "STOPPED"
+        journal["writerUid"] = "removed-writer"
+        journal["writerRemoved"] = True
+        pod = control.writer_manifest(journal)
+        pod.object("metadata")["uid"] = "recovery-writer"
+        with (
+            patch.object(control, "run", side_effect=["", "Ready"]),
+            patch.object(control, "require_offline"),
+            patch.object(control, "ensure_resource", return_value=pod),
+        ):
+            control.create_writer(self.path, journal)
+        self.assertEqual(journal.object("installation").get("phase"), "WRITE_PENDING")
+        persisted = JsonObject.parse(self.path.read_bytes())
+        self.assertEqual(persisted.object("installation").get("phase"), "WRITE_PENDING")
+        # A direct whole-volume primitive changes only its on-volume journal.
+        # Removing that writer must not restore the old candidate authorization.
+        journal["writerRemoved"] = True
+        self.assertNotIn("wholeVolumeRecovery", journal)
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "verified installation"):
+            control.private_start(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+        control.require_offline(journal)
+
+    def test_only_a_successful_new_installation_restores_candidate_start_authorization(self):
+        for completed in (True, False):
+            with self.subTest(completed=completed):
+                self.path = self.path.parent / (
+                    "successful-installation.json" if completed else "failed-installation.json"
+                )
+                self.cluster = Cluster()
+                journal = self.installation_fixture()
+                journal["writerUid"] = "previous-writer"
+                plan = JsonObject(
+                    {
+                        "requestId": REQUEST,
+                        "candidateImage": IMAGE,
+                        "candidateJarSha256": "b" * 64,
+                        "backupUid": "backup-uid",
+                    }
+                )
+                result = JsonObject(
+                    {
+                        **plan,
+                        "phase": "INSTALLED" if completed else "COMMITTING",
+                        "coreProtectEpoch": REQUEST,
+                    }
+                )
+                pod = control.writer_manifest(journal)
+                pod.object("metadata")["uid"] = "new-installation-writer"
+                with (
+                    patch.object(control.restoration_activation, "plan", return_value=plan),
+                    patch.object(control, "require_offline"),
+                    patch.object(control, "require_restore"),
+                    patch.object(control, "ensure_resource", return_value=pod),
+                    patch.object(control, "upload_installation"),
+                    patch.object(
+                        control,
+                        "run",
+                        side_effect=["", "Ready", "b" * 64 + " /plugins/TheStorm.jar", json.dumps(result)],
+                    ),
+                ):
+                    if completed:
+                        control.install(self.path, journal, self.path.parent, self.path)
+                    else:
+                        with self.assertRaisesRegex(ValueError, "mismatched evidence"):
+                            control.install(self.path, journal, self.path.parent, self.path)
+                self.assertEqual(
+                    journal.object("installation").get("phase"), "INSTALLED" if completed else "WRITE_PENDING"
+                )
+
     def test_preflight_cli_reports_pending_backup_without_requiring_backup_fields_or_mutating_cluster(self):
         output = io.StringIO()
         with (
@@ -662,11 +768,19 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(self.cluster.mutations[:4], [("service", name) for name in control.SERVICES])
         self.assertEqual(journal.string("phase"), "LEASED_OFFLINE")
         self.assertEqual(journal["admissionProbes"], "UPDATE_SCALE_AND_DELETE_DENIED")
-        self.assertEqual(self.probes.call_count, 3)
+        self.assertEqual(journal["serviceAdmissionProbes"], "ALL_FOUR_UPDATE_AND_DELETE_DENIED")
+        self.assertEqual(self.probes.call_count, 11)
         self.assertIn("--dry-run=server", self.probes.call_args_list[0].args[0])
         self.assertIn("statefulset/" + control.SERVER, self.probes.call_args_list[1].args[0])
         self.assertEqual(self.probes.call_args_list[2].args[0][:3], ["delete", "statefulset", control.SERVER])
         self.assertIn("--dry-run=server", self.probes.call_args_list[2].args[0])
+        for index, name in enumerate(control.SERVICES):
+            update = self.probes.call_args_list[3 + index * 2].args[0]
+            delete = self.probes.call_args_list[4 + index * 2].args[0]
+            self.assertEqual(update[:3], ["patch", "service", name])
+            self.assertEqual(delete[:3], ["delete", "service", name])
+            self.assertIn("--dry-run=server", update)
+            self.assertIn("--dry-run=server", delete)
         self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
         self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
         self.assertEqual(control.annotations(self.cluster.server)[control.IMAGE], IMAGE)

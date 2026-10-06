@@ -39,6 +39,8 @@ POLICIES = (
     ("minecraft-tsmc-world-restoration.sjer.red", "statefulsets", "UPDATE"),
     ("minecraft-tsmc-world-restoration-scale.sjer.red", "statefulsets/scale", "UPDATE"),
     ("minecraft-tsmc-world-restoration-delete.sjer.red", "statefulsets", "DELETE"),
+    ("minecraft-tsmc-world-restoration-service-write.sjer.red", "services", "UPDATE"),
+    ("minecraft-tsmc-world-restoration-service-delete.sjer.red", "services", "DELETE"),
 )
 RESTORED_NAMESPACE = "minecraft-tsmc-restore"
 
@@ -211,12 +213,12 @@ def assert_guards() -> None:
             )
         ):
             raise ValueError("Restoration admission guards have not reconciled without CEL errors")
-        if resource.endswith("/scale") and binding.object("spec").object("paramRef") != {
+        if (resource.endswith("/scale") or resource == "services") and binding.object("spec").object("paramRef") != {
             "name": SERVER,
             "namespace": NAMESPACE,
-            "parameterNotFoundAction": "Deny",
+            "parameterNotFoundAction": "Allow" if resource == "services" else "Deny",
         }:
-            raise ValueError("Scale admission guard does not bind the expected parent StatefulSet")
+            raise ValueError("Admission guard does not bind the expected parent StatefulSet")
 
 
 def server_image(server: JsonObject) -> str:
@@ -443,7 +445,25 @@ def acquire(path: Path, journal: JsonObject) -> None:
         ["delete", "statefulset", SERVER, "--dry-run=server", "--wait=false"],
         "Release the restoration lease before deleting its StatefulSet",
     )
+    for name in SERVICES:
+        assert_denied(
+            [
+                "patch",
+                "service",
+                name,
+                "--dry-run=server",
+                "--type=json",
+                "-p",
+                json.dumps([{"op": "remove", "path": "/spec/selector/" + pointer(ACCESS)}]),
+            ],
+            "Keep restoration Services closed under the parent lease owner",
+        )
+        assert_denied(
+            ["delete", "service", name, "--dry-run=server", "--wait=false"],
+            "Release the restoration lease before deleting its Service",
+        )
     journal["admissionProbes"] = "UPDATE_SCALE_AND_DELETE_DENIED"
+    journal["serviceAdmissionProbes"] = "ALL_FOUR_UPDATE_AND_DELETE_DENIED"
     save(path, journal)
 
 
@@ -1094,6 +1114,11 @@ def remove_readers(path: Path, journal: JsonObject) -> None:
 
 
 def create_writer(path: Path, journal: JsonObject) -> JsonObject:
+    # A writer can run either installation or whole-volume recovery. Revoke
+    # the old installation before granting write access, even if the writer
+    # exits without reporting which transaction it completed.
+    if "installation" in journal:
+        journal.object("installation")["phase"] = "WRITE_PENDING"
     for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
         journal.pop(key, None)
     save(path, journal)
@@ -1505,12 +1530,15 @@ def verify_rollback(path: Path, journal: JsonObject) -> None:
     if restored.get("byteVerification") != "VERIFIED":
         raise ValueError("Rollback requires the verified independent whole-volume proof")
     proof = backup_contract.whole_proof(Path(restored.string("proofPath")), restored.string("proofSha256"))
-    if any(proof.get(key) != value for key, value in {
-        "requestId": journal.string("requestId"),
-        "backupUid": journal.object("backup").string("uid"),
-        "sourceVolumeUid": journal.string("volumeUid"),
-        "restoredVolumeUid": restored.string("volumeUid"),
-    }.items()):
+    if any(
+        proof.get(key) != value
+        for key, value in {
+            "requestId": journal.string("requestId"),
+            "backupUid": journal.object("backup").string("uid"),
+            "sourceVolumeUid": journal.string("volumeUid"),
+            "restoredVolumeUid": restored.string("volumeUid"),
+        }.items()
+    ):
         raise ValueError("Rollback proof identifies different storage or request")
     name = reader_manifest(journal, NAMESPACE).object("metadata").string("name")
     existing = run(["-n", NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
@@ -1527,10 +1555,19 @@ def verify_rollback(path: Path, journal: JsonObject) -> None:
     save(path, journal)
     run(["-n", NAMESPACE, "wait", "--for=condition=Ready", "pod/" + name, "--timeout=45s"], 50)
     require_offline(journal, readers=True)
-    encoded = run([
-        "-n", NAMESPACE, "exec", name, "-c", "reader", "--", "cat",
-        "/data/" + restoration_files.WORKSPACE + "/" + journal.string("requestId") + "/journal.json",
-    ])
+    encoded = run(
+        [
+            "-n",
+            NAMESPACE,
+            "exec",
+            name,
+            "-c",
+            "reader",
+            "--",
+            "cat",
+            "/data/" + restoration_files.WORKSPACE + "/" + journal.string("requestId") + "/journal.json",
+        ]
+    )
     transaction = JsonObject.parse(encoded)
     if (
         transaction.get("requestId") != journal.string("requestId")
@@ -1544,25 +1581,35 @@ def verify_rollback(path: Path, journal: JsonObject) -> None:
     require_restore(journal)
     rollback_image = journal.string("rollbackImage")
     if not re.fullmatch(
-        r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", rollback_image,
+        r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}",
+        rollback_image,
     ):
         raise ValueError("Rollback requires its recorded immutable image")
     server = read("statefulset", SERVER)
     if server_image(server) != rollback_image:
-        patch("statefulset", SERVER, server, [
-            {"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": rollback_image},
-        ])
+        patch(
+            "statefulset",
+            SERVER,
+            server,
+            [
+                {"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": rollback_image},
+            ],
+        )
     receipt = path.with_name(path.name + ".rollback-verification.json")
     verification = {
-        "status": "VERIFIED", "requestId": journal.string("requestId"),
-        "rollbackImage": rollback_image, "volumeUid": journal.string("volumeUid"),
+        "status": "VERIFIED",
+        "requestId": journal.string("requestId"),
+        "rollbackImage": rollback_image,
+        "volumeUid": journal.string("volumeUid"),
         "backupUid": journal.object("backup").string("uid"),
         "backupProofSha256": restored.string("proofSha256"),
         "transactionSha256": hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
     }
     save(receipt, verification)
     journal["rollbackVerification"] = {
-        **verification, "path": str(receipt.resolve()), "sha256": restoration_files.digest(receipt),
+        **verification,
+        "path": str(receipt.resolve()),
+        "sha256": restoration_files.digest(receipt),
     }
     journal["privateStartup"] = "ROLLED_BACK"
     save(path, journal)
@@ -1584,7 +1631,8 @@ def release_rollback(path: Path, journal: JsonObject) -> None:
     ):
         raise ValueError("Rollback release requires unchanged byte verification and helper cleanup")
     backup_contract.whole_proof(
-        Path(journal.object("restore").string("proofPath")), verification.string("backupProofSha256"),
+        Path(journal.object("restore").string("proofPath")),
+        verification.string("backupProofSha256"),
     )
     reopen(path, journal, journal.string("rollbackImage"))
 

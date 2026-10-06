@@ -534,8 +534,8 @@ public final class Playbook {
     private Vec3 ring(Vec3 guard, Vec3 facing, int index) {
       var radius = Math.max(setup.guardClear() + 1, ANCHOR_MIN);
       var angle =
-          Math.atan2(facing.z(), facing.x()) + (index % 2 == 0 ? 1 : -1) * (index + 1) * 0.6;
-      return guard.plus(new Vec3(Math.cos(angle), 0, Math.sin(angle)).scale(radius));
+          StrictMath.atan2(facing.z(), facing.x()) + (index % 2 == 0 ? 1 : -1) * (index + 1) * 0.6;
+      return guard.plus(new Vec3(StrictMath.cos(angle), 0, StrictMath.sin(angle)).scale(radius));
     }
 
     private Slot sweep(String key, Want want, int index) {
@@ -595,7 +595,7 @@ public final class Playbook {
         var steps = 8 * ring;
         for (var k = 0; k < steps; k++) {
           var angle = 2 * Math.PI * k / steps;
-          var probe = desired.plus(Math.cos(angle) * ring, 0, Math.sin(angle) * ring);
+          var probe = desired.plus(StrictMath.cos(angle) * ring, 0, StrictMath.sin(angle) * ring);
           var node = graph.nearestNodeWithin(probe, 1);
           if (node.isEmpty() || !tried.add(node.getAsInt())) {
             continue;
