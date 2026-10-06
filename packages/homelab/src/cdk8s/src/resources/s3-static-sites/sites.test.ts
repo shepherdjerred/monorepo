@@ -1,6 +1,27 @@
 import { describe, expect, test } from "vitest";
 
+import { generateCaddyfile } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 import { staticSites } from "./sites.ts";
+
+describe("resume static site", () => {
+  const resume = staticSites.find(
+    ({ hostname }) => hostname === "resume.sjer.red",
+  );
+  if (resume === undefined) {
+    throw new Error("resume.sjer.red static site is missing");
+  }
+
+  test("allows the page to embed its own PDF", () => {
+    expect(resume.responseHeaders?.["X-Frame-Options"]).toBe("SAMEORIGIN");
+
+    const caddyfile = generateCaddyfile({
+      sites: [resume],
+      s3Endpoint: "https://seaweedfs.example.test",
+    });
+    expect(caddyfile).toContain('X-Frame-Options "SAMEORIGIN"');
+    expect(caddyfile).not.toContain('X-Frame-Options "DENY"');
+  });
+});
 
 describe("Scout Storybook catalog site", () => {
   const catalog = staticSites.find(

@@ -151,7 +151,11 @@ export const staticSites: StaticSiteConfig[] = [
     },
   },
   { hostname: "webring.sjer.red", bucket: "webring" },
-  { hostname: "resume.sjer.red", bucket: "resume" },
+  {
+    hostname: "resume.sjer.red",
+    bucket: "resume",
+    responseHeaders: { "X-Frame-Options": "SAMEORIGIN" },
+  },
   {
     hostname: "scout-for-lol.com",
     bucket: "scout-frontend",
