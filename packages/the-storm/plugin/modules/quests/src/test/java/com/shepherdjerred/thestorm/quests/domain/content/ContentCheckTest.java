@@ -39,8 +39,7 @@ final class ContentCheckTest {
           Set.of("healing"));
 
   static final ContentCheck.Rules RULES =
-      new ContentCheck.Rules(
-          REGISTRY, new Budget(10, 50, 2000, 0.1, Map.of()), "board", "minecraft:overworld");
+      new ContentCheck.Rules(REGISTRY, new Budget(10, 50), "board", "minecraft:overworld");
 
   private static QuestContent content(Quest... quests) {
     return new QuestContent(
@@ -316,8 +315,7 @@ final class ContentCheckTest {
   @Test
   void theBoardNpcAndRegionWorldsMustExist() {
     var rules =
-        new ContentCheck.Rules(
-            REGISTRY, new Budget(10, 50, 2000, 0.1, Map.of()), "nobody", "minecraft:overworld");
+        new ContentCheck.Rules(REGISTRY, new Budget(10, 50), "nobody", "minecraft:overworld");
     var content =
         new QuestContent(
             Map.of(),
@@ -345,8 +343,7 @@ final class ContentCheckTest {
             REGISTRY.enchantments(),
             REGISTRY.potions());
     var rules =
-        new ContentCheck.Rules(
-            registry, new Budget(10, 50, 2000, 0.1, Map.of()), "board", "minecraft:overworld");
+        new ContentCheck.Rules(registry, new Budget(10, 50), "board", "minecraft:overworld");
     var content =
         new QuestContent(
             Map.of(),

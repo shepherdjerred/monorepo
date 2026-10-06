@@ -66,7 +66,6 @@ final class QuestsMigrationTest {
     }
     try (var database = StormDatabase.open(file)) {
       database.migrate("quests", getClass().getClassLoader());
-      assertThat(database.read(dsl -> dsl.fetchCount(table("quests_placed"))).join()).isZero();
       assertThat(
               database
                   .read(
@@ -87,7 +86,7 @@ final class QuestsMigrationTest {
                               .orderBy(field("installed_rank"))
                               .fetch(field("version", String.class)))
                   .join())
-          .containsExactly("1", "2", "3", "4", "5");
+          .containsExactly("1", "2", "3", "4");
     }
   }
 }

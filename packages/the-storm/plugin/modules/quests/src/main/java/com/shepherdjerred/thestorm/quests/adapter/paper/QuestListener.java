@@ -43,6 +43,9 @@ import org.bukkit.inventory.ItemStack;
  */
 final class QuestListener implements Listener {
 
+  /** How many player-placed blocks are remembered so breaking them does not count. */
+  static final int PLACED_MEMORY = 4096;
+
   record Wiring(
       QuestService service,
       QuestContent content,
@@ -55,7 +58,7 @@ final class QuestListener implements Listener {
   private final SidebarDisplay sidebars;
   private final QuestsConfig config;
   private final InstantSource time;
-  private final PlacedBlocks placed;
+  private final PlacedBlocks placed = new PlacedBlocks(PLACED_MEMORY);
   private final PartyActivity activity = new PartyActivity();
 
   QuestListener(Wiring wiring) {
@@ -64,7 +67,6 @@ final class QuestListener implements Listener {
     this.sidebars = wiring.sidebars();
     this.config = wiring.config();
     this.time = wiring.time();
-    this.placed = new PlacedBlocks(config.placedBlockMemory());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -194,10 +196,8 @@ final class QuestListener implements Listener {
     if (!inMainWorld(event.getPlayer())) {
       return;
     }
-    var now = time.instant();
-    var player = event.getPlayer().getUniqueId();
-    activity.acted(player, now);
-    if (placed.broken(position(event.getBlock()), player, now) == PlacedBlocks.Break.NATURAL) {
+    activity.acted(event.getPlayer().getUniqueId(), time.instant());
+    if (placed.broken(position(event.getBlock()))) {
       service.event(
           event.getPlayer().getUniqueId(),
           new QuestEvent.Mined(event.getBlock().getType().name()),
@@ -211,10 +211,7 @@ final class QuestListener implements Listener {
       return;
     }
     activity.acted(event.getPlayer().getUniqueId(), time.instant());
-    placed.placed(
-        position(event.getBlockPlaced()),
-        Optional.of(event.getPlayer().getUniqueId()),
-        time.instant());
+    placed.placed(position(event.getBlockPlaced()));
     service.event(
         event.getPlayer().getUniqueId(),
         new QuestEvent.Placed(event.getBlockPlaced().getType().name()),

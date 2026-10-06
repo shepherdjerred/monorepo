@@ -14,14 +14,11 @@ mainWorld: world
 budget:
   crystalsPerMinute: 25
   allowance: 100
-  dailyRepeatableCap: 2000
-  deliveryMargin: 0.1
-  itemValues: {}
 
 # Players this close to a kill or pickup who have the same objective active
 # get the credit too. Everything is soloable; this only helps groups.
 party:
-  radius: 16
+  radius: 24
   activeSeconds: 60
 
 # The radiant board: each player gets this many daily and weekly quests,
@@ -37,12 +34,6 @@ refreshTicks: 40
 
 # Creatures quests spawn despawn after this many seconds.
 spawnedMobSeconds: 300
-
-# A placed block does not count as freshly mined during this period.
-placedBlockDays: 7
-
-# Content may test only these registered permission conditions.
-permissionConditions: []
 
 # The most objective lines the tracking sidebar shows.
 sidebarLines: 8

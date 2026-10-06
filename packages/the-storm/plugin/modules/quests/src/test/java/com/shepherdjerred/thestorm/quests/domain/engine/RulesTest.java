@@ -15,13 +15,11 @@ import com.shepherdjerred.thestorm.quests.domain.model.Quest.Repeat;
 import com.shepherdjerred.thestorm.quests.domain.sim.ScriptedFacts;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest;
 import com.shepherdjerred.thestorm.quests.domain.state.Completion;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 /** Conditions, the calendar, credit, game time, craft counts and placed blocks. */
@@ -287,32 +285,20 @@ final class RulesTest {
 
   @Test
   void placedBlocksDoNotCountWhenBroken() {
-    var memory = Duration.ofDays(2);
-    var placed = new PlacedBlocks(memory);
-    var now = Instant.parse("2026-10-06T00:00:00Z");
-    var owner = UUID.fromString("69aef4f7-91d0-4f09-aef1-c721307aa45c");
-    var other = UUID.fromString("c5d09d96-02f7-448a-a18e-47cdf894a401");
+    var placed = new PlacedBlocks(2);
     var a = new PlacedBlocks.Position("w", 0, 64, 0);
     var b = new PlacedBlocks.Position("w", 1, 64, 0);
     var c = new PlacedBlocks.Position("w", 2, 64, 0);
-    assertThat(placed.broken(a, owner, now)).isEqualTo(PlacedBlocks.Break.NATURAL);
-    placed.placed(a, Optional.of(owner), now);
-    assertThat(placed.broken(a, owner, now)).isEqualTo(PlacedBlocks.Break.OWN);
-    assertThat(placed.broken(a, owner, now)).isEqualTo(PlacedBlocks.Break.NATURAL);
-    placed.placed(a, Optional.of(owner), now);
-    placed.placed(b, Optional.of(other), now);
-    placed.placed(c, Optional.empty(), now);
-    // Time, rather than later placements, determines when a placement expires.
-    assertThat(placed.remembers(a, now)).isTrue();
-    assertThat(placed.broken(b, owner, now)).isEqualTo(PlacedBlocks.Break.PLACED);
-    assertThat(placed.broken(c, owner, now)).isEqualTo(PlacedBlocks.Break.PLACED);
-    assertThat(placed.broken(a, owner, now.plus(memory))).isEqualTo(PlacedBlocks.Break.OWN);
-    placed.placed(a, Optional.of(owner), now);
-    assertThat(placed.broken(a, owner, now.plus(memory).plusNanos(1)))
-        .isEqualTo(PlacedBlocks.Break.NATURAL);
-    assertThatThrownBy(() -> new PlacedBlocks(Duration.ZERO))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new PlacedBlocks(Duration.ofDays(-1)))
-        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(placed.broken(a)).isTrue();
+    placed.placed(a);
+    assertThat(placed.broken(a)).isFalse();
+    assertThat(placed.broken(a)).isTrue();
+    placed.placed(a);
+    placed.placed(b);
+    placed.placed(c);
+    // Only the two most recent are remembered.
+    assertThat(placed.broken(a)).isTrue();
+    assertThat(placed.broken(c)).isFalse();
+    assertThatThrownBy(() -> new PlacedBlocks(0)).isInstanceOf(IllegalArgumentException.class);
   }
 }
