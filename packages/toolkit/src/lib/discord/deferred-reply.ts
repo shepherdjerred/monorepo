@@ -20,8 +20,10 @@ export function createUserMessageUpdateWatcher(
   close: () => void;
 } {
   const updatedMessages = new Map<string, IpcMessage>();
-  let activeWait: { replyId: string; finish: (message: IpcMessage) => void } | null =
-    null;
+  let activeWait: {
+    replyId: string;
+    finish: (message: IpcMessage) => void;
+  } | null = null;
   const listener = async (
     _oldMessage: UserMessage | UserPartialMessage,
     newMessage: UserMessage | UserPartialMessage,
