@@ -167,19 +167,23 @@ describe("26.x features through ViaBackwards", () => {
     bot,
     rcon,
   }) => {
-    const { x, y, z: posZ } = bot.entity.position;
-    const at = `${(x + 2).toString()} ${y.toString()} ${posZ.toString()}`;
     const dialogs: unknown[] = [];
+    const entityPackets: string[] = [];
     bot._client.on("packet", (data: unknown, meta: { name: string }) => {
       if (meta.name === "show_dialog") {
         dialogs.push(data);
+      }
+      if (meta.name.includes("entity")) {
+        entityPackets.push(meta.name);
       }
     });
 
     const summonReplies = [];
     for (const type of [...summoned, "sulfur_cube"]) {
       summonReplies.push(
-        await rcon.command(`minecraft:summon minecraft:${type} ${at}`),
+        await rcon.command(
+          `execute at ${bot.username} run minecraft:summon minecraft:${type} ~ ~ ~`,
+        ),
       );
     }
     const seen = () =>
@@ -190,7 +194,7 @@ describe("26.x features through ViaBackwards", () => {
       );
     } catch (error) {
       throw new Error(
-        `${String(error)}; client has ${[...seen()].join(", ")}; RCON replied ${summonReplies.join(" | ")}`,
+        `${String(error)}; client has ${[...seen()].join(", ")}; entity packets ${JSON.stringify(entityPackets)}; RCON replied ${summonReplies.join(" | ")}`,
         { cause: error },
       );
     }
