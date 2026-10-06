@@ -125,6 +125,9 @@ public final class RwfModule implements StormModule {
     context.services().provide(MatchEvents.class, started.events());
     context.services().provide(CombatantActions.class, started.actions());
     context
+        .services()
+        .provide(com.shepherdjerred.thestorm.rwf.app.ShowcaseControl.class, started.showcases());
+    context
         .logger()
         .info(
             "rwf: {} kits, {} maps, world {}, recording {}",

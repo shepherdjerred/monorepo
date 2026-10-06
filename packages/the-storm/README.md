@@ -1203,6 +1203,44 @@ hashes. `--combatants 8` can inspect team captures; the default Trooper pilot
 export remains restricted to duels. These commands prepare data; they do not
 train or enable a learned controller.
 
+The disposable fixture plugin also exposes `rwflearn` through authenticated
+console/RCON. It runs two skill-1 Troopers on Paper with equal kit statistics;
+the candidate keeps authored aim and healing, and the basic opponent sprints,
+strafes and clicks its sword. The fixture command is absent from `TheStorm.jar`.
+Build the jars and run the benchmark from this package:
+
+```bash
+mise exec -- gradle -p plugin :dist:assemble
+bun run bots:benchmark --matches 4 --probe
+bun run bots:benchmark --matches 100
+```
+
+Each run owns and removes its disposable server, exports the recordings, and
+writes a manifest, per-match results and a report under `.cache/rwf-benchmark`.
+The manifest freezes plugin, fixture, kit, map and observation-contract hashes
+and records the pinned Paper build, server image and third-party plugins before
+trials begin. Trials pair each controller seed across red and blue;
+Paper scheduling and physical knockback still introduce runtime variation.
+Only a completed 100-trial run with at least 80 wins passes the strength gate.
+Draws, stops and 60-second timeouts count as non-wins. A failed 100-trial gate
+exits with status 1 after exporting evidence and removing the server. Short
+runs are diagnostics.
+
+`rwflearn begin <seed> <red|blue> <authored|external>` requires an empty
+training-yard lobby. `rwflearn state` returns a version-1 JSON envelope. Actor
+input is exclusively its 34-value `observation` vector, ordered by the same TSV
+as human recordings; damage totals and outcomes are separate evaluation data.
+The context fields `tick`, `elapsed` and `hp` describe the last captured frame
+before commands were applied; terminal `hp` is not the final health after a hit.
+`rwflearn act <match> <body> <life> <tick> <move> <jump> <sneak> <sprint> <attack>`
+uses the dataset's nine movement labels and 0/1 button values. The server checks
+match, body, life, monotonically acknowledged ticks and a maximum age of two
+ticks, and retains the acknowledged facing for movement. Item use, aim and
+noncombat actions stay authored. Missing or expired actions restore authored
+control. `rwflearn cancel` stops only the exact bots-only experiment; experiments
+do not update personality ratings and cannot control the successor match.
+`tools/learning/duels.ts` provides the validated asynchronous RCON client.
+
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
 the transfer pays exactly once on the next enable. Bots are never paid.

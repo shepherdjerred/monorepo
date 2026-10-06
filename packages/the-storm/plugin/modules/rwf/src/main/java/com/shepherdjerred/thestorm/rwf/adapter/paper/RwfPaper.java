@@ -32,6 +32,20 @@ public final class RwfPaper {
 
   private static final Duration TICK = Duration.ofMillis(50);
 
+  public com.shepherdjerred.thestorm.rwf.app.ShowcaseControl showcases() {
+    return new com.shepherdjerred.thestorm.rwf.app.ShowcaseControl() {
+      @Override
+      public Optional<String> start(int combatants) {
+        return runner.startShowcase(combatants);
+      }
+
+      @Override
+      public Optional<String> stop(java.util.UUID matchId) {
+        return runner.stopShowcase(matchId);
+      }
+    };
+  }
+
   private final PaperContext context;
   private final MatchRunner runner;
   private final Watchers watchers;

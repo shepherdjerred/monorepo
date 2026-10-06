@@ -627,6 +627,9 @@ final class MatchRunner implements MatchView, MatchEvents {
    * it, or returns why not. It then runs as any match would, without the humans rule.
    */
   Optional<String> startShowcase(int count) {
+    if (count < 2 || count > parts.config().match().maxCombatants()) {
+      return Optional.of("Showcase size is outside the configured bounds.");
+    }
     if (!ready) {
       return Optional.of("The match is still being prepared; try again in a moment.");
     }
@@ -649,6 +652,19 @@ final class MatchRunner implements MatchView, MatchEvents {
       return Optional.of("No bot could be spawned for the showcase; see the log.");
     }
     parts.context().logger().info("rwf match {} is a showcase of {}", match.matchId(), count);
+    return Optional.empty();
+  }
+
+  Optional<String> stopShowcase(UUID matchId) {
+    if (!match.matchId().equals(matchId) || showcase.isEmpty() || humans() > 0) {
+      return Optional.of("No bots-only showcase with that id is running.");
+    }
+    if (match.phase() instanceof Phase.Lobby
+        || match.phase() instanceof Phase.Countdown
+        || match.phase() instanceof Phase.Live) {
+      var refusal = handle(new MatchEvent.Stop());
+      return refusal.map(Object::toString);
+    }
     return Optional.empty();
   }
 
