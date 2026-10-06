@@ -293,6 +293,16 @@
       "reason": "Platform bootstrap precedes Bun"
     },
     {
+      "source": "packages/dotfiles/macos-file-limits/apply.sh",
+      "disposition": "retain",
+      "reason": "Boot-time launchd configuration uses only macOS system tools before user runtimes are available"
+    },
+    {
+      "source": "packages/dotfiles/macos-file-limits/install.sh",
+      "disposition": "retain",
+      "reason": "System bootstrap installs the launch daemon before Bun is guaranteed"
+    },
+    {
       "source": "packages/homelab/mac-ci/bootstrap.sh",
       "disposition": "retain",
       "reason": "Machine bootstrap precedes Bun"
