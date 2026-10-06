@@ -155,7 +155,8 @@ export const HistorySchema = z
 export function historicalDate(iso: string | null, text: string): number {
   if (iso?.endsWith("Z") === true) {
     const value = Date.parse(iso);
-    if (!Number.isFinite(value)) throw new Error("Invalid historical ISO date");
+    if (!Number.isFinite(value))
+      throw new TypeError("Invalid historical ISO date");
     return Math.floor(value / 1000);
   }
   const match =

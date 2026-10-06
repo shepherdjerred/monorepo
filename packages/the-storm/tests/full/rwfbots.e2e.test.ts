@@ -126,7 +126,9 @@ async function joinedBots(
       { cause: error },
     );
   }
-  expect(log.has(/The game has begun!/u), "all bots arrive in the lobby").toBe(false);
+  expect(log.has(/The game has begun!/u), "all bots arrive in the lobby").toBe(
+    false,
+  );
   const current = await status(rcon);
   expect(
     current.phase,
