@@ -573,8 +573,10 @@ function rightClick(bot: Bot): void {
 
 /** How often the server log says the yard was found damaged and pasted again. */
 function pastes(logs: string): number {
-  return logs.split("Map training-yard differs from its schematic; pasting it")
-    .length;
+  return (
+    logs.split("training-yard differs from its schematic; pasting it").length -
+    1
+  );
 }
 
 // ---- the database and recordings --------------------------------------------
@@ -1209,14 +1211,16 @@ describe("Repairing the Search and Destroy map", () => {
       await waitForLobby(rcon);
       const log = transcript(bot);
       const intact = /Map training-yard is intact\./u;
+      const lobbyIntact = /The lobby is intact\./u;
       const bomb = coords(yard.bombs.Red);
       const floor = coords(yard.floor);
       await rcon.command(`op ${bot.username}`);
       try {
         const before = pastes(await serverLogs(server));
         bot.chat("/rwf admin repair");
-        await log.until(/Verifying training-yard\.\.\./u);
+        await log.until(/Verifying training-yard and the lobby\.\.\./u);
         await log.until(intact, 30_000);
+        await log.until(lobbyIntact, 30_000);
         expect(pastes(await serverLogs(server))).toBe(before);
 
         // An operator's edits: the red bomb broken, a floor block swapped.
@@ -1232,7 +1236,8 @@ describe("Repairing the Search and Destroy map", () => {
         bot.chat("/rwf admin repair");
         await eventually(
           "the second repair to finish",
-          async () => log.all(intact).length === 2,
+          async () =>
+            log.all(intact).length === 2 && log.all(lobbyIntact).length === 2,
           30_000,
         );
         expect(pastes(await serverLogs(server))).toBe(before + 1);

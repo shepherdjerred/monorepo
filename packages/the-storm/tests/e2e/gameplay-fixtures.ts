@@ -2,7 +2,10 @@ import path from "node:path";
 import { z } from "zod";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import type { ServerResources, StartServerOptions } from "./harness/server.ts";
-import { rwfTestSettings } from "./harness/rwf-settings.ts";
+import {
+  fullRwfTestSettings,
+  rwfTestSettings,
+} from "./harness/rwf-settings.ts";
 
 /**
  * Which server a run boots. `e2e` is the focused suite with rwf played by
@@ -115,7 +118,7 @@ async function profileFixtures(
         stormConfig: withBots(owned),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
-        rwf: { ...rwfTestSettings, countdown: "PT25S" },
+        rwf: fullRwfTestSettings,
       };
     }
     case "load": {

@@ -15,7 +15,10 @@ import {
   type Transcript,
   waitForLobby,
 } from "#e2e/harness/rwf-match.ts";
-import { rwfTestSettings } from "#e2e/harness/rwf-settings.ts";
+import {
+  fullRwfTestSettings,
+  rwfTestSettings,
+} from "#e2e/harness/rwf-settings.ts";
 import {
   balance,
   type ClientView,
@@ -69,6 +72,10 @@ const matchBudgetMs = 14 * 60_000;
 const OwnedRwfSchema = z.object({
   match: z.object({ targetCombatants: z.number().int().positive() }),
 });
+const CountdownMillisSchema = z.iso
+  .duration()
+  .transform((value) => Temporal.Duration.from(value).total("milliseconds"))
+  .pipe(z.number().positive());
 const OwnedBotsSchema = z.object({
   think: z.object({ maxDecisionAgeTicks: z.number().int().positive() }),
 });
@@ -100,14 +107,23 @@ const joinedPattern = /^\[RWF\]: (?<name>\w+) joined the match\.$/u;
 
 /** The bots that joined this countdown, from the human's transcript. */
 async function joinedBots(
+  rcon: RconClient,
   log: Transcript,
   human: string,
   count: number,
 ): Promise<string[]> {
+  // Bots now walk in over the countdown. Observe that lifecycle rather than
+  // racing its last arrival against an unrelated fifteen-second deadline.
   await eventually(
     `${count.toString()} bots to join`,
     async () => log.all(joinedPattern).length >= count + 1,
+    CountdownMillisSchema.parse(fullRwfTestSettings.countdown),
   );
+  const current = await status(rcon);
+  expect(
+    current.phase,
+    "every drafted bot joins before the match goes live",
+  ).toBe("Countdown");
   return log
     .all(joinedPattern)
     .map((match) => match.groups?.["name"] ?? "")
@@ -153,7 +169,7 @@ async function fillsWithBots(match: Match): Promise<string[]> {
   const listBefore = ListOutputSchema.parse(await rcon.command("list"));
   bot.chat("/rwf join");
   await log.until(/The game will begin in \d+ seconds\./u);
-  const names = await joinedBots(log, bot.username, wanted);
+  const names = await joinedBots(rcon, log, bot.username, wanted);
   expect(names).toHaveLength(wanted);
   expect(new Set(names).size).toBe(wanted);
   for (const name of names) {
@@ -647,17 +663,24 @@ async function liveWithEater(
       port: server.gamePort,
       username: `e_${Date.now().toString(36).slice(-6)}`,
     });
-    const log = transcript(human);
-    human.chat("/rwf join");
-    const names = await joinedBots(log, human.username, target - 1);
-    await log.until(/The game has begun!/u, 30_000);
-    const live = await status(rcon);
-    expect(live.phase).toBe("Live");
-    const eaters = await eatersIn(rcon, catalog, names);
-    if (eaters.length > 0) {
-      return { human, names, eaters, matchId: live.matchId };
+    let retained = false;
+    try {
+      const log = transcript(human);
+      human.chat("/rwf join");
+      const names = await joinedBots(rcon, log, human.username, target - 1);
+      await log.until(/The game has begun!/u, 30_000);
+      const live = await status(rcon);
+      expect(live.phase).toBe("Live");
+      const eaters = await eatersIn(rcon, catalog, names);
+      if (eaters.length > 0) {
+        retained = true;
+        return { human, names, eaters, matchId: live.matchId };
+      }
+    } finally {
+      if (!retained) {
+        await disconnectBot(human);
+      }
     }
-    await disconnectBot(human);
   }
   throw new Error("four drafts in a row had no Trooper that eats");
 }
@@ -846,7 +869,7 @@ describe("Search and Destroy with rwfbots", () => {
         const log = transcript(human);
         const statsBefore = await personalityStats(server, "abort-before");
         human.chat("/rwf join");
-        const names = await joinedBots(log, username, wanted);
+        const names = await joinedBots(rcon, log, username, wanted);
         await log.until(/The game has begun!/u, 30_000);
         const live = await status(rcon);
         expect(live.phase).toBe("Live");
