@@ -40,6 +40,38 @@ mise exec -- gradle --write-verification-metadata sha256 build
 
 The jar is `plugin/dist/build/libs/TheStorm.jar`.
 
+## Contributor verification
+
+Minecraft CI runs unit tests and one light Paper smoke lane. The smoke command
+explicitly selects `tests/e2e/plugin.e2e.test.ts` and
+`tests/e2e/server.e2e.test.ts`: startup, plugin loading, client connections and
+basic protocol interactions. Keep these files small. The lane builds the
+plugin without building the native client and has a ten-minute timeout,
+including setup.
+
+Extended Paper and gameplay acceptance is the committer's responsibility
+outside CI. Run the suites relevant to the change locally and record the
+commands and results in the PR's verification evidence. This policy is a
+Minecraft-only exception; other packages retain their normal CI gates.
+
+From the repository root, build the plugin and run the desired server suite
+with Docker available:
+
+```bash
+bun run --cwd packages/the-storm build:plugin
+bun run --cwd packages/the-storm test:smoke # the light CI selection
+bun run --cwd packages/the-storm test:e2e   # extended gameplay
+bun run --cwd packages/the-storm test:full  # all modules together
+bun run --cwd packages/the-storm test:load  # 20/50/100-bot load profile
+```
+
+Native-client acceptance uses
+`bun run --cwd packages/the-storm test:client-native` on a machine capable of
+running the Minecraft client. Sandbox gameplay scenarios use
+`toolkit mc playtest run packages/the-storm/playtests/` against `storm-dev`;
+follow the repository's `minecraft-harness` skill for sandbox ownership and
+cleanup. These checks are also committer-run.
+
 ## Skills
 
 The `skills` module replaces the launch set of mcMMO skills with eleven
