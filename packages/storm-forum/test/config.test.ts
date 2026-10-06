@@ -32,6 +32,7 @@ describe("forum configuration contracts", () => {
         ],
       }).success,
     ).toBe(false);
+    expect(addons).toEqual([]);
   });
   it("requires a private backend and explicit node visibility", () => {
     expect(() =>

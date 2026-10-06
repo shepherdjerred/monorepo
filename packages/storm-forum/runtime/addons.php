@@ -4,7 +4,7 @@ XF::start('/app/forum');
 $app = XF::setupApp('XF\Cli\App');
 $app->start();
 $console = require '/opt/storm-forum/runtime/console.php';
-foreach (['SV/StandardLib', 'SV/ContentRatings', 's9e/MediaSites', 'Storm/Forum'] as $id) {
+foreach (['Storm/Forum'] as $id) {
     $addOn = $app->addOnManager()->getById($id);
     if (!$addOn) { throw new RuntimeException("Missing release add-on: {$id}"); }
     $command = $addOn->canInstall() ? 'xf:addon-install' : ($addOn->canUpgrade() ? 'xf:addon-upgrade' : null);
