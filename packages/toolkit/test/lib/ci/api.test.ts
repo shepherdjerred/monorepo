@@ -4,6 +4,7 @@ import {
   getWoodpeckerPipelineForCommit,
   woodpeckerConfigFromEnv,
   loadWoodpeckerConfig,
+  getPipeline,
 } from "#lib/woodpecker/ci.ts";
 import { logExcerpt, pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
 import { ciFixture, CI_HEAD } from "./fixtures.ts";
@@ -81,6 +82,43 @@ test("a pipeline detail response for another head is a contract error", async ()
   await expect(
     getWoodpeckerPipelineForCommit(CI_HEAD, config, 99),
   ).rejects.toThrow("does not match");
+});
+
+test("Woodpecker's null error list preserves failed workflow diagnostics", async () => {
+  const pipeline = {
+    number: 7,
+    commit: CI_HEAD,
+    status: "failure",
+    errors: null,
+    workflows: [
+      {
+        name: "images",
+        state: "failure",
+        children: [
+          { id: 10, pid: 47, name: "images", state: "failure", exit_code: 1 },
+        ],
+      },
+    ],
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: URL) =>
+      json(
+        url.pathname.includes("/logs/")
+          ? [encode("Missing required smoke bootstrap credential", 1)]
+          : pipeline,
+      ),
+    ),
+  );
+  const actual = await getPipeline(pipeline.number, config);
+  expect(actual.number).toBe(pipeline.number);
+  expect(actual.workflows).toEqual(pipeline.workflows);
+  expect(actual.errors).toBeNull();
+  const diagnostics = await pipelineDiagnostics(actual, config);
+  expect(diagnostics[0]?.workflow).toBe("images");
+  expect(diagnostics[0]?.logs).toContain(
+    "Missing required smoke bootstrap credential",
+  );
 });
 
 test("malformed and unauthenticated Woodpecker responses fail explicitly", async () => {

@@ -38,7 +38,7 @@ const SummarySchema = z.object({
 });
 export const WoodpeckerPipelineSchema = SummarySchema.extend({
   workflows: z.array(WorkflowSchema).default([]),
-  errors: z.array(z.unknown()).optional(),
+  errors: z.array(z.unknown()).nullish(),
 });
 export type WoodpeckerPipeline = z.infer<typeof WoodpeckerPipelineSchema>;
 export type WoodpeckerConfig = {
