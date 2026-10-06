@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
-import java.net.InetAddress;
+import com.shepherdjerred.thestorm.essentials.adapter.network.ClientAddresses;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,40 +34,14 @@ final class ForwardedClients implements Listener {
   }
 
   static Optional<String> publicAddress(String literal) {
-    if (!literal.matches("[0-9a-fA-F:.]+")
-        || (!literal.contains(":") && !literal.matches("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")))
-      return Optional.empty();
-    try {
-      var address = InetAddress.getByName(literal);
-      return publicAddress(address) ? Optional.of(address.getHostAddress()) : Optional.empty();
-    } catch (java.net.UnknownHostException invalid) {
-      return Optional.empty();
-    }
-  }
-
-  private static boolean publicAddress(InetAddress address) {
-    return !address.isAnyLocalAddress()
-        && !address.isLoopbackAddress()
-        && !address.isLinkLocalAddress()
-        && !address.isSiteLocalAddress()
-        && !address.isMulticastAddress()
-        && !(address.getAddress().length == 4
-            && (Byte.toUnsignedInt(address.getAddress()[0]) == 0
-                || (Byte.toUnsignedInt(address.getAddress()[0]) == 100
-                    && Byte.toUnsignedInt(address.getAddress()[1]) >= 64
-                    && Byte.toUnsignedInt(address.getAddress()[1]) <= 127)))
-        && !(address.getAddress().length == 16
-            && (Byte.toUnsignedInt(address.getAddress()[0]) & 0xfe) == 0xfc);
+    return ClientAddresses.publicAddress(literal);
   }
 
   @EventHandler
   public void login(AsyncPlayerPreLoginEvent event) {
     addresses.remove(event.getUniqueId());
-    var peer = event.getRawAddress();
-    var forwarded = event.getAddress();
-    if ((peer.isSiteLocalAddress() || peer.isLoopbackAddress())
-        && !peer.equals(forwarded)
-        && publicAddress(forwarded)) addresses.put(event.getUniqueId(), forwarded.getHostAddress());
+    ClientAddresses.forwarded(event)
+        .ifPresent(address -> addresses.put(event.getUniqueId(), address));
     var actor = event.getUniqueId();
     var cached = flags.cachedEnabled(ManagedGameplay.IP, actor);
     flags.enabled(ManagedGameplay.IP, actor).exceptionally(_ -> flags.ipEnforcementDefault());
