@@ -63,31 +63,26 @@ final class ForwardedClients implements Listener {
   @EventHandler
   public void login(AsyncPlayerPreLoginEvent event) {
     addresses.remove(event.getUniqueId());
-    if (!ready.get()) {
-      deny(event, "Staff state is still loading. Please retry shortly.");
-      return;
-    }
     var peer = event.getRawAddress();
     var forwarded = event.getAddress();
     if ((peer.isSiteLocalAddress() || peer.isLoopbackAddress())
         && !peer.equals(forwarded)
         && publicAddress(forwarded)) addresses.put(event.getUniqueId(), forwarded.getHostAddress());
-    evaluate(event);
-  }
-
-  private void evaluate(AsyncPlayerPreLoginEvent event) {
-    try {
-      if (!flags.enabled(ManagedGameplay.IP, event.getUniqueId()).join()) return;
-      var address = addresses.get(event.getUniqueId());
-      if (address == null) {
-        deny(event, "Your client address could not be verified. Please contact staff.");
-        return;
-      }
-      ban.apply(address).ifPresent(reason -> deny(event, reason));
-    } catch (java.util.concurrent.CompletionException failure) {
-      if (!flags.ipEnforcementDefault()) return;
-      deny(event, "Login checks are unavailable. Please retry shortly.");
+    var actor = event.getUniqueId();
+    var cached = flags.cachedEnabled(ManagedGameplay.IP, actor);
+    flags.enabled(ManagedGameplay.IP, actor).exceptionally(_ -> flags.ipEnforcementDefault());
+    var enforce = cached.or(() -> flags.cachedEnabled(ManagedGameplay.IP, actor));
+    if (!enforce.orElseGet(flags::ipEnforcementDefault)) return;
+    if (!ready.get()) {
+      deny(event, "Staff state is still loading. Please retry shortly.");
+      return;
     }
+    var address = addresses.get(actor);
+    if (address == null) {
+      deny(event, "Your client address could not be verified. Please contact staff.");
+      return;
+    }
+    ban.apply(address).ifPresent(reason -> deny(event, reason));
   }
 
   private static void deny(AsyncPlayerPreLoginEvent event, String reason) {

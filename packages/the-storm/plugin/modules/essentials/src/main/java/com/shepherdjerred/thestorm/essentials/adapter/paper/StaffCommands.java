@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
+import static java.util.Objects.requireNonNull;
 
 import com.shepherdjerred.thestorm.core.expansion.ExpansionSettings;
 import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
@@ -95,7 +96,7 @@ final class StaffCommands {
       var args = words();
       if (index >= args.length)
         throw new IllegalArgumentException(
-            "Usage: /" + java.util.Objects.requireNonNull(tools.definitions.get(command)).usage());
+            "Usage: /" + requireNonNull(tools.definitions.get(command)).usage());
       return args[index];
     }
 
@@ -259,7 +260,7 @@ final class StaffCommands {
                 if (CONFIRMED.contains(name) && !targets.equals(snapshot(request)))
                   throw new IllegalArgumentException(
                       "Targets changed. Repeat the command to confirm again.");
-                java.util.Objects.requireNonNull(definitions.get(name)).handler().accept(request);
+                requireNonNull(definitions.get(name)).handler().accept(request);
               });
         });
     return 1;
@@ -420,8 +421,7 @@ final class StaffCommands {
               try {
                 action.accept(value);
               } catch (IllegalArgumentException invalid) {
-                actor.sendMessage(
-                    Component.text(java.util.Objects.requireNonNull(invalid.getMessage())));
+                actor.sendMessage(Component.text(requireNonNull(invalid.getMessage())));
               } catch (RuntimeException runtimeFailure) {
                 context.logger().error("Staff command failed", runtimeFailure);
                 actor.sendMessage(Component.text("Could not complete that staff command."));

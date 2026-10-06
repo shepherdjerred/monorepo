@@ -87,6 +87,62 @@ final class ForwardedClientsTest {
         .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
   }
 
+  @org.junit.jupiter.api.Test
+  void disabledIpEnforcementDoesNotWaitForRolloutOrStaffState() throws Exception {
+    var pending = new java.util.concurrent.CompletableFuture<Boolean>();
+    var gameplay =
+        new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
+            (key, actor) -> pending, () -> {}, false);
+    var clients = new ForwardedClients(gameplay, () -> false, ip -> java.util.Optional.empty());
+    var event = login("127.0.0.1", "127.0.0.1");
+
+    clients.login(event);
+
+    assertThat(event.getLoginResult())
+        .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.ALLOWED);
+    assertThat(pending.isDone()).isFalse();
+  }
+
+  @org.junit.jupiter.api.Test
+  void falseIpRolloutBypassesStaffStateReadiness() throws Exception {
+    var clients =
+        new ForwardedClients(
+            new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
+                (key, actor) -> java.util.concurrent.CompletableFuture.completedFuture(false),
+                () -> {},
+                true),
+            () -> false,
+            ip -> java.util.Optional.empty());
+    var event = login("127.0.0.1", "127.0.0.1");
+
+    clients.login(event);
+
+    assertThat(event.getLoginResult())
+        .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.ALLOWED);
+  }
+
+  @org.junit.jupiter.api.Test
+  void enabledIpEnforcementRequiresStaffBanState() throws Exception {
+    var clients =
+        new ForwardedClients(
+            new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
+                (key, actor) -> java.util.concurrent.CompletableFuture.completedFuture(true),
+                () -> {},
+                true),
+            () -> false,
+            ip -> java.util.Optional.empty());
+    var event = login("10.1.2.3", "8.8.8.8");
+
+    clients.login(event);
+
+    assertThat(event.getLoginResult())
+        .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
+    assertThat(event.kickMessage())
+        .isEqualTo(
+            net.kyori.adventure.text.Component.text(
+                "Staff state is still loading. Please retry shortly."));
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
