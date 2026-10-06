@@ -76,6 +76,10 @@ toolkit ci load                        # Queue, Kueue admission, CPU/memory/disk
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
 
+CI commands resolve `WOODPECKER_TOKEN` through the registered credential broker,
+as the native Woodpecker command does. An explicit token retains precedence;
+custom server URLs or repository IDs require an explicit token.
+
 `wait` pins the initial PR head (or asserts `--head <full SHA>`), subscribes to
 Woodpecker events before reading status, and refreshes GitHub metadata every
 30 seconds. It returns as soon as a blocking check fails, merge conflicts
