@@ -122,8 +122,8 @@ final class TeamPlayTest {
    * output: a deliberate change to how bots play moves it, and the new value is pasted here in the
    * same change; an accidental one fails here.
    */
-  // Anchors screen the approaches and walking applies a stronger push inside the spacing band.
-  private static final String PINNED_YARD_HASH = "0602fa5eec14620d";
+  // Anchors screen the approaches; the walking push has gain 1.3 inside the spacing band.
+  private static final String PINNED_YARD_HASH = "e84d223e4f95713e";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

@@ -208,6 +208,17 @@ final class ReflexTest {
   }
 
   @Test
+  void walkingCorrectionGrowsAsTheGapToATeammateShrinks() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var near = combatant(2, RED, self.pos().plus(0, 0, 2));
+    var far = combatant(2, RED, self.pos().plus(0, 0, 2.75));
+    var nearMove = walkingMove(self, near);
+    var farMove = walkingMove(self, far);
+    assertThat(nearMove.waypoint().x()).isGreaterThan(self.pos().x());
+    assertThat(nearMove.waypoint().z()).isLessThan(farMove.waypoint().z());
+  }
+
+  @Test
   void walkingLeavesAResponseMarginBeyondTheMeleeSpacingBand() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var ally = combatant(2, RED, new Vec3(5.5, 1, 8.25));
