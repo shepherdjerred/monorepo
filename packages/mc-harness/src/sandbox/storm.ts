@@ -40,6 +40,16 @@ export const STORM_DEV_MODULES = [
   "tickets",
 ] as const;
 
+/**
+ * Modules enabled in published-image sandboxes. Companions' local gameplay
+ * dependencies are present; RWF stays off because disposable servers do not
+ * carry the provisioned `rwf` world or production recording salt.
+ */
+export const STORM_IMAGE_MODULES = [
+  ...STORM_DEV_MODULES,
+  "companions",
+] as const;
+
 const OwnedStormConfigSchema = z
   .object({ modules: z.record(z.string(), z.boolean()) })
   .strict();

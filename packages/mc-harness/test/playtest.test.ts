@@ -167,8 +167,17 @@ describe("profiles and staging", () => {
       expect(image.env).toMatchObject({
         FLIPT_URL: "http://127.0.0.1:9",
         FLIPT_ENVIRONMENT: "beta",
+        RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
       });
-      expect(image.staged).toEqual([]);
+      expect(image.staged).toHaveLength(1);
+      const imageConfig = image.staged[0];
+      expect(imageConfig?.kind).toBe("storm-config");
+      if (imageConfig?.kind === "storm-config") {
+        expect(imageConfig.target).toBe(path.join("TheStorm", "config.yml"));
+        expect(imageConfig.modules).toContain("companions");
+        expect(imageConfig.modules).not.toContain("rwf");
+        expect(imageConfig.modules).not.toContain("rwfbots");
+      }
     },
   );
 

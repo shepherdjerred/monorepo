@@ -197,7 +197,7 @@ describe("sandbox pod manifest (mc-sandbox admission policy)", () => {
     );
   });
 
-  it("stages plugins read-only for paper and nothing for the storm image", () => {
+  it("stages Paper plugins and the Storm image's module-config overlay", () => {
     const paper = spec(pod({}));
     expect(paper.containers[0]?.volumeMounts).toContainEqual({
       name: "staging",
@@ -206,10 +206,16 @@ describe("sandbox pod manifest (mc-sandbox admission policy)", () => {
       readOnly: true,
     });
     const storm = spec(pod({ profile: "storm-prod" }));
-    expect(storm.initContainers).toBeUndefined();
+    expect(storm.initContainers).toHaveLength(1);
     expect(
       storm.containers[0]?.volumeMounts.map((mount) => mount.mountPath),
-    ).toEqual(["/data", "/tmp"]);
+    ).toEqual(["/data", "/tmp", "/plugins/TheStorm/config.yml"]);
+    expect(storm.containers[0]?.volumeMounts).toContainEqual({
+      name: "staging",
+      mountPath: "/plugins/TheStorm/config.yml",
+      subPath: "plugins/TheStorm/config.yml",
+      readOnly: true,
+    });
     expect(storm.containers[0]?.image).toMatch(
       /^ghcr\.io\/shepherdjerred\/the-storm-server:.+@sha256:/u,
     );
