@@ -5,9 +5,7 @@ description: Prepare, inspect, apply, and recover the authored survival settleme
 
 Provision the settlement with admission disabled, then activate it through the repository release path.
 
-1. Set `enabled: false` in the [Settlement](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/server/owned/plugins/TheStorm/arena/survival.yml) and [Rustworks](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/server/owned/plugins/TheStorm/arena/rustworks.yml) configuration, then release it.
-   Keep the authored footprint and blueprint in the reviewed repository revision.
-2. Create separate NORMAL superflat void worlds named `settlement` and `rustworks` through Multiverse, matching the [native fixture world setup](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/plugin/dist/src/e2e/java/com/shepherdjerred/thestorm/e2e/StormFixtures.java).
+1. While running the current image, create separate NORMAL superflat void worlds named `settlement` and `rustworks` through Multiverse, matching the [native fixture world setup](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/plugin/dist/src/e2e/java/com/shepherdjerred/thestorm/e2e/StormFixtures.java).
    Use one air layer, the void biome, and no generated structures. Rehearse the pinned
    Multiverse command syntax in a disposable server before using it live.
    Persist both worlds in Multiverse's runtime catalog so they load before The Storm, as required by its [plugin dependencies](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/plugin/dist/src/main/resources/paper-plugin.yml) and [towns world validation](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/plugin/modules/towns/src/main/java/com/shepherdjerred/thestorm/towns/adapter/paper/TownsPaper.java).
@@ -15,6 +13,10 @@ Provision the settlement with admission disabled, then activate it through the r
    Preserve the source world's difficulty when moving existing maps.
    For new maps, choose a non-peaceful difficulty so native hostile spawns are permitted.
    Keep arena worlds outside the [resource-world and random-teleport registry](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/server/owned/plugins/TheStorm/world.yml).
+2. Confirm both worlds are loaded and persisted before releasing the revised town regions.
+   Set `enabled: false` in the [Settlement](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/server/owned/plugins/TheStorm/arena/survival.yml) and [Rustworks](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/server/owned/plugins/TheStorm/arena/rustworks.yml) configuration, then release it.
+   Keep the authored footprint and blueprint in the reviewed repository revision.
+   Arena admission settings do not bypass the towns module's world validation.
 3. Inspect the selected site in a local world copy and check current claims.
    Keep an immutable copy of the original region files.
 4. Run `/settlement preview` as an administrator. The [provisioner](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/plugin/modules/arena/src/main/java/com/shepherdjerred/thestorm/arena/adapter/paper/SettlementProvisioner.java) checks ownership,
