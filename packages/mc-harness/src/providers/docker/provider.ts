@@ -72,10 +72,17 @@ export function dockerCreateArgs(options: {
       "-p",
       `127.0.0.1::${port.toString()}`,
     ]),
-    // An image that bakes its own /plugins (the storm image) keeps them.
+    // An image that bakes its own /plugins (the storm image) keeps them. A
+    // file overlay masks only the selected config file; mounting the staging
+    // directory over /plugins would hide every baked plugin.
     ...(options.pluginsDir === null
       ? []
-      : ["-v", `${options.pluginsDir}:/plugins:ro`]),
+      : options.profile.stagedPluginMount === "files"
+        ? options.profile.staged.flatMap((entry) => [
+            "-v",
+            `${path.join(options.pluginsDir ?? "", entry.target)}:/plugins/${entry.target}:ro`,
+          ])
+        : ["-v", `${options.pluginsDir}:/plugins:ro`]),
     ...(options.profile.seedData ? warmMountArgs(options.cacheDir) : []),
     ...envArgs(options.profile.env),
     options.profile.image,

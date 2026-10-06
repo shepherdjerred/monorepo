@@ -16,6 +16,7 @@ import {
   STORM_BUILD_COMMAND,
   STORM_DEV_MODULES,
   STORM_PATHS,
+  stormImageConfig,
 } from "#sandbox/storm.ts";
 
 export const GAME_PORT = 25_565;
@@ -41,6 +42,8 @@ export type StagedEntry =
       source: string;
       target: string;
       modules: readonly string[];
+      /** Module keys baked into the exact selected image digest. */
+      moduleKeys?: readonly string[];
     };
 
 export type ResolvedProfile = {
@@ -50,6 +53,8 @@ export type ResolvedProfile = {
   plugins: readonly PluginPin[];
   /** Repository outputs and config staged into /plugins, in order. */
   staged: readonly StagedEntry[];
+  /** Mount staged paths individually when the image already owns /plugins. */
+  stagedPluginMount?: "tree" | "files";
   /**
    * Seed /data with the pinned Paper jar and a throttle-free bukkit.yml. Off
    * for the published storm image: it bakes its own Paper and config, and its
@@ -181,15 +186,16 @@ function stormDevProfile(
 }
 
 /**
- * The published minecraft-tsmc image, booted the way the server image's own
- * boot-check does: fresh world, offline mode, fixture Discord and storm-brain
- * credentials (their bridges stay offline; every module still starts). The
- * image bakes Paper, every plugin and the owned config, so nothing is staged.
+ * The published minecraft-tsmc image booted against a disposable fresh world.
+ * The image bakes Paper, every plugin and owned config. Stage a module overlay
+ * so the local companion dependencies start while RWF stays off because its
+ * production world and recording salt do not exist in this fresh sandbox.
  * MCBridge must be baked into the image (the-storm server Dockerfile); an
  * image without it never answers the bridge health check. Amd64-only, so it
  * defaults to the cluster.
  */
 function stormImageProfile(image: string) {
+  const imageConfig = stormImageConfig(image);
   return (
     _world: SandboxCreateRequest["world"],
     secrets: Secrets,
@@ -203,14 +209,25 @@ function stormImageProfile(image: string) {
       STORM_BRAIN_BEARER_TOKEN: "storm-sandbox-brain-token",
       DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
       DISCORD_CHANNEL_ID: "1",
-      // Inert Flipt bootstrap (as boot-check.sh): companions refuse to enable
-      // without it, which stops the server; flags then resolve as unreachable.
+      // Pseudonymization only in disposable sandboxes; never used in production.
+      RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
+      // Keep companion gameplay suspended while the disposable server boots;
+      // the unreachable Flipt endpoint makes rollout evaluation fail closed.
       FLIPT_URL: "http://127.0.0.1:9",
       FLIPT_ENVIRONMENT: "beta",
       ...bridgeAndRconEnv(secrets),
     },
     plugins: [],
-    staged: [],
+    stagedPluginMount: "files",
+    staged: [
+      {
+        kind: "storm-config",
+        source: path.join(STORM_PATHS.ownedConfigDir, "config.yml"),
+        target: path.join("TheStorm", "config.yml"),
+        modules: imageConfig.enabledModules,
+        moduleKeys: imageConfig.moduleKeys,
+      },
+    ],
     seedData: false,
     ports: [GAME_PORT, RCON_PORT, BRIDGE_PORT],
     defaultProvider: "kubernetes",

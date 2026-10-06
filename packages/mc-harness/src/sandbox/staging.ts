@@ -105,7 +105,11 @@ export async function stageEntries(
       case "storm-config": {
         await Bun.write(
           target,
-          stormModuleConfig(await Bun.file(source).text(), entry.modules),
+          stormModuleConfig(
+            await Bun.file(source).text(),
+            entry.modules,
+            entry.moduleKeys,
+          ),
         );
         break;
       }

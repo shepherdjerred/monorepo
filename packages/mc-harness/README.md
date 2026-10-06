@@ -81,12 +81,16 @@ supervised `kubectl port-forward` that restarts with backoff and is re-attached
 annotations; records whose pod disappeared are dropped.
 
 `storm-prod` and `storm-candidate` boot `ghcr.io/shepherdjerred/the-storm-server`
-at the version catalog's `/prod` and candidate pins with fixture credentials,
-staging nothing: the image bakes Paper, every plugin and the owned config. Like
-the image's own boot check, they set an unreachable Flipt bootstrap
-(`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`): companions refuse to
-enable without one, which stops the server. It needs an image that bakes
-MCBridge; earlier images never answer the bridge health check.
+at the version catalog's `/prod` and candidate pins with fixture credentials.
+The image bakes Paper, every plugin, and owned config; the harness stages only
+a config overlay that enables the companion module and its local dependencies,
+while disabling RWF, which requires the provisioned `rwf` world and production
+recording salt. Docker and Kubernetes mount the overlay at the config file path,
+leaving the image's baked plugins visible. The overlay uses a clearly fake RWF
+salt and does not copy production world or plugin data. Both profiles set an unreachable Flipt
+bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
+companions fail closed and do not spawn or act in the disposable world. The
+image must bake MCBridge; earlier images never answer the bridge health check.
 
 The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 `bunx turbo run build --filter=@shepherdjerred/the-storm`), the plugins

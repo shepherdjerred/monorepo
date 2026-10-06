@@ -40,27 +40,104 @@ export const STORM_DEV_MODULES = [
   "tickets",
 ] as const;
 
+/**
+ * Modules enabled in published-image sandboxes. Companions' local gameplay
+ * dependencies are present; RWF stays off because disposable servers do not
+ * carry the provisioned `rwf` world or production recording salt.
+ */
+const STORM_IMAGE_ENABLED_MODULES = [
+  ...STORM_DEV_MODULES,
+  "companions",
+] as const;
+
+const STORM_IMAGE_MODULE_KEYS = [
+  "economy",
+  "messages",
+  "mail",
+  "chat",
+  "discord",
+  "essentials",
+  "shops",
+  "shards",
+  "towns",
+  "tracks",
+  "mechanics",
+  "spells",
+  "npcs",
+  "quests",
+  "arena",
+  "mobs",
+  "qol",
+  "skills",
+  "seasonal",
+  "world",
+  "tickets",
+  "agent",
+  "companions",
+  "rwf",
+  "rwfbots",
+] as const;
+
+/**
+ * Config schema snapshots are keyed by the exact published image digest.
+ * Production and candidate pins can move independently; never infer an older
+ * image's module keys from the current checkout's owned config.
+ */
+const STORM_IMAGE_CONFIGS: Readonly<
+  Record<
+    string,
+    { moduleKeys: readonly string[]; enabledModules: readonly string[] }
+  >
+> = {
+  a9158e5c64baa0be50a8d56e1e20b168a61e5d1d6f12763e70b6b74f7ba9d7b1: {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
+};
+
+export function stormImageConfig(image: string): {
+  moduleKeys: readonly string[];
+  enabledModules: readonly string[];
+} {
+  const digest = /@sha256:([a-f0-9]{64})$/u.exec(image)?.[1];
+  if (digest === undefined) {
+    throw new Error(`Storm sandbox image must be digest-pinned: ${image}`);
+  }
+  const config = STORM_IMAGE_CONFIGS[digest];
+  if (config === undefined) {
+    throw new Error(
+      `No Storm module config snapshot for image digest ${digest}`,
+    );
+  }
+  return config;
+}
+
 const OwnedStormConfigSchema = z
   .object({ modules: z.record(z.string(), z.boolean()) })
   .strict();
 
 /**
  * Turns the repository-owned config.yml into one with only `enabled` modules
- * switched on. The plugin rejects a config that omits a module, so the key set
- * always follows the owned file.
+ * switched on. Published images use their digest-pinned module key snapshot;
+ * local dev follows the repository-owned file.
  */
 export function stormModuleConfig(
   ownedYaml: string,
   enabled: readonly string[],
+  imageModuleKeys?: readonly string[],
 ): string {
   const owned = OwnedStormConfigSchema.parse(Bun.YAML.parse(ownedYaml));
-  const known = new Set(Object.keys(owned.modules));
+  const moduleKeys = imageModuleKeys ?? Object.keys(owned.modules);
+  const known = new Set(moduleKeys);
+  if (known.size !== moduleKeys.length) {
+    throw new Error("Storm module config snapshot contains duplicate keys");
+  }
   const unknown = enabled.filter((module) => !known.has(module));
   if (unknown.length > 0) {
     throw new Error(`Unknown modules: ${unknown.join(", ")}`);
   }
   const on = new Set(enabled);
-  const modules = Object.keys(owned.modules).map(
+  const modules = moduleKeys.map(
     (module) => `  ${module}: ${on.has(module).toString()}`,
   );
   return ["modules:", ...modules, ""].join("\n");
