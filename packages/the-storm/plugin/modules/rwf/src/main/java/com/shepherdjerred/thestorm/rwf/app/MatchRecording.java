@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.app;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.Intent;
+import com.shepherdjerred.thestorm.rwf.domain.record.ObservationFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEnd;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEvent;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +20,8 @@ public interface MatchRecording {
   void frame(Frame frame);
 
   void input(InputFrame input);
+
+  void observation(ObservationFrame observation);
 
   void intent(Intent intent);
 

@@ -12,7 +12,42 @@ package com.shepherdjerred.thestorm.rwf.domain.record;
  * @param yaw hundredths of a degree, 0 to 35999
  * @param pitch hundredths of a degree, -9000 to 9000
  */
-public record InputFrame(long tick, String pseudonym, int keys, int yaw, int pitch) {
+public record InputFrame(
+    long tick,
+    String pseudonym,
+    int keys,
+    int yaw,
+    int pitch,
+    boolean attack,
+    boolean use,
+    int slot,
+    long sequence,
+    long observationTick,
+    Source source) {
+
+  public record Legacy(long tick, String pseudonym, int keys, int yaw, int pitch) {}
+
+  public enum Source {
+    HUMAN,
+    AUTOMATED,
+    MISSING
+  }
+
+  /** Legacy recordings contain no attack/use labels. They are never training examples. */
+  public InputFrame(Legacy legacy) {
+    this(
+        legacy.tick(),
+        legacy.pseudonym(),
+        legacy.keys(),
+        legacy.yaw(),
+        legacy.pitch(),
+        false,
+        false,
+        0,
+        -1,
+        -1,
+        Source.MISSING);
+  }
 
   public static final int FORWARD = 1;
   public static final int BACKWARD = 2;
@@ -31,6 +66,14 @@ public record InputFrame(long tick, String pseudonym, int keys, int yaw, int pit
   private static final int STRAIGHT = 90 * CENTIDEGREES;
 
   public InputFrame {
+    if (slot < 0
+        || slot > 8
+        || sequence < -1
+        || observationTick < -1
+        || observationTick > tick
+        || (source == Source.MISSING) != (sequence == -1)) {
+      throw new IllegalArgumentException("invalid control provenance, sequence or hotbar slot");
+    }
     if (tick < 0) {
       throw new IllegalArgumentException("tick must not be negative");
     }

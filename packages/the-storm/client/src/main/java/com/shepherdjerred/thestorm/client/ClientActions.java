@@ -19,6 +19,8 @@ final class ClientActions {
   private final Session session;
   private final InputLease inputs = new InputLease();
   private final Captures captures;
+  private final RecordedControls recording = new RecordedControls();
+  private int automationTicks;
 
   ClientActions(Session session) {
     this.session = session;
@@ -49,6 +51,7 @@ final class ClientActions {
     requireWorld(client);
     if (request.action().equals("capture")) return captures.capture(client, args);
     if (request.action().equals("input")) return input(client, peer, args);
+    automationTicks = 2;
     var result =
         switch (request.action()) {
           case "look" -> look(client, args);
@@ -64,6 +67,9 @@ final class ClientActions {
   }
 
   void tick(Minecraft client) {
+    recording.tick(client, inputs.active() || automationTicks > 0);
+    automationTicks = Math.max(0, automationTicks - 1);
+    if (!inputs.active()) return;
     if (client.player == null || client.player.isDeadOrDying() || client.gui.screen() != null) {
       release(client);
     } else {
@@ -73,11 +79,13 @@ final class ClientActions {
   }
 
   void disconnect(Minecraft client, UUID peer) {
+    if (!inputs.active()) return;
     inputs.disconnect(peer);
     apply(client);
   }
 
   void release(Minecraft client) {
+    if (!inputs.active()) return;
     inputs.release();
     apply(client);
   }

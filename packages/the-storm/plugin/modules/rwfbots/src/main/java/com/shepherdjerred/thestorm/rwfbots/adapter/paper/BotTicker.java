@@ -9,7 +9,9 @@ import com.shepherdjerred.thestorm.rwfbots.app.DecisionGate;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkStats;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
@@ -162,6 +164,9 @@ public final class BotTicker {
 
   private void drive(BotBody bot, BotProfile profile, Frame frame) {
     var snapshot = frame.snapshot();
+    if (bot.takeRecoveryRequest()) {
+      loop.requestReplan(profile.id());
+    }
     var thought = frame.board().of(profile.id());
     var self = snapshot.combatant(profile.id());
     if (self.isEmpty() || !self.orElseThrow().alive()) {
@@ -184,8 +189,8 @@ public final class BotTicker {
             .orElseGet(() -> new Percept(PerceptionState.EMPTY, List.of(), tick));
     var input =
         ReflexInput.of(self.orElseThrow(), snapshot, decision, percept).withGapples(gapples(bot));
-    input = freshTarget(input);
     var match = frame.match();
+    input = freshTarget(input, match.nav().grid());
     var context =
         new ReflexContext(
             match.nav().grid(),
@@ -197,14 +202,15 @@ public final class BotTicker {
     driver.apply(bot, step.commands(), match.ids(), tick);
   }
 
-  /** The target resolves to this tick's view of the enemy, not the percept's older one. */
-  static ReflexInput freshTarget(ReflexInput input) {
+  /** Refreshes a previously visible target only while the current sight line remains clear. */
+  static ReflexInput freshTarget(ReflexInput input, VoxelGrid grid) {
     var target =
         input
             .target()
             .map(CombatantView::id)
             .flatMap(input.snapshot()::combatant)
-            .filter(CombatantView::alive);
+            .filter(CombatantView::alive)
+            .filter(enemy -> Perception.hasLineOfSight(grid, input.self().eye(), enemy));
     return new ReflexInput(
         input.self(), input.snapshot(), input.decision(), target, input.gapplesLeft());
   }

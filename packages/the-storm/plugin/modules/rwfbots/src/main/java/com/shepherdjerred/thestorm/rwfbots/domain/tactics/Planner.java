@@ -222,6 +222,15 @@ public final class Planner {
     if (bomb.isEmpty()) {
       return holdHere(Option.RETAKE, situation, context);
     }
+    var threat =
+        situation
+            .nearestEnemy()
+            .filter(
+                enemy ->
+                    enemy.pos().distance(bomb.orElseThrow().pos()) <= Features.BOMB_THREAT_RANGE);
+    if (threat.isPresent() && !context.keep().ranged()) {
+      return Plan.of(Option.RETAKE, situation.now(), new PlanStep.Fight(threat.orElseThrow().id()));
+    }
     var at = retakePoint(situation, context, bomb.get());
     var watch =
         situation.nearestEnemy().map(Situation.KnownEnemy::pos).orElseGet(() -> at.plus(1, 0, 0));
@@ -869,7 +878,8 @@ public final class Planner {
               Stance.CAUTIOUS,
               Optional.of(enemy.pos()),
               label + "-wait");
-      return fightDecision(scene, plan, archer.close().or(archer::back).orElse(wait));
+      return fightDecision(
+          scene, plan, archer.close().or(archer::back).or(archer::support).orElse(wait));
     }
     if (!enemy.visible()) {
       return fightDecision(
@@ -892,7 +902,13 @@ public final class Planner {
     return fightDecision(
         scene,
         plan,
-        archer.close().or(archer::back).or(archer::peek).or(archer::room).orElse(shoot));
+        archer
+            .close()
+            .or(archer::back)
+            .or(archer::support)
+            .or(archer::peek)
+            .or(archer::room)
+            .orElse(shoot));
   }
 
   /**
@@ -958,6 +974,23 @@ public final class Planner {
       return peekSpot(situation, context, enemy)
           .filter(spot -> !inCover(self(), spot.pos()))
           .map(spot -> move(spot.pos(), Stance.AGGRESSIVE, "-peek"));
+    }
+
+    /** Reaches the team's firing position before settling into a local peek. */
+    Optional<Engagement> support() {
+      var keep = context.keep();
+      return slotPoint(situation, context)
+          .filter(goal -> goal.horizontalDistance(self()) > ROUTE_REACHED)
+          .filter(goal -> goal.distance(enemy) >= keep.min() && goal.distance(enemy) <= keep.max())
+          .map(
+              goal ->
+                  new Engagement(
+                      Optional.empty(),
+                      pathTo(situation, context, goal, new Way(Stance.AGGRESSIVE, true)),
+                      Stance.AGGRESSIVE,
+                      Optional.of(enemy),
+                      label + "-support"))
+          .filter(engagement -> !engagement.waypoints().isEmpty());
     }
 
     /** Two archers on one spot make one target: step sideways, away from the teammate. */

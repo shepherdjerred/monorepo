@@ -331,6 +331,35 @@ final class ReflexTest {
   }
 
   @Test
+  void aBotHoldingItsSlotMakesRoomForANearbyTeammate() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, self.pos().plus(2.75, 0, 0));
+    var decision =
+        new Decision(
+            self.id(),
+            Option.HOLD_SLOT,
+            Optional.empty(),
+            List.of(),
+            Stance.CAUTIOUS,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "hold-slot:hold",
+            1,
+            0);
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, ally), List.of()), decision, Optional.empty(), 3),
+            context(levers(0.5)),
+            new SplittableRandom(1));
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(self.pos().plus(-1, 0, 0), false));
+    assertThat(step.commands()).anyMatch(BodyCommand.Look.class::isInstance);
+  }
+
+  @Test
   void anEnemyInReachInterruptsEating() {
     var random = new SplittableRandom(4);
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5)).withHealth(6, 0);

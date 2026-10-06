@@ -19,6 +19,10 @@ final class InputLease {
     return buttons;
   }
 
+  boolean active() {
+    return owner != null;
+  }
+
   CompletableFuture<Object> start(UUID peer, Set<String> requested, int ticks) {
     if (owner != null) throw new IllegalStateException("Another input is still running");
     if (ticks < 1 || ticks > 100 || requested.isEmpty() || !BUTTONS.containsAll(requested)) {
