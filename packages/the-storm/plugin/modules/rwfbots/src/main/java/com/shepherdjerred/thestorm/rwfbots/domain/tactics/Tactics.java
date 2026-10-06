@@ -76,7 +76,7 @@ public final class Tactics {
             context.levers().decisionTemperature() * context.bias().temperature());
     var pick = Softmax.select(candidates, temperature, random);
     var choice = choose(pick.choice(), current, now);
-    if (state.lifeEpoch() == 0 && now - born < context.lateStartTicks()) {
+    if (context.remainingStartTicks(state, now) > 0) {
       choice = Option.HOLD_ANGLE;
     }
     var chosen = choice;

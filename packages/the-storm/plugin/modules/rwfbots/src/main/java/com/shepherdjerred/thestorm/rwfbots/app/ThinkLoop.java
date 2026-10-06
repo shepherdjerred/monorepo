@@ -435,7 +435,8 @@ public final class ThinkLoop {
       var period = rates.teamEveryTicks() * cycle.multiplier();
       var members = new HashMap<CombatantId, SlotFit.Member>();
       var views = new ArrayList<CombatantView>();
-      for (var profile : profiles()) {
+      for (var mind : minds.values()) {
+        var profile = mind.profile;
         if (!profile.team().equals(team.board.team())) {
           continue;
         }
@@ -445,7 +446,11 @@ public final class ThinkLoop {
           members.put(
               profile.id(),
               new SlotFit.Member(
-                  profile.archetype(), profile.quirks(), profile.roleWeights(), profile.kit()));
+                  profile.archetype(),
+                  profile.quirks(),
+                  profile.roleWeights(),
+                  profile.kit(),
+                  mind.tacticsContext.remainingStartTicks(mind.tacticsState, snapshot.tick())));
         }
       }
       // A bot that joined since the last deal must get a slot before it thinks.

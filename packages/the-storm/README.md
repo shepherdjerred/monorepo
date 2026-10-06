@@ -1395,7 +1395,10 @@ what spreads a team on an open map such as the training yard. The strategy
 names the objective, so the nuke is played for, not walked into because it
 is nearest. Slots go to bots by the Hungarian algorithm over archetype, role
 and kit fit, path distance and a bonus for the slot already held, so
-assignments stick. Tactics then take and hold the slot (ARM is for the plant
+assignments stick. A bot's remaining opening pause increases its distance
+cost, leaving long field routes to ready teammates while late starters take
+nearby posts. That cost expires with the first-life pause; later lives do not
+repeat it. Tactics then take and hold the slot (ARM is for the plant
 slot, a bot beside an unwatched bomb or the last survivor). A bot at its
 slot stands and watches its angle rather than circling it. Once an enemy the
 bot saw itself is within 24 blocks it moves up from cover to cover, and

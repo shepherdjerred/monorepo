@@ -265,7 +265,13 @@ final class SimWorld {
         var members = new HashMap<CombatantId, SlotFit.Member>();
         for (var bot : bots) {
           members.put(
-              bot.id, new SlotFit.Member(bot.archetype, bot.quirks, bot.roleWeights, bot.kit));
+              bot.id,
+              new SlotFit.Member(
+                  bot.archetype,
+                  bot.quirks,
+                  bot.roleWeights,
+                  bot.kit,
+                  bot.tacticsContext.remainingStartTicks(bot.tactics, snapshot.tick())));
         }
         var views = bots.stream().map(b -> b.view(tick)).toList();
         board =

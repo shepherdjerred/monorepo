@@ -4,10 +4,13 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.BLUE;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -110,4 +113,44 @@ final class AdvanceTest {
   void everyMatchReachesContact() {
     assertThat(RUNS).allMatch(run -> run.advance().contact().isPresent());
   }
+
+  @Test
+  void showcaseStrategiesStillAdvanceAndSpreadWithLateFieldSpecialists() {
+    // Preserve the observed failure seeds and strategies; this is not a native replay.
+    var scenarios =
+        List.of(
+            new Opening(5769237551960524108L, Strategy.TURTLE, Strategy.TURTLE),
+            new Opening(9179509738380524055L, Strategy.SPLIT, Strategy.RUSH));
+    for (var opening : scenarios) {
+      var seed = opening.seed();
+      var red = opening.red();
+      var blue = opening.blue();
+      var world =
+          Arenas.yard(
+              seed, new Arenas.Lineup(8, red, blue, Set.of(Archetype.FLANKER, Archetype.SNIPER)));
+      var advance = new Advance(world);
+      world.run(900, advance::observe);
+      assertThat(advance.contact()).as("%s %s %s contact", seed, red, blue).isPresent();
+      for (var team : List.of(RED, BLUE)) {
+        assertThat(advance.spreadAt8(team))
+            .as("%s %s %s %s width at 8 s", seed, red, blue, team)
+            .isGreaterThanOrEqualTo(MIN_WIDTH);
+        assertThat(advance.spreadAtContact(team))
+            .as("%s %s %s %s width at contact", seed, red, blue, team)
+            .isGreaterThanOrEqualTo(MIN_WIDTH);
+        var anchors =
+            world.boards.get(team).plan().slots().stream()
+                .filter(slot -> slot.kind() == SlotKind.ANCHOR)
+                .count();
+        assertThat(advance.forwardBy(team) * (8 - anchors))
+            .as("%s %s %s %s bots 20 blocks from spawn by 10 s", seed, red, blue, team)
+            .isGreaterThanOrEqualTo(2);
+        assertThat(advance.winding(team))
+            .as("%s %s %s %s winding", seed, red, blue, team)
+            .isLessThanOrEqualTo(MAX_WINDING);
+      }
+    }
+  }
+
+  private record Opening(long seed, Strategy red, Strategy blue) {}
 }

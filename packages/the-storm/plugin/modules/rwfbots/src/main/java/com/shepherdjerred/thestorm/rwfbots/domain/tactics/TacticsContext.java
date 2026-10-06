@@ -61,4 +61,13 @@ public record TacticsContext(
     }
     return LATE_MIN_TICKS + (int) Math.floorMod(seed, (long) LATE_SPREAD_TICKS);
   }
+
+  /** The opening pause remaining at {@code now}; a later life never repeats it. */
+  public int remainingStartTicks(TacticsState state, long now) {
+    if (state.lifeEpoch() != 0) {
+      return 0;
+    }
+    var born = state.bornTick() < 0 ? now : state.bornTick();
+    return (int) Math.max(0, lateStartTicks() - (now - born));
+  }
 }
