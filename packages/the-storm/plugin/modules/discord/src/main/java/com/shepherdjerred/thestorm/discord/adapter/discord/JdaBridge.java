@@ -100,11 +100,17 @@ public final class JdaBridge implements DiscordGateway {
             Commands.slash("baltop", "Show the richest players in The Storm"),
             Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
                 .addOptions(
-                    new OptionData(OptionType.INTEGER, "page", "Directory page").setMinValue(1),
+                    townPageOption(),
                     new OptionData(OptionType.STRING, "name", "Town or historic site to inspect")))
         .queue(
             commands -> logger.info("Discord bridge connected to #{}", found.getName()),
             error -> logger.warn("Registering Discord slash commands failed", error));
+  }
+
+  /** Discord's integer range must fit the page type consumed by the listener. */
+  static OptionData townPageOption() {
+    return new OptionData(OptionType.INTEGER, "page", "Directory page")
+        .setRequiredRange(1, Integer.MAX_VALUE);
   }
 
   @Override
