@@ -113,9 +113,13 @@ final class StaffCommands {
     }
 
     static void requireOthers(CommandSender actor, String command, Player target) {
-      if (!target.equals(actor)
-          && !actor.hasPermission("thestorm.essentials." + command + ".others"))
+      if (!allowsOthers(actor, command, target))
         throw new IllegalArgumentException("You do not have permission for that action.");
+    }
+
+    static boolean allowsOthers(CommandSender actor, String command, Player target) {
+      return target.equals(actor)
+          || actor.hasPermission("thestorm.essentials." + command + ".others");
     }
 
     void require(String permission) {

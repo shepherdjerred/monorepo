@@ -40,6 +40,7 @@ final class StaffInventories implements Listener {
   private void open(StaffCommands.Request request, String command) {
     var target = tools.player(request.actor(), request.word(0));
     var actor = request.self();
+    request.others(target);
     boolean edit = request.words().length > 1 && "edit".equals(request.word(1));
     if (request.words().length > 1 && !edit)
       throw new IllegalArgumentException("Use edit to request editing.");
@@ -103,6 +104,7 @@ final class StaffInventories implements Listener {
                       || !Boolean.TRUE.equals(enabled)
                       || !tools.available(actor, view.command())
                       || target == null
+                      || !StaffCommands.Request.allowsOthers(actor, view.command(), target)
                       || !Objects.equals(views.get(id), view)
                       || !actor.hasPermission("thestorm.essentials." + view.command() + ".edit"))
                     return;

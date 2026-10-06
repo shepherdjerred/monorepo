@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.lang.reflect.Proxy;
@@ -23,6 +24,33 @@ final class StaffCommandPermissionsTest {
     var actor = player(Set.of("thestorm.essentials.jail"));
 
     StaffCommands.Request.requireOthers(actor, "jail", actor);
+  }
+
+  @Test
+  void inventoryCommandsRequireOthersPermissionForAnotherPlayer() {
+    var actor = player(Set.of("thestorm.essentials.invsee"));
+    var target = player();
+
+    assertThatThrownBy(() -> StaffCommands.Request.requireOthers(actor, "invsee", target))
+        .hasMessage("You do not have permission for that action.");
+    assertThatThrownBy(() -> StaffCommands.Request.requireOthers(actor, "enderchest", target))
+        .hasMessage("You do not have permission for that action.");
+  }
+
+  @Test
+  void inventoryCommandPermissionCanBeRecheckedForAnotherPlayer() {
+    var actor = player(Set.of("thestorm.essentials.invsee.others"));
+    var target = player();
+
+    assertThat(StaffCommands.Request.allowsOthers(actor, "invsee", target)).isTrue();
+    assertThat(StaffCommands.Request.allowsOthers(actor, "enderchest", target)).isFalse();
+  }
+
+  @Test
+  void aPlayerMayInspectTheirOwnInventoryWithoutOthersPermission() {
+    var actor = player(Set.of("thestorm.essentials.invsee"));
+
+    StaffCommands.Request.requireOthers(actor, "invsee", actor);
   }
 
   private static CommandSender sender(Set<String> permissions) {
