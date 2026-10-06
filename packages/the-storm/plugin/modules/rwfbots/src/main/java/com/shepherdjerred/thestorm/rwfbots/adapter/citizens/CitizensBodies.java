@@ -2,7 +2,9 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.citizens;
 
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -147,8 +149,14 @@ public final class CitizensBodies implements Bodies, Listener {
   @Override
   public void moveToward(UUID bot, Location target, boolean sprint) {
     var npc = require(bot);
-    npc.setMoveDestination(target);
-    entity(bot).ifPresent(player -> player.setSprinting(sprint));
+    npc.setMoveDestination(null);
+    entity(bot)
+        .ifPresent(
+            player -> {
+              org.bukkit.entity.Entity body = player;
+              var heading = target.toVector().subtract(body.getLocation().toVector());
+              steer(player, new Vec3(heading.getX(), 0, heading.getZ()), sprint);
+            });
   }
 
   @Override
@@ -158,7 +166,18 @@ public final class CitizensBodies implements Bodies, Listener {
     if (npc.getNavigator().isNavigating()) {
       npc.getNavigator().cancelNavigation();
     }
-    entity(bot).ifPresent(player -> player.setSprinting(false));
+    entity(bot).ifPresent(player -> steer(player, Vec3.ZERO, false));
+  }
+
+  private static void steer(Player player, Vec3 heading, boolean sprint) {
+    player.setSprinting(sprint);
+    var velocity = player.getVelocity();
+    var slowdown = player.hasActiveItem() ? 0.2 : player.isSneaking() ? 0.3 : 1.0;
+    var next =
+        MovementMotor.steer(
+            new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
+            new MovementMotor.Control(heading, sprint, SnapshotCapture.onGround(player), slowdown));
+    player.setVelocity(new org.bukkit.util.Vector(next.x(), next.y(), next.z()));
   }
 
   @Override

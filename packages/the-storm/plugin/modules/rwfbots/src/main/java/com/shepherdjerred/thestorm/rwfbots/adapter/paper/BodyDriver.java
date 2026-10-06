@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.rwf.app.BotActions;
 import com.shepherdjerred.thestorm.rwf.app.view.Point;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import java.util.List;
 import java.util.Optional;
@@ -67,8 +68,11 @@ public final class BodyDriver {
   /** Applies {@code commands} to {@code bot} at {@code tick}, resolving ids through {@code ids}. */
   public void apply(BotBody bot, List<BodyCommand> commands, IdMap ids, long tick) {
     var look = look(commands);
+    look.ifPresent(facing -> bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch()));
     for (var command : commands) {
-      apply(bot, command, new Frame(ids, tick, look));
+      if (!(command instanceof BodyCommand.Look)) {
+        apply(bot, command, new Frame(ids, tick, look));
+      }
     }
   }
 
@@ -80,8 +84,11 @@ public final class BodyDriver {
     switch (command) {
       case BodyCommand.Look(var yaw, var pitch) -> bodies.look(id, (float) yaw, (float) pitch);
       case BodyCommand.MoveToward(var waypoint, var sprint) ->
-          bodies.moveToward(id, location(waypoint), sprint);
-      case BodyCommand.Stop _ -> bodies.stop(id);
+          move(bot, waypoint, sprint, frame.tick());
+      case BodyCommand.Stop _ -> {
+        bot.motion(MotionRecovery.State.INITIAL);
+        bodies.stop(id);
+      }
       case BodyCommand.Jump _ -> bodies.jump(id);
       case BodyCommand.Sneak(var sneaking) -> bodies.sneak(id, sneaking);
       case BodyCommand.SelectSlot(var slot) -> bodies.selectSlot(id, slot);
@@ -103,6 +110,29 @@ public final class BodyDriver {
   private void startUse(BotBody bot, long tick) {
     bodies.startUsing(bot.uuid());
     bot.drawStart(tick);
+  }
+
+  private void move(BotBody bot, Vec3 waypoint, boolean sprint, long tick) {
+    bodies
+        .entity(bot.uuid())
+        .ifPresent(
+            player -> {
+              var position = Places.at(player);
+              var step =
+                  MotionRecovery.tick(
+                      bot.motion(),
+                      new Vec3(position.getX(), position.getY(), position.getZ()),
+                      waypoint,
+                      tick);
+              bot.motion(step.state());
+              bodies.moveToward(bot.uuid(), location(step.destination()), sprint);
+              if (step.jump()) {
+                bodies.jump(bot.uuid());
+              }
+              if (step.replan()) {
+                bot.requestRecovery();
+              }
+            });
   }
 
   private void releaseUse(BotBody bot, Frame frame) {

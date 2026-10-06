@@ -263,6 +263,10 @@ public final class RwfModule implements StormModule {
         public void input(InputFrame input) {}
 
         @Override
+        public void observation(
+            com.shepherdjerred.thestorm.rwf.domain.record.ObservationFrame observation) {}
+
+        @Override
         public void intent(Intent intent) {}
 
         @Override

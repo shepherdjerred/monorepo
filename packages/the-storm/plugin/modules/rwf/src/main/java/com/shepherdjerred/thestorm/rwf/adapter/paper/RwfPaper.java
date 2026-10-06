@@ -132,7 +132,23 @@ public final class RwfPaper {
     var bots = new Bots(module.services());
     var tracker = new CombatTracker();
     var inputs = new Inputs();
-    var recordings = new Recordings(app.recorder(), app.pseudonyms(), inputs);
+    context
+        .server()
+        .getMessenger()
+        .registerIncomingPluginChannel(
+            module.plugin(),
+            com.shepherdjerred.thestorm.rwf.domain.record.ControlPacket.CHANNEL,
+            inputs);
+    context
+        .server()
+        .getMessenger()
+        .registerOutgoingPluginChannel(
+            module.plugin(),
+            com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.CHANNEL);
+    var recordings =
+        new Recordings(
+            new Recordings.Parts(
+                app.recorder(), app.pseudonyms(), inputs, module.services(), module.plugin()));
     var runner =
         new MatchRunner(
             new MatchRunner.Parts(
@@ -270,6 +286,17 @@ public final class RwfPaper {
     runner.stop();
     clock.cancel();
     listeners.forEach(HandlerList::unregisterAll);
+    context
+        .server()
+        .getMessenger()
+        .unregisterIncomingPluginChannel(
+            context.plugin(), com.shepherdjerred.thestorm.rwf.domain.record.ControlPacket.CHANNEL);
+    context
+        .server()
+        .getMessenger()
+        .unregisterOutgoingPluginChannel(
+            context.plugin(),
+            com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.CHANNEL);
     permissions.unregister();
     maps.forEach(MapWorld::release);
     displays.clear();

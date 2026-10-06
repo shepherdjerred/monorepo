@@ -14,6 +14,7 @@ const parsed = parseArgs({
     world: { type: "string" },
     vanilla: { type: "boolean", default: false },
     verify: { type: "boolean", default: false },
+    "rwf-duel": { type: "boolean", default: false },
     help: { type: "boolean", default: false },
   },
 });
@@ -22,7 +23,7 @@ async function main(): Promise<void> {
   const action = parsed.positionals[0];
   if (action === undefined || parsed.values.help) {
     process.stdout.write(
-      "client preview [--world <directory>] [--vanilla] [--verify]\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
+      "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel]\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
     );
     return;
   }
@@ -30,6 +31,7 @@ async function main(): Promise<void> {
     await preview({
       vanilla: parsed.values.vanilla,
       verify: parsed.values.verify,
+      rwfDuel: parsed.values["rwf-duel"],
       ...(parsed.values.world === undefined
         ? {}
         : { world: parsed.values.world }),

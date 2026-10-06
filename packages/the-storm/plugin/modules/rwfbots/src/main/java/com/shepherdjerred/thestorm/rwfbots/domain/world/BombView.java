@@ -17,8 +17,8 @@ public record BombView(BombId id, BombOwner owner, Vec3 pos, BombState state) {
     return owner.isTeam(team);
   }
 
-  /** Whether {@code team} can arm this: anything not their own that is still standing. */
+  /** Whether {@code team} can arm this: an unlit bomb not their own that is still standing. */
   public boolean armableBy(TeamId team) {
-    return !belongsTo(team) && !(state instanceof BombState.Destroyed);
+    return !belongsTo(team) && !state.isLit() && !(state instanceof BombState.Destroyed);
   }
 }

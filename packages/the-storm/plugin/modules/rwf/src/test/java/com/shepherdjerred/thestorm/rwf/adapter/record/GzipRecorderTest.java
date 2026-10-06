@@ -68,7 +68,8 @@ final class GzipRecorderTest {
     var recording = recorder.begin(header);
     recording.event(new RecordEvent(0, "joined", alice, ""));
     recording.frame(new Frame(1, alice, 32, 2080, 32, 0, 0, 80, 1, 0));
-    recording.input(new InputFrame(1, alice, InputFrame.FORWARD, 9000, -450));
+    recording.input(
+        new InputFrame(new InputFrame.Legacy(1, alice, InputFrame.FORWARD, 9000, -450)));
     recording.frame(new Frame(2, bot, 64, 2080, 64, 128, 0, 80, 1, Frame.SPRINTING));
     recording.event(new RecordEvent(3, "died", bot, alice + " Melee"));
     var summary =
@@ -95,7 +96,8 @@ final class GzipRecorderTest {
     assertThat(record.events()).hasSize(2);
     assertThat(record.frames()).hasSize(2);
     assertThat(record.inputs())
-        .containsExactly(new InputFrame(1, alice, InputFrame.FORWARD, 9000, -450));
+        .containsExactly(
+            new InputFrame(new InputFrame.Legacy(1, alice, InputFrame.FORWARD, 9000, -450)));
     assertThat(record.end().payouts()).containsEntry(alice, 3L);
     assertThat(recorder.close(Duration.ofSeconds(1)).isDone()).isTrue();
   }

@@ -1137,27 +1137,71 @@ HMAC-SHA256 over the salt in `RWF_RECORDING_SALT`, which must be set when
 `recording.enabled` is true. Recordings are pruned by age and size at enable.
 
 A recording is gzipped UTF-8 text, one tab-separated row per line, written by
-`RecordCodec` (format version 2; `RecordCodecTest` holds a golden copy). Tabs,
+`RecordCodec` (format version 3; `RecordCodecTest` also preserves the version 2 golden copy). Tabs,
 newlines and backslashes inside a field are escaped with a backslash. Ticks
 count from the moment the match went live, at 50 ms each.
 
-| Tag | Row                                                                                                                                                          | When                                                     |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| `H` | version, match id, map id, map block SHA-256, seed, rules version                                                                                            | once, first                                              |
-| `R` | pseudonym, team, kit, bot (`true`/`false`)                                                                                                                   | once per combatant, after `H`                            |
-| `E` | tick, kind, subject, detail                                                                                                                                  | each match event                                         |
-| `F` | tick, pseudonym, x, y, z (1/32 block), yaw (0-255), pitch (-64..64), health (1/4 point), held slot, flags (sneak 1, sprint 2, fire 4, block 8)               | humans every tick (20 Hz), bots every other tick (10 Hz) |
-| `N` | tick, pseudonym, keys (forward 1, back 2, left 4, right 8, jump 16, sneak 32, sprint 64), yaw (0-35999), pitch (-9000..9000), both in hundredths of a degree | humans only, every tick                                  |
-| `I` | tick, pseudonym, kind, target                                                                                                                                | each bot intent                                          |
-| `X` | tick, winner or `-`, reason                                                                                                                                  | once, at the end                                         |
-| `P` | pseudonym, credits                                                                                                                                           | once per paid human, after `X`                           |
+| Tag | Row                                                                                                                                                                                                                                                                                            | When                                                         |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `H` | version, match id, map id, map block SHA-256, seed, rules version                                                                                                                                                                                                                              | once, first                                                  |
+| `R` | pseudonym, team, kit, bot (`true`/`false`)                                                                                                                                                                                                                                                     | once per combatant, after `H`                                |
+| `E` | tick, kind, subject, detail                                                                                                                                                                                                                                                                    | each match event                                             |
+| `F` | tick, pseudonym, x, y, z (1/32 block), yaw (0-255), pitch (-64..64), health (1/4 point), held slot, flags (sneak 1, sprint 2, fire 4, block 8)                                                                                                                                                 | humans every tick (20 Hz), bots every other tick (10 Hz)     |
+| `N` | tick, pseudonym, keys (forward 1, back 2, left 4, right 8, jump 16, sneak 32, sprint 64), yaw (0-35999), pitch (-9000..9000), attack, use, hotbar slot (0-8), client sequence, acknowledged observation tick or -1, source (`HUMAN`, `AUTOMATED`, `MISSING`); angles in hundredths of a degree | humans only, every tick                                      |
+| `O` | tick, pseudonym, observation contract id, normalized float values in contract order                                                                                                                                                                                                            | humans every tick when rwfbots provides its observation port |
+| `I` | tick, pseudonym, kind, target                                                                                                                                                                                                                                                                  | each bot intent                                              |
+| `X` | tick, winner or `-`, reason                                                                                                                                                                                                                                                                    | once, at the end                                             |
+| `P` | pseudonym, credits                                                                                                                                                                                                                                                                             | once per paid human, after `X`                               |
 
-`N` keys are the movement keys the client last reported through Paper's
-`PlayerInputEvent`; a player who has reported nothing since logging in holds
-nothing. `F` and `N` rows are per-tick samples: when the writer falls more
+The dedicated Fabric preview client sends complete `N` controls at 20 Hz through
+`thestorm:rwf_input`. Its sequence and acknowledgement of
+`thestorm:rwf_observation` connect each action to the server observation the
+client received. Tick offsets use Paper's tick counter. Ordinary clients, missing
+packets and already-consumed packets produce `MISSING` diagnostic rows using
+Paper's movement input and server rotation; missing attack/use labels are never
+treated as human demonstrations. Preview automation marks controls `AUTOMATED`.
+Recording leaves manual keyboard and mouse input under the player's control.
+Attack and use callbacks retain clicks released before the end-of-tick sample.
+
+`O` uses `plugin/modules/rwfbots/src/main/resources/rwf-combat-v1.tsv` as the
+language-neutral order and normalization contract. It contains own state,
+visible targets, decaying last-seen sightings and local terrain rays. Current
+hidden enemy positions and enemy health are absent. Roster and outcome rows
+remain evaluation metadata, separate from actor observations.
+
+`F`, `N` and `O` rows are per-tick samples: when the writer falls more
 than 20,000 samples behind, new ones are dropped and counted in
 `rwf_match.dropped_frames`. Every other row is always written. A reader
-refuses any version other than its own instead of guessing at old rows.
+reads versions 2 and 3 explicitly; version 2 lacks complete controls and is
+excluded from training. Unknown versions and corrupt contracts fail validation.
+
+For local human demonstrations, run `bun run client preview --rwf-duel` from
+this package. It starts a disposable Paper server with one Trooper bot and a
+six-second countdown. Join with `/rwf join`, select `/rwf kit trooper` before
+the start, and play using the real keyboard and mouse. The regular preview
+command keeps the full team setup for other-kit or team recordings. The server's
+owned configuration stays unchanged. Stop with the printed session path:
+
+```bash
+bun run client stop --session .cache/client/<session>/session.json
+bun run bots:dataset inspect .cache/client/<session>/recordings
+bun run bots:dataset export .cache/client/<session>/recordings --output .cache/rwf-dataset
+bun run test:learning
+```
+
+The launcher gracefully stops Paper and exports recordings into the session's
+artifact directory before removing its container. The dataset exporter accepts
+only human Trooper combat in two-combatant matches, sword selected, without an
+authored item action, and with an acknowledged observation no older than two
+ticks. Gaps and automated input break recurrent sequences; they are never
+interpolated. Movement labels use the acknowledged observation's facing basis.
+Pass multiple recording directories to combine sessions. At least ten usable
+matches are required for a seeded 80/10/10 split, keeping all actors and segments
+of each match together. Inspection reports action histograms; export rejects
+captures without attacks or movement. The manifest pins the observation contract and recording
+hashes. `--combatants 8` can inspect team captures; the default Trooper pilot
+export remains restricted to duels. These commands prepare data; they do not
+train or enable a learned controller.
 
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
@@ -1278,7 +1322,7 @@ each a kit from its weights over `draft.kits`; a personality whose weights
 name none of those kits (its favourites ship later) still drafts and plays one
 of them, chosen uniformly. The draft happens when the countdown starts, but
 rwf walks the drafted bots into the lobby one by one, a seeded 1 to 8 seconds
-apart (`rwf.domain.lobby.Arrivals`, squeezed into the first 60% of the
+apart (`rwf.domain.lobby.Arrivals`, squeezed into the first half of the
 countdown so all are in before the start; personalities with the
 `late_to_everything` quirk come last), each with the usual join message;
 bots still on their way are released if the countdown stops. Ratings are
@@ -1401,14 +1445,17 @@ what spreads a team on an open map such as the training yard. The strategy
 names the objective, so the nuke is played for, not walked into because it
 is nearest. Slots go to bots by the Hungarian algorithm over archetype, role
 and kit fit, path distance and a bonus for the slot already held, so
-assignments stick. Tactics then take and hold the slot (ARM is for the plant
-slot, a bot beside an unwatched bomb or the last survivor). A bot at its
-slot stands and watches its angle rather than circling it. Once an enemy the
-bot saw itself is within 24 blocks it moves up from cover to cover, and
+assignments stick. Tactics then take and hold the slot (ARM targets an unlit
+bomb for the plant slot, a bot beside an unwatched bomb or the last survivor).
+Lane and flank routes stay committed through distant sightings and calls to help arm;
+close contact, recent damage, survival and defusing can interrupt them.
+A bot at its slot watches its angle and makes room for nearby teammates.
+Once an enemy the bot saw itself is within 24 blocks it moves up from cover to cover, and
 within 12 pairs alternate mover and holder; it holds its slot from cover,
 claiming cover on the blackboard so teammates do not share it. At most two
 bots chase one enemy unless it is nearly dead; bows keep their kit's band
-(longbow and snipers 15 to 30 blocks) and shoot from the edge of cover; the
+(longbow and snipers 15 to 30 blocks), reach their assigned team position along
+its lane when that position fits the band, then shoot from the edge of cover; the
 Rewind kit uses its clock only when a model of rwf's Rewinder says it is
 ready and lands away from the threat. Every path a bot walks pays a per-bot
 penalty: seeded noise over patches of the map, a toll on teammates' current

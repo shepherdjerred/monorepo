@@ -2,13 +2,17 @@ import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
-import { rwfRecordingSalt } from "#e2e/harness/rwf-settings.ts";
+import {
+  rwfRecordingSalt,
+  rwfTestSettings,
+} from "#e2e/harness/rwf-settings.ts";
 import { startControl, ViewpointsSchema } from "./control.ts";
 import {
   request,
@@ -45,7 +49,10 @@ export async function preview(options: {
   world?: string;
   vanilla: boolean;
   verify: boolean;
+  rwfDuel: boolean;
 }): Promise<void> {
+  if (options.vanilla && options.rwfDuel)
+    throw new Error("--rwf-duel requires Storm modules");
   await build(path.join(packageRoot, "client"), ["assemble"]);
   await build(
     path.join(packageRoot, "plugin"),
@@ -104,7 +111,12 @@ type Run = {
 };
 
 async function run(
-  options: { world?: string; vanilla: boolean; verify: boolean },
+  options: {
+    world?: string;
+    vanilla: boolean;
+    verify: boolean;
+    rwfDuel: boolean;
+  },
   runState: Run,
 ): Promise<void> {
   const brainToken = randomBytes(24).toString("hex");
@@ -130,6 +142,15 @@ async function run(
     warmCache: true,
     stormJar: path.join(packageRoot, "plugin/dist/build/libs/TheStorm.jar"),
     ...configs,
+    ...(options.rwfDuel
+      ? {
+          rwf: { ...rwfTestSettings, targetCombatants: 2, maxCombatants: 2 },
+          rwfbotsConfig: await duelBotsConfig(ownedConfigDir),
+        }
+      : {}),
+    ...(options.vanilla
+      ? {}
+      : { exportRecordingsDir: path.join(runState.artifacts, "recordings") }),
     ownedConfigDir,
     env: {
       FLIPT_URL: `http://host.docker.internal:${brain.port.toString()}`,
@@ -217,6 +238,19 @@ async function run(
     runState.finish();
   }
   await runState.stopped;
+}
+
+async function duelBotsConfig(ownedConfigDir: string): Promise<string> {
+  const schema = z.looseObject({
+    draft: z.looseObject({ kits: z.array(z.string()).min(1) }),
+  });
+  const config = schema.parse(
+    Bun.YAML.parse(
+      await Bun.file(path.join(ownedConfigDir, "rwfbots.yml")).text(),
+    ),
+  );
+  config.draft.kits = ["trooper"];
+  return Bun.YAML.stringify(config);
 }
 
 async function launch(session: Session, runState: Run): Promise<void> {

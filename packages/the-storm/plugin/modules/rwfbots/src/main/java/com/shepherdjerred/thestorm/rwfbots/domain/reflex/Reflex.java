@@ -80,7 +80,8 @@ public final class Reflex {
   /** Slower than this per tick, a teammate counts as standing. */
   static final double MOVING = 0.05;
 
-  private static final double BOW_AIM_TOLERANCE = 2.5;
+  private static final double BOW_AIM_TOLERANCE = 5.0;
+  private static final int MAX_BOW_HOLD_TICKS = 32;
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
   private static final double FUSE_SLIP_SCALE = 6;
@@ -297,7 +298,15 @@ public final class Reflex {
       var yaw = Facing.looking(self.eye(), aimPoint).yaw();
       var desired = new Facing(yaw, pitch.getAsDouble());
       state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
-      standApart();
+      var aim = state.aim();
+      if (state.waypointIndex() < input.decision().waypoints().size()) {
+        walk(Optional.of(false));
+        state = state.withAim(aim);
+      } else if (self.lastHurtTick() >= 0 && now - self.lastHurtTick() <= 20) {
+        evade(target);
+      } else {
+        standApart();
+      }
       if (!state.isDrawing()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().bowSlot()));
         commands.add(new BodyCommand.StartUse());
@@ -305,7 +314,9 @@ public final class Reflex {
         return;
       }
       var drawn = now - state.drawStart() >= BowSolver.FULL_DRAW_TICKS;
-      if (drawn && state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE) {
+      var aligned = state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE;
+      var heldLongEnough = now - state.drawStart() >= MAX_BOW_HOLD_TICKS;
+      if (drawn && (aligned || heldLongEnough)) {
         commands.add(new BodyCommand.ReleaseUse());
         state = state.withDrawStart(-1);
       }
@@ -373,6 +384,21 @@ public final class Reflex {
         commands.add(new BodyCommand.Jump());
         state = state.withLastJump(now);
       }
+    }
+
+    /** Keeps a threatened archer moving while its aim remains on the opponent. */
+    private void evade(CombatantView target) {
+      var away = self.pos().minus(target.pos()).horizontal();
+      if (away.isZero()) {
+        commands.add(new BodyCommand.Stop());
+        return;
+      }
+      var radial = away.normalized();
+      var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
+      var move = side.plus(radial.scale(0.6)).plus(apart(SEPARATION));
+      commands.add(
+          new BodyCommand.MoveToward(
+              self.pos().plus(move.isZero() ? radial : move.normalized()), false));
     }
 
     /** Follows the decision's waypoints; {@code sprintOverride} forces walking when present. */

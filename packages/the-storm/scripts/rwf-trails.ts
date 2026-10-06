@@ -177,10 +177,10 @@ function trailLayer(trails: Trails, frame: Frame, contact: number): string[] {
 function statsLines(stats: TeamDispersion[], contactSeconds: string): string[] {
   return [
     `first contact at ${contactSeconds}`,
-    ...stats.map(
-      (team) =>
-        `${team.team}: nearest teammate p50 ${team.nearestP50.toFixed(2)}, mean ${team.nearestMean.toFixed(2)} blocks; most within 2 blocks ${team.maxCrowd.toString()}; ${team.samples.toString()} samples`,
-    ),
+    ...stats.flatMap((team) => [
+      `${team.team}: nearest teammate p50 ${team.nearestP50.toFixed(2)}, mean ${team.nearestMean.toFixed(2)} blocks`,
+      `  Most within 2 blocks: ${team.maxCrowd.toString()}; ${team.samples.toString()} samples`,
+    ]),
   ];
 }
 
@@ -205,10 +205,14 @@ function advanceLines(
   atContact: TeamAdvance[],
   by10: TeamAdvance[],
 ): string[] {
-  return at8.map((team) => {
+  return at8.flatMap((team) => {
     const contact = atContact.find((other) => other.team === team.team);
     const later = by10.find((other) => other.team === team.team);
-    return `${team.team}: width ${team.spreadAt.toFixed(0)} at 8 s / ${(contact?.spreadAt ?? 0).toFixed(0)} at contact; past third ${percent(contact?.forward)} at contact / ${percent(later?.forward)} by 10 s; path/gain ${(contact?.winding ?? 0).toFixed(2)}x`;
+    return [
+      `${team.team}: ${team.spreadAt.toFixed(0)} blocks wide at 8 s; ${(contact?.spreadAt ?? 0).toFixed(0)} at contact`,
+      `  Past own third: ${percent(contact?.forward)} at contact; ${percent(later?.forward)} by 10 s`,
+      `  Walked ${(contact?.winding ?? 0).toFixed(2)}x the ground gained before contact`,
+    ];
   });
 }
 
@@ -227,7 +231,6 @@ function render(
   const { min, max } = map.region;
   const width = (max.x - min.x + 1) * PX + 2 * MARGIN;
   const mapHeight = (max.z - min.z + 1) * PX + 2 * MARGIN + 28;
-  const height = mapHeight + PANEL;
   const frame: Frame = {
     x: (worldX) => MARGIN + (worldX - min.x) * PX,
     y: (worldZ) => MARGIN + 28 + (worldZ - min.z) * PX,
@@ -240,11 +243,12 @@ function render(
   const lines = [
     ...statsLines(stats.contact, contactSeconds),
     ...advanceLines(stats.at8, stats.atContact, stats.by10),
-    ...stats.opening.map(
-      (team) =>
-        `${team.team} over the first 20 s: p50 ${team.nearestP50.toFixed(2)}, mean ${team.nearestMean.toFixed(2)} blocks; most within 2 blocks ${team.maxCrowd.toString()}`,
-    ),
+    ...stats.opening.flatMap((team) => [
+      `${team.team} over the first 20 s: p50 ${team.nearestP50.toFixed(2)}, mean ${team.nearestMean.toFixed(2)} blocks`,
+      `  Most within 2 blocks: ${team.maxCrowd.toString()}`,
+    ]),
   ];
+  const height = mapHeight + Math.max(PANEL, lines.length * 22 + 44);
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width.toString()}" height="${height.toString()}" viewBox="0 0 ${width.toString()} ${height.toString()}">`,
     `<rect width="100%" height="100%" fill="#ffffff"/>`,

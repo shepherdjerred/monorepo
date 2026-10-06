@@ -220,6 +220,13 @@ public final class RwfBotsPaper {
                 .getPluginManager()
                 .registerEvents(listener, module.plugin()));
     services.provide(BotRoster.class, BotRoster.of(roster));
+    services.provide(
+        com.shepherdjerred.thestorm.rwf.app.ObservationSource.class,
+        new LearningObservations(
+            roster,
+            view,
+            module.plugin().getServer(),
+            com.shepherdjerred.thestorm.rwfbots.adapter.content.LearningContract.load()));
     return new RwfBotsPaper(
         new Parts(module, roster, loop, bridge, stimuli, clock, command, traces, chat, heard));
   }

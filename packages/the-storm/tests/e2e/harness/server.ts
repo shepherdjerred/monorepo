@@ -78,6 +78,10 @@ export type StartServerOptions = {
   companionsE2eJar?: string;
   /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
   rwf?: RwfOverlay;
+  /** Disposable rwfbots.yml contents; production-owned configuration stays untouched. */
+  rwfbotsConfig?: string;
+  /** Preserve recordings after a graceful Paper shutdown, before removing its container. */
+  exportRecordingsDir?: string;
   survivalConfig?: string;
   /** Optional local world copy for terrain acceptance; copied into the disposable server. */
   worldDir?: string;
@@ -138,6 +142,7 @@ export async function stagePlugins(
     | "fixturesJar"
     | "companionsE2eJar"
     | "rwf"
+    | "rwfbotsConfig"
     | "survivalConfig"
     | "worldDir"
     | "exportWorldDir"
@@ -200,6 +205,12 @@ export async function stagePlugins(
   );
   if (options.rwf !== undefined) {
     await overlayRwf(path.join(pluginsDir, "TheStorm", "rwf.yml"), options.rwf);
+  }
+  if (options.rwfbotsConfig !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStorm", "rwfbots.yml"),
+      options.rwfbotsConfig,
+    );
   }
   if (
     options.mechanicsE2eJar !== undefined ||
@@ -361,8 +372,21 @@ export async function startServer(
   ]);
   const id = containerId.trim();
   const stop = async () => {
-    if (options.exportWorldDir !== undefined) {
+    if (
+      options.exportWorldDir !== undefined ||
+      options.exportRecordingsDir !== undefined
+    ) {
       await docker(["stop", "--time", "30", id]);
+    }
+    if (options.exportRecordingsDir !== undefined) {
+      await mkdir(options.exportRecordingsDir, { recursive: true });
+      await docker([
+        "cp",
+        `${id}:/data/plugins/TheStorm/rwf-recordings/.`,
+        options.exportRecordingsDir,
+      ]);
+    }
+    if (options.exportWorldDir !== undefined) {
       await mkdir(options.exportWorldDir, { recursive: true });
       await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
     }
@@ -382,6 +406,29 @@ export async function startServer(
       rconPassword,
       started + options.bootTimeoutMs,
     );
+    if (options.exportRecordingsDir !== undefined) {
+      const { stdout: owner } = await docker([
+        "exec",
+        id,
+        "stat",
+        "-c",
+        "%u:%g",
+        "/data/plugins/TheStorm",
+      ]);
+      const user = z
+        .string()
+        .regex(/^\d+:\d+$/u)
+        .parse(owner.trim());
+      await docker([
+        "exec",
+        "--user",
+        user,
+        id,
+        "mkdir",
+        "-p",
+        "/data/plugins/TheStorm/rwf-recordings",
+      ]);
+    }
     if (options.warmCache) {
       await docker([
         "cp",

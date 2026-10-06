@@ -33,10 +33,13 @@ public final class RecordCodec {
       out.append(frame(frame));
     }
     for (var input : record.inputs()) {
-      out.append(input(input));
+      out.append(record.header().schemaVersion() == 2 ? legacyInput(input) : input(input));
     }
     for (var intent : record.intents()) {
       out.append(intent(intent));
+    }
+    for (var observation : record.observations()) {
+      out.append(observation(observation));
     }
     out.append(end(record.end()));
     return out.toString();
@@ -102,7 +105,37 @@ public final class RecordCodec {
         input.pseudonym(),
         String.valueOf(input.keys()),
         String.valueOf(input.yaw()),
+        String.valueOf(input.pitch()),
+        String.valueOf(input.attack()),
+        String.valueOf(input.use()),
+        String.valueOf(input.slot()),
+        String.valueOf(input.sequence()),
+        String.valueOf(input.observationTick()),
+        input.source().name());
+    return out.toString();
+  }
+
+  private static String legacyInput(InputFrame input) {
+    var out = new StringBuilder();
+    row(
+        out,
+        "N",
+        String.valueOf(input.tick()),
+        input.pseudonym(),
+        String.valueOf(input.keys()),
+        String.valueOf(input.yaw()),
         String.valueOf(input.pitch()));
+    return out.toString();
+  }
+
+  public static String observation(ObservationFrame observation) {
+    var fields = new ArrayList<String>();
+    fields.add(String.valueOf(observation.tick()));
+    fields.add(observation.pseudonym());
+    fields.add(observation.contract());
+    observation.values().forEach(value -> fields.add(String.valueOf(value)));
+    var out = new StringBuilder();
+    row(out, "O", fields.toArray(String[]::new));
     return out.toString();
   }
 
@@ -219,6 +252,7 @@ public final class RecordCodec {
     private final List<RecordEvent> events = new ArrayList<>();
     private final List<Frame> frames = new ArrayList<>();
     private final List<InputFrame> inputs = new ArrayList<>();
+    private final List<ObservationFrame> observations = new ArrayList<>();
     private final List<Intent> intents = new ArrayList<>();
     private Optional<RecordEnd> end = Optional.empty();
     private final Map<String, Long> payouts = new TreeMap<>();
@@ -239,14 +273,17 @@ public final class RecordCodec {
             events.add(
                 new RecordEvent(num(at(fields, 1)), at(fields, 2), at(fields, 3), at(fields, 4)));
         case "F" -> frames.add(frame(fields));
-        case "N" ->
-            inputs.add(
-                new InputFrame(
-                    num(at(fields, 1)),
-                    at(fields, 2),
-                    (int) num(at(fields, 3)),
-                    (int) num(at(fields, 4)),
-                    (int) num(at(fields, 5))));
+        case "N" -> inputs.add(input(fields));
+        case "O" -> {
+          if (header
+                  .orElseThrow(() -> new IllegalArgumentException("observation before header"))
+                  .schemaVersion()
+              != 3) throw new IllegalArgumentException("observations require schema 3");
+          var values = new ArrayList<Double>();
+          for (var i = 4; i < fields.length; i++) values.add(Double.parseDouble(fields[i]));
+          observations.add(
+              new ObservationFrame(num(at(fields, 1)), at(fields, 2), at(fields, 3), values));
+        }
         case "I" ->
             intents.add(
                 new Intent(num(at(fields, 1)), at(fields, 2), at(fields, 3), at(fields, 4)));
@@ -260,10 +297,14 @@ public final class RecordCodec {
       if (header.isPresent()) {
         throw new IllegalArgumentException("second header");
       }
+      var version = num(at(fields, 1));
+      if (version != 2 && version != MatchRecord.SCHEMA_VERSION) {
+        throw new IllegalArgumentException("unsupported record schema " + version);
+      }
       header =
           Optional.of(
               new RecordHeader(
-                  (int) num(at(fields, 1)),
+                  integer(at(fields, 1)),
                   UUID.fromString(at(fields, 2)),
                   at(fields, 3),
                   at(fields, 4),
@@ -272,18 +313,45 @@ public final class RecordCodec {
                   at(fields, 6)));
     }
 
+    private InputFrame input(String[] f) {
+      var version =
+          header
+              .orElseThrow(() -> new IllegalArgumentException("input before header"))
+              .schemaVersion();
+      if (f.length != (version == 2 ? 6 : 12)) {
+        throw new IllegalArgumentException("wrong input field count for schema " + version);
+      }
+      if (version == 2) {
+        return new InputFrame(
+            new InputFrame.Legacy(
+                num(at(f, 1)), at(f, 2), integer(at(f, 3)), integer(at(f, 4)), integer(at(f, 5))));
+      }
+      return new InputFrame(
+          num(at(f, 1)),
+          at(f, 2),
+          integer(at(f, 3)),
+          integer(at(f, 4)),
+          integer(at(f, 5)),
+          bool(at(f, 6)),
+          bool(at(f, 7)),
+          integer(at(f, 8)),
+          num(at(f, 9)),
+          num(at(f, 10)),
+          InputFrame.Source.valueOf(at(f, 11)));
+    }
+
     private static Frame frame(String[] f) {
       return new Frame(
           num(at(f, 1)),
           at(f, 2),
-          (int) num(at(f, 3)),
-          (int) num(at(f, 4)),
-          (int) num(at(f, 5)),
-          (int) num(at(f, 6)),
-          (int) num(at(f, 7)),
-          (int) num(at(f, 8)),
-          (int) num(at(f, 9)),
-          (int) num(at(f, 10)));
+          integer(at(f, 3)),
+          integer(at(f, 4)),
+          integer(at(f, 5)),
+          integer(at(f, 6)),
+          integer(at(f, 7)),
+          integer(at(f, 8)),
+          integer(at(f, 9)),
+          integer(at(f, 10)));
     }
 
     private void end(String[] fields) {
@@ -315,6 +383,7 @@ public final class RecordCodec {
           events,
           frames,
           inputs,
+          observations,
           intents,
           new RecordEnd(tail.tick(), tail.winner(), tail.reason(), payouts));
     }
@@ -324,6 +393,10 @@ public final class RecordCodec {
         throw new IllegalArgumentException("row is missing field " + index);
       }
       return fields[index];
+    }
+
+    private static int integer(String field) {
+      return Integer.parseInt(field);
     }
 
     private static long num(String field) {

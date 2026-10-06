@@ -1053,6 +1053,11 @@
           "runner": "vitest",
           "name": "client-controller",
           "args": ["tools/client"]
+        },
+        {
+          "runner": "command",
+          "name": "rwf-learning-data",
+          "command": ["bun", "run", "test:learning"]
         }
       ],
       "excludedSuites": [

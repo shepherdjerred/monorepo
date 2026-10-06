@@ -69,9 +69,10 @@ final class MatchRunner implements MatchView, MatchEvents {
   static final int DISPLAY_EVERY_TICKS = 5;
 
   /**
-   * Drafted bots all arrive within this share of the countdown, so they are in before the start.
+   * Drafted bots arrive in the first half of the countdown, leaving time for admission and kit
+   * choice.
    */
-  static final double ARRIVAL_SHARE = 0.6;
+  static final double ARRIVAL_SHARE = 0.5;
 
   /** Mixed into the match seed for the arrival schedule, so it differs from the other rolls. */
   private static final long ARRIVAL_SALT = 0x6C6F6262795F696EL;
