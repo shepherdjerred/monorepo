@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.core.players;
+package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

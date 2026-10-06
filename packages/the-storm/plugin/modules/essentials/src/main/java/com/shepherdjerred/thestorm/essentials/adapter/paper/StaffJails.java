@@ -70,8 +70,10 @@ final class StaffJails implements Listener {
         request -> {
           var name = name(request.word(0));
           if (tools.state.keys("jail").stream()
-              .map(id -> tools.state.find("jail", id, StaffState.Jail.class).orElseThrow())
-              .anyMatch(jail -> jail.active() && jail.name().equals(name)))
+              .map(UUID::fromString)
+              .map(this::active)
+              .flatMap(Optional::stream)
+              .anyMatch(jail -> jail.name().equals(name)))
             throw new IllegalArgumentException("Release all prisoners before deleting this jail.");
           request.save(
               List.of(tools.state.entry("jail-deleted", name, true)),
@@ -107,14 +109,16 @@ final class StaffJails implements Listener {
     tools.add(
         "togglejail <player> [jail] [duration]",
         request -> {
-          if (active(tools.player(request.actor(), request.word(0)).getUniqueId()).isPresent())
-            release(request);
+          var player = tools.player(request.actor(), request.word(0));
+          request.others(player);
+          if (active(player.getUniqueId()).isPresent()) release(request);
           else jail(request);
         });
   }
 
   private void jail(StaffCommands.Request request) {
     var player = tools.player(request.actor(), request.word(0));
+    request.others(player);
     var name = name(request.word(1));
     if (tools.state.find("jail-deleted", name, Boolean.class).orElse(false))
       throw new IllegalArgumentException("Unknown jail.");
@@ -142,6 +146,7 @@ final class StaffJails implements Listener {
 
   private void release(StaffCommands.Request request) {
     var player = tools.player(request.actor(), request.word(0));
+    request.others(player);
     var jail =
         active(player.getUniqueId())
             .orElseThrow(() -> new IllegalArgumentException("Player is not jailed."));
@@ -157,11 +162,12 @@ final class StaffJails implements Listener {
   }
 
   private Optional<StaffState.Jail> active(UUID player) {
+    return recorded(player).filter(jail -> jail.activeAt(tools.context.time().instant()));
+  }
+
+  private Optional<StaffState.Jail> recorded(UUID player) {
     return tools.state.ready()
-        ? tools
-            .state
-            .find("jail", player.toString(), StaffState.Jail.class)
-            .filter(StaffState.Jail::active)
+        ? tools.state.find("jail", player.toString(), StaffState.Jail.class)
         : Optional.empty();
   }
 
@@ -197,7 +203,8 @@ final class StaffJails implements Listener {
 
   void sweep() {
     for (var player : tools.context.plugin().getServer().getOnlinePlayers())
-      active(player.getUniqueId())
+      recorded(player.getUniqueId())
+          .filter(StaffState.Jail::active)
           .ifPresent(
               jail -> {
                 if (tools.context.time().instant().isBefore(jail.expires())) {

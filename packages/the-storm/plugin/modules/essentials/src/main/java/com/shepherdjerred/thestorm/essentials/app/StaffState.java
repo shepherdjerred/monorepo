@@ -20,6 +20,10 @@ public final class StaffState {
       java.util.Objects.requireNonNull(returning);
       java.util.Objects.requireNonNull(expires);
     }
+
+    public boolean activeAt(Instant now) {
+      return active && now.isBefore(expires);
+    }
   }
 
   public record Session(

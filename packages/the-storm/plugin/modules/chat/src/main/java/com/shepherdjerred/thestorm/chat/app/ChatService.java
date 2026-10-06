@@ -382,7 +382,7 @@ public final class ChatService {
   }
 
   public boolean socialSpy(UUID player) {
-    return identities.apply(player).socialSpy();
+    return storedIdentities.apply(player).socialSpy();
   }
 
   /** A relayed line as MiniMessage; every value is cleaned and escaped. */

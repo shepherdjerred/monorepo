@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.core.players;
+package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import java.net.InetAddress;
@@ -16,24 +16,24 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 /**
  * Public addresses verified through a trusted private PROXY-protocol peer, never a shared proxy IP.
  */
-public final class ForwardedClients implements Listener {
+final class ForwardedClients implements Listener {
   private final Map<UUID, String> addresses = new ConcurrentHashMap<>();
   private final ManagedGameplay flags;
   private final Supplier<Boolean> ready;
   private final Function<String, Optional<String>> ban;
 
-  public ForwardedClients(
+  ForwardedClients(
       ManagedGameplay flags, Supplier<Boolean> ready, Function<String, Optional<String>> ban) {
     this.flags = flags;
     this.ready = ready;
     this.ban = ban;
   }
 
-  public Optional<String> verified(UUID player) {
+  Optional<String> verified(UUID player) {
     return Optional.ofNullable(addresses.get(player));
   }
 
-  public static Optional<String> publicAddress(String literal) {
+  static Optional<String> publicAddress(String literal) {
     if (!literal.matches("[0-9a-fA-F:.]+")
         || (!literal.contains(":") && !literal.matches("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")))
       return Optional.empty();

@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
-import com.shepherdjerred.thestorm.core.players.ForwardedClients;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.app.StaffState;
 import com.shepherdjerred.thestorm.essentials.domain.place.DurationText;

@@ -78,6 +78,15 @@ final class ChatServiceTest {
     assertThat(service.letter(attempt).isOk()).isTrue();
   }
 
+  @Test
+  void socialSpyPreferenceIsIndependentOfIdentityDisplayRollout() {
+    service.identities(id -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh());
+    service.storedIdentities(
+        id -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleSpy());
+
+    assertThat(service.socialSpy(ALICE)).isTrue();
+  }
+
   private OutgoingLine sent(Result<OutgoingLine, List<ChatDenial>> result) {
     return switch (result) {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> line;

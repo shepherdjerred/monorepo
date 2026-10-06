@@ -82,4 +82,22 @@ final class StaffStateTest {
         .hasRootCauseMessage("disk full");
     assertThat(state.find("jail-deleted", "cell", Boolean.class)).isEmpty();
   }
+
+  @Test
+  void elapsedSentencesAreInactiveEvenBeforeTheReleaseSweepPersistsThem() {
+    var expires = Instant.parse("2026-10-04T12:00:00Z");
+    var active =
+        new StaffState.Jail(
+            "cell",
+            new Position("world", 1, 64, 1, 0, 0),
+            new Position("world", 0, 64, 0, 0, 0),
+            expires,
+            true);
+    var released =
+        new StaffState.Jail("cell", active.destination(), active.returning(), expires, false);
+
+    assertThat(active.activeAt(expires.minusMillis(1))).isTrue();
+    assertThat(active.activeAt(expires)).isFalse();
+    assertThat(released.activeAt(expires.minusMillis(1))).isFalse();
+  }
 }
