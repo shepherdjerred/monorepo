@@ -367,7 +367,7 @@ final class SurvivalCombat {
       enemy.teleport(entrance());
       return;
     }
-    if (!(enemy instanceof Mob mob)) {
+    if (!(enemy instanceof Mob mob) || enemy instanceof org.bukkit.entity.AbstractCubeMob) {
       return;
     }
     mob.getPathfinder().moveTo(target, 1.0);

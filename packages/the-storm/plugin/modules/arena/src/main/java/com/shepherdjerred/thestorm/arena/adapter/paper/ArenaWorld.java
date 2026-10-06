@@ -486,6 +486,8 @@ final class ArenaWorld {
     if (!target.equals(hunter.getTarget())) {
       hunter.setTarget(target);
     }
+    // The cube hop goal reads native paths but owns movement; a second navigator fights its hops.
+    if (hunter instanceof org.bukkit.entity.AbstractCubeMob) return;
     // A target alone does not start navigation for every native goal, especially at range.
     // Let close-range ranged combat keep its native strafing and attack behavior.
     var navigator = hunter.getVehicle() instanceof Mob mount ? mount : hunter;

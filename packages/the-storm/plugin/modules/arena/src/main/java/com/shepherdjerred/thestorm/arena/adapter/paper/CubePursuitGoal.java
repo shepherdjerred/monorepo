@@ -83,7 +83,6 @@ final class CubePursuitGoal implements Goal<AbstractCubeMob> {
       waypoint = null;
       return;
     }
-    cube.getPathfinder().moveTo(path, 1.0);
     points = path.getPoints();
     index = Math.min(points.size() - 1, Math.max(1, path.getNextPointIndex()));
     var planned = points.get(index);
