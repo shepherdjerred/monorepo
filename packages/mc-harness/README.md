@@ -100,7 +100,8 @@ preserving the image's baked plugin tree. Build it with
 The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 `bunx turbo run build --filter=@shepherdjerred/the-storm`), the plugins
 its `paper-plugin.yml` requires (LuckPerms, CoreProtect, Multiverse; Citizens
-is already staged), the repository-owned TheStorm and Citizens config with
+is already staged), `TheStormFixtures.jar` to prepare the protected arena worlds,
+the repository-owned TheStorm and Citizens config with
 only the economy, mail, chat, tracks, towns and tickets modules on (agent,
 discord and world need external services), and `TheStormMechanicsE2E.jar`, which runs the production
 mechanics module and builds its bridge and super-push fixtures at x 400-415.

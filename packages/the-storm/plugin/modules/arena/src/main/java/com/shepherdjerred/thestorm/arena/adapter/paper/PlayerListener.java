@@ -147,7 +147,6 @@ final class PlayerListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH)
   void onInteract(PlayerInteractEvent event) {
-    if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
     var id = event.getPlayer().getUniqueId();
     if (arenas.joining(id)) {
       event.setCancelled(true);
@@ -162,7 +161,9 @@ final class PlayerListener implements Listener {
       member(event, block, home.orElseThrow());
       return;
     }
-    if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !joinSign(event, block)) {
+    if (event.getAction() == Action.RIGHT_CLICK_BLOCK
+        && (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND
+            || !joinSign(event, block))) {
       outsider(event, block);
     }
   }
@@ -186,9 +187,12 @@ final class PlayerListener implements Listener {
             .findFirst();
     if (kit.isPresent()) {
       event.setUseInteractedBlock(Event.Result.DENY);
-      commands.pickClass(player, kit.orElseThrow());
+      if (event.getHand() == org.bukkit.inventory.EquipmentSlot.HAND) {
+        commands.pickClass(player, kit.orElseThrow());
+      }
     } else if (definition.readyBlock().equals(pos)) {
       event.setUseInteractedBlock(Event.Result.DENY);
+      if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
       var now = context.time().instant();
       var previous = readyClicks.get(player.getUniqueId());
       if (previous == null || !now.isBefore(previous.plusMillis(250))) {

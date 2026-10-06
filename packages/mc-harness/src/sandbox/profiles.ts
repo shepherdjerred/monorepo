@@ -146,7 +146,8 @@ function paperProfile(
 /**
  * The `storm-dev` profile: the `paper` profile plus the locally built
  * TheStorm.jar with its required plugins and repository-owned config, the
- * modules in STORM_DEV_MODULES, and the mechanics E2E plugin (the production
+ * fixtures that prepare the protected arena worlds, modules in STORM_DEV_MODULES,
+ * and the mechanics E2E plugin (the production
  * mechanics module plus its bridge and super-push fixtures at x 400-415).
  * Mirrors the-storm's six-module E2E suite without the storm-brain agent.
  */
@@ -164,6 +165,12 @@ function stormDevProfile(
         kind: "repo-file",
         source: STORM_PATHS.jar,
         target: "TheStorm.jar",
+        build: STORM_BUILD_COMMAND,
+      },
+      {
+        kind: "repo-file",
+        source: STORM_PATHS.fixturesJar,
+        target: "TheStormFixtures.jar",
         build: STORM_BUILD_COMMAND,
       },
       {

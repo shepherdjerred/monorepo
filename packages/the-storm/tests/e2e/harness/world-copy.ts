@@ -19,14 +19,11 @@ export async function stageWorld(
   source: string,
   stagingDir: string,
   containerId: string,
-  world = "world",
 ): Promise<void> {
-  if (!/^[a-z][a-z0-9-]*$/u.test(world))
-    throw new Error("Invalid staged world name");
-  const copy = path.join(stagingDir, world);
+  const copy = path.join(stagingDir, "world");
   await cp(source, copy, { recursive: true });
   await writableWorld(copy);
-  // Copy the named directory into the existing /data parent. Docker merges an
-  // existing world and creates a missing world while the container is stopped.
+  // Paper 26.2 stores named dimensions within this shared save. Docker creates
+  // or merges the root directory while the container is stopped.
   await docker(["cp", copy, `${containerId}:/data/`]);
 }

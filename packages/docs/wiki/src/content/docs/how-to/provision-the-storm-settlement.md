@@ -12,7 +12,8 @@ Provision the settlement with admission disabled, then activate it through the r
    Multiverse command syntax in a disposable server before using it live.
    Persist both worlds in Multiverse's runtime catalog so they load before The Storm.
    Set each world spawn to its configured arena lobby after installing its safe platform.
-   Set both worlds to NORMAL difficulty so native hostile spawns are permitted.
+   Preserve the source world's difficulty when moving existing maps.
+   For new maps, choose a non-peaceful difficulty so native hostile spawns are permitted.
    Keep arena worlds outside the resource-world and random-teleport registry.
 3. Inspect the selected site in a local world copy and check current claims.
    Keep an immutable copy of the original region files.
@@ -31,7 +32,7 @@ For an offline map build, copy only reviewed region changes while the destinatio
 Compare the original region hashes first and keep the originals for restoration.
 Do not replace level metadata, inventories, or plugin databases with disposable test fixtures.
 
-## Move an existing arena offline
+## Move an existing arena
 
 Build the authored map in a disposable copy of the local world using the exact plugin and
 configuration intended for release. Check the map from above and at street level, then run
@@ -46,18 +47,42 @@ fixtures. Preserve character progression, saved inventories, and all plugin data
 
 1. Inspect the current image, admission settings, ArgoCD application policy, and online players.
    Prepare the matching code artifact before starting maintenance.
-2. Stop Paper cleanly and verify that no process holds the world's `session.lock`.
-3. Archive the current region and create a SQLite backup of The Storm's database. Check the
-   database backup's integrity. Keep the original settlement archive unchanged.
-4. Prepare each named arena world from the reviewed geometry. Record source and
-   destination hashes and validate every permanent block against the released blueprint.
-   Translate block-entity coordinates and invalidate lighting and heightmaps for changed chunks.
-5. Verify the live source hash again while holding the world lock. Transfer the merged region
-   to a temporary sibling file, verify its hash, and atomically replace the region.
-6. Restart with the matching plugin, survival content, and arena configuration. Preserve the
-   application's existing reconciliation policy and use a narrowly scoped application sync.
-7. Verify plugin startup, settlement admission, the deployed artifact and map hashes, and the
-   arena commands. A healthy rollout does not replace a player gameplay check.
+2. Drain both arenas with `/arena stop <id>` and verify that no players remain in the affected regions.
+   Complete a scoped volume backup and create a consistent SQLite backup. Check its integrity.
+   Capture both source regions through the [live harness](/how-to/operate-the-storm-with-the-agent-harness/).
+3. Create and persist the two named worlds. Preserve the source world's difficulty.
+   Use one WorldEdit session for the copy and paste, with `//perf neighbors off`.
+   Keep lighting and event side effects enabled; ensure validation side effects are off.
+4. Copy each source region with native `//copy`, placing the actor at the region's minimum corner.
+   Paste with native `//paste` at the translated minimum corner in the destination world.
+   Supply the exact destination bounds through the harness's `--affects` guard.
+   Use a reason and the protected-region override for each live write.
+   Avoid the generic schematic paste API, which recomputes adjacent wall and fence states.
+5. Capture each destination and compare every block state and translated block entity with its source.
+   Restore temporary doors or fixtures to the reviewed blueprint and record each repair separately.
+   Keep both original sites intact while accepting the new worlds.
+6. Prepare a safe exit platform and lobby spawn in each new world.
+   Release the matching plugin, survival content, and arena configuration through GitOps.
+   Preserve the application's reconciliation policy and use a narrowly scoped application sync.
+7. Verify plugin startup, admission, artifact identity, and map comparisons for both arenas.
+   Check joining, fighting, leaving, and inventory restoration with a native player.
+   A healthy rollout does not replace a player gameplay check.
+
+## Use an offline region merge
+
+If native WorldEdit cannot preserve the reviewed map, merge only its bounded cells while Paper is stopped.
+On Paper 26.2, named dimensions share the enclosing world save and its `session.lock`.
+Unloading one arena world does not release that lock.
+
+1. Stop Paper cleanly and verify that no process holds the save's `session.lock`.
+2. Archive the original region files and keep the original settlement archive unchanged.
+3. Merge permanent geometry and translated block entities into the destination chunks.
+   Preserve outside blocks, block entities, biomes, ticks, and unchanged chunk records.
+   Invalidate lighting and heightmaps only for changed chunks.
+4. Compare source hashes again while holding the save lock.
+   Write temporary sibling files, verify their hashes, and atomically replace the reviewed regions.
+5. Restart Paper and capture the destination through MCBridge.
+   Compare every block state and block entity before releasing arena admission.
 
 Update the working local map using the same bounded merge. Retain the source region, release
 artifact identity, configuration hashes, and installation receipt so restoration is explicit.

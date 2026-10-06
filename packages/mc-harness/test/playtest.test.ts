@@ -180,6 +180,7 @@ describe("profiles and staging", () => {
     expect(storm.staged.map((entry) => entry.target)).toEqual([
       "MCBridge.jar",
       "TheStorm.jar",
+      "TheStormFixtures.jar",
       "TheStorm",
       "Citizens",
       path.join("TheStorm", "config.yml"),
