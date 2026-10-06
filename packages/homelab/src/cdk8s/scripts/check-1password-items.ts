@@ -328,6 +328,9 @@ function matchingPhysicalFields(
   target: DesiredStateTarget["target"],
   labelHash: string,
 ): number {
+  const labelOnly =
+    target.vault_section_id === undefined &&
+    target.vault_field_id === undefined;
   const sectionHash =
     target.vault_section_id === undefined
       ? null
@@ -339,7 +342,7 @@ function matchingPhysicalFields(
   return entry.fieldSelectors.filter(
     (field) =>
       field.label === labelHash &&
-      field.section === sectionHash &&
+      (labelOnly || field.section === sectionHash) &&
       (fieldIdHash === undefined || field.id === fieldIdHash),
   ).length;
 }

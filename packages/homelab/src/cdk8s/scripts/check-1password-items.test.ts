@@ -27,12 +27,18 @@ describe("desired-state handoff selectors", () => {
         value: "synthetic-section-token",
       },
       { id: "other-field", label: "OTHER", value: "synthetic-other-token" },
+      {
+        id: "unique-section-field",
+        label: "SECTION_ONLY",
+        section: { id: "section" },
+        value: "synthetic-unique-token",
+      },
     ],
   };
   const snapshot: SnapshotItem = {
     ref: hash(item.id),
     title: hash(item.title),
-    fields: [hash("TOKEN"), hash("OTHER")],
+    fields: [hash("TOKEN"), hash("OTHER"), hash("SECTION_ONLY")],
     blankFields: [],
     fieldSelectors: snapshotFieldSelectors(item),
   };
@@ -77,7 +83,25 @@ describe("desired-state handoff selectors", () => {
     expect(errors[0]).toContain("do not identify exactly one field");
   });
 
-  test("supports a unique application label without a field ID", () => {
+  test.each(["OTHER", "SECTION_ONLY"])(
+    "supports a unique label across sections without a field ID: %s",
+    (vaultField) => {
+      const errors: string[] = [];
+      validateDesiredStateTargets(
+        [
+          {
+            platform: "application-secrets",
+            target: { vault_item_id: item.id, vault_field: vaultField },
+          },
+        ],
+        byHash,
+        errors,
+      );
+      expect(errors).toEqual([]);
+    },
+  );
+
+  test("rejects a label shared by top-level and section fields", () => {
     const errors: string[] = [];
     validateDesiredStateTargets(
       [
@@ -89,7 +113,7 @@ describe("desired-state handoff selectors", () => {
       byHash,
       errors,
     );
-    expect(errors).toEqual([]);
+    expect(errors).toHaveLength(1);
   });
 
   test("rejects an ambiguous label without a field ID", () => {

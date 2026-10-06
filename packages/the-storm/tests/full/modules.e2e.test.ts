@@ -116,7 +116,7 @@ describe("all modules together", () => {
     rcon,
   }) => {
     await rcon.command("setblock 72 63 61 minecraft:stone");
-    await rcon.command(`tp ${bot.username} 72.5 64 61.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 72.5 64 61.5`);
     await waitUntil(
       "farm arrival",
       () => bot.entity.position.distanceTo(new Vec3(72.5, 64, 61.5)) < 0.5,

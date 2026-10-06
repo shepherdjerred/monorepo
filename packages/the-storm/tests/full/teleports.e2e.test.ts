@@ -21,7 +21,7 @@ describe("shared player travel on native Paper", () => {
     secondBot,
     rcon,
   }) => {
-    await rcon.command(`tp ${bot.username} 800.5 -60 800.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 800.5 -60 800.5`);
     await waitUntil(
       "unclaimed home location",
       () =>

@@ -45,7 +45,7 @@ describe("NPC combat on Paper with all modules", () => {
     await rcon.command("fill -60 63 -24 -14 63 24 minecraft:stone");
     await rcon.command("fill 498 63 498 502 63 502 minecraft:stone");
     await rcon.command("gamerule minecraft:advance_time false");
-    await rcon.command(`tp ${bot.username} -35.5 64 3.5`);
+    await rcon.command(`minecraft:tp ${bot.username} -35.5 64 3.5`);
     await waitUntil(
       "market arrival",
       () => bot.entity.position.distanceTo(new Vec3(-35.5, 64, 3.5)) < 0.3,
@@ -78,7 +78,7 @@ describe("NPC combat on Paper with all modules", () => {
         15_000,
       );
       // Escape stops the current chase; remembered offenses still bypass another NPC's grace.
-      await rcon.command(`tp ${bot.username} 500 64 500`);
+      await rcon.command(`minecraft:tp ${bot.username} 500 64 500`);
       const remembered = waitForMessage(bot, /The Watch will defend us/u);
       await rcon.command(
         `damage ${npc("darren")} 1 minecraft:arrow by ${bot.username}`,
@@ -119,8 +119,8 @@ describe("NPC combat on Paper with all modules", () => {
     bot,
     rcon,
   }) => {
-    await rcon.command(`tp ${npc("market-guard")} -34.5 64 4.5`);
-    await rcon.command(`tp ${bot.username} -34.5 64 3`);
+    await rcon.command(`minecraft:tp ${npc("market-guard")} -34.5 64 4.5`);
+    await rcon.command(`minecraft:tp ${bot.username} -34.5 64 3`);
     await waitUntil("visible market sentry", () =>
       Object.values(bot.entities).some(
         (entity) =>
@@ -149,7 +149,7 @@ describe("NPC combat on Paper with all modules", () => {
     expect(await rcon.command("stormnpc list")).toMatch(
       /zavier:.*dead; returns at dawn/u,
     );
-    await rcon.command(`tp ${bot.username} 500 64 500`);
+    await rcon.command(`minecraft:tp ${bot.username} 500 64 500`);
     await rcon.command(`damage ${npc("market-guard")} 100 minecraft:generic`);
     await Bun.sleep(600);
     expect(await rcon.command("stormnpc list")).toMatch(
@@ -173,13 +173,13 @@ describe("NPC combat on Paper with all modules", () => {
     await rcon.command("fill 195 63 -5 205 63 10 minecraft:stone");
     // Move the guard far from its original home: this reproduces the old home-radius bug.
     await rcon.command(`gamemode spectator ${bot.username}`);
-    await rcon.command(`tp ${bot.username} 200.5 64 3.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 200.5 64 3.5`);
     await waitUntil(
       "hostile mob chunk loaded",
       () => bot.entity.position.distanceTo(new Vec3(200.5, 64, 3.5)) < 0.3,
     );
-    await rcon.command(`tp ${npc("guard-captain")} 200.5 64 6.5`);
-    await rcon.command(`tp ${npc("stan")} 200.5 64 0.5`);
+    await rcon.command(`minecraft:tp ${npc("guard-captain")} 200.5 64 6.5`);
+    await rcon.command(`minecraft:tp ${npc("stan")} 200.5 64 0.5`);
     await rcon.command(
       'summon minecraft:cow 201.5 64 6.5 {Tags:["npc-peaceful"],NoAI:1b,PersistenceRequired:1b}',
     );
@@ -217,8 +217,8 @@ describe("NPC spell targeting on Paper", () => {
     rcon,
   }) => {
     await nextDay(rcon);
-    await rcon.command(`tp ${npc("stan")} -35.5 64 0.5`);
-    await rcon.command(`tp ${bot.username} -35.5 64 -2.5`);
+    await rcon.command(`minecraft:tp ${npc("stan")} -35.5 64 0.5`);
+    await rcon.command(`minecraft:tp ${bot.username} -35.5 64 -2.5`);
     await waitUntil(
       "spellcaster arrival",
       () => bot.entity.position.distanceTo(new Vec3(-35.5, 64, -2.5)) < 0.3,
