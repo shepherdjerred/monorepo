@@ -95,6 +95,40 @@ const PostgresOperatorConfigurationSchema = z.object({
   }),
 });
 
+const StatefulSetPodSchema = z.object({
+  kind: z.literal("StatefulSet"),
+  metadata: z.object({ name: z.string() }).loose(),
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        volumes: z.array(z.object({ name: z.string() }).loose()).optional(),
+        initContainers: z
+          .array(
+            z
+              .object({
+                name: z.string(),
+                volumeMounts: z
+                  .array(z.object({ name: z.string() }).loose())
+                  .optional(),
+              })
+              .loose(),
+          )
+          .optional(),
+        containers: z.array(
+          z
+            .object({
+              name: z.string(),
+              volumeMounts: z
+                .array(z.object({ name: z.string() }).loose())
+                .optional(),
+            })
+            .loose(),
+        ),
+      }),
+    }),
+  }),
+});
+
 type HelmSource = z.infer<typeof HelmSourceSchema>;
 
 type ExternalChart = {
@@ -391,6 +425,38 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
         `Charts with empty template output: ${emptyOutputs.join(", ")}`,
       );
     }
+  });
+
+  it("renders every minecraft-sjerred volume mounted by its containers", () => {
+    const outcome = outcomes.find(
+      ({ chart }) => chart.appName === "minecraft-sjerred",
+    );
+    if (!outcome) {
+      throw new Error("minecraft-sjerred chart was not discovered");
+    }
+    if (outcome.result.exitCode !== 0) {
+      expect(outcome.result.transient).toBe(true);
+      return;
+    }
+
+    const statefulSet = parseAllDocuments(outcome.result.stdout)
+      .map((document) => StatefulSetPodSchema.safeParse(document.toJSON()))
+      .find((result) => result.success)?.data;
+    if (!statefulSet) {
+      throw new Error("minecraft-sjerred chart did not render its StatefulSet");
+    }
+
+    const pod = statefulSet.spec.template.spec;
+    const volumes = new Set((pod.volumes ?? []).map(({ name }) => name));
+    const dangling = [...(pod.initContainers ?? []), ...pod.containers].flatMap(
+      (container) =>
+        (container.volumeMounts ?? [])
+          .filter(({ name }) => !volumes.has(name))
+          .map(({ name }) => `${container.name}:${name}`),
+    );
+
+    expect(dangling).toEqual([]);
+    expect(volumes).toContain("proxy-config");
   });
 
   it("renders the PostgreSQL operator v2 defaults in OperatorConfiguration", () => {

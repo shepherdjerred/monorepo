@@ -636,3 +636,43 @@ describe("Burst-memory sharing policy", () => {
     });
   });
 });
+
+describe("Minecraft proxy sidecar", () => {
+  it("declares the volume mounted by the sjerred proxy sidecar", () => {
+    const applications = documents.flatMap((doc) => {
+      const result = MinecraftApplicationSchema.safeParse(doc);
+      return result.success ? [result.data] : [];
+    });
+    const sjerred = applications.find(
+      (app) => app.metadata.name === "minecraft-sjerred",
+    )?.spec.source.helm.valuesObject;
+
+    expect(sjerred?.["extraVolumes"]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          volumes: [
+            {
+              name: "proxy-config",
+              configMap: { name: "minecraft-sjerred-proxy" },
+            },
+          ],
+          volumeMounts: [],
+        }),
+      ]),
+    );
+    expect(sjerred?.["sidecarContainers"]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "proxy-header-adapter",
+          volumeMounts: [
+            {
+              name: "proxy-config",
+              mountPath: "/usr/local/etc/haproxy",
+              readOnly: true,
+            },
+          ],
+        }),
+      ]),
+    );
+  });
+});
