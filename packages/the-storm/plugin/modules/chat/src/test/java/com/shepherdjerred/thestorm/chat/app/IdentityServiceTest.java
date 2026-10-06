@@ -92,6 +92,31 @@ final class IdentityServiceTest {
   }
 
   @Test
+  void clearingDisplayStateOnQuitStopsOfflineNicknameLookup() {
+    var service =
+        new IdentityService(
+            new IdentityStore() {
+              @Override
+              public CompletableFuture<Map<UUID, Identity>> load() {
+                return CompletableFuture.completedFuture(Map.of());
+              }
+
+              @Override
+              public CompletableFuture<Void> save(UUID player, Identity identity, Audit audit) {
+                return CompletableFuture.completedFuture(null);
+              }
+            });
+    service.load().join();
+    service.change(first, identity -> identity.named(Optional.of("Thunder")), audit).join();
+    service.displaying(first, true);
+    assertThat(service.activelyNamed("Thunder")).contains(first);
+
+    service.displaying(first, false);
+
+    assertThat(service.activelyNamed("Thunder")).isEmpty();
+  }
+
+  @Test
   void namesCannotCarryFormattingOrStaffTitles() {
     for (var name : java.util.List.of("Admin", "<red>Staff", "x", "too_long_a_username"))
       assertThatThrownBy(() -> Identity.fresh().named(Optional.of(name)))

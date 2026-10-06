@@ -6,6 +6,8 @@ import com.shepherdjerred.thestorm.chat.app.ChatLine;
 import com.shepherdjerred.thestorm.chat.app.GlobalChat;
 import com.shepherdjerred.thestorm.chat.app.Subscription;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import com.shepherdjerred.thestorm.core.players.PlayerJoinAnnouncementEvent;
+import com.shepherdjerred.thestorm.core.players.PlayerVisibility;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
@@ -90,6 +92,21 @@ final class ServerEventsListenerTest {
         new PlayerQuitEvent(bot, Component.empty(), PlayerQuitEvent.QuitReason.DISCONNECTED));
 
     assertThat(posts).isEmpty();
+  }
+
+  @Test
+  void defersJoinRelayUntilStaffVisibilityResolution() {
+    var player = server.addPlayer("HiddenOnReconnect");
+    PlayerVisibility.deferJoinAnnouncement(player.getUniqueId());
+
+    listener.onJoin(new PlayerJoinEvent(player, Component.empty()));
+    assertThat(posts).isEmpty();
+
+    PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId());
+    listener.onJoinAnnouncementResolved(new PlayerJoinAnnouncementEvent(player, false));
+    assertThat(posts).isEmpty();
+    listener.onJoinAnnouncementResolved(new PlayerJoinAnnouncementEvent(player, true));
+    assertThat(posts).containsExactly("**HiddenOnReconnect** joined the server");
   }
 
   private static PlayerDeathEvent death(PlayerMock player, String message) {

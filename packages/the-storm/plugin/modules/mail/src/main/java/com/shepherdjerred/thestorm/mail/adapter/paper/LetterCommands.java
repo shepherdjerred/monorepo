@@ -151,13 +151,20 @@ public final class LetterCommands {
   }
 
   private void send(Player actor, UUID recipient, String text) {
+    var gameplay = context.services().require(ManagedGameplay.class);
     complete(
         actor,
-        context
-            .services()
-            .require(ManagedGameplay.class)
-            .enabled(ManagedGameplay.IDENTITY, recipient),
-        identityEnabled -> send(actor, recipient, text, identityEnabled));
+        gameplay.enabled(ManagedGameplay.LETTERS, recipient),
+        lettersEnabled -> {
+          if (!lettersEnabled) {
+            actor.sendMessage(Component.text("Letters are not available for that player."));
+            return;
+          }
+          complete(
+              actor,
+              gameplay.enabled(ManagedGameplay.IDENTITY, recipient),
+              identityEnabled -> send(actor, recipient, text, identityEnabled));
+        });
   }
 
   private void send(Player actor, UUID recipient, String text, boolean recipientIdentityEnabled) {

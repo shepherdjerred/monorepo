@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.players.Humans;
+import com.shepherdjerred.thestorm.core.players.PlayerJoinAnnouncementEvent;
 import com.shepherdjerred.thestorm.core.players.PlayerVisibility;
 import com.shepherdjerred.thestorm.essentials.app.StaffState;
 import com.shepherdjerred.thestorm.essentials.app.StaffStore;
@@ -161,7 +162,10 @@ final class StaffVisibility implements Listener {
               .find("session", player.getUniqueId().toString(), StaffState.Session.class)
               .map(StaffState.Session::vanished)
               .orElseGet(() -> PlayerVisibility.hidden(player));
-      set(player, false);
+      var joinMessage = event.joinMessage();
+      event.joinMessage(null);
+      PlayerVisibility.deferJoinAnnouncement(player.getUniqueId());
+      set(player, hidden);
       var _ =
           tools
               .context
@@ -172,17 +176,33 @@ final class StaffVisibility implements Listener {
                   player.getUniqueId())
               .whenCompleteAsync(
                   (enabled, failure) -> {
-                    if (player.isOnline())
-                      set(
-                          player,
-                          failure == null
-                              && Boolean.TRUE.equals(enabled)
-                              && hidden
-                              && player.hasPermission("thestorm.essentials.vanish"));
+                    if (!player.isOnline()) {
+                      PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId());
+                      return;
+                    }
+                    var shouldHide =
+                        failure == null
+                            && Boolean.TRUE.equals(enabled)
+                            && hidden
+                            && player.hasPermission("thestorm.essentials.vanish");
+                    set(player, shouldHide);
+                    if (!PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId())) return;
+                    if (!shouldHide && joinMessage != null)
+                      tools
+                          .context
+                          .plugin()
+                          .getServer()
+                          .getOnlinePlayers()
+                          .forEach(viewer -> viewer.sendMessage(joinMessage));
+                    tools
+                        .context
+                        .plugin()
+                        .getServer()
+                        .getPluginManager()
+                        .callEvent(new PlayerJoinAnnouncementEvent(player, !shouldHide));
                   },
                   tools.context.scheduler().mainThread());
-    }
-    if (PlayerVisibility.hidden(player)) event.joinMessage(null);
+    } else if (PlayerVisibility.hidden(player)) event.joinMessage(null);
     sweep();
   }
 

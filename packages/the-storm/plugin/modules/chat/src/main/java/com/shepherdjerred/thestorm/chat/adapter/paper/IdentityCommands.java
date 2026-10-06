@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 /** Nicknames, private-message preferences and staff SocialSpy. */
 public final class IdentityCommands implements Listener {
@@ -268,9 +269,12 @@ public final class IdentityCommands implements Listener {
             .enabled(ManagedGameplay.IDENTITY, player.getUniqueId())
             .whenCompleteAsync(
                 (enabled, failure) -> {
+                  if (!player.isOnline()) {
+                    identities.displaying(player.getUniqueId(), false);
+                    return;
+                  }
                   identities.displaying(
                       player.getUniqueId(), failure == null && Boolean.TRUE.equals(enabled));
-                  if (!player.isOnline()) return;
                   var display =
                       Component.text(
                           identities
@@ -310,5 +314,10 @@ public final class IdentityCommands implements Listener {
                       },
                       context.scheduler().mainThread());
         });
+  }
+
+  @EventHandler
+  public void onQuit(PlayerQuitEvent event) {
+    identities.displaying(event.getPlayer().getUniqueId(), false);
   }
 }

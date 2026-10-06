@@ -10,6 +10,8 @@ public final class PlayerVisibility {
   private static final NamespacedKey KEY = new NamespacedKey("thestorm", "vanished");
   private static final java.util.Set<java.util.UUID> HIDDEN =
       java.util.concurrent.ConcurrentHashMap.newKeySet();
+  private static final java.util.Set<java.util.UUID> PENDING_JOIN_ANNOUNCEMENTS =
+      java.util.concurrent.ConcurrentHashMap.newKeySet();
   private static volatile boolean restored;
 
   private PlayerVisibility() {}
@@ -35,6 +37,18 @@ public final class PlayerVisibility {
 
   public static boolean hidden(java.util.UUID player) {
     return HIDDEN.contains(player);
+  }
+
+  public static void deferJoinAnnouncement(java.util.UUID player) {
+    PENDING_JOIN_ANNOUNCEMENTS.add(player);
+  }
+
+  public static boolean joinAnnouncementPending(Player player) {
+    return PENDING_JOIN_ANNOUNCEMENTS.contains(player.getUniqueId());
+  }
+
+  public static boolean resolveJoinAnnouncement(java.util.UUID player) {
+    return PENDING_JOIN_ANNOUNCEMENTS.remove(player);
   }
 
   /** Whether persisted hidden-player state has been restored from the staff store. */
