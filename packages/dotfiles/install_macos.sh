@@ -159,6 +159,10 @@ if command -v brew &>/dev/null; then
     sudo-touchid --with-reattach
     log_success "Touch ID for sudo enabled"
 
+    log_info "Installing persistent launchd file limits"
+    sudo /bin/bash "${DOTFILES_SOURCE_DIR}/macos-file-limits/install.sh"
+    log_success "Launchd file limits installed; a fresh login is required for existing apps"
+
     log_info "Patching and installing Berkeley Mono"
     berkeley_mono_source_dir="$(discover_berkeley_mono_source_dir)"
     berkeley_mono_patcher="$(dirname "${DOTFILES_SOURCE_DIR}")/fonts/patch-berkeley-mono.py"
