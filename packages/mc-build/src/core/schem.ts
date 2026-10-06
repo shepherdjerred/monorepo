@@ -86,6 +86,23 @@ function writeVarints(values: Uint32Array): number[] {
   return out.map((byte) => (byte > 127 ? byte - 256 : byte));
 }
 
+const SchematicSizeSchema = z.object({
+  Width: z.number().int(),
+  Height: z.number().int(),
+  Length: z.number().int(),
+});
+
+/** A schematic's dimensions, without decoding its blocks. */
+export async function schematicSize(bytes: Uint8Array): Promise<Vec3> {
+  const { parsed } = await nbt.parse(Buffer.from(bytes));
+  const root: unknown = nbt.simplify(parsed);
+  const container = z.object({ Schematic: z.unknown() }).safeParse(root);
+  const dims = SchematicSizeSchema.parse(
+    container.success ? container.data.Schematic : root,
+  );
+  return { x: dims.Width, y: dims.Height, z: dims.Length };
+}
+
 export async function readSchematic(bytes: Uint8Array): Promise<SchematicInfo> {
   const { parsed } = await nbt.parse(Buffer.from(bytes));
   const root: unknown = nbt.simplify(parsed);

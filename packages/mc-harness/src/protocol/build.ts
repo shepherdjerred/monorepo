@@ -18,6 +18,9 @@ export const BUILD_FILES = {
   expected: "expected.json",
   /** Frozen canvas result (bridge snapshot of the site box); promote pastes it. */
   expectedSchematic: "expected.schem",
+  /** Tiled snapshots of map-scale sites: `<dir>/parts.json` + `<n>.schem`. */
+  siteParts: path.join("site", "parts"),
+  expectedParts: "expected-parts",
   schematicsDir: "schematics",
   rendersDir: "renders",
 } as const;

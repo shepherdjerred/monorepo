@@ -77,6 +77,54 @@ export function valueNoise(
   );
 }
 
+export type NoiseOptions = {
+  /** Feature size in blocks (default 24). */
+  scale?: number;
+  /** Layers of finer detail, each half the size and amplitude (default 4). */
+  octaves?: number;
+  /** Ridged noise for mountain crests and valleys (default false). */
+  ridged?: boolean;
+  /** Decorrelates independent fields that share a seed (default 0). */
+  salt?: number;
+};
+
+/**
+ * Deterministic 2D fractal value noise in [0, 1): smooth, irregular terrain
+ * heights and masks without the banding of summed sine waves.
+ */
+export function fractalNoise(
+  x: number,
+  z: number,
+  seed: number,
+  options: NoiseOptions = {},
+): number {
+  const scale = options.scale ?? 24;
+  const octaves = options.octaves ?? 4;
+  if (!(scale > 0) || !Number.isInteger(octaves) || octaves < 1) {
+    throw new Error(
+      `noise needs scale > 0 and a positive integer octaves, got scale ${String(scale)}, octaves ${String(octaves)}`,
+    );
+  }
+  let total = 0;
+  let amplitude = 1;
+  let weight = 0;
+  for (let octave = 0; octave < octaves; octave += 1) {
+    const size = scale / 2 ** octave;
+    let value = valueNoise(
+      [x, octave * 101 + (options.salt ?? 0) * 7919, z],
+      Math.max(size, 1),
+      seed,
+    );
+    if (options.ridged === true) {
+      value = 1 - Math.abs(2 * value - 1);
+    }
+    total += value * amplitude;
+    weight += amplitude;
+    amplitude /= 2;
+  }
+  return Math.min(total / weight, 1 - 1e-9);
+}
+
 export type Weighted = readonly (readonly [state: string, weight: number])[];
 
 function pick(entries: Weighted, t: number): string {

@@ -21,12 +21,13 @@ export default ((ctx) => {
 
 ## Core
 
-| Call                                                                                         | Notes                                                    |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `ctx.set(x, y, z, mat)` / `ctx.fill(regionOrBox, mat)` / `ctx.clear(box)`                    | `mat` = state string or `(x,y,z) => state`               |
-| `ctx.geo.box / hollowBox / outline / cylinder / union / subtract / intersect / face / edges` | Regions                                                  |
-| `ctx.site?.heightAt(x, z)`                                                                   | First free y above terrain (local), with a captured site |
-| `ctx.rng()`                                                                                  | Deterministic random in [0,1)                            |
+| Call                                                                                         | Notes                                                         |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `ctx.set(x, y, z, mat)` / `ctx.fill(regionOrBox, mat)` / `ctx.clear(box)`                    | `mat` = state string or `(x,y,z) => state`                    |
+| `ctx.geo.box / hollowBox / outline / cylinder / union / subtract / intersect / face / edges` | Regions                                                       |
+| `ctx.site?.heightAt(x, z)`                                                                   | First free y above terrain (local), with a captured site      |
+| `ctx.rng()`                                                                                  | Deterministic random in [0,1)                                 |
+| `ctx.noise(x, z, { scale?, octaves?, ridged?, salt? })`                                      | Deterministic 2D fractal noise in [0,1) for terrain and masks |
 
 ## Materials (`ctx.mat`)
 
@@ -44,25 +45,26 @@ export default ((ctx) => {
 
 ## Craft (`ctx.craft`) — each returns anchors
 
-| Call                                                                                                     | Notes                                                                          |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `foundation({ x, z, w, d, y, height?, material })`                                                       | Extends down to terrain with a site → `{ top }`                                |
-| `floor({ x, z, w, d, y, material })`                                                                     |                                                                                |
-| `walls({ x, z, w, d, y, h, frame, infill, postEvery?, postsAt?, depth? })`                               | Timber frame, infill recessed 1 (depth 0 = flush) → `{ faces, top, interior }` |
-| `window(face, { at, y?, w?, h?, glass?, sill?, shutters? })`                                             | Glass in the recess, sill stairs outside                                       |
-| `door(face, { at, door })`                                                                               | Two halves on the floor; frame the door with `postsAt`                         |
-| `gableRoof({ x, z, w, d, y, ridge, stairs, overhang?, gable?, eaves?, ridgeBlock? })`                    | Stair slopes, gable ends, ridge cap                                            |
-| `hipRoof({ x, z, w, d, y, stairs, overhang?, eaves?, ridgeBlock? })`                                     | Slopes on all four sides, outer-corner stairs, ridge cap on odd spans          |
-| `chimney({ x, z, base, height, material, size?, cap? })`                                                 | Masonry stack (1 or 2 square); place after the roof; `cap: "campfire"` smokes  |
-| `trim(face, { v, material, layer? })`                                                                    | Horizontal band (string course)                                                |
-| `conicalRoof({ x, z, y, radius, stairs, overhang?, peak? })`                                             | Round cone of stair rings for a round tower → `{ top }`                        |
-| `mansardRoof({ x, z, w, d, y, wall, stairs, steps?, cap? })`                                             | Steep stepped wall-and-stair tiers, flat cap → `{ top }`                       |
-| `dormer({ x, z, w, d, y, facing, wall, stairs, h?, glass? })`                                            | Carves the roof, glazed face, small gable; after the main roof                 |
-| `tower({ x, z, y, shape, radius, h, wall, floor?, floorEvery?, crenellations?, door?, slits?, light? })` | Round or square, lit floors, slits, battlements → `{ top, center }`            |
-| `porch({ face, at, w, depth?, floor, post, roof, railing?, height? })`                                   | Deck, posts, slab roof on a wall face → `{ entrance }`                         |
-| `interior({ room, wood?, bed?, items?, light? })`                                                        | Bed, bookshelves, table and chairs, lights in a walls `interior`               |
-| `landscape({ area, y, ground?, density?, flowers?, bushes?, avoid?, seed? })`                            | Grass, flowers and bushes around the build; `avoid` boxes                      |
-| `path({ from, to, y, width?, material? })`                                                               | L-shaped gravel/dirt-path walk → `{ cells }`                                   |
+| Call                                                                                                     | Notes                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `foundation({ x, z, w, d, y, height?, material })`                                                       | Extends down to terrain with a site → `{ top }`                                                                        |
+| `floor({ x, z, w, d, y, material })`                                                                     |                                                                                                                        |
+| `walls({ x, z, w, d, y, h, frame, infill, postEvery?, postsAt?, depth? })`                               | Timber frame, infill recessed 1 (depth 0 = flush) → `{ faces, top, interior }`                                         |
+| `window(face, { at, y?, w?, h?, glass?, sill?, shutters? })`                                             | Glass in the recess, sill stairs outside                                                                               |
+| `door(face, { at, door })`                                                                               | Two halves on the floor; frame the door with `postsAt`                                                                 |
+| `gableRoof({ x, z, w, d, y, ridge, stairs, overhang?, gable?, eaves?, ridgeBlock? })`                    | Stair slopes, gable ends, ridge cap                                                                                    |
+| `hipRoof({ x, z, w, d, y, stairs, overhang?, eaves?, ridgeBlock? })`                                     | Slopes on all four sides, outer-corner stairs, ridge cap on odd spans                                                  |
+| `chimney({ x, z, base, height, material, size?, cap? })`                                                 | Masonry stack (1 or 2 square); place after the roof; `cap: "campfire"` smokes                                          |
+| `trim(face, { v, material, layer? })`                                                                    | Horizontal band (string course)                                                                                        |
+| `conicalRoof({ x, z, y, radius, stairs, overhang?, peak? })`                                             | Round cone of stair rings for a round tower → `{ top }`                                                                |
+| `mansardRoof({ x, z, w, d, y, wall, stairs, steps?, cap? })`                                             | Steep stepped wall-and-stair tiers, flat cap → `{ top }`                                                               |
+| `dormer({ x, z, w, d, y, facing, wall, stairs, h?, glass? })`                                            | Carves the roof, glazed face, small gable; after the main roof                                                         |
+| `tree({ x, y, z, species?, size?, height?, seed? })`                                                     | Branch-first tree: kinked `*_wood` trunk, domed mixed-leaf canopies (spruce cone, acacia flat); vary species/size/seed |
+| `tower({ x, z, y, shape, radius, h, wall, floor?, floorEvery?, crenellations?, door?, slits?, light? })` | Round or square, lit floors, slits, battlements → `{ top, center }`                                                    |
+| `porch({ face, at, w, depth?, floor, post, roof, railing?, height? })`                                   | Deck, posts, slab roof on a wall face → `{ entrance }`                                                                 |
+| `interior({ room, wood?, bed?, items?, light? })`                                                        | Bed, bookshelves, table and chairs, lights in a walls `interior`                                                       |
+| `landscape({ area, y, ground?, density?, flowers?, bushes?, avoid?, seed? })`                            | Grass, flowers and bushes around the build; `avoid` boxes                                                              |
+| `path({ from, to, y, width?, material? })`                                                               | L-shaped gravel/dirt-path walk → `{ cells }`                                                                           |
 
 Faces are addressed from outside: `u` left→right, `v` up from the wall base,
 `layer` 0 outer plane, 1 one block in, −1 one block out.

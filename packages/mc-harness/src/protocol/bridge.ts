@@ -199,6 +199,12 @@ export const WePasteRequestSchema = z.strictObject({
   at: BlockPosSchema,
   rotate: RotationSchema,
   ignoreAir: z.boolean(),
+  /**
+   * Keep the paste in the session's WorldEdit history for `we-undo` (default
+   * true). Build pastes journaled by snapshots send false so map-scale tiles
+   * do not pile up in server memory.
+   */
+  history: z.boolean().optional(),
 });
 export const WePasteResponseSchema = z.strictObject({
   changed: z.number().int(),

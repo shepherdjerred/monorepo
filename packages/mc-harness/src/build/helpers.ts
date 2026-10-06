@@ -6,7 +6,11 @@ import {
   type Vec3,
 } from "@shepherdjerred/mc-build/core/grid.ts";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
-import { encodePng, Renderer } from "@shepherdjerred/mc-build/render/index.ts";
+import {
+  encodePng,
+  Renderer,
+  wantsHero,
+} from "@shepherdjerred/mc-build/render/index.ts";
 import type { BlockPos } from "#protocol/bridge.ts";
 import { BUILD_FILES, type BuildManifest } from "#protocol/build.ts";
 import type { DaemonClient } from "./daemon-client.ts";
@@ -88,6 +92,23 @@ export async function renderGrid(
   await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
   const out = workspace.file(path.join(BUILD_FILES.rendersDir, `${name}.png`));
   await Bun.write(out, await encodePng(image));
+  return out;
+}
+
+/** The large isometric view of a map-scale grid, or null for small builds. */
+export async function renderHero(
+  workspace: BuildWorkspace,
+  grid: BlockGrid,
+  name: string,
+): Promise<string | null> {
+  if (!wantsHero(grid)) {
+    return null;
+  }
+  const renderer = new Renderer(await ensureAssets());
+  const out = workspace.file(
+    path.join(BUILD_FILES.rendersDir, `${name}-hero.png`),
+  );
+  await Bun.write(out, await encodePng(await renderer.hero(grid)));
   return out;
 }
 

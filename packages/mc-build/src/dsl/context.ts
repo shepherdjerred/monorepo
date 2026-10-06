@@ -4,7 +4,13 @@ import type { BlockRegistry } from "#src/registry/registry.ts";
 import { BuildCanvas } from "./canvas.ts";
 import { createCraft, type Craft } from "./craft.ts";
 import { geo, type Geo } from "./geo.ts";
-import { createMat, hash01, type Mat } from "./mat.ts";
+import {
+  createMat,
+  fractalNoise,
+  hash01,
+  type Mat,
+  type NoiseOptions,
+} from "./mat.ts";
 import {
   AIR,
   KEEP,
@@ -28,6 +34,11 @@ export type BuildContext = {
   site: Site | null;
   /** Deterministic random numbers in [0, 1) for this build's seed. */
   rng: () => number;
+  /**
+   * Deterministic 2D fractal noise in [0, 1) at (x, z) for this build's seed:
+   * terrain heights, coastlines, vegetation and material masks.
+   */
+  noise: (x: number, z: number, options?: NoiseOptions) => number;
   log: (message: string) => void;
   KEEP: typeof KEEP;
   AIR: typeof AIR;
@@ -101,6 +112,8 @@ export function createBuildContext(options: {
       counter += 1;
       return hash01(counter, 0, 0, options.seed);
     },
+    noise: (x, z, noiseOptions) =>
+      fractalNoise(x, z, options.seed, noiseOptions),
     log: options.log ?? discardLog,
     KEEP,
     AIR,

@@ -1,11 +1,14 @@
 import path from "node:path";
 import { z } from "zod";
-import { SnapshotSchema } from "#protocol/bridge.ts";
+import { type Box, RegionReadResponseSchema } from "#protocol/bridge.ts";
 import { BuildManifestSchema } from "#protocol/build.ts";
-import { SnapshotBytesResponseSchema } from "#protocol/ipc.ts";
 import type { GradeCheck, Grader } from "#evals/lib/types.ts";
 import { judgeNote } from "#evals/grade/judge-note.ts";
 import { sandboxFrom } from "#evals/grade/tower.ts";
+import { mergeRegionReads, tileBox } from "#build/tiles.ts";
+import { gridFromRegionRead } from "@shepherdjerred/mc-build/core/grid.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 
 const LintJsonSchema = z.object({
   ok: z.boolean(),
@@ -63,6 +66,52 @@ async function judgeAgainstLibrary(
     reference: { slug, render: reference },
   });
   return { artifacts: [reference], notes: [note] };
+}
+
+/**
+ * Reads the promoted site in tiles (map-scale sites exceed one bridge
+ * snapshot) and renders its contact sheet and hero view.
+ */
+async function renderPromoted(
+  ctx: Parameters<Grader>[0],
+  sandbox: string,
+  siteBox: Box,
+): Promise<{ png: string; hero: string; check: GradeCheck }> {
+  const parts = [];
+  for (const tile of tileBox(siteBox)) {
+    parts.push(
+      await ctx.daemon.request(
+        RegionReadResponseSchema,
+        "POST",
+        `/targets/${sandbox}/region-read`,
+        tile,
+      ),
+    );
+  }
+  const promoted = gridFromRegionRead(mergeRegionReads(siteBox, parts));
+  const registry = await loadRegistry();
+  const schem = path.join(ctx.taskDir, "promoted-site.schem");
+  const png = path.join(ctx.taskDir, "promoted-site.png");
+  const hero = path.join(ctx.taskDir, "promoted-hero.png");
+  await Bun.write(schem, writeSchematic(promoted, registry.dataVersion));
+  const render = await ctx.exec([
+    process.execPath,
+    "run",
+    path.join(ctx.worktree, "packages", "mc-build", "scripts", "render.ts"),
+    schem,
+    png,
+    "--hero",
+    hero,
+  ]);
+  return {
+    png,
+    hero,
+    check: {
+      name: "grader rendered the promoted site",
+      pass: render.exitCode === 0 && (await Bun.file(png).exists()),
+      detail: render.exitCode === 0 ? png : render.stderr.slice(0, 300),
+    },
+  };
 }
 
 /**
@@ -162,37 +211,16 @@ export const buildGrader =
       return { checks, artifacts, notes };
     }
     const { site, world } = manifest.data;
-    const snapshot = await ctx.daemon.request(
-      SnapshotSchema,
-      "POST",
-      `/targets/${sandbox}/snapshot`,
-      {
-        box: { world, min: site.min, max: site.max },
-        label: "eval-grade",
-      },
-    );
-    const bytes = await ctx.daemon.request(
-      SnapshotBytesResponseSchema,
-      "GET",
-      `/targets/${sandbox}/snapshots/${snapshot.id}`,
-    );
-    const schem = path.join(ctx.taskDir, "promoted-site.schem");
-    const png = path.join(ctx.taskDir, "promoted-site.png");
-    await Bun.write(schem, Buffer.from(bytes.base64, "base64"));
-    const render = await ctx.exec([
-      process.execPath,
-      "run",
-      path.join(ctx.worktree, "packages", "mc-build", "scripts", "render.ts"),
-      schem,
-      png,
-    ]);
-    checks.push({
-      name: "grader rendered the promoted site",
-      pass: render.exitCode === 0 && (await Bun.file(png).exists()),
-      detail: render.exitCode === 0 ? png : render.stderr.slice(0, 300),
+    const { png, hero, check } = await renderPromoted(ctx, sandbox, {
+      world,
+      min: site.min,
+      max: site.max,
     });
-    if (await Bun.file(png).exists()) {
-      artifacts.push(png);
+    checks.push(check);
+    for (const file of [png, hero]) {
+      if (await Bun.file(file).exists()) {
+        artifacts.push(file);
+      }
     }
     const critique = ctx.result?.["selfCritique"];
     if (typeof critique === "string") {

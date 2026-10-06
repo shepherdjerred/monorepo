@@ -42,7 +42,10 @@ render and getting a go-ahead when the target is a server people play on.
      quoting. See references/worldedit-cookbook.md.
    - **Program** (`build.ts`, precise architecture): edit it, then
      `toolkit mc build compile <dir>` (compiles, lints, and replaces the earlier
-     program ops in the log). See references/dsl-cheatsheet.md.
+     program ops in the log). See references/dsl-cheatsheet.md, and
+     references/craft.md (shape, depth, roofs), references/palettes.md
+     (blocks, gradients, proven palettes) and references/landscape.md
+     (terrain, water, paths, `craft.tree`) before designing.
      Start from the closest curated program: `library search --tag <t>`,
      then `library use <slug> <dir>`.
    - **Import** an existing design: `toolkit mc build import <dir> <file>
@@ -94,10 +97,10 @@ render and getting a go-ahead when the target is a server people play on.
 
 ## Maps
 
-For a town, island or landscape (60–128 blocks), read references/maps.md
-first: layout plan, one heightfield shared by terrain and buildings,
-variety at scale, and district close-ups with
-`toolkit mc build render <dir> <x1,y1,z1> <x2,y2,z2>`.
+For a town, island or landscape (60–500 blocks), read references/maps.md
+first: layout plan, one `ctx.noise` heightfield shared by terrain and
+buildings, settlements, composition, large-map tiling, the map rubric and
+district close-ups with `toolkit mc build render <dir> <x1,y1,z1> <x2,y2,z2>`.
 
 ## Rules
 

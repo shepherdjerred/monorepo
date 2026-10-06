@@ -6,6 +6,7 @@ import {
 } from "@shepherdjerred/mc-build/core/grid.ts";
 import type { Box, WeOp } from "#protocol/bridge.ts";
 import type { Op } from "#protocol/build.ts";
+import { schematicSize } from "@shepherdjerred/mc-build/core/schem.ts";
 import type { DaemonClient } from "./daemon-client.ts";
 import type { BuildWorkspace } from "./workspace.ts";
 
@@ -59,9 +60,10 @@ async function runSingle(
     }
     return;
   }
-  const bytes = await Bun.file(
-    context.workspace.file(op.schematic),
-  ).arrayBuffer();
+  const bytes = new Uint8Array(
+    await Bun.file(context.workspace.file(op.schematic)).arrayBuffer(),
+  );
+  const size = await schematicSize(bytes);
   await context.client.paste(context.target, {
     session: context.session,
     world: op.world,
@@ -69,6 +71,9 @@ async function runSingle(
     at: op.at,
     rotate: op.rotate,
     ignoreAir: op.ignoreAir,
+    // Ordinary pastes stay undoable with `we-undo`; map-scale ones would
+    // fill the server heap with WorldEdit history, so they skip it.
+    history: size.x * size.y * size.z <= HISTORY_MAX_VOLUME,
   });
 }
 
@@ -102,19 +107,25 @@ export async function runOps(
   return ops.length;
 }
 
+/** Largest replayed paste kept in WorldEdit session history (`we-undo`). */
+export const HISTORY_MAX_VOLUME = 1_000_000;
+
 /** Pastes the captured site back over its box (air included): a clean canvas. */
 export async function resetToSite(
   context: RunContext,
   box: Box,
 ): Promise<void> {
-  await context.client.paste(context.target, {
-    session: context.session,
-    world: box.world,
-    schematic: await context.workspace.siteSchematicBase64(),
-    at: box.min,
-    rotate: 0,
-    ignoreAir: false,
-  });
+  for (const part of await context.workspace.frozenParts("site", box)) {
+    await context.client.paste(context.target, {
+      session: context.session,
+      world: box.world,
+      schematic: Buffer.from(part.bytes).toString("base64"),
+      at: part.at,
+      rotate: 0,
+      ignoreAir: false,
+      history: false,
+    });
+  }
 }
 
 export async function readGrid(

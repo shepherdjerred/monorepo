@@ -140,7 +140,7 @@ public final class SnapshotStore {
 
   /**
    * {@code POST /v1/snapshots/:id/restore}: pastes the snapshot over its original box, air
-   * included.
+   * included, outside WorldEdit history (the snapshot itself is the undo record).
    */
   public JsonObject restore(SnapshotId id) {
     Box box = Fields.of(readMeta(metaPath(id)).get("box"), "snapshot.box", Fields.BOX_KEYS).asBox();
@@ -150,7 +150,7 @@ public final class SnapshotStore {
             RESTORE_SESSION,
             box.world(),
             clipboard,
-            new WorldEditService.PastePlacement(box.min(), new Rotation(0), false));
+            new WorldEditService.PastePlacement(box.min(), new Rotation(0), false, false));
     JsonObject response = new JsonObject();
     response.addProperty("changed", result.changed());
     return response;

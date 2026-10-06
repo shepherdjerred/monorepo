@@ -1,0 +1,5 @@
+Build me an impressive walled port city in Minecraft, about 250×250 blocks, in a fresh flat sandbox: a coastline you shape yourself with a harbor full of ships and piers, warehouses along the quay, a market square, a cathedral or guildhall as a landmark, dense streets of varied town houses, canals or a river through town, and city walls with gates and towers on the landward side. Make it look hand-built, with distinct districts, a readable street plan and plenty of detail up close. Iterate on it using renders until you would be proud to show it.
+
+Do the work through the repository's build workflow so the result is replayable, and put the finished build into a sandbox that you leave running.
+
+Deliverables: copy your best overview render to `OUT/final.png`. `OUT/result.json`: {"sourceSandbox": "<sbx id holding the finished map>", "buildDir": "<path>", "applyId": "<id of the promote that placed it>", "site": {"min": [x, y, z], "max": [x, y, z]}, "iterations": <n>, "lintErrors": <n>, "lintWarnings": <n>, "verifyMismatches": <n>, "selfCritique": "<2-4 sentences, honest, with rubric scores>"}.

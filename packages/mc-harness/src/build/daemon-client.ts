@@ -20,6 +20,15 @@ import {
 } from "#protocol/ipc.ts";
 import { type LiveWriteFlags, liveWriteHeaders } from "#protocol/live.ts";
 import { SOCKET_PATH } from "#protocol/paths.ts";
+import {
+  joinSnapshotIds,
+  mergeRegionReads,
+  splitSnapshotIds,
+  tileBox,
+} from "./tiles.ts";
+
+/** One bridge snapshot covering `box`, a tile of a larger box. */
+export type SnapshotPart = { box: Box; id: string };
 
 /**
  * The build CLI's view of the daemon: the same unix-socket routes toolkit
@@ -118,6 +127,7 @@ export class DaemonClient {
       at: BlockPos;
       rotate: 0 | 90 | 180 | 270;
       ignoreAir: boolean;
+      history?: boolean;
     },
   ) {
     return this.request(
@@ -128,13 +138,24 @@ export class DaemonClient {
     );
   }
 
-  regionRead(id: string, box: Box) {
-    return this.request(
-      RegionReadResponseSchema,
-      "POST",
-      this.target(id, "region-read"),
-      box,
-    );
+  /** Reads any size of box: larger than the bridge limit, it reads tiles and merges them. */
+  async regionRead(id: string, box: Box) {
+    const tiles = tileBox(box);
+    const parts = [];
+    for (const tile of tiles) {
+      parts.push(
+        await this.request(
+          RegionReadResponseSchema,
+          "POST",
+          this.target(id, "region-read"),
+          tile,
+        ),
+      );
+    }
+    const [only] = parts;
+    return only !== undefined && parts.length === 1
+      ? only
+      : mergeRegionReads(box, parts);
   }
 
   snapshot(id: string, box: Box, label?: string) {
@@ -142,6 +163,23 @@ export class DaemonClient {
       box,
       ...(label === undefined ? {} : { label }),
     });
+  }
+
+  /**
+   * Snapshots any size of box as tiles within the bridge limit. `id` joins
+   * the tile ids; `restore` accepts it.
+   */
+  async snapshotParts(
+    id: string,
+    box: Box,
+    label?: string,
+  ): Promise<{ id: string; parts: SnapshotPart[] }> {
+    const parts: SnapshotPart[] = [];
+    for (const tile of tileBox(box)) {
+      const snapshot = await this.snapshot(id, tile, label);
+      parts.push({ box: tile, id: snapshot.id });
+    }
+    return { id: joinSnapshotIds(parts.map((part) => part.id)), parts };
   }
 
   async snapshotBytes(id: string, snapshotId: string): Promise<Uint8Array> {
@@ -153,12 +191,28 @@ export class DaemonClient {
     return new Uint8Array(Buffer.from(base64, "base64"));
   }
 
-  restore(id: string, snapshotId: string) {
-    return this.request(
-      SnapshotRestoreResponseSchema,
-      "POST",
-      this.target(id, "snapshot-restore"),
-      { id: snapshotId },
-    );
+  /** Restores a snapshot, or every tile of a composite id from `snapshotParts`. */
+  async restore(id: string, snapshotId: string) {
+    const parts = splitSnapshotIds(snapshotId);
+    const results = [];
+    for (const [n, part] of parts.entries()) {
+      try {
+        results.push(
+          await this.request(
+            SnapshotRestoreResponseSchema,
+            "POST",
+            this.target(id, "snapshot-restore"),
+            { id: part },
+          ),
+        );
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `Partial restore: ${n.toString()} of ${parts.length.toString()} snapshot tile(s) restored before ${part} failed (${reason}); the box is mixed. Restoring is idempotent, so retry to finish.`,
+          { cause: error },
+        );
+      }
+    }
+    return results;
   }
 }

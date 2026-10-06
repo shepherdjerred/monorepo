@@ -176,7 +176,8 @@ final class BridgeRoutes {
 
   private Response wePaste(Request request) {
     Fields body =
-        request.json(Set.of("session", "world", "schematic", "at", "rotate", "ignoreAir"));
+        request.json(
+            Set.of("session", "world", "schematic", "at", "rotate", "ignoreAir", "history"));
     byte[] schematic;
     try {
       schematic = Base64.getDecoder().decode(body.nonEmptyString("schematic"));
@@ -189,7 +190,10 @@ final class BridgeRoutes {
             body.nonEmptyString("world"),
             WorldEditService.decode(schematic),
             new WorldEditService.PastePlacement(
-                body.blockPos("at"), new Rotation(body.integer("rotate")), body.bool("ignoreAir")));
+                body.blockPos("at"),
+                new Rotation(body.integer("rotate")),
+                body.bool("ignoreAir"),
+                body.optionalBool("history").orElse(true)));
     JsonObject response = new JsonObject();
     response.addProperty("changed", result.changed());
     response.add("min", Json.pos(result.min()));
