@@ -9,7 +9,11 @@
     "preview": "astro preview",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "astro check",
-    "deploy": "bun ../../scripts/release/deploy-site.ts ts-mc-docs"
+    "deploy": "bun ../../scripts/release/deploy-site.ts ts-mc-docs",
+    "archive": "uv run scripts/world_archive.py",
+    "test": "python3 -m unittest discover -s scripts -p 'test_*.py'",
+    "test:ci": "bun run test:report",
+    "test:report": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

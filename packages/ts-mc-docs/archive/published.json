@@ -1,0 +1,290 @@
+{
+  "release": "2026-10-04-v1",
+  "worlds": {
+    "asterism-2016-02": {
+      "sourceSha256": "be7e4c41c6c45688f76479b0aa6ffbfb1bba760299f260292252e3ead89c2b57",
+      "sha256": "0124a369a726160740412abd82d5d50bdeae49d20ff0ee8db98b68a0c744becf",
+      "bytes": 3777028,
+      "files": 18,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/asterism-2016-02.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/overview.png",
+          "sha256": "5985c7807a60d1243bfeac5db9ce6b73a40c213debd7820fac77724a7d00394a",
+          "bytes": 188365,
+          "width": 960,
+          "height": 1264,
+          "bounds": [-865, -876, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/closeup.png",
+          "sha256": "5bd40df0aa1785275379bd1f18625f71afea1830bdbfc65a1b2f33fe87599fb8",
+          "bytes": 187510,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-97, -108, 512, 512]
+        }
+      ]
+    },
+    "new-world-test-2022-11-20": {
+      "sourceSha256": "916fbcf4c5dccebd84f1212cf4ee5e3c347a0f80fa1323e60b38380770c97dac",
+      "sha256": "c67540e757870f7d777f1be7b2ffb74aab603138571d436183b36ec36e7d6201",
+      "bytes": 30409027,
+      "files": 34,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/new-world-test-2022-11-20.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png",
+          "sha256": "9040e300beaa896c2a19c4e5d2e51533b690d317d6158b02c3bfab062a7bf2db",
+          "bytes": 1973018,
+          "width": 1088,
+          "height": 1088,
+          "bounds": [-1024, -1024, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png",
+          "sha256": "d88d9c9805a676d3def1394bd8de2b190fba6d3177d5ab460600fe4618efa98d",
+          "bytes": 706926,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-256, -256, 512, 512]
+        }
+      ]
+    },
+    "creative-2016-01-10": {
+      "sourceSha256": "646c31b56fef4fc478e04ec50ece6f3d9926ad51267069779587aead894e8387",
+      "sha256": "f73a784405c6c233558a876f56cb6345bce90967780fa8d997fff29705a05b1e",
+      "bytes": 41600378,
+      "files": 652,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/creative-2016-01-10.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/overview.png",
+          "sha256": "42dc6bf5508eae4e21b8c378f5d713fbca804c303dcd735553d15c3c7a7431fb",
+          "bytes": 654334,
+          "width": 2048,
+          "height": 2048,
+          "bounds": [-1025, -1025, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/closeup.png",
+          "sha256": "e3e70a0960593c33e139838a644ef3c985b159384e727596a98647bb540865b1",
+          "bytes": 148158,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-257, -257, 512, 512]
+        }
+      ]
+    },
+    "skylands-map1-2015-07-09": {
+      "sourceSha256": "0e4d178bd9c44dab4dab5e5385baeaae8b50eee58226c7e7ab26ca6ce3338970",
+      "sha256": "c6cda6f560d6b6b140741357f64884b222a9e07e4668967cff46032ef71689de",
+      "bytes": 211419320,
+      "files": 222,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/skylands-map1-2015-07-09.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/overview.png",
+          "sha256": "3a30c5b9914319498c7da5db6df191226a94dc3f73dc403a796f90afe1b9544e",
+          "bytes": 5670305,
+          "width": 2048,
+          "height": 2048,
+          "bounds": [-1024, -1024, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/closeup.png",
+          "sha256": "5c46fa581475ed51af6d5dc28fc0978d99b806715837afa35552dd9f6b134f80",
+          "bytes": 679281,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-256, -256, 512, 512]
+        }
+      ]
+    },
+    "skylands-map2-2016-01-10": {
+      "sourceSha256": "4a2a898b4d3a271ee876f05090f5705ae3f7b64796437c22d10b100ec4e33e5a",
+      "sha256": "fd53fe34312f4e7a9765e236868700319c0fd76a0bc8b9c77fa198205381c84f",
+      "bytes": 471248356,
+      "files": 408,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/skylands-map2-2016-01-10.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/overview.png",
+          "sha256": "8d2c659925c57e2ea7e9c9239bd0607bb1b1df62bfc795e160ada8cb7919fdd2",
+          "bytes": 3241812,
+          "width": 2048,
+          "height": 2048,
+          "bounds": [-1024, -1024, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/closeup.png",
+          "sha256": "1f90477a0d81f9ab4814a2928d6c8f6aa892c881366631c433a766717ceb2447",
+          "bytes": 264270,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-256, -256, 512, 512]
+        }
+      ]
+    },
+    "kargeth-2012-09-11": {
+      "sourceSha256": "21913a4ce9f4e9e47e465c86bb8faeb5f431d39be91c0bdb7af04355431bff37",
+      "sha256": "861d90eacc5f00372b1e21c5b0d0cb3e69b3ba750d30d6c1f72dc0db15ae95d5",
+      "bytes": 732452776,
+      "files": 349,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/kargeth-2012-09-11.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/overview.png",
+          "sha256": "ffff3155c7c63872e6c94e82715dc1fc1e923224fbee1b52e0fa8469c02354c2",
+          "bytes": 5876221,
+          "width": 2048,
+          "height": 2048,
+          "bounds": [-873, -911, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/closeup.png",
+          "sha256": "fd9e8cc2b5789e3d11041290eed79cf1a6e52e7c9ff11d02e9f5b211e1987ec1",
+          "bytes": 528770,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-105, -143, 512, 512]
+        }
+      ]
+    },
+    "main-map1-2015-07-09": {
+      "sourceSha256": "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa",
+      "sha256": "2564fd3d0574fefd8328e3a133a23f01229a679530f39c3b9d98247395029da0",
+      "bytes": 1804393912,
+      "files": 10438,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map1-2015-07-09.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/overview.png",
+          "sha256": "8f0704ec7a614e21ddfec6c9fc41effaa245f951c332b57fc5e194078efb56f1",
+          "bytes": 6623831,
+          "width": 2048,
+          "height": 2048,
+          "bounds": [-1024, -1009, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/closeup.png",
+          "sha256": "2805f80e6581ec052ff068e95792c757df9d3fabfbac1bf2cb246f5a4e4157a8",
+          "bytes": 767529,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-256, -241, 512, 512]
+        }
+      ]
+    },
+    "main-map1-upgraded-2023-06-18": {
+      "sourceSha256": "61975677882b79349ed95eb2d104e0b34243b3ff45dc6e7e28c583d72cdc2201",
+      "sha256": "072872775ab4296ba08f707f59659a5793974b275cfa7070152b3dbb3ce1d41e",
+      "bytes": 1803913412,
+      "files": 10469,
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map1-upgraded-2023-06-18.zip",
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/overview.png",
+          "sha256": "fd319ccc2632e71c602b26d36a8d0576e7b488f06d600d4eca3b032f2d41e9a4",
+          "bytes": 6621726,
+          "width": 2048,
+          "height": 2048,
+          "bounds": [-1024, -1009, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/closeup.png",
+          "sha256": "673e1c8a2198b8bb898b46ac4be078b009a25b1dc32e9fbe75ce72f05bc3f222",
+          "bytes": 766259,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-256, -241, 512, 512]
+        }
+      ]
+    },
+    "main-map2-2016-01-10": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map2-2016-01-10.zip",
+      "bytes": 5930639263,
+      "sha256": "58559b089a6e0a4fdf5cba164eec1a156c2be374d24586d4f8a88c6bab511029",
+      "sourceSha256": "3fb8100fbf954ca8b033318957b8d87c8121c34479adc698d750e7687af1c14d",
+      "files": 6633,
+      "previews": [
+        {
+          "kind": "overview",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/overview.png",
+          "sha256": "8e6df638abe6e972f453f22656aaf2414e345d90ff772f8949f76008f59fdf3c",
+          "bytes": 6501128,
+          "width": 2048,
+          "height": 2048,
+          "bounds": [-1024, -1015, 2048, 2048]
+        },
+        {
+          "kind": "closeup",
+          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/closeup.png",
+          "sha256": "dc1e0cf63b4d1fd10e45d6873752b3633c6ad2151ad0eacbdef8d69d8e1f2176",
+          "bytes": 551910,
+          "width": 1024,
+          "height": 1024,
+          "bounds": [-256, -247, 512, 512]
+        }
+      ]
+    }
+  },
+  "schematics": {
+    "bluevalkyrieplotbuildbywintersolstice89204390.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/bluevalkyrieplotbuildbywintersolstice89204390.schematic",
+      "bytes": 41176,
+      "sha256": "5ce633cbc57f90553dcb9c8dbd63e0b5d85072a970a1ab680a3294741aac2837"
+    },
+    "spiderqueen9223084.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/spiderqueen9223084.schematic",
+      "bytes": 22195,
+      "sha256": "9d40a1d3f79e648564f1b41a2e0cf0da0ef08a83c3e3afa48f76cbe5c7cff1f0"
+    },
+    "leviathan9245431.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/leviathan9245431.schematic",
+      "bytes": 107376,
+      "sha256": "69e6de7b68bccc5f54b2d21dd005face86c3b334effda0b9664e89e03f674a62"
+    },
+    "lunareclipse9297068.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/lunareclipse9297068.schematic",
+      "bytes": 31834,
+      "sha256": "0e470e6284c9f6583ef6d9406dc4ce85add99cfa59adfa7fa4ad49ff0e025e28"
+    },
+    "hotsprings9346877.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/hotsprings9346877.schematic",
+      "bytes": 68182,
+      "sha256": "2a7b15ea91591596ffbdc2bcfb3afda0b47147db2d1c13feabcb84a5fbeac102"
+    },
+    "mothernature9424556.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/mothernature9424556.schematic",
+      "bytes": 155759,
+      "sha256": "25527ea013bff43a4e6b12c18954d98305860a18abef8be14ca67ef532e80619"
+    },
+    "blankcanvas9496011.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/blankcanvas9496011.schematic",
+      "bytes": 89771,
+      "sha256": "f818a4b41fdc1eac44ffcccc4c908b78417105b9ef21b1e74878fdfd5936cbbf"
+    },
+    "mistwalker9760777.schematic": {
+      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/mistwalker9760777.schematic",
+      "bytes": 19316,
+      "sha256": "224ded0e7d0a2bbb3ca3d07ac6f2cdf3838174ba37945436c01737bc9722250a"
+    }
+  }
+}

@@ -334,6 +334,29 @@ function selectSite(args: string[]): DeploySite {
   return site;
 }
 
+async function assertPrebuiltSite(
+  site: DeploySite,
+  distDir: string,
+): Promise<void> {
+  const glob = new Bun.Glob("**/*");
+  let fileCount = 0;
+  try {
+    for await (const _ of glob.scan({ cwd: distDir, onlyFiles: true })) {
+      fileCount += 1;
+      break;
+    }
+  } catch (error) {
+    const isEnoent =
+      error instanceof Error && "code" in error && error.code === "ENOENT";
+    if (!isEnoent) throw error;
+  }
+  if (fileCount === 0) {
+    throw new Error(
+      `--prebuilt: ${site.distDir} is missing or empty — refusing to sync`,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) {
@@ -361,24 +384,7 @@ async function main(): Promise<void> {
     // The dist was produced elsewhere (e.g. a CI artifact from a container
     // with build-only tooling like playwright browsers). Refuse to sync a
     // missing/empty dir — with --delete that would wipe the bucket.
-    const glob = new Bun.Glob("**/*");
-    let fileCount = 0;
-    try {
-      for await (const _ of glob.scan({ cwd: distDir, onlyFiles: true })) {
-        fileCount += 1;
-        break;
-      }
-    } catch (error) {
-      // Missing dir (ENOENT) → same refusal as empty; anything else is real.
-      const isEnoent =
-        error instanceof Error && "code" in error && error.code === "ENOENT";
-      if (!isEnoent) throw error;
-    }
-    if (fileCount === 0) {
-      throw new Error(
-        `--prebuilt: ${site.distDir} is missing or empty — refusing to sync`,
-      );
-    }
+    await assertPrebuiltSite(site, distDir);
     console.log(
       `build: skipped (--prebuilt; syncing existing ${site.distDir})`,
     );

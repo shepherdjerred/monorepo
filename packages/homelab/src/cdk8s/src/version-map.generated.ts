@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const VersionMapSchema = z
   .object({
+    "unmined/unmined-cli": z.string(),
     "stashapp/stash": z.string(),
     "trmnl/trmnlp": z.string(),
     connect: z.string(),

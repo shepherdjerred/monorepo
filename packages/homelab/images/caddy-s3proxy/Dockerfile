@@ -9,7 +9,9 @@
 # HEAD support, fixes the 304-on-index regression, and returns 206 +
 # Accept-Ranges on byte-range requests (Safari refuses to play video from
 # origins that answer 200 to Range requests). The pinned source is patched
-# locally to flush Caddy's deferred response headers before streaming S3 data.
+# locally to flush Caddy's deferred response headers and preserve the object's
+# Content-Length before streaming. Cloudflare needs that length to serve ranges
+# for large downloads. The build tests full and partial HTTP response framing.
 
 # renovate: datasource=docker depName=caddy
 FROM caddy:2.11.4-builder-alpine@sha256:2b9f32cbba6045e79212bb253f595588d20be8f7d1edf61582c519e124e0d2d8 AS builder
@@ -19,11 +21,14 @@ FROM caddy:2.11.4-builder-alpine@sha256:2b9f32cbba6045e79212bb253f595588d20be8f7
 # on byte-range responses. The source commit is pinned because the compatibility
 # patch below must be applied to the exact tree it was reviewed against.
 COPY caddy-s3proxy-header-flush.patch /tmp/caddy-s3proxy-header-flush.patch
+COPY get_object_test.go /tmp/get_object_test.go
 RUN git init /tmp/caddy-s3-proxy \
   && git -C /tmp/caddy-s3-proxy remote add origin https://github.com/shepherdjerred/caddy-s3-proxy.git \
   && git -C /tmp/caddy-s3-proxy fetch --depth 1 origin 2333a6ed263df951a2a017ef248af8c97fbf8b42 \
   && git -C /tmp/caddy-s3-proxy checkout --detach FETCH_HEAD \
-  && git -C /tmp/caddy-s3-proxy apply --unidiff-zero /tmp/caddy-s3proxy-header-flush.patch \
+  && git -C /tmp/caddy-s3-proxy apply /tmp/caddy-s3proxy-header-flush.patch \
+  && cp /tmp/get_object_test.go /tmp/caddy-s3-proxy/archive_get_object_test.go \
+  && go -C /tmp/caddy-s3-proxy test -run '^TestArchiveResponseLength$' ./... \
   && xcaddy build --with github.com/lindenlab/caddy-s3-proxy=/tmp/caddy-s3-proxy
 
 # renovate: datasource=docker depName=caddy

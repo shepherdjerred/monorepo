@@ -258,6 +258,16 @@ export const staticSites: StaticSiteConfig[] = [
         path: "/sitemap-index.xml",
         module: "http_2xx",
       },
+      {
+        endpoint: "world-downloads",
+        path: "/world_downloads/",
+        module: "http_200_no_redirect",
+      },
+      {
+        endpoint: "world-archive-preview",
+        path: "/world-archive/2026-10-04-v1/previews/asterism-2016-02/closeup.png",
+        module: "http_200_no_redirect",
+      },
     ],
     responseHeaders: { "Content-Security-Policy": tsMcDocsCsp },
   },

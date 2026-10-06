@@ -234,77 +234,100 @@ describe("animated runic cache on real Paper", () => {
 });
 
 describe("vertical settlement pursuit and party scaling on real Paper", () => {
+  const pursuitLegMs = 45_000;
   for (const round of [1, 5, 10, 15]) {
     for (const count of [1, 4]) {
-      test(`round ${round.toString()} pursues ${count.toString()} survivors across elevated terrain`, async ({
-        bot,
-        server,
-        rcon,
-      }) => {
-        const teammates: Bot[] = [];
-        await rcon.command(`op ${bot.username}`);
-        await join(bot, round);
-        try {
-          for (let index = 1; index < count; index++) {
-            const teammate = await connectBot({
-              host: server.host,
-              port: server.gamePort,
-              username: `v${index.toString()}_${bot.username.slice(2)}`,
-            });
-            teammates.push(teammate);
-            await join(teammate);
-          }
-          await start(bot, rcon, round);
-          expect(
-            await rcon.command(
-              `storm-fixture-survival terrain ${bot.username} none`,
-            ),
-          ).toContain("Opened test terrain routes");
-          for (const player of [bot, ...teammates]) {
-            await rcon.command(
-              `effect give ${player.username} minecraft:resistance infinite 255 true`,
+      // Each teammate can spend 20s connecting and 10s joining; also reserve
+      // the initial join, round start, and both client arrival waits (10s each).
+      const setupBudgetMs = 40_000 + (count - 1) * 30_000;
+      const pursuitCaseMs = 3 * pursuitLegMs + setupBudgetMs;
+      test(
+        `round ${round.toString()} pursues ${count.toString()} survivors across elevated terrain`,
+        async ({ bot, server, rcon }) => {
+          const teammates: Bot[] = [];
+          await rcon.command(`op ${bot.username}`);
+          await join(bot, round);
+          try {
+            for (let index = 1; index < count; index++) {
+              const teammate = await connectBot({
+                host: server.host,
+                port: server.gamePort,
+                username: `v${index.toString()}_${bot.username.slice(2)}`,
+              });
+              teammates.push(teammate);
+              await join(teammate);
+            }
+            await start(bot, rcon, round);
+            expect(
+              await rcon.command(
+                `storm-fixture-survival terrain ${bot.username} none`,
+              ),
+            ).toContain("Opened test terrain routes");
+            for (const player of [bot, ...teammates]) {
+              await rcon.command(
+                `effect give ${player.username} minecraft:resistance infinite 255 true`,
+              );
+              await rcon.command(`tp ${player.username} 1844.5 105 2177.5`);
+            }
+            await waitUntil(
+              "upper terrace arrival",
+              () => bot.entity.position.y > 104 && bot.entity.position.z > 2176,
             );
-            await rcon.command(`tp ${player.username} 1844.5 105 2177.5`);
-          }
-          await waitUntil(
-            "upper terrace arrival",
-            () => bot.entity.position.y > 104 && bot.entity.position.z > 2176,
-          );
-          await waitUntil(
-            "horde traverses bluff routes",
-            () =>
-              Object.values(bot.entities).some(
+            const upperHorde = () =>
+              Object.values(bot.entities).filter(
                 (entity) =>
                   (entity.name === "zombie" || entity.name === "husk") &&
                   entity.position.y > 102 &&
                   entity.position.distanceTo(bot.entity.position) < 7,
-              ),
-            45_000,
-          );
-          for (const player of [bot, ...teammates])
-            await rcon.command(`tp ${player.username} 1819.5 73 2273.5`);
-          await waitUntil(
-            "lower wharf arrival",
-            () => bot.entity.position.y < 74 && bot.entity.position.x > 1818,
-          );
-          await waitUntil(
-            "horde traverses dock routes",
-            () =>
-              Object.values(bot.entities).some(
-                (entity) =>
-                  (entity.name === "zombie" || entity.name === "husk") &&
-                  entity.position.y < 75 &&
-                  entity.position.distanceTo(bot.entity.position) < 7,
-              ),
-            45_000,
-          );
-          expect(bot.health).toBeGreaterThan(0);
-        } finally {
-          await rcon.command("arena stop settlement");
-          await rcon.command("difficulty peaceful");
-          for (const teammate of teammates) await disconnectBot(teammate);
-        }
-      }, 110_000);
+              );
+            await waitUntil(
+              "horde traverses bluff routes",
+              () => upperHorde().length > 0,
+              pursuitLegMs,
+            );
+            // UUIDs survive the client unloading and reloading the distant horde.
+            const upperCohort = new Set(
+              upperHorde().map((entity) => z.guid().parse(entity.uuid)),
+            );
+            for (const player of [bot, ...teammates])
+              await rcon.command(`tp ${player.username} 1819.5 73 2273.5`);
+            await waitUntil(
+              "lower wharf arrival",
+              () => bot.entity.position.y < 74 && bot.entity.position.x > 1818,
+            );
+            // The expanded map has two stair legs between its three terraces.
+            await waitUntil(
+              "the upper horde descends to the middle terrace",
+              () =>
+                Object.values(bot.entities).some(
+                  (entity) =>
+                    entity.uuid !== undefined &&
+                    upperCohort.has(entity.uuid) &&
+                    entity.position.y > 87 &&
+                    entity.position.y < 91,
+                ),
+              pursuitLegMs,
+            );
+            await waitUntil(
+              "horde traverses dock routes",
+              () =>
+                Object.values(bot.entities).some(
+                  (entity) =>
+                    (entity.name === "zombie" || entity.name === "husk") &&
+                    entity.position.y < 75 &&
+                    entity.position.distanceTo(bot.entity.position) < 7,
+                ),
+              pursuitLegMs,
+            );
+            expect(bot.health).toBeGreaterThan(0);
+          } finally {
+            await rcon.command("arena stop settlement");
+            await rcon.command("difficulty peaceful");
+            for (const teammate of teammates) await disconnectBot(teammate);
+          }
+        },
+        pursuitCaseMs,
+      );
     }
   }
 });

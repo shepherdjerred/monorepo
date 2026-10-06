@@ -16,5 +16,11 @@ export const rwfTestSettings: RwfOverlay = {
   dailyCap: 3,
 };
 
+/** The full lane leaves time for staggered bot arrivals and lobby activity. */
+export const fullRwfTestSettings: RwfOverlay = {
+  ...rwfTestSettings,
+  countdown: "PT25S",
+};
+
 /** The pseudonym salt the test server runs with: a fixed test value, never a secret. */
 export const rwfRecordingSalt = "storm-e2e-recording-salt";
