@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore;
+import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore.Confirmation;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Exemptions;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Quote;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
@@ -97,8 +98,14 @@ public final class TeleportPayments {
   /** The player arrived: records usage before clearing the recovery obligation. */
   public CompletableFuture<Void> confirm(UUID payer, Charge charged) {
     var quote = charged.quote();
+    var now = time.instant();
     return usage.confirm(
-        payer, charged.id(), quote.kind(), quote.next().deliveredAt(time.instant()));
+        new Confirmation(
+            payer,
+            charged.id(),
+            quote.kind(),
+            quote.next().deliveredAt(now),
+            now.minus(pricer.pricing().window().multipliedBy(2))));
   }
 
   public TeleportPricing pricing() {

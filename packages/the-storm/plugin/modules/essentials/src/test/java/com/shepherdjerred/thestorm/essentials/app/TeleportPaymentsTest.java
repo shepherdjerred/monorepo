@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore;
+import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore.Confirmation;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Exemptions;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Multiplier;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.OnCooldown;
@@ -50,8 +51,10 @@ final class TeleportPaymentsTest {
     }
 
     @Override
-    public CompletableFuture<Void> confirm(
-        UUID player, UUID operation, TeleportKind kind, TeleportUsage next) {
+    public CompletableFuture<Void> confirm(Confirmation confirmation) {
+      var player = confirmation.player();
+      var operation = confirmation.operation();
+      var next = confirmation.usage();
       if (confirmed.add(operation)) {
         usage.put(player, next);
       }

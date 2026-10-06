@@ -6,7 +6,7 @@ import static com.shepherdjerred.thestorm.essentials.adapter.db.generated.Tables
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore;
-import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
+import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore.Confirmation;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportUsage;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportUse;
 import java.time.Instant;
@@ -48,8 +48,12 @@ public final class JooqTeleportUsageStore implements TeleportUsageStore {
   }
 
   @Override
-  public CompletableFuture<Void> confirm(
-      UUID player, UUID operation, TeleportKind kind, TeleportUsage usage) {
+  public CompletableFuture<Void> confirm(Confirmation confirmation) {
+    var player = confirmation.player();
+    var operation = confirmation.operation();
+    var kind = confirmation.kind();
+    var usage = confirmation.usage();
+    var retainSince = confirmation.retainSince();
     var trip = usage.trips().getLast();
     return database
         .write(
@@ -91,6 +95,10 @@ public final class JooqTeleportUsageStore implements TeleportUsageStore {
                       "teleport confirmation disagrees with its recorded operation");
                 }
               }
+              dsl.deleteFrom(ESSENTIALS_TELEPORT_USES)
+                  .where(ESSENTIALS_TELEPORT_USES.PLAYER.eq(player.toString()))
+                  .and(ESSENTIALS_TELEPORT_USES.COMPLETED_AT.le(retainSince.toEpochMilli()))
+                  .execute();
               dsl.deleteFrom(ESSENTIALS_TELEPORT_ATTEMPTS)
                   .where(ESSENTIALS_TELEPORT_ATTEMPTS.ID.eq(operation.toString()))
                   .execute();
