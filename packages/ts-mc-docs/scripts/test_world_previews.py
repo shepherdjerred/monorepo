@@ -10,7 +10,7 @@ from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
 
-from world_archive import Catalog, extract_preview, run, upload_download, verify_checkpoint
+from world_archive import Catalog, extract_preview, load_catalog, run, upload_download, verify_checkpoint
 from world_previews import level_metadata, png_dimensions, preview_areas
 
 
@@ -98,6 +98,22 @@ class PreviewTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 png_dimensions(path)
 
+    def test_single_world_dry_run_only_requires_selected_source(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, scratch = root / "source", root / "scratch"
+            source.mkdir()
+            world = load_catalog()["worlds"][0]
+            with zipfile.ZipFile(source / world["file"], "w") as archive:
+                archive.writestr(f"{world['root']}/level.dat", level(12, -8))
+            args = Namespace(source=source, scratch=scratch, only=world["id"], dry_run=True)
+            with patch("builtins.print") as printed, patch("world_archive.aws") as aws:
+                run(args)
+            self.assertEqual(printed.call_count, 2)
+            self.assertIn(f"{world['id']}: spawn (12, -8)", printed.call_args_list[0].args[0])
+            aws.assert_not_called()
+            self.assertFalse(scratch.exists())
+
     def test_failed_preview_keeps_download_checkpoint_and_retry_does_not_reupload_zip(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -124,6 +140,7 @@ class PreviewTests(unittest.TestCase):
                 ],
                 "schematics": [],
             }
+            catalog["worlds"].append({**catalog["worlds"][0], "id": "unrelated", "file": "missing.zip"})
             args = Namespace(source=source, scratch=scratch, only="test", dry_run=False, profile="test", workers=2)
             with (
                 patch("world_archive.load_catalog", return_value=catalog),

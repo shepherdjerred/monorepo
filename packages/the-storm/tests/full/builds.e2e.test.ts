@@ -235,10 +235,12 @@ describe("animated runic cache on real Paper", () => {
 
 describe("vertical settlement pursuit and party scaling on real Paper", () => {
   const pursuitLegMs = 45_000;
-  const setupBudgetMs = 20_000;
-  const pursuitCaseMs = 3 * pursuitLegMs + setupBudgetMs;
   for (const round of [1, 5, 10, 15]) {
     for (const count of [1, 4]) {
+      // Each teammate can spend 20s connecting and 10s joining; also reserve
+      // the initial join, round start, and both client arrival waits (10s each).
+      const setupBudgetMs = 40_000 + (count - 1) * 30_000;
+      const pursuitCaseMs = 3 * pursuitLegMs + setupBudgetMs;
       test(
         `round ${round.toString()} pursues ${count.toString()} survivors across elevated terrain`,
         async ({ bot, server, rcon }) => {

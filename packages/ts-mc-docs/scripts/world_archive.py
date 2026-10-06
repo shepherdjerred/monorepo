@@ -418,11 +418,12 @@ def download_size(size: int) -> str:
 
 def run(args: argparse.Namespace) -> None:
     catalog = load_catalog()
+    worlds = [world for world in catalog["worlds"] if not args.only or world["id"] == args.only]
     source, scratch = args.source.resolve(), args.scratch.resolve()
     if scratch.is_relative_to(source) or scratch.is_relative_to(REPO) or source.is_relative_to(scratch):
         raise ValueError("Scratch must be outside the repository and source directory")
     if args.dry_run:
-        for world in catalog["worlds"]:
+        for world in worlds:
             with zipfile.ZipFile(source / world["file"]) as zipped:
                 _, spawn = level_metadata(zipped.read(f"{world['root']}/level.dat"))
                 print(f"{world['id']}: spawn {spawn}; previews 2048² and 512² blocks")
@@ -446,9 +447,7 @@ def run(args: argparse.Namespace) -> None:
     if state["release"] != catalog["release"] or "downloads" not in state:
         raise ValueError("Publication checkpoint is from a different pipeline/release")
     prefix = f"world-archive/{catalog['release']}"
-    for world in sorted(catalog["worlds"], key=lambda w: (source / w["file"]).stat().st_size):
-        if args.only and world["id"] != args.only:
-            continue
+    for world in sorted(worlds, key=lambda w: (source / w["file"]).stat().st_size):
         download = state["downloads"].get(world["id"])
         if download is not None and sha256(source / world["file"]) != download["sourceSha256"]:
             raise ValueError("Published source changed; use a new release")
