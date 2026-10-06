@@ -80,7 +80,10 @@ final class WorldListener implements Listener {
     var block = event.getBlock();
     var effect =
         block.getBlockData() instanceof org.bukkit.block.data.Ageable
-                && org.bukkit.Tag.CROPS.isTagged(block.getType())
+                && (org.bukkit.Tag.CROPS.isTagged(block.getType())
+                    || block.getType() == Material.NETHER_WART
+                    || block.getType() == Material.COCOA
+                    || block.getType() == Material.SWEET_BERRY_BUSH)
                 && event.getNewState().getType() == block.getType()
             ? WorldEffect.CROP_GROWTH
             : WorldEffect.NATURAL_CHANGE;

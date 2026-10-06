@@ -1,15 +1,19 @@
 import copy
-import importlib.util
 import hashlib
+import importlib.util
 import io
 import json
-import tempfile
 import tarfile
+import tempfile
 import unittest
+from collections.abc import Mapping
 from pathlib import Path
 from unittest.mock import patch
 
+from restoration_json import JsonObject
+
 spec = importlib.util.spec_from_file_location("control", Path(__file__).with_name("restoration-control.py"))
+assert spec is not None and spec.loader is not None
 control = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(control)
 
@@ -19,41 +23,78 @@ IMAGE = "ghcr.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
 
 class Cluster:
     def __init__(self):
-        self.objects = {}
-        self.mutations = []
+        self.objects: dict[tuple[str, str], JsonObject] = {}
+        self.mutations: list[tuple[str, str]] = []
         self.players = 0
         self.extra_writer = False
         self.late_join = False
         self.stale_patch = False
         for name, resource in zip(control.POLICIES, ("statefulsets", "statefulsets/scale"), strict=True):
-            self.objects["validatingadmissionpolicy", name] = {
-                "metadata": {"generation": 1}, "status": {"observedGeneration": 1, "typeChecking": {}},
-                "spec": {"failurePolicy": "Fail", "matchConstraints": {"resourceRules": [
-                    {"resources": [resource], "operations": ["UPDATE"]}]}}}
-            self.objects["validatingadmissionpolicybinding", name] = {"spec": {
-                "policyName": name, "validationActions": ["Deny"], **({"paramRef": {
-                    "name": control.SERVER, "namespace": control.NAMESPACE, "parameterNotFoundAction": "Deny"}}
-                    if resource.endswith("/scale") else {})}}
-        self.objects["statefulset", control.SERVER] = {
-            "metadata": {"uid": "server-uid", "resourceVersion": "1", "annotations": {}},
-            "spec": {"replicas": 1, "template": {"spec": {"containers": [{"image": IMAGE}]}}},
-            "status": {"replicas": 1}}
-        self.objects["pvc", control.CLAIM] = {"metadata": {"uid": "claim-uid"},
-            "spec": {"volumeName": "data-volume"}, "status": {"phase": "Bound"}}
-        self.objects["pv", "data-volume"] = {"metadata": {"uid": "volume-uid"}, "spec": {
-            "csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "source-dataset"}}}
+            self.objects["validatingadmissionpolicy", name] = JsonObject(
+                {
+                    "metadata": {"generation": 1},
+                    "status": {"observedGeneration": 1, "typeChecking": {}},
+                    "spec": {
+                        "failurePolicy": "Fail",
+                        "matchConstraints": {"resourceRules": [{"resources": [resource], "operations": ["UPDATE"]}]},
+                    },
+                }
+            )
+            self.objects["validatingadmissionpolicybinding", name] = JsonObject(
+                {
+                    "spec": {
+                        "policyName": name,
+                        "validationActions": ["Deny"],
+                        **(
+                            {
+                                "paramRef": {
+                                    "name": control.SERVER,
+                                    "namespace": control.NAMESPACE,
+                                    "parameterNotFoundAction": "Deny",
+                                }
+                            }
+                            if resource.endswith("/scale")
+                            else {}
+                        ),
+                    }
+                }
+            )
+        self.objects["statefulset", control.SERVER] = JsonObject(
+            {
+                "metadata": {"uid": "server-uid", "resourceVersion": "1", "annotations": {}},
+                "spec": {"replicas": 1, "template": {"spec": {"containers": [{"image": IMAGE}]}}},
+                "status": {"replicas": 1},
+            }
+        )
+        self.objects["pvc", control.CLAIM] = JsonObject(
+            {
+                "metadata": {"uid": "claim-uid"},
+                "spec": {"volumeName": "data-volume"},
+                "status": {"phase": "Bound"},
+            }
+        )
+        self.objects["pv", "data-volume"] = JsonObject(
+            {
+                "metadata": {"uid": "volume-uid"},
+                "spec": {"csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "source-dataset"}},
+            }
+        )
         for name in control.SERVICES:
-            self.objects["service", name] = {"metadata": {"uid": name, "resourceVersion": "1",
-                "annotations": {"tracking": "keep"}}, "spec": {"selector": {"app": control.SERVER}}}
+            self.objects["service", name] = JsonObject(
+                {
+                    "metadata": {"uid": name, "resourceVersion": "1", "annotations": {"tracking": "keep"}},
+                    "spec": {"selector": {"app": control.SERVER}},
+                }
+            )
 
     @property
-    def server(self):
+    def server(self) -> JsonObject:
         return self.objects["statefulset", control.SERVER]
 
-    def read(self, kind, name, namespace=control.NAMESPACE):
+    def read(self, kind: str, name: str, namespace: str = control.NAMESPACE) -> JsonObject:
         return copy.deepcopy(self.objects[kind, name])
 
-    def run(self, arguments, timeout=30):
+    def run(self, arguments: list[str], timeout: float = 30) -> str:
         command = arguments[2:]
         if command[:2] == ["exec", control.SERVER + "-0"]:
             return f"There are {self.players} of a max of 20 players online:"
@@ -62,25 +103,32 @@ class Cluster:
         if command[:2] == ["get", "pvc"]:
             return json.dumps({"items": [{"metadata": {"name": control.CLAIM, "uid": "claim-uid"}}]})
         if command[:2] == ["get", "pods"]:
-            items = [{"metadata": {"labels": {}}, "spec": {"volumes": [
-                {"persistentVolumeClaim": {"claimName": control.CLAIM}}]}, "status": {"phase": "Running"}}]
+            items = [
+                {
+                    "metadata": {"labels": {}},
+                    "spec": {"volumes": [{"persistentVolumeClaim": {"claimName": control.CLAIM}}]},
+                    "status": {"phase": "Running"},
+                }
+            ]
             return json.dumps({"items": items if self.extra_writer else []})
         if command[0] != "patch":
             raise AssertionError("Unexpected Kubernetes command: " + str(command))
         resource = self.objects[command[1], command[2]]
-        operations = json.loads(command[-1])
-        if self.stale_patch or operations[0]["value"] != resource["metadata"]["resourceVersion"]:
+        operations = [JsonObject.require(operation) for operation in json.loads(command[-1])]
+        if self.stale_patch or operations[0]["value"] != resource.object("metadata").string("resourceVersion"):
             raise RuntimeError("resourceVersion test failed")
         for operation in operations[1:]:
-            keys = [key.replace("~1", "/").replace("~0", "~") for key in operation["path"].split("/")[1:]]
+            keys = [key.replace("~1", "/").replace("~0", "~") for key in operation.string("path").split("/")[1:]]
             parent = resource
             for key in keys[:-1]:
-                parent = parent[key]
+                parent = parent.object(key)
             parent[keys[-1]] = operation["value"]
-        resource["metadata"]["resourceVersion"] = str(int(resource["metadata"]["resourceVersion"]) + 1)
+        resource.object("metadata")["resourceVersion"] = str(
+            int(resource.object("metadata").string("resourceVersion")) + 1
+        )
         self.mutations.append((command[1], command[2]))
-        if command[1] == "statefulset" and resource["spec"]["replicas"] == 0:
-            resource["status"]["replicas"] = 0
+        if command[1] == "statefulset" and resource.object("spec").integer("replicas") == 0:
+            resource.object("status")["replicas"] = 0
         if self.late_join and len(self.mutations) == 4:
             self.players = 1
         return "patched"
@@ -98,32 +146,34 @@ class RestorationControlTest(unittest.TestCase):
         self.guard_probe = control.assert_denied
         self.probes = patch.object(control, "assert_denied").start()
 
-    def initialize(self):
+    def initialize(self) -> JsonObject:
         return control.initialize(self.path, REQUEST, IMAGE)
 
     def test_preflight_is_read_only_and_records_the_exact_targets(self):
         journal = self.initialize()
         self.assertEqual(self.cluster.mutations, [])
-        self.assertEqual(journal["claimUid"], "claim-uid")
-        self.assertEqual(set(journal["services"]), set(control.SERVICES))
+        self.assertEqual(journal.string("claimUid"), "claim-uid")
+        self.assertEqual(set(journal.object("services")), set(control.SERVICES))
         self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
 
     def test_closes_all_routes_before_stopping_and_leasing_then_resumes_without_writes(self):
         journal = self.initialize()
         control.acquire(self.path, journal)
         self.assertEqual(self.cluster.mutations[:4], [("service", name) for name in control.SERVICES])
-        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
+        self.assertEqual(journal.string("phase"), "LEASED_OFFLINE")
         self.assertEqual(journal["admissionProbes"], "UPDATE_AND_SCALE_DENIED")
         self.assertEqual(self.probes.call_count, 2)
         self.assertIn("--dry-run=server", self.probes.call_args_list[0].args[0])
         self.assertIn("statefulset/" + control.SERVER, self.probes.call_args_list[1].args[0])
-        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
         self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
         self.assertEqual(control.annotations(self.cluster.server)[control.IMAGE], IMAGE)
         for name in control.SERVICES:
             service = self.cluster.objects["service", name]
-            self.assertEqual(service["spec"]["selector"], {"app": control.SERVER, control.ACCESS: "closed"})
-            self.assertEqual(service["metadata"]["annotations"]["tracking"], "keep")
+            self.assertEqual(
+                service.object("spec").strings("selector"), {"app": control.SERVER, control.ACCESS: "closed"}
+            )
+            self.assertEqual(service.object("metadata").strings("annotations")["tracking"], "keep")
         before = len(self.cluster.mutations)
         control.acquire(self.path, control.initialize(self.path, REQUEST, IMAGE))
         self.assertEqual(len(self.cluster.mutations), before)
@@ -138,8 +188,8 @@ class RestorationControlTest(unittest.TestCase):
         self.cluster.late_join = True
         with self.assertRaisesRegex(ValueError, "empty server"):
             control.acquire(self.path, journal)
-        self.assertEqual(journal["phase"], "ADMISSION_CLOSED")
-        self.assertEqual(self.cluster.server["spec"]["replicas"], 1)
+        self.assertEqual(journal.string("phase"), "ADMISSION_CLOSED")
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 1)
         self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
 
     def test_extra_pvc_writer_blocks_lease_acquisition(self):
@@ -148,15 +198,15 @@ class RestorationControlTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "still mounts"):
             control.acquire(self.path, journal)
         self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
-        self.assertEqual(journal["phase"], "ADMISSION_CLOSED")
+        self.assertEqual(journal.string("phase"), "ADMISSION_CLOSED")
 
     def test_foreign_lease_and_replaced_claim_are_refused_before_any_mutation(self):
         journal = self.initialize()
-        self.cluster.server["metadata"]["annotations"][control.LEASE] = "foreign"
+        self.cluster.server.object("metadata").strings("annotations")[control.LEASE] = "foreign"
         with self.assertRaisesRegex(ValueError, "another request"):
             control.acquire(self.path, journal)
-        self.cluster.server["metadata"]["annotations"].clear()
-        self.cluster.objects["pvc", control.CLAIM]["metadata"]["uid"] = "replaced"
+        self.cluster.server.object("metadata").strings("annotations").clear()
+        self.cluster.objects["pvc", control.CLAIM].object("metadata")["uid"] = "replaced"
         with self.assertRaisesRegex(ValueError, "claim was replaced"):
             control.acquire(self.path, journal)
         self.assertEqual(self.cluster.mutations, [])
@@ -167,14 +217,18 @@ class RestorationControlTest(unittest.TestCase):
                 self.cluster = Cluster()
                 policy = self.cluster.objects["validatingadmissionpolicy", control.POLICIES[0]]
                 if change == "generation":
-                    policy["status"]["observedGeneration"] = 0
+                    policy.object("status")["observedGeneration"] = 0
                 elif change == "warnings":
-                    policy["status"]["typeChecking"]["expressionWarnings"] = [{"warning": "invalid"}]
+                    policy.object("status").object("typeChecking")["expressionWarnings"] = [{"warning": "invalid"}]
                 else:
-                    self.cluster.objects["validatingadmissionpolicybinding", control.POLICIES[1]]["spec"]["paramRef"] = {}
-                with patch.object(control, "read", side_effect=self.cluster.read):
-                    with self.assertRaises(ValueError):
-                        self.initialize()
+                    self.cluster.objects["validatingadmissionpolicybinding", control.POLICIES[1]].object("spec")[
+                        "paramRef"
+                    ] = {}
+                with (
+                    patch.object(control, "read", side_effect=self.cluster.read),
+                    self.assertRaises(ValueError),
+                ):
+                    self.initialize()
                 self.assertFalse(self.path.exists())
                 self.assertEqual(self.cluster.mutations, [])
 
@@ -183,10 +237,10 @@ class RestorationControlTest(unittest.TestCase):
         self.cluster.stale_patch = True
         with self.assertRaisesRegex(RuntimeError, "resourceVersion"):
             control.acquire(self.path, journal)
-        self.assertEqual(json.loads(self.path.read_text())["phase"], "CLOSING_ADMISSION")
+        self.assertEqual(JsonObject.parse(self.path.read_text()).string("phase"), "CLOSING_ADMISSION")
         self.cluster.stale_patch = False
         control.acquire(self.path, control.initialize(self.path, REQUEST, IMAGE))
-        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
 
     def test_conflicting_request_and_unpinned_image_do_not_change_any_resource(self):
         self.initialize()
@@ -198,22 +252,33 @@ class RestorationControlTest(unittest.TestCase):
 
     def test_guard_probe_requires_the_policy_denial_and_rejects_rbac_or_a_successful_request(self):
         for code, error in ((0, ""), (1, "RBAC: user cannot scale")):
-            with patch.object(control.subprocess, "run", return_value=control.subprocess.CompletedProcess([], code, "", error)):
-                with self.assertRaisesRegex(ValueError, "dry-run scale-up probe"):
-                    self.guard_probe(["scale"], "World restoration")
-        with patch.object(control.subprocess, "run", return_value=control.subprocess.CompletedProcess([], 1, "", "World restoration blocks scale requests")):
+            with (
+                patch.object(
+                    control.subprocess, "run", return_value=control.subprocess.CompletedProcess([], code, "", error)
+                ),
+                self.assertRaisesRegex(ValueError, "dry-run scale-up probe"),
+            ):
+                self.guard_probe(["scale"], "World restoration")
+        with patch.object(
+            control.subprocess,
+            "run",
+            return_value=control.subprocess.CompletedProcess([], 1, "", "World restoration blocks scale requests"),
+        ):
             self.guard_probe(["scale"], "World restoration blocks scale requests")
 
     def backup_fixture(self):
         journal = self.initialize()
         control.acquire(self.path, journal)
-        resources = {}
-        def ensure(manifest):
-            key = manifest["kind"], manifest["metadata"]["name"]
+        resources: dict[tuple[str, str], JsonObject] = {}
+
+        def ensure(manifest: Mapping[str, object]) -> JsonObject:
+            manifest = JsonObject(manifest)
+            key = manifest.string("kind"), manifest.object("metadata").string("name")
             if key not in resources:
                 resources[key] = copy.deepcopy(manifest)
-                resources[key]["metadata"]["uid"] = manifest["kind"] + "-uid"
+                resources[key].object("metadata")["uid"] = manifest.string("kind") + "-uid"
             return resources[key]
+
         patch.object(control, "ensure_resource", side_effect=ensure).start()
         return journal, resources
 
@@ -221,12 +286,12 @@ class RestorationControlTest(unittest.TestCase):
         journal, resources = self.backup_fixture()
         before = len(self.cluster.mutations)
         result = control.backup(self.path, journal)
-        self.assertEqual(result["metadata"]["labels"], {control.LEASE: REQUEST})
-        self.assertEqual(result["spec"]["includedNamespaces"], [control.NAMESPACE])
-        self.assertEqual(result["spec"]["includedResources"], ["persistentvolumeclaims", "persistentvolumes"])
-        self.assertEqual(journal["backup"]["phase"], "New")
+        self.assertEqual(result.object("metadata").strings("labels"), {control.LEASE: REQUEST})
+        self.assertEqual(result.object("spec")["includedNamespaces"], [control.NAMESPACE])
+        self.assertEqual(result.object("spec")["includedResources"], ["persistentvolumeclaims", "persistentvolumes"])
+        self.assertEqual(journal.object("backup").string("phase"), "New")
         self.assertEqual(len(self.cluster.mutations), before)
-        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
+        self.assertEqual(journal.string("phase"), "LEASED_OFFLINE")
         control.backup(self.path, journal)
         self.assertEqual(len(resources), 1)
 
@@ -236,28 +301,35 @@ class RestorationControlTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "pod still mounts"):
             control.backup(self.path, journal)
         self.cluster.extra_writer = False
-        self.cluster.server["metadata"]["annotations"][control.LEASE] = "foreign"
+        self.cluster.server.object("metadata").strings("annotations")[control.LEASE] = "foreign"
         with self.assertRaisesRegex(ValueError, "another request"):
             control.backup(self.path, journal)
-        self.cluster.server["metadata"]["annotations"][control.LEASE] = REQUEST
+        self.cluster.server.object("metadata").strings("annotations")[control.LEASE] = REQUEST
         original_run = self.cluster.run
-        def broader(arguments, timeout=30):
+
+        def broader(arguments: list[str], timeout: float = 30) -> str:
             if "velero.io/backup=enabled" in arguments:
                 return json.dumps({"items": [{"metadata": {"name": "other", "uid": "other"}}]})
             return original_run(arguments, timeout)
-        with patch.object(control, "run", side_effect=broader):
-            with self.assertRaisesRegex(ValueError, "only the recorded"):
-                control.backup(self.path, journal)
+
+        with (
+            patch.object(control, "run", side_effect=broader),
+            self.assertRaisesRegex(ValueError, "only the recorded"),
+        ):
+            control.backup(self.path, journal)
 
     def test_partial_backup_or_missing_snapshot_is_not_accepted_as_complete(self):
         journal, _ = self.backup_fixture()
         result = control.backup(self.path, journal)
-        for status in ({"phase": "PartiallyFailed"}, {"phase": "Completed", "errors": 1},
-                       {"phase": "Completed", "volumeSnapshotsAttempted": 1, "volumeSnapshotsCompleted": 0}):
+        for status in (
+            {"phase": "PartiallyFailed"},
+            {"phase": "Completed", "errors": 1},
+            {"phase": "Completed", "volumeSnapshotsAttempted": 1, "volumeSnapshotsCompleted": 0},
+        ):
             result["status"] = status
             with self.assertRaises(ValueError):
                 control.backup(self.path, journal)
-        result["metadata"]["uid"] = "replaced"
+        result.object("metadata")["uid"] = "replaced"
         with self.assertRaisesRegex(ValueError, "backup was replaced"):
             control.backup(self.path, journal)
 
@@ -266,80 +338,131 @@ class RestorationControlTest(unittest.TestCase):
         original = control.backup(self.path, journal)
         with self.assertRaisesRegex(ValueError, "backup to complete"):
             control.restore_backup(self.path, journal)
-        original["status"] = {"phase": "Completed", "completionTimestamp": "2026-10-06T02:00:00Z",
-                              "volumeSnapshotsAttempted": 1, "volumeSnapshotsCompleted": 1}
+        original["status"] = {
+            "phase": "Completed",
+            "completionTimestamp": "2026-10-06T02:00:00Z",
+            "volumeSnapshotsAttempted": 1,
+            "volumeSnapshotsCompleted": 1,
+        }
         control.restore_backup(self.path, journal)
         restored = resources["Restore", "storm-verify-" + REQUEST]
-        self.assertEqual(restored["spec"]["namespaceMapping"], {control.NAMESPACE: control.RESTORED_NAMESPACE})
-        self.assertEqual(restored["spec"]["includedResources"], ["persistentvolumeclaims", "persistentvolumes"])
-        self.assertEqual(journal["restore"]["byteVerification"], "PENDING")
+        self.assertEqual(restored.object("spec")["namespaceMapping"], {control.NAMESPACE: control.RESTORED_NAMESPACE})
+        self.assertEqual(restored.object("spec")["includedResources"], ["persistentvolumeclaims", "persistentvolumes"])
+        self.assertEqual(journal.object("restore").string("byteVerification"), "PENDING")
         restored["status"] = {"phase": "Completed"}
         existing_read = self.cluster.read
-        def restored_claim(kind, name, namespace=control.NAMESPACE):
+
+        def restored_claim(kind: str, name: str, namespace: str = control.NAMESPACE) -> JsonObject:
             if kind == "pv" and name == "restored-volume":
-                return {"metadata": {"uid": "restored-volume-uid"}, "spec": {"csi": {
-                    "driver": "zfs.csi.openebs.io", "volumeHandle": "restored-dataset"}}}
+                return JsonObject(
+                    {
+                        "metadata": {"uid": "restored-volume-uid"},
+                        "spec": {"csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "restored-dataset"}},
+                    }
+                )
             if namespace == control.RESTORED_NAMESPACE:
-                return {"metadata": {"uid": "restored-claim"}, "spec": {"volumeName": "restored-volume"},
-                        "status": {"phase": "Bound"}}
+                return JsonObject(
+                    {
+                        "metadata": {"uid": "restored-claim"},
+                        "spec": {"volumeName": "restored-volume"},
+                        "status": {"phase": "Bound"},
+                    }
+                )
             return existing_read(kind, name, namespace)
+
         with patch.object(control, "read", side_effect=restored_claim):
             control.restore_backup(self.path, journal)
-        self.assertEqual(journal["restore"]["volumeName"], "restored-volume")
-        self.assertEqual(journal["restore"]["byteVerification"], "PENDING")
-        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
-        def aliased_volume(kind, name, namespace=control.NAMESPACE):
+        self.assertEqual(journal.object("restore").string("volumeName"), "restored-volume")
+        self.assertEqual(journal.object("restore").string("byteVerification"), "PENDING")
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
+
+        def aliased_volume(kind: str, name: str, namespace: str = control.NAMESPACE) -> JsonObject:
             result = restored_claim(kind, name, namespace)
             if kind == "pv" and name == "restored-volume":
-                result["spec"]["csi"]["volumeHandle"] = "source-dataset"
+                result.object("spec").object("csi")["volumeHandle"] = "source-dataset"
             return result
-        with patch.object(control, "read", side_effect=aliased_volume):
-            with self.assertRaisesRegex(ValueError, "independent native storage"):
-                control.restore_backup(self.path, journal)
-        with patch.object(control, "read", side_effect=lambda kind, name, namespace=control.NAMESPACE:
-                          existing_read(kind, name)):
-            with self.assertRaisesRegex(ValueError, "distinct bound"):
-                control.restore_backup(self.path, journal)
+
+        with (
+            patch.object(control, "read", side_effect=aliased_volume),
+            self.assertRaisesRegex(ValueError, "independent native storage"),
+        ):
+            control.restore_backup(self.path, journal)
+        with (
+            patch.object(
+                control, "read", side_effect=lambda kind, name, namespace=control.NAMESPACE: existing_read(kind, name)
+            ),
+            self.assertRaisesRegex(ValueError, "distinct bound"),
+        ):
+            control.restore_backup(self.path, journal)
 
     def test_uncertain_resource_creates_read_back_before_retrying_and_refuse_changed_ownership(self):
-        manifest = {"apiVersion": "velero.io/v1", "kind": "Backup", "metadata": {
-            "name": "fixture", "namespace": "velero", "labels": {control.LEASE: REQUEST}},
-            "spec": {"includedNamespaces": [control.NAMESPACE]}}
+        manifest = JsonObject(
+            {
+                "apiVersion": "velero.io/v1",
+                "kind": "Backup",
+                "metadata": {"name": "fixture", "namespace": "velero", "labels": {control.LEASE: REQUEST}},
+                "spec": {"includedNamespaces": [control.NAMESPACE]},
+            }
+        )
         ensure = control.ensure_resource
-        with patch.object(control, "run", return_value=json.dumps(manifest)), patch.object(control.subprocess, "run") as create:
+        with (
+            patch.object(control, "run", return_value=json.dumps(manifest)),
+            patch.object(control.subprocess, "run") as create,
+        ):
             self.assertEqual(ensure(manifest), manifest)
             create.assert_not_called()
         foreign = copy.deepcopy(manifest)
-        foreign["metadata"]["labels"][control.LEASE] = "foreign"
-        with patch.object(control, "run", return_value=json.dumps(foreign)):
-            with self.assertRaisesRegex(ValueError, "another request"):
-                ensure(manifest)
+        foreign.object("metadata").strings("labels")[control.LEASE] = "foreign"
+        with (
+            patch.object(control, "run", return_value=json.dumps(foreign)),
+            self.assertRaisesRegex(ValueError, "another request"),
+        ):
+            ensure(manifest)
         changed = copy.deepcopy(manifest)
-        changed["spec"]["includedNamespaces"] = ["other"]
-        with patch.object(control, "run", return_value=json.dumps(changed)):
-            with self.assertRaisesRegex(ValueError, "has changed"):
-                ensure(manifest)
+        changed.object("spec")["includedNamespaces"] = ["other"]
+        with (
+            patch.object(control, "run", return_value=json.dumps(changed)),
+            self.assertRaisesRegex(ValueError, "has changed"),
+        ):
+            ensure(manifest)
 
     def reader_fixture(self):
         journal = self.initialize()
         control.acquire(self.path, journal)
         journal["backup"] = {"uid": "backup-uid", "phase": "Completed"}
-        journal["restore"] = {"phase": "Completed", "uid": "restore-uid", "claimUid": "restored-claim",
-            "volumeName": "restored-volume", "volumeUid": "restored-volume-uid", "byteVerification": "PENDING",
-            "volumeSource": {"driver": "zfs.csi.openebs.io", "volumeHandle": "restored-dataset"}}
-        pods = {}
+        journal["restore"] = {
+            "phase": "Completed",
+            "uid": "restore-uid",
+            "claimUid": "restored-claim",
+            "volumeName": "restored-volume",
+            "volumeUid": "restored-volume-uid",
+            "byteVerification": "PENDING",
+            "volumeSource": {"driver": "zfs.csi.openebs.io", "volumeHandle": "restored-dataset"},
+        }
+        pods: dict[str, JsonObject] = {}
         previous_read, previous_run = self.cluster.read, self.cluster.run
-        def reader_read(kind, name, namespace=control.NAMESPACE):
+
+        def reader_read(kind: str, name: str, namespace: str = control.NAMESPACE) -> JsonObject:
             if kind == "pod":
                 return copy.deepcopy(pods[namespace])
             if kind == "pvc" and namespace == control.RESTORED_NAMESPACE:
-                return {"metadata": {"uid": "restored-claim"}, "spec": {"volumeName": "restored-volume"},
-                        "status": {"phase": "Bound"}}
+                return JsonObject(
+                    {
+                        "metadata": {"uid": "restored-claim"},
+                        "spec": {"volumeName": "restored-volume"},
+                        "status": {"phase": "Bound"},
+                    }
+                )
             if kind == "pv" and name == "restored-volume":
-                return {"metadata": {"uid": "restored-volume-uid"}, "spec": {
-                    "csi": copy.deepcopy(journal["restore"]["volumeSource"])}}
+                return JsonObject(
+                    {
+                        "metadata": {"uid": "restored-volume-uid"},
+                        "spec": {"csi": copy.deepcopy(journal.object("restore").strings("volumeSource"))},
+                    }
+                )
             return previous_read(kind, name, namespace)
-        def reader_run(arguments, timeout=30):
+
+        def reader_run(arguments: list[str], timeout: float = 30) -> str:
             if arguments[2:4] == ["get", "pods"]:
                 return json.dumps({"items": [pods[arguments[1]]] if arguments[1] in pods else []})
             if arguments[2:4] == ["get", "pod"]:
@@ -347,13 +470,16 @@ class RestorationControlTest(unittest.TestCase):
             if arguments[2] == "wait":
                 return "ready"
             return previous_run(arguments, timeout)
-        def reader_create(manifest):
-            namespace = manifest["metadata"]["namespace"]
+
+        def reader_create(manifest: Mapping[str, object]) -> JsonObject:
+            manifest = JsonObject(manifest)
+            namespace = manifest.object("metadata").string("namespace")
             if namespace not in pods:
                 pods[namespace] = copy.deepcopy(manifest)
-                pods[namespace]["metadata"].update(uid=namespace + "-reader-uid", resourceVersion="1")
+                pods[namespace].object("metadata").update(uid=namespace + "-reader-uid", resourceVersion="1")
                 pods[namespace]["status"] = {"phase": "Running"}
             return copy.deepcopy(pods[namespace])
+
         patch.object(control, "read", side_effect=reader_read).start()
         patch.object(control, "run", side_effect=reader_run).start()
         patch.object(control, "ensure_resource", side_effect=reader_create).start()
@@ -365,42 +491,49 @@ class RestorationControlTest(unittest.TestCase):
         with patch.object(control, "remote_fingerprint", return_value=files) as hashing:
             control.verify_backup(self.path, journal)
         self.assertEqual(hashing.call_count, 2)
-        self.assertEqual(journal["restore"]["byteVerification"], "VERIFIED")
-        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
-        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
-        proof = Path(journal["restore"]["proofPath"])
+        self.assertEqual(journal.object("restore").string("byteVerification"), "VERIFIED")
+        self.assertEqual(journal.string("phase"), "LEASED_OFFLINE")
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
+        proof = Path(journal.object("restore").string("proofPath"))
         self.assertEqual(json.loads(proof.read_text())["files"], files)
-        self.assertEqual(hashlib.sha256(proof.read_bytes()).hexdigest(), journal["restore"]["proofSha256"])
+        self.assertEqual(
+            hashlib.sha256(proof.read_bytes()).hexdigest(), journal.object("restore").string("proofSha256")
+        )
         self.assertEqual(proof.stat().st_mode & 0o777, 0o600)
         for pod in pods.values():
-            self.assertTrue(pod["spec"]["volumes"][0]["persistentVolumeClaim"]["readOnly"])
-            self.assertTrue(pod["spec"]["containers"][0]["volumeMounts"][0]["readOnly"])
-            self.assertFalse(pod["spec"]["automountServiceAccountToken"])
+            self.assertTrue(pod.object("spec").objects("volumes")[0].object("persistentVolumeClaim")["readOnly"])
+            self.assertTrue(pod.object("spec").objects("containers")[0].objects("volumeMounts")[0]["readOnly"])
+            self.assertFalse(pod.object("spec")["automountServiceAccountToken"])
 
     def test_mismatched_volume_never_receives_a_verified_receipt(self):
         journal, _ = self.reader_fixture()
-        with patch.object(control, "remote_fingerprint", side_effect=[{"file": "a"}, {"file": "b"}]):
-            with self.assertRaisesRegex(ValueError, "whole volume differs"):
-                control.verify_backup(self.path, journal)
-        self.assertEqual(journal["restore"]["byteVerification"], "FAILED")
+        with (
+            patch.object(control, "remote_fingerprint", side_effect=[{"file": "a"}, {"file": "b"}]),
+            self.assertRaisesRegex(ValueError, "whole volume differs"),
+        ):
+            control.verify_backup(self.path, journal)
+        self.assertEqual(journal.object("restore").string("byteVerification"), "FAILED")
         self.assertFalse(self.path.with_name(self.path.name + ".backup-files.json").exists())
-        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
 
     def export_fixture(self):
         journal, _ = self.reader_fixture()
         contents = {
-            "world/level.dat": b"native metadata", "plugins/TheStorm/the-storm.db": b"identity",
+            "world/level.dat": b"native metadata",
+            "plugins/TheStorm/the-storm.db": b"identity",
             "world/dimensions/minecraft/overworld/region/r.3.4.mca": b"arena terrain",
             "world/dimensions/minecraft/rwf/data/paper/metadata.dat": b"rwf identity",
             "world/dimensions/minecraft/rwf/region/r.0.0.mca": b"rwf terrain",
-            "world/data/minecraft/maps/13.dat": b"map", "server.properties": b"private configuration",
-            "plugins/TheStorm/config.yml": b"private configuration"}
+            "world/data/minecraft/maps/13.dat": b"map",
+            "server.properties": b"private configuration",
+            "plugins/TheStorm/config.yml": b"private configuration",
+        }
         hashes = {name: hashlib.sha256(value).hexdigest() for name, value in contents.items()}
         with patch.object(control, "remote_fingerprint", return_value=hashes):
             control.verify_backup(self.path, journal)
         return journal, contents
 
-    def export_tar(self, contents):
+    def export_tar(self, contents: dict[str, bytes]) -> io.BytesIO:
         output = io.BytesIO()
         with tarfile.open(fileobj=output, mode="w") as archive:
             for name, value in contents.items():
@@ -413,23 +546,26 @@ class RestorationControlTest(unittest.TestCase):
     def test_export_copies_complete_native_selection_without_server_configuration_or_unlocking(self):
         journal, contents = self.export_fixture()
         destination, proof = self.path.parent / "native-export", self.path.parent / "export.json"
-        def exporting(actual_journal, target, expected):
+
+        def exporting(actual_journal: JsonObject, target: Path, expected: dict[str, str]) -> None:
             self.assertIs(actual_journal, journal)
             selected = {name: value for name, value in contents.items() if name in expected}
             control.export_stream(self.export_tar(selected), target, expected)
+
         with patch.object(control, "remote_export", side_effect=exporting):
             control.export_backup(self.path, journal, destination, proof)
         receipt = json.loads(proof.read_text())
         expected = control.backup_contract.verified_export(receipt)
         self.assertEqual(set(expected), {name for name in contents if not name.endswith((".properties", ".yml"))})
-        self.assertEqual({str(file.relative_to(destination)) for file in destination.rglob("*") if file.is_file()},
-                         set(expected))
+        self.assertEqual(
+            {str(file.relative_to(destination)) for file in destination.rglob("*") if file.is_file()}, set(expected)
+        )
         self.assertTrue(all((destination / name).stat().st_mode & 0o777 == 0o600 for name in expected))
         self.assertEqual(destination.stat().st_mode & 0o777, 0o700)
         self.assertEqual(proof.stat().st_mode & 0o777, 0o600)
-        self.assertEqual(journal["export"]["phase"], "VERIFIED")
-        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
-        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+        self.assertEqual(journal.object("export").string("phase"), "VERIFIED")
+        self.assertEqual(journal.string("phase"), "LEASED_OFFLINE")
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
 
     def test_export_requires_original_verified_storage_and_a_new_destination(self):
         journal, _ = self.export_fixture()
@@ -439,11 +575,11 @@ class RestorationControlTest(unittest.TestCase):
                 with self.subTest(change=change):
                     altered = copy.deepcopy(journal)
                     if change == "unverified":
-                        altered["restore"]["byteVerification"] = "PENDING"
+                        altered.object("restore")["byteVerification"] = "PENDING"
                     elif change == "changed-proof":
-                        altered["restore"]["proofSha256"] = "f" * 64
+                        altered.object("restore")["proofSha256"] = "f" * 64
                     elif change == "changed-volume":
-                        altered["restore"]["volumeUid"] = "replaced"
+                        altered.object("restore")["volumeUid"] = "replaced"
                     else:
                         destination.mkdir()
                     with self.assertRaises(ValueError):
@@ -454,17 +590,20 @@ class RestorationControlTest(unittest.TestCase):
     def test_failed_export_retains_private_copy_without_a_success_receipt(self):
         journal, _ = self.export_fixture()
         destination, proof = self.path.parent / "native-export", self.path.parent / "export.json"
-        with patch.object(control, "remote_export", side_effect=RuntimeError("interrupted")):
-            with self.assertRaisesRegex(RuntimeError, "interrupted"):
-                control.export_backup(self.path, journal, destination, proof)
+        with (
+            patch.object(control, "remote_export", side_effect=RuntimeError("interrupted")),
+            self.assertRaisesRegex(RuntimeError, "interrupted"),
+        ):
+            control.export_backup(self.path, journal, destination, proof)
         self.assertTrue(destination.is_dir())
-        self.assertEqual(journal["export"]["phase"], "FAILED")
+        self.assertEqual(journal.object("export").string("phase"), "FAILED")
         self.assertFalse(proof.exists())
 
     def test_export_stream_rejects_extra_missing_corrupted_and_duplicate_files(self):
         expected = {"world/level.dat": hashlib.sha256(b"expected").hexdigest()}
-        for index, contents in enumerate(({}, {"world/level.dat": b"corrupt"},
-                                         {"server.properties": b"configuration"}, {"../outside": b"escape"})):
+        for index, contents in enumerate(
+            ({}, {"world/level.dat": b"corrupt"}, {"server.properties": b"configuration"}, {"../outside": b"escape"})
+        ):
             with self.subTest(contents=contents):
                 target = self.path.parent / ("failed-" + str(index))
                 target.mkdir(mode=0o700)
@@ -500,15 +639,15 @@ class RestorationControlTest(unittest.TestCase):
             with self.subTest(change=change):
                 pod = copy.deepcopy(original)
                 if change == "uid":
-                    pod["metadata"]["uid"] = "replaced"
+                    pod.object("metadata")["uid"] = "replaced"
                 elif change == "container":
-                    pod["spec"]["containers"].append({"name": "unreviewed"})
+                    pod.object("spec").objects("containers").append(JsonObject({"name": "unreviewed"}))
                 elif change == "volume":
-                    pod["spec"]["volumes"][0]["persistentVolumeClaim"]["readOnly"] = False
+                    pod.object("spec").objects("volumes")[0].object("persistentVolumeClaim")["readOnly"] = False
                 elif change == "environment":
-                    pod["spec"]["containers"][0]["envFrom"] = [{"secretRef": {"name": "unreviewed"}}]
+                    pod.object("spec").objects("containers")[0]["envFrom"] = [{"secretRef": {"name": "unreviewed"}}]
                 else:
-                    pod["spec"]["initContainers" if change == "init" else "ephemeralContainers"] = [{}]
+                    pod.object("spec")["initContainers" if change == "init" else "ephemeralContainers"] = [{}]
                 with self.assertRaisesRegex(ValueError, "read-only pod"):
                     control.assert_reader(pod, journal, control.NAMESPACE)
 
@@ -517,14 +656,21 @@ class RestorationControlTest(unittest.TestCase):
         with patch.object(control, "remote_fingerprint", return_value={"file": "checksum"}):
             control.verify_backup(self.path, journal)
         calls = []
-        def delete(arguments, **kwargs):
-            body = json.loads(kwargs["input"])
+
+        def delete(arguments: list[str], **kwargs: object):
+            encoded = kwargs["input"]
+            if not isinstance(encoded, str):
+                raise AssertionError("Expected a JSON deletion body")
+            body = JsonObject.parse(encoded)
             namespace = arguments[5].split("/")[4]
-            self.assertEqual(body["preconditions"], {"uid": pods[namespace]["metadata"]["uid"],
-                                                     "resourceVersion": "1"})
+            self.assertEqual(
+                body.object("preconditions"),
+                {"uid": pods[namespace].object("metadata").string("uid"), "resourceVersion": "1"},
+            )
             calls.append(namespace)
             del pods[namespace]
             return control.subprocess.CompletedProcess(arguments, 0, "", "")
+
         with patch.object(control.subprocess, "run", side_effect=delete):
             control.remove_readers(self.path, journal)
             control.remove_readers(self.path, journal)
@@ -540,7 +686,7 @@ class RestorationControlTest(unittest.TestCase):
             deletion.assert_not_called()
 
     def test_tar_volume_hashes_without_extracting_contents_and_rejects_unsafe_records(self):
-        def stream(extra=None, omit_database=False):
+        def stream(extra: tarfile.TarInfo | None = None, omit_database: bool = False) -> io.BytesIO:
             output = io.BytesIO()
             with tarfile.open(fileobj=output, mode="w") as archive:
                 names = ["./world/level.dat", "./world/session.lock"]
@@ -554,12 +700,19 @@ class RestorationControlTest(unittest.TestCase):
                     archive.addfile(extra, io.BytesIO())
             output.seek(0)
             return output
+
         expected = hashlib.sha256(b"fixture bytes").hexdigest()
-        self.assertEqual(control.tar_fingerprint(stream()), {
-            "world/level.dat": expected, "plugins/TheStorm/the-storm.db": expected})
-        for name, kind in (("../outside", tarfile.REGTYPE), ("/absolute", tarfile.REGTYPE),
-                           ("linked", tarfile.SYMTYPE), ("hardlink", tarfile.LNKTYPE),
-                           ("device", tarfile.CHRTYPE), ("./world/level.dat", tarfile.REGTYPE)):
+        self.assertEqual(
+            control.tar_fingerprint(stream()), {"world/level.dat": expected, "plugins/TheStorm/the-storm.db": expected}
+        )
+        for name, kind in (
+            ("../outside", tarfile.REGTYPE),
+            ("/absolute", tarfile.REGTYPE),
+            ("linked", tarfile.SYMTYPE),
+            ("hardlink", tarfile.LNKTYPE),
+            ("device", tarfile.CHRTYPE),
+            ("./world/level.dat", tarfile.REGTYPE),
+        ):
             with self.subTest(name=name, kind=kind):
                 member = tarfile.TarInfo(name)
                 member.type = kind
@@ -569,5 +722,7 @@ class RestorationControlTest(unittest.TestCase):
             control.tar_fingerprint(stream(omit_database=True))
         with self.assertRaises(tarfile.ReadError):
             control.tar_fingerprint(io.BytesIO(stream().getvalue()[:550]))
+
+
 if __name__ == "__main__":
     unittest.main()

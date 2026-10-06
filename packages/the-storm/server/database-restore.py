@@ -22,14 +22,21 @@ class RetentionPolicy(TypedDict):
 def reviewed_policy(path: Path) -> RetentionPolicy:
     policy = json.loads(path.read_text(encoding="utf-8"))
     fields = {"schemaVersion", "archiveSha256", "retainTables", "resetTables", "migrationModules"}
-    if (not isinstance(policy, dict) or policy.keys() != fields or policy["schemaVersion"] != 1
-            or policy["archiveSha256"] != "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa"):
+    if (
+        not isinstance(policy, dict)
+        or policy.keys() != fields
+        or policy["schemaVersion"] != 1
+        or policy["archiveSha256"] != "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa"
+    ):
         raise ValueError("Invalid restoration retention policy")
     for key in ("retainTables", "resetTables", "migrationModules"):
         values = policy[key]
-        if (not isinstance(values, list) or not values
-                or any(not isinstance(value, str) or not re.fullmatch("[a-z_]+", value) for value in values)
-                or len(set(values)) != len(values)):
+        if (
+            not isinstance(values, list)
+            or not values
+            or any(not isinstance(value, str) or not re.fullmatch("[a-z_]+", value) for value in values)
+            or len(set(values)) != len(values)
+        ):
             raise ValueError("Invalid or duplicated restoration policy entry")
     if set(policy["retainTables"]) & set(policy["resetTables"]):
         raise ValueError("Retention and reset policy overlap")
@@ -39,17 +46,21 @@ def reviewed_policy(path: Path) -> RetentionPolicy:
 def tables(connection: sqlite3.Connection, schema: str) -> set[str]:
     if schema not in ("main", "original"):
         raise ValueError("Unknown schema")
-    return {row[0] for row in connection.execute(
-        f"SELECT name FROM {schema}.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
+    return {
+        row[0]
+        for row in connection.execute(
+            f"SELECT name FROM {schema}.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        )
+    }
 
 
-def columns(connection: sqlite3.Connection, schema: str, table: str) -> list[tuple]:
+def columns(connection: sqlite3.Connection, schema: str, table: str) -> list[tuple[object, ...]]:
     if schema not in ("main", "original") or not re.fullmatch("[a-z_]+", table):
         raise ValueError("Invalid database identifier")
     return list(connection.execute(f'PRAGMA {schema}.table_xinfo("{table}")'))
 
 
-def row_digest(row: tuple) -> bytes:
+def row_digest(row: tuple[object, ...]) -> bytes:
     """Type and length framing preserves exact SQLite values without exposing them."""
     digest = hashlib.sha256()
     for value in row:
@@ -111,9 +122,14 @@ def retain_identity(original: Path, candidate: Path, policy: RetentionPolicy) ->
                 source = columns(connection, "original", table)
                 if not source or source != columns(connection, "main", table):
                     raise ValueError("Retained table schema changed; review a version migration")
-                names = [column[1] for column in source if column[6] == 0]
-                if any(not re.fullmatch("[a-z_][a-z_0-9]*", name) for name in names):
-                    raise ValueError("Invalid retained column")
+                names: list[str] = []
+                for column in source:
+                    if column[6] != 0:
+                        continue
+                    name = column[1]
+                    if not isinstance(name, str) or not re.fullmatch("[a-z_][a-z_0-9]*", name):
+                        raise ValueError("Invalid retained column")
+                    names.append(name)
                 selected = ",".join('"' + name + '"' for name in names)
                 connection.execute(f'INSERT INTO main."{table}" ({selected}) SELECT {selected} FROM original."{table}"')
                 before = table_digest(connection, "original", table)
@@ -131,5 +147,11 @@ def retain_identity(original: Path, candidate: Path, policy: RetentionPolicy) ->
             raise
         connection.execute("DETACH DATABASE original")
         connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-    return {"schemaVersion": 1, "retained": receipt, "gameplayReset": True,
-            "migrationHistoryCopied": False, "townImport": "PENDING", "privateLiveAcceptance": "PENDING"}
+    return {
+        "schemaVersion": 1,
+        "retained": receipt,
+        "gameplayReset": True,
+        "migrationHistoryCopied": False,
+        "townImport": "PENDING",
+        "privateLiveAcceptance": "PENDING",
+    }

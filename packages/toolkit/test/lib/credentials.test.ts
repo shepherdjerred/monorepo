@@ -310,6 +310,11 @@ describe("credential resolver backends", () => {
 
 describe("command credential mapping", () => {
   test("requiredCredentialsFor maps commands to their vars", () => {
+    for (const action of ["wait", "explain", "main", "load"]) {
+      expect(requiredCredentialsFor("ci", action)).toEqual([
+        "WOODPECKER_TOKEN",
+      ]);
+    }
     expect(requiredCredentialsFor("woodpecker", undefined)).toEqual([
       "WOODPECKER_TOKEN",
     ]);

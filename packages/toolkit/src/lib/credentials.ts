@@ -400,6 +400,7 @@ export function requiredCredentialsFor(
   args: readonly string[] = [],
 ): readonly string[] {
   switch (command) {
+    case "ci":
     case "woodpecker":
       return ["WOODPECKER_TOKEN"];
     case "temporal": {

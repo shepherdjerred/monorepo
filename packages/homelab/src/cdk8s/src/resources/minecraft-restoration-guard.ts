@@ -1,4 +1,5 @@
 import { ApiObject, type Chart } from "cdk8s";
+import { minecraftMaintenanceMatch } from "./minecraft-maintenance-match.ts";
 
 export const RESTORE_LEASE_ANNOTATION = "sjer.red/world-restore-lease";
 export const RESTORE_PHASE_ANNOTATION = "sjer.red/world-restore-phase";
@@ -10,6 +11,8 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
   const policyName = "minecraft-tsmc-world-restoration.sjer.red";
   const annotations = "object.metadata.annotations";
   const leased = `has(${annotations}) && '${RESTORE_LEASE_ANNOTATION}' in ${annotations}`;
+  const priorAnnotations = "oldObject.metadata.annotations";
+  const priorLeased = `has(${priorAnnotations}) && '${RESTORE_LEASE_ANNOTATION}' in ${priorAnnotations}`;
   const phase = `${annotations}['${RESTORE_PHASE_ANNOTATION}']`;
   new ApiObject(chart, "minecraft-tsmc-restoration-policy", {
     apiVersion: "admissionregistration.k8s.io/v1",
@@ -19,27 +22,14 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
       annotations: { "argocd.argoproj.io/sync-wave": "-30" },
     },
     spec: {
-      failurePolicy: "Fail",
-      matchConstraints: {
-        matchPolicy: "Equivalent",
-        resourceRules: [
-          {
-            apiGroups: ["apps"],
-            apiVersions: ["v1"],
-            operations: ["UPDATE"],
-            resources: ["statefulsets"],
-            scope: "Namespaced",
-          },
-        ],
-      },
-      matchConditions: [
-        {
-          name: "the-storm-server",
-          expression:
-            "object.metadata.namespace == 'minecraft-tsmc' && object.metadata.name == 'minecraft-tsmc'",
-        },
-      ],
+      ...minecraftMaintenanceMatch("statefulsets"),
       validations: [
+        {
+          expression: `!(${priorLeased}) || ((${leased}) && ${annotations}['${RESTORE_LEASE_ANNOTATION}'] == ${priorAnnotations}['${RESTORE_LEASE_ANNOTATION}']) || (oldObject.spec.replicas == 0 && object.spec.replicas == 0 && '${RESTORE_PHASE_ANNOTATION}' in ${priorAnnotations} && ${priorAnnotations}['${RESTORE_PHASE_ANNOTATION}'] == 'OFFLINE' && (!has(${annotations}) || (!('${RESTORE_LEASE_ANNOTATION}' in ${annotations}) && !('${RESTORE_PHASE_ANNOTATION}' in ${annotations}) && !('${RESTORE_IMAGE_ANNOTATION}' in ${annotations}))))`,
+          message:
+            "Keep the restoration lease owner until an explicit stopped release",
+          reason: "Forbidden",
+        },
         {
           expression: `!(${leased}) || !('sjer.red/mining-reset-lock' in ${annotations})`,
           message:
@@ -90,27 +80,8 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
       annotations: { "argocd.argoproj.io/sync-wave": "-30" },
     },
     spec: {
-      failurePolicy: "Fail",
+      ...minecraftMaintenanceMatch("statefulsets/scale"),
       paramKind: { apiVersion: "apps/v1", kind: "StatefulSet" },
-      matchConstraints: {
-        matchPolicy: "Equivalent",
-        resourceRules: [
-          {
-            apiGroups: ["apps"],
-            apiVersions: ["v1"],
-            operations: ["UPDATE"],
-            resources: ["statefulsets/scale"],
-            scope: "Namespaced",
-          },
-        ],
-      },
-      matchConditions: [
-        {
-          name: "the-storm-server",
-          expression:
-            "request.namespace == 'minecraft-tsmc' && request.name == 'minecraft-tsmc'",
-        },
-      ],
       validations: [
         {
           expression: `!(${parentLeased}) || object.spec.replicas == 0 || ('${RESTORE_PHASE_ANNOTATION}' in ${parentAnnotations} && ${parentAnnotations}['${RESTORE_PHASE_ANNOTATION}'] == 'VALIDATING' && '${RESTORE_IMAGE_ANNOTATION}' in ${parentAnnotations} && object.spec.replicas == 1 && params.spec.template.spec.containers.size() == 1 && params.spec.template.spec.containers[0].image == ${parentAnnotations}['${RESTORE_IMAGE_ANNOTATION}'])`,

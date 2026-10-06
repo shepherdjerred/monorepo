@@ -8,6 +8,7 @@ from contextlib import closing
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location("database_restore", Path(__file__).with_name("database-restore.py"))
+assert spec is not None and spec.loader is not None
 restore = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(restore)
 
@@ -53,10 +54,14 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertEqual(receipt["retained"]["core_player"]["rows"], 2)
         self.assertEqual(before, hashlib.sha256(self.original.read_bytes()).hexdigest())
         with closing(sqlite3.connect(self.candidate)) as connection:
-            self.assertEqual(connection.execute("SELECT payload,value FROM core_player WHERE id='alice'").fetchone(),
-                             (b"\x00\xfffixture", 1.5))
-            self.assertEqual(connection.execute("SELECT name,payload,value FROM core_player WHERE id='bob'").fetchone(),
-                             (None, None, None))
+            self.assertEqual(
+                connection.execute("SELECT payload,value FROM core_player WHERE id='alice'").fetchone(),
+                (b"\x00\xfffixture", 1.5),
+            )
+            self.assertEqual(
+                connection.execute("SELECT name,payload,value FROM core_player WHERE id='bob'").fetchone(),
+                (None, None, None),
+            )
             self.assertEqual(connection.execute("SELECT * FROM chat_ignore").fetchall(), [("alice", "bob")])
             self.assertEqual(connection.execute("SELECT * FROM tracks_level").fetchall(), [])
             self.assertEqual(connection.execute("SELECT * FROM flyway_core_history").fetchall(), [("candidate",)])
@@ -124,10 +129,11 @@ class DatabaseRestoreTest(unittest.TestCase):
         file.write_text(json.dumps(self.policy), encoding="utf-8")
         self.assertEqual(restore.reviewed_policy(file), self.policy)
         for bad in (
-                dict(self.policy, resetTables=["core_player"]),
-                dict(self.policy, retainTables=["core_player", "core_player"]),
-                dict(self.policy, unknown=True),
-                dict(self.policy, retainTables=[{"invalid": True}])):
+            dict(self.policy, resetTables=["core_player"]),
+            dict(self.policy, retainTables=["core_player", "core_player"]),
+            dict(self.policy, unknown=True),
+            dict(self.policy, retainTables=[{"invalid": True}]),
+        ):
             file.write_text(json.dumps(bad), encoding="utf-8")
             with self.assertRaises(ValueError):
                 restore.reviewed_policy(file)

@@ -13,7 +13,10 @@ import unittest
 import zipfile
 from contextlib import closing
 from pathlib import Path
+from typing import Literal
 from unittest.mock import patch
+
+from restoration_json import JsonObject
 
 spec = importlib.util.spec_from_file_location("restore", Path(__file__).with_name("world-restore.py"))
 assert spec is not None and spec.loader is not None
@@ -27,7 +30,7 @@ class RestoreTest(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
 
-    def archive(self, names):
+    def archive(self, names: list[str]):
         data = io.BytesIO()
         with zipfile.ZipFile(data, "w") as archive:
             for name in names:
@@ -36,12 +39,15 @@ class RestoreTest(unittest.TestCase):
         return zipfile.ZipFile(data)
 
     def test_rejects_escaping_duplicate_and_foreign_members(self):
-        for names in [["../escape"], ["/absolute"], ["foreign/world/level.dat"],
-                      [restore.ARCHIVE_ROOT + "../escape"],
-                      [restore.ARCHIVE_ROOT + "level.dat"] * 2]:
-            with self.subTest(names=names), self.archive(names) as archive:
-                with self.assertRaises(ValueError):
-                    restore.archive_members(archive)
+        for names in [
+            ["../escape"],
+            ["/absolute"],
+            ["foreign/world/level.dat"],
+            [restore.ARCHIVE_ROOT + "../escape"],
+            [restore.ARCHIVE_ROOT + "level.dat"] * 2,
+        ]:
+            with self.subTest(names=names), self.archive(names) as archive, self.assertRaises(ValueError):
+                restore.archive_members(archive)
 
     def test_accepts_only_selected_world_paths(self):
         with self.archive([restore.ARCHIVE_ROOT + "region/r.-1.0.mca"]) as archive:
@@ -161,19 +167,38 @@ class RestoreTest(unittest.TestCase):
         data = self.root / "native-data"
         (data / "world/dimensions/minecraft/rwf/region").mkdir(parents=True)
         (data / "plugins/TheStorm").mkdir(parents=True)
-        for name in ("world/level.dat", "world/dimensions/minecraft/rwf/region/r.0.0.mca",
-                     "plugins/TheStorm/the-storm.db"):
+        for name in (
+            "world/level.dat",
+            "world/dimensions/minecraft/rwf/region/r.0.0.mca",
+            "plugins/TheStorm/the-storm.db",
+        ):
             (data / name).write_bytes(b"fixture")
         hashes = restore.fingerprint(data)
         whole = self.root / "whole.json"
-        identities = {"requestId": "request", "backupUid": "backup", "sourceVolumeUid": "original",
-                      "restoredVolumeUid": "independent"}
-        restore.save_json(whole, {"schemaVersion": 1, "status": "VERIFIED", **identities,
-                                 "files": {**hashes, "server.properties": "a" * 64}})
+        identities = {
+            "requestId": "request",
+            "backupUid": "backup",
+            "sourceVolumeUid": "original",
+            "restoredVolumeUid": "independent",
+        }
+        restore.save_json(
+            whole,
+            {
+                "schemaVersion": 1,
+                "status": "VERIFIED",
+                **identities,
+                "files": {**hashes, "server.properties": "a" * 64},
+            },
+        )
         proof = self.root / "export.json"
-        receipt = {"schemaVersion": 2, "status": "VERIFIED_EXPORT", **identities,
-                   "wholeVolumeProofPath": str(whole), "wholeVolumeProofSha256": restore.digest(whole),
-                   "files": hashes}
+        receipt = {
+            "schemaVersion": 2,
+            "status": "VERIFIED_EXPORT",
+            **identities,
+            "wholeVolumeProofPath": str(whole),
+            "wholeVolumeProofSha256": restore.digest(whole),
+            "files": hashes,
+        }
         restore.save_json(proof, receipt)
         self.assertEqual(restore.verified_backup(data, proof), hashes)
         for change in ("partial", "different-volume", "altered-whole-proof", "unrelated-local-file"):
@@ -192,67 +217,308 @@ class RestoreTest(unittest.TestCase):
                     restore.verified_backup(data, proof)
 
     def test_export_selection_excludes_credentials_player_progression_and_unsupported_paths(self):
-        allowed = ("world/level.dat", "plugins/TheStorm/the-storm.db", "plugins/TheStorm/the-storm.db-wal",
-                   "world/data/minecraft/maps/last_id.dat", "world/dimensions/minecraft/rwf/poi/r.-1.0.mca",
-                   "world/dimensions/minecraft/settlement/region/c.1.-2.mcc")
-        excluded = ("server.properties", "plugins/TheStorm/config.yml", "plugins/floodgate/key.pem",
-                    "world/players/data/modern-player.dat",
-                    "world/dimensions/minecraft/rwf/paper-world.yml", "world/datapacks/config.json")
+        allowed = (
+            "world/level.dat",
+            "plugins/TheStorm/the-storm.db",
+            "plugins/TheStorm/the-storm.db-wal",
+            "world/data/minecraft/maps/last_id.dat",
+            "world/dimensions/minecraft/rwf/poi/r.-1.0.mca",
+            "world/dimensions/minecraft/settlement/region/c.1.-2.mcc",
+        )
+        excluded = (
+            "server.properties",
+            "plugins/TheStorm/config.yml",
+            "plugins/floodgate/key.pem",
+            "world/players/data/modern-player.dat",
+            "world/dimensions/minecraft/rwf/paper-world.yml",
+            "world/datapacks/config.json",
+        )
         files = {name: "a" * 64 for name in (*allowed, *excluded)}
         self.assertEqual(set(restore.backup_contract.selected_files(files)), set(allowed))
-        for name, checksum in (("../outside", "a" * 64), ("/absolute", "a" * 64),
-                               ("world//level.dat", "a" * 64), ("world/level.dat", "bad"),
-                               ("world/level.dat", 12),
-                               ("world/dimensions/minecraft/unknown/region/r.0.0.mca", "a" * 64)):
+        for name, checksum in (
+            ("../outside", "a" * 64),
+            ("/absolute", "a" * 64),
+            ("world//level.dat", "a" * 64),
+            ("world/level.dat", "bad"),
+            ("world/level.dat", 12),
+            ("world/dimensions/minecraft/unknown/region/r.0.0.mca", "a" * 64),
+        ):
             with self.subTest(name=name, checksum=checksum), self.assertRaises(ValueError):
                 restore.backup_contract.selected_files({**files, name: checksum})
 
-    def converter(self, lines):
+    def activation_fixture(self):
+        staging, modern = self.root / "stage", self.root / "modern"
+        source = staging / "arena-preserved-layout/world"
+        (source / "dimensions/minecraft/overworld/region").mkdir(parents=True)
+        (source / "level.dat").write_bytes(b"historical metadata")
+        (source / "dimensions/minecraft/overworld/region/r.0.0.mca").write_bytes(b"protected terrain")
+        restore.save_json(staging / "arena-preserved-layout-files.json", restore.fingerprint(source))
+        (modern / "world").mkdir(parents=True)
+        (modern / "world/level.dat").write_bytes(b"modern metadata")
+        (modern / "plugins/TheStorm").mkdir(parents=True)
+        (modern / "plugins/TheStorm/the-storm.db").write_bytes(b"modern identity")
+        for name in ("settlement", "rustworks", "rwf", "wilds", "peaks", "mining"):
+            dimension = modern / "world/dimensions/minecraft" / name
+            (dimension / "data/paper").mkdir(parents=True)
+            (dimension / "region").mkdir()
+            (dimension / "data/paper/metadata.dat").write_bytes(name.encode())
+            (dimension / "region/r.0.0.mca").write_bytes((name + " terrain").encode())
+        proof = self.root / "backup.json"
+        restore.save_json(proof, {"schemaVersion": 1, "status": "VERIFIED", "files": restore.fingerprint(modern)})
+        candidate, paper, bootstrap = self.root / "candidate.jar", self.root / "paper.jar", self.root / "bootstrap"
+        candidate.write_bytes(b"candidate")
+        paper.write_bytes(b"paper")
+        bootstrap.mkdir()
+        database_root = staging / "restoration-database"
+        database_root.mkdir()
+        (database_root / "the-storm.db").write_bytes(b"migrated identity")
+        restore.save_json(
+            database_root / "receipt.json",
+            {"townImport": "VERIFIED", "databaseSha256": restore.digest(database_root / "the-storm.db")},
+        )
+        inputs = {candidate.name: restore.digest(candidate), proof.name: restore.digest(proof)}
+        receipt = {
+            "phase": "IDENTITY_DATABASE_READY",
+            "archiveSha256": restore.ARCHIVE_SHA256,
+            "requestId": "fixture-request",
+            "arenaTransplantInputs": inputs,
+            "databaseInputs": inputs,
+            "databaseReceiptSha256": restore.digest(database_root / "receipt.json"),
+        }
+        restore.save_json(staging / restore.JOURNAL, receipt)
+        return staging, paper, bootstrap, candidate, modern, proof
+
+    def test_activation_assembly_preserves_arena_dimensions_and_historical_data_without_modern_resource_worlds(self):
+        arguments = self.activation_fixture()
+        staging, _, _, _, modern, _ = arguments
+        before = restore.fingerprint(modern)
+        native = {
+            "status": "VERIFIED",
+            "dataVersion": 4903,
+            "entityUuidCollisions": [],
+            "terrainGeneration": False,
+            "worldTicks": 0,
+        }
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(
+                restore, "repair_animal_identities", return_value=JsonObject({"beforeFiles": {}, "afterFiles": {}})
+            ),
+            patch.object(restore, "run_activation_check", return_value=native) as verification,
+        ):
+            restore.prepare_activation(*arguments)
+        verification.assert_called_once()
+        assembled = staging / "activation-layout"
+        self.assertEqual((assembled / "world/level.dat").read_bytes(), b"historical metadata")
+        self.assertEqual((assembled / "plugins/TheStorm/the-storm.db").read_bytes(), b"migrated identity")
+        for name in ("settlement", "rustworks", "rwf"):
+            self.assertEqual(
+                restore.fingerprint(assembled / "world/dimensions/minecraft" / name),
+                restore.fingerprint(modern / "world/dimensions/minecraft" / name),
+            )
+        for name in ("wilds", "peaks", "mining"):
+            self.assertFalse((assembled / "world/dimensions/minecraft" / name).exists())
+        self.assertEqual(restore.fingerprint(modern), before)
+        journal = json.loads((staging / restore.JOURNAL).read_text())
+        self.assertEqual(journal["phase"], "ACTIVATION_LAYOUT_READY")
+        self.assertEqual(journal["activationReceiptSha256"], restore.digest(staging / "activation-layout-receipt.json"))
+        self.assertEqual(
+            restore.fingerprint(assembled), json.loads((staging / "activation-layout-files.json").read_text())
+        )
+
+    def test_activation_assembly_keeps_a_failed_private_layout_and_never_marks_it_ready(self):
+        arguments = self.activation_fixture()
+        staging = arguments[0]
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(
+                restore, "repair_animal_identities", return_value=JsonObject({"beforeFiles": {}, "afterFiles": {}})
+            ),
+            patch.object(restore, "run_activation_check", side_effect=ValueError("entity UUID collision")),
+            self.assertRaisesRegex(ValueError, "UUID collision"),
+        ):
+            restore.prepare_activation(*arguments)
+        self.assertTrue((staging / "activation-layout/world").is_dir())
+        self.assertEqual(json.loads((staging / restore.JOURNAL).read_text())["phase"], "ACTIVATION_PREPARATION_FAILED")
+        self.assertFalse((staging / "activation-layout-receipt.json").exists())
+
+    def test_activation_records_only_verified_animal_region_changes(self):
+        arguments = self.activation_fixture()
+        staging = arguments[0]
+        native = {"status": "VERIFIED", "dataVersion": 4903, "entityUuidCollisions": []}
+
+        def repair(world: Path, _modern: Path, _root: Path, _classpath: str) -> JsonObject:
+            region = world / "dimensions/minecraft/overworld/region/r.0.0.mca"
+            original = restore.digest(region)
+            region.write_bytes(b"same terrain with a repaired duplicate animal identity")
+            return JsonObject(
+                {"beforeFiles": {region.name: original}, "afterFiles": {region.name: restore.digest(region)}}
+            )
+
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore, "repair_animal_identities", side_effect=repair),
+            patch.object(restore, "run_activation_check", return_value=native),
+        ):
+            restore.prepare_activation(*arguments)
+        self.assertEqual(
+            (staging / "arena-preserved-layout/world/dimensions/minecraft/overworld/region/r.0.0.mca").read_bytes(),
+            b"protected terrain",
+        )
+        proof = json.loads((staging / "activation-layout-receipt.json").read_text())
+        self.assertEqual(set(proof["animalIdentityRepair"]["beforeFiles"]), {"r.0.0.mca"})
+
+    def test_activation_refuses_unsealed_or_unrelated_animal_repair_changes(self):
+        for change in ("wrong-baseline", "wrong-readback", "unrelated-data", "unsafe-owned-animal"):
+            with self.subTest(change=change):
+                original_root = self.root
+                self.root = original_root / change
+                self.root.mkdir()
+                try:
+                    arguments = self.activation_fixture()
+
+                    def repair(
+                        world: Path, _modern: Path, _root: Path, _classpath: str, change: str = change
+                    ) -> JsonObject:
+                        if change == "unsafe-owned-animal":
+                            raise ValueError("Review animal ownership")
+                        region = world / "dimensions/minecraft/overworld/region/r.0.0.mca"
+                        baseline = restore.digest(region)
+                        region.write_bytes(b"repaired identity")
+                        if change == "unrelated-data":
+                            (world / "level.dat").write_bytes(b"unrelated change")
+                        return JsonObject(
+                            {
+                                "beforeFiles": {region.name: "f" * 64 if change == "wrong-baseline" else baseline},
+                                "afterFiles": {
+                                    region.name: "f" * 64 if change == "wrong-readback" else restore.digest(region)
+                                },
+                            }
+                        )
+
+                    with (
+                        patch.object(restore, "conversion_classpath", return_value="fixture"),
+                        patch.object(restore, "repair_animal_identities", side_effect=repair),
+                        patch.object(restore, "run_activation_check", return_value={"status": "VERIFIED"}),
+                        self.assertRaises(ValueError),
+                    ):
+                        restore.prepare_activation(*arguments)
+                    journal = json.loads((arguments[0] / restore.JOURNAL).read_text())
+                    self.assertEqual(journal["phase"], "ACTIVATION_PREPARATION_FAILED")
+                    self.assertFalse((arguments[0] / "activation-layout-receipt.json").exists())
+                finally:
+                    self.root = original_root
+
+    def test_activation_refuses_missing_dimensions_candidate_database_and_checkpoint_drift_before_writing(self):
+        for change in ("candidate", "database", "terrain", "phase", "missing-rwf"):
+            with self.subTest(change=change):
+                original_root = self.root
+                self.root = original_root / change
+                self.root.mkdir()
+                try:
+                    arguments = self.activation_fixture()
+                    staging, _, _, candidate, modern, proof = arguments
+                    if change == "candidate":
+                        candidate.write_bytes(b"different candidate")
+                    elif change == "database":
+                        (staging / "restoration-database/the-storm.db").write_bytes(b"corruption")
+                    elif change == "terrain":
+                        (staging / "arena-preserved-layout/world/level.dat").write_bytes(b"corruption")
+                    else:
+                        journal = json.loads((staging / restore.JOURNAL).read_text())
+                        if change == "phase":
+                            journal["phase"] = "ARENAS_PRESERVED"
+                        else:
+                            shutil.rmtree(modern / "world/dimensions/minecraft/rwf")
+                            restore.save_json(
+                                proof, {"schemaVersion": 1, "status": "VERIFIED", "files": restore.fingerprint(modern)}
+                            )
+                            for key in ("arenaTransplantInputs", "databaseInputs"):
+                                journal[key][proof.name] = restore.digest(proof)
+                        restore.save_json(staging / restore.JOURNAL, journal)
+                    with (
+                        patch.object(restore, "conversion_classpath", return_value="fixture"),
+                        self.assertRaises(ValueError),
+                    ):
+                        restore.prepare_activation(*arguments)
+                    self.assertFalse((staging / "activation-layout").exists())
+                finally:
+                    self.root = original_root
+
+    def converter(self, lines: list[str]):
         script = self.root / "fake-paper.py"
         script.write_text(
             "import sys\n"
             + "\n".join(f"print({line!r}, flush=True)" for line in lines)
             + "\ncommand = sys.stdin.readline()\n"
-            + "print('clean stop' if command == 'stop\\n' else 'bad stop', flush=True)\n")
+            + "print('clean stop' if command == 'stop\\n' else 'bad stop', flush=True)\n"
+        )
         original = subprocess.Popen
 
-        def process(_command, **arguments):
-            return original([sys.executable, str(script)], **arguments)
+        def process(
+            _command: list[str],
+            *,
+            cwd: Path,
+            stdin: int,
+            stdout: int,
+            stderr: int,
+            text: Literal[True],
+            bufsize: int,
+        ) -> subprocess.Popen[str]:
+            return original(
+                [sys.executable, str(script)],
+                cwd=cwd,
+                stdin=stdin,
+                stdout=stdout,
+                stderr=stderr,
+                text=text,
+                bufsize=bufsize,
+            )
 
         return patch.object(restore.subprocess, "Popen", side_effect=process)
 
     def test_converter_requires_frozen_guard_and_clean_shutdown(self):
-        lines = ["CONVERSION_GUARD_READY: ready", 'Preparing level "world"',
-                 "CONVERSION_GUARD_VERIFIED: frozen=true; players=0", "Done (1s)!"]
+        lines = [
+            "CONVERSION_GUARD_READY: ready",
+            'Preparing level "world"',
+            "CONVERSION_GUARD_VERIFIED: frozen=true; players=0",
+            "Done (1s)!",
+        ]
         with self.converter(lines):
             restore.run_converter(self.root, self.root / "paper.jar", self.root / "converter.log", 5)
         self.assertIn("clean stop", (self.root / "converter.log").read_text())
 
     def test_converter_refuses_missing_guard_before_world_initialization(self):
-        with self.converter(['Preparing level "world"']):
-            with self.assertRaisesRegex(ValueError, "preceded"):
-                restore.run_converter(self.root, self.root / "paper.jar", self.root / "converter.log", 5)
+        with self.converter(['Preparing level "world"']), self.assertRaisesRegex(ValueError, "preceded"):
+            restore.run_converter(self.root, self.root / "paper.jar", self.root / "converter.log", 5)
 
     def test_converter_keeps_error_log_and_stops_the_copy(self):
-        with self.converter(["CONVERSION_GUARD_READY: ready", "[server ERROR]: save failed"]):
-            with self.assertRaisesRegex(ValueError, "conversion error"):
-                restore.run_converter(self.root, self.root / "paper.jar", self.root / "converter.log", 5)
+        with (
+            self.converter(["CONVERSION_GUARD_READY: ready", "[server ERROR]: save failed"]),
+            self.assertRaisesRegex(ValueError, "conversion error"),
+        ):
+            restore.run_converter(self.root, self.root / "paper.jar", self.root / "converter.log", 5)
         log = (self.root / "converter.log").read_text()
         self.assertIn("save failed", log)
         self.assertIn("clean stop", log)
 
     def test_converter_times_out_when_freeze_cannot_be_verified(self):
-        with self.converter(["CONVERSION_GUARD_READY: ready", "Done (1s)!"]):
-            with self.assertRaises(TimeoutError):
-                restore.run_converter(self.root, self.root / "paper.jar", self.root / "converter.log", 0.1)
+        with self.converter(["CONVERSION_GUARD_READY: ready", "Done (1s)!"]), self.assertRaises(TimeoutError):
+            restore.run_converter(self.root, self.root / "paper.jar", self.root / "converter.log", 0.1)
 
     def test_converter_configuration_has_no_external_admission_or_gameplay_plugins(self):
         guard = self.root / "guard.jar"
         guard.write_bytes(b"fixture guard")
         restore.conversion_configuration(self.root, guard)
         settings = (self.root / "server.properties").read_text()
-        for setting in ["server-ip=127.0.0.1", "max-players=0", "enforce-whitelist=true",
-                        "enable-rcon=false", "enable-query=false", "allow-nether=false"]:
+        for setting in [
+            "server-ip=127.0.0.1",
+            "max-players=0",
+            "enforce-whitelist=true",
+            "enable-rcon=false",
+            "enable-query=false",
+            "allow-nether=false",
+        ]:
             self.assertIn(setting, settings)
         with self.assertRaisesRegex(ValueError, "must be empty"):
             restore.conversion_configuration(self.root, guard)
@@ -285,23 +551,27 @@ class RestoreTest(unittest.TestCase):
         paper.write_bytes(b"fixture")
         bootstrap = self.root / "bootstrap"
         bootstrap.mkdir()
-        restore.save_json(self.root / restore.JOURNAL, {
-            "phase": "NATIVE_CHUNKS_CONVERTED", "archiveSha256": restore.ARCHIVE_SHA256})
-        for directory, manifest in (("source", "source-files.json"),
-                                    ("companion-data-1.21.7", "companion-data-1.21.7-files.json"),
-                                    ("native-chunks-26.2", "native-chunks-26.2-files.json")):
+        restore.save_json(
+            self.root / restore.JOURNAL, {"phase": "NATIVE_CHUNKS_CONVERTED", "archiveSha256": restore.ARCHIVE_SHA256}
+        )
+        for directory, manifest in (
+            ("source", "source-files.json"),
+            ("companion-data-1.21.7", "companion-data-1.21.7-files.json"),
+            ("native-chunks-26.2", "native-chunks-26.2-files.json"),
+        ):
             root = self.root / directory
             root.mkdir()
             (root / "fixture").write_bytes(b"unchanged")
             restore.save_json(self.root / manifest, restore.fingerprint(root))
         (self.root / "native-chunks-26.2/fixture").write_bytes(b"corrupted")
-        with patch.object(restore, "conversion_classpath", return_value="fixture"), \
-                patch.object(restore.subprocess, "run") as launching:
-            with self.assertRaisesRegex(ValueError, "input changed"):
-                restore.convert_native_companions(self.root, paper, bootstrap)
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore.subprocess, "run") as launching,
+            self.assertRaisesRegex(ValueError, "input changed"),
+        ):
+            restore.convert_native_companions(self.root, paper, bootstrap)
         launching.assert_not_called()
-        self.assertEqual(json.loads((self.root / restore.JOURNAL).read_text())["phase"],
-                         "NATIVE_CHUNKS_CONVERTED")
+        self.assertEqual(json.loads((self.root / restore.JOURNAL).read_text())["phase"], "NATIVE_CHUNKS_CONVERTED")
 
     def test_staging_journal_rejects_an_independent_writer(self):
         worker = (
@@ -309,13 +579,19 @@ class RestoreTest(unittest.TestCase):
             "with (pathlib.Path(sys.argv[1])/'.restore-operation.lock').open('w+b') as lock:\n"
             " fcntl.lockf(lock,fcntl.LOCK_EX)\n"
             " print('locked',flush=True)\n"
-            " sys.stdin.readline()\n")
-        with subprocess.Popen([sys.executable, "-c", worker, str(self.root)],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True) as process:
+            " sys.stdin.readline()\n"
+        )
+        with subprocess.Popen(
+            [sys.executable, "-c", worker, str(self.root)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
+        ) as process:
+            if process.stdout is None:
+                self.fail("Fixture lock worker has no output pipe")
             self.assertEqual(process.stdout.readline().strip(), "locked")
-            with self.assertRaisesRegex(ValueError, "owns this staging journal"):
-                with restore.operation_lock(self.root):
-                    self.fail("Two independent writers acquired the same journal")
+            with (
+                self.assertRaisesRegex(ValueError, "owns this staging journal"),
+                restore.operation_lock(self.root),
+            ):
+                self.fail("Two independent writers acquired the same journal")
             process.communicate("release\n", timeout=5)
         with restore.operation_lock(self.root):
             self.assertTrue((self.root / ".restore-operation.lock").is_file())
@@ -324,9 +600,8 @@ class RestoreTest(unittest.TestCase):
         outside = self.root / "outside"
         outside.write_bytes(b"untouched")
         (self.root / ".restore-operation.lock").symlink_to(outside)
-        with self.assertRaises(OSError):
-            with restore.operation_lock(self.root):
-                self.fail("Lock followed a symlink")
+        with self.assertRaises(OSError), restore.operation_lock(self.root):
+            self.fail("Lock followed a symlink")
         self.assertEqual(outside.read_bytes(), b"untouched")
 
 

@@ -56,6 +56,12 @@ describe("historical preservation on real Paper", () => {
     await rcon.command("setblock 309 200 7 minecraft:water");
     await rcon.command("setblock 310 200 7 minecraft:farmland[moisture=7]");
     await rcon.command("setblock 310 201 7 minecraft:wheat[age=0]");
+    await rcon.command("setblock 312 200 7 minecraft:soul_sand");
+    await rcon.command("setblock 312 201 7 minecraft:nether_wart[age=0]");
+    await rcon.command("setblock 314 201 7 minecraft:jungle_log");
+    await rcon.command("setblock 313 201 7 minecraft:cocoa[age=0,facing=east]");
+    await rcon.command("setblock 312 200 9 minecraft:grass_block");
+    await rcon.command("setblock 312 201 9 minecraft:sweet_berry_bush[age=0]");
     await rcon.command(`op ${bot.username}`);
     try {
       await rcon.command(`tp ${bot.username} 310.5 204 7.5`);
@@ -82,6 +88,19 @@ describe("historical preservation on real Paper", () => {
           bot.blockAt(new Vec3(310, 201, 7))?.getProperties()["age"] === "7",
         10_000,
       );
+      for (const [name, x, blockZ, age] of [
+        ["nether wart", 312, 7, "3"],
+        ["cocoa", 313, 7, "2"],
+        ["sweet berry bush", 312, 9, "3"],
+      ] as const) {
+        await waitUntil(
+          `protected ${name} matures`,
+          () =>
+            bot.blockAt(new Vec3(x, 201, blockZ))?.getProperties()["age"] ===
+            age,
+          10_000,
+        );
+      }
       expect(
         await rcon.command("execute if block 311 205 8 minecraft:oak_leaves"),
       ).toContain("Test passed");

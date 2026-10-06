@@ -33,18 +33,27 @@ describe("world restoration maintenance guard", () => {
           (resource) => resource.kind === "ValidatingAdmissionPolicy",
         )?.spec,
       );
-    expect(policy.validations).toHaveLength(4);
+    expect(policy.validations).toHaveLength(5);
     expect(policy.validations[0]?.expression).toContain(
-      "sjer.red/mining-reset-lock",
+      "oldObject.metadata.annotations",
+    );
+    expect(policy.validations[0]?.expression).toContain(
+      "object.spec.replicas == 0",
+    );
+    expect(policy.validations[0]?.expression).toContain(
+      "oldObject.spec.replicas == 0",
     );
     expect(policy.validations[1]?.expression).toContain(
+      "sjer.red/mining-reset-lock",
+    );
+    expect(policy.validations[2]?.expression).toContain(
       RESTORE_PHASE_ANNOTATION,
     );
-    expect(policy.validations[2]?.expression).toContain("'VALIDATING'");
-    expect(policy.validations[2]?.expression).toContain(
+    expect(policy.validations[3]?.expression).toContain("'VALIDATING'");
+    expect(policy.validations[3]?.expression).toContain(
       RESTORE_IMAGE_ANNOTATION,
     );
-    expect(policy.validations[3]?.expression).toContain(
+    expect(policy.validations[4]?.expression).toContain(
       "oldObject.spec.replicas == 0",
     );
     expect(
