@@ -138,6 +138,7 @@ public final class ArenaFixtures implements Listener {
                 player,
                 java.time.InstantSource.system()));
     cubes.add(cube.getUniqueId());
+    cube.addScoreboardTag("storm_fixture_cube");
     plugin
         .getServer()
         .getScheduler()
@@ -145,6 +146,17 @@ public final class ArenaFixtures implements Listener {
             plugin,
             task -> {
               if (!cube.isValid() || !player.isOnline()) {
+                plugin
+                    .getLogger()
+                    .info(
+                        "Cube probe ended: valid="
+                            + cube.isValid()
+                            + "; dead="
+                            + cube.isDead()
+                            + "; cube="
+                            + cube.getLocation()
+                            + "; player="
+                            + player.getLocation());
                 task.cancel();
                 return;
               }
@@ -172,9 +184,28 @@ public final class ArenaFixtures implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void contact(EntityDamageByEntityEvent event) {
-    if (cubes.contains(event.getDamager().getUniqueId())
+    if (event.getFinalDamage() > 0
+        && cubes.contains(event.getDamager().getUniqueId())
         && event.getEntity() instanceof org.bukkit.entity.Player player)
       player.sendMessage("Fixture cube made a native contact attack.");
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  void cubeDamage(org.bukkit.event.entity.EntityDamageEvent event) {
+    if (cubes.contains(event.getEntity().getUniqueId())
+        || (event instanceof EntityDamageByEntityEvent hit
+            && cubes.contains(hit.getDamager().getUniqueId())))
+      plugin
+          .getLogger()
+          .info(
+              "Cube damage probe: victim="
+                  + event.getEntity()
+                  + "; cause="
+                  + event.getCause()
+                  + "; cancelled="
+                  + event.isCancelled()
+                  + "; damage="
+                  + event.getFinalDamage());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)

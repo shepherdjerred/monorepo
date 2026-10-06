@@ -7,8 +7,6 @@ import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import { z } from "zod";
 import { ClearCountOutputSchema } from "#e2e/harness/rcon-output.ts";
 
-const tagged = '@e[nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}]';
-
 async function join(bot: Bot, round?: number) {
   const joined = waitForMessage(bot, /Survival: Fighter/u);
   bot.chat(
@@ -294,14 +292,20 @@ describe("settlement expeditions on real Paper", () => {
     rcon,
   }) => {
     await rcon.command(`op ${bot.username}`);
-    await join(bot, 8);
+    // Isolate the factory probe from random ranged and explosive specials.
+    await join(bot, 1);
     await rcon.command("difficulty normal");
     try {
-      const round = waitForMessage(bot, /Round 8:/u);
+      const round = waitForMessage(bot, /Round 1:/u);
       await rcon.command("arena start settlement");
       await round;
+      expect(
+        await rcon.command(
+          `storm-fixture-survival terrain ${bot.username} none`,
+        ),
+      ).toContain("Opened test terrain routes");
       await travel(bot, rcon, new Vec3(27.5, 73, 65.5));
-      await protect(bot, rcon);
+      const health = bot.health;
       const contact = waitForMessage(
         bot,
         /Fixture cube made a native contact attack/u,
@@ -321,9 +325,14 @@ describe("settlement expeditions on real Paper", () => {
         20_000,
       );
       await contact;
+      await waitUntil(
+        "native cube damage reaches the client",
+        () => bot.health < health,
+      );
+      expect(bot.health).toBeGreaterThan(0);
       expect(
         await rcon.command(
-          `execute as ${tagged} run data get entity @s Health`,
+          "data get entity @e[tag=storm_fixture_cube,limit=1] Health",
         ),
       ).toContain("f");
     } finally {

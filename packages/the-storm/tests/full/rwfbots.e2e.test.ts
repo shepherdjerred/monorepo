@@ -114,11 +114,19 @@ async function joinedBots(
 ): Promise<string[]> {
   // Bots now walk in over the countdown. Observe that lifecycle rather than
   // racing its last arrival against an unrelated fifteen-second deadline.
-  await eventually(
-    `${count.toString()} bots to join`,
-    async () => log.all(joinedPattern).length >= count + 1,
-    CountdownMillisSchema.parse(fullRwfTestSettings.countdown),
-  );
+  try {
+    await eventually(
+      `${count.toString()} bots to join`,
+      async () => log.all(joinedPattern).length >= count + 1,
+      CountdownMillisSchema.parse(fullRwfTestSettings.countdown),
+    );
+  } catch (error) {
+    throw new Error(
+      `Expected ${count.toString()} bots and ${human} to join; saw:\n${log.lines.join("\n")}`,
+      { cause: error },
+    );
+  }
+  expect(log.has(/The game has begun!/u), "all bots arrive in the lobby").toBe(false);
   const current = await status(rcon);
   expect(
     current.phase,
