@@ -21,13 +21,21 @@ declare module "vitest" {
 }
 
 const packageRoot = path.resolve(import.meta.dirname, "..", "..");
-const stormJar = path.join(
-  packageRoot,
-  "plugin",
-  "dist",
-  "build",
-  "libs",
-  "TheStorm.jar",
+const stormJar = path.resolve(
+  z
+    .string()
+    .min(1)
+    .parse(
+      Bun.env["STORM_E2E_PLUGIN_JAR"] ??
+        path.join(
+          packageRoot,
+          "plugin",
+          "dist",
+          "build",
+          "libs",
+          "TheStorm.jar",
+        ),
+    ),
 );
 const ownedConfigDir = path.join(
   packageRoot,

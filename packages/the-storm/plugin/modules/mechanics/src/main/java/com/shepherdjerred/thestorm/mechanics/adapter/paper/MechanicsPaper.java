@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.app.Gatekeeper;
 import com.shepherdjerred.thestorm.mechanics.app.SignCreation;
@@ -25,7 +26,8 @@ public final class MechanicsPaper {
             signs,
             new Guard(protection),
             context.scheduler(),
-            context.services().require(SealedWorlds.class));
+            context.services().require(SealedWorlds.class),
+            context.services().require(BlockChanges.class));
     var structures = new Structures(kit, context.time());
     var copier = new SignCopier(kit);
     var handlers =

@@ -498,6 +498,7 @@ describe("live status", () => {
       podPhase: "Running",
       podReady: true,
       miningResetLock: null,
+      worldRestoreLease: null,
     });
     expect(status.image).toMatch(
       /^ghcr\.io\/shepherdjerred\/the-storm-server:/u,
@@ -527,6 +528,24 @@ describe("live status", () => {
     expect(
       liveRefusal(parseLiveStatus(locked, await fixture("pod.json"))),
     ).toMatch(/mining reset/u);
+  });
+
+  it("refuses restoration leases even when the private acceptance pod is ready", async () => {
+    const sts = StatefulSetSchema.parse(await fixture("statefulset.json"));
+    const held = {
+      ...sts,
+      metadata: {
+        ...sts.metadata,
+        annotations: {
+          ...sts.metadata.annotations,
+          "sjer.red/world-restore-lease": "restore-request",
+        },
+      },
+    };
+    const status = parseLiveStatus(held, await fixture("pod.json"));
+    expect(status.podReady).toBe(true);
+    expect(status.worldRestoreLease).toBe("restore-request");
+    expect(liveRefusal(status)).toMatch(/world restoration.*restore-request/u);
   });
 });
 

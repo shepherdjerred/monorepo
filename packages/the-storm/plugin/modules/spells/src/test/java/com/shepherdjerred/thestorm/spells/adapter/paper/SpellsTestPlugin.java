@@ -9,6 +9,8 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.spells.SpellsModule;
 import java.io.IOException;
@@ -58,6 +60,7 @@ public class SpellsTestPlugin extends JavaPlugin {
     this.database = database;
     services.provide(Protection.class, new FarClaim());
     services.provide(SealedWorlds.class, sealed);
+    services.provide(BlockChanges.class, new AuditedBlockChanges(change -> {}));
     var context =
         new ModuleContext(
             this,
@@ -89,6 +92,11 @@ public class SpellsTestPlugin extends JavaPlugin {
     public Decision checkHarm(
         UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
       return at(attackerAt).isAllowed() ? at(victimAt) : at(attackerAt);
+    }
+
+    @Override
+    public boolean isPreserved(Location location) {
+      return false;
     }
 
     @Override

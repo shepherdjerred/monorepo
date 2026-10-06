@@ -222,6 +222,11 @@ public class QuestsTestPlugin extends JavaPlugin {
     }
 
     @Override
+    public boolean isPreserved(Location location) {
+      return false;
+    }
+
+    @Override
     public boolean sameLand(Location a, Location b) {
       return true;
     }

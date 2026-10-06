@@ -89,6 +89,23 @@ public final class ArenaNativeProbe {
             + " "
             + runner.talents().status(player);
       }
+      case "pursuit" ->
+          "Fighter "
+              + Places.at(player)
+              + " entrance="
+              + runner.map().entrance(player)
+              + " enemies="
+              + runner.world().enemies().stream()
+                  .map(
+                      enemy ->
+                          enemy.getType()
+                              + " at="
+                              + enemy.getLocation()
+                              + " target="
+                              + (enemy instanceof org.bukkit.entity.Mob mob
+                                  ? mob.getTarget()
+                                  : "none"))
+                  .toList();
       case "cast" -> {
         var boss = runner.combat().boss().orElseThrow();
         var cast = boss.cast().orElseThrow();

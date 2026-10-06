@@ -9,6 +9,8 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
 import java.time.InstantSource;
@@ -55,6 +57,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     this.database = database;
     var services = new Services();
     services.provide(Protection.class, new OpenProtection());
+    services.provide(BlockChanges.class, new AuditedBlockChanges(change -> {}));
     services.provide(SealedWorlds.class, new SealedWorlds());
     var context =
         new ModuleContext(
@@ -195,6 +198,11 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     public Decision checkHarm(
         UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
       return Decision.allowed();
+    }
+
+    @Override
+    public boolean isPreserved(Location location) {
+      return false;
     }
 
     @Override

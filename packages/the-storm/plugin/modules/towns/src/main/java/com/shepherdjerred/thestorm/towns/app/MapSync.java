@@ -49,6 +49,17 @@ public final class MapSync implements TownEvents {
     map.eraseAll();
     state.towns().forEach(town -> landChanged(town.id()));
     state
+        .heritage()
+        .sites()
+        .forEach(
+            site ->
+                map.draw(
+                    UUID.nameUUIDFromBytes(
+                        ("heritage:" + site.id())
+                            .getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    site.name() + " (" + site.kind() + "; permanently protected)",
+                    ClaimOutlines.of(java.util.List.copyOf(site.footprint()))));
+    state
         .parcels()
         .ifPresent(
             book ->

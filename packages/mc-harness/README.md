@@ -234,8 +234,9 @@ the sole owner of sandboxes and bridge tokens.
 `--target live` (never inferred) makes the daemon's `LiveService`
 (`src/live/`) the target. It reads cluster state as the
 `mc-sandbox:mc-harness` ServiceAccount (`kubectl --as`): the StatefulSet, pod
-`minecraft-tsmc-0` and the `sjer.red/mining-reset-lock` annotation. An asleep
-or locked server is a 409 refusal; the harness never scales, patches or
+`minecraft-tsmc-0`, the `sjer.red/mining-reset-lock` annotation, and the
+`sjer.red/world-restore-lease` annotation. An asleep or locked server is a 409
+refusal, including a ready restoration acceptance pod; the harness never scales, patches or
 annotates anything. When usable, it supervises a `kubectl port-forward` to the
 pod's MCBridge port 25580. The bridge token comes only from the daemon's
 `MC_BRIDGE_TOKEN` environment (from the `storm-brain` 1Password item). Logs come

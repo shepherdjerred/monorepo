@@ -77,12 +77,24 @@ final class WorldListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onGrowth(BlockGrowEvent event) {
-    event.setCancelled(!naturalChange(event.getBlock()));
+    var block = event.getBlock();
+    var effect =
+        block.getBlockData() instanceof org.bukkit.block.data.Ageable
+                && org.bukkit.Tag.CROPS.isTagged(block.getType())
+                && event.getNewState().getType() == block.getType()
+            ? WorldEffect.CROP_GROWTH
+            : WorldEffect.NATURAL_CHANGE;
+    event.setCancelled(!guard.flows(effect, block, block));
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onMoisture(MoistureChangeEvent event) {
-    event.setCancelled(!naturalChange(event.getBlock()));
+    var block = event.getBlock();
+    var effect =
+        block.getType() == Material.FARMLAND && event.getNewState().getType() == Material.FARMLAND
+            ? WorldEffect.SOIL_MOISTURE
+            : WorldEffect.NATURAL_CHANGE;
+    event.setCancelled(!guard.flows(effect, block, block));
   }
 
   private boolean naturalChange(Block block) {
@@ -294,7 +306,12 @@ final class WorldListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onSpread(BlockSpreadEvent event) {
-    var effect = spreadOf(event.getNewState().getType());
+    var effect =
+        event.getSource().getType() == Material.GRASS_BLOCK
+                && event.getBlock().getType() == Material.DIRT
+                && event.getNewState().getType() == Material.GRASS_BLOCK
+            ? WorldEffect.GRASS_REGROWTH
+            : spreadOf(event.getNewState().getType());
     if (!guard.flows(effect, event.getSource(), event.getBlock())) {
       event.setCancelled(true);
     }

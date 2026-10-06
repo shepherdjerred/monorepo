@@ -92,7 +92,9 @@ final class TownFlowsTest extends AegisServer {
     assertThat(awaitLine(alice, "Land: 2 of 24 chunks (owner's Governor level 1)."))
         .anyMatch(line -> line.equals("[Towns]: Aegis: owner Alice; member Bob"));
     run(bob, "town list");
-    awaitLine(bob, "Aegis (2 member(s), 2 chunk(s))");
+    awaitLine(bob, "Aegis [PLAYER] — 2 members, 2 claims, 0 permanently protected chunks");
+    run(bob, "town info Test Heritage Spawn");
+    awaitLine(bob, "Test Heritage Spawn [SERVER]");
   }
 
   @Test

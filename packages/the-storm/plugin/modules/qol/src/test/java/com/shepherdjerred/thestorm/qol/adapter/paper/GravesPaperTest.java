@@ -18,6 +18,8 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.block.Action;
@@ -140,6 +142,39 @@ final class GravesPaperTest {
     var spy = spyOnDrops();
     aliceDies();
     assertThat(spy.drops).isEmpty();
+  }
+
+  @Test
+  void protectedLandNeverUsesTheUncheckedDeathSpotAndRetainsBelongings() {
+    harness.land.noBuilding = location -> true;
+    var drops = spyOnDrops();
+    var alice = aliceWithKit();
+    alice.setLevel(12);
+    var event =
+        new PlayerDeathEvent(
+            alice,
+            DamageSource.builder(DamageType.GENERIC).build(),
+            new ArrayList<>(
+                List.of(
+                    new ItemStack(Material.DIAMOND_SWORD),
+                    new ItemStack(Material.DIRT, 64),
+                    new ItemStack(Material.IRON_HELMET))),
+            12,
+            net.kyori.adventure.text.Component.empty(),
+            true);
+    harness.server.getPluginManager().callEvent(event);
+    harness.server.getScheduler().performTicks(5);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(drops.drops).isEmpty();
+    assertThat(event.getKeepInventory()).isTrue();
+    assertThat(event.getKeepLevel()).isTrue();
+    assertThat(event.getDroppedExp()).isZero();
+    assertThat(alice.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.DIAMOND_SWORD));
+    assertThat(alice.getInventory().getItem(5)).isEqualTo(new ItemStack(Material.DIRT, 64));
+    assertThat(alice.getInventory().getHelmet()).isEqualTo(new ItemStack(Material.IRON_HELMET));
+    assertThat(alice.getLevel()).isEqualTo(12);
   }
 
   @Test
@@ -374,15 +409,15 @@ final class GravesPaperTest {
   }
 
   @Test
-  void withNowhereToBuildTheGraveGoesWhereTheOwnerDied() {
+  void withNowhereToBuildNoGraveReplacesProtectedLand() {
     harness.land.noBuilding = location -> true;
     var alice = aliceWithKit();
 
     alice.setHealth(0);
-    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
+    harness.server.getScheduler().performTicks(5);
 
-    assertThat(harness.graves.all().getFirst().grave().pos())
-        .isEqualTo(new GravePos("world", 0, 5, 0));
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
   }
 
   @Test
@@ -430,6 +465,45 @@ final class GravesPaperTest {
 
     assertThat(GraveBlocks.idAt(harness.world.getBlockAt(4, 5, 4))).contains(id);
     assertThat(harness.graves.get(id)).contains(grave);
+  }
+
+  @Test
+  void restoredGravesCannotRecreateMarkersAfterTheirLandBecomesProtected() {
+    aliceDies();
+    var stored = harness.graves.all().getFirst();
+    var before = harness.recordedChanges.size();
+    graveBlock().setType(Material.AIR);
+    harness.land.noBuilding = location -> true;
+
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(harness.graves.get(stored.grave().id())).contains(stored);
+    assertThat(harness.recordedChanges).hasSize(before);
+  }
+
+  @Test
+  void graveMarkerPlacementAndRemovalHaveExplicitAuditActors() {
+    var alice = aliceDies();
+    assertThat(harness.recordedChanges)
+        .anySatisfy(
+            change -> {
+              assertThat(change.actor()).isEqualTo("#storm-graves");
+              assertThat(change.before().getMaterial()).isEqualTo(Material.AIR);
+              assertThat(change.after().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
+            });
+    rightClick(alice, graveBlock());
+    harness.until(() -> harness.graves.all().isEmpty());
+    assertThat(harness.recordedChanges)
+        .anySatisfy(
+            change -> {
+              assertThat(change.actor()).isEqualTo("#storm-graves");
+              assertThat(change.before().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
+              assertThat(change.after().getMaterial()).isEqualTo(Material.AIR);
+            });
   }
 
   @Test

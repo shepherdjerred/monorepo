@@ -53,8 +53,12 @@ val archiveTest = tasks.register<Exec>("archiveTest") {
   workingDir(rootProject.file("../server"))
   commandLine("python3", "-m", "unittest", "-v", "test_archive_progression.py")
 }
+val worldRestoreTest = tasks.register<Exec>("worldRestoreTest") {
+  workingDir(rootProject.file("../server"))
+  commandLine("python3", "-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py")
+}
 tasks.test {
-  dependsOn(archiveTest)
+  dependsOn(archiveTest, worldRestoreTest)
   // ModulesTest checks the shipped module inventory against the registry.
   inputs
       .file(rootProject.file("../server/owned/plugins/TheStorm/config.yml"))
@@ -76,9 +80,13 @@ tasks.runServer {
   downloadPlugins {
     url("https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar")
     url("https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar")
+    url("https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar")
   }
 }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
-dependencies { testImplementation(libs.findLibrary("archunit").get()) }
+dependencies {
+  testImplementation(libs.findLibrary("archunit").get())
+  compileOnly(libs.findLibrary("coreprotect").get()) { isTransitive = false }
+}

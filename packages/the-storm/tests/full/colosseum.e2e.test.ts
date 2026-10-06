@@ -280,7 +280,18 @@ describe("Colosseum on real Paper", () => {
           ).toBeGreaterThanOrEqual(3);
         }
         await rcon.command(`kill ${enemies}`);
-        await waitUntil("next wave", () => wave > current, 15_000);
+        await waitUntil("next wave", () => wave > current, 15_000).catch(
+          async (error: unknown) => {
+            const status = await rcon.command("arena list");
+            const health = await rcon.command(
+              `execute as ${enemies} run data get entity @s Health`,
+            );
+            throw new Error(
+              `Wave ${current.toString()} stalled: ${status}; ${health}`,
+              { cause: error },
+            );
+          },
+        );
       }
       await waitUntil("diamond class weapon", () =>
         bot.inventory.items().some((i) => i.name === "diamond_sword"),

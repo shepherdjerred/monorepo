@@ -185,7 +185,7 @@ public final class TownsPaper {
         location -> {
           var land = guard.land(location);
           return !(land instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.WorkLand)
-              && (!(land
+              && (!(land.underlyingLand()
                       instanceof
                       com.shepherdjerred.thestorm.towns.domain.land.Land.ParcelLand(var parcel))
                   || parcel.phase()

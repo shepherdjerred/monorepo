@@ -112,7 +112,10 @@ public final class RwfPaper {
                 module.compute(),
                 module.time(),
                 module.random(),
-                world));
+                world,
+                module
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.world.BlockChanges.class)));
     var keys = new Keys(module.plugin());
     var kits = KitFactory.build(keys, content.kits());
     var snapshots = new Snapshots(context, app.snapshots());

@@ -38,6 +38,7 @@ final class TownsModuleTest {
     plugin = MockBukkit.createMockPlugin();
     database = StormDatabase.open(directory.resolve("t.db"));
     Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
+    Files.copy(Path.of("src/test/resources/heritage.yml"), directory.resolve("heritage.yml"));
   }
 
   @AfterEach
@@ -105,5 +106,14 @@ final class TownsModuleTest {
   void aMissingConfigStopsTheModule() {
     assertThatThrownBy(() -> new TownsModule().enable(context()))
         .isInstanceOf(RuntimeException.class);
+  }
+
+  @Test
+  void aMissingHeritageCatalogStopsTheModule() throws Exception {
+    Files.copy(SHIPPED, directory.resolve("towns.yml"));
+    Files.delete(directory.resolve("heritage.yml"));
+    assertThatThrownBy(() -> new TownsModule().enable(context()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("heritage.yml");
   }
 }

@@ -1,0 +1,573 @@
+import copy
+import importlib.util
+import hashlib
+import io
+import json
+import tempfile
+import tarfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+spec = importlib.util.spec_from_file_location("control", Path(__file__).with_name("restoration-control.py"))
+control = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(control)
+
+REQUEST = "6903b19f-f4d2-42a5-91ba-6ce046562c83"
+IMAGE = "ghcr.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
+
+
+class Cluster:
+    def __init__(self):
+        self.objects = {}
+        self.mutations = []
+        self.players = 0
+        self.extra_writer = False
+        self.late_join = False
+        self.stale_patch = False
+        for name, resource in zip(control.POLICIES, ("statefulsets", "statefulsets/scale"), strict=True):
+            self.objects["validatingadmissionpolicy", name] = {
+                "metadata": {"generation": 1}, "status": {"observedGeneration": 1, "typeChecking": {}},
+                "spec": {"failurePolicy": "Fail", "matchConstraints": {"resourceRules": [
+                    {"resources": [resource], "operations": ["UPDATE"]}]}}}
+            self.objects["validatingadmissionpolicybinding", name] = {"spec": {
+                "policyName": name, "validationActions": ["Deny"], **({"paramRef": {
+                    "name": control.SERVER, "namespace": control.NAMESPACE, "parameterNotFoundAction": "Deny"}}
+                    if resource.endswith("/scale") else {})}}
+        self.objects["statefulset", control.SERVER] = {
+            "metadata": {"uid": "server-uid", "resourceVersion": "1", "annotations": {}},
+            "spec": {"replicas": 1, "template": {"spec": {"containers": [{"image": IMAGE}]}}},
+            "status": {"replicas": 1}}
+        self.objects["pvc", control.CLAIM] = {"metadata": {"uid": "claim-uid"},
+            "spec": {"volumeName": "data-volume"}, "status": {"phase": "Bound"}}
+        self.objects["pv", "data-volume"] = {"metadata": {"uid": "volume-uid"}, "spec": {
+            "csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "source-dataset"}}}
+        for name in control.SERVICES:
+            self.objects["service", name] = {"metadata": {"uid": name, "resourceVersion": "1",
+                "annotations": {"tracking": "keep"}}, "spec": {"selector": {"app": control.SERVER}}}
+
+    @property
+    def server(self):
+        return self.objects["statefulset", control.SERVER]
+
+    def read(self, kind, name, namespace=control.NAMESPACE):
+        return copy.deepcopy(self.objects[kind, name])
+
+    def run(self, arguments, timeout=30):
+        command = arguments[2:]
+        if command[:2] == ["exec", control.SERVER + "-0"]:
+            return f"There are {self.players} of a max of 20 players online:"
+        if command[:2] == ["get", "pod"]:
+            return ""
+        if command[:2] == ["get", "pvc"]:
+            return json.dumps({"items": [{"metadata": {"name": control.CLAIM, "uid": "claim-uid"}}]})
+        if command[:2] == ["get", "pods"]:
+            items = [{"metadata": {"labels": {}}, "spec": {"volumes": [
+                {"persistentVolumeClaim": {"claimName": control.CLAIM}}]}, "status": {"phase": "Running"}}]
+            return json.dumps({"items": items if self.extra_writer else []})
+        if command[0] != "patch":
+            raise AssertionError("Unexpected Kubernetes command: " + str(command))
+        resource = self.objects[command[1], command[2]]
+        operations = json.loads(command[-1])
+        if self.stale_patch or operations[0]["value"] != resource["metadata"]["resourceVersion"]:
+            raise RuntimeError("resourceVersion test failed")
+        for operation in operations[1:]:
+            keys = [key.replace("~1", "/").replace("~0", "~") for key in operation["path"].split("/")[1:]]
+            parent = resource
+            for key in keys[:-1]:
+                parent = parent[key]
+            parent[keys[-1]] = operation["value"]
+        resource["metadata"]["resourceVersion"] = str(int(resource["metadata"]["resourceVersion"]) + 1)
+        self.mutations.append((command[1], command[2]))
+        if command[1] == "statefulset" and resource["spec"]["replicas"] == 0:
+            resource["status"]["replicas"] = 0
+        if self.late_join and len(self.mutations) == 4:
+            self.players = 1
+        return "patched"
+
+
+class RestorationControlTest(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.path = Path(temporary.name) / "maintenance.json"
+        self.cluster = Cluster()
+        self.addCleanup(patch.stopall)
+        patch.object(control, "read", side_effect=self.cluster.read).start()
+        patch.object(control, "run", side_effect=self.cluster.run).start()
+        self.guard_probe = control.assert_denied
+        self.probes = patch.object(control, "assert_denied").start()
+
+    def initialize(self):
+        return control.initialize(self.path, REQUEST, IMAGE)
+
+    def test_preflight_is_read_only_and_records_the_exact_targets(self):
+        journal = self.initialize()
+        self.assertEqual(self.cluster.mutations, [])
+        self.assertEqual(journal["claimUid"], "claim-uid")
+        self.assertEqual(set(journal["services"]), set(control.SERVICES))
+        self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
+
+    def test_closes_all_routes_before_stopping_and_leasing_then_resumes_without_writes(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        self.assertEqual(self.cluster.mutations[:4], [("service", name) for name in control.SERVICES])
+        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
+        self.assertEqual(journal["admissionProbes"], "UPDATE_AND_SCALE_DENIED")
+        self.assertEqual(self.probes.call_count, 2)
+        self.assertIn("--dry-run=server", self.probes.call_args_list[0].args[0])
+        self.assertIn("statefulset/" + control.SERVER, self.probes.call_args_list[1].args[0])
+        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+        self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
+        self.assertEqual(control.annotations(self.cluster.server)[control.IMAGE], IMAGE)
+        for name in control.SERVICES:
+            service = self.cluster.objects["service", name]
+            self.assertEqual(service["spec"]["selector"], {"app": control.SERVER, control.ACCESS: "closed"})
+            self.assertEqual(service["metadata"]["annotations"]["tracking"], "keep")
+        before = len(self.cluster.mutations)
+        control.acquire(self.path, control.initialize(self.path, REQUEST, IMAGE))
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_players_and_late_joins_never_trigger_a_stop(self):
+        journal = self.initialize()
+        self.cluster.players = 1
+        with self.assertRaisesRegex(ValueError, "empty server"):
+            control.acquire(self.path, journal)
+        self.assertEqual(self.cluster.mutations, [])
+        self.cluster.players = 0
+        self.cluster.late_join = True
+        with self.assertRaisesRegex(ValueError, "empty server"):
+            control.acquire(self.path, journal)
+        self.assertEqual(journal["phase"], "ADMISSION_CLOSED")
+        self.assertEqual(self.cluster.server["spec"]["replicas"], 1)
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+
+    def test_extra_pvc_writer_blocks_lease_acquisition(self):
+        journal = self.initialize()
+        self.cluster.extra_writer = True
+        with self.assertRaisesRegex(ValueError, "still mounts"):
+            control.acquire(self.path, journal)
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+        self.assertEqual(journal["phase"], "ADMISSION_CLOSED")
+
+    def test_foreign_lease_and_replaced_claim_are_refused_before_any_mutation(self):
+        journal = self.initialize()
+        self.cluster.server["metadata"]["annotations"][control.LEASE] = "foreign"
+        with self.assertRaisesRegex(ValueError, "another request"):
+            control.acquire(self.path, journal)
+        self.cluster.server["metadata"]["annotations"].clear()
+        self.cluster.objects["pvc", control.CLAIM]["metadata"]["uid"] = "replaced"
+        with self.assertRaisesRegex(ValueError, "claim was replaced"):
+            control.acquire(self.path, journal)
+        self.assertEqual(self.cluster.mutations, [])
+
+    def test_unreconciled_policy_cel_warnings_and_missing_parent_binding_are_refused(self):
+        for change in ("generation", "warnings", "param"):
+            with self.subTest(change=change):
+                self.cluster = Cluster()
+                policy = self.cluster.objects["validatingadmissionpolicy", control.POLICIES[0]]
+                if change == "generation":
+                    policy["status"]["observedGeneration"] = 0
+                elif change == "warnings":
+                    policy["status"]["typeChecking"]["expressionWarnings"] = [{"warning": "invalid"}]
+                else:
+                    self.cluster.objects["validatingadmissionpolicybinding", control.POLICIES[1]]["spec"]["paramRef"] = {}
+                with patch.object(control, "read", side_effect=self.cluster.read):
+                    with self.assertRaises(ValueError):
+                        self.initialize()
+                self.assertFalse(self.path.exists())
+                self.assertEqual(self.cluster.mutations, [])
+
+    def test_compare_and_swap_refusal_retains_a_resumable_journal(self):
+        journal = self.initialize()
+        self.cluster.stale_patch = True
+        with self.assertRaisesRegex(RuntimeError, "resourceVersion"):
+            control.acquire(self.path, journal)
+        self.assertEqual(json.loads(self.path.read_text())["phase"], "CLOSING_ADMISSION")
+        self.cluster.stale_patch = False
+        control.acquire(self.path, control.initialize(self.path, REQUEST, IMAGE))
+        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+
+    def test_conflicting_request_and_unpinned_image_do_not_change_any_resource(self):
+        self.initialize()
+        with self.assertRaises(ValueError):
+            control.initialize(self.path, "11111111-1111-4111-8111-111111111111", IMAGE)
+        with self.assertRaisesRegex(ValueError, "immutable Storm image"):
+            control.initialize(self.path, REQUEST, "ghcr.io/shepherdjerred/the-storm-server:latest")
+        self.assertEqual(self.cluster.mutations, [])
+
+    def test_guard_probe_requires_the_policy_denial_and_rejects_rbac_or_a_successful_request(self):
+        for code, error in ((0, ""), (1, "RBAC: user cannot scale")):
+            with patch.object(control.subprocess, "run", return_value=control.subprocess.CompletedProcess([], code, "", error)):
+                with self.assertRaisesRegex(ValueError, "dry-run scale-up probe"):
+                    self.guard_probe(["scale"], "World restoration")
+        with patch.object(control.subprocess, "run", return_value=control.subprocess.CompletedProcess([], 1, "", "World restoration blocks scale requests")):
+            self.guard_probe(["scale"], "World restoration blocks scale requests")
+
+    def backup_fixture(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        resources = {}
+        def ensure(manifest):
+            key = manifest["kind"], manifest["metadata"]["name"]
+            if key not in resources:
+                resources[key] = copy.deepcopy(manifest)
+                resources[key]["metadata"]["uid"] = manifest["kind"] + "-uid"
+            return resources[key]
+        patch.object(control, "ensure_resource", side_effect=ensure).start()
+        return journal, resources
+
+    def test_backup_is_request_owned_scoped_and_does_not_unlock_the_server(self):
+        journal, resources = self.backup_fixture()
+        before = len(self.cluster.mutations)
+        result = control.backup(self.path, journal)
+        self.assertEqual(result["metadata"]["labels"], {control.LEASE: REQUEST})
+        self.assertEqual(result["spec"]["includedNamespaces"], [control.NAMESPACE])
+        self.assertEqual(result["spec"]["includedResources"], ["persistentvolumeclaims", "persistentvolumes"])
+        self.assertEqual(journal["backup"]["phase"], "New")
+        self.assertEqual(len(self.cluster.mutations), before)
+        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
+        control.backup(self.path, journal)
+        self.assertEqual(len(resources), 1)
+
+    def test_backup_refuses_mounts_foreign_lease_or_a_broader_pvc_selection(self):
+        journal, _ = self.backup_fixture()
+        self.cluster.extra_writer = True
+        with self.assertRaisesRegex(ValueError, "pod still mounts"):
+            control.backup(self.path, journal)
+        self.cluster.extra_writer = False
+        self.cluster.server["metadata"]["annotations"][control.LEASE] = "foreign"
+        with self.assertRaisesRegex(ValueError, "another request"):
+            control.backup(self.path, journal)
+        self.cluster.server["metadata"]["annotations"][control.LEASE] = REQUEST
+        original_run = self.cluster.run
+        def broader(arguments, timeout=30):
+            if "velero.io/backup=enabled" in arguments:
+                return json.dumps({"items": [{"metadata": {"name": "other", "uid": "other"}}]})
+            return original_run(arguments, timeout)
+        with patch.object(control, "run", side_effect=broader):
+            with self.assertRaisesRegex(ValueError, "only the recorded"):
+                control.backup(self.path, journal)
+
+    def test_partial_backup_or_missing_snapshot_is_not_accepted_as_complete(self):
+        journal, _ = self.backup_fixture()
+        result = control.backup(self.path, journal)
+        for status in ({"phase": "PartiallyFailed"}, {"phase": "Completed", "errors": 1},
+                       {"phase": "Completed", "volumeSnapshotsAttempted": 1, "volumeSnapshotsCompleted": 0}):
+            result["status"] = status
+            with self.assertRaises(ValueError):
+                control.backup(self.path, journal)
+        result["metadata"]["uid"] = "replaced"
+        with self.assertRaisesRegex(ValueError, "backup was replaced"):
+            control.backup(self.path, journal)
+
+    def test_restore_requires_completed_backup_and_remaps_only_data_into_independent_storage(self):
+        journal, resources = self.backup_fixture()
+        original = control.backup(self.path, journal)
+        with self.assertRaisesRegex(ValueError, "backup to complete"):
+            control.restore_backup(self.path, journal)
+        original["status"] = {"phase": "Completed", "completionTimestamp": "2026-10-06T02:00:00Z",
+                              "volumeSnapshotsAttempted": 1, "volumeSnapshotsCompleted": 1}
+        control.restore_backup(self.path, journal)
+        restored = resources["Restore", "storm-verify-" + REQUEST]
+        self.assertEqual(restored["spec"]["namespaceMapping"], {control.NAMESPACE: control.RESTORED_NAMESPACE})
+        self.assertEqual(restored["spec"]["includedResources"], ["persistentvolumeclaims", "persistentvolumes"])
+        self.assertEqual(journal["restore"]["byteVerification"], "PENDING")
+        restored["status"] = {"phase": "Completed"}
+        existing_read = self.cluster.read
+        def restored_claim(kind, name, namespace=control.NAMESPACE):
+            if kind == "pv" and name == "restored-volume":
+                return {"metadata": {"uid": "restored-volume-uid"}, "spec": {"csi": {
+                    "driver": "zfs.csi.openebs.io", "volumeHandle": "restored-dataset"}}}
+            if namespace == control.RESTORED_NAMESPACE:
+                return {"metadata": {"uid": "restored-claim"}, "spec": {"volumeName": "restored-volume"},
+                        "status": {"phase": "Bound"}}
+            return existing_read(kind, name, namespace)
+        with patch.object(control, "read", side_effect=restored_claim):
+            control.restore_backup(self.path, journal)
+        self.assertEqual(journal["restore"]["volumeName"], "restored-volume")
+        self.assertEqual(journal["restore"]["byteVerification"], "PENDING")
+        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+        def aliased_volume(kind, name, namespace=control.NAMESPACE):
+            result = restored_claim(kind, name, namespace)
+            if kind == "pv" and name == "restored-volume":
+                result["spec"]["csi"]["volumeHandle"] = "source-dataset"
+            return result
+        with patch.object(control, "read", side_effect=aliased_volume):
+            with self.assertRaisesRegex(ValueError, "independent native storage"):
+                control.restore_backup(self.path, journal)
+        with patch.object(control, "read", side_effect=lambda kind, name, namespace=control.NAMESPACE:
+                          existing_read(kind, name)):
+            with self.assertRaisesRegex(ValueError, "distinct bound"):
+                control.restore_backup(self.path, journal)
+
+    def test_uncertain_resource_creates_read_back_before_retrying_and_refuse_changed_ownership(self):
+        manifest = {"apiVersion": "velero.io/v1", "kind": "Backup", "metadata": {
+            "name": "fixture", "namespace": "velero", "labels": {control.LEASE: REQUEST}},
+            "spec": {"includedNamespaces": [control.NAMESPACE]}}
+        ensure = control.ensure_resource
+        with patch.object(control, "run", return_value=json.dumps(manifest)), patch.object(control.subprocess, "run") as create:
+            self.assertEqual(ensure(manifest), manifest)
+            create.assert_not_called()
+        foreign = copy.deepcopy(manifest)
+        foreign["metadata"]["labels"][control.LEASE] = "foreign"
+        with patch.object(control, "run", return_value=json.dumps(foreign)):
+            with self.assertRaisesRegex(ValueError, "another request"):
+                ensure(manifest)
+        changed = copy.deepcopy(manifest)
+        changed["spec"]["includedNamespaces"] = ["other"]
+        with patch.object(control, "run", return_value=json.dumps(changed)):
+            with self.assertRaisesRegex(ValueError, "has changed"):
+                ensure(manifest)
+
+    def reader_fixture(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        journal["backup"] = {"uid": "backup-uid", "phase": "Completed"}
+        journal["restore"] = {"phase": "Completed", "uid": "restore-uid", "claimUid": "restored-claim",
+            "volumeName": "restored-volume", "volumeUid": "restored-volume-uid", "byteVerification": "PENDING",
+            "volumeSource": {"driver": "zfs.csi.openebs.io", "volumeHandle": "restored-dataset"}}
+        pods = {}
+        previous_read, previous_run = self.cluster.read, self.cluster.run
+        def reader_read(kind, name, namespace=control.NAMESPACE):
+            if kind == "pod":
+                return copy.deepcopy(pods[namespace])
+            if kind == "pvc" and namespace == control.RESTORED_NAMESPACE:
+                return {"metadata": {"uid": "restored-claim"}, "spec": {"volumeName": "restored-volume"},
+                        "status": {"phase": "Bound"}}
+            if kind == "pv" and name == "restored-volume":
+                return {"metadata": {"uid": "restored-volume-uid"}, "spec": {
+                    "csi": copy.deepcopy(journal["restore"]["volumeSource"])}}
+            return previous_read(kind, name, namespace)
+        def reader_run(arguments, timeout=30):
+            if arguments[2:4] == ["get", "pods"]:
+                return json.dumps({"items": [pods[arguments[1]]] if arguments[1] in pods else []})
+            if arguments[2:4] == ["get", "pod"]:
+                return json.dumps(pods[arguments[1]]) if arguments[1] in pods else ""
+            if arguments[2] == "wait":
+                return "ready"
+            return previous_run(arguments, timeout)
+        def reader_create(manifest):
+            namespace = manifest["metadata"]["namespace"]
+            if namespace not in pods:
+                pods[namespace] = copy.deepcopy(manifest)
+                pods[namespace]["metadata"].update(uid=namespace + "-reader-uid", resourceVersion="1")
+                pods[namespace]["status"] = {"phase": "Running"}
+            return copy.deepcopy(pods[namespace])
+        patch.object(control, "read", side_effect=reader_read).start()
+        patch.object(control, "run", side_effect=reader_run).start()
+        patch.object(control, "ensure_resource", side_effect=reader_create).start()
+        return journal, pods
+
+    def test_complete_volume_comparison_records_only_hashes_and_keeps_admission_closed(self):
+        journal, pods = self.reader_fixture()
+        files = {"world/level.dat": "a" * 64, "plugins/TheStorm/the-storm.db": "b" * 64}
+        with patch.object(control, "remote_fingerprint", return_value=files) as hashing:
+            control.verify_backup(self.path, journal)
+        self.assertEqual(hashing.call_count, 2)
+        self.assertEqual(journal["restore"]["byteVerification"], "VERIFIED")
+        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
+        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+        proof = Path(journal["restore"]["proofPath"])
+        self.assertEqual(json.loads(proof.read_text())["files"], files)
+        self.assertEqual(hashlib.sha256(proof.read_bytes()).hexdigest(), journal["restore"]["proofSha256"])
+        self.assertEqual(proof.stat().st_mode & 0o777, 0o600)
+        for pod in pods.values():
+            self.assertTrue(pod["spec"]["volumes"][0]["persistentVolumeClaim"]["readOnly"])
+            self.assertTrue(pod["spec"]["containers"][0]["volumeMounts"][0]["readOnly"])
+            self.assertFalse(pod["spec"]["automountServiceAccountToken"])
+
+    def test_mismatched_volume_never_receives_a_verified_receipt(self):
+        journal, _ = self.reader_fixture()
+        with patch.object(control, "remote_fingerprint", side_effect=[{"file": "a"}, {"file": "b"}]):
+            with self.assertRaisesRegex(ValueError, "whole volume differs"):
+                control.verify_backup(self.path, journal)
+        self.assertEqual(journal["restore"]["byteVerification"], "FAILED")
+        self.assertFalse(self.path.with_name(self.path.name + ".backup-files.json").exists())
+        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+
+    def export_fixture(self):
+        journal, _ = self.reader_fixture()
+        contents = {
+            "world/level.dat": b"native metadata", "plugins/TheStorm/the-storm.db": b"identity",
+            "world/dimensions/minecraft/overworld/region/r.3.4.mca": b"arena terrain",
+            "world/dimensions/minecraft/rwf/data/paper/metadata.dat": b"rwf identity",
+            "world/dimensions/minecraft/rwf/region/r.0.0.mca": b"rwf terrain",
+            "world/data/minecraft/maps/13.dat": b"map", "server.properties": b"private configuration",
+            "plugins/TheStorm/config.yml": b"private configuration"}
+        hashes = {name: hashlib.sha256(value).hexdigest() for name, value in contents.items()}
+        with patch.object(control, "remote_fingerprint", return_value=hashes):
+            control.verify_backup(self.path, journal)
+        return journal, contents
+
+    def export_tar(self, contents):
+        output = io.BytesIO()
+        with tarfile.open(fileobj=output, mode="w") as archive:
+            for name, value in contents.items():
+                member = tarfile.TarInfo(name)
+                member.size = len(value)
+                archive.addfile(member, io.BytesIO(value))
+        output.seek(0)
+        return output
+
+    def test_export_copies_complete_native_selection_without_server_configuration_or_unlocking(self):
+        journal, contents = self.export_fixture()
+        destination, proof = self.path.parent / "native-export", self.path.parent / "export.json"
+        def exporting(actual_journal, target, expected):
+            self.assertIs(actual_journal, journal)
+            selected = {name: value for name, value in contents.items() if name in expected}
+            control.export_stream(self.export_tar(selected), target, expected)
+        with patch.object(control, "remote_export", side_effect=exporting):
+            control.export_backup(self.path, journal, destination, proof)
+        receipt = json.loads(proof.read_text())
+        expected = control.backup_contract.verified_export(receipt)
+        self.assertEqual(set(expected), {name for name in contents if not name.endswith((".properties", ".yml"))})
+        self.assertEqual({str(file.relative_to(destination)) for file in destination.rglob("*") if file.is_file()},
+                         set(expected))
+        self.assertTrue(all((destination / name).stat().st_mode & 0o777 == 0o600 for name in expected))
+        self.assertEqual(destination.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(proof.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(journal["export"]["phase"], "VERIFIED")
+        self.assertEqual(journal["phase"], "LEASED_OFFLINE")
+        self.assertEqual(self.cluster.server["spec"]["replicas"], 0)
+
+    def test_export_requires_original_verified_storage_and_a_new_destination(self):
+        journal, _ = self.export_fixture()
+        destination, proof = self.path.parent / "native-export", self.path.parent / "export.json"
+        with patch.object(control, "remote_export") as exporting:
+            for change in ("unverified", "changed-proof", "changed-volume", "existing-destination"):
+                with self.subTest(change=change):
+                    altered = copy.deepcopy(journal)
+                    if change == "unverified":
+                        altered["restore"]["byteVerification"] = "PENDING"
+                    elif change == "changed-proof":
+                        altered["restore"]["proofSha256"] = "f" * 64
+                    elif change == "changed-volume":
+                        altered["restore"]["volumeUid"] = "replaced"
+                    else:
+                        destination.mkdir()
+                    with self.assertRaises(ValueError):
+                        control.export_backup(self.path, altered, destination, proof)
+                    exporting.assert_not_called()
+                    self.assertFalse(proof.exists())
+
+    def test_failed_export_retains_private_copy_without_a_success_receipt(self):
+        journal, _ = self.export_fixture()
+        destination, proof = self.path.parent / "native-export", self.path.parent / "export.json"
+        with patch.object(control, "remote_export", side_effect=RuntimeError("interrupted")):
+            with self.assertRaisesRegex(RuntimeError, "interrupted"):
+                control.export_backup(self.path, journal, destination, proof)
+        self.assertTrue(destination.is_dir())
+        self.assertEqual(journal["export"]["phase"], "FAILED")
+        self.assertFalse(proof.exists())
+
+    def test_export_stream_rejects_extra_missing_corrupted_and_duplicate_files(self):
+        expected = {"world/level.dat": hashlib.sha256(b"expected").hexdigest()}
+        for index, contents in enumerate(({}, {"world/level.dat": b"corrupt"},
+                                         {"server.properties": b"configuration"}, {"../outside": b"escape"})):
+            with self.subTest(contents=contents):
+                target = self.path.parent / ("failed-" + str(index))
+                target.mkdir(mode=0o700)
+                with self.assertRaises(ValueError):
+                    control.export_stream(self.export_tar(contents), target, expected)
+        for kind in (tarfile.SYMTYPE, tarfile.LNKTYPE, tarfile.DIRTYPE, tarfile.CHRTYPE):
+            output = io.BytesIO()
+            with tarfile.open(fileobj=output, mode="w") as archive:
+                member = tarfile.TarInfo("world/level.dat")
+                member.type = kind
+                archive.addfile(member)
+            output.seek(0)
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                control.export_stream(output, self.path.parent, expected)
+        output = io.BytesIO()
+        with tarfile.open(fileobj=output, mode="w") as archive:
+            for _ in range(2):
+                member = tarfile.TarInfo("world/level.dat")
+                member.size = len(b"expected")
+                archive.addfile(member, io.BytesIO(b"expected"))
+        output.seek(0)
+        duplicate = self.path.parent / "duplicate"
+        duplicate.mkdir(mode=0o700)
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            control.export_stream(output, duplicate, expected)
+
+    def test_reader_refuses_replacement_extra_container_writable_volume_and_secret_environment(self):
+        journal, pods = self.reader_fixture()
+        with patch.object(control, "remote_fingerprint", return_value={"file": "checksum"}):
+            control.verify_backup(self.path, journal)
+        original = copy.deepcopy(pods[control.NAMESPACE])
+        for change in ("uid", "container", "volume", "environment", "init", "ephemeral"):
+            with self.subTest(change=change):
+                pod = copy.deepcopy(original)
+                if change == "uid":
+                    pod["metadata"]["uid"] = "replaced"
+                elif change == "container":
+                    pod["spec"]["containers"].append({"name": "unreviewed"})
+                elif change == "volume":
+                    pod["spec"]["volumes"][0]["persistentVolumeClaim"]["readOnly"] = False
+                elif change == "environment":
+                    pod["spec"]["containers"][0]["envFrom"] = [{"secretRef": {"name": "unreviewed"}}]
+                else:
+                    pod["spec"]["initContainers" if change == "init" else "ephemeralContainers"] = [{}]
+                with self.assertRaisesRegex(ValueError, "read-only pod"):
+                    control.assert_reader(pod, journal, control.NAMESPACE)
+
+    def test_reader_cleanup_deletes_only_recorded_uid_and_version_and_can_resume(self):
+        journal, pods = self.reader_fixture()
+        with patch.object(control, "remote_fingerprint", return_value={"file": "checksum"}):
+            control.verify_backup(self.path, journal)
+        calls = []
+        def delete(arguments, **kwargs):
+            body = json.loads(kwargs["input"])
+            namespace = arguments[5].split("/")[4]
+            self.assertEqual(body["preconditions"], {"uid": pods[namespace]["metadata"]["uid"],
+                                                     "resourceVersion": "1"})
+            calls.append(namespace)
+            del pods[namespace]
+            return control.subprocess.CompletedProcess(arguments, 0, "", "")
+        with patch.object(control.subprocess, "run", side_effect=delete):
+            control.remove_readers(self.path, journal)
+            control.remove_readers(self.path, journal)
+        self.assertEqual(calls, [control.NAMESPACE, control.RESTORED_NAMESPACE])
+        self.assertTrue(journal["readersRemoved"])
+
+    def test_reader_cleanup_refuses_an_unrelated_namespace_before_deleting_anything(self):
+        journal, _ = self.reader_fixture()
+        journal["readers"] = {"other-service": "foreign-pod"}
+        with patch.object(control.subprocess, "run") as deletion:
+            with self.assertRaisesRegex(ValueError, "outside the two recorded"):
+                control.remove_readers(self.path, journal)
+            deletion.assert_not_called()
+
+    def test_tar_volume_hashes_without_extracting_contents_and_rejects_unsafe_records(self):
+        def stream(extra=None, omit_database=False):
+            output = io.BytesIO()
+            with tarfile.open(fileobj=output, mode="w") as archive:
+                names = ["./world/level.dat", "./world/session.lock"]
+                if not omit_database:
+                    names.append("./plugins/TheStorm/the-storm.db")
+                for name in names:
+                    member = tarfile.TarInfo(name)
+                    member.size = len(b"fixture bytes")
+                    archive.addfile(member, io.BytesIO(b"fixture bytes"))
+                if extra is not None:
+                    archive.addfile(extra, io.BytesIO())
+            output.seek(0)
+            return output
+        expected = hashlib.sha256(b"fixture bytes").hexdigest()
+        self.assertEqual(control.tar_fingerprint(stream()), {
+            "world/level.dat": expected, "plugins/TheStorm/the-storm.db": expected})
+        for name, kind in (("../outside", tarfile.REGTYPE), ("/absolute", tarfile.REGTYPE),
+                           ("linked", tarfile.SYMTYPE), ("hardlink", tarfile.LNKTYPE),
+                           ("device", tarfile.CHRTYPE), ("./world/level.dat", tarfile.REGTYPE)):
+            with self.subTest(name=name, kind=kind):
+                member = tarfile.TarInfo(name)
+                member.type = kind
+                with self.assertRaises(ValueError):
+                    control.tar_fingerprint(stream(member))
+        with self.assertRaisesRegex(ValueError, "expected Storm world and database"):
+            control.tar_fingerprint(stream(omit_database=True))
+        with self.assertRaises(tarfile.ReadError):
+            control.tar_fingerprint(io.BytesIO(stream().getvalue()[:550]))
+if __name__ == "__main__":
+    unittest.main()

@@ -2,7 +2,6 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
-import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -86,18 +85,7 @@ final class MemberCommands {
                                         rename(player, getString(context, TownCommands.NAME))))))
         .then(
             Commands.literal("info")
-                .executes(context -> TownCommands.asPlayer(context, this::infoOwn))
-                .then(
-                    Commands.argument(TOWN, word())
-                        .suggests(this::suggestTowns)
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context,
-                                    player -> infoNamed(player, getString(context, TOWN))))))
-        .then(
-            Commands.literal("list")
-                .executes(context -> TownCommands.asPlayer(context, this::list)));
+                .executes(context -> TownCommands.asPlayer(context, this::infoOwn)));
   }
 
   /** {@code /town <literal> <player>}, running {@code action} once the player is found. */
@@ -276,15 +264,6 @@ final class MemberCommands {
     info(player, town.get());
   }
 
-  private void infoNamed(Player player, String name) {
-    var town = state().named(name);
-    if (town.isEmpty()) {
-      player.sendMessage(Notices.error(Explanations.explain(new TownProblem.NoSuchTown(name))));
-      return;
-    }
-    info(player, town.get());
-  }
-
   /** Tells {@code player} about {@code town}: its ranks, land and limit. */
   void info(Player player, Town town) {
     var claims = state().claimCount(town.id());
@@ -330,28 +309,6 @@ final class MemberCommands {
         .collect(joining("; "));
   }
 
-  private void list(Player player) {
-    var all =
-        state().towns().stream()
-            .sorted(comparing(town -> town.name().toLowerCase(Locale.ROOT)))
-            .toList();
-    if (all.isEmpty()) {
-      player.sendMessage(Notices.info("There are no towns yet. Found one with /town create."));
-      return;
-    }
-    player.sendMessage(Notices.info(all.size() + " town(s):"));
-    for (var town : all) {
-      player.sendMessage(
-          Notices.info(
-              town.name()
-                  + " ("
-                  + town.members().size()
-                  + " member(s), "
-                  + state().claimCount(town.id())
-                  + " chunk(s))"));
-    }
-  }
-
   /** Tells {@code player} about their open invitations, for when they join. */
   void tellInvitations(Player player) {
     for (var town : members.invitationsFor(player.getUniqueId())) {
@@ -389,15 +346,6 @@ final class MemberCommands {
           .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase()))
           .forEach(builder::suggest);
     }
-    return builder.buildFuture();
-  }
-
-  private CompletableFuture<Suggestions> suggestTowns(
-      CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-    state().towns().stream()
-        .map(Town::name)
-        .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase()))
-        .forEach(builder::suggest);
     return builder.buildFuture();
   }
 

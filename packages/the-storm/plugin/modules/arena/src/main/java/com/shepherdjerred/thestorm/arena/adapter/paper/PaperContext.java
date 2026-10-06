@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import java.time.InstantSource;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +24,7 @@ final class PaperContext {
   private final ComputePool compute;
   private final InstantSource time;
   private final RandomGenerator random;
+  private final BlockChanges blocks;
   private @Nullable ArenaPresence presence;
 
   PaperContext(ModuleContext module) {
@@ -31,6 +33,7 @@ final class PaperContext {
     this.compute = module.compute();
     this.time = module.time();
     this.random = module.random();
+    this.blocks = module.services().require(BlockChanges.class);
   }
 
   Plugin plugin() {
@@ -59,6 +62,10 @@ final class PaperContext {
 
   RandomGenerator random() {
     return random;
+  }
+
+  BlockChanges blocks() {
+    return blocks;
   }
 
   ComponentLogger logger() {

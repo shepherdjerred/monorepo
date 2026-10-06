@@ -227,9 +227,13 @@ final class Terrain {
   private void pasteFrom(int start, Runnable done) {
     var blocks = source.blocks();
     var end = Math.min(blocks.schematic().blockCount(), start + PASTE_BATCH);
+    var updates = new ArrayList<com.shepherdjerred.thestorm.core.world.BlockChanges.Update>();
     for (var i = start; i < end; i++) {
-      Places.block(world(), blocks.positionOf(i)).setBlockData(blocks.atIndex(i), false);
+      updates.add(
+          new com.shepherdjerred.thestorm.core.world.BlockChanges.Update(
+              Places.block(world(), blocks.positionOf(i)), blocks.atIndex(i), false));
     }
+    context.blocks().prepare("#storm-rwf-paste", updates).apply();
     if (end < blocks.schematic().blockCount()) {
       context.scheduler().runOnMainThread(() -> pasteFrom(end, done));
       return;

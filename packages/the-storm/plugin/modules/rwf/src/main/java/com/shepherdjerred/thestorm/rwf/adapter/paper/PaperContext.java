@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import java.time.InstantSource;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -21,6 +22,7 @@ final class PaperContext {
   private final InstantSource time;
   private final RandomGenerator random;
   private final World world;
+  private final BlockChanges blocks;
 
   /**
    * What the context is made of.
@@ -38,7 +40,8 @@ final class PaperContext {
       ComputePool compute,
       InstantSource time,
       RandomGenerator random,
-      World world) {}
+      World world,
+      BlockChanges blocks) {}
 
   PaperContext(Parts parts) {
     this.plugin = parts.plugin();
@@ -47,6 +50,7 @@ final class PaperContext {
     this.time = parts.time();
     this.random = parts.random();
     this.world = parts.world();
+    this.blocks = parts.blocks();
   }
 
   Plugin plugin() {
@@ -80,6 +84,10 @@ final class PaperContext {
   /** The sealed world matches run in. */
   World world() {
     return world;
+  }
+
+  BlockChanges blocks() {
+    return blocks;
   }
 
   ComponentLogger logger() {

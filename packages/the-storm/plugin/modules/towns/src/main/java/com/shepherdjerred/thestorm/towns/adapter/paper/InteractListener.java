@@ -115,6 +115,10 @@ final class InteractListener implements Listener {
   }
 
   private void step(PlayerInteractEvent event, Block block) {
+    if (block.getType() == Material.FARMLAND && guard.land(block) instanceof Land.HeritageLand) {
+      event.setUseInteractedBlock(Event.Result.DENY);
+      return;
+    }
     kinds
         .step(block.getType())
         .filter(act -> !guard.permitsQuietly(event.getPlayer(), act, guard.land(block)))

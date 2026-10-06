@@ -6,6 +6,10 @@ public enum ProtectedAction {
   BUILD,
   /** Break a block. */
   BREAK,
+  /** A mechanism or background task places a block, without a direct player edit. */
+  AUTOMATIC_BUILD,
+  /** A mechanism or background task removes a block, without a direct player edit. */
+  AUTOMATIC_BREAK,
   /** Use doors, gates, trapdoors, buttons, levers and similar blocks. */
   INTERACT,
   /** Open or take from a container. */

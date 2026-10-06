@@ -69,7 +69,7 @@ final class ParcelInventoryListener implements Listener {
       if (land instanceof Land.WorkLand) {
         return true;
       }
-      if (land instanceof Land.ParcelLand(var parcel)
+      if (land.underlyingLand() instanceof Land.ParcelLand(var parcel)
           && (parcel.phase() == ProtectedParcel.Phase.RESETTING
               || parcel.phase() == ProtectedParcel.Phase.UNOWNED
               || !parcel.owners().contains(player.getUniqueId()))) {
@@ -81,7 +81,7 @@ final class ParcelInventoryListener implements Listener {
 
   private boolean withdrawalOnly(Inventory inventory, Player player) {
     for (var location : Chests.locations(inventory)) {
-      if (guard.land(location) instanceof Land.ParcelLand(var parcel)
+      if (guard.land(location).underlyingLand() instanceof Land.ParcelLand(var parcel)
           && parcel.phase() == ProtectedParcel.Phase.GRACE
           && parcel.owners().contains(player.getUniqueId())) {
         return true;
@@ -128,7 +128,7 @@ final class ParcelInventoryListener implements Listener {
   private boolean worldFrozen(org.bukkit.block.Block block) {
     var land = guard.land(block);
     return land instanceof Land.WorkLand
-        || (land instanceof Land.ParcelLand(var parcel)
+        || (land.underlyingLand() instanceof Land.ParcelLand(var parcel)
             && parcel.phase() != ProtectedParcel.Phase.ACTIVE);
   }
 }

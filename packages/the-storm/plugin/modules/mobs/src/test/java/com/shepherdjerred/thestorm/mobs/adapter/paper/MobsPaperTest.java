@@ -97,6 +97,11 @@ final class MobsPaperTest {
     }
 
     @Override
+    public boolean isPreserved(Location location) {
+      return false;
+    }
+
+    @Override
     public boolean sameLand(Location a, Location b) {
       return inside(a) == inside(b);
     }

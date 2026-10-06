@@ -37,8 +37,21 @@ final class Guard {
    * refusal wins.
    */
   Decision cells(UUID player, PaperGrid grid, List<Pos> cells) {
+    return cells(player, grid, cells, List.of(ProtectedAction.BREAK, ProtectedAction.BUILD));
+  }
+
+  Decision automaticCells(UUID player, PaperGrid grid, List<Pos> cells) {
+    return cells(
+        player,
+        grid,
+        cells,
+        List.of(ProtectedAction.AUTOMATIC_BREAK, ProtectedAction.AUTOMATIC_BUILD));
+  }
+
+  private Decision cells(
+      UUID player, PaperGrid grid, List<Pos> cells, List<ProtectedAction> actions) {
     for (var pos : cells) {
-      for (var action : List.of(ProtectedAction.BREAK, ProtectedAction.BUILD)) {
+      for (var action : actions) {
         var decision = check(player, action, grid, pos);
         if (!decision.isAllowed()) {
           return decision;
@@ -70,11 +83,11 @@ final class Guard {
   /** Whether {@code player} may break each moved block and build where it lands. */
   Decision moves(UUID player, PaperGrid grid, List<BlockMove> moves) {
     for (var move : moves) {
-      var from = check(player, ProtectedAction.BREAK, grid, move.from());
+      var from = check(player, ProtectedAction.AUTOMATIC_BREAK, grid, move.from());
       if (!from.isAllowed()) {
         return from;
       }
-      var to = check(player, ProtectedAction.BUILD, grid, move.to());
+      var to = check(player, ProtectedAction.AUTOMATIC_BUILD, grid, move.to());
       if (!to.isAllowed()) {
         return to;
       }

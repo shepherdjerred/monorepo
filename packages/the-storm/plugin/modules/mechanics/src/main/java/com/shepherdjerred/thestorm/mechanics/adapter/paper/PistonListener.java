@@ -121,7 +121,7 @@ final class PistonListener implements Listener {
     var pos = PaperGrid.pos(head);
     if (!grid.contains(pos)
         || !rules.crushable(grid.cellAt(pos))
-        || !kit.guard().check(owner, ProtectedAction.BREAK, grid, pos).isAllowed()) {
+        || !kit.guard().check(owner, ProtectedAction.AUTOMATIC_BREAK, grid, pos).isAllowed()) {
       return false;
     }
     head.breakNaturally();
@@ -186,7 +186,7 @@ final class PistonListener implements Listener {
               var grid = new PaperGrid(piston.getWorld());
               var moves = planner.apply(grid);
               if (!moves.isEmpty() && kit.guard().moves(owner, grid, moves).isAllowed()) {
-                Placer.move(grid, moves);
+                Placer.move(grid, moves, kit.changes());
               }
             });
   }

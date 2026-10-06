@@ -233,6 +233,7 @@ final class EntityListener implements Listener {
     if (event.getCause() == HangingBreakEvent.RemoveCause.EXPLOSION) {
       event.setCancelled(!Guard.flows(WorldEffect.EXPLOSION, land, land));
     }
+    if (land instanceof Land.HeritageLand) event.setCancelled(true);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -294,6 +295,7 @@ final class EntityListener implements Listener {
             WorldEffect.EXPLOSION, guard.land(origin(source, vehicle)), guard.land(vehicle))) {
       event.setCancelled(true);
     }
+    if (guard.land(vehicle) instanceof Land.HeritageLand) event.setCancelled(true);
   }
 
   private static Location origin(DamageSource source, Entity victim) {

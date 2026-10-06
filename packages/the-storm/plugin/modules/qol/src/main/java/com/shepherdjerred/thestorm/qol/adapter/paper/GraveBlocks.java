@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.qol.domain.grave.Grave;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Material;
@@ -22,15 +24,22 @@ final class GraveBlocks {
   private GraveBlocks() {}
 
   /** Makes {@code block} the marker for {@code grave}. */
-  static void place(Block block, Grave grave, GraveFace face) {
+  static BlockChanges.Prepared preparePlace(
+      Block block, Grave grave, GraveFace face, BlockChanges changes) {
     // Only open air is ever replaced (see Blocks.cell); the grave records it to put it back.
-    block.setType(Material.PLAYER_HEAD, false);
-    if (!(block.getState() instanceof Skull skull)) {
-      throw new IllegalStateException("a player head has no skull state at " + block);
-    }
-    face.apply(skull, grave.owner());
-    skull.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, grave.id().toString());
-    skull.update(true, false);
+    var prepared =
+        changes.prepare(
+            "#storm-graves",
+            List.of(new BlockChanges.Update(block, Material.PLAYER_HEAD.createBlockData(), false)));
+    return () -> {
+      prepared.apply();
+      if (!(block.getState() instanceof Skull skull)) {
+        throw new IllegalStateException("a player head has no skull state at " + block);
+      }
+      face.apply(skull, grave.owner());
+      skull.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, grave.id().toString());
+      skull.update(true, false);
+    };
   }
 
   /** The grave whose marker {@code block} is, if it is one. */
@@ -51,9 +60,9 @@ final class GraveBlocks {
   }
 
   /** Puts back {@code replaced} if {@code block} is the marker for {@code grave}. */
-  static void clear(Block block, UUID grave, BlockData replaced) {
+  static void clear(Block block, UUID grave, BlockData replaced, BlockChanges changes) {
     if (idAt(block).filter(grave::equals).isPresent()) {
-      block.setBlockData(replaced, false);
+      changes.set("#storm-graves", block, replaced, false);
     }
   }
 }

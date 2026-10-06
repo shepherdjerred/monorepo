@@ -16,7 +16,9 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import org.jspecify.annotations.Nullable;
@@ -96,7 +98,10 @@ public final class JdaBridge implements DiscordGateway {
         .addCommands(
             Commands.slash("list", "Who is online on The Storm"),
             Commands.slash("baltop", "Show the richest players in The Storm"),
-            Commands.slash("towns", "Show player towns in The Storm"))
+            Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
+                .addOptions(
+                    new OptionData(OptionType.INTEGER, "page", "Directory page").setMinValue(1),
+                    new OptionData(OptionType.STRING, "name", "Town or historic site to inspect")))
         .queue(
             commands -> logger.info("Discord bridge connected to #{}", found.getName()),
             error -> logger.warn("Registering Discord slash commands failed", error));

@@ -474,6 +474,11 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     }
 
     @Override
+    public boolean isPreserved(Location location) {
+      return false;
+    }
+
+    @Override
     public boolean sameLand(Location a, Location b) {
       return true;
     }

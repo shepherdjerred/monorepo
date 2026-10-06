@@ -405,8 +405,13 @@ final class SettlementProvisioner {
       throw new IllegalStateException(
           "Concurrent edit at " + change.block() + "; restore with backup " + token);
     }
-    block.setBlockData(
-        context.server().createBlockData(restoring ? change.before() : change.after()), false);
+    context
+        .blocks()
+        .set(
+            restoring ? "#storm-arena-restore" : "#storm-arena-provision",
+            block,
+            context.server().createBlockData(restoring ? change.before() : change.after()),
+            false);
   }
 
   private static String hashChanges(List<SettlementStore.Change> changes) {

@@ -174,6 +174,16 @@ export async function stagePlugins(
       path.join(pluginsDir, "TheStormFixtures.jar"),
       Bun.file(options.fixturesJar),
     );
+    // Recovery exercises a synthetic rental, separate from surveyed production holdings.
+    const parcels = path.join(pluginsDir, "TheStorm", "parcels.yml");
+    const fixture = await Bun.file(
+      path.join(import.meta.dirname, "..", "fixture-rental.yml"),
+    ).text();
+    const entries = fixture
+      .split("\n")
+      .map((line) => (line === "" ? "" : `  ${line}`))
+      .join("\n");
+    await Bun.write(parcels, (await Bun.file(parcels).text()) + entries);
   }
   if (options.companionsE2eJar !== undefined) {
     await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);

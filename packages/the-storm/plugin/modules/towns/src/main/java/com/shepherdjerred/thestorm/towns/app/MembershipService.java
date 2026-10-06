@@ -188,6 +188,9 @@ public final class MembershipService {
 
   /** Renames {@code actor}'s town; the web map is redrawn once saved. */
   public Result<Change<Town>, List<TownProblem>> rename(UUID actor, String name) {
+    if (state().heritageNameReserved(name, state().townOf(actor).map(Town::id))) {
+      return Result.err(List.of(new TownProblem.NameTaken(name)));
+    }
     return unlessBusy(
         actor,
         actor,

@@ -1,10 +1,12 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.mechanics.domain.piston.BlockMove;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.BlockChange;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.Structure;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
@@ -35,19 +37,15 @@ final class Placer {
    */
   record Placement(PaperGrid grid, BlockData template, List<BlockChange> changes) {
 
-    /** Sets every change. Everything was checked beforehand; nothing here can fail. */
-    void apply() {
-      var placed = new ArrayList<Block>();
+    /** Checks and logs every final state before stock is debited or any block moves. */
+    BlockChanges.Prepared prepare(BlockChanges writer, String actor) {
+      var states = new LinkedHashMap<Block, BlockData>();
       for (var change : changes) {
         var block = grid.block(change.pos());
-        if (change.isRemoval()) {
-          block.setType(Material.AIR, true);
-        } else {
-          block.setBlockData(template.clone(), true);
-          placed.add(block);
-        }
+        states.put(block, change.isRemoval() ? Material.AIR.createBlockData() : template.clone());
       }
-      placed.forEach(Placer::connect);
+      states.forEach((block, data) -> connect(block, data, states));
+      return writer.prepare(actor, updates(states));
     }
   }
 
@@ -79,37 +77,45 @@ final class Placer {
    * Joins a placed fence, pane or bar to its neighbours. Vanilla updates the neighbours of a set
    * block but not the block itself, so its own sides are worked out here.
    */
-  private static void connect(Block block) {
-    if (!(block.getBlockData() instanceof MultipleFacing facing)) {
+  private static void connect(Block block, BlockData data, Map<Block, BlockData> states) {
+    if (!(data instanceof MultipleFacing facing)) {
       return;
     }
     for (var side : SIDES) {
       if (facing.getAllowedFaces().contains(side)) {
         var neighbor = block.getRelative(side);
-        var neighborType = neighbor.getType();
-        var connects = neighborType == block.getType() || neighborType.isOccluding();
+        var neighborData = states.getOrDefault(neighbor, neighbor.getBlockData());
+        var neighborType = neighborData.getMaterial();
+        var connects = neighborType == data.getMaterial() || neighborType.isOccluding();
         if (facing instanceof Fence) {
           connects =
               connects
                   || Tag.FENCES.isTagged(neighborType)
-                  || (neighbor.getBlockData() instanceof Gate gate
+                  || (neighborData instanceof Gate gate
                       && gate.getFacing() != side
                       && gate.getFacing() != side.getOppositeFace());
         }
         facing.setFace(side, connects);
       }
     }
-    block.setBlockData(facing, false);
   }
 
-  /** Moves blocks in plan order: each destination is filled before its source is emptied. */
-  static void move(PaperGrid grid, List<BlockMove> moves) {
+  /** Computes and audits the complete final state before moving a block. */
+  static void move(PaperGrid grid, List<BlockMove> moves, BlockChanges writer) {
+    var states = new LinkedHashMap<Block, BlockData>();
     for (var move : moves) {
       var from = grid.block(move.from());
       var to = grid.block(move.to());
-      var data = from.getBlockData().clone();
-      to.setBlockData(data, true);
-      from.setType(Material.AIR, true);
+      var data = states.getOrDefault(from, from.getBlockData()).clone();
+      states.put(to, data);
+      states.put(from, Material.AIR.createBlockData());
     }
+    writer.prepare("#storm-pistons", updates(states)).apply();
+  }
+
+  private static List<BlockChanges.Update> updates(Map<Block, BlockData> states) {
+    return states.entrySet().stream()
+        .map(entry -> new BlockChanges.Update(entry.getKey(), entry.getValue(), true))
+        .toList();
   }
 }

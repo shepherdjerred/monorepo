@@ -203,7 +203,125 @@ the public `public-sjer-red` bucket and is not the right place for a jar), and
 `fetch.sh` keeps verifying the bytes. Nothing has been uploaded yet; the pin
 stays on Jenkins until that mirror exists.
 
+## Historic land protection
+
+`owned/plugins/TheStorm/heritage.yml` is the mandatory preservation catalog.
+It protects spawn, the reconstructed footprints of 64 historic sites, and the
+Settlement, Rustworks and Colosseum structures across the full world height.
+Original Towny claim files were not recovered; the displayed boundaries are
+reconstructed preservation footprints. Claim flags, unclaiming and town
+deletion cannot remove this protection.
+
+Verified editors may intentionally edit only the catalog's proven construction
+chunks. Buffers remain in staff custody. Exact shop boundaries and their proven
+owner UUIDs live in `parcels.yml`; permanent historical shops have no rent or
+expiry. Public container permissions do not inherit into historical holdings.
+
+The immutable floor blocks destructive environmental changes. Sheep may graze
+grass blocks, grass blocks may regrow, and existing crops may age and farmland
+moisture may change. Farmland trampling, decorative grass removal, leaf decay,
+fire, explosions, mob block changes and cross-boundary mechanisms are denied.
+`/town list [page]` and `/town info <name>` expose the shared public directory,
+including staff-held sites with their actual member and claim counts.
+
+The catalog does not restore terrain or import town membership. Those are
+offline restoration operations that require their own backup and migration
+receipts before activation.
+
+## Offline restoration tools
+
+`world-restore.py` prepares the approved archive on independent storage. Each
+operation holds an exclusive journal lock, checks its input hashes, and writes
+its phase and verification receipts before the next operation can proceed.
+Failed copies remain available for inspection. The source archive and successful
+input checkpoints remain immutable.
+
+| Operation                   | Required checkpoint                                               | Result                                                                                           |
+| --------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `prepare`                   | Approved archive SHA-256                                          | Validated archive paths, complete chunk inventory, source file hashes                            |
+| `convert-legacy`            | Prepared private copy                                             | Guarded Paper 1.21.7 conversion and clean shutdown                                               |
+| `convert-companions`        | Legacy terrain converted                                          | Individually converted vanilla players, statistics and maps                                      |
+| `convert-native-chunks`     | Legacy companion checkpoint                                       | Native 26.2 terrain, embedded entities and block entities                                        |
+| `convert-native-companions` | Native terrain checkpoint                                         | Native item codecs, safe player positions, verified beds and map allocation counter              |
+| `convert-native-auxiliary`  | Native companion checkpoint                                       | Native entity and POI stores                                                                     |
+| `rehearse-native-layout`    | All native archive data converted                                 | Frozen Paper 26.2 startup, native dimension layout and metadata verification                     |
+| `preserve-heritage`         | Verified native layout                                            | Saved protected terrain with underground upgrade disabled                                        |
+| `transplant-arenas`         | Heritage preservation and independently verified modern backup    | Current Settlement and Rustworks columns merged into a separate historical world copy            |
+| `prepare-database`          | Verified arena merge and the same modern backup and candidate jar | Fresh candidate Flyway histories, retained identity/moderation rows and proven historical owners |
+| `verify-copy`               | Two independent stopped data trees                                | Complete file hash comparison; symlinks and shared hard links are rejected                       |
+| `database-inventory`        | Existing database                                                 | Integrity check, table schemas and row counts without private row contents                       |
+
+Converters use the exact pinned Paper bootstrap and verify every library hash.
+The conversion guard freezes ticking before world initialization. Whole-world
+inventory checks preserve every pregenerated historical terrain chunk.
+Heritage preservation changes only generation and lighting metadata in the
+protected chunks; their saved sections, biomes, foundations and records remain
+unchanged. Unprotected chunks retain Minecraft's supported underground upgrade.
+
+Arena merging replaces full-height columns in the catalog's reviewed footprints.
+It preserves surrounding blocks, auxiliary records and historical companion data.
+Partial biome cells must agree, and referenced modern map IDs require a reviewed
+map merge before transplantation can succeed. The tool refuses unexplained
+chunk-wide persistent data in partial chunks.
+
+`restoration-policy.json` is the reviewed identity retention contract.
+`database-restore.py` requires a fully checkpointed source database and compares
+retained rows using type-preserving hashes. Gameplay tables and migration
+histories start fresh. Historical owner imports use the domain's stable town IDs
+and their recorded import time; archive dates do not imply founding dates.
+
+`restoration-control.py preflight --journal <private-receipt> --request <uuid>
+--image <immutable-image>` checks the reconciled Kubernetes admission guards and
+records the exact server, claim, volume and Service identities.
+Its `acquire` operation verifies an empty server, closes all four Service routes,
+disables router wake, stops Paper through its normal grace period, and acquires
+the request-owned offline lease. Updates use resource-version comparisons.
+Live dry-run probes must demonstrate that both StatefulSet and scale requests
+are denied. A failed or interrupted acquisition resumes from its private journal
+and retains closed admission. Ordinary live harness access refuses and the mining
+reset defers while the restoration lease is held.
+
+With the same journal and lease, `backup` creates or resumes an owned Velero
+backup of the exact recorded PVC and PV. It requires closed routes, stopped
+replicas and no mounted source-volume pods, and accepts completion only with
+exactly one successful volume snapshot. `restore-backup` restores only storage
+resources into `minecraft-tsmc-restore`; it cannot restore a production workload
+or route. The restore claim is explicitly excluded from scheduled backups.
+The recorded claim, PV and native CSI volume handle must all identify distinct
+storage. Both commands report pending controller work and can be repeated.
+Controller warnings remain recorded for operator review. A completed restore
+keeps byte verification pending. `verify-backup` creates two request-owned,
+read-only volume readers using the recorded immutable rollback image. It streams
+the whole volumes through SHA-256 without extracting or saving file contents,
+rejects linked or non-regular files, and compares every file except transient
+world session locks. The original server remains stopped and all routes stay
+closed. Storage and reader identities are checked before and after the comparison;
+unexpected writers or replaced readers abort verification. The private receipt
+contains hashes only. `export-backup --export-dir <new-private-directory>
+--export-proof <new-private-receipt>` copies the approved native terrain, dimension
+metadata, maps and Storm identity database from the independent restore. Every
+file must match the whole-volume hash proof. The export excludes server
+configuration, credentials and modern vanilla player progression. An unexpected
+dimension, unsafe archive record, missing file or changed hash aborts the copy;
+failed copies remain private for inspection. Its separate receipt pins the
+whole-volume proof and exact storage identities. Native arena transplantation and
+identity import verify this complete selection again before using it.
+`remove-readers` deletes only those recorded helpers with
+UID and resource-version preconditions. These operations leave the independently
+restored rollback volume in place and do not activate or reopen Storm.
+
+The restoration journal and native conversion sources are operator inputs,
+separate from the production gameplay jar. Activation requires an independently
+verified whole-volume rollback copy, preservation of the other retained arena
+dimensions, a fresh CoreProtect epoch, and private acceptance of the matching
+published image before public routes reopen.
+
 ## Local checks
+
+Real-Paper acceptance uses the local `plugin/dist/build/libs/TheStorm.jar`.
+Set `STORM_E2E_PLUGIN_JAR` to an existing immutable jar when reproducing behavior
+against a published baseline; the harness still creates a disposable server and
+runs the same assertions. This does not select or change the production image.
 
 ```bash
 bun run --cwd packages/the-storm build

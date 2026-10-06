@@ -61,6 +61,10 @@ final class PaperProtection implements Protection {
     var actor = actor(player);
     var act = new Act(actionOf(action), subjectOf(action, location));
     var land = guard.land(location);
+    if ((action == ProtectedAction.AUTOMATIC_BUILD || action == ProtectedAction.AUTOMATIC_BREAK)
+        && land instanceof Land.HeritageLand(var site, _, _)) {
+      return decision(new Verdict.Deny(new Denial.ByRegion(site.name(), act.action())));
+    }
     var verdict =
         action == ProtectedAction.OPEN_CONTAINER
                 && rendering.kinds().isLockable(location.getBlock().getType())
@@ -70,7 +74,9 @@ final class PaperProtection implements Protection {
             ? Verdict.allow()
             : engine().decide(actor, act, land);
     if (verdict.isAllowed()
-        && (action == ProtectedAction.OPEN_CONTAINER || action == ProtectedAction.BREAK)) {
+        && (action == ProtectedAction.OPEN_CONTAINER
+            || action == ProtectedAction.BREAK
+            || action == ProtectedAction.AUTOMATIC_BREAK)) {
       var block = Guard.world(location).getBlockAt(location);
       if (!(action == ProtectedAction.OPEN_CONTAINER
           ? locks.mayOpen(player, actor.bypass(), LockGuard.container(block))
@@ -131,6 +137,13 @@ final class PaperProtection implements Protection {
     return guard.land(a).sameOwnerAs(guard.land(b));
   }
 
+  @Override
+  public boolean isPreserved(Location location) {
+    requireMainThread();
+    var land = guard.land(location);
+    return land instanceof Land.HeritageLand || land instanceof Land.WorkLand;
+  }
+
   private ProtectionEngine engine() {
     return guard.engine();
   }
@@ -156,8 +169,8 @@ final class PaperProtection implements Protection {
 
   static Action actionOf(ProtectedAction action) {
     return switch (action) {
-      case BUILD -> Action.BUILD;
-      case BREAK -> Action.BREAK;
+      case BUILD, AUTOMATIC_BUILD -> Action.BUILD;
+      case BREAK, AUTOMATIC_BREAK -> Action.BREAK;
       case INTERACT -> Action.INTERACT;
       case OPEN_CONTAINER -> Action.OPEN_CONTAINER;
       case USE_REDSTONE -> Action.USE_REDSTONE;
@@ -171,7 +184,7 @@ final class PaperProtection implements Protection {
 
   private Subject subjectOf(ProtectedAction action, Location location) {
     return switch (action) {
-      case BUILD, BREAK, INTERACT, OPEN_CONTAINER, USE_REDSTONE ->
+      case BUILD, BREAK, AUTOMATIC_BUILD, AUTOMATIC_BREAK, INTERACT, OPEN_CONTAINER, USE_REDSTONE ->
           rendering.kinds().subject(location.getBlock().getType());
       case DAMAGE_ENTITY, INTERACT_ENTITY, PLACE_ENTITY -> Subject.ENTITY;
       case TELEPORT_INTO, SET_HOME -> Subject.LOCATION;

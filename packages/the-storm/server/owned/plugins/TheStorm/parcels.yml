@@ -35,14 +35,14 @@ parcels:
     kind: PERMANENT_SHOP
     area:
       world: world
-      from: { x: 149, y: -64, z: -136 }
+      from: { x: 152, y: -64, z: -132 }
       to: { x: 167, y: 319, z: -113 }
-    owners: []
+    owners: [af1c824a-8ff5-4912-9470-b32c07ffd1f8]
     provenance: >-
-      The shop sign at 152,68,-124 identifies PikachuPals. Mojang's UUID
-      matches playerdata in the imported map1 archive. The exact shop boundary
-      beside the eastern public path is uncertain; held in staff custody until
-      the public path can be excluded from the editable volume.
+      The shop sign at 152,68,-124 identifies PikachuPals. The exact
+      bukkit.lastKnownName in the 2015 playerdata proves the UUID. The double
+      stone slab border at y=66 defines this footprint; the public road at
+      x<=151 is excluded from the editable volume.
     weeklyRent: 0
   - id: smaland-shop
     name: Smaland47's Historical Shop
@@ -51,11 +51,11 @@ parcels:
       world: world
       from: { x: 32, y: -64, z: -155 }
       to: { x: 49, y: 319, z: -138 }
-    owners: []
+    owners: [3ced328d-f079-45e4-ad71-8c721c4a699b]
     provenance: >-
       Chunk Shop signs at 32,65,-147 and 32,65,-146 identify Smaland47;
-      the shop floor is enclosed by its slab border. No corroborated UUID
-      is available, so editing remains in staff custody.
+      the shop floor is enclosed by its slab border. The exact
+      bukkit.lastKnownName in the 2015 playerdata proves the owner's UUID.
     weeklyRent: 0
   - id: eternal-shop
     name: Eternal's Minemart
@@ -83,17 +83,3 @@ parcels:
       shops. The ground shop's slab border establishes this footprint.
       No corroborated UUID is available; editing remains in staff custody.
     weeklyRent: 0
-  - id: market-01
-    name: North Market Plot 1
-    kind: RENTAL_SHOP
-    area:
-      world: world
-      from: { x: 64, y: 69, z: -184 }
-      to: { x: 75, y: 96, z: -173 }
-    owners: []
-    provenance: >-
-      A 12 by 12 building volume in the unbuilt north market area. Staff must
-      prepare the server-owned foundation at y=68 and capture an air-only
-      recovery baseline before admission. Roads and foundations stay outside
-      the player's editable volume. Weekly rent is 5 CR per buildable block.
-    weeklyRent: 720

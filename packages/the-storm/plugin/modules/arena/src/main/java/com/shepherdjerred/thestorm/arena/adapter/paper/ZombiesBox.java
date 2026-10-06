@@ -323,7 +323,10 @@ final class ZombiesBox {
   void beams() {
     for (var candidate : runner.map().content().boxSites()) {
       var block = runner.world().block(candidate.beacon());
-      block.setType(candidate.id().equals(active()) ? Material.BEACON : Material.AIR, false);
+      runner
+          .world()
+          .setBlock(
+              candidate.beacon(), candidate.id().equals(active()) ? Material.BEACON : Material.AIR);
       if (block.getState() instanceof org.bukkit.block.Beacon beacon) {
         beacon.setPrimaryEffect(null);
         beacon.setSecondaryEffect(null);

@@ -53,7 +53,18 @@ describe("minor survival recovery on real Paper", () => {
       await waitUntil(
         "one-third recovery ceiling",
         () => Math.abs(bot.health - 20 / 3) < 0.001,
-      );
+      ).catch(async (error: unknown) => {
+        const health = await rcon.command(
+          `data get entity ${bot.username} Health`,
+        );
+        const maximum = await rcon.command(
+          `attribute ${bot.username} minecraft:max_health get`,
+        );
+        throw new Error(
+          `Passive recovery stalled: client=${bot.health.toString()}; ${health}; ${maximum}`,
+          { cause: error },
+        );
+      });
       await Bun.sleep(8000);
       expect(bot.health).toBeCloseTo(20 / 3, 3);
 

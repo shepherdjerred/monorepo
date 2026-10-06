@@ -162,6 +162,27 @@ class FakeCluster {
 }
 
 describe("mining reset orchestration", () => {
+  test("defers without touching storage while a world restoration holds the lease", async () => {
+    const cluster = new FakeCluster();
+    cluster.serverAnnotations["sjer.red/world-restore-lease"] =
+      "restore-request";
+    const result = await resetMiningWorldWithDependencies("2026q4", {
+      command: cluster.command.bind(cluster),
+      heartbeat: () => {
+        throw new Error("A deferred restore must not heartbeat a reset");
+      },
+      sleep: async () => {
+        throw new Error("A deferred restore must not wait on a reset");
+      },
+    });
+    expect(result).toEqual({ kind: "deferred" });
+    expect(cluster.serverAnnotations).toEqual({
+      "sjer.red/world-restore-lease": "restore-request",
+    });
+    expect(cluster.backup).toBeUndefined();
+    expect(cluster.job).toBeUndefined();
+    expect(cluster.serviceAnnotations).toEqual({});
+  });
   test("holds the server lock until backup and reset Job succeed", async () => {
     const cluster = new FakeCluster();
     const result = await resetMiningWorldWithDependencies("2026q4", {

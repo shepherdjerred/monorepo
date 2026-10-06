@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.app.Gatekeeper;
 import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
@@ -28,7 +29,8 @@ record Kit(
     Signs signs,
     Guard guard,
     Scheduler scheduler,
-    SealedWorlds sealedWorlds) {
+    SealedWorlds sealedWorlds,
+    BlockChanges changes) {
 
   /**
    * What a player is told about a mechanism sign with no recorded creator, such as a CraftBook sign

@@ -288,6 +288,12 @@
     "reason": "Selected Minecraft world"
   },
   {
+    "namespace": "minecraft-tsmc-restore",
+    "name": "datadir-minecraft-tsmc-0",
+    "backup": "disabled",
+    "reason": "Independent stopped Storm rollback restore; retained for verification and recovery, not a new backup source"
+  },
+  {
     "namespace": "minecraft-sjerred",
     "name": "datadir-minecraft-sjerred-0",
     "backup": "enabled",

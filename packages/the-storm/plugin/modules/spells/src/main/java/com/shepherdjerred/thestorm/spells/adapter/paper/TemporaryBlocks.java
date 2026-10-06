@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.spells.app.SpellStore;
 import com.shepherdjerred.thestorm.spells.domain.temporary.BlockFacts;
 import com.shepherdjerred.thestorm.spells.domain.temporary.BlockKey;
@@ -65,15 +67,26 @@ public final class TemporaryBlocks {
   private final Server server;
   private final InstantSource time;
   private final Async async;
+  private final Protection protection;
+  private final BlockChanges changes;
   private BiFunction<World, BlockKey, CompletableFuture<Block>> loader;
   private BiFunction<World, BlockKey, Optional<Block>> loadedBlock;
   private Instant nextCleanup;
 
-  TemporaryBlocks(SpellStore store, Server server, InstantSource time, Async async) {
+  record Dependencies(
+      Server server,
+      InstantSource time,
+      Async async,
+      Protection protection,
+      BlockChanges changes) {}
+
+  TemporaryBlocks(SpellStore store, Dependencies runtime) {
     this.store = store;
-    this.server = server;
-    this.time = time;
-    this.async = async;
+    this.server = runtime.server();
+    this.time = runtime.time();
+    this.async = runtime.async();
+    this.protection = runtime.protection();
+    this.changes = runtime.changes();
     this.loader =
         (world, key) ->
             world
@@ -84,7 +97,7 @@ public final class TemporaryBlocks {
             world.isChunkLoaded(key.x() >> 4, key.z() >> 4)
                 ? Optional.of(blockIn(world.getChunkAt(key.x() >> 4, key.z() >> 4), key))
                 : Optional.empty();
-    this.nextCleanup = time.instant().plus(CLEANUP_INTERVAL);
+    this.nextCleanup = runtime.time().instant().plus(CLEANUP_INTERVAL);
   }
 
   TemporaryBlocks withLoader(BiFunction<World, BlockKey, CompletableFuture<Block>> replacement) {
@@ -111,6 +124,7 @@ public final class TemporaryBlocks {
    */
   public List<Block> eligible(List<Block> candidates, Replaceability.Mode mode) {
     return candidates.stream()
+        .filter(block -> !protection.isPreserved(block.getLocation()))
         .filter(block -> !holds(block))
         .filter(block -> Replaceability.canReplace(facts(block), mode))
         .filter(TemporaryBlocks::unoccupied)
@@ -174,6 +188,7 @@ public final class TemporaryBlocks {
     var revertAt = time.instant().plus(duration);
     var records =
         blocks.stream()
+            .filter(block -> !protection.isPreserved(block.getLocation()))
             .map(
                 block ->
                     new TemporaryBlock(
@@ -218,7 +233,7 @@ public final class TemporaryBlocks {
               : Optional.<Block>empty();
       if (stored.contains(key) && block.isPresent()) {
         ChunkMarkers.put(block.get().getChunk(), record);
-        block.get().setBlockData(server.createBlockData(record.placed()), false);
+        changes.set("#storm-spells", block.get(), server.createBlockData(record.placed()), false);
         ledger.placed(key);
         applied = true;
         continue;
@@ -247,8 +262,10 @@ public final class TemporaryBlocks {
   }
 
   /** The block still shows the recorded original and nobody has moved into it. */
-  private static boolean placeable(Block block, TemporaryBlock record) {
-    return block.getBlockData().getAsString().equals(record.original()) && unoccupied(block);
+  private boolean placeable(Block block, TemporaryBlock record) {
+    return !protection.isPreserved(block.getLocation())
+        && block.getBlockData().getAsString().equals(record.original())
+        && unoccupied(block);
   }
 
   /**
@@ -416,8 +433,9 @@ public final class TemporaryBlocks {
   private boolean revert(TemporaryBlock record, Block current) {
     var action =
         RevertRule.decide(record, current.getBlockData().getAsString(), current.getType().isAir());
-    if (action == RevertRule.Action.RESTORE) {
-      current.setBlockData(server.createBlockData(record.original()), false);
+    if (action == RevertRule.Action.RESTORE && !protection.isPreserved(current.getLocation())) {
+      changes.set(
+          "#storm-spells-revert", current, server.createBlockData(record.original()), false);
     }
     ChunkMarkers.remove(current.getChunk(), record.key());
     return true;

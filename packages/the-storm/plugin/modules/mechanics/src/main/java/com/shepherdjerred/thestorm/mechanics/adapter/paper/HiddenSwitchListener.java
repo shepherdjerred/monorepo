@@ -110,7 +110,7 @@ final class HiddenSwitchListener implements Listener {
           kit.guard()
               .check(player.getUniqueId(), ProtectedAction.INTERACT, grid, PaperGrid.pos(block))
               .isAllowed();
-      if (allowed && press(block)) {
+      if (allowed && press(player, block)) {
         flipped++;
       }
     }
@@ -120,18 +120,18 @@ final class HiddenSwitchListener implements Listener {
   }
 
   /** Flips a lever, or presses a button that is up and lets vanilla release it on time. */
-  private boolean press(Block block) {
+  private boolean press(Player player, Block block) {
     var data = (Switch) block.getBlockData();
     if (block.getType() == Material.LEVER) {
       data.setPowered(!data.isPowered());
-      block.setBlockData(data, true);
+      kit.changes().set(player.getName(), block, data, true);
       return true;
     }
     if (data.isPowered()) {
       return false;
     }
     data.setPowered(true);
-    block.setBlockData(data, true);
+    kit.changes().set(player.getName(), block, data, true);
     var type = block.getType();
     var hold = Tag.WOODEN_BUTTONS.isTagged(type) ? WOODEN_PRESS : STONE_PRESS;
     kit.scheduler()

@@ -28,6 +28,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -106,6 +107,19 @@ final class ArenaWorld {
     return definition;
   }
 
+  void setBlock(BlockPos position, BlockData replacement) {
+    var block = block(position);
+    if (!contains(block.getLocation())) {
+      throw new IllegalArgumentException(
+          "Arena block change outside its authored region: " + position);
+    }
+    parts.context().blocks().set("#storm-arena-" + definition.id(), block, replacement, false);
+  }
+
+  void setBlock(BlockPos position, Material material) {
+    setBlock(position, material.createBlockData());
+  }
+
   List<String> chestProblems() {
     if (!chunksReady) {
       throw new IllegalStateException(
@@ -154,7 +168,7 @@ final class ArenaWorld {
     for (var spawn : definition.mobSpawns()) {
       var block = Places.block(world, spawn.block());
       if (block.getType() == Material.CREAKING_HEART) {
-        block.setType(Material.AIR, false);
+        setBlock(spawn.block(), Material.AIR);
       }
     }
     parts.chests().empty();

@@ -80,6 +80,18 @@ final class GraveDeaths {
     }
     var spot = spot(player, event);
     if (spot.isEmpty()) {
+      if (!parts
+          .protection()
+          .check(player.getUniqueId(), ProtectedAction.AUTOMATIC_BUILD, Blocks.at(player))
+          .isAllowed()) {
+        event.setKeepInventory(true);
+        event.setKeepLevel(true);
+        event.setDroppedExp(0);
+        event.getDrops().clear();
+        Say.info(
+            player, Say.GRAVES, "This land is protected; your items and experience stay with you.");
+        return;
+      }
       Say.error(player, Say.GRAVES, "There was no room for a grave, so your items dropped.");
       return;
     }
@@ -93,8 +105,9 @@ final class GraveDeaths {
             runtime.time().instant(),
             block.getBlockData().getAsString());
     var contents = new GraveContents(grave, GraveFilling.fill(encode(buried), inventory(player)));
+    var marker = GraveBlocks.preparePlace(block, grave, parts.hooks().face(), parts.changes());
     parts.registry().reserve(grave.pos(), grave.id());
-    GraveBlocks.place(block, grave, parts.hooks().face());
+    marker.apply();
     GraveHandoff.rememberDeath(player, contents);
     var taken = newSetFromMap(new IdentityHashMap<ItemStack, Boolean>());
     taken.addAll(buried);
@@ -203,7 +216,11 @@ final class GraveDeaths {
     if (!unreachable
         && inWorld
         && Blocks.cell(feet) == GravePlacement.Cell.OPEN
-        && !parts.registry().isTaken(Blocks.pos(feet))) {
+        && !parts.registry().isTaken(Blocks.pos(feet))
+        && parts
+            .protection()
+            .check(player.getUniqueId(), ProtectedAction.AUTOMATIC_BUILD, feet.getLocation())
+            .isAllowed()) {
       return Optional.of(feet);
     }
     return Optional.empty();
@@ -232,7 +249,7 @@ final class GraveDeaths {
       var block = world.getBlockAt(x, y, z);
       var cell = Blocks.cell(block);
       if (cell == GravePlacement.Cell.OPEN
-          && protection.check(owner, ProtectedAction.BUILD, block.getLocation())
+          && protection.check(owner, ProtectedAction.AUTOMATIC_BUILD, block.getLocation())
               instanceof Decision.Denied) {
         return GravePlacement.Cell.BLOCKED;
       }

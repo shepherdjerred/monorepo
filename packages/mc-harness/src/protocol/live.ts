@@ -115,6 +115,8 @@ export const LiveStatusResponseSchema = z.strictObject({
   image: z.string().nullable(),
   /** Value of the mining-reset lock annotation; writes refuse while set. */
   miningResetLock: z.string().nullable(),
+  /** Ordinary live access refuses even while restoration runs private acceptance. */
+  worldRestoreLease: z.string().nullable(),
   /** Whether the daemon has the bridge token (the value is never returned). */
   tokenConfigured: z.boolean(),
   bridge: z.strictObject({
