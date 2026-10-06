@@ -167,6 +167,12 @@ describe("26.x features through ViaBackwards", () => {
     bot,
     rcon,
   }) => {
+    // Mineflayer's spawn event can precede the first chunk. Wait until the
+    // client is tracked in its spawn chunk before creating entities for it.
+    await waitUntil(
+      "bot spawn chunk",
+      () => bot.blockAt(bot.entity.position.floored()) !== null,
+    );
     const dialogs: unknown[] = [];
     const entityPackets: string[] = [];
     bot._client.on("packet", (data: unknown, meta: { name: string }) => {
@@ -182,7 +188,7 @@ describe("26.x features through ViaBackwards", () => {
     for (const type of [...summoned, "sulfur_cube"]) {
       summonReplies.push(
         await rcon.command(
-          `execute at ${bot.username} run minecraft:summon minecraft:${type} ~ ~ ~`,
+          `execute at ${bot.username} run minecraft:summon minecraft:${type} ~2 ~ ~`,
         ),
       );
     }
