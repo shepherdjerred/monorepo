@@ -7,6 +7,7 @@ import {
   THE_STORM_PAPER_VERSION,
   createMinecraftTsmcApp,
 } from "./minecraft-tsmc.ts";
+import { createMinecraftShuxinApp } from "./minecraft-shuxin.ts";
 
 // minecraft-tsmc runs ghcr.io/shepherdjerred/the-storm-server, built from
 // packages/the-storm/server. These tests keep the chart values and that image
@@ -58,6 +59,19 @@ function tsmcValues(): Record<string, unknown> {
   return tsmcHelm().valuesObject;
 }
 
+function shuxinValues(): Record<string, unknown> {
+  const application = createMinecraftShuxinApp(Testing.chart()).toJson();
+  return z
+    .object({
+      spec: z.object({
+        source: z.object({
+          helm: z.object({ valuesObject: HelmValues }),
+        }),
+      }),
+    })
+    .parse(application).spec.source.helm.valuesObject;
+}
+
 function synthTsmc(): unknown[] {
   const app = new App();
   const chart = new Chart(app, "test", { disableResourceNameHashes: true });
@@ -96,6 +110,17 @@ describe("minecraft-tsmc runs The Storm's image", () => {
         },
       },
     });
+  });
+
+  test("uses PROXY-aware health probes for both PROXY-enabled Paper servers", () => {
+    for (const values of [tsmcValues(), shuxinValues()]) {
+      expect(values["livenessProbe"]).toMatchObject({
+        command: ["mc-health", "--use-proxy"],
+      });
+      expect(values["readinessProbe"]).toMatchObject({
+        command: ["mc-health", "--use-proxy"],
+      });
+    }
   });
 
   test("pins the image by the accepted production digest", () => {

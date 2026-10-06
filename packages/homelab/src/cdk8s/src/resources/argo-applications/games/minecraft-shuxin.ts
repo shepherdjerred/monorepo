@@ -176,6 +176,11 @@ export function createMinecraftShuxinApp(chart: Chart) {
       VERSION_FROM_MODRINTH_PROJECTS: "true",
     },
 
+    // Paper's proxy-protocol setting requires HAProxy headers on connections,
+    // including the chart's localhost health checks.
+    livenessProbe: { command: ["mc-health", "--use-proxy"] },
+    readinessProbe: { command: ["mc-health", "--use-proxy"] },
+
     // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)
     initContainers: [
       getMinecraftConfigDriftCheckInitContainer(
