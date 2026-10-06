@@ -9,7 +9,7 @@ final class SeasonPolicy extends \XF\Service\AbstractService
         ThemeCatalog::theme($season);
         $map = $this->app->registry()->get('stormForumStyles') ?: [];
         $targets = [];
-        foreach (['light','dark'] as $mode) {
+        foreach (['light','dark','system'] as $mode) {
             foreach ([$season, 'auto'] as $id) {
                 $key = $mode . ':' . $id;
                 $style = isset($map[$key]) ? $this->app->em()->find('XF:Style', $map[$key]) : null;
@@ -18,7 +18,7 @@ final class SeasonPolicy extends \XF\Service\AbstractService
             }
         }
         $changed = false;
-        foreach (['light','dark'] as $mode) {
+        foreach (['light','dark','system'] as $mode) {
             $follower = $targets[$mode . ':auto'];
             $parentId = $targets[$mode . ':' . $season]->style_id;
             if ($follower->parent_id !== $parentId) {
@@ -27,8 +27,11 @@ final class SeasonPolicy extends \XF\Service\AbstractService
                 $changed = true;
             }
         }
-        $defaultId = $targets['light:' . ($follow ? 'auto' : $season)]->style_id;
-        if ($this->app->options()->defaultStyleId != $defaultId) { $this->app->repository('XF:Option')->updateOption('defaultStyleId', $defaultId); }
+        $defaultId = $targets['system:' . ($follow ? 'auto' : $season)]->style_id;
+        if ($this->app->options()->defaultStyleId != $defaultId) {
+            $this->app->repository('XF:Option')->updateOption('defaultStyleId', $defaultId);
+            $this->app->options()->defaultStyleId = $defaultId;
+        }
         foreach (['stormForumSeason'=>$season,'stormForumFollowCalendar'=>$follow] as $key=>$value) {
             if ($this->app->registry()->get($key) !== $value) { $this->app->registry()->set($key, $value); }
         }

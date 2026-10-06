@@ -1,0 +1,165 @@
+.stormEffects {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.stormEffects span {
+  position: absolute;
+  top: -3rem;
+  opacity: 0.65;
+  color: var(--storm-accent);
+  animation: storm-fall var(--fall-duration) var(--fall-delay) linear infinite;
+  animation-play-state: inherit;
+  will-change: transform;
+}
+.stormEffects span[data-effect="snow"] {
+  color: #fff;
+}
+.stormEffects span[data-effect="leaves"] {
+  font-size: 0 !important;
+  width: 10px;
+  height: 17px;
+  border-radius: 0 85% 0 85%;
+  background: var(--storm-accent);
+}
+.stormEffects span[data-effect="leaves"]::after {
+  content: "";
+  position: absolute;
+  inset: 3px 4px;
+  border-left: 1px solid #ffffff70;
+  transform: rotate(-28deg);
+}
+@keyframes storm-fall {
+  to {
+    transform: translate3d(40px, calc(100dvh + 6rem), 0) rotate(160deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stormEffects {
+    display: none;
+  }
+}
+html[data-storm-surface="docs"] {
+  --sl-color-white: var(--storm-text-color-emphasized);
+  --sl-color-black: var(--storm-content-bg);
+  --sl-color-gray-1: var(--storm-text-color);
+  --sl-color-gray-2: var(--storm-text-color-dimmed);
+  --sl-color-gray-3: var(--storm-text-color-muted);
+  --sl-color-gray-4: var(--storm-border-color);
+  --sl-color-gray-5: var(--storm-border-color-light);
+  --sl-color-gray-6: var(--storm-content-alt-bg);
+  --sl-color-accent: var(--storm-accent);
+  --sl-color-accent-high: var(--storm-link-color);
+  --sl-color-accent-low: var(--storm-content-highlight-bg);
+  --sl-color-text: var(--storm-text-color);
+  --sl-color-text-accent: var(--storm-link-color);
+  --sl-color-bg: var(--storm-content-bg);
+  --sl-color-bg-nav: var(--storm-chrome-bg);
+  --sl-color-bg-sidebar: var(--storm-content-alt-bg);
+  --sl-color-hairline: var(--storm-border-color);
+  --sl-font: "Trebuchet MS", Helvetica, Arial, sans-serif;
+  background: var(--storm-chrome-bg);
+}
+html[data-storm-surface="docs"] body {
+  background:
+    linear-gradient(#0005, #0005),
+    var(--storm-scenery) center top / cover fixed;
+}
+html[data-storm-surface="docs"] main {
+  position: relative;
+  background: var(--storm-content-bg);
+  border: 1px solid var(--storm-border-color);
+  border-radius: 6px;
+  margin: 24px 16px;
+  box-shadow: 0 2px 12px #0002;
+}
+html[data-storm-surface="docs"] a:hover {
+  color: var(--storm-link-hover-color);
+}
+html[data-storm-surface="docs"] :focus-visible {
+  outline: 2px solid var(--storm-focus-color);
+  outline-offset: 3px;
+}
+html[data-storm-surface="docs"] .stormDocsHeader a,
+html[data-storm-surface="docs"] .stormDocsHeader a:hover {
+  color: var(--storm-chrome-text-color);
+}
+html[data-storm-surface="docs"] .stormDocsHeader {
+  color: var(--storm-chrome-text-color);
+  background: var(--storm-chrome-bg);
+}
+.stormDocsNav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 8px 12px;
+}
+.stormDocsNav a {
+  font-weight: bold;
+}
+.stormDocsGarland {
+  background: var(--storm-decoration) center / auto 54px repeat-x;
+  height: 58px;
+  pointer-events: none;
+}
+.stormThemeControl {
+  position: relative;
+}
+.stormThemeControl summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 8px;
+}
+.stormThemeControl form {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: 280px;
+  padding: 16px;
+  color: var(--storm-text-color);
+  background: var(--storm-content-bg);
+  border: 1px solid var(--storm-border-color-heavy);
+  border-radius: 6px;
+  box-shadow: 0 4px 18px #0005;
+}
+.stormThemeControl label {
+  display: block;
+  margin-bottom: 12px;
+}
+.stormThemeControl select {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  color: var(--storm-input-text-color);
+  background: var(--storm-input-bg-color);
+  border: 1px solid var(--storm-input-border-color);
+  border-radius: 4px;
+}
+.stormThemeControl input {
+  accent-color: var(--storm-control-color);
+}
+.stormThemeControl button {
+  padding: 8px 12px;
+  border: 1px solid var(--storm-button-primary-bg);
+  border-radius: 4px;
+  color: var(--storm-button-primary-color);
+  background: var(--storm-button-primary-bg);
+  cursor: pointer;
+}
+.stormThemeControl [role="status"] {
+  margin-top: 8px;
+  font-size: 14px;
+}
+@media (max-width: 800px) {
+  html[data-storm-surface="docs"] body {
+    background-image:
+      linear-gradient(#0005, #0005), var(--storm-scenery-mobile);
+    background-attachment: scroll;
+  }
+  html[data-storm-surface="docs"] main {
+    margin: 16px 8px;
+  }
+}

@@ -1882,8 +1882,34 @@
       "dependencies": {
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/feature-flags": "workspace:*",
+        "@shepherdjerred/storm-theme": "workspace:*",
         "@temporalio/activity": "1.24.0",
         "@temporalio/worker": "1.24.0",
+        "htmlparser2": "^12.0.0",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.1",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "prettier": "^3.9.9",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
+    "packages/storm-theme": {
+      "name": "@shepherdjerred/storm-theme",
+      "version": "1.0.0",
+      "dependencies": {
+        "@fontsource/roboto": "^5.2.10",
+        "@resvg/resvg-js": "^2.6.2",
+        "satori": "^0.33.0",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -2308,6 +2334,7 @@
         "@astrojs/check": "^0.9.10",
         "@astrojs/sitemap": "^3.7.3",
         "@astrojs/starlight": "^0.42.0",
+        "@shepherdjerred/storm-theme": "workspace:*",
         "astro": "^7.3.3",
         "sharp": "^0.35.0",
       },
@@ -4302,6 +4329,8 @@
     "@shepherdjerred/storm-brain": ["@shepherdjerred/storm-brain@workspace:packages/storm-brain"],
 
     "@shepherdjerred/storm-forum": ["@shepherdjerred/storm-forum@workspace:packages/storm-forum"],
+
+    "@shepherdjerred/storm-theme": ["@shepherdjerred/storm-theme@workspace:packages/storm-theme"],
 
     "@shepherdjerred/streambot": ["@shepherdjerred/streambot@workspace:packages/streambot"],
 

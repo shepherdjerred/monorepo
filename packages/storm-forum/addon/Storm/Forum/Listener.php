@@ -3,6 +3,13 @@ namespace Storm\Forum;
 
 final class Listener
 {
+    public static function publicPage(\XF\Pub\App $app, array &$params): void
+    {
+        $theme = $app->registry()->get('stormForumSeason');
+        \Storm\Forum\Service\ThemeCatalog::theme($theme);
+        $params['stormPublicTheme'] = $theme;
+    }
+
     public static function mailTransport(\XF\Container $container, ?\Symfony\Component\Mailer\Transport\TransportInterface &$transport): void
     {
         $settings = json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR);

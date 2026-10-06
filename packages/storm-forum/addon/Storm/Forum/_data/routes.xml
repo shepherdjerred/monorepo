@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <routes>
   <route route_type="public" route_prefix="storm-home" controller="Storm\Forum:Portal" context="stormHome"/>
+  <route route_type="public" route_prefix="storm-theme" controller="Storm\Forum:Theme"/>
 </routes>

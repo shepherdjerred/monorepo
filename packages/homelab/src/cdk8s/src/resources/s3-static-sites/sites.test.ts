@@ -159,6 +159,17 @@ describe("human wiki static site", () => {
   });
 });
 
+describe("Storm docs integration", () => {
+  test("allows the credentialed apex preference API without widening other connections", () => {
+    const docs = staticSites.find(
+      ({ hostname }) => hostname === "docs.ts-mc.net",
+    );
+    expect(docs?.responseHeaders?.["Content-Security-Policy"]).toContain(
+      "connect-src 'self' https://j.sjer.red https://ts-mc.net;",
+    );
+  });
+});
+
 describe("Scout static sites", () => {
   for (const hostname of ["scout-for-lol.com", "beta.scout-for-lol.com"]) {
     test(`${hostname} probes the docs entrypoint`, () => {

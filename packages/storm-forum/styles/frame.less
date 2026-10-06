@@ -21,11 +21,55 @@ body {
   box-shadow: 0 2px 12px fade(#000, 12%);
 }
 .p-header-logo img {
-  max-width: 240px;
+  max-width: 270px;
+}
+.button { background-image: none; }
+.button:not(.button--primary):not(.button--cta):not(.button--link) {
+  background: @xf-contentAltBg;
+  color: @xf-textColor;
+  border-color: @xf-borderColorHeavy;
+  &:hover, &:focus-visible { background: @xf-contentHighlightBg; color: @xf-textColor; }
+}
+.button--cta {
+  background: @xf-majorHeadingBg;
+  color: @xf-majorHeadingTextColor;
+  border-color: @xf-borderColorHeavy;
+  &:hover, &:focus-visible { background: @xf-majorHeadingBg; color: @xf-majorHeadingTextColor; text-decoration: underline; }
 }
 .button--primary {
-  background-color: @stormAccent;
-  border-color: darken(@stormAccent, 8%);
+  background: @xf-buttonPrimaryBg;
+  border-color: @xf-buttonPrimaryBg;
+  color: #fff;
+  &:hover, &:focus-visible { background: darken(@xf-buttonPrimaryBg, 10%); color: #fff; }
+}
+.p-header-logo img { filter: drop-shadow(0 0 2px #fff); }
+.p-nav a { color: @xf-chromeTextColor; }
+.p-nav a:hover, .p-nav a:focus-visible { color: #fff; background: fade(#000, 15%); }
+.p-sectionLinks a { color: @xf-subNavTextColor; }
+.p-sectionLinks a:hover, .p-sectionLinks a:focus-visible { color: @xf-subNavTextColor; background: fade(#000, 8%); }
+.block-header a, .block-header a:hover, .block-header a:focus-visible { color: @xf-majorHeadingTextColor; }
+.p-body-sidebar .block-minorHeader a { color: @xf-linkColor; }
+.p-body-sidebar .block-minorHeader a:hover { color: @xf-linkHoverColor; }
+.p-footer a:hover, .p-footer a:focus-visible { color: #fff; }
+label.iconic > input[type=radio] + i,
+label.iconic > input[type=checkbox] + i,
+label.iconic:hover > input[type=radio] + i,
+label.iconic:hover > input[type=checkbox] + i { color: @xf-linkColor; }
+label.iconic > input:focus-visible + i:before,
+label.iconic > input:focus-visible + i:after { outline: 2px solid @xf-linkColor; outline-offset: 3px; }
+.input { border-color: @xf-borderColorHeavy; }
+a:focus-visible, button:focus-visible, .button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid @xf-linkColor;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px @xf-contentBg;
+}
+.stormGarland {
+  background-size: auto 54px;
+  background-position: center;
+  background-repeat: repeat-x;
+  pointer-events: none;
+  width: 100%;
+  margin: 0 auto;
 }
 .stormWelcome {
   border-top: 3px solid @stormAccent;

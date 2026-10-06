@@ -22,6 +22,7 @@ if (
   );
 }
 const suffix = randomBytes(4).toString("hex");
+const preview = Bun.argv.includes("--preview");
 const network = `storm-forum-test-${suffix}`;
 const db = `${network}-db`;
 const app = `${network}-app`;
@@ -142,14 +143,15 @@ try {
     "--network",
     network,
     ...credentials,
-    "-p",
-    "127.0.0.1:18796:8080",
+    ...(preview ? ["-p", "127.0.0.1:18796:8080"] : []),
     "-v",
     "/app/forum",
     "-v",
     "/var/lib/storm-forum",
     "-v",
     `${path.resolve(upload)}:/private/upload:ro`,
+    "-v",
+    `${path.resolve(import.meta.dirname, "../../storm-theme")}:/opt/storm-theme:ro`,
     ...[
       "src",
       "config",
@@ -169,7 +171,15 @@ try {
     "sh",
     "storm-forum:dev",
     "-c",
-    "cp -R /private/upload/. /app/forum/ && cp /opt/storm-forum/runtime/config.php /app/forum/src/config.php && cp -R /opt/storm-forum/addon/Storm /app/forum/src/addons/Storm && mkdir -p /var/lib/storm-forum/internal_data /tmp/storm-forum && sleep infinity",
+    "sleep infinity",
+  ]);
+  // Finish copying the licensed fixture before any installer reads its autoloader.
+  await run([
+    "exec",
+    app,
+    "sh",
+    "-c",
+    "cp -R /private/upload/. /app/forum/ && cp /opt/storm-forum/runtime/config.php /app/forum/src/config.php && cp -R /opt/storm-forum/addon/Storm /app/forum/src/addons/Storm && mkdir -p /var/lib/storm-forum/internal_data /tmp/storm-forum",
   ]);
   let ready = false;
   for (let attempt = 0; attempt < 120; attempt++) {
@@ -265,6 +275,16 @@ try {
       "/opt/storm-forum/test/portal.php",
     ]),
   );
+  process.stdout.write(
+    await run([
+      "exec",
+      "-w",
+      "/app/forum",
+      app,
+      "php",
+      "/opt/storm-forum/test/history.php",
+    ]),
+  );
   await run([
     "exec",
     "-d",
@@ -282,7 +302,7 @@ try {
       "/opt/storm-forum/test/mail.php",
     ]),
   );
-  if (exportDirectory !== undefined || Bun.argv.includes("--preview")) {
+  if (exportDirectory !== undefined || preview) {
     // Build from tracked theme source against this disposable licensed installation.
     await run(["exec", app, "mkdir", "-p", "/app/forum/vendor"]);
     const themeBuildCommand = [
@@ -324,8 +344,18 @@ try {
         "/opt/storm-forum/test/styles.php",
       ]),
     );
+    process.stdout.write(
+      await run([
+        "exec",
+        "-w",
+        "/app/forum",
+        app,
+        "php",
+        "/opt/storm-forum/test/presentation.php",
+      ]),
+    );
   }
-  if (Bun.argv.includes("--preview")) {
+  if (preview) {
     await run([
       "exec",
       "-w",
@@ -337,13 +367,19 @@ try {
     await run(["exec", app, "mkdir", "-p", "/app/forum/styles/storm"]);
     await run([
       "cp",
-      path.resolve(import.meta.dirname, "../../ts-mc/public/logo.svg"),
-      `${app}:/app/forum/styles/storm/logo.svg`,
+      `${path.resolve(import.meta.dirname, "../../storm-theme/assets")}/.`,
+      `${app}:/app/forum/styles/storm/`,
     ]);
     await run([
       "cp",
-      `${path.resolve(import.meta.dirname, "../assets")}/.`,
-      `${app}:/app/forum/styles/storm/`,
+      path.resolve(import.meta.dirname, "../../storm-theme/dist/browser.js"),
+      `${app}:/app/forum/styles/storm/browser.js`,
+    ]);
+    await run(["exec", app, "mkdir", "-p", "/app/forum/data/storm-history"]);
+    await run([
+      "cp",
+      `${path.resolve(import.meta.dirname, "../assets/history")}/.`,
+      `${app}:/app/forum/data/storm-history/`,
     ]);
     await run([
       "exec",

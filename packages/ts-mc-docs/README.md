@@ -26,9 +26,14 @@ it preserves the old MkDocs URL (`/world_downloads/`).
 
 ## Brand
 
-Storm identity: teal `#00d0c6`, dark `#303030`/`#101010`, white.
-Starlight accent overrides live in `src/styles/custom.css`; the mark is
-`src/assets/storm-mark.svg`.
+Flexile chrome, calendar palettes, holiday logos, scenery, and effects come from
+`@shepherdjerred/storm-theme`. `public/storm` links to its owned assets. Starlight
+component overrides share System appearance and saved preferences with XenForo;
+page-specific social metadata uses the forum's public calendar card endpoint.
+Production account navigation and preference synchronization activate with the
+production entry in the forum's GitOps release inventory. Before activation,
+docs save appearance locally and publish their own card using the build's
+calendar theme. Development uses the local licensed forum preview.
 
 ## Analytics
 

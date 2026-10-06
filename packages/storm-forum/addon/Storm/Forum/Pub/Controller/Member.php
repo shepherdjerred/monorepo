@@ -1,0 +1,18 @@
+<?php
+namespace Storm\Forum\Pub\Controller;
+
+final class Member extends XFCP_Member
+{
+    public function actionIndex(\XF\Mvc\ParameterBag $params)
+    {
+        $users = $this->app()->registry()->get('stormForumHistoricalUsers') ?: [];
+        $old = $users[$params->user_id] ?? null;
+        if ($old && $old['userId'] !== (int)$params->user_id
+            && preg_match('#^members/([^/]+)\.' . (int)$params->user_id . '(?:/|$)#', $this->request->getRoutePath(), $match)
+            && in_array($match[1], $old['slugs'], true)) {
+            $user = $this->assertViewableUser($old['userId']);
+            return $this->redirectPermanently($this->buildLink('members', $user));
+        }
+        return parent::actionIndex($params);
+    }
+}

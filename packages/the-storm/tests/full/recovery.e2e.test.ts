@@ -17,17 +17,23 @@ describe("minor survival recovery on real Paper", () => {
     bot.chat("/arena class medic");
     await selected;
     // Isolate passive healing from vanilla food healing and enemy attacks.
+    // Keep the platform inside the initially open Gatehouse combat area:
+    // survival containment returns fighters outside it to a ground-level route.
     // This platform and game rule exist only on the disposable test server.
     await rcon.command("gamerule natural_health_regeneration false");
-    await rcon.command("fill 1770 100 2162 1778 100 2170 stone");
+    await rcon.command("fill 1750 100 2244 1758 100 2252 stone");
     await rcon.command("difficulty normal");
     try {
       const round = waitForMessage(bot, /Round 1:/u);
       await rcon.command("arena start settlement");
       await round;
       for (const player of [bot, secondBot]) {
-        await rcon.command(`tp ${player.username} 1774.5 101 2166.5`);
+        await rcon.command(`tp ${player.username} 1754.5 101 2248.5`);
       }
+      await waitUntil(
+        "isolated recovery platform",
+        () => bot.entity.position.y === 101,
+      );
       await rcon.command(`damage ${bot.username} 15 minecraft:generic`);
       await waitUntil("injured survivor", () => bot.health === 5);
       // Keep the live round's mobs from resetting passive recovery while the
@@ -73,7 +79,7 @@ describe("minor survival recovery on real Paper", () => {
     } finally {
       await rcon.command("arena stop settlement");
       await rcon.command("gamerule natural_health_regeneration true");
-      await rcon.command("fill 1770 100 2162 1778 100 2170 air");
+      await rcon.command("fill 1750 100 2244 1758 100 2252 air");
       await rcon.command("difficulty peaceful");
     }
     await waitUntil("health restored after leaving", () => bot.health === 20);

@@ -136,6 +136,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
     await runPhp(["cmd.php", "storm:configure", "--stage", stage]);
     await runPhp(["cmd.php", "storm:styles"], "/app/forum", 5 * 60_000);
     await runPhp(["cmd.php", "storm:seed"]);
+    await runPhp(["cmd.php", "storm:history"], "/app/forum", 5 * 60_000);
     await runPhp(["cmd.php", "xf:run-jobs", "--max-execution-time", "50"]);
     completed = true;
   } finally {

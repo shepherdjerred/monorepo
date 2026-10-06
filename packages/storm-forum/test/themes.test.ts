@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { access } from "node:fs/promises";
-import { resolveTheme, themeCatalog, ThemeCatalogSchema } from "#src/themes.ts";
+import {
+  resolveTheme,
+  themeCatalog,
+  ThemeCatalogSchema,
+} from "@shepherdjerred/storm-theme";
 
 describe("Pacific festival calendar", () => {
   it("ships every scenery size and decoration referenced by the complete catalog", async () => {
@@ -16,7 +20,7 @@ describe("Pacific festival calendar", () => {
     ];
     await Promise.all(
       assets.map((asset) =>
-        access(new URL(`../assets/${asset}`, import.meta.url)),
+        access(new URL(`../../storm-theme/assets/${asset}`, import.meta.url)),
       ),
     );
   });

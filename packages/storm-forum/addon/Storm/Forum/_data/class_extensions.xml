@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <class_extensions>
+  <extension from_class="XF\Entity\User" to_class="Storm\Forum\Entity\User" execute_order="10" active="1" />
+  <extension from_class="XF\Pub\Controller\MemberController" to_class="Storm\Forum\Pub\Controller\Member" execute_order="10" active="1" />
+  <extension from_class="XF\Pub\Controller\ThreadController" to_class="Storm\Forum\Pub\Controller\Thread" execute_order="10" active="1" />
   <extension from_class="XF\Pub\Controller\MiscController" to_class="Storm\Forum\Pub\Controller\Misc" execute_order="10" active="1" />
 </class_extensions>

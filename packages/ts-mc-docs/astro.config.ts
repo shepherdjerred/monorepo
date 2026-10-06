@@ -1,15 +1,42 @@
 import sitemap from "@astrojs/sitemap";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import { writeFile } from "node:fs/promises";
+import { resolveTheme } from "@shepherdjerred/storm-theme";
+import { renderCard } from "@shepherdjerred/storm-theme/render";
 
 export default defineConfig({
+  devToolbar: { enabled: false },
   build: {
     format: "directory",
   },
   integrations: [
+    {
+      name: "storm-static-card",
+      hooks: {
+        "astro:build:done": async ({ dir }) => {
+          await writeFile(
+            new URL("storm-card.png", dir),
+            await renderCard({
+              theme: resolveTheme("auto", true, new Date()),
+              title: "The Storm player docs",
+              section: "Minecraft Java + Bedrock",
+              description:
+                "A place to build, explore, and catch up. Server IP: ts-mc.net",
+            }),
+          );
+        },
+      },
+    },
     sitemap(),
     starlight({
-      customCss: ["./src/styles/custom.css"],
+      customCss: ["../storm-theme/src/styles.css", "./src/styles/custom.css"],
+      components: {
+        Head: "./src/components/Head.astro",
+        Header: "./src/components/Header.astro",
+        ThemeProvider: "./src/components/ThemeProvider.astro",
+        ThemeSelect: "./src/components/ThemeSelect.astro",
+      },
       description: "Documentation for The Storm Minecraft server.",
       editLink: {
         baseUrl:
@@ -20,13 +47,6 @@ export default defineConfig({
         {
           tag: "script",
           attrs: { src: "/posthog.js", defer: true },
-        },
-        {
-          tag: "meta",
-          attrs: {
-            property: "og:image",
-            content: "https://docs.ts-mc.net/social.png",
-          },
         },
         {
           tag: "meta",
@@ -47,7 +67,7 @@ export default defineConfig({
           label: "Survival",
           items: [
             { label: "Overview", link: "/survival/" },
-            { label: "Live Map", link: "/survival/livemap/" },
+            { label: "LiveMap", link: "/survival/livemap/" },
             { label: "Worlds", link: "/survival/worlds/" },
             { label: "Transparency", link: "/survival/transparency/" },
           ],

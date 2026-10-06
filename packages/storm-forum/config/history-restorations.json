@@ -1,0 +1,47 @@
+{
+  "2": {
+    "cutAt": "That concludes this post,",
+    "ending": "That concludes this post. More announcements will track progress as the server and forums take shape.",
+    "reason": "Complete the interrupted closing using the stated announcement plan."
+  },
+  "152": {
+    "cutAt": "We are still working on expanding spawn,",
+    "ending": "We are still expanding spawn, creating quests, and updating the wiki. For now the focus is on refining and documenting the features added over the last few weeks.",
+    "reason": "Finish the interrupted update paragraph using its surviving statements."
+  },
+  "340": {
+    "cutAt": "Locks\n",
+    "ending": "Please check the transfer lists before changing your name. Items in the untested list may not transfer, and losses will not be restored unless specifically stated otherwise.",
+    "reason": "Omit the unfinished locks promise; repeat the surviving warning without inventing a recovery procedure."
+  },
+  "393": {
+    "cutAt": "Add a new...",
+    "ending": "The second Mob Arena is a longer-term goal. These changes will take time; the immediate priority is catching up on existing suggestions, quests, shops, and unfinished features.",
+    "reason": "Omit the unidentified new feature and close using the documented priorities."
+  },
+  "413": {
+    "cutAt": "If you'd prefer to not join in the war event,",
+    "ending": "Participation is optional. Players who do not want to PvP are not required to take part in the war event.",
+    "reason": "Restate the explicit opt-out policy without inventing the missing command."
+  },
+  "497": {
+    "cutAt": "As always, if you have a suggestion please post in...",
+    "ending": "As always, please post suggestions in the suggestions forum.",
+    "reason": "Complete the interrupted invitation using the documented forum navigation."
+  },
+  "526": {
+    "cutAt": "Lastly, all Premium members have access to 4 disguises!",
+    "ending": "Lastly, all Premium members have access to four disguises. More disguise options are planned for the future; details will follow when they are ready.",
+    "reason": "Finish the surviving disguises paragraph without inventing prices or a release date."
+  },
+  "627": {
+    "cutAt": "With all of these new changes, a new world is...",
+    "ending": "A new world is part of the planned update alongside the changes to towns and perks. More details will follow as the work progresses; there is no definite release date yet.",
+    "reason": "Complete the new-world section using its heading and the explicit lack of a release date."
+  },
+  "630": {
+    "cutAt": "These are the small areas of territories divided up by your...",
+    "ending": "Plots are smaller areas within a town's territories. They can vary in size and shape, with settings that towns can customize for their members.",
+    "reason": "Complete the plots definition using the earlier surviving description in this same announcement."
+  }
+}

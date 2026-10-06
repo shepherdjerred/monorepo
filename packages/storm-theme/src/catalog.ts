@@ -1,5 +1,5 @@
 import { z } from "zod";
-import catalog from "#config/themes.json";
+import catalog from "#data/catalog.json";
 
 const ColorSchema = z.string().regex(/^#[a-f0-9]{6}$/i);
 const PaletteSchema = z
@@ -12,6 +12,41 @@ const PaletteSchema = z
     majorHeadingBg: ColorSchema,
     majorHeadingTextColor: ColorSchema,
     subNavTextColor: ColorSchema,
+    chromeTextColor: ColorSchema,
+    chromeHoverColor: ColorSchema,
+    subNavHoverColor: ColorSchema,
+    contentBg: ColorSchema,
+    pageBg: ColorSchema,
+    minorHeadingTextColor: ColorSchema,
+    contentAltBg: ColorSchema,
+    contentHighlightBg: ColorSchema,
+    textColor: ColorSchema,
+    textColorMuted: ColorSchema,
+    textColorDimmed: ColorSchema,
+    textColorEmphasized: ColorSchema,
+    textColorFeature: ColorSchema,
+    borderColor: ColorSchema,
+    borderColorLight: ColorSchema,
+    borderColorHeavy: ColorSchema,
+    inputBgColor: ColorSchema,
+    inputTextColor: ColorSchema,
+    inputBorderColor: ColorSchema,
+    controlColor: ColorSchema,
+    focusColor: ColorSchema,
+    buttonPrimaryBg: ColorSchema,
+    buttonPrimaryColor: ColorSchema,
+    buttonPrimaryHoverBg: ColorSchema,
+    buttonCtaBg: ColorSchema,
+    buttonCtaColor: ColorSchema,
+    selectedItemBgColor: ColorSchema,
+    selectedItemColor: ColorSchema,
+    paletteColor1: ColorSchema,
+    paletteColor2: ColorSchema,
+    paletteColor3: ColorSchema,
+    paletteColor4: ColorSchema,
+    paletteColor5: ColorSchema,
+    logoColor: ColorSchema,
+    metaThemeColor: ColorSchema,
   })
   .strict();
 const AssetSchema = z.string().regex(/^[a-z/-]+\.(jpg|svg)$/);
@@ -39,7 +74,7 @@ function validateWindow(
 }
 export const ThemeCatalogSchema = z
   .object({
-    version: z.literal(2),
+    version: z.literal(4),
     timeZone: z.literal("America/Los_Angeles"),
     scenery: z.record(
       z.string(),
@@ -53,6 +88,20 @@ export const ThemeCatalogSchema = z
             name: z.string().min(1),
             scenery: z.string(),
             decoration: AssetSchema.nullable(),
+            effect: z
+              .enum([
+                "confetti",
+                "hearts",
+                "petals",
+                "sparks",
+                "leaves",
+                "snow",
+              ])
+              .nullable(),
+            logos: z.object({ light: AssetSchema, dark: AssetSchema }).strict(),
+            contentLogos: z
+              .object({ light: AssetSchema, dark: AssetSchema })
+              .strict(),
             window: z.tuple([z.number().int(), z.number().int()]).nullable(),
             palettes: z
               .object({ light: PaletteSchema, dark: PaletteSchema })
@@ -78,6 +127,12 @@ export const ThemeCatalogSchema = z
         });
       }
       ids.add(theme.id);
+      if (theme.effect !== null && theme.window === null) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Falling effects require a festival window",
+        });
+      }
       if (theme.window !== null) {
         validateWindow(theme.window, days, ctx);
       }

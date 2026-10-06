@@ -2,7 +2,7 @@ import { defineConfig } from "@shepherdjerred/config";
 import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { z } from "zod";
 import manifest from "#config/forum.json";
-import { SeasonChoiceSchema } from "./themes.ts";
+import { SeasonChoiceSchema } from "@shepherdjerred/storm-theme";
 
 const NodeSchema = z
   .object({

@@ -1,6 +1,6 @@
 // Flexile adaptation for The Storm. Required vendor attribution is retained.
 html {
-  background: #1b1b1b;
+  background: @xf-chromeBg;
 }
 body {
   line-height: 1.4;
@@ -9,12 +9,8 @@ body {
   background: transparent;
 }
 .p-header {
-  background: linear-gradient(
-    to bottom,
-    mix(#fff, @xf-chromeBg, 18%),
-    @xf-chromeBg
-  );
-  border-top: 3px solid #21343b;
+  background: @xf-chromeBg;
+  border-top: 3px solid darken(@xf-chromeBg, 10%);
 }
 .p-header-inner {
   padding-top: 0;
@@ -27,14 +23,14 @@ body {
 }
 .p-header-logo {
   flex: 0 0 auto;
-  width: 180px;
+  width: 270px;
   max-width: 50%;
 }
 .p-header-logo img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 60px;
+  max-height: none;
   object-fit: contain;
 }
 .flexile-headerContent {
@@ -71,22 +67,14 @@ body {
   text-shadow: 0 1px fade(#000, 35%);
 }
 .p-navEl.is-selected {
-  background: linear-gradient(
-    to bottom,
-    mix(#fff, @xf-subNavBg, 12%),
-    @xf-subNavBg
-  );
+  background: @xf-subNavBg;
   box-shadow: inset 0 1px fade(#fff, 20%);
   .p-navEl-link {
     color: @xf-subNavTextColor;
   }
 }
 .p-sectionLinks {
-  background: linear-gradient(
-    to bottom,
-    mix(#fff, @xf-subNavBg, 10%),
-    @xf-subNavBg
-  );
+  background: @xf-subNavBg;
   box-shadow: inset 0 1px fade(#fff, 20%);
   border-bottom: 1px solid darken(@xf-subNavBg, 14%);
 }
@@ -197,18 +185,6 @@ body {
 }
 .flexile-attribution {
   margin-top: 5px;
-}
-.p-header-content::after {
-  position: absolute;
-  left: 40%;
-  top: 5px;
-  width: 280px;
-  height: 86px;
-  transform: translateX(-50%);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  pointer-events: none;
 }
 .p-staffBar {
   background: #1b1b1b;
@@ -372,10 +348,6 @@ body {
   outline-offset: 3px;
 }
 @media (max-width: @xf-responsiveWide) {
-  .p-header-content::after {
-    left: 37%;
-    width: 220px;
-  }
   .flexile-headerContent {
     max-width: 330px;
     font-size: 12px;
@@ -401,13 +373,6 @@ body {
     flex-direction: column;
     align-items: center;
   }
-  .p-header-content::after {
-    position: static;
-    order: 1;
-    transform: none;
-    width: 240px;
-    height: 48px;
-  }
   .message-user {
     display: flex;
     gap: 10px;
@@ -422,8 +387,9 @@ body {
     margin-bottom: 0;
   }
   .p-header-logo img {
-    max-height: 50px;
+    max-height: none;
   }
+  .p-header-logo { max-width: 90%; }
   .p-body-inner {
     padding-top: 15px;
   }
@@ -437,3 +403,5 @@ body {
     border-radius: 4px;
   }
 }
+ .stormSkipLink { position: fixed; top: 8px; left: 8px; z-index: 1000; padding: 12px; background: @xf-contentBg; color: @xf-linkColor; border: 2px solid @xf-borderColorHeavy; border-radius: 4px; transform: translateY(-200%); }
+ .stormSkipLink:focus { transform: none; }

@@ -14,6 +14,19 @@ const fixture = {
 };
 
 describe("forum isolation and release resources", () => {
+  it("serves the production community on the apex with no forum subdomain", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(
+      createStormForumChart(new App(), { ...fixture, stage: "prod" }),
+    );
+    const bindings = rendered.filter(
+      (resource) => resource.kind === "TunnelBinding",
+    );
+    expect(bindings).toHaveLength(1);
+    expect(JSON.stringify(bindings)).toContain('"fqdn":"ts-mc.net"');
+    expect(JSON.stringify(rendered)).toContain('"value":"https://ts-mc.net"');
+    expect(JSON.stringify(rendered)).not.toContain("forum.ts-mc.net");
+  });
   it("keeps staging private, password protected, and installs only through an explicit Job", () => {
     resetProbeRegistry();
     const chart = createStormForumChart(new App(), fixture);

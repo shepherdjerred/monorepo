@@ -1,5 +1,5 @@
 ---
-title: Live Map
+title: LiveMap
 description: Interactive browser map of the server's worlds.
 ---
 

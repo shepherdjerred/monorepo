@@ -22,16 +22,21 @@ style export combines those customizations with the licensed XenForo master
 template, so the source lives in Git while the generated archives stay private.
 Each parent archive is pinned by checksum, adaptation version, appearance, and
 XenForo version; both pass validation before installation or either import.
-Child styles express the framed teal appearance across light, dark, and seasonal variants.
+Child styles share calendar palettes and artwork with the player documentation.
+System appearance follows the device; explicit choices remain native preferences.
 Keeping these changes in the [owned style service](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/addon/Storm/Forum/Service/OwnedStyles.php)
 allows parent updates without manually recreating community changes.
 
-## History does not recreate accounts
+## Historical profiles preserve attribution
 
-The forum starts with fresh discussions and attributed editorial history.
-Recreating former accounts would give new content an identity its author never
-claimed. The [editorial seed](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/config/seed-content.json)
-states that distinction explicitly.
+Reviewed public discussions retain original author names and timestamps, with
+new replies enabled. Native profiles group posts by original member ID and retain
+recovered avatars and attachments. These profiles have no email, password, staff
+privileges, or claiming flow. Import checkpoints preserve later edits and replies
+during repeat releases. A reviewed revision explicitly migrates unchanged messages
+while reporting staff-edited content. The
+[runtime boundary](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/README.md)
+separates historical attribution from current account ownership.
 
 Reports, appeals, and applications share the forum's moderation tools while
 remaining readable only by their author and staff. Native permissions enforce

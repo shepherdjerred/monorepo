@@ -304,6 +304,10 @@
       ],
       "project": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"]
     },
+    "packages/storm-theme": {
+      "entry": ["scripts/*.ts", "src/render-cli.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"]
+    },
     "packages/streambot": {
       "entry": ["test/**/*.ts", "integration/**/*.ts", "e2e/**/*.ts"],
       "project": [

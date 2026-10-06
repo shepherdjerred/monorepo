@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { themeCatalog } from "#src/themes.ts";
+import { themeCatalog } from "@shepherdjerred/storm-theme";
 
 // Drive the real native chooser in a disposable local preview, never a deployed forum.
 const tab = z
@@ -10,6 +10,10 @@ const tab = z
   .regex(/^[A-F0-9]+$/)
   .parse(Bun.argv[2]);
 const output = z.string().min(1).parse(Bun.argv[3]);
+const modes =
+  Bun.argv[4] === undefined
+    ? (["light", "dark"] as const)
+    : [z.enum(["light", "dark"]).parse(Bun.argv[4])];
 const configPath = z.string().min(1).parse(Bun.env["PINCHTAB_CONFIG"]);
 const browserConfig = z
   .object({
@@ -73,7 +77,7 @@ async function renderState() {
     origin:location.origin,
     nav:getComputedStyle(document.querySelector('.p-nav')).backgroundColor,
     scenery:getComputedStyle(document.body).backgroundImage,
-    decoration:getComputedStyle(document.querySelector('.p-header-content'),'::after').backgroundImage,
+    decoration:getComputedStyle(document.querySelector('.stormGarland')).backgroundImage,
     overflow:document.documentElement.scrollWidth - innerWidth,
     headerVisible:document.querySelector('.flexile-headerContent').getBoundingClientRect().height > 0,
     footer:getComputedStyle(document.querySelector('.p-footer')).backgroundColor,
@@ -98,6 +102,7 @@ const assets = new Set([
   ...themeCatalog.themes.flatMap((theme) =>
     theme.decoration === null ? [] : [theme.decoration],
   ),
+  ...themeCatalog.themes.flatMap((theme) => Object.values(theme.logos)),
   "logo.svg",
 ]);
 for (const asset of assets) {
@@ -105,7 +110,7 @@ for (const asset of assets) {
   assert.equal(response.status, 200, `Asset failed: ${asset}`);
   await response.arrayBuffer();
 }
-for (const mode of ["light", "dark"] as const) {
+for (const mode of modes) {
   for (const theme of themeCatalog.themes) {
     await viewport(1440, 960);
     await navigate(`${origin}/misc/style`);
@@ -182,5 +187,5 @@ for (const mode of ["light", "dark"] as const) {
   }
 }
 process.stdout.write(
-  "All 26 static combinations passed native selection, chooser persistence, asset, layout and header/footer checks.\n",
+  `${String(modes.length * themeCatalog.themes.length)} static combinations passed native selection, chooser persistence, asset, layout and header/footer checks.\n`,
 );

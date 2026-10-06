@@ -118,6 +118,9 @@ final class Configuration extends \XF\Service\AbstractService
             if ($definition['type'] !== 'Forum') { continue; }
             $id = $node->node_id;
             $access = $definition['access'];
+            if (in_array($access, ['public', 'announcements'], true)) {
+                $this->permissions(1, ['forum' => ['viewAttachment' => 'content_allow']], $id);
+            }
             if ($access === 'author-staff') {
                 // The native viewOthers gate protects thread queries, search and attachments.
                 // Reset inherited grants at this node; staff can explicitly grant them back.
@@ -181,7 +184,7 @@ final class Configuration extends \XF\Service\AbstractService
 
     private function navigation(): void
     {
-        foreach (['stormHome' => ['Home', '{{ link(\'storm-home\') }}'], 'stormDocs' => ['Docs', 'https://docs.ts-mc.net'], 'stormMap' => ['Live Map', 'https://bluemap.ts-mc.net']] as $key => [$title, $link]) {
+        foreach (['stormHome' => ['Home', '{{ link(\'storm-home\') }}'], 'stormDocs' => ['Docs', 'https://docs.ts-mc.net'], 'stormMap' => ['LiveMap', 'https://bluemap.ts-mc.net']] as $key => [$title, $link]) {
             $nav = $this->em()->find('XF:Navigation', $key) ?: $this->em()->create('XF:Navigation');
             $nav->navigation_id = $key;
             $nav->parent_navigation_id = '';

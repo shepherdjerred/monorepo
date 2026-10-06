@@ -106,19 +106,23 @@ try {
     "storm-forum:dev",
     "/tmp/s3-fixture.ts",
   ]);
-  for (const name of ["src", "test", "config", "package.json"]) {
-    await run([
-      "cp",
-      path.join(root, name),
-      `${source}:/app/packages/storm-forum/${name}`,
-    ]);
-  }
+  // Use the current workspace image while retaining the source's licensed
+  // application and data. A long-lived preview can have older dependencies.
   const snapshotOutput = await run([
-    "exec",
-    ...bootstrap,
+    "run",
+    "--rm",
+    "--network",
+    network,
+    "--volumes-from",
     source,
+    "--read-only",
+    "--tmpfs",
+    "/tmp:uid=1000,gid=1000",
+    ...bootstrap,
+    "--entrypoint",
     "bun",
-    "/app/packages/storm-forum/test/backup-roundtrip.ts",
+    "storm-forum:dev",
+    "/opt/storm-forum/test/backup-roundtrip.ts",
   ]);
   const manifestKey = snapshotOutput.trim();
   if (!/^snapshots\/beta\/[a-f0-9-]+\/manifest\.json$/.test(manifestKey)) {

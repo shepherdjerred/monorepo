@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <code_event_listeners>
+  <listener event_id="app_pub_render_page" execute_order="10" callback_class="Storm\Forum\Listener" callback_method="publicPage" active="1" hint="" description="Use the public calendar in social metadata independently of visitor preferences."/>
   <listener event_id="mailer_transport_setup" execute_order="10" callback_class="Storm\Forum\Listener" callback_method="mailTransport" active="1" hint="" description="Require authenticated STARTTLS before sending mail."/>
   <listener event_id="app_setup" execute_order="10" callback_class="Storm\Forum\Listener" callback_method="appSetup" active="1" hint="" description="Inject runtime credentials without writing them to the options table."/>
 </code_event_listeners>

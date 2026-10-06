@@ -1,0 +1,45 @@
+{
+  "name": "@shepherdjerred/storm-theme",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*",
+    "#data/*": "./*"
+  },
+  "exports": {
+    ".": "./src/catalog.ts",
+    "./catalog.json": "./catalog.json",
+    "./browser": "./src/browser.ts",
+    "./render": "./src/render.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "generate": "bun scripts/generate.ts",
+    "build": "bun scripts/generate.ts --check && bun --no-install build src/browser.ts --target browser --minify --outdir dist",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bunx eslint --cache . --max-warnings=0",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.2.10",
+    "@resvg/resvg-js": "^2.6.2",
+    "satori": "^0.33.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "1.4.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
+  }
+}

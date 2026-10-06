@@ -1205,7 +1205,7 @@ describe("Healing in Search and Destroy", () => {
 
 describe("Repairing the Search and Destroy map", () => {
   test(
-    "/rwf admin repair reports an intact yard and pastes broken blocks back",
+    "/rwf admin repair verifies the yard and lobby and restores broken blocks",
     { timeout: 90_000 },
     async ({ bot, rcon, server }) => {
       await waitForLobby(rcon);

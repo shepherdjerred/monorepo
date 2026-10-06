@@ -45,8 +45,12 @@ $thread = XF::asVisitor($author, function () use ($app, $forum) {
     $creator->setDiscussionState('visible');
     return $creator->save();
 });
+$data = $app->service('XF:Attachment\Preparer')->insertDataFromFile(new XF\FileWrapper('/opt/storm-forum/assets/history/attachment-7.png', 'private-test.png'), $author->user_id);
+$attachment = $app->em()->create('XF:Attachment');
+$attachment->bulkSet(['data_id'=>$data->data_id, 'content_type'=>'post', 'content_id'=>$thread->first_post_id, 'unassociated'=>false]); $attachment->save();
 foreach ([[$guest, false], [$author, true], [$other, false], [$staff, true]] as [$visitor, $expected]) {
     $check(XF::asVisitor($visitor, fn() => $thread->canView()) === $expected, 'Private support visibility incorrect for ' . $visitor->username);
+    $check(XF::asVisitor($visitor, fn() => $attachment->canView()) === $expected, 'Private attachment visibility incorrect for ' . $visitor->username);
 }
 $staffForum = $app->em()->find('XF:Forum', $map['node:staff']);
 $check(!XF::asVisitor($author, fn() => $staffForum->canView()), 'Member can view staff forum');
